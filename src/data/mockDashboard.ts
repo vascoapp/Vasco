@@ -1,0 +1,48 @@
+import { AttentionItem } from '../domain/attention';
+
+export const attentionQueue: AttentionItem[] = [
+  {
+    id: 'missing-profile',
+    title: 'Complete business profile',
+    subtitle: 'Unlock pro quotes',
+    why: 'Finish once, reuse forever.',
+    impact: 'Save time',
+    tag: 'P',
+    tone: 'warning',
+    route: '/profile',
+    priority: 1,
+  },
+  {
+    id: 'price-risk',
+    title: 'Price risk detected',
+    subtitle: 'Van Dijk',
+    why: 'Cheaper prep option found.',
+    impact: 'Save €280',
+    tag: 'EUR',
+    tone: 'danger',
+    route: '/quotes/q-103',
+    priority: 2,
+  },
+  {
+    id: 'overdue-invoice',
+    title: 'Invoice overdue',
+    subtitle: 'Invoice #1043',
+    why: '7 days overdue.',
+    impact: 'Get paid',
+    tag: 'I',
+    tone: 'warning',
+    route: '/invoices/i-1043',
+    priority: 3,
+  },
+  {
+    id: 'draft-quote',
+    title: 'Draft quote waiting',
+    subtitle: 'De Jong',
+    why: '48 hours idle.',
+    impact: 'Close €2,450',
+    tag: 'Q',
+    tone: 'default',
+    route: '/quotes/q-102',
+    priority: 4,
+  },
+];

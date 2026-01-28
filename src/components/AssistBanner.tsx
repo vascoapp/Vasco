@@ -1,0 +1,68 @@
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Colors } from '../theme/colors';
+import { Spacing } from '../theme/spacing';
+import { Typography } from '../theme/typography';
+
+type AssistBannerProps = {
+  title: string;
+  description: string;
+  actionLabel: string;
+  onPress?: () => void;
+  meta?: string;
+};
+
+export function AssistBanner({ title, description, actionLabel, onPress, meta }: AssistBannerProps) {
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={Typography.subtitle}>{title}</Text>
+        {meta ? <Text style={styles.meta}>{meta}</Text> : null}
+      </View>
+      <Text style={[Typography.muted, styles.description]}>{description}</Text>
+      <Pressable onPress={onPress} style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
+        <Text style={styles.ctaText}>{actionLabel}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: Spacing.sm,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  meta: {
+    color: Colors.muted,
+    fontSize: 12,
+    fontFamily: 'Inter_500Medium',
+  },
+  description: {
+    lineHeight: 18,
+  },
+  cta: {
+    marginTop: Spacing.xs,
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  ctaText: {
+    color: Colors.text,
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  pressed: {
+    opacity: 0.9,
+  },
+});
