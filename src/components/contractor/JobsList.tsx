@@ -1,0 +1,555 @@
+// Jobs List - Filterable list of all jobs
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { SemanticColors } from '../../theme/colors';
+import { Spacing } from '../../theme/spacing';
+import type { Job, JobStatus } from '../../types/contractor';
+import { MOCK_JOBS, MOCK_CUSTOMERS, JOB_STATUS_CONFIG } from '../../data/mockContractor';
+
+type IconName = keyof typeof Ionicons.glyphMap;
+
+type FilterStatus = 'all' | 'active' | 'completed' | 'quoted';
+
+interface JobsListProps {
+  onSelectJob: (job: Job) => void;
+  onNewJob: () => void;
+  onNewQuote: () => void;
+}
+
+export function JobsList({ onSelectJob, onNewJob, onNewQuote }: JobsListProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
+
+  const formatCurrency = (amount: number) => `€${amount.toLocaleString('nl-NL')}`;
+  const formatDate = (date: string) =>
+    new Date(date).toLocaleDateString('nl-NL', {
+      day: 'numeric',
+      month: 'short',
+    });
+
+  // Filter jobs
+  const filteredJobs = MOCK_JOBS.filter((job) => {
+    // Search filter
+    const customer = MOCK_CUSTOMERS.find((c) => c.id === job.customerId);
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch =
+      !searchQuery ||
+      job.title.toLowerCase().includes(searchLower) ||
+      customer?.name.toLowerCase().includes(searchLower) ||
+      job.address.street.toLowerCase().includes(searchLower);
+
+    // Status filter
+    let matchesStatus = true;
+    if (filterStatus === 'active') {
+      matchesStatus = ['scheduled', 'in-progress'].includes(job.status);
+    } else if (filterStatus === 'completed') {
+      matchesStatus = ['completed', 'invoiced', 'paid'].includes(job.status);
+    } else if (filterStatus === 'quoted') {
+      matchesStatus = ['lead', 'quoted', 'accepted'].includes(job.status);
+    }
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // Group by status for better organization
+  const groupedJobs = filteredJobs.reduce((acc, job) => {
+    const group = getStatusGroup(job.status);
+    if (!acc[group]) acc[group] = [];
+    acc[group].push(job);
+    return acc;
+  }, {} as Record<string, Job[]>);
+
+  function getStatusGroup(status: JobStatus): string {
+    if (['in-progress'].includes(status)) return 'In Progress';
+    if (['scheduled'].includes(status)) return 'Scheduled';
+    if (['lead', 'quoted', 'accepted'].includes(status)) return 'Pipeline';
+    if (['completed', 'invoiced', 'paid'].includes(status)) return 'Completed';
+    return 'Other';
+  }
+
+  const groupOrder = ['In Progress', 'Scheduled', 'Pipeline', 'Completed', 'Other'];
+
+  const filters: { id: FilterStatus; label: string; count: number }[] = [
+    { id: 'all', label: 'All', count: MOCK_JOBS.length },
+    {
+      id: 'active',
+      label: 'Active',
+      count: MOCK_JOBS.filter((j) => ['scheduled', 'in-progress'].includes(j.status)).length,
+    },
+    {
+      id: 'quoted',
+      label: 'Pipeline',
+      count: MOCK_JOBS.filter((j) => ['lead', 'quoted', 'accepted'].includes(j.status)).length,
+    },
+    {
+      id: 'completed',
+      label: 'Done',
+      count: MOCK_JOBS.filter((j) => ['completed', 'invoiced', 'paid'].includes(j.status)).length,
+    },
+  ];
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Jobs</Text>
+        <View style={styles.headerActions}>
+          <Pressable style={styles.headerButton} onPress={onNewQuote}>
+            <Ionicons name="document-text" size={20} color={SemanticColors.textPrimary} />
+          </Pressable>
+          <Pressable style={styles.addButton} onPress={onNewJob}>
+            <Ionicons name="add" size={22} color="#fff" />
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Search */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={18} color={SemanticColors.textTertiary} />
+        <TextInput
+          style={styles.searchInput}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search jobs, customers..."
+          placeholderTextColor={SemanticColors.textTertiary}
+        />
+        {searchQuery.length > 0 && (
+          <Pressable onPress={() => setSearchQuery('')}>
+            <Ionicons name="close-circle" size={18} color={SemanticColors.textTertiary} />
+          </Pressable>
+        )}
+      </View>
+
+      {/* Filters */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filtersContainer}
+      >
+        {filters.map((filter) => (
+          <Pressable
+            key={filter.id}
+            style={[styles.filterPill, filterStatus === filter.id && styles.filterPillActive]}
+            onPress={() => setFilterStatus(filter.id)}
+          >
+            <Text
+              style={[
+                styles.filterPillText,
+                filterStatus === filter.id && styles.filterPillTextActive,
+              ]}
+            >
+              {filter.label}
+            </Text>
+            <View
+              style={[
+                styles.filterBadge,
+                filterStatus === filter.id && styles.filterBadgeActive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.filterBadgeText,
+                  filterStatus === filter.id && styles.filterBadgeTextActive,
+                ]}
+              >
+                {filter.count}
+              </Text>
+            </View>
+          </Pressable>
+        ))}
+      </ScrollView>
+
+      {/* Jobs List */}
+      <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
+        {groupOrder.map((group) => {
+          const jobs = groupedJobs[group];
+          if (!jobs || jobs.length === 0) return null;
+
+          return (
+            <View key={group} style={styles.group}>
+              <Text style={styles.groupTitle}>{group}</Text>
+              {jobs.map((job) => {
+                const customer = MOCK_CUSTOMERS.find((c) => c.id === job.customerId);
+                const statusConfig = JOB_STATUS_CONFIG[job.status];
+
+                return (
+                  <Pressable
+                    key={job.id}
+                    style={styles.jobCard}
+                    onPress={() => onSelectJob(job)}
+                  >
+                    <View style={styles.jobCardHeader}>
+                      <View style={styles.jobCardInfo}>
+                        <Text style={styles.jobCardTitle} numberOfLines={1}>
+                          {job.title}
+                        </Text>
+                        <Text style={styles.jobCardCustomer}>{customer?.name}</Text>
+                      </View>
+                      <View
+                        style={[styles.statusBadge, { backgroundColor: statusConfig.color + '20' }]}
+                      >
+                        <Ionicons
+                          name={statusConfig.icon as IconName}
+                          size={12}
+                          color={statusConfig.color}
+                        />
+                        <Text style={[styles.statusBadgeText, { color: statusConfig.color }]}>
+                          {statusConfig.label}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.jobCardDetails}>
+                      <View style={styles.jobCardDetail}>
+                        <Ionicons
+                          name="location-outline"
+                          size={14}
+                          color={SemanticColors.textTertiary}
+                        />
+                        <Text style={styles.jobCardDetailText} numberOfLines={1}>
+                          {job.address.street}, {job.address.city}
+                        </Text>
+                      </View>
+                      {job.scheduledDate && (
+                        <View style={styles.jobCardDetail}>
+                          <Ionicons
+                            name="calendar-outline"
+                            size={14}
+                            color={SemanticColors.textTertiary}
+                          />
+                          <Text style={styles.jobCardDetailText}>
+                            {formatDate(job.scheduledDate)}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    <View style={styles.jobCardFooter}>
+                      {job.agreedAmount ? (
+                        <Text style={styles.jobCardAmount}>
+                          {formatCurrency(job.agreedAmount)}
+                        </Text>
+                      ) : job.quotedAmount ? (
+                        <Text style={styles.jobCardQuoted}>
+                          Quoted: {formatCurrency(job.quotedAmount)}
+                        </Text>
+                      ) : (
+                        <Text style={styles.jobCardNoAmount}>No quote</Text>
+                      )}
+                      <View style={styles.jobCardMeta}>
+                        {job.photos.length > 0 && (
+                          <View style={styles.metaIcon}>
+                            <Ionicons
+                              name="camera"
+                              size={12}
+                              color={SemanticColors.textTertiary}
+                            />
+                            <Text style={styles.metaText}>{job.photos.length}</Text>
+                          </View>
+                        )}
+                        {job.timeEntries.length > 0 && (
+                          <View style={styles.metaIcon}>
+                            <Ionicons
+                              name="time"
+                              size={12}
+                              color={SemanticColors.textTertiary}
+                            />
+                            <Text style={styles.metaText}>{job.timeEntries.length}</Text>
+                          </View>
+                        )}
+                        <Ionicons
+                          name="chevron-forward"
+                          size={16}
+                          color={SemanticColors.textTertiary}
+                        />
+                      </View>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          );
+        })}
+
+        {filteredJobs.length === 0 && (
+          <View style={styles.emptyState}>
+            <Ionicons name="briefcase-outline" size={48} color={SemanticColors.textTertiary} />
+            <Text style={styles.emptyStateTitle}>No jobs found</Text>
+            <Text style={styles.emptyStateText}>
+              {searchQuery ? 'Try a different search term' : 'Create your first job to get started'}
+            </Text>
+            {!searchQuery && (
+              <Pressable style={styles.emptyStateButton} onPress={onNewJob}>
+                <Ionicons name="add" size={20} color="#fff" />
+                <Text style={styles.emptyStateButtonText}>New Job</Text>
+              </Pressable>
+            )}
+          </View>
+        )}
+      </ScrollView>
+
+      {/* FAB */}
+      <Pressable style={styles.fab} onPress={onNewJob}>
+        <Ionicons name="add" size={28} color="#fff" />
+      </Pressable>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: SemanticColors.surfaceBackground,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: Spacing.md,
+    paddingTop: Spacing.xl,
+    backgroundColor: SemanticColors.surfacePrimary,
+  },
+  headerTitle: {
+    color: SemanticColors.textPrimary,
+    fontSize: 28,
+    fontWeight: '700',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: SemanticColors.actionPrimary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.surfacePrimary,
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    gap: Spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 12,
+    color: SemanticColors.textPrimary,
+    fontSize: 15,
+  },
+  filtersContainer: {
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  filterPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  filterPillActive: {
+    backgroundColor: SemanticColors.actionPrimary + '15',
+    borderColor: SemanticColors.actionPrimary + '40',
+  },
+  filterPillText: {
+    color: SemanticColors.textSecondary,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  filterPillTextActive: {
+    color: SemanticColors.actionPrimary,
+  },
+  filterBadge: {
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    minWidth: 20,
+    alignItems: 'center',
+  },
+  filterBadgeActive: {
+    backgroundColor: SemanticColors.actionPrimary,
+  },
+  filterBadgeText: {
+    color: SemanticColors.textSecondary,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  filterBadgeTextActive: {
+    color: '#fff',
+  },
+  list: {
+    flex: 1,
+  },
+  listContent: {
+    padding: Spacing.md,
+    paddingBottom: 100,
+    gap: Spacing.lg,
+  },
+  group: {
+    gap: Spacing.sm,
+  },
+  groupTitle: {
+    color: SemanticColors.textSecondary,
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  jobCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 14,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    gap: Spacing.sm,
+  },
+  jobCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  jobCardInfo: {
+    flex: 1,
+    marginRight: Spacing.sm,
+  },
+  jobCardTitle: {
+    color: SemanticColors.textPrimary,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  jobCardCustomer: {
+    color: SemanticColors.textSecondary,
+    fontSize: 13,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  statusBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  jobCardDetails: {
+    gap: 4,
+  },
+  jobCardDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  jobCardDetailText: {
+    color: SemanticColors.textTertiary,
+    fontSize: 12,
+    flex: 1,
+  },
+  jobCardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: Spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: SemanticColors.borderMuted,
+  },
+  jobCardAmount: {
+    color: SemanticColors.textPrimary,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  jobCardQuoted: {
+    color: SemanticColors.textSecondary,
+    fontSize: 13,
+  },
+  jobCardNoAmount: {
+    color: SemanticColors.textTertiary,
+    fontSize: 13,
+    fontStyle: 'italic',
+  },
+  jobCardMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  metaIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  metaText: {
+    color: SemanticColors.textTertiary,
+    fontSize: 11,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.xxl,
+    gap: Spacing.sm,
+  },
+  emptyStateTitle: {
+    color: SemanticColors.textPrimary,
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  emptyStateText: {
+    color: SemanticColors.textTertiary,
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  emptyStateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: SemanticColors.actionPrimary,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: Spacing.md,
+  },
+  emptyStateButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  fab: {
+    position: 'absolute',
+    right: Spacing.lg,
+    bottom: 100,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: SemanticColors.actionPrimary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+});

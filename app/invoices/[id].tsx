@@ -4,9 +4,11 @@ import { AssistBanner } from '../../src/components/AssistBanner';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
 import { Screen } from '../../src/components/Screen';
 import { Colors } from '../../src/theme/colors';
+import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
 import { useAppState } from '../../src/state/AppState';
+import { hapticError, hapticSuccess } from '../../src/utils/haptics';
 
 export default function InvoiceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,6 +39,34 @@ export default function InvoiceDetailScreen() {
   const formattedTotal = `€${invoice.amount.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}`;
   const lastExport = lastMoneybirdExport[invoice.id];
   const lastPayment = lastMolliePayment[invoice.id];
+
+  const handleCreatePayment = async () => {
+    try {
+      await createPaymentLink(invoice.id, invoice.amount);
+      hapticSuccess();
+    } catch {
+      hapticError();
+    }
+  };
+
+  const handleExportMoneybird = async () => {
+    try {
+      await exportInvoice(invoice.id);
+      hapticSuccess();
+    } catch {
+      hapticError();
+    }
+  };
+
+  const handleMarkPaid = () => {
+    markInvoicePaid(invoice.id);
+    hapticSuccess();
+  };
+
+  const handleMarkSent = () => {
+    markInvoiceSent(invoice.id);
+    hapticSuccess();
+  };
 
   return (
     <Screen>
@@ -79,18 +109,18 @@ export default function InvoiceDetailScreen() {
             label={mollieConnected ? 'Create iDEAL link' : 'Connect Mollie'}
             onPress={() =>
               mollieConnected
-                ? createPaymentLink(invoice.id, invoice.amount)
+                ? handleCreatePayment()
                 : router.push('/(modals)/mollie')
             }
           />
           <PrimaryButton
             label="Export to Moneybird"
             onPress={() =>
-              moneybirdConnected ? exportInvoice(invoice.id) : router.push('/(modals)/moneybird')
+              moneybirdConnected ? handleExportMoneybird() : router.push('/(modals)/moneybird')
             }
           />
-          <PrimaryButton label="Send reminder" onPress={() => markInvoiceSent(invoice.id)} />
-          <PrimaryButton label="Mark paid" onPress={() => markInvoicePaid(invoice.id)} />
+          <PrimaryButton label="Send reminder" onPress={handleMarkSent} />
+          <PrimaryButton label="Mark paid" onPress={handleMarkPaid} />
         </View>
       </ScrollView>
     </Screen>
@@ -107,7 +137,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: Colors.surface,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     padding: Spacing.lg,
     gap: Spacing.sm,
     borderWidth: 1,
@@ -122,7 +152,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_500Medium',
   },
   paymentText: {
-    color: Colors.accent,
+    color: Colors.accentMuted,
     fontSize: 12,
     fontFamily: 'Inter_500Medium',
   },

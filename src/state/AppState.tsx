@@ -29,6 +29,8 @@ type AppState = {
   markQuoteSent: (id: string) => void;
   markInvoiceSent: (id: string) => void;
   markInvoicePaid: (id: string) => void;
+  removeQuote: (id: string) => void;
+  removeInvoice: (id: string) => void;
   connectMoneybird: () => void;
   exportInvoice: (invoiceId: string) => Promise<void>;
   connectMollie: () => void;
@@ -99,6 +101,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             invoice.id === id ? { ...invoice, status: 'paid', dueInDays: 0 } : invoice
           )
         ),
+      removeQuote: (id) => setQuotes((prev) => prev.filter((quote) => quote.id !== id)),
+      removeInvoice: (id) => setInvoices((prev) => prev.filter((invoice) => invoice.id !== id)),
       connectMoneybird: () => setMoneybirdConnected(true),
       exportInvoice: async (invoiceId) => {
         const result = await exportInvoiceToMoneybird(invoiceId);

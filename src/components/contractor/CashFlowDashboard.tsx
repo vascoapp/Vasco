@@ -1,0 +1,1226 @@
+// =============================================================================
+// CASH FLOW DASHBOARD COMPONENT
+// =============================================================================
+// Financial overview with forecasting, invoice management, and insights
+// =============================================================================
+
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Modal,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { SemanticColors, Palette } from '../../theme/colors';
+import {
+  useCashFlow,
+  usePaymentReminders,
+  useFinancingSuggestions,
+  useSeasonalPatterns,
+  Invoice,
+  CashFlowForecast,
+  PaymentReminder,
+} from '../../services/cashFlowService';
+
+type TabType = 'overview' | 'invoices' | 'forecast' | 'expenses';
+
+export function CashFlowDashboard() {
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+
+  const { invoices, expenses, summary, aging, forecast, markPaid, sendReminder } = useCashFlow();
+  const { reminders } = usePaymentReminders();
+  const financingSuggestions = useFinancingSuggestions();
+  const seasonalPatterns = useSeasonalPatterns();
+
+  const tabs: Array<{ key: TabType; label: string; icon: string }> = [
+    { key: 'overview', label: 'Overzicht', icon: 'wallet-outline' },
+    { key: 'invoices', label: 'Facturen', icon: 'document-text-outline' },
+    { key: 'forecast', label: 'Voorspelling', icon: 'trending-up-outline' },
+    { key: 'expenses', label: 'Uitgaven', icon: 'receipt-outline' },
+  ];
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(amount);
+  };
+
+  const getStatusStyle = (status: Invoice['status']) => {
+    switch (status) {
+      case 'paid': return { color: Palette.emerald, bg: Palette.emerald + '20', label: 'Betaald' };
+      case 'sent': return { color: Palette.blue, bg: Palette.blue + '20', label: 'Verstuurd' };
+      case 'viewed': return { color: Palette.purple, bg: Palette.purple + '20', label: 'Bekeken' };
+      case 'overdue': return { color: Palette.red, bg: Palette.red + '20', label: 'Verlopen' };
+      case 'draft': return { color: Palette.gray, bg: Palette.gray + '20', label: 'Concept' };
+      default: return { color: Palette.gray, bg: Palette.gray + '20', label: status };
+    }
+  };
+
+  const getHealthColor = (score: number) => {
+    if (score >= 70) return Palette.emerald;
+    if (score >= 40) return Palette.orange;
+    return Palette.red;
+  };
+
+  const openInvoice = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setShowInvoiceModal(true);
+  };
+
+  const renderOverviewTab = () => (
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+      {/* Health Score */}
+      <View style={styles.healthCard}>
+        <View style={styles.healthLeft}>
+          <Text style={styles.healthTitle}>Financiële gezondheid</Text>
+          <View style={[styles.healthCircle, { borderColor: getHealthColor(summary.healthScore) }]}>
+            <Text style={[styles.healthScore, { color: getHealthColor(summary.healthScore) }]}>
+              {summary.healthScore}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.healthRight}>
+          <View style={styles.healthStat}>
+            <Text style={styles.healthStatLabel}>Huidig saldo</Text>
+            <Text style={styles.healthStatValue}>{formatCurrency(summary.currentBalance)}</Text>
+          </View>
+          <View style={styles.healthStat}>
+            <Text style={styles.healthStatLabel}>30-dagen voorspelling</Text>
+            <Text style={[styles.healthStatValue, { color: summary.projectedBalance30Days >= summary.currentBalance ? Palette.emerald : Palette.red }]}>
+              {formatCurrency(summary.projectedBalance30Days)}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Alerts */}
+      {summary.alerts.length > 0 && (
+        <View style={styles.alertsSection}>
+          {summary.alerts.map((alert) => (
+            <TouchableOpacity key={alert.id} style={[styles.alertCard, { borderLeftColor: alert.type === 'warning' ? Palette.orange : Palette.blue }]}>
+              <Ionicons
+                name={alert.type === 'warning' ? 'warning-outline' : 'bulb-outline'}
+                size={20}
+                color={alert.type === 'warning' ? Palette.orange : Palette.blue}
+              />
+              <View style={styles.alertContent}>
+                <Text style={styles.alertTitle}>{alert.title}</Text>
+                <Text style={styles.alertDescription}>{alert.description}</Text>
+              </View>
+              {alert.actionable && (
+                <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {/* Quick Stats */}
+      <View style={styles.statsGrid}>
+        <View style={styles.statCard}>
+          <Ionicons name="arrow-up-circle-outline" size={24} color={Palette.emerald} />
+          <Text style={styles.statLabel}>Te ontvangen</Text>
+          <Text style={styles.statValue}>{formatCurrency(summary.pendingIncome)}</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Ionicons name="arrow-down-circle-outline" size={24} color={Palette.red} />
+          <Text style={styles.statLabel}>Te betalen</Text>
+          <Text style={styles.statValue}>{formatCurrency(summary.pendingExpenses)}</Text>
+        </View>
+      </View>
+
+      {/* Invoice Aging */}
+      <View style={styles.agingCard}>
+        <Text style={styles.sectionTitle}>Factuur leeftijd</Text>
+        <View style={styles.agingRow}>
+          <View style={styles.agingItem}>
+            <Text style={styles.agingLabel}>Actueel</Text>
+            <Text style={[styles.agingValue, { color: Palette.emerald }]}>{formatCurrency(aging.current.total)}</Text>
+            <Text style={styles.agingCount}>{aging.current.count} facturen</Text>
+          </View>
+          <View style={styles.agingItem}>
+            <Text style={styles.agingLabel}>1-30 dagen</Text>
+            <Text style={[styles.agingValue, { color: Palette.orange }]}>{formatCurrency(aging.days30.total)}</Text>
+            <Text style={styles.agingCount}>{aging.days30.count} facturen</Text>
+          </View>
+          <View style={styles.agingItem}>
+            <Text style={styles.agingLabel}>31-60 dagen</Text>
+            <Text style={[styles.agingValue, { color: Palette.red }]}>{formatCurrency(aging.days60.total)}</Text>
+            <Text style={styles.agingCount}>{aging.days60.count} facturen</Text>
+          </View>
+          <View style={styles.agingItem}>
+            <Text style={styles.agingLabel}>60+ dagen</Text>
+            <Text style={[styles.agingValue, { color: Palette.red }]}>{formatCurrency(aging.days90Plus.total)}</Text>
+            <Text style={styles.agingCount}>{aging.days90Plus.count} facturen</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Payment Reminders */}
+      {reminders.length > 0 && (
+        <View style={styles.remindersSection}>
+          <Text style={styles.sectionTitle}>Betalingsherinneringen</Text>
+          {reminders.slice(0, 3).map((reminder) => (
+            <View key={reminder.id} style={styles.reminderCard}>
+              <View style={styles.reminderInfo}>
+                <Text style={styles.reminderCustomer}>{reminder.customerName}</Text>
+                <Text style={styles.reminderAmount}>{formatCurrency(reminder.amount)}</Text>
+                <Text style={styles.reminderDays}>{reminder.daysOverdue} dagen verlopen</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.reminderButton}
+                onPress={() => sendReminder(reminder.invoiceId)}
+              >
+                <Ionicons name="mail-outline" size={18} color={Palette.blue} />
+                <Text style={styles.reminderButtonText}>Herinner</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Financing */}
+      {financingSuggestions.length > 0 && (
+        <View style={styles.financingSection}>
+          <Text style={styles.sectionTitle}>Financieringsopties</Text>
+          {financingSuggestions.map((suggestion) => (
+            <TouchableOpacity key={suggestion.id} style={styles.financingCard}>
+              <View style={styles.financingIcon}>
+                <Ionicons name="cash-outline" size={24} color={Palette.purple} />
+              </View>
+              <View style={styles.financingContent}>
+                <Text style={styles.financingTitle}>{suggestion.title}</Text>
+                <Text style={styles.financingDesc}>{suggestion.description}</Text>
+                <Text style={styles.financingAmount}>
+                  Tot {formatCurrency(suggestion.potentialAmount)} beschikbaar
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </ScrollView>
+  );
+
+  const renderInvoiceCard = (invoice: Invoice) => {
+    const status = getStatusStyle(invoice.status);
+    return (
+      <TouchableOpacity key={invoice.id} style={styles.invoiceCard} onPress={() => openInvoice(invoice)}>
+        <View style={styles.invoiceMain}>
+          <View style={styles.invoiceHeader}>
+            <Text style={styles.invoiceCustomer}>{invoice.customerName}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
+              <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+            </View>
+          </View>
+          <Text style={styles.invoiceProject}>{invoice.projectName}</Text>
+          <View style={styles.invoiceMeta}>
+            <Text style={styles.invoiceDate}>
+              Vervaldatum: {new Date(invoice.dueDate).toLocaleDateString('nl-NL')}
+            </Text>
+            {invoice.remindersSent > 0 && (
+              <Text style={styles.invoiceReminders}>{invoice.remindersSent} herinnering(en)</Text>
+            )}
+          </View>
+        </View>
+        <Text style={styles.invoiceAmount}>{formatCurrency(invoice.amount)}</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderInvoicesTab = () => {
+    const unpaid = invoices.filter((i) => i.status !== 'paid' && i.status !== 'cancelled');
+    const paid = invoices.filter((i) => i.status === 'paid');
+
+    return (
+      <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+        <Text style={styles.sectionTitle}>Openstaand ({unpaid.length})</Text>
+        {unpaid.map(renderInvoiceCard)}
+
+        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Betaald ({paid.length})</Text>
+        {paid.map(renderInvoiceCard)}
+      </ScrollView>
+    );
+  };
+
+  const renderForecastBar = (week: CashFlowForecast, index: number) => {
+    const isPositive = week.netCashFlow >= 0;
+    const maxValue = Math.max(...forecast.map((f) => Math.abs(f.netCashFlow)));
+    const barHeight = Math.abs(week.netCashFlow) / maxValue * 60;
+
+    return (
+      <View key={index} style={styles.forecastBar}>
+        <View style={styles.forecastBarContainer}>
+          <View
+            style={[
+              styles.forecastBarFill,
+              {
+                height: barHeight,
+                backgroundColor: isPositive ? Palette.emerald : Palette.red,
+              },
+            ]}
+          />
+        </View>
+        <Text style={styles.forecastBarLabel}>{week.period.replace('Week ', 'W')}</Text>
+        <Text style={[styles.forecastBarValue, { color: isPositive ? Palette.emerald : Palette.red }]}>
+          {isPositive ? '+' : ''}{(week.netCashFlow / 1000).toFixed(1)}k
+        </Text>
+      </View>
+    );
+  };
+
+  const renderForecastTab = () => (
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+      {/* Forecast Chart */}
+      <View style={styles.forecastCard}>
+        <Text style={styles.sectionTitle}>8-Weken voorspelling</Text>
+        <View style={styles.forecastChart}>
+          {forecast.map(renderForecastBar)}
+        </View>
+        <View style={styles.forecastLegend}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: Palette.emerald }]} />
+            <Text style={styles.legendText}>Positief</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: Palette.red }]} />
+            <Text style={styles.legendText}>Negatief</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Seasonal Patterns */}
+      <View style={styles.seasonalCard}>
+        <Text style={styles.sectionTitle}>Seizoenspatronen</Text>
+        <View style={styles.seasonalGrid}>
+          {seasonalPatterns.map((pattern, index) => {
+            const isCurrentMonth = index === new Date().getMonth();
+            return (
+              <View
+                key={pattern.month}
+                style={[styles.seasonalItem, isCurrentMonth && styles.seasonalItemCurrent]}
+              >
+                <Text style={[styles.seasonalMonth, isCurrentMonth && { color: Palette.blue }]}>
+                  {pattern.month}
+                </Text>
+                <View style={[styles.seasonalIndicator, {
+                  backgroundColor: pattern.trend === 'high' ? Palette.emerald + '30' :
+                    pattern.trend === 'medium' ? Palette.orange + '30' : Palette.red + '30',
+                }]}>
+                  <Text style={[styles.seasonalTrend, {
+                    color: pattern.trend === 'high' ? Palette.emerald :
+                      pattern.trend === 'medium' ? Palette.orange : Palette.red,
+                  }]}>
+                    {pattern.trend === 'high' ? 'Hoog' : pattern.trend === 'medium' ? 'Middel' : 'Laag'}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+
+      {/* Forecast Details */}
+      <View style={styles.forecastDetails}>
+        <Text style={styles.sectionTitle}>Details per week</Text>
+        {forecast.slice(0, 4).map((week, index) => (
+          <View key={index} style={styles.forecastDetailRow}>
+            <Text style={styles.forecastDetailPeriod}>{week.period}</Text>
+            <View style={styles.forecastDetailValues}>
+              <View style={styles.forecastDetailItem}>
+                <Ionicons name="arrow-up" size={12} color={Palette.emerald} />
+                <Text style={styles.forecastDetailValue}>{formatCurrency(week.expectedIncome)}</Text>
+              </View>
+              <View style={styles.forecastDetailItem}>
+                <Ionicons name="arrow-down" size={12} color={Palette.red} />
+                <Text style={styles.forecastDetailValue}>{formatCurrency(week.expectedExpenses)}</Text>
+              </View>
+              <Text style={[styles.forecastDetailNet, { color: week.netCashFlow >= 0 ? Palette.emerald : Palette.red }]}>
+                {week.netCashFlow >= 0 ? '+' : ''}{formatCurrency(week.netCashFlow)}
+              </Text>
+            </View>
+            <View style={styles.confidenceBadge}>
+              <Text style={styles.confidenceText}>{Math.round(week.confidence * 100)}%</Text>
+            </View>
+          </View>
+        ))}
+      </View>
+    </ScrollView>
+  );
+
+  const getCategoryStyle = (category: string) => {
+    switch (category) {
+      case 'materialen': return { color: Palette.blue, icon: 'cube-outline' };
+      case 'gereedschap': return { color: Palette.purple, icon: 'hammer-outline' };
+      case 'voertuig': return { color: Palette.orange, icon: 'car-outline' };
+      case 'verzekering': return { color: Palette.emerald, icon: 'shield-checkmark-outline' };
+      default: return { color: Palette.gray, icon: 'ellipsis-horizontal-outline' };
+    }
+  };
+
+  const renderExpensesTab = () => {
+    const totalThisMonth = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const byCategory = expenses.reduce((acc, e) => {
+      acc[e.category] = (acc[e.category] || 0) + e.amount;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return (
+      <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+        {/* Summary */}
+        <View style={styles.expenseSummary}>
+          <Text style={styles.expenseSummaryLabel}>Totaal deze maand</Text>
+          <Text style={styles.expenseSummaryValue}>{formatCurrency(totalThisMonth)}</Text>
+        </View>
+
+        {/* By Category */}
+        <View style={styles.categoryBreakdown}>
+          <Text style={styles.sectionTitle}>Per categorie</Text>
+          {Object.entries(byCategory).map(([category, amount]) => {
+            const style = getCategoryStyle(category);
+            const percentage = (amount / totalThisMonth) * 100;
+            return (
+              <View key={category} style={styles.categoryRow}>
+                <View style={[styles.categoryIcon, { backgroundColor: style.color + '20' }]}>
+                  <Ionicons name={style.icon as any} size={18} color={style.color} />
+                </View>
+                <View style={styles.categoryInfo}>
+                  <Text style={styles.categoryName}>
+                    {category.charAt(0).toUpperCase() + category.slice(1)}
+                  </Text>
+                  <View style={styles.categoryBar}>
+                    <View style={[styles.categoryBarFill, { width: `${percentage}%`, backgroundColor: style.color }]} />
+                  </View>
+                </View>
+                <Text style={styles.categoryAmount}>{formatCurrency(amount)}</Text>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Recent Expenses */}
+        <View style={styles.recentExpenses}>
+          <Text style={styles.sectionTitle}>Recente uitgaven</Text>
+          {expenses.slice(0, 10).map((expense) => {
+            const style = getCategoryStyle(expense.category);
+            return (
+              <View key={expense.id} style={styles.expenseRow}>
+                <View style={[styles.expenseIcon, { backgroundColor: style.color + '20' }]}>
+                  <Ionicons name={style.icon as any} size={16} color={style.color} />
+                </View>
+                <View style={styles.expenseInfo}>
+                  <Text style={styles.expenseDescription}>{expense.description}</Text>
+                  <Text style={styles.expenseDate}>
+                    {new Date(expense.date).toLocaleDateString('nl-NL')}
+                    {expense.recurring && ' • Terugkerend'}
+                  </Text>
+                </View>
+                <Text style={styles.expenseAmount}>{formatCurrency(expense.amount)}</Text>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Add Expense Button */}
+        <TouchableOpacity style={styles.addExpenseButton}>
+          <Ionicons name="add-circle-outline" size={24} color={Palette.blue} />
+          <Text style={styles.addExpenseText}>Uitgave toevoegen</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Tabs */}
+      <View style={styles.tabBar}>
+        {tabs.map((tab) => (
+          <TouchableOpacity
+            key={tab.key}
+            style={[styles.tab, activeTab === tab.key && styles.activeTab]}
+            onPress={() => setActiveTab(tab.key)}
+          >
+            <Ionicons
+              name={tab.icon as any}
+              size={18}
+              color={activeTab === tab.key ? Palette.blue : SemanticColors.textSecondary}
+            />
+            <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Content */}
+      {activeTab === 'overview' && renderOverviewTab()}
+      {activeTab === 'invoices' && renderInvoicesTab()}
+      {activeTab === 'forecast' && renderForecastTab()}
+      {activeTab === 'expenses' && renderExpensesTab()}
+
+      {/* Invoice Detail Modal */}
+      <Modal
+        visible={showInvoiceModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowInvoiceModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setShowInvoiceModal(false)}>
+              <Ionicons name="close" size={24} color={SemanticColors.text} />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Factuur details</Text>
+            <View style={{ width: 24 }} />
+          </View>
+
+          {selectedInvoice && (
+            <ScrollView style={styles.modalContent}>
+              <View style={styles.invoiceDetailHeader}>
+                <Text style={styles.invoiceDetailAmount}>{formatCurrency(selectedInvoice.amount)}</Text>
+                <View style={[styles.statusBadge, { backgroundColor: getStatusStyle(selectedInvoice.status).bg }]}>
+                  <Text style={[styles.statusText, { color: getStatusStyle(selectedInvoice.status).color }]}>
+                    {getStatusStyle(selectedInvoice.status).label}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.invoiceDetailSection}>
+                <Text style={styles.invoiceDetailLabel}>Klant</Text>
+                <Text style={styles.invoiceDetailValue}>{selectedInvoice.customerName}</Text>
+              </View>
+
+              <View style={styles.invoiceDetailSection}>
+                <Text style={styles.invoiceDetailLabel}>Project</Text>
+                <Text style={styles.invoiceDetailValue}>{selectedInvoice.projectName}</Text>
+              </View>
+
+              <View style={styles.invoiceDetailRow}>
+                <View style={styles.invoiceDetailSection}>
+                  <Text style={styles.invoiceDetailLabel}>Factuurdatum</Text>
+                  <Text style={styles.invoiceDetailValue}>
+                    {new Date(selectedInvoice.issueDate).toLocaleDateString('nl-NL')}
+                  </Text>
+                </View>
+                <View style={styles.invoiceDetailSection}>
+                  <Text style={styles.invoiceDetailLabel}>Vervaldatum</Text>
+                  <Text style={styles.invoiceDetailValue}>
+                    {new Date(selectedInvoice.dueDate).toLocaleDateString('nl-NL')}
+                  </Text>
+                </View>
+              </View>
+
+              {selectedInvoice.status !== 'paid' && (
+                <View style={styles.invoiceActions}>
+                  <TouchableOpacity
+                    style={styles.markPaidButton}
+                    onPress={() => {
+                      markPaid(selectedInvoice.id, 'bank_transfer');
+                      setShowInvoiceModal(false);
+                    }}
+                  >
+                    <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+                    <Text style={styles.markPaidText}>Markeer als betaald</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.sendReminderButton}
+                    onPress={() => {
+                      sendReminder(selectedInvoice.id);
+                    }}
+                  >
+                    <Ionicons name="mail-outline" size={20} color={Palette.blue} />
+                    <Text style={styles.sendReminderText}>Stuur herinnering</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </ScrollView>
+          )}
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: SemanticColors.background,
+  },
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: SemanticColors.card,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.border,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 4,
+  },
+  activeTab: {
+    backgroundColor: Palette.blue + '15',
+  },
+  tabText: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+    fontWeight: '500',
+  },
+  activeTabText: {
+    color: Palette.blue,
+  },
+  tabContent: {
+    flex: 1,
+    padding: 16,
+  },
+
+  // Section Title
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: SemanticColors.text,
+    marginBottom: 12,
+  },
+
+  // Health Card
+  healthCard: {
+    flexDirection: 'row',
+    backgroundColor: SemanticColors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: SemanticColors.border,
+  },
+  healthLeft: {
+    alignItems: 'center',
+    marginRight: 20,
+  },
+  healthTitle: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+    marginBottom: 8,
+  },
+  healthCircle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  healthScore: {
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  healthRight: {
+    flex: 1,
+    justifyContent: 'center',
+    gap: 12,
+  },
+  healthStat: {},
+  healthStatLabel: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  healthStatValue: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: SemanticColors.text,
+  },
+
+  // Alerts
+  alertsSection: {
+    marginBottom: 16,
+    gap: 8,
+  },
+  alertCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.card,
+    borderRadius: 10,
+    padding: 12,
+    borderLeftWidth: 4,
+    gap: 10,
+  },
+  alertContent: {
+    flex: 1,
+  },
+  alertTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: SemanticColors.text,
+  },
+  alertDescription: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+    marginTop: 2,
+  },
+
+  // Stats Grid
+  statsGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: SemanticColors.card,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: SemanticColors.border,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+    marginTop: 8,
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: SemanticColors.text,
+    marginTop: 4,
+  },
+
+  // Aging
+  agingCard: {
+    backgroundColor: SemanticColors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: SemanticColors.border,
+  },
+  agingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  agingItem: {
+    alignItems: 'center',
+  },
+  agingLabel: {
+    fontSize: 11,
+    color: SemanticColors.textSecondary,
+    marginBottom: 4,
+  },
+  agingValue: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  agingCount: {
+    fontSize: 10,
+    color: SemanticColors.textSecondary,
+    marginTop: 2,
+  },
+
+  // Reminders
+  remindersSection: {
+    marginBottom: 16,
+  },
+  reminderCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.card,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: SemanticColors.border,
+  },
+  reminderInfo: {
+    flex: 1,
+  },
+  reminderCustomer: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: SemanticColors.text,
+  },
+  reminderAmount: {
+    fontSize: 13,
+    color: SemanticColors.text,
+    marginTop: 2,
+  },
+  reminderDays: {
+    fontSize: 11,
+    color: Palette.red,
+    marginTop: 2,
+  },
+  reminderButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Palette.blue + '15',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 4,
+  },
+  reminderButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Palette.blue,
+  },
+
+  // Financing
+  financingSection: {
+    marginBottom: 16,
+  },
+  financingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: SemanticColors.border,
+    gap: 12,
+  },
+  financingIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Palette.purple + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  financingContent: {
+    flex: 1,
+  },
+  financingTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: SemanticColors.text,
+  },
+  financingDesc: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+    marginTop: 2,
+  },
+  financingAmount: {
+    fontSize: 12,
+    color: Palette.purple,
+    fontWeight: '500',
+    marginTop: 4,
+  },
+
+  // Invoices
+  invoiceCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: SemanticColors.border,
+  },
+  invoiceMain: {
+    flex: 1,
+  },
+  invoiceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  invoiceCustomer: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: SemanticColors.text,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  invoiceProject: {
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+    marginBottom: 4,
+  },
+  invoiceMeta: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  invoiceDate: {
+    fontSize: 11,
+    color: SemanticColors.textSecondary,
+  },
+  invoiceReminders: {
+    fontSize: 11,
+    color: Palette.orange,
+  },
+  invoiceAmount: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: SemanticColors.text,
+  },
+
+  // Forecast
+  forecastCard: {
+    backgroundColor: SemanticColors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: SemanticColors.border,
+  },
+  forecastChart: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    height: 100,
+    marginVertical: 12,
+  },
+  forecastBar: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  forecastBarContainer: {
+    height: 60,
+    justifyContent: 'flex-end',
+  },
+  forecastBarFill: {
+    width: 20,
+    borderRadius: 4,
+    minHeight: 4,
+  },
+  forecastBarLabel: {
+    fontSize: 10,
+    color: SemanticColors.textSecondary,
+    marginTop: 4,
+  },
+  forecastBarValue: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  forecastLegend: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
+    marginTop: 8,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  legendText: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+
+  // Seasonal
+  seasonalCard: {
+    backgroundColor: SemanticColors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: SemanticColors.border,
+  },
+  seasonalGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  seasonalItem: {
+    width: '23%',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  seasonalItemCurrent: {
+    backgroundColor: Palette.blue + '15',
+  },
+  seasonalMonth: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: SemanticColors.text,
+    marginBottom: 4,
+  },
+  seasonalIndicator: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  seasonalTrend: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+
+  // Forecast Details
+  forecastDetails: {
+    backgroundColor: SemanticColors.card,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: SemanticColors.border,
+  },
+  forecastDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.border,
+  },
+  forecastDetailPeriod: {
+    width: 60,
+    fontSize: 13,
+    fontWeight: '500',
+    color: SemanticColors.text,
+  },
+  forecastDetailValues: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  forecastDetailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  forecastDetailValue: {
+    fontSize: 12,
+    color: SemanticColors.text,
+  },
+  forecastDetailNet: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  confidenceBadge: {
+    backgroundColor: SemanticColors.background,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  confidenceText: {
+    fontSize: 10,
+    color: SemanticColors.textSecondary,
+  },
+
+  // Expenses
+  expenseSummary: {
+    backgroundColor: Palette.red,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  expenseSummaryLabel: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  expenseSummaryValue: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#fff',
+    marginTop: 4,
+  },
+  categoryBreakdown: {
+    backgroundColor: SemanticColors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: SemanticColors.border,
+  },
+  categoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 12,
+  },
+  categoryIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryInfo: {
+    flex: 1,
+  },
+  categoryName: {
+    fontSize: 13,
+    color: SemanticColors.text,
+    marginBottom: 4,
+  },
+  categoryBar: {
+    height: 4,
+    backgroundColor: SemanticColors.border,
+    borderRadius: 2,
+  },
+  categoryBarFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  categoryAmount: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: SemanticColors.text,
+  },
+  recentExpenses: {
+    backgroundColor: SemanticColors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: SemanticColors.border,
+  },
+  expenseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.border,
+    gap: 10,
+  },
+  expenseIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  expenseInfo: {
+    flex: 1,
+  },
+  expenseDescription: {
+    fontSize: 14,
+    color: SemanticColors.text,
+  },
+  expenseDate: {
+    fontSize: 11,
+    color: SemanticColors.textSecondary,
+    marginTop: 2,
+  },
+  expenseAmount: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: SemanticColors.text,
+  },
+  addExpenseButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Palette.blue + '15',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Palette.blue,
+    borderStyle: 'dashed',
+    gap: 8,
+  },
+  addExpenseText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Palette.blue,
+  },
+
+  // Modal
+  modalContainer: {
+    flex: 1,
+    backgroundColor: SemanticColors.background,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.border,
+    backgroundColor: SemanticColors.card,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: SemanticColors.text,
+  },
+  modalContent: {
+    flex: 1,
+    padding: 16,
+  },
+  invoiceDetailHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  invoiceDetailAmount: {
+    fontSize: 36,
+    fontWeight: '700',
+    color: SemanticColors.text,
+    marginBottom: 8,
+  },
+  invoiceDetailSection: {
+    marginBottom: 16,
+  },
+  invoiceDetailRow: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  invoiceDetailLabel: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+    marginBottom: 4,
+  },
+  invoiceDetailValue: {
+    fontSize: 16,
+    color: SemanticColors.text,
+  },
+  invoiceActions: {
+    gap: 12,
+    marginTop: 24,
+  },
+  markPaidButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Palette.emerald,
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  markPaidText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  sendReminderButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: SemanticColors.card,
+    paddingVertical: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Palette.blue,
+    gap: 8,
+  },
+  sendReminderText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Palette.blue,
+  },
+});

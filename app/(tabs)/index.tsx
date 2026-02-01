@@ -1,129 +1,209 @@
-import { Link, useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { ActionTile } from '../../src/components/ActionTile';
-import { KpiChip } from '../../src/components/KpiChip';
-import { buildAttentionQueue } from '../../src/logic/attentionEngine';
-import { useAppState } from '../../src/state/AppState';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Screen } from '../../src/components/Screen';
+import {
+  CFODashboard,
+  COODashboard,
+  SiteLeadDashboard,
+  ContractorDashboard,
+} from '../../src/components/dashboards';
+import { useAuth, ROLE_CONFIGS } from '../../src/context/AuthContext';
 import { Colors } from '../../src/theme/colors';
+import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
 
-export default function DashboardScreen() {
-  const router = useRouter();
-  const {
-    businessProfile,
-    invoices,
-    quotes,
-    priceRisks,
-    moneybirdConnected,
-    mollieConnected,
-  } = useAppState();
-  const savingsTotal = priceRisks.reduce((sum, risk) => sum + risk.estimatedSavings, 0);
-  const savingsFormatted = `€${savingsTotal.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}`;
+// Director gets a portfolio overview
+function DirectorDashboard() {
+  const { user, roleConfig } = useAuth();
 
   return (
-    <Screen>
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.sectionLabel}>Today</Text>
-            <Text style={Typography.title}>Next best actions</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.greeting}>Good morning, {user?.name.split(' ')[0]}</Text>
+          <Text style={Typography.title}>Portfolio Overview</Text>
+        </View>
+        <View style={[styles.roleBadge, { backgroundColor: roleConfig?.primaryColor + '20' }]}>
+          <Text style={[styles.roleBadgeText, { color: roleConfig?.primaryColor }]}>
+            {roleConfig?.label}
+          </Text>
+        </View>
+      </View>
+
+      {/* Portfolio Summary */}
+      <View style={styles.portfolioCard}>
+        <Text style={styles.cardTitle}>Active Projects</Text>
+        <View style={styles.portfolioGrid}>
+          <View style={styles.portfolioItem}>
+            <Text style={styles.portfolioValue}>3</Text>
+            <Text style={styles.portfolioLabel}>Projects</Text>
           </View>
-          <View style={styles.helperBadge}>
-            <Text style={styles.helperBadgeText}>Vasco Assist</Text>
+          <View style={styles.portfolioDivider} />
+          <View style={styles.portfolioItem}>
+            <Text style={[styles.portfolioValue, { color: Colors.success }]}>£127M</Text>
+            <Text style={styles.portfolioLabel}>GDV</Text>
+          </View>
+          <View style={styles.portfolioDivider} />
+          <View style={styles.portfolioItem}>
+            <Text style={styles.portfolioValue}>18.2%</Text>
+            <Text style={styles.portfolioLabel}>Avg IRR</Text>
           </View>
         </View>
+      </View>
 
-        <View style={styles.kpiRow}>
-          <KpiChip label="Overdue" value={`${invoices.filter((i) => i.status === 'overdue').length}`} />
-          <KpiChip label="Draft quotes" value={`${quotes.filter((q) => q.status === 'draft').length}`} />
-          <KpiChip
-            label="At risk"
-            value={`${buildAttentionQueue({
-              businessProfile,
-              quotes,
-              invoices,
-              priceRisks,
-              mollieConnected,
-            }).filter((a) => a.tone === 'danger').length}`}
-          />
-          <KpiChip label="Saved" value={savingsFormatted} />
+      {/* Attention Required */}
+      <View style={styles.attentionCard}>
+        <Text style={styles.cardTitle}>Requires Your Attention</Text>
+        <View style={styles.attentionList}>
+          <View style={styles.attentionItem}>
+            <View style={[styles.attentionDot, { backgroundColor: Colors.danger }]} />
+            <View style={styles.attentionContent}>
+              <Text style={styles.attentionText}>3 approvals pending your signature</Text>
+              <Text style={styles.attentionMeta}>2 high-value, 1 critical deadline</Text>
+            </View>
+          </View>
+          <View style={styles.attentionItem}>
+            <View style={[styles.attentionDot, { backgroundColor: Colors.warning }]} />
+            <View style={styles.attentionContent}>
+              <Text style={styles.attentionText}>2 risks trending worsening</Text>
+              <Text style={styles.attentionMeta}>Contractor insolvency, Material costs</Text>
+            </View>
+          </View>
+          <View style={styles.attentionItem}>
+            <View style={[styles.attentionDot, { backgroundColor: Colors.accentMuted }]} />
+            <View style={styles.attentionContent}>
+              <Text style={styles.attentionText}>Investor update ready for review</Text>
+              <Text style={styles.attentionMeta}>Monthly report - Whitechapel</Text>
+            </View>
+          </View>
         </View>
+      </View>
 
-        <View style={styles.helperCard}>
-          <Text style={Typography.subtitle}>We will guide you step by step</Text>
-          <Text style={[Typography.muted, styles.helperCopy]}>
-            One clear action at a time to protect profit and save admin hours.
-          </Text>
+      {/* Key Metrics */}
+      <View style={styles.metricsCard}>
+        <Text style={styles.cardTitle}>Platform Performance</Text>
+        <View style={styles.metricsGrid}>
+          <View style={styles.metricItem}>
+            <Text style={styles.metricValue}>127</Text>
+            <Text style={styles.metricLabel}>Hours Saved</Text>
+          </View>
+          <View style={styles.metricItem}>
+            <Text style={styles.metricValue}>£48K</Text>
+            <Text style={styles.metricLabel}>Value Delivered</Text>
+          </View>
+          <View style={styles.metricItem}>
+            <Text style={styles.metricValue}>92%</Text>
+            <Text style={styles.metricLabel}>Doc Accuracy</Text>
+          </View>
+          <View style={styles.metricItem}>
+            <Text style={styles.metricValue}>4.2d</Text>
+            <Text style={styles.metricLabel}>Avg DSO Reduction</Text>
+          </View>
         </View>
+      </View>
 
-        <View style={styles.moneyBar}>
-          <Text style={styles.moneyLabel}>This week saved</Text>
-          <Text style={styles.moneyValue}>{savingsFormatted}</Text>
-          <Text style={styles.moneyHint}>
-            From better pricing & faster follow‑ups
-          </Text>
+      {/* Project Status */}
+      <View style={styles.projectsCard}>
+        <Text style={styles.cardTitle}>Project Health</Text>
+        <View style={styles.projectList}>
+          <View style={styles.projectItem}>
+            <View style={styles.projectInfo}>
+              <Text style={styles.projectName}>Whitechapel Mixed-Use</Text>
+              <Text style={styles.projectMeta}>UK | Construction</Text>
+            </View>
+            <View style={[styles.projectStatus, { backgroundColor: Colors.success + '20' }]}>
+              <Text style={[styles.projectStatusText, { color: Colors.success }]}>On Track</Text>
+            </View>
+          </View>
+          <View style={styles.projectItem}>
+            <View style={styles.projectInfo}>
+              <Text style={styles.projectName}>Amsterdam Residential</Text>
+              <Text style={styles.projectMeta}>NL | Pre-construction</Text>
+            </View>
+            <View style={[styles.projectStatus, { backgroundColor: Colors.warning + '20' }]}>
+              <Text style={[styles.projectStatusText, { color: Colors.warning }]}>At Risk</Text>
+            </View>
+          </View>
+          <View style={styles.projectItem}>
+            <View style={styles.projectInfo}>
+              <Text style={styles.projectName}>Munich Office</Text>
+              <Text style={styles.projectMeta}>DE | Planning</Text>
+            </View>
+            <View style={[styles.projectStatus, { backgroundColor: Colors.success + '20' }]}>
+              <Text style={[styles.projectStatusText, { color: Colors.success }]}>On Track</Text>
+            </View>
+          </View>
         </View>
+      </View>
+    </ScrollView>
+  );
+}
 
-        <Pressable
-          style={({ pressed }) => [styles.syncBar, pressed && styles.pressed]}
-          onPress={() => router.push('/(modals)/moneybird')}
-        >
-          <Text style={styles.syncLabel}>Moneybird</Text>
-          <Text style={styles.syncValue}>
-            {moneybirdConnected ? 'Synced' : 'Not connected'}
-          </Text>
-        </Pressable>
+export default function HomeScreen() {
+  const { user, roleConfig } = useAuth();
 
-        <Pressable
-          style={({ pressed }) => [styles.syncBar, pressed && styles.pressed]}
-          onPress={() => router.push('/(modals)/mollie')}
-        >
-          <Text style={styles.syncLabel}>Mollie (iDEAL)</Text>
-          <Text style={styles.syncValue}>
-            {mollieConnected ? 'Connected' : 'Not connected'}
-          </Text>
-        </Pressable>
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>Action queue</Text>
-          <Text style={Typography.subtitle}>Save money now</Text>
+  if (!user) {
+    return (
+      <Screen>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
         </View>
+      </Screen>
+    );
+  }
 
-        <View style={styles.actionList}>
-          {buildAttentionQueue({
-            businessProfile,
-            quotes,
-            invoices,
-            priceRisks,
-            mollieConnected,
-          }).map((item) => (
-            <ActionTile
-              key={item.id}
-              title={item.title}
-              subtitle={item.subtitle}
-              why={item.why}
-              impact={item.impact}
-              tag={item.tag}
-              onPress={() => router.push(item.route)}
-            />
-          ))}
-        </View>
+  // Render role-specific dashboard
+  const renderDashboard = () => {
+    switch (user.role) {
+      case 'cfo':
+        return (
+          <>
+            <RoleHeader />
+            <CFODashboard />
+          </>
+        );
+      case 'coo':
+        return (
+          <>
+            <RoleHeader />
+            <COODashboard />
+          </>
+        );
+      case 'site-lead':
+        return (
+          <>
+            <RoleHeader />
+            <SiteLeadDashboard />
+          </>
+        );
+      case 'director':
+        return <DirectorDashboard />;
+      case 'contractor':
+        return <ContractorDashboard />;
+      default:
+        return <DirectorDashboard />;
+    }
+  };
 
-        <View style={styles.ingestion}>
-          <Text style={Typography.subtitle}>Teach Vasco your prices</Text>
-          <Text style={[Typography.muted, styles.ingestionCopy]}>
-            Share past quotes to get smarter pricing suggestions.
-          </Text>
-          <Link href="/(modals)/ingestion" asChild>
-            <Pressable style={styles.ingestionLink}>
-              <Text style={styles.ingestionLinkText}>Add previous work</Text>
-            </Pressable>
-          </Link>
-        </View>
-      </ScrollView>
-    </Screen>
+  return <Screen>{renderDashboard()}</Screen>;
+}
+
+function RoleHeader() {
+  const { user, roleConfig } = useAuth();
+
+  return (
+    <View style={styles.roleHeader}>
+      <View>
+        <Text style={styles.greeting}>Good morning, {user?.name.split(' ')[0]}</Text>
+        <Text style={styles.roleTitle}>{roleConfig?.title}</Text>
+      </View>
+      <View style={[styles.roleBadge, { backgroundColor: roleConfig?.primaryColor + '20' }]}>
+        <Text style={[styles.roleBadgeText, { color: roleConfig?.primaryColor }]}>
+          {roleConfig?.label}
+        </Text>
+      </View>
+    </View>
   );
 }
 
@@ -131,124 +211,193 @@ const styles = StyleSheet.create({
   container: {
     padding: Spacing.lg,
     gap: Spacing.lg,
+    paddingBottom: 100,
   },
-  headerRow: {
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    color: Colors.muted,
+    fontSize: 16,
+  },
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
   },
-  sectionLabel: {
-    color: Colors.muted,
-    fontSize: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    marginBottom: Spacing.xs,
-    fontFamily: 'Inter_500Medium',
-  },
-  helperBadge: {
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: 999,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  helperBadgeText: {
-    color: Colors.muted,
-    fontSize: 12,
-    fontFamily: 'Inter_600SemiBold',
-  },
-  kpiRow: {
+  roleHeader: {
     flexDirection: 'row',
-    gap: Spacing.sm,
-    flexWrap: 'wrap',
-  },
-  sectionHeader: {
-    gap: 2,
-  },
-  actionList: {
-    gap: Spacing.sm,
-  },
-  helperCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.sm,
+    paddingBottom: 0,
   },
-  helperCopy: {
-    lineHeight: 18,
-  },
-  moneyBar: {
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: 16,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: 4,
-  },
-  moneyLabel: {
+  greeting: {
     color: Colors.muted,
-    fontSize: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    fontFamily: 'Inter_500Medium',
+    fontSize: 14,
+    marginBottom: 4,
   },
-  moneyValue: {
+  roleTitle: {
     color: Colors.text,
-    fontSize: 28,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 24,
+    fontWeight: '700',
   },
-  moneyHint: {
-    color: Colors.muted,
+  roleBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: Radius.sm,
+  },
+  roleBadgeText: {
     fontSize: 12,
-    fontFamily: 'Inter_400Regular',
+    fontWeight: '700',
   },
-  syncBar: {
+  portfolioCard: {
     backgroundColor: Colors.surface,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: Colors.border,
+    gap: Spacing.md,
+  },
+  cardTitle: {
+    color: Colors.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  portfolioGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     alignItems: 'center',
   },
-  syncLabel: {
+  portfolioItem: {
+    alignItems: 'center',
+  },
+  portfolioValue: {
+    color: Colors.text,
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  portfolioLabel: {
     color: Colors.muted,
     fontSize: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    fontFamily: 'Inter_500Medium',
+    marginTop: 4,
   },
-  syncValue: {
+  portfolioDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: Colors.border,
+  },
+  attentionCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: Spacing.md,
+  },
+  attentionList: {
+    gap: Spacing.sm,
+  },
+  attentionItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  attentionDot: {
+    width: 10,
+    height: 10,
+    borderRadius: Radius.pill,
+    marginTop: 5,
+  },
+  attentionContent: {
+    flex: 1,
+  },
+  attentionText: {
     color: Colors.text,
     fontSize: 14,
-    fontFamily: 'Inter_600SemiBold',
+    fontWeight: '500',
   },
-  pressed: {
-    opacity: 0.9,
+  attentionMeta: {
+    color: Colors.muted,
+    fontSize: 12,
+    marginTop: 2,
   },
-  ingestion: {
+  metricsCard: {
     backgroundColor: Colors.surface,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: Colors.border,
+    gap: Spacing.md,
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: Spacing.sm,
   },
-  ingestionCopy: {
-    lineHeight: 19,
-  },
-  ingestionLink: {
+  metricItem: {
+    flex: 1,
+    minWidth: '45%',
     backgroundColor: Colors.surfaceElevated,
-    paddingVertical: Spacing.sm,
-    borderRadius: 10,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
     alignItems: 'center',
   },
-  ingestionLinkText: {
-    color: Colors.accent,
+  metricValue: {
+    color: Colors.accentDeep,
+    fontSize: 22,
     fontWeight: '700',
+  },
+  metricLabel: {
+    color: Colors.muted,
+    fontSize: 11,
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  projectsCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: Spacing.md,
+  },
+  projectList: {
+    gap: Spacing.sm,
+  },
+  projectItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  projectInfo: {
+    flex: 1,
+  },
+  projectName: {
+    color: Colors.text,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  projectMeta: {
+    color: Colors.muted,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  projectStatus: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: Radius.sm,
+  },
+  projectStatusText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
 });

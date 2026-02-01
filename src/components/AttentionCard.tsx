@@ -1,5 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../theme/colors';
+import { Radius } from '../theme/radius';
+import { Shadows } from '../theme/shadows';
 import { Spacing } from '../theme/spacing';
 import { Typography } from '../theme/typography';
 import { PrimaryButton } from './PrimaryButton';
@@ -44,11 +46,12 @@ export function AttentionCard({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: Colors.border,
     gap: Spacing.sm,
+    ...Shadows.sm,
   },
   header: {
     flexDirection: 'row',

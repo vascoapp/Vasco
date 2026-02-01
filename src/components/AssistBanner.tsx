@@ -1,5 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../theme/colors';
+import { Radius } from '../theme/radius';
+import { Shadows } from '../theme/shadows';
 import { Spacing } from '../theme/spacing';
 import { Typography } from '../theme/typography';
 
@@ -29,11 +31,12 @@ export function AssistBanner({ title, description, actionLabel, onPress, meta }:
 const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.surface,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: Colors.border,
     gap: Spacing.sm,
+    ...Shadows.sm,
   },
   header: {
     flexDirection: 'row',
@@ -51,7 +54,7 @@ const styles = StyleSheet.create({
   cta: {
     marginTop: Spacing.xs,
     backgroundColor: Colors.surfaceElevated,
-    borderRadius: 12,
+    borderRadius: Radius.md,
     paddingVertical: 12,
     alignItems: 'center',
     borderWidth: 1,

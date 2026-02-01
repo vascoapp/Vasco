@@ -1,5 +1,7 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { Colors } from '../theme/colors';
+import { Radius } from '../theme/radius';
+import { Shadows } from '../theme/shadows';
 import { Spacing } from '../theme/spacing';
 
 type PrimaryButtonProps = {
@@ -20,11 +22,14 @@ export function PrimaryButton({ label, onPress }: PrimaryButtonProps) {
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: Colors.accent,
+    backgroundColor: Colors.accentDeep,
     paddingVertical: 14,
     paddingHorizontal: Spacing.lg,
-    borderRadius: 14,
+    borderRadius: Radius.md,
     alignItems: 'center',
+    minHeight: 44,
+    minWidth: 44,
+    ...Shadows.sm,
   },
   pressed: {
     opacity: 0.85,

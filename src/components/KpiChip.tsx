@@ -1,5 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../theme/colors';
+import { Radius } from '../theme/radius';
+import { Shadows } from '../theme/shadows';
 import { Spacing } from '../theme/spacing';
 import { Typography } from '../theme/typography';
 
@@ -20,13 +22,14 @@ export function KpiChip({ label, value }: KpiChipProps) {
 const styles = StyleSheet.create({
   chip: {
     backgroundColor: Colors.surfaceElevated,
-    borderRadius: 14,
+    borderRadius: Radius.md,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
     minWidth: 88,
     flexShrink: 1,
+    ...Shadows.sm,
   },
   value: {
     ...Typography.subtitle,
