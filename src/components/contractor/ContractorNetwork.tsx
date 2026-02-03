@@ -116,7 +116,7 @@ export function ContractorNetwork() {
             <Ionicons
               name={tab.icon}
               size={20}
-              color={activeTab === tab.key ? SemanticColors.primary : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
             />
             <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
               {tab.label}
@@ -322,7 +322,7 @@ function NetworkTab({
                 <Text style={styles.avatarText}>{contractor.name.charAt(0)}</Text>
                 {contractor.verified && (
                   <View style={styles.verifiedBadge}>
-                    <Ionicons name="checkmark-circle" size={14} color={SemanticColors.primary} />
+                    <Ionicons name="checkmark-circle" size={14} color={SemanticColors.actionPrimary} />
                   </View>
                 )}
               </View>
@@ -368,7 +368,7 @@ function ReferralsTab({
       {/* Send Referral CTA */}
       <TouchableOpacity style={styles.sendReferralCta} onPress={onSendReferral}>
         <View style={styles.ctaIcon}>
-          <Ionicons name="paper-plane" size={24} color={SemanticColors.primary} />
+          <Ionicons name="paper-plane" size={24} color={SemanticColors.actionPrimary} />
         </View>
         <View style={styles.ctaContent}>
           <Text style={styles.ctaTitle}>Stuur een referral</Text>
@@ -457,7 +457,7 @@ function ReferralCard({
   const getStatusColor = (status: Referral['status']) => {
     switch (status) {
       case 'pending': return SemanticColors.warning;
-      case 'accepted': return SemanticColors.primary;
+      case 'accepted': return SemanticColors.actionPrimary;
       case 'completed': return SemanticColors.success;
       case 'declined': return SemanticColors.error;
       default: return SemanticColors.textSecondary;
@@ -478,11 +478,11 @@ function ReferralCard({
   if (compact) {
     return (
       <TouchableOpacity style={styles.referralCardCompact} onPress={onPress}>
-        <View style={[styles.referralDirection, { backgroundColor: isReceived ? SemanticColors.success + '20' : SemanticColors.primary + '20' }]}>
+        <View style={[styles.referralDirection, { backgroundColor: isReceived ? SemanticColors.success + '20' : SemanticColors.actionPrimary + '20' }]}>
           <Ionicons
             name={isReceived ? 'arrow-down' : 'arrow-up'}
             size={16}
-            color={isReceived ? SemanticColors.success : SemanticColors.primary}
+            color={isReceived ? SemanticColors.success : SemanticColors.actionPrimary}
           />
         </View>
         <View style={styles.referralCompactInfo}>
@@ -503,11 +503,11 @@ function ReferralCard({
   return (
     <TouchableOpacity style={styles.referralCard} onPress={onPress}>
       <View style={styles.referralHeader}>
-        <View style={[styles.referralDirection, { backgroundColor: isReceived ? SemanticColors.success + '20' : SemanticColors.primary + '20' }]}>
+        <View style={[styles.referralDirection, { backgroundColor: isReceived ? SemanticColors.success + '20' : SemanticColors.actionPrimary + '20' }]}>
           <Ionicons
             name={isReceived ? 'arrow-down' : 'arrow-up'}
             size={20}
-            color={isReceived ? SemanticColors.success : SemanticColors.primary}
+            color={isReceived ? SemanticColors.success : SemanticColors.actionPrimary}
           />
         </View>
         <View style={styles.referralInfo}>
@@ -643,7 +643,7 @@ function ContractorListItem({
         <Text style={styles.avatarText}>{contractor.name.charAt(0)}</Text>
         {contractor.verified && (
           <View style={styles.verifiedBadge}>
-            <Ionicons name="checkmark-circle" size={14} color={SemanticColors.primary} />
+            <Ionicons name="checkmark-circle" size={14} color={SemanticColors.actionPrimary} />
           </View>
         )}
       </View>
@@ -677,7 +677,7 @@ function ContractorListItem({
           style={styles.connectButton}
           onPress={(e) => { e.stopPropagation(); onConnect(); }}
         >
-          <Ionicons name="person-add" size={18} color={SemanticColors.primary} />
+          <Ionicons name="person-add" size={18} color={SemanticColors.actionPrimary} />
         </TouchableOpacity>
       )}
     </TouchableOpacity>
@@ -715,7 +715,7 @@ function ContractorProfileModal({
               <Text style={styles.profileAvatarText}>{contractor.name.charAt(0)}</Text>
               {contractor.verified && (
                 <View style={styles.profileVerified}>
-                  <Ionicons name="checkmark-circle" size={24} color={SemanticColors.primary} />
+                  <Ionicons name="checkmark-circle" size={24} color={SemanticColors.actionPrimary} />
                 </View>
               )}
             </View>
@@ -770,7 +770,7 @@ function ContractorProfileModal({
               <Text style={styles.profileSectionTitle}>Certificeringen</Text>
               {contractor.certifications.map((cert) => (
                 <View key={cert} style={styles.certificationItem}>
-                  <Ionicons name="ribbon" size={18} color={SemanticColors.primary} />
+                  <Ionicons name="ribbon" size={18} color={SemanticColors.actionPrimary} />
                   <Text style={styles.certificationText}>{cert}</Text>
                 </View>
               ))}
@@ -863,11 +863,11 @@ function ReferralDetailModal({
         <ScrollView style={styles.modalBody}>
           {/* Direction */}
           <View style={styles.referralDetailHeader}>
-            <View style={[styles.referralDirectionLarge, { backgroundColor: isReceived ? SemanticColors.success + '20' : SemanticColors.primary + '20' }]}>
+            <View style={[styles.referralDirectionLarge, { backgroundColor: isReceived ? SemanticColors.success + '20' : SemanticColors.actionPrimary + '20' }]}>
               <Ionicons
                 name={isReceived ? 'arrow-down' : 'arrow-up'}
                 size={32}
-                color={isReceived ? SemanticColors.success : SemanticColors.primary}
+                color={isReceived ? SemanticColors.success : SemanticColors.actionPrimary}
               />
             </View>
             <Text style={styles.referralDetailDirection}>
@@ -1104,13 +1104,13 @@ function SendReferralModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
 
   // Stats Header
   statsHeader: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     paddingVertical: 16,
     paddingHorizontal: 12,
   },
@@ -1137,7 +1137,7 @@ const styles = StyleSheet.create({
   // Tab Bar
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.border,
   },
@@ -1151,14 +1151,14 @@ const styles = StyleSheet.create({
   },
   tabActive: {
     borderBottomWidth: 2,
-    borderBottomColor: SemanticColors.primary,
+    borderBottomColor: SemanticColors.actionPrimary,
   },
   tabLabel: {
     fontSize: 13,
     color: SemanticColors.textSecondary,
   },
   tabLabelActive: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '600',
   },
   badge: {
@@ -1180,7 +1180,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     margin: 16,
     marginBottom: 0,
     paddingHorizontal: 16,
@@ -1233,7 +1233,7 @@ const styles = StyleSheet.create({
   requestCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1242,7 +1242,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -1294,7 +1294,7 @@ const styles = StyleSheet.create({
   },
   connectionCard: {
     width: '47%',
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -1304,7 +1304,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -1313,7 +1313,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -2,
     right: -2,
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 8,
   },
   connectionName: {
@@ -1351,18 +1351,18 @@ const styles = StyleSheet.create({
   sendReferralCta: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.primary + '10',
+    backgroundColor: SemanticColors.actionPrimary + '10',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.primary + '30',
+    borderColor: SemanticColors.actionPrimary + '30',
   },
   ctaIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: SemanticColors.primary + '20',
+    backgroundColor: SemanticColors.actionPrimary + '20',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -1383,7 +1383,7 @@ const styles = StyleSheet.create({
 
   // Referral Card
   referralCard: {
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1391,7 +1391,7 @@ const styles = StyleSheet.create({
   referralCardCompact: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 10,
     padding: 12,
     marginBottom: 8,
@@ -1471,7 +1471,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     alignItems: 'center',
   },
   referralDeclineText: {
@@ -1496,7 +1496,7 @@ const styles = StyleSheet.create({
 
   // Discover Tab
   networkOverview: {
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
@@ -1555,7 +1555,7 @@ const styles = StyleSheet.create({
   contractorListItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1564,7 +1564,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -1595,7 +1595,7 @@ const styles = StyleSheet.create({
   },
   contractorSkill: {
     fontSize: 12,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '500',
   },
   contractorDot: {
@@ -1624,7 +1624,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1636,7 +1636,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
@@ -1678,7 +1678,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 10,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     alignItems: 'center',
   },
   modalDeclineText: {
@@ -1711,7 +1711,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -1726,7 +1726,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 12,
   },
   profileName: {
@@ -1751,7 +1751,7 @@ const styles = StyleSheet.create({
   },
   profileStats: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
@@ -1795,14 +1795,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   profileSkillChip: {
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
   },
   profileSkillText: {
     fontSize: 14,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '500',
   },
   certificationItem: {
@@ -1856,7 +1856,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 16,
     borderRadius: 12,
   },
@@ -1870,7 +1870,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 16,
     borderRadius: 12,
   },
@@ -1933,7 +1933,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     padding: 16,
     borderRadius: 10,
   },
@@ -1978,7 +1978,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   feedbackCard: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
   },
@@ -1996,7 +1996,7 @@ const styles = StyleSheet.create({
 
   // Send Referral Modal
   sendReferralModal: {
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
@@ -2016,19 +2016,19 @@ const styles = StyleSheet.create({
     padding: 12,
     marginRight: 12,
     borderRadius: 12,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     width: 100,
   },
   contractorSelectItemActive: {
-    backgroundColor: SemanticColors.primary + '20',
+    backgroundColor: SemanticColors.actionPrimary + '20',
     borderWidth: 2,
-    borderColor: SemanticColors.primary,
+    borderColor: SemanticColors.actionPrimary,
   },
   contractorSelectAvatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -2045,7 +2045,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   input: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 10,
     padding: 14,
     fontSize: 15,
@@ -2073,7 +2073,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 10,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   cancelSendText: {
     fontSize: 16,
@@ -2087,7 +2087,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     borderRadius: 10,
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
   },
   confirmSendText: {
     fontSize: 16,

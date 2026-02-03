@@ -105,7 +105,7 @@ export function CustomerFollowUp() {
       {/* Today's Follow-ups Banner */}
       {todayFollowUps.length > 0 && (
         <View style={styles.todayBanner}>
-          <Ionicons name="today" size={24} color={SemanticColors.primary} />
+          <Ionicons name="today" size={24} color={SemanticColors.actionPrimary} />
           <View style={styles.todayContent}>
             <Text style={styles.todayTitle}>
               {todayFollowUps.length} follow-up{todayFollowUps.length > 1 ? 's' : ''} vandaag
@@ -134,7 +134,7 @@ export function CustomerFollowUp() {
             <Ionicons
               name={tab.icon}
               size={20}
-              color={activeTab === tab.key ? SemanticColors.primary : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
             />
             <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
               {tab.label}
@@ -154,7 +154,7 @@ export function CustomerFollowUp() {
         {activeTab === 'due' && suggestedFollowUps.length > 0 && (
           <View style={styles.suggestedSection}>
             <Text style={styles.sectionTitle}>
-              <Ionicons name="bulb" size={16} color={SemanticColors.primary} /> Aanbevelingen
+              <Ionicons name="bulb" size={16} color={SemanticColors.actionPrimary} /> Aanbevelingen
             </Text>
             {suggestedFollowUps.map((suggestion, idx) => (
               <TouchableOpacity
@@ -175,7 +175,7 @@ export function CustomerFollowUp() {
                   <Text style={styles.suggestionReason}>{suggestion.reason}</Text>
                 </View>
                 <View style={styles.suggestionAction}>
-                  <Ionicons name="add-circle" size={24} color={SemanticColors.primary} />
+                  <Ionicons name="add-circle" size={24} color={SemanticColors.actionPrimary} />
                 </View>
               </TouchableOpacity>
             ))}
@@ -341,7 +341,7 @@ function FollowUpCard({
       case 'due':
         return SemanticColors.warning;
       case 'scheduled':
-        return SemanticColors.primary;
+        return SemanticColors.actionPrimary;
       case 'completed':
         return SemanticColors.success;
       default:
@@ -517,7 +517,7 @@ function FollowUpDetailModal({
           {/* AI Insights */}
           <View style={styles.insightsSection}>
             <Text style={styles.insightsTitle}>
-              <Ionicons name="bulb" size={16} color={SemanticColors.primary} /> Inzichten
+              <Ionicons name="bulb" size={16} color={SemanticColors.actionPrimary} /> Inzichten
             </Text>
             <View style={styles.insightsList}>
               {followUp.personalizationFactors.map((factor, idx) => (
@@ -636,7 +636,7 @@ function FollowUpDetailModal({
                 style={styles.outcomeOption}
                 onPress={() => onComplete('responded')}
               >
-                <Ionicons name="chatbubble-outline" size={24} color={SemanticColors.primary} />
+                <Ionicons name="chatbubble-outline" size={24} color={SemanticColors.actionPrimary} />
                 <Text style={styles.outcomeOptionText}>Reactie ontvangen</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -777,7 +777,7 @@ function ScheduleFollowUpModal({
                   size={24}
                   color={
                     selectedType === typeOption.type
-                      ? SemanticColors.primary
+                      ? SemanticColors.actionPrimary
                       : SemanticColors.textSecondary
                   }
                 />
@@ -876,13 +876,13 @@ function ScheduleFollowUpModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
 
   // Stats Header
   statsHeader: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     paddingVertical: 16,
     paddingHorizontal: 12,
   },
@@ -910,7 +910,7 @@ const styles = StyleSheet.create({
   todayBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     padding: 16,
     marginHorizontal: 16,
     marginTop: 12,
@@ -931,7 +931,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   todayButton: {
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
@@ -945,7 +945,7 @@ const styles = StyleSheet.create({
   // Tab Bar
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     marginTop: 12,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.border,
@@ -960,14 +960,14 @@ const styles = StyleSheet.create({
   },
   tabActive: {
     borderBottomWidth: 2,
-    borderBottomColor: SemanticColors.primary,
+    borderBottomColor: SemanticColors.actionPrimary,
   },
   tabLabel: {
     fontSize: 13,
     color: SemanticColors.textSecondary,
   },
   tabLabelActive: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '600',
   },
   badge: {
@@ -1004,12 +1004,12 @@ const styles = StyleSheet.create({
   suggestionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 10,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: SemanticColors.primary + '30',
+    borderColor: SemanticColors.actionPrimary + '30',
     borderStyle: 'dashed',
   },
   suggestionInfo: {
@@ -1056,7 +1056,7 @@ const styles = StyleSheet.create({
 
   // Follow-up Card
   followUpCard: {
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1116,7 +1116,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   factorChip: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
@@ -1127,7 +1127,7 @@ const styles = StyleSheet.create({
   },
   moreFactors: {
     fontSize: 11,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     alignSelf: 'center',
   },
   followUpFooter: {
@@ -1154,7 +1154,7 @@ const styles = StyleSheet.create({
   },
   confidenceFill: {
     height: '100%',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     borderRadius: 2,
   },
   confidenceValue: {
@@ -1182,7 +1182,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -1199,7 +1199,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
@@ -1242,7 +1242,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -1268,7 +1268,7 @@ const styles = StyleSheet.create({
 
   // Insights Section
   insightsSection: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
@@ -1335,12 +1335,12 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: SemanticColors.textPrimary,
     marginBottom: 8,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     padding: 12,
     borderRadius: 8,
   },
   messageInput: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     fontSize: 14,
@@ -1364,7 +1364,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sourceChip: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 6,
@@ -1383,7 +1383,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1402,7 +1402,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderRadius: 10,
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
   },
   contactButtonText: {
     color: '#FFFFFF',
@@ -1448,7 +1448,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   outcomeModal: {
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 16,
     padding: 20,
     width: '100%',
@@ -1467,7 +1467,7 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 16,
     borderRadius: 10,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     marginBottom: 8,
   },
   outcomeOptionText: {
@@ -1486,7 +1486,7 @@ const styles = StyleSheet.create({
 
   // Schedule Modal
   scheduleModal: {
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '85%',
@@ -1506,19 +1506,19 @@ const styles = StyleSheet.create({
     padding: 12,
     marginRight: 12,
     borderRadius: 12,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     width: 100,
   },
   customerOptionSelected: {
-    backgroundColor: SemanticColors.primary + '20',
+    backgroundColor: SemanticColors.actionPrimary + '20',
     borderWidth: 2,
-    borderColor: SemanticColors.primary,
+    borderColor: SemanticColors.actionPrimary,
   },
   customerOptionAvatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -1534,7 +1534,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   customerOptionNameSelected: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '600',
   },
   typeGrid: {
@@ -1545,16 +1545,16 @@ const styles = StyleSheet.create({
   },
   typeOption: {
     width: '48%',
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
     gap: 8,
   },
   typeOptionSelected: {
-    backgroundColor: SemanticColors.primary + '20',
+    backgroundColor: SemanticColors.actionPrimary + '20',
     borderWidth: 2,
-    borderColor: SemanticColors.primary,
+    borderColor: SemanticColors.actionPrimary,
   },
   typeOptionLabel: {
     fontSize: 12,
@@ -1562,7 +1562,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   typeOptionLabelSelected: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '600',
   },
   dateOptions: {
@@ -1572,13 +1572,13 @@ const styles = StyleSheet.create({
   },
   dateOption: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 10,
     padding: 14,
     alignItems: 'center',
   },
   dateOptionSelected: {
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
   },
   dateOptionText: {
     fontSize: 13,
@@ -1589,7 +1589,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   customerInsights: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -1605,7 +1605,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 10,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   scheduleCancelText: {
     fontSize: 16,
@@ -1619,7 +1619,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     borderRadius: 10,
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
   },
   scheduleConfirmDisabled: {
     opacity: 0.5,

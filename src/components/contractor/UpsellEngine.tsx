@@ -107,7 +107,7 @@ const OpportunityCard: React.FC<{
 
       <View style={styles.opportunityMeta}>
         <View style={styles.metaItem}>
-          <Ionicons name="cash-outline" size={16} color={SemanticColors.primary} />
+          <Ionicons name="cash-outline" size={16} color={SemanticColors.actionPrimary} />
           <Text style={styles.metaValue}>€{opportunity.suggestedPrice}</Text>
         </View>
         <View style={styles.metaItem}>
@@ -168,7 +168,7 @@ const OpportunityCard: React.FC<{
             <Ionicons
               name={showScript ? 'chevron-up' : 'chevron-down'}
               size={16}
-              color={SemanticColors.primary}
+              color={SemanticColors.actionPrimary}
             />
           </TouchableOpacity>
 
@@ -243,7 +243,7 @@ const StatCard: React.FC<{
 }> = ({ icon, label, value, subtext }) => (
   <View style={styles.statCard}>
     <View style={styles.statIconContainer}>
-      <Ionicons name={icon} size={20} color={SemanticColors.primary} />
+      <Ionicons name={icon} size={20} color={SemanticColors.actionPrimary} />
     </View>
     <Text style={styles.statValue}>{value}</Text>
     <Text style={styles.statLabel}>{label}</Text>
@@ -287,7 +287,7 @@ export const UpsellEngine: React.FC = () => {
             {recommendation && (
               <View style={styles.activeJobBanner}>
                 <View style={styles.jobBannerContent}>
-                  <Ionicons name="construct" size={20} color={SemanticColors.primary} />
+                  <Ionicons name="construct" size={20} color={SemanticColors.actionPrimary} />
                   <View style={styles.jobBannerInfo}>
                     <Text style={styles.jobBannerTitle}>
                       Klus bij {recommendation.customerName}
@@ -458,7 +458,7 @@ export const UpsellEngine: React.FC = () => {
             <Ionicons
               name={tab.icon as keyof typeof Ionicons.glyphMap}
               size={18}
-              color={activeTab === tab.key ? SemanticColors.primary : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
             />
             <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
               {tab.label}
@@ -481,14 +481,14 @@ export const UpsellEngine: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.border,
   },
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
   },
   tabs: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 16,
     paddingBottom: 12,
     gap: 8,
@@ -526,11 +526,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     gap: 6,
   },
   tabActive: {
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
   },
   tabText: {
     fontSize: 13,
@@ -538,7 +538,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   tabTextActive: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   content: {
     flex: 1,
@@ -547,12 +547,12 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   activeJobBanner: {
-    backgroundColor: SemanticColors.primary + '10',
+    backgroundColor: SemanticColors.actionPrimary + '10',
     borderRadius: 12,
     padding: 14,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.primary + '30',
+    borderColor: SemanticColors.actionPrimary + '30',
   },
   jobBannerContent: {
     flexDirection: 'row',
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   opportunityCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -641,7 +641,7 @@ const styles = StyleSheet.create({
   probabilityBar: {
     width: 40,
     height: 6,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginBottom: 16,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     padding: 12,
     borderRadius: 8,
   },
@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   objectionItem: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
@@ -736,7 +736,7 @@ const styles = StyleSheet.create({
   },
   toggleScriptText: {
     fontSize: 14,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '500',
   },
   opportunityActions: {
@@ -749,7 +749,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 12,
     borderRadius: 8,
     gap: 6,
@@ -807,7 +807,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   scriptCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -821,11 +821,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   scriptQuote: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 8,
     padding: 12,
     borderLeftWidth: 3,
-    borderLeftColor: SemanticColors.primary,
+    borderLeftColor: SemanticColors.actionPrimary,
     marginBottom: 10,
   },
   scriptText: {
@@ -851,7 +851,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '48%',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -862,7 +862,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -891,7 +891,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   chartCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -914,14 +914,14 @@ const styles = StyleSheet.create({
   chartBarContainer: {
     width: 24,
     height: 100,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 4,
     justifyContent: 'flex-end',
     overflow: 'hidden',
   },
   chartBar: {
     width: '100%',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     borderRadius: 4,
   },
   chartLabel: {
@@ -933,7 +933,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   topPerformersList: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: SemanticColors.border,
@@ -950,7 +950,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: SemanticColors.primary + '20',
+    backgroundColor: SemanticColors.actionPrimary + '20',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -958,7 +958,7 @@ const styles = StyleSheet.create({
   topPerformerRankText: {
     fontSize: 14,
     fontWeight: '700',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   topPerformerInfo: {
     flex: 1,

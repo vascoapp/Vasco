@@ -110,7 +110,7 @@ export function ComplianceCenter() {
 
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
-          <Ionicons name="document-text" size={24} color={SemanticColors.primary} />
+          <Ionicons name="document-text" size={24} color={SemanticColors.actionPrimary} />
           <Text style={styles.statCardValue}>{stats.validLicenses}/{stats.totalLicenses}</Text>
           <Text style={styles.statCardLabel}>Geldige Licenties</Text>
           {stats.expiringLicenses > 0 && (
@@ -194,7 +194,7 @@ export function ComplianceCenter() {
               style={styles.alertAction}
               onPress={() => acknowledge(alert.id)}
             >
-              <Ionicons name="checkmark" size={20} color={SemanticColors.primary} />
+              <Ionicons name="checkmark" size={20} color={SemanticColors.actionPrimary} />
             </TouchableOpacity>
           )}
         </View>
@@ -248,7 +248,7 @@ export function ComplianceCenter() {
       ))}
 
       <TouchableOpacity style={styles.addButton}>
-        <Ionicons name="add-circle" size={24} color={SemanticColors.primary} />
+        <Ionicons name="add-circle" size={24} color={SemanticColors.actionPrimary} />
         <Text style={styles.addButtonText}>Licentie toevoegen</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -269,7 +269,7 @@ export function ComplianceCenter() {
               <View key={cert.id} style={styles.certCard}>
                 <View style={styles.certHeader}>
                   <View style={styles.certIcon}>
-                    <Ionicons name="ribbon" size={24} color={SemanticColors.primary} />
+                    <Ionicons name="ribbon" size={24} color={SemanticColors.actionPrimary} />
                   </View>
                   <View style={styles.certInfo}>
                     <Text style={styles.certName}>{cert.name}</Text>
@@ -323,7 +323,7 @@ export function ComplianceCenter() {
         ))}
 
         <TouchableOpacity style={styles.addButton}>
-          <Ionicons name="add-circle" size={24} color={SemanticColors.primary} />
+          <Ionicons name="add-circle" size={24} color={SemanticColors.actionPrimary} />
           <Text style={styles.addButtonText}>Certificaat toevoegen</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -460,7 +460,7 @@ export function ComplianceCenter() {
                 <Ionicons
                   name={update.bookmarked ? 'bookmark' : 'bookmark-outline'}
                   size={20}
-                  color={update.bookmarked ? SemanticColors.primary : SemanticColors.textSecondary}
+                  color={update.bookmarked ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
@@ -484,7 +484,7 @@ export function ComplianceCenter() {
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Licentie Details</Text>
           <TouchableOpacity>
-            <Ionicons name="create-outline" size={24} color={SemanticColors.primary} />
+            <Ionicons name="create-outline" size={24} color={SemanticColors.actionPrimary} />
           </TouchableOpacity>
         </View>
 
@@ -557,11 +557,11 @@ export function ComplianceCenter() {
                 </TouchableOpacity>
               )}
               <TouchableOpacity style={styles.secondaryAction}>
-                <Ionicons name="document-attach" size={20} color={SemanticColors.primary} />
+                <Ionicons name="document-attach" size={20} color={SemanticColors.actionPrimary} />
                 <Text style={styles.secondaryActionText}>Document Uploaden</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.secondaryAction}>
-                <Ionicons name="share" size={20} color={SemanticColors.primary} />
+                <Ionicons name="share" size={20} color={SemanticColors.actionPrimary} />
                 <Text style={styles.secondaryActionText}>Delen</Text>
               </TouchableOpacity>
             </View>
@@ -588,7 +588,7 @@ export function ComplianceCenter() {
             <Ionicons
               name={selectedUpdate?.bookmarked ? 'bookmark' : 'bookmark-outline'}
               size={24}
-              color={selectedUpdate?.bookmarked ? SemanticColors.primary : SemanticColors.textSecondary}
+              color={selectedUpdate?.bookmarked ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
             />
           </TouchableOpacity>
         </View>
@@ -613,7 +613,7 @@ export function ComplianceCenter() {
 
             {selectedUpdate.effectiveDate && (
               <View style={styles.effectiveDate}>
-                <Ionicons name="calendar" size={16} color={SemanticColors.primary} />
+                <Ionicons name="calendar" size={16} color={SemanticColors.actionPrimary} />
                 <Text style={styles.effectiveDateText}>
                   Ingangsdatum: {selectedUpdate.effectiveDate.toLocaleDateString('nl-NL')}
                 </Text>
@@ -675,7 +675,7 @@ export function ComplianceCenter() {
               <Ionicons
                 name={tab.icon as any}
                 size={18}
-                color={activeTab === tab.id ? SemanticColors.primary : SemanticColors.textSecondary}
+                color={activeTab === tab.id ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
               />
               <Text
                 style={[
@@ -743,7 +743,7 @@ function getTypeIcon(type: string): string {
 
 function getTypeColor(type: string): string {
   const colors: Record<string, string> = {
-    license: SemanticColors.primary,
+    license: SemanticColors.actionPrimary,
     certification: Palette.success,
     insurance: Palette.info,
   };
@@ -762,7 +762,7 @@ function getSeverityColor(severity: string): string {
 
 function getCategoryColor(category: string): string {
   const colors: Record<string, string> = {
-    technical: SemanticColors.primary,
+    technical: SemanticColors.actionPrimary,
     safety: Palette.warning,
     environmental: Palette.success,
     quality: Palette.info,
@@ -774,7 +774,7 @@ function getCategoryColor(category: string): string {
 function getCategoryUpdateColor(category: string): string {
   const colors: Record<string, string> = {
     legislation: Palette.error,
-    standard: SemanticColors.primary,
+    standard: SemanticColors.actionPrimary,
     guideline: Palette.success,
     industry_news: Palette.info,
   };
@@ -805,7 +805,7 @@ function getInsuranceIcon(type: string): string {
 
 function getInsuranceColor(type: string): string {
   const colors: Record<string, string> = {
-    liability: SemanticColors.primary,
+    liability: SemanticColors.actionPrimary,
     professional: Palette.info,
     vehicle: Palette.warning,
     equipment: Palette.success,
@@ -822,7 +822,7 @@ function getInsuranceColor(type: string): string {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   header: {
     padding: 20,
@@ -849,11 +849,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     marginRight: 8,
     borderRadius: 10,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     gap: 6,
   },
   activeTab: {
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
   },
   tabLabel: {
     fontSize: 13,
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeTabLabel: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   tabContent: {
     flex: 1,
@@ -875,7 +875,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
@@ -883,12 +883,12 @@ const styles = StyleSheet.create({
   scoreValue: {
     fontSize: 36,
     fontWeight: '700',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   scoreLabel: {
     fontSize: 18,
     fontWeight: '500',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     marginLeft: 2,
   },
   scoreTitle: {
@@ -930,13 +930,13 @@ const styles = StyleSheet.create({
   alertsButton: {
     paddingHorizontal: 14,
     paddingVertical: 6,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 8,
   },
   alertsButtonText: {
     fontSize: 13,
     fontWeight: '600',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -946,7 +946,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '47%',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 14,
     padding: 16,
     alignItems: 'center',
@@ -982,7 +982,7 @@ const styles = StyleSheet.create({
   },
   calendarItem: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
@@ -1021,7 +1021,7 @@ const styles = StyleSheet.create({
   emptyCalendar: {
     alignItems: 'center',
     padding: 24,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
   },
   emptyCalendarText: {
@@ -1031,7 +1031,7 @@ const styles = StyleSheet.create({
   },
   alertCard: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     marginBottom: 10,
     overflow: 'hidden',
@@ -1063,7 +1063,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   licenseCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -1129,21 +1129,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.primary + '40',
+    borderColor: SemanticColors.actionPrimary + '40',
     borderStyle: 'dashed',
     marginBottom: 20,
     gap: 8,
   },
   addButtonText: {
     fontSize: 15,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '500',
   },
   certCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
@@ -1156,7 +1156,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1216,7 +1216,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   insuranceSummary: {
-    backgroundColor: SemanticColors.primary + '10',
+    backgroundColor: SemanticColors.actionPrimary + '10',
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
@@ -1229,7 +1229,7 @@ const styles = StyleSheet.create({
   insuranceSummaryValue: {
     fontSize: 32,
     fontWeight: '700',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     marginTop: 4,
   },
   insuranceSummaryPremium: {
@@ -1238,7 +1238,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   insuranceCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -1326,11 +1326,11 @@ const styles = StyleSheet.create({
   filterChip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
   },
   filterChipActive: {
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
   },
   filterChipText: {
     fontSize: 13,
@@ -1342,14 +1342,14 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   updateCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 14,
     padding: 16,
     marginBottom: 12,
   },
   updateCardUnread: {
     borderLeftWidth: 3,
-    borderLeftColor: SemanticColors.primary,
+    borderLeftColor: SemanticColors.actionPrimary,
   },
   updateHeader: {
     flexDirection: 'row',
@@ -1412,7 +1412,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1455,7 +1455,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   detailSection: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 14,
     padding: 16,
     marginBottom: 16,
@@ -1499,7 +1499,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
@@ -1513,7 +1513,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     paddingVertical: 12,
     borderRadius: 12,
     gap: 8,
@@ -1521,7 +1521,7 @@ const styles = StyleSheet.create({
   secondaryActionText: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   updateModalTitle: {
     fontSize: 22,
@@ -1543,7 +1543,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
@@ -1552,7 +1552,7 @@ const styles = StyleSheet.create({
   },
   effectiveDateText: {
     fontSize: 14,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '500',
   },
   updateFullSummary: {
@@ -1576,7 +1576,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   affectedAreaTag: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,

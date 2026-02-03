@@ -155,7 +155,7 @@ const WarrantyCard: React.FC<{
 
           <View style={styles.warrantyActions}>
             <TouchableOpacity style={styles.actionButton} onPress={onViewDetails}>
-              <Ionicons name="document-text-outline" size={18} color={SemanticColors.primary} />
+              <Ionicons name="document-text-outline" size={18} color={SemanticColors.actionPrimary} />
               <Text style={styles.actionButtonText}>Details</Text>
             </TouchableOpacity>
             {warranty.status !== 'expired' && (
@@ -222,7 +222,7 @@ const StatCard: React.FC<{
   label: string;
   value: string | number;
   color?: string;
-}> = ({ icon, label, value, color = SemanticColors.primary }) => (
+}> = ({ icon, label, value, color = SemanticColors.actionPrimary }) => (
   <View style={styles.statCard}>
     <View style={[styles.statIconContainer, { backgroundColor: color + '20' }]}>
       <Ionicons name={icon} size={20} color={color} />
@@ -406,7 +406,7 @@ export const WarrantyManager: React.FC = () => {
             <Ionicons
               name={tab.icon as keyof typeof Ionicons.glyphMap}
               size={18}
-              color={activeTab === tab.key ? SemanticColors.primary : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
             />
             <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
               {tab.label}
@@ -429,14 +429,14 @@ export const WarrantyManager: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.border,
   },
@@ -449,13 +449,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     justifyContent: 'center',
     alignItems: 'center',
   },
   tabs: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 16,
     paddingBottom: 12,
     gap: 8,
@@ -468,11 +468,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     gap: 6,
   },
   tabActive: {
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
   },
   tabText: {
     fontSize: 13,
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   tabTextActive: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   content: {
     flex: 1,
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 14,
     alignItems: 'center',
@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   warrantyCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -594,7 +594,7 @@ const styles = StyleSheet.create({
   },
   warrantyDates: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
@@ -623,7 +623,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 12,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 8,
     marginBottom: 12,
   },
@@ -665,18 +665,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     paddingVertical: 10,
     borderRadius: 8,
     gap: 6,
   },
   actionButtonText: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '600',
     fontSize: 14,
   },
   primaryButton: {
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
   },
   primaryButtonText: {
     color: Palette.white,
@@ -719,7 +719,7 @@ const styles = StyleSheet.create({
   newClaimButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 8,
@@ -732,7 +732,7 @@ const styles = StyleSheet.create({
   },
   claimsStats: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -759,7 +759,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   claimCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -778,7 +778,7 @@ const styles = StyleSheet.create({
   claimNumber: {
     fontSize: 13,
     fontWeight: '600',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontFamily: 'monospace',
   },
   claimProduct: {

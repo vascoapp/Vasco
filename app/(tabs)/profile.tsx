@@ -127,6 +127,24 @@ export default function ProfileScreen() {
           ))}
         </View>
 
+        {/* Certificaten & Documenten (for contractors) */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionLabel}>Documenten</Text>
+        </View>
+
+        <View style={styles.card}>
+          <Pressable
+            style={styles.menuItem}
+            onPress={() => router.push('/(contractor)/certificaten' as never)}
+          >
+            <View style={styles.menuItemLeft}>
+              <Ionicons name="ribbon-outline" size={20} color={Colors.text} />
+              <Text style={styles.menuItemText}>Certificaten en documenten</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.muted} />
+          </Pressable>
+        </View>
+
         {/* Settings */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>Settings</Text>

@@ -74,9 +74,9 @@ export function ProjectPlanner() {
 
   const getFactorIcon = (impact: string) => {
     switch (impact) {
-      case 'positive': return { name: 'arrow-up-circle', color: Palette.emerald };
-      case 'negative': return { name: 'arrow-down-circle', color: Palette.red };
-      default: return { name: 'remove-circle', color: Palette.gray };
+      case 'positive': return { name: 'arrow-up-circle', color: Palette.green500 };
+      case 'negative': return { name: 'arrow-down-circle', color: Palette.red500 };
+      default: return { name: 'remove-circle', color: Palette.gray500 };
     }
   };
 
@@ -118,13 +118,13 @@ export function ProjectPlanner() {
 
       <View style={styles.dateRow}>
         <View style={styles.dateItem}>
-          <Ionicons name="calendar-outline" size={16} color={Palette.emerald} />
+          <Ionicons name="calendar-outline" size={16} color={Palette.green500} />
           <Text style={styles.dateLabel}>Start</Text>
           <Text style={styles.dateValue}>{formatDate(pred.suggestedStartDate)}</Text>
         </View>
         <Ionicons name="arrow-forward" size={16} color={SemanticColors.textSecondary} />
         <View style={styles.dateItem}>
-          <Ionicons name="flag-outline" size={16} color={Palette.blue} />
+          <Ionicons name="flag-outline" size={16} color={Palette.blue500} />
           <Text style={styles.dateLabel}>Einde</Text>
           <Text style={styles.dateValue}>{formatDate(pred.suggestedEndDate)}</Text>
         </View>
@@ -132,7 +132,7 @@ export function ProjectPlanner() {
 
       {pred.weatherRisk > 15 && (
         <View style={styles.weatherWarning}>
-          <Ionicons name="rainy-outline" size={18} color={Palette.orange} />
+          <Ionicons name="rainy-outline" size={18} color={Palette.orange500} />
           <Text style={styles.weatherText}>
             {pred.weatherRisk}% kans op weer-gerelateerde vertraging
           </Text>
@@ -163,7 +163,7 @@ export function ProjectPlanner() {
         style={styles.predictButton}
         onPress={() => setShowPredictModal(true)}
       >
-        <Ionicons name="add-circle-outline" size={24} color={Palette.blue} />
+        <Ionicons name="add-circle-outline" size={24} color={Palette.blue500} />
         <View style={styles.predictButtonContent}>
           <Text style={styles.predictButtonTitle}>Nieuw project voorspellen</Text>
           <Text style={styles.predictButtonSubtitle}>
@@ -210,7 +210,7 @@ export function ProjectPlanner() {
         </View>
         <View style={styles.materialDetail}>
           <Text style={styles.detailLabel}>Zekerheid</Text>
-          <Text style={[styles.detailValue, { color: material.confidence > 0.8 ? Palette.emerald : Palette.orange }]}>
+          <Text style={[styles.detailValue, { color: material.confidence > 0.8 ? Palette.green500 : Palette.orange500 }]}>
             {Math.round(material.confidence * 100)}%
           </Text>
         </View>
@@ -252,9 +252,9 @@ export function ProjectPlanner() {
 
   const renderCapacityBar = (forecast: CapacityForecast) => {
     const utilizationColor =
-      forecast.utilization > 90 ? Palette.red :
-      forecast.utilization > 70 ? Palette.orange :
-      Palette.emerald;
+      forecast.utilization > 90 ? Palette.red500 :
+      forecast.utilization > 70 ? Palette.orange500 :
+      Palette.green500;
 
     return (
       <View key={forecast.week} style={styles.capacityRow}>
@@ -283,15 +283,15 @@ export function ProjectPlanner() {
 
       <View style={styles.capacityLegend}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: Palette.emerald }]} />
+          <View style={[styles.legendDot, { backgroundColor: Palette.green500 }]} />
           <Text style={styles.legendText}>Beschikbaar (&lt;70%)</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: Palette.orange }]} />
+          <View style={[styles.legendDot, { backgroundColor: Palette.orange500 }]} />
           <Text style={styles.legendText}>Druk (70-90%)</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: Palette.red }]} />
+          <View style={[styles.legendDot, { backgroundColor: Palette.red500 }]} />
           <Text style={styles.legendText}>Vol (&gt;90%)</Text>
         </View>
       </View>
@@ -301,7 +301,7 @@ export function ProjectPlanner() {
       </View>
 
       <View style={styles.capacityTip}>
-        <Ionicons name="bulb-outline" size={18} color={Palette.blue} />
+        <Ionicons name="bulb-outline" size={18} color={Palette.blue500} />
         <Text style={styles.capacityTipText}>
           Tip: Weken met minder dan 70% bezetting zijn ideaal voor nieuwe projecten.
         </Text>
@@ -313,7 +313,7 @@ export function ProjectPlanner() {
     <TouchableOpacity key={template.id} style={styles.templateCard}>
       <View style={styles.templateHeader}>
         <View style={styles.templateIcon}>
-          <Ionicons name="document-text-outline" size={24} color={Palette.blue} />
+          <Ionicons name="document-text-outline" size={24} color={Palette.blue500} />
         </View>
         <View style={styles.templateInfo}>
           <Text style={styles.templateName}>{template.name}</Text>
@@ -331,7 +331,7 @@ export function ProjectPlanner() {
           <Text style={styles.templateStatLabel}>Projecten</Text>
         </View>
         <View style={styles.templateStat}>
-          <Text style={[styles.templateStatValue, { color: Palette.emerald }]}>
+          <Text style={[styles.templateStatValue, { color: Palette.green500 }]}>
             {template.historicalData.onTimeRate}%
           </Text>
           <Text style={styles.templateStatLabel}>Op tijd</Text>
@@ -354,7 +354,7 @@ export function ProjectPlanner() {
 
       <TouchableOpacity style={styles.useTemplateButton}>
         <Text style={styles.useTemplateText}>Gebruik template</Text>
-        <Ionicons name="arrow-forward" size={16} color={Palette.blue} />
+        <Ionicons name="arrow-forward" size={16} color={Palette.blue500} />
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -382,7 +382,7 @@ export function ProjectPlanner() {
             <Ionicons
               name={tab.icon as any}
               size={18}
-              color={activeTab === tab.key ? Palette.blue : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? Palette.blue500 : SemanticColors.textSecondary}
             />
             <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
               {tab.label}
@@ -459,7 +459,7 @@ export function ProjectPlanner() {
               <Ionicons
                 name={isOutdoor ? 'checkbox' : 'square-outline'}
                 size={24}
-                color={isOutdoor ? Palette.blue : SemanticColors.textSecondary}
+                color={isOutdoor ? Palette.blue500 : SemanticColors.textSecondary}
               />
               <View style={styles.outdoorContent}>
                 <Text style={styles.outdoorLabel}>Buitenwerk</Text>
@@ -476,11 +476,11 @@ export function ProjectPlanner() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderBottomWidth: 1,
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   activeTab: {
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
   },
   tabText: {
     fontSize: 12,
@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeTabText: {
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   tabContent: {
     flex: 1,
@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
   predictButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
 
   // Prediction Card
   predictionCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   durationBadge: {
-    backgroundColor: Palette.blue,
+    backgroundColor: Palette.blue500,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
   rangeFill: {
     position: 'absolute',
     height: '100%',
-    backgroundColor: Palette.blue,
+    backgroundColor: Palette.blue500,
     borderRadius: 4,
   },
   rangeLabels: {
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
@@ -641,7 +641,7 @@ const styles = StyleSheet.create({
   weatherWarning: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Palette.orange + '15',
+    backgroundColor: Palette.orange500 + '15',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
   weatherText: {
     flex: 1,
     fontSize: 13,
-    color: Palette.orange,
+    color: Palette.orange500,
   },
 
   // Factors
@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
 
   // Materials Tab
   materialsSummary: {
-    backgroundColor: Palette.emerald,
+    backgroundColor: Palette.green500,
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,
@@ -728,7 +728,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
   },
   materialCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -749,7 +749,7 @@ const styles = StyleSheet.create({
   materialCost: {
     fontSize: 16,
     fontWeight: '600',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   materialDetails: {
     flexDirection: 'row',
@@ -777,7 +777,7 @@ const styles = StyleSheet.create({
   },
   confidenceFill: {
     height: '100%',
-    backgroundColor: Palette.emerald,
+    backgroundColor: Palette.green500,
     borderRadius: 2,
   },
 
@@ -816,7 +816,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   capacityList: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -859,7 +859,7 @@ const styles = StyleSheet.create({
   capacityTip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
     borderRadius: 12,
     padding: 16,
     marginTop: 16,
@@ -880,7 +880,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   templateCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -897,7 +897,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -916,7 +916,7 @@ const styles = StyleSheet.create({
   templateStats: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
@@ -956,7 +956,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: Palette.blue,
+    backgroundColor: Palette.blue500,
   },
   phaseLine: {
     position: 'absolute',
@@ -987,13 +987,13 @@ const styles = StyleSheet.create({
   useTemplateText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
 
   // Modal
   modalContainer: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1003,7 +1003,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.border,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   modalTitle: {
     fontSize: 17,
@@ -1013,7 +1013,7 @@ const styles = StyleSheet.create({
   modalAction: {
     fontSize: 16,
     fontWeight: '600',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   modalContent: {
     flex: 1,
@@ -1036,13 +1036,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderWidth: 1,
     borderColor: SemanticColors.border,
   },
   typeOptionSelected: {
-    backgroundColor: Palette.blue,
-    borderColor: Palette.blue,
+    backgroundColor: Palette.blue500,
+    borderColor: Palette.blue500,
   },
   typeOptionText: {
     fontSize: 14,
@@ -1057,15 +1057,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   scopeOption: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
     borderColor: SemanticColors.border,
   },
   scopeOptionSelected: {
-    backgroundColor: Palette.blue + '15',
-    borderColor: Palette.blue,
+    backgroundColor: Palette.blue500 + '15',
+    borderColor: Palette.blue500,
   },
   scopeLabel: {
     fontSize: 15,
@@ -1073,7 +1073,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.text,
   },
   scopeLabelSelected: {
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   scopeDesc: {
     fontSize: 13,
@@ -1081,12 +1081,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   scopeDescSelected: {
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   outdoorToggle: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,

@@ -54,17 +54,17 @@ export function AnalyticsDashboard() {
       <View style={styles.kpiGrid}>
         <View style={styles.kpiCard}>
           <View style={styles.kpiHeader}>
-            <Ionicons name="cash-outline" size={20} color={Palette.emerald} />
+            <Ionicons name="cash-outline" size={20} color={Palette.green500} />
             <Text style={styles.kpiLabel}>Omzet deze maand</Text>
           </View>
           <Text style={styles.kpiValue}>{formatCurrency(summary.revenue.value)}</Text>
-          <View style={[styles.kpiChange, { backgroundColor: summary.revenue.change >= 0 ? Palette.emerald + '20' : Palette.red + '20' }]}>
+          <View style={[styles.kpiChange, { backgroundColor: summary.revenue.change >= 0 ? Palette.green500 + '20' : Palette.red500 + '20' }]}>
             <Ionicons
               name={summary.revenue.change >= 0 ? 'arrow-up' : 'arrow-down'}
               size={12}
-              color={summary.revenue.change >= 0 ? Palette.emerald : Palette.red}
+              color={summary.revenue.change >= 0 ? Palette.green500 : Palette.red500}
             />
-            <Text style={[styles.kpiChangeText, { color: summary.revenue.change >= 0 ? Palette.emerald : Palette.red }]}>
+            <Text style={[styles.kpiChangeText, { color: summary.revenue.change >= 0 ? Palette.green500 : Palette.red500 }]}>
               {formatPercent(summary.revenue.change)}
             </Text>
           </View>
@@ -72,7 +72,7 @@ export function AnalyticsDashboard() {
 
         <View style={styles.kpiCard}>
           <View style={styles.kpiHeader}>
-            <Ionicons name="wallet-outline" size={20} color={Palette.blue} />
+            <Ionicons name="wallet-outline" size={20} color={Palette.blue500} />
             <Text style={styles.kpiLabel}>Nettowinst</Text>
           </View>
           <Text style={styles.kpiValue}>{formatCurrency(summary.profit.value)}</Text>
@@ -81,7 +81,7 @@ export function AnalyticsDashboard() {
 
         <View style={styles.kpiCard}>
           <View style={styles.kpiHeader}>
-            <Ionicons name="people-outline" size={20} color={Palette.purple} />
+            <Ionicons name="people-outline" size={20} color={Palette.hermesOrange} />
             <Text style={styles.kpiLabel}>Klanten</Text>
           </View>
           <Text style={styles.kpiValue}>{summary.customers.total}</Text>
@@ -90,7 +90,7 @@ export function AnalyticsDashboard() {
 
         <View style={styles.kpiCard}>
           <View style={styles.kpiHeader}>
-            <Ionicons name="construct-outline" size={20} color={Palette.orange} />
+            <Ionicons name="construct-outline" size={20} color={Palette.orange500} />
             <Text style={styles.kpiLabel}>Projecten</Text>
           </View>
           <Text style={styles.kpiValue}>{summary.projects.active}</Text>
@@ -111,8 +111,8 @@ export function AnalyticsDashboard() {
           </View>
           <View style={styles.satisfactionDivider} />
           <View style={styles.satisfactionItem}>
-            <View style={[styles.satisfactionCircle, { backgroundColor: Palette.purple + '20' }]}>
-              <Text style={[styles.satisfactionScore, { color: Palette.purple }]}>{summary.satisfaction.nps}</Text>
+            <View style={[styles.satisfactionCircle, { backgroundColor: Palette.hermesOrange + '20' }]}>
+              <Text style={[styles.satisfactionScore, { color: Palette.hermesOrange }]}>{summary.satisfaction.nps}</Text>
             </View>
             <Text style={styles.satisfactionLabel}>NPS Score</Text>
           </View>
@@ -128,7 +128,7 @@ export function AnalyticsDashboard() {
               <Ionicons
                 name={insight.type === 'opportunity' ? 'bulb' : insight.type === 'achievement' ? 'trophy' : 'warning'}
                 size={20}
-                color={insight.type === 'opportunity' ? Palette.blue : insight.type === 'achievement' ? Palette.emerald : Palette.orange}
+                color={insight.type === 'opportunity' ? Palette.blue500 : insight.type === 'achievement' ? Palette.green500 : Palette.orange500}
               />
               <View style={styles.insightPreviewContent}>
                 <Text style={styles.insightPreviewTitle}>{insight.title}</Text>
@@ -170,7 +170,7 @@ export function AnalyticsDashboard() {
             <Text style={styles.revenueStatLabel}>Gem. project</Text>
           </View>
           <View style={styles.revenueStat}>
-            <Text style={[styles.revenueStatValue, { color: Palette.emerald }]}>
+            <Text style={[styles.revenueStatValue, { color: Palette.green500 }]}>
               {formatPercent(revenue.revenueGrowth)}
             </Text>
             <Text style={styles.revenueStatLabel}>Groei</Text>
@@ -215,21 +215,21 @@ export function AnalyticsDashboard() {
         <View style={styles.costBreakdown}>
           <Text style={styles.costTitle}>Kostenverdeling</Text>
           <View style={styles.costBar}>
-            <View style={[styles.costSegment, { width: `${profitability.materialCostRatio}%`, backgroundColor: Palette.orange }]} />
-            <View style={[styles.costSegment, { width: `${profitability.laborCostRatio}%`, backgroundColor: Palette.blue }]} />
-            <View style={[styles.costSegment, { width: `${100 - profitability.materialCostRatio - profitability.laborCostRatio}%`, backgroundColor: Palette.emerald }]} />
+            <View style={[styles.costSegment, { width: `${profitability.materialCostRatio}%`, backgroundColor: Palette.orange500 }]} />
+            <View style={[styles.costSegment, { width: `${profitability.laborCostRatio}%`, backgroundColor: Palette.blue500 }]} />
+            <View style={[styles.costSegment, { width: `${100 - profitability.materialCostRatio - profitability.laborCostRatio}%`, backgroundColor: Palette.green500 }]} />
           </View>
           <View style={styles.costLegend}>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: Palette.orange }]} />
+              <View style={[styles.legendDot, { backgroundColor: Palette.orange500 }]} />
               <Text style={styles.legendText}>Materiaal {profitability.materialCostRatio}%</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: Palette.blue }]} />
+              <View style={[styles.legendDot, { backgroundColor: Palette.blue500 }]} />
               <Text style={styles.legendText}>Arbeid {profitability.laborCostRatio}%</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: Palette.emerald }]} />
+              <View style={[styles.legendDot, { backgroundColor: Palette.green500 }]} />
               <Text style={styles.legendText}>Winst {(100 - profitability.materialCostRatio - profitability.laborCostRatio).toFixed(1)}%</Text>
             </View>
           </View>
@@ -259,21 +259,21 @@ export function AnalyticsDashboard() {
 
   const renderBenchmarkCard = (benchmark: BenchmarkData) => {
     const getPercentileColor = (percentile: number) => {
-      if (percentile >= 75) return Palette.emerald;
-      if (percentile >= 50) return Palette.blue;
-      if (percentile >= 25) return Palette.orange;
-      return Palette.red;
+      if (percentile >= 75) return Palette.green500;
+      if (percentile >= 50) return Palette.blue500;
+      if (percentile >= 25) return Palette.orange500;
+      return Palette.red500;
     };
 
     return (
       <View key={benchmark.metric} style={styles.benchmarkCard}>
         <View style={styles.benchmarkHeader}>
           <Text style={styles.benchmarkMetric}>{benchmark.metric}</Text>
-          <View style={[styles.trendBadge, { backgroundColor: benchmark.trend === 'up' ? Palette.emerald + '20' : benchmark.trend === 'down' ? Palette.red + '20' : Palette.gray + '20' }]}>
+          <View style={[styles.trendBadge, { backgroundColor: benchmark.trend === 'up' ? Palette.green500 + '20' : benchmark.trend === 'down' ? Palette.red500 + '20' : Palette.gray500 + '20' }]}>
             <Ionicons
               name={benchmark.trend === 'up' ? 'arrow-up' : benchmark.trend === 'down' ? 'arrow-down' : 'remove'}
               size={12}
-              color={benchmark.trend === 'up' ? Palette.emerald : benchmark.trend === 'down' ? Palette.red : Palette.gray}
+              color={benchmark.trend === 'up' ? Palette.green500 : benchmark.trend === 'down' ? Palette.red500 : Palette.gray500}
             />
           </View>
         </View>
@@ -307,7 +307,7 @@ export function AnalyticsDashboard() {
   const renderBenchmarksTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
       <View style={styles.benchmarkIntro}>
-        <Ionicons name="analytics-outline" size={24} color={Palette.blue} />
+        <Ionicons name="analytics-outline" size={24} color={Palette.blue500} />
         <Text style={styles.benchmarkIntroText}>
           Vergelijk je prestaties met andere aannemers in jouw regio en vakgebied.
         </Text>
@@ -320,9 +320,9 @@ export function AnalyticsDashboard() {
   const renderInsightCard = (insight: PerformanceInsight) => {
     const getInsightStyle = (type: PerformanceInsight['type']) => {
       switch (type) {
-        case 'opportunity': return { color: Palette.blue, icon: 'bulb' as const, bg: Palette.blue + '15' };
-        case 'achievement': return { color: Palette.emerald, icon: 'trophy' as const, bg: Palette.emerald + '15' };
-        case 'warning': return { color: Palette.orange, icon: 'warning' as const, bg: Palette.orange + '15' };
+        case 'opportunity': return { color: Palette.blue500, icon: 'bulb' as const, bg: Palette.blue500 + '15' };
+        case 'achievement': return { color: Palette.green500, icon: 'trophy' as const, bg: Palette.green500 + '15' };
+        case 'warning': return { color: Palette.orange500, icon: 'warning' as const, bg: Palette.orange500 + '15' };
       }
     };
 
@@ -336,8 +336,8 @@ export function AnalyticsDashboard() {
         <View style={styles.insightContent}>
           <View style={styles.insightHeader}>
             <Text style={styles.insightTitle}>{insight.title}</Text>
-            <View style={[styles.impactBadge, { backgroundColor: insight.impact === 'high' ? Palette.red + '20' : insight.impact === 'medium' ? Palette.orange + '20' : Palette.gray + '20' }]}>
-              <Text style={[styles.impactText, { color: insight.impact === 'high' ? Palette.red : insight.impact === 'medium' ? Palette.orange : Palette.gray }]}>
+            <View style={[styles.impactBadge, { backgroundColor: insight.impact === 'high' ? Palette.red500 + '20' : insight.impact === 'medium' ? Palette.orange500 + '20' : Palette.gray500 + '20' }]}>
+              <Text style={[styles.impactText, { color: insight.impact === 'high' ? Palette.red500 : insight.impact === 'medium' ? Palette.orange500 : Palette.gray500 }]}>
                 {insight.impact === 'high' ? 'Hoog' : insight.impact === 'medium' ? 'Middel' : 'Laag'}
               </Text>
             </View>
@@ -346,7 +346,7 @@ export function AnalyticsDashboard() {
 
           {insight.actionable && insight.suggestedAction && (
             <View style={styles.suggestedAction}>
-              <Ionicons name="arrow-forward-circle-outline" size={16} color={Palette.blue} />
+              <Ionicons name="arrow-forward-circle-outline" size={16} color={Palette.blue500} />
               <Text style={styles.suggestedActionText}>{insight.suggestedAction}</Text>
             </View>
           )}
@@ -383,7 +383,7 @@ export function AnalyticsDashboard() {
 
       {insights.length === 0 && (
         <View style={styles.emptyState}>
-          <Ionicons name="checkmark-circle-outline" size={48} color={Palette.emerald} />
+          <Ionicons name="checkmark-circle-outline" size={48} color={Palette.green500} />
           <Text style={styles.emptyTitle}>Alles op orde!</Text>
           <Text style={styles.emptyText}>Er zijn momenteel geen nieuwe inzichten.</Text>
         </View>
@@ -404,7 +404,7 @@ export function AnalyticsDashboard() {
             <Ionicons
               name={tab.icon as any}
               size={18}
-              color={activeTab === tab.key ? Palette.blue : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? Palette.blue500 : SemanticColors.textSecondary}
             />
             <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
               {tab.label}
@@ -425,15 +425,15 @@ export function AnalyticsDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   tab: {
     flex: 1,
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   activeTab: {
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
   },
   tabText: {
     fontSize: 12,
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeTabText: {
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   tabContent: {
     flex: 1,
@@ -469,11 +469,11 @@ const styles = StyleSheet.create({
   },
   kpiCard: {
     width: (SCREEN_WIDTH - 44) / 2,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   kpiHeader: {
     flexDirection: 'row',
@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
   kpiValue: {
     fontSize: 22,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 4,
   },
   kpiChange: {
@@ -511,17 +511,17 @@ const styles = StyleSheet.create({
 
   // Satisfaction
   satisfactionCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
   satisfactionRow: {
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Palette.emerald + '20',
+    backgroundColor: Palette.green500 + '20',
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
@@ -545,11 +545,11 @@ const styles = StyleSheet.create({
   satisfactionScore: {
     fontSize: 28,
     fontWeight: '700',
-    color: Palette.emerald,
+    color: Palette.green500,
   },
   satisfactionMax: {
     fontSize: 14,
-    color: Palette.emerald,
+    color: Palette.green500,
     marginTop: 8,
   },
   satisfactionLabel: {
@@ -559,24 +559,24 @@ const styles = StyleSheet.create({
   satisfactionDivider: {
     width: 1,
     height: 60,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
   },
 
   // Insights Preview
   insightsPreview: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   insightPreviewCard: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
     gap: 12,
   },
   insightPreviewContent: {
@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
   insightPreviewTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 2,
   },
   insightPreviewDesc: {
@@ -595,11 +595,11 @@ const styles = StyleSheet.create({
 
   // Category Section
   categorySection: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   categoryRow: {
     flexDirection: 'row',
@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   categoryInfo: {
     flex: 1,
@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
   categoryName: {
     fontSize: 14,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   categoryCount: {
     fontSize: 12,
@@ -624,12 +624,12 @@ const styles = StyleSheet.create({
   categoryRevenue: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
 
   // Revenue Tab
   revenueSummary: {
-    backgroundColor: Palette.blue,
+    backgroundColor: Palette.blue500,
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,
@@ -664,12 +664,12 @@ const styles = StyleSheet.create({
 
   // Trend Chart
   trendSection: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   trendChart: {
     flexDirection: 'row',
@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
   },
   trendBarFill: {
     width: '60%',
-    backgroundColor: Palette.blue,
+    backgroundColor: Palette.blue500,
     borderRadius: 4,
     minHeight: 4,
   },
@@ -698,12 +698,12 @@ const styles = StyleSheet.create({
 
   // Profit Section
   profitSection: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   profitGrid: {
     flexDirection: 'row',
@@ -712,7 +712,7 @@ const styles = StyleSheet.create({
   },
   profitCard: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 8,
     padding: 12,
   },
@@ -724,11 +724,11 @@ const styles = StyleSheet.create({
   profitValue: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   profitMargin: {
     fontSize: 12,
-    color: Palette.emerald,
+    color: Palette.green500,
   },
   costBreakdown: {
     marginTop: 8,
@@ -770,11 +770,11 @@ const styles = StyleSheet.create({
 
   // Customer Revenue
   customerRevenueSection: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   customerTypeRow: {
     flexDirection: 'row',
@@ -782,7 +782,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   customerTypeInfo: {
     flexDirection: 'row',
@@ -792,7 +792,7 @@ const styles = StyleSheet.create({
   customerTypeName: {
     fontSize: 14,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   customerTypeCount: {
     fontSize: 12,
@@ -801,14 +801,14 @@ const styles = StyleSheet.create({
   customerTypeRevenue: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
 
   // Benchmarks Tab
   benchmarkIntro: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -817,16 +817,16 @@ const styles = StyleSheet.create({
   benchmarkIntroText: {
     flex: 1,
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     lineHeight: 20,
   },
   benchmarkCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   benchmarkHeader: {
     flexDirection: 'row',
@@ -837,7 +837,7 @@ const styles = StyleSheet.create({
   benchmarkMetric: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   trendBadge: {
     width: 24,
@@ -862,11 +862,11 @@ const styles = StyleSheet.create({
   benchmarkValueNumber: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   percentileBar: {
     height: 6,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 3,
     marginBottom: 6,
     position: 'relative',
@@ -883,7 +883,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: '#fff',
     borderWidth: 2,
-    borderColor: SemanticColors.text,
+    borderColor: SemanticColors.textPrimary,
     marginLeft: -5,
   },
   percentileText: {
@@ -905,16 +905,16 @@ const styles = StyleSheet.create({
   },
   insightsHighImpact: {
     fontSize: 13,
-    color: Palette.red,
+    color: Palette.red500,
     fontWeight: '600',
   },
   insightCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     borderLeftWidth: 4,
     flexDirection: 'row',
     gap: 12,
@@ -938,7 +938,7 @@ const styles = StyleSheet.create({
   insightTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     flex: 1,
   },
   impactBadge: {
@@ -959,7 +959,7 @@ const styles = StyleSheet.create({
   suggestedAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Palette.blue + '10',
+    backgroundColor: Palette.blue500 + '10',
     borderRadius: 8,
     padding: 10,
     marginBottom: 12,
@@ -968,7 +968,7 @@ const styles = StyleSheet.create({
   suggestedActionText: {
     flex: 1,
     fontSize: 13,
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   insightActions: {
     flexDirection: 'row',
@@ -976,7 +976,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    backgroundColor: Palette.blue,
+    backgroundColor: Palette.blue500,
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
@@ -991,7 +991,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   dismissButtonText: {
     color: SemanticColors.textSecondary,
@@ -1007,7 +1007,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 12,
   },
   emptyText: {

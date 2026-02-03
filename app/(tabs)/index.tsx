@@ -165,10 +165,7 @@ export default function HomeScreen() {
         );
       case 'coo':
         return (
-          <>
-            <RoleHeader />
-            <COODashboard />
-          </>
+          <COODashboard initialTab="overview" showTabBar={false} />
         );
       case 'site-lead':
         return (

@@ -73,7 +73,7 @@ export function QuoteOptimizer({
   if (isAnalyzing) {
     return (
       <View style={styles.loadingContainer}>
-        <Ionicons name="analytics" size={48} color={SemanticColors.primary} />
+        <Ionicons name="analytics" size={48} color={SemanticColors.actionPrimary} />
         <Text style={styles.loadingText}>Offerte analyseren...</Text>
         <Text style={styles.loadingSubtext}>
           Marktdata, concurrentie en optimalisaties worden berekend
@@ -123,7 +123,7 @@ export function QuoteOptimizer({
             <Ionicons
               name={tab.icon}
               size={20}
-              color={activeTab === tab.key ? SemanticColors.primary : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
             />
             <Text
               style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}
@@ -264,7 +264,7 @@ function OverviewTab({
         <View style={styles.divider} />
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Optimalisaties beschikbaar</Text>
-          <Text style={[styles.summaryValue, { color: SemanticColors.primary }]}>
+          <Text style={[styles.summaryValue, { color: SemanticColors.actionPrimary }]}>
             {analysis.summary.suggestedAdjustments}
           </Text>
         </View>
@@ -297,7 +297,7 @@ function OverviewTab({
             <Text style={styles.historyStatLabel}>Extra marge gegenereerd</Text>
           </View>
           <View style={styles.historyStat}>
-            <Text style={[styles.historyStatValue, { color: SemanticColors.primary }]}>
+            <Text style={[styles.historyStatValue, { color: SemanticColors.actionPrimary }]}>
               +{statistics.avgWinRateImprovement}%
             </Text>
             <Text style={styles.historyStatLabel}>Winkans verbetering</Text>
@@ -339,7 +339,7 @@ function OptimizeTab({
   const getTypeColor = (type: QuoteOptimization['type']) => {
     switch (type) {
       case 'price_adjustment':
-        return SemanticColors.primary;
+        return SemanticColors.actionPrimary;
       case 'competitive_positioning':
         return '#FF9500';
       case 'margin_warning':
@@ -470,7 +470,7 @@ function UpsellTab({
   const getTypeColor = (type: UpsellSuggestion['type']) => {
     switch (type) {
       case 'upgrade':
-        return SemanticColors.primary;
+        return SemanticColors.actionPrimary;
       case 'add_on':
         return SemanticColors.success;
       case 'bundle':
@@ -532,7 +532,7 @@ function UpsellTab({
             </View>
           </View>
           <View style={styles.upsellReason}>
-            <Ionicons name="bulb-outline" size={16} color={SemanticColors.primary} />
+            <Ionicons name="bulb-outline" size={16} color={SemanticColors.actionPrimary} />
             <Text style={styles.upsellReasonText}>{upsell.reason}</Text>
           </View>
         </TouchableOpacity>
@@ -702,7 +702,7 @@ function OptimizationDetailModal({
               <Ionicons name="arrow-forward" size={20} color={SemanticColors.textSecondary} />
               <View style={styles.impactItem}>
                 <Text style={styles.impactLabel}>Voorgesteld</Text>
-                <Text style={[styles.impactValue, { color: SemanticColors.primary }]}>
+                <Text style={[styles.impactValue, { color: SemanticColors.actionPrimary }]}>
                   €{optimization.impact.suggestedValue.toFixed(2)}
                 </Text>
               </View>
@@ -731,7 +731,7 @@ function OptimizationDetailModal({
           <View style={styles.modalSection}>
             <Text style={styles.modalSectionTitle}>Bron</Text>
             <View style={styles.sourceBadge}>
-              <Ionicons name="analytics-outline" size={16} color={SemanticColors.primary} />
+              <Ionicons name="analytics-outline" size={16} color={SemanticColors.actionPrimary} />
               <Text style={styles.sourceText}>{getSourceLabel(optimization.source)}</Text>
             </View>
             <View style={styles.confidenceBar}>
@@ -805,7 +805,7 @@ function UpsellDetailModal({
               <Text style={styles.upsellModalStatLabel}>Extra marge</Text>
             </View>
             <View style={styles.upsellModalStat}>
-              <Text style={[styles.upsellModalStatValue, { color: SemanticColors.primary }]}>
+              <Text style={[styles.upsellModalStatValue, { color: SemanticColors.actionPrimary }]}>
                 {Math.round(upsell.customerAcceptanceRate * 100)}%
               </Text>
               <Text style={styles.upsellModalStatLabel}>Acceptatiekans</Text>
@@ -813,7 +813,7 @@ function UpsellDetailModal({
           </View>
 
           <View style={styles.reasonBox}>
-            <Ionicons name="bulb" size={24} color={SemanticColors.primary} />
+            <Ionicons name="bulb" size={24} color={SemanticColors.actionPrimary} />
             <View style={styles.reasonContent}>
               <Text style={styles.reasonTitle}>Waarom deze suggestie?</Text>
               <Text style={styles.reasonText}>{upsell.reason}</Text>
@@ -880,7 +880,7 @@ export function QuoteOptimizerDemo() {
   return (
     <View style={styles.demoContainer}>
       <View style={styles.demoHeader}>
-        <Ionicons name="flash" size={24} color={SemanticColors.primary} />
+        <Ionicons name="flash" size={24} color={SemanticColors.actionPrimary} />
         <Text style={styles.demoTitle}>Quote Optimizer</Text>
       </View>
       <QuoteOptimizer quoteId="demo_quote_1" lineItems={demoLineItems} />
@@ -895,7 +895,7 @@ export function QuoteOptimizerDemo() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   loadingContainer: {
     flex: 1,
@@ -930,7 +930,7 @@ const styles = StyleSheet.create({
   // Tab Bar
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.border,
   },
@@ -944,14 +944,14 @@ const styles = StyleSheet.create({
   },
   tabActive: {
     borderBottomWidth: 2,
-    borderBottomColor: SemanticColors.primary,
+    borderBottomColor: SemanticColors.actionPrimary,
   },
   tabLabel: {
     fontSize: 12,
     color: SemanticColors.textSecondary,
   },
   tabLabelActive: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '600',
   },
   badge: {
@@ -1005,7 +1005,7 @@ const styles = StyleSheet.create({
   },
   scoreCard: {
     flex: 1,
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -1036,7 +1036,7 @@ const styles = StyleSheet.create({
 
   // Summary Card
   summaryCard: {
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -1070,7 +1070,7 @@ const styles = StyleSheet.create({
 
   // History Card
   historyCard: {
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 12,
     padding: 16,
   },
@@ -1126,7 +1126,7 @@ const styles = StyleSheet.create({
   optimizationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1166,7 +1166,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   confidenceBadge: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
@@ -1182,7 +1182,7 @@ const styles = StyleSheet.create({
 
   // Upsell Card
   upsellCard: {
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1236,7 +1236,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
-    backgroundColor: SemanticColors.primary + '10',
+    backgroundColor: SemanticColors.actionPrimary + '10',
     padding: 12,
     borderRadius: 8,
   },
@@ -1249,7 +1249,7 @@ const styles = StyleSheet.create({
 
   // Market Card
   marketCard: {
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1293,7 +1293,7 @@ const styles = StyleSheet.create({
     top: -2,
     marginLeft: -6,
     borderWidth: 2,
-    borderColor: SemanticColors.cardBackground,
+    borderColor: SemanticColors.surfacePrimaryBackground,
   },
   priceLabels: {
     flexDirection: 'row',
@@ -1325,7 +1325,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -1384,7 +1384,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textPrimary,
   },
   differenceBox: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     padding: 12,
     borderRadius: 8,
     flexDirection: 'row',
@@ -1418,7 +1418,7 @@ const styles = StyleSheet.create({
   },
   confidenceFill: {
     height: '100%',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     borderRadius: 3,
   },
   confidenceLabel: {
@@ -1442,10 +1442,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   modalButtonPrimary: {
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
   },
   modalButtonSecondary: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   modalButtonPrimaryText: {
     color: '#FFFFFF',
@@ -1490,7 +1490,7 @@ const styles = StyleSheet.create({
   },
   reasonBox: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.primary + '10',
+    backgroundColor: SemanticColors.actionPrimary + '10',
     padding: 16,
     borderRadius: 12,
     gap: 12,
@@ -1513,14 +1513,14 @@ const styles = StyleSheet.create({
   // Demo
   demoContainer: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   demoHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     gap: 8,
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.border,
   },

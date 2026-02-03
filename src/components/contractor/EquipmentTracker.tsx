@@ -225,7 +225,7 @@ export function EquipmentTracker() {
 
           {item.assignedToName && (
             <View style={styles.assignedTo}>
-              <Ionicons name="person" size={14} color={SemanticColors.primary} />
+              <Ionicons name="person" size={14} color={SemanticColors.actionPrimary} />
               <Text style={styles.assignedToText}>Bij {item.assignedToName}</Text>
             </View>
           )}
@@ -252,7 +252,7 @@ export function EquipmentTracker() {
       ))}
 
       <TouchableOpacity style={styles.addButton}>
-        <Ionicons name="add-circle" size={24} color={SemanticColors.primary} />
+        <Ionicons name="add-circle" size={24} color={SemanticColors.actionPrimary} />
         <Text style={styles.addButtonText}>Apparatuur toevoegen</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -312,7 +312,7 @@ export function EquipmentTracker() {
               style={styles.returnButton}
               onPress={() => returnItem(checkout.id, 'good')}
             >
-              <Ionicons name="return-down-back" size={18} color={SemanticColors.primary} />
+              <Ionicons name="return-down-back" size={18} color={SemanticColors.actionPrimary} />
               <Text style={styles.returnButtonText}>Retour melden</Text>
             </TouchableOpacity>
           </View>
@@ -499,7 +499,7 @@ export function EquipmentTracker() {
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Apparatuur Details</Text>
           <TouchableOpacity>
-            <Ionicons name="create-outline" size={24} color={SemanticColors.primary} />
+            <Ionicons name="create-outline" size={24} color={SemanticColors.actionPrimary} />
           </TouchableOpacity>
         </View>
 
@@ -623,11 +623,11 @@ export function EquipmentTracker() {
                 </TouchableOpacity>
               )}
               <TouchableOpacity style={styles.secondaryAction}>
-                <Ionicons name="construct" size={20} color={SemanticColors.primary} />
+                <Ionicons name="construct" size={20} color={SemanticColors.actionPrimary} />
                 <Text style={styles.secondaryActionText}>Onderhoud Melden</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.secondaryAction}>
-                <Ionicons name="document-text" size={20} color={SemanticColors.primary} />
+                <Ionicons name="document-text" size={20} color={SemanticColors.actionPrimary} />
                 <Text style={styles.secondaryActionText}>Geschiedenis</Text>
               </TouchableOpacity>
             </View>
@@ -659,7 +659,7 @@ export function EquipmentTracker() {
             <Ionicons
               name={tab.icon as any}
               size={20}
-              color={activeTab === tab.id ? SemanticColors.primary : SemanticColors.textSecondary}
+              color={activeTab === tab.id ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
             />
             <Text
               style={[
@@ -704,7 +704,7 @@ function getCategoryIcon(category: EquipmentCategory): string {
 function getCategoryColor(category: EquipmentCategory): string {
   const colors: Record<EquipmentCategory, string> = {
     power_tools: Palette.warning,
-    hand_tools: SemanticColors.primary,
+    hand_tools: SemanticColors.actionPrimary,
     measuring: Palette.info,
     safety: Palette.success,
     vehicles: Palette.error,
@@ -729,7 +729,7 @@ function getStatusName(status: string): string {
 function getStatusColor(status: string): string {
   const colors: Record<string, string> = {
     available: Palette.success,
-    in_use: SemanticColors.primary,
+    in_use: SemanticColors.actionPrimary,
     maintenance: Palette.warning,
     repair: Palette.error,
     retired: SemanticColors.textSecondary,
@@ -750,7 +750,7 @@ function getConditionName(condition: string): string {
 function getConditionColor(condition: string): string {
   const colors: Record<string, string> = {
     excellent: Palette.success,
-    good: SemanticColors.primary,
+    good: SemanticColors.actionPrimary,
     fair: Palette.warning,
     poor: Palette.error,
   };
@@ -764,7 +764,7 @@ function getConditionColor(condition: string): string {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   header: {
     padding: 20,
@@ -788,7 +788,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   statItem: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     padding: 12,
     borderRadius: 12,
     minWidth: 75,
@@ -825,7 +825,7 @@ const styles = StyleSheet.create({
   alertsLink: {
     fontSize: 13,
     fontWeight: '600',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   tabBar: {
     flexDirection: 'row',
@@ -840,11 +840,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     gap: 6,
   },
   activeTab: {
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
   },
   tabLabel: {
     fontSize: 12,
@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeTabLabel: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   tabContent: {
     flex: 1,
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     paddingHorizontal: 12,
     marginBottom: 12,
@@ -883,11 +883,11 @@ const styles = StyleSheet.create({
   categoryChip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
   },
   categoryChipActive: {
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
   },
   categoryChipText: {
     fontSize: 13,
@@ -898,7 +898,7 @@ const styles = StyleSheet.create({
     color: Palette.white,
   },
   equipmentCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -965,7 +965,7 @@ const styles = StyleSheet.create({
   },
   assignedToText: {
     fontSize: 13,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   maintenanceAlert: {
     flexDirection: 'row',
@@ -992,17 +992,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.primary + '40',
+    borderColor: SemanticColors.actionPrimary + '40',
     borderStyle: 'dashed',
     marginBottom: 20,
     gap: 8,
   },
   addButtonText: {
     fontSize: 15,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '500',
   },
   sectionHeader: {
@@ -1022,7 +1022,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   checkoutCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -1101,14 +1101,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 12,
     paddingVertical: 10,
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     borderRadius: 10,
     gap: 6,
   },
   returnButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   emptyState: {
     alignItems: 'center',
@@ -1120,7 +1120,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   maintenanceCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -1149,7 +1149,7 @@ const styles = StyleSheet.create({
   },
   daysUntil: {
     alignItems: 'center',
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 10,
@@ -1180,17 +1180,17 @@ const styles = StyleSheet.create({
   scheduleButton: {
     marginTop: 12,
     paddingVertical: 10,
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     borderRadius: 10,
     alignItems: 'center',
   },
   scheduleButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   utilizationCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -1235,7 +1235,7 @@ const styles = StyleSheet.create({
   },
   depreciationSummary: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -1256,7 +1256,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   depreciationCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
@@ -1297,7 +1297,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 14,
     borderRadius: 12,
     marginTop: 8,
@@ -1311,7 +1311,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1397,7 +1397,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
@@ -1411,7 +1411,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     paddingVertical: 12,
     borderRadius: 12,
     gap: 8,
@@ -1419,7 +1419,7 @@ const styles = StyleSheet.create({
   secondaryActionText: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
 });
 

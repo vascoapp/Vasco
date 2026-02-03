@@ -1,19 +1,22 @@
+// =============================================================================
+// SITE LEAD DASHBOARD
+// =============================================================================
+// Site execution focus: Safety, Quality, Progress, Constraints
+// Orange/terracotta color scheme for site-level operations
+// =============================================================================
+
 import { useState, useMemo } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
-import { siteApi } from '../../api/vascoApi';
-import { Colors } from '../../theme/colors';
-import { Spacing } from '../../theme/spacing';
-import { Typography } from '../../theme/typography';
-import { hapticError, hapticSuccess } from '../../utils/haptics';
-
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { SemanticColors, Palette } from '../../theme/colors';
+import { useAuth } from '../../context/AuthContext';
 import {
   mockProjects,
   mockSiteMetrics,
@@ -23,78 +26,142 @@ import {
   formatCurrency,
   formatPercent,
   getCurrencyForCountry,
-  getComplianceRequirements,
 } from '../../modules/countryModules';
-import type { Project, SiteMetrics, SiteEvent, Risk } from '../../types/buildos';
 
-type Recommendation = {
-  classification: string;
-  action: string;
-};
+// -----------------------------------------------------------------------------
+// CONSTANTS
+// -----------------------------------------------------------------------------
 
-const EVENT_TYPES = ['progress', 'delay', 'safety', 'quality', 'weather', 'rfi', 'delivery', 'inspection'];
+const SITE_LEAD_COLOR = '#F97316'; // Orange for site operations
+
+// -----------------------------------------------------------------------------
+// COMPONENT TYPES
+// -----------------------------------------------------------------------------
+
+interface MetricTileProps {
+  label: string;
+  value: string | number;
+  subtitle?: string;
+  trend?: 'up' | 'down' | 'neutral';
+  alert?: boolean;
+}
+
+interface QuickActionProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  badge?: number;
+  onPress: () => void;
+}
+
+interface StatusPillProps {
+  label: string;
+  count: number;
+  color: string;
+}
+
+// -----------------------------------------------------------------------------
+// SUB-COMPONENTS
+// -----------------------------------------------------------------------------
+
+function MetricTile({ label, value, subtitle, trend, alert }: MetricTileProps) {
+  return (
+    <View style={[styles.metricTile, alert && styles.metricTileAlert]}>
+      <Text style={styles.metricLabel}>{label}</Text>
+      <View style={styles.metricValueRow}>
+        <Text style={[styles.metricValue, alert && styles.metricValueAlert]}>
+          {value}
+        </Text>
+        {trend && (
+          <Ionicons
+            name={trend === 'up' ? 'trending-up' : trend === 'down' ? 'trending-down' : 'remove'}
+            size={16}
+            color={trend === 'up' ? Palette.success : trend === 'down' ? Palette.error : SemanticColors.textTertiary}
+          />
+        )}
+      </View>
+      {subtitle && <Text style={styles.metricSubtitle}>{subtitle}</Text>}
+    </View>
+  );
+}
+
+function QuickAction({ icon, label, badge, onPress }: QuickActionProps) {
+  return (
+    <Pressable style={styles.quickAction} onPress={onPress}>
+      <View style={styles.quickActionIconWrap}>
+        <Ionicons name={icon} size={22} color={SITE_LEAD_COLOR} />
+        {badge !== undefined && badge > 0 && (
+          <View style={styles.quickActionBadge}>
+            <Text style={styles.quickActionBadgeText}>{badge}</Text>
+          </View>
+        )}
+      </View>
+      <Text style={styles.quickActionLabel}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function StatusPill({ label, count, color }: StatusPillProps) {
+  return (
+    <View style={[styles.statusPill, { backgroundColor: color + '20' }]}>
+      <Text style={[styles.statusPillCount, { color }]}>{count}</Text>
+      <Text style={styles.statusPillLabel}>{label}</Text>
+    </View>
+  );
+}
+
+// -----------------------------------------------------------------------------
+// MAIN COMPONENT
+// -----------------------------------------------------------------------------
 
 export function SiteLeadDashboard() {
-  // Project selection
+  const router = useRouter();
+  const { user } = useAuth();
   const [selectedProjectId, setSelectedProjectId] = useState<string>('uk-001');
-
-  // Event logging
-  const [eventType, setEventType] = useState('');
-  const [eventDescription, setEventDescription] = useState('');
-  const [eventSeverity, setEventSeverity] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
-
-  // UI state
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [activeSection, setActiveSection] = useState<'metrics' | 'events' | 'risks' | 'actions'>('metrics');
-
-  // API results
-  const [recommendations, setRecommendations] = useState<Recommendation[] | null>(null);
-  const [generatedDailyReport, setGeneratedDailyReport] = useState<string | null>(null);
-  const [generatedSafetyBriefing, setGeneratedSafetyBriefing] = useState<string | null>(null);
-  const [generatedBlockerEscalation, setGeneratedBlockerEscalation] = useState<string | null>(null);
 
   // Derived data
   const selectedProject = useMemo(() => getProjectById(selectedProjectId), [selectedProjectId]);
   const siteMetrics = useMemo(() => mockSiteMetrics[selectedProjectId], [selectedProjectId]);
-  const currency = useMemo(() => selectedProject ? getCurrencyForCountry(selectedProject.country) : 'GBP', [selectedProject]);
-  const complianceReqs = useMemo(() => selectedProject ? getComplianceRequirements(selectedProject.country) : [], [selectedProject]);
+  const currency = useMemo(
+    () => (selectedProject ? getCurrencyForCountry(selectedProject.country) : 'GBP'),
+    [selectedProject]
+  );
 
-  // Progress health
+  // Progress metrics
   const progressHealth = useMemo(() => {
     if (!siteMetrics) return null;
-
+    const variance = siteMetrics.progressVariance;
     return {
-      overallProgress: siteMetrics.overallPercentComplete,
-      plannedProgress: siteMetrics.plannedPercentComplete,
-      variance: siteMetrics.progressVariance,
-      status: siteMetrics.progressVariance >= -2 ? 'on-track' :
-              siteMetrics.progressVariance >= -5 ? 'at-risk' : 'behind',
+      actual: siteMetrics.overallPercentComplete,
+      planned: siteMetrics.plannedPercentComplete,
+      variance,
+      status: variance >= -2 ? 'on-track' : variance >= -5 ? 'at-risk' : 'behind',
     };
   }, [siteMetrics]);
 
   // Safety metrics
   const safetyHealth = useMemo(() => {
     if (!siteMetrics) return null;
-
-    const safetyScore = siteMetrics.ltir < 0.5 ? 'excellent' :
-                        siteMetrics.ltir < 1.0 ? 'good' :
-                        siteMetrics.ltir < 2.0 ? 'fair' : 'poor';
-
+    const score =
+      siteMetrics.ltir < 0.5
+        ? 'excellent'
+        : siteMetrics.ltir < 1.0
+          ? 'good'
+          : siteMetrics.ltir < 2.0
+            ? 'fair'
+            : 'poor';
     return {
+      ltir: siteMetrics.ltir,
       hoursWorked: siteMetrics.hoursWorked,
       incidents: siteMetrics.incidentsTotal,
+      incidentsThisPeriod: siteMetrics.incidentsThisPeriod,
       nearMisses: siteMetrics.nearMissesThisPeriod,
-      ltir: siteMetrics.ltir,
-      safetyScore,
+      score,
     };
   }, [siteMetrics]);
 
   // Quality metrics
   const qualityHealth = useMemo(() => {
     if (!siteMetrics) return null;
-
     return {
       defectsOpen: siteMetrics.defectsOpenTotal,
       defectsClosed: siteMetrics.defectsClosedTotal,
@@ -103,10 +170,9 @@ export function SiteLeadDashboard() {
     };
   }, [siteMetrics]);
 
-  // Constraints
+  // Constraints metrics
   const constraintStatus = useMemo(() => {
     if (!siteMetrics) return null;
-
     return {
       openRfis: siteMetrics.openRfis,
       avgRfiResponse: siteMetrics.avgRfiResponseDays,
@@ -115,360 +181,72 @@ export function SiteLeadDashboard() {
     };
   }, [siteMetrics]);
 
-  const clearMessages = () => {
-    setError('');
-    setSuccess('');
-  };
-
-  const handleError = (err: unknown) => {
-    setError(err instanceof Error ? err.message : 'An error occurred');
-    hapticError();
-  };
-
-  const logSiteEvent = async () => {
-    clearMessages();
-    if (!eventType || !eventDescription) {
-      setError('Event type and description are required');
-      return;
-    }
-    setLoading(true);
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      await siteApi.logEvent(selectedProjectId, today, eventType, eventDescription);
-      setSuccess(`Event logged: ${eventType}`);
-      hapticSuccess();
-      setEventType('');
-      setEventDescription('');
-    } catch (err) {
-      handleError(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchRecommendations = async () => {
-    clearMessages();
-    setLoading(true);
-    try {
-      const data = await siteApi.getRecommendations(selectedProjectId);
-      setRecommendations(data);
-    } catch (err) {
-      handleError(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const generateDailyReport = () => {
-    clearMessages();
-    if (!selectedProject || !siteMetrics || !progressHealth || !safetyHealth || !qualityHealth || !constraintStatus) {
-      setError('No project data available');
-      return;
-    }
-
-    const risks = selectedProject.risks.filter(r => r.status !== 'closed');
-    const activities = selectedProject.scheduleActivities.filter(a => a.status === 'in-progress');
-
-    const report = `
-DAILY SITE REPORT
-=================
-Project: ${selectedProject.name}
-Date: ${new Date().toISOString().split('T')[0]}
-Weather: Clear, 18°C
-Report By: Site Lead
-
-PROGRESS SUMMARY
-----------------
-Overall Progress: ${progressHealth.overallProgress}% (Plan: ${progressHealth.plannedProgress}%)
-Variance: ${progressHealth.variance > 0 ? '+' : ''}${progressHealth.variance}%
-Status: ${progressHealth.status.toUpperCase()}
-
-Active Work Fronts:
-${activities.slice(0, 4).map(a => `- ${a.name}: ${a.percentComplete}% complete`).join('\n')}
-
-SAFETY
-------
-Hours Worked Today: ${Math.floor(safetyHealth.hoursWorked / 335)}
-Total Hours to Date: ${safetyHealth.hoursWorked.toLocaleString()}
-LTIR: ${safetyHealth.ltir}
-Incidents This Period: ${siteMetrics.incidentsThisPeriod}
-Near Misses This Period: ${safetyHealth.nearMisses}
-
-Safety Observations:
-- All personnel wearing required PPE
-- Site housekeeping satisfactory
-- Fire escape routes clear
-
-QUALITY
--------
-Open Defects: ${qualityHealth.defectsOpen}
-Closed Defects: ${qualityHealth.defectsClosed}
-Closure Rate: ${formatPercent(qualityHealth.closureRate)}
-Rework Cost to Date: ${formatCurrency(qualityHealth.reworkCost, currency)}
-
-Quality Issues:
-${qualityHealth.defectsOpen > 10 ? '- High defect count requires attention' : '- Defect levels acceptable'}
-
-CONSTRAINTS & RFIs
-------------------
-Open RFIs: ${constraintStatus.openRfis}
-Avg RFI Response: ${constraintStatus.avgRfiResponse} days
-Open Constraints: ${constraintStatus.openConstraints}
-Cleared This Week: ${constraintStatus.clearedThisWeek}
-
-RISKS
------
-${risks.slice(0, 3).map(r => `- [${r.category}] ${r.description} (Score: ${r.score})`).join('\n') || 'No active risks'}
-
-COMPLIANCE (${selectedProject.country})
-${complianceReqs.filter(c => c.mandatory).slice(0, 3).map(c => `- ${c.code}: ${c.name}`).join('\n')}
-
-TOMORROW'S FOCUS
-----------------
-${activities.filter(a => a.isCriticalPath).slice(0, 3).map(a => `- ${a.name}`).join('\n') || '- Continue current work fronts'}
-
-RESOURCES ON SITE
------------------
-Main Contractor: ${selectedProject.contracts.find(c => c.type === 'main-contractor')?.counterparty || 'TBC'}
-Workforce: Est. ${Math.floor(safetyHealth.hoursWorked / 335 / 8)} personnel
-
-Generated by: BuildOS Site Agent
-Report Time: ${new Date().toISOString()}
-    `.trim();
-
-    setGeneratedDailyReport(report);
-    setSuccess('Daily report generated');
-    hapticSuccess();
-  };
-
-  const generateSafetyBriefing = () => {
-    clearMessages();
-    if (!selectedProject || !safetyHealth) {
-      setError('No project data available');
-      return;
-    }
-
-    const risks = selectedProject.risks.filter(r => r.category === 'health-safety' && r.status !== 'closed');
-    const activities = selectedProject.scheduleActivities.filter(a => a.status === 'in-progress');
-
-    const briefing = `
-DAILY SAFETY BRIEFING
-${'='.repeat(50)}
-Project: ${selectedProject.name}
-Date: ${new Date().toISOString().split('T')[0]}
-Time: 07:00
-Briefing By: Site Lead
-
-TODAY'S SAFETY FOCUS
---------------------
-Topic: Working at Height
-Duration: 10 minutes
-
-KEY POINTS TO COVER
--------------------
-1. All work at height requires valid permit
-2. Edge protection must be in place before access
-3. Harness inspection checklist must be completed
-4. Rescue plan to be reviewed with team
-5. Weather conditions - wind speed limits
-
-ACTIVE WORKS TODAY
-------------------
-${activities.slice(0, 4).map(a => `- ${a.name}`).join('\n') || '- General construction activities'}
-
-ZONE-SPECIFIC HAZARDS
----------------------
-Zone A (Main Building):
-- Crane operations in progress
-- Exclusion zones marked with barriers
-- Hard hat and hi-vis mandatory
-
-Zone B (Foundations):
-- Deep excavations present
-- Edge protection required
-- No entry without banksman
-
-Zone C (Access Roads):
-- HGV movements throughout day
-- Pedestrian routes clearly marked
-- Speed limit: 5 mph
-
-H&S PERFORMANCE
----------------
-LTIR: ${safetyHealth.ltir.toFixed(2)} (Target: <1.0)
-Hours Worked: ${safetyHealth.hoursWorked.toLocaleString()}
-Last Incident: ${safetyHealth.incidents > 0 ? 'Review required' : 'Zero incidents'}
-Near Misses (Week): ${safetyHealth.nearMisses}
-
-ACTIVE SAFETY RISKS
--------------------
-${risks.length > 0 ? risks.map(r => `- ${r.description} (Score: ${r.score})`).join('\n') : '- No specific H&S risks identified'}
-
-EMERGENCY PROCEDURES
---------------------
-Fire Assembly Point: Car Park Area A
-First Aider on Site: [Name] - Welfare Unit
-Emergency Number: Site Office x100
-Nearest A&E: [Local Hospital] - 15 min drive
-
-PPE REQUIREMENTS TODAY
-----------------------
-[ ] Hard hat (always)
-[ ] Hi-vis vest (always)
-[ ] Safety boots (always)
-[ ] Gloves (task specific)
-[ ] Eye protection (as required)
-[ ] Harness (working at height)
-
-TOOLBOX TALK SIGN-OFF
----------------------
-Topic Covered: Working at Height
-Attendance: _____ personnel
-Queries Raised: _________________
-
-Briefing Completed: _______ (time)
-Site Lead Signature: _____________
-
-Generated by: BuildOS Site Agent
-Report Date: ${new Date().toISOString()}
-    `.trim();
-
-    setGeneratedSafetyBriefing(briefing);
-    setSuccess('Safety briefing generated');
-    hapticSuccess();
-  };
-
-  const generateBlockerEscalation = () => {
-    clearMessages();
-    if (!selectedProject || !constraintStatus) {
-      setError('No project data available');
-      return;
-    }
-
-    const risks = selectedProject.risks.filter(r => r.status !== 'closed').sort((a, b) => b.score - a.score);
-    const criticalActivities = selectedProject.scheduleActivities.filter(a => a.isCriticalPath && a.status !== 'completed');
-    const delayedActivities = selectedProject.scheduleActivities.filter(a => a.status === 'delayed');
-
-    const escalation = `
-BLOCKER ESCALATION REPORT
-${'='.repeat(50)}
-Project: ${selectedProject.name}
-Date: ${new Date().toISOString().split('T')[0]}
-Priority: ${delayedActivities.length > 2 || constraintStatus.openConstraints > 10 ? 'HIGH' : 'MEDIUM'}
-From: Site Lead
-To: Project Manager / COO
-
-EXECUTIVE SUMMARY
------------------
-This escalation report identifies ${constraintStatus.openConstraints} open constraints and ${delayedActivities.length} delayed activities requiring management attention. ${constraintStatus.openRfis > 10 ? 'RFI queue is critical.' : ''}
-
-CRITICAL BLOCKERS
------------------
-${delayedActivities.length > 0 ? delayedActivities.map(a =>
-  `1. ${a.name}
-   WBS: ${a.wbsCode}
-   Status: DELAYED
-   Impact: ${a.isCriticalPath ? 'CRITICAL PATH' : 'Non-critical'}
-   Resolution Required: Immediate`
-).join('\n\n') : 'No activities currently delayed'}
-
-OPEN CONSTRAINTS (${constraintStatus.openConstraints})
-${'─'.repeat(40)}
-${constraintStatus.openConstraints > 0 ? `
-Priority 1: Design Information
-- RFIs pending: ${constraintStatus.openRfis}
-- Avg response time: ${constraintStatus.avgRfiResponse} days
-- Action: Design team to prioritize responses
-
-Priority 2: Material Deliveries
-- [Pending specific details from site team]
-- Action: Procurement to confirm delivery dates
-
-Priority 3: Subcontractor Resources
-- [Pending specific details from site team]
-- Action: Commercial team to follow up
-` : 'No significant constraints identified'}
-
-RFI STATUS
-----------
-Open RFIs: ${constraintStatus.openRfis}
-Average Response: ${constraintStatus.avgRfiResponse} days
-Target Response: 3 days
-Status: ${constraintStatus.avgRfiResponse > 3 ? 'BEHIND TARGET - ESCALATE' : 'Within target'}
-
-Cleared This Week: ${constraintStatus.clearedThisWeek}
-
-SCHEDULE IMPACT ASSESSMENT
---------------------------
-Critical Path Activities at Risk:
-${criticalActivities.filter(a => a.status === 'in-progress' || a.status === 'delayed').slice(0, 3).map(a =>
-  `- ${a.name}: ${a.percentComplete}% complete, ${a.float} days float`
-).join('\n') || '- No critical activities at immediate risk'}
-
-Potential Delay: ${delayedActivities.length > 0 ? 'Review required' : 'None identified'}
-
-RISK REGISTER ITEMS
--------------------
-High-Score Risks Requiring Attention:
-${risks.filter(r => r.score >= 9).slice(0, 3).map(r =>
-  `- [${r.category}] ${r.description}
-    Score: ${r.score} | Owner: ${r.owner}
-    Cost Exposure: ${r.costExposure ? fmt(r.costExposure) : 'N/A'}
-    Schedule Exposure: ${r.scheduleExposureDays ? r.scheduleExposureDays + ' days' : 'N/A'}`
-).join('\n\n') || '- No high-score risks'}
-
-REQUESTED ACTIONS
------------------
-1. ${constraintStatus.openRfis > 10 ? 'Urgent design team meeting to clear RFI backlog' : 'Continue monitoring RFI queue'}
-2. ${delayedActivities.length > 0 ? 'Review recovery plan for delayed activities' : 'Maintain current progress'}
-3. ${risks.filter(r => r.score >= 12).length > 0 ? 'Risk review meeting for critical items' : 'Standard risk monitoring'}
-
-NEXT REVIEW
------------
-Date: ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-Attendees: Site Lead, PM, COO
-
-Generated by: BuildOS Site Agent
-Report Date: ${new Date().toISOString()}
-    `.trim();
-
-    setGeneratedBlockerEscalation(escalation);
-    setSuccess('Blocker escalation generated');
-    hapticSuccess();
-  };
-
-  const getEventTypeColor = (type: string) => {
-    switch (type) {
-      case 'safety':
-        return Colors.danger;
-      case 'delay':
-        return Colors.warning;
-      case 'progress':
-        return Colors.success;
-      case 'quality':
-        return Colors.accentMuted;
-      case 'rfi':
-        return Colors.accentDeep;
-      default:
-        return Colors.muted;
-    }
-  };
-
-  const getRiskColor = (score: number) => {
-    if (score >= 12) return Colors.danger;
-    if (score >= 6) return Colors.warning;
-    return Colors.success;
-  };
+  // Risk counts
+  const riskCounts = useMemo(() => {
+    if (!selectedProject) return { high: 0, medium: 0, low: 0 };
+    const activeRisks = selectedProject.risks.filter((r) => r.status !== 'closed');
+    return {
+      high: activeRisks.filter((r) => r.score >= 12).length,
+      medium: activeRisks.filter((r) => r.score >= 6 && r.score < 12).length,
+      low: activeRisks.filter((r) => r.score < 6).length,
+    };
+  }, [selectedProject]);
 
   const fmt = (amount: number) => formatCurrency(amount, currency);
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Goedemorgen';
+    if (hour < 18) return 'Goedemiddag';
+    return 'Goedenavond';
+  };
+
+  const getSafetyColor = (score: string) => {
+    switch (score) {
+      case 'excellent':
+      case 'good':
+        return Palette.success;
+      case 'fair':
+        return Palette.warning;
+      default:
+        return Palette.error;
+    }
+  };
+
+  const getProgressStatusColor = (status: string) => {
+    switch (status) {
+      case 'on-track':
+        return Palette.success;
+      case 'at-risk':
+        return Palette.warning;
+      default:
+        return Palette.error;
+    }
+  };
+
+  if (!selectedProject || !siteMetrics || !progressHealth || !safetyHealth || !qualityHealth || !constraintStatus) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.headerTitle}>Site Lead Dashboard</Text>
+        <Text style={styles.emptyText}>Selecteer een project om te beginnen</Text>
+      </View>
+    );
+  }
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={Typography.title}>Site Lead Dashboard</Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.greeting}>{getGreeting()}, {user?.name?.split(' ')[0] || 'Site Lead'}</Text>
+          <Text style={styles.headerSubtitle}>Site overzicht</Text>
+        </View>
+        <View style={[styles.headerAccent, { backgroundColor: SITE_LEAD_COLOR }]} />
+      </View>
 
       {/* Project Selector */}
-      <View style={styles.projectSelector}>
-        {mockProjects.filter(p => mockSiteMetrics[p.id]).map((project) => (
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.projectScroller}>
+        {mockProjects.filter((p) => mockSiteMetrics[p.id]).map((project) => (
           <Pressable
             key={project.id}
             style={[
@@ -489,959 +267,659 @@ Report Date: ${new Date().toISOString()}
             </Text>
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
 
-      {/* Section Tabs */}
-      <View style={styles.tabRow}>
-        {(['metrics', 'events', 'risks', 'actions'] as const).map((section) => (
-          <Pressable
-            key={section}
-            style={[styles.tab, activeSection === section && styles.tabActive]}
-            onPress={() => setActiveSection(section)}
-          >
-            <Text style={[styles.tabText, activeSection === section && styles.tabTextActive]}>
-              {section === 'metrics' ? 'Metrics' :
-               section === 'events' ? 'Events' :
-               section === 'risks' ? 'Risks' : 'Actions'}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      {/* Site Metrics Section */}
-      {activeSection === 'metrics' && selectedProject && progressHealth && safetyHealth && qualityHealth && constraintStatus && (
-        <>
-          {/* Progress Card */}
-          <View style={styles.card}>
-            <Text style={Typography.subtitle}>Progress</Text>
-            <View style={[
-              styles.healthBanner,
-              progressHealth.status === 'on-track' && styles.healthGreen,
-              progressHealth.status === 'at-risk' && styles.healthYellow,
-              progressHealth.status === 'behind' && styles.healthRed,
-            ]}>
-              <View>
-                <Text style={styles.healthStatus}>
-                  {progressHealth.status === 'on-track' ? 'On Track' :
-                   progressHealth.status === 'at-risk' ? 'At Risk' : 'Behind Schedule'}
-                </Text>
-                <Text style={styles.healthVariance}>
-                  {progressHealth.variance > 0 ? '+' : ''}{progressHealth.variance}% vs plan
-                </Text>
-              </View>
-              <View style={styles.progressCircle}>
-                <Text style={styles.progressValue}>{progressHealth.overallProgress}%</Text>
-              </View>
-            </View>
-
-            <View style={styles.progressComparison}>
-              <View style={styles.progressBarContainer}>
-                <Text style={styles.progressBarLabel}>Actual</Text>
-                <View style={styles.progressBarTrack}>
-                  <View style={[styles.progressBarFill, { width: `${progressHealth.overallProgress}%` }]} />
-                </View>
-                <Text style={styles.progressBarValue}>{progressHealth.overallProgress}%</Text>
-              </View>
-              <View style={styles.progressBarContainer}>
-                <Text style={styles.progressBarLabel}>Planned</Text>
-                <View style={styles.progressBarTrack}>
-                  <View style={[styles.progressBarFillPlan, { width: `${progressHealth.plannedProgress}%` }]} />
-                </View>
-                <Text style={styles.progressBarValue}>{progressHealth.plannedProgress}%</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Safety Card */}
-          <View style={styles.card}>
-            <Text style={Typography.subtitle}>Safety</Text>
-            <View style={styles.safetyGrid}>
-              <View style={[styles.safetyCard, styles.safetyMain]}>
-                <Text style={styles.safetyValue}>{safetyHealth.ltir.toFixed(2)}</Text>
-                <Text style={styles.safetyLabel}>LTIR</Text>
-                <View style={[
-                  styles.safetyBadge,
-                  safetyHealth.safetyScore === 'excellent' && styles.badgeGreen,
-                  safetyHealth.safetyScore === 'good' && styles.badgeGreen,
-                  safetyHealth.safetyScore === 'fair' && styles.badgeYellow,
-                  safetyHealth.safetyScore === 'poor' && styles.badgeRed,
-                ]}>
-                  <Text style={styles.safetyBadgeText}>{safetyHealth.safetyScore}</Text>
-                </View>
-              </View>
-              <View style={styles.safetyCard}>
-                <Text style={styles.safetyValue}>{safetyHealth.hoursWorked.toLocaleString()}</Text>
-                <Text style={styles.safetyLabel}>Hours Worked</Text>
-              </View>
-              <View style={styles.safetyCard}>
-                <Text style={[styles.safetyValue, safetyHealth.incidents > 0 && styles.dangerText]}>
-                  {safetyHealth.incidents}
-                </Text>
-                <Text style={styles.safetyLabel}>Incidents Total</Text>
-              </View>
-              <View style={styles.safetyCard}>
-                <Text style={styles.safetyValue}>{safetyHealth.nearMisses}</Text>
-                <Text style={styles.safetyLabel}>Near Misses (Week)</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Quality Card */}
-          <View style={styles.card}>
-            <Text style={Typography.subtitle}>Quality</Text>
-            <View style={styles.qualityGrid}>
-              <View style={styles.qualityItem}>
-                <Text style={[styles.qualityValue, qualityHealth.defectsOpen > 20 && styles.dangerText]}>
-                  {qualityHealth.defectsOpen}
-                </Text>
-                <Text style={styles.qualityLabel}>Open Defects</Text>
-              </View>
-              <View style={styles.qualityItem}>
-                <Text style={styles.qualityValue}>{qualityHealth.defectsClosed}</Text>
-                <Text style={styles.qualityLabel}>Closed</Text>
-              </View>
-              <View style={styles.qualityItem}>
-                <Text style={styles.qualityValue}>{formatPercent(qualityHealth.closureRate)}</Text>
-                <Text style={styles.qualityLabel}>Closure Rate</Text>
-              </View>
-              <View style={styles.qualityItem}>
-                <Text style={styles.qualityValue}>{fmt(qualityHealth.reworkCost)}</Text>
-                <Text style={styles.qualityLabel}>Rework Cost</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Constraints Card */}
-          <View style={styles.card}>
-            <Text style={Typography.subtitle}>Constraints & RFIs</Text>
-            <View style={styles.constraintGrid}>
-              <View style={styles.constraintItem}>
-                <Text style={[styles.constraintValue, constraintStatus.openRfis > 15 && styles.warningText]}>
-                  {constraintStatus.openRfis}
-                </Text>
-                <Text style={styles.constraintLabel}>Open RFIs</Text>
-              </View>
-              <View style={styles.constraintItem}>
-                <Text style={styles.constraintValue}>{constraintStatus.avgRfiResponse}d</Text>
-                <Text style={styles.constraintLabel}>Avg Response</Text>
-              </View>
-              <View style={styles.constraintItem}>
-                <Text style={styles.constraintValue}>{constraintStatus.openConstraints}</Text>
-                <Text style={styles.constraintLabel}>Open Constraints</Text>
-              </View>
-              <View style={styles.constraintItem}>
-                <Text style={[styles.constraintValue, styles.successText]}>
-                  {constraintStatus.clearedThisWeek}
-                </Text>
-                <Text style={styles.constraintLabel}>Cleared (Week)</Text>
-              </View>
-            </View>
-          </View>
-        </>
-      )}
-
-      {/* Events Section */}
-      {activeSection === 'events' && selectedProject && (
-        <View style={styles.card}>
-          <Text style={Typography.subtitle}>Log Site Event</Text>
-
-          {/* Event Type Selector */}
-          <View style={styles.eventTypeGrid}>
-            {EVENT_TYPES.map((type) => (
-              <Pressable
-                key={type}
-                style={[
-                  styles.eventTypePill,
-                  eventType === type && styles.eventTypePillActive,
-                  eventType === type && { borderColor: getEventTypeColor(type) },
-                ]}
-                onPress={() => setEventType(type)}
-              >
-                <Text style={[
-                  styles.eventTypeText,
-                  eventType === type && { color: getEventTypeColor(type) },
-                ]}>
-                  {type}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          {/* Severity Selector */}
-          {eventType && (
-            <View style={styles.severitySection}>
-              <Text style={styles.severityLabel}>Severity:</Text>
-              <View style={styles.severityRow}>
-                {(['low', 'medium', 'high', 'critical'] as const).map((sev) => (
-                  <Pressable
-                    key={sev}
-                    style={[
-                      styles.severityPill,
-                      eventSeverity === sev && styles.severityPillActive,
-                    ]}
-                    onPress={() => setEventSeverity(sev)}
-                  >
-                    <Text style={[
-                      styles.severityText,
-                      eventSeverity === sev && styles.severityTextActive,
-                    ]}>
-                      {sev}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-          )}
-
-          <TextInput
-            style={styles.input}
-            placeholder="Event description..."
-            placeholderTextColor={Colors.muted}
-            value={eventDescription}
-            onChangeText={setEventDescription}
-            multiline
-            numberOfLines={3}
+      {/* Quick Actions */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Snelle acties</Text>
+        <View style={styles.quickActionsRow}>
+          <QuickAction
+            icon="document-text"
+            label="Dagrapport"
+            onPress={() => router.push('/(hub)/documents')}
           />
-
-          <Pressable style={styles.button} onPress={logSiteEvent}>
-            <Text style={styles.buttonText}>Log Event</Text>
-          </Pressable>
-
-          {/* Get Recommendations */}
-          <View style={styles.divider} />
-          <Text style={Typography.subtitle}>Site Recommendations</Text>
-          <Pressable style={[styles.button, styles.buttonSecondary]} onPress={fetchRecommendations}>
-            <Text style={styles.buttonTextSecondary}>Get AI Recommendations</Text>
-          </Pressable>
-
-          {recommendations && (
-            <View style={styles.recommendationsCard}>
-              {recommendations.map((rec, index) => (
-                <View key={index} style={styles.recRow}>
-                  <View style={[styles.recDot, { backgroundColor: getEventTypeColor(rec.classification) }]} />
-                  <View style={styles.recContent}>
-                    <Text style={styles.recClassification}>{rec.classification}</Text>
-                    <Text style={Typography.muted}>{rec.action}</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
+          <QuickAction
+            icon="shield-checkmark"
+            label="Veiligheid"
+            badge={safetyHealth.incidentsThisPeriod}
+            onPress={() => router.push('/(hub)/safety')}
+          />
+          <QuickAction
+            icon="alert-circle"
+            label="Escalatie"
+            badge={riskCounts.high}
+            onPress={() => router.push('/(hub)/risks')}
+          />
+          <QuickAction
+            icon="chatbubbles"
+            label="RFI's"
+            badge={constraintStatus.openRfis > 10 ? constraintStatus.openRfis : undefined}
+            onPress={() => router.push('/(hub)/rfis')}
+          />
         </View>
-      )}
+      </View>
 
-      {/* Risks Section */}
-      {activeSection === 'risks' && selectedProject && (
+      {/* Progress Banner */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Voortgang</Text>
+        <View
+          style={[
+            styles.progressBanner,
+            { backgroundColor: getProgressStatusColor(progressHealth.status) + '15' },
+          ]}
+        >
+          <View style={styles.progressBannerLeft}>
+            <Text style={styles.progressBannerStatus}>
+              {progressHealth.status === 'on-track'
+                ? 'Op Schema'
+                : progressHealth.status === 'at-risk'
+                  ? 'Risico'
+                  : 'Achter Schema'}
+            </Text>
+            <Text style={styles.progressBannerVariance}>
+              {progressHealth.variance > 0 ? '+' : ''}
+              {progressHealth.variance}% t.o.v. plan
+            </Text>
+          </View>
+          <View
+            style={[
+              styles.progressCircle,
+              { borderColor: getProgressStatusColor(progressHealth.status) },
+            ]}
+          >
+            <Text style={styles.progressCircleValue}>{progressHealth.actual}%</Text>
+          </View>
+        </View>
+
+        {/* Progress Bars */}
+        <View style={styles.progressBars}>
+          <View style={styles.progressBarRow}>
+            <Text style={styles.progressBarLabel}>Actueel</Text>
+            <View style={styles.progressBarTrack}>
+              <View
+                style={[
+                  styles.progressBarFill,
+                  { width: `${progressHealth.actual}%`, backgroundColor: SITE_LEAD_COLOR },
+                ]}
+              />
+            </View>
+            <Text style={styles.progressBarValue}>{progressHealth.actual}%</Text>
+          </View>
+          <View style={styles.progressBarRow}>
+            <Text style={styles.progressBarLabel}>Gepland</Text>
+            <View style={styles.progressBarTrack}>
+              <View
+                style={[
+                  styles.progressBarFill,
+                  { width: `${progressHealth.planned}%`, backgroundColor: SemanticColors.textTertiary },
+                ]}
+              />
+            </View>
+            <Text style={styles.progressBarValue}>{progressHealth.planned}%</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Safety Card */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Veiligheid</Text>
+          <View
+            style={[
+              styles.safetyBadge,
+              { backgroundColor: getSafetyColor(safetyHealth.score) + '20' },
+            ]}
+          >
+            <Text style={[styles.safetyBadgeText, { color: getSafetyColor(safetyHealth.score) }]}>
+              {safetyHealth.score.toUpperCase()}
+            </Text>
+          </View>
+        </View>
+
         <View style={styles.card}>
-          <Text style={Typography.subtitle}>Active Risks</Text>
-
-          {selectedProject.risks.filter(r => r.status !== 'closed').length === 0 ? (
-            <Text style={Typography.muted}>No active risks</Text>
-          ) : (
-            selectedProject.risks
-              .filter(r => r.status !== 'closed')
-              .sort((a, b) => b.score - a.score)
-              .map((risk) => (
-                <View key={risk.id} style={styles.riskCard}>
-                  <View style={styles.riskHeader}>
-                    <View style={[styles.riskScore, { backgroundColor: getRiskColor(risk.score) + '30' }]}>
-                      <Text style={[styles.riskScoreText, { color: getRiskColor(risk.score) }]}>
-                        {risk.score}
-                      </Text>
-                    </View>
-                    <View style={styles.riskInfo}>
-                      <Text style={styles.riskCategory}>{risk.category}</Text>
-                      <Text style={Typography.body}>{risk.description}</Text>
-                    </View>
-                  </View>
-                  <View style={styles.riskDetails}>
-                    <View style={styles.riskDetail}>
-                      <Text style={Typography.muted}>Likelihood</Text>
-                      <Text style={styles.riskDetailValue}>{risk.likelihood}/5</Text>
-                    </View>
-                    <View style={styles.riskDetail}>
-                      <Text style={Typography.muted}>Impact</Text>
-                      <Text style={styles.riskDetailValue}>{risk.impact}/5</Text>
-                    </View>
-                    {risk.costExposure && (
-                      <View style={styles.riskDetail}>
-                        <Text style={Typography.muted}>Cost Exposure</Text>
-                        <Text style={styles.riskDetailValue}>{fmt(risk.costExposure)}</Text>
-                      </View>
-                    )}
-                    {risk.scheduleExposureDays && (
-                      <View style={styles.riskDetail}>
-                        <Text style={Typography.muted}>Schedule</Text>
-                        <Text style={styles.riskDetailValue}>{risk.scheduleExposureDays}d</Text>
-                      </View>
-                    )}
-                  </View>
-                  <View style={styles.riskMitigation}>
-                    <Text style={styles.mitigationLabel}>Mitigation:</Text>
-                    <Text style={Typography.muted}>{risk.mitigation}</Text>
-                  </View>
-                  <View style={styles.riskFooter}>
-                    <Text style={Typography.muted}>Owner: {risk.owner}</Text>
-                    <View style={[styles.statusBadge, { backgroundColor: Colors.accentMuted + '30' }]}>
-                      <Text style={styles.statusBadgeText}>{risk.status}</Text>
-                    </View>
-                  </View>
-                </View>
-              ))
-          )}
-        </View>
-      )}
-
-      {/* Actions Section */}
-      {activeSection === 'actions' && selectedProject && (
-        <>
-          {/* Quick Actions Bar */}
-          <View style={styles.quickActionsCard}>
-            <Text style={styles.sectionLabel}>Quick Actions</Text>
-            <View style={styles.quickActionsGrid}>
-              <Pressable style={styles.quickActionButton} onPress={generateDailyReport}>
-                <View style={styles.quickActionIcon}>
-                  <Text style={styles.quickActionIconText}>📝</Text>
-                </View>
-                <Text style={styles.quickActionLabel}>Daily Report</Text>
-              </Pressable>
-              <Pressable style={styles.quickActionButton} onPress={generateSafetyBriefing}>
-                <View style={styles.quickActionIcon}>
-                  <Text style={styles.quickActionIconText}>⚠️</Text>
-                </View>
-                <Text style={styles.quickActionLabel}>Safety Brief</Text>
-              </Pressable>
-              <Pressable style={styles.quickActionButton} onPress={generateBlockerEscalation}>
-                <View style={styles.quickActionIcon}>
-                  <Text style={styles.quickActionIconText}>🚨</Text>
-                </View>
-                <Text style={styles.quickActionLabel}>Escalation</Text>
-              </Pressable>
+          {/* LTIR Banner */}
+          <View style={styles.ltirBanner}>
+            <View>
+              <Text style={styles.ltirLabel}>LTIR</Text>
+              <Text style={styles.ltirSubtext}>Lost Time Injury Rate</Text>
             </View>
+            <Text style={[styles.ltirValue, { color: getSafetyColor(safetyHealth.score) }]}>
+              {safetyHealth.ltir.toFixed(2)}
+            </Text>
           </View>
 
-          {/* Generated Documents */}
-          {(generatedDailyReport || generatedSafetyBriefing || generatedBlockerEscalation) && (
-            <View style={styles.card}>
-              <Text style={Typography.subtitle}>Generated Documents</Text>
+          {/* Safety Metrics Grid */}
+          <View style={styles.metricsGrid}>
+            <MetricTile
+              label="Gewerkte uren"
+              value={safetyHealth.hoursWorked.toLocaleString()}
+              subtitle="totaal"
+            />
+            <MetricTile
+              label="Incidenten"
+              value={safetyHealth.incidents}
+              subtitle="totaal"
+              alert={safetyHealth.incidents > 0}
+            />
+            <MetricTile
+              label="Deze periode"
+              value={safetyHealth.incidentsThisPeriod}
+              subtitle="incidenten"
+              alert={safetyHealth.incidentsThisPeriod > 0}
+            />
+            <MetricTile
+              label="Near misses"
+              value={safetyHealth.nearMisses}
+              subtitle="deze week"
+            />
+          </View>
+        </View>
+      </View>
 
-              {generatedDailyReport && (
-                <View style={styles.generatedDocument}>
-                  <View style={styles.documentHeader}>
-                    <Text style={styles.documentTitle}>Daily Site Report</Text>
-                    <View style={styles.documentBadge}>
-                      <Text style={styles.documentBadgeText}>DRAFT</Text>
-                    </View>
-                  </View>
-                  <ScrollView style={styles.documentContent} nestedScrollEnabled>
-                    <Text style={styles.documentText}>{generatedDailyReport}</Text>
-                  </ScrollView>
-                </View>
-              )}
+      {/* Quality Card */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Kwaliteit</Text>
+        <View style={styles.card}>
+          <View style={styles.metricsGrid}>
+            <MetricTile
+              label="Open gebreken"
+              value={qualityHealth.defectsOpen}
+              alert={qualityHealth.defectsOpen > 20}
+            />
+            <MetricTile
+              label="Gesloten"
+              value={qualityHealth.defectsClosed}
+            />
+            <MetricTile
+              label="Afsluitingspercentage"
+              value={formatPercent(qualityHealth.closureRate)}
+              trend={qualityHealth.closureRate >= 0.8 ? 'up' : 'down'}
+            />
+            <MetricTile
+              label="Herstelkosten"
+              value={fmt(qualityHealth.reworkCost)}
+            />
+          </View>
+        </View>
+      </View>
 
-              {generatedSafetyBriefing && (
-                <View style={styles.generatedDocument}>
-                  <View style={styles.documentHeader}>
-                    <Text style={styles.documentTitle}>Safety Briefing</Text>
-                    <View style={styles.documentBadge}>
-                      <Text style={styles.documentBadgeText}>DRAFT</Text>
-                    </View>
-                  </View>
-                  <ScrollView style={styles.documentContent} nestedScrollEnabled>
-                    <Text style={styles.documentText}>{generatedSafetyBriefing}</Text>
-                  </ScrollView>
-                </View>
-              )}
+      {/* Constraints & RFIs Card */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Beperkingen & RFI's</Text>
+        <View style={styles.card}>
+          <View style={styles.metricsGrid}>
+            <MetricTile
+              label="Open RFI's"
+              value={constraintStatus.openRfis}
+              alert={constraintStatus.openRfis > 15}
+            />
+            <MetricTile
+              label="Gem. responstijd"
+              value={`${constraintStatus.avgRfiResponse}d`}
+              subtitle={constraintStatus.avgRfiResponse > 3 ? 'boven target' : 'binnen target'}
+              alert={constraintStatus.avgRfiResponse > 3}
+            />
+            <MetricTile
+              label="Open beperkingen"
+              value={constraintStatus.openConstraints}
+            />
+            <MetricTile
+              label="Opgelost"
+              value={constraintStatus.clearedThisWeek}
+              subtitle="deze week"
+              trend="up"
+            />
+          </View>
+        </View>
+      </View>
 
-              {generatedBlockerEscalation && (
-                <View style={styles.generatedDocument}>
-                  <View style={styles.documentHeader}>
-                    <Text style={styles.documentTitle}>Blocker Escalation</Text>
-                    <View style={[styles.documentBadge, styles.documentBadgeUrgent]}>
-                      <Text style={styles.documentBadgeTextUrgent}>ESCALATE</Text>
-                    </View>
-                  </View>
-                  <ScrollView style={styles.documentContent} nestedScrollEnabled>
-                    <Text style={styles.documentText}>{generatedBlockerEscalation}</Text>
-                  </ScrollView>
-                </View>
-              )}
+      {/* Risks Overview */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Risico overzicht</Text>
+        <View style={styles.statusRow}>
+          <StatusPill label="Hoog" count={riskCounts.high} color={Palette.error} />
+          <StatusPill label="Middel" count={riskCounts.medium} color={Palette.warning} />
+          <StatusPill label="Laag" count={riskCounts.low} color={Palette.success} />
+        </View>
+
+        {/* High priority risks list */}
+        {selectedProject.risks
+          .filter((r) => r.status !== 'closed' && r.score >= 12)
+          .slice(0, 3)
+          .map((risk) => (
+            <View key={risk.id} style={styles.riskItem}>
+              <View style={styles.riskScoreBadge}>
+                <Text style={styles.riskScoreText}>{risk.score}</Text>
+              </View>
+              <View style={styles.riskContent}>
+                <Text style={styles.riskCategory}>{risk.category}</Text>
+                <Text style={styles.riskDescription} numberOfLines={2}>
+                  {risk.description}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
             </View>
-          )}
-        </>
-      )}
+          ))}
+      </View>
 
-      {loading && <ActivityIndicator size="large" color={Colors.accentDeep} style={styles.loader} />}
-      {error !== '' && (
-        <View style={styles.errorCard}>
-          <Text style={styles.errorText}>{error}</Text>
+      {/* Hub Navigation Cards */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Site Management</Text>
+        <View style={styles.hubGrid}>
+          <Pressable style={styles.hubCard} onPress={() => router.push('/(hub)/safety')}>
+            <View style={[styles.hubIconWrap, { backgroundColor: Palette.error + '15' }]}>
+              <Ionicons name="shield-checkmark" size={24} color={Palette.error} />
+            </View>
+            <Text style={styles.hubCardTitle}>Veiligheid</Text>
+            <Text style={styles.hubCardSubtitle}>Incidenten & inspectie</Text>
+          </Pressable>
+
+          <Pressable style={styles.hubCard} onPress={() => router.push('/(hub)/quality')}>
+            <View style={[styles.hubIconWrap, { backgroundColor: Palette.warning + '15' }]}>
+              <Ionicons name="checkmark-done-circle" size={24} color={Palette.warning} />
+            </View>
+            <Text style={styles.hubCardTitle}>Kwaliteit</Text>
+            <Text style={styles.hubCardSubtitle}>Gebreken & snaglijst</Text>
+          </Pressable>
+
+          <Pressable style={styles.hubCard} onPress={() => router.push('/(hub)/rfis')}>
+            <View style={[styles.hubIconWrap, { backgroundColor: SITE_LEAD_COLOR + '15' }]}>
+              <Ionicons name="help-circle" size={24} color={SITE_LEAD_COLOR} />
+            </View>
+            <Text style={styles.hubCardTitle}>RFI's</Text>
+            <Text style={styles.hubCardSubtitle}>Informatieverzoeken</Text>
+          </Pressable>
+
+          <Pressable style={styles.hubCard} onPress={() => router.push('/(hub)/documents')}>
+            <View style={[styles.hubIconWrap, { backgroundColor: Palette.success + '15' }]}>
+              <Ionicons name="document-text" size={24} color={Palette.success} />
+            </View>
+            <Text style={styles.hubCardTitle}>Documenten</Text>
+            <Text style={styles.hubCardSubtitle}>Rapporten & formulieren</Text>
+          </Pressable>
         </View>
-      )}
-      {success !== '' && (
-        <View style={styles.successCard}>
-          <Text style={styles.successText}>{success}</Text>
-        </View>
-      )}
+      </View>
+
+      {/* Bottom Spacing */}
+      <View style={styles.bottomSpacer} />
     </ScrollView>
   );
 }
 
+// -----------------------------------------------------------------------------
+// STYLES
+// -----------------------------------------------------------------------------
+
 const styles = StyleSheet.create({
   container: {
-    padding: Spacing.lg,
-    gap: Spacing.lg,
+    flex: 1,
+    backgroundColor: SemanticColors.surfaceSecondary,
+  },
+  content: {
     paddingBottom: 100,
   },
-  projectSelector: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  projectPill: {
-    flex: 1,
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: 12,
-    padding: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  projectPillActive: {
-    borderColor: Colors.accentDeep,
-    backgroundColor: Colors.surface,
-  },
-  projectCountry: {
-    color: Colors.accentMuted,
-    fontSize: 10,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-  projectName: {
-    color: Colors.muted,
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  projectNameActive: {
-    color: Colors.text,
-  },
-  tabRow: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: 12,
-    padding: 4,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  tabActive: {
-    backgroundColor: Colors.surface,
-  },
-  tabText: {
-    color: Colors.muted,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  tabTextActive: {
-    color: Colors.text,
-  },
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.md,
-  },
-  healthBanner: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: Spacing.md,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 16,
+    backgroundColor: SemanticColors.surfacePrimary,
+  },
+  greeting: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: SemanticColors.textSecondary,
+    marginTop: 4,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+    padding: 20,
+  },
+  headerAccent: {
+    width: 8,
+    height: 40,
+    borderRadius: 4,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: SemanticColors.textTertiary,
+    padding: 20,
+  },
+  projectScroller: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: SemanticColors.surfacePrimary,
+  },
+  projectPill: {
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    minWidth: 120,
   },
-  healthGreen: {
-    backgroundColor: Colors.success + '20',
+  projectPillActive: {
+    borderColor: SITE_LEAD_COLOR,
+    backgroundColor: SITE_LEAD_COLOR + '10',
   },
-  healthYellow: {
-    backgroundColor: Colors.warning + '20',
+  projectCountry: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: SITE_LEAD_COLOR,
+    marginBottom: 2,
   },
-  healthRed: {
-    backgroundColor: Colors.danger + '20',
+  projectName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: SemanticColors.textSecondary,
   },
-  healthStatus: {
-    color: Colors.text,
+  projectNameActive: {
+    color: SemanticColors.textPrimary,
+  },
+  section: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
+    color: SemanticColors.textPrimary,
+    marginBottom: 12,
   },
-  healthVariance: {
-    color: Colors.muted,
+  quickActionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  quickAction: {
+    flex: 1,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  quickActionIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: SITE_LEAD_COLOR + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  quickActionBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: Palette.error,
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  quickActionBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  quickActionLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  progressBanner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  progressBannerLeft: {},
+  progressBannerStatus: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  progressBannerVariance: {
     fontSize: 13,
+    color: SemanticColors.textSecondary,
     marginTop: 2,
   },
   progressCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: Colors.surface,
-    justifyContent: 'center',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 4,
+    backgroundColor: SemanticColors.surfacePrimary,
     alignItems: 'center',
-    borderWidth: 3,
-    borderColor: Colors.accentDeep,
+    justifyContent: 'center',
   },
-  progressValue: {
-    color: Colors.text,
-    fontSize: 16,
+  progressCircleValue: {
+    fontSize: 18,
     fontWeight: '700',
+    color: SemanticColors.textPrimary,
   },
-  progressComparison: {
+  progressBars: {
     gap: 12,
   },
-  progressBarContainer: {
+  progressBarRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
   progressBarLabel: {
-    color: Colors.muted,
-    fontSize: 11,
-    width: 50,
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+    width: 60,
   },
   progressBarTrack: {
     flex: 1,
     height: 8,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 4,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: Colors.accentDeep,
-    borderRadius: 4,
-  },
-  progressBarFillPlan: {
-    height: '100%',
-    backgroundColor: Colors.muted,
     borderRadius: 4,
   },
   progressBarValue: {
-    color: Colors.text,
     fontSize: 12,
     fontWeight: '600',
+    color: SemanticColors.textPrimary,
     width: 40,
     textAlign: 'right',
   },
-  safetyGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  safetyCard: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: 12,
-    padding: Spacing.md,
-    alignItems: 'center',
-  },
-  safetyMain: {
-    minWidth: '100%',
-  },
-  safetyValue: {
-    color: Colors.text,
-    fontSize: 24,
-    fontWeight: '700',
-  },
-  safetyLabel: {
-    color: Colors.muted,
-    fontSize: 11,
-    marginTop: 4,
-  },
   safetyBadge: {
-    marginTop: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    paddingHorizontal: 12,
     borderRadius: 8,
-  },
-  badgeGreen: {
-    backgroundColor: Colors.success + '30',
-  },
-  badgeYellow: {
-    backgroundColor: Colors.warning + '30',
-  },
-  badgeRed: {
-    backgroundColor: Colors.danger + '30',
   },
   safetyBadgeText: {
     fontSize: 11,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    color: Colors.text,
-  },
-  dangerText: {
-    color: Colors.danger,
-  },
-  warningText: {
-    color: Colors.warning,
-  },
-  successText: {
-    color: Colors.success,
-  },
-  qualityGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  qualityItem: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: 12,
-    padding: Spacing.md,
-    alignItems: 'center',
-  },
-  qualityValue: {
-    color: Colors.text,
-    fontSize: 18,
     fontWeight: '700',
   },
-  qualityLabel: {
-    color: Colors.muted,
-    fontSize: 10,
-    marginTop: 4,
-  },
-  constraintGrid: {
+  ltirBanner: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  constraintItem: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: 12,
-    padding: Spacing.md,
+    justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  constraintValue: {
-    color: Colors.text,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  constraintLabel: {
-    color: Colors.muted,
-    fontSize: 10,
-    marginTop: 4,
-  },
-  eventTypeGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.xs,
-  },
-  eventTypePill: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: Colors.surfaceElevated,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  eventTypePillActive: {
-    backgroundColor: Colors.surface,
-  },
-  eventTypeText: {
-    color: Colors.muted,
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'capitalize',
-  },
-  severitySection: {
-    gap: 8,
-  },
-  severityLabel: {
-    color: Colors.muted,
-    fontSize: 12,
-  },
-  severityRow: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-  },
-  severityPill: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: Colors.surfaceElevated,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  severityPillActive: {
-    borderColor: Colors.accentMuted,
-  },
-  severityText: {
-    color: Colors.muted,
-    fontSize: 11,
-    fontWeight: '600',
-    textTransform: 'capitalize',
-  },
-  severityTextActive: {
-    color: Colors.accentMuted,
-  },
-  input: {
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: 12,
-    padding: Spacing.md,
-    color: Colors.text,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    fontSize: 14,
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  button: {
-    backgroundColor: Colors.accentDeep,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#0B0C0F',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  buttonSecondary: {
-    backgroundColor: Colors.surfaceElevated,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  buttonTextSecondary: {
-    color: Colors.text,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: Colors.border,
-    marginVertical: Spacing.sm,
-  },
-  recommendationsCard: {
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: 12,
-    padding: Spacing.md,
-    gap: 8,
-  },
-  recRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-    paddingVertical: 8,
+    paddingBottom: 16,
+    marginBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
-  recDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  ltirLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  ltirSubtext: {
+    fontSize: 11,
+    color: SemanticColors.textTertiary,
+    marginTop: 2,
+  },
+  ltirValue: {
+    fontSize: 32,
+    fontWeight: '700',
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  metricTile: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 12,
+    padding: 14,
+  },
+  metricTileAlert: {
+    backgroundColor: Palette.error + '10',
+  },
+  metricLabel: {
+    fontSize: 11,
+    color: SemanticColors.textTertiary,
+    marginBottom: 6,
+  },
+  metricValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  metricValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  metricValueAlert: {
+    color: Palette.error,
+  },
+  metricSubtitle: {
+    fontSize: 10,
+    color: SemanticColors.textTertiary,
     marginTop: 4,
   },
-  recContent: {
+  statusRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
+  statusPill: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 10,
+    gap: 8,
   },
-  recClassification: {
-    color: Colors.text,
-    fontSize: 13,
-    fontWeight: '600',
-    textTransform: 'capitalize',
+  statusPillCount: {
+    fontSize: 18,
+    fontWeight: '700',
   },
-  riskCard: {
-    backgroundColor: Colors.surfaceElevated,
+  statusPillLabel: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  riskItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
-    padding: Spacing.md,
+    padding: 14,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
     gap: 12,
   },
-  riskHeader: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  riskScore: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
+  riskScoreBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Palette.error + '20',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   riskScoreText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
+    color: Palette.error,
   },
-  riskInfo: {
+  riskContent: {
     flex: 1,
   },
   riskCategory: {
-    color: Colors.accentMuted,
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 10,
+    fontWeight: '700',
+    color: SITE_LEAD_COLOR,
     textTransform: 'uppercase',
     marginBottom: 2,
   },
-  riskDetails: {
+  riskDescription: {
+    fontSize: 13,
+    color: SemanticColors.textPrimary,
+  },
+  hubGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.sm,
+    gap: 12,
   },
-  riskDetail: {
-    backgroundColor: Colors.surface,
-    borderRadius: 8,
-    padding: 8,
-    minWidth: '45%',
-    flex: 1,
-  },
-  riskDetailValue: {
-    color: Colors.text,
-    fontSize: 14,
-    fontWeight: '700',
-    marginTop: 2,
-  },
-  riskMitigation: {
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  mitigationLabel: {
-    color: Colors.text,
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  riskFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statusBadge: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-  },
-  statusBadgeText: {
-    fontSize: 10,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    color: Colors.text,
-  },
-  generatedDocument: {
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  documentHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  documentTitle: {
-    color: Colors.text,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  documentBadge: {
-    backgroundColor: Colors.warning + '30',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 6,
-  },
-  documentBadgeText: {
-    color: Colors.warning,
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  documentContent: {
-    maxHeight: 300,
-    padding: Spacing.md,
-  },
-  documentText: {
-    color: Colors.text,
-    fontSize: 11,
-    fontFamily: 'monospace',
-    lineHeight: 18,
-  },
-  loader: {
-    marginVertical: Spacing.lg,
-  },
-  errorCard: {
-    backgroundColor: Colors.danger + '20',
-    borderRadius: 12,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.danger,
-  },
-  errorText: {
-    color: Colors.danger,
-    fontSize: 13,
-  },
-  successCard: {
-    backgroundColor: Colors.success + '20',
-    borderRadius: 12,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.success,
-  },
-  sectionLabel: {
-    color: Colors.text,
-    fontSize: 13,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  quickActionsCard: {
-    backgroundColor: Colors.surface,
+  hubCard: {
+    width: '48%',
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
-    padding: Spacing.lg,
+    padding: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.md,
+    borderColor: SemanticColors.borderDefault,
   },
-  quickActionsGrid: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  quickActionButton: {
-    flex: 1,
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: 12,
-    padding: Spacing.md,
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  quickActionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.accentDeep + '20',
+  hubIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 12,
   },
-  quickActionIconText: {
-    fontSize: 18,
-  },
-  quickActionLabel: {
-    color: Colors.text,
-    fontSize: 11,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  documentBadgeUrgent: {
-    backgroundColor: Colors.danger + '30',
-  },
-  documentBadgeTextUrgent: {
-    color: Colors.danger,
-    fontSize: 10,
+  hubCardTitle: {
+    fontSize: 14,
     fontWeight: '700',
+    color: SemanticColors.textPrimary,
+    marginBottom: 4,
+  },
+  hubCardSubtitle: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  bottomSpacer: {
+    height: 40,
   },
 });

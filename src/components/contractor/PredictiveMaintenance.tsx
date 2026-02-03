@@ -219,10 +219,10 @@ export function PredictiveMaintenance() {
               disabled={analyzing === item.equipmentId}
             >
               {analyzing === item.equipmentId ? (
-                <ActivityIndicator size="small" color={SemanticColors.primary} />
+                <ActivityIndicator size="small" color={SemanticColors.actionPrimary} />
               ) : (
                 <>
-                  <Ionicons name="refresh" size={16} color={SemanticColors.primary} />
+                  <Ionicons name="refresh" size={16} color={SemanticColors.actionPrimary} />
                   <Text style={styles.analyzeButtonText}>Analyse uitvoeren</Text>
                 </>
               )}
@@ -312,7 +312,7 @@ export function PredictiveMaintenance() {
               </View>
               <View style={styles.costItem}>
                 <Text style={styles.costLabel}>Besparing</Text>
-                <Text style={[styles.costValue, { color: SemanticColors.primary }]}>
+                <Text style={[styles.costValue, { color: SemanticColors.actionPrimary }]}>
                   €{prediction.savingsIfPrevented}
                 </Text>
               </View>
@@ -332,7 +332,7 @@ export function PredictiveMaintenance() {
               style={styles.acknowledgeButton}
               onPress={() => acknowledge(prediction.id)}
             >
-              <Ionicons name="checkmark-circle" size={18} color={SemanticColors.primary} />
+              <Ionicons name="checkmark-circle" size={18} color={SemanticColors.actionPrimary} />
               <Text style={styles.acknowledgeButtonText}>Gezien & Gepland</Text>
             </TouchableOpacity>
           </TouchableOpacity>
@@ -392,7 +392,7 @@ export function PredictiveMaintenance() {
               <View
                 style={[
                   styles.typeBadge,
-                  { backgroundColor: SemanticColors.card },
+                  { backgroundColor: SemanticColors.surfacePrimary },
                 ]}
               >
                 <Ionicons name={getTypeIcon(rec.type)} size={14} color={SemanticColors.textSecondary} />
@@ -405,7 +405,7 @@ export function PredictiveMaintenance() {
             <Text style={styles.recommendationDescription}>{rec.description}</Text>
 
             <View style={styles.recommendationReasoning}>
-              <Ionicons name="bulb" size={14} color={SemanticColors.primary} />
+              <Ionicons name="bulb" size={14} color={SemanticColors.actionPrimary} />
               <Text style={styles.reasoningText}>{rec.reasoning}</Text>
             </View>
 
@@ -793,7 +793,7 @@ export function PredictiveMaintenance() {
             <Ionicons
               name={tab.icon as any}
               size={18}
-              color={activeTab === tab.id ? SemanticColors.primary : SemanticColors.textSecondary}
+              color={activeTab === tab.id ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
             />
             <Text
               style={[
@@ -971,7 +971,7 @@ function getUrgencyOrder(urgency: string): number {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   header: {
     padding: 20,
@@ -995,7 +995,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   statItem: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     padding: 12,
     borderRadius: 12,
     minWidth: 90,
@@ -1027,11 +1027,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     gap: 4,
   },
   activeTab: {
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
   },
   tabLabel: {
     fontSize: 12,
@@ -1039,7 +1039,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeTabLabel: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   tabContent: {
     flex: 1,
@@ -1111,11 +1111,11 @@ const styles = StyleSheet.create({
   },
   sectionLink: {
     fontSize: 14,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '500',
   },
   healthCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -1205,17 +1205,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 12,
     paddingVertical: 10,
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     borderRadius: 10,
     gap: 6,
   },
   analyzeButtonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   predictionCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -1330,17 +1330,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 12,
     paddingVertical: 10,
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     borderRadius: 10,
     gap: 6,
   },
   acknowledgeButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   recommendationCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -1378,7 +1378,7 @@ const styles = StyleSheet.create({
   },
   recommendationEquipment: {
     fontSize: 14,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     marginTop: 4,
   },
   recommendationDescription: {
@@ -1390,7 +1390,7 @@ const styles = StyleSheet.create({
   recommendationReasoning: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: SemanticColors.primary + '10',
+    backgroundColor: SemanticColors.actionPrimary + '10',
     padding: 12,
     borderRadius: 10,
     marginTop: 12,
@@ -1399,7 +1399,7 @@ const styles = StyleSheet.create({
   reasoningText: {
     flex: 1,
     fontSize: 13,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     lineHeight: 18,
   },
   recommendationMetrics: {
@@ -1463,7 +1463,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 12,
     borderRadius: 10,
     gap: 6,
@@ -1483,7 +1483,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   partOrderCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -1517,7 +1517,7 @@ const styles = StyleSheet.create({
   },
   partOrderEquipment: {
     fontSize: 13,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     marginTop: 8,
   },
   partOrderReason: {
@@ -1577,7 +1577,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 12,
     borderRadius: 10,
     marginTop: 12,
@@ -1599,7 +1599,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1655,7 +1655,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   factorsSection: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -1702,7 +1702,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 16,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
   },
   lastAssessmentLabel: {
@@ -1745,7 +1745,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   predictionSection: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -1764,7 +1764,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   timeframeMain: {
-    backgroundColor: SemanticColors.primary + '10',
+    backgroundColor: SemanticColors.actionPrimary + '10',
     padding: 8,
     borderRadius: 10,
   },
@@ -1779,7 +1779,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   timeframeMainValue: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '600',
   },
   indicatorRow: {
@@ -1829,7 +1829,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,

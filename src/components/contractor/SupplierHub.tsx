@@ -85,7 +85,7 @@ export function SupplierHub() {
             <Ionicons
               name={tab.icon}
               size={20}
-              color={activeTab === tab.key ? SemanticColors.primary : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
             />
             <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
               {tab.label}
@@ -269,7 +269,7 @@ function SupplierCard({
     switch (status) {
       case 'connected': return SemanticColors.success;
       case 'pending': return SemanticColors.warning;
-      case 'available': return SemanticColors.primary;
+      case 'available': return SemanticColors.actionPrimary;
       default: return SemanticColors.textSecondary;
     }
   };
@@ -286,7 +286,7 @@ function SupplierCard({
   return (
     <TouchableOpacity style={styles.supplierCard} onPress={onPress}>
       <View style={styles.supplierLogo}>
-        <Ionicons name="business" size={28} color={SemanticColors.primary} />
+        <Ionicons name="business" size={28} color={SemanticColors.actionPrimary} />
       </View>
       <View style={styles.supplierInfo}>
         <Text style={styles.supplierName}>{supplier.name}</Text>
@@ -312,7 +312,7 @@ function SupplierCard({
         </View>
         {supplier.integrationStatus === 'connected' && onSync && (
           <TouchableOpacity style={styles.syncButton} onPress={(e) => { e.stopPropagation(); onSync(); }}>
-            <Ionicons name="sync" size={18} color={SemanticColors.primary} />
+            <Ionicons name="sync" size={18} color={SemanticColors.actionPrimary} />
           </TouchableOpacity>
         )}
         {supplier.integrationStatus === 'available' && onConnect && (
@@ -393,7 +393,7 @@ function ProductsTab({
           </View>
           {comparison.recommendation && (
             <View style={styles.recommendationBox}>
-              <Ionicons name="bulb" size={16} color={SemanticColors.primary} />
+              <Ionicons name="bulb" size={16} color={SemanticColors.actionPrimary} />
               <Text style={styles.recommendationText}>{comparison.recommendation}</Text>
             </View>
           )}
@@ -512,7 +512,7 @@ function OrderCard({
   const getStatusColor = (status: Order['status']) => {
     switch (status) {
       case 'delivered': return SemanticColors.success;
-      case 'shipped': return SemanticColors.primary;
+      case 'shipped': return SemanticColors.actionPrimary;
       case 'confirmed': return '#FF9500';
       case 'submitted': return SemanticColors.warning;
       default: return SemanticColors.textSecondary;
@@ -770,7 +770,7 @@ function SupplierDetailModal({
               {supplier.website && (
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Website</Text>
-                  <Text style={[styles.detailValue, { color: SemanticColors.primary }]}>{supplier.website}</Text>
+                  <Text style={[styles.detailValue, { color: SemanticColors.actionPrimary }]}>{supplier.website}</Text>
                 </View>
               )}
             </View>
@@ -1016,20 +1016,20 @@ function OrderDetailModal({
 // ============================================
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: SemanticColors.background },
-  statsHeader: { flexDirection: 'row', backgroundColor: SemanticColors.cardBackground, paddingVertical: 16, paddingHorizontal: 12 },
+  container: { flex: 1, backgroundColor: SemanticColors.surfaceBackground },
+  statsHeader: { flexDirection: 'row', backgroundColor: SemanticColors.surfacePrimaryBackground, paddingVertical: 16, paddingHorizontal: 12 },
   statItem: { flex: 1, alignItems: 'center' },
   statValue: { fontSize: 22, fontWeight: '700', color: SemanticColors.textPrimary },
   statLabel: { fontSize: 11, color: SemanticColors.textSecondary, marginTop: 4 },
   statDivider: { width: 1, backgroundColor: SemanticColors.border, marginVertical: 8 },
-  tabBar: { flexDirection: 'row', backgroundColor: SemanticColors.cardBackground, borderBottomWidth: 1, borderBottomColor: SemanticColors.border },
+  tabBar: { flexDirection: 'row', backgroundColor: SemanticColors.surfacePrimaryBackground, borderBottomWidth: 1, borderBottomColor: SemanticColors.border },
   tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, gap: 6 },
-  tabActive: { borderBottomWidth: 2, borderBottomColor: SemanticColors.primary },
+  tabActive: { borderBottomWidth: 2, borderBottomColor: SemanticColors.actionPrimary },
   tabLabel: { fontSize: 12, color: SemanticColors.textSecondary },
-  tabLabelActive: { color: SemanticColors.primary, fontWeight: '600' },
+  tabLabelActive: { color: SemanticColors.actionPrimary, fontWeight: '600' },
   badge: { backgroundColor: SemanticColors.error, borderRadius: 10, minWidth: 20, height: 20, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 6 },
   badgeText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
-  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: SemanticColors.cardBackground, margin: 16, marginBottom: 0, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, gap: 12 },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: SemanticColors.surfacePrimaryBackground, margin: 16, marginBottom: 0, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, gap: 12 },
   searchInput: { flex: 1, fontSize: 15, color: SemanticColors.textPrimary },
   content: { flex: 1 },
   tabContent: { padding: 16 },
@@ -1037,8 +1037,8 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', padding: 48 },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: SemanticColors.textPrimary, marginTop: 16 },
   emptyText: { fontSize: 14, color: SemanticColors.textSecondary, textAlign: 'center', marginTop: 8 },
-  supplierCard: { flexDirection: 'row', backgroundColor: SemanticColors.cardBackground, borderRadius: 12, padding: 16, marginBottom: 12 },
-  supplierLogo: { width: 56, height: 56, borderRadius: 12, backgroundColor: SemanticColors.primary + '15', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  supplierCard: { flexDirection: 'row', backgroundColor: SemanticColors.surfacePrimaryBackground, borderRadius: 12, padding: 16, marginBottom: 12 },
+  supplierLogo: { width: 56, height: 56, borderRadius: 12, backgroundColor: SemanticColors.actionPrimary + '15', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   supplierInfo: { flex: 1 },
   supplierName: { fontSize: 16, fontWeight: '600', color: SemanticColors.textPrimary },
   supplierCategories: { fontSize: 13, color: SemanticColors.textSecondary, marginTop: 2 },
@@ -1049,9 +1049,9 @@ const styles = StyleSheet.create({
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
   statusText: { fontSize: 11, fontWeight: '600' },
   syncButton: { padding: 8 },
-  connectButton: { backgroundColor: SemanticColors.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
+  connectButton: { backgroundColor: SemanticColors.actionPrimary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
   connectButtonText: { fontSize: 12, fontWeight: '600', color: '#FFFFFF' },
-  comparisonBox: { backgroundColor: SemanticColors.cardBackground, borderRadius: 12, padding: 16, marginBottom: 16 },
+  comparisonBox: { backgroundColor: SemanticColors.surfacePrimaryBackground, borderRadius: 12, padding: 16, marginBottom: 16 },
   comparisonHeader: { marginBottom: 12 },
   comparisonTitle: { fontSize: 14, fontWeight: '600', color: SemanticColors.textPrimary },
   comparisonProduct: { fontSize: 13, color: SemanticColors.textSecondary, marginTop: 2 },
@@ -1059,9 +1059,9 @@ const styles = StyleSheet.create({
   comparisonStat: { alignItems: 'center' },
   comparisonStatLabel: { fontSize: 11, color: SemanticColors.textSecondary },
   comparisonStatValue: { fontSize: 16, fontWeight: '700', color: SemanticColors.textPrimary, marginTop: 2 },
-  recommendationBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: SemanticColors.primary + '10', padding: 12, borderRadius: 8 },
+  recommendationBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: SemanticColors.actionPrimary + '10', padding: 12, borderRadius: 8 },
   recommendationText: { flex: 1, fontSize: 13, color: SemanticColors.textSecondary },
-  productCard: { backgroundColor: SemanticColors.cardBackground, borderRadius: 12, padding: 16, marginBottom: 12, flexDirection: 'row', position: 'relative' },
+  productCard: { backgroundColor: SemanticColors.surfacePrimaryBackground, borderRadius: 12, padding: 16, marginBottom: 12, flexDirection: 'row', position: 'relative' },
   bestPriceBadge: { position: 'absolute', top: 8, left: 8, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: SemanticColors.success, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   bestPriceText: { fontSize: 10, fontWeight: '600', color: '#FFFFFF' },
   productInfo: { flex: 1 },
@@ -1076,8 +1076,8 @@ const styles = StyleSheet.create({
   productListPrice: { fontSize: 13, color: SemanticColors.textSecondary, textDecorationLine: 'line-through' },
   discountBadge: { backgroundColor: SemanticColors.error, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginTop: 4 },
   discountText: { fontSize: 11, fontWeight: '600', color: '#FFFFFF' },
-  addToCartButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: SemanticColors.primary, justifyContent: 'center', alignItems: 'center', marginTop: 8 },
-  orderCard: { backgroundColor: SemanticColors.cardBackground, borderRadius: 12, padding: 16, marginBottom: 12 },
+  addToCartButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: SemanticColors.actionPrimary, justifyContent: 'center', alignItems: 'center', marginTop: 8 },
+  orderCard: { backgroundColor: SemanticColors.surfacePrimaryBackground, borderRadius: 12, padding: 16, marginBottom: 12 },
   orderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   orderSupplier: { fontSize: 16, fontWeight: '600', color: SemanticColors.textPrimary },
   orderNumber: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 2 },
@@ -1087,8 +1087,8 @@ const styles = StyleSheet.create({
   orderItemsText: { fontSize: 14, color: SemanticColors.textSecondary },
   orderFooter: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
   orderDate: { fontSize: 12, color: SemanticColors.textSecondary },
-  orderDelivery: { fontSize: 12, color: SemanticColors.primary },
-  cartSection: { backgroundColor: SemanticColors.cardBackground, borderRadius: 12, padding: 16, marginBottom: 16 },
+  orderDelivery: { fontSize: 12, color: SemanticColors.actionPrimary },
+  cartSection: { backgroundColor: SemanticColors.surfacePrimaryBackground, borderRadius: 12, padding: 16, marginBottom: 16 },
   cartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   cartSupplier: { fontSize: 16, fontWeight: '600', color: SemanticColors.textPrimary },
   clearCartText: { fontSize: 14, color: SemanticColors.error },
@@ -1097,7 +1097,7 @@ const styles = StyleSheet.create({
   cartItemName: { fontSize: 14, fontWeight: '500', color: SemanticColors.textPrimary },
   cartItemPrice: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 2 },
   cartItemQuantity: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 12 },
-  quantityButton: { width: 32, height: 32, borderRadius: 16, backgroundColor: SemanticColors.background, justifyContent: 'center', alignItems: 'center' },
+  quantityButton: { width: 32, height: 32, borderRadius: 16, backgroundColor: SemanticColors.surfaceBackground, justifyContent: 'center', alignItems: 'center' },
   quantityText: { fontSize: 16, fontWeight: '600', color: SemanticColors.textPrimary, marginHorizontal: 12 },
   cartItemTotal: { fontSize: 14, fontWeight: '600', color: SemanticColors.textPrimary, width: 70, textAlign: 'right' },
   cartTotals: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: SemanticColors.border },
@@ -1107,16 +1107,16 @@ const styles = StyleSheet.create({
   cartTotalFinal: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: SemanticColors.border },
   cartFinalLabel: { fontSize: 16, fontWeight: '600', color: SemanticColors.textPrimary },
   cartFinalValue: { fontSize: 18, fontWeight: '700', color: SemanticColors.textPrimary },
-  checkoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: SemanticColors.primary, paddingVertical: 16, borderRadius: 12, marginTop: 16 },
+  checkoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: SemanticColors.actionPrimary, paddingVertical: 16, borderRadius: 12, marginTop: 16 },
   checkoutText: { fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: SemanticColors.cardBackground, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '85%' },
+  modalContent: { backgroundColor: SemanticColors.surfacePrimaryBackground, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '85%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: SemanticColors.border },
   modalTitle: { fontSize: 18, fontWeight: '600', color: SemanticColors.textPrimary },
   modalClose: { padding: 4 },
   modalBody: { padding: 16 },
   modalActions: { padding: 16, borderTopWidth: 1, borderTopColor: SemanticColors.border },
-  supplierStats: { flexDirection: 'row', backgroundColor: SemanticColors.background, borderRadius: 12, padding: 16, marginBottom: 20 },
+  supplierStats: { flexDirection: 'row', backgroundColor: SemanticColors.surfaceBackground, borderRadius: 12, padding: 16, marginBottom: 20 },
   supplierStatItem: { flex: 1, alignItems: 'center' },
   supplierStatValue: { fontSize: 20, fontWeight: '700', color: SemanticColors.textPrimary },
   supplierStatLabel: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 4 },
@@ -1124,20 +1124,20 @@ const styles = StyleSheet.create({
   detailSection: { marginBottom: 20 },
   detailSectionTitle: { fontSize: 14, fontWeight: '600', color: SemanticColors.textPrimary, marginBottom: 12 },
   categoryChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  categoryChip: { backgroundColor: SemanticColors.primary + '15', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
-  categoryChipText: { fontSize: 13, color: SemanticColors.primary },
+  categoryChip: { backgroundColor: SemanticColors.actionPrimary + '15', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+  categoryChipText: { fontSize: 13, color: SemanticColors.actionPrimary },
   detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: SemanticColors.border },
   detailLabel: { fontSize: 14, color: SemanticColors.textSecondary },
   detailValue: { fontSize: 14, fontWeight: '500', color: SemanticColors.textPrimary },
   lastSync: { fontSize: 12, color: SemanticColors.textSecondary, textAlign: 'center', marginTop: 16 },
-  syncModalButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: SemanticColors.primary, paddingVertical: 16, borderRadius: 12 },
+  syncModalButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: SemanticColors.actionPrimary, paddingVertical: 16, borderRadius: 12 },
   syncModalText: { fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
-  connectModalButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: SemanticColors.primary, paddingVertical: 16, borderRadius: 12 },
+  connectModalButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: SemanticColors.actionPrimary, paddingVertical: 16, borderRadius: 12 },
   connectModalText: { fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
   productDetailName: { fontSize: 20, fontWeight: '700', color: SemanticColors.textPrimary },
-  productDetailBrand: { fontSize: 14, color: SemanticColors.primary, marginTop: 4 },
+  productDetailBrand: { fontSize: 14, color: SemanticColors.actionPrimary, marginTop: 4 },
   productDetailSupplier: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 8 },
-  pricingSection: { marginTop: 20, backgroundColor: SemanticColors.background, borderRadius: 12, padding: 16 },
+  pricingSection: { marginTop: 20, backgroundColor: SemanticColors.surfaceBackground, borderRadius: 12, padding: 16 },
   mainPrice: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   priceLabel: { fontSize: 14, color: SemanticColors.textSecondary },
   priceValue: { fontSize: 28, fontWeight: '700', color: SemanticColors.textPrimary },
@@ -1155,23 +1155,23 @@ const styles = StyleSheet.create({
   quantitySection: { marginTop: 20 },
   quantitySectionTitle: { fontSize: 14, fontWeight: '600', color: SemanticColors.textPrimary, marginBottom: 12 },
   quantitySelector: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  quantitySelectorButton: { width: 48, height: 48, borderRadius: 24, backgroundColor: SemanticColors.background, justifyContent: 'center', alignItems: 'center' },
+  quantitySelectorButton: { width: 48, height: 48, borderRadius: 24, backgroundColor: SemanticColors.surfaceBackground, justifyContent: 'center', alignItems: 'center' },
   quantitySelectorValue: { fontSize: 24, fontWeight: '700', color: SemanticColors.textPrimary, marginHorizontal: 24 },
   quantityTotal: { fontSize: 16, fontWeight: '600', color: SemanticColors.textPrimary, textAlign: 'center', marginTop: 16 },
-  addToCartModalButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: SemanticColors.primary, paddingVertical: 16, borderRadius: 12 },
+  addToCartModalButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: SemanticColors.actionPrimary, paddingVertical: 16, borderRadius: 12 },
   addToCartModalText: { fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
   orderDetailHeader: { marginBottom: 20 },
   orderDetailSupplier: { fontSize: 20, fontWeight: '700', color: SemanticColors.textPrimary },
   orderDetailNumber: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 4 },
   orderDetailItems: { marginBottom: 20 },
   orderDetailItemsTitle: { fontSize: 14, fontWeight: '600', color: SemanticColors.textPrimary, marginBottom: 12 },
-  orderDetailItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: SemanticColors.background, padding: 12, borderRadius: 8, marginBottom: 8 },
+  orderDetailItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: SemanticColors.surfaceBackground, padding: 12, borderRadius: 8, marginBottom: 8 },
   orderDetailItemInfo: { flex: 1 },
   orderDetailItemName: { fontSize: 14, color: SemanticColors.textPrimary },
   orderDetailItemSku: { fontSize: 11, color: SemanticColors.textSecondary, marginTop: 2 },
   orderDetailItemQty: { fontSize: 14, color: SemanticColors.textSecondary, marginHorizontal: 12 },
   orderDetailItemPrice: { fontSize: 14, fontWeight: '600', color: SemanticColors.textPrimary },
-  orderDetailTotals: { backgroundColor: SemanticColors.background, borderRadius: 12, padding: 16, marginBottom: 20 },
+  orderDetailTotals: { backgroundColor: SemanticColors.surfaceBackground, borderRadius: 12, padding: 16, marginBottom: 20 },
   orderDetailTotalRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   orderDetailTotalLabel: { fontSize: 14, color: SemanticColors.textSecondary },
   orderDetailTotalValue: { fontSize: 14, color: SemanticColors.textPrimary },

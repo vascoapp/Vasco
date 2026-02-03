@@ -50,19 +50,19 @@ export function CashFlowDashboard() {
 
   const getStatusStyle = (status: Invoice['status']) => {
     switch (status) {
-      case 'paid': return { color: Palette.emerald, bg: Palette.emerald + '20', label: 'Betaald' };
-      case 'sent': return { color: Palette.blue, bg: Palette.blue + '20', label: 'Verstuurd' };
-      case 'viewed': return { color: Palette.purple, bg: Palette.purple + '20', label: 'Bekeken' };
-      case 'overdue': return { color: Palette.red, bg: Palette.red + '20', label: 'Verlopen' };
-      case 'draft': return { color: Palette.gray, bg: Palette.gray + '20', label: 'Concept' };
-      default: return { color: Palette.gray, bg: Palette.gray + '20', label: status };
+      case 'paid': return { color: Palette.green500, bg: Palette.green500 + '20', label: 'Betaald' };
+      case 'sent': return { color: Palette.blue500, bg: Palette.blue500 + '20', label: 'Verstuurd' };
+      case 'viewed': return { color: Palette.hermesOrange, bg: Palette.hermesOrange + '20', label: 'Bekeken' };
+      case 'overdue': return { color: Palette.red500, bg: Palette.red500 + '20', label: 'Verlopen' };
+      case 'draft': return { color: Palette.gray500, bg: Palette.gray500 + '20', label: 'Concept' };
+      default: return { color: Palette.gray500, bg: Palette.gray500 + '20', label: status };
     }
   };
 
   const getHealthColor = (score: number) => {
-    if (score >= 70) return Palette.emerald;
-    if (score >= 40) return Palette.orange;
-    return Palette.red;
+    if (score >= 70) return Palette.green500;
+    if (score >= 40) return Palette.orange500;
+    return Palette.red500;
   };
 
   const openInvoice = (invoice: Invoice) => {
@@ -89,7 +89,7 @@ export function CashFlowDashboard() {
           </View>
           <View style={styles.healthStat}>
             <Text style={styles.healthStatLabel}>30-dagen voorspelling</Text>
-            <Text style={[styles.healthStatValue, { color: summary.projectedBalance30Days >= summary.currentBalance ? Palette.emerald : Palette.red }]}>
+            <Text style={[styles.healthStatValue, { color: summary.projectedBalance30Days >= summary.currentBalance ? Palette.green500 : Palette.red500 }]}>
               {formatCurrency(summary.projectedBalance30Days)}
             </Text>
           </View>
@@ -100,11 +100,11 @@ export function CashFlowDashboard() {
       {summary.alerts.length > 0 && (
         <View style={styles.alertsSection}>
           {summary.alerts.map((alert) => (
-            <TouchableOpacity key={alert.id} style={[styles.alertCard, { borderLeftColor: alert.type === 'warning' ? Palette.orange : Palette.blue }]}>
+            <TouchableOpacity key={alert.id} style={[styles.alertCard, { borderLeftColor: alert.type === 'warning' ? Palette.orange500 : Palette.blue500 }]}>
               <Ionicons
                 name={alert.type === 'warning' ? 'warning-outline' : 'bulb-outline'}
                 size={20}
-                color={alert.type === 'warning' ? Palette.orange : Palette.blue}
+                color={alert.type === 'warning' ? Palette.orange500 : Palette.blue500}
               />
               <View style={styles.alertContent}>
                 <Text style={styles.alertTitle}>{alert.title}</Text>
@@ -121,12 +121,12 @@ export function CashFlowDashboard() {
       {/* Quick Stats */}
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
-          <Ionicons name="arrow-up-circle-outline" size={24} color={Palette.emerald} />
+          <Ionicons name="arrow-up-circle-outline" size={24} color={Palette.green500} />
           <Text style={styles.statLabel}>Te ontvangen</Text>
           <Text style={styles.statValue}>{formatCurrency(summary.pendingIncome)}</Text>
         </View>
         <View style={styles.statCard}>
-          <Ionicons name="arrow-down-circle-outline" size={24} color={Palette.red} />
+          <Ionicons name="arrow-down-circle-outline" size={24} color={Palette.red500} />
           <Text style={styles.statLabel}>Te betalen</Text>
           <Text style={styles.statValue}>{formatCurrency(summary.pendingExpenses)}</Text>
         </View>
@@ -138,22 +138,22 @@ export function CashFlowDashboard() {
         <View style={styles.agingRow}>
           <View style={styles.agingItem}>
             <Text style={styles.agingLabel}>Actueel</Text>
-            <Text style={[styles.agingValue, { color: Palette.emerald }]}>{formatCurrency(aging.current.total)}</Text>
+            <Text style={[styles.agingValue, { color: Palette.green500 }]}>{formatCurrency(aging.current.total)}</Text>
             <Text style={styles.agingCount}>{aging.current.count} facturen</Text>
           </View>
           <View style={styles.agingItem}>
             <Text style={styles.agingLabel}>1-30 dagen</Text>
-            <Text style={[styles.agingValue, { color: Palette.orange }]}>{formatCurrency(aging.days30.total)}</Text>
+            <Text style={[styles.agingValue, { color: Palette.orange500 }]}>{formatCurrency(aging.days30.total)}</Text>
             <Text style={styles.agingCount}>{aging.days30.count} facturen</Text>
           </View>
           <View style={styles.agingItem}>
             <Text style={styles.agingLabel}>31-60 dagen</Text>
-            <Text style={[styles.agingValue, { color: Palette.red }]}>{formatCurrency(aging.days60.total)}</Text>
+            <Text style={[styles.agingValue, { color: Palette.red500 }]}>{formatCurrency(aging.days60.total)}</Text>
             <Text style={styles.agingCount}>{aging.days60.count} facturen</Text>
           </View>
           <View style={styles.agingItem}>
             <Text style={styles.agingLabel}>60+ dagen</Text>
-            <Text style={[styles.agingValue, { color: Palette.red }]}>{formatCurrency(aging.days90Plus.total)}</Text>
+            <Text style={[styles.agingValue, { color: Palette.red500 }]}>{formatCurrency(aging.days90Plus.total)}</Text>
             <Text style={styles.agingCount}>{aging.days90Plus.count} facturen</Text>
           </View>
         </View>
@@ -174,7 +174,7 @@ export function CashFlowDashboard() {
                 style={styles.reminderButton}
                 onPress={() => sendReminder(reminder.invoiceId)}
               >
-                <Ionicons name="mail-outline" size={18} color={Palette.blue} />
+                <Ionicons name="mail-outline" size={18} color={Palette.blue500} />
                 <Text style={styles.reminderButtonText}>Herinner</Text>
               </TouchableOpacity>
             </View>
@@ -189,7 +189,7 @@ export function CashFlowDashboard() {
           {financingSuggestions.map((suggestion) => (
             <TouchableOpacity key={suggestion.id} style={styles.financingCard}>
               <View style={styles.financingIcon}>
-                <Ionicons name="cash-outline" size={24} color={Palette.purple} />
+                <Ionicons name="cash-outline" size={24} color={Palette.hermesOrange} />
               </View>
               <View style={styles.financingContent}>
                 <Text style={styles.financingTitle}>{suggestion.title}</Text>
@@ -260,13 +260,13 @@ export function CashFlowDashboard() {
               styles.forecastBarFill,
               {
                 height: barHeight,
-                backgroundColor: isPositive ? Palette.emerald : Palette.red,
+                backgroundColor: isPositive ? Palette.green500 : Palette.red500,
               },
             ]}
           />
         </View>
         <Text style={styles.forecastBarLabel}>{week.period.replace('Week ', 'W')}</Text>
-        <Text style={[styles.forecastBarValue, { color: isPositive ? Palette.emerald : Palette.red }]}>
+        <Text style={[styles.forecastBarValue, { color: isPositive ? Palette.green500 : Palette.red500 }]}>
           {isPositive ? '+' : ''}{(week.netCashFlow / 1000).toFixed(1)}k
         </Text>
       </View>
@@ -283,11 +283,11 @@ export function CashFlowDashboard() {
         </View>
         <View style={styles.forecastLegend}>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: Palette.emerald }]} />
+            <View style={[styles.legendDot, { backgroundColor: Palette.green500 }]} />
             <Text style={styles.legendText}>Positief</Text>
           </View>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: Palette.red }]} />
+            <View style={[styles.legendDot, { backgroundColor: Palette.red500 }]} />
             <Text style={styles.legendText}>Negatief</Text>
           </View>
         </View>
@@ -304,16 +304,16 @@ export function CashFlowDashboard() {
                 key={pattern.month}
                 style={[styles.seasonalItem, isCurrentMonth && styles.seasonalItemCurrent]}
               >
-                <Text style={[styles.seasonalMonth, isCurrentMonth && { color: Palette.blue }]}>
+                <Text style={[styles.seasonalMonth, isCurrentMonth && { color: Palette.blue500 }]}>
                   {pattern.month}
                 </Text>
                 <View style={[styles.seasonalIndicator, {
-                  backgroundColor: pattern.trend === 'high' ? Palette.emerald + '30' :
-                    pattern.trend === 'medium' ? Palette.orange + '30' : Palette.red + '30',
+                  backgroundColor: pattern.trend === 'high' ? Palette.green500 + '30' :
+                    pattern.trend === 'medium' ? Palette.orange500 + '30' : Palette.red500 + '30',
                 }]}>
                   <Text style={[styles.seasonalTrend, {
-                    color: pattern.trend === 'high' ? Palette.emerald :
-                      pattern.trend === 'medium' ? Palette.orange : Palette.red,
+                    color: pattern.trend === 'high' ? Palette.green500 :
+                      pattern.trend === 'medium' ? Palette.orange500 : Palette.red500,
                   }]}>
                     {pattern.trend === 'high' ? 'Hoog' : pattern.trend === 'medium' ? 'Middel' : 'Laag'}
                   </Text>
@@ -332,14 +332,14 @@ export function CashFlowDashboard() {
             <Text style={styles.forecastDetailPeriod}>{week.period}</Text>
             <View style={styles.forecastDetailValues}>
               <View style={styles.forecastDetailItem}>
-                <Ionicons name="arrow-up" size={12} color={Palette.emerald} />
+                <Ionicons name="arrow-up" size={12} color={Palette.green500} />
                 <Text style={styles.forecastDetailValue}>{formatCurrency(week.expectedIncome)}</Text>
               </View>
               <View style={styles.forecastDetailItem}>
-                <Ionicons name="arrow-down" size={12} color={Palette.red} />
+                <Ionicons name="arrow-down" size={12} color={Palette.red500} />
                 <Text style={styles.forecastDetailValue}>{formatCurrency(week.expectedExpenses)}</Text>
               </View>
-              <Text style={[styles.forecastDetailNet, { color: week.netCashFlow >= 0 ? Palette.emerald : Palette.red }]}>
+              <Text style={[styles.forecastDetailNet, { color: week.netCashFlow >= 0 ? Palette.green500 : Palette.red500 }]}>
                 {week.netCashFlow >= 0 ? '+' : ''}{formatCurrency(week.netCashFlow)}
               </Text>
             </View>
@@ -354,11 +354,11 @@ export function CashFlowDashboard() {
 
   const getCategoryStyle = (category: string) => {
     switch (category) {
-      case 'materialen': return { color: Palette.blue, icon: 'cube-outline' };
-      case 'gereedschap': return { color: Palette.purple, icon: 'hammer-outline' };
-      case 'voertuig': return { color: Palette.orange, icon: 'car-outline' };
-      case 'verzekering': return { color: Palette.emerald, icon: 'shield-checkmark-outline' };
-      default: return { color: Palette.gray, icon: 'ellipsis-horizontal-outline' };
+      case 'materialen': return { color: Palette.blue500, icon: 'cube-outline' };
+      case 'gereedschap': return { color: Palette.hermesOrange, icon: 'hammer-outline' };
+      case 'voertuig': return { color: Palette.orange500, icon: 'car-outline' };
+      case 'verzekering': return { color: Palette.green500, icon: 'shield-checkmark-outline' };
+      default: return { color: Palette.gray500, icon: 'ellipsis-horizontal-outline' };
     }
   };
 
@@ -427,7 +427,7 @@ export function CashFlowDashboard() {
 
         {/* Add Expense Button */}
         <TouchableOpacity style={styles.addExpenseButton}>
-          <Ionicons name="add-circle-outline" size={24} color={Palette.blue} />
+          <Ionicons name="add-circle-outline" size={24} color={Palette.blue500} />
           <Text style={styles.addExpenseText}>Uitgave toevoegen</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -447,7 +447,7 @@ export function CashFlowDashboard() {
             <Ionicons
               name={tab.icon as any}
               size={18}
-              color={activeTab === tab.key ? Palette.blue : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? Palette.blue500 : SemanticColors.textSecondary}
             />
             <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
               {tab.label}
@@ -472,7 +472,7 @@ export function CashFlowDashboard() {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setShowInvoiceModal(false)}>
-              <Ionicons name="close" size={24} color={SemanticColors.text} />
+              <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Factuur details</Text>
             <View style={{ width: 24 }} />
@@ -532,7 +532,7 @@ export function CashFlowDashboard() {
                       sendReminder(selectedInvoice.id);
                     }}
                   >
-                    <Ionicons name="mail-outline" size={20} color={Palette.blue} />
+                    <Ionicons name="mail-outline" size={20} color={Palette.blue500} />
                     <Text style={styles.sendReminderText}>Stuur herinnering</Text>
                   </TouchableOpacity>
                 </View>
@@ -548,15 +548,15 @@ export function CashFlowDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   tab: {
     flex: 1,
@@ -568,7 +568,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   activeTab: {
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
   },
   tabText: {
     fontSize: 12,
@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeTabText: {
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   tabContent: {
     flex: 1,
@@ -587,19 +587,19 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
 
   // Health Card
   healthCard: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   healthLeft: {
     alignItems: 'center',
@@ -635,7 +635,7 @@ const styles = StyleSheet.create({
   healthStatValue: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
 
   // Alerts
@@ -646,7 +646,7 @@ const styles = StyleSheet.create({
   alertCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 10,
     padding: 12,
     borderLeftWidth: 4,
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
   alertTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   alertDescription: {
     fontSize: 12,
@@ -674,12 +674,12 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   statLabel: {
     fontSize: 12,
@@ -689,18 +689,18 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 4,
   },
 
   // Aging
   agingCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   agingRow: {
     flexDirection: 'row',
@@ -731,12 +731,12 @@ const styles = StyleSheet.create({
   reminderCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 10,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   reminderInfo: {
     flex: 1,
@@ -744,22 +744,22 @@ const styles = StyleSheet.create({
   reminderCustomer: {
     fontSize: 14,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   reminderAmount: {
     fontSize: 13,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 2,
   },
   reminderDays: {
     fontSize: 11,
-    color: Palette.red,
+    color: Palette.red500,
     marginTop: 2,
   },
   reminderButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
@@ -768,7 +768,7 @@ const styles = StyleSheet.create({
   reminderButtonText: {
     fontSize: 13,
     fontWeight: '600',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
 
   // Financing
@@ -778,19 +778,19 @@ const styles = StyleSheet.create({
   financingCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 12,
   },
   financingIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: Palette.purple + '15',
+    backgroundColor: Palette.hermesOrange + '15',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -800,7 +800,7 @@ const styles = StyleSheet.create({
   financingTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   financingDesc: {
     fontSize: 12,
@@ -809,7 +809,7 @@ const styles = StyleSheet.create({
   },
   financingAmount: {
     fontSize: 12,
-    color: Palette.purple,
+    color: Palette.hermesOrange,
     fontWeight: '500',
     marginTop: 4,
   },
@@ -818,12 +818,12 @@ const styles = StyleSheet.create({
   invoiceCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   invoiceMain: {
     flex: 1,
@@ -837,7 +837,7 @@ const styles = StyleSheet.create({
   invoiceCustomer: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -863,22 +863,22 @@ const styles = StyleSheet.create({
   },
   invoiceReminders: {
     fontSize: 11,
-    color: Palette.orange,
+    color: Palette.orange500,
   },
   invoiceAmount: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
 
   // Forecast
   forecastCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   forecastChart: {
     flexDirection: 'row',
@@ -932,12 +932,12 @@ const styles = StyleSheet.create({
 
   // Seasonal
   seasonalCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   seasonalGrid: {
     flexDirection: 'row',
@@ -951,12 +951,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   seasonalItemCurrent: {
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
   },
   seasonalMonth: {
     fontSize: 12,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 4,
   },
   seasonalIndicator: {
@@ -971,24 +971,24 @@ const styles = StyleSheet.create({
 
   // Forecast Details
   forecastDetails: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   forecastDetailRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   forecastDetailPeriod: {
     width: 60,
     fontSize: 13,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   forecastDetailValues: {
     flex: 1,
@@ -1003,14 +1003,14 @@ const styles = StyleSheet.create({
   },
   forecastDetailValue: {
     fontSize: 12,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   forecastDetailNet: {
     fontSize: 13,
     fontWeight: '600',
   },
   confidenceBadge: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -1022,7 +1022,7 @@ const styles = StyleSheet.create({
 
   // Expenses
   expenseSummary: {
-    backgroundColor: Palette.red,
+    backgroundColor: Palette.red500,
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,
@@ -1039,12 +1039,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   categoryBreakdown: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   categoryRow: {
     flexDirection: 'row',
@@ -1064,12 +1064,12 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     fontSize: 13,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 4,
   },
   categoryBar: {
     height: 4,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 2,
   },
   categoryBarFill: {
@@ -1079,22 +1079,22 @@ const styles = StyleSheet.create({
   categoryAmount: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   recentExpenses: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   expenseRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
     gap: 10,
   },
   expenseIcon: {
@@ -1109,7 +1109,7 @@ const styles = StyleSheet.create({
   },
   expenseDescription: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   expenseDate: {
     fontSize: 11,
@@ -1119,30 +1119,30 @@ const styles = StyleSheet.create({
   expenseAmount: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   addExpenseButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: Palette.blue,
+    borderColor: Palette.blue500,
     borderStyle: 'dashed',
     gap: 8,
   },
   addExpenseText: {
     fontSize: 15,
     fontWeight: '600',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
 
   // Modal
   modalContainer: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1151,13 +1151,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
-    backgroundColor: SemanticColors.card,
+    borderBottomColor: SemanticColors.borderDefault,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   modalContent: {
     flex: 1,
@@ -1170,7 +1170,7 @@ const styles = StyleSheet.create({
   invoiceDetailAmount: {
     fontSize: 36,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   invoiceDetailSection: {
@@ -1187,7 +1187,7 @@ const styles = StyleSheet.create({
   },
   invoiceDetailValue: {
     fontSize: 16,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   invoiceActions: {
     gap: 12,
@@ -1197,7 +1197,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Palette.emerald,
+    backgroundColor: Palette.green500,
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,
@@ -1211,16 +1211,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingVertical: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Palette.blue,
+    borderColor: Palette.blue500,
     gap: 8,
   },
   sendReminderText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
 });

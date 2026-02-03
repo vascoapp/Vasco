@@ -63,20 +63,20 @@ export function DocumentVault() {
 
   const getTypeStyle = (type: DocumentType) => {
     const styles: Record<string, { color: string; icon: string }> = {
-      contract: { color: Palette.blue, icon: 'document-text' },
-      quote: { color: Palette.purple, icon: 'pricetag' },
-      invoice: { color: Palette.emerald, icon: 'receipt' },
-      warranty: { color: Palette.orange, icon: 'shield-checkmark' },
-      certification: { color: Palette.red, icon: 'ribbon' },
-      insurance: { color: Palette.blue, icon: 'umbrella' },
-      permit: { color: Palette.purple, icon: 'document-attach' },
-      photo_before: { color: Palette.orange, icon: 'camera' },
-      photo_after: { color: Palette.emerald, icon: 'camera' },
-      photo_progress: { color: Palette.blue, icon: 'camera' },
-      receipt: { color: Palette.gray, icon: 'receipt' },
-      specification: { color: Palette.purple, icon: 'list' },
-      floor_plan: { color: Palette.blue, icon: 'map' },
-      other: { color: Palette.gray, icon: 'document' },
+      contract: { color: Palette.blue500, icon: 'document-text' },
+      quote: { color: Palette.hermesOrange, icon: 'pricetag' },
+      invoice: { color: Palette.green500, icon: 'receipt' },
+      warranty: { color: Palette.orange500, icon: 'shield-checkmark' },
+      certification: { color: Palette.red500, icon: 'ribbon' },
+      insurance: { color: Palette.blue500, icon: 'umbrella' },
+      permit: { color: Palette.hermesOrange, icon: 'document-attach' },
+      photo_before: { color: Palette.orange500, icon: 'camera' },
+      photo_after: { color: Palette.green500, icon: 'camera' },
+      photo_progress: { color: Palette.blue500, icon: 'camera' },
+      receipt: { color: Palette.gray500, icon: 'receipt' },
+      specification: { color: Palette.hermesOrange, icon: 'list' },
+      floor_plan: { color: Palette.blue500, icon: 'map' },
+      other: { color: Palette.gray500, icon: 'document' },
     };
     return styles[type] || styles.other;
   };
@@ -128,10 +128,10 @@ export function DocumentVault() {
         </View>
         <View style={styles.documentActions}>
           {doc.shared && (
-            <Ionicons name="share-social" size={16} color={Palette.blue} />
+            <Ionicons name="share-social" size={16} color={Palette.blue500} />
           )}
           {doc.expiresAt && (
-            <Ionicons name="time-outline" size={16} color={Palette.orange} />
+            <Ionicons name="time-outline" size={16} color={Palette.orange500} />
           )}
         </View>
       </TouchableOpacity>
@@ -194,7 +194,7 @@ export function DocumentVault() {
           <Text style={styles.statLabel}>Opslag</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: stats.expiringCount > 0 ? Palette.orange : Palette.emerald }]}>
+          <Text style={[styles.statValue, { color: stats.expiringCount > 0 ? Palette.orange500 : Palette.green500 }]}>
             {stats.expiringCount}
           </Text>
           <Text style={styles.statLabel}>Verloopt</Text>
@@ -219,9 +219,9 @@ export function DocumentVault() {
 
   const renderExpiringCard = (item: ExpiringDocument) => {
     const urgencyStyle = {
-      critical: { color: Palette.red, bg: Palette.red + '15', icon: 'alert-circle' },
-      warning: { color: Palette.orange, bg: Palette.orange + '15', icon: 'warning' },
-      info: { color: Palette.blue, bg: Palette.blue + '15', icon: 'information-circle' },
+      critical: { color: Palette.red500, bg: Palette.red500 + '15', icon: 'alert-circle' },
+      warning: { color: Palette.orange500, bg: Palette.orange500 + '15', icon: 'warning' },
+      info: { color: Palette.blue500, bg: Palette.blue500 + '15', icon: 'information-circle' },
     }[item.urgency];
 
     return (
@@ -254,7 +254,7 @@ export function DocumentVault() {
       {expiringDocuments.length > 0 ? (
         <>
           <View style={styles.expiringHeader}>
-            <Ionicons name="alert-circle-outline" size={20} color={Palette.orange} />
+            <Ionicons name="alert-circle-outline" size={20} color={Palette.orange500} />
             <Text style={styles.expiringHeaderText}>
               {expiringDocuments.length} document{expiringDocuments.length !== 1 ? 'en' : ''} verlo
               {expiringDocuments.length !== 1 ? 'pen' : 'opt'} binnen 60 dagen
@@ -265,7 +265,7 @@ export function DocumentVault() {
         </>
       ) : (
         <View style={styles.emptyState}>
-          <Ionicons name="checkmark-circle-outline" size={48} color={Palette.emerald} />
+          <Ionicons name="checkmark-circle-outline" size={48} color={Palette.green500} />
           <Text style={styles.emptyTitle}>Alles up-to-date!</Text>
           <Text style={styles.emptyText}>Er zijn geen documenten die binnenkort verlopen</Text>
         </View>
@@ -275,7 +275,7 @@ export function DocumentVault() {
 
   const renderFolderCard = (folder: typeof folders[0]) => (
     <TouchableOpacity key={folder.id} style={styles.folderCard}>
-      <View style={[styles.folderIcon, { backgroundColor: folder.color || Palette.gray }]}>
+      <View style={[styles.folderIcon, { backgroundColor: folder.color || Palette.gray500 }]}>
         <Ionicons name="folder" size={24} color="#fff" />
       </View>
       <View style={styles.folderInfo}>
@@ -291,7 +291,7 @@ export function DocumentVault() {
       {folders.map(renderFolderCard)}
 
       <TouchableOpacity style={styles.addFolderButton}>
-        <Ionicons name="add-circle-outline" size={24} color={Palette.blue} />
+        <Ionicons name="add-circle-outline" size={24} color={Palette.blue500} />
         <Text style={styles.addFolderText}>Nieuwe map maken</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -300,7 +300,7 @@ export function DocumentVault() {
   const renderTemplateCard = (template: DocumentTemplate) => (
     <TouchableOpacity key={template.id} style={styles.templateCard}>
       <View style={styles.templatePreview}>
-        <Ionicons name="document-outline" size={32} color={Palette.purple} />
+        <Ionicons name="document-outline" size={32} color={Palette.hermesOrange} />
       </View>
       <View style={styles.templateInfo}>
         <Text style={styles.templateName}>{template.name}</Text>
@@ -341,7 +341,7 @@ export function DocumentVault() {
               <Ionicons
                 name={tab.icon as any}
                 size={18}
-                color={activeTab === tab.key ? Palette.blue : SemanticColors.textSecondary}
+                color={activeTab === tab.key ? Palette.blue500 : SemanticColors.textSecondary}
               />
               {tab.badge && tab.badge > 0 && (
                 <View style={styles.tabBadge}>
@@ -407,7 +407,7 @@ export function DocumentVault() {
                 {selectedDocument.expiresAt && (
                   <View style={styles.docDetailRow}>
                     <Text style={styles.docDetailLabel}>Verloopt</Text>
-                    <Text style={[styles.docDetailValue, { color: Palette.orange }]}>
+                    <Text style={[styles.docDetailValue, { color: Palette.orange500 }]}>
                       {formatDate(selectedDocument.expiresAt)}
                     </Text>
                   </View>
@@ -433,20 +433,20 @@ export function DocumentVault() {
 
               <View style={styles.docActions}>
                 <TouchableOpacity style={styles.docActionButton}>
-                  <Ionicons name="eye-outline" size={20} color={Palette.blue} />
+                  <Ionicons name="eye-outline" size={20} color={Palette.blue500} />
                   <Text style={styles.docActionText}>Bekijken</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.docActionButton}>
-                  <Ionicons name="share-outline" size={20} color={Palette.blue} />
+                  <Ionicons name="share-outline" size={20} color={Palette.blue500} />
                   <Text style={styles.docActionText}>Delen</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.docActionButton}>
-                  <Ionicons name="download-outline" size={20} color={Palette.blue} />
+                  <Ionicons name="download-outline" size={20} color={Palette.blue500} />
                   <Text style={styles.docActionText}>Download</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.docActionButton, { borderColor: Palette.red }]}>
-                  <Ionicons name="trash-outline" size={20} color={Palette.red} />
-                  <Text style={[styles.docActionText, { color: Palette.red }]}>Verwijder</Text>
+                <TouchableOpacity style={[styles.docActionButton, { borderColor: Palette.red500 }]}>
+                  <Ionicons name="trash-outline" size={20} color={Palette.red500} />
+                  <Text style={[styles.docActionText, { color: Palette.red500 }]}>Verwijder</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -460,11 +460,11 @@ export function DocumentVault() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderBottomWidth: 1,
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   activeTab: {
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
   },
   tabIconContainer: {
     position: 'relative',
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -6,
     right: -8,
-    backgroundColor: Palette.red,
+    backgroundColor: Palette.red500,
     borderRadius: 8,
     minWidth: 16,
     height: 16,
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeTabText: {
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   tabContent: {
     flex: 1,
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 10,
     paddingHorizontal: 12,
     marginBottom: 12,
@@ -544,15 +544,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderWidth: 1,
     borderColor: SemanticColors.border,
     marginRight: 8,
     gap: 6,
   },
   typeChipActive: {
-    backgroundColor: Palette.blue,
-    borderColor: Palette.blue,
+    backgroundColor: Palette.blue500,
+    borderColor: Palette.blue500,
   },
   typeChipText: {
     fontSize: 13,
@@ -566,7 +566,7 @@ const styles = StyleSheet.create({
   // Stats
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -605,7 +605,7 @@ const styles = StyleSheet.create({
   documentCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   tag: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -659,7 +659,7 @@ const styles = StyleSheet.create({
   },
   moreTags: {
     fontSize: 10,
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   documentActions: {
     flexDirection: 'row',
@@ -689,7 +689,7 @@ const styles = StyleSheet.create({
   expiringHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Palette.orange + '15',
+    backgroundColor: Palette.orange500 + '15',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -703,7 +703,7 @@ const styles = StyleSheet.create({
   expiringCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -738,7 +738,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   renewButton: {
-    backgroundColor: Palette.blue,
+    backgroundColor: Palette.blue500,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
@@ -753,7 +753,7 @@ const styles = StyleSheet.create({
   folderCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 8,
@@ -785,11 +785,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: Palette.blue,
+    borderColor: Palette.blue500,
     borderStyle: 'dashed',
     gap: 8,
     marginTop: 8,
@@ -797,14 +797,14 @@ const styles = StyleSheet.create({
   addFolderText: {
     fontSize: 15,
     fontWeight: '600',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
 
   // Templates
   templateCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -815,7 +815,7 @@ const styles = StyleSheet.create({
   templatePreview: {
     width: 56,
     height: 72,
-    backgroundColor: Palette.purple + '15',
+    backgroundColor: Palette.hermesOrange + '15',
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -844,7 +844,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   useTemplateButton: {
-    backgroundColor: Palette.purple,
+    backgroundColor: Palette.hermesOrange,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,
@@ -863,7 +863,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Palette.blue,
+    backgroundColor: Palette.blue500,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -876,7 +876,7 @@ const styles = StyleSheet.create({
   // Modal
   modalContainer: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -886,7 +886,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.border,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   modalTitle: {
     fontSize: 17,
@@ -921,7 +921,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   docDetailSection: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -964,16 +964,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Palette.blue,
+    borderColor: Palette.blue500,
     gap: 8,
   },
   docActionText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
 });

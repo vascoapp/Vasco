@@ -77,7 +77,7 @@ export function SmartReorder() {
         </View>
         <View style={styles.headerStatDivider} />
         <View style={styles.headerStat}>
-          <Ionicons name="wallet" size={24} color={SemanticColors.primary} />
+          <Ionicons name="wallet" size={24} color={SemanticColors.actionPrimary} />
           <Text style={styles.headerStatValue}>€{statistics.totalSavings}</Text>
           <Text style={styles.headerStatLabel}>Bespaard</Text>
         </View>
@@ -100,7 +100,7 @@ export function SmartReorder() {
             <Ionicons
               name={tab.icon}
               size={20}
-              color={activeTab === tab.key ? SemanticColors.primary : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
             />
             <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
               {tab.label}
@@ -722,7 +722,7 @@ function SuggestionDetailModal({
           {/* Price Optimization */}
           {suggestion.priceOptimization && (
             <View style={styles.savingsBox}>
-              <Ionicons name="swap-horizontal" size={24} color={SemanticColors.primary} />
+              <Ionicons name="swap-horizontal" size={24} color={SemanticColors.actionPrimary} />
               <View style={styles.savingsContent}>
                 <Text style={styles.savingsTitle}>Betere prijs gevonden!</Text>
                 <Text style={styles.savingsDescription}>
@@ -869,13 +869,13 @@ function BundleDetailModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
 
   // Header Stats
   headerStats: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     paddingVertical: 16,
     paddingHorizontal: 12,
   },
@@ -904,7 +904,7 @@ const styles = StyleSheet.create({
   // Tab Bar
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.border,
   },
@@ -918,18 +918,18 @@ const styles = StyleSheet.create({
   },
   tabActive: {
     borderBottomWidth: 2,
-    borderBottomColor: SemanticColors.primary,
+    borderBottomColor: SemanticColors.actionPrimary,
   },
   tabLabel: {
     fontSize: 13,
     color: SemanticColors.textSecondary,
   },
   tabLabelActive: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '600',
   },
   badge: {
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -991,7 +991,7 @@ const styles = StyleSheet.create({
 
   // Suggestion Card
   suggestionCard: {
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1024,7 +1024,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -1062,7 +1062,7 @@ const styles = StyleSheet.create({
   costValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   savingsBadge: {
     flexDirection: 'row',
@@ -1082,7 +1082,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1098,10 +1098,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
   },
   categoryChipActive: {
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
   },
   categoryChipText: {
     fontSize: 13,
@@ -1112,7 +1112,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   inventoryCard: {
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1200,7 +1200,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1213,7 +1213,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   bundleCard: {
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1255,7 +1255,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   bundleItems: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
@@ -1276,7 +1276,7 @@ const styles = StyleSheet.create({
   },
   bundleMoreItems: {
     fontSize: 12,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     marginTop: 4,
   },
   bundleFooter: {
@@ -1311,7 +1311,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: SemanticColors.cardBackground,
+    backgroundColor: SemanticColors.surfacePrimaryBackground,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '85%',
@@ -1381,7 +1381,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   orderDetails: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
   },
@@ -1439,7 +1439,7 @@ const styles = StyleSheet.create({
   },
   confidenceFill: {
     height: '100%',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     borderRadius: 3,
   },
   confidenceValue: {
@@ -1458,7 +1458,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 10,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   snoozeText: {
     fontSize: 14,
@@ -1468,7 +1468,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 10,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   dismissText: {
     fontSize: 14,
@@ -1482,7 +1482,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     borderRadius: 10,
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
   },
   orderText: {
     fontSize: 16,
@@ -1493,7 +1493,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 10,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   cancelText: {
     fontSize: 16,
@@ -1548,7 +1548,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     padding: 12,
     borderRadius: 8,
     marginBottom: 8,
@@ -1571,7 +1571,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textPrimary,
   },
   bundleDetailTotal: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -1610,7 +1610,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 12,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 8,
   },
   bundleDetailValidText: {

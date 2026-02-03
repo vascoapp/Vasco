@@ -149,7 +149,7 @@ const JobCard: React.FC<{
 
             <View style={styles.jobActions}>
               <TouchableOpacity style={styles.navigateButton}>
-                <Ionicons name="navigate-outline" size={18} color={SemanticColors.primary} />
+                <Ionicons name="navigate-outline" size={18} color={SemanticColors.actionPrimary} />
                 <Text style={styles.navigateButtonText}>Navigeren</Text>
               </TouchableOpacity>
 
@@ -254,7 +254,7 @@ const StatCard: React.FC<{
   value: string | number;
   subtext?: string;
   color?: string;
-}> = ({ icon, label, value, subtext, color = SemanticColors.primary }) => (
+}> = ({ icon, label, value, subtext, color = SemanticColors.actionPrimary }) => (
   <View style={styles.statCard}>
     <View style={[styles.statIconContainer, { backgroundColor: color + '20' }]}>
       <Ionicons name={icon} size={20} color={color} />
@@ -424,7 +424,7 @@ export const RouteOptimizer: React.FC = () => {
               ].map((item, index) => (
                 <View key={index} style={styles.tipItem}>
                   <View style={styles.tipIconContainer}>
-                    <Ionicons name={item.icon as keyof typeof Ionicons.glyphMap} size={18} color={SemanticColors.primary} />
+                    <Ionicons name={item.icon as keyof typeof Ionicons.glyphMap} size={18} color={SemanticColors.actionPrimary} />
                   </View>
                   <Text style={styles.tipText}>{item.tip}</Text>
                 </View>
@@ -459,7 +459,7 @@ export const RouteOptimizer: React.FC = () => {
             <Ionicons
               name={tab.icon as keyof typeof Ionicons.glyphMap}
               size={18}
-              color={activeTab === tab.key ? SemanticColors.primary : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
             />
             <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
               {tab.label}
@@ -482,14 +482,14 @@ export const RouteOptimizer: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.border,
   },
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
   optimizeButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 8,
@@ -514,7 +514,7 @@ const styles = StyleSheet.create({
   },
   tabs: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 16,
     paddingBottom: 12,
     gap: 8,
@@ -527,11 +527,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     gap: 6,
   },
   tabActive: {
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
   },
   tabText: {
     fontSize: 13,
@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   tabTextActive: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   content: {
     flex: 1,
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   },
   todaySummary: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
   createRouteButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,
@@ -608,7 +608,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   routeCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -646,7 +646,7 @@ const styles = StyleSheet.create({
   progressBar: {
     width: 60,
     height: 6,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -700,7 +700,7 @@ const styles = StyleSheet.create({
   },
   jobCard: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 10,
     padding: 12,
     marginLeft: 8,
@@ -788,13 +788,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     paddingVertical: 10,
     borderRadius: 8,
     gap: 6,
   },
   navigateButtonText: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '600',
     fontSize: 14,
   },
@@ -803,7 +803,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 10,
     borderRadius: 8,
     gap: 6,
@@ -814,7 +814,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   mapPlaceholder: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 40,
     alignItems: 'center',
@@ -835,7 +835,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   mapLegend: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -874,7 +874,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '48%',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -913,7 +913,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   optimizationCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -958,7 +958,7 @@ const styles = StyleSheet.create({
   tipItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 10,
     padding: 14,
     marginBottom: 8,
@@ -969,7 +969,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,

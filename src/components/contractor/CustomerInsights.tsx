@@ -183,7 +183,7 @@ const CustomerCard: React.FC<{
               <Text style={styles.sectionLabel}>Apparatuur</Text>
               {customer.equipment.map((eq, index) => (
                 <View key={index} style={styles.equipmentItem}>
-                  <Ionicons name="hardware-chip-outline" size={16} color={SemanticColors.primary} />
+                  <Ionicons name="hardware-chip-outline" size={16} color={SemanticColors.actionPrimary} />
                   <Text style={styles.equipmentText}>
                     {eq.type} - {eq.brand} {eq.model}
                   </Text>
@@ -194,7 +194,7 @@ const CustomerCard: React.FC<{
 
           <View style={styles.customerActions}>
             <TouchableOpacity style={styles.actionButton} onPress={onView}>
-              <Ionicons name="person-outline" size={18} color={SemanticColors.primary} />
+              <Ionicons name="person-outline" size={18} color={SemanticColors.actionPrimary} />
               <Text style={styles.actionButtonText}>Profiel</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.actionButton, styles.primaryButton]}>
@@ -236,7 +236,7 @@ const SegmentCard: React.FC<{ segment: CustomerSegment }> = ({ segment }) => (
       <View style={styles.criteriaList}>
         {segment.criteria.map((criterion, index) => (
           <View key={index} style={styles.criteriaItem}>
-            <Ionicons name="checkmark" size={12} color={SemanticColors.primary} />
+            <Ionicons name="checkmark" size={12} color={SemanticColors.actionPrimary} />
             <Text style={styles.criteriaText}>{criterion}</Text>
           </View>
         ))}
@@ -337,7 +337,7 @@ const StatCard: React.FC<{
   label: string;
   value: string | number;
   color?: string;
-}> = ({ icon, label, value, color = SemanticColors.primary }) => (
+}> = ({ icon, label, value, color = SemanticColors.actionPrimary }) => (
   <View style={styles.statCard}>
     <View style={[styles.statIconContainer, { backgroundColor: color + '20' }]}>
       <Ionicons name={icon} size={20} color={color} />
@@ -501,7 +501,7 @@ export const CustomerInsights: React.FC = () => {
             <Ionicons
               name={tab.icon as keyof typeof Ionicons.glyphMap}
               size={18}
-              color={activeTab === tab.key ? SemanticColors.primary : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
             />
             <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
               {tab.label}
@@ -524,14 +524,14 @@ export const CustomerInsights: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.border,
   },
@@ -544,13 +544,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     justifyContent: 'center',
     alignItems: 'center',
   },
   tabs: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 16,
     paddingBottom: 12,
     gap: 8,
@@ -563,11 +563,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     gap: 6,
   },
   tabActive: {
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
   },
   tabText: {
     fontSize: 13,
@@ -575,7 +575,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   tabTextActive: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   content: {
     flex: 1,
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     paddingHorizontal: 12,
     marginBottom: 16,
@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
@@ -656,7 +656,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   customerCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -683,14 +683,14 @@ const styles = StyleSheet.create({
     color: SemanticColors.text,
   },
   customerTypeBadge: {
-    backgroundColor: SemanticColors.primary + '20',
+    backgroundColor: SemanticColors.actionPrimary + '20',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
   },
   customerTypeText: {
     fontSize: 11,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '500',
   },
   customerMeta: {
@@ -720,7 +720,7 @@ const styles = StyleSheet.create({
   },
   customerStats: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
@@ -750,14 +750,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tag: {
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
   tagText: {
     fontSize: 12,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '500',
   },
   expandedContent: {
@@ -807,18 +807,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     paddingVertical: 10,
     borderRadius: 8,
     gap: 6,
   },
   actionButtonText: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '600',
     fontSize: 14,
   },
   primaryButton: {
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
   },
   primaryButtonText: {
     color: Palette.white,
@@ -837,7 +837,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   segmentCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -856,7 +856,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.text,
   },
   segmentCount: {
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -905,7 +905,7 @@ const styles = StyleSheet.create({
   criteriaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -962,7 +962,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   churnCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1055,7 +1055,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 12,
     borderRadius: 8,
     gap: 8,

@@ -169,7 +169,7 @@ const LeadCard: React.FC<{
                 style={[styles.actionButton, styles.secondaryButton]}
                 onPress={() => onUpdateStage('contacted')}
               >
-                <Ionicons name="checkmark" size={18} color={SemanticColors.primary} />
+                <Ionicons name="checkmark" size={18} color={SemanticColors.actionPrimary} />
                 <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>
                   Gecontacteerd
                 </Text>
@@ -180,7 +180,7 @@ const LeadCard: React.FC<{
                 style={[styles.actionButton, styles.secondaryButton]}
                 onPress={() => onUpdateStage('qualified')}
               >
-                <Ionicons name="star" size={18} color={SemanticColors.primary} />
+                <Ionicons name="star" size={18} color={SemanticColors.actionPrimary} />
                 <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>
                   Kwalificeer
                 </Text>
@@ -203,7 +203,7 @@ const StatCard: React.FC<{
   <View style={styles.statCard}>
     <View style={styles.statHeader}>
       <View style={styles.statIconContainer}>
-        <Ionicons name={icon} size={20} color={SemanticColors.primary} />
+        <Ionicons name={icon} size={20} color={SemanticColors.actionPrimary} />
       </View>
       {trend && (
         <View style={[styles.trendBadge, { backgroundColor: trendUp ? "rgba(34, 197, 94, 0.15)" : "rgba(239, 68, 68, 0.15)" }]}>
@@ -390,7 +390,7 @@ export const LeadGeneration: React.FC = () => {
                 ].map((item, index) => (
                   <View key={index} style={styles.sourceItem}>
                     <View style={styles.sourceIconContainer}>
-                      <Ionicons name={item.icon as keyof typeof Ionicons.glyphMap} size={18} color={SemanticColors.primary} />
+                      <Ionicons name={item.icon as keyof typeof Ionicons.glyphMap} size={18} color={SemanticColors.actionPrimary} />
                     </View>
                     <Text style={styles.sourceName}>{item.source}</Text>
                     <Text style={styles.sourceCount}>{item.leads} leads</Text>
@@ -426,7 +426,7 @@ export const LeadGeneration: React.FC = () => {
             <Ionicons
               name={tab.icon as keyof typeof Ionicons.glyphMap}
               size={18}
-              color={activeTab === tab.key ? SemanticColors.primary : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
             />
             <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
               {tab.label}
@@ -449,14 +449,14 @@ export const LeadGeneration: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.border,
   },
@@ -469,13 +469,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   tabs: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 16,
     paddingBottom: 12,
     gap: 8,
@@ -488,11 +488,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     gap: 6,
   },
   tabActive: {
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
   },
   tabText: {
     fontSize: 13,
@@ -500,7 +500,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   tabTextActive: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   content: {
     flex: 1,
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     paddingHorizontal: 12,
     marginBottom: 16,
@@ -534,7 +534,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   leadCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.text,
   },
   notesSection: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 10,
     borderRadius: 8,
     gap: 6,
@@ -662,10 +662,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   secondaryButton: {
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
   },
   secondaryButtonText: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   hotLeadsHeader: {
     alignItems: 'center',
@@ -700,7 +700,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '48%',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -716,7 +716,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -752,7 +752,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   funnelContainer: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -778,7 +778,7 @@ const styles = StyleSheet.create({
   },
   funnelBarContainer: {
     height: 8,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 4,
     overflow: 'hidden',
   },
@@ -790,7 +790,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sourcesList: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: SemanticColors.border,
@@ -807,7 +807,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,

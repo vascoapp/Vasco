@@ -152,7 +152,7 @@ export function TeamManagement() {
       ))}
 
       <TouchableOpacity style={styles.addButton}>
-        <Ionicons name="add-circle" size={24} color={SemanticColors.primary} />
+        <Ionicons name="add-circle" size={24} color={SemanticColors.actionPrimary} />
         <Text style={styles.addButtonText}>Nieuw teamlid toevoegen</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -250,7 +250,7 @@ export function TeamManagement() {
                 )}
                 {entry.totalHours && (
                   <View style={styles.timeDetail}>
-                    <Ionicons name="time" size={16} color={SemanticColors.primary} />
+                    <Ionicons name="time" size={16} color={SemanticColors.actionPrimary} />
                     <Text style={styles.timeDetailText}>{entry.totalHours}u</Text>
                   </View>
                 )}
@@ -360,7 +360,7 @@ export function TeamManagement() {
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Verlofaanvragen</Text>
         <TouchableOpacity style={styles.filterButton}>
-          <Ionicons name="filter" size={18} color={SemanticColors.primary} />
+          <Ionicons name="filter" size={18} color={SemanticColors.actionPrimary} />
           <Text style={styles.filterButtonText}>Filter</Text>
         </TouchableOpacity>
       </View>
@@ -376,7 +376,7 @@ export function TeamManagement() {
                   <Ionicons
                     name={getLeaveIcon(request.type)}
                     size={14}
-                    color={SemanticColors.primary}
+                    color={SemanticColors.actionPrimary}
                   />
                   <Text style={styles.leaveTypeText}>{getLeaveTypeName(request.type)}</Text>
                 </View>
@@ -467,7 +467,7 @@ export function TeamManagement() {
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Teamlid Details</Text>
           <TouchableOpacity>
-            <Ionicons name="create-outline" size={24} color={SemanticColors.primary} />
+            <Ionicons name="create-outline" size={24} color={SemanticColors.actionPrimary} />
           </TouchableOpacity>
         </View>
 
@@ -610,7 +610,7 @@ export function TeamManagement() {
             <Ionicons
               name={tab.icon as any}
               size={20}
-              color={activeTab === tab.id ? SemanticColors.primary : SemanticColors.textSecondary}
+              color={activeTab === tab.id ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
             />
             <Text
               style={[
@@ -698,7 +698,7 @@ function getLeaveIcon(type: string): any {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   header: {
     padding: 20,
@@ -722,7 +722,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   statItem: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     padding: 12,
     borderRadius: 12,
     minWidth: 80,
@@ -754,11 +754,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     gap: 6,
   },
   activeTab: {
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
   },
   tabLabel: {
     fontSize: 13,
@@ -766,7 +766,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeTabLabel: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   tabContent: {
     flex: 1,
@@ -789,7 +789,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   memberCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -802,14 +802,14 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: SemanticColors.primary + '20',
+    backgroundColor: SemanticColors.actionPrimary + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   statusDot: {
     position: 'absolute',
@@ -819,7 +819,7 @@ const styles = StyleSheet.create({
     height: 14,
     borderRadius: 7,
     borderWidth: 2,
-    borderColor: SemanticColors.card,
+    borderColor: SemanticColors.surfacePrimary,
   },
   memberInfo: {
     flex: 1,
@@ -841,7 +841,7 @@ const styles = StyleSheet.create({
   scoreValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   scoreLabel: {
     fontSize: 10,
@@ -856,7 +856,7 @@ const styles = StyleSheet.create({
   skillBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -894,21 +894,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.primary + '40',
+    borderColor: SemanticColors.actionPrimary + '40',
     borderStyle: 'dashed',
     marginBottom: 20,
     gap: 8,
   },
   addButtonText: {
     fontSize: 15,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
     fontWeight: '500',
   },
   timeCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -921,14 +921,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: SemanticColors.primary + '20',
+    backgroundColor: SemanticColors.actionPrimary + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },
   timeAvatarText: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   timeInfo: {
     flex: 1,
@@ -992,7 +992,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   performanceCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -1005,14 +1005,14 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: SemanticColors.primary + '20',
+    backgroundColor: SemanticColors.actionPrimary + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },
   performanceAvatarText: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   performanceInfo: {
     flex: 1,
@@ -1089,7 +1089,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     borderRadius: 3,
   },
   filterButton: {
@@ -1099,10 +1099,10 @@ const styles = StyleSheet.create({
   },
   filterButtonText: {
     fontSize: 14,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   leaveCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -1131,11 +1131,11 @@ const styles = StyleSheet.create({
   },
   leaveTypeText: {
     fontSize: 13,
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   leaveDays: {
     alignItems: 'center',
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 10,
@@ -1203,7 +1203,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1231,14 +1231,14 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: SemanticColors.primary + '20',
+    backgroundColor: SemanticColors.actionPrimary + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },
   profileAvatarText: {
     fontSize: 28,
     fontWeight: '600',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   profileName: {
     fontSize: 22,
@@ -1258,7 +1258,7 @@ const styles = StyleSheet.create({
   profileScoreValue: {
     fontSize: 32,
     fontWeight: '700',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   profileScoreLabel: {
     fontSize: 13,
@@ -1292,7 +1292,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     padding: 12,
     borderRadius: 10,
   },
@@ -1313,7 +1313,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     padding: 12,
     borderRadius: 10,
     marginBottom: 8,
@@ -1351,7 +1351,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   availDay: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     padding: 10,
     borderRadius: 10,
     minWidth: 70,

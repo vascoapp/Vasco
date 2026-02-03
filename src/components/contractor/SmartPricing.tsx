@@ -64,10 +64,10 @@ export function SmartPricing() {
 
   const getPositionStyle = (position: PricingSuggestion['competitivePosition']) => {
     switch (position) {
-      case 'below': return { color: Palette.red, label: 'Onder gemiddeld', icon: 'arrow-down' };
-      case 'average': return { color: Palette.orange, label: 'Marktconform', icon: 'remove' };
-      case 'above': return { color: Palette.blue, label: 'Boven gemiddeld', icon: 'arrow-up' };
-      case 'premium': return { color: Palette.emerald, label: 'Premium', icon: 'star' };
+      case 'below': return { color: Palette.red500, label: 'Onder gemiddeld', icon: 'arrow-down' };
+      case 'average': return { color: Palette.orange500, label: 'Marktconform', icon: 'remove' };
+      case 'above': return { color: Palette.blue500, label: 'Boven gemiddeld', icon: 'arrow-up' };
+      case 'premium': return { color: Palette.green500, label: 'Premium', icon: 'star' };
     }
   };
 
@@ -115,7 +115,7 @@ export function SmartPricing() {
           </View>
           <View style={styles.rangeLabels}>
             <Text style={styles.rangeLabelText}>{formatCurrency(sug.priceRange.min)}</Text>
-            <Text style={[styles.rangeLabelText, { color: Palette.emerald }]}>Optimaal</Text>
+            <Text style={[styles.rangeLabelText, { color: Palette.green500 }]}>Optimaal</Text>
             <Text style={styles.rangeLabelText}>{formatCurrency(sug.priceRange.max)}</Text>
           </View>
         </View>
@@ -130,15 +130,15 @@ export function SmartPricing() {
             <Text style={[styles.metricValue, { color: position.color }]}>{position.label}</Text>
           </View>
           <View style={styles.metricItem}>
-            <View style={[styles.metricIcon, { backgroundColor: Palette.blue + '20' }]}>
-              <Ionicons name="trophy-outline" size={16} color={Palette.blue} />
+            <View style={[styles.metricIcon, { backgroundColor: Palette.blue500 + '20' }]}>
+              <Ionicons name="trophy-outline" size={16} color={Palette.blue500} />
             </View>
             <Text style={styles.metricLabel}>Winkans</Text>
             <Text style={styles.metricValue}>{Math.round(sug.winProbability * 100)}%</Text>
           </View>
           <View style={styles.metricItem}>
-            <View style={[styles.metricIcon, { backgroundColor: Palette.emerald + '20' }]}>
-              <Ionicons name="trending-up-outline" size={16} color={Palette.emerald} />
+            <View style={[styles.metricIcon, { backgroundColor: Palette.green500 + '20' }]}>
+              <Ionicons name="trending-up-outline" size={16} color={Palette.green500} />
             </View>
             <Text style={styles.metricLabel}>Marge</Text>
             <Text style={styles.metricValue}>{sug.expectedMargin}%</Text>
@@ -154,13 +154,13 @@ export function SmartPricing() {
                 <Text style={styles.factorName}>{factor.name}</Text>
                 <Text style={styles.factorDesc}>{factor.description}</Text>
               </View>
-              <View style={[styles.factorImpact, { backgroundColor: factor.direction === 'up' ? Palette.emerald + '20' : Palette.red + '20' }]}>
+              <View style={[styles.factorImpact, { backgroundColor: factor.direction === 'up' ? Palette.green500 + '20' : Palette.red500 + '20' }]}>
                 <Ionicons
                   name={factor.direction === 'up' ? 'arrow-up' : 'arrow-down'}
                   size={12}
-                  color={factor.direction === 'up' ? Palette.emerald : Palette.red}
+                  color={factor.direction === 'up' ? Palette.green500 : Palette.red500}
                 />
-                <Text style={[styles.factorImpactText, { color: factor.direction === 'up' ? Palette.emerald : Palette.red }]}>
+                <Text style={[styles.factorImpactText, { color: factor.direction === 'up' ? Palette.green500 : Palette.red500 }]}>
                   {factor.direction === 'up' ? '+' : '-'}{factor.impact}%
                 </Text>
               </View>
@@ -175,7 +175,7 @@ export function SmartPricing() {
             <Text style={styles.applyButtonText}>Pas toe in offerte</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.adjustButton}>
-            <Ionicons name="options-outline" size={18} color={Palette.blue} />
+            <Ionicons name="options-outline" size={18} color={Palette.blue500} />
           </TouchableOpacity>
         </View>
       </View>
@@ -188,7 +188,7 @@ export function SmartPricing() {
         style={styles.newPriceButton}
         onPress={() => setShowPricingModal(true)}
       >
-        <Ionicons name="calculator-outline" size={24} color={Palette.blue} />
+        <Ionicons name="calculator-outline" size={24} color={Palette.blue500} />
         <View style={styles.newPriceContent}>
           <Text style={styles.newPriceTitle}>Bereken optimale prijs</Text>
           <Text style={styles.newPriceSubtitle}>
@@ -221,7 +221,7 @@ export function SmartPricing() {
     return (
       <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
         <View style={styles.marketIntro}>
-          <Ionicons name="analytics-outline" size={20} color={Palette.blue} />
+          <Ionicons name="analytics-outline" size={20} color={Palette.blue500} />
           <Text style={styles.marketIntroText}>
             Actuele uurtarieven in jouw regio (Amsterdam)
           </Text>
@@ -231,13 +231,13 @@ export function SmartPricing() {
           <View key={rate.type} style={styles.marketCard}>
             <View style={styles.marketHeader}>
               <Text style={styles.marketType}>{rate.type}</Text>
-              <View style={[styles.trendBadge, { backgroundColor: rate.trend === 'rising' ? Palette.emerald + '20' : rate.trend === 'falling' ? Palette.red + '20' : Palette.gray + '20' }]}>
+              <View style={[styles.trendBadge, { backgroundColor: rate.trend === 'rising' ? Palette.green500 + '20' : rate.trend === 'falling' ? Palette.red500 + '20' : Palette.gray500 + '20' }]}>
                 <Ionicons
                   name={rate.trend === 'rising' ? 'arrow-up' : rate.trend === 'falling' ? 'arrow-down' : 'remove'}
                   size={12}
-                  color={rate.trend === 'rising' ? Palette.emerald : rate.trend === 'falling' ? Palette.red : Palette.gray}
+                  color={rate.trend === 'rising' ? Palette.green500 : rate.trend === 'falling' ? Palette.red500 : Palette.gray500}
                 />
-                <Text style={[styles.trendText, { color: rate.trend === 'rising' ? Palette.emerald : rate.trend === 'falling' ? Palette.red : Palette.gray }]}>
+                <Text style={[styles.trendText, { color: rate.trend === 'rising' ? Palette.green500 : rate.trend === 'falling' ? Palette.red500 : Palette.gray500 }]}>
                   {rate.trendPercent > 0 ? '+' : ''}{rate.trendPercent}%
                 </Text>
               </View>
@@ -264,8 +264,8 @@ export function SmartPricing() {
   const renderSeasonalCard = (month: SeasonalAdjustment, index: number) => {
     const isCurrentMonth = index === new Date().getMonth();
     const demandColor =
-      month.demandLevel === 'high' ? Palette.emerald :
-      month.demandLevel === 'medium' ? Palette.orange :
+      month.demandLevel === 'high' ? Palette.green500 :
+      month.demandLevel === 'medium' ? Palette.orange500 :
       Palette.red;
 
     return (
@@ -274,7 +274,7 @@ export function SmartPricing() {
         style={[styles.seasonalCard, isCurrentMonth && styles.seasonalCardCurrent]}
       >
         <View style={styles.seasonalHeader}>
-          <Text style={[styles.seasonalMonth, isCurrentMonth && { color: Palette.blue }]}>
+          <Text style={[styles.seasonalMonth, isCurrentMonth && { color: Palette.blue500 }]}>
             {month.month}
           </Text>
           {isCurrentMonth && (
@@ -290,8 +290,8 @@ export function SmartPricing() {
           </Text>
         </View>
 
-        <View style={[styles.adjustmentBadge, { backgroundColor: month.suggestedAdjustment >= 0 ? Palette.emerald + '15' : Palette.red + '15' }]}>
-          <Text style={[styles.adjustmentValue, { color: month.suggestedAdjustment >= 0 ? Palette.emerald : Palette.red }]}>
+        <View style={[styles.adjustmentBadge, { backgroundColor: month.suggestedAdjustment >= 0 ? Palette.green500 + '15' : Palette.red500 + '15' }]}>
+          <Text style={[styles.adjustmentValue, { color: month.suggestedAdjustment >= 0 ? Palette.green500 : Palette.red500 }]}>
             {month.suggestedAdjustment >= 0 ? '+' : ''}{month.suggestedAdjustment}%
           </Text>
         </View>
@@ -304,7 +304,7 @@ export function SmartPricing() {
   const renderSeasonalTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
       <View style={styles.seasonalIntro}>
-        <Ionicons name="calendar-outline" size={20} color={Palette.orange} />
+        <Ionicons name="calendar-outline" size={20} color={Palette.orange500} />
         <Text style={styles.seasonalIntroText}>
           Pas je prijzen aan op basis van seizoensgebonden vraag
         </Text>
@@ -315,7 +315,7 @@ export function SmartPricing() {
       </View>
 
       <View style={styles.seasonalTip}>
-        <Ionicons name="bulb-outline" size={18} color={Palette.blue} />
+        <Ionicons name="bulb-outline" size={18} color={Palette.blue500} />
         <Text style={styles.seasonalTipText}>
           Tip: Verhoog je prijzen in drukke periodes (apr-jun, sep) en geef korting in rustige maanden voor stabiele werkstroom.
         </Text>
@@ -325,9 +325,9 @@ export function SmartPricing() {
 
   const renderCompetitorCard = (comp: CompetitorPricing) => {
     const positionColor =
-      comp.yourPosition > 75 ? Palette.emerald :
-      comp.yourPosition > 50 ? Palette.blue :
-      comp.yourPosition > 25 ? Palette.orange :
+      comp.yourPosition > 75 ? Palette.green500 :
+      comp.yourPosition > 50 ? Palette.blue500 :
+      comp.yourPosition > 25 ? Palette.orange500 :
       Palette.red;
 
     return (
@@ -373,7 +373,7 @@ export function SmartPricing() {
   const renderCompetitorsTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
       <View style={styles.competitorIntro}>
-        <Ionicons name="people-outline" size={20} color={Palette.purple} />
+        <Ionicons name="people-outline" size={20} color={Palette.hermesOrange} />
         <Text style={styles.competitorIntroText}>
           Vergelijk je tarieven met concurrenten in jouw segment
         </Text>
@@ -396,7 +396,7 @@ export function SmartPricing() {
             <Ionicons
               name={tab.icon as any}
               size={18}
-              color={activeTab === tab.key ? Palette.blue : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? Palette.blue500 : SemanticColors.textSecondary}
             />
             <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
               {tab.label}
@@ -479,7 +479,7 @@ export function SmartPricing() {
                 <Ionicons
                   name="person-outline"
                   size={24}
-                  color={selectedCustomerType === 'particulier' ? Palette.blue : SemanticColors.textSecondary}
+                  color={selectedCustomerType === 'particulier' ? Palette.blue500 : SemanticColors.textSecondary}
                 />
                 <Text style={[styles.customerTypeLabel, selectedCustomerType === 'particulier' && styles.customerTypeLabelSelected]}>
                   Particulier
@@ -492,7 +492,7 @@ export function SmartPricing() {
                 <Ionicons
                   name="business-outline"
                   size={24}
-                  color={selectedCustomerType === 'zakelijk' ? Palette.blue : SemanticColors.textSecondary}
+                  color={selectedCustomerType === 'zakelijk' ? Palette.blue500 : SemanticColors.textSecondary}
                 />
                 <Text style={[styles.customerTypeLabel, selectedCustomerType === 'zakelijk' && styles.customerTypeLabelSelected]}>
                   Zakelijk
@@ -509,11 +509,11 @@ export function SmartPricing() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderBottomWidth: 1,
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   activeTab: {
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
   },
   tabText: {
     fontSize: 12,
@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeTabText: {
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   tabContent: {
     flex: 1,
@@ -548,7 +548,7 @@ const styles = StyleSheet.create({
   newPriceButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -572,7 +572,7 @@ const styles = StyleSheet.create({
 
   // Suggestion Card
   suggestionCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   priceBadge: {
-    backgroundColor: Palette.emerald,
+    backgroundColor: Palette.green500,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -634,7 +634,7 @@ const styles = StyleSheet.create({
   rangeOptimalZone: {
     position: 'absolute',
     height: '100%',
-    backgroundColor: Palette.emerald + '40',
+    backgroundColor: Palette.green500 + '40',
     borderRadius: 6,
   },
   rangeMarker: {
@@ -643,7 +643,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: Palette.emerald,
+    backgroundColor: Palette.green500,
     borderWidth: 2,
     borderColor: '#fff',
     marginLeft: -8,
@@ -660,7 +660,7 @@ const styles = StyleSheet.create({
   // Metrics Row
   metricsRow: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 12,
     marginBottom: 20,
@@ -745,7 +745,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Palette.blue,
+    backgroundColor: Palette.blue500,
     paddingVertical: 14,
     borderRadius: 10,
     gap: 8,
@@ -759,7 +759,7 @@ const styles = StyleSheet.create({
     width: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
     borderRadius: 10,
   },
 
@@ -787,7 +787,7 @@ const styles = StyleSheet.create({
   marketIntro: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -799,7 +799,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.text,
   },
   marketCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -864,7 +864,7 @@ const styles = StyleSheet.create({
   seasonalIntro: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Palette.orange + '15',
+    backgroundColor: Palette.orange500 + '15',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -883,7 +883,7 @@ const styles = StyleSheet.create({
   },
   seasonalCard: {
     width: '31%',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 10,
     padding: 10,
     borderWidth: 1,
@@ -891,7 +891,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   seasonalCardCurrent: {
-    borderColor: Palette.blue,
+    borderColor: Palette.blue500,
     borderWidth: 2,
   },
   seasonalHeader: {
@@ -906,7 +906,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.text,
   },
   currentBadge: {
-    backgroundColor: Palette.blue,
+    backgroundColor: Palette.blue500,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 8,
@@ -944,7 +944,7 @@ const styles = StyleSheet.create({
   seasonalTip: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
     borderRadius: 12,
     padding: 16,
     gap: 10,
@@ -960,7 +960,7 @@ const styles = StyleSheet.create({
   competitorIntro: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Palette.purple + '15',
+    backgroundColor: Palette.hermesOrange + '15',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -972,7 +972,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.text,
   },
   competitorCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1067,7 +1067,7 @@ const styles = StyleSheet.create({
   // Modal
   modalContainer: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1077,7 +1077,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.border,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   modalTitle: {
     fontSize: 17,
@@ -1087,7 +1087,7 @@ const styles = StyleSheet.create({
   modalAction: {
     fontSize: 16,
     fontWeight: '600',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   modalContent: {
     flex: 1,
@@ -1110,13 +1110,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderWidth: 1,
     borderColor: SemanticColors.border,
   },
   typeOptionSelected: {
-    backgroundColor: Palette.blue,
-    borderColor: Palette.blue,
+    backgroundColor: Palette.blue500,
+    borderColor: Palette.blue500,
   },
   typeOptionText: {
     fontSize: 14,
@@ -1131,15 +1131,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   scopeOption: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
     borderColor: SemanticColors.border,
   },
   scopeOptionSelected: {
-    backgroundColor: Palette.blue + '15',
-    borderColor: Palette.blue,
+    backgroundColor: Palette.blue500 + '15',
+    borderColor: Palette.blue500,
   },
   scopeLabel: {
     fontSize: 15,
@@ -1147,7 +1147,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.text,
   },
   scopeLabelSelected: {
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   scopeDesc: {
     fontSize: 13,
@@ -1155,7 +1155,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   scopeDescSelected: {
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   customerTypeOptions: {
     flexDirection: 'row',
@@ -1163,7 +1163,7 @@ const styles = StyleSheet.create({
   },
   customerTypeOption: {
     flex: 1,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 20,
     alignItems: 'center',
@@ -1172,8 +1172,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   customerTypeSelected: {
-    backgroundColor: Palette.blue + '15',
-    borderColor: Palette.blue,
+    backgroundColor: Palette.blue500 + '15',
+    borderColor: Palette.blue500,
   },
   customerTypeLabel: {
     fontSize: 14,
@@ -1181,7 +1181,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.text,
   },
   customerTypeLabelSelected: {
-    color: Palette.blue,
+    color: Palette.blue500,
     fontWeight: '600',
   },
 });

@@ -54,20 +54,20 @@ export function KnowledgeBase() {
 
   const getDifficultyStyle = (difficulty: string) => {
     switch (difficulty) {
-      case 'beginner': return { color: Palette.emerald, label: 'Beginner' };
-      case 'intermediate': return { color: Palette.orange, label: 'Gemiddeld' };
-      case 'advanced': return { color: Palette.red, label: 'Gevorderd' };
-      default: return { color: Palette.gray, label: difficulty };
+      case 'beginner': return { color: Palette.green500, label: 'Beginner' };
+      case 'intermediate': return { color: Palette.orange500, label: 'Gemiddeld' };
+      case 'advanced': return { color: Palette.red500, label: 'Gevorderd' };
+      default: return { color: Palette.gray500, label: difficulty };
     }
   };
 
   const getSkillLevelStyle = (level: string) => {
     const levels: Record<string, { color: string; width: number }> = {
-      none: { color: Palette.gray, width: 0 },
-      beginner: { color: Palette.red, width: 25 },
-      intermediate: { color: Palette.orange, width: 50 },
-      advanced: { color: Palette.blue, width: 75 },
-      expert: { color: Palette.emerald, width: 100 },
+      none: { color: Palette.gray500, width: 0 },
+      beginner: { color: Palette.red500, width: 25 },
+      intermediate: { color: Palette.orange500, width: 50 },
+      advanced: { color: Palette.blue500, width: 75 },
+      expert: { color: Palette.green500, width: 100 },
     };
     return levels[level] || levels.none;
   };
@@ -100,7 +100,7 @@ export function KnowledgeBase() {
     <TouchableOpacity key={path.id} style={styles.pathCard}>
       <View style={styles.pathHeader}>
         <View style={styles.pathIcon}>
-          <Ionicons name="school-outline" size={24} color={Palette.purple} />
+          <Ionicons name="school-outline" size={24} color={Palette.hermesOrange} />
         </View>
         <View style={styles.pathInfo}>
           <Text style={styles.pathTitle}>{path.title}</Text>
@@ -217,7 +217,7 @@ export function KnowledgeBase() {
             <View style={styles.articleHeader}>
               <Text style={styles.articleCategory}>{article.category}</Text>
               {article.bookmarked && (
-                <Ionicons name="bookmark" size={16} color={Palette.blue} />
+                <Ionicons name="bookmark" size={16} color={Palette.blue500} />
               )}
             </View>
             <Text style={styles.articleTitle}>{article.title}</Text>
@@ -252,7 +252,7 @@ export function KnowledgeBase() {
       <TouchableOpacity key={tutorial.id} style={styles.tutorialCard}>
         <View style={styles.tutorialHeader}>
           <View style={styles.tutorialIcon}>
-            <Ionicons name="play-circle" size={32} color={Palette.blue} />
+            <Ionicons name="play-circle" size={32} color={Palette.blue500} />
             {tutorial.progress > 0 && tutorial.progress < 100 && (
               <View style={styles.tutorialProgressRing}>
                 <Text style={styles.tutorialProgressText}>{tutorial.progress}%</Text>
@@ -260,7 +260,7 @@ export function KnowledgeBase() {
             )}
             {tutorial.progress === 100 && (
               <View style={styles.tutorialCompleteIcon}>
-                <Ionicons name="checkmark-circle" size={16} color={Palette.emerald} />
+                <Ionicons name="checkmark-circle" size={16} color={Palette.green500} />
               </View>
             )}
           </View>
@@ -330,11 +330,11 @@ export function KnowledgeBase() {
 
   const getCategoryStyle = (category: string) => {
     switch (category) {
-      case 'regelgeving': return { color: Palette.red, icon: 'document-text' };
-      case 'markt': return { color: Palette.blue, icon: 'trending-up' };
-      case 'technologie': return { color: Palette.purple, icon: 'hardware-chip' };
-      case 'materialen': return { color: Palette.orange, icon: 'cube' };
-      default: return { color: Palette.gray, icon: 'newspaper' };
+      case 'regelgeving': return { color: Palette.red500, icon: 'document-text' };
+      case 'markt': return { color: Palette.blue500, icon: 'trending-up' };
+      case 'technologie': return { color: Palette.hermesOrange, icon: 'hardware-chip' };
+      case 'materialen': return { color: Palette.orange500, icon: 'cube' };
+      default: return { color: Palette.gray500, icon: 'newspaper' };
     }
   };
 
@@ -356,7 +356,7 @@ export function KnowledgeBase() {
                 <Text style={styles.updateTitle}>{update.title}</Text>
                 {update.importance === 'high' && (
                   <View style={styles.importanceBadge}>
-                    <Ionicons name="alert-circle" size={12} color={Palette.red} />
+                    <Ionicons name="alert-circle" size={12} color={Palette.red500} />
                   </View>
                 )}
               </View>
@@ -397,7 +397,7 @@ export function KnowledgeBase() {
               <Ionicons
                 name={tab.icon as any}
                 size={18}
-                color={activeTab === tab.key ? Palette.blue : SemanticColors.textSecondary}
+                color={activeTab === tab.key ? Palette.blue500 : SemanticColors.textSecondary}
               />
               {tab.badge && tab.badge > 0 && (
                 <View style={styles.tabBadge}>
@@ -436,7 +436,7 @@ export function KnowledgeBase() {
               <Ionicons
                 name={selectedArticle?.bookmarked ? 'bookmark' : 'bookmark-outline'}
                 size={24}
-                color={selectedArticle?.bookmarked ? Palette.blue : SemanticColors.text}
+                color={selectedArticle?.bookmarked ? Palette.blue500 : SemanticColors.text}
               />
             </TouchableOpacity>
           </View>
@@ -485,7 +485,7 @@ export function KnowledgeBase() {
 
               <View style={styles.articleActions}>
                 <TouchableOpacity style={styles.helpfulButton}>
-                  <Ionicons name="thumbs-up-outline" size={20} color={Palette.blue} />
+                  <Ionicons name="thumbs-up-outline" size={20} color={Palette.blue500} />
                   <Text style={styles.helpfulButtonText}>Nuttig</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.shareButton}>
@@ -504,11 +504,11 @@ export function KnowledgeBase() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderBottomWidth: 1,
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   activeTab: {
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
   },
   tabIconContainer: {
     position: 'relative',
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -6,
     right: -8,
-    backgroundColor: Palette.red,
+    backgroundColor: Palette.red500,
     borderRadius: 8,
     minWidth: 16,
     height: 16,
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeTabText: {
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   tabContent: {
     flex: 1,
@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     fontSize: 14,
-    color: Palette.blue,
+    color: Palette.blue500,
   },
 
   // Skills
@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
   },
   skillCard: {
     width: 180,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 14,
     marginRight: 12,
@@ -622,7 +622,7 @@ const styles = StyleSheet.create({
 
   // Learning Paths
   pathCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -639,7 +639,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: Palette.purple + '15',
+    backgroundColor: Palette.hermesOrange + '15',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -670,13 +670,13 @@ const styles = StyleSheet.create({
   },
   pathProgressFill: {
     height: '100%',
-    backgroundColor: Palette.purple,
+    backgroundColor: Palette.hermesOrange,
     borderRadius: 3,
   },
   pathProgressText: {
     fontSize: 13,
     fontWeight: '600',
-    color: Palette.purple,
+    color: Palette.hermesOrange,
   },
   pathMeta: {
     flexDirection: 'row',
@@ -696,7 +696,7 @@ const styles = StyleSheet.create({
   articleCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -714,7 +714,7 @@ const styles = StyleSheet.create({
   },
   articleCategory: {
     fontSize: 11,
-    color: Palette.blue,
+    color: Palette.blue500,
     fontWeight: '600',
     textTransform: 'uppercase',
   },
@@ -758,7 +758,7 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 10,
     paddingHorizontal: 12,
     marginBottom: 12,
@@ -781,7 +781,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderWidth: 1,
     borderColor: SemanticColors.border,
     marginRight: 8,
@@ -793,7 +793,7 @@ const styles = StyleSheet.create({
 
   // Tutorials
   tutorialCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -812,7 +812,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: Palette.blue,
+    backgroundColor: Palette.blue500,
     borderRadius: 10,
     paddingHorizontal: 4,
     paddingVertical: 2,
@@ -866,7 +866,7 @@ const styles = StyleSheet.create({
   },
   tutorialProgressFill: {
     height: '100%',
-    backgroundColor: Palette.blue,
+    backgroundColor: Palette.blue500,
     borderRadius: 2,
   },
   skillsGained: {
@@ -885,14 +885,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   skillGainedChip: {
-    backgroundColor: Palette.emerald + '15',
+    backgroundColor: Palette.green500 + '15',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
   skillGainedText: {
     fontSize: 12,
-    color: Palette.emerald,
+    color: Palette.green500,
     fontWeight: '500',
   },
 
@@ -900,7 +900,7 @@ const styles = StyleSheet.create({
   updateCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -909,8 +909,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   updateCardUnread: {
-    backgroundColor: Palette.blue + '08',
-    borderColor: Palette.blue + '30',
+    backgroundColor: Palette.blue500 + '08',
+    borderColor: Palette.blue500 + '30',
   },
   updateIcon: {
     width: 40,
@@ -947,7 +947,7 @@ const styles = StyleSheet.create({
   },
   updateSource: {
     fontSize: 11,
-    color: Palette.blue,
+    color: Palette.blue500,
     fontWeight: '500',
   },
   updateDate: {
@@ -958,7 +958,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Palette.blue,
+    backgroundColor: Palette.blue500,
     marginTop: 6,
   },
 
@@ -984,7 +984,7 @@ const styles = StyleSheet.create({
   // Modal
   modalContainer: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -994,7 +994,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.border,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   articleModalContent: {
     flex: 1,
@@ -1002,7 +1002,7 @@ const styles = StyleSheet.create({
   },
   articleModalCategory: {
     fontSize: 12,
-    color: Palette.blue,
+    color: Palette.blue500,
     fontWeight: '600',
     textTransform: 'uppercase',
     marginBottom: 8,
@@ -1048,7 +1048,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   tagChip: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -1085,13 +1085,13 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: Palette.blue,
+    borderColor: Palette.blue500,
     gap: 8,
   },
   helpfulButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   shareButton: {
     flex: 1,
@@ -1100,7 +1100,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 14,
     borderRadius: 10,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderWidth: 1,
     borderColor: SemanticColors.border,
     gap: 8,

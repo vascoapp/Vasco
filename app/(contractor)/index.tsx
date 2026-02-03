@@ -131,16 +131,25 @@ function EarningsCard({ earnings }: { earnings: EarningsData }) {
       </View>
 
       {earnings.pendingQuotes > 0 && (
-        <Pressable
-          style={styles.pendingQuotesBar}
-          onPress={() => router.push('/(contractor)/money')}
-        >
-          <Ionicons name="document-text" size={16} color={Palette.terracotta} />
-          <Text style={styles.pendingQuotesText}>
-            {earnings.pendingQuotes} {earnings.pendingQuotes === 1 ? 'offerte wacht' : 'offertes wachten'} op antwoord
-          </Text>
-          <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
-        </Pressable>
+        <View style={styles.pendingQuotesSection}>
+          <Pressable
+            style={styles.pendingQuotesBar}
+            onPress={() => router.push('/(contractor)/money')}
+          >
+            <Ionicons name="document-text" size={16} color={Palette.terracotta} />
+            <Text style={styles.pendingQuotesText}>
+              {earnings.pendingQuotes} {earnings.pendingQuotes === 1 ? 'offerte wacht' : 'offertes wachten'} op antwoord
+            </Text>
+            <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+          </Pressable>
+          <Pressable
+            style={styles.smartQuoteButton}
+            onPress={() => router.push('/contractor/tiered-quote' as any)}
+          >
+            <Ionicons name="layers" size={16} color={Palette.hermesOrange} />
+            <Text style={styles.smartQuoteButtonText}>Smart Offerte maken</Text>
+          </Pressable>
+        </View>
       )}
     </View>
   );
@@ -650,19 +659,36 @@ const styles = StyleSheet.create({
     height: 36,
     backgroundColor: SemanticColors.borderDefault,
   },
-  pendingQuotesBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
+  pendingQuotesSection: {
     marginTop: Spacing.md,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
     borderTopColor: SemanticColors.borderDefault,
+    gap: Spacing.sm,
+  },
+  pendingQuotesBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
   },
   pendingQuotesText: {
     flex: 1,
     fontSize: 13,
     color: SemanticColors.textSecondary,
+  },
+  smartQuoteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: Palette.hermesOrange + '15',
+    paddingVertical: Spacing.sm,
+    borderRadius: 8,
+  },
+  smartQuoteButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Palette.hermesOrange,
   },
 
   // AI Section

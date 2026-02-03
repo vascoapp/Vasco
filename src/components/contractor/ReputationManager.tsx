@@ -72,7 +72,7 @@ export function ReputationManager() {
           key={star}
           name={star <= rating ? 'star' : 'star-outline'}
           size={size}
-          color={star <= rating ? Palette.orange : SemanticColors.border}
+          color={star <= rating ? Palette.orange500 : SemanticColors.border}
         />
       ))}
     </View>
@@ -105,7 +105,7 @@ export function ReputationManager() {
         </View>
         {review.verified && (
           <View style={styles.verifiedBadge}>
-            <Ionicons name="checkmark-circle" size={14} color={Palette.emerald} />
+            <Ionicons name="checkmark-circle" size={14} color={Palette.green500} />
             <Text style={styles.verifiedText}>Geverifieerd</Text>
           </View>
         )}
@@ -118,7 +118,7 @@ export function ReputationManager() {
       {review.response ? (
         <View style={styles.responseBox}>
           <View style={styles.responseHeader}>
-            <Ionicons name="chatbubble-outline" size={14} color={Palette.blue} />
+            <Ionicons name="chatbubble-outline" size={14} color={Palette.blue500} />
             <Text style={styles.responseLabel}>Jouw reactie</Text>
           </View>
           <Text style={styles.responseText}>{review.response.content}</Text>
@@ -129,7 +129,7 @@ export function ReputationManager() {
           style={styles.respondButton}
           onPress={() => handleRespond(review)}
         >
-          <Ionicons name="chatbubble-outline" size={16} color={Palette.blue} />
+          <Ionicons name="chatbubble-outline" size={16} color={Palette.blue500} />
           <Text style={styles.respondButtonText}>Reageren</Text>
         </TouchableOpacity>
       )}
@@ -159,7 +159,7 @@ export function ReputationManager() {
               <Ionicons
                 name="star"
                 size={12}
-                color={filterRating === rating ? '#fff' : Palette.orange}
+                color={filterRating === rating ? '#fff' : Palette.orange500}
               />
               <Text style={[styles.filterChipText, filterRating === rating && styles.filterChipTextActive]}>
                 {rating}
@@ -187,9 +187,9 @@ export function ReputationManager() {
   const renderScoreTab = () => {
     const getTrendStyle = (trend: string) => {
       switch (trend) {
-        case 'improving': return { color: Palette.emerald, icon: 'arrow-up', label: 'Stijgend' };
-        case 'declining': return { color: Palette.red, icon: 'arrow-down', label: 'Dalend' };
-        default: return { color: Palette.gray, icon: 'remove', label: 'Stabiel' };
+        case 'improving': return { color: Palette.green500, icon: 'arrow-up', label: 'Stijgend' };
+        case 'declining': return { color: Palette.red500, icon: 'arrow-down', label: 'Dalend' };
+        default: return { color: Palette.gray500, icon: 'remove', label: 'Stabiel' };
       }
     };
 
@@ -234,7 +234,7 @@ export function ReputationManager() {
                         styles.categoryFill,
                         {
                           width: `${value}%`,
-                          backgroundColor: value >= 90 ? Palette.emerald : value >= 80 ? Palette.blue : Palette.orange,
+                          backgroundColor: value >= 90 ? Palette.green500 : value >= 80 ? Palette.blue500 : Palette.orange500,
                         },
                       ]}
                     />
@@ -274,7 +274,7 @@ export function ReputationManager() {
         <Ionicons
           name={cert.verified ? 'ribbon' : 'ribbon-outline'}
           size={28}
-          color={cert.verified ? Palette.emerald : SemanticColors.textSecondary}
+          color={cert.verified ? Palette.green500 : SemanticColors.textSecondary}
         />
       </View>
       <View style={styles.certInfo}>
@@ -291,7 +291,7 @@ export function ReputationManager() {
       </View>
       {cert.verified && (
         <View style={styles.verifiedIndicator}>
-          <Ionicons name="checkmark-circle" size={20} color={Palette.emerald} />
+          <Ionicons name="checkmark-circle" size={20} color={Palette.green500} />
         </View>
       )}
     </View>
@@ -309,7 +309,7 @@ export function ReputationManager() {
       {certifications.map(renderCertificationCard)}
 
       <TouchableOpacity style={styles.addCertButton}>
-        <Ionicons name="add-circle-outline" size={24} color={Palette.blue} />
+        <Ionicons name="add-circle-outline" size={24} color={Palette.blue500} />
         <Text style={styles.addCertText}>Certificaat toevoegen</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -331,7 +331,7 @@ export function ReputationManager() {
             return (
               <View key={rating} style={styles.distributionRow}>
                 <Text style={styles.distributionLabel}>{rating}</Text>
-                <Ionicons name="star" size={12} color={Palette.orange} />
+                <Ionicons name="star" size={12} color={Palette.orange500} />
                 <View style={styles.distributionBar}>
                   <View
                     style={[styles.distributionFill, { width: `${percentage}%` }]}
@@ -353,13 +353,13 @@ export function ReputationManager() {
               key={index}
               style={[
                 styles.keywordChip,
-                { backgroundColor: kw.sentiment === 'positive' ? Palette.emerald + '20' : Palette.red + '20' },
+                { backgroundColor: kw.sentiment === 'positive' ? Palette.green500 + '20' : Palette.red500 + '20' },
               ]}
             >
               <Text
                 style={[
                   styles.keywordText,
-                  { color: kw.sentiment === 'positive' ? Palette.emerald : Palette.red },
+                  { color: kw.sentiment === 'positive' ? Palette.green500 : Palette.red500 },
                 ]}
               >
                 {kw.word}
@@ -389,11 +389,11 @@ export function ReputationManager() {
         <Ionicons
           name={stats.recentTrend >= 0 ? 'trending-up' : 'trending-down'}
           size={24}
-          color={stats.recentTrend >= 0 ? Palette.emerald : Palette.red}
+          color={stats.recentTrend >= 0 ? Palette.green500 : Palette.red500}
         />
         <View style={styles.trendContent}>
           <Text style={styles.trendTitle}>Recente trend</Text>
-          <Text style={[styles.trendValue, { color: stats.recentTrend >= 0 ? Palette.emerald : Palette.red }]}>
+          <Text style={[styles.trendValue, { color: stats.recentTrend >= 0 ? Palette.green500 : Palette.red500 }]}>
             {stats.recentTrend >= 0 ? '+' : ''}{(stats.recentTrend * 100).toFixed(0)}% t.o.v. vorige maand
           </Text>
         </View>
@@ -414,7 +414,7 @@ export function ReputationManager() {
             <Ionicons
               name={tab.icon as any}
               size={18}
-              color={activeTab === tab.key ? Palette.blue : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? Palette.blue500 : SemanticColors.textSecondary}
             />
             <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
               {tab.label}
@@ -489,11 +489,11 @@ export function ReputationManager() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderBottomWidth: 1,
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   activeTab: {
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
   },
   tabText: {
     fontSize: 12,
@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeTabText: {
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   tabContent: {
     flex: 1,
@@ -544,15 +544,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderWidth: 1,
     borderColor: SemanticColors.border,
     marginRight: 8,
     gap: 4,
   },
   filterChipActive: {
-    backgroundColor: Palette.blue,
-    borderColor: Palette.blue,
+    backgroundColor: Palette.blue500,
+    borderColor: Palette.blue500,
   },
   filterChipText: {
     fontSize: 13,
@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
 
   // Review Card
   reviewCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -587,14 +587,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Palette.blue + '20',
+    backgroundColor: Palette.blue500 + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   reviewerName: {
     fontSize: 15,
@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   ratingBadge: {
-    backgroundColor: Palette.orange + '15',
+    backgroundColor: Palette.orange500 + '15',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
   },
   verifiedText: {
     fontSize: 12,
-    color: Palette.emerald,
+    color: Palette.green500,
     fontWeight: '500',
   },
   helpfulBadge: {
@@ -659,11 +659,11 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   responseBox: {
-    backgroundColor: Palette.blue + '10',
+    backgroundColor: Palette.blue500 + '10',
     borderRadius: 8,
     padding: 12,
     borderLeftWidth: 3,
-    borderLeftColor: Palette.blue,
+    borderLeftColor: Palette.blue500,
   },
   responseHeader: {
     flexDirection: 'row',
@@ -674,7 +674,7 @@ const styles = StyleSheet.create({
   responseLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   responseText: {
     fontSize: 14,
@@ -693,13 +693,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Palette.blue,
+    borderColor: Palette.blue500,
     gap: 6,
   },
   respondButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
 
   // Empty State
@@ -725,7 +725,7 @@ const styles = StyleSheet.create({
   scoreCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,
@@ -737,7 +737,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: Palette.emerald + '20',
+    backgroundColor: Palette.green500 + '20',
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
@@ -745,11 +745,11 @@ const styles = StyleSheet.create({
   scoreValue: {
     fontSize: 36,
     fontWeight: '700',
-    color: Palette.emerald,
+    color: Palette.green500,
   },
   scoreMax: {
     fontSize: 16,
-    color: Palette.emerald,
+    color: Palette.green500,
     marginTop: 12,
   },
   scoreMeta: {
@@ -782,7 +782,7 @@ const styles = StyleSheet.create({
 
   // Categories Card
   categoriesCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -831,7 +831,7 @@ const styles = StyleSheet.create({
 
   // Response Stats Card
   responseStatsCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -869,12 +869,12 @@ const styles = StyleSheet.create({
   },
   certHeaderSubtitle: {
     fontSize: 14,
-    color: Palette.emerald,
+    color: Palette.green500,
   },
   certCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -886,7 +886,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: Palette.emerald + '15',
+    backgroundColor: Palette.green500 + '15',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -914,31 +914,31 @@ const styles = StyleSheet.create({
   },
   certExpiry: {
     fontSize: 11,
-    color: Palette.orange,
+    color: Palette.orange500,
   },
   verifiedIndicator: {},
   addCertButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: Palette.blue,
+    borderColor: Palette.blue500,
     borderStyle: 'dashed',
     gap: 8,
   },
   addCertText: {
     fontSize: 15,
     fontWeight: '600',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
 
   // Stats Tab
   ratingsSummary: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -985,7 +985,7 @@ const styles = StyleSheet.create({
   },
   distributionFill: {
     height: '100%',
-    backgroundColor: Palette.orange,
+    backgroundColor: Palette.orange500,
     borderRadius: 3,
   },
   distributionCount: {
@@ -997,7 +997,7 @@ const styles = StyleSheet.create({
 
   // Keywords Card
   keywordsCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -1028,7 +1028,7 @@ const styles = StyleSheet.create({
 
   // Response Card
   responseCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -1044,7 +1044,7 @@ const styles = StyleSheet.create({
   responsePercent: {
     fontSize: 24,
     fontWeight: '700',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   responseBar: {
     height: 8,
@@ -1054,7 +1054,7 @@ const styles = StyleSheet.create({
   },
   responseFill: {
     height: '100%',
-    backgroundColor: Palette.blue,
+    backgroundColor: Palette.blue500,
     borderRadius: 4,
   },
   responseTip: {
@@ -1066,7 +1066,7 @@ const styles = StyleSheet.create({
   trendCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -1089,7 +1089,7 @@ const styles = StyleSheet.create({
   // Modal
   modalContainer: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1099,7 +1099,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.border,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   modalTitle: {
     fontSize: 17,
@@ -1109,7 +1109,7 @@ const styles = StyleSheet.create({
   modalAction: {
     fontSize: 16,
     fontWeight: '600',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   modalActionDisabled: {
     color: SemanticColors.textSecondary,
@@ -1119,7 +1119,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   reviewPreview: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -1143,7 +1143,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   responseInput: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -1154,7 +1154,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   responseTips: {
-    backgroundColor: Palette.blue + '10',
+    backgroundColor: Palette.blue500 + '10',
     borderRadius: 12,
     padding: 16,
   },

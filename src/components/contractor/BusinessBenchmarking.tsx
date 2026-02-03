@@ -480,7 +480,7 @@ export const BusinessBenchmarking: React.FC = () => {
       <View style={styles.header}>
         <Text style={styles.title}>Benchmarking</Text>
         <TouchableOpacity style={styles.refreshButton}>
-          <Ionicons name="refresh-outline" size={24} color={SemanticColors.text} />
+          <Ionicons name="refresh-outline" size={24} color={SemanticColors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -498,7 +498,7 @@ export const BusinessBenchmarking: React.FC = () => {
             <Ionicons
               name={tab.icon as keyof typeof Ionicons.glyphMap}
               size={18}
-              color={activeTab === tab.key ? SemanticColors.primary : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
             />
             <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
               {tab.label}
@@ -521,33 +521,33 @@ export const BusinessBenchmarking: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   refreshButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     justifyContent: 'center',
     alignItems: 'center',
   },
   tabs: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 16,
     paddingBottom: 12,
     gap: 8,
@@ -560,11 +560,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     gap: 6,
   },
   tabActive: {
-    backgroundColor: SemanticColors.primary + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
   },
   tabText: {
     fontSize: 13,
@@ -572,7 +572,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   tabTextActive: {
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   content: {
     flex: 1,
@@ -589,12 +589,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   overallScoreCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   scoreCircle: {
     flexDirection: 'row',
@@ -605,7 +605,7 @@ const styles = StyleSheet.create({
   scoreValue: {
     fontSize: 48,
     fontWeight: '700',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   scoreMax: {
     fontSize: 20,
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
   scoreTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   scorePercentile: {
     fontSize: 14,
@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   scoreHighlights: {
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 10,
     padding: 12,
     gap: 8,
@@ -644,7 +644,7 @@ const styles = StyleSheet.create({
   highlightValue: {
     fontSize: 13,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   categorySection: {
     marginBottom: 24,
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
   categoryName: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   categoryDescription: {
     fontSize: 13,
@@ -663,12 +663,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   metricCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   metricHeader: {
     flexDirection: 'row',
@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
   metricName: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   metricDescription: {
     fontSize: 13,
@@ -701,7 +701,7 @@ const styles = StyleSheet.create({
   },
   metricValues: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
@@ -718,7 +718,7 @@ const styles = StyleSheet.create({
   yourValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   industryValue: {
     fontSize: 16,
@@ -732,7 +732,7 @@ const styles = StyleSheet.create({
   },
   valueDivider: {
     width: 1,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     marginHorizontal: 8,
   },
   trendContainer: {
@@ -750,7 +750,7 @@ const styles = StyleSheet.create({
   },
   percentileBar: {
     height: 8,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 4,
     overflow: 'hidden',
     position: 'relative',
@@ -775,12 +775,12 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   recommendationsTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   recommendationItem: {
@@ -792,13 +792,13 @@ const styles = StyleSheet.create({
   recommendationText: {
     flex: 1,
     fontSize: 13,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   setGoalButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 10,
     borderRadius: 8,
     marginTop: 12,
@@ -817,12 +817,12 @@ const styles = StyleSheet.create({
   },
   goalsStats: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 10,
     padding: 12,
     gap: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   goalsStat: {
     alignItems: 'center',
@@ -830,7 +830,7 @@ const styles = StyleSheet.create({
   goalsStatValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   goalsStatLabel: {
     fontSize: 11,
@@ -838,12 +838,12 @@ const styles = StyleSheet.create({
   },
   goalsStatDivider: {
     width: 1,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
   },
   addGoalButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 8,
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: 12,
     fontSize: 16,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     fontWeight: '500',
   },
   emptySubtext: {
@@ -870,12 +870,12 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   goalCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   goalHeader: {
     flexDirection: 'row',
@@ -889,7 +889,7 @@ const styles = StyleSheet.create({
   goalMetric: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   goalDeadline: {
     fontSize: 13,
@@ -925,7 +925,7 @@ const styles = StyleSheet.create({
   goalCurrentValue: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   goalTargetValue: {
     fontSize: 18,
@@ -934,7 +934,7 @@ const styles = StyleSheet.create({
   },
   progressBarContainer: {
     height: 8,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 4,
     overflow: 'hidden',
   },
@@ -953,7 +953,7 @@ const styles = StyleSheet.create({
   opportunitiesTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   opportunitiesSubtitle: {
     fontSize: 14,
@@ -961,12 +961,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   opportunityCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   opportunityHeader: {
     flexDirection: 'row',
@@ -977,7 +977,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -993,7 +993,7 @@ const styles = StyleSheet.create({
   opportunityTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   opportunityCategory: {
     fontSize: 13,
@@ -1033,7 +1033,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
@@ -1050,7 +1050,7 @@ const styles = StyleSheet.create({
   comparisonValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   actionsSection: {
     marginBottom: 16,
@@ -1058,7 +1058,7 @@ const styles = StyleSheet.create({
   actionsTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 10,
   },
   actionItem: {
@@ -1070,7 +1070,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: SemanticColors.primary + '20',
+    backgroundColor: SemanticColors.actionPrimary + '20',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -1078,18 +1078,18 @@ const styles = StyleSheet.create({
   actionNumberText: {
     fontSize: 12,
     fontWeight: '600',
-    color: SemanticColors.primary,
+    color: SemanticColors.actionPrimary,
   },
   actionText: {
     flex: 1,
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   exploreButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.primary,
+    backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 12,
     borderRadius: 8,
     gap: 8,

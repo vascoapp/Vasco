@@ -57,31 +57,31 @@ export function SmartScheduler() {
 
   const getJobTypeStyle = (type: ScheduledJob['type']) => {
     switch (type) {
-      case 'job': return { color: Palette.blue, icon: 'construct-outline', label: 'Werk' };
-      case 'quote_visit': return { color: Palette.purple, icon: 'document-text-outline', label: 'Offerte' };
-      case 'follow_up': return { color: Palette.orange, icon: 'chatbubble-outline', label: 'Follow-up' };
-      case 'personal': return { color: Palette.gray, icon: 'person-outline', label: 'Persoonlijk' };
-      default: return { color: Palette.gray, icon: 'calendar-outline', label: type };
+      case 'job': return { color: Palette.blue500, icon: 'construct-outline', label: 'Werk' };
+      case 'quote_visit': return { color: Palette.hermesOrange, icon: 'document-text-outline', label: 'Offerte' };
+      case 'follow_up': return { color: Palette.orange500, icon: 'chatbubble-outline', label: 'Follow-up' };
+      case 'personal': return { color: Palette.gray500, icon: 'person-outline', label: 'Persoonlijk' };
+      default: return { color: Palette.gray500, icon: 'calendar-outline', label: type };
     }
   };
 
   const getPriorityStyle = (priority: ScheduledJob['priority']) => {
     switch (priority) {
-      case 'urgent': return { color: Palette.red, label: 'Urgent' };
-      case 'high': return { color: Palette.orange, label: 'Hoog' };
-      case 'medium': return { color: Palette.blue, label: 'Middel' };
-      case 'low': return { color: Palette.gray, label: 'Laag' };
+      case 'urgent': return { color: Palette.red500, label: 'Urgent' };
+      case 'high': return { color: Palette.orange500, label: 'Hoog' };
+      case 'medium': return { color: Palette.blue500, label: 'Middel' };
+      case 'low': return { color: Palette.gray500, label: 'Laag' };
     }
   };
 
   const getWeatherIcon = (condition: string) => {
     switch (condition) {
-      case 'sunny': return { icon: 'sunny-outline', color: Palette.orange };
-      case 'cloudy': return { icon: 'cloudy-outline', color: Palette.gray };
-      case 'rainy': return { icon: 'rainy-outline', color: Palette.blue };
-      case 'stormy': return { icon: 'thunderstorm-outline', color: Palette.purple };
-      case 'snow': return { icon: 'snow-outline', color: Palette.blue };
-      default: return { icon: 'partly-sunny-outline', color: Palette.gray };
+      case 'sunny': return { icon: 'sunny-outline', color: Palette.orange500 };
+      case 'cloudy': return { icon: 'cloudy-outline', color: Palette.gray500 };
+      case 'rainy': return { icon: 'rainy-outline', color: Palette.blue500 };
+      case 'stormy': return { icon: 'thunderstorm-outline', color: Palette.hermesOrange };
+      case 'snow': return { icon: 'snow-outline', color: Palette.blue500 };
+      default: return { icon: 'partly-sunny-outline', color: Palette.gray500 };
     }
   };
 
@@ -103,11 +103,11 @@ export function SmartScheduler() {
 
     return (
       <TouchableOpacity style={styles.conflictBanner}>
-        <Ionicons name="warning-outline" size={20} color={Palette.red} />
+        <Ionicons name="warning-outline" size={20} color={Palette.red500} />
         <Text style={styles.conflictText}>
           {conflicts.length} planning{conflicts.length > 1 ? 'conflicten' : 'conflict'} gedetecteerd
         </Text>
-        <Ionicons name="chevron-forward" size={18} color={Palette.red} />
+        <Ionicons name="chevron-forward" size={18} color={Palette.red500} />
       </TouchableOpacity>
     );
   };
@@ -120,11 +120,11 @@ export function SmartScheduler() {
         style={styles.optimizationBanner}
         onPress={() => setShowOptimizations(true)}
       >
-        <Ionicons name="bulb-outline" size={20} color={Palette.emerald} />
+        <Ionicons name="bulb-outline" size={20} color={Palette.green500} />
         <Text style={styles.optimizationText}>
           {optimizations.length} optimalisatie{optimizations.length > 1 ? 'suggesties' : 'suggestie'}
         </Text>
-        <Ionicons name="chevron-forward" size={18} color={Palette.emerald} />
+        <Ionicons name="chevron-forward" size={18} color={Palette.green500} />
       </TouchableOpacity>
     );
   };
@@ -134,7 +134,7 @@ export function SmartScheduler() {
 
     return (
       <View style={styles.weatherAlert}>
-        <Ionicons name="rainy-outline" size={18} color={Palette.orange} />
+        <Ionicons name="rainy-outline" size={18} color={Palette.orange500} />
         <Text style={styles.weatherAlertText}>
           {weatherAlerts.length} buitenklus{weatherAlerts.length > 1 ? 'sen' : ''} met slecht weer
         </Text>
@@ -160,7 +160,7 @@ export function SmartScheduler() {
               {formatTime(job.startTime)} - {formatTime(job.endTime)}
             </Text>
             {hasWeatherWarning && (
-              <Ionicons name="rainy-outline" size={14} color={Palette.orange} />
+              <Ionicons name="rainy-outline" size={14} color={Palette.orange500} />
             )}
             {job.priority === 'urgent' || job.priority === 'high' ? (
               <View style={[styles.priorityDot, { backgroundColor: priorityStyle.color }]} />
@@ -221,7 +221,7 @@ export function SmartScheduler() {
                 styles.utilizationFill,
                 {
                   width: `${Math.min(schedule.utilization, 100)}%`,
-                  backgroundColor: schedule.utilization > 90 ? Palette.red : schedule.utilization > 70 ? Palette.orange : Palette.emerald,
+                  backgroundColor: schedule.utilization > 90 ? Palette.red500 : schedule.utilization > 70 ? Palette.orange500 : Palette.green500,
                 },
               ]}
             />
@@ -289,7 +289,7 @@ export function SmartScheduler() {
           <Text style={styles.dayStatLabel}>Reistijd</Text>
         </View>
         <View style={styles.dayStat}>
-          <Text style={[styles.dayStatValue, { color: daySchedule.utilization > 90 ? Palette.red : daySchedule.utilization > 70 ? Palette.orange : Palette.emerald }]}>
+          <Text style={[styles.dayStatValue, { color: daySchedule.utilization > 90 ? Palette.red500 : daySchedule.utilization > 70 ? Palette.orange500 : Palette.green500 }]}>
             {daySchedule.utilization}%
           </Text>
           <Text style={styles.dayStatLabel}>Bezetting</Text>
@@ -359,14 +359,14 @@ export function SmartScheduler() {
                 <Ionicons
                   name={opt.type === 'travel' ? 'car-outline' : opt.type === 'weather' ? 'rainy-outline' : 'flash-outline'}
                   size={24}
-                  color={Palette.emerald}
+                  color={Palette.green500}
                 />
               </View>
               <View style={styles.optimizationContent}>
                 <Text style={styles.optimizationTitle}>{opt.title}</Text>
                 <Text style={styles.optimizationDesc}>{opt.description}</Text>
                 <View style={styles.optimizationSaving}>
-                  <Ionicons name="time-outline" size={14} color={Palette.emerald} />
+                  <Ionicons name="time-outline" size={14} color={Palette.green500} />
                   <Text style={styles.optimizationSavingText}>{opt.potentialSaving}</Text>
                 </View>
               </View>
@@ -394,7 +394,7 @@ export function SmartScheduler() {
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Afspraak details</Text>
           <TouchableOpacity>
-            <Ionicons name="create-outline" size={24} color={Palette.blue} />
+            <Ionicons name="create-outline" size={24} color={Palette.blue500} />
           </TouchableOpacity>
         </View>
 
@@ -462,7 +462,7 @@ export function SmartScheduler() {
 
               <View style={styles.jobActionRow}>
                 <TouchableOpacity style={styles.rescheduleButton}>
-                  <Ionicons name="calendar-outline" size={18} color={Palette.blue} />
+                  <Ionicons name="calendar-outline" size={18} color={Palette.blue500} />
                   <Text style={styles.rescheduleText}>Verplaatsen</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -472,7 +472,7 @@ export function SmartScheduler() {
                     setShowJobModal(false);
                   }}
                 >
-                  <Ionicons name="close-circle-outline" size={18} color={Palette.red} />
+                  <Ionicons name="close-circle-outline" size={18} color={Palette.red500} />
                   <Text style={styles.cancelText}>Annuleren</Text>
                 </TouchableOpacity>
               </View>
@@ -496,7 +496,7 @@ export function SmartScheduler() {
             <Ionicons
               name={view === 'day' ? 'today-outline' : view === 'week' ? 'calendar-outline' : 'list-outline'}
               size={18}
-              color={viewType === view ? Palette.blue : SemanticColors.textSecondary}
+              color={viewType === view ? Palette.blue500 : SemanticColors.textSecondary}
             />
             <Text style={[styles.viewButtonText, viewType === view && styles.viewButtonTextActive]}>
               {view === 'day' ? 'Dag' : view === 'week' ? 'Week' : 'Lijst'}
@@ -530,13 +530,13 @@ export function SmartScheduler() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
 
   // View Selector
   viewSelector: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderBottomWidth: 1,
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   viewButtonActive: {
-    backgroundColor: Palette.blue + '15',
+    backgroundColor: Palette.blue500 + '15',
   },
   viewButtonText: {
     fontSize: 13,
@@ -561,14 +561,14 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   viewButtonTextActive: {
-    color: Palette.blue,
+    color: Palette.blue500,
   },
 
   // Banners
   conflictBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Palette.red + '15',
+    backgroundColor: Palette.red500 + '15',
     paddingHorizontal: 16,
     paddingVertical: 10,
     gap: 8,
@@ -576,13 +576,13 @@ const styles = StyleSheet.create({
   conflictText: {
     flex: 1,
     fontSize: 13,
-    color: Palette.red,
+    color: Palette.red500,
     fontWeight: '500',
   },
   optimizationBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Palette.emerald + '15',
+    backgroundColor: Palette.green500 + '15',
     paddingHorizontal: 16,
     paddingVertical: 10,
     gap: 8,
@@ -590,20 +590,20 @@ const styles = StyleSheet.create({
   optimizationText: {
     flex: 1,
     fontSize: 13,
-    color: Palette.emerald,
+    color: Palette.green500,
     fontWeight: '500',
   },
   weatherAlert: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Palette.orange + '15',
+    backgroundColor: Palette.orange500 + '15',
     paddingHorizontal: 16,
     paddingVertical: 8,
     gap: 6,
   },
   weatherAlertText: {
     fontSize: 12,
-    color: Palette.orange,
+    color: Palette.orange500,
   },
 
   // Week View
@@ -614,14 +614,14 @@ const styles = StyleSheet.create({
   dayColumn: {
     width: 120,
     marginHorizontal: 4,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: SemanticColors.border,
   },
   dayColumnSelected: {
-    borderColor: Palette.blue,
+    borderColor: Palette.blue500,
   },
   dayHeader: {
     alignItems: 'center',
@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.border,
   },
   dayHeaderToday: {
-    backgroundColor: Palette.blue,
+    backgroundColor: Palette.blue500,
   },
   dayOfWeek: {
     fontSize: 11,
@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
   },
   moreJobs: {
     fontSize: 11,
-    color: Palette.blue,
+    color: Palette.blue500,
     textAlign: 'center',
     marginTop: 4,
   },
@@ -696,7 +696,7 @@ const styles = StyleSheet.create({
   // Job Card
   jobCard: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 8,
     marginBottom: 8,
     overflow: 'hidden',
@@ -759,7 +759,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
@@ -785,11 +785,11 @@ const styles = StyleSheet.create({
   },
   notSuitableText: {
     fontSize: 11,
-    color: Palette.orange,
+    color: Palette.orange500,
   },
   dayStats: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.border,
@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Palette.blue,
+    backgroundColor: Palette.blue500,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -865,7 +865,7 @@ const styles = StyleSheet.create({
   // Modal
   modalContainer: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -875,7 +875,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.border,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   modalTitle: {
     fontSize: 17,
@@ -891,7 +891,7 @@ const styles = StyleSheet.create({
   optimizationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -903,7 +903,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: Palette.emerald + '15',
+    backgroundColor: Palette.green500 + '15',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -928,11 +928,11 @@ const styles = StyleSheet.create({
   },
   optimizationSavingText: {
     fontSize: 13,
-    color: Palette.emerald,
+    color: Palette.green500,
     fontWeight: '500',
   },
   applyButton: {
-    backgroundColor: Palette.emerald,
+    backgroundColor: Palette.green500,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
@@ -971,7 +971,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   jobDetailSection: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -1005,7 +1005,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Palette.emerald,
+    backgroundColor: Palette.green500,
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,
@@ -1024,33 +1024,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Palette.blue,
+    borderColor: Palette.blue500,
     gap: 6,
   },
   rescheduleText: {
     fontSize: 15,
     fontWeight: '600',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   cancelButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Palette.red,
+    borderColor: Palette.red500,
     gap: 6,
   },
   cancelText: {
     fontSize: 15,
     fontWeight: '600',
-    color: Palette.red,
+    color: Palette.red500,
   },
 });

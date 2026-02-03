@@ -22,33 +22,27 @@ interface TabConfig {
 const CONTRACTOR_TABS: TabConfig[] = [
   {
     name: 'index',
-    title: 'Today',
+    title: 'Vandaag',
     icon: 'today-outline',
     iconFocused: 'today',
   },
   {
-    name: 'jobs',
-    title: 'Jobs',
-    icon: 'briefcase-outline',
-    iconFocused: 'briefcase',
+    name: 'besparen',
+    title: 'Besparen',
+    icon: 'trending-down-outline',
+    iconFocused: 'trending-down',
   },
   {
     name: 'decisions',
-    title: 'Decisions',
+    title: 'Beslissingen',
     icon: 'checkbox-outline',
     iconFocused: 'checkbox',
   },
   {
-    name: 'money',
-    title: 'Money',
-    icon: 'wallet-outline',
-    iconFocused: 'wallet',
-  },
-  {
-    name: 'savings',
-    title: 'Savings',
-    icon: 'trending-down-outline',
-    iconFocused: 'trending-down',
+    name: 'facturen',
+    title: 'Facturen',
+    icon: 'document-text-outline',
+    iconFocused: 'document-text',
   },
 ];
 

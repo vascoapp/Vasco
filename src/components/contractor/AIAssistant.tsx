@@ -57,12 +57,12 @@ export function AIAssistant() {
 
   const getInsightStyle = (type: ProactiveInsight['type']) => {
     switch (type) {
-      case 'opportunity': return { color: Palette.blue, icon: 'bulb', bg: Palette.blue + '15' };
-      case 'warning': return { color: Palette.orange, icon: 'warning', bg: Palette.orange + '15' };
-      case 'tip': return { color: Palette.emerald, icon: 'sparkles', bg: Palette.emerald + '15' };
-      case 'milestone': return { color: Palette.purple, icon: 'trophy', bg: Palette.purple + '15' };
-      case 'reminder': return { color: Palette.red, icon: 'alarm', bg: Palette.red + '15' };
-      default: return { color: Palette.gray, icon: 'information-circle', bg: Palette.gray + '15' };
+      case 'opportunity': return { color: Palette.blue500, icon: 'bulb', bg: Palette.blue500 + '15' };
+      case 'warning': return { color: Palette.orange500, icon: 'warning', bg: Palette.orange500 + '15' };
+      case 'tip': return { color: Palette.green500, icon: 'sparkles', bg: Palette.green500 + '15' };
+      case 'milestone': return { color: Palette.hermesOrange, icon: 'trophy', bg: Palette.hermesOrange + '15' };
+      case 'reminder': return { color: Palette.red500, icon: 'alarm', bg: Palette.red500 + '15' };
+      default: return { color: Palette.gray500, icon: 'information-circle', bg: Palette.gray500 + '15' };
     }
   };
 
@@ -88,7 +88,7 @@ export function AIAssistant() {
       >
         {!isUser && (
           <View style={styles.assistantAvatar}>
-            <Ionicons name="sparkles" size={16} color={Palette.purple} />
+            <Ionicons name="sparkles" size={16} color={Palette.hermesOrange} />
           </View>
         )}
         <View style={[styles.messageBubble, isUser && styles.userBubble]}>
@@ -98,7 +98,7 @@ export function AIAssistant() {
           {message.metadata?.actionable && (
             <TouchableOpacity style={styles.messageAction}>
               <Text style={styles.messageActionText}>Actie ondernemen</Text>
-              <Ionicons name="arrow-forward" size={14} color={Palette.blue} />
+              <Ionicons name="arrow-forward" size={14} color={Palette.blue500} />
             </TouchableOpacity>
           )}
         </View>
@@ -122,7 +122,7 @@ export function AIAssistant() {
         {!conversation?.messages.length && (
           <View style={styles.welcomeContainer}>
             <View style={styles.welcomeIcon}>
-              <Ionicons name="sparkles" size={32} color={Palette.purple} />
+              <Ionicons name="sparkles" size={32} color={Palette.hermesOrange} />
             </View>
             <Text style={styles.welcomeTitle}>Hoi! Ik ben je Vasco assistent</Text>
             <Text style={styles.welcomeText}>
@@ -138,7 +138,7 @@ export function AIAssistant() {
                   style={styles.quickActionCard}
                   onPress={() => handleQuickAction(action)}
                 >
-                  <Ionicons name={action.icon as any} size={24} color={Palette.blue} />
+                  <Ionicons name={action.icon as any} size={24} color={Palette.blue500} />
                   <Text style={styles.quickActionLabel}>{action.label}</Text>
                 </TouchableOpacity>
               ))}
@@ -208,8 +208,8 @@ export function AIAssistant() {
         <View style={styles.insightContent}>
           <View style={styles.insightHeader}>
             <Text style={styles.insightTitle}>{insight.title}</Text>
-            <View style={[styles.priorityBadge, { backgroundColor: insight.priority === 'high' ? Palette.red + '20' : insight.priority === 'medium' ? Palette.orange + '20' : Palette.gray + '20' }]}>
-              <Text style={[styles.priorityText, { color: insight.priority === 'high' ? Palette.red : insight.priority === 'medium' ? Palette.orange : Palette.gray }]}>
+            <View style={[styles.priorityBadge, { backgroundColor: insight.priority === 'high' ? Palette.red500 + '20' : insight.priority === 'medium' ? Palette.orange500 + '20' : Palette.gray500 + '20' }]}>
+              <Text style={[styles.priorityText, { color: insight.priority === 'high' ? Palette.red500 : insight.priority === 'medium' ? Palette.orange500 : Palette.gray500 }]}>
                 {insight.priority === 'high' ? 'Hoog' : insight.priority === 'medium' ? 'Middel' : 'Laag'}
               </Text>
             </View>
@@ -220,7 +220,7 @@ export function AIAssistant() {
             {insight.actionLabel && (
               <TouchableOpacity style={styles.insightActionButton}>
                 <Text style={styles.insightActionText}>{insight.actionLabel}</Text>
-                <Ionicons name="arrow-forward" size={14} color={Palette.blue} />
+                <Ionicons name="arrow-forward" size={14} color={Palette.blue500} />
               </TouchableOpacity>
             )}
             <TouchableOpacity
@@ -248,7 +248,7 @@ export function AIAssistant() {
         insights.map(renderInsightCard)
       ) : (
         <View style={styles.emptyState}>
-          <Ionicons name="checkmark-circle-outline" size={48} color={Palette.emerald} />
+          <Ionicons name="checkmark-circle-outline" size={48} color={Palette.green500} />
           <Text style={styles.emptyTitle}>Alles op orde!</Text>
           <Text style={styles.emptyText}>Er zijn momenteel geen nieuwe inzichten voor je.</Text>
         </View>
@@ -260,7 +260,7 @@ export function AIAssistant() {
     <View key={suggestion.id} style={styles.suggestionCard}>
       <View style={styles.suggestionHeader}>
         <View style={styles.suggestionIconContainer}>
-          <Ionicons name={getSuggestionIcon(suggestion.type) as any} size={24} color={Palette.emerald} />
+          <Ionicons name={getSuggestionIcon(suggestion.type) as any} size={24} color={Palette.green500} />
         </View>
         <View style={styles.suggestionTitleContainer}>
           <Text style={styles.suggestionTitle}>{suggestion.title}</Text>
@@ -273,7 +273,7 @@ export function AIAssistant() {
       <Text style={styles.suggestionDescription}>{suggestion.description}</Text>
 
       <View style={styles.impactBox}>
-        <Ionicons name="trending-up-outline" size={18} color={Palette.emerald} />
+        <Ionicons name="trending-up-outline" size={18} color={Palette.green500} />
         <Text style={styles.impactText}>Potentiële impact: {suggestion.potentialImpact}</Text>
       </View>
 
@@ -325,7 +325,7 @@ export function AIAssistant() {
           <Ionicons
             name="chatbubbles-outline"
             size={18}
-            color={viewMode === 'chat' ? Palette.purple : SemanticColors.textSecondary}
+            color={viewMode === 'chat' ? Palette.hermesOrange : SemanticColors.textSecondary}
           />
           <Text style={[styles.viewButtonText, viewMode === 'chat' && styles.viewButtonTextActive]}>
             Chat
@@ -340,7 +340,7 @@ export function AIAssistant() {
             <Ionicons
               name="bulb-outline"
               size={18}
-              color={viewMode === 'insights' ? Palette.purple : SemanticColors.textSecondary}
+              color={viewMode === 'insights' ? Palette.hermesOrange : SemanticColors.textSecondary}
             />
             {activeCount > 0 && (
               <View style={styles.badge}>
@@ -360,7 +360,7 @@ export function AIAssistant() {
           <Ionicons
             name="rocket-outline"
             size={18}
-            color={viewMode === 'suggestions' ? Palette.purple : SemanticColors.textSecondary}
+            color={viewMode === 'suggestions' ? Palette.hermesOrange : SemanticColors.textSecondary}
           />
           <Text style={[styles.viewButtonText, viewMode === 'suggestions' && styles.viewButtonTextActive]}>
             Suggesties
@@ -379,17 +379,17 @@ export function AIAssistant() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
 
   // View Selector
   viewSelector: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
     gap: 8,
   },
   viewButton: {
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   viewButtonActive: {
-    backgroundColor: Palette.purple + '15',
+    backgroundColor: Palette.hermesOrange + '15',
   },
   viewButtonIconContainer: {
     position: 'relative',
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -6,
     right: -8,
-    backgroundColor: Palette.red,
+    backgroundColor: Palette.red500,
     borderRadius: 8,
     minWidth: 16,
     height: 16,
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   viewButtonTextActive: {
-    color: Palette.purple,
+    color: Palette.hermesOrange,
     fontWeight: '600',
   },
 
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: Palette.purple + '20',
+    backgroundColor: Palette.hermesOrange + '20',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   welcomeText: {
@@ -486,16 +486,16 @@ const styles = StyleSheet.create({
   },
   quickActionCard: {
     width: '31%',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   quickActionLabel: {
     fontSize: 12,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     textAlign: 'center',
     marginTop: 8,
   },
@@ -507,18 +507,18 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   capabilityCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     width: '100%',
   },
   capabilityName: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   capabilityDesc: {
     fontSize: 13,
@@ -532,14 +532,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   exampleChip: {
-    backgroundColor: Palette.purple + '10',
+    backgroundColor: Palette.hermesOrange + '10',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
   },
   exampleText: {
     fontSize: 12,
-    color: Palette.purple,
+    color: Palette.hermesOrange,
     fontStyle: 'italic',
   },
 
@@ -556,29 +556,29 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Palette.purple + '20',
+    backgroundColor: Palette.hermesOrange + '20',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
   },
   messageBubble: {
     maxWidth: '80%',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     borderTopLeftRadius: 4,
     padding: 14,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   userBubble: {
-    backgroundColor: Palette.purple,
-    borderColor: Palette.purple,
+    backgroundColor: Palette.hermesOrange,
+    borderColor: Palette.hermesOrange,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 4,
   },
   messageText: {
     fontSize: 15,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     lineHeight: 22,
   },
   userMessageText: {
@@ -590,12 +590,12 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
     gap: 6,
   },
   messageActionText: {
     fontSize: 14,
-    color: Palette.blue,
+    color: Palette.blue500,
     fontWeight: '500',
   },
 
@@ -604,33 +604,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     padding: 12,
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
     gap: 10,
   },
   input: {
     flex: 1,
-    backgroundColor: SemanticColors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 15,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     maxHeight: 100,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   sendButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Palette.purple,
+    backgroundColor: Palette.hermesOrange,
     alignItems: 'center',
     justifyContent: 'center',
   },
   sendButtonDisabled: {
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
   },
 
   // Insights View
@@ -644,7 +644,7 @@ const styles = StyleSheet.create({
   insightsTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   insightsSubtitle: {
     fontSize: 14,
@@ -653,12 +653,12 @@ const styles = StyleSheet.create({
   },
   insightCard: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     borderLeftWidth: 4,
     gap: 12,
   },
@@ -681,7 +681,7 @@ const styles = StyleSheet.create({
   insightTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     flex: 1,
   },
   priorityBadge: {
@@ -711,7 +711,7 @@ const styles = StyleSheet.create({
   },
   insightActionText: {
     fontSize: 14,
-    color: Palette.blue,
+    color: Palette.blue500,
     fontWeight: '500',
   },
   dismissButton: {
@@ -729,7 +729,7 @@ const styles = StyleSheet.create({
   suggestionsTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   suggestionsSubtitle: {
     fontSize: 14,
@@ -737,12 +737,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   suggestionCard: {
-    backgroundColor: SemanticColors.card,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   suggestionHeader: {
     flexDirection: 'row',
@@ -754,7 +754,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: Palette.emerald + '15',
+    backgroundColor: Palette.green500 + '15',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -764,10 +764,10 @@ const styles = StyleSheet.create({
   suggestionTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   confidenceBadge: {
-    backgroundColor: Palette.emerald + '20',
+    backgroundColor: Palette.green500 + '20',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -776,7 +776,7 @@ const styles = StyleSheet.create({
   },
   confidenceText: {
     fontSize: 11,
-    color: Palette.emerald,
+    color: Palette.green500,
     fontWeight: '600',
   },
   suggestionDescription: {
@@ -788,7 +788,7 @@ const styles = StyleSheet.create({
   impactBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Palette.emerald + '10',
+    backgroundColor: Palette.green500 + '10',
     borderRadius: 10,
     padding: 12,
     marginBottom: 8,
@@ -796,7 +796,7 @@ const styles = StyleSheet.create({
   },
   impactText: {
     fontSize: 14,
-    color: Palette.emerald,
+    color: Palette.green500,
     fontWeight: '500',
   },
   basedOnBox: {
@@ -815,7 +815,7 @@ const styles = StyleSheet.create({
   actionStepsTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 10,
   },
   actionStep: {
@@ -828,26 +828,26 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: Palette.blue + '20',
+    backgroundColor: Palette.blue500 + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepNumberText: {
     fontSize: 12,
     fontWeight: '600',
-    color: Palette.blue,
+    color: Palette.blue500,
   },
   stepText: {
     flex: 1,
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     lineHeight: 20,
   },
   implementButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Palette.emerald,
+    backgroundColor: Palette.green500,
     paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
@@ -867,7 +867,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 12,
   },
   emptyText: {

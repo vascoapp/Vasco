@@ -1,9 +1,12 @@
 // Contractor Dashboard - ServiceTitan-style dashboard for individual trades contractors
+// Enhanced with unified command center: decisions, agent actions, evidence capture, ROI
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { IntelligenceDashboard } from './IntelligenceDashboard';
+import { AgentActionsPanel } from '../contractor/AgentActionsPanel';
+import { HoursSavedCard } from '../contractor/HoursSavedCard';
 import { Palette } from '../../theme/colors';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
@@ -16,12 +19,15 @@ import {
   MOCK_CONTRACTOR_PROFILE,
   JOB_STATUS_CONFIG,
 } from '../../data/mockContractor';
+import { MOCK_ACTIVE_TRACKERS } from '../../data/mockDecisions';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
 export function ContractorDashboard() {
   const router = useRouter();
   const [showIntelligence, setShowIntelligence] = useState(false);
+  const [showDecisions, setShowDecisions] = useState(false);
+  const [showROI, setShowROI] = useState(false);
   const metrics = MOCK_CONTRACTOR_METRICS;
   const profile = MOCK_CONTRACTOR_PROFILE;
 
@@ -32,6 +38,9 @@ export function ContractorDashboard() {
   // Get active jobs
   const activeJobs = MOCK_JOBS.filter((j) => j.status === 'in-progress' || j.status === 'scheduled');
 
+  // Get jobs ready for completion (in-progress jobs that can be marked complete)
+  const jobsReadyToComplete = MOCK_JOBS.filter((j) => j.status === 'in-progress');
+
   // Get pending quotes
   const pendingQuotes = MOCK_QUOTES.filter((q) => q.status === 'sent' || q.status === 'viewed');
 
@@ -39,6 +48,11 @@ export function ContractorDashboard() {
   const outstandingInvoices = MOCK_CONTRACTOR_INVOICES.filter(
     (i) => i.status === 'sent' || i.status === 'overdue'
   );
+
+  // Get customer decision stats
+  const decisionTrackers = MOCK_ACTIVE_TRACKERS;
+  const totalOverdueDecisions = decisionTrackers.reduce((sum, t) => sum + t.overdueCount, 0);
+  const totalPendingDecisions = decisionTrackers.reduce((sum, t) => sum + t.pendingCount, 0);
 
   const formatCurrency = (amount: number) => {
     return `€${amount.toLocaleString('nl-NL')}`;
@@ -88,6 +102,70 @@ export function ContractorDashboard() {
           <Text style={styles.statValue}>{metrics.quotesOutstanding}</Text>
           <Text style={styles.statLabel}>Quotes Out</Text>
         </View>
+      </View>
+
+      {/* Hours Saved - Hero Metric */}
+      <View style={styles.heroSavingsCard}>
+        <View style={styles.heroSavingsIcon}>
+          <Ionicons name="time" size={28} color={SemanticColors.feedbackSuccess} />
+        </View>
+        <View style={styles.heroSavingsContent}>
+          <Text style={styles.heroSavingsValue}>12.5 uur</Text>
+          <Text style={styles.heroSavingsLabel}>bespaard deze week</Text>
+          <Text style={styles.heroSavingsSubtext}>€687 aan tijdswaarde</Text>
+        </View>
+        <Pressable
+          style={styles.heroSavingsButton}
+          onPress={() => setShowROI(true)}
+        >
+          <Ionicons name="analytics" size={16} color={SemanticColors.actionPrimary} />
+          <Text style={styles.heroSavingsButtonText}>Details</Text>
+        </Pressable>
+      </View>
+
+      {/* Customer Decisions Alert */}
+      {(totalOverdueDecisions > 0 || totalPendingDecisions > 0) && (
+        <Pressable
+          style={[
+            styles.decisionsAlert,
+            totalOverdueDecisions > 0 && styles.decisionsAlertUrgent
+          ]}
+          onPress={() => router.push('/contractor/decisions')}
+        >
+          <View style={[
+            styles.decisionsAlertIcon,
+            { backgroundColor: totalOverdueDecisions > 0
+              ? SemanticColors.feedbackErrorBg
+              : SemanticColors.feedbackWarningBg
+            }
+          ]}>
+            <Ionicons
+              name={totalOverdueDecisions > 0 ? "alert-circle" : "people"}
+              size={20}
+              color={totalOverdueDecisions > 0
+                ? SemanticColors.feedbackError
+                : SemanticColors.feedbackWarning
+              }
+            />
+          </View>
+          <View style={styles.decisionsAlertContent}>
+            <Text style={styles.decisionsAlertTitle}>
+              {totalOverdueDecisions > 0
+                ? `${totalOverdueDecisions} klantbeslissingen te laat`
+                : `${totalPendingDecisions} klantbeslissingen wachten`
+              }
+            </Text>
+            <Text style={styles.decisionsAlertSubtitle}>
+              {decisionTrackers.length} actieve projecten · Tap om herinneringen te sturen
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+        </Pressable>
+      )}
+
+      {/* Agent Actions Panel - One-tap approvals */}
+      <View style={styles.section}>
+        <AgentActionsPanel />
       </View>
 
       {/* Intelligence Widget */}
@@ -178,6 +256,43 @@ export function ContractorDashboard() {
           <Text style={styles.quickActionText}>Clock In</Text>
         </Pressable>
       </View>
+
+      {/* Jobs Ready to Complete - Evidence Capture */}
+      {jobsReadyToComplete.length > 0 && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Ready to Complete</Text>
+            <View style={styles.completeHint}>
+              <Ionicons name="camera" size={12} color={SemanticColors.feedbackSuccess} />
+              <Text style={styles.completeHintText}>Add photos → Generate invoice</Text>
+            </View>
+          </View>
+          <View style={styles.completeJobsList}>
+            {jobsReadyToComplete.slice(0, 2).map((job) => (
+              <Pressable
+                key={job.id}
+                style={styles.completeJobCard}
+                onPress={() => router.push(`/contractor/complete-job/${job.id}`)}
+              >
+                <View style={styles.completeJobIcon}>
+                  <Ionicons name="checkmark-circle" size={24} color={SemanticColors.feedbackSuccess} />
+                </View>
+                <View style={styles.completeJobContent}>
+                  <Text style={styles.completeJobTitle}>{job.title}</Text>
+                  <Text style={styles.completeJobCustomer}>{job.address.city}</Text>
+                </View>
+                <View style={styles.completeJobAction}>
+                  <Text style={styles.completeJobAmount}>{formatCurrency(job.agreedAmount || 0)}</Text>
+                  <View style={styles.completeButton}>
+                    <Ionicons name="camera" size={14} color="#fff" />
+                    <Text style={styles.completeButtonText}>Complete</Text>
+                  </View>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      )}
 
       {/* Active Jobs */}
       <View style={styles.section}>
@@ -404,6 +519,26 @@ export function ContractorDashboard() {
       >
         <IntelligenceDashboard onClose={() => setShowIntelligence(false)} />
       </Modal>
+
+      {/* ROI Dashboard Modal */}
+      <Modal
+        visible={showROI}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Pressable onPress={() => setShowROI(false)} style={styles.modalCloseButton}>
+              <Ionicons name="close" size={24} color={SemanticColors.textSecondary} />
+            </Pressable>
+            <Text style={styles.modalTitle}>Business ROI</Text>
+            <View style={styles.modalHeaderRight} />
+          </View>
+          <ScrollView contentContainerStyle={styles.modalContent}>
+            <HoursSavedCard />
+          </ScrollView>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -418,6 +553,196 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+  },
+  // Hero Savings Card
+  heroSavingsCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.feedbackSuccessBg,
+    borderRadius: 14,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.feedbackSuccess + '30',
+    gap: Spacing.md,
+  },
+  heroSavingsIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 13,
+    backgroundColor: SemanticColors.feedbackSuccess + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroSavingsContent: {
+    flex: 1,
+  },
+  heroSavingsValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: SemanticColors.feedbackSuccess,
+  },
+  heroSavingsLabel: {
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+  },
+  heroSavingsSubtext: {
+    fontSize: 12,
+    color: SemanticColors.textTertiary,
+    marginTop: 2,
+  },
+  heroSavingsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: SemanticColors.surfacePrimary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  heroSavingsButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: SemanticColors.actionPrimary,
+  },
+  // Customer Decisions Alert
+  decisionsAlert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.feedbackWarningBg,
+    borderRadius: 12,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.feedbackWarning + '30',
+    gap: Spacing.sm,
+  },
+  decisionsAlertUrgent: {
+    backgroundColor: SemanticColors.feedbackErrorBg,
+    borderColor: SemanticColors.feedbackError + '30',
+  },
+  decisionsAlertIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  decisionsAlertContent: {
+    flex: 1,
+  },
+  decisionsAlertTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  decisionsAlertSubtitle: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+    marginTop: 2,
+  },
+  // Jobs Ready to Complete
+  completeJobsList: {
+    gap: Spacing.xs,
+  },
+  completeJobCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.feedbackSuccessBg,
+    borderRadius: 12,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.feedbackSuccess + '20',
+    gap: Spacing.sm,
+  },
+  completeJobIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 11,
+    backgroundColor: SemanticColors.feedbackSuccess + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  completeJobContent: {
+    flex: 1,
+  },
+  completeJobTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  completeJobCustomer: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  completeJobAction: {
+    alignItems: 'flex-end',
+    gap: 6,
+  },
+  completeJobAmount: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: SemanticColors.feedbackSuccess,
+  },
+  completeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: SemanticColors.feedbackSuccess,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  completeButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  completeHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: SemanticColors.feedbackSuccessBg,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  completeHintText: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: SemanticColors.feedbackSuccess,
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: SemanticColors.surfaceSecondary,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.borderDefault,
+  },
+  modalCloseButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  modalHeaderRight: {
+    width: 40,
+  },
+  modalContent: {
+    padding: Spacing.lg,
+    gap: Spacing.lg,
+    paddingBottom: 100,
   },
   greeting: {
     color: SemanticColors.textSecondary,
