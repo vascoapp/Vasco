@@ -1,0 +1,355 @@
+import { useState, useMemo } from 'react';
+import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { Colors } from '../../theme/colors';
+import { Spacing } from '../../theme/spacing';
+import { Radius } from '../../theme/radius';
+import {
+  mockProjects,
+  mockSiteMetrics,
+  getProjectById,
+} from '../../data/mockProjects';
+
+const SITE_LEAD_COLOR = '#F97316';
+
+export function ProgressDashboard() {
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('uk-001');
+
+  const selectedProject = useMemo(() => getProjectById(selectedProjectId), [selectedProjectId]);
+  const siteMetrics = useMemo(() => mockSiteMetrics[selectedProjectId], [selectedProjectId]);
+
+  const progressHealth = useMemo(() => {
+    if (!siteMetrics) return null;
+    return {
+      overallProgress: siteMetrics.overallPercentComplete,
+      plannedProgress: siteMetrics.plannedPercentComplete,
+      variance: siteMetrics.progressVariance,
+      status:
+        siteMetrics.progressVariance >= -2
+          ? 'on-track'
+          : siteMetrics.progressVariance >= -5
+          ? 'at-risk'
+          : 'behind',
+    };
+  }, [siteMetrics]);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'on-track':
+        return Colors.success;
+      case 'at-risk':
+        return Colors.warning;
+      case 'behind':
+        return Colors.danger;
+      default:
+        return Colors.muted;
+    }
+  };
+
+  if (!selectedProject || !siteMetrics || !progressHealth) {
+    return (
+      <View style={styles.loading}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  const activeActivities = selectedProject.scheduleActivities.filter(
+    (a) => a.status === 'in-progress'
+  );
+
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      {/* Project Selector */}
+      <View style={styles.projectSelector}>
+        {mockProjects
+          .filter((p) => mockSiteMetrics[p.id])
+          .map((project) => (
+            <Pressable
+              key={project.id}
+              style={[
+                styles.projectPill,
+                selectedProjectId === project.id && styles.projectPillActive,
+              ]}
+              onPress={() => setSelectedProjectId(project.id)}
+            >
+              <Text style={styles.projectCountry}>{project.country}</Text>
+              <Text
+                style={[
+                  styles.projectName,
+                  selectedProjectId === project.id && styles.projectNameActive,
+                ]}
+                numberOfLines={1}
+              >
+                {project.name}
+              </Text>
+            </Pressable>
+          ))}
+      </View>
+
+      {/* Main Progress Card */}
+      <View style={styles.progressCard}>
+        <View style={styles.progressHeader}>
+          <Text style={styles.progressTitle}>Overall Progress</Text>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(progressHealth.status) + '20' }]}>
+            <Text style={[styles.statusText, { color: getStatusColor(progressHealth.status) }]}>
+              {progressHealth.status.replace('-', ' ').toUpperCase()}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.progressCircle}>
+          <Text style={[styles.progressValue, { color: SITE_LEAD_COLOR }]}>
+            {progressHealth.overallProgress}%
+          </Text>
+          <Text style={styles.progressLabel}>Complete</Text>
+        </View>
+
+        <View style={styles.comparisonBars}>
+          <View style={styles.progressBarRow}>
+            <Text style={styles.barLabel}>Actual</Text>
+            <View style={styles.barTrack}>
+              <View
+                style={[styles.barFillActual, { width: `${progressHealth.overallProgress}%` }]}
+              />
+            </View>
+            <Text style={styles.barValue}>{progressHealth.overallProgress}%</Text>
+          </View>
+          <View style={styles.progressBarRow}>
+            <Text style={styles.barLabel}>Planned</Text>
+            <View style={styles.barTrack}>
+              <View
+                style={[styles.barFillPlan, { width: `${progressHealth.plannedProgress}%` }]}
+              />
+            </View>
+            <Text style={styles.barValue}>{progressHealth.plannedProgress}%</Text>
+          </View>
+        </View>
+
+        <View style={styles.varianceRow}>
+          <Text style={styles.varianceLabel}>Variance</Text>
+          <Text style={[styles.varianceValue, { color: getStatusColor(progressHealth.status) }]}>
+            {progressHealth.variance > 0 ? '+' : ''}{progressHealth.variance}%
+          </Text>
+        </View>
+      </View>
+
+      {/* Active Work Fronts */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Active Work Fronts ({activeActivities.length})</Text>
+        <View style={styles.activityList}>
+          {activeActivities.map((activity) => (
+            <View key={activity.id} style={styles.activityItem}>
+              <View style={styles.activityInfo}>
+                <Text style={styles.activityName}>{activity.name}</Text>
+                <Text style={styles.activityWbs}>{activity.wbsCode}</Text>
+              </View>
+              <View style={styles.activityProgress}>
+                <View style={styles.activityBar}>
+                  <View
+                    style={[styles.activityFill, { width: `${activity.percentComplete}%` }]}
+                  />
+                </View>
+                <Text style={styles.activityPercent}>{activity.percentComplete}%</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      </View>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    padding: Spacing.sm,
+    gap: Spacing.sm,
+    paddingBottom: 100,
+  },
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    color: Colors.muted,
+    fontSize: 16,
+  },
+  projectSelector: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
+  },
+  projectPill: {
+    flex: 1,
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: Radius.md,
+    padding: Spacing.xs,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  projectPillActive: {
+    borderColor: SITE_LEAD_COLOR,
+  },
+  projectCountry: {
+    color: SITE_LEAD_COLOR,
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  projectName: {
+    color: Colors.muted,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  projectNameActive: {
+    color: Colors.text,
+  },
+  progressCard: {
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    gap: Spacing.md,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  progressTitle: {
+    color: Colors.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  statusBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: Radius.sm,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  progressCircle: {
+    alignItems: 'center',
+    paddingVertical: Spacing.md,
+  },
+  progressValue: {
+    fontSize: 48,
+    fontWeight: '700',
+  },
+  progressLabel: {
+    color: Colors.muted,
+    fontSize: 14,
+    marginTop: 4,
+  },
+  comparisonBars: {
+    gap: Spacing.sm,
+  },
+  progressBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  barLabel: {
+    color: Colors.muted,
+    fontSize: 12,
+    width: 50,
+  },
+  barTrack: {
+    flex: 1,
+    height: 10,
+    backgroundColor: Colors.surface,
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  barFillActual: {
+    height: '100%',
+    backgroundColor: SITE_LEAD_COLOR,
+    borderRadius: 5,
+  },
+  barFillPlan: {
+    height: '100%',
+    backgroundColor: Colors.muted,
+    borderRadius: 5,
+  },
+  barValue: {
+    color: Colors.text,
+    fontSize: 12,
+    fontWeight: '600',
+    width: 40,
+    textAlign: 'right',
+  },
+  varianceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  varianceLabel: {
+    color: Colors.muted,
+    fontSize: 13,
+  },
+  varianceValue: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  section: {
+    gap: Spacing.xs,
+  },
+  sectionTitle: {
+    color: Colors.muted,
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  activityList: {
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: Radius.md,
+    overflow: 'hidden',
+  },
+  activityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  activityInfo: {
+    flex: 1,
+  },
+  activityName: {
+    color: Colors.text,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  activityWbs: {
+    color: Colors.muted,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  activityProgress: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  activityBar: {
+    width: 60,
+    height: 6,
+    backgroundColor: Colors.surface,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  activityFill: {
+    height: '100%',
+    backgroundColor: SITE_LEAD_COLOR,
+    borderRadius: 3,
+  },
+  activityPercent: {
+    color: Colors.text,
+    fontSize: 12,
+    fontWeight: '600',
+    width: 35,
+    textAlign: 'right',
+  },
+});
