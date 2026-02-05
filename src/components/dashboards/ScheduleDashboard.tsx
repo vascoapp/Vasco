@@ -10,7 +10,7 @@ import {
 } from '../../data/mockProjects';
 import { calculateScheduleVariance } from '../../modules/countryModules';
 
-const COO_COLOR = '#3B82F6';
+const COO_COLOR = '#7C3AED'; // Purple for COO (per theme)
 
 export function ScheduleDashboard() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>('uk-001');

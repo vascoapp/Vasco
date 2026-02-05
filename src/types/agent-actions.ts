@@ -159,7 +159,23 @@ export type ActionType =
   // Reporting Actions
   | 'weekly-summary'
   | 'monthly-report'
-  | 'lender-update';
+  | 'lender-update'
+
+  // Enterprise Financial Actions (P0 - require final confirmation)
+  | 'approve-payment'
+  | 'approve-change-order'
+  | 'release-retention'
+  | 'draw-request'
+
+  // Enterprise Contractual Actions
+  | 'issue-instruction'
+  | 'certify-completion'
+  | 'terminate-contract'
+
+  // Enterprise Compliance Actions
+  | 'submit-permit'
+  | 'discharge-condition'
+  | 's106-payment';
 
 // ============================================
 // SPECIFIC ACTION PAYLOADS
@@ -289,6 +305,7 @@ export interface ActionRule {
   stake: ActionStake;
   autoApproveThreshold?: number;  // Confidence level for auto-approval
   requiresConfirmation: boolean;
+  requiresFinalConfirmation?: boolean;  // P0: Final execution confirmation gate for critical liability actions
   maxDailyLimit?: number;
   cooldownMinutes?: number;       // Min time between same action types
 }
@@ -326,6 +343,77 @@ export const DEFAULT_ACTION_RULES: Record<ActionType, ActionRule> = {
   'certification-renewal': { actionType: 'certification-renewal', stake: 'high', requiresConfirmation: true },
   'compliance-filing': { actionType: 'compliance-filing', stake: 'high', requiresConfirmation: true },
   'insurance-renewal': { actionType: 'insurance-renewal', stake: 'high', requiresConfirmation: true },
+
+  // ============================================
+  // ENTERPRISE ACTIONS - P0 FINAL CONFIRMATION GATE
+  // ============================================
+  // Critical liability actions requiring explicit final confirmation before execution
+
+  // Financial - require final confirmation for liability protection
+  'approve-payment': {
+    actionType: 'approve-payment',
+    stake: 'high',
+    requiresConfirmation: true,
+    requiresFinalConfirmation: true,  // P0: Final gate before payment execution
+  },
+  'approve-change-order': {
+    actionType: 'approve-change-order',
+    stake: 'high',
+    requiresConfirmation: true,
+    requiresFinalConfirmation: true,  // P0: Budget impact requires final confirmation
+  },
+  'release-retention': {
+    actionType: 'release-retention',
+    stake: 'high',
+    requiresConfirmation: true,
+    requiresFinalConfirmation: true,  // P0: Retention release is irreversible
+  },
+  'draw-request': {
+    actionType: 'draw-request',
+    stake: 'high',
+    requiresConfirmation: true,
+    requiresFinalConfirmation: true,  // P0: Lender draw requests are high-stakes
+  },
+
+  // Contractual - critical legal implications
+  'issue-instruction': {
+    actionType: 'issue-instruction',
+    stake: 'medium',
+    requiresConfirmation: true,
+    requiresFinalConfirmation: false,
+  },
+  'certify-completion': {
+    actionType: 'certify-completion',
+    stake: 'high',
+    requiresConfirmation: true,
+    requiresFinalConfirmation: true,  // P0: Practical completion has legal implications
+  },
+  'terminate-contract': {
+    actionType: 'terminate-contract',
+    stake: 'high',
+    requiresConfirmation: true,
+    requiresFinalConfirmation: true,  // P0: Contract termination is critical
+  },
+
+  // Compliance - regulatory implications
+  'submit-permit': {
+    actionType: 'submit-permit',
+    stake: 'high',
+    requiresConfirmation: true,
+    requiresFinalConfirmation: true,  // P0: Permit submissions are binding
+  },
+  'discharge-condition': {
+    actionType: 'discharge-condition',
+    stake: 'medium',
+    requiresConfirmation: true,
+    requiresFinalConfirmation: false,
+  },
+  's106-payment': {
+    actionType: 's106-payment',
+    stake: 'high',
+    requiresConfirmation: true,
+    requiresFinalConfirmation: true,  // P0: S106 payments are significant financial obligations
+  },
 };
 
 // ============================================

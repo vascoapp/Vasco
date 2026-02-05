@@ -11,7 +11,7 @@ import {
   getProjectById,
 } from '../../data/mockProjects';
 
-const SITE_LEAD_COLOR = '#F97316';
+const SITE_LEAD_COLOR = '#D2691E'; // Terracotta for Site Lead (per theme)
 
 export function SafetyDashboard() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>('uk-001');

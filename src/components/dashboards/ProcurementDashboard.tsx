@@ -14,7 +14,7 @@ import {
   getCurrencyForCountry,
 } from '../../modules/countryModules';
 
-const COO_COLOR = '#3B82F6';
+const COO_COLOR = '#7C3AED'; // Purple for COO (per theme)
 
 export function ProcurementDashboard() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>('uk-001');

@@ -84,7 +84,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     label: 'CFO',
     title: 'Finance Control',
     description: 'Financial oversight, appraisals, cost control, and investor reporting',
-    primaryColor: '#10B981', // Green for money
+    primaryColor: '#2563EB', // Blue for CFO (per theme)
     features: [
       'Development Appraisals',
       'Cost Control & EAC',
@@ -104,7 +104,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     label: 'COO',
     title: 'Delivery Control',
     description: 'Project delivery, schedules, permits, procurement, and risk management',
-    primaryColor: '#3B82F6', // Blue for operations
+    primaryColor: '#7C3AED', // Purple for COO (per theme)
     features: [
       'Schedule Performance',
       'Permit Tracking',
@@ -124,7 +124,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     label: 'Site Lead',
     title: 'Site Execution',
     description: 'Daily operations, safety, progress tracking, and issue escalation',
-    primaryColor: '#F59E0B', // Orange for construction
+    primaryColor: '#D2691E', // Terracotta for Site Lead (per theme)
     features: [
       'Daily Site Reports',
       'Safety Briefings',
@@ -144,7 +144,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     label: 'Director',
     title: 'Executive View',
     description: 'Full platform access with portfolio oversight and strategic controls',
-    primaryColor: '#8B5CF6', // Purple for executive
+    primaryColor: '#E35205', // Hermes Orange for Director (per theme)
     features: [
       'Portfolio Dashboard',
       'All Role Views',
@@ -164,7 +164,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     label: 'Contractor',
     title: 'Job Management',
     description: 'Manage jobs, quotes, invoices, and customers for your trade business',
-    primaryColor: '#FF5A1F', // Vasco orange for contractors
+    primaryColor: '#E35205', // Hermes Orange for Contractor (per theme)
     features: [
       'Job Scheduling',
       'Quote Builder',
@@ -273,12 +273,97 @@ export function canApproveAction(role: UserRole, actionType: string, amount?: nu
     case 'director':
       return true; // Can approve anything
     case 'cfo':
-      return ['payment', 'financial', 'draw', 'invoice'].some((t) => actionType.includes(t));
+      return ['payment', 'financial', 'draw', 'invoice', 'retention', 's106'].some((t) => actionType.includes(t));
     case 'coo':
-      return ['change-order', 'permit', 'schedule', 'risk'].some((t) => actionType.includes(t));
+      return ['change-order', 'permit', 'schedule', 'risk', 'instruction', 'procurement'].some((t) => actionType.includes(t));
     case 'site-lead':
-      return ['daily-report', 'safety', 'blocker'].some((t) => actionType.includes(t));
+      return ['daily-report', 'safety', 'blocker', 'issue'].some((t) => actionType.includes(t));
+    case 'contractor':
+      return ['invoice', 'quote', 'job'].some((t) => actionType.includes(t));
     default:
       return false;
   }
+}
+
+// ============================================
+// P0: FINAL CONFIRMATION REQUIREMENTS
+// ============================================
+
+/**
+ * Checks if a user can provide final confirmation for an action
+ * Final confirmation is required for high-stakes actions (P0 - a16z E9 Liability)
+ */
+export function canProvideFinalConfirmation(role: UserRole, actionType: string, amount?: number): boolean {
+  // Actions requiring final confirmation
+  const finalConfirmationActions = [
+    'approve-payment',
+    'release-retention',
+    'terminate-contract',
+    'draw-request',
+    'certify-completion',
+    'submit-permit',
+    's106-payment',
+    'approve-change-order',
+  ];
+
+  if (!finalConfirmationActions.some(a => actionType.includes(a))) {
+    return false; // Action doesn't require final confirmation
+  }
+
+  // Role-based final confirmation authority
+  switch (role) {
+    case 'director':
+      return true; // Directors can provide final confirmation for all actions
+
+    case 'cfo':
+      // CFO can confirm financial actions
+      return ['payment', 'retention', 'draw', 's106'].some(t => actionType.includes(t));
+
+    case 'coo':
+      // COO can confirm operational actions
+      return ['change-order', 'permit', 'completion', 'instruction'].some(t => actionType.includes(t));
+
+    default:
+      return false;
+  }
+}
+
+/**
+ * Gets the confirmation threshold for a role
+ * Actions above this amount require additional confirmation steps
+ */
+export function getConfirmationThreshold(role: UserRole): { amount: number; currency: 'GBP' | 'EUR' } {
+  switch (role) {
+    case 'director':
+      return { amount: 100000, currency: 'GBP' };
+    case 'cfo':
+      return { amount: 50000, currency: 'GBP' };
+    case 'coo':
+      return { amount: 25000, currency: 'GBP' };
+    case 'site-lead':
+      return { amount: 5000, currency: 'GBP' };
+    case 'contractor':
+      return { amount: 10000, currency: 'EUR' };
+    default:
+      return { amount: 0, currency: 'GBP' };
+  }
+}
+
+/**
+ * Checks if an action requires escalation to a higher authority
+ */
+export function requiresEscalation(role: UserRole, actionType: string, amount?: number): boolean {
+  if (!amount) return false;
+
+  const threshold = getConfirmationThreshold(role);
+
+  // If amount exceeds threshold, escalation is required
+  if (amount >= threshold.amount) {
+    // Site leads escalate to COO/CFO
+    if (role === 'site-lead') return true;
+    // COO/CFO escalate to Director for very high amounts
+    if ((role === 'coo' || role === 'cfo') && amount >= 100000) return true;
+  }
+
+  return false;
 }

@@ -43,15 +43,15 @@ const getTabsForRole = (role: UserRole | undefined): {
     case 'director':
       return [
         { name: 'index', title: 'Portfolio', icon: 'analytics-outline', iconFocused: 'analytics' },
-        { name: 'dir-projects', title: 'Projects', icon: 'business-outline', iconFocused: 'business' },
         { name: 'dir-approvals', title: 'Approvals', icon: 'checkmark-circle-outline', iconFocused: 'checkmark-circle' },
-        { name: 'dir-reports', title: 'Reports', icon: 'document-text-outline', iconFocused: 'document-text' },
+        { name: 'dir-risks', title: 'Risks', icon: 'warning-outline', iconFocused: 'warning' },
+        { name: 'dir-performance', title: 'Performance', icon: 'trending-up-outline', iconFocused: 'trending-up' },
       ];
     case 'contractor':
       return [
         { name: 'index', title: 'Dashboard', icon: 'home-outline', iconFocused: 'home' },
         { name: 'work', title: 'Jobs', icon: 'briefcase-outline', iconFocused: 'briefcase' },
-        { name: 'tools', title: 'Tools', icon: 'build-outline', iconFocused: 'build' },
+        { name: 'planning', title: 'Planning', icon: 'calendar-outline', iconFocused: 'calendar' },
         { name: 'profile', title: 'Profile', icon: 'person-circle-outline', iconFocused: 'person-circle' },
       ];
     default:
@@ -100,6 +100,7 @@ export default function TabsLayout() {
       {!tabs.find(t => t.name === 'work') && <Tabs.Screen name="work" options={{ href: null }} />}
       {!tabs.find(t => t.name === 'hub') && <Tabs.Screen name="hub" options={{ href: null }} />}
       {!tabs.find(t => t.name === 'tools') && <Tabs.Screen name="tools" options={{ href: null }} />}
+      {!tabs.find(t => t.name === 'planning') && <Tabs.Screen name="planning" options={{ href: null }} />}
       {/* COO tabs */}
       {!tabs.find(t => t.name === 'schedule') && <Tabs.Screen name="schedule" options={{ href: null }} />}
       {!tabs.find(t => t.name === 'permits') && <Tabs.Screen name="permits" options={{ href: null }} />}
@@ -113,14 +114,15 @@ export default function TabsLayout() {
       {!tabs.find(t => t.name === 'site-quality') && <Tabs.Screen name="site-quality" options={{ href: null }} />}
       {!tabs.find(t => t.name === 'site-issues') && <Tabs.Screen name="site-issues" options={{ href: null }} />}
       {/* Director tabs */}
-      {!tabs.find(t => t.name === 'dir-projects') && <Tabs.Screen name="dir-projects" options={{ href: null }} />}
       {!tabs.find(t => t.name === 'dir-approvals') && <Tabs.Screen name="dir-approvals" options={{ href: null }} />}
-      {!tabs.find(t => t.name === 'dir-reports') && <Tabs.Screen name="dir-reports" options={{ href: null }} />}
+      {!tabs.find(t => t.name === 'dir-risks') && <Tabs.Screen name="dir-risks" options={{ href: null }} />}
+      {!tabs.find(t => t.name === 'dir-performance') && <Tabs.Screen name="dir-performance" options={{ href: null }} />}
+      {/* Hide profile tab for non-contractor roles (contractor includes it in tabs) */}
+      {!tabs.find(t => t.name === 'profile') && <Tabs.Screen name="profile" options={{ href: null }} />}
       {/* Hidden utility screens */}
       <Tabs.Screen name="buildos" options={{ href: null }} />
       <Tabs.Screen name="quotes" options={{ href: null }} />
       <Tabs.Screen name="invoices" options={{ href: null }} />
-      <Tabs.Screen name="profile" options={{ href: null }} />
     </Tabs>
   );
 }

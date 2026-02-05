@@ -16,11 +16,15 @@ import {
   recordApproval,
   executeAction,
   generateActionDashboard,
+  requiresFinalConfirmationGate,
+  requestFinalConfirmation,
+  confirmAndExecute,
   type ActionInstance,
   type ActionCategory,
   type ActionRiskLevel,
   type ApprovalRole,
 } from '../../modules/agentActions';
+import { ExecutionConfirmationModal } from '../shared/ExecutionConfirmationModal';
 
 type TabType = 'pending' | 'my-approvals' | 'executed' | 'all';
 
@@ -98,6 +102,8 @@ export function ApprovalQueueDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('pending');
   const [actions, setActions] = useState<ActionInstance[]>(() => createMockActions());
   const [expandedAction, setExpandedAction] = useState<string | null>(null);
+  const [confirmationAction, setConfirmationAction] = useState<ActionInstance | null>(null);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
   const dashboard = useMemo(
     () => generateActionDashboard(actions, CURRENT_USER_ROLES),
@@ -136,12 +142,40 @@ export function ApprovalQueueDashboard() {
   };
 
   const handleExecute = (actionId: string) => {
+    const action = actions.find((a) => a.id === actionId);
+    if (!action || action.status !== 'approved') return;
+
+    // Check if this action requires final confirmation
+    if (requiresFinalConfirmationGate(action)) {
+      // Request confirmation and show modal
+      const actionWithConfirmation = requestFinalConfirmation(action);
+      setConfirmationAction(actionWithConfirmation);
+      setShowConfirmationModal(true);
+    } else {
+      // Execute directly
+      setActions((prev) =>
+        prev.map((a) => {
+          if (a.id !== actionId) return a;
+          return executeAction(a, CURRENT_USER_ID);
+        })
+      );
+    }
+  };
+
+  const handleConfirmExecution = (executedAction: ActionInstance) => {
+    // The modal already executed the action via confirmAndExecute
+    // We just need to update our state with the result
     setActions((prev) =>
-      prev.map((a) => {
-        if (a.id !== actionId || a.status !== 'approved') return a;
-        return executeAction(a, CURRENT_USER_ID);
-      })
+      prev.map((a) => (a.id === executedAction.id ? executedAction : a))
     );
+
+    setShowConfirmationModal(false);
+    setConfirmationAction(null);
+  };
+
+  const handleCancelConfirmation = () => {
+    setShowConfirmationModal(false);
+    setConfirmationAction(null);
   };
 
   const getCategoryColor = (category: ActionCategory) => {
@@ -322,8 +356,19 @@ export function ApprovalQueueDashboard() {
             style={[styles.actionButton, styles.executeButton]}
             onPress={() => handleExecute(action.id)}
           >
-            <Text style={styles.executeButtonText}>Execute Action</Text>
+            <Text style={styles.executeButtonText}>
+              {requiresFinalConfirmationGate(action) ? 'Confirm & Execute' : 'Execute Action'}
+            </Text>
           </Pressable>
+        )}
+
+        {/* Show indicator if action requires final confirmation */}
+        {action.status === 'approved' && requiresFinalConfirmationGate(action) && (
+          <View style={styles.confirmationRequired}>
+            <Text style={styles.confirmationRequiredText}>
+              ⚠️ Requires final confirmation before execution
+            </Text>
+          </View>
         )}
       </View>
     );
@@ -409,6 +454,18 @@ export function ApprovalQueueDashboard() {
           getFilteredActions().map(renderActionCard)
         )}
       </View>
+
+      {/* Execution Confirmation Modal */}
+      {confirmationAction && (
+        <ExecutionConfirmationModal
+          visible={showConfirmationModal}
+          action={confirmationAction}
+          userId={CURRENT_USER_ID}
+          userName={CURRENT_USER_NAME}
+          onConfirm={handleConfirmExecution}
+          onCancel={handleCancelConfirmation}
+        />
+      )}
     </ScrollView>
   );
 }
@@ -714,5 +771,17 @@ const styles = StyleSheet.create({
   emptyText: {
     color: Colors.muted,
     fontSize: 14,
+  },
+  confirmationRequired: {
+    backgroundColor: Colors.warning + '15',
+    borderRadius: 8,
+    padding: 8,
+    marginTop: Spacing.xs,
+  },
+  confirmationRequiredText: {
+    color: Colors.warning,
+    fontSize: 11,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });

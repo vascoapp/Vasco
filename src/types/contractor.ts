@@ -493,3 +493,190 @@ export interface Expense {
 
   createdAt: string;
 }
+
+// ============================================
+// EVIDENCE PACK & HANDOVER
+// ============================================
+
+export type EvidenceType =
+  | 'photo_before'
+  | 'photo_during'
+  | 'photo_after'
+  | 'checklist'
+  | 'warranty'
+  | 'certificate'
+  | 'material_receipt'
+  | 'permit'
+  | 'inspection_report'
+  | 'customer_signature'
+  | 'completion_certificate';
+
+export interface EvidenceItem {
+  id: string;
+  type: EvidenceType;
+  name: string;
+  description?: string;
+  uri: string;
+  thumbnailUri?: string;
+  mimeType: string;
+  size: number;
+  capturedAt: string;
+  capturedBy: string;
+  location?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  };
+  metadata?: Record<string, unknown>;
+  verified: boolean;
+  verifiedAt?: string;
+  verifiedBy?: string;
+}
+
+export interface ChecklistCategory {
+  id: string;
+  name: string;
+  items: ChecklistItem[];
+}
+
+export interface ChecklistItem {
+  id: string;
+  label: string;
+  required: boolean;
+  completed: boolean;
+  completedAt?: string;
+  completedBy?: string;
+  notes?: string;
+  photoRequired: boolean;
+  photoUri?: string;
+}
+
+export interface EvidencePack {
+  id: string;
+  jobId: string;
+  contractorId: string;
+  customerId: string;
+
+  // Job reference
+  jobTitle: string;
+  jobAddress: string;
+  completionDate: string;
+
+  // Evidence items
+  photos: EvidenceItem[];
+  documents: EvidenceItem[];
+  checklists: ChecklistCategory[];
+
+  // Warranties & certificates
+  warranties: {
+    id: string;
+    type: string;
+    description: string;
+    duration: string;
+    startDate: string;
+    endDate: string;
+    documentUri?: string;
+    coverage: string[];
+  }[];
+  certificates: {
+    id: string;
+    type: string;
+    name: string;
+    issuer: string;
+    issueDate: string;
+    documentUri?: string;
+  }[];
+
+  // Compliance
+  complianceStatus: 'pending' | 'partial' | 'complete' | 'non-compliant';
+  complianceChecks: {
+    id: string;
+    name: string;
+    required: boolean;
+    passed: boolean;
+    checkedAt?: string;
+    notes?: string;
+  }[];
+
+  // Stats
+  totalPhotos: number;
+  requiredItemsComplete: number;
+  requiredItemsTotal: number;
+  completionPercentage: number;
+
+  // Status
+  status: 'draft' | 'assembling' | 'ready' | 'delivered' | 'accepted';
+  createdAt: string;
+  updatedAt: string;
+  assembledAt?: string;
+}
+
+export interface HandoverPackage {
+  id: string;
+  evidencePackId: string;
+  jobId: string;
+  contractorId: string;
+  customerId: string;
+
+  // Customer info
+  customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
+
+  // Handover details
+  title: string;
+  summary: string;
+  completionDate: string;
+  handoverDate?: string;
+
+  // Financial summary
+  quotedAmount: number;
+  finalAmount: number;
+  currency: 'GBP' | 'EUR';
+  paymentStatus: 'pending' | 'partial' | 'paid';
+
+  // Documents included
+  includedDocuments: {
+    id: string;
+    name: string;
+    type: EvidenceType;
+    uri: string;
+    included: boolean;
+  }[];
+
+  // Completion certificate
+  completionCertificate?: {
+    id: string;
+    generatedAt: string;
+    documentUri: string;
+    signedByContractor: boolean;
+    contractorSignatureUri?: string;
+    contractorSignedAt?: string;
+  };
+
+  // Customer sign-off
+  customerSignOff?: {
+    signed: boolean;
+    signatureUri?: string;
+    signedAt?: string;
+    signedByName?: string;
+    feedback?: string;
+    rating?: number; // 1-5
+  };
+
+  // Portal access
+  portalLink?: string;
+  portalLinkExpiresAt?: string;
+  portalAccessCount: number;
+  portalLastAccessedAt?: string;
+
+  // PDF export
+  pdfUri?: string;
+  pdfGeneratedAt?: string;
+
+  // Status
+  status: 'draft' | 'ready' | 'sent' | 'viewed' | 'signed' | 'complete';
+  createdAt: string;
+  updatedAt: string;
+  sentAt?: string;
+}

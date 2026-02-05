@@ -225,3 +225,58 @@ export {
   useCompetitivePosition,
   useBenchmarkStats,
 } from './businessBenchmarkingService';
+
+// =============================================================================
+// A16Z CRE AI TRADES - NEW FEATURES
+// =============================================================================
+
+// P0: Evidence Pack & Handover Orchestration (E8 - Beachhead)
+export {
+  evidencePackService,
+  useEvidencePack,
+  useHandoverPackage,
+  useEvidencePacksForJob,
+} from './evidencePackService';
+
+// P1: Supplier Reliability Tracking (E11 - Predictive)
+export {
+  supplierReliabilityService,
+  useSupplierPerformance,
+  useSupplierRanking,
+  useDriftAlerts,
+  useSupplierReliabilityStats,
+} from './supplierReliabilityService';
+
+// P2: Schedule Fragility Scoring (E11 - Predictive)
+export {
+  scheduleFragilityService,
+  useFragilityScore,
+  useCriticalPath,
+  useFragilityAlerts,
+  useWhatIfAnalysis,
+  useScheduleFragilityStats,
+} from './scheduleFragilityService';
+
+// Phase 4: Cross-Role Workflows
+export {
+  crossRoleWorkflowService,
+  useWorkflow,
+  useWorkflowsForRole,
+  usePendingWorkflows,
+  useJobToPaymentWorkflows,
+  useSupplierEscalations,
+  useWorkflowStats,
+} from './crossRoleWorkflowService';
+
+// Phase 10: Predictive Capacity Planning
+export {
+  capacityPlanningService,
+  useCapacityForecast,
+  useAvailabilityWindows,
+  useDurationEstimate,
+  useOverrunPrediction,
+  useDelayAnalysis,
+  useCapacityAlerts,
+  useCustomerQuoteResponse,
+  usePredictionAccuracy,
+} from './capacityPlanningService';

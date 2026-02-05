@@ -147,10 +147,11 @@ const DarkTheme = {
   statusOverdue: Palette.red600,
 
   // Role-specific accents (for role badges/branding)
-  roleCFO: '#3B82F6',
-  roleCOO: '#8B5CF6',
-  roleSiteLead: '#F59E0B',
-  roleDirector: Palette.vascoPrimary,
+  roleCFO: '#2563EB',       // Blue for CFO
+  roleCOO: '#7C3AED',       // Purple for COO
+  roleSiteLead: '#D2691E',  // Terracotta for Site Lead
+  roleDirector: '#E35205',  // Hermes Orange for Director
+  roleContractor: '#E35205', // Hermes Orange for Contractor
 
   // Chart/Data visualization
   chartPrimary: Palette.vascoPrimary,

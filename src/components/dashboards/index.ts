@@ -1,6 +1,7 @@
 export { CFODashboard } from './CFODashboard';
 export { COODashboard } from './COODashboard';
 export { SiteLeadDashboard } from './SiteLeadDashboard';
+export { DirectorDashboard } from './DirectorDashboard';
 export { MetricsDashboard } from './MetricsDashboard';
 export { S106CILDashboard } from './S106CILDashboard';
 export { ApprovalQueueDashboard } from './ApprovalQueueDashboard';

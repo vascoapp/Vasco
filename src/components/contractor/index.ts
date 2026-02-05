@@ -64,3 +64,6 @@ export { InvoiceAutomation } from './InvoiceAutomation';
 export { RouteOptimizer } from './RouteOptimizer';
 export { CustomerInsights } from './CustomerInsights';
 export { BusinessBenchmarking } from './BusinessBenchmarking';
+
+// Phase 10: Predictive Capacity Planning
+export { CapacityPlanning } from './CapacityPlanning';

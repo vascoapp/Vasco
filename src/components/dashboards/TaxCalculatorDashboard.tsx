@@ -11,7 +11,7 @@ import {
 } from '../../modules/countryModules';
 import type { Country } from '../../types/buildos';
 
-const CFO_COLOR = '#22C55E';
+const CFO_COLOR = '#2563EB'; // Blue for CFO (per theme)
 
 const BUNDESLAND_LIST = Object.keys(DE_RETT_RATES);
 

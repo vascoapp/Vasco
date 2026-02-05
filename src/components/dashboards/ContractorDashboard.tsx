@@ -1,5 +1,10 @@
-// Contractor Dashboard - ServiceTitan-style dashboard for individual trades contractors
+// =============================================================================
+// CONTRACTOR DASHBOARD - ServiceTitan-style dashboard for trades contractors
+// =============================================================================
 // Enhanced with unified command center: decisions, agent actions, evidence capture, ROI
+// 4-tab navigation: Dashboard, Jobs, Money, Tools
+// =============================================================================
+
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View, Modal } from 'react-native';
@@ -22,12 +27,44 @@ import {
 import { MOCK_ACTIVE_TRACKERS } from '../../data/mockDecisions';
 
 type IconName = keyof typeof Ionicons.glyphMap;
+type TabView = 'dashboard' | 'jobs' | 'money' | 'tools';
 
-export function ContractorDashboard() {
+// Contractor theme color
+const CONTRACTOR_COLOR = SemanticColors.actionPrimary;
+
+// =============================================================================
+// TAB CONFIGURATION
+// =============================================================================
+
+interface TabConfig {
+  id: TabView;
+  label: string;
+  icon: IconName;
+}
+
+const TABS: TabConfig[] = [
+  { id: 'dashboard', label: 'Dashboard', icon: 'home' },
+  { id: 'jobs', label: 'Jobs', icon: 'construct' },
+  { id: 'money', label: 'Money', icon: 'wallet' },
+  { id: 'tools', label: 'Tools', icon: 'apps' },
+];
+
+// =============================================================================
+// MAIN DASHBOARD
+// =============================================================================
+
+export type ContractorTabView = TabView;
+
+interface ContractorDashboardProps {
+  initialTab?: TabView;
+}
+
+export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDashboardProps) {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabView>(initialTab);
   const [showIntelligence, setShowIntelligence] = useState(false);
-  const [showDecisions, setShowDecisions] = useState(false);
   const [showROI, setShowROI] = useState(false);
+
   const metrics = MOCK_CONTRACTOR_METRICS;
   const profile = MOCK_CONTRACTOR_PROFILE;
 
@@ -40,6 +77,9 @@ export function ContractorDashboard() {
 
   // Get jobs ready for completion (in-progress jobs that can be marked complete)
   const jobsReadyToComplete = MOCK_JOBS.filter((j) => j.status === 'in-progress');
+
+  // Get jobs ready for handover (completed jobs that need handover package)
+  const jobsReadyForHandover = MOCK_JOBS.filter((j) => j.status === 'completed');
 
   // Get pending quotes
   const pendingQuotes = MOCK_QUOTES.filter((q) => q.status === 'sent' || q.status === 'viewed');
@@ -58,20 +98,16 @@ export function ContractorDashboard() {
     return `€${amount.toLocaleString('nl-NL')}`;
   };
 
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Good morning</Text>
-          <Text style={styles.businessName}>{profile.tradeName || profile.businessName}</Text>
-        </View>
-        <View style={styles.tradeBadge}>
-          <Ionicons name="color-palette" size={14} color={SemanticColors.actionPrimary} />
-          <Text style={styles.tradeBadgeText}>Painter</Text>
-        </View>
-      </View>
+  // =============================================================================
+  // RENDER TAB CONTENT
+  // =============================================================================
 
+  const renderDashboardTab = () => (
+    <ScrollView
+      style={styles.tabContent}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Quick Stats Row */}
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
@@ -102,25 +138,6 @@ export function ContractorDashboard() {
           <Text style={styles.statValue}>{metrics.quotesOutstanding}</Text>
           <Text style={styles.statLabel}>Quotes Out</Text>
         </View>
-      </View>
-
-      {/* Hours Saved - Hero Metric */}
-      <View style={styles.heroSavingsCard}>
-        <View style={styles.heroSavingsIcon}>
-          <Ionicons name="time" size={28} color={SemanticColors.feedbackSuccess} />
-        </View>
-        <View style={styles.heroSavingsContent}>
-          <Text style={styles.heroSavingsValue}>12.5 uur</Text>
-          <Text style={styles.heroSavingsLabel}>bespaard deze week</Text>
-          <Text style={styles.heroSavingsSubtext}>€687 aan tijdswaarde</Text>
-        </View>
-        <Pressable
-          style={styles.heroSavingsButton}
-          onPress={() => setShowROI(true)}
-        >
-          <Ionicons name="analytics" size={16} color={SemanticColors.actionPrimary} />
-          <Text style={styles.heroSavingsButtonText}>Details</Text>
-        </Pressable>
       </View>
 
       {/* Customer Decisions Alert */}
@@ -168,38 +185,20 @@ export function ContractorDashboard() {
         <AgentActionsPanel />
       </View>
 
-      {/* Intelligence Widget */}
-      <Pressable style={styles.intelligenceWidget} onPress={() => setShowIntelligence(true)}>
-        <View style={styles.intelligenceIcon}>
-          <Ionicons name="sparkles" size={22} color={Palette.hermesOrange} />
-        </View>
-        <View style={styles.intelligenceContent}>
-          <View style={styles.intelligenceHeader}>
-            <Text style={styles.intelligenceTitle}>Vasco Intelligence</Text>
-            <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
-          </View>
-          <Text style={styles.intelligenceSubtitle}>€4.280 bespaard · 156 datapunten</Text>
-          <View style={styles.intelligenceTip}>
-            <Ionicons name="bulb-outline" size={12} color={Palette.hermesOrange} />
-            <Text style={styles.intelligenceTipText}>3 nieuwe tips beschikbaar</Text>
-          </View>
-        </View>
-      </Pressable>
-
       {/* Today's Schedule */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Today's Schedule</Text>
           <Pressable style={styles.seeAllButton}>
             <Text style={styles.seeAllText}>Calendar</Text>
-            <Ionicons name="chevron-forward" size={14} color={SemanticColors.actionPrimary} />
+            <Ionicons name="chevron-forward" size={14} color={CONTRACTOR_COLOR} />
           </Pressable>
         </View>
         {todaysSchedule.length > 0 ? (
           <View style={styles.scheduleList}>
             {todaysSchedule.map((item) => (
               <Pressable key={item.id} style={styles.scheduleCard}>
-                <View style={[styles.scheduleIndicator, { backgroundColor: item.color || SemanticColors.actionPrimary }]} />
+                <View style={[styles.scheduleIndicator, { backgroundColor: item.color || CONTRACTOR_COLOR }]} />
                 <View style={styles.scheduleContent}>
                   <View style={styles.scheduleTime}>
                     <Ionicons name="time-outline" size={14} color={SemanticColors.textSecondary} />
@@ -257,6 +256,38 @@ export function ContractorDashboard() {
         </Pressable>
       </View>
 
+      <View style={{ height: 100 }} />
+    </ScrollView>
+  );
+
+  const renderJobsTab = () => (
+    <ScrollView
+      style={styles.tabContent}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Jobs Stats Banner */}
+      <View style={styles.statsBanner}>
+        <View style={styles.statsBannerItem}>
+          <Text style={styles.statsBannerValue}>{activeJobs.length}</Text>
+          <Text style={styles.statsBannerLabel}>Active</Text>
+        </View>
+        <View style={styles.statsBannerDivider} />
+        <View style={styles.statsBannerItem}>
+          <Text style={[styles.statsBannerValue, { color: SemanticColors.feedbackSuccess }]}>
+            {jobsReadyToComplete.length}
+          </Text>
+          <Text style={styles.statsBannerLabel}>To Complete</Text>
+        </View>
+        <View style={styles.statsBannerDivider} />
+        <View style={styles.statsBannerItem}>
+          <Text style={[styles.statsBannerValue, { color: SemanticColors.feedbackInfo }]}>
+            {jobsReadyForHandover.length}
+          </Text>
+          <Text style={styles.statsBannerLabel}>Handover</Text>
+        </View>
+      </View>
+
       {/* Jobs Ready to Complete - Evidence Capture */}
       {jobsReadyToComplete.length > 0 && (
         <View style={styles.section}>
@@ -268,7 +299,7 @@ export function ContractorDashboard() {
             </View>
           </View>
           <View style={styles.completeJobsList}>
-            {jobsReadyToComplete.slice(0, 2).map((job) => (
+            {jobsReadyToComplete.map((job) => (
               <Pressable
                 key={job.id}
                 style={styles.completeJobCard}
@@ -294,13 +325,49 @@ export function ContractorDashboard() {
         </View>
       )}
 
+      {/* Jobs Ready for Handover - P0 Feature */}
+      {jobsReadyForHandover.length > 0 && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Ready for Handover</Text>
+            <View style={styles.handoverHint}>
+              <Ionicons name="gift" size={12} color={SemanticColors.feedbackInfo} />
+              <Text style={styles.handoverHintText}>Build handover package</Text>
+            </View>
+          </View>
+          <View style={styles.handoverJobsList}>
+            {jobsReadyForHandover.map((job) => (
+              <Pressable
+                key={job.id}
+                style={styles.handoverJobCard}
+                onPress={() => router.push(`/contractor/handover/${job.id}`)}
+              >
+                <View style={styles.handoverJobIcon}>
+                  <Ionicons name="gift" size={24} color={SemanticColors.feedbackInfo} />
+                </View>
+                <View style={styles.handoverJobContent}>
+                  <Text style={styles.handoverJobTitle}>{job.title}</Text>
+                  <Text style={styles.handoverJobCustomer}>{job.address.city}</Text>
+                </View>
+                <View style={styles.handoverJobAction}>
+                  <View style={styles.handoverButton}>
+                    <Ionicons name="document-attach" size={14} color="#fff" />
+                    <Text style={styles.handoverButtonText}>Handover</Text>
+                  </View>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      )}
+
       {/* Active Jobs */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Active Jobs</Text>
           <Pressable style={styles.seeAllButton}>
             <Text style={styles.seeAllText}>View all</Text>
-            <Ionicons name="chevron-forward" size={14} color={SemanticColors.actionPrimary} />
+            <Ionicons name="chevron-forward" size={14} color={CONTRACTOR_COLOR} />
           </Pressable>
         </View>
         <View style={styles.jobsList}>
@@ -348,7 +415,7 @@ export function ContractorDashboard() {
             <Text style={styles.sectionTitle}>Pending Quotes</Text>
             <Pressable style={styles.seeAllButton}>
               <Text style={styles.seeAllText}>View all</Text>
-              <Ionicons name="chevron-forward" size={14} color={SemanticColors.actionPrimary} />
+              <Ionicons name="chevron-forward" size={14} color={CONTRACTOR_COLOR} />
             </Pressable>
           </View>
           <View style={styles.quotesList}>
@@ -395,60 +462,92 @@ export function ContractorDashboard() {
         </View>
       )}
 
+      <View style={{ height: 100 }} />
+    </ScrollView>
+  );
+
+  const renderMoneyTab = () => (
+    <ScrollView
+      style={styles.tabContent}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Money Stats Banner */}
+      <View style={[styles.statsBanner, { backgroundColor: SemanticColors.feedbackSuccessBg }]}>
+        <View style={styles.statsBannerItem}>
+          <Text style={[styles.statsBannerValue, { color: SemanticColors.feedbackSuccess }]}>
+            {formatCurrency(metrics.revenueThisMonth)}
+          </Text>
+          <Text style={styles.statsBannerLabel}>This Month</Text>
+        </View>
+        <View style={styles.statsBannerDivider} />
+        <View style={styles.statsBannerItem}>
+          <Text style={[styles.statsBannerValue, { color: SemanticColors.feedbackWarning }]}>
+            {formatCurrency(metrics.invoicesOutstandingValue)}
+          </Text>
+          <Text style={styles.statsBannerLabel}>Outstanding</Text>
+        </View>
+        <View style={styles.statsBannerDivider} />
+        <View style={styles.statsBannerItem}>
+          <Text style={[styles.statsBannerValue, { color: SemanticColors.feedbackError }]}>
+            {metrics.overdueInvoices}
+          </Text>
+          <Text style={styles.statsBannerLabel}>Overdue</Text>
+        </View>
+      </View>
+
       {/* Outstanding Invoices */}
-      {outstandingInvoices.length > 0 && (
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Outstanding Invoices</Text>
-            {metrics.overdueInvoices > 0 && (
-              <View style={styles.overdueAlert}>
-                <Ionicons name="alert-circle" size={14} color={SemanticColors.feedbackError} />
-                <Text style={styles.overdueAlertText}>{metrics.overdueInvoices} overdue</Text>
-              </View>
-            )}
-          </View>
-          <View style={styles.invoicesList}>
-            {outstandingInvoices.map((invoice) => (
-              <Pressable key={invoice.id} style={styles.invoiceCard}>
-                <View style={styles.invoiceHeader}>
-                  <Text style={styles.invoiceNumber}>{invoice.invoiceNumber}</Text>
-                  <View
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Outstanding Invoices</Text>
+          {metrics.overdueInvoices > 0 && (
+            <View style={styles.overdueAlert}>
+              <Ionicons name="alert-circle" size={14} color={SemanticColors.feedbackError} />
+              <Text style={styles.overdueAlertText}>{metrics.overdueInvoices} overdue</Text>
+            </View>
+          )}
+        </View>
+        <View style={styles.invoicesList}>
+          {outstandingInvoices.map((invoice) => (
+            <Pressable key={invoice.id} style={styles.invoiceCard}>
+              <View style={styles.invoiceHeader}>
+                <Text style={styles.invoiceNumber}>{invoice.invoiceNumber}</Text>
+                <View
+                  style={[
+                    styles.invoiceStatus,
+                    {
+                      backgroundColor:
+                        invoice.status === 'overdue'
+                          ? SemanticColors.feedbackErrorBg
+                          : SemanticColors.feedbackWarningBg,
+                    },
+                  ]}
+                >
+                  <Text
                     style={[
-                      styles.invoiceStatus,
+                      styles.invoiceStatusText,
                       {
-                        backgroundColor:
+                        color:
                           invoice.status === 'overdue'
-                            ? SemanticColors.feedbackErrorBg
-                            : SemanticColors.feedbackWarningBg,
+                            ? SemanticColors.feedbackError
+                            : SemanticColors.feedbackWarning,
                       },
                     ]}
                   >
-                    <Text
-                      style={[
-                        styles.invoiceStatusText,
-                        {
-                          color:
-                            invoice.status === 'overdue'
-                              ? SemanticColors.feedbackError
-                              : SemanticColors.feedbackWarning,
-                        },
-                      ]}
-                    >
-                      {invoice.status === 'overdue' ? 'Overdue' : 'Pending'}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.invoiceFooter}>
-                  <Text style={styles.invoiceDue}>
-                    Due {new Date(invoice.dueDate).toLocaleDateString('nl-NL')}
+                    {invoice.status === 'overdue' ? 'Overdue' : 'Pending'}
                   </Text>
-                  <Text style={styles.invoiceAmount}>{formatCurrency(invoice.amountDue)}</Text>
                 </View>
-              </Pressable>
-            ))}
-          </View>
+              </View>
+              <View style={styles.invoiceFooter}>
+                <Text style={styles.invoiceDue}>
+                  Due {new Date(invoice.dueDate).toLocaleDateString('nl-NL')}
+                </Text>
+                <Text style={styles.invoiceAmount}>{formatCurrency(invoice.amountDue)}</Text>
+              </View>
+            </Pressable>
+          ))}
         </View>
-      )}
+      </View>
 
       {/* Performance Snapshot */}
       <View style={styles.section}>
@@ -476,7 +575,54 @@ export function ContractorDashboard() {
         </View>
       </View>
 
-      {/* Power Tools - Advanced Features */}
+      {/* Money Actions */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <View style={styles.actionsList}>
+          <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/payments')}>
+            <View style={[styles.actionIcon, { backgroundColor: '#CC006620' }]}>
+              <Ionicons name="card" size={20} color="#CC0066" />
+            </View>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Accept Payments</Text>
+              <Text style={styles.actionSubtitle}>iDEAL & Mollie integration</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+          </Pressable>
+          <Pressable style={styles.actionItem}>
+            <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackSuccessBg }]}>
+              <Ionicons name="receipt" size={20} color={SemanticColors.feedbackSuccess} />
+            </View>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Create Invoice</Text>
+              <Text style={styles.actionSubtitle}>Generate from completed job</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+          </Pressable>
+          <Pressable style={styles.actionItem}>
+            <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackInfoBg }]}>
+              <Ionicons name="send" size={20} color={SemanticColors.feedbackInfo} />
+            </View>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Send Reminders</Text>
+              <Text style={styles.actionSubtitle}>Chase overdue payments</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+          </Pressable>
+        </View>
+      </View>
+
+      <View style={{ height: 100 }} />
+    </ScrollView>
+  );
+
+  const renderToolsTab = () => (
+    <ScrollView
+      style={styles.tabContent}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Power Tools */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Power Tools</Text>
         <View style={styles.toolsGrid}>
@@ -511,6 +657,139 @@ export function ContractorDashboard() {
         </View>
       </View>
 
+      {/* Vasco Intelligence */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Intelligence</Text>
+        <Pressable style={styles.intelligenceCard} onPress={() => setShowIntelligence(true)}>
+          <View style={styles.intelligenceCardIcon}>
+            <Ionicons name="sparkles" size={28} color={Palette.hermesOrange} />
+          </View>
+          <View style={styles.intelligenceCardContent}>
+            <Text style={styles.intelligenceCardTitle}>Vasco Intelligence</Text>
+            <Text style={styles.intelligenceCardSubtitle}>AI-powered insights & recommendations</Text>
+            <View style={styles.intelligenceCardStats}>
+              <View style={styles.intelligenceCardStat}>
+                <Text style={styles.intelligenceCardStatValue}>€4.280</Text>
+                <Text style={styles.intelligenceCardStatLabel}>saved</Text>
+              </View>
+              <View style={styles.intelligenceCardStat}>
+                <Text style={styles.intelligenceCardStatValue}>156</Text>
+                <Text style={styles.intelligenceCardStatLabel}>data points</Text>
+              </View>
+              <View style={styles.intelligenceCardStat}>
+                <Text style={styles.intelligenceCardStatValue}>3</Text>
+                <Text style={styles.intelligenceCardStatLabel}>new tips</Text>
+              </View>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={SemanticColors.textTertiary} />
+        </Pressable>
+      </View>
+
+      {/* Business ROI */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Business ROI</Text>
+        <Pressable style={styles.roiCard} onPress={() => setShowROI(true)}>
+          <View style={styles.roiCardIcon}>
+            <Ionicons name="analytics" size={28} color={SemanticColors.feedbackSuccess} />
+          </View>
+          <View style={styles.roiCardContent}>
+            <Text style={styles.roiCardTitle}>Hours Saved Dashboard</Text>
+            <Text style={styles.roiCardSubtitle}>Track your time savings & ROI</Text>
+            <View style={styles.roiCardHighlight}>
+              <Text style={styles.roiCardHighlightValue}>12.5 uur</Text>
+              <Text style={styles.roiCardHighlightLabel}>saved this week</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={SemanticColors.textTertiary} />
+        </Pressable>
+      </View>
+
+      {/* Additional Actions */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>More</Text>
+        <View style={styles.actionsList}>
+          <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/decisions')}>
+            <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarningBg }]}>
+              <Ionicons name="people" size={20} color={SemanticColors.feedbackWarning} />
+            </View>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Customer Decisions</Text>
+              <Text style={styles.actionSubtitle}>Track pending approvals</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+          </Pressable>
+          <Pressable style={styles.actionItem}>
+            <View style={[styles.actionIcon, { backgroundColor: SemanticColors.surfaceSecondary }]}>
+              <Ionicons name="settings" size={20} color={SemanticColors.textSecondary} />
+            </View>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Settings</Text>
+              <Text style={styles.actionSubtitle}>Account & preferences</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+          </Pressable>
+        </View>
+      </View>
+
+      <View style={{ height: 100 }} />
+    </ScrollView>
+  );
+
+  // =============================================================================
+  // MAIN RENDER
+  // =============================================================================
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.greeting}>Good morning</Text>
+            <Text style={styles.businessName}>{profile.tradeName || profile.businessName}</Text>
+          </View>
+          <View style={styles.tradeBadge}>
+            <Ionicons name="color-palette" size={14} color={CONTRACTOR_COLOR} />
+            <Text style={styles.tradeBadgeText}>Painter</Text>
+          </View>
+        </View>
+
+        {/* Status Pills */}
+        <View style={styles.statusPills}>
+          <Pressable
+            style={[styles.statusPill, outstandingInvoices.length > 0 && styles.statusPillWarning]}
+            onPress={() => setActiveTab('money')}
+          >
+            <Ionicons name="wallet" size={14} color={outstandingInvoices.length > 0 ? SemanticColors.feedbackWarning : SemanticColors.textSecondary} />
+            <Text style={[styles.statusPillText, outstandingInvoices.length > 0 && { color: SemanticColors.feedbackWarning }]}>
+              {outstandingInvoices.length} Outstanding
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.statusPill, activeJobs.length > 0 && styles.statusPillActive]}
+            onPress={() => setActiveTab('jobs')}
+          >
+            <Ionicons name="construct" size={14} color={activeJobs.length > 0 ? CONTRACTOR_COLOR : SemanticColors.textSecondary} />
+            <Text style={[styles.statusPillText, activeJobs.length > 0 && styles.statusPillTextActive]}>
+              {activeJobs.length} Jobs
+            </Text>
+          </Pressable>
+          <View style={styles.statusPill}>
+            <Ionicons name="calendar" size={14} color={SemanticColors.textSecondary} />
+            <Text style={styles.statusPillText}>{todaysSchedule.length} Today</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Internal tab bar removed - using bottom navigation instead */}
+
+      {/* Tab Content */}
+      {activeTab === 'dashboard' && renderDashboardTab()}
+      {activeTab === 'jobs' && renderJobsTab()}
+      {activeTab === 'money' && renderMoneyTab()}
+      {activeTab === 'tools' && renderToolsTab()}
+
       {/* Intelligence Modal */}
       <Modal
         visible={showIntelligence}
@@ -539,21 +818,186 @@ export function ContractorDashboard() {
           </ScrollView>
         </View>
       </Modal>
-    </ScrollView>
+    </View>
   );
 }
 
+// =============================================================================
+// STYLES
+// =============================================================================
+
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: SemanticColors.surfaceBackground,
+  },
+  tabContent: {
+    flex: 1,
+  },
+  scrollContent: {
     padding: Spacing.lg,
     gap: Spacing.lg,
-    paddingBottom: 100,
   },
+
+  // Header
   header: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.borderDefault,
+    gap: Spacing.md,
+  },
+  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
+  greeting: {
+    color: SemanticColors.textSecondary,
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  businessName: {
+    color: SemanticColors.textPrimary,
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  tradeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: CONTRACTOR_COLOR + '15',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  tradeBadgeText: {
+    color: CONTRACTOR_COLOR,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
+  // Status Pills
+  statusPills: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  statusPillActive: {
+    backgroundColor: CONTRACTOR_COLOR + '15',
+  },
+  statusPillWarning: {
+    backgroundColor: SemanticColors.feedbackWarningBg,
+  },
+  statusPillText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: SemanticColors.textSecondary,
+  },
+  statusPillTextActive: {
+    color: CONTRACTOR_COLOR,
+  },
+
+  // Tab Bar
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.borderDefault,
+    paddingHorizontal: Spacing.sm,
+  },
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    gap: 4,
+  },
+  tabActive: {
+    borderBottomWidth: 2,
+    borderBottomColor: CONTRACTOR_COLOR,
+  },
+  tabLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: SemanticColors.textTertiary,
+  },
+  tabLabelActive: {
+    color: CONTRACTOR_COLOR,
+    fontWeight: '600',
+  },
+
+  // Stats Banner
+  statsBanner: {
+    flexDirection: 'row',
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 14,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  statsBannerItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statsBannerValue: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  statsBannerLabel: {
+    fontSize: 11,
+    color: SemanticColors.textTertiary,
+    marginTop: 2,
+  },
+  statsBannerDivider: {
+    width: 1,
+    backgroundColor: SemanticColors.borderDefault,
+    marginHorizontal: Spacing.sm,
+  },
+
+  // Stats Grid
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
+  statCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 14,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    gap: 6,
+  },
+  statIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statValue: {
+    color: SemanticColors.textPrimary,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  statLabel: {
+    color: SemanticColors.textSecondary,
+    fontSize: 11,
+  },
+
   // Hero Savings Card
   heroSavingsCard: {
     flexDirection: 'row',
@@ -602,8 +1046,9 @@ const styles = StyleSheet.create({
   heroSavingsButtonText: {
     fontSize: 12,
     fontWeight: '600',
-    color: SemanticColors.actionPrimary,
+    color: CONTRACTOR_COLOR,
   },
+
   // Customer Decisions Alert
   decisionsAlert: {
     flexDirection: 'row',
@@ -639,7 +1084,229 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
-  // Jobs Ready to Complete
+
+  // Intelligence Widget
+  intelligenceWidget: {
+    flexDirection: 'row',
+    backgroundColor: Palette.pastelOrange + '20',
+    borderRadius: 14,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Palette.hermesOrange + '30',
+    gap: Spacing.md,
+  },
+  intelligenceIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: Palette.hermesOrange + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  intelligenceContent: {
+    flex: 1,
+    gap: 4,
+  },
+  intelligenceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  intelligenceTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  intelligenceSubtitle: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  intelligenceTip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  intelligenceTipText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: Palette.hermesOrange,
+  },
+
+  // Section
+  section: {
+    gap: Spacing.sm,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    color: SemanticColors.textPrimary,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  seeAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  seeAllText: {
+    color: CONTRACTOR_COLOR,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // Schedule
+  scheduleList: {
+    gap: Spacing.xs,
+  },
+  scheduleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 12,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    gap: Spacing.sm,
+  },
+  scheduleIndicator: {
+    width: 4,
+    height: 48,
+    borderRadius: 2,
+  },
+  scheduleContent: {
+    flex: 1,
+    gap: 4,
+  },
+  scheduleTime: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  scheduleTimeText: {
+    color: SemanticColors.textSecondary,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  scheduleTitle: {
+    color: SemanticColors.textPrimary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  scheduleLocation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  scheduleLocationText: {
+    color: SemanticColors.textTertiary,
+    fontSize: 12,
+  },
+  emptyState: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 12,
+    padding: Spacing.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    gap: Spacing.sm,
+  },
+  emptyText: {
+    color: SemanticColors.textTertiary,
+    fontSize: 14,
+  },
+
+  // Quick Actions
+  quickActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+  },
+  quickActionButton: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 8,
+  },
+  quickActionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickActionText: {
+    color: SemanticColors.textSecondary,
+    fontSize: 11,
+    fontWeight: '500',
+  },
+
+  // Jobs List
+  jobsList: {
+    gap: Spacing.xs,
+  },
+  jobCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 12,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    gap: Spacing.sm,
+  },
+  jobHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  jobInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  jobTitle: {
+    color: SemanticColors.textPrimary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  jobCustomer: {
+    color: SemanticColors.textSecondary,
+    fontSize: 12,
+  },
+  jobStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  jobStatusText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  jobFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  jobDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  jobDetailText: {
+    color: SemanticColors.textTertiary,
+    fontSize: 12,
+  },
+  jobAmount: {
+    color: SemanticColors.textPrimary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  // Complete Jobs
   completeJobsList: {
     gap: Spacing.xs,
   },
@@ -710,306 +1377,75 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: SemanticColors.feedbackSuccess,
   },
-  // Modal styles
-  modalContainer: {
-    flex: 1,
-    backgroundColor: SemanticColors.surfaceSecondary,
+
+  // Handover Jobs
+  handoverJobsList: {
+    gap: Spacing.xs,
   },
-  modalHeader: {
+  handoverJobCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.borderDefault,
+    backgroundColor: SemanticColors.feedbackInfoBg,
+    borderRadius: 12,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.feedbackInfo + '20',
+    gap: Spacing.sm,
   },
-  modalCloseButton: {
-    width: 40,
-    height: 40,
+  handoverJobIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 11,
+    backgroundColor: SemanticColors.feedbackInfo + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modalTitle: {
-    fontSize: 17,
+  handoverJobContent: {
+    flex: 1,
+  },
+  handoverJobTitle: {
+    fontSize: 14,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
-  modalHeaderRight: {
-    width: 40,
-  },
-  modalContent: {
-    padding: Spacing.lg,
-    gap: Spacing.lg,
-    paddingBottom: 100,
-  },
-  greeting: {
+  handoverJobCustomer: {
+    fontSize: 12,
     color: SemanticColors.textSecondary,
-    fontSize: 14,
-    marginBottom: 4,
   },
-  businessName: {
-    color: SemanticColors.textPrimary,
-    fontSize: 24,
-    fontWeight: '700',
+  handoverJobAction: {
+    alignItems: 'flex-end',
+    gap: 6,
   },
-  tradeBadge: {
+  handoverButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: SemanticColors.actionPrimary + '15',
-    paddingHorizontal: 12,
+    gap: 4,
+    backgroundColor: SemanticColors.feedbackInfo,
+    paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 6,
   },
-  tradeBadgeText: {
-    color: SemanticColors.actionPrimary,
+  handoverButtonText: {
     fontSize: 12,
     fontWeight: '600',
+    color: '#fff',
   },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  intelligenceWidget: {
-    flexDirection: 'row',
-    backgroundColor: Palette.pastelOrange + '20',
-    borderRadius: 14,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Palette.hermesOrange + '30',
-    gap: Spacing.md,
-  },
-  intelligenceIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: Palette.hermesOrange + '20',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  intelligenceContent: {
-    flex: 1,
-    gap: 4,
-  },
-  intelligenceHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  intelligenceTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
-  },
-  intelligenceSubtitle: {
-    fontSize: 12,
-    color: SemanticColors.textSecondary,
-  },
-  intelligenceTip: {
+  handoverHint: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 4,
-  },
-  intelligenceTipText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: Palette.hermesOrange,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-    gap: 6,
-  },
-  statIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statValue: {
-    color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  statLabel: {
-    color: SemanticColors.textSecondary,
-    fontSize: 11,
-  },
-  section: {
-    gap: Spacing.sm,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  sectionTitle: {
-    color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  seeAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  seeAllText: {
-    color: SemanticColors.actionPrimary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  scheduleList: {
-    gap: Spacing.xs,
-  },
-  scheduleCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-    gap: Spacing.sm,
-  },
-  scheduleIndicator: {
-    width: 4,
-    height: 48,
-    borderRadius: 2,
-  },
-  scheduleContent: {
-    flex: 1,
-    gap: 4,
-  },
-  scheduleTime: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  scheduleTimeText: {
-    color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  scheduleTitle: {
-    color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  scheduleLocation: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  scheduleLocationText: {
-    color: SemanticColors.textTertiary,
-    fontSize: 12,
-  },
-  emptyState: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
-    padding: Spacing.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-    gap: Spacing.sm,
-  },
-  emptyText: {
-    color: SemanticColors.textTertiary,
-    fontSize: 14,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: Spacing.sm,
-  },
-  quickActionButton: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 8,
-  },
-  quickActionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickActionText: {
-    color: SemanticColors.textSecondary,
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  jobsList: {
-    gap: Spacing.xs,
-  },
-  jobCard: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-    gap: Spacing.sm,
-  },
-  jobHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  jobInfo: {
-    flex: 1,
-    gap: 2,
-  },
-  jobTitle: {
-    color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  jobCustomer: {
-    color: SemanticColors.textSecondary,
-    fontSize: 12,
-  },
-  jobStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    backgroundColor: SemanticColors.feedbackInfoBg,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
-  jobStatusText: {
-    fontSize: 11,
-    fontWeight: '600',
+  handoverHintText: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: SemanticColors.feedbackInfo,
   },
-  jobFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  jobDetail: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  jobDetailText: {
-    color: SemanticColors.textTertiary,
-    fontSize: 12,
-  },
-  jobAmount: {
-    color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
+
+  // Quotes
   quotesList: {
     gap: Spacing.xs,
   },
@@ -1055,10 +1491,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   quoteAmount: {
-    color: SemanticColors.actionPrimary,
+    color: CONTRACTOR_COLOR,
     fontSize: 14,
     fontWeight: '700',
   },
+
+  // Invoices
   overdueAlert: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1117,6 +1555,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+
+  // Performance Grid
   performanceGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1147,6 +1587,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
+
+  // Tools Grid
   toolsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1176,5 +1618,175 @@ const styles = StyleSheet.create({
   toolDesc: {
     color: SemanticColors.textSecondary,
     fontSize: 11,
+  },
+
+  // Intelligence Card
+  intelligenceCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Palette.pastelOrange + '20',
+    borderRadius: 14,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Palette.hermesOrange + '30',
+    gap: Spacing.md,
+  },
+  intelligenceCardIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+    backgroundColor: Palette.hermesOrange + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  intelligenceCardContent: {
+    flex: 1,
+    gap: 4,
+  },
+  intelligenceCardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  intelligenceCardSubtitle: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  intelligenceCardStats: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginTop: 6,
+  },
+  intelligenceCardStat: {
+    alignItems: 'center',
+  },
+  intelligenceCardStatValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Palette.hermesOrange,
+  },
+  intelligenceCardStatLabel: {
+    fontSize: 10,
+    color: SemanticColors.textTertiary,
+  },
+
+  // ROI Card
+  roiCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.feedbackSuccessBg,
+    borderRadius: 14,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.feedbackSuccess + '30',
+    gap: Spacing.md,
+  },
+  roiCardIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+    backgroundColor: SemanticColors.feedbackSuccess + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  roiCardContent: {
+    flex: 1,
+    gap: 4,
+  },
+  roiCardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  roiCardSubtitle: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  roiCardHighlight: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+    marginTop: 4,
+  },
+  roiCardHighlightValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: SemanticColors.feedbackSuccess,
+  },
+  roiCardHighlightLabel: {
+    fontSize: 11,
+    color: SemanticColors.textTertiary,
+  },
+
+  // Actions List
+  actionsList: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    overflow: 'hidden',
+  },
+  actionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.borderMuted,
+    gap: Spacing.sm,
+  },
+  actionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionContent: {
+    flex: 1,
+  },
+  actionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  actionSubtitle: {
+    fontSize: 12,
+    color: SemanticColors.textTertiary,
+    marginTop: 2,
+  },
+
+  // Modal
+  modalContainer: {
+    flex: 1,
+    backgroundColor: SemanticColors.surfaceSecondary,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.borderDefault,
+  },
+  modalCloseButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  modalHeaderRight: {
+    width: 40,
+  },
+  modalContent: {
+    padding: Spacing.lg,
+    gap: Spacing.lg,
+    paddingBottom: 100,
   },
 });

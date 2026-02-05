@@ -266,6 +266,13 @@ export interface ActionInstance {
   // Approvals
   requiredApprovals: ApprovalRole[];
   approvals: ApprovalRecord[];
+  // P0: Final Confirmation Gate
+  requiresFinalConfirmation?: boolean;
+  finalConfirmationBy?: string;
+  finalConfirmationByName?: string;
+  finalConfirmationAt?: string;
+  executionHash?: string; // Cryptographic proof of confirmation
+  confirmationCode?: string; // Optional 2FA/PIN code
   // Timestamps
   createdAt: string;
   createdBy: string;
@@ -423,6 +430,11 @@ export function executeAction(
     throw new Error('Action must be approved before execution');
   }
 
+  // P0: Check if final confirmation is required
+  if (action.requiresFinalConfirmation && !action.finalConfirmationAt) {
+    throw new Error('Action requires final confirmation before execution');
+  }
+
   const now = new Date().toISOString();
 
   return {
@@ -435,9 +447,243 @@ export function executeAction(
         timestamp: now,
         action: 'executed',
         userId,
-        details: 'Action executed',
+        details: action.requiresFinalConfirmation
+          ? `Action executed after final confirmation by ${action.finalConfirmationByName || action.finalConfirmationBy}`
+          : 'Action executed',
       },
     ],
+  };
+}
+
+// ============================================
+// P0: FINAL CONFIRMATION GATE
+// ============================================
+
+/**
+ * Generates a cryptographic hash for action confirmation
+ * Provides audit proof of the specific action state at confirmation time
+ */
+function generateExecutionHash(action: ActionInstance, userId: string): string {
+  const data = `${action.id}-${action.type}-${action.amount || 0}-${userId}-${Date.now()}`;
+  // In production, use a proper crypto hash
+  return btoa(data).replace(/[^a-zA-Z0-9]/g, '').slice(0, 32);
+}
+
+/**
+ * Checks if an action requires final confirmation before execution
+ */
+export function requiresFinalConfirmationGate(action: ActionInstance): boolean {
+  const definition = getActionDefinition(action.type);
+  if (!definition) return false;
+
+  // Check if action type requires final confirmation
+  // This would be defined in ACTION_DEFINITIONS or determined by risk level
+  const criticalTypes = [
+    'approve-payment',
+    'release-retention',
+    'terminate-contract',
+    'draw-request',
+    'certify-completion',
+    'submit-permit',
+    's106-payment',
+    'approve-change-order',
+  ];
+
+  if (criticalTypes.includes(action.type)) {
+    return true;
+  }
+
+  // High-value actions also require confirmation
+  if (action.amount && action.amount >= 50000) {
+    return true;
+  }
+
+  // Critical risk level requires confirmation
+  if (action.riskLevel === 'critical') {
+    return true;
+  }
+
+  return action.requiresFinalConfirmation || false;
+}
+
+/**
+ * Marks an action as requiring final confirmation
+ * Called after approval but before execution for critical actions
+ */
+export function requestFinalConfirmation(action: ActionInstance): ActionInstance {
+  if (action.status !== 'approved') {
+    throw new Error('Action must be approved before requesting final confirmation');
+  }
+
+  const now = new Date().toISOString();
+
+  return {
+    ...action,
+    requiresFinalConfirmation: true,
+    status: 'approved', // Stays approved but waiting for final confirmation
+    auditTrail: [
+      ...action.auditTrail,
+      {
+        timestamp: now,
+        action: 'final-confirmation-requested',
+        userId: 'system',
+        details: 'Final confirmation gate activated - awaiting executive confirmation before execution',
+      },
+    ],
+  };
+}
+
+/**
+ * Records the final confirmation and executes the action
+ * This is the explicit "Are you sure?" confirmation before high-stakes actions
+ */
+export function confirmAndExecute(
+  action: ActionInstance,
+  userId: string,
+  userName: string,
+  confirmationCode?: string
+): ActionInstance {
+  if (action.status !== 'approved') {
+    throw new Error('Action must be approved before final confirmation');
+  }
+
+  if (!action.requiresFinalConfirmation) {
+    throw new Error('Action does not require final confirmation - use executeAction instead');
+  }
+
+  const now = new Date().toISOString();
+  const executionHash = generateExecutionHash(action, userId);
+
+  // First record the confirmation
+  const confirmedAction: ActionInstance = {
+    ...action,
+    finalConfirmationBy: userId,
+    finalConfirmationByName: userName,
+    finalConfirmationAt: now,
+    executionHash,
+    confirmationCode,
+    auditTrail: [
+      ...action.auditTrail,
+      {
+        timestamp: now,
+        action: 'final-confirmation-received',
+        userId,
+        details: `Final confirmation received from ${userName}. Execution hash: ${executionHash}`,
+      },
+    ],
+  };
+
+  // Then execute
+  return {
+    ...confirmedAction,
+    status: 'executed',
+    executedAt: now,
+    auditTrail: [
+      ...confirmedAction.auditTrail,
+      {
+        timestamp: now,
+        action: 'executed',
+        userId,
+        details: `Action executed after final confirmation. Hash: ${executionHash}`,
+      },
+    ],
+  };
+}
+
+/**
+ * Gets the confirmation requirements for an action
+ * Returns details about what confirmation is needed
+ */
+export interface ConfirmationRequirements {
+  required: boolean;
+  reason: string;
+  riskLevel: ActionRiskLevel;
+  requiresPin?: boolean;
+  requires2FA?: boolean;
+  warningMessage?: string;
+  impactSummary?: {
+    financial?: { amount: number; currency: Currency };
+    legal?: string;
+    operational?: string;
+  };
+}
+
+export function getConfirmationRequirements(action: ActionInstance): ConfirmationRequirements {
+  const definition = getActionDefinition(action.type);
+
+  if (!requiresFinalConfirmationGate(action)) {
+    return {
+      required: false,
+      reason: 'Standard approval workflow',
+      riskLevel: action.riskLevel,
+    };
+  }
+
+  let reason = 'High-stakes action requiring explicit confirmation';
+  let warningMessage: string | undefined;
+  let requiresPin = false;
+  let requires2FA = false;
+
+  // Customize based on action type
+  switch (action.type) {
+    case 'approve-payment':
+      reason = 'Payment approval with significant financial impact';
+      warningMessage = `You are about to authorize a payment of ${action.currency || 'GBP'} ${action.amount?.toLocaleString() || 'N/A'}. This action cannot be undone.`;
+      if (action.amount && action.amount >= 100000) {
+        requiresPin = true;
+      }
+      break;
+
+    case 'release-retention':
+      reason = 'Retention release - funds will be transferred';
+      warningMessage = 'Releasing retention funds is irreversible. Ensure all defects are resolved.';
+      requiresPin = true;
+      break;
+
+    case 'terminate-contract':
+      reason = 'Contract termination - significant legal implications';
+      warningMessage = 'Contract termination will have legal and financial consequences. Legal review is recommended.';
+      requiresPin = true;
+      requires2FA = true;
+      break;
+
+    case 'draw-request':
+      reason = 'Lender draw request - formal financial submission';
+      warningMessage = 'This draw request will be submitted to the lender. Ensure all documentation is complete.';
+      break;
+
+    case 'certify-completion':
+      reason = 'Practical completion certification - triggers contractual obligations';
+      warningMessage = 'Certifying practical completion has significant legal implications including defects liability period commencement.';
+      break;
+
+    case 'submit-permit':
+      reason = 'Permit submission - regulatory commitment';
+      warningMessage = 'Submitting this permit application creates a formal regulatory record.';
+      break;
+
+    case 's106-payment':
+      reason = 'Section 106 payment - planning obligation';
+      warningMessage = 'This payment fulfills a planning obligation and will be reported to the local authority.';
+      break;
+
+    default:
+      if (action.amount && action.amount >= 50000) {
+        reason = 'High-value action exceeding confirmation threshold';
+        warningMessage = `This action involves ${action.currency || 'GBP'} ${action.amount.toLocaleString()}`;
+      }
+  }
+
+  return {
+    required: true,
+    reason,
+    riskLevel: action.riskLevel,
+    requiresPin,
+    requires2FA,
+    warningMessage,
+    impactSummary: action.amount
+      ? { financial: { amount: action.amount, currency: action.currency || 'GBP' } }
+      : undefined,
   };
 }
 

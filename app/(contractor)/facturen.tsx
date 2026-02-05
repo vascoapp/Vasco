@@ -1,8 +1,7 @@
 // =============================================================================
-// FACTUREN - Invoices, Quotes & Payments
+// FACTUREN - Invoices & Quotes (Simplified)
 // =============================================================================
-// Manage invoices, quotes (Good-Better-Best) and payments (iDEAL/Mollie)
-// Connected to cashFlowService for real data
+// Clean invoice management with integrated financial auditing
 // =============================================================================
 
 import { useState, useMemo } from 'react';
@@ -21,6 +20,9 @@ import { Spacing } from '../../src/theme/spacing';
 import { TieredQuoteBuilder } from '../../src/components/contractor/TieredQuoteBuilder';
 import { IntegratedPayments } from '../../src/components/contractor/IntegratedPayments';
 import { useCashFlow, type Invoice } from '../../src/services/cashFlowService';
+
+// Integrate financial auditor for invoice verification
+import { useFinancialAuditFindings } from '../../src/services/financialAuditorService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -47,324 +49,122 @@ interface Quote {
 // COMPONENTS
 // ============================================
 
-function SummaryCards({ summary, invoices }: { summary: ReturnType<typeof useCashFlow>['summary']; invoices: Invoice[] }) {
-  const pendingInvoices = invoices.filter(i => ['sent', 'viewed'].includes(i.status));
-  const pendingValue = pendingInvoices.reduce((sum, i) => sum + i.amount, 0);
-
-  const paidThisMonth = invoices.filter(i => i.status === 'paid');
-  const paidValue = paidThisMonth.reduce((sum, i) => sum + i.amount, 0);
+function SummaryBar({ invoices }: { invoices: Invoice[] }) {
+  const pending = invoices.filter(i => ['sent', 'viewed'].includes(i.status));
+  const overdue = invoices.filter(i => i.status === 'overdue');
+  const pendingValue = pending.reduce((sum, i) => sum + i.amount, 0);
+  const overdueValue = overdue.reduce((sum, i) => sum + i.amount, 0);
 
   return (
-    <View style={styles.summaryCards}>
-      <View style={[styles.summaryCard, { borderColor: Palette.hermesOrange + '40' }]}>
-        <View style={styles.summaryCardHeader}>
-          <Ionicons name="document-text" size={20} color={Palette.hermesOrange} />
-          <Text style={styles.summaryCardLabel}>Openstaand</Text>
-        </View>
-        <Text style={styles.summaryCardValue}>€{pendingValue.toLocaleString('nl-NL')}</Text>
-        <Text style={styles.summaryCardMeta}>{pendingInvoices.length} wacht op antwoord</Text>
+    <View style={styles.summaryBar}>
+      <View style={styles.summaryItem}>
+        <Text style={styles.summaryValue}>€{pendingValue.toLocaleString('nl-NL')}</Text>
+        <Text style={styles.summaryLabel}>{pending.length} openstaand</Text>
       </View>
-
-      <View style={[styles.summaryCard, { borderColor: SemanticColors.feedbackSuccessBorder }]}>
-        <View style={styles.summaryCardHeader}>
-          <Ionicons name="checkmark-circle" size={20} color={SemanticColors.feedbackSuccess} />
-          <Text style={styles.summaryCardLabel}>Betaald</Text>
-        </View>
-        <Text style={[styles.summaryCardValue, { color: SemanticColors.feedbackSuccess }]}>
-          €{paidValue.toLocaleString('nl-NL')}
-        </Text>
-        <Text style={styles.summaryCardMeta}>{paidThisMonth.length} facturen betaald</Text>
-      </View>
+      {overdue.length > 0 && (
+        <>
+          <View style={styles.summaryDivider} />
+          <View style={styles.summaryItem}>
+            <Text style={[styles.summaryValue, { color: SemanticColors.feedbackError }]}>
+              €{overdueValue.toLocaleString('nl-NL')}
+            </Text>
+            <Text style={[styles.summaryLabel, { color: SemanticColors.feedbackError }]}>
+              {overdue.length} verlopen
+            </Text>
+          </View>
+        </>
+      )}
     </View>
   );
 }
 
-function InvoiceHistory({ invoices }: { invoices: Invoice[] }) {
-  // Group invoices by month
-  const groupedInvoices = useMemo(() => {
-    const groups: { [key: string]: Invoice[] } = {};
-
-    invoices.forEach(inv => {
-      const date = new Date(inv.issueDate);
-      const monthKey = date.toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' });
-      if (!groups[monthKey]) {
-        groups[monthKey] = [];
-      }
-      groups[monthKey].push(inv);
-    });
-
-    // Sort by date descending within each group
-    Object.keys(groups).forEach(key => {
-      groups[key].sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime());
-    });
-
-    return groups;
-  }, [invoices]);
-
+function InvoiceList({ invoices }: { invoices: Invoice[] }) {
   const getStatusConfig = (status: Invoice['status']) => {
     switch (status) {
       case 'paid':
-        return {
-          label: 'Betaald',
-          color: SemanticColors.feedbackSuccess,
-          icon: 'checkmark-circle' as IconName,
-          bg: SemanticColors.feedbackSuccessBg
-        };
+        return { label: 'Betaald', color: SemanticColors.feedbackSuccess, icon: 'checkmark-circle' as IconName };
       case 'sent':
-        return {
-          label: 'Verzonden',
-          color: SemanticColors.feedbackInfo,
-          icon: 'paper-plane' as IconName,
-          bg: SemanticColors.feedbackInfoBg
-        };
+        return { label: 'Verzonden', color: SemanticColors.feedbackInfo, icon: 'paper-plane' as IconName };
       case 'viewed':
-        return {
-          label: 'Bekeken',
-          color: Palette.hermesOrange,
-          icon: 'eye' as IconName,
-          bg: Palette.hermesOrange + '15'
-        };
+        return { label: 'Bekeken', color: Palette.hermesOrange, icon: 'eye' as IconName };
       case 'overdue':
-        return {
-          label: 'Te laat',
-          color: SemanticColors.feedbackError,
-          icon: 'alert-circle' as IconName,
-          bg: SemanticColors.feedbackErrorBg
-        };
-      case 'cancelled':
-        return {
-          label: 'Geannuleerd',
-          color: SemanticColors.textTertiary,
-          icon: 'close-circle' as IconName,
-          bg: SemanticColors.surfaceSecondary
-        };
+        return { label: 'Verlopen', color: SemanticColors.feedbackError, icon: 'alert-circle' as IconName };
       default:
-        return {
-          label: 'Concept',
-          color: SemanticColors.textTertiary,
-          icon: 'document' as IconName,
-          bg: SemanticColors.surfaceSecondary
-        };
+        return { label: 'Concept', color: SemanticColors.textTertiary, icon: 'document' as IconName };
     }
   };
 
-  const monthKeys = Object.keys(groupedInvoices);
-
-  if (monthKeys.length === 0) {
+  if (invoices.length === 0) {
     return (
-      <View style={styles.emptyHistory}>
-        <View style={styles.emptyHistoryIcon}>
-          <Ionicons name="receipt-outline" size={32} color={SemanticColors.textTertiary} />
-        </View>
-        <Text style={styles.emptyHistoryTitle}>Nog geen facturen</Text>
-        <Text style={styles.emptyHistoryText}>
-          Wanneer klanten betalen verschijnen ze hier
-        </Text>
+      <View style={styles.emptyState}>
+        <Ionicons name="receipt-outline" size={40} color={SemanticColors.textTertiary} />
+        <Text style={styles.emptyStateText}>Nog geen facturen</Text>
       </View>
     );
   }
 
+  // Sort by date descending
+  const sorted = [...invoices].sort((a, b) =>
+    new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()
+  );
+
   return (
-    <View style={styles.historyContainer}>
-      {monthKeys.map((monthKey, groupIndex) => {
-        const monthInvoices = groupedInvoices[monthKey];
-        const monthTotal = monthInvoices
-          .filter(i => i.status === 'paid')
-          .reduce((sum, i) => sum + i.amount, 0);
-
+    <View style={styles.invoiceList}>
+      {sorted.map((invoice, index) => {
+        const status = getStatusConfig(invoice.status);
         return (
-          <View key={monthKey} style={styles.historyGroup}>
-            {/* Month Header */}
-            <View style={styles.historyMonthHeader}>
-              <Text style={styles.historyMonthTitle}>{monthKey}</Text>
-              {monthTotal > 0 && (
-                <View style={styles.historyMonthTotal}>
-                  <Ionicons name="checkmark-circle" size={14} color={SemanticColors.feedbackSuccess} />
-                  <Text style={styles.historyMonthTotalText}>
-                    €{monthTotal.toLocaleString('nl-NL')}
-                  </Text>
-                </View>
-              )}
+          <Pressable
+            key={invoice.id}
+            style={[styles.invoiceItem, index < sorted.length - 1 && styles.invoiceItemBorder]}
+          >
+            <Ionicons name={status.icon} size={20} color={status.color} />
+            <View style={styles.invoiceInfo}>
+              <Text style={styles.invoiceCustomer} numberOfLines={1}>{invoice.customerName}</Text>
+              <Text style={styles.invoiceProject} numberOfLines={1}>{invoice.projectName}</Text>
             </View>
-
-            {/* Invoice List */}
-            <View style={styles.historyList}>
-              {monthInvoices.map((invoice, index) => {
-                const status = getStatusConfig(invoice.status);
-                const isLast = index === monthInvoices.length - 1;
-
-                return (
-                  <Pressable
-                    key={invoice.id}
-                    style={[
-                      styles.historyItem,
-                      !isLast && styles.historyItemBorder
-                    ]}
-                  >
-                    {/* Status Indicator */}
-                    <View style={[styles.historyItemStatus, { backgroundColor: status.bg }]}>
-                      <Ionicons name={status.icon} size={18} color={status.color} />
-                    </View>
-
-                    {/* Main Content */}
-                    <View style={styles.historyItemContent}>
-                      <View style={styles.historyItemTop}>
-                        <Text style={styles.historyItemCustomer} numberOfLines={1}>
-                          {invoice.customerName}
-                        </Text>
-                        <Text style={[
-                          styles.historyItemAmount,
-                          invoice.status === 'paid' && styles.historyItemAmountPaid
-                        ]}>
-                          €{invoice.amount.toLocaleString('nl-NL')}
-                        </Text>
-                      </View>
-
-                      <Text style={styles.historyItemProject} numberOfLines={1}>
-                        {invoice.projectName}
-                      </Text>
-
-                      <View style={styles.historyItemMeta}>
-                        <View style={styles.historyItemMetaItem}>
-                          <Ionicons name="document-text-outline" size={12} color={SemanticColors.textTertiary} />
-                          <Text style={styles.historyItemMetaText}>
-                            #{invoice.id.replace('inv_', '')}
-                          </Text>
-                        </View>
-                        <View style={styles.historyItemMetaItem}>
-                          <Ionicons name="calendar-outline" size={12} color={SemanticColors.textTertiary} />
-                          <Text style={styles.historyItemMetaText}>
-                            {new Date(invoice.issueDate).toLocaleDateString('nl-NL', {
-                              day: 'numeric',
-                              month: 'short'
-                            })}
-                          </Text>
-                        </View>
-                        {invoice.status === 'paid' && (
-                          <View style={styles.historyItemMetaItem}>
-                            <Ionicons name="card-outline" size={12} color={SemanticColors.feedbackSuccess} />
-                            <Text style={[styles.historyItemMetaText, { color: SemanticColors.feedbackSuccess }]}>
-                              iDEAL
-                            </Text>
-                          </View>
-                        )}
-                        <View style={[styles.historyItemStatusBadge, { backgroundColor: status.bg }]}>
-                          <Text style={[styles.historyItemStatusText, { color: status.color }]}>
-                            {status.label}
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-
-                    <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
-                  </Pressable>
-                );
-              })}
+            <View style={styles.invoiceRight}>
+              <Text style={[
+                styles.invoiceAmount,
+                invoice.status === 'paid' && { color: SemanticColors.feedbackSuccess }
+              ]}>
+                €{invoice.amount.toLocaleString('nl-NL')}
+              </Text>
+              <Text style={[styles.invoiceStatus, { color: status.color }]}>{status.label}</Text>
             </View>
-          </View>
+          </Pressable>
         );
       })}
-
-      {/* Year Summary */}
-      <View style={styles.yearSummary}>
-        <Text style={styles.yearSummaryTitle}>2024 Totaal</Text>
-        <View style={styles.yearSummaryStats}>
-          <View style={styles.yearSummaryStat}>
-            <Text style={styles.yearSummaryValue}>
-              €{invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0).toLocaleString('nl-NL')}
-            </Text>
-            <Text style={styles.yearSummaryLabel}>Ontvangen</Text>
-          </View>
-          <View style={styles.yearSummaryDivider} />
-          <View style={styles.yearSummaryStat}>
-            <Text style={styles.yearSummaryValue}>
-              {invoices.filter(i => i.status === 'paid').length}
-            </Text>
-            <Text style={styles.yearSummaryLabel}>Facturen</Text>
-          </View>
-          <View style={styles.yearSummaryDivider} />
-          <View style={styles.yearSummaryStat}>
-            <Text style={styles.yearSummaryValue}>
-              {invoices.length > 0
-                ? Math.round(invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0) / Math.max(1, invoices.filter(i => i.status === 'paid').length))
-                : 0
-              }
-            </Text>
-            <Text style={styles.yearSummaryLabel}>Gem. factuur</Text>
-          </View>
-        </View>
-      </View>
     </View>
   );
 }
 
-function QuoteCard({ quote, onPress }: { quote: Quote; onPress: () => void }) {
+function QuoteItem({ quote, onPress }: { quote: Quote; onPress: () => void }) {
   const getStatusConfig = (status: QuoteStatus) => {
     switch (status) {
-      case 'draft':
-        return { label: 'Concept', color: SemanticColors.textTertiary, icon: 'create-outline' as IconName };
-      case 'sent':
-        return { label: 'Verstuurd', color: SemanticColors.feedbackInfo, icon: 'send-outline' as IconName };
       case 'viewed':
-        return { label: `${quote.viewCount}x bekeken`, color: Palette.hermesOrange, icon: 'eye-outline' as IconName };
+        return { label: 'Bekeken', color: Palette.hermesOrange };
       case 'accepted':
-        return { label: 'Geaccepteerd', color: SemanticColors.feedbackSuccess, icon: 'checkmark-circle-outline' as IconName };
+        return { label: 'Geaccepteerd', color: SemanticColors.feedbackSuccess };
       case 'rejected':
-        return { label: 'Afgewezen', color: SemanticColors.feedbackError, icon: 'close-circle-outline' as IconName };
-      case 'expired':
-        return { label: 'Verlopen', color: SemanticColors.textTertiary, icon: 'time-outline' as IconName };
+        return { label: 'Afgewezen', color: SemanticColors.feedbackError };
+      default:
+        return { label: 'Verstuurd', color: SemanticColors.feedbackInfo };
     }
   };
 
-  const statusConfig = getStatusConfig(quote.status);
+  const status = getStatusConfig(quote.status);
 
   return (
-    <Pressable style={styles.quoteCard} onPress={onPress}>
-      <View style={styles.quoteHeader}>
-        <View style={styles.quoteInfo}>
-          <Text style={styles.quoteReference}>{quote.reference}</Text>
-          <Text style={styles.quoteCustomer}>{quote.customer}</Text>
-        </View>
-        <View style={[styles.quoteStatus, { backgroundColor: statusConfig.color + '15' }]}>
-          <Ionicons name={statusConfig.icon} size={14} color={statusConfig.color} />
-          <Text style={[styles.quoteStatusText, { color: statusConfig.color }]}>
-            {statusConfig.label}
-          </Text>
-        </View>
+    <Pressable style={styles.quoteItem} onPress={onPress}>
+      <View style={styles.quoteInfo}>
+        <Text style={styles.quoteCustomer} numberOfLines={1}>{quote.customer}</Text>
+        <Text style={styles.quoteTitle} numberOfLines={1}>{quote.title}</Text>
       </View>
-
-      <Text style={styles.quoteTitle}>{quote.title}</Text>
-
-      {/* Tier Preview */}
-      <View style={styles.tierPreview}>
-        {(['good', 'better', 'best'] as const).map((tier) => (
-          <View
-            key={tier}
-            style={[
-              styles.tierBadge,
-              quote.selectedTier === tier && styles.tierBadgeSelected,
-            ]}
-          >
-            <Text style={[
-              styles.tierLabel,
-              quote.selectedTier === tier && styles.tierLabelSelected,
-            ]}>
-              {tier}
-            </Text>
-            <Text style={[
-              styles.tierPrice,
-              quote.selectedTier === tier && styles.tierPriceSelected,
-            ]}>
-              €{quote.tiers[tier].toLocaleString()}
-            </Text>
-          </View>
-        ))}
+      <View style={styles.quoteRight}>
+        <Text style={styles.quoteAmount}>€{quote.total.toLocaleString('nl-NL')}</Text>
+        <Text style={[styles.quoteStatus, { color: status.color }]}>{status.label}</Text>
       </View>
-
-      <View style={styles.quoteFooter}>
-        <Text style={styles.quoteSentDate}>Verstuurd {quote.sentDate}</Text>
-        <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-      </View>
+      <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
     </Pressable>
   );
 }
@@ -373,105 +173,86 @@ function QuoteCard({ quote, onPress }: { quote: Quote; onPress: () => void }) {
 // MAIN SCREEN
 // ============================================
 
-type TabView = 'quotes' | 'payments';
+type TabView = 'offertes' | 'facturen';
 
 export default function FacturenScreen() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabView>('quotes');
+  const [activeTab, setActiveTab] = useState<TabView>('offertes');
   const [showQuoteBuilder, setShowQuoteBuilder] = useState(false);
   const [showPayments, setShowPayments] = useState(false);
 
-  // Connect to cash flow service
+  // Connect to services
   const { invoices, summary } = useCashFlow();
+  const { findings: auditFindings } = useFinancialAuditFindings();
 
-  // Transform invoices to quote format for display
+  // Transform invoices to quotes
   const quotes = useMemo((): Quote[] => {
-    return invoices.map((inv): Quote => {
-      // Map invoice status to quote status
-      let status: QuoteStatus;
-      switch (inv.status) {
-        case 'draft': status = 'draft'; break;
-        case 'sent': status = 'sent'; break;
-        case 'viewed': status = 'viewed'; break;
-        case 'paid': status = 'accepted'; break;
-        case 'overdue': status = 'sent'; break; // Treat overdue as still pending
-        case 'cancelled': status = 'expired'; break;
-        default: status = 'sent';
-      }
-
-      // Generate tiers based on invoice amount
-      const baseAmount = inv.amount;
-      return {
+    return invoices
+      .filter(inv => ['sent', 'viewed', 'draft'].includes(inv.status))
+      .map((inv): Quote => ({
         id: inv.id,
         reference: `Q-${inv.id.replace('inv_', '')}`,
         customer: inv.customerName,
         title: inv.projectName,
-        status,
+        status: inv.status === 'viewed' ? 'viewed' : inv.status === 'draft' ? 'draft' : 'sent',
         sentDate: new Date(inv.issueDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }),
-        total: baseAmount,
+        total: inv.amount,
         tiers: {
-          good: Math.round(baseAmount * 0.75),
-          better: Math.round(baseAmount * 0.9),
-          best: baseAmount,
+          good: Math.round(inv.amount * 0.75),
+          better: Math.round(inv.amount * 0.9),
+          best: inv.amount,
         },
-        selectedTier: status === 'accepted' ? 'best' : undefined,
-        viewCount: status === 'viewed' ? 3 : undefined,
-      };
-    });
+      }));
   }, [invoices]);
 
-  const activeQuotes = quotes.filter(q => ['sent', 'viewed'].includes(q.status));
-  const wonQuotes = quotes.filter(q => q.status === 'accepted');
+  // Check for audit alerts
+  const hasAuditAlert = auditFindings.some(f => f.severity === 'critical' && f.status === 'new');
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Facturen</Text>
-        <View style={styles.headerActions}>
-          <Pressable
-            style={styles.headerButton}
-            onPress={() => setShowPayments(true)}
-          >
-            <Ionicons name="card-outline" size={22} color={SemanticColors.textPrimary} />
-          </Pressable>
-          <Pressable
-            style={styles.addButton}
-            onPress={() => setShowQuoteBuilder(true)}
-          >
-            <Ionicons name="add" size={24} color="#fff" />
-          </Pressable>
-        </View>
+        <Pressable
+          style={styles.addButton}
+          onPress={() => setShowQuoteBuilder(true)}
+        >
+          <Ionicons name="add" size={22} color="#fff" />
+        </Pressable>
       </View>
 
       {/* Summary */}
-      <View style={styles.summarySection}>
-        <SummaryCards summary={summary} invoices={invoices} />
-      </View>
+      <SummaryBar invoices={invoices} />
+
+      {/* Audit Alert */}
+      {hasAuditAlert && (
+        <View style={styles.auditAlert}>
+          <Ionicons name="alert-circle" size={16} color={SemanticColors.feedbackError} />
+          <Text style={styles.auditAlertText}>
+            Factuur discrepantie gedetecteerd
+          </Text>
+          <Pressable>
+            <Text style={styles.auditAlertAction}>Bekijk</Text>
+          </Pressable>
+        </View>
+      )}
 
       {/* Tabs */}
       <View style={styles.tabBar}>
         <Pressable
-          style={[styles.tab, activeTab === 'quotes' && styles.tabActive]}
-          onPress={() => setActiveTab('quotes')}
+          style={[styles.tab, activeTab === 'offertes' && styles.tabActive]}
+          onPress={() => setActiveTab('offertes')}
         >
-          <Text style={[styles.tabText, activeTab === 'quotes' && styles.tabTextActive]}>
-            Actieve Offertes
+          <Text style={[styles.tabText, activeTab === 'offertes' && styles.tabTextActive]}>
+            Offertes ({quotes.length})
           </Text>
-          {activeQuotes.length > 0 && (
-            <View style={[styles.tabBadge, activeTab === 'quotes' && styles.tabBadgeActive]}>
-              <Text style={[styles.tabBadgeText, activeTab === 'quotes' && styles.tabBadgeTextActive]}>
-                {activeQuotes.length}
-              </Text>
-            </View>
-          )}
         </Pressable>
         <Pressable
-          style={[styles.tab, activeTab === 'payments' && styles.tabActive]}
-          onPress={() => setActiveTab('payments')}
+          style={[styles.tab, activeTab === 'facturen' && styles.tabActive]}
+          onPress={() => setActiveTab('facturen')}
         >
-          <Text style={[styles.tabText, activeTab === 'payments' && styles.tabTextActive]}>
-            Betaald / Geschiedenis
+          <Text style={[styles.tabText, activeTab === 'facturen' && styles.tabTextActive]}>
+            Alle Facturen
           </Text>
         </Pressable>
       </View>
@@ -482,107 +263,43 @@ export default function FacturenScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {activeTab === 'quotes' ? (
-          <>
-            {/* Upsell Stats */}
-            <View style={styles.upsellStats}>
-              <Ionicons name="trending-up" size={16} color={SemanticColors.feedbackSuccess} />
-              <Text style={styles.upsellStatsText}>
-                83% van klanten kiest voor Beter of Best opties
-              </Text>
-            </View>
-
-            {activeQuotes.length > 0 ? (
-              activeQuotes.map(quote => (
-                <QuoteCard
+        {activeTab === 'offertes' ? (
+          quotes.length > 0 ? (
+            <View style={styles.quotesList}>
+              {quotes.map((quote, index) => (
+                <QuoteItem
                   key={quote.id}
                   quote={quote}
                   onPress={() => router.push(`/quotes/${quote.id}` as any)}
                 />
-              ))
-            ) : (
-              <View style={styles.emptyState}>
-                <Ionicons name="document-text-outline" size={48} color={SemanticColors.textTertiary} />
-                <Text style={styles.emptyStateTitle}>Geen actieve offertes</Text>
-                <Text style={styles.emptyStateText}>
-                  Maak een offerte om te beginnen
-                </Text>
-                <Pressable
-                  style={styles.emptyStateButton}
-                  onPress={() => setShowQuoteBuilder(true)}
-                >
-                  <Text style={styles.emptyStateButtonText}>Offerte Maken</Text>
-                </Pressable>
-              </View>
-            )}
-          </>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyState}>
+              <Ionicons name="document-text-outline" size={40} color={SemanticColors.textTertiary} />
+              <Text style={styles.emptyStateText}>Geen actieve offertes</Text>
+              <Pressable
+                style={styles.emptyStateButton}
+                onPress={() => setShowQuoteBuilder(true)}
+              >
+                <Text style={styles.emptyStateButtonText}>Nieuwe Offerte</Text>
+              </Pressable>
+            </View>
+          )
         ) : (
-          <InvoiceHistory invoices={invoices} />
+          <InvoiceList invoices={invoices} />
         )}
 
-        {/* Money Tools Section */}
-        <View style={styles.toolsSection}>
-          <Text style={styles.toolsSectionTitle}>Tools</Text>
-          <View style={styles.toolsList}>
-            <Pressable
-              style={styles.toolRow}
-              onPress={() => setShowPayments(true)}
-            >
-              <View style={[styles.toolRowIcon, { backgroundColor: '#CC006615' }]}>
-                <Ionicons name="card" size={22} color="#CC0066" />
-              </View>
-              <View style={styles.toolRowContent}>
-                <Text style={styles.toolRowTitle}>Betalingen</Text>
-                <Text style={styles.toolRowDesc}>iDEAL & Mollie integratie</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-            </Pressable>
-            <Pressable
-              style={styles.toolRow}
-              onPress={() => router.push('/contractor/analytics' as any)}
-            >
-              <View style={[styles.toolRowIcon, { backgroundColor: Palette.terracotta + '15' }]}>
-                <Ionicons name="bar-chart" size={22} color={Palette.terracotta} />
-              </View>
-              <View style={styles.toolRowContent}>
-                <Text style={styles.toolRowTitle}>Analyse</Text>
-                <Text style={styles.toolRowDesc}>ROI & prestaties inzicht</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-            </Pressable>
-            <Pressable
-              style={styles.toolRow}
-              onPress={() => setShowQuoteBuilder(true)}
-            >
-              <View style={[styles.toolRowIcon, { backgroundColor: Palette.hermesOrange + '15' }]}>
-                <Ionicons name="layers" size={22} color={Palette.hermesOrange} />
-              </View>
-              <View style={styles.toolRowContent}>
-                <Text style={styles.toolRowTitle}>Smart Offerte</Text>
-                <Text style={styles.toolRowDesc}>Goed-Beter-Best prijzen</Text>
-              </View>
-              <View style={styles.toolRowBadge}>
-                <Text style={styles.toolRowBadgeText}>83% upsell</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-            </Pressable>
-            <Pressable
-              style={[styles.toolRow, styles.toolRowLast]}
-              onPress={() => router.push('/contractor/purchasing' as any)}
-            >
-              <View style={[styles.toolRowIcon, { backgroundColor: SemanticColors.feedbackSuccessBg }]}>
-                <Ionicons name="cart" size={22} color={SemanticColors.feedbackSuccess} />
-              </View>
-              <View style={styles.toolRowContent}>
-                <Text style={styles.toolRowTitle}>Smart Inkoop</Text>
-                <Text style={styles.toolRowDesc}>AI materiaal besparingen</Text>
-              </View>
-              <View style={[styles.toolRowBadge, { backgroundColor: SemanticColors.feedbackSuccess }]}>
-                <Text style={styles.toolRowBadgeText}>Bespaar 15%</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-            </Pressable>
-          </View>
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <Pressable style={styles.quickAction} onPress={() => setShowPayments(true)}>
+            <Ionicons name="card-outline" size={20} color={SemanticColors.textPrimary} />
+            <Text style={styles.quickActionText}>Betalingen</Text>
+          </Pressable>
+          <Pressable style={styles.quickAction} onPress={() => setShowQuoteBuilder(true)}>
+            <Ionicons name="layers-outline" size={20} color={SemanticColors.textPrimary} />
+            <Text style={styles.quickActionText}>Smart Offerte</Text>
+          </Pressable>
         </View>
 
         <View style={{ height: 100 }} />
@@ -628,488 +345,234 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: 60,
-    paddingBottom: Spacing.md,
-    backgroundColor: SemanticColors.surfacePrimary,
+    paddingHorizontal: Spacing.md,
+    paddingTop: 56,
+    paddingBottom: Spacing.sm,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  headerButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: Palette.hermesOrange,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  summarySection: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.borderDefault,
-  },
-  summaryCards: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  summaryCard: {
-    flex: 1,
-    backgroundColor: SemanticColors.surfaceBackground,
-    borderRadius: 12,
-    padding: Spacing.md,
-    borderWidth: 1,
-  },
-  summaryCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: Spacing.xs,
-  },
-  summaryCardLabel: {
-    fontSize: 11,
-    color: SemanticColors.textSecondary,
-    fontWeight: '500',
-  },
-  summaryCardValue: {
     fontSize: 22,
     fontWeight: '700',
     color: SemanticColors.textPrimary,
   },
-  summaryCardMeta: {
-    fontSize: 11,
-    color: SemanticColors.textTertiary,
-    marginTop: 2,
+  addButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: Palette.hermesOrange,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  tabBar: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    backgroundColor: SemanticColors.surfacePrimary,
-    gap: Spacing.sm,
-  },
-  tab: {
+
+  // Summary Bar
+  summaryBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  summaryItem: {
+    flex: 1,
+  },
+  summaryValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  summaryLabel: {
+    fontSize: 12,
+    color: SemanticColors.textTertiary,
+  },
+  summaryDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: SemanticColors.borderDefault,
+    marginHorizontal: Spacing.lg,
+  },
+
+  // Audit Alert
+  auditAlert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginHorizontal: Spacing.md,
+    padding: Spacing.sm,
+    backgroundColor: SemanticColors.feedbackErrorBg,
+    borderRadius: 8,
+  },
+  auditAlertText: {
+    flex: 1,
+    fontSize: 13,
+    color: SemanticColors.feedbackError,
+  },
+  auditAlertAction: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: SemanticColors.feedbackError,
+  },
+
+  // Tab Bar
+  tabBar: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    gap: Spacing.xs,
+  },
+  tab: {
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
-    borderRadius: 10,
-    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 8,
   },
   tabActive: {
     backgroundColor: Palette.hermesOrange,
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: SemanticColors.textSecondary,
   },
   tabTextActive: {
     color: '#fff',
   },
-  tabBadge: {
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: SemanticColors.surfacePrimary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabBadgeActive: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
-  },
-  tabBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: SemanticColors.textSecondary,
-  },
-  tabBadgeTextActive: {
-    color: '#fff',
-  },
+
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: Spacing.lg,
-    gap: Spacing.sm,
-  },
-  upsellStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: SemanticColors.feedbackSuccessBg,
     padding: Spacing.md,
-    borderRadius: 10,
-    marginBottom: Spacing.sm,
+    gap: Spacing.md,
   },
-  upsellStatsText: {
-    fontSize: 13,
-    color: SemanticColors.feedbackSuccess,
-    fontWeight: '500',
-  },
-  quoteCard: {
+
+  // Quotes List
+  quotesList: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
-    padding: Spacing.md,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
-    gap: Spacing.sm,
+    overflow: 'hidden',
   },
-  quoteHeader: {
+  quoteItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    padding: Spacing.md,
+    gap: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.borderMuted,
   },
   quoteInfo: {
     flex: 1,
   },
-  quoteReference: {
-    fontSize: 12,
-    color: SemanticColors.textTertiary,
-    fontWeight: '500',
-  },
   quoteCustomer: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
-    marginTop: 2,
-  },
-  quoteStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  quoteStatusText: {
-    fontSize: 11,
-    fontWeight: '600',
   },
   quoteTitle: {
-    fontSize: 13,
-    color: SemanticColors.textSecondary,
-  },
-  tierPreview: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-  },
-  tierBadge: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
-  },
-  tierBadgeSelected: {
-    backgroundColor: Palette.hermesOrange + '15',
-    borderWidth: 1,
-    borderColor: Palette.hermesOrange,
-  },
-  tierLabel: {
-    fontSize: 10,
-    color: SemanticColors.textTertiary,
-    textTransform: 'capitalize',
-    fontWeight: '500',
-  },
-  tierLabelSelected: {
-    color: Palette.hermesOrange,
-  },
-  tierPrice: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: SemanticColors.textSecondary,
-    marginTop: 2,
-  },
-  tierPriceSelected: {
-    color: Palette.hermesOrange,
-  },
-  quoteFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: SemanticColors.borderDefault,
-  },
-  quoteSentDate: {
     fontSize: 12,
     color: SemanticColors.textTertiary,
+    marginTop: 1,
   },
-  emptyState: {
+  quoteRight: {
+    alignItems: 'flex-end',
+  },
+  quoteAmount: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  quoteStatus: {
+    fontSize: 11,
+    fontWeight: '500',
+    marginTop: 1,
+  },
+
+  // Invoice List
+  invoiceList: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    overflow: 'hidden',
+  },
+  invoiceItem: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.xl * 2,
+    padding: Spacing.md,
     gap: Spacing.sm,
   },
-  emptyStateTitle: {
-    fontSize: 18,
+  invoiceItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.borderMuted,
+  },
+  invoiceInfo: {
+    flex: 1,
+  },
+  invoiceCustomer: {
+    fontSize: 14,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
+  },
+  invoiceProject: {
+    fontSize: 12,
+    color: SemanticColors.textTertiary,
+    marginTop: 1,
+  },
+  invoiceRight: {
+    alignItems: 'flex-end',
+  },
+  invoiceAmount: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  invoiceStatus: {
+    fontSize: 11,
+    fontWeight: '500',
+    marginTop: 1,
+  },
+
+  // Empty State
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+    gap: Spacing.sm,
   },
   emptyStateText: {
     fontSize: 14,
     color: SemanticColors.textTertiary,
-    textAlign: 'center',
   },
   emptyStateButton: {
-    marginTop: Spacing.md,
+    marginTop: Spacing.sm,
     backgroundColor: Palette.hermesOrange,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.lg,
-    borderRadius: 10,
+    borderRadius: 8,
   },
   emptyStateButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: '#fff',
   },
-  // Invoice History Styles
-  historyContainer: {
-    gap: Spacing.lg,
-  },
-  historyGroup: {
+
+  // Quick Actions
+  quickActions: {
+    flexDirection: 'row',
     gap: Spacing.sm,
   },
-  historyMonthHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xs,
-  },
-  historyMonthTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: SemanticColors.textSecondary,
-    textTransform: 'capitalize',
-  },
-  historyMonthTotal: {
+  quickAction: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-  },
-  historyMonthTotalText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: SemanticColors.feedbackSuccess,
-  },
-  historyList: {
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: Spacing.md,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-    overflow: 'hidden',
-  },
-  historyItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.md,
-    gap: Spacing.sm,
-  },
-  historyItemBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.borderMuted,
-  },
-  historyItemStatus: {
-    width: 40,
-    height: 40,
     borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  historyItemContent: {
-    flex: 1,
-    gap: 2,
-  },
-  historyItemTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  historyItemCustomer: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
-    flex: 1,
-    marginRight: Spacing.sm,
-  },
-  historyItemAmount: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-  historyItemAmountPaid: {
-    color: SemanticColors.feedbackSuccess,
-  },
-  historyItemProject: {
-    fontSize: 13,
-    color: SemanticColors.textSecondary,
-  },
-  historyItemMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginTop: 4,
-  },
-  historyItemMetaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  historyItemMetaText: {
-    fontSize: 11,
-    color: SemanticColors.textTertiary,
-  },
-  historyItemStatusBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginLeft: 'auto',
-  },
-  historyItemStatusText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  emptyHistory: {
-    alignItems: 'center',
-    paddingVertical: Spacing.xl * 2,
-    gap: Spacing.sm,
-  },
-  emptyHistoryIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.sm,
-  },
-  emptyHistoryTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
-  },
-  emptyHistoryText: {
-    fontSize: 14,
-    color: SemanticColors.textTertiary,
-    textAlign: 'center',
-  },
-  yearSummary: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
-    padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
-    marginTop: Spacing.sm,
   },
-  yearSummaryTitle: {
+  quickActionText: {
     fontSize: 13,
     fontWeight: '600',
-    color: SemanticColors.textSecondary,
-    textAlign: 'center',
-    marginBottom: Spacing.md,
-  },
-  yearSummaryStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  yearSummaryStat: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  yearSummaryValue: {
-    fontSize: 20,
-    fontWeight: '700',
     color: SemanticColors.textPrimary,
-  },
-  yearSummaryLabel: {
-    fontSize: 11,
-    color: SemanticColors.textTertiary,
-    marginTop: 2,
-  },
-  yearSummaryDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: SemanticColors.borderDefault,
-  },
-  // Tools Section
-  toolsSection: {
-    marginTop: Spacing.lg,
-    gap: Spacing.sm,
-  },
-  toolsSectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: SemanticColors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    paddingHorizontal: Spacing.xs,
-  },
-  toolsList: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-    overflow: 'hidden',
-  },
-  toolRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.md,
-    gap: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.borderMuted,
-  },
-  toolRowLast: {
-    borderBottomWidth: 0,
-  },
-  toolRowIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  toolRowContent: {
-    flex: 1,
-  },
-  toolRowTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
-  },
-  toolRowDesc: {
-    fontSize: 12,
-    color: SemanticColors.textSecondary,
-    marginTop: 1,
-  },
-  toolRowBadge: {
-    backgroundColor: Palette.hermesOrange,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    marginRight: 4,
-  },
-  toolRowBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#fff',
   },
 });

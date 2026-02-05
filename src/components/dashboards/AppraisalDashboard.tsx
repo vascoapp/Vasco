@@ -14,7 +14,7 @@ import {
   getCurrencyForCountry,
 } from '../../modules/countryModules';
 
-const CFO_COLOR = '#22C55E';
+const CFO_COLOR = '#2563EB'; // Blue for CFO (per theme)
 
 export function AppraisalDashboard() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>('uk-001');

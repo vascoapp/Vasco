@@ -1,12 +1,15 @@
 // =============================================================================
-// TODAY - Contractor Dashboard
+// TODAY - Contractor Dashboard with Vasco AI Guidance
 // =============================================================================
-// The command center for a solo contractor's day
-// Shows active work, earnings, and AI-powered insights
-// Connected to real services for live data
+// Smart contractor dashboard with:
+// - Vasco AI Guidance (weather, recommendations, alerts)
+// - Today's schedule
+// - Earnings overview
+// - Audit findings
+// - Quick actions
 // =============================================================================
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -19,286 +22,645 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing } from '../../src/theme/spacing';
-import { AIRecommendations } from '../../src/components/intelligence/AIRecommendations';
 import { useAuth } from '../../src/context/AuthContext';
 
-// Import service hooks
-import { useDaySchedule, useScheduler } from '../../src/services/smartSchedulerService';
+// Core services
+import { useDaySchedule } from '../../src/services/smartSchedulerService';
 import { useCashFlow } from '../../src/services/cashFlowService';
-import { useProactiveInsights } from '../../src/services/aiAssistantService';
-import { useDashboardSummary } from '../../src/services/analyticsService';
+
+// AI services
+import { useAuditFindings } from '../../src/services/auditorService';
+import { useFinancialAuditStats } from '../../src/services/financialAuditorService';
+import { useComplianceAlerts } from '../../src/services/complianceService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
+
+// ============================================
+// VASCO AI GUIDANCE
+// ============================================
+
+type VascoGuidanceType = 'weather' | 'schedule' | 'earnings' | 'compliance' | 'tip' | 'alert';
+
+interface VascoGuidance {
+  id: string;
+  type: VascoGuidanceType;
+  priority: 'critical' | 'high' | 'medium' | 'low';
+  title: string;
+  message: string;
+  icon: IconName;
+  actionLabel?: string;
+  actionRoute?: string;
+  timestamp: string;
+}
+
+const MOCK_VASCO_GUIDANCE: VascoGuidance[] = [
+  {
+    id: 'vg-1',
+    type: 'weather',
+    priority: 'high',
+    title: 'Regen verwacht',
+    message: 'Tussen 14:00-17:00 wordt regen verwacht. Plan buitenwerk indien mogelijk voor de ochtend.',
+    icon: 'rainy',
+    timestamp: '08:15',
+  },
+  {
+    id: 'vg-2',
+    type: 'earnings',
+    priority: 'medium',
+    title: 'Factuur herinnering',
+    message: 'Factuur #2024-089 (€2.450) is al 7 dagen onbetaald. Stuur een herinnering.',
+    icon: 'receipt',
+    actionLabel: 'Herinnering sturen',
+    actionRoute: '/(contractor)/facturen',
+    timestamp: '08:30',
+  },
+  {
+    id: 'vg-3',
+    type: 'compliance',
+    priority: 'critical',
+    title: 'VCA verloopt binnenkort',
+    message: 'Je VCA certificaat verloopt over 12 dagen. Plan nu je herexamen.',
+    icon: 'shield-checkmark',
+    actionLabel: 'Bekijk certificaten',
+    actionRoute: '/(contractor)/certificaten',
+    timestamp: 'Gisteren',
+  },
+  {
+    id: 'vg-4',
+    type: 'tip',
+    priority: 'low',
+    title: 'Bespaar op materiaal',
+    message: 'Koper buizen zijn 15% goedkoper bij Technische Unie deze week. Overweeg voorraad aan te vullen.',
+    icon: 'bulb',
+    actionLabel: 'Bekijk aanbiedingen',
+    actionRoute: '/(contractor)/besparen',
+    timestamp: 'Vandaag',
+  },
+  {
+    id: 'vg-5',
+    type: 'schedule',
+    priority: 'medium',
+    title: 'Klant niet thuis',
+    message: 'Klant Van Dijk (14:00) heeft laten weten later thuis te zijn. Nieuwe tijd: 15:00.',
+    icon: 'time',
+    timestamp: '10 min geleden',
+  },
+];
+
+// ============================================
+// UI GUIDANCE & ONBOARDING
+// ============================================
+
+interface UIGuidanceTip {
+  id: string;
+  category: 'onboarding' | 'feature' | 'productivity' | 'achievement';
+  title: string;
+  description: string;
+  icon: IconName;
+  action?: { label: string; route: string };
+  dismissible: boolean;
+  priority: number; // Higher = more important
+}
+
+interface ProgressMilestone {
+  id: string;
+  title: string;
+  description: string;
+  icon: IconName;
+  completed: boolean;
+  current?: boolean;
+}
+
+// Onboarding tips for new users
+const ONBOARDING_TIPS: UIGuidanceTip[] = [
+  {
+    id: 'onboard-1',
+    category: 'onboarding',
+    title: 'Welkom bij Vasco!',
+    description: 'Je persoonlijke assistent voor al je zakelijke taken. Swipe door de tips om te leren hoe je het meeste uit de app haalt.',
+    icon: 'sparkles',
+    dismissible: false,
+    priority: 100,
+  },
+  {
+    id: 'onboard-2',
+    category: 'onboarding',
+    title: 'Snelle offerte maken',
+    description: 'Tik op "+ Offerte" om binnen 2 minuten een professionele offerte te maken met AI-ondersteuning.',
+    icon: 'document-text',
+    action: { label: 'Probeer nu', route: '/contractor/tiered-quote' },
+    dismissible: true,
+    priority: 90,
+  },
+  {
+    id: 'onboard-3',
+    category: 'onboarding',
+    title: 'Certificaten beheren',
+    description: 'Upload je VCA, NEN en andere certificaten. Vasco waarschuwt je automatisch voordat ze verlopen.',
+    icon: 'shield-checkmark',
+    action: { label: 'Uploaden', route: '/(contractor)/certificaten' },
+    dismissible: true,
+    priority: 85,
+  },
+  {
+    id: 'onboard-4',
+    category: 'onboarding',
+    title: 'Bespaar op inkoop',
+    description: 'Vergelijk prijzen bij meerdere leveranciers en bespaar gemiddeld 12% op je materiaalkosten.',
+    icon: 'pricetag',
+    action: { label: 'Bekijken', route: '/(contractor)/besparen' },
+    dismissible: true,
+    priority: 80,
+  },
+];
+
+// Feature discovery tips
+const FEATURE_TIPS: UIGuidanceTip[] = [
+  {
+    id: 'feat-1',
+    category: 'feature',
+    title: 'AI Offerte Generator',
+    description: 'Laat Vasco automatisch een gedetailleerde offerte opstellen op basis van je beschrijving.',
+    icon: 'flash',
+    action: { label: 'Ontdek', route: '/contractor/tiered-quote' },
+    dismissible: true,
+    priority: 70,
+  },
+  {
+    id: 'feat-2',
+    category: 'feature',
+    title: 'Foto naar Factuur',
+    description: 'Maak een foto van je bonnetje en Vasco haalt automatisch de gegevens eruit voor je administratie.',
+    icon: 'camera',
+    dismissible: true,
+    priority: 65,
+  },
+  {
+    id: 'feat-3',
+    category: 'feature',
+    title: 'Slimme Herinneringen',
+    description: 'Vasco stuurt automatisch betalingsherinneringen naar klanten met onbetaalde facturen.',
+    icon: 'notifications',
+    action: { label: 'Instellingen', route: '/(contractor)/facturen' },
+    dismissible: true,
+    priority: 60,
+  },
+];
+
+// Progress milestones
+const PROGRESS_MILESTONES: ProgressMilestone[] = [
+  { id: 'p1', title: 'Account aangemaakt', description: 'Je bent begonnen!', icon: 'checkmark-circle', completed: true },
+  { id: 'p2', title: 'Profiel compleet', description: 'Bedrijfsgegevens ingevuld', icon: 'person', completed: true },
+  { id: 'p3', title: 'Eerste offerte', description: 'Maak je eerste offerte', icon: 'document-text', completed: false, current: true },
+  { id: 'p4', title: 'Certificaten up-to-date', description: 'Upload je certificaten', icon: 'shield-checkmark', completed: false },
+  { id: 'p5', title: 'Eerste factuur verstuurd', description: 'Stuur je eerste factuur', icon: 'receipt', completed: false },
+];
 
 // ============================================
 // TYPES
 // ============================================
 
-interface ActiveJobData {
+interface JobItem {
   id: string;
   title: string;
   customer: string;
   address: string;
-  timeElapsed: string;
-  scheduled: string;
-}
-
-interface EarningsData {
-  today: number;
-  thisWeek: number;
-  outstanding: number;
-  pendingQuotes: number;
-}
-
-interface CustomerDecisionsData {
-  overdue: number;
-  pending: number;
-  customers: Array<{ name: string; overdue: number; pending: number }>;
-}
-
-interface UpcomingJobData {
-  id: string;
-  title: string;
   time: string;
-  customer: string;
+  duration: string;
+  status: 'active' | 'upcoming' | 'completed';
 }
 
-interface AlertData {
+interface AlertItem {
   id: string;
-  type: string;
+  type: 'warning' | 'success' | 'info';
+  icon: IconName;
   text: string;
-  time: string;
-  positive: boolean;
+  action?: string;
 }
 
 // ============================================
-// COMPONENTS
+// HELPER FUNCTIONS
 // ============================================
 
-function ActiveJobCard({ job, onPress }: { job: ActiveJobData; onPress: () => void }) {
+function getPriorityColor(priority: VascoGuidance['priority']): string {
+  switch (priority) {
+    case 'critical': return SemanticColors.feedbackError;
+    case 'high': return SemanticColors.feedbackWarning;
+    case 'medium': return Palette.hermesOrange;
+    case 'low': return SemanticColors.textTertiary;
+  }
+}
+
+function getPriorityBg(priority: VascoGuidance['priority']): string {
+  switch (priority) {
+    case 'critical': return SemanticColors.feedbackErrorBg;
+    case 'high': return SemanticColors.feedbackWarningBg;
+    case 'medium': return Palette.hermesOrange + '15';
+    case 'low': return SemanticColors.surfaceSecondary;
+  }
+}
+
+// ============================================
+// UI GUIDANCE COMPONENTS
+// ============================================
+
+function OnboardingCarousel({ tips, onDismiss, onAction }: {
+  tips: UIGuidanceTip[];
+  onDismiss: (id: string) => void;
+  onAction: (route: string) => void;
+}) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const tip = tips[currentIndex];
+
+  if (!tip) return null;
+
   return (
-    <Pressable style={styles.activeJobCard} onPress={onPress}>
-      <View style={styles.activeJobHeader}>
-        <View style={styles.liveIndicator}>
-          <View style={styles.liveDot} />
-          <Text style={styles.liveText}>ACTIVE</Text>
+    <View style={styles.onboardingCarousel}>
+      <View style={styles.onboardingHeader}>
+        <View style={styles.onboardingIconContainer}>
+          <Ionicons name={tip.icon} size={24} color={Palette.hermesOrange} />
         </View>
-        <Text style={styles.timeElapsed}>{job.timeElapsed}</Text>
+        <View style={styles.onboardingDots}>
+          {tips.map((_, idx) => (
+            <View
+              key={idx}
+              style={[
+                styles.onboardingDot,
+                idx === currentIndex && styles.onboardingDotActive
+              ]}
+            />
+          ))}
+        </View>
+        {tip.dismissible && (
+          <Pressable onPress={() => onDismiss(tip.id)} hitSlop={8}>
+            <Ionicons name="close" size={20} color={SemanticColors.textTertiary} />
+          </Pressable>
+        )}
       </View>
 
-      <Text style={styles.activeJobTitle}>{job.title}</Text>
-      <Text style={styles.activeJobCustomer}>{job.customer}</Text>
+      <Text style={styles.onboardingTitle}>{tip.title}</Text>
+      <Text style={styles.onboardingDescription}>{tip.description}</Text>
 
-      <View style={styles.activeJobFooter}>
-        <View style={styles.activeJobLocation}>
-          <Ionicons name="location" size={14} color={SemanticColors.textTertiary} />
-          <Text style={styles.activeJobAddress} numberOfLines={1}>{job.address}</Text>
-        </View>
-        <Ionicons name="chevron-forward" size={20} color={Palette.hermesOrange} />
+      <View style={styles.onboardingActions}>
+        {currentIndex > 0 && (
+          <Pressable
+            style={styles.onboardingPrevButton}
+            onPress={() => setCurrentIndex(currentIndex - 1)}
+          >
+            <Ionicons name="chevron-back" size={18} color={SemanticColors.textSecondary} />
+            <Text style={styles.onboardingPrevText}>Vorige</Text>
+          </Pressable>
+        )}
+        <View style={{ flex: 1 }} />
+        {tip.action ? (
+          <Pressable
+            style={styles.onboardingActionButton}
+            onPress={() => onAction(tip.action!.route)}
+          >
+            <Text style={styles.onboardingActionText}>{tip.action.label}</Text>
+            <Ionicons name="arrow-forward" size={16} color="#fff" />
+          </Pressable>
+        ) : currentIndex < tips.length - 1 ? (
+          <Pressable
+            style={styles.onboardingNextButton}
+            onPress={() => setCurrentIndex(currentIndex + 1)}
+          >
+            <Text style={styles.onboardingNextText}>Volgende</Text>
+            <Ionicons name="chevron-forward" size={18} color={Palette.hermesOrange} />
+          </Pressable>
+        ) : (
+          <Pressable
+            style={styles.onboardingActionButton}
+            onPress={() => onDismiss(tip.id)}
+          >
+            <Text style={styles.onboardingActionText}>Aan de slag!</Text>
+            <Ionicons name="checkmark" size={16} color="#fff" />
+          </Pressable>
+        )}
       </View>
+    </View>
+  );
+}
+
+function ProgressTracker({ milestones, onMilestonePress }: {
+  milestones: ProgressMilestone[];
+  onMilestonePress: (milestone: ProgressMilestone) => void;
+}) {
+  const completedCount = milestones.filter(m => m.completed).length;
+  const progressPercent = (completedCount / milestones.length) * 100;
+
+  return (
+    <View style={styles.progressTracker}>
+      <View style={styles.progressHeader}>
+        <View style={styles.progressTitleRow}>
+          <Ionicons name="trophy" size={18} color={Palette.hermesOrange} />
+          <Text style={styles.progressTitle}>Je voortgang</Text>
+        </View>
+        <Text style={styles.progressPercent}>{Math.round(progressPercent)}%</Text>
+      </View>
+
+      <View style={styles.progressBarContainer}>
+        <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
+      </View>
+
+      <View style={styles.milestonesRow}>
+        {milestones.map((milestone, index) => (
+          <Pressable
+            key={milestone.id}
+            style={styles.milestoneItem}
+            onPress={() => !milestone.completed && onMilestonePress(milestone)}
+          >
+            <View style={[
+              styles.milestoneIcon,
+              milestone.completed && styles.milestoneIconCompleted,
+              milestone.current && styles.milestoneIconCurrent,
+            ]}>
+              {milestone.completed ? (
+                <Ionicons name="checkmark" size={14} color="#fff" />
+              ) : (
+                <Ionicons
+                  name={milestone.icon}
+                  size={14}
+                  color={milestone.current ? Palette.hermesOrange : SemanticColors.textTertiary}
+                />
+              )}
+            </View>
+            {index < milestones.length - 1 && (
+              <View style={[
+                styles.milestoneLine,
+                milestone.completed && styles.milestoneLineCompleted
+              ]} />
+            )}
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Current milestone callout */}
+      {milestones.find(m => m.current) && (
+        <View style={styles.currentMilestoneCard}>
+          <Ionicons name="arrow-forward-circle" size={18} color={Palette.hermesOrange} />
+          <View style={styles.currentMilestoneContent}>
+            <Text style={styles.currentMilestoneTitle}>
+              Volgende stap: {milestones.find(m => m.current)?.title}
+            </Text>
+            <Text style={styles.currentMilestoneDesc}>
+              {milestones.find(m => m.current)?.description}
+            </Text>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+}
+
+function FeatureDiscoveryCard({ tip, onAction, onDismiss }: {
+  tip: UIGuidanceTip;
+  onAction: () => void;
+  onDismiss: () => void;
+}) {
+  return (
+    <View style={styles.featureCard}>
+      <View style={styles.featureCardHeader}>
+        <View style={styles.featureNewBadge}>
+          <Ionicons name="sparkles" size={10} color="#fff" />
+          <Text style={styles.featureNewText}>NIEUW</Text>
+        </View>
+        <Pressable onPress={onDismiss} hitSlop={8}>
+          <Ionicons name="close" size={18} color={SemanticColors.textTertiary} />
+        </Pressable>
+      </View>
+
+      <View style={styles.featureCardContent}>
+        <View style={styles.featureIconContainer}>
+          <Ionicons name={tip.icon} size={28} color={Palette.hermesOrange} />
+        </View>
+        <View style={styles.featureTextContent}>
+          <Text style={styles.featureTitle}>{tip.title}</Text>
+          <Text style={styles.featureDescription}>{tip.description}</Text>
+        </View>
+      </View>
+
+      {tip.action && (
+        <Pressable style={styles.featureActionButton} onPress={onAction}>
+          <Text style={styles.featureActionText}>{tip.action.label}</Text>
+          <Ionicons name="chevron-forward" size={16} color={Palette.hermesOrange} />
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+function ContextualCoachMark({ message, position, onDismiss }: {
+  message: string;
+  position: 'top' | 'bottom';
+  onDismiss: () => void;
+}) {
+  return (
+    <View style={[
+      styles.coachMark,
+      position === 'top' ? styles.coachMarkTop : styles.coachMarkBottom
+    ]}>
+      <View style={styles.coachMarkArrow} />
+      <View style={styles.coachMarkContent}>
+        <Ionicons name="bulb" size={16} color={Palette.hermesOrange} />
+        <Text style={styles.coachMarkText}>{message}</Text>
+        <Pressable onPress={onDismiss} hitSlop={8}>
+          <Ionicons name="close" size={16} color={SemanticColors.textTertiary} />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+function WhatToDoNextCard({ suggestions, onSuggestionPress }: {
+  suggestions: { id: string; icon: IconName; title: string; subtitle: string; route: string }[];
+  onSuggestionPress: (route: string) => void;
+}) {
+  return (
+    <View style={styles.whatNextCard}>
+      <View style={styles.whatNextHeader}>
+        <Ionicons name="compass" size={18} color={Palette.hermesOrange} />
+        <Text style={styles.whatNextTitle}>Wat wil je doen?</Text>
+      </View>
+
+      <View style={styles.whatNextGrid}>
+        {suggestions.map(suggestion => (
+          <Pressable
+            key={suggestion.id}
+            style={styles.whatNextItem}
+            onPress={() => onSuggestionPress(suggestion.route)}
+          >
+            <View style={styles.whatNextIconContainer}>
+              <Ionicons name={suggestion.icon} size={22} color={Palette.hermesOrange} />
+            </View>
+            <Text style={styles.whatNextItemTitle}>{suggestion.title}</Text>
+            <Text style={styles.whatNextItemSubtitle}>{suggestion.subtitle}</Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+// ============================================
+// EXISTING COMPONENTS
+// ============================================
+
+function VascoGuidanceCard({ guidance, onAction, onDismiss }: {
+  guidance: VascoGuidance;
+  onAction?: () => void;
+  onDismiss?: () => void;
+}) {
+  return (
+    <View style={[styles.guidanceCard, { borderLeftColor: getPriorityColor(guidance.priority) }]}>
+      <View style={styles.guidanceHeader}>
+        <View style={[styles.guidanceIconContainer, { backgroundColor: getPriorityBg(guidance.priority) }]}>
+          <Ionicons name={guidance.icon} size={18} color={getPriorityColor(guidance.priority)} />
+        </View>
+        <View style={styles.guidanceHeaderText}>
+          <Text style={styles.guidanceTitle}>{guidance.title}</Text>
+          <Text style={styles.guidanceTimestamp}>{guidance.timestamp}</Text>
+        </View>
+        {onDismiss && (
+          <Pressable onPress={onDismiss} hitSlop={8}>
+            <Ionicons name="close" size={18} color={SemanticColors.textTertiary} />
+          </Pressable>
+        )}
+      </View>
+      <Text style={styles.guidanceMessage}>{guidance.message}</Text>
+      {guidance.actionLabel && (
+        <Pressable style={styles.guidanceAction} onPress={onAction}>
+          <Text style={styles.guidanceActionText}>{guidance.actionLabel}</Text>
+          <Ionicons name="chevron-forward" size={14} color={Palette.hermesOrange} />
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+function MoneyCard({ outstanding, thisWeek, pendingCount }: {
+  outstanding: number;
+  thisWeek: number;
+  pendingCount: number;
+}) {
+  const router = useRouter();
+
+  return (
+    <Pressable style={styles.moneyCard} onPress={() => router.push('/(contractor)/facturen')}>
+      <View style={styles.moneyRow}>
+        <View style={styles.moneyItem}>
+          <Text style={styles.moneyLabel}>Openstaand</Text>
+          <Text style={styles.moneyValue}>€{outstanding.toLocaleString('nl-NL')}</Text>
+          <Text style={styles.moneySubtext}>{pendingCount} facturen</Text>
+        </View>
+        <View style={styles.moneyDivider} />
+        <View style={styles.moneyItem}>
+          <Text style={styles.moneyLabel}>Deze week</Text>
+          <Text style={[styles.moneyValue, { color: SemanticColors.feedbackSuccess }]}>
+            €{thisWeek.toLocaleString('nl-NL')}
+          </Text>
+          <Text style={styles.moneySubtext}>ontvangen</Text>
+        </View>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
     </Pressable>
   );
 }
 
-function EarningsCard({ earnings }: { earnings: EarningsData }) {
-  const router = useRouter();
-
+function JobCard({ job, onPress }: { job: JobItem; onPress: () => void }) {
   return (
-    <View style={styles.earningsCard}>
-      <Text style={styles.sectionTitle}>Inkomsten</Text>
-
-      <View style={styles.earningsGrid}>
-        <Pressable style={styles.earningItem} onPress={() => router.push('/(contractor)/jobs')}>
-          <Text style={styles.earningValue}>€{Math.round(earnings.today).toLocaleString('nl-NL')}</Text>
-          <Text style={styles.earningLabel}>Vandaag</Text>
-        </Pressable>
-
-        <View style={styles.earningsDivider} />
-
-        <Pressable style={styles.earningItem} onPress={() => router.push('/(contractor)/money')}>
-          <Text style={[styles.earningValue, { color: Palette.hermesOrange }]}>
-            €{Math.round(earnings.thisWeek).toLocaleString('nl-NL')}
+    <Pressable style={styles.jobCard} onPress={onPress}>
+      <View style={styles.jobCardHeader}>
+        <View style={styles.jobTimeContainer}>
+          <Text style={[
+            styles.jobTime,
+            job.status === 'active' && styles.jobTimeActive
+          ]}>
+            {job.time}
           </Text>
-          <Text style={styles.earningLabel}>Deze Week</Text>
-        </Pressable>
-
-        <View style={styles.earningsDivider} />
-
-        <Pressable style={styles.earningItem} onPress={() => router.push('/(contractor)/money')}>
-          <Text style={styles.earningValue}>€{Math.round(earnings.outstanding).toLocaleString('nl-NL')}</Text>
-          <Text style={styles.earningLabel}>Openstaand</Text>
-        </Pressable>
-      </View>
-
-      {earnings.pendingQuotes > 0 && (
-        <View style={styles.pendingQuotesSection}>
-          <Pressable
-            style={styles.pendingQuotesBar}
-            onPress={() => router.push('/(contractor)/money')}
-          >
-            <Ionicons name="document-text" size={16} color={Palette.terracotta} />
-            <Text style={styles.pendingQuotesText}>
-              {earnings.pendingQuotes} {earnings.pendingQuotes === 1 ? 'offerte wacht' : 'offertes wachten'} op antwoord
-            </Text>
-            <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
-          </Pressable>
-          <Pressable
-            style={styles.smartQuoteButton}
-            onPress={() => router.push('/contractor/tiered-quote' as any)}
-          >
-            <Ionicons name="layers" size={16} color={Palette.hermesOrange} />
-            <Text style={styles.smartQuoteButtonText}>Smart Offerte maken</Text>
-          </Pressable>
+          <Text style={styles.jobDuration}>{job.duration}</Text>
         </View>
-      )}
-    </View>
+        {job.status === 'active' && (
+          <View style={styles.jobActiveTag}>
+            <View style={styles.jobActiveDot} />
+            <Text style={styles.jobActiveText}>ACTIEF</Text>
+          </View>
+        )}
+        {job.status === 'completed' && (
+          <View style={styles.jobCompletedTag}>
+            <Ionicons name="checkmark" size={12} color={SemanticColors.feedbackSuccess} />
+            <Text style={styles.jobCompletedText}>KLAAR</Text>
+          </View>
+        )}
+      </View>
+      <Text style={styles.jobTitle} numberOfLines={1}>{job.title}</Text>
+      <Text style={styles.jobCustomer} numberOfLines={1}>{job.customer}</Text>
+      <View style={styles.jobAddress}>
+        <Ionicons name="location-outline" size={12} color={SemanticColors.textTertiary} />
+        <Text style={styles.jobAddressText} numberOfLines={1}>{job.address}</Text>
+      </View>
+    </Pressable>
   );
 }
 
 function QuickActions() {
   const router = useRouter();
 
-  const actions: { icon: IconName; label: string; route: string; color: string }[] = [
-    { icon: 'add-circle', label: 'New Quote', route: '/contractor/tiered-quote', color: Palette.hermesOrange },
-    { icon: 'time', label: 'Clock In', route: '/(contractor)/jobs', color: SemanticColors.feedbackSuccess },
-    { icon: 'document-text', label: 'Invoice', route: '/(contractor)/money', color: Palette.terracotta },
-    { icon: 'cart', label: 'Buy Smart', route: '/(contractor)/savings', color: SemanticColors.feedbackInfo },
+  const actions = [
+    { icon: 'add' as IconName, label: 'Offerte', route: '/contractor/tiered-quote', primary: true },
+    { icon: 'receipt-outline' as IconName, label: 'Factuur', route: '/(contractor)/facturen', primary: false },
+    { icon: 'cart-outline' as IconName, label: 'Inkoop', route: '/(contractor)/besparen', primary: false },
+    { icon: 'document-text-outline' as IconName, label: 'Certificaat', route: '/(contractor)/certificaten', primary: false },
   ];
 
   return (
     <View style={styles.quickActions}>
-      {actions.map((action) => (
+      {actions.map((action, index) => (
         <Pressable
-          key={action.label}
-          style={styles.quickActionButton}
+          key={index}
+          style={[
+            styles.quickAction,
+            action.primary && styles.quickActionPrimary
+          ]}
           onPress={() => router.push(action.route as any)}
         >
-          <View style={[styles.quickActionIcon, { backgroundColor: action.color + '15' }]}>
-            <Ionicons name={action.icon} size={24} color={action.color} />
-          </View>
-          <Text style={styles.quickActionLabel}>{action.label}</Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
-function UpcomingJobs({ jobs }: { jobs: UpcomingJobData[] }) {
-  const router = useRouter();
-
-  return (
-    <View style={styles.upcomingCard}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Komende Afspraken</Text>
-        <Pressable onPress={() => router.push('/(contractor)/jobs')}>
-          <Text style={styles.seeAllLink}>Bekijk Alle</Text>
-        </Pressable>
-      </View>
-
-      {jobs.map((job, index) => (
-        <Pressable
-          key={job.id}
-          style={[styles.upcomingJob, index < jobs.length - 1 && styles.upcomingJobBorder]}
-          onPress={() => router.push(`/contractor/job/${job.id}` as any)}
-        >
-          <View style={styles.upcomingJobTime}>
-            <Ionicons name="time-outline" size={16} color={SemanticColors.textTertiary} />
-            <Text style={styles.upcomingJobTimeText}>{job.time}</Text>
-          </View>
-          <View style={styles.upcomingJobInfo}>
-            <Text style={styles.upcomingJobTitle}>{job.title}</Text>
-            <Text style={styles.upcomingJobCustomer}>{job.customer}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
-function CustomerDecisionsCard({ decisions }: { decisions: CustomerDecisionsData }) {
-  const router = useRouter();
-
-  const hasOverdue = decisions.overdue > 0;
-
-  return (
-    <Pressable
-      style={[styles.decisionsCard, hasOverdue && styles.decisionsCardAlert]}
-      onPress={() => router.push('/(contractor)/decisions')}
-    >
-      <View style={styles.decisionsHeader}>
-        <View style={styles.decisionsIcon}>
           <Ionicons
-            name={hasOverdue ? 'alert-circle' : 'checkbox'}
-            size={24}
-            color={hasOverdue ? SemanticColors.feedbackError : SemanticColors.feedbackInfo}
+            name={action.icon}
+            size={20}
+            color={action.primary ? '#fff' : SemanticColors.textPrimary}
           />
-        </View>
-        <View style={styles.decisionsInfo}>
-          <Text style={styles.decisionsTitle}>Klantbeslissingen</Text>
-          <Text style={styles.decisionsSubtitle}>
-            {hasOverdue
-              ? `${decisions.overdue} verlopen, ${decisions.pending} in afwachting`
-              : `${decisions.pending} beslissingen wachten op antwoord`}
+          <Text style={[
+            styles.quickActionText,
+            action.primary && styles.quickActionTextPrimary
+          ]}>
+            {action.label}
           </Text>
-        </View>
-        <Ionicons name="chevron-forward" size={20} color={SemanticColors.textTertiary} />
-      </View>
-
-      {hasOverdue && decisions.customers.filter(c => c.overdue > 0).length > 0 && (
-        <View style={styles.decisionsCustomers}>
-          {decisions.customers.filter(c => c.overdue > 0).map((customer, index) => (
-            <View key={index} style={styles.decisionsCustomerRow}>
-              <Text style={styles.decisionsCustomerName}>{customer.name}</Text>
-              <View style={styles.decisionsOverdueBadge}>
-                <Text style={styles.decisionsOverdueText}>{customer.overdue} verlopen</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {hasOverdue && (
-        <View style={styles.decisionsAction}>
-          <Ionicons name="notifications" size={14} color={Palette.hermesOrange} />
-          <Text style={styles.decisionsActionText}>Stuur herinneringen</Text>
-        </View>
-      )}
-    </Pressable>
+        </Pressable>
+      ))}
+    </View>
   );
 }
 
-function RecentAlerts({ alerts }: { alerts: AlertData[] }) {
-  const getAlertIcon = (type: string): IconName => {
-    switch (type) {
-      case 'payment': return 'checkmark-circle';
-      case 'quote': return 'eye';
-      case 'price': return 'pricetag';
-      default: return 'notifications';
+function AuditFindingBanner({ finding, onPress }: { finding: any; onPress: () => void }) {
+  const getSeverityColor = () => {
+    switch (finding.severity) {
+      case 'critical': return SemanticColors.feedbackError;
+      case 'high': return SemanticColors.feedbackWarning;
+      default: return Palette.hermesOrange;
     }
   };
 
   return (
-    <View style={styles.alertsCard}>
-      <Text style={styles.sectionTitle}>Recente Activiteit</Text>
-
-      {alerts.map((alert) => (
-        <View key={alert.id} style={styles.alertItem}>
-          <View style={[
-            styles.alertIcon,
-            { backgroundColor: alert.positive ? SemanticColors.feedbackSuccessBg : SemanticColors.surfaceSecondary }
-          ]}>
-            <Ionicons
-              name={getAlertIcon(alert.type)}
-              size={16}
-              color={alert.positive ? SemanticColors.feedbackSuccess : SemanticColors.textSecondary}
-            />
-          </View>
-          <Text style={styles.alertText}>{alert.text}</Text>
-          <Text style={styles.alertTime}>{alert.time}</Text>
-        </View>
-      ))}
-    </View>
+    <Pressable style={[styles.auditBanner, { borderLeftColor: getSeverityColor() }]} onPress={onPress}>
+      <View style={styles.auditBannerIcon}>
+        <Ionicons name="shield-checkmark" size={16} color={getSeverityColor()} />
+      </View>
+      <View style={styles.auditBannerContent}>
+        <Text style={styles.auditBannerTitle} numberOfLines={1}>{finding.title}</Text>
+        <Text style={styles.auditBannerText} numberOfLines={1}>{finding.description}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+    </Pressable>
   );
 }
 
@@ -309,104 +671,62 @@ function RecentAlerts({ alerts }: { alerts: AlertData[] }) {
 export default function TodayScreen() {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
+  const [dismissedGuidance, setDismissedGuidance] = useState<Set<string>>(new Set());
   const { user } = useAuth();
 
-  // Get today's date in ISO format
+  // UI Guidance state
+  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [dismissedTips, setDismissedTips] = useState<Set<string>>(new Set());
+  const [showProgressTracker, setShowProgressTracker] = useState(true);
+  const [activeCoachMark, setActiveCoachMark] = useState<string | null>(null);
+
+  // Get today's date
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
-  // Connect to services
+  // Core services
   const daySchedule = useDaySchedule(today);
-  const { jobs: allJobs } = useScheduler();
   const { summary: cashFlowSummary, invoices } = useCashFlow();
-  const { insights } = useProactiveInsights();
-  const dashboardSummary = useDashboardSummary();
 
-  // Derive data from services
-  const activeJob = useMemo(() => {
-    const inProgressJob = daySchedule.jobs.find(j => j.status === 'in_progress');
-    if (!inProgressJob) return null;
+  // AI services
+  const { findings: auditFindings } = useAuditFindings('contractor');
+  const financialStats = useFinancialAuditStats();
+  const { alerts: complianceAlerts } = useComplianceAlerts();
 
-    // Calculate elapsed time
-    const startTime = new Date(inProgressJob.startTime);
-    const now = new Date();
-    const elapsedMs = now.getTime() - startTime.getTime();
-    const hours = Math.floor(elapsedMs / (1000 * 60 * 60));
-    const minutes = Math.floor((elapsedMs % (1000 * 60 * 60)) / (1000 * 60));
+  // Filter dismissed guidance
+  const activeGuidance = useMemo(
+    () => MOCK_VASCO_GUIDANCE.filter(g => !dismissedGuidance.has(g.id)),
+    [dismissedGuidance]
+  );
 
-    return {
-      id: inProgressJob.id,
-      title: inProgressJob.projectName,
-      customer: inProgressJob.customerName,
-      address: inProgressJob.address,
-      timeElapsed: `${hours}h ${minutes}m`,
-      scheduled: `${new Date(inProgressJob.startTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} - ${new Date(inProgressJob.endTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`,
-    };
-  }, [daySchedule.jobs]);
-
-  const upcomingJobs = useMemo(() => {
-    return daySchedule.jobs
-      .filter(j => j.status === 'scheduled')
-      .slice(0, 3)
-      .map(job => ({
-        id: job.id,
-        title: job.projectName,
-        time: new Date(job.startTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
-        customer: job.customerName,
-      }));
-  }, [daySchedule.jobs]);
-
-  const earnings = useMemo(() => {
-    const paidToday = invoices
-      .filter(i => i.status === 'paid' && i.paidDate?.startsWith(today))
-      .reduce((sum, i) => sum + i.amount, 0);
-
-    const pendingQuotes = invoices.filter(i => i.status === 'sent' || i.status === 'viewed').length;
-
-    return {
-      today: paidToday || dashboardSummary.revenue.value / 30, // Estimate if no data
-      thisWeek: dashboardSummary.revenue.value / 4, // Weekly estimate
-      outstanding: cashFlowSummary.pendingIncome,
-      pendingQuotes,
-    };
-  }, [invoices, cashFlowSummary, dashboardSummary, today]);
-
-  const customerDecisions = useMemo(() => {
-    const overdueInvoices = invoices.filter(i => i.status === 'overdue');
-    const pendingInvoices = invoices.filter(i => i.status === 'sent' || i.status === 'viewed');
-
-    // Group by customer
-    const customerMap = new Map<string, { name: string; overdue: number; pending: number }>();
-
-    overdueInvoices.forEach(inv => {
-      const existing = customerMap.get(inv.customerId) || { name: inv.customerName, overdue: 0, pending: 0 };
-      existing.overdue++;
-      customerMap.set(inv.customerId, existing);
-    });
-
-    pendingInvoices.forEach(inv => {
-      const existing = customerMap.get(inv.customerId) || { name: inv.customerName, overdue: 0, pending: 0 };
-      existing.pending++;
-      customerMap.set(inv.customerId, existing);
-    });
-
-    return {
-      overdue: overdueInvoices.length,
-      pending: pendingInvoices.length,
-      customers: Array.from(customerMap.values()),
-    };
-  }, [invoices]);
-
-  const recentAlerts = useMemo(() => {
-    return insights.slice(0, 3).map((insight, index) => ({
-      id: insight.id,
-      type: insight.type === 'warning' ? 'payment' : insight.type === 'opportunity' ? 'quote' : 'price',
-      text: insight.title,
-      time: index === 0 ? '10m geleden' : index === 1 ? '1u geleden' : '2u geleden',
-      positive: insight.type !== 'warning',
+  // Build today's jobs list
+  const todayJobs = useMemo((): JobItem[] => {
+    return daySchedule.jobs.map(job => ({
+      id: job.id,
+      title: job.projectName,
+      customer: job.customerName,
+      address: job.address || 'Adres niet beschikbaar',
+      time: new Date(job.startTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
+      duration: `${Math.round((new Date(job.endTime).getTime() - new Date(job.startTime).getTime()) / 3600000)}u`,
+      status: job.status === 'in_progress' ? 'active' : job.status === 'completed' ? 'completed' : 'upcoming',
     }));
-  }, [insights]);
+  }, [daySchedule.jobs]);
 
-  // Greeting based on time of day
+  // Critical findings
+  const criticalFindings = useMemo(() => {
+    return auditFindings.filter(f =>
+      (f.severity === 'critical' || f.severity === 'high') &&
+      f.status === 'new'
+    ).slice(0, 2);
+  }, [auditFindings]);
+
+  // Calculate money stats
+  const outstanding = cashFlowSummary.pendingIncome;
+  const pendingInvoices = invoices.filter(i => i.status === 'pending' || i.status === 'overdue');
+  const thisWeek = invoices
+    .filter(i => i.status === 'paid')
+    .reduce((sum, i) => sum + i.amount, 0) / 4;
+
+  // Greeting
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Goedemorgen';
@@ -414,18 +734,71 @@ export default function TodayScreen() {
     return 'Goedenavond';
   }, []);
 
-  const formattedDate = useMemo(() => {
-    return new Date().toLocaleDateString('nl-NL', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long'
-    });
+  const formattedDate = new Date().toLocaleDateString('nl-NL', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long'
+  });
+
+  // UI Guidance - filter active tips
+  const activeOnboardingTips = useMemo(() =>
+    ONBOARDING_TIPS.filter(tip => !dismissedTips.has(tip.id)),
+    [dismissedTips]
+  );
+
+  const activeFeatureTips = useMemo(() =>
+    FEATURE_TIPS.filter(tip => !dismissedTips.has(tip.id)).slice(0, 1),
+    [dismissedTips]
+  );
+
+  // What to do next suggestions
+  const whatNextSuggestions = useMemo(() => [
+    { id: 'wn-1', icon: 'add-circle' as IconName, title: 'Offerte maken', subtitle: 'Met AI-hulp', route: '/contractor/tiered-quote' },
+    { id: 'wn-2', icon: 'receipt' as IconName, title: 'Factuur sturen', subtitle: 'In 30 seconden', route: '/(contractor)/facturen' },
+    { id: 'wn-3', icon: 'pricetag' as IconName, title: 'Prijzen vergelijken', subtitle: 'Bespaar tot 15%', route: '/(contractor)/besparen' },
+    { id: 'wn-4', icon: 'calendar' as IconName, title: 'Planning bekijken', subtitle: 'Deze week', route: '/(contractor)/planning' },
+  ], []);
+
+  const handleDismissGuidance = useCallback((id: string) => {
+    setDismissedGuidance(prev => new Set(prev).add(id));
   }, []);
+
+  const handleGuidanceAction = useCallback((guidance: VascoGuidance) => {
+    if (guidance.actionRoute) {
+      router.push(guidance.actionRoute as any);
+    }
+  }, [router]);
+
+  const handleDismissOnboardingTip = useCallback((id: string) => {
+    setDismissedTips(prev => new Set(prev).add(id));
+    // If all tips dismissed, hide onboarding
+    if (ONBOARDING_TIPS.every(t => t.id === id || dismissedTips.has(t.id))) {
+      setShowOnboarding(false);
+    }
+  }, [dismissedTips]);
+
+  const handleMilestonePress = useCallback((milestone: ProgressMilestone) => {
+    // Navigate based on milestone
+    switch (milestone.id) {
+      case 'p3':
+        router.push('/contractor/tiered-quote' as any);
+        break;
+      case 'p4':
+        router.push('/(contractor)/certificaten' as any);
+        break;
+      case 'p5':
+        router.push('/(contractor)/facturen' as any);
+        break;
+    }
+  }, [router]);
+
+  const handleFeatureAction = useCallback((route: string) => {
+    router.push(route as any);
+  }, [router]);
 
   const onRefresh = () => {
     setRefreshing(true);
-    // Services will automatically update when their data changes
-    setTimeout(() => setRefreshing(false), 1000);
+    setTimeout(() => setRefreshing(false), 800);
   };
 
   return (
@@ -433,11 +806,11 @@ export default function TodayScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>{greeting}, {user?.name?.split(' ')[0] || 'Thomas'}</Text>
+          <Text style={styles.greeting}>{greeting}</Text>
           <Text style={styles.date}>{formattedDate}</Text>
         </View>
         <Pressable style={styles.profileButton} onPress={() => router.push('/profile' as any)}>
-          <Ionicons name="person-circle" size={40} color={Palette.charcoal} />
+          <Ionicons name="person-circle-outline" size={32} color={SemanticColors.textPrimary} />
         </Pressable>
       </View>
 
@@ -449,33 +822,115 @@ export default function TodayScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />
         }
       >
-        {/* Active Job */}
-        {activeJob && (
-          <ActiveJobCard
-            job={activeJob}
-            onPress={() => router.push(`/contractor/job/${activeJob.id}` as any)}
+        {/* Onboarding Carousel for new users */}
+        {showOnboarding && activeOnboardingTips.length > 0 && (
+          <OnboardingCarousel
+            tips={activeOnboardingTips}
+            onDismiss={handleDismissOnboardingTip}
+            onAction={(route) => router.push(route as any)}
           />
         )}
+
+        {/* Progress Tracker */}
+        {showProgressTracker && !showOnboarding && (
+          <ProgressTracker
+            milestones={PROGRESS_MILESTONES}
+            onMilestonePress={handleMilestonePress}
+          />
+        )}
+
+        {/* Vasco AI Guidance Section */}
+        {activeGuidance.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionTitleRow}>
+                <Ionicons name="sparkles" size={16} color={Palette.hermesOrange} />
+                <Text style={styles.sectionTitle}>Vasco voor jou</Text>
+              </View>
+              <Text style={styles.sectionCount}>{activeGuidance.length} tips</Text>
+            </View>
+            <View style={styles.guidanceList}>
+              {activeGuidance.slice(0, 3).map((guidance) => (
+                <VascoGuidanceCard
+                  key={guidance.id}
+                  guidance={guidance}
+                  onDismiss={() => handleDismissGuidance(guidance.id)}
+                  onAction={() => handleGuidanceAction(guidance)}
+                />
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Audit Findings */}
+        {criticalFindings.length > 0 && (
+          <View style={styles.findingsSection}>
+            {criticalFindings.map(finding => (
+              <AuditFindingBanner
+                key={finding.id}
+                finding={finding}
+                onPress={() => {}}
+              />
+            ))}
+          </View>
+        )}
+
+        {/* Money Summary */}
+        <MoneyCard
+          outstanding={outstanding}
+          thisWeek={thisWeek}
+          pendingCount={pendingInvoices.length}
+        />
 
         {/* Quick Actions */}
         <QuickActions />
 
-        {/* Earnings */}
-        <EarningsCard earnings={earnings} />
+        {/* What to do next - show when no jobs today */}
+        {todayJobs.length === 0 && (
+          <WhatToDoNextCard
+            suggestions={whatNextSuggestions}
+            onSuggestionPress={handleFeatureAction}
+          />
+        )}
 
-        {/* Customer Decisions */}
-        <CustomerDecisionsCard decisions={customerDecisions} />
+        {/* Feature Discovery */}
+        {activeFeatureTips.length > 0 && !showOnboarding && (
+          <View style={styles.section}>
+            {activeFeatureTips.map(tip => (
+              <FeatureDiscoveryCard
+                key={tip.id}
+                tip={tip}
+                onAction={() => tip.action && handleFeatureAction(tip.action.route)}
+                onDismiss={() => setDismissedTips(prev => new Set(prev).add(tip.id))}
+              />
+            ))}
+          </View>
+        )}
 
-        {/* AI Insights */}
-        <View style={styles.aiSection}>
-          <AIRecommendations userId="current-user" maxItems={2} showHeader />
+        {/* Today's Schedule */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Vandaag</Text>
+            <Text style={styles.sectionCount}>{todayJobs.length} afspraken</Text>
+          </View>
+          {todayJobs.length === 0 ? (
+            <View style={styles.emptyJobs}>
+              <Ionicons name="calendar-outline" size={32} color={SemanticColors.textTertiary} />
+              <Text style={styles.emptyJobsText}>Geen afspraken vandaag</Text>
+              <Text style={styles.emptyJobsSubtext}>Geniet van je vrije dag!</Text>
+            </View>
+          ) : (
+            <View style={styles.jobsList}>
+              {todayJobs.map((job) => (
+                <JobCard
+                  key={job.id}
+                  job={job}
+                  onPress={() => router.push(`/contractor/job/${job.id}` as any)}
+                />
+              ))}
+            </View>
+          )}
         </View>
-
-        {/* Upcoming Jobs */}
-        {upcomingJobs.length > 0 && <UpcomingJobs jobs={upcomingJobs} />}
-
-        {/* Recent Alerts */}
-        {recentAlerts.length > 0 && <RecentAlerts alerts={recentAlerts} />}
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -497,9 +952,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
-    paddingTop: 60,
-    paddingBottom: Spacing.md,
-    backgroundColor: SemanticColors.surfacePrimary,
+    paddingTop: 56,
+    paddingBottom: Spacing.sm,
   },
   greeting: {
     fontSize: 24,
@@ -518,336 +972,655 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: Spacing.lg,
+    padding: Spacing.md,
     gap: Spacing.md,
   },
 
-  // Active Job
-  activeJobCard: {
-    backgroundColor: Palette.hermesOrange,
-    borderRadius: 16,
-    padding: Spacing.lg,
-  },
-  activeJobHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-  },
-  liveIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  liveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#fff',
-  },
-  liveText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#fff',
-    letterSpacing: 1,
-  },
-  timeElapsed: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  activeJobTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 4,
-  },
-  activeJobCustomer: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.85)',
-    marginBottom: Spacing.md,
-  },
-  activeJobFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.2)',
-  },
-  activeJobLocation: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flex: 1,
-  },
-  activeJobAddress: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
-    flex: 1,
-  },
-
-  // Quick Actions
-  quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  quickActionButton: {
-    alignItems: 'center',
-    gap: 6,
-  },
-  quickActionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickActionLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: SemanticColors.textSecondary,
-  },
-
-  // Earnings
-  earningsCard: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: SemanticColors.textSecondary,
-    marginBottom: Spacing.md,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+  // Section
+  section: {
+    gap: Spacing.sm,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.xs,
   },
-  seeAllLink: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Palette.hermesOrange,
-  },
-  earningsGrid: {
+  sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  earningItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  earningValue: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-  earningLabel: {
-    fontSize: 12,
-    color: SemanticColors.textTertiary,
-    marginTop: 4,
-  },
-  earningsDivider: {
-    width: 1,
-    height: 36,
-    backgroundColor: SemanticColors.borderDefault,
-  },
-  pendingQuotesSection: {
-    marginTop: Spacing.md,
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: SemanticColors.borderDefault,
-    gap: Spacing.sm,
-  },
-  pendingQuotesBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  pendingQuotesText: {
-    flex: 1,
-    fontSize: 13,
-    color: SemanticColors.textSecondary,
-  },
-  smartQuoteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     gap: 6,
-    backgroundColor: Palette.hermesOrange + '15',
-    paddingVertical: Spacing.sm,
-    borderRadius: 8,
   },
-  smartQuoteButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Palette.hermesOrange,
-  },
-
-  // AI Section
-  aiSection: {
-    // Container for AI recommendations
-  },
-
-  // Upcoming Jobs
-  upcomingCard: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-  },
-  upcomingJob: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-    gap: Spacing.md,
-  },
-  upcomingJobBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.borderDefault,
-  },
-  upcomingJobTime: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    minWidth: 100,
-  },
-  upcomingJobTimeText: {
-    fontSize: 13,
-    color: SemanticColors.textSecondary,
-    fontWeight: '500',
-  },
-  upcomingJobInfo: {
-    flex: 1,
-  },
-  upcomingJobTitle: {
+  sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.textPrimary,
+    color: SemanticColors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
-  upcomingJobCustomer: {
+  sectionCount: {
     fontSize: 12,
     color: SemanticColors.textTertiary,
-    marginTop: 2,
   },
 
-  // Alerts
-  alertsCard: {
+  // Vasco Guidance
+  guidanceList: {
+    gap: Spacing.sm,
+  },
+  guidanceCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
-    padding: Spacing.lg,
+    borderRadius: 12,
+    padding: Spacing.md,
+    borderLeftWidth: 4,
+    gap: 8,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
-  alertItem: {
+  guidanceHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    paddingVertical: Spacing.xs,
   },
-  alertIcon: {
+  guidanceIconContainer: {
     width: 32,
     height: 32,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  alertText: {
+  guidanceHeaderText: {
     flex: 1,
-    fontSize: 13,
+  },
+  guidanceTitle: {
+    fontSize: 14,
+    fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
-  alertTime: {
+  guidanceTimestamp: {
     fontSize: 11,
     color: SemanticColors.textTertiary,
   },
-
-  // Customer Decisions Card
-  decisionsCard: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
+  guidanceMessage: {
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+    lineHeight: 18,
   },
-  decisionsCardAlert: {
-    borderColor: SemanticColors.feedbackError + '40',
-    borderLeftWidth: 3,
-    borderLeftColor: SemanticColors.feedbackError,
-  },
-  decisionsHeader: {
+  guidanceAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    justifyContent: 'flex-end',
+    gap: 4,
+    paddingTop: 4,
   },
-  decisionsIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: SemanticColors.feedbackInfoBg,
+  guidanceActionText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Palette.hermesOrange,
+  },
+
+  // Audit Banner
+  findingsSection: {
+    gap: Spacing.xs,
+  },
+  auditBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 10,
+    padding: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderLeftWidth: 3,
+    gap: Spacing.sm,
+  },
+  auditBannerIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    backgroundColor: SemanticColors.feedbackWarningBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  decisionsInfo: {
+  auditBannerContent: {
     flex: 1,
   },
-  decisionsTitle: {
+  auditBannerTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  auditBannerText: {
+    fontSize: 12,
+    color: SemanticColors.textTertiary,
+  },
+
+  // Money Card
+  moneyCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 12,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  moneyRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  moneyItem: {
+    flex: 1,
+  },
+  moneyLabel: {
+    fontSize: 11,
+    color: SemanticColors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  moneyValue: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+    marginTop: 2,
+  },
+  moneySubtext: {
+    fontSize: 11,
+    color: SemanticColors.textTertiary,
+    marginTop: 1,
+  },
+  moneyDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: SemanticColors.borderDefault,
+    marginHorizontal: Spacing.md,
+  },
+
+  // Quick Actions
+  quickActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  quickAction: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: Spacing.sm,
+    borderRadius: 10,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  quickActionPrimary: {
+    backgroundColor: Palette.hermesOrange,
+    borderColor: Palette.hermesOrange,
+  },
+  quickActionText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  quickActionTextPrimary: {
+    color: '#fff',
+  },
+
+  // Jobs List
+  jobsList: {
+    gap: Spacing.sm,
+  },
+  jobCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 12,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    gap: 4,
+  },
+  jobCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  jobTimeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  jobTime: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: SemanticColors.textSecondary,
+  },
+  jobTimeActive: {
+    color: SemanticColors.feedbackSuccess,
+  },
+  jobDuration: {
+    fontSize: 12,
+    color: SemanticColors.textTertiary,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  jobActiveTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: SemanticColors.feedbackSuccessBg,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  jobActiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: SemanticColors.feedbackSuccess,
+  },
+  jobActiveText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: SemanticColors.feedbackSuccess,
+    letterSpacing: 0.5,
+  },
+  jobCompletedTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: SemanticColors.feedbackSuccessBg,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  jobCompletedText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: SemanticColors.feedbackSuccess,
+    letterSpacing: 0.5,
+  },
+  jobTitle: {
     fontSize: 15,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
-  decisionsSubtitle: {
+  jobCustomer: {
     fontSize: 13,
     color: SemanticColors.textSecondary,
-    marginTop: 2,
   },
-  decisionsCustomers: {
-    marginTop: Spacing.md,
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: SemanticColors.borderDefault,
+  jobAddress: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  jobAddressText: {
+    fontSize: 12,
+    color: SemanticColors.textTertiary,
+    flex: 1,
+  },
+  emptyJobs: {
+    alignItems: 'center',
+    padding: Spacing.xl,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
     gap: Spacing.xs,
   },
-  decisionsCustomerRow: {
+  emptyJobsText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: SemanticColors.textSecondary,
+  },
+  emptyJobsSubtext: {
+    fontSize: 13,
+    color: SemanticColors.textTertiary,
+  },
+
+  // ============================================
+  // UI GUIDANCE STYLES
+  // ============================================
+
+  // Onboarding Carousel
+  onboardingCarousel: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 16,
+    padding: Spacing.lg,
+    borderWidth: 2,
+    borderColor: Palette.hermesOrange,
+    gap: Spacing.md,
+  },
+  onboardingHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  decisionsCustomerName: {
-    fontSize: 13,
+  onboardingIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Palette.hermesOrange + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  onboardingDots: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  onboardingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: SemanticColors.borderDefault,
+  },
+  onboardingDotActive: {
+    backgroundColor: Palette.hermesOrange,
+    width: 20,
+  },
+  onboardingTitle: {
+    fontSize: 20,
+    fontWeight: '700',
     color: SemanticColors.textPrimary,
   },
-  decisionsOverdueBadge: {
-    backgroundColor: SemanticColors.feedbackErrorBg,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+  onboardingDescription: {
+    fontSize: 14,
+    color: SemanticColors.textSecondary,
+    lineHeight: 20,
   },
-  decisionsOverdueText: {
-    fontSize: 11,
+  onboardingActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: Spacing.sm,
+  },
+  onboardingPrevButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    padding: Spacing.sm,
+  },
+  onboardingPrevText: {
+    fontSize: 14,
+    color: SemanticColors.textSecondary,
+  },
+  onboardingNextButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    padding: Spacing.sm,
+  },
+  onboardingNextText: {
+    fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.feedbackError,
+    color: Palette.hermesOrange,
   },
-  decisionsAction: {
+  onboardingActionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: Spacing.md,
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: SemanticColors.borderDefault,
+    backgroundColor: Palette.hermesOrange,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
   },
-  decisionsActionText: {
+  onboardingActionText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#fff',
+  },
+
+  // Progress Tracker
+  progressTracker: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 12,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    gap: Spacing.md,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  progressTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  progressTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  progressPercent: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Palette.hermesOrange,
+  },
+  progressBarContainer: {
+    height: 8,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: Palette.hermesOrange,
+    borderRadius: 4,
+  },
+  milestonesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  milestoneItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  milestoneIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: SemanticColors.borderDefault,
+  },
+  milestoneIconCompleted: {
+    backgroundColor: SemanticColors.feedbackSuccess,
+    borderColor: SemanticColors.feedbackSuccess,
+  },
+  milestoneIconCurrent: {
+    borderColor: Palette.hermesOrange,
+    borderWidth: 2,
+  },
+  milestoneLine: {
+    width: 24,
+    height: 2,
+    backgroundColor: SemanticColors.borderDefault,
+    marginLeft: 4,
+  },
+  milestoneLineCompleted: {
+    backgroundColor: SemanticColors.feedbackSuccess,
+  },
+  currentMilestoneCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Palette.hermesOrange + '10',
+    padding: Spacing.sm,
+    borderRadius: 8,
+  },
+  currentMilestoneContent: {
+    flex: 1,
+  },
+  currentMilestoneTitle: {
     fontSize: 13,
     fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  currentMilestoneDesc: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+
+  // Feature Discovery Card
+  featureCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 12,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    gap: Spacing.sm,
+  },
+  featureCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  featureNewBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Palette.hermesOrange,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  featureNewText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: 0.5,
+  },
+  featureCardContent: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  featureIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: Palette.hermesOrange + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureTextContent: {
+    flex: 1,
+    gap: 4,
+  },
+  featureTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  featureDescription: {
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+    lineHeight: 18,
+  },
+  featureActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 4,
+    paddingTop: Spacing.xs,
+  },
+  featureActionText: {
+    fontSize: 14,
+    fontWeight: '600',
     color: Palette.hermesOrange,
+  },
+
+  // Coach Mark
+  coachMark: {
+    position: 'absolute',
+    left: Spacing.md,
+    right: Spacing.md,
+    zIndex: 100,
+  },
+  coachMarkTop: {
+    top: 100,
+  },
+  coachMarkBottom: {
+    bottom: 100,
+  },
+  coachMarkArrow: {
+    width: 12,
+    height: 12,
+    backgroundColor: Palette.charcoal,
+    transform: [{ rotate: '45deg' }],
+    position: 'absolute',
+    top: -6,
+    left: 24,
+  },
+  coachMarkContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Palette.charcoal,
+    padding: Spacing.md,
+    borderRadius: 12,
+  },
+  coachMarkText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#fff',
+    lineHeight: 18,
+  },
+
+  // What to do next
+  whatNextCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 12,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    gap: Spacing.md,
+  },
+  whatNextHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  whatNextTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  whatNextGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
+  whatNextItem: {
+    width: '48%',
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 10,
+    padding: Spacing.md,
+    alignItems: 'center',
+    gap: 6,
+  },
+  whatNextIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Palette.hermesOrange + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  whatNextItemTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+    textAlign: 'center',
+  },
+  whatNextItemSubtitle: {
+    fontSize: 12,
+    color: SemanticColors.textTertiary,
+    textAlign: 'center',
   },
 });

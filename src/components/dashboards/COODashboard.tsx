@@ -13,6 +13,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,19 +35,34 @@ import {
   generatePermitDashboard,
   generatePermitAlerts,
 } from '../../modules/permitTracker';
+import { FragilityScoreCard } from '../shared/FragilityScoreCard';
+import { CriticalPathView } from '../shared/CriticalPathView';
+import { SupplierReliabilityCard } from '../shared/SupplierReliabilityCard';
+import { SupplierAlertBanner } from '../shared/SupplierAlertBanner';
+import { WhatIfAnalysisModal } from '../shared/WhatIfAnalysisModal';
+import {
+  useFragilityScore,
+  useCriticalPath,
+  useFragilityAlerts,
+} from '../../services/scheduleFragilityService';
+import {
+  useSupplierRanking,
+  useDriftAlerts,
+} from '../../services/supplierReliabilityService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 export type COOTabView = 'overview' | 'schedule' | 'permits' | 'procurement';
 type TabView = COOTabView;
 
-// Role color
-const COO_COLOR = '#3B82F6'; // Blue for operations
+// Role color - matches theme roleCOO token
+const COO_COLOR = '#7C3AED'; // Purple for COO (per theme)
 
 // =============================================================================
 // HELPERS
 // =============================================================================
 
-function formatCompact(value: number, currency: string = 'GBP'): string {
+function formatCompact(value: number | undefined | null, currency: string = 'GBP'): string {
+  if (value === undefined || value === null) return '—';
   const symbol = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
   const absValue = Math.abs(value);
 
@@ -99,6 +115,14 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabView>(initialTab);
   const [selectedProjectId, setSelectedProjectId] = useState<string>('uk-001');
+  const [showWhatIfModal, setShowWhatIfModal] = useState(false);
+
+  // New hooks for P1/P2 features
+  const { data: fragilityScore, loading: fragilityLoading } = useFragilityScore(selectedProjectId);
+  const { data: criticalPath, loading: criticalPathLoading } = useCriticalPath(selectedProjectId);
+  const { data: fragilityAlerts } = useFragilityAlerts(selectedProjectId);
+  const { data: topSuppliers } = useSupplierRanking('materials', 5);
+  const { data: supplierAlerts } = useDriftAlerts();
 
   // Derived data
   const selectedProject = useMemo(() => getProjectById(selectedProjectId), [selectedProjectId]);
@@ -249,32 +273,7 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
         </View>
       </View>
 
-      {/* Tab Bar (only show when not using navigation tabs) */}
-      {showTabBar && (
-        <View style={styles.tabBar}>
-          {[
-            { key: 'overview', label: 'Overview', icon: 'grid' },
-            { key: 'schedule', label: 'Schedule', icon: 'calendar' },
-            { key: 'permits', label: 'Permits', icon: 'document-text' },
-            { key: 'procurement', label: 'Procure', icon: 'cart' },
-          ].map((tab) => (
-            <Pressable
-              key={tab.key}
-              style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-              onPress={() => setActiveTab(tab.key as TabView)}
-            >
-              <Ionicons
-                name={tab.icon as IconName}
-                size={18}
-                color={activeTab === tab.key ? '#fff' : SemanticColors.textSecondary}
-              />
-              <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
-                {tab.label}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      )}
+      {/* Internal tab bar removed - using bottom navigation instead */}
 
       <ScrollView
         style={styles.scrollView}
@@ -485,6 +484,36 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                 </View>
               </View>
             </View>
+
+            {/* Schedule Fragility Scoring - P2 Feature */}
+            {fragilityScore && !fragilityLoading && (
+              <FragilityScoreCard
+                fragility={fragilityScore}
+                onPress={() => setShowWhatIfModal(true)}
+                showFactors={true}
+                showAlerts={true}
+              />
+            )}
+
+            {/* Critical Path View - P2 Feature */}
+            {criticalPath && !criticalPathLoading && (
+              <CriticalPathView
+                criticalPath={criticalPath}
+                compact={false}
+              />
+            )}
+
+            {/* What-If Analysis Button */}
+            {fragilityScore && (
+              <Pressable
+                style={styles.whatIfButton}
+                onPress={() => setShowWhatIfModal(true)}
+              >
+                <Ionicons name="git-branch" size={18} color={COO_COLOR} />
+                <Text style={styles.whatIfButtonText}>Run What-If Analysis</Text>
+                <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+              </Pressable>
+            )}
           </>
         )}
 
@@ -587,6 +616,20 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
           <>
             <ProjectSelector />
 
+            {/* Supplier Drift Alerts - P1 Feature */}
+            {supplierAlerts && supplierAlerts.length > 0 && (
+              <View style={styles.supplierAlertsSection}>
+                {supplierAlerts.slice(0, 2).map((alert) => (
+                  <SupplierAlertBanner
+                    key={alert.id}
+                    alert={alert}
+                    onViewDetails={() => {}}
+                    onViewAlternatives={() => {}}
+                  />
+                ))}
+              </View>
+            )}
+
             {/* Contract Awards Progress */}
             <View style={styles.card}>
               <View style={styles.cardHeaderRow}>
@@ -652,6 +695,27 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
               </View>
             </View>
 
+            {/* Supplier Reliability Section - P1 Feature */}
+            {topSuppliers && topSuppliers.length > 0 && (
+              <View style={styles.card}>
+                <View style={styles.cardHeaderRow}>
+                  <Text style={styles.cardTitle}>Supplier Reliability</Text>
+                  <Pressable>
+                    <Text style={[styles.seeAllText, { color: COO_COLOR }]}>View All</Text>
+                  </Pressable>
+                </View>
+                <View style={styles.suppliersGrid}>
+                  {topSuppliers.slice(0, 3).map((supplier) => (
+                    <SupplierReliabilityCard
+                      key={supplier.supplierId}
+                      supplier={supplier}
+                      compact={true}
+                    />
+                  ))}
+                </View>
+              </View>
+            )}
+
             {/* Contract List Preview */}
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Recent Contracts</Text>
@@ -673,6 +737,17 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
 
         <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* What-If Analysis Modal - P2 Feature */}
+      {fragilityScore && (
+        <WhatIfAnalysisModal
+          visible={showWhatIfModal}
+          onClose={() => setShowWhatIfModal(false)}
+          projectId={selectedProjectId}
+          projectName={selectedProject?.name || ''}
+          currentFragility={fragilityScore}
+        />
+      )}
     </View>
   );
 }
@@ -1373,5 +1448,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: SemanticColors.textPrimary,
+  },
+
+  // P1/P2 Feature Styles
+  whatIfButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: COO_COLOR + '10',
+    borderRadius: 12,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: COO_COLOR + '30',
+  },
+  whatIfButtonText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: COO_COLOR,
+  },
+  supplierAlertsSection: {
+    gap: Spacing.sm,
+  },
+  suppliersGrid: {
+    gap: Spacing.sm,
+  },
+  seeAllText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

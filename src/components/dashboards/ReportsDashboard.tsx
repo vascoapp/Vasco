@@ -19,11 +19,13 @@ import {
 } from '../../modules/countryModules';
 import { hapticSuccess } from '../../utils/haptics';
 
+// Role colors aligned with theme tokens
 const ROLE_COLORS: Record<string, string> = {
-  cfo: '#22C55E',
-  coo: '#3B82F6',
-  sitelead: '#F97316',
-  director: '#8B5CF6',
+  cfo: '#2563EB',       // Blue for CFO
+  coo: '#7C3AED',       // Purple for COO
+  sitelead: '#D2691E',  // Terracotta for Site Lead
+  director: '#E35205',  // Hermes Orange for Director
+  contractor: '#E35205', // Hermes Orange for Contractor
 };
 
 type ReportType = {
@@ -41,7 +43,7 @@ export function ReportsDashboard() {
   const [reportType, setReportType] = useState<string>('');
 
   const userRole = user?.role || 'cfo';
-  const roleColor = ROLE_COLORS[userRole] || '#22C55E';
+  const roleColor = ROLE_COLORS[userRole] || '#2563EB'; // Default to CFO blue
 
   const selectedProject = useMemo(() => getProjectById(selectedProjectId), [selectedProjectId]);
   const appraisal = useMemo(() => mockAppraisals[selectedProjectId], [selectedProjectId]);
