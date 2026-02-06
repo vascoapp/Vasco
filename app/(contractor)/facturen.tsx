@@ -12,6 +12,7 @@ import {
   ScrollView,
   Pressable,
   Modal,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,9 +21,14 @@ import { Spacing } from '../../src/theme/spacing';
 import { TieredQuoteBuilder } from '../../src/components/contractor/TieredQuoteBuilder';
 import { IntegratedPayments } from '../../src/components/contractor/IntegratedPayments';
 import { useCashFlow, type Invoice } from '../../src/services/cashFlowService';
+import { InlineInsight } from '../../src/components/shared/VascoInsightCard';
+import { ContractorDashboardHeader } from '../../src/components/contractor/ContractorDashboardHeader';
+import { useInlineInsight } from '../../src/services/vascoGuidanceService';
 
 // Integrate financial auditor for invoice verification
 import { useFinancialAuditFindings } from '../../src/services/financialAuditorService';
+import { useSavingsAggregation } from '../../src/services/savingsAggregatorService';
+import { useLaborCosts } from '../../src/services/laborCostService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -48,35 +54,6 @@ interface Quote {
 // ============================================
 // COMPONENTS
 // ============================================
-
-function SummaryBar({ invoices }: { invoices: Invoice[] }) {
-  const pending = invoices.filter(i => ['sent', 'viewed'].includes(i.status));
-  const overdue = invoices.filter(i => i.status === 'overdue');
-  const pendingValue = pending.reduce((sum, i) => sum + i.amount, 0);
-  const overdueValue = overdue.reduce((sum, i) => sum + i.amount, 0);
-
-  return (
-    <View style={styles.summaryBar}>
-      <View style={styles.summaryItem}>
-        <Text style={styles.summaryValue}>€{pendingValue.toLocaleString('nl-NL')}</Text>
-        <Text style={styles.summaryLabel}>{pending.length} openstaand</Text>
-      </View>
-      {overdue.length > 0 && (
-        <>
-          <View style={styles.summaryDivider} />
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryValue, { color: SemanticColors.feedbackError }]}>
-              €{overdueValue.toLocaleString('nl-NL')}
-            </Text>
-            <Text style={[styles.summaryLabel, { color: SemanticColors.feedbackError }]}>
-              {overdue.length} verlopen
-            </Text>
-          </View>
-        </>
-      )}
-    </View>
-  );
-}
 
 function InvoiceList({ invoices }: { invoices: Invoice[] }) {
   const getStatusConfig = (status: Invoice['status']) => {
@@ -184,6 +161,15 @@ export default function FacturenScreen() {
   // Connect to services
   const { invoices, summary } = useCashFlow();
   const { findings: auditFindings } = useFinancialAuditFindings();
+  const inlineInsight = useInlineInsight('contractor', 'invoices', 'list');
+  const savings = useSavingsAggregation();
+  const labor = useLaborCosts();
+
+  // Compute KPI values
+  const pendingInvoices = invoices.filter(i => ['sent', 'viewed'].includes(i.status));
+  const overdueInvoices = invoices.filter(i => i.status === 'overdue');
+  const pendingValue = pendingInvoices.reduce((sum, i) => sum + i.amount, 0);
+  const overdueValue = overdueInvoices.reduce((sum, i) => sum + i.amount, 0);
 
   // Transform invoices to quotes
   const quotes = useMemo((): Quote[] => {
@@ -221,8 +207,16 @@ export default function FacturenScreen() {
         </Pressable>
       </View>
 
-      {/* Summary */}
-      <SummaryBar invoices={invoices} />
+      {/* KPI Header */}
+      <View style={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.xs }}>
+        <ContractorDashboardHeader
+          kpis={[
+            { icon: 'receipt', value: `€${pendingValue.toLocaleString('nl-NL')}`, label: 'Openstaand' },
+            { icon: 'alert-circle', value: overdueInvoices.length > 0 ? `€${overdueValue.toLocaleString('nl-NL')}` : '0', label: 'Verlopen', color: overdueInvoices.length > 0 ? SemanticColors.feedbackError : undefined },
+            { icon: 'document-text', value: String(quotes.length), label: 'Offertes', color: Palette.hermesOrange },
+          ]}
+        />
+      </View>
 
       {/* Audit Alert */}
       {hasAuditAlert && (
@@ -231,7 +225,16 @@ export default function FacturenScreen() {
           <Text style={styles.auditAlertText}>
             Factuur discrepantie gedetecteerd
           </Text>
-          <Pressable>
+          <Pressable onPress={() => {
+            const critical = auditFindings.find(f => f.severity === 'critical' && f.status === 'new');
+            if (critical) {
+              Alert.alert(
+                'Factuur Discrepantie',
+                `${critical.title}\n\n${critical.description}${critical.suggestedAction ? `\n\nAanbeveling: ${critical.suggestedAction.description}` : ''}`,
+                [{ text: 'Sluiten' }]
+              );
+            }
+          }}>
             <Text style={styles.auditAlertAction}>Bekijk</Text>
           </Pressable>
         </View>
@@ -290,6 +293,16 @@ export default function FacturenScreen() {
           <InvoiceList invoices={invoices} />
         )}
 
+        {/* AI Guidance */}
+        {inlineInsight && (
+          <InlineInsight
+            icon={inlineInsight.icon as IconName}
+            message={inlineInsight.message}
+            actionLabel={inlineInsight.actionLabel}
+            actionRoute={inlineInsight.actionRoute}
+          />
+        )}
+
         {/* Quick Actions */}
         <View style={styles.quickActions}>
           <Pressable style={styles.quickAction} onPress={() => setShowPayments(true)}>
@@ -300,6 +313,27 @@ export default function FacturenScreen() {
             <Ionicons name="layers-outline" size={20} color={SemanticColors.textPrimary} />
             <Text style={styles.quickActionText}>Smart Offerte</Text>
           </Pressable>
+        </View>
+
+        {/* Financial Intelligence Strip — from laborCostService + savingsAggregatorService */}
+        <View style={styles.finIntelStrip}>
+          <View style={styles.finIntelItem}>
+            <Text style={styles.finIntelValue}>€{labor.effectiveRate}/u</Text>
+            <Text style={styles.finIntelLabel}>Effectief tarief</Text>
+            <View style={styles.finIntelBadge}>
+              <Ionicons name="arrow-up" size={10} color={SemanticColors.feedbackSuccess} />
+              <Text style={styles.finIntelBadgeText}>+{labor.rateVsBenchmark}% vs branche</Text>
+            </View>
+          </View>
+          <View style={styles.finIntelDivider} />
+          <View style={styles.finIntelItem}>
+            <Text style={styles.finIntelValue}>€{savings.savingsPerJob}</Text>
+            <Text style={styles.finIntelLabel}>Besparing per klus</Text>
+            <View style={styles.finIntelBadge}>
+              <Ionicons name="trending-up" size={10} color={SemanticColors.feedbackSuccess} />
+              <Text style={styles.finIntelBadgeText}>+{savings.savingsVsBenchmark}% vs gem.</Text>
+            </View>
+          </View>
         </View>
 
         <View style={{ height: 100 }} />
@@ -313,8 +347,11 @@ export default function FacturenScreen() {
       >
         <TieredQuoteBuilder
           onSend={(quote) => {
-            console.log('Quote sent:', quote);
             setShowQuoteBuilder(false);
+            Alert.alert(
+              'Offerte verstuurd',
+              'Je offerte is succesvol aangemaakt en verstuurd naar de klant.',
+            );
           }}
           onClose={() => setShowQuoteBuilder(false)}
         />
@@ -361,32 +398,6 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-
-  // Summary Bar
-  summaryBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-  },
-  summaryItem: {
-    flex: 1,
-  },
-  summaryValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-  summaryLabel: {
-    fontSize: 12,
-    color: SemanticColors.textTertiary,
-  },
-  summaryDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: SemanticColors.borderDefault,
-    marginHorizontal: Spacing.lg,
   },
 
   // Audit Alert
@@ -574,5 +585,48 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
+  },
+
+  // Financial Intelligence Strip
+  finIntelStrip: {
+    flexDirection: 'row',
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    padding: Spacing.md,
+  },
+  finIntelItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+  },
+  finIntelValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  finIntelLabel: {
+    fontSize: 11,
+    color: SemanticColors.textSecondary,
+  },
+  finIntelBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: SemanticColors.feedbackSuccessBg,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  finIntelBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: SemanticColors.feedbackSuccess,
+  },
+  finIntelDivider: {
+    width: 1,
+    backgroundColor: SemanticColors.borderMuted,
+    marginHorizontal: Spacing.sm,
   },
 });

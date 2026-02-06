@@ -394,7 +394,7 @@ function SupplierCard({ supplier, onPress }: { supplier: Supplier; onPress: () =
       case 'bouwmarkt':
         return { label: 'Bouwmarkt', icon: 'storefront' as IconName, color: Palette.hermesOrange };
       case 'groothandel':
-        return { label: 'Groothandel', icon: 'business' as IconName, color: Palette.dustyBlue };
+        return { label: 'Groothandel', icon: 'business' as IconName, color: Palette.blue500 };
       case 'specialist':
         return { label: 'Specialist', icon: 'star' as IconName, color: Palette.sageGreen };
       case 'online':

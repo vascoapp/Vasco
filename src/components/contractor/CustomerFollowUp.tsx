@@ -15,6 +15,7 @@ import {
   Modal,
   TextInput,
   Alert,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
@@ -22,6 +23,7 @@ import {
   useFollowUps,
   useFollowUpTemplates,
   useCustomers,
+  followUpService,
   FollowUp,
   FollowUpTemplate,
   Customer,
@@ -95,7 +97,7 @@ export function CustomerFollowUp() {
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: SemanticColors.success }]}>
+          <Text style={[styles.statValue, { color: SemanticColors.feedbackSuccess }]}>
             €{statistics.savedDealValue.toLocaleString('nl-NL')}
           </Text>
           <Text style={styles.statLabel}>Deals gered</Text>
@@ -337,13 +339,13 @@ function FollowUpCard({
   const getStatusColor = (status: FollowUp['status']) => {
     switch (status) {
       case 'overdue':
-        return SemanticColors.error;
+        return SemanticColors.feedbackError;
       case 'due':
-        return SemanticColors.warning;
+        return SemanticColors.feedbackWarning;
       case 'scheduled':
         return SemanticColors.actionPrimary;
       case 'completed':
-        return SemanticColors.success;
+        return SemanticColors.feedbackSuccess;
       default:
         return SemanticColors.textSecondary;
     }
@@ -352,7 +354,7 @@ function FollowUpCard({
   const getPriorityColor = (priority: FollowUp['priority']) => {
     switch (priority) {
       case 'high':
-        return SemanticColors.error;
+        return SemanticColors.feedbackError;
       case 'medium':
         return '#FF9500';
       default:
@@ -376,15 +378,15 @@ function FollowUpCard({
         </View>
         <View style={styles.followUpMeta}>
           {followUp.status === 'overdue' && (
-            <View style={[styles.statusBadge, { backgroundColor: SemanticColors.error + '20' }]}>
-              <Text style={[styles.statusText, { color: SemanticColors.error }]}>
+            <View style={[styles.statusBadge, { backgroundColor: SemanticColors.feedbackError + '20' }]}>
+              <Text style={[styles.statusText, { color: SemanticColors.feedbackError }]}>
                 {Math.abs(followUp.dueInDays)}d te laat
               </Text>
             </View>
           )}
           {followUp.status === 'due' && (
-            <View style={[styles.statusBadge, { backgroundColor: SemanticColors.warning + '20' }]}>
-              <Text style={[styles.statusText, { color: SemanticColors.warning }]}>Vandaag</Text>
+            <View style={[styles.statusBadge, { backgroundColor: SemanticColors.feedbackWarning + '20' }]}>
+              <Text style={[styles.statusText, { color: SemanticColors.feedbackWarning }]}>Vandaag</Text>
             </View>
           )}
           {followUp.status === 'scheduled' && (
@@ -474,14 +476,17 @@ function FollowUpDetailModal({
   const [showOutcomeOptions, setShowOutcomeOptions] = useState(false);
 
   const getContactAction = () => {
-    // In production, this would open the appropriate app
+    const customer = followUpService.getCustomer(followUp.customerId);
+    const phone = customer?.phone?.replace(/\s/g, '') ?? '';
+    const email = customer?.email ?? '';
+
     Alert.alert(
       'Contact opnemen',
       'Kies een manier om contact op te nemen:',
       [
-        { text: 'WhatsApp', onPress: () => console.log('Open WhatsApp') },
-        { text: 'E-mail', onPress: () => console.log('Open Email') },
-        { text: 'Bellen', onPress: () => console.log('Open Phone') },
+        { text: 'WhatsApp', onPress: () => Linking.openURL(`https://wa.me/${phone}`) },
+        { text: 'E-mail', onPress: () => Linking.openURL(`mailto:${email}`) },
+        { text: 'Bellen', onPress: () => Linking.openURL(`tel:${phone}`) },
         { text: 'Annuleren', style: 'cancel' },
       ]
     );
@@ -522,7 +527,7 @@ function FollowUpDetailModal({
             <View style={styles.insightsList}>
               {followUp.personalizationFactors.map((factor, idx) => (
                 <View key={idx} style={styles.insightItem}>
-                  <Ionicons name="checkmark-circle" size={16} color={SemanticColors.success} />
+                  <Ionicons name="checkmark-circle" size={16} color={SemanticColors.feedbackSuccess} />
                   <Text style={styles.insightText}>{factor}</Text>
                 </View>
               ))}
@@ -574,7 +579,7 @@ function FollowUpDetailModal({
         {/* Actions */}
         {followUp.status === 'completed' ? (
           <View style={styles.completedInfo}>
-            <Ionicons name="checkmark-circle" size={24} color={SemanticColors.success} />
+            <Ionicons name="checkmark-circle" size={24} color={SemanticColors.feedbackSuccess} />
             <Text style={styles.completedText}>
               Afgerond op {new Date(followUp.completedAt!).toLocaleDateString('nl-NL')}
             </Text>
@@ -608,7 +613,7 @@ function FollowUpDetailModal({
                   );
                 }}
               >
-                <Ionicons name="trash-outline" size={20} color={SemanticColors.error} />
+                <Ionicons name="trash-outline" size={20} color={SemanticColors.feedbackError} />
               </TouchableOpacity>
             </View>
 
@@ -643,7 +648,7 @@ function FollowUpDetailModal({
                 style={styles.outcomeOption}
                 onPress={() => onComplete('converted')}
               >
-                <Ionicons name="trophy-outline" size={24} color={SemanticColors.success} />
+                <Ionicons name="trophy-outline" size={24} color={SemanticColors.feedbackSuccess} />
                 <Text style={styles.outcomeOptionText}>Deal gewonnen!</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -657,7 +662,7 @@ function FollowUpDetailModal({
                 style={styles.outcomeOption}
                 onPress={() => onComplete('declined')}
               >
-                <Ionicons name="close-circle-outline" size={24} color={SemanticColors.error} />
+                <Ionicons name="close-circle-outline" size={24} color={SemanticColors.feedbackError} />
                 <Text style={styles.outcomeOptionText}>Afgewezen</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -882,7 +887,7 @@ const styles = StyleSheet.create({
   // Stats Header
   statsHeader: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingVertical: 16,
     paddingHorizontal: 12,
   },
@@ -902,7 +907,7 @@ const styles = StyleSheet.create({
   },
   statDivider: {
     width: 1,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     marginVertical: 8,
   },
 
@@ -945,10 +950,10 @@ const styles = StyleSheet.create({
   // Tab Bar
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfacePrimary,
     marginTop: 12,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   tab: {
     flex: 1,
@@ -971,7 +976,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   badge: {
-    backgroundColor: SemanticColors.error,
+    backgroundColor: SemanticColors.feedbackError,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -1004,7 +1009,7 @@ const styles = StyleSheet.create({
   suggestionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 10,
     padding: 12,
     marginBottom: 8,
@@ -1056,7 +1061,7 @@ const styles = StyleSheet.create({
 
   // Follow-up Card
   followUpCard: {
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1148,7 +1153,7 @@ const styles = StyleSheet.create({
   confidenceBar: {
     flex: 1,
     height: 4,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -1168,7 +1173,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: SemanticColors.success,
+    backgroundColor: SemanticColors.feedbackSuccess,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 12,
@@ -1199,7 +1204,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
@@ -1210,7 +1215,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   modalTitle: {
     fontSize: 18,
@@ -1228,7 +1233,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
     alignItems: 'center',
   },
 
@@ -1294,7 +1299,7 @@ const styles = StyleSheet.create({
   },
   responsePredict: {
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
     paddingTop: 12,
   },
   responsePredictLabel: {
@@ -1304,14 +1309,14 @@ const styles = StyleSheet.create({
   },
   responsePredictBar: {
     height: 6,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 3,
     overflow: 'hidden',
     marginBottom: 4,
   },
   responsePredictFill: {
     height: '100%',
-    backgroundColor: SemanticColors.success,
+    backgroundColor: SemanticColors.feedbackSuccess,
     borderRadius: 3,
   },
   responsePredictValue: {
@@ -1391,7 +1396,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: SemanticColors.error + '15',
+    backgroundColor: SemanticColors.feedbackError + '15',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1416,7 +1421,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderRadius: 10,
-    backgroundColor: SemanticColors.success,
+    backgroundColor: SemanticColors.feedbackSuccess,
   },
   completeButtonText: {
     color: '#FFFFFF',
@@ -1432,11 +1437,11 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   completedText: {
     fontSize: 14,
-    color: SemanticColors.success,
+    color: SemanticColors.feedbackSuccess,
   },
 
   // Outcome Modal
@@ -1448,7 +1453,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   outcomeModal: {
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: 20,
     width: '100%',
@@ -1486,7 +1491,7 @@ const styles = StyleSheet.create({
 
   // Schedule Modal
   scheduleModal: {
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '85%',
@@ -1599,7 +1604,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   scheduleCancelButton: {
     paddingHorizontal: 24,

@@ -268,6 +268,13 @@ export {
   useWorkflowStats,
 } from './crossRoleWorkflowService';
 
+// Agent Actions Service
+export {
+  agentActionsService,
+  usePendingActions,
+  useActionStats,
+} from './agentActionsService';
+
 // Phase 10: Predictive Capacity Planning
 export {
   capacityPlanningService,

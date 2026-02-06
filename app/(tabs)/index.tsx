@@ -27,7 +27,7 @@ export default function HomeScreen() {
   const renderDashboard = () => {
     switch (user.role) {
       case 'cfo':
-        return <CFODashboard initialTab="finance" showTabBar={false} />;
+        return <CFODashboard initialTab="overview" showTabBar={false} />;
       case 'coo':
         return <COODashboard initialTab="overview" showTabBar={false} />;
       case 'site-lead':

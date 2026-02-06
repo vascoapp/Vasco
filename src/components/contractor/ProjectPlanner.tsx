@@ -407,7 +407,7 @@ export function ProjectPlanner() {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setShowPredictModal(false)}>
-              <Ionicons name="close" size={24} color={SemanticColors.text} />
+              <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Project voorspellen</Text>
             <TouchableOpacity onPress={handlePredict}>
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   tab: {
     flex: 1,
@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 12,
   },
   predictButtonContent: {
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
   predictButtonTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   predictButtonSubtitle: {
     fontSize: 13,
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   predictionHeader: {
     flexDirection: 'row',
@@ -554,7 +554,7 @@ const styles = StyleSheet.create({
   predictionType: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   predictionConfidence: {
     fontSize: 13,
@@ -589,7 +589,7 @@ const styles = StyleSheet.create({
   },
   rangeBar: {
     height: 8,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 4,
     marginBottom: 4,
   },
@@ -634,7 +634,7 @@ const styles = StyleSheet.create({
   dateValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
 
   // Weather Warning
@@ -656,13 +656,13 @@ const styles = StyleSheet.create({
   // Factors
   factorsSection: {
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
     paddingTop: 16,
   },
   factorsTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
   factorRow: {
@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
   factorName: {
     fontSize: 14,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   factorDesc: {
     fontSize: 12,
@@ -694,7 +694,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 12,
   },
   emptyText: {
@@ -733,7 +733,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   materialHeader: {
     flexDirection: 'row',
@@ -744,7 +744,7 @@ const styles = StyleSheet.create({
   materialName: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   materialCost: {
     fontSize: 16,
@@ -764,7 +764,7 @@ const styles = StyleSheet.create({
   detailValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   detailRange: {
     fontSize: 12,
@@ -772,7 +772,7 @@ const styles = StyleSheet.create({
   },
   confidenceBar: {
     height: 4,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 2,
   },
   confidenceFill: {
@@ -788,7 +788,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   capacitySubtitle: {
     fontSize: 13,
@@ -820,7 +820,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   capacityRow: {
     flexDirection: 'row',
@@ -838,7 +838,7 @@ const styles = StyleSheet.create({
   },
   capacityBar: {
     height: 8,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 4,
   },
   capacityFill: {
@@ -868,7 +868,7 @@ const styles = StyleSheet.create({
   capacityTipText: {
     flex: 1,
     fontSize: 13,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     lineHeight: 18,
   },
 
@@ -885,7 +885,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   templateHeader: {
     flexDirection: 'row',
@@ -907,7 +907,7 @@ const styles = StyleSheet.create({
   templateName: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   templateCategory: {
     fontSize: 13,
@@ -927,7 +927,7 @@ const styles = StyleSheet.create({
   templateStatValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   templateStatLabel: {
     fontSize: 11,
@@ -940,7 +940,7 @@ const styles = StyleSheet.create({
   phasesTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   phasesTimeline: {
@@ -964,11 +964,11 @@ const styles = StyleSheet.create({
     left: 10,
     width: 20,
     height: 2,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
   },
   phaseName: {
     fontSize: 11,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 4,
   },
   phaseDuration: {
@@ -981,7 +981,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
     gap: 6,
   },
   useTemplateText: {
@@ -1002,13 +1002,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
     backgroundColor: SemanticColors.surfacePrimary,
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   modalAction: {
     fontSize: 16,
@@ -1022,7 +1022,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 12,
     marginTop: 8,
   },
@@ -1038,7 +1038,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: SemanticColors.surfacePrimary,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   typeOptionSelected: {
     backgroundColor: Palette.blue500,
@@ -1046,7 +1046,7 @@ const styles = StyleSheet.create({
   },
   typeOptionText: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   typeOptionTextSelected: {
     color: '#fff',
@@ -1061,7 +1061,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   scopeOptionSelected: {
     backgroundColor: Palette.blue500 + '15',
@@ -1070,7 +1070,7 @@ const styles = StyleSheet.create({
   scopeLabel: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   scopeLabelSelected: {
     color: Palette.blue500,
@@ -1090,7 +1090,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 12,
   },
   outdoorContent: {
@@ -1099,7 +1099,7 @@ const styles = StyleSheet.create({
   outdoorLabel: {
     fontSize: 15,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   outdoorHint: {
     fontSize: 13,

@@ -98,7 +98,7 @@ export function ContractorNetwork() {
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: SemanticColors.success }]}>
+          <Text style={[styles.statValue, { color: SemanticColors.feedbackSuccess }]}>
             €{myStats.totalEarnedFromReferrals.toLocaleString('nl-NL')}
           </Text>
           <Text style={styles.statLabel}>Verdiend</Text>
@@ -286,7 +286,7 @@ function NetworkTab({
                   style={styles.declineButton}
                   onPress={() => onDeclineRequest(request.id)}
                 >
-                  <Ionicons name="close" size={20} color={SemanticColors.error} />
+                  <Ionicons name="close" size={20} color={SemanticColors.feedbackError} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.acceptButton}
@@ -336,7 +336,7 @@ function NetworkTab({
               </View>
               <View style={[
                 styles.availabilityIndicator,
-                { backgroundColor: contractor.availability === 'available' ? SemanticColors.success : '#FF9500' }
+                { backgroundColor: contractor.availability === 'available' ? SemanticColors.feedbackSuccess : '#FF9500' }
               ]} />
             </TouchableOpacity>
           ))}
@@ -456,10 +456,10 @@ function ReferralCard({
 
   const getStatusColor = (status: Referral['status']) => {
     switch (status) {
-      case 'pending': return SemanticColors.warning;
+      case 'pending': return SemanticColors.feedbackWarning;
       case 'accepted': return SemanticColors.actionPrimary;
-      case 'completed': return SemanticColors.success;
-      case 'declined': return SemanticColors.error;
+      case 'completed': return SemanticColors.feedbackSuccess;
+      case 'declined': return SemanticColors.feedbackError;
       default: return SemanticColors.textSecondary;
     }
   };
@@ -478,11 +478,11 @@ function ReferralCard({
   if (compact) {
     return (
       <TouchableOpacity style={styles.referralCardCompact} onPress={onPress}>
-        <View style={[styles.referralDirection, { backgroundColor: isReceived ? SemanticColors.success + '20' : SemanticColors.actionPrimary + '20' }]}>
+        <View style={[styles.referralDirection, { backgroundColor: isReceived ? SemanticColors.feedbackSuccess + '20' : SemanticColors.actionPrimary + '20' }]}>
           <Ionicons
             name={isReceived ? 'arrow-down' : 'arrow-up'}
             size={16}
-            color={isReceived ? SemanticColors.success : SemanticColors.actionPrimary}
+            color={isReceived ? SemanticColors.feedbackSuccess : SemanticColors.actionPrimary}
           />
         </View>
         <View style={styles.referralCompactInfo}>
@@ -503,11 +503,11 @@ function ReferralCard({
   return (
     <TouchableOpacity style={styles.referralCard} onPress={onPress}>
       <View style={styles.referralHeader}>
-        <View style={[styles.referralDirection, { backgroundColor: isReceived ? SemanticColors.success + '20' : SemanticColors.actionPrimary + '20' }]}>
+        <View style={[styles.referralDirection, { backgroundColor: isReceived ? SemanticColors.feedbackSuccess + '20' : SemanticColors.actionPrimary + '20' }]}>
           <Ionicons
             name={isReceived ? 'arrow-down' : 'arrow-up'}
             size={20}
-            color={isReceived ? SemanticColors.success : SemanticColors.actionPrimary}
+            color={isReceived ? SemanticColors.feedbackSuccess : SemanticColors.actionPrimary}
           />
         </View>
         <View style={styles.referralInfo}>
@@ -670,7 +670,7 @@ function ContractorListItem({
 
       {isConnected ? (
         <View style={styles.connectedBadge}>
-          <Ionicons name="checkmark-circle" size={20} color={SemanticColors.success} />
+          <Ionicons name="checkmark-circle" size={20} color={SemanticColors.feedbackSuccess} />
         </View>
       ) : (
         <TouchableOpacity
@@ -804,7 +804,7 @@ function ContractorProfileModal({
             <View style={styles.availabilityRow}>
               <View style={[
                 styles.availabilityDot,
-                { backgroundColor: contractor.availability === 'available' ? SemanticColors.success : '#FF9500' }
+                { backgroundColor: contractor.availability === 'available' ? SemanticColors.feedbackSuccess : '#FF9500' }
               ]} />
               <Text style={styles.availabilityText}>
                 {contractor.availability === 'available'
@@ -863,11 +863,11 @@ function ReferralDetailModal({
         <ScrollView style={styles.modalBody}>
           {/* Direction */}
           <View style={styles.referralDetailHeader}>
-            <View style={[styles.referralDirectionLarge, { backgroundColor: isReceived ? SemanticColors.success + '20' : SemanticColors.actionPrimary + '20' }]}>
+            <View style={[styles.referralDirectionLarge, { backgroundColor: isReceived ? SemanticColors.feedbackSuccess + '20' : SemanticColors.actionPrimary + '20' }]}>
               <Ionicons
                 name={isReceived ? 'arrow-down' : 'arrow-up'}
                 size={32}
-                color={isReceived ? SemanticColors.success : SemanticColors.actionPrimary}
+                color={isReceived ? SemanticColors.feedbackSuccess : SemanticColors.actionPrimary}
               />
             </View>
             <Text style={styles.referralDetailDirection}>
@@ -914,7 +914,7 @@ function ReferralDetailModal({
           {/* Commission Info */}
           {referral.status === 'completed' && (
             <View style={styles.commissionBox}>
-              <Ionicons name="cash" size={24} color={SemanticColors.success} />
+              <Ionicons name="cash" size={24} color={SemanticColors.feedbackSuccess} />
               <View style={styles.commissionContent}>
                 <Text style={styles.commissionTitle}>
                   {isReceived ? 'Commissie betaald' : 'Commissie ontvangen'}
@@ -1110,7 +1110,7 @@ const styles = StyleSheet.create({
   // Stats Header
   statsHeader: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     paddingVertical: 16,
     paddingHorizontal: 12,
   },
@@ -1130,16 +1130,16 @@ const styles = StyleSheet.create({
   },
   statDivider: {
     width: 1,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     marginVertical: 8,
   },
 
   // Tab Bar
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   tab: {
     flex: 1,
@@ -1162,7 +1162,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   badge: {
-    backgroundColor: SemanticColors.error,
+    backgroundColor: SemanticColors.feedbackError,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -1180,7 +1180,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     margin: 16,
     marginBottom: 0,
     paddingHorizontal: 16,
@@ -1233,7 +1233,7 @@ const styles = StyleSheet.create({
   requestCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1273,7 +1273,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: SemanticColors.error + '15',
+    backgroundColor: SemanticColors.feedbackError + '15',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1281,7 +1281,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: SemanticColors.success,
+    backgroundColor: SemanticColors.feedbackSuccess,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1294,7 +1294,7 @@ const styles = StyleSheet.create({
   },
   connectionCard: {
     width: '47%',
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -1313,7 +1313,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -2,
     right: -2,
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 8,
   },
   connectionName: {
@@ -1383,7 +1383,7 @@ const styles = StyleSheet.create({
 
   // Referral Card
   referralCard: {
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1391,7 +1391,7 @@ const styles = StyleSheet.create({
   referralCardCompact: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 10,
     padding: 12,
     marginBottom: 8,
@@ -1464,7 +1464,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
     paddingTop: 12,
   },
   referralDeclineButton: {
@@ -1486,7 +1486,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: SemanticColors.success,
+    backgroundColor: SemanticColors.feedbackSuccess,
   },
   referralAcceptText: {
     fontSize: 14,
@@ -1555,7 +1555,7 @@ const styles = StyleSheet.create({
   contractorListItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1636,7 +1636,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
@@ -1647,7 +1647,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   modalTitle: {
     fontSize: 18,
@@ -1672,7 +1672,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   modalDeclineButton: {
     flex: 1,
@@ -1693,7 +1693,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     borderRadius: 10,
-    backgroundColor: SemanticColors.success,
+    backgroundColor: SemanticColors.feedbackSuccess,
   },
   modalAcceptText: {
     fontSize: 16,
@@ -1726,7 +1726,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
   },
   profileName: {
@@ -1777,7 +1777,7 @@ const styles = StyleSheet.create({
   },
   profileStatDivider: {
     width: 1,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     marginHorizontal: 12,
   },
   profileSection: {
@@ -1820,7 +1820,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   referralInfoLabel: {
     fontSize: 14,
@@ -1849,7 +1849,7 @@ const styles = StyleSheet.create({
   profileActions: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   sendReferralButton: {
     flexDirection: 'row',
@@ -1949,7 +1949,7 @@ const styles = StyleSheet.create({
   commissionBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.success + '15',
+    backgroundColor: SemanticColors.feedbackSuccess + '15',
     borderRadius: 12,
     padding: 16,
     gap: 12,
@@ -1960,12 +1960,12 @@ const styles = StyleSheet.create({
   },
   commissionTitle: {
     fontSize: 14,
-    color: SemanticColors.success,
+    color: SemanticColors.feedbackSuccess,
   },
   commissionAmount: {
     fontSize: 20,
     fontWeight: '700',
-    color: SemanticColors.success,
+    color: SemanticColors.feedbackSuccess,
     marginTop: 2,
   },
   feedbackSection: {
@@ -1996,7 +1996,7 @@ const styles = StyleSheet.create({
 
   // Send Referral Modal
   sendReferralModal: {
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
@@ -2067,7 +2067,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   cancelSendButton: {
     paddingHorizontal: 24,

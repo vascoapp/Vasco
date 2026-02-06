@@ -12,6 +12,7 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
@@ -365,11 +366,59 @@ export const CustomerInsights: React.FC = () => {
   );
 
   const handleViewCustomer = (customer: CustomerProfile) => {
-    console.log('View customer:', customer.id);
+    const daysSinceContact = Math.floor(
+      (Date.now() - customer.lastContact.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const typeLabel = customer.type === 'commercial' ? 'Zakelijk' : 'Particulier';
+    const paymentLabels: Record<string, string> = {
+      excellent: 'Uitstekend',
+      good: 'Goed',
+      average: 'Gemiddeld',
+      poor: 'Slecht',
+    };
+
+    Alert.alert(
+      customer.name,
+      `Type: ${typeLabel}\n` +
+      `Telefoon: ${customer.phone}\n` +
+      (customer.email ? `E-mail: ${customer.email}\n` : '') +
+      `Adres: ${customer.address}, ${customer.city}\n\n` +
+      `Totaal klussen: ${customer.totalJobs}\n` +
+      `Gem. kluswaarde: \u20AC${customer.avgJobValue.toLocaleString()}\n` +
+      `Lifetime value: \u20AC${customer.lifetimeValue.toLocaleString()}\n` +
+      `Tevredenheid: ${customer.satisfaction.toFixed(1)} / 5\n` +
+      `Betaalgedrag: ${paymentLabels[customer.paymentBehavior] ?? customer.paymentBehavior}\n` +
+      `Laatste contact: ${daysSinceContact} dagen geleden`,
+      [{ text: 'Sluiten', style: 'cancel' }],
+    );
   };
 
   const handleTakeAction = (prediction: ChurnPrediction) => {
-    console.log('Take action for:', prediction.customerId);
+    const daysSinceContact = Math.floor(
+      (Date.now() - prediction.lastContact.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    Alert.alert(
+      `Actie voor ${prediction.customerName}`,
+      `Churn risico: ${prediction.probability}%\n` +
+      `Lifetime value: \u20AC${prediction.lifetimeValue.toLocaleString()}\n` +
+      `Laatste contact: ${daysSinceContact} dagen geleden`,
+      [
+        { text: 'Annuleren', style: 'cancel' },
+        {
+          text: 'Contact opnemen',
+          onPress: () => {
+            Alert.alert('Contact opnemen', `Neem contact op met ${prediction.customerName}.`);
+          },
+        },
+        {
+          text: 'Herinnering sturen',
+          onPress: () => {
+            Alert.alert('Herinnering', `Herinnering verstuurd naar ${prediction.customerName}.`);
+          },
+        },
+      ],
+    );
   };
 
   const renderContent = () => {
@@ -483,7 +532,7 @@ export const CustomerInsights: React.FC = () => {
       <View style={styles.header}>
         <Text style={styles.title}>Klant Inzichten</Text>
         <TouchableOpacity style={styles.filterButton}>
-          <Ionicons name="filter-outline" size={24} color={SemanticColors.text} />
+          <Ionicons name="filter-outline" size={24} color={SemanticColors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -533,12 +582,12 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: SemanticColors.surfacePrimary,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   filterButton: {
     width: 40,
@@ -591,14 +640,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   searchInput: {
     flex: 1,
     paddingVertical: 12,
     paddingHorizontal: 8,
     fontSize: 16,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   statsRow: {
     flexDirection: 'row',
@@ -612,7 +661,7 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   statIconContainer: {
     width: 36,
@@ -625,7 +674,7 @@ const styles = StyleSheet.create({
   statCardValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   statCardLabel: {
     fontSize: 11,
@@ -647,7 +696,7 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: 12,
     fontSize: 16,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     fontWeight: '500',
   },
   emptySubtext: {
@@ -661,7 +710,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   customerHeader: {
     flexDirection: 'row',
@@ -680,7 +729,7 @@ const styles = StyleSheet.create({
   customerName: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   customerTypeBadge: {
     backgroundColor: SemanticColors.actionPrimary + '20',
@@ -732,7 +781,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   statLabel: {
     fontSize: 11,
@@ -741,7 +790,7 @@ const styles = StyleSheet.create({
   },
   statDivider: {
     width: 1,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     marginHorizontal: 12,
   },
   tagsRow: {
@@ -764,7 +813,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   contactInfo: {
     gap: 8,
@@ -777,7 +826,7 @@ const styles = StyleSheet.create({
   },
   contactText: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   equipmentSection: {
     marginBottom: 12,
@@ -785,7 +834,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   equipmentItem: {
@@ -829,7 +878,7 @@ const styles = StyleSheet.create({
   segmentsTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   segmentsSubtitle: {
     fontSize: 14,
@@ -842,7 +891,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   segmentHeader: {
     flexDirection: 'row',
@@ -853,7 +902,7 @@ const styles = StyleSheet.create({
   segmentName: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   segmentCount: {
     backgroundColor: SemanticColors.actionPrimary,
@@ -882,7 +931,7 @@ const styles = StyleSheet.create({
   segmentStatValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   segmentStatLabel: {
     fontSize: 12,
@@ -894,7 +943,7 @@ const styles = StyleSheet.create({
   criteriaLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 6,
   },
   criteriaList: {
@@ -919,12 +968,12 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   recommendationsLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   recommendationItem: {
@@ -935,7 +984,7 @@ const styles = StyleSheet.create({
   },
   recommendationText: {
     fontSize: 13,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   churnHeader: {
     flexDirection: 'row',
@@ -967,7 +1016,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   churnInfo: {
     flex: 1,
@@ -975,7 +1024,7 @@ const styles = StyleSheet.create({
   churnCustomerName: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   churnLastContact: {
     fontSize: 13,
@@ -1019,7 +1068,7 @@ const styles = StyleSheet.create({
   factorsLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 6,
   },
   factorItem: {
@@ -1038,7 +1087,7 @@ const styles = StyleSheet.create({
   suggestedActionsLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 6,
   },
   actionItem: {
@@ -1049,7 +1098,7 @@ const styles = StyleSheet.create({
   },
   actionItemText: {
     fontSize: 13,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   takeActionButton: {
     flexDirection: 'row',

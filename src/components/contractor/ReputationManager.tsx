@@ -72,7 +72,7 @@ export function ReputationManager() {
           key={star}
           name={star <= rating ? 'star' : 'star-outline'}
           size={size}
-          color={star <= rating ? Palette.orange500 : SemanticColors.border}
+          color={star <= rating ? Palette.orange500 : SemanticColors.borderDefault}
         />
       ))}
     </View>
@@ -439,7 +439,7 @@ export function ReputationManager() {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setShowResponseModal(false)}>
-              <Ionicons name="close" size={24} color={SemanticColors.text} />
+              <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Reageren</Text>
             <TouchableOpacity onPress={submitResponse} disabled={!responseText.trim()}>
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   tab: {
     flex: 1,
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: SemanticColors.surfacePrimary,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     marginRight: 8,
     gap: 4,
   },
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
   },
   filterChipText: {
     fontSize: 13,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   filterChipTextActive: {
     color: '#fff',
@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   reviewHeader: {
     flexDirection: 'row',
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
   reviewerName: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   reviewDate: {
     fontSize: 12,
@@ -619,12 +619,12 @@ const styles = StyleSheet.create({
   reviewTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 6,
   },
   reviewContent: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -678,7 +678,7 @@ const styles = StyleSheet.create({
   },
   responseText: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     lineHeight: 18,
   },
   responseDate: {
@@ -711,7 +711,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 12,
   },
   emptyText: {
@@ -730,7 +730,7 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 20,
   },
   scoreCircle: {
@@ -758,7 +758,7 @@ const styles = StyleSheet.create({
   scoreTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   trendBadge: {
@@ -787,12 +787,12 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
   categoryRow: {
@@ -803,7 +803,7 @@ const styles = StyleSheet.create({
   categoryLabel: {
     width: 100,
     fontSize: 13,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   categoryBarContainer: {
     flex: 1,
@@ -814,7 +814,7 @@ const styles = StyleSheet.create({
   categoryBar: {
     flex: 1,
     height: 8,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 4,
   },
   categoryFill: {
@@ -825,7 +825,7 @@ const styles = StyleSheet.create({
     width: 28,
     fontSize: 13,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     textAlign: 'right',
   },
 
@@ -835,7 +835,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   responseStatsRow: {
     flexDirection: 'row',
@@ -847,7 +847,7 @@ const styles = StyleSheet.create({
   responseStatValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   responseStatLabel: {
     fontSize: 12,
@@ -865,7 +865,7 @@ const styles = StyleSheet.create({
   certHeaderTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   certHeaderSubtitle: {
     fontSize: 14,
@@ -879,7 +879,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 12,
   },
   certIcon: {
@@ -896,7 +896,7 @@ const styles = StyleSheet.create({
   certName: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   certIssuer: {
     fontSize: 13,
@@ -943,19 +943,19 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   ratingsOverview: {
     alignItems: 'center',
     marginRight: 20,
     paddingRight: 20,
     borderRightWidth: 1,
-    borderRightColor: SemanticColors.border,
+    borderRightColor: SemanticColors.borderDefault,
   },
   avgRating: {
     fontSize: 40,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   totalReviews: {
     fontSize: 12,
@@ -974,13 +974,13 @@ const styles = StyleSheet.create({
   },
   distributionLabel: {
     fontSize: 12,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     width: 12,
   },
   distributionBar: {
     flex: 1,
     height: 6,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 3,
   },
   distributionFill: {
@@ -1002,7 +1002,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   keywordsList: {
     flexDirection: 'row',
@@ -1033,7 +1033,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   responseCardHeader: {
     flexDirection: 'row',
@@ -1048,7 +1048,7 @@ const styles = StyleSheet.create({
   },
   responseBar: {
     height: 8,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 4,
     marginBottom: 8,
   },
@@ -1070,7 +1070,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 12,
   },
   trendContent: {
@@ -1098,13 +1098,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
     backgroundColor: SemanticColors.surfacePrimary,
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   modalAction: {
     fontSize: 16,
@@ -1124,7 +1124,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   reviewPreviewHeader: {
     flexDirection: 'row',
@@ -1135,7 +1135,7 @@ const styles = StyleSheet.create({
   reviewPreviewName: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   reviewPreviewContent: {
     fontSize: 14,
@@ -1147,9 +1147,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     fontSize: 15,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     minHeight: 150,
     marginBottom: 16,
   },
@@ -1161,7 +1161,7 @@ const styles = StyleSheet.create({
   responseTipsTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   responseTipsItem: {

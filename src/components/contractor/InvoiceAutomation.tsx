@@ -11,6 +11,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
@@ -286,7 +287,19 @@ export const InvoiceAutomation: React.FC = () => {
   });
 
   const handleView = (invoice: AutoInvoice) => {
-    console.log('View invoice:', invoice.id);
+    const statusLabels: Record<string, string> = {
+      draft: 'Concept',
+      sent: 'Verzonden',
+      viewed: 'Bekeken',
+      paid: 'Betaald',
+      overdue: 'Te laat',
+      reminded: 'Herinnerd',
+      collection: 'Incasso',
+    };
+    Alert.alert(
+      `Factuur ${invoice.invoiceNumber}`,
+      `Klant: ${invoice.customerName}\nBedrag: \u20AC${invoice.total.toFixed(2)}\nStatus: ${statusLabels[invoice.status] || invoice.status}`,
+    );
   };
 
   const handleSend = (invoiceId: string) => {
@@ -424,12 +437,12 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: SemanticColors.surfacePrimary,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   addButton: {
     width: 40,
@@ -466,7 +479,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   statLabel: {
     fontSize: 11,
@@ -529,13 +542,13 @@ const styles = StyleSheet.create({
   reminderCustomer: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 2,
   },
   reminderAmount: {
     fontSize: 18,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   reminderDetails: {
     marginBottom: 12,
@@ -580,7 +593,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 8,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   tab: {
     flexDirection: 'row',
@@ -603,7 +616,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.actionPrimary,
   },
   tabBadge: {
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 8,
@@ -648,7 +661,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   invoiceHeader: {
     flexDirection: 'row',
@@ -668,7 +681,7 @@ const styles = StyleSheet.create({
   customerName: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 4,
   },
   invoiceAmountSection: {
@@ -677,7 +690,7 @@ const styles = StyleSheet.create({
   invoiceAmount: {
     fontSize: 20,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 6,
   },
   statusBadge: {
@@ -701,7 +714,7 @@ const styles = StyleSheet.create({
   metaDivider: {
     width: 1,
     height: 12,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     marginHorizontal: 10,
   },
   metaText: {
@@ -712,7 +725,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   lineItemsSection: {
     marginBottom: 16,
@@ -720,7 +733,7 @@ const styles = StyleSheet.create({
   lineItemsTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   lineItem: {
@@ -728,12 +741,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   lineItemDesc: {
     flex: 1,
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   lineItemQty: {
     fontSize: 13,
@@ -743,7 +756,7 @@ const styles = StyleSheet.create({
   lineItemPrice: {
     fontSize: 14,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     width: 80,
     textAlign: 'right',
   },
@@ -758,23 +771,23 @@ const styles = StyleSheet.create({
   },
   totalValue: {
     fontSize: 13,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   grandTotal: {
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   grandTotalLabel: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   grandTotalValue: {
     fontSize: 17,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   remindersSection: {
     marginBottom: 16,
@@ -782,7 +795,7 @@ const styles = StyleSheet.create({
   remindersTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   reminderItem: {

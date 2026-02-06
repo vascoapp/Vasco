@@ -21,7 +21,7 @@ const getTabsForRole = (role: UserRole | undefined): {
   switch (role) {
     case 'cfo':
       return [
-        { name: 'index', title: 'Finance', icon: 'wallet-outline', iconFocused: 'wallet' },
+        { name: 'index', title: 'Overview', icon: 'analytics-outline', iconFocused: 'analytics' },
         { name: 'cfo-costs', title: 'Costs', icon: 'trending-down-outline', iconFocused: 'trending-down' },
         { name: 'cfo-cashflow', title: 'Cash Flow', icon: 'cash-outline', iconFocused: 'cash' },
         { name: 'cfo-returns', title: 'Returns', icon: 'pie-chart-outline', iconFocused: 'pie-chart' },
@@ -35,10 +35,10 @@ const getTabsForRole = (role: UserRole | undefined): {
       ];
     case 'site-lead':
       return [
-        { name: 'index', title: 'Progress', icon: 'speedometer-outline', iconFocused: 'speedometer' },
-        { name: 'site-safety', title: 'Safety', icon: 'shield-checkmark-outline', iconFocused: 'shield-checkmark' },
-        { name: 'site-quality', title: 'Quality', icon: 'ribbon-outline', iconFocused: 'ribbon' },
-        { name: 'site-issues', title: 'Issues', icon: 'warning-outline', iconFocused: 'warning' },
+        { name: 'index', title: 'Overzicht', icon: 'grid-outline', iconFocused: 'grid' },
+        { name: 'site-safety', title: 'Veiligheid', icon: 'shield-checkmark-outline', iconFocused: 'shield-checkmark' },
+        { name: 'site-quality', title: 'Kwaliteit', icon: 'ribbon-outline', iconFocused: 'ribbon' },
+        { name: 'site-schedule', title: 'Planning', icon: 'calendar-outline', iconFocused: 'calendar' },
       ];
     case 'director':
       return [
@@ -98,7 +98,7 @@ export default function TabsLayout() {
       ))}
       {/* Hide tabs not in current role's configuration */}
       {!tabs.find(t => t.name === 'work') && <Tabs.Screen name="work" options={{ href: null }} />}
-      {!tabs.find(t => t.name === 'hub') && <Tabs.Screen name="hub" options={{ href: null }} />}
+      <Tabs.Screen name="hub" options={{ href: null }} />
       {!tabs.find(t => t.name === 'tools') && <Tabs.Screen name="tools" options={{ href: null }} />}
       {!tabs.find(t => t.name === 'planning') && <Tabs.Screen name="planning" options={{ href: null }} />}
       {/* COO tabs */}
@@ -112,7 +112,8 @@ export default function TabsLayout() {
       {/* Site Lead tabs */}
       {!tabs.find(t => t.name === 'site-safety') && <Tabs.Screen name="site-safety" options={{ href: null }} />}
       {!tabs.find(t => t.name === 'site-quality') && <Tabs.Screen name="site-quality" options={{ href: null }} />}
-      {!tabs.find(t => t.name === 'site-issues') && <Tabs.Screen name="site-issues" options={{ href: null }} />}
+      {!tabs.find(t => t.name === 'site-schedule') && <Tabs.Screen name="site-schedule" options={{ href: null }} />}
+      <Tabs.Screen name="site-issues" options={{ href: null }} />
       {/* Director tabs */}
       {!tabs.find(t => t.name === 'dir-approvals') && <Tabs.Screen name="dir-approvals" options={{ href: null }} />}
       {!tabs.find(t => t.name === 'dir-risks') && <Tabs.Screen name="dir-risks" options={{ href: null }} />}

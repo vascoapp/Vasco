@@ -62,7 +62,7 @@ export function ServiceContracts() {
         <Text style={styles.statLabel}>Actief</Text>
       </View>
       <View style={styles.statItem}>
-        <Text style={[styles.statValue, { color: Palette.success }]}>
+        <Text style={[styles.statValue, { color: SemanticColors.feedbackSuccess }]}>
           €{stats.monthlyRecurringRevenue}
         </Text>
         <Text style={styles.statLabel}>MRR</Text>
@@ -136,7 +136,7 @@ export function ServiceContracts() {
           <View style={styles.templateServices}>
             {template.services.slice(0, 2).map((s, i) => (
               <View key={i} style={styles.templateService}>
-                <Ionicons name="checkmark" size={14} color={Palette.success} />
+                <Ionicons name="checkmark" size={14} color={SemanticColors.feedbackSuccess} />
                 <Text style={styles.templateServiceText}>{s.name}</Text>
               </View>
             ))}
@@ -253,8 +253,8 @@ export function ServiceContracts() {
               <View style={styles.renewalDays}>
                 <Text style={[
                   styles.renewalDaysValue,
-                  renewal.daysUntilRenewal < 30 && { color: Palette.warning },
-                  renewal.daysUntilRenewal < 14 && { color: Palette.error },
+                  renewal.daysUntilRenewal < 30 && { color: SemanticColors.feedbackWarning },
+                  renewal.daysUntilRenewal < 14 && { color: SemanticColors.feedbackError },
                 ]}>
                   {renewal.daysUntilRenewal}
                 </Text>
@@ -274,8 +274,8 @@ export function ServiceContracts() {
                   €{renewal.suggestedPrice}
                 </Text>
               </View>
-              <View style={[styles.priceChange, { backgroundColor: renewal.priceChange > 0 ? Palette.warning + '20' : Palette.success + '20' }]}>
-                <Text style={[styles.priceChangeText, { color: renewal.priceChange > 0 ? Palette.warning : Palette.success }]}>
+              <View style={[styles.priceChange, { backgroundColor: renewal.priceChange > 0 ? SemanticColors.feedbackWarning + '20' : SemanticColors.feedbackSuccess + '20' }]}>
+                <Text style={[styles.priceChangeText, { color: renewal.priceChange > 0 ? SemanticColors.feedbackWarning : SemanticColors.feedbackSuccess }]}>
                   {renewal.priceChange > 0 ? '+' : ''}{renewal.priceChange}%
                 </Text>
               </View>
@@ -292,7 +292,7 @@ export function ServiceContracts() {
                 </TouchableOpacity>
               ) : (
                 <View style={styles.sentBadge}>
-                  <Ionicons name="checkmark-circle" size={16} color={Palette.success} />
+                  <Ionicons name="checkmark-circle" size={16} color={SemanticColors.feedbackSuccess} />
                   <Text style={styles.sentText}>Verstuurd</Text>
                 </View>
               )}
@@ -390,7 +390,7 @@ export function ServiceContracts() {
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <TouchableOpacity onPress={() => setShowContractModal(false)}>
-            <Ionicons name="close" size={24} color={SemanticColors.text} />
+            <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Contract Details</Text>
           <TouchableOpacity>
@@ -450,7 +450,7 @@ export function ServiceContracts() {
                   <Ionicons
                     name={service.included ? 'checkmark-circle' : 'close-circle'}
                     size={18}
-                    color={service.included ? Palette.success : SemanticColors.textSecondary}
+                    color={service.included ? SemanticColors.feedbackSuccess : SemanticColors.textSecondary}
                   />
                   <View style={styles.serviceInfo}>
                     <Text style={styles.serviceName}>{service.name}</Text>
@@ -536,9 +536,9 @@ export function ServiceContracts() {
 
 function getStatusColor(status: string): string {
   const colors: Record<string, string> = {
-    active: Palette.success,
-    pending: Palette.warning,
-    expired: Palette.error,
+    active: SemanticColors.feedbackSuccess,
+    pending: SemanticColors.feedbackWarning,
+    expired: SemanticColors.feedbackError,
     cancelled: SemanticColors.textSecondary,
   };
   return colors[status] || SemanticColors.textSecondary;
@@ -578,7 +578,7 @@ function getSlaColor(level: string): string {
   const colors: Record<string, string> = {
     basic: SemanticColors.textSecondary,
     standard: SemanticColors.actionPrimary,
-    premium: Palette.warning,
+    premium: SemanticColors.feedbackWarning,
   };
   return colors[level] || SemanticColors.textSecondary;
 }
@@ -595,8 +595,8 @@ function getVisitTypeName(type: string): string {
 function getVisitTypeColor(type: string): string {
   const colors: Record<string, string> = {
     maintenance: SemanticColors.actionPrimary,
-    inspection: Palette.info,
-    repair: Palette.warning,
+    inspection: SemanticColors.feedbackInfo,
+    repair: SemanticColors.feedbackWarning,
   };
   return colors[type] || SemanticColors.textSecondary;
 }
@@ -608,14 +608,14 @@ function getVisitTypeColor(type: string): string {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: SemanticColors.surfaceBackground },
   header: { padding: 20, paddingBottom: 12 },
-  title: { fontSize: 28, fontWeight: '700', color: SemanticColors.text },
+  title: { fontSize: 28, fontWeight: '700', color: SemanticColors.textPrimary },
   subtitle: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 4 },
   statsBar: { maxHeight: 80 },
   statsBarContent: { paddingHorizontal: 20, gap: 12 },
   statItem: { backgroundColor: SemanticColors.surfacePrimary, padding: 12, borderRadius: 12, minWidth: 80, alignItems: 'center' },
-  statValue: { fontSize: 20, fontWeight: '700', color: SemanticColors.text },
+  statValue: { fontSize: 20, fontWeight: '700', color: SemanticColors.textPrimary },
   statLabel: { fontSize: 11, color: SemanticColors.textSecondary, marginTop: 2 },
-  warningValue: { color: Palette.warning },
+  warningValue: { color: SemanticColors.feedbackWarning },
   tabBar: { flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 12, gap: 8 },
   tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 10, backgroundColor: SemanticColors.surfacePrimary, gap: 4 },
   activeTab: { backgroundColor: SemanticColors.actionPrimary + '15' },
@@ -623,13 +623,13 @@ const styles = StyleSheet.create({
   activeTabLabel: { color: SemanticColors.actionPrimary },
   tabContent: { flex: 1, paddingHorizontal: 20 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, marginTop: 8 },
-  sectionTitle: { fontSize: 18, fontWeight: '600', color: SemanticColors.text },
+  sectionTitle: { fontSize: 18, fontWeight: '600', color: SemanticColors.textPrimary },
   sectionSubtitle: { fontSize: 14, color: SemanticColors.textSecondary },
   sectionLink: { fontSize: 14, color: SemanticColors.actionPrimary, fontWeight: '500' },
   revenueCard: { backgroundColor: SemanticColors.actionPrimary + '15', borderRadius: 16, padding: 24, alignItems: 'center', marginBottom: 20 },
   revenueTitle: { fontSize: 14, color: SemanticColors.textSecondary },
   revenueValue: { fontSize: 36, fontWeight: '700', color: SemanticColors.actionPrimary, marginTop: 8 },
-  revenueSubtitle: { fontSize: 14, color: SemanticColors.text, marginTop: 4 },
+  revenueSubtitle: { fontSize: 14, color: SemanticColors.textPrimary, marginTop: 4 },
   chartContainer: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: 16, padding: 16, marginBottom: 20 },
   chartBars: { flexDirection: 'row', justifyContent: 'space-between', height: 100, alignItems: 'flex-end' },
   chartBarContainer: { alignItems: 'center', flex: 1 },
@@ -638,58 +638,58 @@ const styles = StyleSheet.create({
   templateCard: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: 14, padding: 14, marginBottom: 10 },
   templateHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   templateInfo: { flex: 1 },
-  templateName: { fontSize: 16, fontWeight: '600', color: SemanticColors.text },
+  templateName: { fontSize: 16, fontWeight: '600', color: SemanticColors.textPrimary },
   templateDescription: { fontSize: 13, color: SemanticColors.textSecondary, marginTop: 2 },
   templatePrice: { alignItems: 'flex-end' },
   templatePriceValue: { fontSize: 20, fontWeight: '700', color: SemanticColors.actionPrimary },
   templatePriceLabel: { fontSize: 12, color: SemanticColors.textSecondary },
   templateServices: { marginTop: 10, gap: 4 },
   templateService: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  templateServiceText: { fontSize: 13, color: SemanticColors.text },
+  templateServiceText: { fontSize: 13, color: SemanticColors.textPrimary },
   slaBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginTop: 10 },
   slaText: { fontSize: 11, fontWeight: '500' },
   visitCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: SemanticColors.surfacePrimary, borderRadius: 12, padding: 14, marginBottom: 10 },
   visitDate: { width: 50, alignItems: 'center' },
-  visitDay: { fontSize: 22, fontWeight: '700', color: SemanticColors.text },
+  visitDay: { fontSize: 22, fontWeight: '700', color: SemanticColors.textPrimary },
   visitMonth: { fontSize: 11, color: SemanticColors.textSecondary, textTransform: 'uppercase' },
   visitInfo: { flex: 1, marginLeft: 12 },
-  visitCustomer: { fontSize: 15, fontWeight: '600', color: SemanticColors.text },
+  visitCustomer: { fontSize: 15, fontWeight: '600', color: SemanticColors.textPrimary },
   visitType: { fontSize: 13, color: SemanticColors.actionPrimary, marginTop: 2 },
   visitTime: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 2 },
   contractCard: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: 16, padding: 16, marginBottom: 12 },
   contractHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   contractInfo: { flex: 1 },
-  contractCustomer: { fontSize: 16, fontWeight: '600', color: SemanticColors.text },
+  contractCustomer: { fontSize: 16, fontWeight: '600', color: SemanticColors.textPrimary },
   contractNumber: { fontSize: 13, color: SemanticColors.textSecondary, marginTop: 2 },
   contractStatus: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
   contractStatusText: { fontSize: 11, fontWeight: '600' },
   contractDetails: { flexDirection: 'row', marginTop: 12, gap: 16 },
   contractDetail: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   contractDetailText: { fontSize: 13, color: SemanticColors.textSecondary },
-  contractEquipment: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: SemanticColors.border },
-  contractEquipmentLabel: { fontSize: 13, color: SemanticColors.text },
+  contractEquipment: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: SemanticColors.borderDefault },
+  contractEquipmentLabel: { fontSize: 13, color: SemanticColors.textPrimary },
   contractExpiry: { fontSize: 12, color: SemanticColors.textSecondary },
   addButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, backgroundColor: SemanticColors.surfacePrimary, borderRadius: 12, borderWidth: 1, borderColor: SemanticColors.actionPrimary + '40', borderStyle: 'dashed', marginBottom: 20, gap: 8 },
   addButtonText: { fontSize: 15, color: SemanticColors.actionPrimary, fontWeight: '500' },
   renewalCard: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: 16, padding: 16, marginBottom: 12 },
   renewalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   renewalInfo: { flex: 1 },
-  renewalCustomer: { fontSize: 16, fontWeight: '600', color: SemanticColors.text },
+  renewalCustomer: { fontSize: 16, fontWeight: '600', color: SemanticColors.textPrimary },
   renewalContract: { fontSize: 13, color: SemanticColors.textSecondary, marginTop: 2 },
   renewalDays: { alignItems: 'center', backgroundColor: SemanticColors.surfaceBackground, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
-  renewalDaysValue: { fontSize: 20, fontWeight: '700', color: SemanticColors.text },
+  renewalDaysValue: { fontSize: 20, fontWeight: '700', color: SemanticColors.textPrimary },
   renewalDaysLabel: { fontSize: 10, color: SemanticColors.textSecondary },
-  renewalPricing: { flexDirection: 'row', alignItems: 'center', marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: SemanticColors.border },
+  renewalPricing: { flexDirection: 'row', alignItems: 'center', marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: SemanticColors.borderDefault },
   priceItem: { flex: 1 },
   priceLabel: { fontSize: 11, color: SemanticColors.textSecondary },
-  priceValue: { fontSize: 18, fontWeight: '600', color: SemanticColors.text, marginTop: 2 },
+  priceValue: { fontSize: 18, fontWeight: '600', color: SemanticColors.textPrimary, marginTop: 2 },
   priceChange: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   priceChangeText: { fontSize: 12, fontWeight: '600' },
   renewalActions: { flexDirection: 'row', alignItems: 'center', marginTop: 14, gap: 10 },
   sendOfferButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: SemanticColors.actionPrimary, paddingVertical: 12, borderRadius: 10, gap: 6 },
   sendOfferText: { fontSize: 15, fontWeight: '600', color: Palette.white },
   sentBadge: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  sentText: { fontSize: 14, color: Palette.success, fontWeight: '500' },
+  sentText: { fontSize: 14, color: SemanticColors.feedbackSuccess, fontWeight: '500' },
   editButton: { padding: 10, backgroundColor: SemanticColors.actionPrimary + '15', borderRadius: 10 },
   visitDetailCard: { flexDirection: 'row', backgroundColor: SemanticColors.surfacePrimary, borderRadius: 16, marginBottom: 12, overflow: 'hidden' },
   visitDetailDate: { width: 70, backgroundColor: SemanticColors.actionPrimary + '15', padding: 12, alignItems: 'center', justifyContent: 'center' },
@@ -698,40 +698,40 @@ const styles = StyleSheet.create({
   visitDetailWeekday: { fontSize: 11, color: SemanticColors.textSecondary, marginTop: 2 },
   visitDetailContent: { flex: 1, padding: 14 },
   visitDetailHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  visitDetailCustomer: { fontSize: 16, fontWeight: '600', color: SemanticColors.text },
+  visitDetailCustomer: { fontSize: 16, fontWeight: '600', color: SemanticColors.textPrimary },
   visitTypeBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
   visitTypeBadgeText: { fontSize: 11, fontWeight: '500' },
   visitDetailAddress: { fontSize: 13, color: SemanticColors.textSecondary, marginTop: 4 },
   visitDetailTime: { fontSize: 13, color: SemanticColors.textSecondary, marginTop: 4 },
   visitEquipment: { marginTop: 10 },
   visitEquipmentLabel: { fontSize: 12, fontWeight: '500', color: SemanticColors.textSecondary },
-  visitEquipmentItem: { fontSize: 12, color: SemanticColors.text, marginTop: 2 },
+  visitEquipmentItem: { fontSize: 12, color: SemanticColors.textPrimary, marginTop: 2 },
   visitActions: { flexDirection: 'row', marginTop: 12, gap: 12 },
   visitActionButton: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   visitActionText: { fontSize: 13, color: SemanticColors.actionPrimary, fontWeight: '500' },
   emptyState: { alignItems: 'center', padding: 40 },
   emptyText: { fontSize: 15, color: SemanticColors.textSecondary, marginTop: 12 },
   modalContainer: { flex: 1, backgroundColor: SemanticColors.surfaceBackground },
-  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: SemanticColors.border },
-  modalTitle: { fontSize: 17, fontWeight: '600', color: SemanticColors.text },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: SemanticColors.borderDefault },
+  modalTitle: { fontSize: 17, fontWeight: '600', color: SemanticColors.textPrimary },
   modalContent: { flex: 1, padding: 20 },
   contractProfile: { alignItems: 'center', marginBottom: 24 },
   contractProfileNumber: { fontSize: 14, color: SemanticColors.actionPrimary, fontWeight: '500' },
-  contractProfileCustomer: { fontSize: 22, fontWeight: '700', color: SemanticColors.text, marginTop: 8 },
+  contractProfileCustomer: { fontSize: 22, fontWeight: '700', color: SemanticColors.textPrimary, marginTop: 8 },
   contractProfileAddress: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 4, textAlign: 'center' },
   modalSection: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: 14, padding: 16, marginBottom: 16 },
-  modalSectionTitle: { fontSize: 16, fontWeight: '600', color: SemanticColors.text, marginBottom: 12 },
-  modalRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: SemanticColors.border },
+  modalSectionTitle: { fontSize: 16, fontWeight: '600', color: SemanticColors.textPrimary, marginBottom: 12 },
+  modalRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: SemanticColors.borderDefault },
   modalRowLabel: { fontSize: 14, color: SemanticColors.textSecondary },
-  modalRowValue: { fontSize: 14, fontWeight: '500', color: SemanticColors.text },
+  modalRowValue: { fontSize: 14, fontWeight: '500', color: SemanticColors.textPrimary },
   serviceItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingVertical: 8 },
   serviceInfo: { flex: 1 },
-  serviceName: { fontSize: 14, fontWeight: '500', color: SemanticColors.text },
+  serviceName: { fontSize: 14, fontWeight: '500', color: SemanticColors.textPrimary },
   serviceDescription: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 2 },
-  equipmentItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: SemanticColors.border },
+  equipmentItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: SemanticColors.borderDefault },
   equipmentIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: SemanticColors.actionPrimary + '15', alignItems: 'center', justifyContent: 'center' },
   equipmentInfo: { flex: 1, marginLeft: 12 },
-  equipmentName: { fontSize: 14, fontWeight: '500', color: SemanticColors.text },
+  equipmentName: { fontSize: 14, fontWeight: '500', color: SemanticColors.textPrimary },
   equipmentMeta: { fontSize: 12, color: SemanticColors.textSecondary },
   equipmentLocation: { fontSize: 12, color: SemanticColors.textSecondary },
   modalActions: { gap: 10 },

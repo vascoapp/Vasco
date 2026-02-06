@@ -6,3 +6,8 @@ export { QuickActionsBar } from './QuickActionsBar';
 export { DashboardHeader } from './DashboardHeader';
 export { HubNavigationCard } from './HubNavigationCard';
 export { HubNavigationGrid } from './HubNavigationGrid';
+export { VascoInsightCard, VascoInsightList, InlineInsight } from './VascoInsightCard';
+export type { VascoInsight, InsightPriority, InsightCategory } from './VascoInsightCard';
+export { ReasoningMode, useReasoningMode } from './ReasoningMode';
+export type { ReasoningData } from './ReasoningMode';
+export { EvidenceGraphExplorer } from './EvidenceGraphExplorer';

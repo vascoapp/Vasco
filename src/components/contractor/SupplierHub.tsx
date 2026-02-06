@@ -67,7 +67,7 @@ export function SupplierHub() {
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: SemanticColors.success }]}>
+          <Text style={[styles.statValue, { color: SemanticColors.feedbackSuccess }]}>
             {statistics.avgSavings}%
           </Text>
           <Text style={styles.statLabel}>Bespaard</Text>
@@ -267,8 +267,8 @@ function SupplierCard({
 }) {
   const getStatusColor = (status: Supplier['integrationStatus']) => {
     switch (status) {
-      case 'connected': return SemanticColors.success;
-      case 'pending': return SemanticColors.warning;
+      case 'connected': return SemanticColors.feedbackSuccess;
+      case 'pending': return SemanticColors.feedbackWarning;
       case 'available': return SemanticColors.actionPrimary;
       default: return SemanticColors.textSecondary;
     }
@@ -376,7 +376,7 @@ function ProductsTab({
           <View style={styles.comparisonStats}>
             <View style={styles.comparisonStat}>
               <Text style={styles.comparisonStatLabel}>Beste prijs</Text>
-              <Text style={[styles.comparisonStatValue, { color: SemanticColors.success }]}>
+              <Text style={[styles.comparisonStatValue, { color: SemanticColors.feedbackSuccess }]}>
                 €{comparison.bestPrice.toFixed(2)}
               </Text>
             </View>
@@ -427,10 +427,10 @@ function ProductCard({
 }) {
   const getStockColor = (level: SupplierProduct['stockLevel']) => {
     switch (level) {
-      case 'high': return SemanticColors.success;
-      case 'medium': return SemanticColors.warning;
+      case 'high': return SemanticColors.feedbackSuccess;
+      case 'medium': return SemanticColors.feedbackWarning;
       case 'low': return '#FF9500';
-      default: return SemanticColors.error;
+      default: return SemanticColors.feedbackError;
     }
   };
 
@@ -511,10 +511,10 @@ function OrderCard({
 }) {
   const getStatusColor = (status: Order['status']) => {
     switch (status) {
-      case 'delivered': return SemanticColors.success;
+      case 'delivered': return SemanticColors.feedbackSuccess;
       case 'shipped': return SemanticColors.actionPrimary;
       case 'confirmed': return '#FF9500';
-      case 'submitted': return SemanticColors.warning;
+      case 'submitted': return SemanticColors.feedbackWarning;
       default: return SemanticColors.textSecondary;
     }
   };
@@ -858,7 +858,7 @@ function ProductDetailModal({
               <Ionicons
                 name={product.inStock ? 'checkmark-circle' : 'close-circle'}
                 size={20}
-                color={product.inStock ? SemanticColors.success : SemanticColors.error}
+                color={product.inStock ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError}
               />
               <Text style={styles.stockText}>
                 {product.inStock
@@ -974,7 +974,7 @@ function OrderDetailModal({
           <View style={styles.orderTimeline}>
             <Text style={styles.orderTimelineTitle}>Status</Text>
             <View style={styles.timelineItem}>
-              <View style={[styles.timelineDot, { backgroundColor: SemanticColors.success }]} />
+              <View style={[styles.timelineDot, { backgroundColor: SemanticColors.feedbackSuccess }]} />
               <View style={styles.timelineContent}>
                 <Text style={styles.timelineLabel}>Besteld</Text>
                 <Text style={styles.timelineDate}>
@@ -984,7 +984,7 @@ function OrderDetailModal({
             </View>
             {order.submittedAt && (
               <View style={styles.timelineItem}>
-                <View style={[styles.timelineDot, { backgroundColor: SemanticColors.success }]} />
+                <View style={[styles.timelineDot, { backgroundColor: SemanticColors.feedbackSuccess }]} />
                 <View style={styles.timelineContent}>
                   <Text style={styles.timelineLabel}>Verzonden naar leverancier</Text>
                   <Text style={styles.timelineDate}>
@@ -995,7 +995,7 @@ function OrderDetailModal({
             )}
             {order.status === 'delivered' && order.deliveredAt && (
               <View style={styles.timelineItem}>
-                <View style={[styles.timelineDot, { backgroundColor: SemanticColors.success }]} />
+                <View style={[styles.timelineDot, { backgroundColor: SemanticColors.feedbackSuccess }]} />
                 <View style={styles.timelineContent}>
                   <Text style={styles.timelineLabel}>Geleverd</Text>
                   <Text style={styles.timelineDate}>
@@ -1017,19 +1017,19 @@ function OrderDetailModal({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: SemanticColors.surfaceBackground },
-  statsHeader: { flexDirection: 'row', backgroundColor: SemanticColors.surfacePrimaryBackground, paddingVertical: 16, paddingHorizontal: 12 },
+  statsHeader: { flexDirection: 'row', backgroundColor: SemanticColors.surfaceBackground, paddingVertical: 16, paddingHorizontal: 12 },
   statItem: { flex: 1, alignItems: 'center' },
   statValue: { fontSize: 22, fontWeight: '700', color: SemanticColors.textPrimary },
   statLabel: { fontSize: 11, color: SemanticColors.textSecondary, marginTop: 4 },
-  statDivider: { width: 1, backgroundColor: SemanticColors.border, marginVertical: 8 },
-  tabBar: { flexDirection: 'row', backgroundColor: SemanticColors.surfacePrimaryBackground, borderBottomWidth: 1, borderBottomColor: SemanticColors.border },
+  statDivider: { width: 1, backgroundColor: SemanticColors.borderDefault, marginVertical: 8 },
+  tabBar: { flexDirection: 'row', backgroundColor: SemanticColors.surfaceBackground, borderBottomWidth: 1, borderBottomColor: SemanticColors.borderDefault },
   tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, gap: 6 },
   tabActive: { borderBottomWidth: 2, borderBottomColor: SemanticColors.actionPrimary },
   tabLabel: { fontSize: 12, color: SemanticColors.textSecondary },
   tabLabelActive: { color: SemanticColors.actionPrimary, fontWeight: '600' },
-  badge: { backgroundColor: SemanticColors.error, borderRadius: 10, minWidth: 20, height: 20, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 6 },
+  badge: { backgroundColor: SemanticColors.feedbackError, borderRadius: 10, minWidth: 20, height: 20, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 6 },
   badgeText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
-  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: SemanticColors.surfacePrimaryBackground, margin: 16, marginBottom: 0, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, gap: 12 },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: SemanticColors.surfaceBackground, margin: 16, marginBottom: 0, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, gap: 12 },
   searchInput: { flex: 1, fontSize: 15, color: SemanticColors.textPrimary },
   content: { flex: 1 },
   tabContent: { padding: 16 },
@@ -1037,7 +1037,7 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', padding: 48 },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: SemanticColors.textPrimary, marginTop: 16 },
   emptyText: { fontSize: 14, color: SemanticColors.textSecondary, textAlign: 'center', marginTop: 8 },
-  supplierCard: { flexDirection: 'row', backgroundColor: SemanticColors.surfacePrimaryBackground, borderRadius: 12, padding: 16, marginBottom: 12 },
+  supplierCard: { flexDirection: 'row', backgroundColor: SemanticColors.surfaceBackground, borderRadius: 12, padding: 16, marginBottom: 12 },
   supplierLogo: { width: 56, height: 56, borderRadius: 12, backgroundColor: SemanticColors.actionPrimary + '15', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   supplierInfo: { flex: 1 },
   supplierName: { fontSize: 16, fontWeight: '600', color: SemanticColors.textPrimary },
@@ -1051,7 +1051,7 @@ const styles = StyleSheet.create({
   syncButton: { padding: 8 },
   connectButton: { backgroundColor: SemanticColors.actionPrimary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
   connectButtonText: { fontSize: 12, fontWeight: '600', color: '#FFFFFF' },
-  comparisonBox: { backgroundColor: SemanticColors.surfacePrimaryBackground, borderRadius: 12, padding: 16, marginBottom: 16 },
+  comparisonBox: { backgroundColor: SemanticColors.surfaceBackground, borderRadius: 12, padding: 16, marginBottom: 16 },
   comparisonHeader: { marginBottom: 12 },
   comparisonTitle: { fontSize: 14, fontWeight: '600', color: SemanticColors.textPrimary },
   comparisonProduct: { fontSize: 13, color: SemanticColors.textSecondary, marginTop: 2 },
@@ -1061,8 +1061,8 @@ const styles = StyleSheet.create({
   comparisonStatValue: { fontSize: 16, fontWeight: '700', color: SemanticColors.textPrimary, marginTop: 2 },
   recommendationBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: SemanticColors.actionPrimary + '10', padding: 12, borderRadius: 8 },
   recommendationText: { flex: 1, fontSize: 13, color: SemanticColors.textSecondary },
-  productCard: { backgroundColor: SemanticColors.surfacePrimaryBackground, borderRadius: 12, padding: 16, marginBottom: 12, flexDirection: 'row', position: 'relative' },
-  bestPriceBadge: { position: 'absolute', top: 8, left: 8, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: SemanticColors.success, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  productCard: { backgroundColor: SemanticColors.surfaceBackground, borderRadius: 12, padding: 16, marginBottom: 12, flexDirection: 'row', position: 'relative' },
+  bestPriceBadge: { position: 'absolute', top: 8, left: 8, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: SemanticColors.feedbackSuccess, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   bestPriceText: { fontSize: 10, fontWeight: '600', color: '#FFFFFF' },
   productInfo: { flex: 1 },
   productName: { fontSize: 15, fontWeight: '600', color: SemanticColors.textPrimary, marginTop: 16 },
@@ -1074,10 +1074,10 @@ const styles = StyleSheet.create({
   productPricing: { alignItems: 'flex-end', marginLeft: 12 },
   productPrice: { fontSize: 18, fontWeight: '700', color: SemanticColors.textPrimary },
   productListPrice: { fontSize: 13, color: SemanticColors.textSecondary, textDecorationLine: 'line-through' },
-  discountBadge: { backgroundColor: SemanticColors.error, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginTop: 4 },
+  discountBadge: { backgroundColor: SemanticColors.feedbackError, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginTop: 4 },
   discountText: { fontSize: 11, fontWeight: '600', color: '#FFFFFF' },
   addToCartButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: SemanticColors.actionPrimary, justifyContent: 'center', alignItems: 'center', marginTop: 8 },
-  orderCard: { backgroundColor: SemanticColors.surfacePrimaryBackground, borderRadius: 12, padding: 16, marginBottom: 12 },
+  orderCard: { backgroundColor: SemanticColors.surfaceBackground, borderRadius: 12, padding: 16, marginBottom: 12 },
   orderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   orderSupplier: { fontSize: 16, fontWeight: '600', color: SemanticColors.textPrimary },
   orderNumber: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 2 },
@@ -1088,11 +1088,11 @@ const styles = StyleSheet.create({
   orderFooter: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
   orderDate: { fontSize: 12, color: SemanticColors.textSecondary },
   orderDelivery: { fontSize: 12, color: SemanticColors.actionPrimary },
-  cartSection: { backgroundColor: SemanticColors.surfacePrimaryBackground, borderRadius: 12, padding: 16, marginBottom: 16 },
+  cartSection: { backgroundColor: SemanticColors.surfaceBackground, borderRadius: 12, padding: 16, marginBottom: 16 },
   cartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   cartSupplier: { fontSize: 16, fontWeight: '600', color: SemanticColors.textPrimary },
-  clearCartText: { fontSize: 14, color: SemanticColors.error },
-  cartItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: SemanticColors.border },
+  clearCartText: { fontSize: 14, color: SemanticColors.feedbackError },
+  cartItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: SemanticColors.borderDefault },
   cartItemInfo: { flex: 1 },
   cartItemName: { fontSize: 14, fontWeight: '500', color: SemanticColors.textPrimary },
   cartItemPrice: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 2 },
@@ -1100,33 +1100,33 @@ const styles = StyleSheet.create({
   quantityButton: { width: 32, height: 32, borderRadius: 16, backgroundColor: SemanticColors.surfaceBackground, justifyContent: 'center', alignItems: 'center' },
   quantityText: { fontSize: 16, fontWeight: '600', color: SemanticColors.textPrimary, marginHorizontal: 12 },
   cartItemTotal: { fontSize: 14, fontWeight: '600', color: SemanticColors.textPrimary, width: 70, textAlign: 'right' },
-  cartTotals: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: SemanticColors.border },
+  cartTotals: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: SemanticColors.borderDefault },
   cartTotalRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   cartTotalLabel: { fontSize: 14, color: SemanticColors.textSecondary },
   cartTotalValue: { fontSize: 14, color: SemanticColors.textPrimary },
-  cartTotalFinal: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: SemanticColors.border },
+  cartTotalFinal: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: SemanticColors.borderDefault },
   cartFinalLabel: { fontSize: 16, fontWeight: '600', color: SemanticColors.textPrimary },
   cartFinalValue: { fontSize: 18, fontWeight: '700', color: SemanticColors.textPrimary },
   checkoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: SemanticColors.actionPrimary, paddingVertical: 16, borderRadius: 12, marginTop: 16 },
   checkoutText: { fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: SemanticColors.surfacePrimaryBackground, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '85%' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: SemanticColors.border },
+  modalContent: { backgroundColor: SemanticColors.surfaceBackground, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '85%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: SemanticColors.borderDefault },
   modalTitle: { fontSize: 18, fontWeight: '600', color: SemanticColors.textPrimary },
   modalClose: { padding: 4 },
   modalBody: { padding: 16 },
-  modalActions: { padding: 16, borderTopWidth: 1, borderTopColor: SemanticColors.border },
+  modalActions: { padding: 16, borderTopWidth: 1, borderTopColor: SemanticColors.borderDefault },
   supplierStats: { flexDirection: 'row', backgroundColor: SemanticColors.surfaceBackground, borderRadius: 12, padding: 16, marginBottom: 20 },
   supplierStatItem: { flex: 1, alignItems: 'center' },
   supplierStatValue: { fontSize: 20, fontWeight: '700', color: SemanticColors.textPrimary },
   supplierStatLabel: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 4 },
-  supplierStatDivider: { width: 1, backgroundColor: SemanticColors.border },
+  supplierStatDivider: { width: 1, backgroundColor: SemanticColors.borderDefault },
   detailSection: { marginBottom: 20 },
   detailSectionTitle: { fontSize: 14, fontWeight: '600', color: SemanticColors.textPrimary, marginBottom: 12 },
   categoryChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   categoryChip: { backgroundColor: SemanticColors.actionPrimary + '15', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
   categoryChipText: { fontSize: 13, color: SemanticColors.actionPrimary },
-  detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: SemanticColors.border },
+  detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: SemanticColors.borderDefault },
   detailLabel: { fontSize: 14, color: SemanticColors.textSecondary },
   detailValue: { fontSize: 14, fontWeight: '500', color: SemanticColors.textPrimary },
   lastSync: { fontSize: 12, color: SemanticColors.textSecondary, textAlign: 'center', marginTop: 16 },
@@ -1142,11 +1142,11 @@ const styles = StyleSheet.create({
   priceLabel: { fontSize: 14, color: SemanticColors.textSecondary },
   priceValue: { fontSize: 28, fontWeight: '700', color: SemanticColors.textPrimary },
   listPriceValue: { fontSize: 16, color: SemanticColors.textSecondary, textDecorationLine: 'line-through' },
-  bulkPrices: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: SemanticColors.border },
+  bulkPrices: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: SemanticColors.borderDefault },
   bulkPricesTitle: { fontSize: 14, fontWeight: '600', color: SemanticColors.textPrimary, marginBottom: 8 },
   bulkPriceRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
   bulkPriceQty: { fontSize: 13, color: SemanticColors.textSecondary },
-  bulkPriceValue: { fontSize: 13, fontWeight: '600', color: SemanticColors.success },
+  bulkPriceValue: { fontSize: 13, fontWeight: '600', color: SemanticColors.feedbackSuccess },
   stockSection: { marginTop: 20 },
   stockRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   stockText: { fontSize: 14, color: SemanticColors.textPrimary },
@@ -1175,7 +1175,7 @@ const styles = StyleSheet.create({
   orderDetailTotalRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   orderDetailTotalLabel: { fontSize: 14, color: SemanticColors.textSecondary },
   orderDetailTotalValue: { fontSize: 14, color: SemanticColors.textPrimary },
-  orderDetailTotalFinal: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: SemanticColors.border },
+  orderDetailTotalFinal: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: SemanticColors.borderDefault },
   orderDetailFinalLabel: { fontSize: 16, fontWeight: '600', color: SemanticColors.textPrimary },
   orderDetailFinalValue: { fontSize: 18, fontWeight: '700', color: SemanticColors.textPrimary },
   orderTimeline: { marginBottom: 20 },

@@ -11,6 +11,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
@@ -382,12 +383,21 @@ export const BusinessBenchmarking: React.FC = () => {
   const stats = useBenchmarkStats();
 
   const handleSetGoal = (metricId: string) => {
-    // Would open goal setting modal
-    console.log('Set goal for metric:', metricId);
+    Alert.alert(
+      'Doel Instellen',
+      `Wil je een doel instellen voor deze metric?`,
+      [
+        { text: 'Annuleren', style: 'cancel' },
+        { text: 'Bevestigen', onPress: () => setGoal(metricId, 100, new Date(Date.now() + 90 * 86400000)) },
+      ],
+    );
   };
 
   const handleExploreOpportunity = (opportunity: ImprovementOpportunity) => {
-    console.log('Explore opportunity:', opportunity.id);
+    Alert.alert(
+      opportunity.title,
+      `Categorie: ${opportunity.category}\nImpact: ${opportunity.potentialImpact === 'high' ? 'Hoog' : opportunity.potentialImpact === 'medium' ? 'Gemiddeld' : 'Laag'}${opportunity.estimatedRevenue ? `\nGeschatte omzet: \u20AC${opportunity.estimatedRevenue.toLocaleString()}` : ''}\n\n${opportunity.description}`,
+    );
   };
 
   const renderContent = () => {

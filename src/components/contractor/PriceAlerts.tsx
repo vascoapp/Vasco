@@ -204,7 +204,7 @@ function TriggeredAlertCard({
       case 'price_target':
         return { label: 'Doelprijs bereikt', icon: 'flag' as IconName, color: Palette.hermesOrange };
       case 'competitor_match':
-        return { label: 'Betere prijs gevonden', icon: 'swap-horizontal' as IconName, color: Palette.dustyBlue };
+        return { label: 'Betere prijs gevonden', icon: 'swap-horizontal' as IconName, color: Palette.blue500 };
       case 'bulk_opportunity':
         return { label: 'Bulk korting', icon: 'layers' as IconName, color: '#8B5CF6' };
     }

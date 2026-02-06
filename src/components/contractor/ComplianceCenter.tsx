@@ -84,7 +84,7 @@ export function ComplianceCenter() {
         <Ionicons
           name={highPriorityCount > 0 ? 'alert-circle' : 'information-circle'}
           size={20}
-          color={highPriorityCount > 0 ? Palette.error : Palette.warning}
+          color={highPriorityCount > 0 ? SemanticColors.feedbackError : SemanticColors.feedbackWarning}
         />
         <View style={styles.alertsInfo}>
           <Text style={styles.alertsTitle}>
@@ -118,7 +118,7 @@ export function ComplianceCenter() {
           )}
         </View>
         <View style={styles.statCard}>
-          <Ionicons name="ribbon" size={24} color={Palette.success} />
+          <Ionicons name="ribbon" size={24} color={SemanticColors.feedbackSuccess} />
           <Text style={styles.statCardValue}>{stats.validCertifications}/{stats.totalCertifications}</Text>
           <Text style={styles.statCardLabel}>Certificaten</Text>
           {stats.expiringCertifications > 0 && (
@@ -126,12 +126,12 @@ export function ComplianceCenter() {
           )}
         </View>
         <View style={styles.statCard}>
-          <Ionicons name="umbrella" size={24} color={Palette.info} />
+          <Ionicons name="umbrella" size={24} color={SemanticColors.feedbackInfo} />
           <Text style={styles.statCardValue}>{stats.activeInsurance}/{stats.totalInsurancePolicies}</Text>
           <Text style={styles.statCardLabel}>Verzekeringen</Text>
         </View>
         <View style={styles.statCard}>
-          <Ionicons name="newspaper" size={24} color={Palette.warning} />
+          <Ionicons name="newspaper" size={24} color={SemanticColors.feedbackWarning} />
           <Text style={styles.statCardValue}>{stats.unreadRegulatory}</Text>
           <Text style={styles.statCardLabel}>Ongelezen Updates</Text>
         </View>
@@ -168,7 +168,7 @@ export function ComplianceCenter() {
 
       {expiryCalendar.length === 0 && (
         <View style={styles.emptyCalendar}>
-          <Ionicons name="checkmark-circle" size={32} color={Palette.success} />
+          <Ionicons name="checkmark-circle" size={32} color={SemanticColors.feedbackSuccess} />
           <Text style={styles.emptyCalendarText}>Geen verlopen in de komende 6 maanden</Text>
         </View>
       )}
@@ -394,7 +394,7 @@ export function ComplianceCenter() {
             </Text>
             {policy.autoRenew && (
               <View style={styles.autoRenewBadge}>
-                <Ionicons name="refresh" size={12} color={Palette.success} />
+                <Ionicons name="refresh" size={12} color={SemanticColors.feedbackSuccess} />
                 <Text style={styles.autoRenewText}>Auto verlenging</Text>
               </View>
             )}
@@ -452,7 +452,7 @@ export function ComplianceCenter() {
             <View style={styles.updateActions}>
               {update.actionRequired && (
                 <View style={styles.actionRequiredBadge}>
-                  <Ionicons name="alert" size={12} color={Palette.warning} />
+                  <Ionicons name="alert" size={12} color={SemanticColors.feedbackWarning} />
                   <Text style={styles.actionRequiredText}>Actie vereist</Text>
                 </View>
               )}
@@ -480,7 +480,7 @@ export function ComplianceCenter() {
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <TouchableOpacity onPress={() => setShowLicenseModal(false)}>
-            <Ionicons name="close" size={24} color={SemanticColors.text} />
+            <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Licentie Details</Text>
           <TouchableOpacity>
@@ -542,7 +542,7 @@ export function ComplianceCenter() {
                 <Text style={styles.detailSectionTitle}>Vereist voor</Text>
                 {selectedLicense.requiredFor.map((item, i) => (
                   <View key={i} style={styles.requiredForItem}>
-                    <Ionicons name="checkmark-circle" size={16} color={Palette.success} />
+                    <Ionicons name="checkmark-circle" size={16} color={SemanticColors.feedbackSuccess} />
                     <Text style={styles.requiredForItemText}>{item}</Text>
                   </View>
                 ))}
@@ -581,7 +581,7 @@ export function ComplianceCenter() {
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <TouchableOpacity onPress={() => setShowUpdateModal(false)}>
-            <Ionicons name="close" size={24} color={SemanticColors.text} />
+            <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Update Details</Text>
           <TouchableOpacity onPress={() => selectedUpdate && toggleBookmark(selectedUpdate.id)}>
@@ -638,7 +638,7 @@ export function ComplianceCenter() {
             {selectedUpdate.actionRequired && (
               <View style={styles.actionRequiredSection}>
                 <View style={styles.actionRequiredHeader}>
-                  <Ionicons name="alert-circle" size={20} color={Palette.warning} />
+                  <Ionicons name="alert-circle" size={20} color={SemanticColors.feedbackWarning} />
                   <Text style={styles.actionRequiredTitle}>Actie Vereist</Text>
                 </View>
                 <Text style={styles.actionRequiredDescription}>
@@ -721,12 +721,12 @@ function getStatusName(status: string): string {
 
 function getStatusColor(status: string): string {
   const colors: Record<string, string> = {
-    valid: Palette.success,
-    active: Palette.success,
-    expiring_soon: Palette.warning,
-    expired: Palette.error,
-    pending_renewal: Palette.info,
-    suspended: Palette.error,
+    valid: SemanticColors.feedbackSuccess,
+    active: SemanticColors.feedbackSuccess,
+    expiring_soon: SemanticColors.feedbackWarning,
+    expired: SemanticColors.feedbackError,
+    pending_renewal: SemanticColors.feedbackInfo,
+    suspended: SemanticColors.feedbackError,
     cancelled: SemanticColors.textSecondary,
   };
   return colors[status] || SemanticColors.textSecondary;
@@ -744,18 +744,18 @@ function getTypeIcon(type: string): string {
 function getTypeColor(type: string): string {
   const colors: Record<string, string> = {
     license: SemanticColors.actionPrimary,
-    certification: Palette.success,
-    insurance: Palette.info,
+    certification: SemanticColors.feedbackSuccess,
+    insurance: SemanticColors.feedbackInfo,
   };
   return colors[type] || SemanticColors.textSecondary;
 }
 
 function getSeverityColor(severity: string): string {
   const colors: Record<string, string> = {
-    critical: Palette.error,
-    high: Palette.error,
-    medium: Palette.warning,
-    low: Palette.info,
+    critical: SemanticColors.feedbackError,
+    high: SemanticColors.feedbackError,
+    medium: SemanticColors.feedbackWarning,
+    low: SemanticColors.feedbackInfo,
   };
   return colors[severity] || SemanticColors.textSecondary;
 }
@@ -763,9 +763,9 @@ function getSeverityColor(severity: string): string {
 function getCategoryColor(category: string): string {
   const colors: Record<string, string> = {
     technical: SemanticColors.actionPrimary,
-    safety: Palette.warning,
-    environmental: Palette.success,
-    quality: Palette.info,
+    safety: SemanticColors.feedbackWarning,
+    environmental: SemanticColors.feedbackSuccess,
+    quality: SemanticColors.feedbackInfo,
     industry_specific: '#9B59B6',
   };
   return colors[category] || SemanticColors.textSecondary;
@@ -773,10 +773,10 @@ function getCategoryColor(category: string): string {
 
 function getCategoryUpdateColor(category: string): string {
   const colors: Record<string, string> = {
-    legislation: Palette.error,
+    legislation: SemanticColors.feedbackError,
     standard: SemanticColors.actionPrimary,
-    guideline: Palette.success,
-    industry_news: Palette.info,
+    guideline: SemanticColors.feedbackSuccess,
+    industry_news: SemanticColors.feedbackInfo,
   };
   return colors[category] || SemanticColors.textSecondary;
 }
@@ -806,9 +806,9 @@ function getInsuranceIcon(type: string): string {
 function getInsuranceColor(type: string): string {
   const colors: Record<string, string> = {
     liability: SemanticColors.actionPrimary,
-    professional: Palette.info,
-    vehicle: Palette.warning,
-    equipment: Palette.success,
+    professional: SemanticColors.feedbackInfo,
+    vehicle: SemanticColors.feedbackWarning,
+    equipment: SemanticColors.feedbackSuccess,
     workers_comp: '#9B59B6',
     property: '#E67E22',
   };
@@ -831,7 +831,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   subtitle: {
     fontSize: 14,
@@ -894,7 +894,7 @@ const styles = StyleSheet.create({
   scoreTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 12,
   },
   scoreSubtitle: {
@@ -906,13 +906,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
-    backgroundColor: Palette.warning + '15',
+    backgroundColor: SemanticColors.feedbackWarning + '15',
     borderRadius: 12,
     marginBottom: 16,
     gap: 12,
   },
   alertsBannerUrgent: {
-    backgroundColor: Palette.error + '15',
+    backgroundColor: SemanticColors.feedbackError + '15',
   },
   alertsInfo: {
     flex: 1,
@@ -920,11 +920,11 @@ const styles = StyleSheet.create({
   alertsTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   alertsUrgent: {
     fontSize: 13,
-    color: Palette.error,
+    color: SemanticColors.feedbackError,
     fontWeight: '500',
   },
   alertsButton: {
@@ -954,7 +954,7 @@ const styles = StyleSheet.create({
   statCardValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 8,
   },
   statCardLabel: {
@@ -964,7 +964,7 @@ const styles = StyleSheet.create({
   },
   statCardWarning: {
     fontSize: 11,
-    color: Palette.warning,
+    color: SemanticColors.feedbackWarning,
     marginTop: 4,
     fontWeight: '500',
   },
@@ -978,7 +978,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   calendarItem: {
     flexDirection: 'row',
@@ -991,14 +991,14 @@ const styles = StyleSheet.create({
     width: 50,
     alignItems: 'center',
     borderRightWidth: 1,
-    borderRightColor: SemanticColors.border,
+    borderRightColor: SemanticColors.borderDefault,
     paddingRight: 12,
     marginRight: 12,
   },
   calendarDay: {
     fontSize: 22,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   calendarMonth: {
     fontSize: 12,
@@ -1016,7 +1016,7 @@ const styles = StyleSheet.create({
   },
   calendarItemText: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   emptyCalendar: {
     alignItems: 'center',
@@ -1046,7 +1046,7 @@ const styles = StyleSheet.create({
   alertTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   alertDescription: {
     fontSize: 13,
@@ -1055,7 +1055,7 @@ const styles = StyleSheet.create({
   },
   alertDue: {
     fontSize: 12,
-    color: Palette.warning,
+    color: SemanticColors.feedbackWarning,
     marginTop: 6,
   },
   alertAction: {
@@ -1079,7 +1079,7 @@ const styles = StyleSheet.create({
   licenseName: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   licenseNumber: {
     fontSize: 13,
@@ -1113,7 +1113,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   requiredForLabel: {
     fontSize: 12,
@@ -1121,7 +1121,7 @@ const styles = StyleSheet.create({
   },
   requiredForText: {
     fontSize: 13,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 2,
   },
   addButton: {
@@ -1178,7 +1178,7 @@ const styles = StyleSheet.create({
   certName: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   certHolder: {
     fontSize: 13,
@@ -1205,7 +1205,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   certExpiry: {
     fontSize: 12,
@@ -1234,7 +1234,7 @@ const styles = StyleSheet.create({
   },
   insuranceSummaryPremium: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 8,
   },
   insuranceCard: {
@@ -1261,7 +1261,7 @@ const styles = StyleSheet.create({
   insuranceName: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   insuranceProvider: {
     fontSize: 13,
@@ -1282,7 +1282,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   insuranceDetailItem: {
     flex: 1,
@@ -1295,7 +1295,7 @@ const styles = StyleSheet.create({
   insuranceDetailValue: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 2,
   },
   insuranceFooter: {
@@ -1315,7 +1315,7 @@ const styles = StyleSheet.create({
   },
   autoRenewText: {
     fontSize: 11,
-    color: Palette.success,
+    color: SemanticColors.feedbackSuccess,
     fontWeight: '500',
   },
   regulatoryFilters: {
@@ -1373,7 +1373,7 @@ const styles = StyleSheet.create({
   updateTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 6,
   },
   updateSummary: {
@@ -1400,14 +1400,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: Palette.warning + '15',
+    backgroundColor: SemanticColors.feedbackWarning + '15',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
   },
   actionRequiredText: {
     fontSize: 11,
-    color: Palette.warning,
+    color: SemanticColors.feedbackWarning,
     fontWeight: '500',
   },
   modalContainer: {
@@ -1420,12 +1420,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   modalContent: {
     flex: 1,
@@ -1446,7 +1446,7 @@ const styles = StyleSheet.create({
   licenseProfileName: {
     fontSize: 22,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     textAlign: 'center',
   },
   licenseProfileNumber: {
@@ -1463,7 +1463,7 @@ const styles = StyleSheet.create({
   detailSectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
   detailRow: {
@@ -1471,7 +1471,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   detailLabel: {
     fontSize: 14,
@@ -1480,7 +1480,7 @@ const styles = StyleSheet.create({
   detailValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   requiredForItem: {
     flexDirection: 'row',
@@ -1490,7 +1490,7 @@ const styles = StyleSheet.create({
   },
   requiredForItemText: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   modalActions: {
     gap: 10,
@@ -1526,7 +1526,7 @@ const styles = StyleSheet.create({
   updateModalTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   updateMeta: {
@@ -1557,7 +1557,7 @@ const styles = StyleSheet.create({
   },
   updateFullSummary: {
     fontSize: 15,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     lineHeight: 24,
     marginBottom: 20,
   },
@@ -1567,7 +1567,7 @@ const styles = StyleSheet.create({
   affectedAreasTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 10,
   },
   affectedAreasTags: {
@@ -1583,14 +1583,14 @@ const styles = StyleSheet.create({
   },
   affectedAreaTagText: {
     fontSize: 13,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   actionRequiredSection: {
-    backgroundColor: Palette.warning + '15',
+    backgroundColor: SemanticColors.feedbackWarning + '15',
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: Palette.warning + '40',
+    borderColor: SemanticColors.feedbackWarning + '40',
   },
   actionRequiredHeader: {
     flexDirection: 'row',
@@ -1601,17 +1601,17 @@ const styles = StyleSheet.create({
   actionRequiredTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: Palette.warning,
+    color: SemanticColors.feedbackWarning,
   },
   actionRequiredDescription: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     lineHeight: 22,
   },
   actionDeadline: {
     fontSize: 13,
     fontWeight: '600',
-    color: Palette.error,
+    color: SemanticColors.feedbackError,
     marginTop: 10,
   },
 });

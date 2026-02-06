@@ -421,7 +421,7 @@ export function SmartPricing() {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setShowPricingModal(false)}>
-              <Ionicons name="close" size={24} color={SemanticColors.text} />
+              <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Prijs berekenen</Text>
             <TouchableOpacity onPress={handleSuggestPrice}>
@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   tab: {
     flex: 1,
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 12,
   },
   newPriceContent: {
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
   newPriceTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   newPriceSubtitle: {
     fontSize: 13,
@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   suggestionHeader: {
     flexDirection: 'row',
@@ -587,7 +587,7 @@ const styles = StyleSheet.create({
   suggestionType: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   suggestionConfidence: {
     fontSize: 13,
@@ -622,7 +622,7 @@ const styles = StyleSheet.create({
   },
   rangeBar: {
     height: 12,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 6,
     marginBottom: 6,
   },
@@ -685,21 +685,21 @@ const styles = StyleSheet.create({
   metricValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 2,
   },
 
   // Factors Section
   factorsSection: {
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
     paddingTop: 16,
     marginBottom: 16,
   },
   factorsTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
   factorRow: {
@@ -715,7 +715,7 @@ const styles = StyleSheet.create({
   factorName: {
     fontSize: 14,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   factorDesc: {
     fontSize: 12,
@@ -772,7 +772,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 12,
   },
   emptyText: {
@@ -796,7 +796,7 @@ const styles = StyleSheet.create({
   marketIntroText: {
     flex: 1,
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   marketCard: {
     backgroundColor: SemanticColors.surfacePrimary,
@@ -804,7 +804,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   marketHeader: {
     flexDirection: 'row',
@@ -815,7 +815,7 @@ const styles = StyleSheet.create({
   marketType: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   trendBadge: {
     flexDirection: 'row',
@@ -841,7 +841,7 @@ const styles = StyleSheet.create({
   marketRateValue: {
     fontSize: 28,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   marketRateUnit: {
     fontSize: 14,
@@ -857,7 +857,7 @@ const styles = StyleSheet.create({
   },
   marketRangeValue: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
 
   // Seasonal Tab
@@ -873,7 +873,7 @@ const styles = StyleSheet.create({
   seasonalIntroText: {
     flex: 1,
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   seasonalGrid: {
     flexDirection: 'row',
@@ -887,7 +887,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     alignItems: 'center',
   },
   seasonalCardCurrent: {
@@ -903,7 +903,7 @@ const styles = StyleSheet.create({
   seasonalMonth: {
     fontSize: 13,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   currentBadge: {
     backgroundColor: Palette.blue500,
@@ -952,7 +952,7 @@ const styles = StyleSheet.create({
   seasonalTipText: {
     flex: 1,
     fontSize: 13,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     lineHeight: 18,
   },
 
@@ -969,7 +969,7 @@ const styles = StyleSheet.create({
   competitorIntroText: {
     flex: 1,
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   competitorCard: {
     backgroundColor: SemanticColors.surfacePrimary,
@@ -977,7 +977,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   competitorHeader: {
     flexDirection: 'row',
@@ -988,7 +988,7 @@ const styles = StyleSheet.create({
   competitorType: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   competitorSample: {
     fontSize: 12,
@@ -1007,7 +1007,7 @@ const styles = StyleSheet.create({
   competitorAvgValue: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   competitorRange: {
     alignItems: 'flex-end',
@@ -1018,7 +1018,7 @@ const styles = StyleSheet.create({
   },
   competitorRangeValue: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   positionSection: {},
   positionLabel: {
@@ -1031,7 +1031,7 @@ const styles = StyleSheet.create({
   },
   positionTrack: {
     height: 8,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 4,
     position: 'relative',
   },
@@ -1047,7 +1047,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: '#fff',
     borderWidth: 2,
-    borderColor: SemanticColors.text,
+    borderColor: SemanticColors.textPrimary,
     marginLeft: -6,
   },
   positionLabels: {
@@ -1076,13 +1076,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
     backgroundColor: SemanticColors.surfacePrimary,
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   modalAction: {
     fontSize: 16,
@@ -1096,7 +1096,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 12,
     marginTop: 8,
   },
@@ -1112,7 +1112,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: SemanticColors.surfacePrimary,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   typeOptionSelected: {
     backgroundColor: Palette.blue500,
@@ -1120,7 +1120,7 @@ const styles = StyleSheet.create({
   },
   typeOptionText: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   typeOptionTextSelected: {
     color: '#fff',
@@ -1135,7 +1135,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   scopeOptionSelected: {
     backgroundColor: Palette.blue500 + '15',
@@ -1144,7 +1144,7 @@ const styles = StyleSheet.create({
   scopeLabel: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   scopeLabelSelected: {
     color: Palette.blue500,
@@ -1168,7 +1168,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 8,
   },
   customerTypeSelected: {
@@ -1178,7 +1178,7 @@ const styles = StyleSheet.create({
   customerTypeLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   customerTypeLabelSelected: {
     color: Palette.blue500,

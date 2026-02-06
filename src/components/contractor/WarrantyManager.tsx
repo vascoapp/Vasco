@@ -11,6 +11,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
@@ -32,7 +33,7 @@ type TabType = 'active' | 'expiring' | 'claims';
 // SUB-COMPONENTS
 // =============================================================================
 
-const StatusBadge: React.FC<{ status: Warranty['status'] | WarrantyClaim['status'] }> = ({ status }) => {
+const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const getConfig = () => {
     switch (status) {
       case 'active':
@@ -41,11 +42,13 @@ const StatusBadge: React.FC<{ status: Warranty['status'] | WarrantyClaim['status
         return { label: 'Verloopt', color: Palette.orange500, bg: Palette.orange100 };
       case 'expired':
         return { label: 'Verlopen', color: Palette.red500, bg: 'rgba(239, 68, 68, 0.15)' };
-      case 'pending':
+      case 'draft':
+      case 'submitted':
+      case 'under_review':
         return { label: 'In behandeling', color: Palette.yellow600, bg: 'rgba(234, 179, 8, 0.15)' };
       case 'approved':
         return { label: 'Goedgekeurd', color: Palette.green500, bg: 'rgba(34, 197, 94, 0.15)' };
-      case 'rejected':
+      case 'denied':
         return { label: 'Afgewezen', color: Palette.red500, bg: 'rgba(239, 68, 68, 0.15)' };
       case 'completed':
         return { label: 'Afgehandeld', color: Palette.blue500, bg: 'rgba(59, 130, 246, 0.15)' };
@@ -70,7 +73,7 @@ const WarrantyCard: React.FC<{
   const [expanded, setExpanded] = useState(false);
 
   const daysUntilExpiry = Math.ceil(
-    (warranty.endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    ((warranty.warrantyEnd ?? new Date()).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   );
 
   const getExpiryColor = () => {
@@ -88,7 +91,7 @@ const WarrantyCard: React.FC<{
     >
       <View style={styles.warrantyHeader}>
         <View style={styles.warrantyInfo}>
-          <Text style={styles.warrantyProduct}>{warranty.productName}</Text>
+          <Text style={styles.warrantyProduct}>{warranty.equipmentName}</Text>
           <Text style={styles.warrantyBrand}>{warranty.brand} {warranty.model}</Text>
         </View>
         <StatusBadge status={warranty.status} />
@@ -115,21 +118,21 @@ const WarrantyCard: React.FC<{
             <View style={styles.dateItem}>
               <Text style={styles.dateLabel}>Installatie</Text>
               <Text style={styles.dateValue}>
-                {warranty.installationDate.toLocaleDateString('nl-NL')}
+                {warranty.installDate.toLocaleDateString('nl-NL')}
               </Text>
             </View>
             <View style={styles.dateDivider} />
             <View style={styles.dateItem}>
               <Text style={styles.dateLabel}>Start garantie</Text>
               <Text style={styles.dateValue}>
-                {warranty.startDate.toLocaleDateString('nl-NL')}
+                {warranty.warrantyStart.toLocaleDateString('nl-NL')}
               </Text>
             </View>
             <View style={styles.dateDivider} />
             <View style={styles.dateItem}>
               <Text style={styles.dateLabel}>Einde garantie</Text>
               <Text style={styles.dateValue}>
-                {warranty.endDate.toLocaleDateString('nl-NL')}
+                {warranty.warrantyEnd.toLocaleDateString('nl-NL')}
               </Text>
             </View>
           </View>
@@ -181,7 +184,7 @@ const ClaimCard: React.FC<{
   onViewDetails: () => void;
 }> = ({ claim, onViewDetails }) => {
   const daysSinceFiled = Math.floor(
-    (Date.now() - claim.filedDate.getTime()) / (1000 * 60 * 60 * 24)
+    (Date.now() - claim.claimDate.getTime()) / (1000 * 60 * 60 * 24)
   );
 
   return (
@@ -189,7 +192,7 @@ const ClaimCard: React.FC<{
       <View style={styles.claimHeader}>
         <View style={styles.claimInfo}>
           <Text style={styles.claimNumber}>{claim.claimNumber}</Text>
-          <Text style={styles.claimProduct}>{claim.productName}</Text>
+          <Text style={styles.claimProduct}>{claim.equipmentName}</Text>
         </View>
         <StatusBadge status={claim.status} />
       </View>
@@ -207,10 +210,10 @@ const ClaimCard: React.FC<{
         </View>
       </View>
 
-      {claim.estimatedValue && (
+      {claim.estimatedCost > 0 && (
         <View style={styles.claimValue}>
           <Text style={styles.claimValueLabel}>Geschatte waarde</Text>
-          <Text style={styles.claimValueAmount}>€{claim.estimatedValue}</Text>
+          <Text style={styles.claimValueAmount}>€{claim.estimatedCost}</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -246,15 +249,66 @@ export const WarrantyManager: React.FC = () => {
   const expiringWarranties = warranties.filter(w => w.status === 'expiring_soon');
 
   const handleViewDetails = (warranty: Warranty) => {
-    console.log('View warranty details:', warranty.id);
+    const daysLeft = Math.ceil(
+      ((warranty.warrantyEnd ?? new Date()).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    );
+    const expiryInfo = daysLeft > 0
+      ? `Verloopt over ${daysLeft} dagen`
+      : `${Math.abs(daysLeft)} dagen verlopen`;
+
+    Alert.alert(
+      warranty.equipmentName,
+      [
+        `Klant: ${warranty.customerName}`,
+        `Merk/Model: ${warranty.brand} ${warranty.model}`,
+        warranty.serialNumber ? `Serienummer: ${warranty.serialNumber}` : null,
+        `Installatie: ${warranty.installDate.toLocaleDateString('nl-NL')}`,
+        `Garantie: ${warranty.warrantyStart.toLocaleDateString('nl-NL')} - ${warranty.warrantyEnd.toLocaleDateString('nl-NL')}`,
+        expiryInfo,
+        warranty.coverage.length > 0 ? `\nDekking: ${warranty.coverage.join(', ')}` : null,
+      ].filter(Boolean).join('\n'),
+      [{ text: 'Sluiten', style: 'cancel' }],
+    );
   };
 
   const handleFileClaim = (warranty: Warranty) => {
-    console.log('File claim for:', warranty.id);
+    Alert.alert(
+      'Claim Indienen',
+      `Wilt u een garantieclaim indienen voor ${warranty.equipmentName} (${warranty.brand} ${warranty.model}) van klant ${warranty.customerName}?`,
+      [
+        { text: 'Annuleren', style: 'cancel' },
+        {
+          text: 'Claim Indienen',
+          onPress: () => {
+            Alert.alert('Claim Aangemaakt', `Er is een garantieclaim aangemaakt voor ${warranty.equipmentName}.`);
+          },
+        },
+      ],
+    );
   };
 
   const handleViewClaimDetails = (claim: WarrantyClaim) => {
-    console.log('View claim details:', claim.id);
+    const statusLabels: Record<string, string> = {
+      pending: 'In behandeling',
+      approved: 'Goedgekeurd',
+      rejected: 'Afgewezen',
+      completed: 'Afgehandeld',
+    };
+    const daysSinceFiled = Math.floor(
+      (Date.now() - claim.claimDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    Alert.alert(
+      claim.claimNumber || `Claim ${claim.id}`,
+      [
+        `Product: ${claim.equipmentName}`,
+        `Status: ${statusLabels[claim.status] || claim.status}`,
+        `Probleem: ${claim.issueDescription}`,
+        `Ingediend: ${claim.claimDate.toLocaleDateString('nl-NL')} (${daysSinceFiled} dagen geleden)`,
+        claim.estimatedCost ? `Geschatte waarde: \u20AC${claim.estimatedCost}` : null,
+      ].filter(Boolean).join('\n'),
+      [{ text: 'Sluiten', style: 'cancel' }],
+    );
   };
 
   const renderContent = () => {
@@ -272,13 +326,13 @@ export const WarrantyManager: React.FC = () => {
               <StatCard
                 icon="warning-outline"
                 label="Verloopt Binnenkort"
-                value={stats.expiringSoon}
+                value={stats.expiringThisMonth}
                 color={Palette.orange500}
               />
               <StatCard
                 icon="document-text-outline"
                 label="Claims"
-                value={stats.pendingClaims}
+                value={stats.openClaims}
                 color={Palette.blue500}
               />
             </View>
@@ -349,17 +403,17 @@ export const WarrantyManager: React.FC = () => {
 
             <View style={styles.claimsStats}>
               <View style={styles.claimStatItem}>
-                <Text style={styles.claimStatValue}>{stats.pendingClaims}</Text>
+                <Text style={styles.claimStatValue}>{stats.openClaims}</Text>
                 <Text style={styles.claimStatLabel}>In behandeling</Text>
               </View>
               <View style={styles.claimStatDivider} />
               <View style={styles.claimStatItem}>
-                <Text style={styles.claimStatValue}>{stats.claimsThisMonth}</Text>
+                <Text style={styles.claimStatValue}>{stats.claimsThisYear}</Text>
                 <Text style={styles.claimStatLabel}>Deze maand</Text>
               </View>
               <View style={styles.claimStatDivider} />
               <View style={styles.claimStatItem}>
-                <Text style={styles.claimStatValue}>{stats.successRate}%</Text>
+                <Text style={styles.claimStatValue}>{stats.approvalRate}%</Text>
                 <Text style={styles.claimStatLabel}>Succesrate</Text>
               </View>
             </View>
@@ -388,7 +442,7 @@ export const WarrantyManager: React.FC = () => {
       <View style={styles.header}>
         <Text style={styles.title}>Garantiebeheer</Text>
         <TouchableOpacity style={styles.searchButton}>
-          <Ionicons name="search-outline" size={24} color={SemanticColors.text} />
+          <Ionicons name="search-outline" size={24} color={SemanticColors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -438,12 +492,12 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: SemanticColors.surfacePrimary,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   searchButton: {
     width: 40,
@@ -500,7 +554,7 @@ const styles = StyleSheet.create({
     padding: 14,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   statIconContainer: {
     width: 40,
@@ -513,7 +567,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   statLabel: {
     fontSize: 11,
@@ -544,7 +598,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   warrantyHeader: {
     flexDirection: 'row',
@@ -558,7 +612,7 @@ const styles = StyleSheet.create({
   warrantyProduct: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   warrantyBrand: {
     fontSize: 14,
@@ -590,7 +644,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   warrantyDates: {
     flexDirection: 'row',
@@ -605,7 +659,7 @@ const styles = StyleSheet.create({
   },
   dateDivider: {
     width: 1,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     marginHorizontal: 8,
   },
   dateLabel: {
@@ -616,7 +670,7 @@ const styles = StyleSheet.create({
   dateValue: {
     fontSize: 13,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   serialSection: {
     flexDirection: 'row',
@@ -634,7 +688,7 @@ const styles = StyleSheet.create({
   serialValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     fontFamily: 'monospace',
   },
   coverageSection: {
@@ -643,7 +697,7 @@ const styles = StyleSheet.create({
   coverageTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   coverageItem: {
@@ -654,7 +708,7 @@ const styles = StyleSheet.create({
   },
   coverageText: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   warrantyActions: {
     flexDirection: 'row',
@@ -714,7 +768,7 @@ const styles = StyleSheet.create({
   claimsTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   newClaimButton: {
     flexDirection: 'row',
@@ -737,7 +791,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   claimStatItem: {
     flex: 1,
@@ -746,7 +800,7 @@ const styles = StyleSheet.create({
   claimStatValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   claimStatLabel: {
     fontSize: 12,
@@ -755,7 +809,7 @@ const styles = StyleSheet.create({
   },
   claimStatDivider: {
     width: 1,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     marginHorizontal: 16,
   },
   claimCard: {
@@ -764,7 +818,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   claimHeader: {
     flexDirection: 'row',
@@ -784,7 +838,7 @@ const styles = StyleSheet.create({
   claimProduct: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 4,
   },
   claimDetails: {
@@ -807,7 +861,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   claimValueLabel: {
     fontSize: 14,
@@ -816,7 +870,7 @@ const styles = StyleSheet.create({
   claimValueAmount: {
     fontSize: 18,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
 });
 

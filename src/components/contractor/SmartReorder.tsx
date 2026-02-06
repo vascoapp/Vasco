@@ -71,7 +71,7 @@ export function SmartReorder() {
       {/* Header Stats */}
       <View style={styles.headerStats}>
         <View style={styles.headerStat}>
-          <Ionicons name="shield-checkmark" size={24} color={SemanticColors.success} />
+          <Ionicons name="shield-checkmark" size={24} color={SemanticColors.feedbackSuccess} />
           <Text style={styles.headerStatValue}>{statistics.stockoutsAvoided}</Text>
           <Text style={styles.headerStatLabel}>Stockouts voorkomen</Text>
         </View>
@@ -206,7 +206,7 @@ function SuggestionsTab({
   if (suggestions.length === 0) {
     return (
       <View style={styles.emptyState}>
-        <Ionicons name="checkmark-circle" size={64} color={SemanticColors.success} />
+        <Ionicons name="checkmark-circle" size={64} color={SemanticColors.feedbackSuccess} />
         <Text style={styles.emptyTitle}>Voorraad op orde!</Text>
         <Text style={styles.emptyText}>
           Er zijn momenteel geen bestelsugesties. We houden je voorraad in de gaten.
@@ -220,8 +220,8 @@ function SuggestionsTab({
       {critical.length > 0 && (
         <>
           <View style={styles.sectionHeader}>
-            <Ionicons name="alert-circle" size={20} color={SemanticColors.error} />
-            <Text style={[styles.sectionTitle, { color: SemanticColors.error }]}>
+            <Ionicons name="alert-circle" size={20} color={SemanticColors.feedbackError} />
+            <Text style={[styles.sectionTitle, { color: SemanticColors.feedbackError }]}>
               Kritiek ({critical.length})
             </Text>
           </View>
@@ -287,11 +287,11 @@ function SuggestionCard({
   const getPriorityColor = (priority: ReorderSuggestion['priority']) => {
     switch (priority) {
       case 'critical':
-        return SemanticColors.error;
+        return SemanticColors.feedbackError;
       case 'high':
         return '#FF9500';
       case 'medium':
-        return SemanticColors.warning;
+        return SemanticColors.feedbackWarning;
       default:
         return SemanticColors.textSecondary;
     }
@@ -352,7 +352,7 @@ function SuggestionCard({
 
         {(suggestion.bulkDiscount || suggestion.priceOptimization) && (
           <View style={styles.savingsBadge}>
-            <Ionicons name="pricetag" size={12} color={SemanticColors.success} />
+            <Ionicons name="pricetag" size={12} color={SemanticColors.feedbackSuccess} />
             <Text style={styles.savingsText}>
               {suggestion.bulkDiscount
                 ? `${suggestion.bulkDiscount.discountPercent}% korting`
@@ -446,10 +446,10 @@ function InventoryCard({
   const stockLevel = item.currentStock / item.optimalStock;
   const stockColor =
     item.currentStock === 0
-      ? SemanticColors.error
+      ? SemanticColors.feedbackError
       : item.currentStock <= item.minimumStock
       ? '#FF9500'
-      : SemanticColors.success;
+      : SemanticColors.feedbackSuccess;
 
   const getTrendIcon = (trend: MaterialInventory['usageTrend']): keyof typeof Ionicons.glyphMap => {
     switch (trend) {
@@ -479,9 +479,9 @@ function InventoryCard({
             size={16}
             color={
               item.usageTrend === 'increasing'
-                ? SemanticColors.error
+                ? SemanticColors.feedbackError
                 : item.usageTrend === 'decreasing'
-                ? SemanticColors.success
+                ? SemanticColors.feedbackSuccess
                 : SemanticColors.textSecondary
             }
           />
@@ -707,7 +707,7 @@ function SuggestionDetailModal({
           {/* Bulk Discount */}
           {suggestion.bulkDiscount && (
             <View style={styles.savingsBox}>
-              <Ionicons name="pricetag" size={24} color={SemanticColors.success} />
+              <Ionicons name="pricetag" size={24} color={SemanticColors.feedbackSuccess} />
               <View style={styles.savingsContent}>
                 <Text style={styles.savingsTitle}>Bulkkorting beschikbaar!</Text>
                 <Text style={styles.savingsDescription}>
@@ -826,10 +826,10 @@ function BundleDetailModal({
               </Text>
             </View>
             <View style={styles.bundleDetailTotalRow}>
-              <Text style={[styles.bundleDetailTotalLabel, { color: SemanticColors.success }]}>
+              <Text style={[styles.bundleDetailTotalLabel, { color: SemanticColors.feedbackSuccess }]}>
                 Bundelkorting
               </Text>
-              <Text style={[styles.bundleDetailTotalValue, { color: SemanticColors.success }]}>
+              <Text style={[styles.bundleDetailTotalValue, { color: SemanticColors.feedbackSuccess }]}>
                 -€{bundle.savings.toFixed(2)}
               </Text>
             </View>
@@ -875,7 +875,7 @@ const styles = StyleSheet.create({
   // Header Stats
   headerStats: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     paddingVertical: 16,
     paddingHorizontal: 12,
   },
@@ -897,16 +897,16 @@ const styles = StyleSheet.create({
   },
   headerStatDivider: {
     width: 1,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     marginVertical: 8,
   },
 
   // Tab Bar
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   tab: {
     flex: 1,
@@ -938,7 +938,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   badgeUrgent: {
-    backgroundColor: SemanticColors.error,
+    backgroundColor: SemanticColors.feedbackError,
   },
   badgeText: {
     color: '#FFFFFF',
@@ -991,7 +991,7 @@ const styles = StyleSheet.create({
 
   // Suggestion Card
   suggestionCard: {
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1068,7 +1068,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: SemanticColors.success + '15',
+    backgroundColor: SemanticColors.feedbackSuccess + '15',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -1076,7 +1076,7 @@ const styles = StyleSheet.create({
   savingsText: {
     fontSize: 11,
     fontWeight: '600',
-    color: SemanticColors.success,
+    color: SemanticColors.feedbackSuccess,
   },
   quickOrderButton: {
     width: 40,
@@ -1098,7 +1098,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   categoryChipActive: {
     backgroundColor: SemanticColors.actionPrimary,
@@ -1112,7 +1112,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   inventoryCard: {
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1144,7 +1144,7 @@ const styles = StyleSheet.create({
   },
   stockBar: {
     height: 8,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 4,
     marginBottom: 8,
     overflow: 'hidden',
@@ -1213,7 +1213,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   bundleCard: {
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1243,11 +1243,11 @@ const styles = StyleSheet.create({
   bundleSavingsValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: SemanticColors.success,
+    color: SemanticColors.feedbackSuccess,
   },
   bundleSavingsAmount: {
     fontSize: 12,
-    color: SemanticColors.success,
+    color: SemanticColors.feedbackSuccess,
   },
   bundleDescription: {
     fontSize: 13,
@@ -1311,7 +1311,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '85%',
@@ -1322,7 +1322,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   modalTitle: {
     fontSize: 18,
@@ -1340,7 +1340,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
 
   // Detail Modal
@@ -1402,7 +1402,7 @@ const styles = StyleSheet.create({
   savingsBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: SemanticColors.success + '10',
+    backgroundColor: SemanticColors.feedbackSuccess + '10',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -1432,7 +1432,7 @@ const styles = StyleSheet.create({
   },
   confidenceBar: {
     height: 6,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 3,
     overflow: 'hidden',
     marginBottom: 8,
@@ -1514,7 +1514,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bundleDetailSavings: {
-    backgroundColor: SemanticColors.success,
+    backgroundColor: SemanticColors.feedbackSuccess,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
@@ -1591,7 +1591,7 @@ const styles = StyleSheet.create({
   },
   bundleDetailDivider: {
     height: 1,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     marginVertical: 8,
   },
   bundleDetailFinalLabel: {

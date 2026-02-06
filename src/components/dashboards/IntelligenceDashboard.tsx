@@ -361,7 +361,7 @@ function MarketTab({ insights }: { insights: MarketInsight[] }) {
       case 'demand':
         return { label: 'Vraag', color: Palette.hermesOrange, icon: 'trending-up' as IconName };
       case 'preference':
-        return { label: 'Voorkeur', color: Palette.dustyBlue, icon: 'heart' as IconName };
+        return { label: 'Voorkeur', color: Palette.blue500, icon: 'heart' as IconName };
     }
   };
 

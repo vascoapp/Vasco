@@ -106,7 +106,7 @@ export function TeamManagement() {
               <View
                 style={[
                   styles.statusDot,
-                  { backgroundColor: member.status === 'active' ? Palette.success : Palette.warning },
+                  { backgroundColor: member.status === 'active' ? SemanticColors.feedbackSuccess : SemanticColors.feedbackWarning },
                 ]}
               />
             </View>
@@ -127,7 +127,7 @@ export function TeamManagement() {
               <View key={skill.id} style={styles.skillBadge}>
                 <Text style={styles.skillText}>{skill.name}</Text>
                 {skill.verified && (
-                  <Ionicons name="checkmark-circle" size={12} color={Palette.success} />
+                  <Ionicons name="checkmark-circle" size={12} color={SemanticColors.feedbackSuccess} />
                 )}
               </View>
             ))}
@@ -198,10 +198,10 @@ export function TeamManagement() {
                     {
                       backgroundColor:
                         entry.status === 'in_progress'
-                          ? Palette.success + '20'
+                          ? SemanticColors.feedbackSuccess + '20'
                           : entry.status === 'completed'
                           ? Palette.primary + '20'
-                          : Palette.warning + '20',
+                          : SemanticColors.feedbackWarning + '20',
                     },
                   ]}
                 >
@@ -211,10 +211,10 @@ export function TeamManagement() {
                       {
                         color:
                           entry.status === 'in_progress'
-                            ? Palette.success
+                            ? SemanticColors.feedbackSuccess
                             : entry.status === 'completed'
                             ? Palette.primary
-                            : Palette.warning,
+                            : SemanticColors.feedbackWarning,
                       },
                     ]}
                   >
@@ -229,7 +229,7 @@ export function TeamManagement() {
 
               <View style={styles.timeDetails}>
                 <View style={styles.timeDetail}>
-                  <Ionicons name="log-in" size={16} color={Palette.success} />
+                  <Ionicons name="log-in" size={16} color={SemanticColors.feedbackSuccess} />
                   <Text style={styles.timeDetailText}>
                     {entry.clockIn.toLocaleTimeString('nl-NL', {
                       hour: '2-digit',
@@ -239,7 +239,7 @@ export function TeamManagement() {
                 </View>
                 {entry.clockOut && (
                   <View style={styles.timeDetail}>
-                    <Ionicons name="log-out" size={16} color={Palette.error} />
+                    <Ionicons name="log-out" size={16} color={SemanticColors.feedbackError} />
                     <Text style={styles.timeDetailText}>
                       {entry.clockOut.toLocaleTimeString('nl-NL', {
                         hour: '2-digit',
@@ -267,7 +267,7 @@ export function TeamManagement() {
                   style={styles.approveButton}
                   onPress={() => approveEntry(entry.id)}
                 >
-                  <Ionicons name="checkmark-circle" size={18} color={Palette.success} />
+                  <Ionicons name="checkmark-circle" size={18} color={SemanticColors.feedbackSuccess} />
                   <Text style={styles.approveButtonText}>Goedkeuren</Text>
                 </TouchableOpacity>
               )}
@@ -407,7 +407,7 @@ export function TeamManagement() {
                 style={[styles.leaveActionButton, styles.denyAction]}
                 onPress={() => denyRequest(request.id)}
               >
-                <Ionicons name="close" size={18} color={Palette.error} />
+                <Ionicons name="close" size={18} color={SemanticColors.feedbackError} />
                 <Text style={styles.denyActionText}>Afwijzen</Text>
               </TouchableOpacity>
             </View>
@@ -429,15 +429,15 @@ export function TeamManagement() {
                   <Ionicons
                     name={getLeaveIcon(request.type)}
                     size={14}
-                    color={Palette.success}
+                    color={SemanticColors.feedbackSuccess}
                   />
-                  <Text style={[styles.leaveTypeText, { color: Palette.success }]}>
+                  <Text style={[styles.leaveTypeText, { color: SemanticColors.feedbackSuccess }]}>
                     {getLeaveTypeName(request.type)}
                   </Text>
                 </View>
               </View>
-              <View style={[styles.statusBadge, { backgroundColor: Palette.success + '20' }]}>
-                <Text style={[styles.statusBadgeText, { color: Palette.success }]}>
+              <View style={[styles.statusBadge, { backgroundColor: SemanticColors.feedbackSuccess + '20' }]}>
+                <Text style={[styles.statusBadgeText, { color: SemanticColors.feedbackSuccess }]}>
                   Goedgekeurd
                 </Text>
               </View>
@@ -463,7 +463,7 @@ export function TeamManagement() {
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <TouchableOpacity onPress={() => setShowMemberModal(false)}>
-            <Ionicons name="close" size={24} color={SemanticColors.text} />
+            <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Teamlid Details</Text>
           <TouchableOpacity>
@@ -511,7 +511,7 @@ export function TeamManagement() {
                       <Text style={styles.skillLevel}>{getSkillLevelName(skill.level)}</Text>
                     </View>
                     {skill.verified && (
-                      <Ionicons name="checkmark-circle" size={20} color={Palette.success} />
+                      <Ionicons name="checkmark-circle" size={20} color={SemanticColors.feedbackSuccess} />
                     )}
                   </View>
                 ))}
@@ -535,10 +535,10 @@ export function TeamManagement() {
                       {
                         backgroundColor:
                           cert.status === 'valid'
-                            ? Palette.success + '20'
+                            ? SemanticColors.feedbackSuccess + '20'
                             : cert.status === 'expiring_soon'
-                            ? Palette.warning + '20'
-                            : Palette.error + '20',
+                            ? SemanticColors.feedbackWarning + '20'
+                            : SemanticColors.feedbackError + '20',
                       },
                     ]}
                   >
@@ -548,10 +548,10 @@ export function TeamManagement() {
                         {
                           color:
                             cert.status === 'valid'
-                              ? Palette.success
+                              ? SemanticColors.feedbackSuccess
                               : cert.status === 'expiring_soon'
-                              ? Palette.warning
-                              : Palette.error,
+                              ? SemanticColors.feedbackWarning
+                              : SemanticColors.feedbackError,
                         },
                       ]}
                     >
@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   subtitle: {
     fontSize: 14,
@@ -731,7 +731,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   statLabel: {
     fontSize: 11,
@@ -739,7 +739,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   warningValue: {
-    color: Palette.warning,
+    color: SemanticColors.feedbackWarning,
   },
   tabBar: {
     flexDirection: 'row',
@@ -782,7 +782,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   sectionSubtitle: {
     fontSize: 14,
@@ -828,7 +828,7 @@ const styles = StyleSheet.create({
   memberName: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   memberRole: {
     fontSize: 13,
@@ -864,7 +864,7 @@ const styles = StyleSheet.create({
   },
   skillText: {
     fontSize: 12,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   moreSkills: {
     fontSize: 12,
@@ -877,7 +877,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
     gap: 16,
   },
   footerItem: {
@@ -937,7 +937,7 @@ const styles = StyleSheet.create({
   timeName: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   timeJob: {
     fontSize: 13,
@@ -965,7 +965,7 @@ const styles = StyleSheet.create({
   },
   timeDetailText: {
     fontSize: 13,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   approveButton: {
     flexDirection: 'row',
@@ -973,14 +973,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 12,
     paddingVertical: 10,
-    backgroundColor: Palette.success + '15',
+    backgroundColor: SemanticColors.feedbackSuccess + '15',
     borderRadius: 10,
     gap: 6,
   },
   approveButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Palette.success,
+    color: SemanticColors.feedbackSuccess,
   },
   emptyState: {
     alignItems: 'center',
@@ -1021,7 +1021,7 @@ const styles = StyleSheet.create({
   performanceName: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   performanceRole: {
     fontSize: 13,
@@ -1029,7 +1029,7 @@ const styles = StyleSheet.create({
   },
   efficiencyBadge: {
     alignItems: 'center',
-    backgroundColor: Palette.success + '15',
+    backgroundColor: SemanticColors.feedbackSuccess + '15',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 10,
@@ -1037,11 +1037,11 @@ const styles = StyleSheet.create({
   efficiencyValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: Palette.success,
+    color: SemanticColors.feedbackSuccess,
   },
   efficiencyLabel: {
     fontSize: 10,
-    color: Palette.success,
+    color: SemanticColors.feedbackSuccess,
   },
   metricsGrid: {
     flexDirection: 'row',
@@ -1054,7 +1054,7 @@ const styles = StyleSheet.create({
   metricValue: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   metricLabel: {
     fontSize: 11,
@@ -1065,7 +1065,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   revenueInfo: {
     flexDirection: 'row',
@@ -1079,11 +1079,11 @@ const styles = StyleSheet.create({
   revenueValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   progressBar: {
     height: 6,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -1121,7 +1121,7 @@ const styles = StyleSheet.create({
   leaveName: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   leaveType: {
     flexDirection: 'row',
@@ -1143,7 +1143,7 @@ const styles = StyleSheet.create({
   leaveDaysValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   leaveDaysLabel: {
     fontSize: 10,
@@ -1154,7 +1154,7 @@ const styles = StyleSheet.create({
   },
   leaveDateText: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   leaveReason: {
     fontSize: 13,
@@ -1177,7 +1177,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   approveAction: {
-    backgroundColor: Palette.success,
+    backgroundColor: SemanticColors.feedbackSuccess,
   },
   approveActionText: {
     fontSize: 14,
@@ -1185,12 +1185,12 @@ const styles = StyleSheet.create({
     color: Palette.white,
   },
   denyAction: {
-    backgroundColor: Palette.error + '15',
+    backgroundColor: SemanticColors.feedbackError + '15',
   },
   denyActionText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Palette.error,
+    color: SemanticColors.feedbackError,
   },
   statusBadge: {
     paddingHorizontal: 10,
@@ -1211,12 +1211,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   modalContent: {
     flex: 1,
@@ -1225,7 +1225,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   profileAvatar: {
     width: 80,
@@ -1243,7 +1243,7 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 22,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 12,
   },
   profileRole: {
@@ -1267,12 +1267,12 @@ const styles = StyleSheet.create({
   detailSection: {
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   detailSectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
   detailRow: {
@@ -1283,7 +1283,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 15,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   skillsList: {
     gap: 8,
@@ -1302,7 +1302,7 @@ const styles = StyleSheet.create({
   skillName: {
     fontSize: 15,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   skillLevel: {
     fontSize: 13,
@@ -1324,7 +1324,7 @@ const styles = StyleSheet.create({
   certName: {
     fontSize: 15,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   certIssuer: {
     fontSize: 13,
@@ -1364,7 +1364,7 @@ const styles = StyleSheet.create({
   },
   availTime: {
     fontSize: 11,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 4,
   },
   availOff: {

@@ -92,7 +92,7 @@ export function EquipmentTracker() {
         <Text style={styles.statLabel}>Waarde</Text>
       </View>
       <View style={styles.statItem}>
-        <Text style={[styles.statValue, { color: Palette.success }]}>
+        <Text style={[styles.statValue, { color: SemanticColors.feedbackSuccess }]}>
           {stats.availableCount}
         </Text>
         <Text style={styles.statLabel}>Beschikbaar</Text>
@@ -119,7 +119,7 @@ export function EquipmentTracker() {
 
     return (
       <View style={styles.alertsBanner}>
-        <Ionicons name="warning" size={18} color={Palette.warning} />
+        <Ionicons name="warning" size={18} color={SemanticColors.feedbackWarning} />
         <Text style={styles.alertsText}>{alerts.length} meldingen vereisen aandacht</Text>
         <TouchableOpacity>
           <Text style={styles.alertsLink}>Bekijk</Text>
@@ -238,7 +238,7 @@ export function EquipmentTracker() {
               <Ionicons
                 name="construct"
                 size={14}
-                color={item.nextMaintenanceDate <= new Date() ? Palette.error : SemanticColors.textSecondary}
+                color={item.nextMaintenanceDate <= new Date() ? SemanticColors.feedbackError : SemanticColors.textSecondary}
               />
               <Text style={[
                 styles.maintenanceAlertText,
@@ -279,7 +279,7 @@ export function EquipmentTracker() {
               </View>
               {isOverdue && (
                 <View style={styles.overdueBadge}>
-                  <Ionicons name="alert-circle" size={14} color={Palette.error} />
+                  <Ionicons name="alert-circle" size={14} color={SemanticColors.feedbackError} />
                   <Text style={styles.overdueText}>Te laat</Text>
                 </View>
               )}
@@ -351,7 +351,7 @@ export function EquipmentTracker() {
               </View>
               {item.isOverdue ? (
                 <View style={styles.overdueBadge}>
-                  <Ionicons name="alert-circle" size={14} color={Palette.error} />
+                  <Ionicons name="alert-circle" size={14} color={SemanticColors.feedbackError} />
                   <Text style={styles.overdueText}>Achterstallig</Text>
                 </View>
               ) : (
@@ -404,7 +404,7 @@ export function EquipmentTracker() {
               <Text style={styles.utilizationName}>{item.equipmentName}</Text>
               <Text style={[
                 styles.utilizationRate,
-                { color: item.utilizationRate > 50 ? Palette.success : Palette.warning },
+                { color: item.utilizationRate > 50 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackWarning },
               ]}>
                 {item.utilizationRate}%
               </Text>
@@ -415,7 +415,7 @@ export function EquipmentTracker() {
                   styles.utilizationFill,
                   {
                     width: `${item.utilizationRate}%`,
-                    backgroundColor: item.utilizationRate > 50 ? Palette.success : Palette.warning,
+                    backgroundColor: item.utilizationRate > 50 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackWarning,
                   },
                 ]}
               />
@@ -450,7 +450,7 @@ export function EquipmentTracker() {
         </View>
         <View style={styles.depreciationItem}>
           <Text style={styles.depreciationLabel}>Boekwaarde</Text>
-          <Text style={[styles.depreciationValue, { color: Palette.success }]}>
+          <Text style={[styles.depreciationValue, { color: SemanticColors.feedbackSuccess }]}>
             €{depreciation.reduce((sum, d) => sum + d.bookValue, 0).toLocaleString('nl-NL')}
           </Text>
         </View>
@@ -495,7 +495,7 @@ export function EquipmentTracker() {
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <TouchableOpacity onPress={() => setShowEquipmentModal(false)}>
-            <Ionicons name="close" size={24} color={SemanticColors.text} />
+            <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Apparatuur Details</Text>
           <TouchableOpacity>
@@ -607,7 +607,7 @@ export function EquipmentTracker() {
                   <Text style={styles.detailRowLabel}>Volgend onderhoud</Text>
                   <Text style={[
                     styles.detailRowValue,
-                    selectedEquipment.nextMaintenanceDate <= new Date() && { color: Palette.error },
+                    selectedEquipment.nextMaintenanceDate <= new Date() && { color: SemanticColors.feedbackError },
                   ]}>
                     {selectedEquipment.nextMaintenanceDate.toLocaleDateString('nl-NL')}
                   </Text>
@@ -703,11 +703,11 @@ function getCategoryIcon(category: EquipmentCategory): string {
 
 function getCategoryColor(category: EquipmentCategory): string {
   const colors: Record<EquipmentCategory, string> = {
-    power_tools: Palette.warning,
+    power_tools: SemanticColors.feedbackWarning,
     hand_tools: SemanticColors.actionPrimary,
-    measuring: Palette.info,
-    safety: Palette.success,
-    vehicles: Palette.error,
+    measuring: SemanticColors.feedbackInfo,
+    safety: SemanticColors.feedbackSuccess,
+    vehicles: SemanticColors.feedbackError,
     heavy_equipment: '#8B4513',
     diagnostic: '#9B59B6',
     other: SemanticColors.textSecondary,
@@ -728,10 +728,10 @@ function getStatusName(status: string): string {
 
 function getStatusColor(status: string): string {
   const colors: Record<string, string> = {
-    available: Palette.success,
+    available: SemanticColors.feedbackSuccess,
     in_use: SemanticColors.actionPrimary,
-    maintenance: Palette.warning,
-    repair: Palette.error,
+    maintenance: SemanticColors.feedbackWarning,
+    repair: SemanticColors.feedbackError,
     retired: SemanticColors.textSecondary,
   };
   return colors[status] || SemanticColors.textSecondary;
@@ -749,10 +749,10 @@ function getConditionName(condition: string): string {
 
 function getConditionColor(condition: string): string {
   const colors: Record<string, string> = {
-    excellent: Palette.success,
+    excellent: SemanticColors.feedbackSuccess,
     good: SemanticColors.actionPrimary,
-    fair: Palette.warning,
-    poor: Palette.error,
+    fair: SemanticColors.feedbackWarning,
+    poor: SemanticColors.feedbackError,
   };
   return colors[condition] || SemanticColors.textSecondary;
 }
@@ -773,7 +773,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   subtitle: {
     fontSize: 14,
@@ -797,7 +797,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   statLabel: {
     fontSize: 11,
@@ -805,7 +805,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   warningValue: {
-    color: Palette.warning,
+    color: SemanticColors.feedbackWarning,
   },
   alertsBanner: {
     flexDirection: 'row',
@@ -813,14 +813,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 12,
     padding: 12,
-    backgroundColor: Palette.warning + '15',
+    backgroundColor: SemanticColors.feedbackWarning + '15',
     borderRadius: 10,
     gap: 8,
   },
   alertsText: {
     flex: 1,
     fontSize: 13,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   alertsLink: {
     fontSize: 13,
@@ -871,7 +871,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     fontSize: 15,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   categoryFilter: {
     maxHeight: 40,
@@ -921,7 +921,7 @@ const styles = StyleSheet.create({
   equipmentName: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   equipmentMeta: {
     fontSize: 13,
@@ -942,7 +942,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   detailItem: {
     flex: 1,
@@ -954,7 +954,7 @@ const styles = StyleSheet.create({
   detailValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 2,
   },
   assignedTo: {
@@ -974,7 +974,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   maintenanceOverdue: {
-    backgroundColor: Palette.error + '10',
+    backgroundColor: SemanticColors.feedbackError + '10',
     padding: 8,
     borderRadius: 8,
     marginTop: 12,
@@ -984,7 +984,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   maintenanceOverdueText: {
-    color: Palette.error,
+    color: SemanticColors.feedbackError,
     fontWeight: '500',
   },
   addButton: {
@@ -1015,7 +1015,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   sectionSubtitle: {
     fontSize: 14,
@@ -1029,7 +1029,7 @@ const styles = StyleSheet.create({
   },
   overdueCard: {
     borderWidth: 1,
-    borderColor: Palette.error + '40',
+    borderColor: SemanticColors.feedbackError + '40',
   },
   checkoutHeader: {
     flexDirection: 'row',
@@ -1042,7 +1042,7 @@ const styles = StyleSheet.create({
   checkoutName: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   checkoutPerson: {
     fontSize: 13,
@@ -1052,7 +1052,7 @@ const styles = StyleSheet.create({
   overdueBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Palette.error + '15',
+    backgroundColor: SemanticColors.feedbackError + '15',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -1061,7 +1061,7 @@ const styles = StyleSheet.create({
   overdueText: {
     fontSize: 12,
     fontWeight: '600',
-    color: Palette.error,
+    color: SemanticColors.feedbackError,
   },
   checkoutDates: {
     flexDirection: 'row',
@@ -1079,11 +1079,11 @@ const styles = StyleSheet.create({
   dateValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 2,
   },
   overdueDateValue: {
-    color: Palette.error,
+    color: SemanticColors.feedbackError,
   },
   checkoutJob: {
     flexDirection: 'row',
@@ -1127,7 +1127,7 @@ const styles = StyleSheet.create({
   },
   maintenanceOverdueCard: {
     borderWidth: 1,
-    borderColor: Palette.error + '40',
+    borderColor: SemanticColors.feedbackError + '40',
   },
   maintenanceHeader: {
     flexDirection: 'row',
@@ -1140,7 +1140,7 @@ const styles = StyleSheet.create({
   maintenanceName: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   maintenanceType: {
     fontSize: 13,
@@ -1157,7 +1157,7 @@ const styles = StyleSheet.create({
   daysValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   daysLabel: {
     fontSize: 10,
@@ -1204,7 +1204,7 @@ const styles = StyleSheet.create({
   utilizationName: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   utilizationRate: {
     fontSize: 18,
@@ -1212,7 +1212,7 @@ const styles = StyleSheet.create({
   },
   utilizationBar: {
     height: 6,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -1231,7 +1231,7 @@ const styles = StyleSheet.create({
   },
   utilizationStatValue: {
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   depreciationSummary: {
     flexDirection: 'row',
@@ -1252,7 +1252,7 @@ const styles = StyleSheet.create({
   depreciationValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 4,
   },
   depreciationCard: {
@@ -1270,7 +1270,7 @@ const styles = StyleSheet.create({
   depreciationCardName: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   depreciationCardYears: {
     fontSize: 12,
@@ -1290,7 +1290,7 @@ const styles = StyleSheet.create({
   depreciationCardAmount: {
     fontSize: 14,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 2,
   },
   exportButton: {
@@ -1319,12 +1319,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   modalContent: {
     flex: 1,
@@ -1333,7 +1333,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   equipmentProfileIcon: {
     width: 80,
@@ -1345,7 +1345,7 @@ const styles = StyleSheet.create({
   equipmentProfileName: {
     fontSize: 22,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 16,
     textAlign: 'center',
   },
@@ -1367,12 +1367,12 @@ const styles = StyleSheet.create({
   detailSection: {
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   detailSectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
   detailRow: {
@@ -1387,7 +1387,7 @@ const styles = StyleSheet.create({
   detailRowValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   modalActions: {
     padding: 20,

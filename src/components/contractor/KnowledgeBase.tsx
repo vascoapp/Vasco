@@ -428,7 +428,7 @@ export function KnowledgeBase() {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setShowArticleModal(false)}>
-              <Ionicons name="close" size={24} color={SemanticColors.text} />
+              <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => selectedArticle && bookmarkArticle(selectedArticle.id)}
@@ -436,7 +436,7 @@ export function KnowledgeBase() {
               <Ionicons
                 name={selectedArticle?.bookmarked ? 'bookmark' : 'bookmark-outline'}
                 size={24}
-                color={selectedArticle?.bookmarked ? Palette.blue500 : SemanticColors.text}
+                color={selectedArticle?.bookmarked ? Palette.blue500 : SemanticColors.textPrimary}
               />
             </TouchableOpacity>
           </View>
@@ -489,7 +489,7 @@ export function KnowledgeBase() {
                   <Text style={styles.helpfulButtonText}>Nuttig</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.shareButton}>
-                  <Ionicons name="share-outline" size={20} color={SemanticColors.text} />
+                  <Ionicons name="share-outline" size={20} color={SemanticColors.textPrimary} />
                   <Text style={styles.shareButtonText}>Delen</Text>
                 </TouchableOpacity>
               </View>
@@ -512,7 +512,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   tab: {
     flex: 1,
@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   seeAllText: {
     fontSize: 14,
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginRight: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   skillHeader: {
     flexDirection: 'row',
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
   skillName: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   skillLevel: {
     fontSize: 12,
@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
   },
   skillBar: {
     height: 6,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 3,
     marginBottom: 8,
   },
@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   pathHeader: {
     flexDirection: 'row',
@@ -649,7 +649,7 @@ const styles = StyleSheet.create({
   pathTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   pathDescription: {
     fontSize: 13,
@@ -665,7 +665,7 @@ const styles = StyleSheet.create({
   pathProgressBar: {
     flex: 1,
     height: 6,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 3,
   },
   pathProgressFill: {
@@ -701,7 +701,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   articleContent: {
     flex: 1,
@@ -721,7 +721,7 @@ const styles = StyleSheet.create({
   articleTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 4,
   },
   articleSummary: {
@@ -763,14 +763,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   searchInput: {
     flex: 1,
     paddingVertical: 12,
     paddingHorizontal: 10,
     fontSize: 15,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
 
   // Categories
@@ -783,12 +783,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: SemanticColors.surfacePrimary,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     marginRight: 8,
   },
   categoryChipText: {
     fontSize: 13,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
 
   // Tutorials
@@ -798,7 +798,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   tutorialHeader: {
     flexDirection: 'row',
@@ -835,7 +835,7 @@ const styles = StyleSheet.create({
   tutorialTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   tutorialDescription: {
     fontSize: 13,
@@ -860,7 +860,7 @@ const styles = StyleSheet.create({
   },
   tutorialProgressBar: {
     height: 4,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 2,
     marginBottom: 12,
   },
@@ -871,7 +871,7 @@ const styles = StyleSheet.create({
   },
   skillsGained: {
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
     paddingTop: 12,
   },
   skillsGainedLabel: {
@@ -905,7 +905,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 12,
   },
   updateCardUnread: {
@@ -931,7 +931,7 @@ const styles = StyleSheet.create({
   updateTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     flex: 1,
   },
   importanceBadge: {},
@@ -971,7 +971,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 12,
   },
   emptyText: {
@@ -993,7 +993,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
     backgroundColor: SemanticColors.surfacePrimary,
   },
   articleModalContent: {
@@ -1010,7 +1010,7 @@ const styles = StyleSheet.create({
   articleModalTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     lineHeight: 30,
     marginBottom: 12,
   },
@@ -1021,7 +1021,7 @@ const styles = StyleSheet.create({
   },
   articleModalAuthor: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   articleModalDate: {
     fontSize: 14,
@@ -1053,22 +1053,22 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   tagText: {
     fontSize: 12,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   articleModalSummary: {
     fontSize: 16,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     fontWeight: '500',
     lineHeight: 24,
     marginBottom: 20,
   },
   articleModalBody: {
     fontSize: 15,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     lineHeight: 24,
     marginBottom: 24,
   },
@@ -1102,12 +1102,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: SemanticColors.surfacePrimary,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 8,
   },
   shareButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
 });

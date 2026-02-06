@@ -522,7 +522,7 @@ function OpportunityCard({ opportunity }: { opportunity: MarketOpportunity }) {
   const getTypeConfig = (type: MarketOpportunity['type']) => {
     switch (type) {
       case 'product':
-        return { icon: 'cube' as IconName, color: Palette.dustyBlue };
+        return { icon: 'cube' as IconName, color: Palette.blue500 };
       case 'pricing':
         return { icon: 'cash' as IconName, color: SemanticColors.feedbackSuccess };
       case 'timing':

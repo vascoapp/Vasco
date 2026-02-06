@@ -377,11 +377,11 @@ export function DocumentVault() {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setShowDocumentModal(false)}>
-              <Ionicons name="close" size={24} color={SemanticColors.text} />
+              <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Document</Text>
             <TouchableOpacity>
-              <Ionicons name="ellipsis-horizontal" size={24} color={SemanticColors.text} />
+              <Ionicons name="ellipsis-horizontal" size={24} color={SemanticColors.textPrimary} />
             </TouchableOpacity>
           </View>
 
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   tab: {
     flex: 1,
@@ -524,14 +524,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   searchInput: {
     flex: 1,
     paddingVertical: 12,
     paddingHorizontal: 10,
     fontSize: 15,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
 
   // Type Filter
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: SemanticColors.surfacePrimary,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     marginRight: 8,
     gap: 6,
   },
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
   },
   typeChipText: {
     fontSize: 13,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   typeChipTextActive: {
     color: '#fff',
@@ -571,7 +571,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   statItem: {
     flex: 1,
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   statLabel: {
     fontSize: 12,
@@ -592,7 +592,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   sectionSubtitle: {
@@ -610,7 +610,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 12,
   },
   documentIcon: {
@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
   documentName: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   documentMeta: {
     flexDirection: 'row',
@@ -675,7 +675,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 12,
   },
   emptyText: {
@@ -698,7 +698,7 @@ const styles = StyleSheet.create({
   expiringHeaderText: {
     flex: 1,
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   expiringCard: {
     flexDirection: 'row',
@@ -708,7 +708,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     borderLeftWidth: 4,
     gap: 12,
   },
@@ -725,7 +725,7 @@ const styles = StyleSheet.create({
   expiringName: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   expiringDays: {
     fontSize: 13,
@@ -758,7 +758,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 12,
   },
   folderIcon: {
@@ -774,7 +774,7 @@ const styles = StyleSheet.create({
   folderName: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   folderCount: {
     fontSize: 13,
@@ -809,7 +809,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 12,
   },
   templatePreview: {
@@ -826,7 +826,7 @@ const styles = StyleSheet.create({
   templateName: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   templateDesc: {
     fontSize: 13,
@@ -885,13 +885,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
     backgroundColor: SemanticColors.surfacePrimary,
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   modalContent: {
     flex: 1,
@@ -912,7 +912,7 @@ const styles = StyleSheet.create({
   docDetailName: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     textAlign: 'center',
   },
   docDetailSize: {
@@ -926,14 +926,14 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   docDetailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   docDetailLabel: {
     fontSize: 14,
@@ -941,7 +941,7 @@ const styles = StyleSheet.create({
   },
   docDetailValue: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     fontWeight: '500',
   },
   docDetailTags: {

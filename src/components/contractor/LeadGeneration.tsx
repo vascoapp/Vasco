@@ -12,6 +12,7 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
@@ -46,7 +47,7 @@ const LeadScoreBadge: React.FC<{ score: number }> = ({ score }) => {
   );
 };
 
-const StageBadge: React.FC<{ stage: Lead['stage'] }> = ({ stage }) => {
+const StageBadge: React.FC<{ stage: Lead['status'] }> = ({ stage }) => {
   const getStageConfig = () => {
     switch (stage) {
       case 'new':
@@ -55,8 +56,10 @@ const StageBadge: React.FC<{ stage: Lead['stage'] }> = ({ stage }) => {
         return { label: 'Gecontacteerd', color: "#a855f7" };
       case 'qualified':
         return { label: 'Gekwalificeerd', color: Palette.yellow500 };
-      case 'quoted':
+      case 'proposal_sent':
         return { label: 'Offerte', color: Palette.orange500 };
+      case 'negotiating':
+        return { label: 'Onderhandeling', color: '#a855f7' };
       case 'won':
         return { label: 'Gewonnen', color: Palette.green500 };
       case 'lost':
@@ -77,7 +80,7 @@ const StageBadge: React.FC<{ stage: Lead['stage'] }> = ({ stage }) => {
 const LeadCard: React.FC<{
   lead: Lead;
   onContact: () => void;
-  onUpdateStage: (stage: Lead['stage']) => void;
+  onUpdateStage: (stage: Lead['status']) => void;
 }> = ({ lead, onContact, onUpdateStage }) => {
   const [expanded, setExpanded] = useState(false);
 
@@ -85,9 +88,9 @@ const LeadCard: React.FC<{
     switch (lead.source) {
       case 'website': return 'globe-outline';
       case 'referral': return 'people-outline';
-      case 'google': return 'search-outline';
-      case 'social': return 'share-social-outline';
-      case 'flyer': return 'document-text-outline';
+      case 'google_ads': return 'search-outline';
+      case 'social_media': return 'share-social-outline';
+      case 'phone': return 'call-outline';
       default: return 'ellipse-outline';
     }
   };
@@ -105,7 +108,7 @@ const LeadCard: React.FC<{
       <View style={styles.leadHeader}>
         <View style={styles.leadInfo}>
           <View style={styles.leadTitleRow}>
-            <Text style={styles.leadName}>{lead.name}</Text>
+            <Text style={styles.leadName}>{lead.customerInfo.name}</Text>
             <LeadScoreBadge score={lead.score} />
           </View>
           <View style={styles.leadMeta}>
@@ -115,13 +118,13 @@ const LeadCard: React.FC<{
             <Text style={styles.leadMetaText}>{daysSinceCreated}d geleden</Text>
           </View>
         </View>
-        <StageBadge stage={lead.stage} />
+        <StageBadge stage={lead.status} />
       </View>
 
       <View style={styles.leadDetails}>
         <View style={styles.leadDetailRow}>
           <Ionicons name="construct-outline" size={16} color={SemanticColors.textSecondary} />
-          <Text style={styles.leadDetailText}>{lead.serviceNeeded}</Text>
+          <Text style={styles.leadDetailText}>{lead.requestType}</Text>
         </View>
         {lead.estimatedValue && (
           <View style={styles.leadDetailRow}>
@@ -136,26 +139,28 @@ const LeadCard: React.FC<{
       {expanded && (
         <View style={styles.expandedContent}>
           <View style={styles.contactInfo}>
-            {lead.email && (
+            {lead.customerInfo.email && (
               <View style={styles.contactRow}>
                 <Ionicons name="mail-outline" size={16} color={SemanticColors.textSecondary} />
-                <Text style={styles.contactText}>{lead.email}</Text>
+                <Text style={styles.contactText}>{lead.customerInfo.email}</Text>
               </View>
             )}
             <View style={styles.contactRow}>
               <Ionicons name="call-outline" size={16} color={SemanticColors.textSecondary} />
-              <Text style={styles.contactText}>{lead.phone}</Text>
+              <Text style={styles.contactText}>{lead.customerInfo.phone}</Text>
             </View>
+            {(lead.customerInfo.address || lead.customerInfo.city) && (
             <View style={styles.contactRow}>
               <Ionicons name="location-outline" size={16} color={SemanticColors.textSecondary} />
-              <Text style={styles.contactText}>{lead.address}, {lead.city}</Text>
+              <Text style={styles.contactText}>{[lead.customerInfo.address, lead.customerInfo.city].filter(Boolean).join(', ')}</Text>
             </View>
+            )}
           </View>
 
-          {lead.notes && (
+          {lead.description && (
             <View style={styles.notesSection}>
               <Text style={styles.notesLabel}>Notities:</Text>
-              <Text style={styles.notesText}>{lead.notes}</Text>
+              <Text style={styles.notesText}>{lead.description}</Text>
             </View>
           )}
 
@@ -164,7 +169,7 @@ const LeadCard: React.FC<{
               <Ionicons name="call" size={18} color={Palette.white} />
               <Text style={styles.actionButtonText}>Bellen</Text>
             </TouchableOpacity>
-            {lead.stage === 'new' && (
+            {lead.status === 'new' && (
               <TouchableOpacity
                 style={[styles.actionButton, styles.secondaryButton]}
                 onPress={() => onUpdateStage('contacted')}
@@ -175,7 +180,7 @@ const LeadCard: React.FC<{
                 </Text>
               </TouchableOpacity>
             )}
-            {lead.stage === 'contacted' && (
+            {lead.status === 'contacted' && (
               <TouchableOpacity
                 style={[styles.actionButton, styles.secondaryButton]}
                 onPress={() => onUpdateStage('qualified')}
@@ -247,32 +252,31 @@ const FunnelStage: React.FC<{
 export const LeadGeneration: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('leads');
   const [searchQuery, setSearchQuery] = useState('');
-  const { leads, loading, updateStage } = useLeads();
+  const { leads, loading, updateStatus } = useLeads();
   const stats = useLeadStats();
 
   const filteredLeads = leads.filter(lead =>
-    lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    lead.serviceNeeded.toLowerCase().includes(searchQuery.toLowerCase())
+    lead.customerInfo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    lead.requestType.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const hotLeads = leads.filter(l => l.score >= 70 && l.stage !== 'won' && l.stage !== 'lost');
+  const hotLeads = leads.filter(l => l.score >= 70 && l.status !== 'won' && l.status !== 'lost');
 
   const handleContact = (lead: Lead) => {
-    // Would trigger phone call
-    console.log('Calling', lead.phone);
+    Linking.openURL('tel:' + lead.customerInfo.phone);
   };
 
-  const handleUpdateStage = (leadId: string, stage: Lead['stage']) => {
-    updateStage(leadId, stage);
+  const handleUpdateStage = (leadId: string, stage: Lead['status']) => {
+    updateStatus(leadId, stage);
   };
 
   // Calculate funnel data
   const funnelData = [
-    { label: 'Nieuw', count: leads.filter(l => l.stage === 'new').length, color: Palette.blue500 },
-    { label: 'Gecontacteerd', count: leads.filter(l => l.stage === 'contacted').length, color: "#a855f7" },
-    { label: 'Gekwalificeerd', count: leads.filter(l => l.stage === 'qualified').length, color: Palette.yellow500 },
-    { label: 'Offerte', count: leads.filter(l => l.stage === 'quoted').length, color: Palette.orange500 },
-    { label: 'Gewonnen', count: leads.filter(l => l.stage === 'won').length, color: Palette.green500 },
+    { label: 'Nieuw', count: leads.filter(l => l.status === 'new').length, color: Palette.blue500 },
+    { label: 'Gecontacteerd', count: leads.filter(l => l.status === 'contacted').length, color: "#a855f7" },
+    { label: 'Gekwalificeerd', count: leads.filter(l => l.status === 'qualified').length, color: Palette.yellow500 },
+    { label: 'Offerte', count: leads.filter(l => l.status === 'proposal_sent').length, color: Palette.orange500 },
+    { label: 'Gewonnen', count: leads.filter(l => l.status === 'won').length, color: Palette.green500 },
   ];
   const maxCount = Math.max(...funnelData.map(d => d.count), 1);
 
@@ -360,7 +364,7 @@ export const LeadGeneration: React.FC = () => {
               <StatCard
                 icon="cash-outline"
                 label="Gem. Waarde"
-                value={`€${stats.avgDealValue.toLocaleString()}`}
+                value={`€${stats.totalLeads > 0 ? Math.round(stats.pipelineValue / stats.totalLeads).toLocaleString() : 0}`}
               />
             </View>
 
@@ -458,12 +462,12 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: SemanticColors.surfacePrimary,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   addButton: {
     width: 40,
@@ -516,14 +520,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   searchInput: {
     flex: 1,
     paddingVertical: 12,
     paddingHorizontal: 8,
     fontSize: 16,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   loadingContainer: {
     padding: 40,
@@ -539,7 +543,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   leadHeader: {
     flexDirection: 'row',
@@ -558,7 +562,7 @@ const styles = StyleSheet.create({
   leadName: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   scoreBadge: {
     width: 28,
@@ -611,7 +615,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   contactInfo: {
     gap: 8,
@@ -624,7 +628,7 @@ const styles = StyleSheet.create({
   },
   contactText: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   notesSection: {
     backgroundColor: SemanticColors.surfaceBackground,
@@ -640,7 +644,7 @@ const styles = StyleSheet.create({
   },
   notesText: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   leadActions: {
     flexDirection: 'row',
@@ -675,7 +679,7 @@ const styles = StyleSheet.create({
   hotLeadsTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 8,
   },
   hotLeadsSubtitle: {
@@ -704,7 +708,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   statHeader: {
     flexDirection: 'row',
@@ -735,7 +739,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   statLabel: {
     fontSize: 13,
@@ -748,7 +752,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 16,
   },
   funnelContainer: {
@@ -756,7 +760,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 12,
   },
   funnelStage: {
@@ -769,12 +773,12 @@ const styles = StyleSheet.create({
   },
   funnelLabel: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   funnelCount: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   funnelBarContainer: {
     height: 8,
@@ -793,7 +797,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     overflow: 'hidden',
   },
   sourceItem: {
@@ -801,7 +805,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   sourceIconContainer: {
     width: 36,
@@ -815,7 +819,7 @@ const styles = StyleSheet.create({
   sourceName: {
     flex: 1,
     fontSize: 15,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   sourceCount: {
     fontSize: 14,

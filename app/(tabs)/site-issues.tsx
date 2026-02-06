@@ -6,7 +6,7 @@ import { SiteLeadDashboard } from '../../src/components/dashboards';
 export default function SiteIssuesScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <SiteLeadDashboard initialTab="issues" showTabBar={false} />
+      <SiteLeadDashboard initialTab="safety" showTabBar={false} />
     </SafeAreaView>
   );
 }

@@ -30,8 +30,15 @@ import {
   getCurrencyForCountry,
 } from '../../modules/countryModules';
 
+// Vasco Guidance
+import { useVascoGuidance, useInlineInsight } from '../../services/vascoGuidanceService';
+import { VascoInsightList, InlineInsight } from '../shared/VascoInsightCard';
+import type { VascoInsight } from '../shared/VascoInsightCard';
+import { ContractorDashboardHeader } from '../contractor/ContractorDashboardHeader';
+
+
 type IconName = keyof typeof Ionicons.glyphMap;
-export type SiteLeadTabView = 'overview' | 'dispatch' | 'safety' | 'quality' | 'issues';
+export type SiteLeadTabView = 'overview' | 'dispatch' | 'safety' | 'quality';
 type TabView = SiteLeadTabView;
 
 // =============================================================================
@@ -87,6 +94,109 @@ const MOCK_JOBS: DispatchJob[] = [
   { id: 'j6', title: 'Schilderwerk kantoor', customer: 'ABC Consulting', address: 'Zuidas 100', time: '14:00', duration: 360, status: 'unassigned', priority: 'low', requiredSkills: ['Binnen'], jobType: 'Schilder' },
 ];
 
+// =============================================================================
+// WORK TEAM PROGRESS TRACKING
+// =============================================================================
+
+type TeamStatus = 'on-track' | 'at-risk' | 'behind' | 'completed';
+
+interface WorkTeam {
+  id: string;
+  name: string;
+  trade: string;
+  tradeIcon: IconName;
+  lead: string;
+  members: number;
+  task: string;
+  location: string;
+  progress: number; // 0-100
+  plannedProgress: number; // 0-100
+  status: TeamStatus;
+  startTime: string;
+  estimatedEnd: string;
+  blockers?: string;
+}
+
+const MOCK_WORK_TEAMS: WorkTeam[] = [
+  {
+    id: 'wt-1',
+    name: 'Elektra Team A',
+    trade: 'Elektricien',
+    tradeIcon: 'flash',
+    lead: 'Mohammed Al-Rashid',
+    members: 3,
+    task: 'Bekabeling 2e verdieping',
+    location: 'Blok A - Verdieping 2',
+    progress: 72,
+    plannedProgress: 65,
+    status: 'on-track',
+    startTime: '07:30',
+    estimatedEnd: '16:00',
+  },
+  {
+    id: 'wt-2',
+    name: 'Loodgieter Team',
+    trade: 'Loodgieter',
+    tradeIcon: 'water',
+    lead: 'Pieter de Groot',
+    members: 2,
+    task: 'Sanitair installatie badkamers',
+    location: 'Blok B - Verdieping 1',
+    progress: 45,
+    plannedProgress: 60,
+    status: 'behind',
+    startTime: '08:00',
+    estimatedEnd: '17:00',
+    blockers: 'Wacht op materiaallevering',
+  },
+  {
+    id: 'wt-3',
+    name: 'Timmerwerk',
+    trade: 'Timmerman',
+    tradeIcon: 'hammer',
+    lead: 'Erik Jansen',
+    members: 4,
+    task: 'Kozijnen plaatsen begane grond',
+    location: 'Blok A - Begane grond',
+    progress: 88,
+    plannedProgress: 85,
+    status: 'on-track',
+    startTime: '07:00',
+    estimatedEnd: '14:30',
+  },
+  {
+    id: 'wt-4',
+    name: 'Schilders',
+    trade: 'Schilder',
+    tradeIcon: 'color-palette',
+    lead: 'Lisa Bakker',
+    members: 2,
+    task: 'Binnenschilderwerk kantoren',
+    location: 'Blok C - Verdieping 3',
+    progress: 30,
+    plannedProgress: 35,
+    status: 'at-risk',
+    startTime: '08:30',
+    estimatedEnd: '17:30',
+    blockers: 'Ventilatie nog niet afgerond',
+  },
+  {
+    id: 'wt-5',
+    name: 'Metselwerk',
+    trade: 'Metselaar',
+    tradeIcon: 'cube',
+    lead: 'Jan van Bergen',
+    members: 3,
+    task: 'Gevelstenen buitenmuur',
+    location: 'Blok B - Buitenzijde',
+    progress: 100,
+    plannedProgress: 100,
+    status: 'completed',
+    startTime: '06:30',
+    estimatedEnd: '15:00',
+  },
+];
+
 // Role color - matches theme roleSiteLead token
 const SITE_LEAD_COLOR = '#D2691E'; // Terracotta for Site Lead (per theme)
 
@@ -137,10 +247,10 @@ const SITELEAD_ONBOARDING_TIPS: UIGuidanceTip[] = [
   },
   {
     id: 'sl-4',
-    title: 'RFI\'s & Risico\'s',
-    description: 'Stel vragen aan ontwerpers, escaleer issues en beheer risico\'s voordat ze problemen worden.',
-    icon: 'help-circle',
-    action: { label: 'Naar Issues', tab: 'issues' },
+    title: 'Planning & Dispatch',
+    description: 'Beheer werkplanning, wijs technici toe aan klussen en optimaliseer routes.',
+    icon: 'calendar',
+    action: { label: 'Naar Planning', tab: 'dispatch' },
     dismissible: true,
   },
 ];
@@ -154,10 +264,9 @@ const SITELEAD_MILESTONES: ProgressMilestone[] = [
 ];
 
 const SITELEAD_QUICK_ACTIONS = [
-  { id: 'qa-1', icon: 'people' as IconName, title: 'Dispatch', subtitle: 'Planning', tab: 'dispatch' as TabView },
-  { id: 'qa-2', icon: 'shield-checkmark' as IconName, title: 'Veiligheid', subtitle: 'Incidenten', tab: 'safety' as TabView },
-  { id: 'qa-3', icon: 'ribbon' as IconName, title: 'Kwaliteit', subtitle: 'Gebreken', tab: 'quality' as TabView },
-  { id: 'qa-4', icon: 'warning' as IconName, title: 'Issues', subtitle: 'RFI & Risico', tab: 'issues' as TabView },
+  { id: 'qa-1', icon: 'shield-checkmark' as IconName, title: 'Veiligheid', subtitle: 'Incidenten', tab: 'safety' as TabView },
+  { id: 'qa-2', icon: 'ribbon' as IconName, title: 'Kwaliteit', subtitle: 'Gebreken', tab: 'quality' as TabView },
+  { id: 'qa-3', icon: 'calendar' as IconName, title: 'Planning', subtitle: 'Dispatch', tab: 'dispatch' as TabView },
 ];
 
 // =============================================================================
@@ -184,7 +293,7 @@ function MetricTile({ label, value, subtitle, trend, alert }: MetricTileProps) {
           <Ionicons
             name={trend === 'up' ? 'trending-up' : trend === 'down' ? 'trending-down' : 'remove'}
             size={16}
-            color={trend === 'up' ? Palette.success : trend === 'down' ? Palette.error : SemanticColors.textTertiary}
+            color={trend === 'up' ? SemanticColors.feedbackSuccess : trend === 'down' ? SemanticColors.feedbackError : SemanticColors.textTertiary}
           />
         )}
       </View>
@@ -511,45 +620,34 @@ export function SiteLeadDashboard({ initialTab = 'overview', showTabBar = true }
   const [activeTab, setActiveTab] = useState<TabView>(initialTab);
   const [selectedProjectId, setSelectedProjectId] = useState<string>('uk-001');
 
-  // UI Guidance state
-  const [showOnboarding, setShowOnboarding] = useState(true);
-  const [onboardingIndex, setOnboardingIndex] = useState(0);
-  const [dismissedTips, setDismissedTips] = useState<Set<string>>(new Set());
-  const [milestones, setMilestones] = useState<ProgressMilestone[]>(SITELEAD_MILESTONES);
+  // Vasco AI Guidance
+  const [dismissedGuidance, setDismissedGuidance] = useState<Set<string>>(new Set());
+  const [snoozedGuidance, setSnoozedGuidance] = useState<Set<string>>(new Set());
+  const allGuidance = useVascoGuidance('sitelead', activeTab as any);
+  const activeGuidance = useMemo(
+    () => allGuidance.filter(g => !dismissedGuidance.has(g.id) && !snoozedGuidance.has(g.id)),
+    [allGuidance, dismissedGuidance, snoozedGuidance]
+  );
+  const overviewInsight = useInlineInsight('sitelead', 'overview', 'overview');
+  const dispatchInsight = useInlineInsight('sitelead', 'dispatch', 'overview');
+  const safetyInsight = useInlineInsight('sitelead', 'safety', 'overview');
+  const qualityInsight = useInlineInsight('sitelead', 'quality', 'overview');
+
+  const handleDismissGuidance = useCallback((id: string) => {
+    setDismissedGuidance(prev => new Set(prev).add(id));
+  }, []);
+  const handleSnoozeGuidance = useCallback((id: string) => {
+    setSnoozedGuidance(prev => new Set(prev).add(id));
+  }, []);
+  const handleGuidanceAction = useCallback((insight: VascoInsight) => {
+    if (insight.actionRoute) router.push(insight.actionRoute as any);
+  }, [router]);
 
   // ServiceTitan Dispatch state
   const [dispatchWorkers, setDispatchWorkers] = useState<DispatchWorker[]>(MOCK_WORKERS);
   const [dispatchJobs, setDispatchJobs] = useState<DispatchJob[]>(MOCK_JOBS);
   const [selectedWorkerId, setSelectedWorkerId] = useState<string | null>(null);
   const [dispatchFilter, setDispatchFilter] = useState<'all' | 'unassigned' | 'in-progress'>('all');
-
-  // UI Guidance - filter active tips
-  const activeTips = useMemo(() =>
-    SITELEAD_ONBOARDING_TIPS.filter(t => !dismissedTips.has(t.id)),
-    [dismissedTips]
-  );
-
-  const handleDismissTip = useCallback((id: string) => {
-    setDismissedTips(prev => new Set(prev).add(id));
-    if (SITELEAD_ONBOARDING_TIPS.every(t => t.id === id || dismissedTips.has(t.id))) {
-      setShowOnboarding(false);
-    }
-  }, [dismissedTips]);
-
-  const handleOnboardingAction = useCallback((tab: TabView) => {
-    setActiveTab(tab);
-    setShowOnboarding(false);
-  }, []);
-
-  const handleMilestonePress = useCallback((m: ProgressMilestone) => {
-    // Navigate based on milestone
-    if (m.id === 'pm-3') setActiveTab('safety');
-    if (m.id === 'pm-5') setActiveTab('quality');
-  }, []);
-
-  const handleWhatNextAction = useCallback((tab: TabView) => {
-    setActiveTab(tab);
-  }, []);
 
   // Dispatch - filter jobs
   const filteredJobs = useMemo(() => {
@@ -650,6 +748,50 @@ export function SiteLeadDashboard({ initialTab = 'overview', showTabBar = true }
     };
   }, [selectedProject]);
 
+  const headerConfig = useMemo(() => {
+    switch (activeTab) {
+      case 'overview':
+        return {
+          title: 'Site Overzicht',
+          pills: [
+            { value: `${progressHealth?.actual ?? 0}%`, label: 'Progress', good: progressHealth?.status === 'on-track' },
+            { value: (safetyHealth?.ltir ?? 0).toFixed(2), label: 'LTIR', good: safetyHealth?.score === 'excellent' || safetyHealth?.score === 'good' },
+            { value: String(qualityHealth?.defectsOpen ?? 0), label: 'Open Defects', danger: (qualityHealth?.defectsOpen ?? 0) > 20 },
+          ],
+        };
+      case 'dispatch':
+        return {
+          title: 'Planning',
+          pills: [
+            { value: String(MOCK_WORKERS.filter(w => w.status === 'available').length), label: 'Beschikbaar', good: true },
+            { value: String(MOCK_JOBS.filter(j => j.status === 'in-progress').length), label: 'Actief' },
+            { value: String(MOCK_JOBS.filter(j => j.status === 'unassigned').length), label: 'Niet toegewezen', danger: MOCK_JOBS.filter(j => j.status === 'unassigned').length > 0 },
+          ],
+        };
+      case 'safety':
+        return {
+          title: 'Veiligheid',
+          pills: [
+            { value: (safetyHealth?.ltir ?? 0).toFixed(2), label: 'LTIR', good: safetyHealth?.score === 'excellent' || safetyHealth?.score === 'good' },
+            { value: String(qualityHealth?.defectsOpen ?? 0), label: 'Open Defects', danger: (qualityHealth?.defectsOpen ?? 0) > 20 },
+            { value: String(riskCounts.high), label: 'Hoog Risico', danger: riskCounts.high > 0 },
+          ],
+        };
+      case 'quality':
+        return {
+          title: 'Kwaliteit',
+          pills: [
+            { value: String(qualityHealth?.defectsOpen ?? 0), label: 'Open', danger: (qualityHealth?.defectsOpen ?? 0) > 20 },
+            { value: `${qualityHealth?.closureRate ?? 0}%`, label: 'Closure Rate', good: (qualityHealth?.closureRate ?? 0) > 80 },
+            { value: String((qualityHealth?.defectsOpen ?? 0) + (qualityHealth?.defectsClosed ?? 0)), label: 'Totaal' },
+          ],
+        };
+      // issues tab removed - merged into safety/veiligheid
+      default:
+        return { title: 'Site Overzicht', pills: [] as { value: string; label: string; good?: boolean; danger?: boolean }[] };
+    }
+  }, [activeTab, progressHealth, safetyHealth, qualityHealth, constraintStatus, riskCounts]);
+
   const fmt = (amount: number) => formatCurrency(amount, currency);
 
   const getGreeting = () => {
@@ -663,22 +805,22 @@ export function SiteLeadDashboard({ initialTab = 'overview', showTabBar = true }
     switch (score) {
       case 'excellent':
       case 'good':
-        return Palette.success;
+        return SemanticColors.feedbackSuccess;
       case 'fair':
-        return Palette.warning;
+        return SemanticColors.feedbackWarning;
       default:
-        return Palette.error;
+        return SemanticColors.feedbackError;
     }
   };
 
   const getProgressStatusColor = (status: string) => {
     switch (status) {
       case 'on-track':
-        return Palette.success;
+        return SemanticColors.feedbackSuccess;
       case 'at-risk':
-        return Palette.warning;
+        return SemanticColors.feedbackWarning;
       default:
-        return Palette.error;
+        return SemanticColors.feedbackError;
     }
   };
 
@@ -726,26 +868,18 @@ export function SiteLeadDashboard({ initialTab = 'overview', showTabBar = true }
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View>
-            <Text style={styles.headerTitle}>Site Overzicht</Text>
+            <Text style={styles.headerTitle}>{headerConfig.title}</Text>
             <Text style={styles.headerSubtitle}>{selectedProject.name}</Text>
           </View>
           <View style={[styles.headerAccent, { backgroundColor: SITE_LEAD_COLOR }]} />
         </View>
-
-        {/* Status Pills */}
         <View style={styles.headerMetrics}>
-          <View style={[styles.headerStatusPill, progressHealth.status === 'on-track' && styles.statusPillGood]}>
-            <Text style={styles.headerStatusValue}>{progressHealth.actual}%</Text>
-            <Text style={styles.headerStatusLabel}>Progress</Text>
-          </View>
-          <View style={[styles.headerStatusPill, safetyHealth.score === 'excellent' || safetyHealth.score === 'good' ? styles.statusPillGood : styles.statusPillWarning]}>
-            <Text style={styles.headerStatusValue}>{safetyHealth.ltir.toFixed(2)}</Text>
-            <Text style={styles.headerStatusLabel}>LTIR</Text>
-          </View>
-          <View style={[styles.headerStatusPill, qualityHealth.defectsOpen > 20 && styles.statusPillDanger]}>
-            <Text style={styles.headerStatusValue}>{qualityHealth.defectsOpen}</Text>
-            <Text style={styles.headerStatusLabel}>Open Defects</Text>
-          </View>
+          {headerConfig.pills.map((pill, idx) => (
+            <View key={idx} style={[styles.headerStatusPill, pill.good && styles.statusPillGood, pill.danger && styles.statusPillDanger]}>
+              <Text style={styles.headerStatusValue}>{pill.value}</Text>
+              <Text style={styles.headerStatusLabel}>{pill.label}</Text>
+            </View>
+          ))}
         </View>
       </View>
 
@@ -759,61 +893,26 @@ export function SiteLeadDashboard({ initialTab = 'overview', showTabBar = true }
         {/* OVERVIEW TAB */}
         {activeTab === 'overview' && (
           <>
-            {/* UI Guidance - Onboarding Carousel */}
-            {showOnboarding && activeTips.length > 0 && (
-              <OnboardingCarousel
-                tips={activeTips}
-                currentIndex={onboardingIndex}
-                onNext={() => setOnboardingIndex(i => Math.min(i + 1, activeTips.length - 1))}
-                onPrev={() => setOnboardingIndex(i => Math.max(i - 1, 0))}
-                onDismiss={handleDismissTip}
-                onAction={handleOnboardingAction}
-              />
+            {/* KPI Header */}
+            <ContractorDashboardHeader
+              kpis={[
+                { icon: 'people', value: String(MOCK_WORKERS.filter(w => w.status !== 'sick').length), label: 'Beschikbaar', color: SITE_LEAD_COLOR },
+                { icon: 'construct', value: String(MOCK_JOBS.filter(j => j.status === 'in-progress').length), label: 'Actief' },
+                { icon: 'alert-circle', value: String(MOCK_JOBS.filter(j => j.priority === 'urgent').length), label: 'Urgent', color: SemanticColors.feedbackError },
+              ]}
+            />
+            <VascoInsightList
+              insights={activeGuidance}
+              title="Vasco AI Guidance"
+              compact
+              maxVisible={2}
+              onDismiss={handleDismissGuidance}
+              onAction={handleGuidanceAction}
+              onSnooze={handleSnoozeGuidance}
+            />
+            {overviewInsight && (
+              <InlineInsight icon={overviewInsight.icon as IconName} message={overviewInsight.message} />
             )}
-
-            {/* UI Guidance - Progress Tracker */}
-            {!showOnboarding && (
-              <ProgressTracker
-                milestones={milestones}
-                onPress={handleMilestonePress}
-              />
-            )}
-
-            {/* UI Guidance - What to do next */}
-            {!showOnboarding && (
-              <WhatNextCard
-                actions={SITELEAD_QUICK_ACTIONS}
-                onAction={handleWhatNextAction}
-              />
-            )}
-
-            {/* Quick Actions */}
-            <View style={styles.quickActionsRow}>
-              <QuickAction
-                icon="people"
-                label="Dispatch"
-                badge={dispatchJobs.filter(j => j.status === 'unassigned').length || undefined}
-                onPress={() => setActiveTab('dispatch')}
-              />
-              <QuickAction
-                icon="shield-checkmark"
-                label="Veiligheid"
-                badge={safetyHealth.incidentsThisPeriod}
-                onPress={() => setActiveTab('safety')}
-              />
-              <QuickAction
-                icon="alert-circle"
-                label="Escalatie"
-                badge={riskCounts.high}
-                onPress={() => setActiveTab('issues')}
-              />
-              <QuickAction
-                icon="chatbubbles"
-                label="RFI's"
-                badge={constraintStatus.openRfis > 10 ? constraintStatus.openRfis : undefined}
-                onPress={() => setActiveTab('issues')}
-              />
-            </View>
 
             {/* Project Selector */}
             <View style={styles.section}>
@@ -879,49 +978,61 @@ export function SiteLeadDashboard({ initialTab = 'overview', showTabBar = true }
               </View>
             </View>
 
-            {/* Site Management Hub */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Site Management</Text>
-              <View style={styles.hubGrid}>
-                <Pressable style={styles.hubCard} onPress={() => setActiveTab('dispatch')}>
-                  <View style={[styles.hubIconWrap, { backgroundColor: SITE_LEAD_COLOR + '15' }]}>
-                    <Ionicons name="people" size={24} color={SITE_LEAD_COLOR} />
+            {/* Tool Link Cards */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Tools</Text>
+              <View style={styles.actionsList}>
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/ai-assistant' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: SITE_LEAD_COLOR + '15' }]}>
+                    <Ionicons name="sparkles" size={18} color={SITE_LEAD_COLOR} />
                   </View>
-                  <Text style={styles.hubCardTitle}>Dispatch</Text>
-                  <Text style={styles.hubCardSubtitle}>Technici & klussen</Text>
+                  <View style={styles.actionContent}>
+                    <Text style={styles.actionTitle}>AI Assistent</Text>
+                    <Text style={styles.actionSubtitle}>Slimme hulp bij dagelijkse taken</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
-
-                <Pressable style={styles.hubCard} onPress={() => setActiveTab('safety')}>
-                  <View style={[styles.hubIconWrap, { backgroundColor: Palette.error + '15' }]}>
-                    <Ionicons name="shield-checkmark" size={24} color={Palette.error} />
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/team' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackSuccess + '15' }]}>
+                    <Ionicons name="people" size={18} color={SemanticColors.feedbackSuccess} />
                   </View>
-                  <Text style={styles.hubCardTitle}>Veiligheid</Text>
-                  <Text style={styles.hubCardSubtitle}>Incidenten & inspectie</Text>
+                  <View style={styles.actionContent}>
+                    <Text style={styles.actionTitle}>Teambeheer</Text>
+                    <Text style={styles.actionSubtitle}>Beheer teamleden en rollen</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
-
-                <Pressable style={styles.hubCard} onPress={() => setActiveTab('quality')}>
-                  <View style={[styles.hubIconWrap, { backgroundColor: Palette.warning + '15' }]}>
-                    <Ionicons name="checkmark-done-circle" size={24} color={Palette.warning} />
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/documents' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
+                    <Ionicons name="document-text" size={18} color={SemanticColors.feedbackInfo} />
                   </View>
-                  <Text style={styles.hubCardTitle}>Kwaliteit</Text>
-                  <Text style={styles.hubCardSubtitle}>Gebreken & snaglijst</Text>
-                </Pressable>
-
-                <Pressable style={styles.hubCard} onPress={() => setActiveTab('issues')}>
-                  <View style={[styles.hubIconWrap, { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
-                    <Ionicons name="help-circle" size={24} color={SemanticColors.feedbackInfo} />
+                  <View style={styles.actionContent}>
+                    <Text style={styles.actionTitle}>Documenten</Text>
+                    <Text style={styles.actionSubtitle}>Documenten opslaan en delen</Text>
                   </View>
-                  <Text style={styles.hubCardTitle}>RFI's</Text>
-                  <Text style={styles.hubCardSubtitle}>Informatieverzoeken</Text>
+                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
               </View>
             </View>
+
           </>
         )}
 
         {/* SAFETY TAB */}
         {activeTab === 'safety' && (
           <>
+            {/* KPI Header */}
+            <ContractorDashboardHeader
+              kpis={[
+                { icon: 'shield-checkmark', value: safetyHealth.ltir.toFixed(2), label: 'LTIR', color: safetyHealth.score === 'excellent' || safetyHealth.score === 'good' ? SemanticColors.feedbackSuccess : SemanticColors.feedbackWarning },
+                { icon: 'warning', value: String(safetyHealth.incidentsThisPeriod), label: 'Incidenten', color: safetyHealth.incidentsThisPeriod > 0 ? SemanticColors.feedbackError : undefined },
+                { icon: 'eye', value: String(safetyHealth.nearMisses), label: 'Near-misses' },
+              ]}
+            />
+            {safetyInsight && (
+              <InlineInsight icon={safetyInsight.icon as IconName} message={safetyInsight.message} />
+            )}
+
             <ProjectSelector />
 
             {/* Safety Score Banner */}
@@ -940,46 +1051,40 @@ export function SiteLeadDashboard({ initialTab = 'overview', showTabBar = true }
               </View>
             </View>
 
-            {/* Safety Metrics */}
+            {/* Safety Metrics - Incident Bars */}
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Safety Metrics</Text>
-              <View style={styles.metricsGrid}>
-                <MetricTile
-                  label="Gewerkte uren"
-                  value={safetyHealth.hoursWorked.toLocaleString()}
-                  subtitle="totaal"
-                />
-                <MetricTile
-                  label="Incidenten"
-                  value={safetyHealth.incidents}
-                  subtitle="totaal"
-                  alert={safetyHealth.incidents > 0}
-                />
-                <MetricTile
-                  label="Deze periode"
-                  value={safetyHealth.incidentsThisPeriod}
-                  subtitle="incidenten"
-                  alert={safetyHealth.incidentsThisPeriod > 0}
-                />
-                <MetricTile
-                  label="Near misses"
-                  value={safetyHealth.nearMisses}
-                  subtitle="deze week"
-                />
+              <Text style={styles.cardTitle}>Incident Overzicht</Text>
+              <View style={styles.safetyGaugeBars}>
+                {[
+                  { label: 'Gewerkte uren', value: safetyHealth.hoursWorked.toLocaleString(), pct: 100, color: SITE_LEAD_COLOR },
+                  { label: 'Incidenten (totaal)', value: String(safetyHealth.incidents), pct: safetyHealth.incidents > 0 ? Math.max((safetyHealth.incidents / 10) * 100, 15) : 0, color: SemanticColors.feedbackError },
+                  { label: 'Deze periode', value: String(safetyHealth.incidentsThisPeriod), pct: safetyHealth.incidentsThisPeriod > 0 ? Math.max((safetyHealth.incidentsThisPeriod / 5) * 100, 10) : 0, color: SemanticColors.feedbackWarning },
+                  { label: 'Near-misses', value: String(safetyHealth.nearMisses), pct: safetyHealth.nearMisses > 0 ? Math.max((safetyHealth.nearMisses / 5) * 100, 10) : 0, color: Palette.hermesOrange },
+                ].map((item) => (
+                  <View key={item.label} style={styles.safetyBarRow}>
+                    <View style={styles.safetyBarLabelRow}>
+                      <Text style={styles.safetyBarLabel}>{item.label}</Text>
+                      <Text style={[styles.safetyBarValue, { color: item.color }]}>{item.value}</Text>
+                    </View>
+                    <View style={styles.safetyBarTrack}>
+                      <View style={[styles.safetyBarFill, { width: `${Math.min(item.pct, 100)}%`, backgroundColor: item.color }]} />
+                    </View>
+                  </View>
+                ))}
               </View>
             </View>
 
-            {/* Safety Actions */}
+            {/* Veiligheid Tools */}
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Safety Actions</Text>
+              <Text style={styles.cardTitle}>Veiligheid Tools</Text>
               <View style={styles.actionsList}>
                 <Pressable style={styles.actionItem}>
-                  <View style={[styles.actionIcon, { backgroundColor: Palette.error + '15' }]}>
-                    <Ionicons name="warning" size={18} color={Palette.error} />
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackError + '15' }]}>
+                    <Ionicons name="warning" size={18} color={SemanticColors.feedbackError} />
                   </View>
                   <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Report Incident</Text>
-                    <Text style={styles.actionSubtitle}>Log safety incident or near miss</Text>
+                    <Text style={styles.actionTitle}>Incident Melden</Text>
+                    <Text style={styles.actionSubtitle}>Meld veiligheidsincident of bijna-ongeluk</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
@@ -988,18 +1093,38 @@ export function SiteLeadDashboard({ initialTab = 'overview', showTabBar = true }
                     <Ionicons name="clipboard" size={18} color={SITE_LEAD_COLOR} />
                   </View>
                   <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Safety Inspection</Text>
-                    <Text style={styles.actionSubtitle}>Conduct site safety walk</Text>
+                    <Text style={styles.actionTitle}>Veiligheidsinspectie</Text>
+                    <Text style={styles.actionSubtitle}>Voer site veiligheidsronde uit</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
                 <Pressable style={styles.actionItem}>
-                  <View style={[styles.actionIcon, { backgroundColor: Palette.success + '15' }]}>
-                    <Ionicons name="people" size={18} color={Palette.success} />
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackSuccess + '15' }]}>
+                    <Ionicons name="people" size={18} color={SemanticColors.feedbackSuccess} />
                   </View>
                   <View style={styles.actionContent}>
                     <Text style={styles.actionTitle}>Toolbox Talk</Text>
-                    <Text style={styles.actionSubtitle}>Record safety briefing</Text>
+                    <Text style={styles.actionSubtitle}>Registreer veiligheidsbriefing</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+                </Pressable>
+                <Pressable style={styles.actionItem} onPress={() => router.push('/(contractor)/certificaten' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
+                    <Ionicons name="ribbon" size={18} color={SemanticColors.feedbackWarning} />
+                  </View>
+                  <View style={styles.actionContent}>
+                    <Text style={styles.actionTitle}>Certificaten</Text>
+                    <Text style={styles.actionSubtitle}>VCA, NEN beheren</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+                </Pressable>
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/compliance' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
+                    <Ionicons name="shield-checkmark" size={18} color={SemanticColors.feedbackInfo} />
+                  </View>
+                  <View style={styles.actionContent}>
+                    <Text style={styles.actionTitle}>Compliance</Text>
+                    <Text style={styles.actionSubtitle}>Nalevingsstatus</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
@@ -1011,44 +1136,89 @@ export function SiteLeadDashboard({ initialTab = 'overview', showTabBar = true }
         {/* QUALITY TAB */}
         {activeTab === 'quality' && (
           <>
+            {/* KPI Header */}
+            <ContractorDashboardHeader
+              kpis={[
+                { icon: 'ribbon', value: String(qualityHealth.defectsOpen), label: 'Open Defects', color: qualityHealth.defectsOpen > 20 ? SemanticColors.feedbackWarning : SemanticColors.feedbackSuccess },
+                { icon: 'checkmark-circle', value: `${qualityHealth.closureRate}%`, label: 'Closure Rate' },
+                { icon: 'construct', value: `€${qualityHealth.reworkCost.toLocaleString('nl-NL')}`, label: 'Rework' },
+              ]}
+            />
+            {qualityInsight && (
+              <InlineInsight icon={qualityInsight.icon as IconName} message={qualityInsight.message} />
+            )}
+
             <ProjectSelector />
 
-            {/* Quality Status Banner */}
-            <View style={styles.qualityBanner}>
-              <View style={styles.qualityBannerItem}>
-                <Text style={styles.qualityBannerValue}>{qualityHealth.defectsOpen}</Text>
-                <Text style={styles.qualityBannerLabel}>Open</Text>
-              </View>
-              <View style={styles.qualityBannerDivider} />
-              <View style={styles.qualityBannerItem}>
-                <Text style={[styles.qualityBannerValue, { color: Palette.success }]}>
-                  {qualityHealth.defectsClosed}
+            {/* Defect Resolution Flow */}
+            <View style={styles.card}>
+              <View style={styles.cardHeaderRow}>
+                <Text style={styles.cardTitle}>Defect Resolution</Text>
+                <Text style={[styles.cardHeaderStat, { color: SITE_LEAD_COLOR }]}>
+                  {qualityHealth.defectsOpen + qualityHealth.defectsClosed} total
                 </Text>
-                <Text style={styles.qualityBannerLabel}>Closed</Text>
               </View>
-              <View style={styles.qualityBannerDivider} />
-              <View style={styles.qualityBannerItem}>
-                <Text style={[styles.qualityBannerValue, { color: SITE_LEAD_COLOR }]}>
-                  {formatPercent(qualityHealth.closureRate)}
-                </Text>
-                <Text style={styles.qualityBannerLabel}>Closure Rate</Text>
+              {/* Pipeline Bar: Open → Closed */}
+              <View style={styles.defectPipelineBar}>
+                {qualityHealth.defectsClosed > 0 && (
+                  <View style={[styles.defectPipelineSegment, {
+                    flex: qualityHealth.defectsClosed,
+                    backgroundColor: SemanticColors.feedbackSuccess,
+                  }]} />
+                )}
+                {qualityHealth.defectsOpen > 0 && (
+                  <View style={[styles.defectPipelineSegment, {
+                    flex: qualityHealth.defectsOpen,
+                    backgroundColor: SemanticColors.feedbackWarning,
+                  }]} />
+                )}
+              </View>
+              <View style={styles.defectPipelineLegend}>
+                <View style={styles.defectPipelineLegendItem}>
+                  <View style={[styles.defectPipelineDot, { backgroundColor: SemanticColors.feedbackSuccess }]} />
+                  <Text style={styles.defectPipelineLegendText}>Gesloten</Text>
+                  <Text style={styles.defectPipelineLegendCount}>{qualityHealth.defectsClosed}</Text>
+                </View>
+                <View style={styles.defectPipelineLegendItem}>
+                  <View style={[styles.defectPipelineDot, { backgroundColor: SemanticColors.feedbackWarning }]} />
+                  <Text style={styles.defectPipelineLegendText}>Open</Text>
+                  <Text style={styles.defectPipelineLegendCount}>{qualityHealth.defectsOpen}</Text>
+                </View>
               </View>
             </View>
 
-            {/* Quality Details - Complementary data not in banner */}
+            {/* Quality Scorecard */}
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Quality Details</Text>
-              <View style={styles.metricsGrid}>
-                <MetricTile
-                  label="Herstelkosten"
-                  value={fmt(qualityHealth.reworkCost)}
-                  subtitle="totaal"
-                />
-                <MetricTile
-                  label="Closure trend"
-                  value={qualityHealth.closureRate >= 0.8 ? 'Good' : 'Needs focus'}
-                  trend={qualityHealth.closureRate >= 0.8 ? 'up' : 'down'}
-                />
+              <Text style={styles.cardTitle}>Kwaliteit Scorecard</Text>
+              <View style={styles.qualityScorecardRow}>
+                {/* Closure Rate Ring */}
+                <View style={[styles.closureRateRing, {
+                  borderColor: qualityHealth.closureRate >= 0.8 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackWarning,
+                }]}>
+                  <Text style={[styles.closureRateValue, {
+                    color: qualityHealth.closureRate >= 0.8 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackWarning,
+                  }]}>
+                    {formatPercent(qualityHealth.closureRate)}
+                  </Text>
+                  <Text style={styles.closureRateLabel}>Closure</Text>
+                </View>
+                {/* Detail Stats */}
+                <View style={styles.qualityScorecardStats}>
+                  <View style={styles.qualityScorecardStatRow}>
+                    <Ionicons name="construct" size={14} color={SemanticColors.feedbackWarning} />
+                    <Text style={styles.qualityScorecardLabel}>Herstelkosten</Text>
+                    <Text style={styles.qualityScorecardValue}>{fmt(qualityHealth.reworkCost)}</Text>
+                  </View>
+                  <View style={styles.qualityScorecardStatRow}>
+                    <Ionicons name="trending-up" size={14} color={qualityHealth.closureRate >= 0.8 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError} />
+                    <Text style={styles.qualityScorecardLabel}>Trend</Text>
+                    <Text style={[styles.qualityScorecardValue, {
+                      color: qualityHealth.closureRate >= 0.8 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError,
+                    }]}>
+                      {qualityHealth.closureRate >= 0.8 ? 'Goed' : 'Aandacht nodig'}
+                    </Text>
+                  </View>
+                </View>
               </View>
             </View>
 
@@ -1057,8 +1227,8 @@ export function SiteLeadDashboard({ initialTab = 'overview', showTabBar = true }
               <Text style={styles.cardTitle}>Quality Actions</Text>
               <View style={styles.actionsList}>
                 <Pressable style={styles.actionItem}>
-                  <View style={[styles.actionIcon, { backgroundColor: Palette.warning + '15' }]}>
-                    <Ionicons name="bug" size={18} color={Palette.warning} />
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
+                    <Ionicons name="bug" size={18} color={SemanticColors.feedbackWarning} />
                   </View>
                   <View style={styles.actionContent}>
                     <Text style={styles.actionTitle}>Log Defect</Text>
@@ -1067,8 +1237,8 @@ export function SiteLeadDashboard({ initialTab = 'overview', showTabBar = true }
                   <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
                 <Pressable style={styles.actionItem}>
-                  <View style={[styles.actionIcon, { backgroundColor: Palette.success + '15' }]}>
-                    <Ionicons name="checkmark-circle" size={18} color={Palette.success} />
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackSuccess + '15' }]}>
+                    <Ionicons name="checkmark-circle" size={18} color={SemanticColors.feedbackSuccess} />
                   </View>
                   <View style={styles.actionContent}>
                     <Text style={styles.actionTitle}>Close Defect</Text>
@@ -1086,104 +1256,23 @@ export function SiteLeadDashboard({ initialTab = 'overview', showTabBar = true }
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
-              </View>
-            </View>
-          </>
-        )}
-
-        {/* ISSUES TAB */}
-        {activeTab === 'issues' && (
-          <>
-            <ProjectSelector />
-
-            {/* Constraints & RFI Summary */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Beperkingen & RFI's</Text>
-              <View style={styles.metricsGrid}>
-                <MetricTile
-                  label="Open RFI's"
-                  value={constraintStatus.openRfis}
-                  alert={constraintStatus.openRfis > 15}
-                />
-                <MetricTile
-                  label="Gem. responstijd"
-                  value={`${constraintStatus.avgRfiResponse}d`}
-                  subtitle={constraintStatus.avgRfiResponse > 3 ? 'boven target' : 'binnen target'}
-                  alert={constraintStatus.avgRfiResponse > 3}
-                />
-                <MetricTile
-                  label="Open beperkingen"
-                  value={constraintStatus.openConstraints}
-                />
-                <MetricTile
-                  label="Opgelost"
-                  value={constraintStatus.clearedThisWeek}
-                  subtitle="deze week"
-                  trend="up"
-                />
-              </View>
-            </View>
-
-            {/* Risks Overview */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Risico Overzicht</Text>
-              <View style={styles.riskStatusRow}>
-                <StatusPill label="Hoog" count={riskCounts.high} color={Palette.error} />
-                <StatusPill label="Middel" count={riskCounts.medium} color={Palette.warning} />
-                <StatusPill label="Laag" count={riskCounts.low} color={Palette.success} />
-              </View>
-
-              {/* High priority risks list */}
-              {selectedProject.risks
-                .filter((r) => r.status !== 'closed' && r.score >= 12)
-                .slice(0, 3)
-                .map((risk) => (
-                  <Pressable key={risk.id} style={styles.riskItem}>
-                    <View style={styles.riskScoreBadge}>
-                      <Text style={styles.riskScoreText}>{risk.score}</Text>
-                    </View>
-                    <View style={styles.riskContent}>
-                      <Text style={styles.riskCategory}>{risk.category}</Text>
-                      <Text style={styles.riskDescription} numberOfLines={2}>
-                        {risk.description}
-                      </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                  </Pressable>
-                ))}
-            </View>
-
-            {/* Issues Actions */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Issue Actions</Text>
-              <View style={styles.actionsList}>
-                <Pressable style={styles.actionItem}>
-                  <View style={[styles.actionIcon, { backgroundColor: SITE_LEAD_COLOR + '15' }]}>
-                    <Ionicons name="help-circle" size={18} color={SITE_LEAD_COLOR} />
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/warranty' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
+                    <Ionicons name="shield-checkmark" size={18} color={SemanticColors.feedbackWarning} />
                   </View>
                   <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Create RFI</Text>
-                    <Text style={styles.actionSubtitle}>Request for information</Text>
+                    <Text style={styles.actionTitle}>Garantie</Text>
+                    <Text style={styles.actionSubtitle}>Garantiebeheer</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
-                <Pressable style={styles.actionItem}>
-                  <View style={[styles.actionIcon, { backgroundColor: Palette.error + '15' }]}>
-                    <Ionicons name="flag" size={18} color={Palette.error} />
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/receipts' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
+                    <Ionicons name="camera" size={18} color={SemanticColors.feedbackInfo} />
                   </View>
                   <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Escalate Issue</Text>
-                    <Text style={styles.actionSubtitle}>Flag blocker for attention</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
-                <Pressable style={styles.actionItem}>
-                  <View style={[styles.actionIcon, { backgroundColor: Palette.warning + '15' }]}>
-                    <Ionicons name="warning" size={18} color={Palette.warning} />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Log Risk</Text>
-                    <Text style={styles.actionSubtitle}>Add to risk register</Text>
+                    <Text style={styles.actionTitle}>Bon Scanner</Text>
+                    <Text style={styles.actionSubtitle}>Scan bonnen</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
@@ -1192,9 +1281,130 @@ export function SiteLeadDashboard({ initialTab = 'overview', showTabBar = true }
           </>
         )}
 
-        {/* DISPATCH TAB - ServiceTitan-style */}
+        {/* DISPATCH TAB (Planning) - ServiceTitan-style */}
         {activeTab === 'dispatch' && (
           <>
+            {/* KPI Header */}
+            <ContractorDashboardHeader
+              kpis={[
+                { icon: 'people', value: `${availableWorkers}/${dispatchWorkers.length}`, label: 'Beschikbaar', color: SITE_LEAD_COLOR },
+                { icon: 'construct', value: String(dispatchJobs.filter(j => j.status === 'unassigned').length), label: 'Niet Toegewezen' },
+                { icon: 'checkmark-done', value: String(dispatchJobs.filter(j => j.status === 'completed').length), label: 'Klaar' },
+              ]}
+            />
+            {dispatchInsight && (
+              <InlineInsight icon={dispatchInsight.icon as IconName} message={dispatchInsight.message} />
+            )}
+
+            {/* Werkploeg Voortgang - moved from Overview */}
+            <View style={styles.card}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md }}>
+                <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: SITE_LEAD_COLOR + '15', alignItems: 'center', justifyContent: 'center', marginRight: Spacing.sm }}>
+                  <Ionicons name="people" size={16} color={SITE_LEAD_COLOR} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.cardTitle}>Werkploeg Voortgang</Text>
+                  <Text style={{ fontSize: 12, color: SemanticColors.textTertiary }}>
+                    {MOCK_WORK_TEAMS.filter(t => t.status !== 'completed').length} actief · {MOCK_WORK_TEAMS.filter(t => t.status === 'completed').length} afgerond
+                  </Text>
+                </View>
+              </View>
+
+              {/* Summary strip */}
+              <View style={{ flexDirection: 'row', marginBottom: Spacing.md, gap: Spacing.sm }}>
+                {[
+                  { label: 'Op schema', count: MOCK_WORK_TEAMS.filter(t => t.status === 'on-track').length, color: SemanticColors.feedbackSuccess },
+                  { label: 'Risico', count: MOCK_WORK_TEAMS.filter(t => t.status === 'at-risk').length, color: SemanticColors.feedbackWarning },
+                  { label: 'Achter', count: MOCK_WORK_TEAMS.filter(t => t.status === 'behind').length, color: SemanticColors.feedbackError },
+                  { label: 'Klaar', count: MOCK_WORK_TEAMS.filter(t => t.status === 'completed').length, color: SemanticColors.textTertiary },
+                ].map((item) => (
+                  <View key={item.label} style={{ flex: 1, backgroundColor: item.color + '12', borderRadius: 8, paddingVertical: 6, alignItems: 'center' }}>
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: item.color }}>{item.count}</Text>
+                    <Text style={{ fontSize: 10, color: SemanticColors.textTertiary }}>{item.label}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Team cards */}
+              {MOCK_WORK_TEAMS.map((team) => {
+                const deviation = team.progress - team.plannedProgress;
+                const statusColor = team.status === 'on-track' ? SemanticColors.feedbackSuccess
+                  : team.status === 'at-risk' ? SemanticColors.feedbackWarning
+                  : team.status === 'behind' ? SemanticColors.feedbackError
+                  : SemanticColors.textTertiary;
+
+                return (
+                  <View key={team.id} style={{
+                    backgroundColor: SemanticColors.surfaceSecondary,
+                    borderRadius: 10,
+                    padding: Spacing.sm,
+                    marginBottom: Spacing.xs,
+                    borderLeftWidth: 3,
+                    borderLeftColor: statusColor,
+                  }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                      <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: statusColor + '20', alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+                        <Ionicons name={team.tradeIcon} size={14} color={statusColor} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 14, fontWeight: '600', color: SemanticColors.textPrimary }}>{team.name}</Text>
+                        <Text style={{ fontSize: 11, color: SemanticColors.textTertiary }}>
+                          {team.lead} · {team.members} personen · {team.location}
+                        </Text>
+                      </View>
+                      {team.status === 'completed' ? (
+                        <Ionicons name="checkmark-circle" size={18} color={SemanticColors.feedbackSuccess} />
+                      ) : (
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: statusColor }}>
+                          {deviation >= 0 ? '+' : ''}{deviation}%
+                        </Text>
+                      )}
+                    </View>
+                    <Text style={{ fontSize: 12, color: SemanticColors.textSecondary, marginBottom: 6 }}>
+                      {team.task}
+                    </Text>
+                    <View style={{ marginBottom: 4 }}>
+                      <View style={{ height: 6, borderRadius: 3, backgroundColor: SemanticColors.surfacePrimary, overflow: 'hidden' }}>
+                        <View style={{
+                          height: '100%',
+                          borderRadius: 3,
+                          width: `${team.progress}%`,
+                          backgroundColor: statusColor,
+                        }} />
+                      </View>
+                      {team.status !== 'completed' && (
+                        <View style={{
+                          position: 'absolute',
+                          left: `${team.plannedProgress}%`,
+                          top: -2,
+                          width: 2,
+                          height: 10,
+                          backgroundColor: SemanticColors.textTertiary,
+                          borderRadius: 1,
+                        }} />
+                      )}
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={{ fontSize: 11, color: SemanticColors.textTertiary }}>
+                        {team.progress}% (plan: {team.plannedProgress}%)
+                      </Text>
+                      <Text style={{ fontSize: 11, color: SemanticColors.textTertiary }}>
+                        {team.startTime} - {team.estimatedEnd}
+                      </Text>
+                    </View>
+                    {team.blockers && (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, paddingTop: 4, borderTopWidth: 1, borderTopColor: SemanticColors.borderMuted }}>
+                        <Ionicons name="alert-circle" size={12} color={SemanticColors.feedbackWarning} />
+                        <Text style={{ fontSize: 11, color: SemanticColors.feedbackWarning, marginLeft: 4, flex: 1 }}>
+                          {team.blockers}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+
             {/* Dispatch Header Stats */}
             <View style={styles.dispatchHeader}>
               <View style={styles.dispatchStat}>
@@ -1203,12 +1413,12 @@ export function SiteLeadDashboard({ initialTab = 'overview', showTabBar = true }
               </View>
               <View style={styles.dispatchStatDivider} />
               <View style={styles.dispatchStat}>
-                <Text style={[styles.dispatchStatValue, { color: Palette.success }]}>{availableWorkers}</Text>
+                <Text style={[styles.dispatchStatValue, { color: SemanticColors.feedbackSuccess }]}>{availableWorkers}</Text>
                 <Text style={styles.dispatchStatLabel}>Beschikbaar</Text>
               </View>
               <View style={styles.dispatchStatDivider} />
               <View style={styles.dispatchStat}>
-                <Text style={[styles.dispatchStatValue, { color: Palette.error }]}>
+                <Text style={[styles.dispatchStatValue, { color: SemanticColors.feedbackError }]}>
                   {dispatchJobs.filter(j => j.priority === 'urgent').length}
                 </Text>
                 <Text style={styles.dispatchStatLabel}>Spoed</Text>
@@ -1311,9 +1521,9 @@ export function SiteLeadDashboard({ initialTab = 'overview', showTabBar = true }
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
-                <Pressable style={styles.actionItem}>
-                  <View style={[styles.actionIcon, { backgroundColor: Palette.success + '15' }]}>
-                    <Ionicons name="calendar" size={18} color={Palette.success} />
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/planning' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackSuccess + '15' }]}>
+                    <Ionicons name="calendar" size={18} color={SemanticColors.feedbackSuccess} />
                   </View>
                   <View style={styles.actionContent}>
                     <Text style={styles.actionTitle}>Week Planning</Text>
@@ -1321,9 +1531,9 @@ export function SiteLeadDashboard({ initialTab = 'overview', showTabBar = true }
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
-                <Pressable style={styles.actionItem}>
-                  <View style={[styles.actionIcon, { backgroundColor: Palette.warning + '15' }]}>
-                    <Ionicons name="map" size={18} color={Palette.warning} />
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/route' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
+                    <Ionicons name="map" size={18} color={SemanticColors.feedbackWarning} />
                   </View>
                   <View style={styles.actionContent}>
                     <Text style={styles.actionTitle}>Route Optimalisatie</Text>
@@ -1490,7 +1700,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: Palette.error,
+    backgroundColor: SemanticColors.feedbackError,
     borderRadius: 10,
     minWidth: 18,
     height: 18,
@@ -1606,7 +1816,7 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   metricTileAlert: {
-    backgroundColor: Palette.error + '10',
+    backgroundColor: SemanticColors.feedbackError + '10',
   },
   metricLabel: {
     fontSize: 11,
@@ -1624,7 +1834,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textPrimary,
   },
   metricValueAlert: {
-    color: Palette.error,
+    color: SemanticColors.feedbackError,
   },
   metricSubtitle: {
     fontSize: 10,
@@ -1793,14 +2003,14 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Palette.error + '20',
+    backgroundColor: SemanticColors.feedbackError + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },
   riskScoreText: {
     fontSize: 14,
     fontWeight: '700',
-    color: Palette.error,
+    color: SemanticColors.feedbackError,
   },
   riskContent: {
     flex: 1,
@@ -1977,8 +2187,8 @@ const styles = StyleSheet.create({
     borderColor: SemanticColors.borderDefault,
   },
   milestoneIconDone: {
-    backgroundColor: Palette.success,
-    borderColor: Palette.success,
+    backgroundColor: SemanticColors.feedbackSuccess,
+    borderColor: SemanticColors.feedbackSuccess,
   },
   milestoneIconCurrent: {
     borderColor: SITE_LEAD_COLOR,
@@ -1991,7 +2201,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   milestoneLineDone: {
-    backgroundColor: Palette.success,
+    backgroundColor: SemanticColors.feedbackSuccess,
   },
   currentMilestone: {
     flexDirection: 'row',
@@ -2260,8 +2470,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   dispatchJobCardUnassigned: {
-    borderColor: Palette.warning + '60',
-    backgroundColor: Palette.warning + '05',
+    borderColor: SemanticColors.feedbackWarning + '60',
+    backgroundColor: SemanticColors.feedbackWarning + '05',
   },
   dispatchJobHeader: {
     flexDirection: 'row',
@@ -2384,4 +2594,228 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  // Card Header Row
+  cardHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cardHeaderStat: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: SemanticColors.textSecondary,
+  },
+
+  // Safety Gauge
+  safetyGaugeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.lg,
+  },
+  safetyGaugeRing: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: SemanticColors.surfaceSecondary,
+  },
+  safetyGaugeValue: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  safetyGaugeLabel: {
+    fontSize: 10,
+    color: SemanticColors.textTertiary,
+  },
+  safetyGaugeBars: {
+    flex: 1,
+    gap: 8,
+  },
+  safetyBarRow: {
+    gap: 2,
+  },
+  safetyBarLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  safetyBarLabel: {
+    fontSize: 11,
+    color: SemanticColors.textSecondary,
+  },
+  safetyBarValue: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  safetyBarTrack: {
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    overflow: 'hidden',
+  },
+  safetyBarFill: {
+    height: '100%',
+    borderRadius: 2.5,
+  },
+
+  // Defect Pipeline
+  defectPipelineBar: {
+    flexDirection: 'row',
+    height: 14,
+    borderRadius: 7,
+    overflow: 'hidden',
+    backgroundColor: SemanticColors.surfaceSecondary,
+  },
+  defectPipelineSegment: {
+    height: '100%',
+  },
+  defectPipelineLegend: {
+    gap: Spacing.xs,
+  },
+  defectPipelineLegendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  defectPipelineDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  defectPipelineLegendText: {
+    flex: 1,
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  defectPipelineLegendCount: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+
+  // Quality Scorecard
+  qualityScorecardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.lg,
+  },
+  closureRateRing: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: SemanticColors.surfaceSecondary,
+  },
+  closureRateValue: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  closureRateLabel: {
+    fontSize: 9,
+    color: SemanticColors.textTertiary,
+  },
+  qualityScorecardStats: {
+    flex: 1,
+    gap: Spacing.sm,
+  },
+  qualityScorecardStatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  qualityScorecardLabel: {
+    flex: 1,
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  qualityScorecardValue: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+
+  // RFI Response Time
+  rfiResponseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.lg,
+  },
+  rfiResponseGauge: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rfiResponseActual: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  rfiResponseLabel: {
+    fontSize: 10,
+    color: SemanticColors.textTertiary,
+  },
+  rfiResponseBars: {
+    flex: 1,
+    gap: Spacing.sm,
+  },
+  rfiResponseBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  rfiResponseBarLabel: {
+    width: 50,
+    fontSize: 11,
+    color: SemanticColors.textSecondary,
+  },
+  rfiResponseBarTrack: {
+    flex: 1,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    overflow: 'hidden',
+  },
+  rfiResponseBarFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  rfiResponseBarValue: {
+    width: 24,
+    fontSize: 11,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+    textAlign: 'right',
+  },
+
+  // Constraint Rows
+  constraintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.borderMuted,
+  },
+  constraintIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  constraintLabel: {
+    flex: 1,
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+  },
+  constraintValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+
 });

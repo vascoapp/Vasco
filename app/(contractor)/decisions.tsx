@@ -1,22 +1,42 @@
-// Customer Decisions Screen - Help contractors guide customers through project decisions
+// =============================================================================
+// KEUZES — Customer Decision Tracker
+// =============================================================================
+// Track customer decisions to keep projects on schedule. Customers see what
+// needs to be decided and when, with integrated reminders to reduce project
+// overflow caused by late decisions.
+// =============================================================================
+
 import { useState } from 'react';
-import { View, StyleSheet, Modal } from 'react-native';
+import { View, Text, StyleSheet, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SemanticColors } from '../../src/theme/colors';
+import { Ionicons } from '@expo/vector-icons';
+import { SemanticColors, Palette } from '../../src/theme/colors';
+import { Spacing } from '../../src/theme/spacing';
 import {
   DecisionTrackerList,
   DecisionTrackerDetail,
   TemplatePicker,
 } from '../../src/components/contractor/DecisionTracker';
 import { ShareDecisionTracker } from '../../src/components/contractor/ShareDecisionTracker';
+import { InlineInsight } from '../../src/components/shared/VascoInsightCard';
+import { ContractorDashboardHeader } from '../../src/components/contractor/ContractorDashboardHeader';
+import { useInlineInsight } from '../../src/services/vascoGuidanceService';
 import type { CustomerDecisionTracker, DecisionTemplate } from '../../src/types/decisions';
 
+type IconName = keyof typeof Ionicons.glyphMap;
 type ViewMode = 'list' | 'detail' | 'template-picker';
 
-export default function DecisionsScreen() {
+export default function KeuzeScreen() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedTracker, setSelectedTracker] = useState<CustomerDecisionTracker | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
+
+  const inlineInsight = useInlineInsight('contractor', 'decisions', 'overview');
+
+  // Mock KPI counts
+  const totalDecisions = 12;
+  const pendingDecisions = 5;
+  const overdueDecisions = 2;
 
   const handleSelectTracker = (tracker: CustomerDecisionTracker) => {
     setSelectedTracker(tracker);
@@ -28,10 +48,50 @@ export default function DecisionsScreen() {
   };
 
   const handleSelectTemplate = (template: DecisionTemplate) => {
-    // In a real app, this would create a new tracker and navigate to it
-    // For now, just go back to list
-    console.log('Selected template:', template.name);
-    setViewMode('list');
+    const newTracker: CustomerDecisionTracker = {
+      id: `tracker_${Date.now()}`,
+      jobId: 'new',
+      customerId: 'new',
+      customerName: 'Nieuwe klant',
+      templateId: template.id,
+      templateName: template.name,
+      projectStartDate: new Date().toISOString(),
+      phases: [],
+      categories: template.categories.map(cat => ({
+        id: cat.id,
+        categoryId: cat.id,
+        name: cat.name,
+        phase: cat.phase,
+        dueDate: new Date(Date.now() + cat.daysBeforePhaseStart * 86400000).toISOString(),
+        items: cat.items.map(item => ({
+          id: item.id,
+          itemId: item.id,
+          name: item.name,
+          description: item.description,
+          inputType: item.inputType,
+          options: item.options,
+          priority: item.priority,
+          status: 'pending' as const,
+          dueDate: new Date(Date.now() + cat.daysBeforePhaseStart * 86400000).toISOString(),
+          isOverdue: false,
+          remindersSent: 0,
+        })),
+        isOverdue: false,
+        completedCount: 0,
+        totalCount: cat.items.length,
+      })),
+      totalDecisions: template.estimatedTotalDecisions,
+      decidedCount: 0,
+      pendingCount: template.estimatedTotalDecisions,
+      overdueCount: 0,
+      reminderFrequency: 'every_2_days',
+      preferredChannel: 'whatsapp',
+      status: 'active',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setSelectedTracker(newTracker);
+    setViewMode('detail');
   };
 
   const handleClose = () => {
@@ -44,8 +104,18 @@ export default function DecisionsScreen() {
     itemIds: string[],
     channel: 'whatsapp' | 'sms' | 'email'
   ) => {
-    console.log(`Reminder sent via ${channel} for ${itemIds.length} items`);
-    // In a real app, this would record the reminder in the database
+    const channelLabel = channel === 'whatsapp' ? 'WhatsApp' : channel === 'sms' ? 'SMS' : 'e-mail';
+    Alert.alert(
+      'Herinnering verstuurd',
+      `${itemIds.length} item(s) verstuurd via ${channelLabel}.`,
+    );
+    if (selectedTracker) {
+      setSelectedTracker({
+        ...selectedTracker,
+        lastReminderSent: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    }
   };
 
   const handleRecordDecision = (
@@ -53,8 +123,26 @@ export default function DecisionsScreen() {
     itemId: string,
     value: string | number | boolean
   ) => {
-    console.log(`Decision recorded for item ${itemId}: ${value}`);
-    // In a real app, this would update the decision in the database
+    if (!selectedTracker) return;
+    const updatedCategories = selectedTracker.categories.map(cat => ({
+      ...cat,
+      items: cat.items.map(item =>
+        item.itemId === itemId
+          ? { ...item, status: 'decided' as const, value, decidedAt: new Date().toISOString() }
+          : item
+      ),
+      completedCount: cat.items.filter(item =>
+        item.itemId === itemId ? true : item.status === 'decided'
+      ).length,
+    }));
+    const decidedCount = updatedCategories.reduce((sum, cat) => sum + cat.completedCount, 0);
+    setSelectedTracker({
+      ...selectedTracker,
+      categories: updatedCategories,
+      decidedCount,
+      pendingCount: selectedTracker.totalDecisions - decidedCount,
+      updatedAt: new Date().toISOString(),
+    });
   };
 
   const handleShareWithCustomer = () => {
@@ -63,6 +151,26 @@ export default function DecisionsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {viewMode === 'list' && (
+        <View style={styles.listHeader}>
+          <Text style={styles.headerTitle}>Keuzes</Text>
+          <ContractorDashboardHeader
+            kpis={[
+              { icon: 'checkbox', value: String(totalDecisions), label: 'Keuzes' },
+              { icon: 'time', value: String(pendingDecisions), label: 'Wachtend', color: Palette.hermesOrange },
+              { icon: 'alert-circle', value: String(overdueDecisions), label: 'Verlopen', color: SemanticColors.feedbackError },
+            ]}
+          />
+          {inlineInsight && (
+            <InlineInsight
+              icon={inlineInsight.icon as IconName}
+              message={inlineInsight.message}
+              actionLabel={inlineInsight.actionLabel}
+              actionRoute={inlineInsight.actionRoute}
+            />
+          )}
+        </View>
+      )}
       {viewMode === 'list' && (
         <DecisionTrackerList
           onSelectTracker={handleSelectTracker}
@@ -109,5 +217,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceBackground,
+  },
+  listHeader: {
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.xs,
+    paddingBottom: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
   },
 });

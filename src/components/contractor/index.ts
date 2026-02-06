@@ -1,3 +1,6 @@
+// Shared Contractor Components
+export { ContractorDashboardHeader } from './ContractorDashboardHeader';
+
 // Contractor Mode Components
 export { JobDetailScreen } from './JobDetailScreen';
 export { JobsList } from './JobsList';

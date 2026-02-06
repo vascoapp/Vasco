@@ -209,9 +209,9 @@ function OverviewTab({
   statistics: ReturnType<typeof useQuoteOptimizer>['statistics'];
 }) {
   const getScoreColor = (score: number) => {
-    if (score >= 70) return SemanticColors.success;
-    if (score >= 50) return SemanticColors.warning;
-    return SemanticColors.error;
+    if (score >= 70) return SemanticColors.feedbackSuccess;
+    if (score >= 50) return SemanticColors.feedbackWarning;
+    return SemanticColors.feedbackError;
   };
 
   const getWinProbabilityLabel = (prob: number) => {
@@ -270,7 +270,7 @@ function OverviewTab({
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Potentiële extra marge</Text>
-          <Text style={[styles.summaryValue, { color: SemanticColors.success }]}>
+          <Text style={[styles.summaryValue, { color: SemanticColors.feedbackSuccess }]}>
             +€{analysis.summary.potentialMarginGain.toFixed(2)}
           </Text>
         </View>
@@ -279,7 +279,7 @@ function OverviewTab({
       {/* Historical Performance */}
       <View style={styles.historyCard}>
         <View style={styles.historyHeader}>
-          <Ionicons name="trending-up" size={24} color={SemanticColors.success} />
+          <Ionicons name="trending-up" size={24} color={SemanticColors.feedbackSuccess} />
           <Text style={styles.historyTitle}>Jouw Prestaties</Text>
         </View>
         <Text style={styles.historySubtitle}>
@@ -291,7 +291,7 @@ function OverviewTab({
             <Text style={styles.historyStatLabel}>Optimalisaties toegepast</Text>
           </View>
           <View style={styles.historyStat}>
-            <Text style={[styles.historyStatValue, { color: SemanticColors.success }]}>
+            <Text style={[styles.historyStatValue, { color: SemanticColors.feedbackSuccess }]}>
               €{statistics.totalSavingsGenerated.toLocaleString('nl-NL')}
             </Text>
             <Text style={styles.historyStatLabel}>Extra marge gegenereerd</Text>
@@ -343,16 +343,16 @@ function OptimizeTab({
       case 'competitive_positioning':
         return '#FF9500';
       case 'margin_warning':
-        return SemanticColors.error;
+        return SemanticColors.feedbackError;
       default:
-        return SemanticColors.success;
+        return SemanticColors.feedbackSuccess;
     }
   };
 
   if (optimizations.length === 0) {
     return (
       <View style={styles.emptyTab}>
-        <Ionicons name="checkmark-circle" size={48} color={SemanticColors.success} />
+        <Ionicons name="checkmark-circle" size={48} color={SemanticColors.feedbackSuccess} />
         <Text style={styles.emptyTabTitle}>Offerte ziet er goed uit!</Text>
         <Text style={styles.emptyTabText}>
           Er zijn geen optimalisaties gevonden voor deze offerte.
@@ -392,7 +392,7 @@ function OptimizeTab({
                     <Text
                       style={[
                         styles.impactText,
-                        { color: opt.impact.difference > 0 ? SemanticColors.error : SemanticColors.success },
+                        { color: opt.impact.difference > 0 ? SemanticColors.feedbackError : SemanticColors.feedbackSuccess },
                       ]}
                     >
                       {opt.impact.difference > 0 ? '+' : ''}€{opt.impact.difference.toFixed(2)}
@@ -414,7 +414,7 @@ function OptimizeTab({
               key={`${opt.lineItemId}_${opt.type}_applied`}
               style={[styles.optimizationCard, styles.optimizationApplied]}
             >
-              <Ionicons name="checkmark-circle" size={24} color={SemanticColors.success} />
+              <Ionicons name="checkmark-circle" size={24} color={SemanticColors.feedbackSuccess} />
               <View style={styles.optContent}>
                 <Text style={styles.optTitle}>{opt.title}</Text>
               </View>
@@ -472,7 +472,7 @@ function UpsellTab({
       case 'upgrade':
         return SemanticColors.actionPrimary;
       case 'add_on':
-        return SemanticColors.success;
+        return SemanticColors.feedbackSuccess;
       case 'bundle':
         return '#FF9500';
       case 'premium_alternative':
@@ -526,7 +526,7 @@ function UpsellTab({
             </View>
             <View style={styles.upsellStat}>
               <Text style={styles.upsellStatLabel}>Extra marge</Text>
-              <Text style={[styles.upsellStatValue, { color: SemanticColors.success }]}>
+              <Text style={[styles.upsellStatValue, { color: SemanticColors.feedbackSuccess }]}>
                 +€{upsell.marginIncrease.toFixed(2)}
               </Text>
             </View>
@@ -543,9 +543,9 @@ function UpsellTab({
 
 function MarketTab({ marketData }: { marketData: MarketPriceData[] }) {
   const getPricePositionColor = (percentile: number) => {
-    if (percentile <= 30) return SemanticColors.success;
-    if (percentile <= 70) return SemanticColors.warning;
-    return SemanticColors.error;
+    if (percentile <= 30) return SemanticColors.feedbackSuccess;
+    if (percentile <= 70) return SemanticColors.feedbackWarning;
+    return SemanticColors.feedbackError;
   };
 
   const getTrendIcon = (trend: MarketPriceData['trend']): keyof typeof Ionicons.glyphMap => {
@@ -562,9 +562,9 @@ function MarketTab({ marketData }: { marketData: MarketPriceData[] }) {
   const getTrendColor = (trend: MarketPriceData['trend']) => {
     switch (trend) {
       case 'rising':
-        return SemanticColors.error;
+        return SemanticColors.feedbackError;
       case 'falling':
-        return SemanticColors.success;
+        return SemanticColors.feedbackSuccess;
       default:
         return SemanticColors.textSecondary;
     }
@@ -715,8 +715,8 @@ function OptimizationDetailModal({
                   {
                     color:
                       optimization.impact.difference > 0
-                        ? SemanticColors.error
-                        : SemanticColors.success,
+                        ? SemanticColors.feedbackError
+                        : SemanticColors.feedbackSuccess,
                   },
                 ]}
               >
@@ -799,7 +799,7 @@ function UpsellDetailModal({
               <Text style={styles.upsellModalStatLabel}>Extra omzet</Text>
             </View>
             <View style={styles.upsellModalStat}>
-              <Text style={[styles.upsellModalStatValue, { color: SemanticColors.success }]}>
+              <Text style={[styles.upsellModalStatValue, { color: SemanticColors.feedbackSuccess }]}>
                 +€{upsell.marginIncrease.toFixed(2)}
               </Text>
               <Text style={styles.upsellModalStatLabel}>Extra marge</Text>
@@ -930,9 +930,9 @@ const styles = StyleSheet.create({
   // Tab Bar
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   tab: {
     flex: 1,
@@ -955,7 +955,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   badge: {
-    backgroundColor: SemanticColors.error,
+    backgroundColor: SemanticColors.feedbackError,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -1005,7 +1005,7 @@ const styles = StyleSheet.create({
   },
   scoreCard: {
     flex: 1,
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -1036,7 +1036,7 @@ const styles = StyleSheet.create({
 
   // Summary Card
   summaryCard: {
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -1064,13 +1064,13 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     marginVertical: 8,
   },
 
   // History Card
   historyCard: {
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
   },
@@ -1126,7 +1126,7 @@ const styles = StyleSheet.create({
   optimizationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1182,7 +1182,7 @@ const styles = StyleSheet.create({
 
   // Upsell Card
   upsellCard: {
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1249,7 +1249,7 @@ const styles = StyleSheet.create({
 
   // Market Card
   marketCard: {
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1281,7 +1281,7 @@ const styles = StyleSheet.create({
   },
   priceRange: {
     height: 8,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 4,
     marginBottom: 8,
   },
@@ -1293,7 +1293,7 @@ const styles = StyleSheet.create({
     top: -2,
     marginLeft: -6,
     borderWidth: 2,
-    borderColor: SemanticColors.surfacePrimaryBackground,
+    borderColor: SemanticColors.surfaceBackground,
   },
   priceLabels: {
     flexDirection: 'row',
@@ -1325,7 +1325,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -1336,7 +1336,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   modalTitle: {
     fontSize: 18,
@@ -1411,7 +1411,7 @@ const styles = StyleSheet.create({
   },
   confidenceBar: {
     height: 6,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 3,
     marginBottom: 8,
     overflow: 'hidden',
@@ -1430,7 +1430,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   modalButton: {
     flex: 1,
@@ -1520,9 +1520,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     gap: 8,
-    backgroundColor: SemanticColors.surfacePrimaryBackground,
+    backgroundColor: SemanticColors.surfaceBackground,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   demoTitle: {
     fontSize: 18,

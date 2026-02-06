@@ -6,7 +6,7 @@
 // 4-tab navigation for focused operational views
 // =============================================================================
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -49,6 +49,19 @@ import {
   useSupplierRanking,
   useDriftAlerts,
 } from '../../services/supplierReliabilityService';
+import {
+  useWorkflowsForRole,
+  usePendingWorkflows,
+  useSupplierEscalations,
+  crossRoleWorkflowService,
+} from '../../services/crossRoleWorkflowService';
+import type { Workflow, WorkflowStep } from '../../services/crossRoleWorkflowService';
+
+// Vasco Guidance
+import { useVascoGuidance, useInlineInsight } from '../../services/vascoGuidanceService';
+import { VascoInsightList, InlineInsight } from '../shared/VascoInsightCard';
+import type { VascoInsight } from '../shared/VascoInsightCard';
+import { ContractorDashboardHeader } from '../contractor/ContractorDashboardHeader';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 export type COOTabView = 'overview' | 'schedule' | 'permits' | 'procurement';
@@ -117,12 +130,31 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
   const [selectedProjectId, setSelectedProjectId] = useState<string>('uk-001');
   const [showWhatIfModal, setShowWhatIfModal] = useState(false);
 
+  // Vasco AI Guidance
+  const [dismissedGuidance, setDismissedGuidance] = useState<Set<string>>(new Set());
+  const [snoozedGuidance, setSnoozedGuidance] = useState<Set<string>>(new Set());
+  const allGuidance = useVascoGuidance('coo', activeTab as any);
+  const activeGuidance = useMemo(
+    () => allGuidance.filter(g => !dismissedGuidance.has(g.id) && !snoozedGuidance.has(g.id)),
+    [allGuidance, dismissedGuidance, snoozedGuidance]
+  );
+  // Inline insights per tab
+  const overviewInsight = useInlineInsight('coo', 'overview', 'overview');
+  const scheduleInsight = useInlineInsight('coo', 'schedule', 'overview');
+  const permitsInsight = useInlineInsight('coo', 'permits', 'overview');
+  const procurementInsight = useInlineInsight('coo', 'procurement', 'overview');
+
   // New hooks for P1/P2 features
   const { data: fragilityScore, loading: fragilityLoading } = useFragilityScore(selectedProjectId);
   const { data: criticalPath, loading: criticalPathLoading } = useCriticalPath(selectedProjectId);
   const { data: fragilityAlerts } = useFragilityAlerts(selectedProjectId);
   const { data: topSuppliers } = useSupplierRanking('materials', 5);
   const { data: supplierAlerts } = useDriftAlerts();
+
+  // Cross-role workflow data
+  const cooWorkflows = useWorkflowsForRole('coo');
+  const cooPendingWorkflows = usePendingWorkflows('coo');
+  const { activeEscalations } = useSupplierEscalations();
 
   // Derived data
   const selectedProject = useMemo(() => getProjectById(selectedProjectId), [selectedProjectId]);
@@ -218,6 +250,16 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
 
   const fmt = (amount: number) => formatCompact(amount, currency);
 
+  const handleDismissGuidance = useCallback((id: string) => {
+    setDismissedGuidance(prev => new Set(prev).add(id));
+  }, []);
+  const handleSnoozeGuidance = useCallback((id: string) => {
+    setSnoozedGuidance(prev => new Set(prev).add(id));
+  }, []);
+  const handleGuidanceAction = useCallback((insight: VascoInsight) => {
+    if (insight.actionRoute) router.push(insight.actionRoute as any);
+  }, [router]);
+
   // Project selector component (reused across tabs)
   const ProjectSelector = () => (
     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -283,31 +325,26 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
         {/* OVERVIEW TAB */}
         {activeTab === 'overview' && (
           <>
-            {/* Quick Actions */}
-            <View style={styles.quickActionsRow}>
-              <QuickAction
-                icon="calendar"
-                label="Reforecast"
-                onPress={() => router.push('/hub/schedule' as any)}
-              />
-              <QuickAction
-                icon="document"
-                label="Permits"
-                badge={criticalAlerts.length}
-                onPress={() => setActiveTab('permits')}
-              />
-              <QuickAction
-                icon="cart"
-                label="Contracts"
-                onPress={() => setActiveTab('procurement')}
-              />
-              <QuickAction
-                icon="clipboard"
-                label="Reports"
-                badge={1}
-                onPress={() => router.push('/hub/reports' as any)}
-              />
-            </View>
+            {/* KPI Header */}
+            <ContractorDashboardHeader
+              kpis={[
+                { icon: 'business', value: `${portfolioMetrics.onTrack}/${mockProjects.length}`, label: 'On Track', color: COO_COLOR },
+                { icon: 'trending-up', value: scheduleHealth ? `${scheduleHealth.spi.toFixed(2)}` : '—', label: 'SPI' },
+                { icon: 'alert-circle', value: `${portfolioMetrics.behind}`, label: 'Behind', color: portfolioMetrics.behind > 0 ? SemanticColors.feedbackError : undefined },
+              ]}
+            />
+            <VascoInsightList
+              insights={activeGuidance}
+              title="Vasco AI Guidance"
+              compact
+              maxVisible={2}
+              onDismiss={handleDismissGuidance}
+              onAction={handleGuidanceAction}
+              onSnooze={handleSnoozeGuidance}
+            />
+            {overviewInsight && (
+              <InlineInsight icon={overviewInsight.icon as IconName} message={overviewInsight.message} />
+            )}
 
             {/* Project Selector */}
             <View style={styles.section}>
@@ -391,12 +428,167 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                 <Ionicons name="chevron-forward" size={18} color={SemanticColors.feedbackError} />
               </Pressable>
             )}
+
+            {/* Cross-Role Workflows - COO Actions */}
+            {(cooPendingWorkflows.length > 0 || activeEscalations.length > 0) && (
+              <View style={styles.card}>
+                <View style={styles.cardHeaderRow}>
+                  <Text style={styles.cardTitle}>Workflow Acties</Text>
+                  <View style={styles.wfBadge}>
+                    <Text style={styles.wfBadgeText}>
+                      {cooPendingWorkflows.length + activeEscalations.length}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Pending escalations requiring COO action */}
+                {activeEscalations.map((wf) => {
+                  const currentStep = wf.steps.find(s => s.id === wf.currentStepId);
+                  const isMyStep = currentStep?.assignedRole === 'coo';
+                  return (
+                    <View key={wf.id} style={styles.wfItem}>
+                      <View style={styles.wfItemHeader}>
+                        <View style={[styles.wfTypeBadge, { backgroundColor: SemanticColors.feedbackWarning + '20' }]}>
+                          <Ionicons name="flash" size={12} color={SemanticColors.feedbackWarning} />
+                          <Text style={[styles.wfTypeBadgeText, { color: SemanticColors.feedbackWarning }]}>Escalatie</Text>
+                        </View>
+                        {isMyStep && (
+                          <View style={[styles.wfActionRequired, { backgroundColor: COO_COLOR + '15' }]}>
+                            <Text style={[styles.wfActionRequiredText, { color: COO_COLOR }]}>Actie vereist</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={styles.wfItemTitle}>{wf.title}</Text>
+                      <Text style={styles.wfItemMeta}>
+                        {wf.projectName} {wf.amount ? `· ${formatCompact(wf.amount, wf.currency)}` : ''}
+                      </Text>
+                      {currentStep && (
+                        <View style={styles.wfStepRow}>
+                          <View style={[styles.wfStepDot, {
+                            backgroundColor: currentStep.status === 'in-progress'
+                              ? COO_COLOR
+                              : SemanticColors.feedbackWarning,
+                          }]} />
+                          <Text style={styles.wfStepText}>
+                            Stap {currentStep.order}: {currentStep.name}
+                          </Text>
+                        </View>
+                      )}
+                      {/* Progress indicator */}
+                      <View style={styles.wfProgressBar}>
+                        <View style={[styles.wfProgressFill, {
+                          width: `${(wf.steps.filter(s => s.status === 'completed').length / wf.steps.length) * 100}%`,
+                          backgroundColor: COO_COLOR,
+                        }]} />
+                      </View>
+                      <Text style={styles.wfProgressText}>
+                        {wf.steps.filter(s => s.status === 'completed').length}/{wf.steps.length} stappen afgerond
+                      </Text>
+                      {isMyStep && (
+                        <Pressable
+                          style={[styles.wfActionButton, { backgroundColor: COO_COLOR }]}
+                          onPress={() => {
+                            if (currentStep) {
+                              crossRoleWorkflowService.completeStep(
+                                wf.id, currentStep.id, 'coo-001', 'James Morrison', 'coo'
+                              );
+                            }
+                          }}
+                        >
+                          <Ionicons name="checkmark" size={16} color="#fff" />
+                          <Text style={styles.wfActionButtonText}>Stap afronden</Text>
+                        </Pressable>
+                      )}
+                    </View>
+                  );
+                })}
+
+                {/* Other pending workflows for COO */}
+                {cooPendingWorkflows
+                  .filter(wf => wf.type !== 'supplier-escalation')
+                  .slice(0, 2)
+                  .map((wf) => {
+                    const currentStep = wf.steps.find(s => s.id === wf.currentStepId);
+                    return (
+                      <View key={wf.id} style={styles.wfItem}>
+                        <View style={styles.wfItemHeader}>
+                          <View style={[styles.wfTypeBadge, { backgroundColor: COO_COLOR + '15' }]}>
+                            <Ionicons name="git-network" size={12} color={COO_COLOR} />
+                            <Text style={[styles.wfTypeBadgeText, { color: COO_COLOR }]}>Workflow</Text>
+                          </View>
+                        </View>
+                        <Text style={styles.wfItemTitle}>{wf.title}</Text>
+                        <Text style={styles.wfItemMeta}>
+                          {wf.projectName} · Status: {wf.status}
+                        </Text>
+                        {currentStep && (
+                          <View style={styles.wfStepRow}>
+                            <View style={[styles.wfStepDot, { backgroundColor: COO_COLOR }]} />
+                            <Text style={styles.wfStepText}>
+                              Stap {currentStep.order}: {currentStep.name}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    );
+                  })}
+              </View>
+            )}
+
+            {/* Tools */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Tools</Text>
+              <View style={styles.actionsList}>
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/ai-assistant' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: COO_COLOR + '15' }]}>
+                    <Ionicons name="sparkles" size={18} color={COO_COLOR} />
+                  </View>
+                  <View style={styles.actionContent}>
+                    <Text style={styles.actionTitle}>AI Assistent</Text>
+                    <Text style={styles.actionSubtitle}>Operationele vragen & AI hulp</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+                </Pressable>
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/team' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
+                    <Ionicons name="people" size={18} color={SemanticColors.feedbackInfo} />
+                  </View>
+                  <View style={styles.actionContent}>
+                    <Text style={styles.actionTitle}>Teambeheer</Text>
+                    <Text style={styles.actionSubtitle}>Team management & resource overzicht</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+                </Pressable>
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/documents' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
+                    <Ionicons name="folder-open" size={18} color={SemanticColors.feedbackWarning} />
+                  </View>
+                  <View style={styles.actionContent}>
+                    <Text style={styles.actionTitle}>Documenten</Text>
+                    <Text style={styles.actionSubtitle}>Operationele documentkluis</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+                </Pressable>
+              </View>
+            </View>
           </>
         )}
 
         {/* SCHEDULE TAB */}
         {activeTab === 'schedule' && scheduleHealth && selectedProject && (
           <>
+            {/* KPI Header */}
+            <ContractorDashboardHeader
+              kpis={[
+                { icon: 'pie-chart', value: scheduleHealth ? `${scheduleHealth.progressPercent.toFixed(0)}%` : '—', label: 'Voortgang', color: COO_COLOR },
+                { icon: 'alert-circle', value: String(scheduleHealth?.delayedCount || 0), label: 'Vertraagd', color: (scheduleHealth?.delayedCount || 0) > 0 ? SemanticColors.feedbackError : undefined },
+                { icon: 'git-network', value: String(scheduleHealth?.criticalCount || 0), label: 'Kritiek Pad' },
+              ]}
+            />
+            {scheduleInsight && (
+              <InlineInsight icon={scheduleInsight.icon as IconName} message={scheduleInsight.message} />
+            )}
+
             <ProjectSelector />
 
             {/* SPI Banner */}
@@ -514,12 +706,61 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                 <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
               </Pressable>
             )}
+
+            {/* Planning Tools */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Planning Tools</Text>
+              <View style={styles.actionsList}>
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/planning' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: COO_COLOR + '15' }]}>
+                    <Ionicons name="calendar" size={18} color={COO_COLOR} />
+                  </View>
+                  <View style={styles.actionContent}>
+                    <Text style={styles.actionTitle}>Planning</Text>
+                    <Text style={styles.actionSubtitle}>Gedetailleerde planning & jobplanning</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+                </Pressable>
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/capacity' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
+                    <Ionicons name="bar-chart" size={18} color={SemanticColors.feedbackInfo} />
+                  </View>
+                  <View style={styles.actionContent}>
+                    <Text style={styles.actionTitle}>Capaciteit</Text>
+                    <Text style={styles.actionSubtitle}>Teamcapaciteit & resource-allocatie</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+                </Pressable>
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/route' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackSuccess + '15' }]}>
+                    <Ionicons name="navigate" size={18} color={SemanticColors.feedbackSuccess} />
+                  </View>
+                  <View style={styles.actionContent}>
+                    <Text style={styles.actionTitle}>Route Optimalisatie</Text>
+                    <Text style={styles.actionSubtitle}>Route-efficiëntie & reisoptimalisatie</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+                </Pressable>
+              </View>
+            </View>
           </>
         )}
 
         {/* PERMITS TAB */}
         {activeTab === 'permits' && permitDashboard && selectedProject && (
           <>
+            {/* KPI Header */}
+            <ContractorDashboardHeader
+              kpis={[
+                { icon: 'document-text', value: String(permitDashboard.totalPermits), label: 'Total', color: COO_COLOR },
+                { icon: 'checkmark-circle', value: String(permitDashboard.byStatus.approved + permitDashboard.byStatus.approvedWithConditions), label: 'Approved', color: SemanticColors.feedbackSuccess },
+                { icon: 'alert-circle', value: String(criticalAlerts.length), label: 'Critical', color: criticalAlerts.length > 0 ? SemanticColors.feedbackError : undefined },
+              ]}
+            />
+            {permitsInsight && (
+              <InlineInsight icon={permitsInsight.icon as IconName} message={permitsInsight.message} />
+            )}
+
             <ProjectSelector />
 
             {/* Critical Alerts */}
@@ -537,58 +778,100 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
               </View>
             )}
 
-            {/* Permit Status Summary */}
+            {/* Permit Pipeline */}
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Permit Status</Text>
-              <View style={styles.permitGrid}>
-                <View style={[styles.permitCard, styles.permitCardApproved]}>
-                  <Text style={styles.permitCardValue}>
-                    {permitDashboard.byStatus.approved + permitDashboard.byStatus.approvedWithConditions}
+              <View style={styles.cardHeaderRow}>
+                <Text style={styles.cardTitle}>Permit Pipeline</Text>
+                <Text style={[styles.cardHeaderStat, { color: COO_COLOR }]}>
+                  {permitDashboard.totalPermits} total
+                </Text>
+              </View>
+              {/* Stacked Pipeline Bar */}
+              <View style={styles.permitPipelineBar}>
+                {permitDashboard.byStatus.approved + permitDashboard.byStatus.approvedWithConditions > 0 && (
+                  <View style={[styles.permitPipelineSegment, {
+                    flex: permitDashboard.byStatus.approved + permitDashboard.byStatus.approvedWithConditions,
+                    backgroundColor: SemanticColors.feedbackSuccess,
+                  }]} />
+                )}
+                {permitDashboard.byStatus.pending > 0 && (
+                  <View style={[styles.permitPipelineSegment, {
+                    flex: permitDashboard.byStatus.pending,
+                    backgroundColor: SemanticColors.feedbackWarning,
+                  }]} />
+                )}
+                {(permitDashboard.totalPermits - (permitDashboard.byStatus.approved + permitDashboard.byStatus.approvedWithConditions) - permitDashboard.byStatus.pending) > 0 && (
+                  <View style={[styles.permitPipelineSegment, {
+                    flex: permitDashboard.totalPermits - (permitDashboard.byStatus.approved + permitDashboard.byStatus.approvedWithConditions) - permitDashboard.byStatus.pending,
+                    backgroundColor: SemanticColors.feedbackInfo,
+                  }]} />
+                )}
+              </View>
+              {/* Legend */}
+              <View style={styles.permitPipelineLegend}>
+                <View style={styles.permitPipelineLegendItem}>
+                  <View style={[styles.permitPipelineDot, { backgroundColor: SemanticColors.feedbackSuccess }]} />
+                  <Text style={styles.permitPipelineLegendText}>Approved</Text>
+                  <Text style={styles.permitPipelineLegendCount}>{permitDashboard.byStatus.approved + permitDashboard.byStatus.approvedWithConditions}</Text>
+                </View>
+                <View style={styles.permitPipelineLegendItem}>
+                  <View style={[styles.permitPipelineDot, { backgroundColor: SemanticColors.feedbackWarning }]} />
+                  <Text style={styles.permitPipelineLegendText}>Pending</Text>
+                  <Text style={styles.permitPipelineLegendCount}>{permitDashboard.byStatus.pending}</Text>
+                </View>
+                <View style={styles.permitPipelineLegendItem}>
+                  <View style={[styles.permitPipelineDot, { backgroundColor: SemanticColors.feedbackInfo }]} />
+                  <Text style={styles.permitPipelineLegendText}>Under Review</Text>
+                  <Text style={styles.permitPipelineLegendCount}>
+                    {permitDashboard.totalPermits - (permitDashboard.byStatus.approved + permitDashboard.byStatus.approvedWithConditions) - permitDashboard.byStatus.pending}
                   </Text>
-                  <Text style={styles.permitCardLabel}>Approved</Text>
-                </View>
-                <View style={[styles.permitCard, styles.permitCardPending]}>
-                  <Text style={styles.permitCardValue}>{permitDashboard.byStatus.pending}</Text>
-                  <Text style={styles.permitCardLabel}>Pending</Text>
-                </View>
-                <View style={styles.permitCard}>
-                  <Text style={styles.permitCardValue}>{permitDashboard.totalPermits}</Text>
-                  <Text style={styles.permitCardLabel}>Total</Text>
                 </View>
               </View>
             </View>
 
-            {/* Conditions Progress */}
+            {/* Conditions Discharge Ring */}
             <View style={styles.card}>
               <View style={styles.cardHeaderRow}>
-                <Text style={styles.cardTitle}>Conditions</Text>
-                <Text style={styles.cardHeaderStat}>
-                  {permitDashboard.conditionsProgress.discharged}/{permitDashboard.conditionsProgress.total}
+                <Text style={styles.cardTitle}>Conditions Discharge</Text>
+                <Text style={[styles.cardHeaderStat, { color: SemanticColors.feedbackSuccess }]}>
+                  {Math.round(permitDashboard.conditionsProgress.percentComplete * 100)}%
                 </Text>
               </View>
-              <View style={styles.conditionsBar}>
-                <View style={[
-                  styles.conditionsFill,
-                  { width: `${permitDashboard.conditionsProgress.percentComplete * 100}%` }
-                ]} />
-              </View>
-              <View style={styles.conditionsStats}>
-                <View style={styles.conditionsStat}>
-                  <Text style={styles.conditionsStatValue}>{permitDashboard.conditionsProgress.discharged}</Text>
-                  <Text style={styles.conditionsStatLabel}>Discharged</Text>
+              <View style={styles.conditionsDischargeRow}>
+                {/* Ring indicator */}
+                <View style={styles.conditionsRing}>
+                  <View style={[styles.conditionsRingFill, {
+                    borderColor: permitDashboard.conditionsProgress.percentComplete >= 0.8
+                      ? SemanticColors.feedbackSuccess
+                      : permitDashboard.conditionsProgress.percentComplete >= 0.5
+                        ? SemanticColors.feedbackWarning
+                        : SemanticColors.feedbackError,
+                  }]}>
+                    <Text style={styles.conditionsRingValue}>
+                      {permitDashboard.conditionsProgress.discharged}
+                    </Text>
+                    <Text style={styles.conditionsRingLabel}>of {permitDashboard.conditionsProgress.total}</Text>
+                  </View>
                 </View>
-                <View style={styles.conditionsStat}>
-                  <Text style={styles.conditionsStatValue}>{permitDashboard.conditionsProgress.pending}</Text>
-                  <Text style={styles.conditionsStatLabel}>Pending</Text>
-                </View>
-                <View style={styles.conditionsStat}>
-                  <Text style={[
-                    styles.conditionsStatValue,
-                    permitDashboard.conditionsProgress.overdue > 0 && styles.dangerText
-                  ]}>
-                    {permitDashboard.conditionsProgress.overdue}
-                  </Text>
-                  <Text style={styles.conditionsStatLabel}>Overdue</Text>
+                {/* Stats */}
+                <View style={styles.conditionsDischargeStats}>
+                  <View style={styles.conditionsDischargeStatRow}>
+                    <View style={[styles.conditionsDischargeIndicator, { backgroundColor: SemanticColors.feedbackSuccess }]} />
+                    <Text style={styles.conditionsDischargeLabel}>Discharged</Text>
+                    <Text style={styles.conditionsDischargeValue}>{permitDashboard.conditionsProgress.discharged}</Text>
+                  </View>
+                  <View style={styles.conditionsDischargeStatRow}>
+                    <View style={[styles.conditionsDischargeIndicator, { backgroundColor: SemanticColors.feedbackWarning }]} />
+                    <Text style={styles.conditionsDischargeLabel}>Pending</Text>
+                    <Text style={styles.conditionsDischargeValue}>{permitDashboard.conditionsProgress.pending}</Text>
+                  </View>
+                  <View style={styles.conditionsDischargeStatRow}>
+                    <View style={[styles.conditionsDischargeIndicator, { backgroundColor: SemanticColors.feedbackError }]} />
+                    <Text style={styles.conditionsDischargeLabel}>Overdue</Text>
+                    <Text style={[styles.conditionsDischargeValue, permitDashboard.conditionsProgress.overdue > 0 && styles.dangerText]}>
+                      {permitDashboard.conditionsProgress.overdue}
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
@@ -608,12 +891,51 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                 ))}
               </View>
             </View>
+
+            {/* Vergunning Tools */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Vergunning Tools</Text>
+              <View style={styles.actionsList}>
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/compliance' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: COO_COLOR + '15' }]}>
+                    <Ionicons name="shield-checkmark" size={18} color={COO_COLOR} />
+                  </View>
+                  <View style={styles.actionContent}>
+                    <Text style={styles.actionTitle}>Compliance</Text>
+                    <Text style={styles.actionSubtitle}>Regelgeving & nalevingstracking</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+                </Pressable>
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/warranty' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
+                    <Ionicons name="ribbon" size={18} color={SemanticColors.feedbackWarning} />
+                  </View>
+                  <View style={styles.actionContent}>
+                    <Text style={styles.actionTitle}>Garantie</Text>
+                    <Text style={styles.actionSubtitle}>Garantie- & verplichtingenbeheer</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+                </Pressable>
+              </View>
+            </View>
           </>
         )}
 
         {/* PROCUREMENT TAB */}
         {activeTab === 'procurement' && procurementRisk && selectedProject && (
           <>
+            {/* KPI Header */}
+            <ContractorDashboardHeader
+              kpis={[
+                { icon: 'cart', value: `${procurementRisk.awarded}/${procurementRisk.total}`, label: 'Awarded', color: COO_COLOR },
+                { icon: 'time', value: String(procurementRisk.pending), label: 'Pending' },
+                { icon: 'cash', value: formatCompact(procurementRisk.changeOrders.value, currency), label: 'CO Value' },
+              ]}
+            />
+            {procurementInsight && (
+              <InlineInsight icon={procurementInsight.icon as IconName} message={procurementInsight.message} />
+            )}
+
             <ProjectSelector />
 
             {/* Supplier Drift Alerts - P1 Feature */}
@@ -668,30 +990,36 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
               </View>
             )}
 
-            {/* Change Orders */}
+            {/* Change Order Pipeline */}
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Change Orders</Text>
-              <View style={styles.changeOrderGrid}>
-                <View style={styles.changeOrderCard}>
-                  <Text style={styles.changeOrderValue}>{procurementRisk.changeOrders.submitted}</Text>
-                  <Text style={styles.changeOrderLabel}>Submitted</Text>
-                </View>
-                <View style={[styles.changeOrderCard, styles.changeOrderCardApproved]}>
-                  <Text style={styles.changeOrderValue}>{procurementRisk.changeOrders.approved}</Text>
-                  <Text style={styles.changeOrderLabel}>Approved</Text>
-                </View>
-                <View style={styles.changeOrderCard}>
-                  <Text style={styles.changeOrderValue}>
-                    {procurementRisk.changeOrders.submitted - procurementRisk.changeOrders.approved}
-                  </Text>
-                  <Text style={styles.changeOrderLabel}>Pending</Text>
-                </View>
+              <View style={styles.cardHeaderRow}>
+                <Text style={styles.cardTitle}>Change Orders</Text>
+                <Text style={[styles.cardHeaderStat, { color: Palette.hermesOrange }]}>{fmt(procurementRisk.changeOrders.value)}</Text>
               </View>
-
-              {/* Total Value */}
-              <View style={styles.changeOrderTotal}>
-                <Text style={styles.changeOrderTotalLabel}>Total Change Order Value</Text>
-                <Text style={styles.changeOrderTotalValue}>{fmt(procurementRisk.changeOrders.value)}</Text>
+              {/* CO Flow Bars */}
+              {[
+                { label: 'Submitted', value: procurementRisk.changeOrders.submitted, max: procurementRisk.changeOrders.submitted, color: COO_COLOR },
+                { label: 'Approved', value: procurementRisk.changeOrders.approved, max: procurementRisk.changeOrders.submitted, color: SemanticColors.feedbackSuccess },
+                { label: 'Pending', value: procurementRisk.changeOrders.submitted - procurementRisk.changeOrders.approved, max: procurementRisk.changeOrders.submitted, color: SemanticColors.feedbackWarning },
+              ].map((item) => (
+                <View key={item.label} style={styles.coFlowRow}>
+                  <View style={styles.coFlowLabel}>
+                    <Text style={styles.coFlowLabelText}>{item.label}</Text>
+                    <Text style={[styles.coFlowCount, { color: item.color }]}>{item.value}</Text>
+                  </View>
+                  <View style={styles.coFlowBarTrack}>
+                    <View style={[styles.coFlowBarFill, {
+                      width: `${item.max > 0 ? (item.value / item.max) * 100 : 0}%`,
+                      backgroundColor: item.color,
+                    }]} />
+                  </View>
+                </View>
+              ))}
+              {/* Total Value Callout */}
+              <View style={styles.coTotalCallout}>
+                <Ionicons name="cash" size={16} color={Palette.hermesOrange} />
+                <Text style={styles.coTotalLabel}>Total CO Value</Text>
+                <Text style={styles.coTotalValue}>{fmt(procurementRisk.changeOrders.value)}</Text>
               </View>
             </View>
 
@@ -731,6 +1059,43 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                   <Text style={styles.contractValue}>{fmt(contract.value)}</Text>
                 </View>
               ))}
+            </View>
+
+            {/* Inkoop Tools */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Inkoop Tools</Text>
+              <View style={styles.actionsList}>
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/purchasing' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: COO_COLOR + '15' }]}>
+                    <Ionicons name="storefront" size={18} color={COO_COLOR} />
+                  </View>
+                  <View style={styles.actionContent}>
+                    <Text style={styles.actionTitle}>Leveranciers</Text>
+                    <Text style={styles.actionSubtitle}>Leverancierskeuze & -beheer</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+                </Pressable>
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/reorder' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
+                    <Ionicons name="refresh" size={18} color={SemanticColors.feedbackWarning} />
+                  </View>
+                  <View style={styles.actionContent}>
+                    <Text style={styles.actionTitle}>Herbestellen</Text>
+                    <Text style={styles.actionSubtitle}>Slim herbestellen & voorraad</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+                </Pressable>
+                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/benchmark' as any)}>
+                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackSuccess + '15' }]}>
+                    <Ionicons name="stats-chart" size={18} color={SemanticColors.feedbackSuccess} />
+                  </View>
+                  <View style={styles.actionContent}>
+                    <Text style={styles.actionTitle}>Benchmarking</Text>
+                    <Text style={styles.actionSubtitle}>Leveranciers- & kostenbenchmarks</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+                </Pressable>
+              </View>
             </View>
           </>
         )}
@@ -1477,5 +1842,271 @@ const styles = StyleSheet.create({
   seeAllText: {
     fontSize: 12,
     fontWeight: '600',
+  },
+
+  // Permit Pipeline
+  permitPipelineBar: {
+    flexDirection: 'row',
+    height: 14,
+    borderRadius: 7,
+    overflow: 'hidden',
+    backgroundColor: SemanticColors.surfaceSecondary,
+  },
+  permitPipelineSegment: {
+    height: '100%',
+  },
+  permitPipelineLegend: {
+    gap: Spacing.xs,
+  },
+  permitPipelineLegendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  permitPipelineDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  permitPipelineLegendText: {
+    flex: 1,
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  permitPipelineLegendCount: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+
+  // Conditions Discharge Ring
+  conditionsDischargeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.lg,
+  },
+  conditionsRing: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  conditionsRingFill: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: SemanticColors.surfaceSecondary,
+  },
+  conditionsRingValue: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  conditionsRingLabel: {
+    fontSize: 10,
+    color: SemanticColors.textTertiary,
+  },
+  conditionsDischargeStats: {
+    flex: 1,
+    gap: Spacing.sm,
+  },
+  conditionsDischargeStatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  conditionsDischargeIndicator: {
+    width: 4,
+    height: 20,
+    borderRadius: 2,
+  },
+  conditionsDischargeLabel: {
+    flex: 1,
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+  },
+  conditionsDischargeValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+
+  // Change Order Flow Bars
+  coFlowRow: {
+    gap: 4,
+  },
+  coFlowLabel: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  coFlowLabelText: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  coFlowCount: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  coFlowBarTrack: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    overflow: 'hidden',
+  },
+  coFlowBarFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  coTotalCallout: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Palette.hermesOrange + '10',
+    borderRadius: 10,
+    padding: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  coTotalLabel: {
+    flex: 1,
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  coTotalValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Palette.hermesOrange,
+  },
+
+  // Cross-Role Workflow Styles
+  wfBadge: {
+    backgroundColor: COO_COLOR,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  wfBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  wfItem: {
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 10,
+    padding: 12,
+    gap: 6,
+  },
+  wfItemHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  wfTypeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  wfTypeBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  wfActionRequired: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  wfActionRequiredText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  wfItemTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  wfItemMeta: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  wfStepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
+  wfStepDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  wfStepText: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  wfProgressBar: {
+    height: 4,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginTop: 4,
+  },
+  wfProgressFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  wfProgressText: {
+    fontSize: 10,
+    color: SemanticColors.textTertiary,
+  },
+  wfActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginTop: 4,
+  },
+  wfActionButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#fff',
+  },
+
+  // Tool Action Items
+  actionsList: {
+    gap: 8,
+  },
+  actionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 12,
+    padding: 12,
+    gap: 12,
+  },
+  actionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionContent: {
+    flex: 1,
+  },
+  actionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  actionSubtitle: {
+    fontSize: 12,
+    color: SemanticColors.textTertiary,
+    marginTop: 2,
   },
 });

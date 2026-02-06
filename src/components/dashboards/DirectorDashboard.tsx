@@ -6,7 +6,7 @@
 // 4-tab navigation: Portfolio, Approvals, Risks, Performance
 // =============================================================================
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -27,6 +27,19 @@ import {
 import { formatCurrency, formatPercent } from '../../modules/countryModules';
 import { useScheduleFragilityStats } from '../../services/scheduleFragilityService';
 import { useSupplierReliabilityStats } from '../../services/supplierReliabilityService';
+import {
+  useWorkflowsForRole,
+  useWorkflowStats,
+  useJobToPaymentWorkflows,
+  useSupplierEscalations,
+} from '../../services/crossRoleWorkflowService';
+import type { Workflow } from '../../services/crossRoleWorkflowService';
+
+// Vasco Guidance
+import { useVascoGuidance, useInlineInsight } from '../../services/vascoGuidanceService';
+import { VascoInsightList, InlineInsight } from '../shared/VascoInsightCard';
+import type { VascoInsight } from '../shared/VascoInsightCard';
+import { ContractorDashboardHeader } from '../contractor/ContractorDashboardHeader';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type TabView = 'portfolio' | 'approvals' | 'risks' | 'performance';
@@ -210,9 +223,38 @@ export function DirectorDashboard({ initialTab = 'portfolio', showTabBar = true 
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabView>(initialTab);
 
+  // Vasco AI Guidance
+  const [dismissedGuidance, setDismissedGuidance] = useState<Set<string>>(new Set());
+  const [snoozedGuidance, setSnoozedGuidance] = useState<Set<string>>(new Set());
+  const allGuidance = useVascoGuidance('director', activeTab as any);
+  const activeGuidance = useMemo(
+    () => allGuidance.filter(g => !dismissedGuidance.has(g.id) && !snoozedGuidance.has(g.id)),
+    [allGuidance, dismissedGuidance, snoozedGuidance]
+  );
+  const portfolioInsight = useInlineInsight('director', 'portfolio', 'overview');
+  const approvalsInsight = useInlineInsight('director', 'approvals', 'overview');
+  const risksInsight = useInlineInsight('director', 'risks', 'overview');
+  const performanceInsight = useInlineInsight('director', 'performance', 'overview');
+
+  const handleDismissGuidance = useCallback((id: string) => {
+    setDismissedGuidance(prev => new Set(prev).add(id));
+  }, []);
+  const handleSnoozeGuidance = useCallback((id: string) => {
+    setSnoozedGuidance(prev => new Set(prev).add(id));
+  }, []);
+  const handleGuidanceAction = useCallback((insight: VascoInsight) => {
+    if (insight.actionRoute) router.push(insight.actionRoute as any);
+  }, [router]);
+
   // Portfolio-level feature hooks
   const { data: fragilityStats } = useScheduleFragilityStats();
   const { data: supplierStats } = useSupplierReliabilityStats();
+
+  // Cross-role workflow data
+  const workflowStats = useWorkflowStats();
+  const allWorkflows = useWorkflowsForRole('director');
+  const { workflows: paymentWorkflows } = useJobToPaymentWorkflows();
+  const { activeEscalations } = useSupplierEscalations();
 
   // Portfolio metrics
   const portfolioMetrics = useMemo(() => {
@@ -311,35 +353,26 @@ export function DirectorDashboard({ initialTab = 'portfolio', showTabBar = true 
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* Quick Actions */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.quickActionsRow}>
-          <QuickAction
-            icon="checkmark-done"
-            label="Approvals"
-            badge={pendingApprovals}
-            onPress={() => setActiveTab('approvals')}
-          />
-          <QuickAction
-            icon="warning"
-            label="Risks"
-            badge={riskSummary.highCount}
-            onPress={() => setActiveTab('risks')}
-          />
-          <QuickAction
-            icon="bar-chart"
-            label="Reports"
-            badge={1}
-            onPress={() => router.push('/hub/reports' as any)}
-          />
-          <QuickAction
-            icon="analytics"
-            label="Analytics"
-            onPress={() => setActiveTab('performance')}
-          />
-        </View>
-      </View>
+      {/* KPI Header */}
+      <ContractorDashboardHeader
+        kpis={[
+          { icon: 'cash', value: formatCurrency(portfolioMetrics.totalGdv, 'GBP'), label: 'GDV', color: DIRECTOR_COLOR },
+          { icon: 'trending-up', value: formatPercent(portfolioMetrics.avgIrr), label: 'Avg IRR', color: SemanticColors.feedbackSuccess },
+          { icon: 'business', value: String(mockProjects.length), label: 'Projects' },
+        ]}
+      />
+      <VascoInsightList
+        insights={activeGuidance}
+        title="Vasco AI Guidance"
+        compact
+        maxVisible={2}
+        onDismiss={handleDismissGuidance}
+        onAction={handleGuidanceAction}
+        onSnooze={handleSnoozeGuidance}
+      />
+      {portfolioInsight && (
+        <InlineInsight icon={portfolioInsight.icon as IconName} message={portfolioInsight.message} />
+      )}
 
       {/* Portfolio Summary */}
       <View style={styles.card}>
@@ -381,112 +414,6 @@ export function DirectorDashboard({ initialTab = 'portfolio', showTabBar = true 
             <Text style={styles.healthLabel}>Behind</Text>
           </View>
         </View>
-      </View>
-
-      {/* Portfolio Handover Status */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <View style={[styles.cardHeaderIcon, { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
-            <Ionicons name="document-attach" size={18} color={SemanticColors.feedbackInfo} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>Handover Status</Text>
-            <Text style={styles.cardSubtitle}>Evidence packs across portfolio</Text>
-          </View>
-          {MOCK_PORTFOLIO_HANDOVERS.some(h => h.blockedPaymentValue > 0) && (
-            <View style={[styles.cardBadge, { backgroundColor: SemanticColors.feedbackWarning }]}>
-              <Text style={styles.cardBadgeText}>
-                {MOCK_PORTFOLIO_HANDOVERS.filter(h => h.blockedPaymentValue > 0).length}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* Summary Stats */}
-        <View style={styles.handoverStatsRow}>
-          <View style={styles.handoverStatItem}>
-            <Text style={[styles.handoverStatValue, { color: SemanticColors.feedbackSuccess }]}>
-              {MOCK_PORTFOLIO_HANDOVERS.reduce((s, h) => s + h.completedHandovers, 0)}
-            </Text>
-            <Text style={styles.handoverStatLabel}>Completed</Text>
-          </View>
-          <View style={styles.handoverStatItem}>
-            <Text style={[styles.handoverStatValue, { color: SemanticColors.feedbackInfo }]}>
-              {MOCK_PORTFOLIO_HANDOVERS.reduce((s, h) => s + h.pendingSignoff, 0)}
-            </Text>
-            <Text style={styles.handoverStatLabel}>Pending Sign-off</Text>
-          </View>
-          <View style={styles.handoverStatItem}>
-            <Text style={[styles.handoverStatValue, { color: SemanticColors.feedbackWarning }]}>
-              {formatCurrency(MOCK_PORTFOLIO_HANDOVERS.reduce((s, h) => s + h.blockedPaymentValue, 0), 'GBP')}
-            </Text>
-            <Text style={styles.handoverStatLabel}>Blocked Payments</Text>
-          </View>
-        </View>
-
-        {/* Project Handover List */}
-        {MOCK_PORTFOLIO_HANDOVERS.map((handover) => {
-          const completionPercent = Math.round((handover.completedHandovers / handover.totalHandovers) * 100);
-          return (
-            <View key={handover.projectId} style={styles.handoverProjectItem}>
-              <View style={styles.handoverProjectTop}>
-                <View style={styles.handoverProjectInfo}>
-                  <Text style={styles.handoverProjectName}>{handover.projectName}</Text>
-                  <Text style={styles.handoverProjectMeta}>
-                    {handover.completedHandovers}/{handover.totalHandovers} handovers
-                  </Text>
-                </View>
-                <View style={[
-                  styles.handoverProjectStatus,
-                  handover.status === 'complete' && styles.handoverProjectStatusComplete,
-                  handover.status === 'on-track' && styles.handoverProjectStatusOnTrack,
-                  handover.status === 'at-risk' && styles.handoverProjectStatusAtRisk,
-                  handover.status === 'blocked' && styles.handoverProjectStatusBlocked,
-                ]}>
-                  <Text style={styles.handoverProjectStatusText}>
-                    {handover.status === 'complete' ? 'Complete' :
-                     handover.status === 'on-track' ? 'On Track' :
-                     handover.status === 'at-risk' ? 'At Risk' : 'Blocked'}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Progress Bar */}
-              <View style={styles.handoverProjectProgress}>
-                <View style={styles.handoverProjectProgressBar}>
-                  <View style={[
-                    styles.handoverProjectProgressFill,
-                    { width: `${completionPercent}%` },
-                    completionPercent === 100 && styles.handoverProgressComplete,
-                    completionPercent >= 70 && completionPercent < 100 && styles.handoverProgressOnTrack,
-                    completionPercent < 70 && styles.handoverProgressAtRisk,
-                  ]} />
-                </View>
-                <Text style={styles.handoverProjectProgressText}>{completionPercent}%</Text>
-              </View>
-
-              {/* Blocked Payment Warning */}
-              {handover.blockedPaymentValue > 0 && (
-                <View style={styles.handoverBlockedWarning}>
-                  <Ionicons name="lock-closed" size={12} color={SemanticColors.feedbackWarning} />
-                  <Text style={styles.handoverBlockedText}>
-                    {formatCurrency(handover.blockedPaymentValue, 'GBP')} blocked
-                  </Text>
-                  {handover.pendingSignoff > 0 && (
-                    <Text style={styles.handoverBlockedReason}>
-                      • {handover.pendingSignoff} awaiting sign-off
-                    </Text>
-                  )}
-                </View>
-              )}
-            </View>
-          );
-        })}
-
-        <Pressable style={styles.viewAllButton} onPress={() => router.push('/hub/projects' as any)}>
-          <Text style={styles.viewAllText}>View All Handovers</Text>
-          <Ionicons name="arrow-forward" size={16} color={DIRECTOR_COLOR} />
-        </Pressable>
       </View>
 
       {/* Project List */}
@@ -536,37 +463,143 @@ export function DirectorDashboard({ initialTab = 'portfolio', showTabBar = true 
         })}
       </View>
 
-      {/* Hub Navigation */}
+      {/* Cross-Role Workflow Oversight */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View style={[styles.cardHeaderIcon, { backgroundColor: DIRECTOR_COLOR + '15' }]}>
+            <Ionicons name="git-network" size={18} color={DIRECTOR_COLOR} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.cardTitle}>Workflow Overzicht</Text>
+            <Text style={styles.cardSubtitle}>Cross-role processen portfolio-breed</Text>
+          </View>
+        </View>
+
+        {/* Stats Row */}
+        <View style={styles.wfOverviewStats}>
+          <View style={styles.wfOverviewStatItem}>
+            <Text style={[styles.wfOverviewStatValue, { color: DIRECTOR_COLOR }]}>
+              {workflowStats.total}
+            </Text>
+            <Text style={styles.wfOverviewStatLabel}>Totaal</Text>
+          </View>
+          <View style={styles.wfOverviewStatItem}>
+            <Text style={[styles.wfOverviewStatValue, { color: SemanticColors.feedbackWarning }]}>
+              {(workflowStats.byStatus['in-progress'] || 0) + (workflowStats.byStatus['pending-review'] || 0) + (workflowStats.byStatus['pending-approval'] || 0)}
+            </Text>
+            <Text style={styles.wfOverviewStatLabel}>Actief</Text>
+          </View>
+          <View style={styles.wfOverviewStatItem}>
+            <Text style={[styles.wfOverviewStatValue, { color: SemanticColors.feedbackSuccess }]}>
+              {workflowStats.byStatus['completed'] || 0}
+            </Text>
+            <Text style={styles.wfOverviewStatLabel}>Afgerond</Text>
+          </View>
+          <View style={styles.wfOverviewStatItem}>
+            <Text style={[styles.wfOverviewStatValue, { color: SemanticColors.feedbackInfo }]}>
+              {formatCurrency(workflowStats.pendingPaymentValue, 'GBP')}
+            </Text>
+            <Text style={styles.wfOverviewStatLabel}>Pending</Text>
+          </View>
+        </View>
+
+        {/* Workflow Type Breakdown */}
+        <View style={styles.wfTypeBreakdown}>
+          {[
+            {
+              label: 'Betaling workflows',
+              count: workflowStats.byType['job-to-payment'] || 0,
+              icon: 'cash' as IconName,
+              color: '#2563EB',
+            },
+            {
+              label: 'Leverancier escalaties',
+              count: workflowStats.byType['supplier-escalation'] || 0,
+              icon: 'flash' as IconName,
+              color: SemanticColors.feedbackWarning,
+            },
+          ].map((item) => (
+            <View key={item.label} style={styles.wfTypeRow}>
+              <View style={[styles.wfTypeIcon, { backgroundColor: item.color + '15' }]}>
+                <Ionicons name={item.icon} size={14} color={item.color} />
+              </View>
+              <Text style={styles.wfTypeLabel}>{item.label}</Text>
+              <View style={styles.wfTypeCount}>
+                <Text style={[styles.wfTypeCountText, { color: item.color }]}>{item.count}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* Active Escalations Alert */}
+        {activeEscalations.length > 0 && (
+          <View style={styles.wfEscalationAlert}>
+            <Ionicons name="warning" size={16} color={SemanticColors.feedbackWarning} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.wfEscalationAlertTitle}>
+                {activeEscalations.length} actieve escalatie{activeEscalations.length > 1 ? 's' : ''}
+              </Text>
+              {activeEscalations.slice(0, 2).map((esc) => (
+                <Text key={esc.id} style={styles.wfEscalationAlertItem}>
+                  {esc.title} ({esc.projectName})
+                </Text>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Pending Payment Summary */}
+        {paymentWorkflows.filter(wf => wf.status !== 'completed').length > 0 && (
+          <View style={styles.wfPaymentSummary}>
+            <Ionicons name="time" size={16} color={DIRECTOR_COLOR} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.wfPaymentSummaryTitle}>
+                {paymentWorkflows.filter(wf => wf.status !== 'completed').length} betalingen in afhandeling
+              </Text>
+              <Text style={styles.wfPaymentSummaryValue}>
+                Totale waarde: {formatCurrency(workflowStats.pendingPaymentValue, 'GBP')}
+              </Text>
+            </View>
+            <Pressable onPress={() => setActiveTab('approvals')}>
+              <Ionicons name="chevron-forward" size={18} color={DIRECTOR_COLOR} />
+            </Pressable>
+          </View>
+        )}
+      </View>
+
+      {/* Tools */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Strategic Hub</Text>
-        <View style={styles.hubGrid}>
-          <Pressable style={styles.hubCard} onPress={() => router.push('/hub/appraisal' as any)}>
-            <View style={[styles.hubIcon, { backgroundColor: SemanticColors.feedbackSuccess + '15' }]}>
-              <Ionicons name="stats-chart" size={22} color={SemanticColors.feedbackSuccess} />
+        <Text style={styles.sectionTitle}>Tools</Text>
+        <View style={styles.actionsList}>
+          <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/ai-assistant' as any)}>
+            <View style={[styles.actionIcon, { backgroundColor: DIRECTOR_COLOR + '15' }]}>
+              <Ionicons name="sparkles" size={20} color={DIRECTOR_COLOR} />
             </View>
-            <Text style={styles.hubTitle}>Appraisal</Text>
-            <Text style={styles.hubStat}>Portfolio IRR</Text>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>AI Assistent</Text>
+              <Text style={styles.actionSubtitle}>Strategische vragen & AI hulp</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
           </Pressable>
-          <Pressable style={styles.hubCard} onPress={() => router.push('/hub/reports' as any)}>
-            <View style={[styles.hubIcon, { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
-              <Ionicons name="document-text" size={22} color={SemanticColors.feedbackInfo} />
+          <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/team' as any)}>
+            <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
+              <Ionicons name="people" size={20} color={SemanticColors.feedbackInfo} />
             </View>
-            <Text style={styles.hubTitle}>Reports</Text>
-            <Text style={styles.hubStat}>1 ready</Text>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Teambeheer</Text>
+              <Text style={styles.actionSubtitle}>Organisatie & resource overzicht</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
           </Pressable>
-          <Pressable style={styles.hubCard} onPress={() => router.push('/hub/projects' as any)}>
-            <View style={[styles.hubIcon, { backgroundColor: DIRECTOR_COLOR + '15' }]}>
-              <Ionicons name="folder-open" size={22} color={DIRECTOR_COLOR} />
+          <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/documents' as any)}>
+            <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
+              <Ionicons name="folder-open" size={20} color={SemanticColors.feedbackWarning} />
             </View>
-            <Text style={styles.hubTitle}>Projects</Text>
-            <Text style={styles.hubStat}>{portfolioMetrics.projectCount} active</Text>
-          </Pressable>
-          <Pressable style={styles.hubCard} onPress={() => router.push('/hub/metrics' as any)}>
-            <View style={[styles.hubIcon, { backgroundColor: Palette.hermesOrange + '15' }]}>
-              <Ionicons name="pie-chart" size={22} color={Palette.hermesOrange} />
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Documenten</Text>
+              <Text style={styles.actionSubtitle}>Strategische documentkluis</Text>
             </View>
-            <Text style={styles.hubTitle}>Metrics</Text>
-            <Text style={styles.hubStat}>Live data</Text>
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
           </Pressable>
         </View>
       </View>
@@ -581,27 +614,64 @@ export function DirectorDashboard({ initialTab = 'portfolio', showTabBar = true 
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* Approval Stats Banner */}
-      <View style={styles.statsBanner}>
-        <View style={styles.statsBannerItem}>
-          <Text style={styles.statsBannerValue}>{pendingApprovals}</Text>
-          <Text style={styles.statsBannerLabel}>Pending</Text>
-        </View>
-        <View style={styles.statsBannerDivider} />
-        <View style={styles.statsBannerItem}>
-          <Text style={[styles.statsBannerValue, { color: SemanticColors.feedbackError }]}>
-            {MOCK_PENDING_APPROVALS.filter(a => a.priority === 'critical').length}
-          </Text>
-          <Text style={styles.statsBannerLabel}>Critical</Text>
-        </View>
-        <View style={styles.statsBannerDivider} />
-        <View style={styles.statsBannerItem}>
-          <Text style={styles.statsBannerValue}>
-            {Math.round(MOCK_PENDING_APPROVALS.reduce((s, a) => s + a.daysWaiting, 0) / pendingApprovals)}d
-          </Text>
-          <Text style={styles.statsBannerLabel}>Avg Wait</Text>
-        </View>
-      </View>
+      {/* KPI Header */}
+      <ContractorDashboardHeader
+        kpis={[
+          { icon: 'checkmark-done', value: String(pendingApprovals), label: 'Pending', color: DIRECTOR_COLOR },
+          { icon: 'alert-circle', value: String(MOCK_PENDING_APPROVALS.filter(a => a.priority === 'critical').length), label: 'Critical', color: SemanticColors.feedbackError },
+          { icon: 'timer', value: `${Math.max(...MOCK_PENDING_APPROVALS.map(a => a.daysWaiting))}d`, label: 'Max Wait' },
+        ]}
+      />
+      {approvalsInsight && (
+        <InlineInsight icon={approvalsInsight.icon as IconName} message={approvalsInsight.message} />
+      )}
+
+      {/* Approval Value Pipeline */}
+      {(() => {
+        const criticalValue = MOCK_PENDING_APPROVALS.filter(a => a.priority === 'critical').reduce((s, a) => s + a.amount, 0);
+        const highValue = MOCK_PENDING_APPROVALS.filter(a => a.priority === 'high').reduce((s, a) => s + a.amount, 0);
+        const mediumValue = MOCK_PENDING_APPROVALS.filter(a => a.priority === 'medium').reduce((s, a) => s + a.amount, 0);
+        const totalValue = criticalValue + highValue + mediumValue;
+        return (
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={[styles.cardHeaderIcon, { backgroundColor: DIRECTOR_COLOR + '15' }]}>
+                <Ionicons name="cash" size={18} color={DIRECTOR_COLOR} />
+              </View>
+              <Text style={styles.cardTitle}>Approval Pipeline</Text>
+            </View>
+            {/* Hero Total */}
+            <View style={styles.pipelineHero}>
+              <Text style={styles.pipelineHeroValue}>{formatCurrency(totalValue, 'GBP')}</Text>
+              <Text style={styles.pipelineHeroLabel}>{pendingApprovals} items awaiting decision</Text>
+            </View>
+            {/* Stacked Bar */}
+            <View style={styles.pipelineBarTrack}>
+              {criticalValue > 0 && <View style={[styles.pipelineSegment, { flex: criticalValue, backgroundColor: SemanticColors.feedbackError }]} />}
+              {highValue > 0 && <View style={[styles.pipelineSegment, { flex: highValue, backgroundColor: SemanticColors.feedbackWarning }]} />}
+              {mediumValue > 0 && <View style={[styles.pipelineSegment, { flex: mediumValue, backgroundColor: SemanticColors.feedbackInfo }]} />}
+            </View>
+            {/* Legend */}
+            <View style={styles.pipelineLegend}>
+              <View style={styles.pipelineLegendItem}>
+                <View style={[styles.pipelineLegendDot, { backgroundColor: SemanticColors.feedbackError }]} />
+                <Text style={styles.pipelineLegendLabel}>Critical</Text>
+                <Text style={styles.pipelineLegendValue}>{formatCurrency(criticalValue, 'GBP')}</Text>
+              </View>
+              <View style={styles.pipelineLegendItem}>
+                <View style={[styles.pipelineLegendDot, { backgroundColor: SemanticColors.feedbackWarning }]} />
+                <Text style={styles.pipelineLegendLabel}>High</Text>
+                <Text style={styles.pipelineLegendValue}>{formatCurrency(highValue, 'GBP')}</Text>
+              </View>
+              <View style={styles.pipelineLegendItem}>
+                <View style={[styles.pipelineLegendDot, { backgroundColor: SemanticColors.feedbackInfo }]} />
+                <Text style={styles.pipelineLegendLabel}>Medium</Text>
+                <Text style={styles.pipelineLegendValue}>{formatCurrency(mediumValue, 'GBP')}</Text>
+              </View>
+            </View>
+          </View>
+        );
+      })()}
 
       {/* Pending Approvals */}
       <View style={styles.card}>
@@ -677,13 +747,30 @@ export function DirectorDashboard({ initialTab = 'portfolio', showTabBar = true 
             </View>
             <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
           </Pressable>
-          <Pressable style={styles.actionItem} onPress={() => router.push('/hub/approvals' as any)}>
-            <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
-              <Ionicons name="settings" size={20} color={SemanticColors.feedbackWarning} />
+        </View>
+      </View>
+
+      {/* Tools */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Tools</Text>
+        <View style={styles.actionsList}>
+          <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/compliance' as any)}>
+            <View style={[styles.actionIcon, { backgroundColor: DIRECTOR_COLOR + '15' }]}>
+              <Ionicons name="shield-checkmark" size={20} color={DIRECTOR_COLOR} />
             </View>
             <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>Delegation Rules</Text>
-              <Text style={styles.actionSubtitle}>Configure thresholds</Text>
+              <Text style={styles.actionTitle}>Compliance</Text>
+              <Text style={styles.actionSubtitle}>Regelgeving & nalevingscontext</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+          </Pressable>
+          <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/cashflow' as any)}>
+            <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackSuccess + '15' }]}>
+              <Ionicons name="cash" size={20} color={SemanticColors.feedbackSuccess} />
+            </View>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Cash Flow</Text>
+              <Text style={styles.actionSubtitle}>Financiële impact van goedkeuringen</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
           </Pressable>
@@ -700,93 +787,80 @@ export function DirectorDashboard({ initialTab = 'portfolio', showTabBar = true 
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* Risk Stats Banner */}
-      <View style={styles.statsBanner}>
-        <View style={styles.statsBannerItem}>
-          <Text style={[styles.statsBannerValue, { color: SemanticColors.feedbackError }]}>
-            {riskSummary.highCount}
-          </Text>
-          <Text style={styles.statsBannerLabel}>High Risks</Text>
-        </View>
-        <View style={styles.statsBannerDivider} />
-        <View style={styles.statsBannerItem}>
-          <Text style={styles.statsBannerValue}>{riskSummary.totalCount}</Text>
-          <Text style={styles.statsBannerLabel}>Total Open</Text>
-        </View>
-        <View style={styles.statsBannerDivider} />
-        <View style={styles.statsBannerItem}>
-          <Text style={styles.statsBannerValue}>
-            {fragilityStats?.averageFragility || 0}
-          </Text>
-          <Text style={styles.statsBannerLabel}>Avg Fragility</Text>
-        </View>
-      </View>
-
-      {/* Portfolio Risk Exposure */}
-      {(fragilityStats || supplierStats) && (
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderIcon}>
-              <Ionicons name="shield" size={18} color={SemanticColors.feedbackWarning} />
-            </View>
-            <Text style={styles.cardTitle}>Portfolio Risk Exposure</Text>
-          </View>
-
-          {/* Fragility Stats */}
-          {fragilityStats && (
-            <View style={styles.riskStatsRow}>
-              <View style={styles.riskStatItem}>
-                <Text style={styles.riskStatValue}>{fragilityStats.averageFragility}</Text>
-                <Text style={styles.riskStatLabel}>Avg Fragility</Text>
-              </View>
-              <View style={styles.riskStatItem}>
-                <Text style={[styles.riskStatValue, { color: SemanticColors.feedbackError }]}>
-                  {fragilityStats.criticalCount}
-                </Text>
-                <Text style={styles.riskStatLabel}>Critical</Text>
-              </View>
-              <View style={styles.riskStatItem}>
-                <Text style={[styles.riskStatValue, { color: SemanticColors.feedbackWarning }]}>
-                  {fragilityStats.highCount}
-                </Text>
-                <Text style={styles.riskStatLabel}>High Risk</Text>
-              </View>
-              <View style={styles.riskStatItem}>
-                <Text style={styles.riskStatValue}>{fragilityStats.totalAlerts}</Text>
-                <Text style={styles.riskStatLabel}>Alerts</Text>
-              </View>
-            </View>
-          )}
-
-          {/* Supplier Stats */}
-          {supplierStats && (
-            <View style={styles.supplierStatsRow}>
-              <View style={styles.supplierStatItem}>
-                <Text style={styles.supplierStatLabel}>Suppliers Tracked</Text>
-                <Text style={styles.supplierStatValue}>{supplierStats.totalSuppliers}</Text>
-              </View>
-              <View style={styles.supplierStatItem}>
-                <Text style={styles.supplierStatLabel}>Avg Reliability</Text>
-                <Text style={[
-                  styles.supplierStatValue,
-                  { color: supplierStats.averageReliability >= 80 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackWarning }
-                ]}>
-                  {supplierStats.averageReliability}%
-                </Text>
-              </View>
-              <View style={styles.supplierStatItem}>
-                <Text style={styles.supplierStatLabel}>Active Alerts</Text>
-                <Text style={[
-                  styles.supplierStatValue,
-                  supplierStats.activeAlerts > 0 && { color: SemanticColors.feedbackError }
-                ]}>
-                  {supplierStats.activeAlerts}
-                </Text>
-              </View>
-            </View>
-          )}
-        </View>
+      {/* KPI Header */}
+      <ContractorDashboardHeader
+        kpis={[
+          { icon: 'warning', value: String(riskSummary.highCount), label: 'High Risk', color: riskSummary.highCount > 0 ? SemanticColors.feedbackError : undefined },
+          { icon: 'shield', value: String(riskSummary.totalCount), label: 'Total Open' },
+          { icon: 'analytics', value: String(fragilityStats?.averageFragilityScore || 0), label: 'Avg Fragility' },
+        ]}
+      />
+      {risksInsight && (
+        <InlineInsight icon={risksInsight.icon as IconName} message={risksInsight.message} />
       )}
+
+      {/* Risk Distribution Gauge */}
+      {(() => {
+        const highRisks = riskSummary.highCount;
+        const medRisks = riskSummary.totalCount - highRisks;
+        const total = riskSummary.totalCount || 1;
+        return (
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={[styles.cardHeaderIcon, { backgroundColor: SemanticColors.feedbackError + '15' }]}>
+                <Ionicons name="shield" size={18} color={SemanticColors.feedbackError} />
+              </View>
+              <Text style={styles.cardTitle}>Risk Distribution</Text>
+              <View style={[styles.cardBadge, { backgroundColor: SemanticColors.feedbackError }]}>
+                <Text style={styles.cardBadgeText}>{riskSummary.totalCount} open</Text>
+              </View>
+            </View>
+
+            {/* Severity Bars */}
+            {[
+              { label: 'High (12+)', count: highRisks, color: SemanticColors.feedbackError, pct: (highRisks / total) * 100 },
+              { label: 'Medium (6-11)', count: medRisks, color: SemanticColors.feedbackWarning, pct: (medRisks / total) * 100 },
+            ].map((row) => (
+              <View key={row.label} style={styles.riskGaugeRow}>
+                <View style={styles.riskGaugeLabel}>
+                  <Text style={styles.riskGaugeLabelText}>{row.label}</Text>
+                  <Text style={[styles.riskGaugeCount, { color: row.color }]}>{row.count}</Text>
+                </View>
+                <View style={styles.riskGaugeBarTrack}>
+                  <View style={[styles.riskGaugeBarFill, { width: `${Math.max(row.pct, 4)}%`, backgroundColor: row.color }]} />
+                </View>
+              </View>
+            ))}
+
+            {/* Fragility + Supplier Row */}
+            <View style={styles.riskExposureRow}>
+              <View style={styles.riskExposureItem}>
+                <Ionicons name="pulse" size={16} color={SemanticColors.feedbackWarning} />
+                <View>
+                  <Text style={styles.riskExposureValue}>{fragilityStats?.averageFragilityScore || '—'}</Text>
+                  <Text style={styles.riskExposureLabel}>Avg Fragility</Text>
+                </View>
+              </View>
+              <View style={styles.riskExposureDivider} />
+              <View style={styles.riskExposureItem}>
+                <Ionicons name="people" size={16} color={SemanticColors.feedbackInfo} />
+                <View>
+                  <Text style={styles.riskExposureValue}>{supplierStats?.totalSuppliers || '—'}</Text>
+                  <Text style={styles.riskExposureLabel}>Suppliers</Text>
+                </View>
+              </View>
+              <View style={styles.riskExposureDivider} />
+              <View style={styles.riskExposureItem}>
+                <Ionicons name="checkmark-circle" size={16} color={SemanticColors.feedbackSuccess} />
+                <View>
+                  <Text style={styles.riskExposureValue}>{supplierStats?.averageReliabilityScore || '—'}%</Text>
+                  <Text style={styles.riskExposureLabel}>Reliability</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        );
+      })()}
 
       {/* High-Score Risks */}
       <View style={styles.card}>
@@ -849,13 +923,30 @@ export function DirectorDashboard({ initialTab = 'portfolio', showTabBar = true 
             </View>
             <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
           </Pressable>
-          <Pressable style={styles.actionItem} onPress={() => router.push('/hub/reports' as any)}>
-            <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
-              <Ionicons name="document-text" size={20} color={SemanticColors.feedbackInfo} />
+        </View>
+      </View>
+
+      {/* Tools */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Tools</Text>
+        <View style={styles.actionsList}>
+          <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/compliance' as any)}>
+            <View style={[styles.actionIcon, { backgroundColor: DIRECTOR_COLOR + '15' }]}>
+              <Ionicons name="shield-checkmark" size={20} color={DIRECTOR_COLOR} />
             </View>
             <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>Risk Report</Text>
-              <Text style={styles.actionSubtitle}>Generate for investors</Text>
+              <Text style={styles.actionTitle}>Compliance</Text>
+              <Text style={styles.actionSubtitle}>Regelgeving & risiconaleving</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+          </Pressable>
+          <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/warranty' as any)}>
+            <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
+              <Ionicons name="ribbon" size={20} color={SemanticColors.feedbackWarning} />
+            </View>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Garantie</Text>
+              <Text style={styles.actionSubtitle}>Garantie- & verplichtingenrisico's</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
           </Pressable>
@@ -872,97 +963,75 @@ export function DirectorDashboard({ initialTab = 'portfolio', showTabBar = true 
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* Platform Performance Banner */}
-      <View style={[styles.statsBanner, { backgroundColor: Palette.hermesOrange + '15' }]}>
-        <View style={styles.statsBannerItem}>
-          <Text style={[styles.statsBannerValue, { color: Palette.hermesOrange }]}>
-            {platformMetrics.hoursSaved}h
-          </Text>
-          <Text style={styles.statsBannerLabel}>Hours Saved</Text>
-        </View>
-        <View style={styles.statsBannerDivider} />
-        <View style={styles.statsBannerItem}>
-          <Text style={[styles.statsBannerValue, { color: SemanticColors.feedbackSuccess }]}>
-            {formatCurrency(platformMetrics.valueDelivered, 'GBP')}
-          </Text>
-          <Text style={styles.statsBannerLabel}>Value</Text>
-        </View>
-        <View style={styles.statsBannerDivider} />
-        <View style={styles.statsBannerItem}>
-          <Text style={[styles.statsBannerValue, { color: DIRECTOR_COLOR }]}>
-            {platformMetrics.aiActions}
-          </Text>
-          <Text style={styles.statsBannerLabel}>AI Actions</Text>
-        </View>
-      </View>
+      {/* KPI Header */}
+      <ContractorDashboardHeader
+        kpis={[
+          { icon: 'cash', value: formatCurrency(platformMetrics.valueDelivered, 'GBP'), label: 'ROI', color: DIRECTOR_COLOR },
+          { icon: 'time', value: `${platformMetrics.avgDsoReduction}d`, label: 'DSO ↓', color: SemanticColors.feedbackSuccess },
+          { icon: 'checkmark-circle', value: String(platformMetrics.approvalsSaved), label: 'Auto-Approved' },
+        ]}
+      />
+      {performanceInsight && (
+        <InlineInsight icon={performanceInsight.icon as IconName} message={performanceInsight.message} />
+      )}
 
-      {/* Platform Metrics */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <View style={[styles.cardHeaderIcon, { backgroundColor: Palette.hermesOrange + '15' }]}>
-            <Ionicons name="sparkles" size={18} color={Palette.hermesOrange} />
+      {/* ROI Hero Card */}
+      <View style={styles.roiHeroCard}>
+        <View style={styles.roiHeroTop}>
+          <View style={styles.roiHeroRing}>
+            <Text style={styles.roiHeroRingValue}>{formatCurrency(platformMetrics.valueDelivered, 'GBP')}</Text>
+            <Text style={styles.roiHeroRingLabel}>Quarterly ROI</Text>
           </View>
-          <Text style={styles.cardTitle}>Platform Performance</Text>
+          <View style={styles.roiHeroSubMetrics}>
+            <View style={styles.roiHeroSubItem}>
+              <Text style={styles.roiHeroSubValue}>{platformMetrics.hoursSaved}h</Text>
+              <Text style={styles.roiHeroSubLabel}>Hours Saved</Text>
+            </View>
+            <View style={styles.roiHeroSubItem}>
+              <Text style={styles.roiHeroSubValue}>{platformMetrics.avgDsoReduction}d</Text>
+              <Text style={styles.roiHeroSubLabel}>DSO Reduction</Text>
+            </View>
+            <View style={styles.roiHeroSubItem}>
+              <Text style={styles.roiHeroSubValue}>{formatPercent(platformMetrics.docAccuracy)}</Text>
+              <Text style={styles.roiHeroSubLabel}>Accuracy</Text>
+            </View>
+          </View>
         </View>
-
-        <View style={styles.platformGrid}>
-          <MetricCard
-            value={`${platformMetrics.hoursSaved}h`}
-            label="Hours Saved"
-            trend="up"
-            trendValue="+12%"
-            color={SemanticColors.feedbackSuccess}
-          />
-          <MetricCard
-            value={formatCurrency(platformMetrics.valueDelivered, 'GBP')}
-            label="Value Delivered"
-            trend="up"
-            trendValue="+8%"
-            color={SemanticColors.feedbackSuccess}
-          />
-          <MetricCard
-            value={formatPercent(platformMetrics.docAccuracy)}
-            label="Doc Accuracy"
-            trend="neutral"
-            trendValue="stable"
-            color={DIRECTOR_COLOR}
-          />
-          <MetricCard
-            value={`${platformMetrics.avgDsoReduction}d`}
-            label="DSO Reduction"
-            trend="up"
-            trendValue="+0.5d"
-            color={SemanticColors.feedbackInfo}
-          />
+        <View style={styles.roiHeroTrend}>
+          <Ionicons name="trending-up" size={14} color={SemanticColors.feedbackSuccess} />
+          <Text style={[styles.roiHeroTrendText, { color: SemanticColors.feedbackSuccess }]}>+12% vs last quarter</Text>
         </View>
       </View>
 
-      {/* AI Agent Stats */}
+      {/* Platform Activity Bars */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <View style={[styles.cardHeaderIcon, { backgroundColor: DIRECTOR_COLOR + '15' }]}>
             <Ionicons name="flash" size={18} color={DIRECTOR_COLOR} />
           </View>
-          <Text style={styles.cardTitle}>AI Agent Activity</Text>
+          <Text style={styles.cardTitle}>AI Activity</Text>
         </View>
-
-        <View style={styles.agentStatsRow}>
-          <View style={styles.agentStatItem}>
-            <Ionicons name="document-text" size={24} color={SemanticColors.feedbackInfo} />
-            <Text style={styles.agentStatValue}>342</Text>
-            <Text style={styles.agentStatLabel}>Docs Processed</Text>
+        {[
+          { icon: 'document-text' as IconName, label: 'Docs Processed', value: 342, max: 500, color: SemanticColors.feedbackInfo },
+          { icon: 'flash' as IconName, label: 'AI Actions', value: platformMetrics.aiActions, max: 200, color: DIRECTOR_COLOR },
+          { icon: 'checkmark-circle' as IconName, label: 'Auto-Approvals', value: platformMetrics.approvalsSaved, max: 50, color: SemanticColors.feedbackSuccess },
+          { icon: 'bulb' as IconName, label: 'Insights Generated', value: 89, max: 120, color: Palette.hermesOrange },
+        ].map((item) => (
+          <View key={item.label} style={styles.actBarRow}>
+            <View style={styles.actBarIcon}>
+              <Ionicons name={item.icon} size={16} color={item.color} />
+            </View>
+            <View style={styles.actBarContent}>
+              <View style={styles.actBarLabelRow}>
+                <Text style={styles.actBarLabel}>{item.label}</Text>
+                <Text style={[styles.actBarValue, { color: item.color }]}>{item.value}</Text>
+              </View>
+              <View style={styles.actBarTrack}>
+                <View style={[styles.actBarFill, { width: `${Math.min((item.value / item.max) * 100, 100)}%`, backgroundColor: item.color }]} />
+              </View>
+            </View>
           </View>
-          <View style={styles.agentStatItem}>
-            <Ionicons name="checkmark-circle" size={24} color={SemanticColors.feedbackSuccess} />
-            <Text style={styles.agentStatValue}>{platformMetrics.approvalsSaved}</Text>
-            <Text style={styles.agentStatLabel}>Auto-Approvals</Text>
-          </View>
-          <View style={styles.agentStatItem}>
-            <Ionicons name="bulb" size={24} color={Palette.hermesOrange} />
-            <Text style={styles.agentStatValue}>89</Text>
-            <Text style={styles.agentStatLabel}>Insights</Text>
-          </View>
-        </View>
+        ))}
       </View>
 
       {/* ROI Breakdown */}
@@ -1029,12 +1098,32 @@ export function DirectorDashboard({ initialTab = 'portfolio', showTabBar = true 
             <Text style={styles.hubTitle}>Appraisal</Text>
             <Text style={styles.hubStat}>IRR tracking</Text>
           </Pressable>
-          <Pressable style={styles.hubCard} onPress={() => router.push('/hub/metrics' as any)}>
-            <View style={[styles.hubIcon, { backgroundColor: DIRECTOR_COLOR + '15' }]}>
-              <Ionicons name="settings" size={22} color={DIRECTOR_COLOR} />
+        </View>
+      </View>
+
+      {/* Tools */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Tools</Text>
+        <View style={styles.actionsList}>
+          <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/benchmark' as any)}>
+            <View style={[styles.actionIcon, { backgroundColor: DIRECTOR_COLOR + '15' }]}>
+              <Ionicons name="stats-chart" size={20} color={DIRECTOR_COLOR} />
             </View>
-            <Text style={styles.hubTitle}>Configure</Text>
-            <Text style={styles.hubStat}>AI settings</Text>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Benchmarking</Text>
+              <Text style={styles.actionSubtitle}>Prestatie- & kostenbenchmarks</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+          </Pressable>
+          <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/smart-pricing' as any)}>
+            <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackSuccess + '15' }]}>
+              <Ionicons name="pricetag" size={20} color={SemanticColors.feedbackSuccess} />
+            </View>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Smart Pricing</Text>
+              <Text style={styles.actionSubtitle}>Prijsintelligentie & margeanalyse</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
           </Pressable>
         </View>
       </View>
@@ -1907,5 +1996,315 @@ const styles = StyleSheet.create({
   handoverBlockedReason: {
     fontSize: 11,
     color: SemanticColors.textTertiary,
+  },
+
+  // Approval Pipeline
+  pipelineHero: {
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+  },
+  pipelineHeroValue: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: DIRECTOR_COLOR,
+  },
+  pipelineHeroLabel: {
+    fontSize: 12,
+    color: SemanticColors.textTertiary,
+    marginTop: 4,
+  },
+  pipelineBarTrack: {
+    flexDirection: 'row',
+    height: 12,
+    borderRadius: 6,
+    overflow: 'hidden',
+    backgroundColor: SemanticColors.surfaceSecondary,
+  },
+  pipelineSegment: {
+    height: '100%',
+  },
+  pipelineLegend: {
+    gap: Spacing.xs,
+  },
+  pipelineLegendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  pipelineLegendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  pipelineLegendLabel: {
+    flex: 1,
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  pipelineLegendValue: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+
+  // Risk Distribution Gauge
+  riskGaugeRow: {
+    gap: 6,
+  },
+  riskGaugeLabel: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  riskGaugeLabelText: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  riskGaugeCount: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  riskGaugeBarTrack: {
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    overflow: 'hidden',
+  },
+  riskGaugeBarFill: {
+    height: '100%',
+    borderRadius: 5,
+  },
+  riskExposureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 10,
+    padding: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  riskExposureItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    justifyContent: 'center',
+  },
+  riskExposureValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  riskExposureLabel: {
+    fontSize: 9,
+    color: SemanticColors.textTertiary,
+  },
+  riskExposureDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: SemanticColors.borderDefault,
+  },
+
+  // ROI Hero Card
+  roiHeroCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 16,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    gap: Spacing.md,
+  },
+  roiHeroTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.lg,
+  },
+  roiHeroRing: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    borderWidth: 6,
+    borderColor: DIRECTOR_COLOR,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: DIRECTOR_COLOR + '10',
+  },
+  roiHeroRingValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: DIRECTOR_COLOR,
+  },
+  roiHeroRingLabel: {
+    fontSize: 9,
+    color: SemanticColors.textTertiary,
+    marginTop: 2,
+  },
+  roiHeroSubMetrics: {
+    flex: 1,
+    gap: Spacing.sm,
+  },
+  roiHeroSubItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  roiHeroSubValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  roiHeroSubLabel: {
+    fontSize: 11,
+    color: SemanticColors.textTertiary,
+  },
+  roiHeroTrend: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingTop: Spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: SemanticColors.borderDefault,
+  },
+  roiHeroTrendText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+
+  // Activity Bars
+  actBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  actBarIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actBarContent: {
+    flex: 1,
+    gap: 4,
+  },
+  actBarLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  actBarLabel: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  actBarValue: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  actBarTrack: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    overflow: 'hidden',
+  },
+  actBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+
+  // Cross-Role Workflow Oversight Styles
+  wfOverviewStats: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  wfOverviewStatItem: {
+    flex: 1,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 8,
+    padding: 10,
+    alignItems: 'center',
+  },
+  wfOverviewStatValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  wfOverviewStatLabel: {
+    fontSize: 9,
+    color: SemanticColors.textTertiary,
+    marginTop: 2,
+  },
+  wfTypeBreakdown: {
+    gap: 6,
+  },
+  wfTypeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 8,
+    padding: 10,
+  },
+  wfTypeIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  wfTypeLabel: {
+    flex: 1,
+    fontSize: 13,
+    color: SemanticColors.textPrimary,
+  },
+  wfTypeCount: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  wfTypeCountText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  wfEscalationAlert: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: SemanticColors.feedbackWarningBg,
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: SemanticColors.feedbackWarningBorder,
+  },
+  wfEscalationAlertTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: SemanticColors.feedbackWarning,
+  },
+  wfEscalationAlertItem: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+    marginTop: 2,
+  },
+  wfPaymentSummary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: DIRECTOR_COLOR + '08',
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: DIRECTOR_COLOR + '20',
+  },
+  wfPaymentSummaryTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  wfPaymentSummaryValue: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+    marginTop: 2,
   },
 });

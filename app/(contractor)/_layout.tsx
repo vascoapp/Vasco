@@ -34,7 +34,7 @@ const CONTRACTOR_TABS: TabConfig[] = [
   },
   {
     name: 'decisions',
-    title: 'Beslissingen',
+    title: 'Keuzes',
     icon: 'checkbox-outline',
     iconFocused: 'checkbox',
   },
@@ -43,6 +43,12 @@ const CONTRACTOR_TABS: TabConfig[] = [
     title: 'Facturen',
     icon: 'document-text-outline',
     iconFocused: 'document-text',
+  },
+  {
+    name: 'meer',
+    title: 'Meer',
+    icon: 'grid-outline',
+    iconFocused: 'grid',
   },
 ];
 
@@ -78,6 +84,11 @@ export default function ContractorLayout() {
           }}
         />
       ))}
+      {/* Hidden screens accessible via navigation but not shown in tab bar */}
+      <Tabs.Screen
+        name="certificaten"
+        options={{ href: null }}
+      />
     </Tabs>
   );
 }

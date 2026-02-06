@@ -249,7 +249,7 @@ export function SmartScheduler() {
           prev.setDate(prev.getDate() - 1);
           setSelectedDate(prev.toISOString().split('T')[0]);
         }}>
-          <Ionicons name="chevron-back" size={24} color={SemanticColors.text} />
+          <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.dayViewTitle}>
           <Text style={styles.dayViewDate}>{formatDate(selectedDate)}</Text>
@@ -270,7 +270,7 @@ export function SmartScheduler() {
           next.setDate(next.getDate() + 1);
           setSelectedDate(next.toISOString().split('T')[0]);
         }}>
-          <Ionicons name="chevron-forward" size={24} color={SemanticColors.text} />
+          <Ionicons name="chevron-forward" size={24} color={SemanticColors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -346,7 +346,7 @@ export function SmartScheduler() {
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <TouchableOpacity onPress={() => setShowOptimizations(false)}>
-            <Ionicons name="close" size={24} color={SemanticColors.text} />
+            <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Optimalisaties</Text>
           <View style={{ width: 24 }} />
@@ -390,7 +390,7 @@ export function SmartScheduler() {
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <TouchableOpacity onPress={() => setShowJobModal(false)}>
-            <Ionicons name="close" size={24} color={SemanticColors.text} />
+            <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Afspraak details</Text>
           <TouchableOpacity>
@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
     gap: 8,
   },
   viewButton: {
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   dayColumnSelected: {
     borderColor: Palette.blue500,
@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   dayHeaderToday: {
     backgroundColor: Palette.blue500,
@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
   dayNumber: {
     fontSize: 20,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   dayTextToday: {
     color: '#fff',
@@ -673,13 +673,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 8,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
     gap: 6,
   },
   utilizationBar: {
     flex: 1,
     height: 4,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 2,
   },
   utilizationFill: {
@@ -701,7 +701,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   jobCardCompact: {
     marginBottom: 4,
@@ -732,7 +732,7 @@ const styles = StyleSheet.create({
   jobTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   jobCustomer: {
     fontSize: 13,
@@ -763,7 +763,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   dayViewTitle: {
     alignItems: 'center',
@@ -771,7 +771,7 @@ const styles = StyleSheet.create({
   dayViewDate: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   dayViewWeather: {
     flexDirection: 'row',
@@ -792,7 +792,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   dayStat: {
     flex: 1,
@@ -801,7 +801,7 @@ const styles = StyleSheet.create({
   dayStatValue: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   dayStatLabel: {
     fontSize: 11,
@@ -819,7 +819,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 12,
   },
   emptyText: {
@@ -874,13 +874,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
     backgroundColor: SemanticColors.surfacePrimary,
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   modalContent: {
     flex: 1,
@@ -896,7 +896,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 12,
   },
   optimizationIcon: {
@@ -913,7 +913,7 @@ const styles = StyleSheet.create({
   optimizationTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   optimizationDesc: {
     fontSize: 13,
@@ -963,7 +963,7 @@ const styles = StyleSheet.create({
   jobDetailTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   jobDetailCustomer: {
     fontSize: 15,
@@ -976,14 +976,14 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   jobDetailRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
     gap: 12,
   },
   jobDetailRowContent: {
@@ -995,7 +995,7 @@ const styles = StyleSheet.create({
   },
   jobDetailValue: {
     fontSize: 15,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 2,
   },
   jobActions: {

@@ -95,7 +95,7 @@ export function RecommendationFeedbackCard({
       case 'timing':
         return { icon: 'time' as IconName, color: Palette.terracotta, label: 'Timing' };
       case 'material':
-        return { icon: 'cube' as IconName, color: Palette.dustyBlue, label: 'Materiaal' };
+        return { icon: 'cube' as IconName, color: Palette.blue500, label: 'Materiaal' };
       case 'product':
         return { icon: 'pricetag' as IconName, color: Palette.sageGreen, label: 'Product' };
       default:

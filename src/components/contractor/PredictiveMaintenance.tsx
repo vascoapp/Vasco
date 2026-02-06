@@ -83,7 +83,7 @@ export function PredictiveMaintenance() {
         <Text style={styles.statLabel}>Voorspellingen</Text>
       </View>
       <View style={styles.statItem}>
-        <Text style={[styles.statValue, { color: Palette.success }]}>
+        <Text style={[styles.statValue, { color: SemanticColors.feedbackSuccess }]}>
           €{stats.savingsThisMonth}
         </Text>
         <Text style={styles.statLabel}>Bespaard</Text>
@@ -100,7 +100,7 @@ export function PredictiveMaintenance() {
       {report && (
         <View style={styles.savingsCard}>
           <View style={styles.savingsHeader}>
-            <Ionicons name="trending-up" size={24} color={Palette.success} />
+            <Ionicons name="trending-up" size={24} color={SemanticColors.feedbackSuccess} />
             <Text style={styles.savingsTitle}>Maandelijkse Besparingen</Text>
           </View>
           <View style={styles.savingsMain}>
@@ -172,9 +172,9 @@ export function PredictiveMaintenance() {
                     size={14}
                     color={
                       item.trend === 'improving'
-                        ? Palette.success
+                        ? SemanticColors.feedbackSuccess
                         : item.trend === 'declining'
-                        ? Palette.error
+                        ? SemanticColors.feedbackError
                         : SemanticColors.textSecondary
                     }
                   />
@@ -300,13 +300,13 @@ export function PredictiveMaintenance() {
             <View style={styles.predictionCosts}>
               <View style={styles.costItem}>
                 <Text style={styles.costLabel}>Reparatiekosten</Text>
-                <Text style={[styles.costValue, { color: Palette.error }]}>
+                <Text style={[styles.costValue, { color: SemanticColors.feedbackError }]}>
                   €{prediction.estimatedRepairCost}
                 </Text>
               </View>
               <View style={styles.costItem}>
                 <Text style={styles.costLabel}>Preventiekosten</Text>
-                <Text style={[styles.costValue, { color: Palette.success }]}>
+                <Text style={[styles.costValue, { color: SemanticColors.feedbackSuccess }]}>
                   €{prediction.preventionCost}
                 </Text>
               </View>
@@ -351,7 +351,7 @@ export function PredictiveMaintenance() {
                   <View
                     style={[
                       styles.probabilityCircle,
-                      { backgroundColor: SemanticColors.border },
+                      { backgroundColor: SemanticColors.borderDefault },
                     ]}
                   >
                     <Text style={[styles.probabilityValue, { color: SemanticColors.textSecondary }]}>
@@ -362,7 +362,7 @@ export function PredictiveMaintenance() {
                     <Text style={styles.predictionEquipment}>{prediction.equipmentName}</Text>
                     <Text style={styles.predictionComponent}>{prediction.component}</Text>
                   </View>
-                  <Ionicons name="checkmark-circle" size={24} color={Palette.success} />
+                  <Ionicons name="checkmark-circle" size={24} color={SemanticColors.feedbackSuccess} />
                 </View>
               </View>
             ))}
@@ -420,7 +420,7 @@ export function PredictiveMaintenance() {
               </View>
               <View style={styles.metricItem}>
                 <Text style={styles.metricLabel}>Besparing</Text>
-                <Text style={[styles.metricValue, { color: Palette.success }]}>
+                <Text style={[styles.metricValue, { color: SemanticColors.feedbackSuccess }]}>
                   €{rec.potentialSavings}
                 </Text>
               </View>
@@ -529,7 +529,7 @@ export function PredictiveMaintenance() {
                 <Text
                   style={[
                     styles.orderDateValue,
-                    suggestion.orderByDate < new Date() && { color: Palette.error },
+                    suggestion.orderByDate < new Date() && { color: SemanticColors.feedbackError },
                   ]}
                 >
                   {suggestion.orderByDate.toLocaleDateString('nl-NL')}
@@ -562,7 +562,7 @@ export function PredictiveMaintenance() {
 
       {suggestions.length === 0 && (
         <View style={styles.emptyState}>
-          <Ionicons name="checkmark-circle" size={48} color={Palette.success} />
+          <Ionicons name="checkmark-circle" size={48} color={SemanticColors.feedbackSuccess} />
           <Text style={styles.emptyText}>Alle onderdelen op voorraad</Text>
         </View>
       )}
@@ -579,7 +579,7 @@ export function PredictiveMaintenance() {
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <TouchableOpacity onPress={() => setShowEquipmentModal(false)}>
-            <Ionicons name="close" size={24} color={SemanticColors.text} />
+            <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Gezondheidsdetails</Text>
           <View style={{ width: 24 }} />
@@ -675,7 +675,7 @@ export function PredictiveMaintenance() {
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <TouchableOpacity onPress={() => setShowPredictionModal(false)}>
-            <Ionicons name="close" size={24} color={SemanticColors.text} />
+            <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Voorspelling Details</Text>
           <View style={{ width: 24 }} />
@@ -736,7 +736,7 @@ export function PredictiveMaintenance() {
               <Text style={styles.predictionSectionTitle}>Indicatoren</Text>
               {selectedPrediction.indicators.map((indicator, i) => (
                 <View key={i} style={styles.indicatorRow}>
-                  <Ionicons name="alert-circle" size={16} color={Palette.warning} />
+                  <Ionicons name="alert-circle" size={16} color={SemanticColors.feedbackWarning} />
                   <Text style={styles.indicatorRowText}>{indicator}</Text>
                 </View>
               ))}
@@ -823,17 +823,17 @@ export function PredictiveMaintenance() {
 // =============================================================================
 
 function getHealthColor(score: number): string {
-  if (score >= 80) return Palette.success;
-  if (score >= 60) return Palette.warning;
-  return Palette.error;
+  if (score >= 80) return SemanticColors.feedbackSuccess;
+  if (score >= 60) return SemanticColors.feedbackWarning;
+  return SemanticColors.feedbackError;
 }
 
 function getRiskColor(level: string): string {
   const colors: Record<string, string> = {
-    low: Palette.success,
-    medium: Palette.warning,
-    high: Palette.error,
-    critical: Palette.error,
+    low: SemanticColors.feedbackSuccess,
+    medium: SemanticColors.feedbackWarning,
+    high: SemanticColors.feedbackError,
+    critical: SemanticColors.feedbackError,
   };
   return colors[level] || SemanticColors.textSecondary;
 }
@@ -850,9 +850,9 @@ function getRiskLevelName(level: string): string {
 
 function getFactorColor(status: string): string {
   const colors: Record<string, string> = {
-    good: Palette.success,
-    warning: Palette.warning,
-    critical: Palette.error,
+    good: SemanticColors.feedbackSuccess,
+    warning: SemanticColors.feedbackWarning,
+    critical: SemanticColors.feedbackError,
   };
   return colors[status] || SemanticColors.textSecondary;
 }
@@ -867,17 +867,17 @@ function getCategoryName(category: string): string {
 }
 
 function getProbabilityColor(probability: number): string {
-  if (probability >= 70) return Palette.error;
-  if (probability >= 40) return Palette.warning;
-  return Palette.info;
+  if (probability >= 70) return SemanticColors.feedbackError;
+  if (probability >= 40) return SemanticColors.feedbackWarning;
+  return SemanticColors.feedbackInfo;
 }
 
 function getImpactColor(impact: string): string {
   const colors: Record<string, string> = {
-    low: Palette.success,
-    medium: Palette.warning,
-    high: Palette.error,
-    critical: Palette.error,
+    low: SemanticColors.feedbackSuccess,
+    medium: SemanticColors.feedbackWarning,
+    high: SemanticColors.feedbackError,
+    critical: SemanticColors.feedbackError,
   };
   return colors[impact] || SemanticColors.textSecondary;
 }
@@ -898,10 +898,10 @@ function formatDateRange(start: Date, end: Date): string {
 
 function getPriorityColor(priority: string): string {
   const colors: Record<string, string> = {
-    low: Palette.info,
-    medium: Palette.warning,
-    high: Palette.error,
-    urgent: Palette.error,
+    low: SemanticColors.feedbackInfo,
+    medium: SemanticColors.feedbackWarning,
+    high: SemanticColors.feedbackError,
+    urgent: SemanticColors.feedbackError,
   };
   return colors[priority] || SemanticColors.textSecondary;
 }
@@ -943,9 +943,9 @@ function getTypeName(type: string): string {
 
 function getUrgencyColor(urgency: string): string {
   const colors: Record<string, string> = {
-    low: Palette.info,
-    medium: Palette.warning,
-    high: Palette.error,
+    low: SemanticColors.feedbackInfo,
+    medium: SemanticColors.feedbackWarning,
+    high: SemanticColors.feedbackError,
   };
   return colors[urgency] || SemanticColors.textSecondary;
 }
@@ -980,7 +980,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   subtitle: {
     fontSize: 14,
@@ -1004,7 +1004,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   statLabel: {
     fontSize: 11,
@@ -1012,7 +1012,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   warningValue: {
-    color: Palette.error,
+    color: SemanticColors.feedbackError,
   },
   tabBar: {
     flexDirection: 'row',
@@ -1046,7 +1046,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   savingsCard: {
-    backgroundColor: Palette.success + '15',
+    backgroundColor: SemanticColors.feedbackSuccess + '15',
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
@@ -1060,7 +1060,7 @@ const styles = StyleSheet.create({
   savingsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   savingsMain: {
     alignItems: 'center',
@@ -1069,11 +1069,11 @@ const styles = StyleSheet.create({
   savingsAmount: {
     fontSize: 40,
     fontWeight: '700',
-    color: Palette.success,
+    color: SemanticColors.feedbackSuccess,
   },
   savingsPercentage: {
     fontSize: 14,
-    color: Palette.success,
+    color: SemanticColors.feedbackSuccess,
     marginTop: 4,
   },
   savingsDetails: {
@@ -1090,7 +1090,7 @@ const styles = StyleSheet.create({
   savingsDetailValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 2,
   },
   sectionHeader: {
@@ -1103,7 +1103,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   sectionSubtitle: {
     fontSize: 14,
@@ -1131,7 +1131,7 @@ const styles = StyleSheet.create({
   healthName: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   healthCategory: {
     fontSize: 13,
@@ -1173,11 +1173,11 @@ const styles = StyleSheet.create({
   factorValue: {
     fontSize: 12,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   factorProgress: {
     height: 4,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -1249,11 +1249,11 @@ const styles = StyleSheet.create({
   predictionEquipment: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   predictionComponent: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 2,
   },
   predictionType: {
@@ -1283,14 +1283,14 @@ const styles = StyleSheet.create({
   timelineValue: {
     fontSize: 13,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   predictionCosts: {
     flexDirection: 'row',
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   costItem: {
     flex: 1,
@@ -1322,7 +1322,7 @@ const styles = StyleSheet.create({
   },
   indicatorText: {
     fontSize: 13,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   acknowledgeButton: {
     flexDirection: 'row',
@@ -1374,7 +1374,7 @@ const styles = StyleSheet.create({
   recommendationTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   recommendationEquipment: {
     fontSize: 14,
@@ -1417,14 +1417,14 @@ const styles = StyleSheet.create({
   metricValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 2,
   },
   partsNeeded: {
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   partsLabel: {
     fontSize: 13,
@@ -1440,17 +1440,17 @@ const styles = StyleSheet.create({
   },
   partName: {
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   partStatus: {},
   partInStock: {
     fontSize: 12,
-    color: Palette.success,
+    color: SemanticColors.feedbackSuccess,
     fontWeight: '500',
   },
   partOutStock: {
     fontSize: 12,
-    color: Palette.warning,
+    color: SemanticColors.feedbackWarning,
     fontWeight: '500',
   },
   recommendationActions: {
@@ -1499,7 +1499,7 @@ const styles = StyleSheet.create({
   partOrderName: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   partOrderNumber: {
     fontSize: 13,
@@ -1540,7 +1540,7 @@ const styles = StyleSheet.create({
   partOrderDetailValue: {
     fontSize: 15,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 2,
   },
   partOrderDates: {
@@ -1548,7 +1548,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: SemanticColors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   orderDateItem: {
     flex: 1,
@@ -1560,7 +1560,7 @@ const styles = StyleSheet.create({
   orderDateValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 2,
   },
   supplierInfo: {
@@ -1607,12 +1607,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   modalContent: {
     flex: 1,
@@ -1641,7 +1641,7 @@ const styles = StyleSheet.create({
   healthProfileName: {
     fontSize: 20,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 16,
   },
   riskBadgeLarge: {
@@ -1663,7 +1663,7 @@ const styles = StyleSheet.create({
   factorsSectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 16,
   },
   factorDetail: {
@@ -1677,7 +1677,7 @@ const styles = StyleSheet.create({
   factorDetailName: {
     fontSize: 14,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   factorDetailValue: {
     fontSize: 14,
@@ -1685,7 +1685,7 @@ const styles = StyleSheet.create({
   },
   factorDetailProgress: {
     height: 6,
-    backgroundColor: SemanticColors.border,
+    backgroundColor: SemanticColors.borderDefault,
     borderRadius: 3,
     overflow: 'hidden',
     marginBottom: 6,
@@ -1712,7 +1712,7 @@ const styles = StyleSheet.create({
   lastAssessmentValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
   },
   predictionProfile: {
     alignItems: 'center',
@@ -1736,7 +1736,7 @@ const styles = StyleSheet.create({
   predictionProfileName: {
     fontSize: 20,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 16,
   },
   predictionProfileComponent: {
@@ -1753,7 +1753,7 @@ const styles = StyleSheet.create({
   predictionSectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
   timeframeRow: {
@@ -1775,7 +1775,7 @@ const styles = StyleSheet.create({
   timeframeValue: {
     fontSize: 13,
     fontWeight: '500',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 2,
   },
   timeframeMainValue: {
@@ -1791,7 +1791,7 @@ const styles = StyleSheet.create({
   indicatorRowText: {
     flex: 1,
     fontSize: 14,
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     lineHeight: 20,
   },
   costComparison: {
@@ -1805,10 +1805,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   costBoxBad: {
-    backgroundColor: Palette.error + '10',
+    backgroundColor: SemanticColors.feedbackError + '10',
   },
   costBoxGood: {
-    backgroundColor: Palette.success + '10',
+    backgroundColor: SemanticColors.feedbackSuccess + '10',
   },
   costBoxLabel: {
     fontSize: 12,
@@ -1817,7 +1817,7 @@ const styles = StyleSheet.create({
   costBoxValue: {
     fontSize: 22,
     fontWeight: '700',
-    color: SemanticColors.text,
+    color: SemanticColors.textPrimary,
     marginTop: 4,
   },
   costBoxSub: {

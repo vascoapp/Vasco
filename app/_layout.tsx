@@ -52,6 +52,7 @@ function RootLayoutNav() {
       <Stack.Screen name="contractor" />
       <Stack.Screen name="sitelead" />
       <Stack.Screen name="customer/[code]" />
+      <Stack.Screen name="hub" />
       <Stack.Screen name="(modals)/ingestion" options={{ presentation: 'modal' }} />
       <Stack.Screen name="(modals)/insights" options={{ presentation: 'modal' }} />
     </Stack>

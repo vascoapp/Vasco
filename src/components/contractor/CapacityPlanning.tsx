@@ -146,6 +146,17 @@ function CapacityTab() {
   const { data: forecast, loading } = useCapacityForecast(undefined, 14);
   const [selectedDay, setSelectedDay] = useState<CapacitySlot | null>(null);
 
+  // Calculate summary stats (must be before any early return)
+  const stats = useMemo(() => {
+    const available = forecast.filter((d) => d.status === 'available').length;
+    const partial = forecast.filter((d) => d.status === 'partial').length;
+    const busy = forecast.filter((d) => d.status === 'busy').length;
+    const totalAvailableHours = forecast.reduce((sum, d) => sum + d.availableHours, 0);
+    const avgUtilization = forecast.length > 0 ? forecast.reduce((sum, d) => sum + d.utilization, 0) / forecast.length : 0;
+
+    return { available, partial, busy, totalAvailableHours, avgUtilization };
+  }, [forecast]);
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -154,17 +165,6 @@ function CapacityTab() {
       </View>
     );
   }
-
-  // Calculate summary stats
-  const stats = useMemo(() => {
-    const available = forecast.filter((d) => d.status === 'available').length;
-    const partial = forecast.filter((d) => d.status === 'partial').length;
-    const busy = forecast.filter((d) => d.status === 'busy').length;
-    const totalAvailableHours = forecast.reduce((sum, d) => sum + d.availableHours, 0);
-    const avgUtilization = forecast.reduce((sum, d) => sum + d.utilization, 0) / forecast.length;
-
-    return { available, partial, busy, totalAvailableHours, avgUtilization };
-  }, [forecast]);
 
   return (
     <View>
