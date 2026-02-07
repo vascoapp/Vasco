@@ -47,8 +47,12 @@ import {
 import { useVascoGuidance, useInlineInsight } from '../../services/vascoGuidanceService';
 import { VascoInsightList, InlineInsight } from '../shared/VascoInsightCard';
 import type { VascoInsight } from '../shared/VascoInsightCard';
-import { ContractorDashboardHeader } from '../contractor/ContractorDashboardHeader';
 import { FinancialAuditorDashboard } from '../financial-auditor/FinancialAuditorDashboard';
+import { FinancialKPIGrid } from '../shared/FinancialKPIGrid';
+import { PLStatementView } from '../shared/PLStatementView';
+import { TrendBarChart } from '../shared/TrendBarChart';
+import { ReceivablesAgingBar } from '../shared/ReceivablesAgingBar';
+import { ScenarioComparisonCard } from '../shared/ScenarioComparisonCard';
 
 // Cross-Role Workflows
 import {
@@ -233,6 +237,41 @@ type TabView = CFOTabView;
 
 // Role color - matches theme roleCFO token
 const CFO_COLOR = '#2563EB'; // Blue for CFO (per theme)
+
+// =============================================================================
+// NEW MOCK DATA FOR FINANCIAL COMPONENTS
+// =============================================================================
+
+const MOCK_MONTHLY_SPEND = [
+  { label: 'Sep', value: 3200000 },
+  { label: 'Okt', value: 4100000 },
+  { label: 'Nov', value: 3800000 },
+  { label: 'Dec', value: 5200000 },
+  { label: 'Jan', value: 4600000 },
+  { label: 'Feb', value: 5800000 },
+];
+
+const MOCK_AGING_BUCKETS = [
+  { label: 'Huidig', amount: 2400000, color: '#2563EB' },
+  { label: '30d', amount: 850000, color: '#EAB308' },
+  { label: '60d', amount: 320000, color: '#F97316' },
+  { label: '90d+', amount: 180000, color: '#EF4444' },
+];
+
+const MOCK_CASHFLOW_MONTHLY = [
+  { label: 'Sep', value: 1200000 },
+  { label: 'Okt', value: -800000 },
+  { label: 'Nov', value: 1500000 },
+  { label: 'Dec', value: -2100000 },
+  { label: 'Jan', value: 900000 },
+  { label: 'Feb', value: -400000 },
+];
+
+const MOCK_SCENARIOS = [
+  { name: 'Neerwaarts', irr: '14.2%', profit: '\u00A312.1M', equityMultiple: '1.48x' },
+  { name: 'Basis', irr: '22.4%', profit: '\u00A318.4M', equityMultiple: '1.82x', isBase: true },
+  { name: 'Opwaarts', irr: '29.8%', profit: '\u00A324.6M', equityMultiple: '2.14x' },
+];
 
 // =============================================================================
 // HELPERS
@@ -841,12 +880,41 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
         {/* OVERVIEW TAB */}
         {activeTab === 'overview' && (
           <>
+            {/* KPI Scorecard Grid */}
+            <FinancialKPIGrid
+              accentColor={CFO_COLOR}
+              tiles={[
+                { label: 'Portfolio GDV', value: formatCompact(portfolioMetrics.totalGdv, 'GBP'), variance: '+3.2%', varianceDirection: 'up', status: 'green' },
+                { label: 'Gemiddeld IRR', value: formatPercent(portfolioMetrics.avgIrr), variance: '+1.1%', varianceDirection: 'up', status: 'green', heroBg: true },
+                { label: 'Totaal Budget', value: formatCompact(portfolioMetrics.totalBudget, 'GBP'), budgetLabel: `${mockProjects.length} projecten` },
+                { label: 'Totaal Besteed', value: formatCompact(portfolioMetrics.totalSpent, 'GBP'), variance: '-2.1%', varianceDirection: 'down', status: 'amber' },
+                { label: 'Ongecommitteerd', value: formatCompact(portfolioMetrics.uncommitted, 'GBP'), status: 'green' },
+                { label: 'Goedkeuringen', value: `${pendingApprovalCount}`, status: pendingApprovalCount > 2 ? 'red' : 'amber', onPress: () => setActiveTab('costs') },
+              ]}
+            />
+
+            {/* Monthly Spend Trend */}
+            <View style={styles.card}>
+              <Text style={styles.sectionLabel}>MAANDELIJKSE BESTEDING</Text>
+              <TrendBarChart
+                data={MOCK_MONTHLY_SPEND}
+                positiveColor={CFO_COLOR}
+                currency="GBP"
+              />
+            </View>
+
+            {/* Receivables Aging */}
+            <View style={styles.card}>
+              <Text style={styles.sectionLabel}>DEBITEUREN VEROUDERING</Text>
+              <ReceivablesAgingBar buckets={MOCK_AGING_BUCKETS} currency="GBP" />
+            </View>
+
             {/* Vasco AI Guidance */}
             <VascoInsightList
               insights={activeGuidance}
               title="Vasco AI Guidance"
               compact
-              maxVisible={2}
+              maxVisible={1}
               onDismiss={handleDismissGuidance}
               onAction={handleGuidanceAction}
               onSnooze={handleSnoozeGuidance}
@@ -1065,12 +1133,33 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
         {/* COSTS TAB */}
         {activeTab === 'costs' && costHealth && selectedProject && (
           <>
-            {/* KPI Header */}
-            <ContractorDashboardHeader
-              kpis={[
-                { icon: 'cash', value: costHealth.cpi.toFixed(2), label: 'CPI', color: costHealth.status === 'healthy' ? SemanticColors.feedbackSuccess : costHealth.status === 'at-risk' ? SemanticColors.feedbackWarning : SemanticColors.feedbackError },
-                { icon: 'trending-down', value: fmt(costHealth.budgetVariance), label: 'Variance' },
-                { icon: 'shield', value: `${Math.round(costHealth.contingencyPercent * 100)}%`, label: 'Contingency' },
+            {/* KPI Scorecard Grid */}
+            <FinancialKPIGrid
+              accentColor={CFO_COLOR}
+              tiles={[
+                {
+                  label: 'CPI',
+                  value: costHealth.cpi.toFixed(2),
+                  status: costHealth.status === 'healthy' ? 'green' : costHealth.status === 'at-risk' ? 'amber' : 'red',
+                },
+                {
+                  label: 'Budget Variantie',
+                  value: fmt(costHealth.budgetVariance),
+                  variance: `${Math.abs(Math.round((costHealth.budgetVariance / selectedProject.totalBudget) * 100))}%`,
+                  varianceDirection: costHealth.budgetVariance >= 0 ? 'up' : 'down',
+                  status: costHealth.budgetVariance >= 0 ? 'green' : 'red',
+                },
+                {
+                  label: 'EAC',
+                  value: fmt(costHealth.eac),
+                  budgetLabel: `Budget: ${fmt(selectedProject.totalBudget)}`,
+                },
+                {
+                  label: 'Contingency Resterend',
+                  value: `${Math.round(costHealth.contingencyPercent * 100)}%`,
+                  budgetLabel: fmt(costHealth.contingencyRemaining),
+                  status: costHealth.contingencyPercent < 0.3 ? 'red' : costHealth.contingencyPercent < 0.5 ? 'amber' : 'green',
+                },
               ]}
             />
             {costsInsight && (
@@ -1103,28 +1192,28 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
               </ScrollView>
             </View>
 
-            {/* CPI Status Banner */}
-            <View style={[
-              styles.cpiBanner,
-              costHealth.status === 'healthy' && styles.cpiBannerHealthy,
-              costHealth.status === 'at-risk' && styles.cpiBannerWarning,
-              costHealth.status === 'critical' && styles.cpiBannerCritical,
-            ]}>
-              <View style={styles.cpiLeft}>
-                <Text style={styles.cpiLabel}>Cost Performance Index</Text>
-                <Text style={styles.cpiStatus}>
-                  {costHealth.status === 'healthy' ? 'On Budget' :
-                   costHealth.status === 'at-risk' ? 'At Risk' : 'Over Budget'}
-                </Text>
-              </View>
-              <View style={styles.cpiCircle}>
-                <Text style={styles.cpiValue}>{costHealth.cpi.toFixed(2)}</Text>
-              </View>
+            {/* P&L Statement */}
+            <View style={styles.card}>
+              <Text style={styles.sectionLabel}>P&L</Text>
+              <PLStatementView
+                accentColor={CFO_COLOR}
+                currency={currency}
+                rows={[
+                  { label: 'Omzet (GDV)', actual: selectedProject.totalBudget * 1.25, budget: selectedProject.totalBudget * 1.2 },
+                  { label: 'Grondkosten', actual: selectedProject.actualSpent * 0.3, budget: selectedProject.totalBudget * 0.28 },
+                  { label: 'Bouwkosten', actual: selectedProject.actualSpent * 0.45, budget: selectedProject.totalBudget * 0.42 },
+                  { label: 'Bruto Marge', actual: selectedProject.totalBudget * 1.25 - selectedProject.actualSpent * 0.75, budget: selectedProject.totalBudget * 1.2 - selectedProject.totalBudget * 0.7, isSubtotal: true },
+                  { label: 'Advieskosten', actual: selectedProject.actualSpent * 0.08, budget: selectedProject.totalBudget * 0.07 },
+                  { label: 'Wettelijke kosten', actual: selectedProject.actualSpent * 0.03, budget: selectedProject.totalBudget * 0.03 },
+                  { label: 'Financieringskosten', actual: selectedProject.actualSpent * 0.05, budget: selectedProject.totalBudget * 0.04 },
+                  { label: 'Netto Ontwikkelwinst', actual: selectedProject.totalBudget * 1.25 - selectedProject.actualSpent * 0.91, budget: selectedProject.totalBudget * 1.2 - selectedProject.totalBudget * 0.84, isTotal: true },
+                ]}
+              />
             </View>
 
             {/* Budget Waterfall */}
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Budget vs Actuals</Text>
+              <Text style={styles.sectionLabel}>BUDGET VS ACTUALS</Text>
               {[
                 { label: 'Budget', value: selectedProject.totalBudget, color: CFO_COLOR, percent: 100 },
                 { label: 'Spent', value: selectedProject.actualSpent, color: Palette.hermesOrange, percent: (selectedProject.actualSpent / selectedProject.totalBudget) * 100 },
@@ -1266,14 +1355,34 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
         {/* CASHFLOW TAB */}
         {activeTab === 'cashflow' && (
           <>
-            {/* KPI Header */}
-            <ContractorDashboardHeader
-              kpis={[
-                { icon: 'wallet', value: '£4.2M', label: 'Available', color: CFO_COLOR },
-                { icon: 'card', value: '£2.8M', label: 'Committed' },
-                { icon: 'cash', value: '£12.4M', label: 'Drawn' },
+            {/* KPI Scorecard Grid */}
+            <FinancialKPIGrid
+              accentColor={CFO_COLOR}
+              tiles={[
+                { label: 'Beschikbaar', value: '\u00A34.2M', status: 'green' },
+                { label: 'Gecommitteerd', value: '\u00A32.8M', status: 'amber' },
+                { label: 'Opgenomen', value: '\u00A312.4M', budgetLabel: 'Van \u00A318.5M faciliteit' },
+                { label: 'Netto Cash Positie', value: '\u00A31.4M', variance: '-18.7%', varianceDirection: 'down', status: 'amber' },
               ]}
             />
+
+            {/* Cashflow Trend */}
+            <View style={styles.card}>
+              <Text style={styles.sectionLabel}>CASHFLOW 6 MAANDEN</Text>
+              <TrendBarChart
+                data={MOCK_CASHFLOW_MONTHLY}
+                positiveColor={CFO_COLOR}
+                negativeColor={SemanticColors.feedbackError}
+                currency="GBP"
+              />
+            </View>
+
+            {/* Receivables Aging */}
+            <View style={styles.card}>
+              <Text style={styles.sectionLabel}>DEBITEUREN VEROUDERING</Text>
+              <ReceivablesAgingBar buckets={MOCK_AGING_BUCKETS} currency="GBP" />
+            </View>
+
             {cashflowInsight && (
               <InlineInsight icon={cashflowInsight.icon as IconName} message={cashflowInsight.message} />
             )}
@@ -1558,44 +1667,21 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
         {/* RETURNS TAB */}
         {activeTab === 'returns' && (
           <>
-            {/* KPI Header */}
-            <ContractorDashboardHeader
-              kpis={[
-                { icon: 'trending-up', value: formatPercent(portfolioMetrics.avgIrr), label: 'Blended IRR', color: CFO_COLOR },
-                { icon: 'cash', value: '£18.4M', label: 'Total Profit' },
-                { icon: 'stats-chart', value: '1.82x', label: 'Equity Multiple' },
+            {/* KPI Scorecard Grid */}
+            <FinancialKPIGrid
+              accentColor={CFO_COLOR}
+              tiles={[
+                { label: 'Blended IRR', value: formatPercent(portfolioMetrics.avgIrr), variance: '+1.8%', varianceDirection: 'up', status: 'green', heroBg: true },
+                { label: 'Totale Winst', value: '\u00A318.4M', variance: '+5.2%', varianceDirection: 'up', status: 'green' },
+                { label: 'Equity Multiple', value: '1.82x', status: 'green' },
+                { label: 'Gem. PoC', value: '24.5%', status: 'amber' },
+                { label: 'GDV', value: formatCompact(portfolioMetrics.totalGdv, 'GBP') },
+                { label: 'NPV', value: '\u00A314.8M', budgetLabel: 'Discontovoet 8%' },
               ]}
             />
             {returnsInsight && (
               <InlineInsight icon={returnsInsight.icon as IconName} message={returnsInsight.message} />
             )}
-
-            {/* Hero Scorecard */}
-            <View style={styles.heroScorecard}>
-              <View style={styles.heroRing}>
-                <Text style={styles.heroRingValue}>{formatPercent(portfolioMetrics.avgIrr)}</Text>
-                <Text style={styles.heroRingLabel}>Blended IRR</Text>
-              </View>
-              <View style={styles.heroSubMetrics}>
-                <View style={styles.heroSubMetric}>
-                  <Ionicons name="cash" size={16} color={SemanticColors.feedbackSuccess} />
-                  <Text style={styles.heroSubValue}>£18.4M</Text>
-                  <Text style={styles.heroSubLabel}>Total Profit</Text>
-                </View>
-                <View style={styles.heroSubDivider} />
-                <View style={styles.heroSubMetric}>
-                  <Ionicons name="layers" size={16} color={CFO_COLOR} />
-                  <Text style={styles.heroSubValue}>1.82x</Text>
-                  <Text style={styles.heroSubLabel}>Equity Multiple</Text>
-                </View>
-                <View style={styles.heroSubDivider} />
-                <View style={styles.heroSubMetric}>
-                  <Ionicons name="pie-chart" size={16} color={Palette.hermesOrange} />
-                  <Text style={styles.heroSubValue}>24.5%</Text>
-                  <Text style={styles.heroSubLabel}>Avg PoC</Text>
-                </View>
-              </View>
-            </View>
 
             {/* IRR Comparison Bars */}
             <View style={styles.card}>
@@ -1668,36 +1754,13 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
               })}
             </View>
 
-            {/* Sensitivity Analysis */}
+            {/* Scenario Comparison */}
             <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <View style={styles.cardHeaderIcon}>
-                  <Ionicons name="analytics" size={18} color={CFO_COLOR} />
-                </View>
-                <Text style={styles.cardTitle}>Sensitivity Analysis</Text>
-              </View>
-              <View style={styles.sensitivityGrid}>
-                {[
-                  { scenario: 'GDV -5%', irr: 0.16, impact: 'moderate' },
-                  { scenario: 'GDV -10%', irr: 0.11, impact: 'high' },
-                  { scenario: 'Cost +5%', irr: 0.18, impact: 'low' },
-                  { scenario: 'Cost +10%', irr: 0.14, impact: 'moderate' },
-                  { scenario: 'Delay 3mo', irr: 0.19, impact: 'low' },
-                  { scenario: 'Delay 6mo', irr: 0.16, impact: 'moderate' },
-                ].map((item, idx) => (
-                  <View key={idx} style={styles.sensitivityItem}>
-                    <Text style={styles.sensitivityScenario}>{item.scenario}</Text>
-                    <Text style={[
-                      styles.sensitivityIRR,
-                      item.impact === 'high' && { color: SemanticColors.feedbackError },
-                      item.impact === 'moderate' && { color: SemanticColors.feedbackWarning },
-                      item.impact === 'low' && { color: CFO_COLOR },
-                    ]}>
-                      {formatPercent(item.irr)}
-                    </Text>
-                  </View>
-                ))}
-              </View>
+              <Text style={styles.sectionLabel}>SCENARIOANALYSE</Text>
+              <ScenarioComparisonCard
+                scenarios={MOCK_SCENARIOS}
+                accentColor={CFO_COLOR}
+              />
             </View>
 
             {/* Rendement Tools */}
@@ -1904,8 +1967,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: Spacing.lg,
-    gap: Spacing.md,
+    padding: Spacing.sm,
+    gap: 12,
   },
 
   // Section
@@ -1923,13 +1986,22 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
+    fontSize: 10,
+    fontWeight: '700',
+    color: SemanticColors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
   sectionSubtitle: {
     fontSize: 12,
     color: SemanticColors.textTertiary,
+  },
+  sectionLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: SemanticColors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
 
   // Vasco Guidance
@@ -2044,11 +2116,11 @@ const styles = StyleSheet.create({
   // Cards
   card: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
-    padding: Spacing.md,
+    borderRadius: 10,
+    padding: 16,
     borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-    gap: Spacing.md,
+    borderColor: SemanticColors.borderMuted,
+    gap: 12,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -2064,7 +2136,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cardTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
@@ -3077,14 +3149,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   waterfallBarTrack: {
-    height: 10,
+    height: 6,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 5,
+    borderRadius: 3,
     overflow: 'hidden',
   },
   waterfallBarFill: {
     height: '100%',
-    borderRadius: 5,
+    borderRadius: 3,
   },
   varianceCallout: {
     flexDirection: 'row',
@@ -3113,8 +3185,8 @@ const styles = StyleSheet.create({
   },
   facilityBarTrack: {
     flexDirection: 'row',
-    height: 16,
-    borderRadius: 8,
+    height: 10,
+    borderRadius: 5,
     overflow: 'hidden',
   },
   facilitySegment: {

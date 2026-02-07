@@ -11,3 +11,15 @@ export type { VascoInsight, InsightPriority, InsightCategory } from './VascoInsi
 export { ReasoningMode, useReasoningMode } from './ReasoningMode';
 export type { ReasoningData } from './ReasoningMode';
 export { EvidenceGraphExplorer } from './EvidenceGraphExplorer';
+export { FinancialKPIGrid } from './FinancialKPIGrid';
+export type { KPITile } from './FinancialKPIGrid';
+export { PLStatementView } from './PLStatementView';
+export type { PLRow } from './PLStatementView';
+export { TrendBarChart } from './TrendBarChart';
+export type { BarDataPoint } from './TrendBarChart';
+export { ReceivablesAgingBar } from './ReceivablesAgingBar';
+export type { AgingBucket } from './ReceivablesAgingBar';
+export { ScenarioComparisonCard } from './ScenarioComparisonCard';
+export type { ScenarioData } from './ScenarioComparisonCard';
+export { WorkCardList } from './WorkCardList';
+export type { WorkCard } from './WorkCardList';

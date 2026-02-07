@@ -29,6 +29,10 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing } from '../../src/theme/spacing';
+import { FinancialKPIGrid } from '../../src/components/shared/FinancialKPIGrid';
+import type { KPITile } from '../../src/components/shared/FinancialKPIGrid';
+import { WorkCardList } from '../../src/components/shared/WorkCardList';
+import type { WorkCard } from '../../src/components/shared/WorkCardList';
 
 // Services
 import { useAuditFindings } from '../../src/services/auditorService';
@@ -2072,48 +2076,6 @@ export default function SiteLeadScreen() {
       >
         {activeTab === 'overview' && (
           <>
-            {/* UI Guidance - Onboarding Carousel */}
-            {showOnboarding && activeOnboardingTips.length > 0 && (
-              <SiteLeadOnboardingCarousel
-                tips={activeOnboardingTips}
-                currentIndex={onboardingIndex}
-                onNext={() => setOnboardingIndex(i => Math.min(i + 1, activeOnboardingTips.length - 1))}
-                onPrev={() => setOnboardingIndex(i => Math.max(i - 1, 0))}
-                onDismiss={handleDismissOnboardingTip}
-                onAction={handleOnboardingAction}
-              />
-            )}
-
-            {/* UI Guidance - Progress Tracker */}
-            {showProgressTracker && !showOnboarding && (
-              <SiteLeadProgressTracker
-                milestones={milestones}
-                onMilestonePress={handleMilestonePress}
-              />
-            )}
-
-            {/* UI Guidance - What to do next */}
-            {!showOnboarding && (
-              <SiteLeadWhatNextCard
-                suggestions={SITELEAD_WHAT_NEXT}
-                onSuggestionPress={handleWhatNextPress}
-              />
-            )}
-
-            {/* UI Guidance - Feature Discovery */}
-            {activeFeatureTips.length > 0 && !showOnboarding && (
-              <View style={styles.section}>
-                {activeFeatureTips.map(tip => (
-                  <SiteLeadFeatureCard
-                    key={tip.id}
-                    tip={tip}
-                    onAction={() => tip.action && handleFeatureAction(tip.action.tabOrRoute)}
-                    onDismiss={() => setDismissedTips(prev => new Set(prev).add(tip.id))}
-                  />
-                ))}
-              </View>
-            )}
-
             {/* Schedule Issues/Overruns */}
             {auditFindings.filter(f => f.categoryId === 'critical-path-risk').length > 0 && (
               <View style={styles.section}>
@@ -2167,26 +2129,196 @@ export default function SiteLeadScreen() {
               </View>
             )}
 
-            {/* Today's Shift Overview (Compact) */}
+            {/* Team Status Strip — "Wie is waar?" */}
+            <View style={styles.section}>
+              <Text style={styles.overviewSectionLabel}>WIE IS WAAR?</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.teamStripScroll}>
+                {dispatchWorkers.map(worker => {
+                  const statusColor = worker.status === 'available' ? SemanticColors.feedbackSuccess
+                    : worker.status === 'on-job' ? Palette.hermesOrange
+                    : worker.status === 'traveling' ? '#2563EB'
+                    : worker.status === 'break' ? SemanticColors.feedbackWarning
+                    : worker.status === 'sick' ? SemanticColors.feedbackError
+                    : SemanticColors.textTertiary;
+                  const statusLabel = worker.status === 'available' ? 'Beschikbaar'
+                    : worker.status === 'on-job' ? 'Bezig'
+                    : worker.status === 'traveling' ? 'Onderweg'
+                    : worker.status === 'break' ? 'Pauze'
+                    : worker.status === 'sick' ? 'Ziek'
+                    : 'Vrij';
+
+                  return (
+                    <Pressable
+                      key={worker.id}
+                      style={[
+                        styles.teamStripCard,
+                        worker.status === 'sick' && { borderColor: SemanticColors.feedbackError, backgroundColor: SemanticColors.feedbackErrorBg },
+                      ]}
+                      onPress={() => {
+                        if (worker.status === 'available') {
+                          setSelectedWorkerId(worker.id);
+                          setActiveTab('dispatch');
+                        } else {
+                          Alert.alert(
+                            worker.name,
+                            `${worker.trade} — ${statusLabel}\n${worker.currentLocation || ''}\n\nTel: ${worker.phone}`,
+                            [
+                              { text: 'OK' },
+                              { text: 'Dispatch', onPress: () => { setSelectedWorkerId(worker.id); setActiveTab('dispatch'); } },
+                            ]
+                          );
+                        }
+                      }}
+                    >
+                      <View style={[styles.teamStripAvatar, { borderColor: statusColor }]}>
+                        <Text style={styles.teamStripInitials}>{worker.initials}</Text>
+                      </View>
+                      <Text style={styles.teamStripName} numberOfLines={1}>{worker.name.split(' ')[0]}</Text>
+                      <Text style={styles.teamStripTrade} numberOfLines={1}>{worker.trade}</Text>
+                      <View style={[styles.teamStripBadge, { backgroundColor: statusColor + '20' }]}>
+                        <View style={[styles.teamStripDot, { backgroundColor: statusColor }]} />
+                        <Text style={[styles.teamStripStatus, { color: statusColor }]}>{statusLabel}</Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+
+            {/* Operations KPI Grid */}
+            <View style={styles.section}>
+              <Text style={styles.overviewSectionLabel}>OPERATIES</Text>
+              <FinancialKPIGrid
+                accentColor={Palette.hermesOrange}
+                tiles={[
+                  {
+                    label: 'Actieve klussen',
+                    value: String(dispatchJobs.filter(j => j.status === 'in-progress' || j.status === 'traveling').length),
+                    status: urgentJobs > 0 ? 'amber' : 'green',
+                    budgetLabel: `${dispatchJobs.filter(j => j.status !== 'completed' && j.status !== 'cancelled').length} totaal vandaag`,
+                  },
+                  {
+                    label: 'Monteurs beschikbaar',
+                    value: `${availableWorkers}/${dispatchWorkers.length}`,
+                    status: availableWorkers === 0 ? 'red' : availableWorkers <= 1 ? 'amber' : 'green',
+                    budgetLabel: `${activeWorkers} actief bezig`,
+                  },
+                  {
+                    label: 'Niet toegewezen',
+                    value: String(unassignedJobs),
+                    status: unassignedJobs > 0 ? 'red' : 'green',
+                    budgetLabel: urgentJobs > 0 ? `${urgentJobs} spoed!` : 'Alles gepland',
+                    onPress: unassignedJobs > 0 ? () => setActiveTab('dispatch') : undefined,
+                  },
+                  {
+                    label: 'Handovers vandaag',
+                    value: String(pendingHandovers + readyHandovers),
+                    status: pendingHandovers > 0 ? 'amber' : 'green',
+                    budgetLabel: `${readyHandovers} gereed, ${pendingHandovers} wachtend`,
+                    onPress: () => setActiveTab('handover'),
+                  },
+                ] as KPITile[]}
+              />
+            </View>
+
+            {/* Klussen Vandaag — Work Card List */}
             <View style={styles.section}>
               <View style={styles.sectionHeaderRow}>
-                <Text style={styles.sectionTitle}>Dagplanning</Text>
-                <Pressable onPress={() => setActiveTab('schedule')}>
-                  <Text style={styles.seeAllLink}>Volledig schema</Text>
+                <Text style={styles.overviewSectionLabel}>KLUSSEN VANDAAG</Text>
+                <Pressable onPress={() => setActiveTab('dispatch')}>
+                  <Text style={styles.seeAllLink}>Alle klussen</Text>
                 </Pressable>
               </View>
-              <ShiftGrid
-                contractors={contractors.slice(0, 4)}
-                selectedDate={selectedDate}
-                onSlotPress={handleSlotPress}
+              <WorkCardList
+                jobs={dispatchJobs
+                  .filter(j => j.status !== 'completed' && j.status !== 'cancelled')
+                  .sort((a, b) => {
+                    // Urgent first
+                    if (a.priority === 'urgent' && b.priority !== 'urgent') return -1;
+                    if (b.priority === 'urgent' && a.priority !== 'urgent') return 1;
+                    // Then by status: in-progress > traveling > unassigned > scheduled
+                    const statusOrder: Record<string, number> = { 'in-progress': 0, 'traveling': 1, 'unassigned': 2, 'scheduled': 3, 'dispatched': 4 };
+                    return (statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5);
+                  })
+                  .map(j => ({
+                    id: j.id,
+                    time: j.scheduledTime,
+                    title: j.title,
+                    assignedTo: j.assignedTo ? dispatchWorkers.find(w => w.id === j.assignedTo)?.name : undefined,
+                    status: j.status === 'dispatched' ? 'scheduled' as const : j.status as WorkCard['status'],
+                    priority: j.priority,
+                    jobType: j.jobType,
+                  }))}
+                maxVisible={5}
+                onJobPress={(card) => {
+                  const job = dispatchJobs.find(j => j.id === card.id);
+                  if (job) handleJobPress(job);
+                }}
+                onQuickAssign={(card) => {
+                  const job = dispatchJobs.find(j => j.id === card.id);
+                  if (job) handleQuickAssign(job);
+                }}
               />
+            </View>
+
+            {/* Dagplanning Mini-Timeline */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.overviewSectionLabel}>DAGPLANNING</Text>
+                <Pressable onPress={() => setActiveTab('dispatch')}>
+                  <Text style={styles.seeAllLink}>Dispatch</Text>
+                </Pressable>
+              </View>
+              <JobTimeline jobs={dispatchJobs} />
+            </View>
+
+            {/* Quick Actions Grid */}
+            <View style={styles.section}>
+              <Text style={styles.overviewSectionLabel}>SNELLE ACTIES</Text>
+              <View style={styles.quickActionsGrid}>
+                <Pressable style={styles.quickActionBtn} onPress={() => {
+                  Alert.alert('Nieuwe klus', 'Maak een nieuwe klus aan en wijs toe aan een monteur');
+                }}>
+                  <View style={[styles.quickActionIcon, { backgroundColor: Palette.hermesOrange + '15' }]}>
+                    <Ionicons name="add-circle" size={22} color={Palette.hermesOrange} />
+                  </View>
+                  <Text style={styles.quickActionLabel}>Nieuwe klus</Text>
+                </Pressable>
+                <Pressable style={styles.quickActionBtn} onPress={() => {
+                  Alert.alert('Monteur bellen', 'Selecteer een monteur om te bellen');
+                }}>
+                  <View style={[styles.quickActionIcon, { backgroundColor: '#2563EB15' }]}>
+                    <Ionicons name="call" size={22} color="#2563EB" />
+                  </View>
+                  <Text style={styles.quickActionLabel}>Monteur bellen</Text>
+                </Pressable>
+                <Pressable style={styles.quickActionBtn} onPress={() => setActiveTab('handover')}>
+                  <View style={[styles.quickActionIcon, { backgroundColor: SemanticColors.feedbackSuccessBg }]}>
+                    <Ionicons name="swap-horizontal" size={22} color={SemanticColors.feedbackSuccess} />
+                  </View>
+                  <Text style={styles.quickActionLabel}>Handover</Text>
+                  {pendingHandovers > 0 && (
+                    <View style={styles.quickActionBadge}>
+                      <Text style={styles.quickActionBadgeText}>{pendingHandovers}</Text>
+                    </View>
+                  )}
+                </Pressable>
+                <Pressable style={styles.quickActionBtn} onPress={() => {
+                  Alert.alert('Rapport', 'Dagrapport genereren voor vandaag');
+                }}>
+                  <View style={[styles.quickActionIcon, { backgroundColor: SemanticColors.feedbackInfoBg }]}>
+                    <Ionicons name="document-text" size={22} color={SemanticColors.feedbackInfo} />
+                  </View>
+                  <Text style={styles.quickActionLabel}>Rapport</Text>
+                </Pressable>
+              </View>
             </View>
 
             {/* Pending Handovers */}
             {pendingHandovers > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeaderRow}>
-                  <Text style={styles.sectionTitle}>Handovers Vandaag</Text>
+                  <Text style={styles.overviewSectionLabel}>HANDOVERS</Text>
                   <Pressable onPress={() => setActiveTab('handover')}>
                     <Text style={styles.seeAllLink}>Alles ({handovers.length})</Text>
                   </Pressable>
@@ -2669,6 +2801,122 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: Palette.hermesOrange,
+  },
+
+  // Overview Section Label (Fabrico-style uppercase)
+  overviewSectionLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: SemanticColors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+
+  // Team Status Strip
+  teamStripScroll: {
+    gap: 10,
+    paddingVertical: 4,
+  },
+  teamStripCard: {
+    width: 90,
+    alignItems: 'center',
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderMuted,
+    gap: 4,
+  },
+  teamStripAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Palette.charcoal,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+  },
+  teamStripInitials: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  teamStripName: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+    textAlign: 'center',
+  },
+  teamStripTrade: {
+    fontSize: 9,
+    color: SemanticColors.textTertiary,
+    textAlign: 'center',
+  },
+  teamStripBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  teamStripDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  teamStripStatus: {
+    fontSize: 9,
+    fontWeight: '600',
+  },
+
+  // Quick Actions Grid (Overview)
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  quickActionBtn: {
+    width: '48%',
+    flexGrow: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderMuted,
+    position: 'relative',
+  },
+  quickActionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickActionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+    flex: 1,
+  },
+  quickActionBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: SemanticColors.feedbackError,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickActionBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#fff',
   },
 
   // Shift Grid
