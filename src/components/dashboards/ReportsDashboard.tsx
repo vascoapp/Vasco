@@ -18,6 +18,7 @@ import {
   getCurrencyForCountry,
 } from '../../modules/countryModules';
 import { hapticSuccess } from '../../utils/haptics';
+import type { Currency } from '../../types/buildos';
 
 // Role colors aligned with theme tokens
 const ROLE_COLORS: Record<string, string> = {
@@ -33,7 +34,7 @@ type ReportType = {
   title: string;
   icon: string;
   roles: string[];
-  generator: (projectId: string, currency: string) => string;
+  generator: (projectId: string, currency: Currency) => string;
 };
 
 export function ReportsDashboard() {

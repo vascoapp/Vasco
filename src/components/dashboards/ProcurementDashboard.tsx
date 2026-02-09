@@ -190,10 +190,10 @@ export function ProcurementDashboard() {
                   <Text style={styles.contractListName} numberOfLines={1}>
                     {contract.counterparty}
                   </Text>
-                  <Text style={styles.contractListType}>{contract.tradePackage}</Text>
+                  <Text style={styles.contractListType}>{contract.description}</Text>
                 </View>
                 <View style={styles.contractListRight}>
-                  <Text style={styles.contractListValue}>{fmt(contract.value || 0)}</Text>
+                  <Text style={styles.contractListValue}>{fmt(contract.contractSum || 0)}</Text>
                   {coCount > 0 && (
                     <Text style={styles.contractListCo}>
                       {coCount} COs ({fmt(coValue)})

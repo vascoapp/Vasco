@@ -831,7 +831,7 @@ class UKComplianceService {
     };
 
     const gasSafeStatus = checkCert(gasSafe, 'gas-safe', 'Gas Safe Registration');
-    const partPStatus = checkCert(partP, 'part-p', 'Part P Registration');
+    const partPStatus = checkCert(partP ? { status: partP.status, daysUntilExpiry: partP.daysUntilRenewal, expiryDate: partP.currentPeriodEnd } : undefined, 'part-p', 'Part P Registration');
     const cscsStatus = checkCert(cscs, 'cscs', 'CSCS Card');
     const oftecStatus = checkCert(oftec, 'oftec', 'OFTEC Registration');
     const fgasStatus = checkCert(fgas, 'fgas', 'F-Gas Certification');

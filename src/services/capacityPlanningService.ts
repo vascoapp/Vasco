@@ -1077,7 +1077,7 @@ class CapacityPlanningService {
     // Prepare risk communications
     const knownRisks = delays.topRisks.slice(0, 3).map((risk) => ({
       risk: risk.name,
-      likelihood: risk.probability > 50 ? 'likely' : risk.probability > 25 ? 'possible' : ('unlikely' as const),
+      likelihood: (risk.probability > 50 ? 'likely' : risk.probability > 25 ? 'possible' : 'unlikely') as 'unlikely' | 'possible' | 'likely',
       customerMessage: `${risk.name} could add ${Math.ceil(risk.impactHours / 8)} day(s) to the timeline`,
       contingencyBuiltIn: true,
     }));

@@ -1,5 +1,6 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -55,6 +56,9 @@ function RootLayoutNav() {
       <Stack.Screen name="hub" />
       <Stack.Screen name="(modals)/ingestion" options={{ presentation: 'modal' }} />
       <Stack.Screen name="(modals)/insights" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="(modals)/pdf" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="(modals)/mollie" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="(modals)/moneybird" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }
@@ -74,7 +78,9 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <AppStateProvider>
-        <RootLayoutNav />
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <RootLayoutNav />
+        </GestureHandlerRootView>
       </AppStateProvider>
     </AuthProvider>
   );

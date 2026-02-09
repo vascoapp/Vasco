@@ -404,7 +404,7 @@ class SupplierIntegrationService {
       suppliers = suppliers.filter((s) => s.integrationStatus === filter.status);
     }
     if (filter?.category) {
-      suppliers = suppliers.filter((s) => s.categories.includes(filter.category));
+      suppliers = suppliers.filter((s) => s.categories.includes(filter.category!));
     }
 
     return suppliers.sort((a, b) => b.reliabilityScore - a.reliabilityScore);

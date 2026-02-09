@@ -140,6 +140,7 @@ const MOCK_DOCUMENTS: IntelligentDocument[] = [
       iban: 'NL91ABNA0417164300',
       paymentReference: 'BM2025-1234',
     } as ExtractedSupplierInvoice,
+    autoLinked: false,
     complianceFlags: [],
     createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
     createdBy: 'contractor_1',
@@ -167,6 +168,7 @@ const MOCK_DOCUMENTS: IntelligentDocument[] = [
       currency: 'EUR',
       suggestedCategory: 'materials',
     } as ExtractedReceipt,
+    autoLinked: false,
     complianceFlags: [
       {
         type: 'missing-field',

@@ -74,7 +74,7 @@ export type AuditSeverity = 'critical' | 'high' | 'medium' | 'low';
 
 export type AuditStatus = 'new' | 'acknowledged' | 'in-review' | 'resolved' | 'dismissed' | 'auto-resolved';
 
-export type CheckFrequency = 'realtime' | 'hourly' | 'daily' | 'weekly';
+export type CheckFrequency = 'realtime' | 'hourly' | 'daily' | 'weekly' | 'monthly';
 
 // ============================================
 // AUDIT CATEGORY CONFIGURATION

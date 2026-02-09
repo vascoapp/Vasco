@@ -42,50 +42,63 @@ export function DecisionTrackerList({
   onCreateNew,
 }: DecisionTrackerListProps) {
   const trackers = MOCK_ACTIVE_TRACKERS;
+  const [filter, setFilter] = useState<'all' | 'overdue' | 'pending'>('all');
+
+  const totalOverdue = trackers.reduce((sum, t) => sum + t.overdueCount, 0);
+  const totalPending = trackers.reduce((sum, t) => sum + t.pendingCount, 0);
+
+  const filteredTrackers = trackers.filter(t => {
+    if (filter === 'overdue') return t.overdueCount > 0;
+    if (filter === 'pending') return t.pendingCount > 0;
+    return true;
+  });
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      {/* Summary Header */}
-      <View style={styles.summaryHeader}>
-        <Text style={styles.summaryTitle}>Customer Decisions</Text>
-        <Text style={styles.summarySubtitle}>
-          Guide customers through project decisions to avoid delays
-        </Text>
-      </View>
-
-      {/* Stats Overview */}
+      {/* Stats Overview - pressable filters */}
       <View style={styles.statsRow}>
-        <View style={styles.statCard}>
+        <Pressable
+          style={[styles.statCard, filter === 'all' && styles.statCardActive]}
+          onPress={() => setFilter('all')}
+        >
           <Ionicons name="people" size={24} color={SemanticColors.actionPrimary} />
           <Text style={styles.statValue}>{trackers.length}</Text>
-          <Text style={styles.statLabel}>Active</Text>
-        </View>
-        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Actief</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.statCard, filter === 'overdue' && styles.statCardActive]}
+          onPress={() => setFilter(filter === 'overdue' ? 'all' : 'overdue')}
+        >
           <Ionicons name="alert-circle" size={24} color={SemanticColors.feedbackError} />
           <Text style={[styles.statValue, { color: SemanticColors.feedbackError }]}>
-            {trackers.reduce((sum, t) => sum + t.overdueCount, 0)}
+            {totalOverdue}
           </Text>
-          <Text style={styles.statLabel}>Overdue</Text>
-        </View>
-        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Verlopen</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.statCard, filter === 'pending' && styles.statCardActive]}
+          onPress={() => setFilter(filter === 'pending' ? 'all' : 'pending')}
+        >
           <Ionicons name="time" size={24} color={SemanticColors.feedbackWarning} />
           <Text style={[styles.statValue, { color: SemanticColors.feedbackWarning }]}>
-            {trackers.reduce((sum, t) => sum + t.pendingCount, 0)}
+            {totalPending}
           </Text>
-          <Text style={styles.statLabel}>Pending</Text>
-        </View>
+          <Text style={styles.statLabel}>Wachtend</Text>
+        </Pressable>
       </View>
 
       {/* Add New Button */}
       <Pressable style={styles.addNewButton} onPress={onCreateNew}>
         <Ionicons name="add-circle" size={20} color={SemanticColors.actionPrimary} />
-        <Text style={styles.addNewText}>Start New Decision Tracker</Text>
+        <Text style={styles.addNewText}>Nieuwe keuzelijst</Text>
       </Pressable>
 
       {/* Active Trackers List */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Active Trackers</Text>
-        {trackers.map((tracker) => (
+        <Text style={styles.sectionTitle}>
+          {filter === 'overdue' ? 'Verlopen keuzes' : filter === 'pending' ? 'Wachtende keuzes' : 'Actieve trackers'}
+        </Text>
+        {filteredTrackers.map((tracker) => (
           <TrackerCard
             key={tracker.id}
             tracker={tracker}
@@ -904,6 +917,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
+  },
+  statCardActive: {
+    borderColor: SemanticColors.actionPrimary,
+    borderWidth: 2,
   },
   statValue: {
     color: SemanticColors.textPrimary,

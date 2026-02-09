@@ -5,7 +5,8 @@
 // Optimizes margins while maintaining competitive positioning
 // =============================================================================
 
-import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { trackUserAction, intelligence } from '../intelligence/intelligenceEngine';
+import { logPrediction } from '../intelligence/calibration';
 
 // ============================================
 // TYPES
@@ -69,13 +70,13 @@ export interface SeasonalAdjustment {
 // ============================================
 
 class PricingEngineService {
-  suggestPrice(params: {
+  async suggestPrice(params: {
     projectType: string;
     scope: 'small' | 'medium' | 'large';
     customerType: 'particulier' | 'zakelijk';
     region: string;
     customerId?: string;
-  }): PricingSuggestion {
+  }): Promise<PricingSuggestion> {
     const basePrice = this.calculateBasePrice(params.projectType, params.scope);
     const factors = this.analyzePricingFactors(params);
     const adjustedPrice = this.applyFactors(basePrice, factors);
@@ -84,10 +85,37 @@ class PricingEngineService {
     const competitivePosition = this.determinePosition(adjustedPrice, marketRate.avgHourlyRate);
     const winProbability = this.calculateWinProbability(competitivePosition, params.customerType);
 
+    // Use intelligence engine for quote acceptance prediction
+    const acceptancePrediction = await intelligence.predict('quote_acceptance', {
+      quoteValue: adjustedPrice,
+      customerHistory: params.customerType === 'zakelijk' ? 3 : 0,
+      tier: 'better',
+    }).catch(() => null);
+
+    // Use intelligence engine for pricing prediction
+    const pricingPrediction = await intelligence.predict('quote_pricing', {
+      category: params.projectType,
+      sqm: params.scope === 'small' ? 10 : params.scope === 'medium' ? 30 : 80,
+      marketRate: marketRate.avgHourlyRate,
+    }).catch(() => null);
+
+    // Merge engine confidence with local confidence
+    const engineConfidence = acceptancePrediction?.confidence || 0;
+    const mergedConfidence = Math.round(((0.78 + engineConfidence) / 2) * 100) / 100;
+
     trackUserAction('price_suggested', {
       projectType: params.projectType,
       suggestedPrice: adjustedPrice,
       competitivePosition,
+      enginePrediction: pricingPrediction?.prediction,
+    });
+
+    // Log prediction for calibration tracking
+    logPrediction({
+      generatorId: 'smart-pricing',
+      predictedAt: new Date().toISOString(),
+      prediction: `Optimale prijs ${params.projectType} ${params.scope}: €${adjustedPrice}`,
+      predictedValue: adjustedPrice,
     });
 
     return {
@@ -98,7 +126,7 @@ class PricingEngineService {
         max: Math.round(adjustedPrice * 1.15),
         optimal: adjustedPrice,
       },
-      confidence: 0.78,
+      confidence: mergedConfidence,
       factors,
       competitivePosition,
       winProbability,
@@ -216,6 +244,18 @@ class PricingEngineService {
       accepted,
       adjustment: Math.round((finalPrice - suggestedPrice) / suggestedPrice * 100),
     });
+
+    // Log resolved prediction for calibration: actual price vs suggested
+    logPrediction({
+      generatorId: 'smart-pricing',
+      predictedAt: new Date(Date.now() - 86400000).toISOString(), // assume predicted yesterday
+      prediction: `Prijs uitkomst: voorgesteld €${suggestedPrice}, werkelijk €${finalPrice}`,
+      predictedValue: suggestedPrice,
+    }).then(id => {
+      import('../intelligence/calibration').then(mod => {
+        mod.resolvePrediction(id, finalPrice, 15);
+      });
+    });
   }
 }
 
@@ -230,8 +270,8 @@ import { useState, useCallback, useMemo } from 'react';
 export function usePricingEngine() {
   const [suggestion, setSuggestion] = useState<PricingSuggestion | null>(null);
 
-  const suggestPrice = useCallback((params: Parameters<typeof pricingEngineService.suggestPrice>[0]) => {
-    const result = pricingEngineService.suggestPrice(params);
+  const suggestPrice = useCallback(async (params: Parameters<typeof pricingEngineService.suggestPrice>[0]) => {
+    const result = await pricingEngineService.suggestPrice(params);
     setSuggestion(result);
     return result;
   }, []);

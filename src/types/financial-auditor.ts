@@ -119,7 +119,7 @@ export interface InvoiceDiscrepancy {
   severity: AuditSeverity;
 
   source: {
-    type: 'budget' | 'contract' | 'po' | 'historical';
+    type: 'budget' | 'contract' | 'po' | 'historical' | 'invoice';
     documentId?: string;
     reference?: string;
   };

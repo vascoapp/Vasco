@@ -18,7 +18,7 @@ import {
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
-import { Spacing } from '../../src/theme/spacing';
+import { Spacing, SafeArea } from '../../src/theme/spacing';
 
 // Services
 import {
@@ -146,20 +146,24 @@ function ComplianceScoreRing({ score, size = 100 }: { score: number; size?: numb
 function AlertCard({ alert, onPress }: { alert: any; onPress?: () => void }) {
   const severityConfig = {
     critical: { bg: SemanticColors.feedbackErrorBg, color: SemanticColors.feedbackError, icon: 'warning' as IconName },
-    warning: { bg: SemanticColors.feedbackWarningBg, color: SemanticColors.feedbackWarning, icon: 'alert-circle' as IconName },
-    info: { bg: SemanticColors.feedbackInfoBg, color: SemanticColors.feedbackInfo, icon: 'information-circle' as IconName },
+    high: { bg: SemanticColors.feedbackWarningBg, color: SemanticColors.feedbackWarning, icon: 'alert-circle' as IconName },
+    medium: { bg: SemanticColors.feedbackInfoBg, color: SemanticColors.feedbackInfo, icon: 'information-circle' as IconName },
+    low: { bg: SemanticColors.feedbackInfoBg, color: SemanticColors.feedbackInfo, icon: 'information-circle' as IconName },
   };
 
-  const config = severityConfig[alert.severity as keyof typeof severityConfig] || severityConfig.info;
+  const config = severityConfig[alert.severity as keyof typeof severityConfig] || severityConfig.low;
 
   return (
     <Pressable style={[styles.alertCard, { backgroundColor: config.bg }]} onPress={onPress}>
       <Ionicons name={config.icon} size={20} color={config.color} />
       <View style={styles.alertContent}>
-        <Text style={[styles.alertTitle, { color: config.color }]}>{alert.title}</Text>
-        {alert.daysUntil !== undefined && (
+        <Text style={[styles.alertTitle, { color: config.color }]} numberOfLines={1}>{alert.title}</Text>
+        {alert.dueDate && (
           <Text style={[styles.alertDays, { color: config.color }]}>
-            {alert.daysUntil < 0 ? `${Math.abs(alert.daysUntil)} dagen geleden` : `Nog ${alert.daysUntil} dagen`}
+            {(() => {
+              const days = Math.ceil((new Date(alert.dueDate).getTime() - Date.now()) / 86400000);
+              return days < 0 ? `${Math.abs(days)} dagen geleden` : `Nog ${days} dagen`;
+            })()}
           </Text>
         )}
       </View>
@@ -296,11 +300,11 @@ function BlockedWorkBanner({ blockedCount }: { blockedCount: number }) {
         <Ionicons name="lock-closed" size={18} color="#fff" />
       </View>
       <View style={styles.blockedContent}>
-        <Text style={styles.blockedTitle}>{blockedCount} type{blockedCount > 1 ? 's' : ''} werk geblokkeerd</Text>
-        <Text style={styles.blockedSubtitle}>Door ontbrekende certificaten</Text>
+        <Text style={styles.blockedTitle} numberOfLines={1}>{blockedCount} type{blockedCount > 1 ? 's' : ''} werk geblokkeerd</Text>
+        <Text style={styles.blockedSubtitle} numberOfLines={1}>Door ontbrekende certificaten</Text>
       </View>
       <Pressable style={styles.blockedAction}>
-        <Text style={styles.blockedActionText}>Bekijk</Text>
+        <Text style={styles.blockedActionText} numberOfLines={1}>Bekijk</Text>
       </Pressable>
     </View>
   );
@@ -317,9 +321,9 @@ export default function CertificatenScreen() {
   const [selectedItem, setSelectedItem] = useState<ComplianceItem | null>(null);
 
   // Data from services
-  const { licenses, loading: licensesLoading, refresh: refreshLicenses } = useLicenses();
-  const { certifications, loading: certsLoading, refresh: refreshCerts } = useCertifications();
-  const { policies, loading: insuranceLoading, refresh: refreshInsurance } = useInsurancePolicies();
+  const { licenses, loading: licensesLoading } = useLicenses();
+  const { certifications, loading: certsLoading } = useCertifications();
+  const { policies, loading: insuranceLoading } = useInsurancePolicies();
   const { alerts } = useComplianceAlerts();
   const stats = useComplianceStats();
   const calendar = useExpiryCalendar(6);
@@ -392,27 +396,28 @@ export default function CertificatenScreen() {
     f => f.categoryId === 'compliance-expiring' && f.status === 'new'
   ).length;
 
-  // Upcoming expiries for timeline
+  // Upcoming expiries for timeline — calendar entries have { date, items[] }
   const upcomingExpiries = useMemo(() => {
     if (!calendar || !Array.isArray(calendar)) return [];
-    return calendar
-      .filter(item => new Date(item.expiryDate) > new Date())
-      .sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime())
-      .map(item => ({
-        name: item.name,
-        date: new Date(item.expiryDate),
-        type: item.type,
-      }));
+    const now = new Date();
+    const entries: { name: string; date: Date; type: string }[] = [];
+    calendar.forEach(entry => {
+      if (entry.date > now) {
+        entry.items.forEach(item => {
+          entries.push({ name: item.name, date: entry.date, type: item.type });
+        });
+      }
+    });
+    return entries.sort((a, b) => a.date.getTime() - b.date.getTime());
   }, [calendar]);
 
   // Critical alerts (expiring/expired)
-  const criticalAlerts = alerts.filter(a => a.severity === 'critical' || a.severity === 'warning');
+  const criticalAlerts = alerts.filter(a => a.severity === 'critical' || a.severity === 'high');
 
-  // Refresh handler
-  const onRefresh = async () => {
+  // Refresh handler — services re-fetch via subscribe, so just trigger a re-render
+  const onRefresh = () => {
     setRefreshing(true);
-    await Promise.all([refreshLicenses(), refreshCerts(), refreshInsurance()]);
-    setRefreshing(false);
+    setTimeout(() => setRefreshing(false), 600);
   };
 
   const isLoading = licensesLoading || certsLoading || insuranceLoading;
@@ -519,7 +524,7 @@ export default function CertificatenScreen() {
             {/* Quick Add Button */}
             <Pressable style={styles.addButton}>
               <Ionicons name="add-circle" size={22} color={Palette.hermesOrange} />
-              <Text style={styles.addButtonText}>Certificaat toevoegen</Text>
+              <Text style={styles.addButtonText} numberOfLines={1}>Certificaat toevoegen</Text>
             </Pressable>
           </>
         )}
@@ -540,8 +545,8 @@ export default function CertificatenScreen() {
             {filteredItems
               .sort((a, b) => {
                 // Expired first, then expiring, then valid
-                const priority = { expired: 0, expiring_soon: 1, pending_renewal: 2, suspended: 3, valid: 4 };
-                return priority[a.status] - priority[b.status];
+                const priority: Record<string, number> = { expired: 0, cancelled: 0, expiring_soon: 1, pending_renewal: 2, suspended: 3, valid: 4, active: 4 };
+                return (priority[a.status] ?? 4) - (priority[b.status] ?? 4);
               })
               .map(item => (
                 <ItemCard
@@ -557,7 +562,7 @@ export default function CertificatenScreen() {
                 <Ionicons name="document-outline" size={48} color={SemanticColors.textTertiary} />
                 <Text style={styles.emptyStateText}>Geen items gevonden</Text>
                 <Pressable style={styles.emptyStateButton}>
-                  <Text style={styles.emptyStateButtonText}>Voeg toe</Text>
+                  <Text style={styles.emptyStateButtonText} numberOfLines={1}>Voeg toe</Text>
                 </Pressable>
               </View>
             )}
@@ -565,7 +570,7 @@ export default function CertificatenScreen() {
             {/* Add Button */}
             <Pressable style={styles.addButton}>
               <Ionicons name="add-circle" size={22} color={Palette.hermesOrange} />
-              <Text style={styles.addButtonText}>
+              <Text style={styles.addButtonText} numberOfLines={1}>
                 {activeTab === 'certificates' && 'Certificaat toevoegen'}
                 {activeTab === 'insurance' && 'Verzekering toevoegen'}
                 {activeTab === 'licenses' && 'Vergunning toevoegen'}
@@ -699,7 +704,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: Spacing.lg,
+    paddingHorizontal: SafeArea.content,
+    paddingVertical: Spacing.lg,
     gap: Spacing.md,
   },
 

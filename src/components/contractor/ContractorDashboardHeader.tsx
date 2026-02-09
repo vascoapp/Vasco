@@ -33,11 +33,11 @@ export function ContractorDashboardHeader({ kpis }: ContractorDashboardHeaderPro
                 size={14}
                 color={kpi.color || SemanticColors.textSecondary}
               />
-              <Text style={[styles.kpiValue, kpi.color ? { color: kpi.color } : undefined]}>
+              <Text style={[styles.kpiValue, kpi.color ? { color: kpi.color } : undefined]} numberOfLines={1}>
                 {kpi.value}
               </Text>
             </View>
-            <Text style={styles.kpiLabel}>{kpi.label}</Text>
+            <Text style={styles.kpiLabel} numberOfLines={1}>{kpi.label}</Text>
           </>
         );
 
@@ -94,6 +94,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: SemanticColors.textPrimary,
+    fontVariant: ['tabular-nums'] as any,
   },
   kpiLabel: {
     fontSize: 11,

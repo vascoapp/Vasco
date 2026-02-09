@@ -86,7 +86,6 @@ const mockBenchmarks: BenchmarkCategory[] = [
   {
     id: 'cat-1', name: 'Financiële Prestaties', description: 'Omzet en winstgevendheid',
     metrics: [
-      { id: 'm-1', name: 'Omzet per monteur', description: 'Jaarlijkse omzet gedeeld door FTE', yourValue: 145000, industryAvg: 125000, topPerformers: 180000, unit: '€', trend: 'up', trendPercentage: 12, status: 'good', percentile: 72, recommendations: ['Focus op upselling tijdens onderhoud', 'Verhoog onderhoudscontracten'] },
       { id: 'm-2', name: 'Bruto marge', description: 'Percentage bruto winst', yourValue: 38, industryAvg: 35, topPerformers: 45, unit: '%', trend: 'stable', trendPercentage: 0, status: 'good', percentile: 65 },
       { id: 'm-3', name: 'Gem. factuurwaarde', description: 'Gemiddelde waarde per factuur', yourValue: 285, industryAvg: 320, topPerformers: 450, unit: '€', trend: 'up', trendPercentage: 8, status: 'below_average', percentile: 42, recommendations: ['Bundel services', 'Upsell mogelijkheden benutten'] },
     ],
@@ -94,7 +93,6 @@ const mockBenchmarks: BenchmarkCategory[] = [
   {
     id: 'cat-2', name: 'Operationele Efficiëntie', description: 'Productiviteit en doorlooptijd',
     metrics: [
-      { id: 'm-4', name: 'Klussen per dag', description: 'Gemiddeld aantal afgeronde klussen', yourValue: 3.2, industryAvg: 2.8, topPerformers: 4.0, unit: 'klussen', trend: 'up', trendPercentage: 5, status: 'excellent', percentile: 85 },
       { id: 'm-5', name: 'Eerste-keer-goed', description: 'Percentage zonder terugkomst', yourValue: 92, industryAvg: 88, topPerformers: 96, unit: '%', trend: 'stable', trendPercentage: 1, status: 'good', percentile: 70 },
       { id: 'm-6', name: 'Responstijd storingen', description: 'Gemiddelde tijd tot aankomst', yourValue: 6, industryAvg: 8, topPerformers: 4, unit: 'uur', trend: 'down', trendPercentage: -15, status: 'good', percentile: 68 },
     ],
@@ -111,7 +109,7 @@ const mockBenchmarks: BenchmarkCategory[] = [
 
 const mockGoals: PerformanceGoal[] = [
   { id: 'goal-1', metricId: 'm-3', metricName: 'Gem. factuurwaarde', currentValue: 285, targetValue: 350, deadline: new Date('2024-12-31'), progress: 45, status: 'on_track', milestones: [] },
-  { id: 'goal-2', metricId: 'm-4', metricName: 'Klussen per dag', currentValue: 3.2, targetValue: 3.5, deadline: new Date('2024-06-30'), progress: 70, status: 'on_track', milestones: [] },
+  { id: 'goal-2', metricId: 'm-5', metricName: 'Eerste-keer-goed', currentValue: 92, targetValue: 95, deadline: new Date('2024-06-30'), progress: 70, status: 'on_track', milestones: [] },
 ];
 
 const mockOpportunities: ImprovementOpportunity[] = [

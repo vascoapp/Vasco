@@ -81,11 +81,19 @@ export interface SupplierPerformance {
   lastOrderDate?: string;
 
   // Alerts
-  alerts: ReliabilityAlert[];
+  alerts: (ReliabilityAlert | DriftAlert)[];
 
   // Assessment
   lastAssessedAt: string;
   nextAssessmentDue?: string;
+}
+
+export interface ReliabilityAlert {
+  id: string;
+  type: string;
+  message: string;
+  severity: DriftSeverity;
+  date: string;
 }
 
 // ============================================

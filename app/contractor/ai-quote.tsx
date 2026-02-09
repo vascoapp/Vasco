@@ -19,7 +19,7 @@ export default function AIQuoteScreen() {
       [
         {
           text: 'View Quote',
-          onPress: () => router.replace('/contractor/quotes'),
+          onPress: () => router.replace('/quotes/new'),
         },
       ]
     );

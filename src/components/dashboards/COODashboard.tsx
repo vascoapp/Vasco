@@ -1,9 +1,8 @@
 // =============================================================================
-// COO DASHBOARD - Operational Delivery & Execution
+// COO DASHBOARD - Commercial Real Estate KPI Framework
 // =============================================================================
-// Executive operations dashboard for real estate development COOs
-// Focus: Schedule, Permits, Procurement, Change Orders
-// 4-tab navigation for focused operational views
+// 4-tab navigation: Financials | Efficiency | Market | Emerging
+// Aligned with CRE executive priorities for 2026
 // =============================================================================
 
 import { useState, useMemo, useCallback } from 'react';
@@ -13,12 +12,11 @@ import {
   StyleSheet,
   Text,
   View,
-  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
-import { Spacing } from '../../theme/spacing';
+import { Spacing, SafeArea } from '../../theme/spacing';
 import {
   mockProjects,
   mockDeliveryMetrics,
@@ -40,6 +38,8 @@ import { CriticalPathView } from '../shared/CriticalPathView';
 import { SupplierReliabilityCard } from '../shared/SupplierReliabilityCard';
 import { SupplierAlertBanner } from '../shared/SupplierAlertBanner';
 import { WhatIfAnalysisModal } from '../shared/WhatIfAnalysisModal';
+import { FinancialKPIGrid } from '../shared/FinancialKPIGrid';
+import type { KPITile } from '../shared/FinancialKPIGrid';
 import {
   useFragilityScore,
   useCriticalPath,
@@ -56,6 +56,12 @@ import {
   crossRoleWorkflowService,
 } from '../../services/crossRoleWorkflowService';
 import type { Workflow, WorkflowStep } from '../../services/crossRoleWorkflowService';
+import {
+  useFinancialPerformance,
+  useOperationalEfficiency,
+  useStakeholderMarket,
+  useEmergingPriorities,
+} from '../../services/cooRealEstateKPIService';
 
 // Vasco Guidance
 import { useVascoGuidance, useInlineInsight } from '../../services/vascoGuidanceService';
@@ -63,12 +69,12 @@ import { VascoInsightList, InlineInsight } from '../shared/VascoInsightCard';
 import type { VascoInsight } from '../shared/VascoInsightCard';
 import { ContractorDashboardHeader } from '../contractor/ContractorDashboardHeader';
 
+
 type IconName = keyof typeof Ionicons.glyphMap;
-export type COOTabView = 'overview' | 'schedule' | 'permits' | 'procurement';
+export type COOTabView = 'financials' | 'efficiency' | 'market' | 'emerging';
 type TabView = COOTabView;
 
-// Role color - matches theme roleCOO token
-const COO_COLOR = '#7C3AED'; // Purple for COO (per theme)
+const COO_COLOR = Palette.hermesOrange;
 
 // =============================================================================
 // HELPERS
@@ -88,31 +94,12 @@ function formatCompact(value: number | undefined | null, currency: string = 'GBP
   return `${symbol}${value.toFixed(0)}`;
 }
 
-// =============================================================================
-// COMPONENTS
-// =============================================================================
-
-interface QuickActionProps {
-  icon: IconName;
-  label: string;
-  badge?: number;
-  onPress: () => void;
+function varianceColor(val: number): string {
+  return val >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError;
 }
 
-function QuickAction({ icon, label, badge, onPress }: QuickActionProps) {
-  return (
-    <Pressable style={styles.quickAction} onPress={onPress}>
-      <View style={styles.quickActionIcon}>
-        <Ionicons name={icon} size={20} color={COO_COLOR} />
-        {badge !== undefined && badge > 0 && (
-          <View style={styles.quickActionBadge}>
-            <Text style={styles.quickActionBadgeText}>{badge}</Text>
-          </View>
-        )}
-      </View>
-      <Text style={styles.quickActionLabel} numberOfLines={1}>{label}</Text>
-    </Pressable>
-  );
+function varianceDir(val: number): 'up' | 'down' {
+  return val >= 0 ? 'up' : 'down';
 }
 
 // =============================================================================
@@ -124,11 +111,18 @@ interface COODashboardProps {
   showTabBar?: boolean;
 }
 
-export function COODashboard({ initialTab = 'overview', showTabBar = true }: COODashboardProps) {
+export function COODashboard({ initialTab = 'financials', showTabBar = true }: COODashboardProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabView>(initialTab);
   const [selectedProjectId, setSelectedProjectId] = useState<string>('uk-001');
   const [showWhatIfModal, setShowWhatIfModal] = useState(false);
+  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
+
+  // CRE KPI hooks
+  const financialKPIs = useFinancialPerformance(selectedProjectId);
+  const efficiencyKPIs = useOperationalEfficiency(selectedProjectId);
+  const stakeholderKPIs = useStakeholderMarket(selectedProjectId);
+  const emergingKPIs = useEmergingPriorities(selectedProjectId);
 
   // Vasco AI Guidance
   const [dismissedGuidance, setDismissedGuidance] = useState<Set<string>>(new Set());
@@ -138,13 +132,12 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
     () => allGuidance.filter(g => !dismissedGuidance.has(g.id) && !snoozedGuidance.has(g.id)),
     [allGuidance, dismissedGuidance, snoozedGuidance]
   );
-  // Inline insights per tab
-  const overviewInsight = useInlineInsight('coo', 'overview', 'overview');
-  const scheduleInsight = useInlineInsight('coo', 'schedule', 'overview');
-  const permitsInsight = useInlineInsight('coo', 'permits', 'overview');
-  const procurementInsight = useInlineInsight('coo', 'procurement', 'overview');
+  const financialsInsight = useInlineInsight('coo', 'financials', 'overview');
+  const efficiencyInsight = useInlineInsight('coo', 'efficiency', 'overview');
+  const marketInsight = useInlineInsight('coo', 'market', 'overview');
+  const emergingInsight = useInlineInsight('coo', 'emerging', 'overview');
 
-  // New hooks for P1/P2 features
+  // Schedule / P1-P2 hooks
   const { data: fragilityScore, loading: fragilityLoading } = useFragilityScore(selectedProjectId);
   const { data: criticalPath, loading: criticalPathLoading } = useCriticalPath(selectedProjectId);
   const { data: fragilityAlerts } = useFragilityAlerts(selectedProjectId);
@@ -225,30 +218,8 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
     };
   }, [deliveryMetrics]);
 
-  // Portfolio metrics
-  const portfolioMetrics = useMemo(() => {
-    let onTrack = 0;
-    let atRisk = 0;
-    let behind = 0;
-    let totalPermitsPending = 0;
-
-    mockProjects.forEach((project) => {
-      const metrics = mockDeliveryMetrics[project.id];
-      if (metrics) {
-        if (metrics.spiSchedulePerformanceIndex >= 0.95) onTrack++;
-        else if (metrics.spiSchedulePerformanceIndex >= 0.85) atRisk++;
-        else behind++;
-      }
-      const pending = project.permits.filter(p =>
-        p.status === 'under-review' || p.status === 'submitted'
-      ).length;
-      totalPermitsPending += pending;
-    });
-
-    return { onTrack, atRisk, behind, totalPermitsPending };
-  }, []);
-
   const fmt = (amount: number) => formatCompact(amount, currency);
+  const sym = currency === 'GBP' ? '£' : '€';
 
   const handleDismissGuidance = useCallback((id: string) => {
     setDismissedGuidance(prev => new Set(prev).add(id));
@@ -260,30 +231,60 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
     if (insight.actionRoute) router.push(insight.actionRoute as any);
   }, [router]);
 
-  // Project selector component (reused across tabs)
+  // Project selector — dropdown balloon
   const ProjectSelector = () => (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-      <View style={styles.projectRow}>
-        {mockProjects.map((project) => (
-          <Pressable
-            key={project.id}
-            style={[
-              styles.projectPill,
-              selectedProjectId === project.id && styles.projectPillActive,
-            ]}
-            onPress={() => setSelectedProjectId(project.id)}
-          >
-            <Text style={styles.projectCountry}>{project.country}</Text>
-            <Text style={[
-              styles.projectName,
-              selectedProjectId === project.id && styles.projectNameActive,
-            ]} numberOfLines={1}>
-              {project.name}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-    </ScrollView>
+    <View style={styles.dropdownContainer}>
+      <Pressable
+        style={styles.dropdownButton}
+        onPress={() => setShowProjectDropdown(!showProjectDropdown)}
+      >
+        <View style={styles.dropdownButtonLeft}>
+          <Text style={styles.dropdownCountryTag}>{selectedProject?.country}</Text>
+          <Text style={styles.dropdownSelectedName} numberOfLines={1}>
+            {selectedProject?.name || 'Select project'}
+          </Text>
+        </View>
+        <Ionicons
+          name={showProjectDropdown ? 'chevron-up' : 'chevron-down'}
+          size={18}
+          color={COO_COLOR}
+        />
+      </Pressable>
+      {showProjectDropdown && (
+        <View style={styles.dropdownMenu}>
+          {mockProjects.map((project) => {
+            const isSelected = selectedProjectId === project.id;
+            return (
+              <Pressable
+                key={project.id}
+                style={[
+                  styles.dropdownItem,
+                  isSelected && styles.dropdownItemActive,
+                ]}
+                onPress={() => {
+                  setSelectedProjectId(project.id);
+                  setShowProjectDropdown(false);
+                }}
+              >
+                <Text style={styles.dropdownItemCountry}>{project.country}</Text>
+                <Text
+                  style={[
+                    styles.dropdownItemName,
+                    isSelected && styles.dropdownItemNameActive,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {project.name}
+                </Text>
+                {isSelected && (
+                  <Ionicons name="checkmark-circle" size={18} color={COO_COLOR} />
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
+    </View>
   );
 
   return (
@@ -292,47 +293,31 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View>
-            <Text style={styles.headerTitle}>Operations</Text>
-            <Text style={styles.headerSubtitle}>{mockProjects.length} actieve projecten</Text>
+            <Text style={styles.headerTitle} numberOfLines={1}>Operations</Text>
+            <Text style={styles.headerSubtitle} numberOfLines={1}>{mockProjects.length} actieve projecten</Text>
           </View>
           <View style={[styles.headerAccent, { backgroundColor: COO_COLOR }]} />
         </View>
-
-        {/* Portfolio Status Pills */}
-        <View style={styles.headerMetrics}>
-          <View style={[styles.statusPill, styles.statusPillGood]}>
-            <Text style={styles.statusPillValue}>{portfolioMetrics.onTrack}</Text>
-            <Text style={styles.statusPillLabel}>On Track</Text>
-          </View>
-          <View style={[styles.statusPill, styles.statusPillWarning]}>
-            <Text style={styles.statusPillValue}>{portfolioMetrics.atRisk}</Text>
-            <Text style={styles.statusPillLabel}>At Risk</Text>
-          </View>
-          <View style={[styles.statusPill, styles.statusPillDanger]}>
-            <Text style={styles.statusPillValue}>{portfolioMetrics.behind}</Text>
-            <Text style={styles.statusPillLabel}>Behind</Text>
-          </View>
-        </View>
       </View>
-
-      {/* Internal tab bar removed - using bottom navigation instead */}
 
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* OVERVIEW TAB */}
-        {activeTab === 'overview' && (
+        {/* ================================================================ */}
+        {/* TAB 1: FINANCIALS                                                */}
+        {/* ================================================================ */}
+        {activeTab === 'financials' && (
           <>
-            {/* KPI Header */}
             <ContractorDashboardHeader
               kpis={[
-                { icon: 'business', value: `${portfolioMetrics.onTrack}/${mockProjects.length}`, label: 'On Track', color: COO_COLOR },
-                { icon: 'trending-up', value: scheduleHealth ? `${scheduleHealth.spi.toFixed(2)}` : '—', label: 'SPI' },
-                { icon: 'alert-circle', value: `${portfolioMetrics.behind}`, label: 'Behind', color: portfolioMetrics.behind > 0 ? SemanticColors.feedbackError : undefined },
+                { icon: 'trending-up', value: `${financialKPIs.irr}%`, label: 'IRR', color: COO_COLOR },
+                { icon: 'cash', value: formatCompact(financialKPIs.noi, financialKPIs.currency), label: 'NOI' },
+                { icon: 'analytics', value: `${financialKPIs.operatingMargin}%`, label: 'Margin' },
               ]}
             />
+
             <VascoInsightList
               insights={activeGuidance}
               title="Vasco AI Guidance"
@@ -342,94 +327,63 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
               onAction={handleGuidanceAction}
               onSnooze={handleSnoozeGuidance}
             />
-            {overviewInsight && (
-              <InlineInsight icon={overviewInsight.icon as IconName} message={overviewInsight.message} />
+            {financialsInsight && (
+              <InlineInsight icon={financialsInsight.icon as IconName} message={financialsInsight.message} />
             )}
 
-            {/* Project Selector */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Select Project</Text>
               <ProjectSelector />
             </View>
 
-            {/* Key Metrics Summary */}
-            {scheduleHealth && permitDashboard && procurementRisk && (
-              <View style={styles.summaryGrid}>
-                {/* Schedule Summary */}
-                <Pressable style={styles.summaryCard} onPress={() => setActiveTab('schedule')}>
-                  <View style={styles.summaryCardHeader}>
-                    <Ionicons name="speedometer" size={18} color={COO_COLOR} />
-                    <Text style={styles.summaryCardTitle}>Schedule</Text>
-                  </View>
-                  <View style={styles.summaryCardContent}>
-                    <Text style={[
-                      styles.summaryCardValue,
-                      scheduleHealth.spi >= 0.95 && { color: SemanticColors.feedbackSuccess },
-                      scheduleHealth.spi < 0.85 && { color: SemanticColors.feedbackError },
-                    ]}>
-                      {scheduleHealth.spi.toFixed(2)}
-                    </Text>
-                    <Text style={styles.summaryCardLabel}>SPI</Text>
-                  </View>
-                  <Text style={styles.summaryCardSubtext}>
-                    {scheduleHealth.varianceDays >= 0 ? '+' : ''}{scheduleHealth.varianceDays}d variance
-                  </Text>
-                </Pressable>
+            {/* Financial KPI Grid — 6 tiles */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Financial Performance</Text>
+              <FinancialKPIGrid
+                accentColor={COO_COLOR}
+                tiles={[
+                  {
+                    label: 'IRR',
+                    value: `${financialKPIs.irr}%`,
+                    variance: `${financialKPIs.irrVariance > 0 ? '+' : ''}${financialKPIs.irrVariance}%`,
+                    varianceDirection: varianceDir(financialKPIs.irrVariance),
+                    status: financialKPIs.irr >= 15 ? 'green' : financialKPIs.irr >= 10 ? 'amber' : 'red',
+                    heroBg: true,
+                  },
+                  {
+                    label: 'NOI',
+                    value: formatCompact(financialKPIs.noi, financialKPIs.currency),
+                    variance: formatCompact(financialKPIs.noiVariance, financialKPIs.currency),
+                    varianceDirection: varianceDir(financialKPIs.noiVariance),
+                    status: financialKPIs.noiVariance >= 0 ? 'green' : 'red',
+                  },
+                  {
+                    label: 'OPERATING MARGIN',
+                    value: `${financialKPIs.operatingMargin}%`,
+                    variance: `${financialKPIs.marginVariance > 0 ? '+' : ''}${financialKPIs.marginVariance}%`,
+                    varianceDirection: varianceDir(financialKPIs.marginVariance),
+                    status: financialKPIs.operatingMargin >= 15 ? 'green' : financialKPIs.operatingMargin >= 12 ? 'amber' : 'red',
+                  },
+                  {
+                    label: 'G&A RATIO',
+                    value: `${financialKPIs.gaExpenseRatio}%`,
+                    status: financialKPIs.gaExpenseRatio <= 5 ? 'green' : financialKPIs.gaExpenseRatio <= 6 ? 'amber' : 'red',
+                  },
+                  {
+                    label: 'EBITDA',
+                    value: formatCompact(financialKPIs.ebitda, financialKPIs.currency),
+                    status: 'green',
+                  },
+                  {
+                    label: 'EQUITY IRR',
+                    value: `${financialKPIs.equityIrr}%`,
+                    status: financialKPIs.equityIrr >= 18 ? 'green' : financialKPIs.equityIrr >= 14 ? 'amber' : 'red',
+                  },
+                ]}
+              />
+            </View>
 
-                {/* Permits Summary */}
-                <Pressable style={styles.summaryCard} onPress={() => setActiveTab('permits')}>
-                  <View style={styles.summaryCardHeader}>
-                    <Ionicons name="document-text" size={18} color={Palette.terracotta} />
-                    <Text style={styles.summaryCardTitle}>Permits</Text>
-                    {criticalAlerts.length > 0 && (
-                      <View style={styles.summaryCardBadge}>
-                        <Text style={styles.summaryCardBadgeText}>{criticalAlerts.length}</Text>
-                      </View>
-                    )}
-                  </View>
-                  <View style={styles.summaryCardContent}>
-                    <Text style={styles.summaryCardValue}>
-                      {permitDashboard.byStatus.approved + permitDashboard.byStatus.approvedWithConditions}
-                    </Text>
-                    <Text style={styles.summaryCardLabel}>Approved</Text>
-                  </View>
-                  <Text style={styles.summaryCardSubtext}>
-                    {permitDashboard.byStatus.pending} pending
-                  </Text>
-                </Pressable>
-
-                {/* Procurement Summary */}
-                <Pressable style={styles.summaryCard} onPress={() => setActiveTab('procurement')}>
-                  <View style={styles.summaryCardHeader}>
-                    <Ionicons name="cart" size={18} color={Palette.hermesOrange} />
-                    <Text style={styles.summaryCardTitle}>Contracts</Text>
-                  </View>
-                  <View style={styles.summaryCardContent}>
-                    <Text style={styles.summaryCardValue}>{formatPercent(procurementRisk.awardedPercent)}</Text>
-                    <Text style={styles.summaryCardLabel}>Awarded</Text>
-                  </View>
-                  <Text style={styles.summaryCardSubtext}>
-                    {procurementRisk.pending} pending
-                  </Text>
-                </Pressable>
-              </View>
-            )}
-
-            {/* Critical Alerts */}
-            {criticalAlerts.length > 0 && (
-              <Pressable style={styles.alertBanner} onPress={() => setActiveTab('permits')}>
-                <Ionicons name="warning" size={20} color={SemanticColors.feedbackError} />
-                <View style={styles.alertBannerContent}>
-                  <Text style={styles.alertBannerTitle}>Permit Alert</Text>
-                  <Text style={styles.alertBannerText} numberOfLines={1}>
-                    {criticalAlerts[0].title}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={SemanticColors.feedbackError} />
-              </Pressable>
-            )}
-
-            {/* Cross-Role Workflows - COO Actions */}
+            {/* Cross-Role Workflows */}
             {(cooPendingWorkflows.length > 0 || activeEscalations.length > 0) && (
               <View style={styles.card}>
                 <View style={styles.cardHeaderRow}>
@@ -441,7 +395,6 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                   </View>
                 </View>
 
-                {/* Pending escalations requiring COO action */}
                 {activeEscalations.map((wf) => {
                   const currentStep = wf.steps.find(s => s.id === wf.currentStepId);
                   const isMyStep = currentStep?.assignedRole === 'coo';
@@ -458,8 +411,8 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                           </View>
                         )}
                       </View>
-                      <Text style={styles.wfItemTitle}>{wf.title}</Text>
-                      <Text style={styles.wfItemMeta}>
+                      <Text style={styles.wfItemTitle} numberOfLines={1}>{wf.title}</Text>
+                      <Text style={styles.wfItemMeta} numberOfLines={1}>
                         {wf.projectName} {wf.amount ? `· ${formatCompact(wf.amount, wf.currency)}` : ''}
                       </Text>
                       {currentStep && (
@@ -469,19 +422,18 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                               ? COO_COLOR
                               : SemanticColors.feedbackWarning,
                           }]} />
-                          <Text style={styles.wfStepText}>
+                          <Text style={styles.wfStepText} numberOfLines={1}>
                             Stap {currentStep.order}: {currentStep.name}
                           </Text>
                         </View>
                       )}
-                      {/* Progress indicator */}
                       <View style={styles.wfProgressBar}>
                         <View style={[styles.wfProgressFill, {
                           width: `${(wf.steps.filter(s => s.status === 'completed').length / wf.steps.length) * 100}%`,
                           backgroundColor: COO_COLOR,
                         }]} />
                       </View>
-                      <Text style={styles.wfProgressText}>
+                      <Text style={styles.wfProgressText} numberOfLines={1}>
                         {wf.steps.filter(s => s.status === 'completed').length}/{wf.steps.length} stappen afgerond
                       </Text>
                       {isMyStep && (
@@ -503,7 +455,6 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                   );
                 })}
 
-                {/* Other pending workflows for COO */}
                 {cooPendingWorkflows
                   .filter(wf => wf.type !== 'supplier-escalation')
                   .slice(0, 2)
@@ -517,14 +468,14 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                             <Text style={[styles.wfTypeBadgeText, { color: COO_COLOR }]}>Workflow</Text>
                           </View>
                         </View>
-                        <Text style={styles.wfItemTitle}>{wf.title}</Text>
-                        <Text style={styles.wfItemMeta}>
+                        <Text style={styles.wfItemTitle} numberOfLines={1}>{wf.title}</Text>
+                        <Text style={styles.wfItemMeta} numberOfLines={1}>
                           {wf.projectName} · Status: {wf.status}
                         </Text>
                         {currentStep && (
                           <View style={styles.wfStepRow}>
                             <View style={[styles.wfStepDot, { backgroundColor: COO_COLOR }]} />
-                            <Text style={styles.wfStepText}>
+                            <Text style={styles.wfStepText} numberOfLines={1}>
                               Stap {currentStep.order}: {currentStep.name}
                             </Text>
                           </View>
@@ -544,8 +495,8 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                     <Ionicons name="sparkles" size={18} color={COO_COLOR} />
                   </View>
                   <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>AI Assistent</Text>
-                    <Text style={styles.actionSubtitle}>Operationele vragen & AI hulp</Text>
+                    <Text style={styles.actionTitle} numberOfLines={1}>AI Assistent</Text>
+                    <Text style={styles.actionSubtitle} numberOfLines={2}>Operationele vragen & AI hulp</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
@@ -554,8 +505,8 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                     <Ionicons name="people" size={18} color={SemanticColors.feedbackInfo} />
                   </View>
                   <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Teambeheer</Text>
-                    <Text style={styles.actionSubtitle}>Team management & resource overzicht</Text>
+                    <Text style={styles.actionTitle} numberOfLines={1}>Teambeheer</Text>
+                    <Text style={styles.actionSubtitle} numberOfLines={2}>Team management & resource overzicht</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
@@ -564,8 +515,8 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                     <Ionicons name="folder-open" size={18} color={SemanticColors.feedbackWarning} />
                   </View>
                   <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Documenten</Text>
-                    <Text style={styles.actionSubtitle}>Operationele documentkluis</Text>
+                    <Text style={styles.actionTitle} numberOfLines={1}>Documenten</Text>
+                    <Text style={styles.actionSubtitle} numberOfLines={2}>Operationele documentkluis</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
@@ -574,77 +525,140 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
           </>
         )}
 
-        {/* SCHEDULE TAB */}
-        {activeTab === 'schedule' && scheduleHealth && selectedProject && (
+        {/* ================================================================ */}
+        {/* TAB 2: EFFICIENCY                                                */}
+        {/* ================================================================ */}
+        {activeTab === 'efficiency' && scheduleHealth && selectedProject && (
           <>
-            {/* KPI Header */}
             <ContractorDashboardHeader
               kpis={[
-                { icon: 'pie-chart', value: scheduleHealth ? `${scheduleHealth.progressPercent.toFixed(0)}%` : '—', label: 'Voortgang', color: COO_COLOR },
-                { icon: 'alert-circle', value: String(scheduleHealth?.delayedCount || 0), label: 'Vertraagd', color: (scheduleHealth?.delayedCount || 0) > 0 ? SemanticColors.feedbackError : undefined },
-                { icon: 'git-network', value: String(scheduleHealth?.criticalCount || 0), label: 'Kritiek Pad' },
+                { icon: 'speedometer', value: scheduleHealth.spi.toFixed(2), label: 'SPI', color: COO_COLOR },
+                { icon: 'time', value: `${efficiencyKPIs.avgConstructionDuration}/${efficiencyKPIs.plannedDuration}m`, label: 'Duration' },
+                { icon: 'calculator', value: `${efficiencyKPIs.monthsToBreakeven}m`, label: 'Breakeven' },
               ]}
             />
-            {scheduleInsight && (
-              <InlineInsight icon={scheduleInsight.icon as IconName} message={scheduleInsight.message} />
+            {efficiencyInsight && (
+              <InlineInsight icon={efficiencyInsight.icon as IconName} message={efficiencyInsight.message} />
             )}
 
             <ProjectSelector />
 
-            {/* SPI Banner */}
+            {/* Operational Efficiency KPI Grid — 5 tiles */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Operational Efficiency</Text>
+              <FinancialKPIGrid
+                accentColor={COO_COLOR}
+                tiles={[
+                  {
+                    label: 'AVG DURATION',
+                    value: `${efficiencyKPIs.avgConstructionDuration}m`,
+                    budgetLabel: `Planned: ${efficiencyKPIs.plannedDuration}m`,
+                    status: efficiencyKPIs.avgConstructionDuration <= efficiencyKPIs.plannedDuration ? 'green' : 'red',
+                    heroBg: true,
+                  },
+                  {
+                    label: 'BREAKEVEN',
+                    value: `${efficiencyKPIs.monthsToBreakeven}m`,
+                    status: efficiencyKPIs.monthsToBreakeven <= 24 ? 'green' : efficiencyKPIs.monthsToBreakeven <= 30 ? 'amber' : 'red',
+                  },
+                  {
+                    label: 'OPEX RATIO',
+                    value: `${efficiencyKPIs.opExRatio}%`,
+                    status: efficiencyKPIs.opExRatio <= 30 ? 'green' : efficiencyKPIs.opExRatio <= 35 ? 'amber' : 'red',
+                  },
+                  {
+                    label: `MAINT ${sym}/SQFT`,
+                    value: `${sym}${efficiencyKPIs.maintenanceCostPerSqft.toFixed(2)}`,
+                    status: efficiencyKPIs.maintenanceCostPerSqft <= 4.5 ? 'green' : 'amber',
+                  },
+                  {
+                    label: 'ASSET UTIL',
+                    value: `${efficiencyKPIs.assetUtilization}%`,
+                    status: efficiencyKPIs.assetUtilization >= 85 ? 'green' : efficiencyKPIs.assetUtilization >= 75 ? 'amber' : 'red',
+                  },
+                ]}
+              />
+            </View>
+
+            {/* SPI + Progress Combined */}
             <View style={[
               styles.spiBanner,
               scheduleHealth.spi >= 0.95 && styles.spiBannerGood,
               scheduleHealth.spi >= 0.85 && scheduleHealth.spi < 0.95 && styles.spiBannerWarning,
               scheduleHealth.spi < 0.85 && styles.spiBannerDanger,
             ]}>
-              <View style={styles.spiLeft}>
-                <Text style={styles.spiLabel}>Schedule Performance Index</Text>
-                <Text style={styles.spiStatus}>
-                  {scheduleHealth.status === 'ahead' ? 'Ahead of Schedule' :
-                   scheduleHealth.status === 'on-track' ? 'On Track' : 'Behind Schedule'}
-                </Text>
-              </View>
-              <View style={styles.spiCircle}>
-                <Text style={styles.spiValue}>{scheduleHealth.spi.toFixed(2)}</Text>
-              </View>
-            </View>
-
-            {/* Progress Card */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Progress</Text>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: `${scheduleHealth.progressPercent}%` }]} />
-              </View>
-              <View style={styles.progressStats}>
-                <Text style={styles.progressPercent}>{scheduleHealth.progressPercent.toFixed(0)}% Complete</Text>
-                <Text style={styles.progressVariance}>
-                  {scheduleHealth.varianceDays >= 0 ? '+' : ''}{scheduleHealth.varianceDays} days
-                </Text>
-              </View>
-            </View>
-
-            {/* Schedule Metrics */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Activity Status</Text>
-              <View style={styles.activityGrid}>
-                <View style={[styles.activityItem, styles.activityItemCompleted]}>
-                  <Text style={styles.activityValue}>{scheduleHealth.completedCount}</Text>
-                  <Text style={styles.activityLabel}>Completed</Text>
+              <View style={{ flex: 1, gap: 8 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <View>
+                    <Text style={styles.spiLabel}>Schedule Performance</Text>
+                    <Text style={styles.spiStatus}>
+                      {scheduleHealth.status === 'ahead' ? 'Ahead of Schedule' :
+                       scheduleHealth.status === 'on-track' ? 'On Track' : 'Behind Schedule'}
+                    </Text>
+                  </View>
+                  <View style={styles.spiCircle}>
+                    <Text style={styles.spiValue}>{scheduleHealth.spi.toFixed(2)}</Text>
+                  </View>
                 </View>
-                <View style={[styles.activityItem, styles.activityItemProgress]}>
-                  <Text style={styles.activityValue}>{scheduleHealth.inProgressCount}</Text>
-                  <Text style={styles.activityLabel}>In Progress</Text>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, { width: `${scheduleHealth.progressPercent}%` }]} />
                 </View>
-                <View style={[styles.activityItem, scheduleHealth.delayedCount > 0 && styles.activityItemDelayed]}>
-                  <Text style={[styles.activityValue, scheduleHealth.delayedCount > 0 && styles.dangerText]}>
-                    {scheduleHealth.delayedCount}
+                <View style={styles.progressStats}>
+                  <Text style={[styles.progressPercent, { color: SemanticColors.textSecondary }]}>{scheduleHealth.progressPercent.toFixed(0)}% Complete</Text>
+                  <Text style={styles.progressVariance}>
+                    {scheduleHealth.varianceDays >= 0 ? '+' : ''}{scheduleHealth.varianceDays} days
                   </Text>
-                  <Text style={styles.activityLabel}>Delayed</Text>
                 </View>
-                <View style={styles.activityItem}>
-                  <Text style={styles.activityValue}>{scheduleHealth.criticalCount}</Text>
-                  <Text style={styles.activityLabel}>Critical Path</Text>
+              </View>
+            </View>
+
+            {/* Activity Breakdown */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Activiteiten ({scheduleHealth.totalActivities})</Text>
+              {/* Stacked bar */}
+              <View style={styles.activityBarTrack}>
+                <View style={[styles.activityBarSegment, {
+                  flex: scheduleHealth.completedCount,
+                  backgroundColor: SemanticColors.feedbackSuccess,
+                }]} />
+                <View style={[styles.activityBarSegment, {
+                  flex: scheduleHealth.inProgressCount,
+                  backgroundColor: COO_COLOR,
+                }]} />
+                {scheduleHealth.delayedCount > 0 && (
+                  <View style={[styles.activityBarSegment, {
+                    flex: scheduleHealth.delayedCount,
+                    backgroundColor: SemanticColors.feedbackError,
+                  }]} />
+                )}
+                <View style={[styles.activityBarSegment, {
+                  flex: scheduleHealth.totalActivities - scheduleHealth.completedCount - scheduleHealth.inProgressCount - scheduleHealth.delayedCount,
+                  backgroundColor: SemanticColors.surfaceSecondary,
+                }]} />
+              </View>
+              {/* Legend rows */}
+              <View style={styles.activityLegend}>
+                <View style={styles.activityLegendRow}>
+                  <View style={[styles.activityLegendDot, { backgroundColor: SemanticColors.feedbackSuccess }]} />
+                  <Text style={styles.activityLegendLabel}>Afgerond</Text>
+                  <Text style={styles.activityLegendValue}>{scheduleHealth.completedCount}</Text>
+                </View>
+                <View style={styles.activityLegendRow}>
+                  <View style={[styles.activityLegendDot, { backgroundColor: COO_COLOR }]} />
+                  <Text style={styles.activityLegendLabel}>Actief</Text>
+                  <Text style={styles.activityLegendValue}>{scheduleHealth.inProgressCount}</Text>
+                </View>
+                {scheduleHealth.delayedCount > 0 && (
+                  <View style={styles.activityLegendRow}>
+                    <View style={[styles.activityLegendDot, { backgroundColor: SemanticColors.feedbackError }]} />
+                    <Text style={styles.activityLegendLabel}>Vertraagd</Text>
+                    <Text style={[styles.activityLegendValue, styles.dangerText]}>{scheduleHealth.delayedCount}</Text>
+                  </View>
+                )}
+                <View style={styles.activityLegendRow}>
+                  <View style={[styles.activityLegendDot, { backgroundColor: SemanticColors.feedbackWarning }]} />
+                  <Text style={styles.activityLegendLabel}>Kritiek pad</Text>
+                  <Text style={styles.activityLegendValue}>{scheduleHealth.criticalCount}</Text>
                 </View>
               </View>
             </View>
@@ -655,7 +669,7 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
               <View style={styles.datesGrid}>
                 <View style={styles.dateCard}>
                   <Text style={styles.dateCardLabel}>Start Date</Text>
-                  <Text style={styles.dateCardValue}>{selectedProject.startDate}</Text>
+                  <Text style={styles.dateCardValue}>{selectedProject.plannedStartDate}</Text>
                 </View>
                 <View style={styles.dateCard}>
                   <Text style={styles.dateCardLabel}>Planned End</Text>
@@ -677,7 +691,7 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
               </View>
             </View>
 
-            {/* Schedule Fragility Scoring - P2 Feature */}
+            {/* Schedule Fragility - P2 */}
             {fragilityScore && !fragilityLoading && (
               <FragilityScoreCard
                 fragility={fragilityScore}
@@ -687,7 +701,7 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
               />
             )}
 
-            {/* Critical Path View - P2 Feature */}
+            {/* Critical Path View - P2 */}
             {criticalPath && !criticalPathLoading && (
               <CriticalPathView
                 criticalPath={criticalPath}
@@ -695,90 +709,132 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
               />
             )}
 
-            {/* What-If Analysis Button */}
+            {/* What-If Analysis */}
             {fragilityScore && (
               <Pressable
                 style={styles.whatIfButton}
                 onPress={() => setShowWhatIfModal(true)}
               >
                 <Ionicons name="git-branch" size={18} color={COO_COLOR} />
-                <Text style={styles.whatIfButtonText}>Run What-If Analysis</Text>
+                <Text style={styles.whatIfButtonText} numberOfLines={1}>Run What-If Analysis</Text>
                 <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
               </Pressable>
             )}
-
-            {/* Planning Tools */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Planning Tools</Text>
-              <View style={styles.actionsList}>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/planning' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: COO_COLOR + '15' }]}>
-                    <Ionicons name="calendar" size={18} color={COO_COLOR} />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Planning</Text>
-                    <Text style={styles.actionSubtitle}>Gedetailleerde planning & jobplanning</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/capacity' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
-                    <Ionicons name="bar-chart" size={18} color={SemanticColors.feedbackInfo} />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Capaciteit</Text>
-                    <Text style={styles.actionSubtitle}>Teamcapaciteit & resource-allocatie</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/route' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackSuccess + '15' }]}>
-                    <Ionicons name="navigate" size={18} color={SemanticColors.feedbackSuccess} />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Route Optimalisatie</Text>
-                    <Text style={styles.actionSubtitle}>Route-efficiëntie & reisoptimalisatie</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
-              </View>
-            </View>
           </>
         )}
 
-        {/* PERMITS TAB */}
-        {activeTab === 'permits' && permitDashboard && selectedProject && (
+        {/* ================================================================ */}
+        {/* TAB 3: MARKET                                                    */}
+        {/* ================================================================ */}
+        {activeTab === 'market' && permitDashboard && selectedProject && (
           <>
-            {/* KPI Header */}
             <ContractorDashboardHeader
               kpis={[
-                { icon: 'document-text', value: String(permitDashboard.totalPermits), label: 'Total', color: COO_COLOR },
-                { icon: 'checkmark-circle', value: String(permitDashboard.byStatus.approved + permitDashboard.byStatus.approvedWithConditions), label: 'Approved', color: SemanticColors.feedbackSuccess },
-                { icon: 'alert-circle', value: String(criticalAlerts.length), label: 'Critical', color: criticalAlerts.length > 0 ? SemanticColors.feedbackError : undefined },
+                { icon: 'business', value: `${stakeholderKPIs.occupancyRate}%`, label: 'Occupancy', color: COO_COLOR },
+                { icon: 'people', value: `${stakeholderKPIs.tenantRetention}%`, label: 'Retention' },
+                { icon: 'time', value: `${stakeholderKPIs.avgDaysOnMarket}d`, label: 'Days on Market' },
               ]}
             />
-            {permitsInsight && (
-              <InlineInsight icon={permitsInsight.icon as IconName} message={permitsInsight.message} />
+            {marketInsight && (
+              <InlineInsight icon={marketInsight.icon as IconName} message={marketInsight.message} />
             )}
 
             <ProjectSelector />
 
-            {/* Critical Alerts */}
-            {criticalAlerts.length > 0 && (
-              <View style={styles.alertCard}>
-                <View style={styles.alertCardHeader}>
-                  <Ionicons name="warning" size={20} color={SemanticColors.feedbackError} />
-                  <Text style={styles.alertCardTitle}>Critical Alerts ({criticalAlerts.length})</Text>
-                </View>
-                {criticalAlerts.slice(0, 3).map((alert, index) => (
-                  <View key={index} style={styles.alertCardItem}>
-                    <Text style={styles.alertCardItemText}>{alert.title}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
+            {/* Stakeholder KPI Grid — 4 tiles */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Stakeholder & Market</Text>
+              <FinancialKPIGrid
+                accentColor={COO_COLOR}
+                tiles={[
+                  {
+                    label: 'OCCUPANCY RATE',
+                    value: `${stakeholderKPIs.occupancyRate}%`,
+                    status: stakeholderKPIs.occupancyRate >= 90 ? 'green' : stakeholderKPIs.occupancyRate >= 80 ? 'amber' : 'red',
+                    heroBg: true,
+                  },
+                  {
+                    label: 'TENANT RETENTION',
+                    value: `${stakeholderKPIs.tenantRetention}%`,
+                    status: stakeholderKPIs.tenantRetention >= 85 ? 'green' : stakeholderKPIs.tenantRetention >= 75 ? 'amber' : 'red',
+                  },
+                  {
+                    label: 'DAYS ON MARKET',
+                    value: `${stakeholderKPIs.avgDaysOnMarket}`,
+                    status: stakeholderKPIs.avgDaysOnMarket <= 30 ? 'green' : stakeholderKPIs.avgDaysOnMarket <= 45 ? 'amber' : 'red',
+                  },
+                  {
+                    label: 'LEASE-UP VELOCITY',
+                    value: `${stakeholderKPIs.leaseUpVelocity}/mo`,
+                    status: stakeholderKPIs.leaseUpVelocity >= 4 ? 'green' : stakeholderKPIs.leaseUpVelocity >= 3 ? 'amber' : 'red',
+                  },
+                ]}
+              />
+            </View>
 
-            {/* Permit Pipeline */}
+            {/* ESG & Sustainability Card */}
+            <View style={styles.card}>
+              <View style={styles.cardHeaderRow}>
+                <Text style={styles.cardTitle}>ESG & Sustainability</Text>
+                <View style={[styles.esgRatingBadge, {
+                  backgroundColor: stakeholderKPIs.esgEnergyRating <= 'B'
+                    ? SemanticColors.feedbackSuccessBg
+                    : stakeholderKPIs.esgEnergyRating <= 'D'
+                      ? SemanticColors.feedbackWarningBg
+                      : SemanticColors.feedbackErrorBg,
+                }]}>
+                  <Text style={[styles.esgRatingText, {
+                    color: stakeholderKPIs.esgEnergyRating <= 'B'
+                      ? SemanticColors.feedbackSuccess
+                      : stakeholderKPIs.esgEnergyRating <= 'D'
+                        ? SemanticColors.feedbackWarning
+                        : SemanticColors.feedbackError,
+                  }]}>
+                    Rating {stakeholderKPIs.esgEnergyRating}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Energy Score Ring */}
+              <View style={styles.esgRingRow}>
+                <View style={styles.esgRing}>
+                  <View style={[styles.esgRingFill, {
+                    borderColor: stakeholderKPIs.esgEnergyScore >= 75
+                      ? SemanticColors.feedbackSuccess
+                      : stakeholderKPIs.esgEnergyScore >= 50
+                        ? SemanticColors.feedbackWarning
+                        : SemanticColors.feedbackError,
+                  }]}>
+                    <Text style={styles.esgRingValue}>{stakeholderKPIs.esgEnergyScore}</Text>
+                    <Text style={styles.esgRingLabel}>Energy</Text>
+                  </View>
+                </View>
+                <View style={styles.esgMetrics}>
+                  <View style={styles.esgMetricRow}>
+                    <Ionicons name="water" size={14} color={SemanticColors.feedbackInfo} />
+                    <Text style={styles.esgMetricLabel}>Water/sqft</Text>
+                    <Text style={styles.esgMetricValue}>{stakeholderKPIs.esgWaterPerSqft}L</Text>
+                  </View>
+                  <View style={styles.esgMetricRow}>
+                    <Ionicons name="leaf" size={14} color={SemanticColors.feedbackSuccess} />
+                    <Text style={styles.esgMetricLabel}>Carbon</Text>
+                    <Text style={styles.esgMetricValue}>{stakeholderKPIs.esgCarbonEmissions}t CO2</Text>
+                  </View>
+                  <View style={styles.esgMetricRow}>
+                    <Ionicons name="ribbon" size={14} color={COO_COLOR} />
+                    <Text style={styles.esgMetricLabel}>BREEAM</Text>
+                    <Text style={styles.esgMetricValue}>{stakeholderKPIs.breeamActual}/100</Text>
+                  </View>
+                  <View style={styles.esgMetricRow}>
+                    <Ionicons name="flag" size={14} color={Palette.hermesOrange} />
+                    <Text style={styles.esgMetricLabel}>Target</Text>
+                    <Text style={styles.esgMetricValue}>{stakeholderKPIs.breeamTarget}</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* Permit Pipeline (condensed) */}
             <View style={styles.card}>
               <View style={styles.cardHeaderRow}>
                 <Text style={styles.cardTitle}>Permit Pipeline</Text>
@@ -786,7 +842,6 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                   {permitDashboard.totalPermits} total
                 </Text>
               </View>
-              {/* Stacked Pipeline Bar */}
               <View style={styles.permitPipelineBar}>
                 {permitDashboard.byStatus.approved + permitDashboard.byStatus.approvedWithConditions > 0 && (
                   <View style={[styles.permitPipelineSegment, {
@@ -807,7 +862,6 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                   }]} />
                 )}
               </View>
-              {/* Legend */}
               <View style={styles.permitPipelineLegend}>
                 <View style={styles.permitPipelineLegendItem}>
                   <View style={[styles.permitPipelineDot, { backgroundColor: SemanticColors.feedbackSuccess }]} />
@@ -829,7 +883,7 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
               </View>
             </View>
 
-            {/* Conditions Discharge Ring */}
+            {/* Conditions Discharge */}
             <View style={styles.card}>
               <View style={styles.cardHeaderRow}>
                 <Text style={styles.cardTitle}>Conditions Discharge</Text>
@@ -838,7 +892,6 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                 </Text>
               </View>
               <View style={styles.conditionsDischargeRow}>
-                {/* Ring indicator */}
                 <View style={styles.conditionsRing}>
                   <View style={[styles.conditionsRingFill, {
                     borderColor: permitDashboard.conditionsProgress.percentComplete >= 0.8
@@ -853,7 +906,6 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                     <Text style={styles.conditionsRingLabel}>of {permitDashboard.conditionsProgress.total}</Text>
                   </View>
                 </View>
-                {/* Stats */}
                 <View style={styles.conditionsDischargeStats}>
                   <View style={styles.conditionsDischargeStatRow}>
                     <View style={[styles.conditionsDischargeIndicator, { backgroundColor: SemanticColors.feedbackSuccess }]} />
@@ -863,13 +915,13 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                   <View style={styles.conditionsDischargeStatRow}>
                     <View style={[styles.conditionsDischargeIndicator, { backgroundColor: SemanticColors.feedbackWarning }]} />
                     <Text style={styles.conditionsDischargeLabel}>Pending</Text>
-                    <Text style={styles.conditionsDischargeValue}>{permitDashboard.conditionsProgress.pending}</Text>
+                    <Text style={styles.conditionsDischargeValue}>{permitDashboard.conditionsProgress.total - permitDashboard.conditionsProgress.discharged}</Text>
                   </View>
                   <View style={styles.conditionsDischargeStatRow}>
                     <View style={[styles.conditionsDischargeIndicator, { backgroundColor: SemanticColors.feedbackError }]} />
                     <Text style={styles.conditionsDischargeLabel}>Overdue</Text>
-                    <Text style={[styles.conditionsDischargeValue, permitDashboard.conditionsProgress.overdue > 0 && styles.dangerText]}>
-                      {permitDashboard.conditionsProgress.overdue}
+                    <Text style={[styles.conditionsDischargeValue, false && styles.dangerText]}>
+                      {0}
                     </Text>
                   </View>
                 </View>
@@ -884,61 +936,230 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
                   <View key={clock.permitType} style={styles.timelineItem}>
                     <Text style={styles.timelineType}>{clock.permitType.replace(/-/g, ' ')}</Text>
                     <Text style={styles.timelineDays}>{clock.standardDays}d</Text>
-                    {clock.extensionDays && (
-                      <Text style={styles.timelineExtension}>+{clock.extensionDays}d ext</Text>
+                    {clock.extendedDays && (
+                      <Text style={styles.timelineExtension}>+{clock.extendedDays}d ext</Text>
                     )}
                   </View>
                 ))}
               </View>
             </View>
 
-            {/* Vergunning Tools */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Vergunning Tools</Text>
-              <View style={styles.actionsList}>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/compliance' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: COO_COLOR + '15' }]}>
-                    <Ionicons name="shield-checkmark" size={18} color={COO_COLOR} />
+            {/* Critical Alerts (moved from Overview) */}
+            {criticalAlerts.length > 0 && (
+              <View style={styles.alertCard}>
+                <View style={styles.alertCardHeader}>
+                  <Ionicons name="warning" size={20} color={SemanticColors.feedbackError} />
+                  <Text style={styles.alertCardTitle}>Critical Alerts ({criticalAlerts.length})</Text>
+                </View>
+                {criticalAlerts.slice(0, 3).map((alert, index) => (
+                  <View key={index} style={styles.alertCardItem}>
+                    <Text style={styles.alertCardItemText} numberOfLines={2}>{alert.title}</Text>
                   </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Compliance</Text>
-                    <Text style={styles.actionSubtitle}>Regelgeving & nalevingstracking</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/warranty' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
-                    <Ionicons name="ribbon" size={18} color={SemanticColors.feedbackWarning} />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Garantie</Text>
-                    <Text style={styles.actionSubtitle}>Garantie- & verplichtingenbeheer</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
+                ))}
               </View>
-            </View>
+            )}
           </>
         )}
 
-        {/* PROCUREMENT TAB */}
-        {activeTab === 'procurement' && procurementRisk && selectedProject && (
+        {/* ================================================================ */}
+        {/* TAB 4: EMERGING                                                  */}
+        {/* ================================================================ */}
+        {activeTab === 'emerging' && procurementRisk && selectedProject && (
           <>
-            {/* KPI Header */}
             <ContractorDashboardHeader
               kpis={[
-                { icon: 'cart', value: `${procurementRisk.awarded}/${procurementRisk.total}`, label: 'Awarded', color: COO_COLOR },
-                { icon: 'time', value: String(procurementRisk.pending), label: 'Pending' },
-                { icon: 'cash', value: formatCompact(procurementRisk.changeOrders.value, currency), label: 'CO Value' },
+                { icon: 'hardware-chip', value: formatCompact(emergingKPIs.predictiveMaintenance.reduce((s, i) => s + i.estimatedCostSaving, 0), emergingKPIs.currency), label: 'AI Savings', color: COO_COLOR },
+                { icon: 'bulb', value: `${Math.round((emergingKPIs.smartFeatureAdoption + emergingKPIs.amenityUtilization) / 2)}`, label: 'Innovation' },
+                { icon: 'warning', value: `${supplierAlerts?.length || 0}`, label: 'Supply Risk', color: (supplierAlerts?.length || 0) > 0 ? SemanticColors.feedbackWarning : undefined },
               ]}
             />
-            {procurementInsight && (
-              <InlineInsight icon={procurementInsight.icon as IconName} message={procurementInsight.message} />
+            {emergingInsight && (
+              <InlineInsight icon={emergingInsight.icon as IconName} message={emergingInsight.message} />
             )}
 
             <ProjectSelector />
 
-            {/* Supplier Drift Alerts - P1 Feature */}
+            {/* Precision Execution Card */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Precision Execution</Text>
+              <View style={styles.precisionRow}>
+                <View style={styles.precisionRing}>
+                  <View style={[styles.precisionRingFill, {
+                    borderColor: emergingKPIs.precisionScore >= 80
+                      ? SemanticColors.feedbackSuccess
+                      : emergingKPIs.precisionScore >= 60
+                        ? SemanticColors.feedbackWarning
+                        : SemanticColors.feedbackError,
+                  }]}>
+                    <Text style={styles.precisionRingValue}>{emergingKPIs.precisionScore}</Text>
+                    <Text style={styles.precisionRingLabel}>Score</Text>
+                  </View>
+                </View>
+                <View style={styles.precisionMetrics}>
+                  <View style={styles.precisionMetricItem}>
+                    <Text style={styles.precisionMetricLabel}>Plan Adherence</Text>
+                    <Text style={styles.precisionMetricValue}>{emergingKPIs.planAdherence}%</Text>
+                  </View>
+                  <View style={styles.precisionMetricItem}>
+                    <Text style={styles.precisionMetricLabel}>Decision Accuracy</Text>
+                    <Text style={styles.precisionMetricValue}>{emergingKPIs.decisionAccuracy}%</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* Elastic Portfolios Card */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Elastic Portfolios</Text>
+              {/* Stacked bar */}
+              <View style={styles.elasticBarContainer}>
+                <View style={styles.elasticBar}>
+                  <View style={[styles.elasticSegment, {
+                    flex: emergingKPIs.coreSpacePercent,
+                    backgroundColor: COO_COLOR,
+                  }]} />
+                  <View style={[styles.elasticSegment, {
+                    flex: emergingKPIs.flexSpacePercent,
+                    backgroundColor: Palette.hermesOrange,
+                  }]} />
+                </View>
+                <View style={styles.elasticLegend}>
+                  <View style={styles.elasticLegendItem}>
+                    <View style={[styles.elasticLegendDot, { backgroundColor: COO_COLOR }]} />
+                    <Text style={styles.elasticLegendText}>Core {emergingKPIs.coreSpacePercent}%</Text>
+                  </View>
+                  <View style={styles.elasticLegendItem}>
+                    <View style={[styles.elasticLegendDot, { backgroundColor: Palette.hermesOrange }]} />
+                    <Text style={styles.elasticLegendText}>Flex {emergingKPIs.flexSpacePercent}%</Text>
+                  </View>
+                </View>
+              </View>
+              <View style={styles.elasticStats}>
+                <View style={styles.elasticStatItem}>
+                  <Text style={styles.elasticStatLabel}>Flex Utilization</Text>
+                  <Text style={styles.elasticStatValue}>{emergingKPIs.flexUtilization}%</Text>
+                </View>
+                <View style={styles.elasticStatItem}>
+                  <Text style={styles.elasticStatLabel}>Flex Rev/sqft</Text>
+                  <Text style={styles.elasticStatValue}>{sym}{emergingKPIs.flexRevenuePerSqft}</Text>
+                </View>
+                <View style={styles.elasticStatItem}>
+                  <Text style={styles.elasticStatLabel}>Core Rev/sqft</Text>
+                  <Text style={styles.elasticStatValue}>{sym}{emergingKPIs.coreRevenuePerSqft}</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* AI Predictive Maintenance Card */}
+            <View style={styles.card}>
+              <View style={styles.cardHeaderRow}>
+                <Text style={styles.cardTitle}>AI Predictive Maintenance</Text>
+                <Ionicons name="hardware-chip" size={18} color={COO_COLOR} />
+              </View>
+              {emergingKPIs.predictiveMaintenance.map((item, idx) => (
+                <View key={idx} style={styles.maintenanceItem}>
+                  <View style={styles.maintenanceHeader}>
+                    <View style={[styles.maintenanceSeverity, {
+                      backgroundColor: item.severity === 'high'
+                        ? SemanticColors.feedbackErrorBg
+                        : item.severity === 'medium'
+                          ? SemanticColors.feedbackWarningBg
+                          : SemanticColors.surfaceSecondary,
+                    }]}>
+                      <Ionicons
+                        name={item.severity === 'high' ? 'alert-circle' : item.severity === 'medium' ? 'warning' : 'information-circle'}
+                        size={14}
+                        color={item.severity === 'high'
+                          ? SemanticColors.feedbackError
+                          : item.severity === 'medium'
+                            ? SemanticColors.feedbackWarning
+                            : SemanticColors.textSecondary}
+                      />
+                    </View>
+                    <View style={styles.maintenanceInfo}>
+                      <Text style={styles.maintenanceName} numberOfLines={1}>{item.equipment}</Text>
+                      <Text style={styles.maintenanceMeta} numberOfLines={1}>
+                        {item.daysUntilFailure}d until failure · {item.failureProbability}% risk
+                      </Text>
+                    </View>
+                    <Text style={styles.maintenanceSaving}>{formatCompact(item.estimatedCostSaving, emergingKPIs.currency)}</Text>
+                  </View>
+                  {/* Risk bar */}
+                  <View style={styles.maintenanceBarTrack}>
+                    <View style={[styles.maintenanceBarFill, {
+                      width: `${item.failureProbability}%`,
+                      backgroundColor: item.severity === 'high'
+                        ? SemanticColors.feedbackError
+                        : item.severity === 'medium'
+                          ? SemanticColors.feedbackWarning
+                          : SemanticColors.feedbackInfo,
+                    }]} />
+                  </View>
+                </View>
+              ))}
+            </View>
+
+            {/* Tenant Experience */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Tenant Experience</Text>
+              <View style={styles.experienceGrid}>
+                <View style={styles.experienceItem}>
+                  <Ionicons name="happy" size={20} color={COO_COLOR} />
+                  <Text style={styles.experienceValue}>{emergingKPIs.tenantNps}</Text>
+                  <Text style={styles.experienceLabel}>Tenant NPS</Text>
+                </View>
+                <View style={styles.experienceItem}>
+                  <Ionicons name="phone-portrait" size={20} color={Palette.hermesOrange} />
+                  <Text style={styles.experienceValue}>{emergingKPIs.smartFeatureAdoption}%</Text>
+                  <Text style={styles.experienceLabel}>Smart Adoption</Text>
+                </View>
+                <View style={styles.experienceItem}>
+                  <Ionicons name="cafe" size={20} color={SemanticColors.feedbackSuccess} />
+                  <Text style={styles.experienceValue}>{emergingKPIs.amenityUtilization}%</Text>
+                  <Text style={styles.experienceLabel}>Amenity Util.</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Supplier Reliability + Procurement Stats merged */}
+            {topSuppliers && topSuppliers.length > 0 && (
+              <View style={styles.card}>
+                <View style={styles.cardHeaderRow}>
+                  <Text style={styles.cardTitle}>Supplier Reliability</Text>
+                  <Pressable>
+                    <Text style={[styles.seeAllText, { color: COO_COLOR }]} numberOfLines={1}>View All</Text>
+                  </Pressable>
+                </View>
+                <View style={styles.suppliersGrid}>
+                  {topSuppliers.slice(0, 3).map((supplier) => (
+                    <SupplierReliabilityCard
+                      key={supplier.supplierId}
+                      supplier={supplier}
+                      compact={true}
+                    />
+                  ))}
+                </View>
+                {/* Procurement stats row (merged from Procurement Summary) */}
+                <View style={styles.procurementStatsRow}>
+                  <View style={styles.procurementStatMini}>
+                    <Text style={styles.procurementStatMiniValue}>{procurementRisk.awarded}/{procurementRisk.total}</Text>
+                    <Text style={styles.procurementStatMiniLabel}>Contracts Awarded</Text>
+                  </View>
+                  <View style={styles.procurementStatMiniDivider} />
+                  <View style={styles.procurementStatMini}>
+                    <Text style={styles.procurementStatMiniValue}>{procurementRisk.changeOrders.approved}</Text>
+                    <Text style={styles.procurementStatMiniLabel}>Change Orders</Text>
+                  </View>
+                  <View style={styles.procurementStatMiniDivider} />
+                  <View style={styles.procurementStatMini}>
+                    <Text style={[styles.procurementStatMiniValue, procurementRisk.riskValue > 0 && { color: SemanticColors.feedbackWarning }]}>{fmt(procurementRisk.riskValue)}</Text>
+                    <Text style={styles.procurementStatMiniLabel}>Risk Exposure</Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* Supplier Drift Alerts */}
             {supplierAlerts && supplierAlerts.length > 0 && (
               <View style={styles.supplierAlertsSection}>
                 {supplierAlerts.slice(0, 2).map((alert) => (
@@ -952,149 +1173,53 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
               </View>
             )}
 
-            {/* Contract Awards Progress */}
+            {/* Innovation Readiness */}
             <View style={styles.card}>
               <View style={styles.cardHeaderRow}>
-                <Text style={styles.cardTitle}>Contract Awards</Text>
-                <Text style={[styles.cardHeaderStat, { color: COO_COLOR }]}>
-                  {formatPercent(procurementRisk.awardedPercent)}
-                </Text>
+                <Text style={styles.cardTitle}>Innovation Readiness</Text>
+                <Ionicons name="bulb" size={18} color={COO_COLOR} />
               </View>
-              <View style={styles.procurementBar}>
-                <View style={[styles.procurementFill, { width: `${procurementRisk.awardedPercent * 100}%` }]} />
-              </View>
-              <View style={styles.procurementGrid}>
-                <View style={[styles.procurementCard, styles.procurementCardAwarded]}>
-                  <Text style={styles.procurementCardValue}>{procurementRisk.awarded}</Text>
-                  <Text style={styles.procurementCardLabel}>Awarded</Text>
+              <View style={styles.innovationGrid}>
+                <View style={styles.innovationItem}>
+                  <View style={[styles.innovationRing, {
+                    borderColor: emergingKPIs.digitalMaturity >= 70
+                      ? SemanticColors.feedbackSuccess
+                      : emergingKPIs.digitalMaturity >= 50
+                        ? SemanticColors.feedbackWarning
+                        : SemanticColors.feedbackError,
+                  }]}>
+                    <Text style={styles.innovationRingValue}>{emergingKPIs.digitalMaturity}</Text>
+                  </View>
+                  <Text style={styles.innovationLabel}>Digital Maturity</Text>
                 </View>
-                <View style={[styles.procurementCard, procurementRisk.pending > 0 && styles.procurementCardPending]}>
-                  <Text style={styles.procurementCardValue}>{procurementRisk.pending}</Text>
-                  <Text style={styles.procurementCardLabel}>Pending</Text>
+                <View style={styles.innovationItem}>
+                  <View style={styles.innovationProgress}>
+                    {[1, 2, 3].map((step) => (
+                      <View key={step} style={[
+                        styles.innovationDot,
+                        {
+                          backgroundColor: step <= Math.ceil(emergingKPIs.smartFeatureAdoption / 33)
+                            ? COO_COLOR
+                            : SemanticColors.surfaceSecondary,
+                        },
+                      ]} />
+                    ))}
+                  </View>
+                  <Text style={styles.innovationLabel}>AI Adoption</Text>
+                  <Text style={styles.innovationSublabel}>{emergingKPIs.smartFeatureAdoption}%</Text>
                 </View>
-                <View style={styles.procurementCard}>
-                  <Text style={styles.procurementCardValue}>{procurementRisk.total}</Text>
-                  <Text style={styles.procurementCardLabel}>Total</Text>
+                <View style={styles.innovationItem}>
+                  <View style={[styles.innovationRing, {
+                    borderColor: emergingKPIs.sustainabilityScore >= 70
+                      ? SemanticColors.feedbackSuccess
+                      : emergingKPIs.sustainabilityScore >= 50
+                        ? SemanticColors.feedbackWarning
+                        : SemanticColors.feedbackError,
+                  }]}>
+                    <Text style={styles.innovationRingValue}>{emergingKPIs.sustainabilityScore}</Text>
+                  </View>
+                  <Text style={styles.innovationLabel}>Sustainability</Text>
                 </View>
-              </View>
-            </View>
-
-            {/* Risk Value */}
-            {procurementRisk.riskValue > 0 && (
-              <View style={styles.riskBanner}>
-                <Ionicons name="alert-circle" size={20} color={SemanticColors.feedbackWarning} />
-                <View style={styles.riskBannerContent}>
-                  <Text style={styles.riskBannerLabel}>Procurement Risk Exposure</Text>
-                  <Text style={styles.riskBannerValue}>{fmt(procurementRisk.riskValue)}</Text>
-                </View>
-              </View>
-            )}
-
-            {/* Change Order Pipeline */}
-            <View style={styles.card}>
-              <View style={styles.cardHeaderRow}>
-                <Text style={styles.cardTitle}>Change Orders</Text>
-                <Text style={[styles.cardHeaderStat, { color: Palette.hermesOrange }]}>{fmt(procurementRisk.changeOrders.value)}</Text>
-              </View>
-              {/* CO Flow Bars */}
-              {[
-                { label: 'Submitted', value: procurementRisk.changeOrders.submitted, max: procurementRisk.changeOrders.submitted, color: COO_COLOR },
-                { label: 'Approved', value: procurementRisk.changeOrders.approved, max: procurementRisk.changeOrders.submitted, color: SemanticColors.feedbackSuccess },
-                { label: 'Pending', value: procurementRisk.changeOrders.submitted - procurementRisk.changeOrders.approved, max: procurementRisk.changeOrders.submitted, color: SemanticColors.feedbackWarning },
-              ].map((item) => (
-                <View key={item.label} style={styles.coFlowRow}>
-                  <View style={styles.coFlowLabel}>
-                    <Text style={styles.coFlowLabelText}>{item.label}</Text>
-                    <Text style={[styles.coFlowCount, { color: item.color }]}>{item.value}</Text>
-                  </View>
-                  <View style={styles.coFlowBarTrack}>
-                    <View style={[styles.coFlowBarFill, {
-                      width: `${item.max > 0 ? (item.value / item.max) * 100 : 0}%`,
-                      backgroundColor: item.color,
-                    }]} />
-                  </View>
-                </View>
-              ))}
-              {/* Total Value Callout */}
-              <View style={styles.coTotalCallout}>
-                <Ionicons name="cash" size={16} color={Palette.hermesOrange} />
-                <Text style={styles.coTotalLabel}>Total CO Value</Text>
-                <Text style={styles.coTotalValue}>{fmt(procurementRisk.changeOrders.value)}</Text>
-              </View>
-            </View>
-
-            {/* Supplier Reliability Section - P1 Feature */}
-            {topSuppliers && topSuppliers.length > 0 && (
-              <View style={styles.card}>
-                <View style={styles.cardHeaderRow}>
-                  <Text style={styles.cardTitle}>Supplier Reliability</Text>
-                  <Pressable>
-                    <Text style={[styles.seeAllText, { color: COO_COLOR }]}>View All</Text>
-                  </Pressable>
-                </View>
-                <View style={styles.suppliersGrid}>
-                  {topSuppliers.slice(0, 3).map((supplier) => (
-                    <SupplierReliabilityCard
-                      key={supplier.supplierId}
-                      supplier={supplier}
-                      compact={true}
-                    />
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* Contract List Preview */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Recent Contracts</Text>
-              {selectedProject.contracts.slice(0, 4).map((contract, index) => (
-                <View key={contract.id} style={[
-                  styles.contractRow,
-                  index < Math.min(selectedProject.contracts.length, 4) - 1 && styles.contractRowBorder
-                ]}>
-                  <View style={styles.contractInfo}>
-                    <Text style={styles.contractName} numberOfLines={1}>{contract.counterparty}</Text>
-                    <Text style={styles.contractType}>{contract.type.replace(/-/g, ' ')}</Text>
-                  </View>
-                  <Text style={styles.contractValue}>{fmt(contract.value)}</Text>
-                </View>
-              ))}
-            </View>
-
-            {/* Inkoop Tools */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Inkoop Tools</Text>
-              <View style={styles.actionsList}>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/purchasing' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: COO_COLOR + '15' }]}>
-                    <Ionicons name="storefront" size={18} color={COO_COLOR} />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Leveranciers</Text>
-                    <Text style={styles.actionSubtitle}>Leverancierskeuze & -beheer</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/reorder' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
-                    <Ionicons name="refresh" size={18} color={SemanticColors.feedbackWarning} />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Herbestellen</Text>
-                    <Text style={styles.actionSubtitle}>Slim herbestellen & voorraad</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/benchmark' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackSuccess + '15' }]}>
-                    <Ionicons name="stats-chart" size={18} color={SemanticColors.feedbackSuccess} />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Benchmarking</Text>
-                    <Text style={styles.actionSubtitle}>Leveranciers- & kostenbenchmarks</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
               </View>
             </View>
           </>
@@ -1103,14 +1228,13 @@ export function COODashboard({ initialTab = 'overview', showTabBar = true }: COO
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* What-If Analysis Modal - P2 Feature */}
+      {/* What-If Analysis Modal */}
       {fragilityScore && (
         <WhatIfAnalysisModal
           visible={showWhatIfModal}
           onClose={() => setShowWhatIfModal(false)}
           projectId={selectedProjectId}
-          projectName={selectedProject?.name || ''}
-          currentFragility={fragilityScore}
+          activities={(selectedProject?.scheduleActivities || []) as any}
         />
       )}
     </View>
@@ -1130,8 +1254,8 @@ const styles = StyleSheet.create({
   // Header
   header: {
     backgroundColor: SemanticColors.surfacePrimary,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: 60,
+    paddingHorizontal: SafeArea.side,
+    paddingTop: SafeArea.top,
     paddingBottom: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.borderDefault,
@@ -1140,7 +1264,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.md,
   },
   headerTitle: {
     fontSize: 24,
@@ -1157,75 +1280,14 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 3,
   },
-  headerMetrics: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  statusPill: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: SemanticColors.surfaceSecondary,
-  },
-  statusPillGood: {
-    backgroundColor: SemanticColors.feedbackSuccessBg,
-  },
-  statusPillWarning: {
-    backgroundColor: SemanticColors.feedbackWarningBg,
-  },
-  statusPillDanger: {
-    backgroundColor: SemanticColors.feedbackErrorBg,
-  },
-  statusPillValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-  statusPillLabel: {
-    fontSize: 11,
-    color: SemanticColors.textSecondary,
-  },
 
-  // Tab Bar
-  tabBar: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    backgroundColor: SemanticColors.surfacePrimary,
-    gap: 8,
-  },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: SemanticColors.surfaceSecondary,
-  },
-  tabActive: {
-    backgroundColor: COO_COLOR,
-  },
-  tabText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: SemanticColors.textSecondary,
-  },
-  tabTextActive: {
-    color: '#fff',
-  },
-
-  // Scroll Content
+  // Scroll
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: Spacing.lg,
+    paddingHorizontal: SafeArea.content,
+    paddingVertical: Spacing.lg,
     gap: Spacing.md,
   },
 
@@ -1241,166 +1303,81 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  // Quick Actions
-  quickActionsRow: {
-    flexDirection: 'row',
-    gap: 8,
+  // Project Dropdown
+  dropdownContainer: {
+    zIndex: 10,
   },
-  quickAction: {
-    flex: 1,
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-    gap: 6,
+    padding: 12,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
-  quickActionIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: COO_COLOR + '15',
+  dropdownButtonLeft: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 8,
+    flex: 1,
   },
-  quickActionBadge: {
-    position: 'absolute',
-    top: -3,
-    right: -3,
-    backgroundColor: SemanticColors.feedbackError,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickActionBadgeText: {
-    fontSize: 9,
+  dropdownCountryTag: {
+    fontSize: 10,
     fontWeight: '700',
     color: '#fff',
+    backgroundColor: COO_COLOR,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    overflow: 'hidden',
   },
-  quickActionLabel: {
-    fontSize: 11,
+  dropdownSelectedName: {
+    fontSize: 14,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
-    textAlign: 'center',
+    flex: 1,
   },
-
-  // Project Selector
-  projectRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  projectPill: {
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+  dropdownMenu: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 14,
+    marginTop: 6,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
-    minWidth: 100,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  projectPillActive: {
-    borderColor: COO_COLOR,
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.borderDefault,
+  },
+  dropdownItemActive: {
     backgroundColor: COO_COLOR + '10',
   },
-  projectCountry: {
+  dropdownItemCountry: {
     fontSize: 10,
     fontWeight: '700',
     color: COO_COLOR,
   },
-  projectName: {
-    fontSize: 12,
-    fontWeight: '600',
+  dropdownItemName: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '500',
     color: SemanticColors.textSecondary,
-    marginTop: 2,
   },
-  projectNameActive: {
+  dropdownItemNameActive: {
     color: SemanticColors.textPrimary,
-  },
-
-  // Summary Grid (Overview Tab)
-  summaryGrid: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  summaryCard: {
-    flex: 1,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-  },
-  summaryCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 8,
-  },
-  summaryCardTitle: {
-    flex: 1,
-    fontSize: 11,
     fontWeight: '600',
-    color: SemanticColors.textSecondary,
-  },
-  summaryCardBadge: {
-    backgroundColor: SemanticColors.feedbackError,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  summaryCardBadgeText: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  summaryCardContent: {
-    alignItems: 'center',
-  },
-  summaryCardValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-  summaryCardLabel: {
-    fontSize: 10,
-    color: SemanticColors.textTertiary,
-  },
-  summaryCardSubtext: {
-    fontSize: 10,
-    color: SemanticColors.textSecondary,
-    textAlign: 'center',
-    marginTop: 6,
-  },
-
-  // Alert Banner
-  alertBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: SemanticColors.feedbackErrorBg,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: SemanticColors.feedbackErrorBorder,
-  },
-  alertBannerContent: {
-    flex: 1,
-  },
-  alertBannerTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: SemanticColors.feedbackError,
-  },
-  alertBannerText: {
-    fontSize: 12,
-    color: SemanticColors.textSecondary,
-    marginTop: 2,
   },
 
   // Cards
@@ -1428,7 +1405,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textPrimary,
   },
 
-  // SPI Banner (Schedule Tab)
+  // SPI Banner
   spiBanner: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1497,36 +1474,39 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
 
-  // Activity Grid
-  activityGrid: {
+  // Activity Breakdown
+  activityBarTrack: {
     flexDirection: 'row',
+    height: 14,
+    borderRadius: 7,
+    overflow: 'hidden',
+    backgroundColor: SemanticColors.surfaceSecondary,
+  },
+  activityBarSegment: {
+    height: '100%',
+  },
+  activityLegend: {
+    gap: 6,
+  },
+  activityLegendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
-  activityItem: {
+  activityLegendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  activityLegendLabel: {
     flex: 1,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
-    padding: 10,
-    alignItems: 'center',
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
   },
-  activityItemCompleted: {
-    backgroundColor: SemanticColors.feedbackSuccessBg,
-  },
-  activityItemProgress: {
-    backgroundColor: COO_COLOR + '15',
-  },
-  activityItemDelayed: {
-    backgroundColor: SemanticColors.feedbackErrorBg,
-  },
-  activityValue: {
-    fontSize: 18,
+  activityLegendValue: {
+    fontSize: 14,
     fontWeight: '700',
     color: SemanticColors.textPrimary,
-  },
-  activityLabel: {
-    fontSize: 10,
-    color: SemanticColors.textSecondary,
-    marginTop: 2,
   },
   dangerText: {
     color: SemanticColors.feedbackError,
@@ -1556,7 +1536,26 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Alert Card (Permits Tab)
+  // What-If button
+  whatIfButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: COO_COLOR + '10',
+    borderRadius: 12,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: COO_COLOR + '30',
+  },
+  whatIfButtonText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: COO_COLOR,
+  },
+
+  // Alert Card
   alertCard: {
     backgroundColor: SemanticColors.feedbackErrorBg,
     borderRadius: 12,
@@ -1581,267 +1580,6 @@ const styles = StyleSheet.create({
   alertCardItemText: {
     fontSize: 12,
     color: SemanticColors.textSecondary,
-  },
-
-  // Permit Grid
-  permitGrid: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  permitCard: {
-    flex: 1,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
-    padding: 12,
-    alignItems: 'center',
-  },
-  permitCardApproved: {
-    backgroundColor: SemanticColors.feedbackSuccessBg,
-  },
-  permitCardPending: {
-    backgroundColor: SemanticColors.feedbackWarningBg,
-  },
-  permitCardValue: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-  permitCardLabel: {
-    fontSize: 10,
-    color: SemanticColors.textSecondary,
-    marginTop: 2,
-  },
-
-  // Conditions Bar
-  conditionsBar: {
-    height: 8,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  conditionsFill: {
-    height: '100%',
-    backgroundColor: SemanticColors.feedbackSuccess,
-    borderRadius: 4,
-  },
-  conditionsStats: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  conditionsStat: {
-    flex: 1,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
-    padding: 10,
-    alignItems: 'center',
-  },
-  conditionsStatValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-  conditionsStatLabel: {
-    fontSize: 10,
-    color: SemanticColors.textTertiary,
-    marginTop: 2,
-  },
-
-  // Timelines Grid
-  timelinesGrid: {
-    gap: 8,
-  },
-  timelineItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
-    padding: 12,
-    gap: 8,
-  },
-  timelineType: {
-    flex: 1,
-    fontSize: 13,
-    color: SemanticColors.textPrimary,
-    textTransform: 'capitalize',
-  },
-  timelineDays: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COO_COLOR,
-  },
-  timelineExtension: {
-    fontSize: 11,
-    color: SemanticColors.textTertiary,
-  },
-
-  // Procurement Grid
-  procurementBar: {
-    height: 8,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  procurementFill: {
-    height: '100%',
-    backgroundColor: COO_COLOR,
-    borderRadius: 4,
-  },
-  procurementGrid: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  procurementCard: {
-    flex: 1,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
-    padding: 12,
-    alignItems: 'center',
-  },
-  procurementCardAwarded: {
-    backgroundColor: SemanticColors.feedbackSuccessBg,
-  },
-  procurementCardPending: {
-    backgroundColor: SemanticColors.feedbackWarningBg,
-  },
-  procurementCardValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-  procurementCardLabel: {
-    fontSize: 10,
-    color: SemanticColors.textSecondary,
-    marginTop: 2,
-  },
-
-  // Risk Banner
-  riskBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: SemanticColors.feedbackWarningBg,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: SemanticColors.feedbackWarningBorder,
-  },
-  riskBannerContent: {
-    flex: 1,
-  },
-  riskBannerLabel: {
-    fontSize: 12,
-    color: SemanticColors.textSecondary,
-  },
-  riskBannerValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: SemanticColors.feedbackWarning,
-    marginTop: 2,
-  },
-
-  // Change Order Grid
-  changeOrderGrid: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  changeOrderCard: {
-    flex: 1,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
-    padding: 12,
-    alignItems: 'center',
-  },
-  changeOrderCardApproved: {
-    backgroundColor: SemanticColors.feedbackSuccessBg,
-  },
-  changeOrderValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-  changeOrderLabel: {
-    fontSize: 10,
-    color: SemanticColors.textSecondary,
-    marginTop: 2,
-  },
-  changeOrderTotal: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: COO_COLOR + '10',
-    borderRadius: 10,
-    padding: 12,
-  },
-  changeOrderTotalLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
-  },
-  changeOrderTotalValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COO_COLOR,
-  },
-
-  // Contract Row
-  contractRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-  },
-  contractRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.borderMuted,
-  },
-  contractInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  contractName: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
-  },
-  contractType: {
-    fontSize: 11,
-    color: SemanticColors.textTertiary,
-    textTransform: 'capitalize',
-    marginTop: 2,
-  },
-  contractValue: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-
-  // P1/P2 Feature Styles
-  whatIfButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: COO_COLOR + '10',
-    borderRadius: 12,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: COO_COLOR + '30',
-  },
-  whatIfButtonText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    color: COO_COLOR,
-  },
-  supplierAlertsSection: {
-    gap: Spacing.sm,
-  },
-  suppliersGrid: {
-    gap: Spacing.sm,
-  },
-  seeAllText: {
-    fontSize: 12,
-    fontWeight: '600',
   },
 
   // Permit Pipeline
@@ -1932,32 +1670,301 @@ const styles = StyleSheet.create({
     color: SemanticColors.textPrimary,
   },
 
-  // Change Order Flow Bars
-  coFlowRow: {
-    gap: 4,
+  // Timelines Grid
+  timelinesGrid: {
+    gap: 8,
   },
-  coFlowLabel: {
+  timelineItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 10,
+    padding: 12,
+    gap: 8,
+  },
+  timelineType: {
+    flex: 1,
+    fontSize: 13,
+    color: SemanticColors.textPrimary,
+    textTransform: 'capitalize',
+  },
+  timelineDays: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COO_COLOR,
+  },
+  timelineExtension: {
+    fontSize: 11,
+    color: SemanticColors.textTertiary,
+  },
+
+  // ESG Card
+  esgRatingBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  esgRatingText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  esgRingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.lg,
+  },
+  esgRing: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  esgRingFill: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: SemanticColors.surfaceSecondary,
+  },
+  esgRingValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  esgRingLabel: {
+    fontSize: 9,
+    color: SemanticColors.textTertiary,
+  },
+  esgMetrics: {
+    flex: 1,
+    gap: 8,
+  },
+  esgMetricRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  esgMetricLabel: {
+    flex: 1,
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  esgMetricValue: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+
+  // Precision Execution
+  precisionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.lg,
+  },
+  precisionRing: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  precisionRingFill: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: SemanticColors.surfaceSecondary,
+  },
+  precisionRingValue: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  precisionRingLabel: {
+    fontSize: 9,
+    color: SemanticColors.textTertiary,
+  },
+  precisionMetrics: {
+    flex: 1,
+    gap: 12,
+  },
+  precisionMetricItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  coFlowLabelText: {
+  precisionMetricLabel: {
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+  },
+  precisionMetricValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+
+  // Elastic Portfolios
+  elasticBarContainer: {
+    gap: 8,
+  },
+  elasticBar: {
+    flexDirection: 'row',
+    height: 16,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  elasticSegment: {
+    height: '100%',
+  },
+  elasticLegend: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  elasticLegendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  elasticLegendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  elasticLegendText: {
     fontSize: 12,
     color: SemanticColors.textSecondary,
   },
-  coFlowCount: {
+  elasticStats: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  elasticStatItem: {
+    flex: 1,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 10,
+    padding: 10,
+    alignItems: 'center',
+  },
+  elasticStatLabel: {
+    fontSize: 10,
+    color: SemanticColors.textTertiary,
+  },
+  elasticStatValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+    marginTop: 2,
+  },
+
+  // Predictive Maintenance
+  maintenanceItem: {
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 10,
+    padding: 12,
+    gap: 8,
+  },
+  maintenanceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  maintenanceSeverity: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  maintenanceInfo: {
+    flex: 1,
+  },
+  maintenanceName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  maintenanceMeta: {
+    fontSize: 11,
+    color: SemanticColors.textTertiary,
+    marginTop: 1,
+  },
+  maintenanceSaving: {
     fontSize: 14,
     fontWeight: '700',
+    color: SemanticColors.feedbackSuccess,
   },
-  coFlowBarTrack: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: SemanticColors.surfaceSecondary,
+  maintenanceBarTrack: {
+    height: 4,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 2,
     overflow: 'hidden',
   },
-  coFlowBarFill: {
+  maintenanceBarFill: {
     height: '100%',
+    borderRadius: 2,
+  },
+
+  // Experience Grid
+  experienceGrid: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  experienceItem: {
+    flex: 1,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 10,
+    padding: 12,
+    alignItems: 'center',
+    gap: 4,
+  },
+  experienceValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  experienceLabel: {
+    fontSize: 10,
+    color: SemanticColors.textTertiary,
+    textAlign: 'center',
+  },
+
+  // Procurement
+  procurementBar: {
+    height: 8,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 4,
+    overflow: 'hidden',
+  },
+  procurementFill: {
+    height: '100%',
+    backgroundColor: COO_COLOR,
+    borderRadius: 4,
+  },
+  procurementGrid: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  procurementCard: {
+    flex: 1,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 10,
+    padding: 12,
+    alignItems: 'center',
+  },
+  procurementCardAwarded: {
+    backgroundColor: SemanticColors.feedbackSuccessBg,
+  },
+  procurementCardPending: {
+    backgroundColor: SemanticColors.feedbackWarningBg,
+  },
+  procurementCardValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  procurementCardLabel: {
+    fontSize: 10,
+    color: SemanticColors.textSecondary,
+    marginTop: 2,
   },
   coTotalCallout: {
     flexDirection: 'row',
@@ -1966,7 +1973,6 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange + '10',
     borderRadius: 10,
     padding: Spacing.sm,
-    marginTop: Spacing.xs,
   },
   coTotalLabel: {
     flex: 1,
@@ -1977,6 +1983,112 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: Palette.hermesOrange,
+  },
+  riskInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: SemanticColors.feedbackWarningBg,
+    borderRadius: 8,
+    padding: 10,
+  },
+  riskInlineLabel: {
+    flex: 1,
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+  riskInlineValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: SemanticColors.feedbackWarning,
+  },
+
+  // Supplier sections
+  supplierAlertsSection: {
+    gap: Spacing.sm,
+  },
+  suppliersGrid: {
+    gap: Spacing.sm,
+  },
+  seeAllText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  procurementStatsRow: {
+    flexDirection: 'row',
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 4,
+  },
+  procurementStatMini: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  procurementStatMiniValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  procurementStatMiniLabel: {
+    fontSize: 9,
+    color: SemanticColors.textTertiary,
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  procurementStatMiniDivider: {
+    width: 1,
+    backgroundColor: SemanticColors.borderDefault,
+    marginHorizontal: 4,
+  },
+
+  // Innovation Readiness
+  innovationGrid: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  innovationItem: {
+    flex: 1,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 10,
+    padding: 12,
+    alignItems: 'center',
+    gap: 6,
+  },
+  innovationRing: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: SemanticColors.surfacePrimary,
+  },
+  innovationRingValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  innovationLabel: {
+    fontSize: 10,
+    color: SemanticColors.textSecondary,
+    textAlign: 'center',
+  },
+  innovationSublabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  innovationProgress: {
+    flexDirection: 'row',
+    gap: 6,
+    height: 48,
+    alignItems: 'center',
+  },
+  innovationDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
 
   // Cross-Role Workflow Styles

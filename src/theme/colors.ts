@@ -57,6 +57,7 @@ const Palette = {
   burntSienna: '#E07A5F',      // Accent - softer burnt sienna
   pastelOrange: '#F8B195',     // Light - pastel peach/orange
   peachCream: '#FFDAB9',       // Subtle - peachy cream
+  salmonLight: '#FFFFFF',       // Contractor background - porcelain white
 
   // Legacy Vasco (keep for backward compat)
   vascoPrimary: '#E35205',     // Updated to Hermes

@@ -1,4 +1,4 @@
-// COO Schedule Tab - Schedule Performance & Activities
+// COO Efficiency Tab - Operational Efficiency & Schedule
 import { Screen } from '../../src/components/Screen';
 import { COODashboard } from '../../src/components/dashboards';
 import { useAuth } from '../../src/context/AuthContext';
@@ -21,7 +21,7 @@ export default function ScheduleScreen() {
 
   return (
     <Screen>
-      <COODashboard initialTab="schedule" showTabBar={false} />
+      <COODashboard initialTab="efficiency" showTabBar={false} />
     </Screen>
   );
 }

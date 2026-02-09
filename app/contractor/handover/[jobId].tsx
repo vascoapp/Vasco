@@ -9,10 +9,9 @@ import { useState, useEffect } from 'react';
 import { Alert, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { HandoverPackBuilder } from '../../../src/components/contractor/HandoverPackBuilder';
-import { useEvidencePack, useHandoverPackage } from '../../../src/services/evidencePackService';
 import { SemanticColors } from '../../../src/theme/colors';
 import { Spacing } from '../../../src/theme/spacing';
-import type { EvidencePack, HandoverPackage, CustomerSignOff } from '../../../src/types/contractor';
+import type { HandoverPackage } from '../../../src/types/contractor';
 
 // Mock job data - in real app this would come from a job service
 const MOCK_JOBS: Record<string, {
@@ -59,27 +58,14 @@ export default function HandoverScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [job, setJob] = useState<typeof MOCK_JOBS[string] | null>(null);
 
-  // Hooks for evidence pack and handover management
-  const { data: evidencePack, loading: evidenceLoading } = useEvidencePack(jobId || '');
-  const {
-    data: handoverPackage,
-    loading: handoverLoading,
-    createPackage,
-    generatePDF,
-    sendToCustomer,
-  } = useHandoverPackage(jobId || '');
-
   useEffect(() => {
-    // Simulate loading job data
     const loadJob = async () => {
       setIsLoading(true);
-      // In real app, this would fetch from a service
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       if (jobId && MOCK_JOBS[jobId]) {
         setJob(MOCK_JOBS[jobId]);
       } else if (jobId) {
-        // Create a generic job for unknown IDs
         setJob({
           id: jobId,
           title: 'Construction Project',
@@ -96,109 +82,31 @@ export default function HandoverScreen() {
     loadJob();
   }, [jobId]);
 
-  const handleComplete = async (pack: EvidencePack, handover: HandoverPackage) => {
-    try {
-      // Create the handover package
-      await createPackage(pack);
-
-      // Generate PDF if requested
-      if (handover.pdfUri) {
-        await generatePDF();
-      }
-
-      // Show success message
-      Alert.alert(
-        'Handover Package Ready',
-        `The handover package for ${job?.title || 'this job'} has been prepared successfully.\n\nYou can now share it with the customer.`,
-        [
-          {
-            text: 'Share Now',
-            onPress: async () => {
-              // Send to customer
-              if (job?.customerEmail) {
-                await sendToCustomer(job.customerEmail);
-                Alert.alert(
-                  'Sent!',
-                  'The handover package has been sent to the customer.',
-                  [{ text: 'OK', onPress: () => router.back() }]
-                );
-              }
-            },
-          },
-          {
-            text: 'Later',
-            style: 'cancel',
-            onPress: () => router.back(),
-          },
-        ]
-      );
-    } catch (error) {
-      Alert.alert(
-        'Error',
-        'Failed to create handover package. Please try again.',
-        [{ text: 'OK' }]
-      );
-    }
+  const handleComplete = (handover: HandoverPackage) => {
+    Alert.alert(
+      'Opleverpakket klaar',
+      `Het opleverpakket voor ${job?.title || 'deze klus'} is succesvol aangemaakt.`,
+      [
+        { text: 'Terug', onPress: () => router.back() },
+      ]
+    );
   };
 
-  const handleSendToCustomer = async (pack: EvidencePack, email: string) => {
-    try {
-      await sendToCustomer(email);
-      Alert.alert(
-        'Success',
-        `Handover package sent to ${email}`,
-        [{ text: 'OK' }]
-      );
-    } catch (error) {
-      Alert.alert(
-        'Error',
-        'Failed to send handover package. Please try again.',
-        [{ text: 'OK' }]
-      );
-    }
-  };
-
-  const handleGeneratePDF = async (pack: EvidencePack) => {
-    try {
-      const pdfUri = await generatePDF();
-      Alert.alert(
-        'PDF Generated',
-        'The handover PDF has been created and is ready to share.',
-        [{ text: 'OK' }]
-      );
-      return pdfUri || '';
-    } catch (error) {
-      Alert.alert(
-        'Error',
-        'Failed to generate PDF. Please try again.',
-        [{ text: 'OK' }]
-      );
-      return '';
-    }
-  };
-
-  const handleSignatureCapture = async (signOff: CustomerSignOff) => {
-    // In real app, this would save the signature
-    console.log('Signature captured:', signOff);
-  };
-
-  // Loading state
-  if (isLoading || evidenceLoading) {
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={SemanticColors.actionPrimary} />
-        <Text style={styles.loadingText}>Loading handover package...</Text>
+        <Text style={styles.loadingText}>Opleverpakket laden...</Text>
       </View>
     );
   }
 
-  // No job found
   if (!job) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorTitle}>Job Not Found</Text>
+        <Text style={styles.errorTitle}>Klus niet gevonden</Text>
         <Text style={styles.errorText}>
-          The requested job could not be found. Please try again.
+          De gevraagde klus kon niet gevonden worden. Probeer het opnieuw.
         </Text>
       </View>
     );
@@ -207,15 +115,19 @@ export default function HandoverScreen() {
   return (
     <HandoverPackBuilder
       jobId={job.id}
-      jobTitle={job.title}
-      customerName={job.customerName}
-      customerEmail={job.customerEmail}
-      existingPack={evidencePack || undefined}
+      contractorId="contractor_1"
+      customerId="customer_1"
+      job={{
+        id: job.id,
+        title: job.title,
+        customerName: job.customerName,
+        address: job.address,
+        quotedAmount: job.agreedAmount,
+        finalAmount: job.agreedAmount,
+        currency: 'EUR',
+      }}
       onComplete={handleComplete}
-      onSendToCustomer={handleSendToCustomer}
-      onGeneratePDF={handleGeneratePDF}
-      onCaptureSignature={handleSignatureCapture}
-      onCancel={() => router.back()}
+      onClose={() => router.back()}
     />
   );
 }

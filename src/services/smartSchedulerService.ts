@@ -11,6 +11,57 @@ import { trackUserAction } from '../intelligence/intelligenceEngine';
 // TYPES
 // ============================================
 
+export type JobLifecycleStatus =
+  | 'lead'
+  | 'offerte'
+  | 'geaccepteerd'
+  | 'ingepland'
+  | 'bezig'
+  | 'gereed'
+  | 'gefactureerd'
+  | 'betaald'
+  | 'geannuleerd';
+
+export const LIFECYCLE_ORDER: JobLifecycleStatus[] = [
+  'lead', 'offerte', 'geaccepteerd', 'ingepland', 'bezig', 'gereed', 'gefactureerd', 'betaald',
+];
+
+export const LIFECYCLE_LABELS: Record<JobLifecycleStatus, string> = {
+  lead: 'Lead',
+  offerte: 'Offerte',
+  geaccepteerd: 'Geaccepteerd',
+  ingepland: 'Ingepland',
+  bezig: 'Bezig',
+  gereed: 'Gereed',
+  gefactureerd: 'Gefactureerd',
+  betaald: 'Betaald',
+  geannuleerd: 'Geannuleerd',
+};
+
+export const LIFECYCLE_COLORS: Record<JobLifecycleStatus, string> = {
+  lead: '#94A3B8',
+  offerte: '#F59E0B',
+  geaccepteerd: '#3B82F6',
+  ingepland: '#8B5CF6',
+  bezig: '#E35205',
+  gereed: '#16A34A',
+  gefactureerd: '#0EA5E9',
+  betaald: '#059669',
+  geannuleerd: '#DC2626',
+};
+
+export const LIFECYCLE_NEXT_ACTION: Record<JobLifecycleStatus, string | null> = {
+  lead: 'Offerte maken',
+  offerte: 'Markeer als geaccepteerd',
+  geaccepteerd: 'Inplannen',
+  ingepland: 'Start klus',
+  bezig: 'Markeer als gereed',
+  gereed: 'Factureer',
+  gefactureerd: 'Markeer als betaald',
+  betaald: null,
+  geannuleerd: null,
+};
+
 export interface ScheduledJob {
   id: string;
   projectId: string;
@@ -23,6 +74,7 @@ export interface ScheduledJob {
   endTime: string;
   duration: number; // minutes
   status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'rescheduled';
+  lifecycleStatus: JobLifecycleStatus;
   type: 'job' | 'quote_visit' | 'follow_up' | 'personal';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   notes?: string;
@@ -31,6 +83,11 @@ export interface ScheduledJob {
   assignedTo?: string;
   travelTime?: number;
   previousJobId?: string;
+  // P2: Actual hours tracking
+  actualHoursLogged?: number;
+  estimatedHours?: number;
+  // Quoted amount for daily earnings tracking
+  quotedAmount?: number;
 }
 
 export interface TimeSlot {
@@ -115,7 +172,74 @@ export interface ScheduleSuggestion {
 // MOCK DATA
 // ============================================
 
+// Helper to get today's date string for dynamic mock data
+function getTodayStr(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
 const MOCK_JOBS: ScheduledJob[] = [
+  // Today's appointments (dynamic date)
+  {
+    id: 'job_today_1',
+    projectId: 'proj_t1',
+    projectName: 'CV-ketel onderhoud',
+    customerId: 'cust_t1',
+    customerName: 'Familie Smit',
+    address: 'Herengracht 210, Amsterdam',
+    startTime: `${getTodayStr()}T08:30:00`,
+    endTime: `${getTodayStr()}T10:30:00`,
+    duration: 120,
+    status: 'scheduled',
+    lifecycleStatus: 'ingepland',
+    type: 'job',
+    priority: 'high',
+    isOutdoor: false,
+    weatherSensitive: false,
+    travelTime: 15,
+    estimatedHours: 2,
+    quotedAmount: 285,
+  },
+  {
+    id: 'job_today_2',
+    projectId: 'proj_t2',
+    projectName: 'Lekkage badkamer',
+    customerId: 'cust_t2',
+    customerName: 'M. van der Berg',
+    address: 'Bilderdijkstraat 44, Amsterdam',
+    startTime: `${getTodayStr()}T11:00:00`,
+    endTime: `${getTodayStr()}T13:00:00`,
+    duration: 120,
+    status: 'scheduled',
+    lifecycleStatus: 'ingepland',
+    type: 'job',
+    priority: 'medium',
+    isOutdoor: false,
+    weatherSensitive: false,
+    travelTime: 20,
+    estimatedHours: 2,
+    quotedAmount: 450,
+  },
+  {
+    id: 'job_today_3',
+    projectId: 'proj_t3',
+    projectName: 'Offerte keukenrenovatie',
+    customerId: 'cust_t3',
+    customerName: 'Bakkerij Jansen',
+    address: 'Prinsengracht 450, Amsterdam',
+    startTime: `${getTodayStr()}T14:00:00`,
+    endTime: `${getTodayStr()}T15:00:00`,
+    duration: 60,
+    status: 'scheduled',
+    lifecycleStatus: 'offerte',
+    type: 'quote_visit',
+    priority: 'medium',
+    isOutdoor: false,
+    weatherSensitive: false,
+    travelTime: 12,
+    estimatedHours: 1,
+    quotedAmount: 0,
+  },
+  // Future appointments
   {
     id: 'job_1',
     projectId: 'proj_1',
@@ -127,10 +251,12 @@ const MOCK_JOBS: ScheduledJob[] = [
     endTime: '2025-02-03T17:00:00',
     duration: 480,
     status: 'scheduled',
+    lifecycleStatus: 'geaccepteerd',
     type: 'job',
     priority: 'medium',
     isOutdoor: false,
     weatherSensitive: false,
+    estimatedHours: 8,
   },
   {
     id: 'job_2',
@@ -143,10 +269,12 @@ const MOCK_JOBS: ScheduledJob[] = [
     endTime: '2025-02-03T09:00:00',
     duration: 60,
     status: 'scheduled',
+    lifecycleStatus: 'lead',
     type: 'quote_visit',
     priority: 'high',
     isOutdoor: true,
     weatherSensitive: true,
+    estimatedHours: 1,
   },
   {
     id: 'job_3',
@@ -159,10 +287,13 @@ const MOCK_JOBS: ScheduledJob[] = [
     endTime: '2025-02-04T17:00:00',
     duration: 540,
     status: 'scheduled',
+    lifecycleStatus: 'bezig',
     type: 'job',
     priority: 'high',
     isOutdoor: false,
     weatherSensitive: false,
+    estimatedHours: 9,
+    actualHoursLogged: 6.5,
   },
   {
     id: 'job_4',
@@ -175,10 +306,13 @@ const MOCK_JOBS: ScheduledJob[] = [
     endTime: '2025-02-05T16:00:00',
     duration: 420,
     status: 'scheduled',
+    lifecycleStatus: 'gefactureerd',
     type: 'job',
     priority: 'medium',
     isOutdoor: true,
     weatherSensitive: true,
+    estimatedHours: 7,
+    actualHoursLogged: 8.5,
   },
 ];
 
@@ -528,6 +662,55 @@ class SmartSchedulerService {
   }
 
   // -----------------------------------------
+  // Job Lifecycle Pipeline (P1)
+  // -----------------------------------------
+
+  getSchedulerStatus(lifecycleStatus: JobLifecycleStatus): ScheduledJob['status'] {
+    switch (lifecycleStatus) {
+      case 'bezig': return 'in_progress';
+      case 'gereed':
+      case 'gefactureerd':
+      case 'betaald': return 'completed';
+      case 'geannuleerd': return 'cancelled';
+      default: return 'scheduled';
+    }
+  }
+
+  advanceLifecycle(jobId: string): JobLifecycleStatus | null {
+    const job = this.jobs.get(jobId);
+    if (!job) return null;
+
+    const currentIndex = LIFECYCLE_ORDER.indexOf(job.lifecycleStatus);
+    if (currentIndex === -1 || currentIndex >= LIFECYCLE_ORDER.length - 1) return null;
+
+    const nextStatus = LIFECYCLE_ORDER[currentIndex + 1];
+    job.lifecycleStatus = nextStatus;
+    job.status = this.getSchedulerStatus(nextStatus);
+    this.notifyListeners();
+    trackUserAction('lifecycle_advanced', { jobId, from: LIFECYCLE_ORDER[currentIndex], to: nextStatus });
+    return nextStatus;
+  }
+
+  getLifecycleCounts(): Record<JobLifecycleStatus, number> {
+    const counts: Record<JobLifecycleStatus, number> = {
+      lead: 0, offerte: 0, geaccepteerd: 0, ingepland: 0,
+      bezig: 0, gereed: 0, gefactureerd: 0, betaald: 0, geannuleerd: 0,
+    };
+    this.jobs.forEach(job => {
+      counts[job.lifecycleStatus]++;
+    });
+    return counts;
+  }
+
+  recordActualHours(jobId: string, hours: number): void {
+    const job = this.jobs.get(jobId);
+    if (job) {
+      job.actualHoursLogged = (job.actualHoursLogged || 0) + hours;
+      this.notifyListeners();
+    }
+  }
+
+  // -----------------------------------------
   // Subscription
   // -----------------------------------------
 
@@ -624,4 +807,27 @@ export function useWeekSchedule(startDate: string) {
 
 export function useWeatherAlerts() {
   return useMemo(() => smartSchedulerService.getWeatherAlerts(), []);
+}
+
+export function useJobLifecyclePipeline() {
+  const [jobs, setJobs] = useState<ScheduledJob[]>(() => smartSchedulerService.getJobs());
+  const [counts, setCounts] = useState(() => smartSchedulerService.getLifecycleCounts());
+
+  useEffect(() => {
+    const unsubscribe = smartSchedulerService.subscribe(() => {
+      setJobs(smartSchedulerService.getJobs());
+      setCounts(smartSchedulerService.getLifecycleCounts());
+    });
+    return unsubscribe;
+  }, []);
+
+  const advance = useCallback((jobId: string) => {
+    return smartSchedulerService.advanceLifecycle(jobId);
+  }, []);
+
+  const recordHours = useCallback((jobId: string, hours: number) => {
+    smartSchedulerService.recordActualHours(jobId, hours);
+  }, []);
+
+  return { jobs, counts, advance, recordHours };
 }

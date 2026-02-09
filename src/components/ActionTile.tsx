@@ -66,8 +66,8 @@ export function ActionTile({
         </View>
         <View style={styles.content}>
           <Text style={Typography.subtitle}>{title}</Text>
-          {subtitle ? <Text style={Typography.muted}>{subtitle}</Text> : null}
-          {why ? <Text style={styles.why}>{why}</Text> : null}
+          {subtitle ? <Text style={Typography.muted} numberOfLines={1}>{subtitle}</Text> : null}
+          {why ? <Text style={styles.why} numberOfLines={2}>{why}</Text> : null}
         </View>
       </View>
       <View style={styles.right}>

@@ -28,8 +28,9 @@ interface HoursSavedCardProps {
 }
 
 export function HoursSavedCard({ onPress, compact = false }: HoursSavedCardProps) {
-  const { data: displayData, isLoading } = useHoursSavedDisplay();
-  const { data: dashboard } = useROIDashboard();
+  const displayData = useHoursSavedDisplay();
+  const dashboard = useROIDashboard();
+  const isLoading = !displayData;
 
   if (isLoading || !displayData) {
     return (
@@ -93,7 +94,7 @@ export function HoursSavedCard({ onPress, compact = false }: HoursSavedCardProps
 
       {/* Breakdown Grid */}
       <View style={styles.breakdownGrid}>
-        {displayData.breakdown.slice(0, 4).map((item, index) => {
+        {displayData.breakdown.slice(0, 4).map((item: any, index: number) => {
           const config = CATEGORY_CONFIG[item.category] || {
             icon: 'ellipsis-horizontal',
             color: SemanticColors.textSecondary,
@@ -145,7 +146,7 @@ export function HoursSavedCard({ onPress, compact = false }: HoursSavedCardProps
 
 // Simplified widget for dashboard
 export function HoursSavedWidget({ onPress }: { onPress?: () => void }) {
-  const { data: dashboard } = useROIDashboard();
+  const dashboard = useROIDashboard();
 
   if (!dashboard) return null;
 
@@ -171,7 +172,7 @@ export function HoursSavedWidget({ onPress }: { onPress?: () => void }) {
 
 // Mini stat chip for quick reference
 export function HoursSavedChip() {
-  const { data: dashboard } = useROIDashboard();
+  const dashboard = useROIDashboard();
 
   if (!dashboard) return null;
 

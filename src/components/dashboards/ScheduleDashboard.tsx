@@ -125,7 +125,7 @@ export function ScheduleDashboard() {
           <View style={styles.dateRow}>
             <View style={styles.dateItem}>
               <Text style={styles.dateLabel}>Start Date</Text>
-              <Text style={styles.dateValue}>{selectedProject.startDate}</Text>
+              <Text style={styles.dateValue}>{selectedProject.plannedStartDate}</Text>
             </View>
             <View style={styles.dateDivider} />
             <View style={styles.dateItem}>

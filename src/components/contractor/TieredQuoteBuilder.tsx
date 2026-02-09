@@ -8,6 +8,9 @@ import type { Customer } from '../../types/contractor';
 import type { TieredQuote, QuoteTier, PricebookItem } from '../../types/contractor-features';
 import { MOCK_PRICEBOOK } from '../../data/mockPricebook';
 import { intelligence } from '../../intelligence/intelligenceEngine';
+import { useInlineInsight } from '../../services/vascoGuidanceService';
+import { useQuoteCalibration } from '../../services/estimationFeedbackService';
+import type { QuoteCalibrationSuggestion } from '../../services/estimationFeedbackService';
 
 interface TieredQuoteBuilderProps {
   customer?: Customer;
@@ -43,6 +46,15 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
     unit: string;
   }[]>([]);
   const [showPricebook, setShowPricebook] = useState(false);
+  const [calibrationApplied, setCalibrationApplied] = useState(false);
+  const inlineInsight = useInlineInsight('contractor', 'invoices', 'list');
+
+  // P4: Quote calibration
+  const calibrationLineItems = selectedServices.map(s => ({
+    description: s.item.name,
+    estimate: s.item.basePrice * s.quantity,
+  }));
+  const calibrations = useQuoteCalibration(calibrationLineItems);
 
   const formatCurrency = (amount: number) => `€${amount.toFixed(2)}`;
 
@@ -215,6 +227,14 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+        {/* Vasco Guidance Tip */}
+        {inlineInsight && (
+          <View style={styles.guidanceTip}>
+            <Ionicons name="sparkles" size={16} color="#E35205" />
+            <Text style={styles.guidanceTipText}>{inlineInsight.message}</Text>
+          </View>
+        )}
+
         {/* Selected Services */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -262,6 +282,58 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
             </Pressable>
           )}
         </View>
+
+        {/* Vasco Kalibratie Banner (P4) */}
+        {selectedServices.length > 0 && calibrations.length > 0 && !calibrationApplied && (
+          <View style={styles.calibrationBanner}>
+            <View style={styles.calibrationHeader}>
+              <Ionicons name="sparkles" size={16} color="#E35205" />
+              <Text style={styles.calibrationTitle}>Vasco Kalibratie</Text>
+            </View>
+            <Text style={styles.calibrationText}>
+              Op basis van {calibrations[0]?.basedOnJobCount || 0} eerdere klussen: uren{' '}
+              {calibrations.some(c => c.multiplier > 1)
+                ? `+${Math.round((Math.max(...calibrations.map(c => c.multiplier)) - 1) * 100)}%`
+                : 'op schema'
+              }
+            </Text>
+            <View style={styles.calibrationActions}>
+              <Pressable
+                style={styles.calibrationApply}
+                onPress={() => {
+                  // Apply calibration multipliers to quantities
+                  setSelectedServices(prev =>
+                    prev.map((s, idx) => {
+                      const cal = calibrations[idx];
+                      if (cal && cal.multiplier > 1) {
+                        return { ...s, quantity: Math.ceil(s.quantity * cal.multiplier) };
+                      }
+                      return s;
+                    })
+                  );
+                  setCalibrationApplied(true);
+                }}
+              >
+                <Ionicons name="checkmark" size={16} color="#fff" />
+                <Text style={styles.calibrationApplyText}>Toepassen</Text>
+              </Pressable>
+              <Pressable
+                style={styles.calibrationIgnore}
+                onPress={() => setCalibrationApplied(true)}
+              >
+                <Text style={styles.calibrationIgnoreText}>Negeren</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+        {calibrationApplied && calibrations.length > 0 && (
+          <View style={[styles.calibrationBanner, { borderLeftColor: '#16A34A' }]}>
+            <View style={styles.calibrationHeader}>
+              <Ionicons name="checkmark-circle" size={16} color="#16A34A" />
+              <Text style={[styles.calibrationTitle, { color: '#16A34A' }]}>Kalibratie toegepast</Text>
+            </View>
+          </View>
+        )}
 
         {/* Tiered Preview */}
         {selectedServices.length > 0 && (
@@ -414,6 +486,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceBackground,
+  },
+  guidanceTip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#E3520508',
+    borderRadius: 10,
+    padding: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: '#E35205',
+    marginBottom: 4,
+  },
+  guidanceTipText: {
+    flex: 1,
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+    lineHeight: 18,
   },
   header: {
     flexDirection: 'row',
@@ -719,5 +808,62 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
+  },
+
+  // Calibration Banner (P4)
+  calibrationBanner: {
+    backgroundColor: '#E3520508',
+    borderRadius: 12,
+    padding: Spacing.md,
+    borderLeftWidth: 3,
+    borderLeftColor: '#E35205',
+    gap: Spacing.sm,
+  },
+  calibrationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  calibrationTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#E35205',
+  },
+  calibrationText: {
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+    lineHeight: 18,
+  },
+  calibrationActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  calibrationApply: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#E35205',
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  calibrationApplyText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  calibrationIgnore: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: SemanticColors.surfaceSecondary,
+  },
+  calibrationIgnoreText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: SemanticColors.textSecondary,
   },
 });

@@ -172,13 +172,13 @@ export function TaxCalculatorDashboard() {
           </View>
 
           {/* Breakdown if available */}
-          {taxResult.breakdown && taxResult.breakdown.length > 0 && (
+          {taxResult.details && 'breakdown' in taxResult.details && taxResult.details.breakdown.length > 0 && (
             <View style={styles.breakdownSection}>
               <Text style={styles.breakdownTitle}>Tax Bands</Text>
-              {taxResult.breakdown.map((band, index) => (
+              {taxResult.details.breakdown.map((band, index) => (
                 <View key={index} style={styles.breakdownRow}>
                   <Text style={styles.breakdownRange}>
-                    {formatCurrency(band.from, currency)} - {formatCurrency(band.to, currency)}
+                    {band.band}
                   </Text>
                   <Text style={styles.breakdownRate}>{formatPercent(band.rate)}</Text>
                   <Text style={styles.breakdownTax}>{formatCurrency(band.tax, currency)}</Text>

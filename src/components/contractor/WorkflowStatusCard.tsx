@@ -9,7 +9,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Palette, SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
-import { useActiveWorkflows, useWorkflowActions, workflowAgentsService } from '../../services';
+import { useActiveWorkflows, workflowAgentsService } from '../../services';
 import type { Workflow, WorkflowStep } from '../../types/workflow-agents';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -20,7 +20,8 @@ const WORKFLOW_ICONS: Record<string, IconName> = {
   'job-closeout': 'checkmark-done-circle',
 };
 
-const STATUS_CONFIG = {
+const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
+  idle: { color: SemanticColors.textTertiary, label: 'Idle' },
   active: { color: SemanticColors.feedbackSuccess, label: 'Running' },
   paused: { color: SemanticColors.feedbackWarning, label: 'Paused' },
   'waiting-approval': { color: SemanticColors.feedbackInfo, label: 'Needs Approval' },
@@ -35,8 +36,9 @@ interface WorkflowStatusCardProps {
 }
 
 export function WorkflowStatusCard({ onPress, compact = false }: WorkflowStatusCardProps) {
-  const { data: activeWorkflows, isLoading } = useActiveWorkflows();
-  const { data: pendingActions } = useWorkflowActions();
+  const { workflows: activeWorkflows } = useActiveWorkflows();
+  const isLoading = !activeWorkflows;
+  const pendingActions = null as any;
 
   if (isLoading) {
     return (
@@ -155,7 +157,7 @@ function WorkflowItem({ workflow }: { workflow: Workflow }) {
         <View style={styles.workflowInfo}>
           <Text style={styles.workflowName}>{workflow.name}</Text>
           <Text style={styles.workflowContext} numberOfLines={1}>
-            {workflow.context?.customerName || workflow.context?.jobTitle || 'In progress'}
+            {(workflow.context?.customerName as string) || (workflow.context?.jobTitle as string) || 'In progress'}
           </Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: statusConfig.color + '15' }]}>
@@ -277,10 +279,10 @@ function StepIndicator({
 
 // Widget version for dashboard
 export function WorkflowWidget({ onPress }: { onPress?: () => void }) {
-  const { data: activeWorkflows } = useActiveWorkflows();
+  const { workflows: activeWorkflows } = useActiveWorkflows();
 
   const count = activeWorkflows?.length || 0;
-  const needsApproval = activeWorkflows?.filter((w) => w.status === 'waiting-approval').length || 0;
+  const needsApproval = activeWorkflows?.filter((w: any) => w.status === 'waiting-approval').length || 0;
 
   return (
     <Pressable style={styles.widget} onPress={onPress}>

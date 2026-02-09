@@ -14,12 +14,12 @@ export { TieredQuoteBuilder } from './TieredQuoteBuilder';
 export { IntegratedPayments } from './IntegratedPayments';
 
 // Decision & Tracking Features
-export { DecisionTracker } from './DecisionTracker';
+export { DecisionTrackerList, DecisionTrackerDetail, TemplatePicker } from './DecisionTracker';
 export { ShareDecisionTracker } from './ShareDecisionTracker';
 export { ReceiptScanner } from './ReceiptScanner';
 
 // Recommendations & AI Features
-export { RecommendationFeedback } from './RecommendationFeedback';
+export { RecommendationFeedbackCard as RecommendationFeedback } from './RecommendationFeedback';
 export { TemplateSuggestion } from './TemplateSuggestion';
 
 // Supplier & Market Intelligence
@@ -70,3 +70,10 @@ export { BusinessBenchmarking } from './BusinessBenchmarking';
 
 // Phase 10: Predictive Capacity Planning
 export { CapacityPlanning } from './CapacityPlanning';
+
+// Evidence & Materials
+export { AIQuoteFromPhoto } from './AIQuoteFromPhoto';
+export { JobCompletionEvidence } from './JobCompletionEvidence';
+export { JobMaterialsSuggestion } from './JobMaterialsSuggestion';
+export { HandoverPackBuilder } from './HandoverPackBuilder';
+export { AgentActionsPanel } from './AgentActionsPanel';

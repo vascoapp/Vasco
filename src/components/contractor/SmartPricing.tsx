@@ -266,7 +266,7 @@ export function SmartPricing() {
     const demandColor =
       month.demandLevel === 'high' ? Palette.green500 :
       month.demandLevel === 'medium' ? Palette.orange500 :
-      Palette.red;
+      Palette.red500;
 
     return (
       <View
@@ -328,7 +328,7 @@ export function SmartPricing() {
       comp.yourPosition > 75 ? Palette.green500 :
       comp.yourPosition > 50 ? Palette.blue500 :
       comp.yourPosition > 25 ? Palette.orange500 :
-      Palette.red;
+      Palette.red500;
 
     return (
       <View key={comp.competitorType} style={styles.competitorCard}>

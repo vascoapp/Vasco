@@ -5,7 +5,7 @@
 // Supports expand/collapse, primary action, dismiss, and snooze.
 // =============================================================================
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { recordInteraction } from '../../intelligence/learningStorage';
+import type { ScoredInsight, ReasoningChain } from '../../intelligence/generators/types';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -73,6 +75,16 @@ function getPriorityBg(priority: InsightPriority): string {
   }
 }
 
+function isScoredInsight(insight: VascoInsight): insight is ScoredInsight {
+  return 'reasoning' in insight && 'confidence' in insight && 'generatorId' in insight;
+}
+
+function getConfidenceColor(confidence: number): string {
+  if (confidence >= 0.8) return '#16A34A';
+  if (confidence >= 0.5) return Palette.hermesOrange;
+  return SemanticColors.textTertiary;
+}
+
 function getCategoryLabel(category: InsightCategory): string {
   switch (category) {
     case 'alert': return 'Waarschuwing';
@@ -96,13 +108,74 @@ export function VascoInsightCard({
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const [actedOn, setActedOn] = useState(false);
+  const [showReasoning, setShowReasoning] = useState(false);
+  const viewedRef = useRef(false);
+  const mountTimeRef = useRef(Date.now());
+
+  const scored = isScoredInsight(insight);
+  const generatorId = scored ? (insight as ScoredInsight).generatorId : 'unknown';
+
+  // Track 'viewed' on mount
+  useEffect(() => {
+    if (!viewedRef.current) {
+      viewedRef.current = true;
+      recordInteraction({
+        insightId: insight.id,
+        generatorId,
+        action: 'viewed',
+        timestamp: new Date().toISOString(),
+        screenContext: '',
+      });
+    }
+  }, [insight.id, generatorId]);
+
+  // Track 'ignored' — visible 5s+ without interaction
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!expanded && !actedOn) {
+        recordInteraction({
+          insightId: insight.id,
+          generatorId,
+          action: 'ignored',
+          timestamp: new Date().toISOString(),
+          screenContext: '',
+          dwellTimeMs: 5000,
+        });
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [insight.id, generatorId, expanded, actedOn]);
 
   const toggleExpand = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpanded(prev => !prev);
+    setExpanded(prev => {
+      if (!prev) {
+        recordInteraction({
+          insightId: insight.id,
+          generatorId,
+          action: 'expanded',
+          timestamp: new Date().toISOString(),
+          screenContext: '',
+        });
+      }
+      return !prev;
+    });
+  }, [insight.id, generatorId]);
+
+  const toggleReasoning = useCallback(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setShowReasoning(prev => !prev);
   }, []);
 
   const handlePrimaryAction = useCallback(() => {
+    recordInteraction({
+      insightId: insight.id,
+      generatorId,
+      action: 'acted',
+      timestamp: new Date().toISOString(),
+      screenContext: '',
+      dwellTimeMs: Date.now() - mountTimeRef.current,
+    });
     if (onAction) {
       onAction(insight);
     }
@@ -110,17 +183,32 @@ export function VascoInsightCard({
       router.push(insight.actionRoute as any);
     }
     setActedOn(true);
-  }, [insight, onAction, router]);
+  }, [insight, onAction, router, generatorId]);
 
   const handleDismiss = useCallback(() => {
+    recordInteraction({
+      insightId: insight.id,
+      generatorId,
+      action: 'dismissed',
+      timestamp: new Date().toISOString(),
+      screenContext: '',
+      dwellTimeMs: Date.now() - mountTimeRef.current,
+    });
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     onDismiss?.(insight.id);
-  }, [insight.id, onDismiss]);
+  }, [insight.id, onDismiss, generatorId]);
 
   const handleSnooze = useCallback(() => {
+    recordInteraction({
+      insightId: insight.id,
+      generatorId,
+      action: 'snoozed',
+      timestamp: new Date().toISOString(),
+      screenContext: '',
+    });
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     onSnooze?.(insight.id);
-  }, [insight.id, onSnooze]);
+  }, [insight.id, onSnooze, generatorId]);
 
   const priorityColor = getPriorityColor(insight.priority);
   const priorityBg = getPriorityBg(insight.priority);
@@ -180,7 +268,7 @@ export function VascoInsightCard({
         </View>
         <View style={styles.headerText}>
           <View style={styles.titleRow}>
-            <Text style={styles.title}>{insight.title}</Text>
+            <Text style={styles.title} numberOfLines={1}>{insight.title}</Text>
             {insight.priority === 'critical' && (
               <View style={styles.criticalBadge}>
                 <Text style={styles.criticalBadgeText}>URGENT</Text>
@@ -237,6 +325,49 @@ export function VascoInsightCard({
         </View>
       )}
 
+      {/* Reasoning toggle — only for ScoredInsight */}
+      {scored && expanded && (
+        <View style={styles.reasoningSection}>
+          <Pressable style={styles.reasoningToggle} onPress={toggleReasoning}>
+            <Ionicons name="help-circle-outline" size={14} color={SemanticColors.textTertiary} />
+            <Text style={styles.reasoningToggleText}>Waarom?</Text>
+            <Ionicons
+              name={showReasoning ? 'chevron-up' : 'chevron-down'}
+              size={12}
+              color={SemanticColors.textTertiary}
+            />
+          </Pressable>
+
+          {showReasoning && (
+            <View style={styles.reasoningCard}>
+              <View style={styles.reasoningHeader}>
+                <Text style={styles.reasoningEvidence}>
+                  {(insight as ScoredInsight).reasoning.evidence}
+                </Text>
+                <View style={[styles.confidenceBadge, { backgroundColor: getConfidenceColor((insight as ScoredInsight).confidence) + '18' }]}>
+                  <Text style={[styles.confidenceText, { color: getConfidenceColor((insight as ScoredInsight).confidence) }]}>
+                    {Math.round((insight as ScoredInsight).confidence * 100)}% zeker
+                  </Text>
+                  <Ionicons name="bar-chart" size={10} color={getConfidenceColor((insight as ScoredInsight).confidence)} />
+                </View>
+              </View>
+              <View style={styles.reasoningRow}>
+                <Text style={styles.reasoningLabel}>Observatie</Text>
+                <Text style={styles.reasoningValue}>{(insight as ScoredInsight).reasoning.observation}</Text>
+              </View>
+              <View style={styles.reasoningRow}>
+                <Text style={styles.reasoningLabel}>Impact</Text>
+                <Text style={styles.reasoningValue}>{(insight as ScoredInsight).reasoning.implication}</Text>
+              </View>
+              <View style={styles.reasoningRow}>
+                <Text style={styles.reasoningLabel}>Advies</Text>
+                <Text style={styles.reasoningValue}>{(insight as ScoredInsight).reasoning.suggestion}</Text>
+              </View>
+            </View>
+          )}
+        </View>
+      )}
+
       {/* Actions */}
       {(insight.actionLabel || expanded) && (
         <View style={styles.actions}>
@@ -251,12 +382,12 @@ export function VascoInsightCard({
             <Pressable style={styles.secondaryAction} onPress={() => {
               if (insight.secondaryActionRoute) router.push(insight.secondaryActionRoute as any);
             }}>
-              <Text style={styles.secondaryActionText}>{insight.secondaryActionLabel}</Text>
+              <Text style={styles.secondaryActionText} numberOfLines={1}>{insight.secondaryActionLabel}</Text>
             </Pressable>
           )}
           {insight.actionLabel && (
             <Pressable style={styles.primaryAction} onPress={handlePrimaryAction}>
-              <Text style={styles.primaryActionText}>{insight.actionLabel}</Text>
+              <Text style={styles.primaryActionText} numberOfLines={1}>{insight.actionLabel}</Text>
               <Ionicons name="chevron-forward" size={14} color={Palette.hermesOrange} />
             </Pressable>
           )}
@@ -653,6 +784,68 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     color: Palette.hermesOrange,
+  },
+
+  // Reasoning
+  reasoningSection: {
+    gap: 6,
+  },
+  reasoningToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 4,
+  },
+  reasoningToggleText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: SemanticColors.textTertiary,
+  },
+  reasoningCard: {
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 8,
+    padding: Spacing.sm,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderMuted,
+  },
+  reasoningHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  reasoningEvidence: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: SemanticColors.textSecondary,
+    flex: 1,
+  },
+  confidenceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  confidenceText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  reasoningRow: {
+    gap: 2,
+  },
+  reasoningLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: SemanticColors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  reasoningValue: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+    lineHeight: 16,
   },
 
   // Inline

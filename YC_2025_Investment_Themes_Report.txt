@@ -1,0 +1,273 @@
+YC 2025 Investment Themes Research (YC Batches 2025)
+====================================================
+
+Sources & Method
+----------------
+- Primary source: YC OSS API batch JSON for 2025 (Winter, Summer, Fall).
+  - Winter 2025: https://yc-oss.github.io/api/batches/winter-2025.json
+  - Summer 2025: https://yc-oss.github.io/api/batches/summer-2025.json
+  - Fall 2025: https://yc-oss.github.io/api/batches/fall-2025.json
+- Supplemental lists: Extruct batch mirrors (used as a cross-check).
+  - W25: https://extruct.ai/ycombinator-companies/w25
+  - S25: https://extruct.ai/ycombinator-companies/s25
+
+Note: The YC OSS API is a public, unofficial mirror of YC directory data. It is a practical
+way to enumerate batch companies with descriptions for analysis. Some entries in source data
+may be incomplete or missing details.
+
+
+Executive Summary (What YC 2025 is funding)
+-------------------------------------------
+1) AI is now mostly "systems that do work," not just chat tools.
+   Many companies describe agents that complete tasks end‑to‑end (voice agents,
+   process automation, doc generation, underwriting, claims, recruitment, etc.).
+2) Vertical AI dominates: the most common pattern is "AI for a specific industry or role."
+   Examples include insurance, healthcare, construction, property management, logistics,
+   clinical trials, and accounting.
+3) Infrastructure for agents is a parallel mega‑theme:
+   evaluation, data pipelines, orchestration, agent tooling, and sandboxing.
+4) Voice interfaces and browser/computer use are strong:
+   AI voice agents for call centers, real estate, hotels, debt collection, and more.
+5) Moats are formed through data, workflow integration, and operational performance,
+   not just models.
+
+
+Investment Themes (2025)
+------------------------
+
+Theme A — "AI that does the work" (Agentic workflows)
+Typical pattern: automating a multi‑step workflow with a mix of data extraction, validation,
+decisioning, and execution.
+Examples:
+- Adaptional: AI underwriting for insurance, extracting data and applying guidelines.
+- Egress Health: AI for revenue cycle management in dental.
+- Leaping AI / Flowtel / Trace: voice AI for call centers and support.
+- Brickanta / Bild AI: AI for construction estimation and blueprint understanding.
+- Wayline: AI voice for property managers.
+
+Theme B — Vertical AI in regulated or complex domains
+Regulated domains reduce competition and create data moats via compliance and approvals.
+Examples:
+- Healthcare agents: Egress Health, Delineate (clinical trials), Exin Therapeutics (AI discovery).
+- Insurance: Adaptional, Fernstone (brokerage).
+- Government procurement and compliance: Candor.
+- Construction compliance and pre‑construction: Brickanta, Bild AI.
+
+Theme C — AI infrastructure and tooling (agent platform layer)
+Startups building the scaffolding that agent companies rely on.
+Examples:
+- Dedalus Labs: orchestration for agent workflows and MCP tooling.
+- Autumn: billing infrastructure for AI apps.
+- Cactus: AI runtime on consumer devices.
+- Halluminate, MangoDesk: data, evals, and agent training pipelines.
+- Metis / Omnara: command center for agents (ops layer).
+
+Theme D — Data moat creation
+Companies are explicit about gathering proprietary data or running workflows to build
+unique datasets (e.g., simulations, annotations, or benchmark data).
+Examples:
+- Serafis: AI knowledge graph from podcasts.
+- Halluminate: data + sandboxing for computer use agents.
+- AirCaps: real‑world conversational data stream.
+- Brickanta: construction project data + standards.
+
+Theme E — "System of action" for a role or function
+Users buy AI that replaces whole tasks rather than adding minor productivity.
+Examples:
+- AI underwriting, AI collections, AI marketing ops, AI recruitment agents.
+- “AI-native OS” for a role: YouShift (hospital workforce), Nixo (FDE ops).
+
+
+How AI Is Implemented (Recurring Patterns)
+------------------------------------------
+1) Capture → Extract → Validate → Act
+   Many products ingest documents or communications, extract structured data,
+   validate it (rules/knowledge base), then take action (submit, respond, file, schedule).
+
+2) Agent + human‑in‑the‑loop
+   Many tools position AI as a copilot, with human approval gates for risky actions.
+
+3) RAG + domain rules
+   Rather than pure LLMs, firms use retrieval + explicit business rules (underwriting
+   guidelines, compliance checks, inventory policies, etc.).
+
+4) Multi‑agent workflows
+   Specialized agent roles per step (data collection, verification, decisioning,
+   drafting, execution).
+
+5) Data flywheel
+   Each workflow completion produces structured data + outcomes, feeding model improvement,
+   better benchmarks, and defensible insights.
+
+
+Business Types Observed
+-----------------------
+1) Vertical SaaS + AI (construction, real estate, healthcare, insurance, logistics)
+2) AI-first BPO / workforce replacement (voice agents, recruiting agents, call centers)
+3) Agent infrastructure (evaluation, orchestration, billing, sandboxing)
+4) AI assistants for productivity roles (docs, design, engineering)
+5) AI consumer products (still present, but less dominant)
+
+
+Shared Commonalities Across Investments
+---------------------------------------
+- Clear ROI story (cost reduction or revenue lift).
+- Deep vertical specialization (domain language, rules, data sources).
+- End‑to‑end workflow automation (not just a single task).
+- Hard‑to‑replicate data advantage (data gathered through operations).
+- Integration with existing tools (phone systems, CRMs, ERPs, email, calendars).
+- A “system of action” that actually executes and closes loops.
+
+
+Moat Analysis (How these companies defend)
+------------------------------------------
+
+Moat Type 1 — Proprietary workflow data
+They collect real‑world data in the process of automation (claims, calls, blueprints,
+clinical trial datasets, underwriting decisions).
+
+Moat Type 2 — Deep integration & switching costs
+Once embedded into ops, removing the system breaks the workflow, reducing churn.
+
+Moat Type 3 — Domain expertise + compliance
+Regulated industries require domain expertise and compliance guardrails.
+That knowledge is a barrier to entry.
+
+Moat Type 4 — Performance and reliability at scale
+High‑volume workflows create reliability advantages (voice agents, collections).
+
+Moat Type 5 — Operational flywheel
+System improves with each run (new data, better models, improved outcomes).
+
+
+How to Apply These Learnings to an AI App for Subcontractors & Trades
+--------------------------------------------------------------------
+
+Goal: Build a "system of action" for subcontractors that turns field data into
+better decisions, fewer mistakes, and higher margins.
+
+1) Define the vertical wedge (start narrow)
+Pick one trade to start (e.g., electrical, plumbing, HVAC) and one high‑value workflow:
+- Bid and estimate from plans (materials + labor)
+- Job costing & budget variance
+- Change orders and RFI management
+- Daily logs & site safety compliance
+- Invoice generation + collections
+
+2) Build a structured data layer
+Create a database schema that records:
+- Projects, jobs, scopes
+- Materials lists + pricing history
+- Labor hours and productivity rates
+- Change orders and impacts
+- Invoices, collections, and cash flow
+- Safety logs and compliance evidence
+
+3) Implement AI agents as an execution layer
+Agent roles can mirror real operations:
+- Estimator Agent: extracts BOQ from plans, maps to assemblies, drafts bid.
+- PM Agent: monitors change orders, flags scope creep, updates schedule.
+- Finance Agent: creates invoices, tracks collections, predicts cash gaps.
+- Compliance Agent: ensures safety docs and permits are complete.
+
+4) Use a hybrid architecture (RAG + rules)
+- RAG for domain knowledge (codes, specs, manufacturer docs).
+- Rules for safety, compliance, and company policies.
+- Human approval gates for critical actions (quotes, bids, compliance).
+
+5) Build a data flywheel (the moat)
+Every job outcome updates:
+- Cost benchmark per task and region
+- Productivity metrics for crews
+- Supplier price trends
+- Change order frequency and impact
+
+6) Integrate into existing workflows
+- Connect to email, Google Drive, Dropbox, and accounting systems.
+- Pull in purchase orders and invoices.
+- Capture site photos and daily logs.
+
+7) Deliver ROI with measurable metrics
+Show weekly savings and margin improvements:
+- Estimating time saved
+- Change order revenue captured
+- Cash flow acceleration
+- Reduced rework (based on QA logs)
+
+
+Suggested Product Blueprint
+---------------------------
+
+Core Modules
+1) Intake & Knowledge Base
+   - Plan ingestion (PDFs, drawings)
+   - Past job library
+   - Supplier catalogs and pricing
+
+2) Estimation + Bid Engine
+   - Auto takeoff
+   - Labor + materials assemblies
+   - Quote generator with margin guardrails
+
+3) Job Execution & Compliance
+   - Daily logs, photos, safety checklists
+   - Change orders and RFIs
+   - Automated compliance documentation
+
+4) Financial Ops
+   - Invoices, collections, cash forecasting
+   - Variance analysis (actual vs estimate)
+
+5) Insights & Coaching
+   - “Margin leak” detection
+   - Best‑practice playbooks
+   - Agent recommendations with confidence scores
+
+
+Moats for a Subcontractor AI System
+-----------------------------------
+- Proprietary trade‑specific data (job outcomes, crew productivity, local pricing).
+- Embedded workflows (estimates, invoices, compliance → high switching costs).
+- Local/regional pricing intelligence (hard for outsiders to replicate).
+- Community benchmarking (aggregate anonymized benchmarks across peers).
+- Field data capture (photo logs, daily reports, QA history).
+
+
+Implementation Roadmap (Practical Next Steps)
+---------------------------------------------
+Phase 1 (2–4 weeks)
+- Pick 1 trade and 1 workflow (e.g., estimation).
+- Build ingestion + takeoff MVP.
+- Show ROI for 3–5 pilot contractors.
+
+Phase 2 (1–2 months)
+- Add job costing + change order automation.
+- Integrate with accounting tools.
+- Build basic agent system with human approval.
+
+Phase 3 (3–6 months)
+- Add compliance/safety modules.
+- Build benchmarking and predictive analytics.
+- Expand to more trades.
+
+
+What to Implement First (High Impact)
+-------------------------------------
+- Estimation and bid generation (fast ROI and clear user pain).
+- Change order detection (revenue capture).
+- Automated invoice + collections tracking (cash flow stability).
+- Daily log + safety compliance automation.
+
+
+Closing: What 2025 YC signals for your app
+------------------------------------------
+YC 2025 signals that winners will be:
+- Vertical‑first (deeply tailored, not generic).
+- System‑of‑action (not just assistant tools).
+- Data‑powered with clear ROI.
+- Trusted and compliant in regulated or operationally complex areas.
+
+For subcontractors and trades, the winning product is an AI operating system that
+captures field data, automates repetitive admin, and delivers margin‑improving
+recommendations. The moat is built by operational data and integration into
+real workflows that are painful to replace.

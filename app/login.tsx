@@ -27,6 +27,15 @@ const DEMO_ACCOUNTS: { email: string; role: UserRole; name: string }[] = [
   { email: 'director@vasco.dev', role: 'director', name: 'Alexandra Wright' },
 ];
 
+const ENTERPRISE_ROLES: UserRole[] = ['cfo', 'coo', 'site-lead', 'director'];
+
+const getRouteForEmail = (email: string) => {
+  const normalizedEmail = email.toLowerCase().trim();
+  const account = DEMO_ACCOUNTS.find((demo) => demo.email === normalizedEmail);
+  const role = account?.role;
+  return role && ENTERPRISE_ROLES.includes(role) ? '/(tabs)' : '/(contractor)';
+};
+
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,7 +54,7 @@ export default function LoginScreen() {
     const success = await login(email, password);
 
     if (success) {
-      router.replace('/(tabs)');
+      router.replace(getRouteForEmail(email));
     } else {
       setError('Invalid credentials. Try one of the demo accounts below.');
     }
@@ -55,7 +64,7 @@ export default function LoginScreen() {
     setEmail(demoEmail);
     const success = await login(demoEmail, 'demo');
     if (success) {
-      router.replace('/(tabs)');
+      router.replace(getRouteForEmail(demoEmail));
     }
   };
 

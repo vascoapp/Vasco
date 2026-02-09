@@ -169,7 +169,7 @@ export {
 export {
   serviceContractsService,
   useServiceContracts,
-  useContractVisits,
+  useUpcomingVisits as useContractVisits,
   useContractRenewals,
   useContractStats,
 } from './serviceContractsService';
@@ -287,3 +287,27 @@ export {
   useCustomerQuoteResponse,
   usePredictionAccuracy,
 } from './capacityPlanningService';
+
+// ROI Metrics
+export {
+  useROIMetrics,
+  useHoursSavedDisplay,
+  useROIGoals,
+  useROIDashboard,
+  useAutomationROI,
+} from './roiMetricsService';
+
+// Workflow Agents
+export {
+  workflowAgentsService,
+  useActiveWorkflows,
+  useWorkflowActions,
+} from './workflowAgentsService';
+
+// Dutch Compliance
+export {
+  useComplianceDashboard,
+} from './dutchComplianceService';
+
+// ROI Insights (alias)
+export { useInsights as useROIInsights } from './analyticsService';

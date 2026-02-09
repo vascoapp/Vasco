@@ -14,7 +14,6 @@ export default function ContractorLayout() {
       <Stack.Screen name="tiered-quote" />
       <Stack.Screen name="purchasing" />
       <Stack.Screen name="payments" />
-      <Stack.Screen name="jobs" />
       <Stack.Screen name="job/[id]" />
       <Stack.Screen name="ai-assistant" />
       <Stack.Screen name="smart-pricing" />
@@ -31,6 +30,9 @@ export default function ContractorLayout() {
       <Stack.Screen name="documents" />
       <Stack.Screen name="compliance" />
       <Stack.Screen name="cashflow" />
+      <Stack.Screen name="insurance" />
+      <Stack.Screen name="inkoop" />
+      <Stack.Screen name="profile" />
       <Stack.Screen name="warranty" />
       <Stack.Screen name="benchmark" />
       <Stack.Screen name="complete-job" />

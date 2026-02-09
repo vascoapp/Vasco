@@ -188,7 +188,7 @@ export function ComplianceStatusCard({ onPress, compact = false }: ComplianceSta
           <Text style={styles.alertsTitle}>
             {dashboard.alerts.length} Alert{dashboard.alerts.length !== 1 ? 's' : ''}
           </Text>
-          {dashboard.alerts.slice(0, 2).map((alert) => (
+          {dashboard.alerts.slice(0, 2).map((alert: any) => (
             <AlertItem key={alert.id} alert={alert} />
           ))}
           {dashboard.alerts.length > 2 && (
@@ -203,7 +203,7 @@ export function ComplianceStatusCard({ onPress, compact = false }: ComplianceSta
       {dashboard.upcomingDeadlines.length > 0 && (
         <View style={styles.deadlinesSection}>
           <Text style={styles.deadlinesTitle}>Upcoming Deadlines</Text>
-          {dashboard.upcomingDeadlines.slice(0, 3).map((deadline) => (
+          {dashboard.upcomingDeadlines.slice(0, 3).map((deadline: any) => (
             <DeadlineItem key={deadline.id} deadline={deadline} />
           ))}
         </View>
@@ -317,13 +317,13 @@ function formatDate(dateString: string): string {
 
 // Widget version for dashboard
 export function ComplianceWidget({ onPress }: { onPress?: () => void }) {
-  const { data: dashboard } = useComplianceDashboard();
+  const dashboard = useComplianceDashboard();
 
   if (!dashboard) return null;
 
-  const statusConfig = STATUS_CONFIG[dashboard.status];
+  const statusConfig = STATUS_CONFIG[dashboard.status as keyof typeof STATUS_CONFIG];
   const totalIssues =
-    dashboard.alerts.filter((a) => a.severity === 'critical' || a.severity === 'warning').length;
+    dashboard.alerts.filter((a: any) => a.severity === 'critical' || a.severity === 'warning').length;
 
   return (
     <Pressable style={styles.widget} onPress={onPress}>

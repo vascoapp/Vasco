@@ -1,4 +1,4 @@
-// COO Permits Tab - Permit Status & Conditions
+// COO Market Tab - Stakeholder & Market Success
 import { Screen } from '../../src/components/Screen';
 import { COODashboard } from '../../src/components/dashboards';
 import { useAuth } from '../../src/context/AuthContext';
@@ -21,7 +21,7 @@ export default function PermitsScreen() {
 
   return (
     <Screen>
-      <COODashboard initialTab="permits" showTabBar={false} />
+      <COODashboard initialTab="market" showTabBar={false} />
     </Screen>
   );
 }

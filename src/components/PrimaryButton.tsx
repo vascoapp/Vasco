@@ -15,7 +15,7 @@ export function PrimaryButton({ label, onPress }: PrimaryButtonProps) {
       onPress={onPress}
       style={({ pressed }) => [styles.button, pressed && styles.pressed]}
     >
-      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.label} numberOfLines={1}>{label}</Text>
     </Pressable>
   );
 }

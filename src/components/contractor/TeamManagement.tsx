@@ -200,7 +200,7 @@ export function TeamManagement() {
                         entry.status === 'in_progress'
                           ? SemanticColors.feedbackSuccess + '20'
                           : entry.status === 'completed'
-                          ? Palette.primary + '20'
+                          ? Palette.hermesOrange + '20'
                           : SemanticColors.feedbackWarning + '20',
                     },
                   ]}
@@ -213,7 +213,7 @@ export function TeamManagement() {
                           entry.status === 'in_progress'
                             ? SemanticColors.feedbackSuccess
                             : entry.status === 'completed'
-                            ? Palette.primary
+                            ? Palette.hermesOrange
                             : SemanticColors.feedbackWarning,
                       },
                     ]}

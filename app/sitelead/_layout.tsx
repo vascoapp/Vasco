@@ -10,9 +10,14 @@ export default function SiteLeadLayout() {
         animation: 'slide_from_right',
       }}
     >
-      <Stack.Screen name="index" />
       <Stack.Screen name="dispatch" />
       <Stack.Screen name="reports" />
+      <Stack.Screen name="team/[id]" />
+      <Stack.Screen name="incident-report" />
+      <Stack.Screen name="inspection" />
+      <Stack.Screen name="compliance" />
+      <Stack.Screen name="log-defect" />
+      <Stack.Screen name="close-defect" />
     </Stack>
   );
 }

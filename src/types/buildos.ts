@@ -427,6 +427,8 @@ export interface DevelopmentAppraisal {
   equityIrr?: number;
   npv: number;
   equityMultiple?: number;
+  // Equity
+  peakEquityRequired?: number;
   // Sensitivity
   breakEvenYield?: number;
   maxLandValue?: number;

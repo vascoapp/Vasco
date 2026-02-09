@@ -30,11 +30,12 @@ interface ROIDashboardProps {
 
 export function ROIDashboard({ onClose }: ROIDashboardProps) {
   const [period, setPeriod] = useState<TimePeriod>('month');
-  const { data: metrics, isLoading } = useROIMetrics();
-  const { data: dashboard } = useROIDashboard();
-  const { data: insights } = useROIInsights();
-  const { data: goals } = useROIGoals();
-  const { data: automationROI } = useAutomationROI();
+  const metrics = useROIMetrics();
+  const dashboard = useROIDashboard();
+  const { insights } = useROIInsights() as any;
+  const { goals } = useROIGoals();
+  const automationROI = useAutomationROI();
+  const isLoading = !metrics;
 
   if (isLoading || !dashboard) {
     return (
@@ -125,7 +126,7 @@ export function ROIDashboard({ onClose }: ROIDashboardProps) {
                 </View>
               </View>
               <View style={styles.roiBreakdown}>
-                {automationROI.breakdown.map((item, index) => (
+                {automationROI.breakdown.map((item: any, index: number) => (
                   <View key={index} style={styles.roiBreakdownItem}>
                     <Text style={styles.roiBreakdownLabel}>{item.category}</Text>
                     <Text style={styles.roiBreakdownValue}>
@@ -149,7 +150,7 @@ export function ROIDashboard({ onClose }: ROIDashboardProps) {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>vs. Industry Benchmark</Text>
             <View style={styles.benchmarkList}>
-              {dashboard.vsBenchmark.map((item, index) => (
+              {dashboard.vsBenchmark.map((item: any, index: number) => (
                 <BenchmarkItem key={index} item={item} />
               ))}
             </View>
@@ -167,7 +168,7 @@ export function ROIDashboard({ onClose }: ROIDashboardProps) {
               </Pressable>
             </View>
             <View style={styles.goalsList}>
-              {goals.map((goal) => (
+              {goals.map((goal: any) => (
                 <GoalCard key={goal.id} goal={goal} />
               ))}
             </View>
@@ -179,7 +180,7 @@ export function ROIDashboard({ onClose }: ROIDashboardProps) {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Insights & Opportunities</Text>
             <View style={styles.insightsList}>
-              {insights.slice(0, 5).map((insight) => (
+              {insights.slice(0, 5).map((insight: any) => (
                 <InsightCard key={insight.id} insight={insight} />
               ))}
             </View>

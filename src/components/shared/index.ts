@@ -23,3 +23,8 @@ export { ScenarioComparisonCard } from './ScenarioComparisonCard';
 export type { ScenarioData } from './ScenarioComparisonCard';
 export { WorkCardList } from './WorkCardList';
 export type { WorkCard } from './WorkCardList';
+export { UtilizationHeatmapGrid } from './UtilizationHeatmapGrid';
+export { BurnRateBar } from './BurnRateBar';
+export { ScheduleBlockBoard } from './ScheduleBlockBoard';
+export { VascoTaskBar } from './VascoTaskBar';
+export { VascoKarmaStrip } from './VascoKarmaStrip';

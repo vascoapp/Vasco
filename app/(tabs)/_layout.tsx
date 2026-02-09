@@ -28,17 +28,17 @@ const getTabsForRole = (role: UserRole | undefined): {
       ];
     case 'coo':
       return [
-        { name: 'index', title: 'Overview', icon: 'speedometer-outline', iconFocused: 'speedometer' },
-        { name: 'schedule', title: 'Schedule', icon: 'calendar-outline', iconFocused: 'calendar' },
-        { name: 'permits', title: 'Permits', icon: 'document-text-outline', iconFocused: 'document-text' },
-        { name: 'procurement', title: 'Contracts', icon: 'briefcase-outline', iconFocused: 'briefcase' },
+        { name: 'index', title: 'Financials', icon: 'analytics-outline', iconFocused: 'analytics' },
+        { name: 'schedule', title: 'Efficiency', icon: 'speedometer-outline', iconFocused: 'speedometer' },
+        { name: 'permits', title: 'Market', icon: 'people-outline', iconFocused: 'people' },
+        { name: 'procurement', title: 'Emerging', icon: 'rocket-outline', iconFocused: 'rocket' },
       ];
     case 'site-lead':
       return [
         { name: 'index', title: 'Overzicht', icon: 'grid-outline', iconFocused: 'grid' },
+        { name: 'site-schedule', title: 'Planning', icon: 'calendar-outline', iconFocused: 'calendar' },
         { name: 'site-safety', title: 'Veiligheid', icon: 'shield-checkmark-outline', iconFocused: 'shield-checkmark' },
         { name: 'site-quality', title: 'Kwaliteit', icon: 'ribbon-outline', iconFocused: 'ribbon' },
-        { name: 'site-schedule', title: 'Planning', icon: 'calendar-outline', iconFocused: 'calendar' },
       ];
     case 'director':
       return [
@@ -72,7 +72,8 @@ export default function TabsLayout() {
           backgroundColor: Colors.surface,
           borderTopColor: Colors.border,
           paddingTop: 8,
-          height: 80,
+          paddingBottom: 34,
+          height: 90,
         },
         tabBarActiveTintColor: primaryColor,
         tabBarInactiveTintColor: Colors.muted,
@@ -98,7 +99,7 @@ export default function TabsLayout() {
       ))}
       {/* Hide tabs not in current role's configuration */}
       {!tabs.find(t => t.name === 'work') && <Tabs.Screen name="work" options={{ href: null }} />}
-      <Tabs.Screen name="hub" options={{ href: null }} />
+      {!tabs.find(t => t.name === 'hub') && <Tabs.Screen name="hub" options={{ href: null }} />}
       {!tabs.find(t => t.name === 'tools') && <Tabs.Screen name="tools" options={{ href: null }} />}
       {!tabs.find(t => t.name === 'planning') && <Tabs.Screen name="planning" options={{ href: null }} />}
       {/* COO tabs */}

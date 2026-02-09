@@ -6,11 +6,11 @@
 // overflow caused by late decisions.
 // =============================================================================
 
-import { useState } from 'react';
-import { View, Text, StyleSheet, Modal, Alert } from 'react-native';
+import { useState, useCallback, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors, Palette } from '../../src/theme/colors';
+import { Palette } from '../../src/theme/colors';
+import { hapticSuccess } from '../../src/utils/haptics';
 import { Spacing } from '../../src/theme/spacing';
 import {
   DecisionTrackerList,
@@ -18,25 +18,27 @@ import {
   TemplatePicker,
 } from '../../src/components/contractor/DecisionTracker';
 import { ShareDecisionTracker } from '../../src/components/contractor/ShareDecisionTracker';
-import { InlineInsight } from '../../src/components/shared/VascoInsightCard';
-import { ContractorDashboardHeader } from '../../src/components/contractor/ContractorDashboardHeader';
-import { useInlineInsight } from '../../src/services/vascoGuidanceService';
 import type { CustomerDecisionTracker, DecisionTemplate } from '../../src/types/decisions';
+import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 
-type IconName = keyof typeof Ionicons.glyphMap;
 type ViewMode = 'list' | 'detail' | 'template-picker';
 
 export default function KeuzeScreen() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedTracker, setSelectedTracker] = useState<CustomerDecisionTracker | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const inlineInsight = useInlineInsight('contractor', 'decisions', 'overview');
+  // Screen visit tracking
+  useEffect(() => { recordScreenVisit('decisions'); }, []);
 
-  // Mock KPI counts
-  const totalDecisions = 12;
-  const pendingDecisions = 5;
-  const overdueDecisions = 2;
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+      hapticSuccess();
+    }, 800);
+  }, []);
 
   const handleSelectTracker = (tracker: CustomerDecisionTracker) => {
     setSelectedTracker(tracker);
@@ -151,49 +153,39 @@ export default function KeuzeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {viewMode === 'list' && (
-        <View style={styles.listHeader}>
-          <Text style={styles.headerTitle}>Keuzes</Text>
-          <ContractorDashboardHeader
-            kpis={[
-              { icon: 'checkbox', value: String(totalDecisions), label: 'Keuzes' },
-              { icon: 'time', value: String(pendingDecisions), label: 'Wachtend', color: Palette.hermesOrange },
-              { icon: 'alert-circle', value: String(overdueDecisions), label: 'Verlopen', color: SemanticColors.feedbackError },
-            ]}
+      <Text style={styles.pageTitle}>Klant Keuzes</Text>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />
+        }
+      >
+        {viewMode === 'list' && (
+          <DecisionTrackerList
+            onSelectTracker={handleSelectTracker}
+            onCreateNew={handleCreateNew}
           />
-          {inlineInsight && (
-            <InlineInsight
-              icon={inlineInsight.icon as IconName}
-              message={inlineInsight.message}
-              actionLabel={inlineInsight.actionLabel}
-              actionRoute={inlineInsight.actionRoute}
-            />
-          )}
-        </View>
-      )}
-      {viewMode === 'list' && (
-        <DecisionTrackerList
-          onSelectTracker={handleSelectTracker}
-          onCreateNew={handleCreateNew}
-        />
-      )}
+        )}
 
-      {viewMode === 'detail' && selectedTracker && (
-        <DecisionTrackerDetail
-          tracker={selectedTracker}
-          onClose={handleClose}
-          onSendReminder={handleSendReminder}
-          onRecordDecision={handleRecordDecision}
-          onShareWithCustomer={handleShareWithCustomer}
-        />
-      )}
+        {viewMode === 'detail' && selectedTracker && (
+          <DecisionTrackerDetail
+            tracker={selectedTracker}
+            onClose={handleClose}
+            onSendReminder={handleSendReminder}
+            onRecordDecision={handleRecordDecision}
+            onShareWithCustomer={handleShareWithCustomer}
+          />
+        )}
 
-      {viewMode === 'template-picker' && (
-        <TemplatePicker
-          onSelect={handleSelectTemplate}
-          onClose={handleClose}
-        />
-      )}
+        {viewMode === 'template-picker' && (
+          <TemplatePicker
+            onSelect={handleSelectTemplate}
+            onClose={handleClose}
+          />
+        )}
+      </ScrollView>
 
       {/* Share Modal */}
       <Modal
@@ -216,17 +208,14 @@ export default function KeuzeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.surfaceBackground,
+    backgroundColor: Palette.salmonLight,
   },
-  listHeader: {
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.xs,
-    paddingBottom: Spacing.sm,
-    gap: Spacing.sm,
-  },
-  headerTitle: {
+  pageTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: SemanticColors.textPrimary,
+    color: '#1A1A1A',
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
   },
 });

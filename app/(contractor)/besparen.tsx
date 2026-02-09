@@ -1,11 +1,11 @@
 // =============================================================================
 // BESPAREN - Premium Contractor Savings & Cost Management Dashboard
 // =============================================================================
-// Pro-grade fintech savings hub with hero card, visual breakdowns,
-// and intelligent price alerts
+// Pro-grade fintech savings hub with hero card, actionable tips with
+// Vasco reasoning, and intelligent price alerts
 // =============================================================================
 
-import { useState } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,20 +14,23 @@ import {
   Pressable,
   Modal,
   Alert,
+  RefreshControl,
+  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
-import { Spacing } from '../../src/theme/spacing';
+import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { SmartPurchasing } from '../../src/components/contractor/SmartPurchasing';
-import { ReceiptScanner } from '../../src/components/contractor/ReceiptScanner';
 import { InlineInsight } from '../../src/components/shared/VascoInsightCard';
-import { ReasoningMode, useReasoningMode } from '../../src/components/shared/ReasoningMode';
 import { useInlineInsight } from '../../src/services/vascoGuidanceService';
 import { useSavingsAggregation, useSavingsTimeline } from '../../src/services/savingsAggregatorService';
 import { usePredictiveSavings } from '../../src/services/predictiveSavingsService';
-import { useSupplierNegotiation } from '../../src/services/supplierNegotiationService';
-import { useTCOSummary } from '../../src/services/tcoCalculatorService';
+import { hapticSuccess } from '../../src/utils/haptics';
+import { recordScreenVisit } from '../../src/intelligence/learningStorage';
+
+// P2: Cost tracking
+import { useJobCostSummary } from '../../src/services/jobCostTrackingService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -76,77 +79,135 @@ function getAlertAccentColor(type: PriceAlert['type']): string {
   }
 }
 
-interface ToolItem {
-  id: string;
-  icon: IconName;
-  title: string;
-  description: string;
-  route?: string;
-  onPress?: () => void;
-  color: string;
-  stat?: string;
-}
+// Vasco reasoning explanations per tip type
+const VASCO_REASONING: Record<string, string> = {
+  'pred_1': 'Op basis van je bestelhistorie zie ik dat je materiaalkosten stijgen rond seizoenswisselingen. Door nu in te kopen bespaar je gemiddeld 12% op bulktarieven.',
+  'pred_2': 'Je bestelt bij 3 verschillende leveranciers dezelfde categorieën. Door te consolideren naar vaste besteldagen kun je verzendkosten en tijd besparen.',
+  'pred_3': 'Facturen die automatisch betaald worden binnen 14 dagen krijgen gemiddeld 2% korting. Dit bespaart je €180/jaar zonder extra moeite.',
+  'pred_4': 'Ik vergelijk continu je materiaalkosten met marktprijzen. Momenteel zijn koppelingen en fittingen 8-15% goedkoper bij alternatieve leveranciers.',
+  'pred_5': 'Je huidige contracttarieven zijn 6 maanden oud. Op basis van marktontwikkelingen kun je bij heronderhandeling betere voorwaarden krijgen.',
+};
 
 // ============================================
 // MAIN SCREEN
 // ============================================
 
+// Circular Progress Ring
+function SavingsRing({ current, goal, size = 120, strokeWidth = 10 }: { current: number; goal: number; size?: number; strokeWidth?: number }) {
+  const animValue = useRef(new Animated.Value(0)).current;
+  const progress = Math.min(current / goal, 1);
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+
+  useEffect(() => {
+    Animated.timing(animValue, {
+      toValue: progress,
+      duration: 1000,
+      useNativeDriver: false,
+    }).start();
+  }, [progress]);
+
+  // For RN, we approximate with a View-based ring
+  const rotation = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      {/* Background ring */}
+      <View style={{
+        position: 'absolute',
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        borderWidth: strokeWidth,
+        borderColor: Palette.hermesOrange + '15',
+      }} />
+      {/* Progress ring - using overlapping half-circles */}
+      <View style={{
+        position: 'absolute',
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        borderWidth: strokeWidth,
+        borderColor: Palette.hermesOrange,
+        borderTopColor: progress > 0.25 ? Palette.hermesOrange : 'transparent',
+        borderRightColor: progress > 0.5 ? Palette.hermesOrange : 'transparent',
+        borderBottomColor: progress > 0.75 ? Palette.hermesOrange : 'transparent',
+        borderLeftColor: 'transparent',
+        transform: [{ rotate: '-90deg' }],
+      }} />
+      {progress > 0 && progress <= 0.25 && (
+        <View style={{
+          position: 'absolute',
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          borderWidth: strokeWidth,
+          borderColor: 'transparent',
+          borderTopColor: Palette.hermesOrange,
+          transform: [{ rotate: `${-90 + progress * 360}deg` }],
+        }} />
+      )}
+      {/* Center content */}
+      <View style={{ alignItems: 'center' }}>
+        <Text style={{ fontSize: 28, fontWeight: '800', color: Palette.hermesOrange, fontVariant: ['tabular-nums'] }}>
+          {'\u20AC'}{current.toLocaleString('nl-NL')}
+        </Text>
+        <Text style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
+          van {'\u20AC'}{goal.toLocaleString('nl-NL')}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 export default function BesparenScreen() {
   const router = useRouter();
   const [showFullPurchasing, setShowFullPurchasing] = useState(false);
-  const [showReceiptScanner, setShowReceiptScanner] = useState(false);
+  const [expandedTipId, setExpandedTipId] = useState<string | null>(null);
+  const [actionedTips, setActionedTips] = useState<Set<string>>(new Set());
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
+  const [refreshing, setRefreshing] = useState(false);
   const inlineInsight = useInlineInsight('contractor', 'savings', 'overview');
+
+  // Screen visit tracking
+  useEffect(() => { recordScreenVisit('savings'); }, []);
 
   // AI Cost-Saving Services
   const savings = useSavingsAggregation();
+  const timeline = useSavingsTimeline();
   const predictive = usePredictiveSavings({ urgency: 'high' });
   const allPredictive = usePredictiveSavings();
-  const negotiation = useSupplierNegotiation();
-  const tco = useTCOSummary();
-  const timeline = useSavingsTimeline();
 
-  // AI Reasoning
-  const savingsReasoning = useReasoningMode('savings_total');
-  const potentialReasoning = useReasoningMode('savings_potential');
+  // P2: Cost tracking summary
+  const costSummary = useJobCostSummary();
 
   const totalPotential = predictive.reduce((s, p) => s + p.potentialSaving, 0);
   const totalKansen = MOCK_ALERTS.length + allPredictive.length;
 
-  const savingsTools: ToolItem[] = [
-    {
-      id: 'scan',
-      icon: 'camera',
-      title: 'Bon Scanner',
-      description: 'Scan bonnen voor administratie',
-      onPress: () => setShowReceiptScanner(true),
-      color: SemanticColors.feedbackSuccess,
-    },
-    {
-      id: 'suppliers',
-      icon: 'storefront',
-      title: 'Leveranciers',
-      description: 'Beheer & vergelijk leveranciers',
-      route: '/contractor/purchasing',
-      color: SemanticColors.feedbackInfo,
-    },
-    {
-      id: 'reorder',
-      icon: 'refresh-circle',
-      title: 'Herbestellen',
-      description: 'Slim herbestellen',
-      route: '/contractor/reorder',
-      color: '#3B82F6',
-    },
-    {
-      id: 'benchmark',
-      icon: 'analytics',
-      title: 'Benchmarking',
-      description: 'Vergelijk kosten',
-      route: '/contractor/benchmark',
-      color: '#8B5CF6',
-    },
-  ];
+  // Sort tips by biggest saving impact first
+  const sortedTips = [...allPredictive].sort((a, b) => b.potentialSaving - a.potentialSaving);
 
+  // Monthly savings goal
+  const monthlyGoal = 5000;
+  const remaining = Math.max(0, monthlyGoal - savings.totalSavedThisMonth);
+
+  // Month-over-month comparison
+  const currentMonthAmount = timeline.length > 0 ? timeline[timeline.length - 1].amount : 0;
+  const prevMonthAmount = timeline.length > 1 ? timeline[timeline.length - 2].amount : 0;
+  const momDelta = prevMonthAmount > 0 ? Math.round(((currentMonthAmount - prevMonthAmount) / prevMonthAmount) * 100) : 0;
+  const momColor = momDelta > 0 ? '#16A34A' : momDelta < 0 ? '#DC2626' : '#999';
+  const momIcon = momDelta > 0 ? 'arrow-up' : momDelta < 0 ? 'arrow-down' : 'remove';
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+      hapticSuccess();
+    }, 800);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -157,7 +218,7 @@ export default function BesparenScreen() {
           style={styles.headerButton}
           onPress={() => setShowFullPurchasing(true)}
         >
-          <Ionicons name="analytics" size={20} color={SemanticColors.textSecondary} />
+          <Ionicons name="analytics" size={20} color={Palette.hermesOrange} />
         </Pressable>
       </View>
 
@@ -165,19 +226,34 @@ export default function BesparenScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />
+        }
       >
         {/* ============================================ */}
-        {/* 1. HERO SAVINGS CARD                        */}
+        {/* 1. HERO SAVINGS CARD with Goal Ring          */}
         {/* ============================================ */}
         <View style={styles.heroCard}>
           <View style={styles.heroAccent} />
           <View style={styles.heroContent}>
             <View style={styles.heroMain}>
-              <Text style={styles.heroAmount}>
-                {'\u20AC'}{savings.totalSavedThisMonth.toLocaleString('nl-NL')}
-              </Text>
+              <SavingsRing current={savings.totalSavedThisMonth} goal={monthlyGoal} />
               <Text style={styles.heroSubtitle}>deze maand bespaard</Text>
+              {remaining > 0 && (
+                <Text style={styles.heroRemaining}>
+                  Nog {'\u20AC'}{remaining.toLocaleString('nl-NL')} te gaan
+                </Text>
+              )}
             </View>
+
+            {/* Month-over-month comparison */}
+            <View style={[styles.momStrip, { backgroundColor: momColor + '10' }]}>
+              <Ionicons name={momIcon as IconName} size={12} color={momColor} />
+              <Text style={[styles.momText, { color: momColor }]}>
+                {momDelta > 0 ? '+' : ''}{momDelta}% vs vorige maand
+              </Text>
+            </View>
+
             <View style={styles.heroChips}>
               <View style={styles.heroChip}>
                 <Ionicons name="bulb" size={13} color={Palette.hermesOrange} />
@@ -206,14 +282,178 @@ export default function BesparenScreen() {
           </View>
         </View>
 
-        {/* Reasoning chips */}
-        <View style={styles.reasoningRow}>
-          <ReasoningMode reasoning={savingsReasoning} label="Waarom deze besparing?" />
-          <ReasoningMode reasoning={potentialReasoning} label="Potentieel?" variant="chip" />
-        </View>
+        {/* ============================================ */}
+        {/* 1b. MARGE-LEK DEZE MAAND (P2)              */}
+        {/* ============================================ */}
+        {costSummary.totalMarginLeakage > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Marge-lek deze maand</Text>
+              <View style={[styles.alertBadge, { backgroundColor: '#DC262614' }]}>
+                <Text style={[styles.alertBadgeText, { color: '#DC2626' }]}>
+                  -{'\u20AC'}{costSummary.totalMarginLeakage.toLocaleString('nl-NL')}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.marginLeakCard}>
+              {costSummary.topVarianceReasons.map((reason, idx) => {
+                const icons: Record<string, IconName> = {
+                  uren: 'time',
+                  materiaal: 'cube',
+                  reistijd: 'car',
+                  herwerk: 'refresh',
+                  onvoorzien: 'alert-circle',
+                };
+                return (
+                  <View key={reason.category} style={[
+                    styles.marginLeakRow,
+                    idx < costSummary.topVarianceReasons.length - 1 && styles.alertItemBorder,
+                  ]}>
+                    <View style={[styles.toolIcon, { backgroundColor: '#DC262610', width: 28, height: 28, borderRadius: 8 }]}>
+                      <Ionicons name={icons[reason.category] || 'help-circle'} size={13} color="#DC2626" />
+                    </View>
+                    <Text style={styles.marginLeakCategory}>{reason.category.charAt(0).toUpperCase() + reason.category.slice(1)}</Text>
+                    <Text style={styles.marginLeakAmount}>-{'\u20AC'}{reason.amount.toLocaleString('nl-NL')}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
 
         {/* ============================================ */}
-        {/* 6. INLINE INSIGHT (moved up)                */}
+        {/* 2. BESPAARTIPS VAN VASCO (actionable)       */}
+        {/* ============================================ */}
+        {(sortedTips.length > 0 || MOCK_ALERTS.length > 0) && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Bespaartips van Vasco</Text>
+              <View style={styles.alertBadge}>
+                <Text style={styles.alertBadgeText}>{sortedTips.length + MOCK_ALERTS.filter(a => !dismissedAlerts.has(a.id)).length} kansen</Text>
+              </View>
+            </View>
+            <View style={styles.alertsList}>
+              {sortedTips.slice(0, 3).map((tip, index) => {
+                const isExpanded = expandedTipId === tip.id;
+                return (
+                  <View key={tip.id}>
+                    <Pressable
+                      style={[styles.alertItem, (!isExpanded && (index < Math.min(sortedTips.length, 3) - 1 || MOCK_ALERTS.some(a => !dismissedAlerts.has(a.id)))) && styles.alertItemBorder]}
+                      onPress={() => setExpandedTipId(isExpanded ? null : tip.id)}
+                    >
+                      <View style={[styles.toolIcon, { backgroundColor: Palette.hermesOrange + '15' }]}>
+                        <Ionicons name={tip.icon as IconName} size={20} color={Palette.hermesOrange} />
+                      </View>
+                      <View style={styles.toolContent}>
+                        <Text style={styles.toolTitle} numberOfLines={1}>{tip.title}</Text>
+                        <Text style={styles.toolDesc} numberOfLines={1}>{tip.description}</Text>
+                      </View>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Text style={{ fontSize: 14, fontWeight: '700', color: SemanticColors.feedbackSuccess }}>{'\u20AC'}{tip.potentialSaving}</Text>
+                        <Text style={{ fontSize: 10, color: SemanticColors.textTertiary }}>{tip.confidence}% zeker</Text>
+                      </View>
+                    </Pressable>
+
+                    {/* Expanded detail with reasoning + action */}
+                    {isExpanded && (
+                      <View style={[styles.tipDetail, (index < Math.min(sortedTips.length, 3) - 1 || MOCK_ALERTS.some(a => !dismissedAlerts.has(a.id))) && styles.alertItemBorder]}>
+                        <Text style={styles.tipDetailDesc}>{tip.description}</Text>
+
+                        {/* Vasco reasoning */}
+                        <View style={styles.tipReasoningBox}>
+                          <View style={styles.tipReasoningHeader}>
+                            <Ionicons name="sparkles" size={14} color={Palette.hermesOrange} />
+                            <Text style={styles.tipReasoningTitle}>Waarom deze tip?</Text>
+                          </View>
+                          <Text style={styles.tipReasoningText}>
+                            {VASCO_REASONING[tip.id] || 'Vasco analyseert je uitgavenpatronen en marktprijzen om besparingskansen te identificeren.'}
+                          </Text>
+                        </View>
+
+                        {/* Stats row */}
+                        <View style={styles.tipStatsRow}>
+                          <View style={styles.tipStat}>
+                            <Text style={styles.tipStatValue}>{'\u20AC'}{tip.potentialSaving}</Text>
+                            <Text style={styles.tipStatLabel}>Besparing</Text>
+                          </View>
+                          <View style={styles.tipStatDivider} />
+                          <View style={styles.tipStat}>
+                            <Text style={styles.tipStatValue}>{tip.confidence}%</Text>
+                            <Text style={styles.tipStatLabel}>Betrouwbaar</Text>
+                          </View>
+                          <View style={styles.tipStatDivider} />
+                          <View style={styles.tipStat}>
+                            <Text style={styles.tipStatValue}>{tip.timeframe}</Text>
+                            <Text style={styles.tipStatLabel}>Termijn</Text>
+                          </View>
+                        </View>
+
+                        {/* Action button */}
+                        {actionedTips.has(tip.id) ? (
+                          <View style={[styles.tipActionButton, { backgroundColor: '#16A34A' }]}>
+                            <Ionicons name="checkmark-done" size={18} color="#fff" />
+                            <Text style={styles.tipActionText}>Ingepland</Text>
+                          </View>
+                        ) : (
+                          <Pressable
+                            style={styles.tipActionButton}
+                            onPress={() => {
+                              setActionedTips(prev => new Set(prev).add(tip.id));
+                              setExpandedTipId(null);
+                              Alert.alert('Actie ingepland', `"${tip.actionLabel}" is ingepland. Vasco houdt de voortgang bij.`);
+                            }}
+                          >
+                            <Ionicons name="checkmark-circle" size={18} color="#fff" />
+                            <Text style={styles.tipActionText} numberOfLines={1}>{tip.actionLabel}</Text>
+                          </Pressable>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
+
+              {/* Price alerts merged into tips */}
+              {MOCK_ALERTS.filter(a => !dismissedAlerts.has(a.id)).map((alert, index, arr) => (
+                <View
+                  key={alert.id}
+                  style={[styles.alertItem, index < arr.length - 1 && styles.alertItemBorder]}
+                >
+                  <View style={[styles.toolIcon, { backgroundColor: getAlertAccentColor(alert.type) + '15' }]}>
+                    <Ionicons name="pricetag" size={18} color={getAlertAccentColor(alert.type)} />
+                  </View>
+                  <View style={styles.toolContent}>
+                    <Text style={styles.toolTitle} numberOfLines={1}>{alert.materialName}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                      <Text style={styles.toolDesc}>{alert.supplierName}</Text>
+                      <View style={[styles.alertSavingsPill, { backgroundColor: getAlertAccentColor(alert.type) + '18' }]}>
+                        <Ionicons name="arrow-down" size={10} color={getAlertAccentColor(alert.type)} />
+                        <Text style={{ fontSize: 11, fontWeight: '700', color: getAlertAccentColor(alert.type) }}>{alert.savingsPercent}%</Text>
+                      </View>
+                    </View>
+                  </View>
+                  <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                    <Pressable
+                      style={styles.alertInlineCTA}
+                      onPress={() => {
+                        setDismissedAlerts(prev => new Set(prev).add(alert.id));
+                        Alert.alert('Besteld', `${alert.materialName} toegevoegd aan je bestelling.`);
+                      }}
+                    >
+                      <Text style={styles.alertInlineCTAText} numberOfLines={1}>Bestel nu</Text>
+                    </Pressable>
+                    <Pressable onPress={() => Alert.alert('Prijsalert', `Alert ingesteld voor ${alert.materialName}. Je krijgt bericht als de prijs verder daalt.`)}>
+                      <Text style={styles.alertInlineLink} numberOfLines={1}>Alert instellen</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* ============================================ */}
+        {/* 3. INLINE INSIGHT                            */}
         {/* ============================================ */}
         {inlineInsight && (
           <InlineInsight
@@ -225,267 +465,18 @@ export default function BesparenScreen() {
         )}
 
         {/* ============================================ */}
-        {/* 2. UPGRADED PRICE ALERTS                    */}
-        {/* ============================================ */}
-        {MOCK_ALERTS.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Prijsalerts</Text>
-              <View style={styles.alertBadge}>
-                <Text style={styles.alertBadgeText}>{MOCK_ALERTS.length} actief</Text>
-              </View>
-            </View>
-            <View style={styles.alertsList}>
-              {MOCK_ALERTS.map((alert, index) => (
-                <View
-                  key={alert.id}
-                  style={[
-                    styles.alertItemUpgraded,
-                    index < MOCK_ALERTS.length - 1 && styles.alertItemBorder,
-                  ]}
-                >
-                  {/* Colored left accent */}
-                  <View style={[styles.alertLeftAccent, { backgroundColor: getAlertAccentColor(alert.type) }]} />
-                  <View style={styles.alertContentUpgraded}>
-                    <View style={styles.alertTop}>
-                      <Text style={styles.alertMaterial} numberOfLines={1}>{alert.materialName}</Text>
-                      {/* Prominent savings badge */}
-                      <View style={[styles.alertSavingsBadge, { backgroundColor: getAlertAccentColor(alert.type) + '18' }]}>
-                        <Ionicons name="arrow-down" size={14} color={getAlertAccentColor(alert.type)} />
-                        <Text style={[styles.alertSavingsBadgeText, { color: getAlertAccentColor(alert.type) }]}>{alert.savingsPercent}%</Text>
-                      </View>
-                    </View>
-                    <Text style={styles.alertSupplier}>{alert.supplierName}</Text>
-                    <View style={styles.alertPrices}>
-                      <Text style={styles.alertCurrentPrice}>{'\u20AC'}{alert.currentPrice.toFixed(2)}</Text>
-                      <Text style={styles.alertOldPrice}>{'\u20AC'}{alert.previousPrice.toFixed(2)}</Text>
-                      {alert.expiresIn && (
-                        <View style={styles.alertExpiry}>
-                          <Ionicons name="time-outline" size={10} color={SemanticColors.feedbackWarning} />
-                          <Text style={styles.alertExpiryText}>{alert.expiresIn}</Text>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                  {/* CTA button */}
-                  <Pressable
-                    style={styles.alertCTAButton}
-                    onPress={() => Alert.alert(
-                      'Toevoegen aan winkelwagen',
-                      `${alert.materialName} van ${alert.supplierName} voor \u20AC${alert.currentPrice.toFixed(2)}?`,
-                      [
-                        { text: 'Annuleren', style: 'cancel' },
-                        { text: 'Toevoegen', onPress: () => Alert.alert('Toegevoegd', `${alert.materialName} is toegevoegd aan je winkelwagen.`) },
-                      ]
-                    )}
-                  >
-                    <Ionicons name="cart" size={14} color="#fff" />
-                    <Text style={styles.alertCTAText}>Bestel nu</Text>
-                  </Pressable>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* ============================================ */}
-        {/* 3. SAVINGS BREAKDOWN BAR                    */}
+        {/* 4. INKOOP                                    */}
         {/* ============================================ */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Waar je bespaart</Text>
-          <View style={[styles.alertsList, { padding: Spacing.md }]}>
-            {/* Stacked horizontal bar */}
-            <View style={styles.breakdownBar}>
-              <View style={{ flex: 45, backgroundColor: SemanticColors.feedbackSuccess }} />
-              <View style={{ flex: 25, backgroundColor: Palette.hermesOrange }} />
-              <View style={{ flex: 20, backgroundColor: SemanticColors.feedbackInfo }} />
-              <View style={{ flex: 10, backgroundColor: '#8B5CF6' }} />
-            </View>
-            {/* Legend */}
-            {([
-              { label: 'Materialen', amount: '\u20AC1.840', percent: '45%', color: SemanticColors.feedbackSuccess },
-              { label: 'Leveranciers', amount: '\u20AC1.020', percent: '25%', color: Palette.hermesOrange },
-              { label: 'Effici\u00EBntie', amount: '\u20AC820', percent: '20%', color: SemanticColors.feedbackInfo },
-              { label: 'Overig', amount: '\u20AC410', percent: '10%', color: '#8B5CF6' },
-            ] as const).map((item) => (
-              <View key={item.label} style={styles.breakdownLegendRow}>
-                <View style={[styles.breakdownDot, { backgroundColor: item.color }]} />
-                <Text style={styles.breakdownLabel}>{item.label}</Text>
-                <Text style={styles.breakdownAmount}>{item.amount}</Text>
-                <Text style={styles.breakdownPercent}>{item.percent}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* ============================================ */}
-        {/* 4. UPGRADED SAVINGS TIMELINE                */}
-        {/* ============================================ */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Besparingsverloop</Text>
-          <View style={[styles.alertsList, { padding: Spacing.md }]}>
-            {/* Top row: total + trend */}
-            <View style={styles.timelineHeader}>
-              <View>
-                <Text style={styles.timelineTotalLabel}>Totaal bespaard dit jaar</Text>
-                <Text style={styles.timelineTotal}>{'\u20AC'}{savings.totalSavedThisYear.toLocaleString('nl-NL')}</Text>
-              </View>
-              <View style={styles.timelineTrend}>
-                <Ionicons name="arrow-up" size={14} color={SemanticColors.feedbackSuccess} />
-                <Text style={styles.timelineTrendText}>+{savings.trendPercent}%</Text>
-              </View>
-            </View>
-            {/* Bar chart */}
-            <View style={styles.timelineChart}>
-              {timeline.map((m, idx) => {
-                const maxVal = Math.max(...timeline.map(t => t.amount));
-                const barH = Math.max(8, (m.amount / maxVal) * 80);
-                const isCurrentMonth = idx === timeline.length - 1;
-                return (
-                  <View key={m.month} style={styles.timelineBarCol}>
-                    {/* Value label on current month */}
-                    {isCurrentMonth && (
-                      <Text style={styles.timelineBarValue}>{'\u20AC'}{m.amount.toLocaleString('nl-NL')}</Text>
-                    )}
-                    <View
-                      style={[
-                        styles.timelineBar,
-                        {
-                          height: barH,
-                          backgroundColor: SemanticColors.feedbackSuccess,
-                          opacity: isCurrentMonth ? 1 : 0.4,
-                        },
-                        isCurrentMonth && styles.timelineBarCurrent,
-                      ]}
-                    />
-                    <Text style={[
-                      styles.timelineBarLabel,
-                      isCurrentMonth && styles.timelineBarLabelActive,
-                    ]}>{m.month}</Text>
-                  </View>
-                );
-              })}
-            </View>
-          </View>
-        </View>
-
-        {/* ============================================ */}
-        {/* 5. COMPACT TOOL GRID                        */}
-        {/* ============================================ */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Inkoop & Kosten</Text>
-          <View style={styles.toolGrid}>
-            {savingsTools.map((tool) => (
-              <Pressable
-                key={tool.id}
-                style={styles.toolGridCard}
-                onPress={() => {
-                  if (tool.onPress) tool.onPress();
-                  else if (tool.route) router.push(tool.route as any);
-                }}
-              >
-                <View style={[styles.toolGridIcon, { backgroundColor: tool.color + '15' }]}>
-                  <Ionicons name={tool.icon} size={18} color={tool.color} />
-                </View>
-                <Text style={styles.toolGridTitle}>{tool.title}</Text>
-                <Text style={styles.toolGridDesc}>{tool.description}</Text>
-                {tool.stat && (
-                  <Text style={[styles.toolGridStat, { color: tool.color }]}>{tool.stat}</Text>
-                )}
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        {/* Predictive Savings — from predictiveSavingsService */}
-        {allPredictive.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Bespaartips van Vasco</Text>
-              <View style={styles.alertBadge}>
-                <Text style={styles.alertBadgeText}>{allPredictive.length} tips</Text>
-              </View>
-            </View>
-            <View style={styles.alertsList}>
-              {allPredictive.slice(0, 3).map((tip, index) => (
-                <Pressable
-                  key={tip.id}
-                  style={[styles.alertItem, index < Math.min(allPredictive.length, 3) - 1 && styles.alertItemBorder]}
-                  onPress={() => Alert.alert(tip.title, `${tip.description}\n\nPotenti\u00EBle besparing: \u20AC${tip.potentialSaving}\nBetrouwbaarheid: ${tip.confidence}%`)}
-                >
-                  <View style={[styles.toolIcon, { backgroundColor: Palette.hermesOrange + '15' }]}>
-                    <Ionicons name={tip.icon as IconName} size={20} color={Palette.hermesOrange} />
-                  </View>
-                  <View style={styles.toolContent}>
-                    <Text style={styles.toolTitle}>{tip.title}</Text>
-                    <Text style={styles.toolDesc} numberOfLines={1}>{tip.description}</Text>
-                  </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={{ fontSize: 14, fontWeight: '700', color: SemanticColors.feedbackSuccess }}>{'\u20AC'}{tip.potentialSaving}</Text>
-                    <Text style={{ fontSize: 10, color: SemanticColors.textTertiary }}>{tip.confidence}% zeker</Text>
-                  </View>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Supplier Negotiation — from supplierNegotiationService */}
-        {negotiation.quickWins.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Onderhandelingskansen</Text>
-            <View style={styles.alertsList}>
-              {negotiation.quickWins.map((win, index) => (
-                <Pressable
-                  key={win.supplier}
-                  style={[styles.alertItem, index < negotiation.quickWins.length - 1 && styles.alertItemBorder]}
-                  onPress={() => Alert.alert(
-                    `${win.supplier} \u2014 Actie`,
-                    `${win.action}\n\nGeschatte besparing: \u20AC${win.saving}/jaar`,
-                    [{ text: 'Later' }, { text: 'Contact opnemen', onPress: () => Alert.alert('Herinnering ingesteld', `We herinneren je om contact op te nemen met ${win.supplier}.`) }]
-                  )}
-                >
-                  <View style={[styles.toolIcon, { backgroundColor: '#8B5CF6' + '15' }]}>
-                    <Ionicons name="business" size={20} color="#8B5CF6" />
-                  </View>
-                  <View style={styles.toolContent}>
-                    <Text style={styles.toolTitle}>{win.supplier}</Text>
-                    <Text style={styles.toolDesc} numberOfLines={1}>{win.action}</Text>
-                  </View>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: SemanticColors.feedbackSuccess }}>{'\u20AC'}{win.saving}</Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* TCO Calculator — from tcoCalculatorService */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>TCO Vergelijking</Text>
-          <View style={styles.alertsList}>
-            {tco.comparisons.map((comp, index) => (
-              <Pressable
-                key={comp.category}
-                style={[styles.alertItem, index < tco.comparisons.length - 1 && styles.alertItemBorder]}
-                onPress={() => Alert.alert(
-                  `TCO: ${comp.category}`,
-                  `${comp.customerPitch}\n\nAanbeveling: ${comp.recommendation.name} (${comp.recommendation.brand})\nTCO/jaar: \u20AC${comp.recommendation.tcoPerYear} vs \u20AC${comp.materials[0].tcoPerYear} (budget)\n\nBesparing: \u20AC${comp.savingsVsBudget}/jaar`,
-                )}
-              >
-                <View style={[styles.toolIcon, { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
-                  <Ionicons name="calculator" size={20} color={SemanticColors.feedbackInfo} />
-                </View>
-                <View style={styles.toolContent}>
-                  <Text style={styles.toolTitle}>{comp.category}</Text>
-                  <Text style={styles.toolDesc} numberOfLines={1}>{comp.recommendation.brand} {comp.recommendation.name} — beste TCO</Text>
-                </View>
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: SemanticColors.feedbackSuccess }}>-{'\u20AC'}{comp.savingsVsBudget}/jr</Text>
-                  <Text style={{ fontSize: 10, color: SemanticColors.textTertiary }}>vs budget</Text>
-                </View>
-              </Pressable>
-            ))}
-          </View>
+          <Text style={styles.sectionTitle}>Inkoop</Text>
+          <Pressable
+            style={styles.inkoopButton}
+            onPress={() => router.push('/contractor/inkoop' as any)}
+          >
+            <Ionicons name="storefront" size={22} color="#fff" />
+            <Text style={styles.inkoopButtonText} numberOfLines={1}>Inkoop beheren</Text>
+            <Ionicons name="chevron-forward" size={18} color="#fff" style={{ marginLeft: 'auto' }} />
+          </Pressable>
         </View>
 
         <View style={{ height: 100 }} />
@@ -499,15 +490,6 @@ export default function BesparenScreen() {
       >
         <SmartPurchasing onClose={() => setShowFullPurchasing(false)} />
       </Modal>
-
-      {/* Receipt Scanner Modal */}
-      <Modal
-        visible={showReceiptScanner}
-        animationType="slide"
-        presentationStyle="fullScreen"
-      >
-        <ReceiptScanner onClose={() => setShowReceiptScanner(false)} />
-      </Modal>
     </View>
   );
 }
@@ -519,29 +501,26 @@ export default function BesparenScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.surfaceBackground,
+    backgroundColor: Palette.salmonLight,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: 60,
+    paddingHorizontal: SafeArea.side,
+    paddingTop: SafeArea.top,
     paddingBottom: Spacing.md,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.borderDefault,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: SemanticColors.textPrimary,
+    color: '#1A1A1A',
   },
   headerButton: {
     width: 40,
     height: 40,
-    borderRadius: 12,
-    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 14,
+    backgroundColor: Palette.hermesOrange + '0C',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -549,7 +528,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: Spacing.lg,
+    paddingHorizontal: SafeArea.content,
+    paddingVertical: Spacing.lg,
     gap: Spacing.lg,
   },
 
@@ -557,15 +537,18 @@ const styles = StyleSheet.create({
   // HERO SAVINGS CARD
   // ============================================
   heroCard: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
+    backgroundColor: '#fff',
+    borderRadius: 18,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
   heroAccent: {
-    height: 3,
-    backgroundColor: SemanticColors.feedbackSuccess,
+    height: 4,
+    backgroundColor: Palette.hermesOrange,
   },
   heroContent: {
     padding: Spacing.md,
@@ -578,19 +561,38 @@ const styles = StyleSheet.create({
   heroAmount: {
     fontSize: 40,
     fontWeight: '800',
-    color: SemanticColors.feedbackSuccess,
+    color: Palette.hermesOrange,
     letterSpacing: -1,
+    fontVariant: ['tabular-nums'] as any,
   },
   heroSubtitle: {
     fontSize: 14,
-    color: SemanticColors.textSecondary,
+    color: '#777',
     marginTop: 4,
     letterSpacing: 0.3,
+  },
+  heroRemaining: {
+    fontSize: 12,
+    color: '#BBB',
+    marginTop: 2,
+  },
+  momStrip: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 6,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  momText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    fontVariant: ['tabular-nums'] as any,
   },
   heroChips: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SemanticColors.surfaceSecondary,
+    backgroundColor: '#FAFAFA',
     borderRadius: 12,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.xs,
@@ -611,20 +613,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: SemanticColors.textPrimary,
+    fontVariant: ['tabular-nums'] as any,
   },
   heroChipLabel: {
     fontSize: 10,
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
-  },
-
-  // ============================================
-  // REASONING CHIPS
-  // ============================================
-  reasoningRow: {
-    flexDirection: 'row',
-    gap: 8,
   },
 
   // ============================================
@@ -647,7 +642,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   alertBadge: {
-    backgroundColor: SemanticColors.feedbackSuccessBg,
+    backgroundColor: Palette.hermesOrange + '12',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -655,18 +650,21 @@ const styles = StyleSheet.create({
   alertBadgeText: {
     fontSize: 11,
     fontWeight: '600',
-    color: SemanticColors.feedbackSuccess,
+    color: Palette.hermesOrange,
   },
 
   // ============================================
   // ALERTS LIST (shared container)
   // ============================================
   alertsList: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
+    backgroundColor: '#fff',
+    borderRadius: 16,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
   alertItem: {
     flexDirection: 'row',
@@ -680,245 +678,129 @@ const styles = StyleSheet.create({
   },
 
   // ============================================
-  // UPGRADED PRICE ALERTS
+  // TIP EXPANDED DETAIL
   // ============================================
-  alertItemUpgraded: {
+  tipDetail: {
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.md,
+    gap: Spacing.sm,
+  },
+  tipDetailDesc: {
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+    lineHeight: 18,
+  },
+  tipReasoningBox: {
+    backgroundColor: Palette.hermesOrange + '08',
+    borderRadius: 10,
+    padding: Spacing.sm,
+    borderLeftWidth: 3,
+    borderLeftColor: Palette.hermesOrange,
+    gap: 6,
+  },
+  tipReasoningHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    paddingRight: Spacing.md,
+    gap: 6,
+  },
+  tipReasoningTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Palette.hermesOrange,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  tipReasoningText: {
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+    lineHeight: 18,
+  },
+  tipStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 8,
     paddingVertical: Spacing.sm,
   },
-  alertLeftAccent: {
-    width: 4,
-    alignSelf: 'stretch',
-    borderTopRightRadius: 2,
-    borderBottomRightRadius: 2,
-  },
-  alertContentUpgraded: {
+  tipStat: {
     flex: 1,
-    paddingLeft: Spacing.xs,
-  },
-  alertTop: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 2,
   },
-  alertMaterial: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
-    flex: 1,
-    marginRight: Spacing.sm,
-  },
-  alertSavingsBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  alertSavingsBadgeText: {
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  alertSupplier: {
-    fontSize: 12,
-    color: SemanticColors.textSecondary,
-    marginTop: 2,
-  },
-  alertPrices: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginTop: 4,
-  },
-  alertCurrentPrice: {
-    fontSize: 16,
+  tipStatValue: {
+    fontSize: 14,
     fontWeight: '700',
     color: SemanticColors.textPrimary,
+    fontVariant: ['tabular-nums'] as any,
   },
-  alertOldPrice: {
-    fontSize: 13,
+  tipStatLabel: {
+    fontSize: 10,
     color: SemanticColors.textTertiary,
-    textDecorationLine: 'line-through',
   },
-  alertExpiry: {
+  tipStatDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: SemanticColors.borderDefault,
+  },
+  tipActionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    marginLeft: 'auto',
-  },
-  alertExpiryText: {
-    fontSize: 11,
-    color: SemanticColors.feedbackWarning,
-    fontWeight: '500',
-  },
-  alertCTAButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
+    gap: 8,
     backgroundColor: Palette.hermesOrange,
     borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
-  alertCTAText: {
-    fontSize: 12,
+  tipActionText: {
+    fontSize: 14,
     fontWeight: '700',
     color: '#fff',
   },
 
   // ============================================
-  // SAVINGS BREAKDOWN
+  // ALERT INLINE CTAs (merged into tips)
   // ============================================
-  breakdownBar: {
-    flexDirection: 'row',
-    height: 12,
-    borderRadius: 6,
-    overflow: 'hidden',
-    marginBottom: Spacing.md,
-  },
-  breakdownLegendRow: {
+  alertSavingsPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
-  },
-  breakdownDot: {
-    width: 8,
-    height: 8,
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: 4,
-    marginRight: 8,
   },
-  breakdownLabel: {
-    flex: 1,
-    fontSize: 13,
-    color: SemanticColors.textPrimary,
+  alertInlineCTA: {
+    backgroundColor: Palette.hermesOrange,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
   },
-  breakdownAmount: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
-    marginRight: 8,
-  },
-  breakdownPercent: {
-    fontSize: 12,
-    color: SemanticColors.textTertiary,
-    width: 32,
-  },
-
-  // ============================================
-  // SAVINGS TIMELINE
-  // ============================================
-  timelineHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: Spacing.md,
-  },
-  timelineTotalLabel: {
-    fontSize: 12,
-    color: SemanticColors.textTertiary,
-    marginBottom: 2,
-  },
-  timelineTotal: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-  timelineTrend: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: SemanticColors.feedbackSuccessBg,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  timelineTrendText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: SemanticColors.feedbackSuccess,
-  },
-  timelineChart: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 6,
-    height: 110,
-  },
-  timelineBarCol: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    height: '100%',
-  },
-  timelineBar: {
-    width: '100%',
-    borderRadius: 4,
-    minHeight: 8,
-  },
-  timelineBarCurrent: {
-    shadowColor: SemanticColors.feedbackSuccess,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  timelineBarValue: {
+  alertInlineCTAText: {
     fontSize: 11,
     fontWeight: '700',
-    color: SemanticColors.feedbackSuccess,
-    marginBottom: 4,
+    color: '#fff',
   },
-  timelineBarLabel: {
+  alertInlineLink: {
     fontSize: 10,
-    color: SemanticColors.textTertiary,
-    marginTop: 6,
-  },
-  timelineBarLabelActive: {
-    color: SemanticColors.textPrimary,
     fontWeight: '600',
+    color: Palette.hermesOrange,
   },
 
   // ============================================
-  // COMPACT TOOL GRID (2 columns)
+  // INKOOP BUTTON
   // ============================================
-  toolGrid: {
+  inkoopButton: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  toolGridCard: {
-    width: '48%' as any,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-  },
-  toolGridIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
+    gap: 12,
+    backgroundColor: '#D2691E',
+    borderRadius: 14,
+    padding: Spacing.md,
+    paddingVertical: 16,
   },
-  toolGridTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
-  },
-  toolGridDesc: {
-    fontSize: 11,
-    color: SemanticColors.textTertiary,
-    marginTop: 2,
-  },
-  toolGridStat: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 4,
+  inkoopButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
   },
 
   // ============================================
@@ -944,4 +826,36 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
     marginTop: 1,
   },
+
+  // Marge-lek (P2)
+  marginLeakCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  marginLeakRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  marginLeakCategory: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  marginLeakAmount: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#DC2626',
+    fontVariant: ['tabular-nums'] as any,
+  },
+
 });

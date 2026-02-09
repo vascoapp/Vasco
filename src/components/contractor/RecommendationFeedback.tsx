@@ -30,7 +30,7 @@ type IconName = keyof typeof Ionicons.glyphMap;
 
 export interface Recommendation {
   id: string;
-  type: 'pricing' | 'supplier' | 'timing' | 'material' | 'product';
+  type: 'pricing' | 'supplier' | 'timing' | 'material' | 'product' | 'general';
   title: string;
   description: string;
   confidence: number;
@@ -97,7 +97,7 @@ export function RecommendationFeedbackCard({
       case 'material':
         return { icon: 'cube' as IconName, color: Palette.blue500, label: 'Materiaal' };
       case 'product':
-        return { icon: 'pricetag' as IconName, color: Palette.sageGreen, label: 'Product' };
+        return { icon: 'pricetag' as IconName, color: Palette.green500, label: 'Product' };
       default:
         return { icon: 'bulb' as IconName, color: SemanticColors.actionPrimary, label: 'Tip' };
     }
@@ -766,7 +766,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   submitButtonDisabled: {
-    backgroundColor: SemanticColors.actionDisabled,
+    backgroundColor: SemanticColors.iconDisabled,
   },
   submitButtonText: {
     fontSize: 16,

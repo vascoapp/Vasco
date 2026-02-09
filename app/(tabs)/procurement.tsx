@@ -1,4 +1,4 @@
-// COO Procurement Tab - Contracts & Change Orders
+// COO Emerging Tab - Emerging 2026 Priorities
 import { Screen } from '../../src/components/Screen';
 import { COODashboard } from '../../src/components/dashboards';
 import { useAuth } from '../../src/context/AuthContext';
@@ -21,7 +21,7 @@ export default function ProcurementScreen() {
 
   return (
     <Screen>
-      <COODashboard initialTab="procurement" showTabBar={false} />
+      <COODashboard initialTab="emerging" showTabBar={false} />
     </Screen>
   );
 }

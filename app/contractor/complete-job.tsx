@@ -41,7 +41,7 @@ export default function CompleteJobScreen() {
         {
           text: 'View Invoice',
           onPress: () => {
-            router.replace('/contractor/invoices');
+            router.replace('/invoices/new');
           },
         },
       ]

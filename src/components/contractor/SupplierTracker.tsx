@@ -396,7 +396,7 @@ function SupplierCard({ supplier, onPress }: { supplier: Supplier; onPress: () =
       case 'groothandel':
         return { label: 'Groothandel', icon: 'business' as IconName, color: Palette.blue500 };
       case 'specialist':
-        return { label: 'Specialist', icon: 'star' as IconName, color: Palette.sageGreen };
+        return { label: 'Specialist', icon: 'star' as IconName, color: Palette.green500 };
       case 'online':
         return { label: 'Online', icon: 'globe' as IconName, color: '#8B5CF6' };
     }

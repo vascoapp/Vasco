@@ -71,6 +71,9 @@ export type DataEventType =
   | 'job_completed'
   | 'job_cancelled'
   | 'job_rescheduled'
+  | 'job_status_updated'
+  | 'lifecycle_advanced'
+  | 'customer_preference_set'
 
   // Time tracking
   | 'clock_in'
@@ -109,7 +112,209 @@ export type DataEventType =
   | 'ai_recommendation_shown'
   | 'ai_recommendation_accepted'
   | 'ai_recommendation_rejected'
-  | 'ai_prediction_made';
+  | 'ai_recommendation_dismissed'
+  | 'ai_prediction_made'
+
+  // Invoices & payments (extended)
+  | 'invoice_generated'
+  | 'invoice_paid'
+  | 'invoice_reminder_sent'
+  | 'invoice_extracted'
+  | 'expense_added'
+
+  // Quotes (extended)
+  | 'quote_analyzed'
+  | 'quote_approved_by_customer'
+  | 'quote_declined_by_customer'
+  | 'optimization_applied'
+  | 'optimization_rejected'
+  | 'upsell_applied'
+
+  // Follow-ups
+  | 'follow_up_scheduled'
+  | 'follow_up_completed'
+  | 'follow_up_snoozed'
+  | 'follow_up_cancelled'
+  | 'follow_up_preferences_updated'
+
+  // Compliance & certifications
+  | 'license_added'
+  | 'certification_added'
+  | 'safety_checklist_completed'
+  | 'regulatory_update_read'
+  | 'insurance_policy_added'
+
+  // Equipment
+  | 'equipment_added'
+  | 'equipment_updated'
+  | 'equipment_checkout'
+  | 'equipment_return'
+  | 'maintenance_recorded'
+
+  // Evidence & handover
+  | 'evidence_pack_assembled'
+  | 'handover_package_created'
+  | 'handover_pdf_generated'
+  | 'handover_portal_link_created'
+  | 'handover_customer_signed'
+  | 'completion_certificate_generated'
+  | 'handover_package_sent'
+
+  // Documents (extended)
+  | 'document_updated'
+  | 'document_deleted'
+  | 'share_link_created'
+  | 'document_shared'
+
+  // Contractor network & referrals
+  | 'connection_request_sent'
+  | 'connection_request_accepted'
+  | 'referral_sent'
+  | 'referral_accepted'
+  | 'referral_declined'
+  | 'referral_completed'
+
+  // Workflows
+  | 'workflow_initiated'
+  | 'workflow_step_completed'
+  | 'workflow_payment_approved'
+  | 'workflow_payment_released'
+
+  // Customer portal & insights
+  | 'customer_message_sent'
+  | 'customer_interaction_added'
+  | 'customer_decision_made'
+  | 'maintenance_request_submitted'
+  | 'portal_portal_accessed'
+  | 'portal_category_viewed'
+  | 'portal_item_viewed'
+  | 'portal_decision_made'
+  | 'portal_decision_changed'
+  | 'portal_note_added'
+  | 'portal_photo_uploaded'
+  | 'portal_product_linked'
+  | 'portal_help_viewed'
+  | 'product_selected_by_customer'
+  | 'regional_preference_recorded'
+  | 'decision_timing_recorded'
+
+  // AI assistant
+  | 'assistant_conversation_started'
+  | 'assistant_message_sent'
+  | 'assistant_context_updated'
+
+  // Insights & analytics
+  | 'insight_dismissed'
+  | 'insight_actioned'
+  | 'report_exported'
+
+  // Benchmarking
+  | 'benchmark_goal_set'
+
+  // Cash flow
+  | 'cash_flow_forecast'
+
+  // Price alerts
+  | 'price_alert_created'
+  | 'price_alert_actioned'
+  | 'price_alert_snoozed'
+  | 'price_alert_dismissed'
+  | 'price_alert_purchased'
+  | 'alert_preferences_updated'
+
+  // Pricing engine
+  | 'price_suggested'
+  | 'price_outcome_recorded'
+
+  // Project planner
+  | 'project_predicted'
+  | 'project_outcome_recorded'
+
+  // Reorder & stock
+  | 'stock_updated'
+  | 'order_placed'
+  | 'suggestion_ordered'
+  | 'suggestion_dismissed'
+  | 'suggestion_snoozed'
+
+  // Reputation
+  | 'review_responded'
+  | 'review_requested'
+
+  // Route optimizer
+  | 'route_optimized'
+  | 'route_job_status_updated'
+
+  // Schedule fragility
+  | 'what_if_analysis_run'
+
+  // Service contracts
+  | 'contract_created'
+  | 'contract_cancelled'
+  | 'contract_visit_scheduled'
+  | 'contract_visit_completed'
+  | 'contract_renewal_sent'
+  | 'contract_renewal_accepted'
+
+  // Supplier integration
+  | 'supplier_connection_requested'
+  | 'supplier_synced'
+  | 'product_added_to_cart'
+  | 'order_submitted'
+  | 'supplier_reviewed'
+
+  // Supplier reliability
+  | 'delivery_tracked'
+  | 'drift_detected'
+  | 'alternatives_suggested'
+
+  // Team management
+  | 'team_member_added'
+  | 'team_member_updated'
+  | 'team_clock_in'
+  | 'team_clock_out'
+  | 'payroll_calculated'
+  | 'skill_match_search'
+  | 'leave_request_submitted'
+  | 'leave_request_approved'
+  | 'training_recorded'
+
+  // Upsell engine
+  | 'upsell_recommendations_generated'
+  | 'upsell_presented'
+  | 'upsell_outcome'
+
+  // Warranty
+  | 'warranty_registered'
+  | 'warranty_claim_created'
+
+  // Predictive maintenance
+  | 'prediction_acknowledged'
+  | 'recommendation_scheduled'
+  | 'recommendation_completed'
+  | 'recommendation_dismissed'
+  | 'part_ordered'
+  | 'predictive_analysis_run'
+
+  // Recommendation feedback
+  | 'recommendation_feedback_submitted'
+  | 'recommendation_dismissed'
+
+  // Decision tracking
+  | 'decision_tracker_created'
+
+  // Knowledge base
+  | 'article_read'
+  | 'tutorial_step_completed'
+
+  // Lead generation
+  | 'lead_created'
+  | 'lead_status_changed'
+  | 'lead_activity_added'
+
+  // Capacity planning (no events, just type fix)
+  | 'quick_feedback_positive'
+  | 'quick_feedback_negative';
 
 export interface EventContext {
   // Device & session

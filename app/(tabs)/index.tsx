@@ -29,7 +29,7 @@ export default function HomeScreen() {
       case 'cfo':
         return <CFODashboard initialTab="overview" showTabBar={false} />;
       case 'coo':
-        return <COODashboard initialTab="overview" showTabBar={false} />;
+        return <COODashboard initialTab="financials" showTabBar={false} />;
       case 'site-lead':
         return <SiteLeadDashboard initialTab="overview" showTabBar={false} />;
       case 'director':

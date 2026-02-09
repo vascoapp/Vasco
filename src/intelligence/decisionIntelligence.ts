@@ -144,7 +144,7 @@ class DecisionIntelligenceService {
       chosenLabel,
       linkedProduct: submission.linkedProduct ? {
         name: submission.linkedProduct.name,
-        brand: submission.linkedProduct.brand || this.extractBrand(submission.linkedProduct.name),
+        brand: submission.linkedProduct.brand || this.extractBrand(submission.linkedProduct.name) || '',
         category: this.inferProductCategory(item.name, context.trade),
         price: submission.linkedProduct.price,
         retailer: submission.linkedProduct.retailer,
@@ -507,6 +507,72 @@ class DecisionIntelligenceService {
     const due = new Date(dueDate).getTime();
     const submitted = new Date(submittedAt).getTime();
     return Math.floor((due - submitted) / (1000 * 60 * 60 * 24));
+  }
+
+  // -----------------------------------------
+  // Material Intelligence (shared across app)
+  // -----------------------------------------
+
+  /**
+   * Auto-categorize a material name using brand extraction + category inference.
+   * Used by invoice processing, TCO comparisons, and cost tracking.
+   */
+  categorizeMaterial(materialName: string, trade: string = 'general'): {
+    brand?: string;
+    category: string;
+    confidence: number;
+  } {
+    const brand = this.extractBrand(materialName);
+    const category = this.inferProductCategory(materialName, trade);
+    let confidence = 0.5;
+    if (brand) confidence += 0.25;
+    if (category !== trade && category !== 'other') confidence += 0.25;
+    return { brand, category, confidence: Math.min(confidence, 1) };
+  }
+
+  /**
+   * Batch categorize materials and find cross-supplier price opportunities.
+   * Returns materials grouped by category with brand info.
+   */
+  analyzeMaterialSpend(
+    materials: Array<{ name: string; cost: number; supplier?: string }>
+  ): Array<{
+    category: string;
+    totalSpend: number;
+    items: Array<{ name: string; brand?: string; cost: number; supplier?: string }>;
+    brandConcentration: string | null;
+  }> {
+    const categoryMap = new Map<string, Array<{ name: string; brand?: string; cost: number; supplier?: string }>>();
+
+    for (const mat of materials) {
+      const { brand, category } = this.categorizeMaterial(mat.name);
+      const items = categoryMap.get(category) || [];
+      items.push({ name: mat.name, brand, cost: mat.cost, supplier: mat.supplier });
+      categoryMap.set(category, items);
+    }
+
+    const results: Array<{
+      category: string;
+      totalSpend: number;
+      items: Array<{ name: string; brand?: string; cost: number; supplier?: string }>;
+      brandConcentration: string | null;
+    }> = [];
+
+    for (const [category, items] of categoryMap) {
+      const totalSpend = items.reduce((s, i) => s + i.cost, 0);
+      const brands = items.map(i => i.brand).filter(Boolean);
+      const brandCounts = new Map<string, number>();
+      for (const b of brands) {
+        brandCounts.set(b!, (brandCounts.get(b!) || 0) + 1);
+      }
+      const topBrand = brands.length > 0
+        ? [...brandCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || null
+        : null;
+
+      results.push({ category, totalSpend, items, brandConcentration: topBrand });
+    }
+
+    return results.sort((a, b) => b.totalSpend - a.totalSpend);
   }
 }
 

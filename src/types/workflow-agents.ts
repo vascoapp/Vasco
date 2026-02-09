@@ -22,6 +22,7 @@ export type WorkflowStatus =
   | 'idle'
   | 'active'
   | 'paused'
+  | 'waiting-approval'
   | 'completed'
   | 'failed'
   | 'cancelled';
@@ -72,7 +73,7 @@ export interface WorkflowStep {
   skipConditions?: WorkflowCondition[];
 
   // Status
-  status: 'pending' | 'waiting' | 'executing' | 'completed' | 'skipped' | 'failed';
+  status: 'pending' | 'waiting' | 'executing' | 'in-progress' | 'pending-approval' | 'completed' | 'skipped' | 'failed';
   executedAt?: string;
   result?: unknown;
 }
@@ -173,6 +174,7 @@ export interface QuoteNurtureWorkflow extends Workflow {
 }
 
 export interface QuoteNurtureContext {
+  [key: string]: unknown;
   quoteId: string;
   customerId: string;
   customerName: string;
@@ -275,6 +277,7 @@ export interface CashCollectionWorkflow extends Workflow {
 }
 
 export interface CashCollectionContext {
+  [key: string]: unknown;
   invoiceId: string;
   customerId: string;
   customerName: string;
@@ -395,6 +398,7 @@ export interface JobCloseoutWorkflow extends Workflow {
 }
 
 export interface JobCloseoutContext {
+  [key: string]: unknown;
   jobId: string;
   jobTitle: string;
   customerId: string;
@@ -504,6 +508,7 @@ export interface MaterialReorderWorkflow extends Workflow {
 }
 
 export interface MaterialReorderContext {
+  [key: string]: unknown;
   materialId: string;
   materialName: string;
   currentStock: number;

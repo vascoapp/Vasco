@@ -129,7 +129,7 @@ export function InvoiceVerificationPanel({ projectId, onInvoiceSelect }: Props) 
   const renderInvoiceCard = (invoice: typeof MOCK_PENDING_INVOICES[0]) => {
     const verification = verificationResults.get(invoice.id);
     const isVerifying = verifying === invoice.id;
-    const hasDiscrepancies = verification?.verificationResult.discrepancies.length ?? 0 > 0;
+    const hasDiscrepancies = (verification?.verificationResult.discrepancies.length ?? 0) > 0;
 
     return (
       <TouchableOpacity

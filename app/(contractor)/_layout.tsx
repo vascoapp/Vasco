@@ -29,8 +29,8 @@ const CONTRACTOR_TABS: TabConfig[] = [
   {
     name: 'besparen',
     title: 'Besparen',
-    icon: 'trending-down-outline',
-    iconFocused: 'trending-down',
+    icon: 'cash-outline',
+    iconFocused: 'cash',
   },
   {
     name: 'decisions',
@@ -95,14 +95,16 @@ export default function ContractorLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderTopWidth: 1,
-    borderTopColor: SemanticColors.borderDefault,
-    height: 88,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 0,
+    height: 90,
     paddingTop: 8,
-    paddingBottom: 28,
-    elevation: 0,
-    shadowOpacity: 0,
+    paddingBottom: 34,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 4,
   },
   tabLabel: {
     fontSize: 11,

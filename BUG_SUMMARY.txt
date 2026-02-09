@@ -1,0 +1,28 @@
+Vasco App - Bug/Issue Summary
+Generated: 2026-02-01
+
+Critical / High
+1) Swipe gestures without GestureHandlerRootView
+   - Files: app/(tabs)/quotes.tsx, app/(tabs)/invoices.tsx
+   - Issue: Swipeable is used but there is no GestureHandlerRootView at app root.
+   - Risk: Gesture handling can break or crash on device.
+
+2) Hub tab is always hidden
+   - File: app/(tabs)/_layout.tsx
+   - Issue: Hub is rendered in tabs list but then always hidden via href: null.
+   - Risk: Hub cannot be accessed from the tab bar.
+
+Medium
+3) Contractor routing duplication / ambiguity
+   - Files: app/_layout.tsx, app/(tabs)/_layout.tsx
+   - Issue: Contractors are routed to /(contractor) but (tabs) also defines contractor tabs.
+   - Risk: Confusing or conflicting routing if logic changes later.
+
+Notes
+- Theme tokens are mixed (Colors vs SemanticColors) in different screens; this is not a crash
+  but can cause inconsistent UI behavior in future theme changes.
+
+Suggested Next Fixes (order)
+1) Wrap root layout with GestureHandlerRootView and ensure gesture handler is imported at entry.
+2) Only hide hub when it is not part of the current tab configuration.
+3) Remove contractor tab config from (tabs) or route contractors to (tabs).
