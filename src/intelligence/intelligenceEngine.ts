@@ -5,6 +5,7 @@
 // AI-powered recommendations. This creates the agentic moat through learning.
 // =============================================================================
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type {
   DataEvent,
   DataEventType,
@@ -18,6 +19,57 @@ import type {
   ContractorProfile,
   MarketIntelligence,
 } from './dataSchema';
+
+// ============================================
+// FEEDBACK WEIGHTS - Persisted learned data
+// ============================================
+
+export interface FeedbackWeights {
+  // Quote acceptance rates by price bracket + customer type
+  quoteAcceptance: {
+    byBracket: Record<string, { accepted: number; total: number }>;  // e.g., '0-1000', '1000-5000'
+    byCustomerType: Record<string, { accepted: number; total: number }>; // 'new', 'repeat'
+  };
+  // Job duration ratios by category
+  jobDuration: {
+    byCategory: Record<string, { totalRatio: number; count: number }>; // actual/estimated ratio
+  };
+  // Payment timing by customer segment
+  paymentTiming: {
+    bySegment: Record<string, { totalDays: number; count: number }>; // avg payment days
+  };
+  lastUpdated: string;
+}
+
+const FEEDBACK_WEIGHTS_KEY = '@vasco_feedback_weights';
+
+function createDefaultWeights(): FeedbackWeights {
+  return {
+    quoteAcceptance: { byBracket: {}, byCustomerType: {} },
+    jobDuration: { byCategory: {} },
+    paymentTiming: { bySegment: {} },
+    lastUpdated: new Date().toISOString(),
+  };
+}
+
+async function loadFeedbackWeights(): Promise<FeedbackWeights> {
+  try {
+    const raw = await AsyncStorage.getItem(FEEDBACK_WEIGHTS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {
+    // Silent
+  }
+  return createDefaultWeights();
+}
+
+async function saveFeedbackWeights(weights: FeedbackWeights): Promise<void> {
+  try {
+    weights.lastUpdated = new Date().toISOString();
+    await AsyncStorage.setItem(FEEDBACK_WEIGHTS_KEY, JSON.stringify(weights));
+  } catch {
+    // Silent
+  }
+}
 
 // ============================================
 // INTELLIGENCE API
@@ -125,23 +177,60 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
     return id;
   }
 
-  // Resolve entity from name/context
+  // Resolve entity from name/context using Levenshtein similarity
   async resolveEntity(
     name: string,
     type: EntityType,
     context?: Record<string, unknown>
   ): Promise<EntityRef> {
-    // In real implementation: Use ML model for entity resolution
-    // Check for existing entities with similar names
-    // Consider context for disambiguation
+    // Search existing entities for a close match
+    const candidates = Array.from(this.entityCache.values())
+      .filter(e => e.type === type);
 
+    let bestMatch: Entity | null = null;
+    let bestSimilarity = 0;
+
+    for (const candidate of candidates) {
+      const similarity = this.stringSimilarity(name.toLowerCase(), candidate.name.toLowerCase());
+      if (similarity > bestSimilarity && similarity > 0.7) {
+        bestMatch = candidate;
+        bestSimilarity = similarity;
+      }
+    }
+
+    if (bestMatch) {
+      return {
+        id: bestMatch.id,
+        type,
+        name: bestMatch.name,
+        confidence: bestSimilarity,
+      };
+    }
+
+    // No match — create new entity
     const id = `${type}_${name.toLowerCase().replace(/\s+/g, '_')}`;
+    const now = new Date().toISOString();
+    const newEntity: Entity = {
+      id,
+      type,
+      name,
+      aliases: [],
+      attributes: context || {},
+      relationships: [],
+      history: [],
+      stats: { totalInteractions: 0, lastInteraction: now },
+      confidence: 1.0,
+      sources: ['entity-resolution'],
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.entityCache.set(id, newEntity);
 
     return {
       id,
       type,
       name,
-      confidence: 0.9,
+      confidence: 1.0,
     };
   }
 
@@ -150,8 +239,54 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
   }
 
   async findSimilarEntities(entityId: string, limit = 5): Promise<EntityRef[]> {
-    // In real implementation: Vector similarity search
-    return [];
+    const entity = this.entityCache.get(entityId);
+    if (!entity) return [];
+
+    const candidates = Array.from(this.entityCache.values())
+      .filter(e => e.id !== entityId && e.type === entity.type)
+      .map(e => ({
+        entity: e,
+        similarity: this.stringSimilarity(entity.name.toLowerCase(), e.name.toLowerCase()),
+      }))
+      .filter(c => c.similarity > 0.4)
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, limit);
+
+    return candidates.map(c => ({
+      id: c.entity.id,
+      type: c.entity.type,
+      name: c.entity.name,
+      confidence: c.similarity,
+    }));
+  }
+
+  // Levenshtein distance-based string similarity (0-1, 1 = identical)
+  private stringSimilarity(a: string, b: string): number {
+    if (a === b) return 1;
+    if (a.length === 0 || b.length === 0) return 0;
+
+    const matrix: number[][] = [];
+
+    for (let i = 0; i <= a.length; i++) {
+      matrix[i] = [i];
+    }
+    for (let j = 0; j <= b.length; j++) {
+      matrix[0][j] = j;
+    }
+
+    for (let i = 1; i <= a.length; i++) {
+      for (let j = 1; j <= b.length; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j] + 1,      // deletion
+          matrix[i][j - 1] + 1,      // insertion
+          matrix[i - 1][j - 1] + cost // substitution
+        );
+      }
+    }
+
+    const distance = matrix[a.length][b.length];
+    return 1 - distance / Math.max(a.length, b.length);
   }
 
   // Make prediction using trained model
@@ -172,9 +307,7 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
   }
 
   private async runModel(modelType: AIModelType, input: Record<string, unknown>): Promise<ModelPrediction> {
-    // In real implementation: Call ML model API
-    // For now, return heuristic-based predictions
-
+    // Learned models load FeedbackWeights from AsyncStorage
     switch (modelType) {
       case 'quote_acceptance':
         return this.predictQuoteAcceptance(input);
@@ -192,7 +325,7 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
         return {
           id: `pred_${Date.now()}`,
           modelType,
-          modelVersion: '1.0.0',
+          modelVersion: '2.0.0',
           timestamp: new Date().toISOString(),
           input,
           prediction: null,
@@ -331,37 +464,76 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
   // PREDICTION MODELS (Heuristic implementations)
   // ============================================
 
-  private predictQuoteAcceptance(input: Record<string, unknown>): ModelPrediction {
+  private async predictQuoteAcceptance(input: Record<string, unknown>): Promise<ModelPrediction> {
     const quoteValue = (input.quoteValue as number) || 0;
     const customerHistory = (input.customerHistory as number) || 0;
     const tier = (input.tier as string) || 'good';
 
-    // Simple heuristic model
-    let probability = 0.5;
+    // Heuristic base model
+    let heuristicProb = 0.5;
+    if (quoteValue < 1000) heuristicProb += 0.15;
+    else if (quoteValue > 5000) heuristicProb -= 0.1;
+    if (customerHistory > 0) heuristicProb += 0.2;
+    if (tier === 'better') heuristicProb += 0.1;
+    else if (tier === 'best') heuristicProb -= 0.05;
 
-    // Lower quotes more likely to be accepted
-    if (quoteValue < 1000) probability += 0.15;
-    else if (quoteValue > 5000) probability -= 0.1;
+    // Load learned weights and blend
+    const weights = await loadFeedbackWeights();
+    const bracket = quoteValue < 1000 ? '0-1000'
+      : quoteValue < 5000 ? '1000-5000'
+      : quoteValue < 15000 ? '5000-15000'
+      : '15000+';
+    const custType = customerHistory > 0 ? 'repeat' : 'new';
 
-    // Repeat customers more likely
-    if (customerHistory > 0) probability += 0.2;
+    const bracketData = weights.quoteAcceptance.byBracket[bracket];
+    const custData = weights.quoteAcceptance.byCustomerType[custType];
 
-    // Better tier has higher acceptance in our data
-    if (tier === 'better') probability += 0.1;
-    else if (tier === 'best') probability -= 0.05;
+    let learnedProb: number | null = null;
+    let dataVolume = 0;
+
+    if (bracketData && bracketData.total >= 3 && custData && custData.total >= 3) {
+      // Blend bracket rate and customer type rate
+      const bracketRate = bracketData.accepted / bracketData.total;
+      const custRate = custData.accepted / custData.total;
+      learnedProb = bracketRate * 0.6 + custRate * 0.4;
+      dataVolume = bracketData.total + custData.total;
+    } else if (bracketData && bracketData.total >= 3) {
+      learnedProb = bracketData.accepted / bracketData.total;
+      dataVolume = bracketData.total;
+    } else if (custData && custData.total >= 3) {
+      learnedProb = custData.accepted / custData.total;
+      dataVolume = custData.total;
+    }
+
+    // Blend learned + heuristic: 60/40 when data exists, 100% heuristic otherwise
+    let probability: number;
+    let confidence: number;
+    const explanation: string[] = [];
+
+    if (learnedProb !== null) {
+      probability = learnedProb * 0.6 + heuristicProb * 0.4;
+      confidence = Math.min(0.95, 0.5 + dataVolume * 0.02); // scales with data volume
+      explanation.push(`Geleerd uit ${dataVolume} offertes (${bracket}, ${custType})`);
+    } else {
+      probability = heuristicProb;
+      confidence = Math.abs(heuristicProb - 0.5) * 2;
+      explanation.push('Gebaseerd op heuristiek — meer data verbetert voorspellingen');
+    }
+
+    explanation.push(
+      probability > 0.5 ? 'Offerte wordt waarschijnlijk geaccepteerd' : 'Offerte vereist mogelijk aanpassing',
+      customerHistory > 0 ? 'Terugkerende klant verhoogt kans' : 'Nieuwe klant — overweeg opvolging',
+    );
 
     return {
       id: `pred_${Date.now()}`,
       modelType: 'quote_acceptance',
-      modelVersion: '1.0.0',
+      modelVersion: '2.0.0',
       timestamp: new Date().toISOString(),
       input,
       prediction: probability > 0.5,
-      confidence: Math.abs(probability - 0.5) * 2,
-      explanation: [
-        probability > 0.5 ? 'Quote likely to be accepted' : 'Quote may need adjustment',
-        customerHistory > 0 ? 'Repeat customer increases likelihood' : 'New customer - consider follow-up',
-      ],
+      confidence,
+      explanation,
     };
   }
 
@@ -427,12 +599,12 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
     };
   }
 
-  private predictJobDuration(input: Record<string, unknown>): ModelPrediction {
+  private async predictJobDuration(input: Record<string, unknown>): Promise<ModelPrediction> {
     const category = (input.category as string) || 'general';
     const sqm = (input.sqm as number) || 0;
     const complexity = (input.complexity as string) || 'medium';
 
-    // Base hours per sqm by category
+    // Base hours per sqm by category (heuristic)
     const baseRates: Record<string, number> = {
       painting: 0.5,
       repairs: 1.0,
@@ -442,13 +614,38 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
 
     const baseRate = baseRates[category] || 0.5;
     const complexityMultiplier = complexity === 'high' ? 1.5 : complexity === 'low' ? 0.8 : 1.0;
+    const heuristicHours = sqm * baseRate * complexityMultiplier;
 
-    const estimatedHours = sqm * baseRate * complexityMultiplier;
+    // Load learned actual/estimated ratios by category
+    const weights = await loadFeedbackWeights();
+    const categoryData = weights.jobDuration.byCategory[category];
+
+    let estimatedHours: number;
+    let confidence: number;
+    const explanation: string[] = [];
+
+    if (categoryData && categoryData.count >= 3) {
+      // Apply learned correction factor
+      const avgRatio = categoryData.totalRatio / categoryData.count;
+      estimatedHours = heuristicHours * avgRatio;
+      confidence = Math.min(0.95, 0.6 + categoryData.count * 0.02);
+      explanation.push(
+        `Gecorrigeerd met factor ${avgRatio.toFixed(2)}x op basis van ${categoryData.count} eerdere ${category}-klussen`,
+        `Basis: ${sqm}m² × ${baseRate} uur/m² × ${complexityMultiplier}x complexiteit`,
+      );
+    } else {
+      estimatedHours = heuristicHours;
+      confidence = 0.7;
+      explanation.push(
+        `Gebaseerd op ${sqm}m² ${category}-werk`,
+        `${complexity} complexiteit — meer klussen verbeteren de voorspelling`,
+      );
+    }
 
     return {
       id: `pred_${Date.now()}`,
       modelType: 'job_duration',
-      modelVersion: '1.0.0',
+      modelVersion: '2.0.0',
       timestamp: new Date().toISOString(),
       input,
       prediction: {
@@ -456,11 +653,8 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
         rangeMin: estimatedHours * 0.8,
         rangeMax: estimatedHours * 1.3,
       },
-      confidence: 0.7,
-      explanation: [
-        `Based on ${sqm}m² of ${category} work`,
-        `${complexity} complexity applied`,
-      ],
+      confidence,
+      explanation,
     };
   }
 
@@ -523,9 +717,76 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
   // ============================================
 
   private async processFeedbackLoops(event: DataEvent): Promise<void> {
-    // Check if this event completes any feedback loops
-    // Update models with new training data
-    console.log('[Intelligence] Processing feedback for:', event.eventType);
+    const weights = await loadFeedbackWeights();
+    let updated = false;
+
+    switch (event.eventType) {
+      case 'quote_accepted':
+      case 'quote_rejected': {
+        const accepted = event.eventType === 'quote_accepted';
+        const value = (event.payload.quoteValue as number) || 0;
+        const isRepeat = (event.payload.customerHistory as number) > 0;
+
+        // Update by price bracket
+        const bracket = value < 1000 ? '0-1000'
+          : value < 5000 ? '1000-5000'
+          : value < 15000 ? '5000-15000'
+          : '15000+';
+        if (!weights.quoteAcceptance.byBracket[bracket]) {
+          weights.quoteAcceptance.byBracket[bracket] = { accepted: 0, total: 0 };
+        }
+        weights.quoteAcceptance.byBracket[bracket].total++;
+        if (accepted) weights.quoteAcceptance.byBracket[bracket].accepted++;
+
+        // Update by customer type
+        const custType = isRepeat ? 'repeat' : 'new';
+        if (!weights.quoteAcceptance.byCustomerType[custType]) {
+          weights.quoteAcceptance.byCustomerType[custType] = { accepted: 0, total: 0 };
+        }
+        weights.quoteAcceptance.byCustomerType[custType].total++;
+        if (accepted) weights.quoteAcceptance.byCustomerType[custType].accepted++;
+
+        updated = true;
+        break;
+      }
+
+      case 'job_completed': {
+        const category = (event.payload.category as string) || 'general';
+        const estimatedHours = (event.payload.estimatedHours as number) || 0;
+        const actualHours = (event.payload.actualHours as number) || 0;
+
+        if (estimatedHours > 0 && actualHours > 0) {
+          const ratio = actualHours / estimatedHours;
+          if (!weights.jobDuration.byCategory[category]) {
+            weights.jobDuration.byCategory[category] = { totalRatio: 0, count: 0 };
+          }
+          weights.jobDuration.byCategory[category].totalRatio += ratio;
+          weights.jobDuration.byCategory[category].count++;
+          updated = true;
+        }
+        break;
+      }
+
+      case 'payment_received': {
+        const segment = (event.payload.customerSegment as string) || 'unknown';
+        const paymentDays = (event.payload.paymentDays as number) || 0;
+
+        if (paymentDays > 0) {
+          if (!weights.paymentTiming.bySegment[segment]) {
+            weights.paymentTiming.bySegment[segment] = { totalDays: 0, count: 0 };
+          }
+          weights.paymentTiming.bySegment[segment].totalDays += paymentDays;
+          weights.paymentTiming.bySegment[segment].count++;
+          updated = true;
+        }
+        break;
+      }
+    }
+
+    if (updated) {
+      await saveFeedbackWeights(weights);
+      console.log('[Intelligence] Feedback weights updated for:', event.eventType);
+    }
   }
 
   // ============================================
