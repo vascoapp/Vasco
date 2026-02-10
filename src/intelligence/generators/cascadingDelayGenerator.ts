@@ -9,6 +9,9 @@ import type { ScoredInsight, GeneratorContext } from './types';
 import { useCapacityAlerts } from '../../services/capacityPlanningService';
 import { useCapacityForecast } from '../../services/capacityPlanningService';
 import { useScheduler } from '../../services/smartSchedulerService';
+import { logPrediction } from '../calibration';
+import { getTrend } from '../learningStorage';
+import { getAdaptiveThreshold } from '../adaptiveThresholds';
 
 export function useCascadingDelayInsight(ctx: GeneratorContext): ScoredInsight | null {
   const { data: alerts } = useCapacityAlerts('active');
@@ -34,8 +37,23 @@ export function useCascadingDelayInsight(ctx: GeneratorContext): ScoredInsight |
 
   if (overrunningJobs.length === 0 && cascadeAlerts.length === 0) return null;
 
+  // Log prediction for calibration: predicted cascade delay
+  const topOverrunForLog = overrunningJobs[0];
+  if (topOverrunForLog) {
+    logPrediction({
+      generatorId: 'cascading-delay',
+      predictedAt: new Date().toISOString(),
+      prediction: `Cascade vertraging: ${topOverrunForLog.projectName} overschrijdt schatting`,
+      predictedValue: topOverrunForLog.actualHoursLogged && topOverrunForLog.estimatedHours
+        ? topOverrunForLog.actualHoursLogged / topOverrunForLog.estimatedHours
+        : 1.0,
+    });
+  }
+
   // Find downstream jobs that would be affected
-  const overbookedDays = forecast.filter(day => day.utilization > 0.9);
+  // Use adaptive threshold for capacity utilization (default 85%, adapted per contractor)
+  const capThreshold = getAdaptiveThreshold(ctx.profile, 'capacityUtilization');
+  const overbookedDays = forecast.filter(day => day.utilization > (capThreshold.threshold / 100));
   const affectedDownstream: string[] = [];
   let totalDelayHours = 0;
 
@@ -71,6 +89,7 @@ export function useCascadingDelayInsight(ctx: GeneratorContext): ScoredInsight |
       actionRoute: '/(contractor)/index',
       source: 'Cascade Analyse',
 
+      rootCauseTags: ['schedule', 'cascade'],
       rawScore: 0,
       reasoning: {
         observation: topAlert.title,
@@ -111,10 +130,11 @@ export function useCascadingDelayInsight(ctx: GeneratorContext): ScoredInsight |
       trend: 'down',
     },
 
+    rootCauseTags: ['schedule', 'cascade'],
     rawScore: 0,
     reasoning: {
       observation: `${overrunningJobs.length} lopende klus${overrunningJobs.length > 1 ? 'sen overschrijden' : ' overschrijdt'} de schatting`,
-      evidence: `${topOverrun.projectName}: ${topOverrun.actualHoursLogged?.toFixed(1)}u gebruikt van ${topOverrun.estimatedHours}u geschat. ${overbookedDays.length} overbelaste dagen vooruit`,
+      evidence: `${topOverrun.projectName}: ${topOverrun.actualHoursLogged?.toFixed(1)}u gebruikt van ${topOverrun.estimatedHours}u geschat. ${overbookedDays.length} overbelaste dagen vooruit${(() => { const t = getTrend(ctx.profile, 'capacityUtilization', 4); return t && t.slope !== 0 ? ` — bezettingstrend: ${t.direction}` : ''; })()}`,
       implication: `${uniqueAffected.length} vervolgklussen dreigen vertraagd te raken — geschatte cascade: ${totalDelayHours.toFixed(1)} uur`,
       suggestion: overrunningJobs.length > 1
         ? 'Herplan de minst urgente klus van morgen om ruimte te maken'

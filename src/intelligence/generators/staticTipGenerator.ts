@@ -137,6 +137,100 @@ const STATIC_TIPS: StaticTip[] = [
   },
 ];
 
+/**
+ * Generate profile-aware dynamic tips when contractor data is available.
+ * Falls back to static tips when profile has no relevant data.
+ */
+function generateDynamicTip(ctx: GeneratorContext): ScoredInsight | null {
+  const profile = ctx.profile;
+  const jobs = profile.jobCompletionHistory;
+  const savings = profile.savingsProfile;
+  const invoices = profile.invoicePatterns;
+
+  // Dynamic tip: estimation accuracy insight from job history
+  if (jobs.length >= 3) {
+    const avgRatio = jobs.reduce((s, j) => s + (j.estimatedHours > 0 ? j.actualHours / j.estimatedHours : 1), 0) / jobs.length;
+    if (avgRatio > 1.15) {
+      return {
+        id: 'dynamic-tip-underestimate',
+        generatorId: 'static-tip',
+        category: 'tip',
+        priority: 'low',
+        title: 'Je schat uren structureel te laag',
+        message: `Je klussen duren gemiddeld ${Math.round((avgRatio - 1) * 100)}% langer dan begroot. Verhoog je uurschatting bij de volgende offerte.`,
+        detail: `Op basis van ${jobs.length} afgeronde klussen.`,
+        icon: 'bulb',
+        source: 'Vasco AI (persoonlijk)',
+        rootCauseTags: ['tip', 'personalized'],
+        rawScore: 0,
+        reasoning: {
+          observation: `Uren wijken gemiddeld ${Math.round((avgRatio - 1) * 100)}% af van begroting`,
+          evidence: `Op basis van ${jobs.length} afgeronde klussen uit je profiel`,
+          implication: 'Structurele onderschatting erodeert je marge',
+          suggestion: 'Verhoog je standaard uurschatting met dit percentage',
+        },
+        dataPoints: jobs.length,
+        confidence: 0.65,
+        freshness: 48,
+      };
+    }
+  }
+
+  // Dynamic tip: savings streak motivation
+  if (savings.savingsStreak >= 3) {
+    return {
+      id: 'dynamic-tip-streak',
+      generatorId: 'static-tip',
+      category: 'opportunity',
+      priority: 'low',
+      title: `${savings.savingsStreak} maanden besparingen op rij!`,
+      message: `Je bespaart al ${savings.savingsStreak} maanden achter elkaar. ${savings.topSavingsCategory ? `Je beste categorie: ${savings.topSavingsCategory}.` : 'Goed bezig!'}`,
+      icon: 'trophy',
+      source: 'Vasco AI (persoonlijk)',
+      rootCauseTags: ['tip', 'personalized'],
+      rawScore: 0,
+      reasoning: {
+        observation: `${savings.savingsStreak} opeenvolgende maanden met besparingen`,
+        evidence: 'Op basis van je besparingsprofiel',
+        implication: 'Consistente besparingen beschermen je marge op lange termijn',
+        suggestion: 'Verhoog je maanddoel om de volgende stap te zetten',
+      },
+      dataPoints: savings.savingsStreak,
+      confidence: 0.6,
+      freshness: 48,
+    };
+  }
+
+  // Dynamic tip: invoice payment advice
+  if (invoices.totalInvoices > 5 && invoices.onTimeRate < 0.7) {
+    return {
+      id: 'dynamic-tip-payment',
+      generatorId: 'static-tip',
+      category: 'financial',
+      priority: 'low',
+      title: 'Betaalgedrag verbeteren',
+      message: `Slechts ${Math.round(invoices.onTimeRate * 100)}% van je facturen wordt op tijd betaald. Automatische herinneringen kunnen dit verbeteren.`,
+      icon: 'bulb',
+      source: 'Vasco AI (persoonlijk)',
+      actionLabel: 'Herinneringen instellen',
+      actionRoute: '/(contractor)/facturen',
+      rootCauseTags: ['tip', 'personalized'],
+      rawScore: 0,
+      reasoning: {
+        observation: `On-time betaalratio: ${Math.round(invoices.onTimeRate * 100)}%`,
+        evidence: `Op basis van ${invoices.totalInvoices} facturen`,
+        implication: 'Late betalingen beperken je werkkapitaal',
+        suggestion: 'Schakel automatische herinneringen in op dag 3 en dag 7',
+      },
+      dataPoints: invoices.totalInvoices,
+      confidence: 0.7,
+      freshness: 48,
+    };
+  }
+
+  return null; // fall through to static tips
+}
+
 export const staticTipGenerator: InsightGenerator = {
   id: 'static-tip',
   screens: ['today', 'invoices', 'savings', 'decisions', 'meer', 'overview', 'dispatch',
@@ -144,7 +238,13 @@ export const staticTipGenerator: InsightGenerator = {
     'financials', 'efficiency', 'market', 'emerging', 'portfolio', 'safety', 'quality', 'issues'],
   roles: ['contractor', 'sitelead', 'coo', 'cfo', 'director'],
   generate(ctx: GeneratorContext): ScoredInsight | null {
-    // Use day-of-month for deterministic tip selection (not random)
+    // Try dynamic profile-aware tip first (contractor only)
+    if (ctx.role === 'contractor') {
+      const dynamic = generateDynamicTip(ctx);
+      if (dynamic) return dynamic;
+    }
+
+    // Fall back to static tips
     const dayIndex = ctx.now.getDate();
 
     const matching = STATIC_TIPS.filter(
@@ -159,6 +259,7 @@ export const staticTipGenerator: InsightGenerator = {
       ...selected.insight,
       id: `static-${selected.tipId}`,
       generatorId: 'static-tip',
+      rootCauseTags: ['tip', 'general'],
       rawScore: 0,
       reasoning: {
         observation: selected.insight.title,

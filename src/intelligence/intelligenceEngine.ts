@@ -21,30 +21,57 @@ import type {
 } from './dataSchema';
 
 // ============================================
-// FEEDBACK WEIGHTS - Persisted learned data
+// FEEDBACK OBSERVATIONS - Timestamped data points
+// ============================================
+
+export interface FeedbackObservation {
+  timestamp: string;   // ISO date
+  value: number;       // 1 = accepted/positive, 0 = rejected/negative, or ratio value
+}
+
+// ============================================
+// FEEDBACK WEIGHTS - Persisted learned data (v2: observation arrays)
 // ============================================
 
 export interface FeedbackWeights {
-  // Quote acceptance rates by price bracket + customer type
+  version: number;  // 2 = observation-based
   quoteAcceptance: {
-    byBracket: Record<string, { accepted: number; total: number }>;  // e.g., '0-1000', '1000-5000'
-    byCustomerType: Record<string, { accepted: number; total: number }>; // 'new', 'repeat'
+    byBracket: Record<string, FeedbackObservation[]>;
+    byCustomerType: Record<string, FeedbackObservation[]>;
   };
-  // Job duration ratios by category
   jobDuration: {
-    byCategory: Record<string, { totalRatio: number; count: number }>; // actual/estimated ratio
+    byCategory: Record<string, FeedbackObservation[]>;  // value = actual/estimated ratio
   };
-  // Payment timing by customer segment
   paymentTiming: {
-    bySegment: Record<string, { totalDays: number; count: number }>; // avg payment days
+    bySegment: Record<string, FeedbackObservation[]>;   // value = payment days
+  };
+  lastUpdated: string;
+}
+
+// Legacy format for migration
+interface LegacyFeedbackWeights {
+  version?: undefined;
+  quoteAcceptance: {
+    byBracket: Record<string, { accepted: number; total: number }>;
+    byCustomerType: Record<string, { accepted: number; total: number }>;
+  };
+  jobDuration: {
+    byCategory: Record<string, { totalRatio: number; count: number }>;
+  };
+  paymentTiming: {
+    bySegment: Record<string, { totalDays: number; count: number }>;
   };
   lastUpdated: string;
 }
 
 const FEEDBACK_WEIGHTS_KEY = '@vasco_feedback_weights';
+const MAX_OBSERVATIONS_PER_KEY = 100;
+const FEEDBACK_DECAY_HALF_LIFE_DAYS = 60;
+const FEEDBACK_DECAY = Math.LN2 / FEEDBACK_DECAY_HALF_LIFE_DAYS;
 
 function createDefaultWeights(): FeedbackWeights {
   return {
+    version: 2,
     quoteAcceptance: { byBracket: {}, byCustomerType: {} },
     jobDuration: { byCategory: {} },
     paymentTiming: { bySegment: {} },
@@ -52,10 +79,152 @@ function createDefaultWeights(): FeedbackWeights {
   };
 }
 
+/**
+ * Migrate v1 counter-based weights to v2 observation arrays.
+ * Spreads old observations uniformly over the past 90 days.
+ */
+function migrateFeedbackWeightsV1ToV2(legacy: LegacyFeedbackWeights): FeedbackWeights {
+  const now = Date.now();
+  const SPREAD_DAYS = 90;
+
+  function spreadCounters(accepted: number, total: number): FeedbackObservation[] {
+    const observations: FeedbackObservation[] = [];
+    for (let i = 0; i < total && i < MAX_OBSERVATIONS_PER_KEY; i++) {
+      const ageMs = ((total - i) / total) * SPREAD_DAYS * 86400000;
+      observations.push({
+        timestamp: new Date(now - ageMs).toISOString(),
+        value: i < accepted ? 1 : 0,
+      });
+    }
+    return observations;
+  }
+
+  function spreadRatios(totalRatio: number, count: number): FeedbackObservation[] {
+    if (count === 0) return [];
+    const avgRatio = totalRatio / count;
+    const observations: FeedbackObservation[] = [];
+    for (let i = 0; i < count && i < MAX_OBSERVATIONS_PER_KEY; i++) {
+      const ageMs = ((count - i) / count) * SPREAD_DAYS * 86400000;
+      observations.push({
+        timestamp: new Date(now - ageMs).toISOString(),
+        value: avgRatio,
+      });
+    }
+    return observations;
+  }
+
+  function spreadDays(totalDays: number, count: number): FeedbackObservation[] {
+    if (count === 0) return [];
+    const avgDays = totalDays / count;
+    const observations: FeedbackObservation[] = [];
+    for (let i = 0; i < count && i < MAX_OBSERVATIONS_PER_KEY; i++) {
+      const ageMs = ((count - i) / count) * SPREAD_DAYS * 86400000;
+      observations.push({
+        timestamp: new Date(now - ageMs).toISOString(),
+        value: avgDays,
+      });
+    }
+    return observations;
+  }
+
+  const weights: FeedbackWeights = {
+    version: 2,
+    quoteAcceptance: { byBracket: {}, byCustomerType: {} },
+    jobDuration: { byCategory: {} },
+    paymentTiming: { bySegment: {} },
+    lastUpdated: new Date().toISOString(),
+  };
+
+  for (const [key, data] of Object.entries(legacy.quoteAcceptance.byBracket)) {
+    weights.quoteAcceptance.byBracket[key] = spreadCounters(data.accepted, data.total);
+  }
+  for (const [key, data] of Object.entries(legacy.quoteAcceptance.byCustomerType)) {
+    weights.quoteAcceptance.byCustomerType[key] = spreadCounters(data.accepted, data.total);
+  }
+  for (const [key, data] of Object.entries(legacy.jobDuration.byCategory)) {
+    weights.jobDuration.byCategory[key] = spreadRatios(data.totalRatio, data.count);
+  }
+  for (const [key, data] of Object.entries(legacy.paymentTiming.bySegment)) {
+    weights.paymentTiming.bySegment[key] = spreadDays(data.totalDays, data.count);
+  }
+
+  return weights;
+}
+
+/**
+ * Compute time-decayed rate from observation array.
+ * Returns { rate, effectiveN } where effectiveN is the sum of decay weights.
+ */
+export function getDecayedRate(
+  observations: FeedbackObservation[],
+  now: number = Date.now(),
+): { rate: number; effectiveN: number } {
+  if (observations.length === 0) return { rate: 0, effectiveN: 0 };
+
+  let weightedSum = 0;
+  let totalWeight = 0;
+
+  for (const obs of observations) {
+    const ageMs = now - new Date(obs.timestamp).getTime();
+    const ageDays = Math.max(0, ageMs / 86400000);
+    const weight = Math.exp(-FEEDBACK_DECAY * ageDays);
+    weightedSum += obs.value * weight;
+    totalWeight += weight;
+  }
+
+  if (totalWeight < 0.01) return { rate: 0, effectiveN: 0 };
+  return { rate: weightedSum / totalWeight, effectiveN: totalWeight };
+}
+
+/**
+ * Confidence interval that narrows with more data (classic statistical shrinkage).
+ * Width = max(minWidth, baseWidth / sqrt(effectiveN))
+ * Asymmetric upper bound (1.3x) since construction jobs overrun more than underrun.
+ */
+export function confidenceInterval(
+  estimate: number,
+  effectiveN: number,
+  baseWidth: number = 0.4,
+  minWidth: number = 0.08,
+): { lower: number; upper: number; width: number; certaintyLevel: string } {
+  const width = Math.max(minWidth, baseWidth / Math.sqrt(Math.max(1, effectiveN)));
+  const lower = estimate * (1 - width);
+  const upper = estimate * (1 + width * 1.3); // asymmetric: overruns more likely
+
+  // Dutch certainty description based on width
+  const certaintyLevel = width <= 0.1
+    ? 'Hoge zekerheid — voldoende data'
+    : width <= 0.2
+      ? 'Redelijke zekerheid — meer data verbetert voorspelling'
+      : 'Lage zekerheid — voorspelling wordt beter met meer klussen';
+
+  return { lower, upper, width, certaintyLevel };
+}
+
+/** Push observation and trim to max cap */
+function pushObservation(arr: FeedbackObservation[], obs: FeedbackObservation): FeedbackObservation[] {
+  arr.push(obs);
+  if (arr.length > MAX_OBSERVATIONS_PER_KEY) {
+    // Trim oldest
+    arr.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+    return arr.slice(-MAX_OBSERVATIONS_PER_KEY);
+  }
+  return arr;
+}
+
 async function loadFeedbackWeights(): Promise<FeedbackWeights> {
   try {
     const raw = await AsyncStorage.getItem(FEEDBACK_WEIGHTS_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // Migrate v1 → v2 if needed
+      if (!parsed.version || parsed.version < 2) {
+        const migrated = migrateFeedbackWeightsV1ToV2(parsed as LegacyFeedbackWeights);
+        await saveFeedbackWeights(migrated);
+        return migrated;
+      }
+      return parsed as FeedbackWeights;
+    }
   } catch {
     // Silent
   }
@@ -477,7 +646,7 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
     if (tier === 'better') heuristicProb += 0.1;
     else if (tier === 'best') heuristicProb -= 0.05;
 
-    // Load learned weights and blend
+    // Load learned weights and blend using time-decayed observations
     const weights = await loadFeedbackWeights();
     const bracket = quoteValue < 1000 ? '0-1000'
       : quoteValue < 5000 ? '1000-5000'
@@ -485,24 +654,24 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
       : '15000+';
     const custType = customerHistory > 0 ? 'repeat' : 'new';
 
-    const bracketData = weights.quoteAcceptance.byBracket[bracket];
-    const custData = weights.quoteAcceptance.byCustomerType[custType];
+    const bracketObs = weights.quoteAcceptance.byBracket[bracket] || [];
+    const custObs = weights.quoteAcceptance.byCustomerType[custType] || [];
+
+    const bracketDecayed = getDecayedRate(bracketObs);
+    const custDecayed = getDecayedRate(custObs);
 
     let learnedProb: number | null = null;
-    let dataVolume = 0;
+    let totalEffectiveN = 0;
 
-    if (bracketData && bracketData.total >= 3 && custData && custData.total >= 3) {
-      // Blend bracket rate and customer type rate
-      const bracketRate = bracketData.accepted / bracketData.total;
-      const custRate = custData.accepted / custData.total;
-      learnedProb = bracketRate * 0.6 + custRate * 0.4;
-      dataVolume = bracketData.total + custData.total;
-    } else if (bracketData && bracketData.total >= 3) {
-      learnedProb = bracketData.accepted / bracketData.total;
-      dataVolume = bracketData.total;
-    } else if (custData && custData.total >= 3) {
-      learnedProb = custData.accepted / custData.total;
-      dataVolume = custData.total;
+    if (bracketDecayed.effectiveN >= 2 && custDecayed.effectiveN >= 2) {
+      learnedProb = bracketDecayed.rate * 0.6 + custDecayed.rate * 0.4;
+      totalEffectiveN = bracketDecayed.effectiveN + custDecayed.effectiveN;
+    } else if (bracketDecayed.effectiveN >= 2) {
+      learnedProb = bracketDecayed.rate;
+      totalEffectiveN = bracketDecayed.effectiveN;
+    } else if (custDecayed.effectiveN >= 2) {
+      learnedProb = custDecayed.rate;
+      totalEffectiveN = custDecayed.effectiveN;
     }
 
     // Blend learned + heuristic: 60/40 when data exists, 100% heuristic otherwise
@@ -512,8 +681,12 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
 
     if (learnedProb !== null) {
       probability = learnedProb * 0.6 + heuristicProb * 0.4;
-      confidence = Math.min(0.95, 0.5 + dataVolume * 0.02); // scales with data volume
-      explanation.push(`Geleerd uit ${dataVolume} offertes (${bracket}, ${custType})`);
+      confidence = Math.min(0.95, 0.5 + totalEffectiveN * 0.03);
+      const ci = confidenceInterval(probability, totalEffectiveN, 0.3, 0.08);
+      explanation.push(
+        `Geleerd uit ${bracketObs.length + custObs.length} offertes (${bracket}, ${custType}), effectief N=${totalEffectiveN.toFixed(1)}`,
+        `${ci.certaintyLevel} (bereik: ${(ci.lower * 100).toFixed(0)}%–${(ci.upper * 100).toFixed(0)}%)`,
+      );
     } else {
       probability = heuristicProb;
       confidence = Math.abs(heuristicProb - 0.5) * 2;
@@ -528,7 +701,7 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
     return {
       id: `pred_${Date.now()}`,
       modelType: 'quote_acceptance',
-      modelVersion: '2.0.0',
+      modelVersion: '3.0.0',
       timestamp: new Date().toISOString(),
       input,
       prediction: probability > 0.5,
@@ -616,23 +789,44 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
     const complexityMultiplier = complexity === 'high' ? 1.5 : complexity === 'low' ? 0.8 : 1.0;
     const heuristicHours = sqm * baseRate * complexityMultiplier;
 
-    // Load learned actual/estimated ratios by category
+    // Load learned actual/estimated ratios using time-decayed observations
     const weights = await loadFeedbackWeights();
-    const categoryData = weights.jobDuration.byCategory[category];
+    const categoryObs = weights.jobDuration.byCategory[category] || [];
+    const decayed = getDecayedRate(categoryObs);
 
     let estimatedHours: number;
     let confidence: number;
     const explanation: string[] = [];
 
-    if (categoryData && categoryData.count >= 3) {
-      // Apply learned correction factor
-      const avgRatio = categoryData.totalRatio / categoryData.count;
+    if (decayed.effectiveN >= 2) {
+      // Apply learned correction factor (decayed.rate = weighted avg ratio)
+      const avgRatio = decayed.rate;
       estimatedHours = heuristicHours * avgRatio;
-      confidence = Math.min(0.95, 0.6 + categoryData.count * 0.02);
+      confidence = Math.min(0.95, 0.6 + decayed.effectiveN * 0.03);
+
+      // Apply narrowing confidence interval
+      const ci = confidenceInterval(estimatedHours, decayed.effectiveN);
+
       explanation.push(
-        `Gecorrigeerd met factor ${avgRatio.toFixed(2)}x op basis van ${categoryData.count} eerdere ${category}-klussen`,
+        `Gecorrigeerd met factor ${avgRatio.toFixed(2)}x op basis van ${categoryObs.length} eerdere ${category}-klussen (effectief N=${decayed.effectiveN.toFixed(1)})`,
         `Basis: ${sqm}m² × ${baseRate} uur/m² × ${complexityMultiplier}x complexiteit`,
+        `${ci.certaintyLevel} (bereik: ${ci.lower.toFixed(1)}–${ci.upper.toFixed(1)} uur)`,
       );
+
+      return {
+        id: `pred_${Date.now()}`,
+        modelType: 'job_duration',
+        modelVersion: '3.0.0',
+        timestamp: new Date().toISOString(),
+        input,
+        prediction: {
+          estimatedHours,
+          rangeMin: ci.lower,
+          rangeMax: ci.upper,
+        },
+        confidence,
+        explanation,
+      };
     } else {
       estimatedHours = heuristicHours;
       confidence = 0.7;
@@ -645,7 +839,7 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
     return {
       id: `pred_${Date.now()}`,
       modelType: 'job_duration',
-      modelVersion: '2.0.0',
+      modelVersion: '3.0.0',
       timestamp: new Date().toISOString(),
       input,
       prediction: {
@@ -685,30 +879,65 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
     };
   }
 
-  private predictPaymentTiming(input: Record<string, unknown>): ModelPrediction {
+  private async predictPaymentTiming(input: Record<string, unknown>): Promise<ModelPrediction> {
     const customerHistory = (input.customerPaymentHistory as number[]) || [];
     const invoiceAmount = (input.invoiceAmount as number) || 0;
+    const segment = (input.customerSegment as string) || 'unknown';
 
-    const avgDays = customerHistory.length > 0
+    // Heuristic baseline from direct customer history
+    const heuristicDays = customerHistory.length > 0
       ? customerHistory.reduce((a, b) => a + b, 0) / customerHistory.length
       : 14;
+
+    // Load learned payment timing from FeedbackWeights
+    const weights = await loadFeedbackWeights();
+    const segmentObs = weights.paymentTiming.bySegment[segment] || [];
+    const decayed = getDecayedRate(segmentObs);
+
+    let expectedDays: number;
+    let confidence: number;
+    const explanation: string[] = [];
+
+    if (decayed.effectiveN >= 2) {
+      // Blend learned segment data (60%) + direct customer history (40%)
+      const learnedDays = decayed.rate; // value = payment days
+      expectedDays = customerHistory.length > 0
+        ? learnedDays * 0.6 + heuristicDays * 0.4
+        : learnedDays;
+      confidence = Math.min(0.95, 0.6 + decayed.effectiveN * 0.03);
+
+      const ci = confidenceInterval(expectedDays, decayed.effectiveN, 0.4, 0.08);
+      explanation.push(
+        `Geleerd uit ${segmentObs.length} betalingen in segment "${segment}" (effectief N=${decayed.effectiveN.toFixed(1)})`,
+        `${ci.certaintyLevel} (bereik: ${Math.round(ci.lower)}–${Math.round(ci.upper)} dagen)`,
+      );
+    } else {
+      expectedDays = heuristicDays;
+      confidence = customerHistory.length > 3 ? 0.85 : 0.6;
+      explanation.push(
+        `Gebaseerd op ${customerHistory.length} eerdere betalingen van deze klant`,
+        'Meer data per segment verbetert voorspellingen',
+      );
+    }
+
+    explanation.push(
+      `Verwachte betaaltermijn: ${Math.round(expectedDays)} dagen`,
+      expectedDays > 21 ? 'Hoog risico — overweeg proactief contact' : 'Betaling binnen normale termijn verwacht',
+    );
 
     return {
       id: `pred_${Date.now()}`,
       modelType: 'payment_timing',
-      modelVersion: '1.0.0',
+      modelVersion: '3.0.0',
       timestamp: new Date().toISOString(),
       input,
       prediction: {
-        expectedDays: Math.round(avgDays),
-        probability80: Math.round(avgDays * 1.3),
-        riskLevel: avgDays > 21 ? 'high' : avgDays > 14 ? 'medium' : 'low',
+        expectedDays: Math.round(expectedDays),
+        probability80: Math.round(expectedDays * 1.3),
+        riskLevel: expectedDays > 21 ? 'high' : expectedDays > 14 ? 'medium' : 'low',
       },
-      confidence: customerHistory.length > 3 ? 0.85 : 0.6,
-      explanation: [
-        `Based on ${customerHistory.length} previous payments`,
-        `Average payment time: ${Math.round(avgDays)} days`,
-      ],
+      confidence,
+      explanation,
     };
   }
 
@@ -719,6 +948,7 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
   private async processFeedbackLoops(event: DataEvent): Promise<void> {
     const weights = await loadFeedbackWeights();
     let updated = false;
+    const now = new Date().toISOString();
 
     switch (event.eventType) {
       case 'quote_accepted':
@@ -727,24 +957,26 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
         const value = (event.payload.quoteValue as number) || 0;
         const isRepeat = (event.payload.customerHistory as number) > 0;
 
-        // Update by price bracket
         const bracket = value < 1000 ? '0-1000'
           : value < 5000 ? '1000-5000'
           : value < 15000 ? '5000-15000'
           : '15000+';
         if (!weights.quoteAcceptance.byBracket[bracket]) {
-          weights.quoteAcceptance.byBracket[bracket] = { accepted: 0, total: 0 };
+          weights.quoteAcceptance.byBracket[bracket] = [];
         }
-        weights.quoteAcceptance.byBracket[bracket].total++;
-        if (accepted) weights.quoteAcceptance.byBracket[bracket].accepted++;
+        weights.quoteAcceptance.byBracket[bracket] = pushObservation(
+          weights.quoteAcceptance.byBracket[bracket],
+          { timestamp: now, value: accepted ? 1 : 0 },
+        );
 
-        // Update by customer type
         const custType = isRepeat ? 'repeat' : 'new';
         if (!weights.quoteAcceptance.byCustomerType[custType]) {
-          weights.quoteAcceptance.byCustomerType[custType] = { accepted: 0, total: 0 };
+          weights.quoteAcceptance.byCustomerType[custType] = [];
         }
-        weights.quoteAcceptance.byCustomerType[custType].total++;
-        if (accepted) weights.quoteAcceptance.byCustomerType[custType].accepted++;
+        weights.quoteAcceptance.byCustomerType[custType] = pushObservation(
+          weights.quoteAcceptance.byCustomerType[custType],
+          { timestamp: now, value: accepted ? 1 : 0 },
+        );
 
         updated = true;
         break;
@@ -758,10 +990,12 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
         if (estimatedHours > 0 && actualHours > 0) {
           const ratio = actualHours / estimatedHours;
           if (!weights.jobDuration.byCategory[category]) {
-            weights.jobDuration.byCategory[category] = { totalRatio: 0, count: 0 };
+            weights.jobDuration.byCategory[category] = [];
           }
-          weights.jobDuration.byCategory[category].totalRatio += ratio;
-          weights.jobDuration.byCategory[category].count++;
+          weights.jobDuration.byCategory[category] = pushObservation(
+            weights.jobDuration.byCategory[category],
+            { timestamp: now, value: ratio },
+          );
           updated = true;
         }
         break;
@@ -773,12 +1007,79 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
 
         if (paymentDays > 0) {
           if (!weights.paymentTiming.bySegment[segment]) {
-            weights.paymentTiming.bySegment[segment] = { totalDays: 0, count: 0 };
+            weights.paymentTiming.bySegment[segment] = [];
           }
-          weights.paymentTiming.bySegment[segment].totalDays += paymentDays;
-          weights.paymentTiming.bySegment[segment].count++;
+          weights.paymentTiming.bySegment[segment] = pushObservation(
+            weights.paymentTiming.bySegment[segment],
+            { timestamp: now, value: paymentDays },
+          );
           updated = true;
         }
+        break;
+      }
+
+      case 'quote_viewed': {
+        // Track quote view as weak positive signal (0.3) — they looked but haven't decided
+        const viewValue = (event.payload.quoteValue as number) || 0;
+        const viewBracket = viewValue < 1000 ? '0-1000'
+          : viewValue < 5000 ? '1000-5000'
+          : viewValue < 15000 ? '5000-15000'
+          : '15000+';
+        if (!weights.quoteAcceptance.byBracket[viewBracket]) {
+          weights.quoteAcceptance.byBracket[viewBracket] = [];
+        }
+        weights.quoteAcceptance.byBracket[viewBracket] = pushObservation(
+          weights.quoteAcceptance.byBracket[viewBracket],
+          { timestamp: now, value: 0.3 },  // weak positive: viewed but not yet accepted
+        );
+        updated = true;
+        break;
+      }
+
+      case 'quote_expired': {
+        // Expired quote = negative signal (0) for that bracket
+        const expValue = (event.payload.quoteValue as number) || 0;
+        const expBracket = expValue < 1000 ? '0-1000'
+          : expValue < 5000 ? '1000-5000'
+          : expValue < 15000 ? '5000-15000'
+          : '15000+';
+        if (!weights.quoteAcceptance.byBracket[expBracket]) {
+          weights.quoteAcceptance.byBracket[expBracket] = [];
+        }
+        weights.quoteAcceptance.byBracket[expBracket] = pushObservation(
+          weights.quoteAcceptance.byBracket[expBracket],
+          { timestamp: now, value: 0 },
+        );
+        updated = true;
+        break;
+      }
+
+      case 'payment_overdue': {
+        // Overdue payment: record high payment days as negative signal
+        const overdueSegment = (event.payload.customerSegment as string) || 'unknown';
+        const daysOverdue = (event.payload.daysOverdue as number) || 30;
+        if (!weights.paymentTiming.bySegment[overdueSegment]) {
+          weights.paymentTiming.bySegment[overdueSegment] = [];
+        }
+        weights.paymentTiming.bySegment[overdueSegment] = pushObservation(
+          weights.paymentTiming.bySegment[overdueSegment],
+          { timestamp: now, value: daysOverdue + 30 },  // base 30 + overdue days = total payment time
+        );
+        updated = true;
+        break;
+      }
+
+      case 'job_cancelled': {
+        // Cancelled job: record 0 ratio for that category (no work completed)
+        const cancelCategory = (event.payload.category as string) || 'general';
+        if (!weights.jobDuration.byCategory[cancelCategory]) {
+          weights.jobDuration.byCategory[cancelCategory] = [];
+        }
+        weights.jobDuration.byCategory[cancelCategory] = pushObservation(
+          weights.jobDuration.byCategory[cancelCategory],
+          { timestamp: now, value: 0 },  // 0 = cancelled before completion
+        );
+        updated = true;
         break;
       }
     }

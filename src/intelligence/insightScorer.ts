@@ -13,18 +13,56 @@ import {
   getLastShownTime,
   getLastDismissedTime,
   getRemainingDailyBudget,
+  getHabituationScore,
+  getCategoryFatigueToday,
+  getScreenVisitCount,
+  getOutcomeSuccessRate,
+  getSnoozeExpiry,
   type ContractorLearningProfile,
 } from './learningStorage';
 import { getConfidenceMultiplier, getCalibrationScores, logPrediction } from './calibration';
 import type { CalibrationScore } from './calibration';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // =============================================================================
-// CALIBRATION CACHE
+// GENERATOR DISPLAY NAMES (for consolidation evidence)
 // =============================================================================
+
+const GENERATOR_DISPLAY_NAMES: Record<string, string> = {
+  'overdue-invoice': 'Openstaande facturen',
+  'savings-opportunity': 'Besparingskansen',
+  'margin-drift': 'Marge-analyse',
+  'compliance-alert': 'Compliance',
+  'labor-efficiency': 'Arbeidsefficiëntie',
+  'estimation-calibration': 'Offertekalibratie',
+  'dso-trend': 'DSO-trend',
+  'cert-expiry': 'Certificaten',
+  'supplier-price': 'Leveranciersprijzen',
+  'weather-schedule': 'Weersplanning',
+  'daily-planning': 'Dagplanning',
+  'cross-service': 'Cross-service',
+  'cash-gap': 'Kasgat-analyse',
+  'capacity': 'Capaciteitsplanning',
+  'goal-progress': 'Doelvoortgang',
+  'profitability': 'Winstgevendheid',
+  'financial-audit': 'Financiële audit',
+  'margin-root-cause': 'Marge-oorzaak',
+  'customer-lifecycle': 'Klant-levenscyclus',
+  'cascading-delay': 'Cascadevertraging',
+  'estimation-variance-type': 'Schattingsafwijking',
+  'static-tip': 'Vasco Tip',
+};
+
+// =============================================================================
+// CALIBRATION CACHE (with AsyncStorage persistence)
+// =============================================================================
+
+const CALIBRATION_CACHE_KEY = '@vasco_calibration_cache';
+const CACHE_PERSIST_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours for persisted cache
 
 let calibrationCache: Map<string, number> = new Map();
 let calibrationCacheAge = 0;
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes for in-memory refresh
 
 export async function refreshCalibrationCache(): Promise<void> {
   const scores = await getCalibrationScores();
@@ -34,12 +72,93 @@ export async function refreshCalibrationCache(): Promise<void> {
   }
   calibrationCache = newCache;
   calibrationCacheAge = Date.now();
+
+  // Persist to AsyncStorage so cache survives app restart
+  try {
+    const persistData = {
+      entries: Object.fromEntries(newCache),
+      savedAt: calibrationCacheAge,
+    };
+    await AsyncStorage.setItem(CALIBRATION_CACHE_KEY, JSON.stringify(persistData));
+  } catch { /* silent */ }
 }
 
+/**
+ * Load calibration cache from AsyncStorage on cold start.
+ * Uses persisted data if < 24 hours old, otherwise returns false.
+ */
+async function loadPersistedCalibrationCache(): Promise<boolean> {
+  try {
+    const raw = await AsyncStorage.getItem(CALIBRATION_CACHE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw) as { entries: Record<string, number>; savedAt: number };
+    if (Date.now() - data.savedAt > CACHE_PERSIST_TTL_MS) return false;
+
+    calibrationCache = new Map(Object.entries(data.entries));
+    calibrationCacheAge = data.savedAt;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Cold-start: try loading persisted cache immediately
+let coldStartLoaded = false;
+
 function getCalibratedMultiplier(generatorId: string): number {
+  // Cold start: load from AsyncStorage if cache is empty
+  if (!coldStartLoaded && calibrationCache.size === 0) {
+    coldStartLoaded = true;
+    loadPersistedCalibrationCache().then(loaded => {
+      if (!loaded) refreshCalibrationCache().catch(() => {});
+    }).catch(() => {});
+  }
+
+  // Auto-refresh stale cache (fire-and-forget, uses current cache in meantime)
+  if (calibrationCacheAge > 0 && Date.now() - calibrationCacheAge > CACHE_TTL_MS) {
+    refreshCalibrationCache().catch(() => {});
+  }
   const multiplier = calibrationCache.get(generatorId);
   if (multiplier !== undefined) return multiplier;
   return 1.0; // neutral default if no calibration data
+}
+
+// =============================================================================
+// CROSS-GENERATOR CONFIDENCE DEPENDENCIES
+// =============================================================================
+// Some generators reinforce each other. When a "source" generator has high
+// calibration accuracy, the "dependent" generator gets a confidence boost.
+// =============================================================================
+
+const CONFIDENCE_DEPENDENCIES: Record<string, string[]> = {
+  'margin-root-cause': ['margin-drift'],                    // root cause depends on drift detection
+  'cash-gap':          ['dso-trend', 'overdue-invoice'],    // cash gap depends on DSO + overdue
+  'cascading-delay':   ['capacity', 'daily-planning'],      // cascade depends on capacity awareness
+  'customer-lifecycle': ['overdue-invoice', 'profitability'], // lifecycle depends on payment + profit
+  'goal-progress':     ['savings-opportunity'],              // goals met via realized savings
+  'profitability':     ['estimation-calibration', 'margin-drift'], // profit driven by estimation + margins
+  'labor-efficiency':  ['capacity'],                         // efficiency improves with balanced capacity
+  'estimation-variance-type': ['estimation-calibration'],    // variance type informs calibration
+  'margin-drift':      ['labor-efficiency'],                 // margin erosion often caused by labor issues
+};
+
+function getCrossGeneratorBoost(generatorId: string): number {
+  const deps = CONFIDENCE_DEPENDENCIES[generatorId];
+  if (!deps || deps.length === 0) return 0;
+
+  let totalMult = 0;
+  let depCount = 0;
+  for (const depId of deps) {
+    const mult = calibrationCache.get(depId);
+    if (mult !== undefined && mult > 1.0) {
+      totalMult += mult - 1.0; // excess above 1.0
+      depCount++;
+    }
+  }
+
+  // Small boost: avg excess * 0.5, capped at 0.1
+  if (depCount === 0) return 0;
+  return Math.min(0.1, (totalMult / depCount) * 0.5);
 }
 
 // =============================================================================
@@ -48,9 +167,16 @@ function getCalibratedMultiplier(generatorId: string): number {
 
 const MAX_PER_SCREEN = 5;
 const MIN_SCORE_THRESHOLD = 0.3;
-const FATIGUE_SAME_GENERATOR_4H = 0.3;
-const FATIGUE_DISMISSED_24H = 0.6;
 const MAX_PER_CATEGORY = 2; // diversity enforcement
+
+// Role-aware fatigue: contractors tolerate frequent insights, enterprise roles prefer less noise
+const ROLE_FATIGUE: Record<UserRole, { sameGenerator4h: number; dismissed24h: number }> = {
+  contractor: { sameGenerator4h: 0.20, dismissed24h: 0.40 },  // high tolerance
+  sitelead:   { sameGenerator4h: 0.25, dismissed24h: 0.50 },  // moderate
+  coo:        { sameGenerator4h: 0.35, dismissed24h: 0.65 },  // lower tolerance
+  cfo:        { sameGenerator4h: 0.40, dismissed24h: 0.70 },  // low — prefers quality over quantity
+  director:   { sameGenerator4h: 0.45, dismissed24h: 0.75 },  // lowest — strategic, few insights
+};
 
 // =============================================================================
 // ROLE-BASED SCORING WEIGHTS
@@ -103,6 +229,7 @@ const SCREEN_RELEVANCE: Record<string, Record<ScreenContext, number>> = {
   'margin-root-cause': { today: 0.8, invoices: 0.4, savings: 0.9, decisions: 0.9, meer: 0.2, schedule: 0.1, dispatch: 0.1, costs: 0.8, cashflow: 0.3, returns: 0.3, approvals: 0.1, risks: 0.4, performance: 0.6, permits: 0.1, procurement: 0.2, financials: 0.6, efficiency: 0.5, market: 0.1, emerging: 0.1, portfolio: 0.2, overview: 0.5, safety: 0.1, quality: 0.1, issues: 0.1 },
   'customer-lifecycle': { today: 0.7, invoices: 0.8, savings: 0.2, decisions: 0.7, meer: 0.3, schedule: 0.1, dispatch: 0.1, costs: 0.3, cashflow: 0.5, returns: 0.3, approvals: 0.1, risks: 0.3, performance: 0.5, permits: 0.1, procurement: 0.1, financials: 0.4, efficiency: 0.1, market: 0.2, emerging: 0.1, portfolio: 0.3, overview: 0.4, safety: 0.1, quality: 0.1, issues: 0.1 },
   'cascading-delay': { today: 0.9, invoices: 0.1, savings: 0.1, decisions: 0.7, meer: 0.1, schedule: 1.0, dispatch: 0.7, costs: 0.3, cashflow: 0.2, returns: 0.1, approvals: 0.1, risks: 0.5, performance: 0.3, permits: 0.1, procurement: 0.1, financials: 0.2, efficiency: 0.6, market: 0.1, emerging: 0.1, portfolio: 0.1, overview: 0.3, safety: 0.1, quality: 0.2, issues: 0.2 },
+  'estimation-variance-type': { today: 0.6, invoices: 0.2, savings: 0.9, decisions: 0.7, meer: 0.3, schedule: 0.1, dispatch: 0.1, costs: 0.7, cashflow: 0.1, returns: 0.1, approvals: 0.1, risks: 0.2, performance: 0.5, permits: 0.1, procurement: 0.1, financials: 0.3, efficiency: 0.4, market: 0.1, emerging: 0.1, portfolio: 0.1, overview: 0.3, safety: 0.1, quality: 0.1, issues: 0.1 },
   'static-tip': { today: 0.3, invoices: 0.3, savings: 0.3, decisions: 0.3, meer: 0.3, schedule: 0.3, dispatch: 0.3, costs: 0.3, cashflow: 0.3, returns: 0.3, approvals: 0.3, risks: 0.3, performance: 0.3, permits: 0.3, procurement: 0.3, financials: 0.3, efficiency: 0.3, market: 0.3, emerging: 0.3, portfolio: 0.3, overview: 0.3, safety: 0.3, quality: 0.3, issues: 0.3 },
 };
 
@@ -124,22 +251,27 @@ function getFatiguePenalty(
   profile: ContractorLearningProfile,
   generatorId: string,
   now: Date,
+  role: UserRole = 'contractor',
 ): number {
+  const fatigueLevels = ROLE_FATIGUE[role] || ROLE_FATIGUE.contractor;
   let penalty = 0;
 
   // Same generator shown in last 4 hours
   const lastShown = getLastShownTime(profile, generatorId);
   if (lastShown) {
     const hoursSince = (now.getTime() - new Date(lastShown).getTime()) / 3600000;
-    if (hoursSince < 4) penalty += FATIGUE_SAME_GENERATOR_4H;
+    if (hoursSince < 4) penalty += fatigueLevels.sameGenerator4h;
   }
 
-  // Dismissed in last 24 hours
+  // Dismissed in last 24 hours (escalating: more dismissals = higher penalty)
   const lastDismissed = getLastDismissedTime(profile, generatorId);
   if (lastDismissed) {
     const hoursSince = (now.getTime() - new Date(lastDismissed).getTime()) / 3600000;
-    if (hoursSince < 24) penalty += FATIGUE_DISMISSED_24H;
+    if (hoursSince < 24) penalty += fatigueLevels.dismissed24h;
   }
+
+  // Habituation: persistent dismissal pattern (14-day window)
+  penalty += getHabituationScore(profile, generatorId);
 
   return penalty;
 }
@@ -157,27 +289,151 @@ export function scoreInsight(
 ): ScoredInsight {
   const weights = ROLE_WEIGHTS[role] || ROLE_WEIGHTS.contractor;
 
+  // Suppress generators in dismissedPatterns (user consistently ignores these)
+  if (profile.dismissedPatterns.includes(insight.generatorId)) {
+    return { ...insight, rawScore: 0 };
+  }
+
   const relevance = getRelevanceScore(insight.generatorId, screen);
+
+  // Screen affinity: boost relevance for frequently-visited screens
+  const screenVisits = getScreenVisitCount(profile, screen);
+  const screenAffinityBoost = screenVisits > 20 ? 0.05 : screenVisits > 10 ? 0.03 : 0;
   const engagement = getEngagementRate(profile, insight.generatorId);
   const freshness = getFreshnessScore(insight.freshness);
   const urgency = priorityToUrgencyScore(insight.priority);
-  const fatigue = getFatiguePenalty(profile, insight.generatorId, now);
+  const fatigue = getFatiguePenalty(profile, insight.generatorId, now, role);
+  const categoryFatigue = getCategoryFatigueToday(profile, insight.category || 'other', now);
+
+  // Cross-screen dedup: penalize enterprise roles seeing same generator on different screen within 6h
+  let crossScreenPenalty = 0;
+  if (role !== 'contractor') {
+    const sixHoursAgo = new Date(now.getTime() - 6 * 3600000).toISOString();
+    const recentOnOtherScreen = profile.insightInteractions.some(
+      i => i.generatorId === insight.generatorId
+        && i.action === 'viewed'
+        && i.timestamp > sixHoursAgo
+        && i.screenContext !== screen
+        && i.screenContext !== '',
+    );
+    if (recentOnOtherScreen) crossScreenPenalty = 0.15;
+  }
+
+  // Outcome success rate (computed early so actionedBonus can reference it)
+  const outcomeRate = getOutcomeSuccessRate(profile, insight.generatorId);
+
+  // Actioned pattern boost: scaled by outcome success rate
+  // High outcome rate (>0.7) → 0.08, moderate (>0.5) → 0.05, low → 0.02
+  const isActioned = profile.actionedPatterns.includes(insight.generatorId);
+  const actionedBonus = isActioned
+    ? (outcomeRate > 0.7 ? 0.08 : outcomeRate > 0.5 ? 0.05 : 0.02)
+    : 0;
 
   const baseScore =
     (relevance * weights.relevance) +
     (engagement * weights.engagement) +
     (freshness * weights.freshness) +
-    (urgency * weights.urgency) -
-    fatigue;
+    (urgency * weights.urgency) +
+    screenAffinityBoost +
+    actionedBonus -
+    fatigue -
+    categoryFatigue -
+    crossScreenPenalty;
+
+  // Data-point confidence: insights based on few data points get dampened
+  // Scales from 0.7 (1 data point) to 1.0 (10+ data points)
+  const dp = insight.dataPoints ?? 1;
+  const dataPointFactor = dp >= 10 ? 1.0 : 0.7 + 0.3 * (Math.min(dp, 10) / 10);
 
   // Apply calibration multiplier: accurate generators boosted, inaccurate dampened
   const calibrationMult = getCalibratedMultiplier(insight.generatorId);
-  const finalScore = baseScore * calibrationMult;
+
+  // Cross-generator confidence: boost when dependent generators are well-calibrated
+  const crossBoost = getCrossGeneratorBoost(insight.generatorId);
+
+  // Outcome-based boost: generators whose insights led to positive results get a bonus
+  const outcomeBoost = outcomeRate > 0.6 ? 0.05 : outcomeRate < 0.3 ? -0.05 : 0;
+
+  const finalScore = (baseScore + crossBoost + outcomeBoost) * calibrationMult * dataPointFactor;
+
+  // Low-data confidence warning for insights based on few data points
+  const confidenceWarning = dp < 5
+    ? `Vroeg signaal — gebaseerd op ${dp} datapunt${dp > 1 ? 'en' : ''}`
+    : undefined;
 
   return {
     ...insight,
     rawScore: Math.max(0, Math.min(1, finalScore)),
+    confidenceWarning,
   };
+}
+
+// =============================================================================
+// INSIGHT CONSOLIDATION
+// =============================================================================
+// Merges insights that share rootCauseTags. The highest-scored insight absorbs
+// lower-scored ones sharing >= 1 tag. Absorbed insights boost confidence and
+// evidence, creating stronger composite signals.
+// =============================================================================
+
+function consolidateInsights(insights: ScoredInsight[]): ScoredInsight[] {
+  if (insights.length <= 1) return insights;
+
+  const absorbed = new Set<string>();
+  const result: ScoredInsight[] = [];
+
+  for (const primary of insights) {
+    if (absorbed.has(primary.id)) continue;
+
+    const tags = primary.rootCauseTags;
+    if (!tags || tags.length === 0) {
+      result.push(primary);
+      continue;
+    }
+
+    // Find lower-scored insights sharing >= 1 tag
+    const absorbedInsights: ScoredInsight[] = [];
+    for (const candidate of insights) {
+      if (candidate.id === primary.id || absorbed.has(candidate.id)) continue;
+      const candidateTags = candidate.rootCauseTags;
+      if (!candidateTags || candidateTags.length === 0) continue;
+
+      const shared = tags.some(t => candidateTags.includes(t));
+      if (shared && candidate.rawScore <= primary.rawScore) {
+        absorbedInsights.push(candidate);
+        absorbed.add(candidate.id);
+      }
+    }
+
+    if (absorbedInsights.length > 0) {
+      // Boost confidence: +15% per absorbed insight, capped at 0.95
+      const boostedConfidence = Math.min(0.95, primary.confidence + absorbedInsights.length * 0.15);
+
+      // Boost rawScore: 1.1x for multi-source corroboration
+      const boostedScore = Math.min(1, primary.rawScore * 1.1);
+
+      // Update evidence string with source generator names
+      const absorbedIds = absorbedInsights.map(i => i.id);
+      const sourceNames = absorbedInsights.map(i => GENERATOR_DISPLAY_NAMES[i.generatorId] || i.generatorId);
+      const evidence = `${primary.reasoning.evidence} — bevestigd door ${sourceNames.join(', ')} (${absorbedInsights.length + 1} bronnen)`;
+
+      result.push({
+        ...primary,
+        confidence: boostedConfidence,
+        rawScore: boostedScore,
+        consolidatedFrom: absorbedIds,
+        reasoning: {
+          ...primary.reasoning,
+          evidence,
+        },
+      });
+    } else {
+      result.push(primary);
+    }
+  }
+
+  // Re-sort after score adjustments
+  return result.sort((a, b) => b.rawScore - a.rawScore);
 }
 
 export function scoreAndRankInsights(
@@ -189,21 +445,32 @@ export function scoreAndRankInsights(
 ): ScoredInsight[] {
   const budget = getRemainingDailyBudget(profile);
 
-  const scored = insights
+  // Filter snoozed insights before scoring
+  const unsnoozed = insights.filter(insight => !getSnoozeExpiry(profile, insight.generatorId));
+
+  const scored = unsnoozed
     .map(insight => scoreInsight(insight, screen, profile, now, role))
     .filter(insight => insight.rawScore >= MIN_SCORE_THRESHOLD)
     .sort((a, b) => b.rawScore - a.rawScore);
 
-  // Diversity enforcement: max MAX_PER_CATEGORY insights per category
+  // Consolidation: merge related insights before diversity enforcement
+  const consolidated = consolidateInsights(scored);
+
+  // Diversity enforcement: max 1 insight per generator, max MAX_PER_CATEGORY per category
   const categoryCounts = new Map<string, number>();
+  const seenGenerators = new Set<string>();
   const diversified: ScoredInsight[] = [];
 
-  for (const insight of scored) {
+  for (const insight of consolidated) {
+    // Generator-level dedup: only the highest-scored insight per generator
+    if (seenGenerators.has(insight.generatorId)) continue;
+
     const cat = insight.category || 'other';
     const count = categoryCounts.get(cat) || 0;
     if (count < MAX_PER_CATEGORY) {
       diversified.push(insight);
       categoryCounts.set(cat, count + 1);
+      seenGenerators.add(insight.generatorId);
     }
     if (diversified.length >= Math.min(MAX_PER_SCREEN, budget)) break;
   }

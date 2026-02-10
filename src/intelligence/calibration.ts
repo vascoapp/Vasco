@@ -44,6 +44,10 @@ interface CalibrationStore {
 const STORAGE_KEY = '@vasco_calibration';
 const MAX_ENTRIES = 200;
 
+// In-memory deduplication: prevent duplicate logPrediction calls from re-renders
+const recentPredictions = new Map<string, number>(); // key -> timestamp
+const DEDUP_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+
 // =============================================================================
 // PERSISTENCE
 // =============================================================================
@@ -72,6 +76,22 @@ async function saveStore(store: CalibrationStore): Promise<void> {
 // =============================================================================
 
 export async function logPrediction(entry: Omit<CalibrationEntry, 'id'>): Promise<string> {
+  // Dedup: skip if same generator + same value was logged recently (prevents re-render spam)
+  const dedupKey = `${entry.generatorId}:${entry.predictedValue ?? ''}`;
+  const now = Date.now();
+  const lastLogged = recentPredictions.get(dedupKey);
+  if (lastLogged && now - lastLogged < DEDUP_WINDOW_MS) {
+    return ''; // Already logged recently, skip
+  }
+  recentPredictions.set(dedupKey, now);
+
+  // Prune stale dedup entries periodically
+  if (recentPredictions.size > 50) {
+    for (const [key, ts] of recentPredictions) {
+      if (now - ts > DEDUP_WINDOW_MS) recentPredictions.delete(key);
+    }
+  }
+
   const store = await loadStore();
   const id = `cal-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   store.entries.push({ ...entry, id });
@@ -132,13 +152,79 @@ export async function getCalibrationScores(): Promise<CalibrationScore[]> {
   return scores;
 }
 
+// =============================================================================
+// AUTO-RESOLUTION - Resolve pending predictions when outcomes arrive
+// =============================================================================
+
+/**
+ * Resolve all unresolved predictions for a generator by comparing against actual value.
+ * Called when outcome data becomes available (e.g., job completes, invoice paid).
+ */
+export async function resolveByGenerator(
+  generatorId: string,
+  actualValue: number,
+  tolerancePercent: number = 15,
+  maxAge: number = 30 * 86400000, // only resolve predictions < 30 days old
+): Promise<number> {
+  const store = await loadStore();
+  let resolved = 0;
+
+  const now = Date.now();
+  for (const entry of store.entries) {
+    if (entry.generatorId !== generatorId) continue;
+    if (entry.resolvedAt) continue; // already resolved
+    if (entry.predictedValue === undefined) continue;
+
+    // Skip predictions older than maxAge
+    const age = now - new Date(entry.predictedAt).getTime();
+    if (age > maxAge) continue;
+
+    entry.actualValue = actualValue;
+    entry.resolvedAt = new Date().toISOString();
+    const diff = Math.abs(entry.predictedValue - actualValue);
+    const tolerance = Math.abs(entry.predictedValue) * (tolerancePercent / 100);
+    entry.accurate = diff <= tolerance;
+    resolved++;
+  }
+
+  if (resolved > 0) {
+    await saveStore(store);
+  }
+  return resolved;
+}
+
+/**
+ * Batch-resolve predictions from multiple generators based on outcome data.
+ * Use this when job/invoice/payment outcomes arrive to update all relevant predictions.
+ */
+export async function resolveCalibrationPredictions(outcomes: {
+  generatorId: string;
+  actualValue: number;
+  tolerancePercent?: number;
+}[]): Promise<number> {
+  let totalResolved = 0;
+  for (const outcome of outcomes) {
+    const count = await resolveByGenerator(
+      outcome.generatorId,
+      outcome.actualValue,
+      outcome.tolerancePercent ?? 15,
+    );
+    totalResolved += count;
+  }
+  return totalResolved;
+}
+
+/**
+ * Smooth logistic confidence multiplier.
+ * Maps calibration rate (0-1) to multiplier (0.7-1.1) using a logistic curve.
+ * Centered at 0.6 accuracy (neutral = 1.0). No cliff effects.
+ */
 export function getConfidenceMultiplier(calibrationRate: number): number {
-  // Good calibration (>80%) → boost confidence
-  // Poor calibration (<50%) → reduce confidence
-  if (calibrationRate >= 0.8) return 1.1;
-  if (calibrationRate >= 0.6) return 1.0;
-  if (calibrationRate >= 0.4) return 0.85;
-  return 0.7;
+  // Logistic: 0.7 + 0.4 / (1 + e^(-k*(x - midpoint)))
+  // At rate=0.6 → ~1.0, rate=0.8 → ~1.08, rate=0.3 → ~0.73
+  const k = 8;  // steepness
+  const midpoint = 0.6;
+  return 0.7 + 0.4 / (1 + Math.exp(-k * (calibrationRate - midpoint)));
 }
 
 // =============================================================================

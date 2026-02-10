@@ -173,6 +173,18 @@ class InvoiceAutomationService {
       invoice.paymentMethod = method;
       trackUserAction('invoice_paid', { invoiceId, method, amount: invoice.paidAmount });
       this.notify();
+
+      // Record invoice outcome for intelligence calibration
+      import('../intelligence/learningStorage').then(({ recordInvoiceOutcome }) => {
+        recordInvoiceOutcome({
+          invoiceId: invoice.id,
+          amount: invoice.total,
+          issuedDate: invoice.issueDate.toISOString(),
+          dueDate: invoice.dueDate.toISOString(),
+          paidDate: invoice.paidDate!.toISOString(),
+          isOverdue: invoice.dueDate < invoice.paidDate!,
+        }).catch(() => {});
+      }).catch(() => {});
     }
   }
 

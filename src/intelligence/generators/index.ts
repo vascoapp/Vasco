@@ -27,6 +27,9 @@ import { useGoalProgressInsight } from './goalProgressGenerator';
 import { useProfitabilityInsight } from './profitabilityGenerator';
 import { useFinancialAuditInsight } from './financialAuditGenerator';
 
+// Profile-driven generators
+import { useEstimationVarianceByTypeInsight } from './estimationVarianceByTypeGenerator';
+
 // Cross-service generators
 import { useMarginRootCauseInsight } from './marginRootCauseGenerator';
 import { useCustomerLifecycleInsight } from './customerLifecycleGenerator';
@@ -50,26 +53,28 @@ interface GeneratorRegistration {
 }
 
 const GENERATOR_REGISTRY: GeneratorRegistration[] = [
-  { id: 'overdue-invoice', screens: ['today', 'invoices'], roles: ['contractor'] },
+  // Contractor + enterprise roles where relevant
+  { id: 'overdue-invoice', screens: ['today', 'invoices', 'cashflow'], roles: ['contractor', 'cfo'] },
   { id: 'savings-opportunity', screens: ['today', 'savings'], roles: ['contractor'] },
-  { id: 'margin-drift', screens: ['today', 'savings', 'decisions'], roles: ['contractor'] },
-  { id: 'compliance-alert', screens: ['today', 'meer'], roles: ['contractor'] },
-  { id: 'labor-efficiency', screens: ['today', 'decisions'], roles: ['contractor'] },
+  { id: 'margin-drift', screens: ['today', 'savings', 'decisions', 'financials'], roles: ['contractor', 'cfo', 'director'] },
+  { id: 'compliance-alert', screens: ['today', 'meer', 'safety', 'quality', 'risks'], roles: ['contractor', 'sitelead', 'coo'] },
+  { id: 'labor-efficiency', screens: ['today', 'decisions', 'efficiency'], roles: ['contractor', 'coo'] },
   { id: 'estimation-calibration', screens: ['today', 'savings'], roles: ['contractor'] },
-  { id: 'dso-trend', screens: ['today', 'invoices'], roles: ['contractor'] },
-  { id: 'cert-expiry', screens: ['today', 'meer'], roles: ['contractor'] },
-  { id: 'supplier-price', screens: ['savings', 'meer'], roles: ['contractor'] },
-  { id: 'weather-schedule', screens: ['today'], roles: ['contractor'] },
-  { id: 'daily-planning', screens: ['today'], roles: ['contractor'] },
-  { id: 'cross-service', screens: ['invoices', 'savings', 'decisions'], roles: ['contractor'] },
-  { id: 'cash-gap', screens: ['today', 'invoices'], roles: ['contractor'] },
-  { id: 'capacity', screens: ['today', 'decisions'], roles: ['contractor'] },
+  { id: 'dso-trend', screens: ['today', 'invoices', 'cashflow'], roles: ['contractor', 'cfo'] },
+  { id: 'cert-expiry', screens: ['today', 'meer', 'safety'], roles: ['contractor', 'sitelead'] },
+  { id: 'supplier-price', screens: ['savings', 'meer', 'procurement'], roles: ['contractor', 'coo'] },
+  { id: 'weather-schedule', screens: ['today', 'schedule'], roles: ['contractor', 'sitelead'] },
+  { id: 'daily-planning', screens: ['today', 'schedule', 'dispatch'], roles: ['contractor', 'sitelead'] },
+  { id: 'cross-service', screens: ['invoices', 'savings', 'decisions', 'financials'], roles: ['contractor', 'cfo'] },
+  { id: 'cash-gap', screens: ['today', 'invoices', 'cashflow'], roles: ['contractor', 'cfo'] },
+  { id: 'capacity', screens: ['today', 'decisions', 'dispatch', 'efficiency'], roles: ['contractor', 'sitelead', 'coo'] },
   { id: 'goal-progress', screens: ['today', 'savings'], roles: ['contractor'] },
-  { id: 'profitability', screens: ['overview'], roles: ['cfo', 'director'] },
-  { id: 'financial-audit', screens: ['today', 'invoices'], roles: ['contractor', 'cfo'] },
-  { id: 'margin-root-cause', screens: ['today', 'savings', 'decisions'], roles: ['contractor'] },
+  { id: 'profitability', screens: ['overview', 'financials', 'portfolio'], roles: ['contractor', 'cfo', 'director'] },
+  { id: 'financial-audit', screens: ['today', 'invoices', 'financials'], roles: ['contractor', 'cfo', 'director'] },
+  { id: 'margin-root-cause', screens: ['today', 'savings', 'decisions', 'financials'], roles: ['contractor', 'cfo'] },
   { id: 'customer-lifecycle', screens: ['today', 'invoices', 'decisions'], roles: ['contractor'] },
-  { id: 'cascading-delay', screens: ['today', 'schedule', 'decisions'], roles: ['contractor'] },
+  { id: 'cascading-delay', screens: ['today', 'schedule', 'decisions', 'dispatch'], roles: ['contractor', 'sitelead', 'coo'] },
+  { id: 'estimation-variance-type', screens: ['today', 'savings', 'decisions'], roles: ['contractor'] },
   { id: 'static-tip', screens: ['today', 'invoices', 'savings', 'decisions', 'meer', 'overview', 'dispatch',
     'costs', 'cashflow', 'returns', 'approvals', 'risks', 'performance',
     'financials', 'efficiency', 'market', 'emerging', 'portfolio', 'safety', 'quality', 'issues'],
@@ -101,6 +106,9 @@ export function useAllGenerators(ctx: GeneratorContext): ScoredInsight[] {
   const goalProgress = useGoalProgressInsight(ctx);
   const profitability = useProfitabilityInsight(ctx);
   const financialAudit = useFinancialAuditInsight(ctx);
+
+  // Profile-driven generators
+  const estimationVarianceType = useEstimationVarianceByTypeInsight(ctx);
 
   // Cross-service generators
   const marginRootCause = useMarginRootCauseInsight(ctx);
@@ -134,6 +142,7 @@ export function useAllGenerators(ctx: GeneratorContext): ScoredInsight[] {
       { id: 'margin-root-cause', insight: marginRootCause },
       { id: 'customer-lifecycle', insight: customerLifecycle },
       { id: 'cascading-delay', insight: cascadingDelay },
+      { id: 'estimation-variance-type', insight: estimationVarianceType },
       { id: 'static-tip', insight: staticTip },
     ];
 
@@ -153,6 +162,6 @@ export function useAllGenerators(ctx: GeneratorContext): ScoredInsight[] {
     estimationCal, dsoTrend, certExpiry, supplierPrice, weather,
     dailyPlanning, crossService, cashGap, capacity, goalProgress,
     profitability, financialAudit, marginRootCause, customerLifecycle,
-    cascadingDelay, staticTip, ctx.role, ctx.screen,
+    cascadingDelay, estimationVarianceType, staticTip, ctx.role, ctx.screen,
   ]);
 }

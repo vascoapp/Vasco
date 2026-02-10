@@ -34,6 +34,10 @@ export interface ScoredInsight extends VascoInsight {
   dataPoints: number;      // how many data points back this insight
   confidence: number;      // 0-1
   freshness: number;       // hours since data changed
+  rootCauseTags?: string[];       // semantic tags for consolidation (e.g. ['margin', 'cost-variance'])
+  consolidatedFrom?: string[];    // IDs of insights absorbed during consolidation
+  shownOnScreen?: string;         // screen context where this insight was displayed
+  confidenceWarning?: string;     // Dutch warning when insight based on few data points
 }
 
 export interface InsightGenerator {

@@ -6,10 +6,10 @@
 // =============================================================================
 
 import type { VascoInsight } from '../components/shared/VascoInsightCard';
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 
 // Learning Engine imports
-import { useLearningProfile, incrementInsightsShown } from '../intelligence/learningStorage';
+import { useLearningProfile, incrementInsightsShown, setActiveRole } from '../intelligence/learningStorage';
 import { useAllGenerators } from '../intelligence/generators';
 import type { ScoredInsight, UserRole, ScreenContext } from '../intelligence/generators';
 import { scoreAndRankInsights, refreshCalibrationCache } from '../intelligence/insightScorer';
@@ -24,8 +24,16 @@ export type { ScoredInsight } from '../intelligence/generators';
 // =============================================================================
 
 export function useVascoGuidance(role: UserRole, screen: ScreenContext): ScoredInsight[] {
+  // Set active role for role-aware storage (must be before useLearningProfile)
+  setActiveRole(role);
   const { profile } = useLearningProfile();
-  const now = useMemo(() => new Date(), []);
+
+  // Periodically update `now` so freshness/fatigue stay accurate in long sessions
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 5 * 60 * 1000); // every 5 min
+    return () => clearInterval(interval);
+  }, []);
 
   // Load calibration scores into scorer cache on mount
   useEffect(() => {
@@ -46,6 +54,11 @@ export function useVascoGuidance(role: UserRole, screen: ScreenContext): ScoredI
   // Score, rank, and cap insights (role-aware weights + diversity enforcement)
   const scoredInsights = useMemo(() => {
     const ranked = scoreAndRankInsights(rawInsights, screen, profile, now, role);
+
+    // Stamp screen context onto each insight for interaction tracking
+    for (const insight of ranked) {
+      insight.shownOnScreen = screen;
+    }
 
     // Track shown insights for daily budget
     if (ranked.length > 0) {

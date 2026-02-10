@@ -4,6 +4,7 @@
 
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import { useExpiryCalendar } from '../../services/complianceService';
+import { logPrediction } from '../calibration';
 
 export const certExpiryGenerator: InsightGenerator = {
   id: 'cert-expiry',
@@ -25,6 +26,14 @@ export function useCertExpiryInsight(ctx: GeneratorContext): ScoredInsight | nul
 
   const soonest = expiringItems[0];
   const daysUntil = Math.ceil((new Date(soonest.date).getTime() - ctx.now.getTime()) / 86400000);
+
+  // Log prediction for calibration
+  logPrediction({
+    generatorId: 'cert-expiry',
+    predictedAt: new Date().toISOString(),
+    prediction: `${expiringItems.length} certificaten verlopen binnen ${daysUntil} dagen`,
+    predictedValue: daysUntil,
+  });
   const priority = daysUntil <= 14 ? 'high' : daysUntil <= 30 ? 'medium' : 'low';
 
   return {
@@ -41,6 +50,7 @@ export function useCertExpiryInsight(ctx: GeneratorContext): ScoredInsight | nul
     actionRoute: '/(contractor)/certificaten',
     source: 'Compliance',
 
+    rootCauseTags: ['compliance', 'certification'],
     rawScore: 0,
     reasoning: {
       observation: `${expiringItems.length} certificaat/vergunning${expiringItems.length > 1 ? 'en' : ''} verloop${expiringItems.length > 1 ? 'en' : 't'} binnenkort`,

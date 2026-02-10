@@ -8,11 +8,14 @@
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import type { VascoInsight } from '../../components/shared/VascoInsightCard';
 import { useProjectProfitability } from '../../services/projectProfitabilityService';
+import { logPrediction } from '../calibration';
+import { recordMetricSnapshot, getTrend } from '../learningStorage';
+import { isAboveThreshold } from '../adaptiveThresholds';
 
 export const profitabilityGenerator: InsightGenerator = {
   id: 'profitability',
   screens: ['overview'],
-  roles: ['cfo', 'director'],
+  roles: ['contractor', 'cfo', 'director'],
   generate(ctx: GeneratorContext): ScoredInsight | null {
     return null;
   },
@@ -26,6 +29,18 @@ export function useProfitabilityInsight(ctx: GeneratorContext): ScoredInsight | 
   const actionable = [...warnings, ...opportunities].slice(0, 3);
 
   if (actionable.length === 0) return null;
+
+  // Log prediction for calibration
+  const totalImpactForLog = actionable.reduce((sum, i) => sum + Math.abs(i.impact), 0);
+  logPrediction({
+    generatorId: 'profitability',
+    predictedAt: new Date().toISOString(),
+    prediction: `Winstgevendheid impact: €${totalImpactForLog} (${warnings.length} risico's, ${opportunities.length} kansen)`,
+    predictedValue: totalImpactForLog,
+  });
+
+  // Record margin leakage metric for trend tracking
+  recordMetricSnapshot('marginLeakage', totalImpactForLog);
 
   // Compute total impact across top insights
   const totalImpact = actionable.reduce((sum, i) => sum + Math.abs(i.impact), 0);
@@ -41,7 +56,9 @@ export function useProfitabilityInsight(ctx: GeneratorContext): ScoredInsight | 
     parts.push(`${opportunities.length} kans${opportunities.length > 1 ? 'en' : ''} (€${oppImpact.toLocaleString('nl-NL')} potentieel)`);
   }
 
-  const priority = warnings.length >= 2 || warningImpact > 5000 ? 'high' : 'medium';
+  // Use adaptive threshold for margin leakage to determine priority
+  const isHighImpact = isAboveThreshold(ctx.profile, 'marginLeakage', warningImpact);
+  const priority = warnings.length >= 2 || isHighImpact ? 'high' : 'medium';
   const topInsight = actionable[0];
 
   // Detail: list top 3 insights
@@ -66,10 +83,11 @@ export function useProfitabilityInsight(ctx: GeneratorContext): ScoredInsight | 
       trend: warnings.length > opportunities.length ? 'down' : 'up',
     },
 
+    rootCauseTags: ['margin', 'profitability'],
     rawScore: 0,
     reasoning: {
       observation: `${actionable.length} winstgevendheid-inzichten gedetecteerd`,
-      evidence: `Op basis van ${profitability.insights.length} projectanalyses — marge ${profitability.overallMargin}%, trend: ${profitability.profitTrend}`,
+      evidence: `Op basis van ${profitability.insights.length} projectanalyses — marge ${profitability.overallMargin}%, trend: ${profitability.profitTrend}${(() => { const t = getTrend(ctx.profile, 'marginLeakage', 4); return t && t.slope !== 0 ? ` — historische trend: ${t.direction}` : ''; })()}`,
       implication: `Totale geschatte impact: €${totalImpact.toLocaleString('nl-NL')} (${warnings.length} risico's, ${opportunities.length} kansen)`,
       suggestion: topInsight.description,
     },

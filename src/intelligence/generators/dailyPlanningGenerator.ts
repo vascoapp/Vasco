@@ -4,6 +4,7 @@
 
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import { useDaySchedule } from '../../services/smartSchedulerService';
+import { logPrediction } from '../calibration';
 
 export const dailyPlanningGenerator: InsightGenerator = {
   id: 'daily-planning',
@@ -43,6 +44,14 @@ export function useDailyPlanningInsight(ctx: GeneratorContext): ScoredInsight | 
 
   if (maxGapHours < 1.5) return null;
 
+  // Log prediction for calibration
+  logPrediction({
+    generatorId: 'daily-planning',
+    predictedAt: new Date().toISOString(),
+    prediction: `Planningsgat: ${maxGapHours.toFixed(1)} uur (${gapStart}-${gapEnd})`,
+    predictedValue: maxGapHours,
+  });
+
   return {
     id: 'schedule-gap',
     generatorId: 'daily-planning',
@@ -57,6 +66,7 @@ export function useDailyPlanningInsight(ctx: GeneratorContext): ScoredInsight | 
     source: 'Planner',
     timestamp: 'Nu',
 
+    rootCauseTags: ['schedule', 'idle-time'],
     rawScore: 0,
     reasoning: {
       observation: `${maxGapHours.toFixed(1)} uur ongebruikte tijd gevonden in je dagplanning`,

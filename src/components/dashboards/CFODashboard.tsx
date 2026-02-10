@@ -5,7 +5,7 @@
 // Enhanced with Financial Auditor AI, Vasco Guidance, and smart approvals
 // =============================================================================
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -46,6 +46,7 @@ import {
 import { useVascoGuidance, useInlineInsight } from '../../services/vascoGuidanceService';
 import { VascoInsightList, InlineInsight } from '../shared/VascoInsightCard';
 import type { VascoInsight } from '../shared/VascoInsightCard';
+import { recordScreenVisit } from '../../intelligence/learningStorage';
 import { FinancialAuditorDashboard } from '../financial-auditor/FinancialAuditorDashboard';
 import { FinancialKPIGrid } from '../shared/FinancialKPIGrid';
 import { PLStatementView } from '../shared/PLStatementView';
@@ -658,8 +659,11 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
   const deliveryMetrics = useMemo(() => mockDeliveryMetrics[selectedProjectId], [selectedProjectId]);
   const currency = useMemo(() => selectedProject ? getCurrencyForCountry(selectedProject.country) : 'GBP', [selectedProject]);
 
-  // Vasco AI Guidance (from service)
+  // Track screen visits for learning profile
   const screenContext = activeTab === 'overview' ? 'today' : activeTab;
+  useEffect(() => { recordScreenVisit(screenContext); }, [screenContext]);
+
+  // Vasco AI Guidance (from service)
   const allGuidance = useVascoGuidance('cfo', screenContext as any);
   const activeGuidance = useMemo(
     () => allGuidance.filter(g => !dismissedGuidance.has(g.id) && !snoozedGuidance.has(g.id)),

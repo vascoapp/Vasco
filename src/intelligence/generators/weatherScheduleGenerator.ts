@@ -3,6 +3,7 @@
 // =============================================================================
 
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
+import { logPrediction } from '../calibration';
 
 export const weatherScheduleGenerator: InsightGenerator = {
   id: 'weather-schedule',
@@ -13,9 +14,19 @@ export const weatherScheduleGenerator: InsightGenerator = {
     const hour = ctx.now.getHours();
     const month = ctx.now.getMonth();
     const isWinter = month >= 10 || month <= 2;
-    const showRainWarning = isWinter || Math.random() > 0.5; // Simulate weather conditions
+    // Deterministic: use day-of-month for reproducible behavior (not Math.random)
+    const dayOfMonth = ctx.now.getDate();
+    const showRainWarning = isWinter || (dayOfMonth % 3 !== 0); // ~67% chance, deterministic
 
     if (!showRainWarning) return null;
+
+    // Log prediction for calibration
+    logPrediction({
+      generatorId: 'weather-schedule',
+      predictedAt: new Date().toISOString(),
+      prediction: 'Regen verwacht tussen 14:00-17:00',
+      predictedValue: 8, // mm predicted
+    });
 
     return {
       id: 'ctx-weather',
@@ -29,6 +40,7 @@ export const weatherScheduleGenerator: InsightGenerator = {
       source: 'Weer',
       timestamp: `${String(hour).padStart(2, '0')}:15`,
 
+      rootCauseTags: ['schedule', 'weather'],
       rawScore: 0,
       reasoning: {
         observation: 'Regen verwacht vanmiddag (14:00-17:00)',

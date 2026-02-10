@@ -5,6 +5,7 @@
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import type { VascoInsight } from '../../components/shared/VascoInsightCard';
 import { useCrossServiceIntelligence } from '../../services/crossServiceIntelligenceService';
+import { logPrediction } from '../calibration';
 
 export const crossServiceGenerator: InsightGenerator = {
   id: 'cross-service',
@@ -29,6 +30,14 @@ export function useCrossServiceInsight(ctx: GeneratorContext): ScoredInsight | n
 
   if (!relevantInsight) return null;
 
+  // Log prediction for calibration
+  logPrediction({
+    generatorId: 'cross-service',
+    predictedAt: new Date().toISOString(),
+    prediction: `Cross-service correlatie: ${relevantInsight.title} (impact €${relevantInsight.impact.value})`,
+    predictedValue: relevantInsight.impact.value,
+  });
+
   const hasMoneyImpact = relevantInsight.impact.unit.includes('€');
 
   return {
@@ -49,6 +58,7 @@ export function useCrossServiceInsight(ctx: GeneratorContext): ScoredInsight | n
         }
       : undefined,
 
+    rootCauseTags: ['cross-service', 'correlation'],
     rawScore: 0,
     reasoning: {
       observation: `Verband gevonden tussen ${relevantInsight.sources.join(' en ')}`,

@@ -11,7 +11,9 @@ import type { ScoredInsight, GeneratorContext } from './types';
 import { useJobCostSummary } from '../../services/jobCostTrackingService';
 import { useLaborCosts } from '../../services/laborCostService';
 import { useEstimationAccuracy } from '../../services/estimationFeedbackService';
-import { recordMetricSnapshot } from '../learningStorage';
+import { recordMetricSnapshot, getTrend } from '../learningStorage';
+import { logPrediction } from '../calibration';
+import { isAboveThreshold, getAdaptiveThreshold } from '../adaptiveThresholds';
 
 export function useMarginRootCauseInsight(ctx: GeneratorContext): ScoredInsight | null {
   const costSummary = useJobCostSummary();
@@ -22,8 +24,16 @@ export function useMarginRootCauseInsight(ctx: GeneratorContext): ScoredInsight 
   recordMetricSnapshot('marginLeakage', costSummary.totalMarginLeakage);
   recordMetricSnapshot('estimationAccuracy', estimation.overallScore);
 
-  // Only trigger if there's meaningful margin leakage
-  if (costSummary.totalMarginLeakage < 200) return null;
+  // Log prediction for calibration
+  logPrediction({
+    generatorId: 'margin-root-cause',
+    predictedAt: new Date().toISOString(),
+    prediction: `Marge-lek root cause: €${costSummary.totalMarginLeakage}`,
+    predictedValue: costSummary.totalMarginLeakage,
+  });
+
+  // Only trigger if margin leakage exceeds contractor's adaptive threshold
+  if (!isAboveThreshold(ctx.profile, 'marginLeakage', costSummary.totalMarginLeakage)) return null;
 
   // Identify root causes and rank by contribution
   interface RootCause {
@@ -35,8 +45,8 @@ export function useMarginRootCauseInsight(ctx: GeneratorContext): ScoredInsight 
 
   const causes: RootCause[] = [];
 
-  // 1. Estimation accuracy issues
-  if (estimation.overallScore < 75) {
+  // 1. Estimation accuracy issues (adaptive: alert when below contractor's threshold)
+  if (isAboveThreshold(ctx.profile, 'estimationAccuracy', estimation.overallScore)) {
     const estImpact = costSummary.totalMarginLeakage * (1 - estimation.overallScore / 100);
     causes.push({
       id: 'estimation',
@@ -46,8 +56,8 @@ export function useMarginRootCauseInsight(ctx: GeneratorContext): ScoredInsight 
     });
   }
 
-  // 2. Idle time / labor inefficiency
-  if (labor.idleTime.idlePercent > 8) {
+  // 2. Idle time / labor inefficiency (adaptive threshold)
+  if (isAboveThreshold(ctx.profile, 'idlePercent', labor.idleTime.idlePercent)) {
     causes.push({
       id: 'idle',
       label: 'Leegloop',
@@ -100,10 +110,11 @@ export function useMarginRootCauseInsight(ctx: GeneratorContext): ScoredInsight 
       trend: 'down',
     },
 
+    rootCauseTags: ['margin', primaryCause.id],
     rawScore: 0,
     reasoning: {
       observation: `€${costSummary.totalMarginLeakage.toLocaleString('nl-NL')} marge-lek over recente klussen`,
-      evidence: `Oorzakenanalyse uit ${causes.length} bronnen: kostentracking, arbeidsanalyse, schattingsfeedback`,
+      evidence: `Oorzakenanalyse uit ${causes.length} bronnen: kostentracking, arbeidsanalyse, schattingsfeedback${(() => { const t = getTrend(ctx.profile, 'marginLeakage', 4); return t && t.slope !== 0 ? ` — trend: ${t.slope > 0 ? 'stijgend' : 'dalend'} (${t.direction})` : ''; })()}`,
       implication: `${primaryCause.explanation}. Totaal verklaard: €${totalIdentified.toLocaleString('nl-NL')} van €${costSummary.totalMarginLeakage.toLocaleString('nl-NL')}`,
       suggestion: primaryCause.id === 'estimation'
         ? 'Kalibreer je uurschattingen per klustype — de feedback-loop toont waar je consistent te laag schat'

@@ -35,6 +35,10 @@ const GENERATOR_LABELS: Record<string, string> = {
   'goal-progress': 'Doelvoortgang',
   'profitability': 'Winstgevendheid',
   'financial-audit': 'Financieel audit',
+  'margin-root-cause': 'Marge-oorzaak',
+  'customer-lifecycle': 'Klant-levenscyclus',
+  'cascading-delay': 'Cascadevertraging',
+  'estimation-variance-type': 'Schattingsafwijking per type',
   'static-tip': 'Vasco tips',
   'smart-pricing': 'Slimme prijzen',
 };
@@ -57,6 +61,10 @@ const GENERATOR_ICONS: Record<string, string> = {
   'goal-progress': 'trophy',
   'profitability': 'stats-chart',
   'financial-audit': 'search',
+  'margin-root-cause': 'analytics',
+  'customer-lifecycle': 'people',
+  'cascading-delay': 'git-branch',
+  'estimation-variance-type': 'calculator',
   'static-tip': 'bulb',
   'smart-pricing': 'flash',
 };

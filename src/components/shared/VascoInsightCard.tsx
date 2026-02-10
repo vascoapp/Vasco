@@ -19,7 +19,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
-import { recordInteraction } from '../../intelligence/learningStorage';
+import { recordInteraction, recordInsightOutcome } from '../../intelligence/learningStorage';
 import type { ScoredInsight, ReasoningChain } from '../../intelligence/generators/types';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -108,12 +108,15 @@ export function VascoInsightCard({
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const [actedOn, setActedOn] = useState(false);
+  const [outcomeRecorded, setOutcomeRecorded] = useState(false);
   const [showReasoning, setShowReasoning] = useState(false);
   const viewedRef = useRef(false);
   const mountTimeRef = useRef(Date.now());
+  const expandedAtRef = useRef<number | null>(null);
 
   const scored = isScoredInsight(insight);
   const generatorId = scored ? (insight as ScoredInsight).generatorId : 'unknown';
+  const screenCtx = scored ? ((insight as ScoredInsight).shownOnScreen || '') : '';
 
   // Track 'viewed' on mount
   useEffect(() => {
@@ -124,10 +127,11 @@ export function VascoInsightCard({
         generatorId,
         action: 'viewed',
         timestamp: new Date().toISOString(),
-        screenContext: '',
+        screenContext: screenCtx,
+        category: insight.category,
       });
     }
-  }, [insight.id, generatorId]);
+  }, [insight.id, generatorId, insight.category]);
 
   // Track 'ignored' — visible 5s+ without interaction
   useEffect(() => {
@@ -138,25 +142,42 @@ export function VascoInsightCard({
           generatorId,
           action: 'ignored',
           timestamp: new Date().toISOString(),
-          screenContext: '',
+          screenContext: screenCtx,
+          category: insight.category,
           dwellTimeMs: 5000,
         });
       }
     }, 5000);
     return () => clearTimeout(timer);
-  }, [insight.id, generatorId, expanded, actedOn]);
+  }, [insight.id, generatorId, expanded, actedOn, insight.category]);
 
   const toggleExpand = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpanded(prev => {
       if (!prev) {
+        // Opening: record expand and save timestamp
+        expandedAtRef.current = Date.now();
         recordInteraction({
           insightId: insight.id,
           generatorId,
           action: 'expanded',
           timestamp: new Date().toISOString(),
-          screenContext: '',
+          screenContext: screenCtx,
+          category: insight.category,
         });
+      } else if (expandedAtRef.current) {
+        // Closing: record dwell time as a second expanded interaction
+        const dwellMs = Date.now() - expandedAtRef.current;
+        recordInteraction({
+          insightId: insight.id,
+          generatorId,
+          action: 'expanded',
+          timestamp: new Date().toISOString(),
+          screenContext: screenCtx,
+          category: insight.category,
+          dwellTimeMs: dwellMs,
+        });
+        expandedAtRef.current = null;
       }
       return !prev;
     });
@@ -173,7 +194,8 @@ export function VascoInsightCard({
       generatorId,
       action: 'acted',
       timestamp: new Date().toISOString(),
-      screenContext: '',
+      screenContext: screenCtx,
+      category: insight.category,
       dwellTimeMs: Date.now() - mountTimeRef.current,
     });
     if (onAction) {
@@ -191,7 +213,8 @@ export function VascoInsightCard({
       generatorId,
       action: 'dismissed',
       timestamp: new Date().toISOString(),
-      screenContext: '',
+      screenContext: screenCtx,
+      category: insight.category,
       dwellTimeMs: Date.now() - mountTimeRef.current,
     });
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -204,7 +227,8 @@ export function VascoInsightCard({
       generatorId,
       action: 'snoozed',
       timestamp: new Date().toISOString(),
-      screenContext: '',
+      screenContext: screenCtx,
+      category: insight.category,
     });
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     onSnooze?.(insight.id);
@@ -213,18 +237,38 @@ export function VascoInsightCard({
   const priorityColor = getPriorityColor(insight.priority);
   const priorityBg = getPriorityBg(insight.priority);
 
+  const handleOutcome = useCallback((outcome: 'positive' | 'negative') => {
+    recordInsightOutcome(insight.id, generatorId, outcome);
+    setOutcomeRecorded(true);
+  }, [insight.id, generatorId]);
+
   if (actedOn) {
     return (
       <View style={[styles.card, styles.cardActedOn]}>
         <View style={styles.actedOnContent}>
           <Ionicons name="checkmark-circle" size={20} color={SemanticColors.feedbackSuccess} />
           <Text style={styles.actedOnText}>
-            {insight.actionLabel ? `${insight.actionLabel} — klaar` : 'Afgehandeld'}
+            {outcomeRecorded ? 'Bedankt voor je feedback' : insight.actionLabel ? `${insight.actionLabel} — klaar` : 'Afgehandeld'}
           </Text>
         </View>
-        <Pressable onPress={handleDismiss} hitSlop={8}>
-          <Ionicons name="close" size={16} color={SemanticColors.textTertiary} />
-        </Pressable>
+        {!outcomeRecorded ? (
+          <View style={styles.outcomeFeedback}>
+            <Text style={styles.outcomeLabel}>Nuttig?</Text>
+            <Pressable onPress={() => handleOutcome('positive')} hitSlop={8} style={styles.outcomeButton}>
+              <Ionicons name="thumbs-up-outline" size={14} color={SemanticColors.feedbackSuccess} />
+            </Pressable>
+            <Pressable onPress={() => handleOutcome('negative')} hitSlop={8} style={styles.outcomeButton}>
+              <Ionicons name="thumbs-down-outline" size={14} color={SemanticColors.textTertiary} />
+            </Pressable>
+            <Pressable onPress={handleDismiss} hitSlop={8}>
+              <Ionicons name="close" size={14} color={SemanticColors.textTertiary} />
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable onPress={handleDismiss} hitSlop={8}>
+            <Ionicons name="close" size={16} color={SemanticColors.textTertiary} />
+          </Pressable>
+        )}
       </View>
     );
   }
@@ -344,11 +388,21 @@ export function VascoInsightCard({
                 <Text style={styles.reasoningEvidence}>
                   {(insight as ScoredInsight).reasoning.evidence}
                 </Text>
-                <View style={[styles.confidenceBadge, { backgroundColor: getConfidenceColor((insight as ScoredInsight).confidence) + '18' }]}>
-                  <Text style={[styles.confidenceText, { color: getConfidenceColor((insight as ScoredInsight).confidence) }]}>
-                    {Math.round((insight as ScoredInsight).confidence * 100)}% zeker
-                  </Text>
-                  <Ionicons name="bar-chart" size={10} color={getConfidenceColor((insight as ScoredInsight).confidence)} />
+                <View style={styles.confidenceRow}>
+                  <View style={[styles.confidenceBadge, { backgroundColor: getConfidenceColor((insight as ScoredInsight).confidence) + '18' }]}>
+                    <Text style={[styles.confidenceText, { color: getConfidenceColor((insight as ScoredInsight).confidence) }]}>
+                      {Math.round((insight as ScoredInsight).confidence * 100)}% zeker
+                    </Text>
+                    <Ionicons name="bar-chart" size={10} color={getConfidenceColor((insight as ScoredInsight).confidence)} />
+                  </View>
+                  {(insight as ScoredInsight).confidenceWarning && (
+                    <View style={[styles.confidenceBadge, { backgroundColor: Palette.hermesOrange + '15', marginLeft: 6 }]}>
+                      <Ionicons name="flask-outline" size={10} color={Palette.hermesOrange} />
+                      <Text style={[styles.confidenceText, { color: Palette.hermesOrange }]}>
+                        {(insight as ScoredInsight).confidenceWarning}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               </View>
               <View style={styles.reasoningRow}>
@@ -557,6 +611,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: SemanticColors.feedbackSuccess,
     fontWeight: '500',
+    flex: 1,
+  },
+  outcomeFeedback: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  outcomeLabel: {
+    fontSize: 11,
+    color: SemanticColors.textTertiary,
+  },
+  outcomeButton: {
+    padding: 4,
   },
 
   // Header
@@ -819,6 +886,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: SemanticColors.textSecondary,
     flex: 1,
+  },
+  confidenceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 4,
   },
   confidenceBadge: {
     flexDirection: 'row',

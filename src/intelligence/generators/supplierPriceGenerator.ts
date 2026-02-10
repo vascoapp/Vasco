@@ -4,6 +4,7 @@
 
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import { useSupplierNegotiation } from '../../services/supplierNegotiationService';
+import { logPrediction } from '../calibration';
 
 export const supplierPriceGenerator: InsightGenerator = {
   id: 'supplier-price',
@@ -18,6 +19,14 @@ export function useSupplierPriceInsight(ctx: GeneratorContext): ScoredInsight | 
   const negotiation = useSupplierNegotiation();
 
   if (!negotiation || negotiation.totalDiscountPotential <= 0) return null;
+
+  // Log prediction for calibration
+  logPrediction({
+    generatorId: 'supplier-price',
+    predictedAt: new Date().toISOString(),
+    prediction: `Leverancierskorting potentieel: €${negotiation.totalDiscountPotential}`,
+    predictedValue: negotiation.totalDiscountPotential,
+  });
 
   const topLeverage = negotiation.topLeverage;
 
@@ -40,6 +49,7 @@ export function useSupplierPriceInsight(ctx: GeneratorContext): ScoredInsight | 
       trend: 'up',
     },
 
+    rootCauseTags: ['savings', 'supplier'],
     rawScore: 0,
     reasoning: {
       observation: topLeverage

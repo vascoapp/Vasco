@@ -6,7 +6,7 @@
 // 4-tab navigation: Portfolio, Approvals, Risks, Performance
 // =============================================================================
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -39,6 +39,7 @@ import type { Workflow } from '../../services/crossRoleWorkflowService';
 import { useVascoGuidance, useInlineInsight } from '../../services/vascoGuidanceService';
 import { VascoInsightList, InlineInsight } from '../shared/VascoInsightCard';
 import type { VascoInsight } from '../shared/VascoInsightCard';
+import { recordScreenVisit } from '../../intelligence/learningStorage';
 import { ContractorDashboardHeader } from '../contractor/ContractorDashboardHeader';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -222,6 +223,9 @@ export function DirectorDashboard({ initialTab = 'portfolio', showTabBar = true 
   const router = useRouter();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabView>(initialTab);
+
+  // Track screen visits for learning profile
+  useEffect(() => { recordScreenVisit(activeTab); }, [activeTab]);
 
   // Vasco AI Guidance
   const [dismissedGuidance, setDismissedGuidance] = useState<Set<string>>(new Set());

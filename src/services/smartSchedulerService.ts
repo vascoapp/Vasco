@@ -688,6 +688,23 @@ class SmartSchedulerService {
     job.status = this.getSchedulerStatus(nextStatus);
     this.notifyListeners();
     trackUserAction('lifecycle_advanced', { jobId, from: LIFECYCLE_ORDER[currentIndex], to: nextStatus });
+
+    // Record job outcome for intelligence calibration when job reaches completion
+    if (nextStatus === 'gereed' || nextStatus === 'betaald') {
+      import('../intelligence/learningStorage').then(({ recordJobOutcome }) => {
+        recordJobOutcome({
+          jobId: job.id,
+          jobType: job.projectName || 'Overig',
+          estimatedHours: job.estimatedHours || 0,
+          actualHours: job.actualHoursLogged || job.estimatedHours || 0,
+          estimatedCost: job.quotedAmount || 0,
+          actualCost: job.quotedAmount || 0,
+          marginPercent: 0,
+          completedAt: new Date().toISOString(),
+        }).catch(() => {});
+      }).catch(() => {});
+    }
+
     return nextStatus;
   }
 

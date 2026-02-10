@@ -240,6 +240,18 @@ class CashFlowService {
       invoice.paymentMethod = paymentMethod;
       this.notifyListeners();
       trackUserAction('invoice_paid', { invoiceId, amount: invoice.amount });
+
+      // Record invoice outcome for intelligence calibration
+      import('../intelligence/learningStorage').then(({ recordInvoiceOutcome }) => {
+        recordInvoiceOutcome({
+          invoiceId: invoice.id,
+          amount: invoice.amount,
+          issuedDate: invoice.issueDate,
+          dueDate: invoice.dueDate,
+          paidDate: invoice.paidDate!,
+          isOverdue: new Date(invoice.dueDate) < new Date(invoice.paidDate!),
+        }).catch(() => {});
+      }).catch(() => {});
     }
   }
 

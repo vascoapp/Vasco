@@ -6,7 +6,7 @@
 // Tabs: Overzicht | Planning | Veiligheid | Kwaliteit
 // =============================================================================
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Alert,
   Pressable,
@@ -34,6 +34,7 @@ import {
 import { useVascoGuidance, useInlineInsight } from '../../services/vascoGuidanceService';
 import { VascoInsightList, InlineInsight } from '../shared/VascoInsightCard';
 import type { VascoInsight } from '../shared/VascoInsightCard';
+import { recordScreenVisit } from '../../intelligence/learningStorage';
 import { ContractorDashboardHeader } from '../contractor/ContractorDashboardHeader';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -285,6 +286,9 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
 
   // Fixed project for site lead (no multi-site selection)
   const selectedProjectId = 'uk-001';
+
+  // Track screen visits for learning profile
+  useEffect(() => { recordScreenVisit(activeTab); }, [activeTab]);
 
   // Vasco AI Guidance
   const [dismissedGuidance, setDismissedGuidance] = useState<Set<string>>(new Set());

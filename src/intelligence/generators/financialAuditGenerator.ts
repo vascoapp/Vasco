@@ -4,6 +4,7 @@
 
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import { useFinancialAuditStats } from '../../services/financialAuditorService';
+import { logPrediction } from '../calibration';
 
 export const financialAuditGenerator: InsightGenerator = {
   id: 'financial-audit',
@@ -20,6 +21,14 @@ export function useFinancialAuditInsight(ctx: GeneratorContext): ScoredInsight |
   if (!stats || (stats.criticalFindings === 0 && stats.highFindings === 0)) return null;
 
   const totalFindings = stats.criticalFindings + stats.highFindings;
+
+  // Log prediction for calibration
+  logPrediction({
+    generatorId: 'financial-audit',
+    predictedAt: new Date().toISOString(),
+    prediction: `Financiële bevindingen: ${totalFindings} (${stats.criticalFindings} kritiek)`,
+    predictedValue: totalFindings,
+  });
   const priority = stats.criticalFindings > 0 ? 'critical' : 'high';
 
   return {
@@ -40,6 +49,7 @@ export function useFinancialAuditInsight(ctx: GeneratorContext): ScoredInsight |
       trend: 'up',
     } : undefined,
 
+    rootCauseTags: ['financial', 'audit'],
     rawScore: 0,
     reasoning: {
       observation: `${totalFindings} financiële bevindingen gedetecteerd`,

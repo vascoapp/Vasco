@@ -5,6 +5,8 @@
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import { useComplianceAlerts } from '../../services/complianceService';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
+import { logPrediction } from '../calibration';
+import { detectAnomaly } from '../adaptiveThresholds';
 
 export const complianceAlertGenerator: InsightGenerator = {
   id: 'compliance-alert',
@@ -34,6 +36,17 @@ export function useComplianceAlertInsight(ctx: GeneratorContext): ScoredInsight 
   // Record metric snapshot for trend tracking
   recordMetricSnapshot('complianceScore', complianceScore);
 
+  // Anomaly detection: sudden compliance score drops
+  const anomaly = detectAnomaly(ctx.profile, 'complianceScore', complianceScore);
+
+  // Log prediction for calibration
+  logPrediction({
+    generatorId: 'compliance-alert',
+    predictedAt: new Date().toISOString(),
+    prediction: `Compliance-score: ${complianceScore}/100 (${criticalAndHigh.length} waarschuwingen)`,
+    predictedValue: complianceScore,
+  });
+
   // Get trend from profile
   const trend = getTrend(ctx.profile, 'complianceScore', 4);
   const trendText = trend
@@ -62,17 +75,18 @@ export function useComplianceAlertInsight(ctx: GeneratorContext): ScoredInsight 
     timestamp: 'Nu',
     metric: { label: 'Score', value: `${complianceScore}/100`, trend: complianceScore < 70 ? 'down' : 'up' },
 
+    rootCauseTags: ['compliance', 'risk'],
     rawScore: 0,
     reasoning: {
       observation: `${criticalAndHigh.length} compliance-waarschuwing${criticalAndHigh.length > 1 ? 'en' : ''} vereisen actie (${critical.length} kritiek, ${high.length} hoog)`,
-      evidence: `Op basis van ${totalAlerts} actieve compliance-checks — score ${complianceScore}/100`,
+      evidence: `Op basis van ${totalAlerts} actieve compliance-checks — score ${complianceScore}/100${anomaly.isAnomaly ? ` — anomalie gedetecteerd (${anomaly.zScore.toFixed(1)}σ)` : ''}`,
       implication: critical.length > 0
         ? `Niet-naleving kan leiden tot boetes of werkstop${trendText}`
         : `Tijdige actie voorkomt escalatie naar kritiek niveau${trendText}`,
       suggestion: 'Controleer je certificaten en vergunningen op verloopdatums',
     },
     dataPoints: totalAlerts,
-    confidence: 0.95,
+    confidence: anomaly.isAnomaly ? Math.min(0.98, 0.95 + 0.02) : 0.95,
     freshness: 0.5,
   };
 }

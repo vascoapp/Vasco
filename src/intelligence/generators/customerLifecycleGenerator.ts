@@ -9,6 +9,7 @@
 import type { ScoredInsight, GeneratorContext } from './types';
 import { useTopCustomers, useAtRiskCustomers } from '../../services/projectProfitabilityService';
 import { useCollectionsAgent } from '../../services/collectionsAgentService';
+import { logPrediction } from '../calibration';
 
 export function useCustomerLifecycleInsight(ctx: GeneratorContext): ScoredInsight | null {
   const topCustomers = useTopCustomers(5);
@@ -28,6 +29,17 @@ export function useCustomerLifecycleInsight(ctx: GeneratorContext): ScoredInsigh
       seq.customerName === customer.customerName && seq.daysOverdue > 0
     );
   });
+
+  // Log prediction for calibration
+  if (atRiskWithOverdue.length > 0) {
+    const totalAtRiskCLV = atRiskWithOverdue.reduce((sum, c) => sum + c.predictedClv, 0);
+    logPrediction({
+      generatorId: 'customer-lifecycle',
+      predictedAt: new Date().toISOString(),
+      prediction: `${atRiskWithOverdue.length} at-risk klanten, CLV €${totalAtRiskCLV}`,
+      predictedValue: totalAtRiskCLV,
+    });
+  }
 
   // Prioritize at-risk high-CLV customers
   if (atRiskWithOverdue.length > 0) {
@@ -55,6 +67,7 @@ export function useCustomerLifecycleInsight(ctx: GeneratorContext): ScoredInsigh
         trend: 'down',
       },
 
+      rootCauseTags: ['customer', 'cashflow'],
       rawScore: 0,
       reasoning: {
         observation: `${atRiskWithOverdue.length} klant${atRiskWithOverdue.length > 1 ? 'en' : ''} met hoge levensduurwaarde hebben betalingsachterstand`,
@@ -88,6 +101,7 @@ export function useCustomerLifecycleInsight(ctx: GeneratorContext): ScoredInsigh
         trend: 'up',
       },
 
+      rootCauseTags: ['customer', 'upsell'],
       rawScore: 0,
       reasoning: {
         observation: `${loyalTopCustomers.length} topklanten betalen consistent op tijd`,

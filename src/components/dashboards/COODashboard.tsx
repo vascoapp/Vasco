@@ -5,7 +5,7 @@
 // Aligned with CRE executive priorities for 2026
 // =============================================================================
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -67,6 +67,7 @@ import {
 import { useVascoGuidance, useInlineInsight } from '../../services/vascoGuidanceService';
 import { VascoInsightList, InlineInsight } from '../shared/VascoInsightCard';
 import type { VascoInsight } from '../shared/VascoInsightCard';
+import { recordScreenVisit } from '../../intelligence/learningStorage';
 import { ContractorDashboardHeader } from '../contractor/ContractorDashboardHeader';
 
 
@@ -123,6 +124,9 @@ export function COODashboard({ initialTab = 'financials', showTabBar = true }: C
   const efficiencyKPIs = useOperationalEfficiency(selectedProjectId);
   const stakeholderKPIs = useStakeholderMarket(selectedProjectId);
   const emergingKPIs = useEmergingPriorities(selectedProjectId);
+
+  // Track screen visits for learning profile
+  useEffect(() => { recordScreenVisit(activeTab); }, [activeTab]);
 
   // Vasco AI Guidance
   const [dismissedGuidance, setDismissedGuidance] = useState<Set<string>>(new Set());
