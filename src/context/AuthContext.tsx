@@ -248,6 +248,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Load intelligence learning profile when user role is known
+  useEffect(() => {
+    if (user?.role) {
+      import('../intelligence/learningStorage').then(({ setActiveRole, loadProfile }) => {
+        const intelligenceRole = user.role === 'site-lead' ? 'sitelead' : user.role;
+        setActiveRole(intelligenceRole);
+        loadProfile().catch(() => {});
+      }).catch(() => {});
+    }
+  }, [user?.role]);
+
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
 

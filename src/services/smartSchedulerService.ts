@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { jobCostTrackingService } from './jobCostTrackingService';
 
 // ============================================
 // TYPES
@@ -691,18 +692,29 @@ class SmartSchedulerService {
 
     // Record job outcome for intelligence calibration when job reaches completion
     if (nextStatus === 'gereed' || nextStatus === 'betaald') {
+      // Pull real cost data from jobCostTrackingService when available
+      const variance = jobCostTrackingService.getJobCostVariance(job.id);
+      const actualCost = variance ? variance.actualTotal : job.quotedAmount || 0;
+      const estimatedCost = variance ? variance.estimatedTotal : job.quotedAmount || 0;
+      const marginPercent = estimatedCost > 0
+        ? ((estimatedCost - actualCost) / estimatedCost) * 100
+        : 0;
+
       import('../intelligence/learningStorage').then(({ recordJobOutcome }) => {
         recordJobOutcome({
           jobId: job.id,
           jobType: job.projectName || 'Overig',
-          estimatedHours: job.estimatedHours || 0,
-          actualHours: job.actualHoursLogged || job.estimatedHours || 0,
-          estimatedCost: job.quotedAmount || 0,
-          actualCost: job.quotedAmount || 0,
-          marginPercent: 0,
+          estimatedHours: variance?.estimatedHours || job.estimatedHours || 0,
+          actualHours: variance?.actualHours || job.actualHoursLogged || job.estimatedHours || 0,
+          estimatedCost,
+          actualCost,
+          marginPercent,
           completedAt: new Date().toISOString(),
         }).catch(() => {});
       }).catch(() => {});
+
+      // Feed price observations to supplier intelligence
+      jobCostTrackingService.recordJobPriceObservations(job.id).catch(() => {});
     }
 
     return nextStatus;
