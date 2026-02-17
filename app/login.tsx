@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,8 +12,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useAuth, ROLE_CONFIGS, type UserRole } from '../src/context/AuthContext';
-import { Colors } from '../src/theme/colors';
+import { useAuth, ROLE_CONFIGS, type UserRole, isDemoMode } from '../src/context/AuthContext';
+import { SemanticColors } from '../src/theme/colors';
 import { Radius } from '../src/theme/radius';
 import { Spacing } from '../src/theme/spacing';
 import { Typography } from '../src/theme/typography';
@@ -56,7 +55,11 @@ export default function LoginScreen() {
     if (success) {
       router.replace(getRouteForEmail(email));
     } else {
-      setError('Invalid credentials. Try one of the demo accounts below.');
+      setError(
+        isDemoMode
+          ? 'Invalid credentials. Try one of the demo accounts below.'
+          : 'Invalid email or password.',
+      );
     }
   };
 
@@ -69,7 +72,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -87,6 +90,11 @@ export default function LoginScreen() {
             </View>
             <Text style={styles.title}>Vasco</Text>
             <Text style={styles.subtitle}>BuildOS Platform</Text>
+            {isDemoMode && (
+              <View style={styles.demoBadgeHeader}>
+                <Text style={styles.demoBadgeHeaderText}>Demo Mode</Text>
+              </View>
+            )}
           </View>
 
           {/* Login Form */}
@@ -96,7 +104,7 @@ export default function LoginScreen() {
             <TextInput
               style={styles.input}
               placeholder="Email address"
-              placeholderTextColor={Colors.muted}
+              placeholderTextColor={SemanticColors.textSecondary}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -107,7 +115,7 @@ export default function LoginScreen() {
             <TextInput
               style={styles.input}
               placeholder="Password"
-              placeholderTextColor={Colors.muted}
+              placeholderTextColor={SemanticColors.textSecondary}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -175,7 +183,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   keyboardView: {
     flex: 1,
@@ -196,7 +204,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: Radius.xl,
-    backgroundColor: Colors.accentDeep,
+    backgroundColor: SemanticColors.actionPrimary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
@@ -207,54 +215,66 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   title: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 32,
     fontWeight: '700',
   },
   subtitle: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 16,
     marginTop: 4,
   },
+  demoBadgeHeader: {
+    marginTop: Spacing.sm,
+    backgroundColor: SemanticColors.actionPrimary + '25',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: Radius.sm,
+  },
+  demoBadgeHeaderText: {
+    color: SemanticColors.actionPrimary,
+    fontSize: 12,
+    fontWeight: '600',
+  },
   form: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: Radius.xl,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: Spacing.md,
     marginBottom: Spacing.lg,
   },
   formTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
   input: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.md,
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     fontSize: 16,
   },
   errorCard: {
-    backgroundColor: Colors.danger + '20',
+    backgroundColor: SemanticColors.feedbackError + '20',
     borderRadius: Radius.md,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.danger,
+    borderColor: SemanticColors.feedbackError,
   },
   errorText: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
     fontSize: 13,
     textAlign: 'center',
   },
   loginButton: {
-    backgroundColor: Colors.accentDeep,
+    backgroundColor: SemanticColors.actionPrimary,
     borderRadius: Radius.md,
     paddingVertical: 16,
     alignItems: 'center',
@@ -274,13 +294,13 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   demoTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
   },
   demoSubtitle: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 13,
     textAlign: 'center',
     marginBottom: Spacing.sm,
@@ -289,7 +309,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   demoCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: Radius.md,
     padding: Spacing.md,
     borderWidth: 1,
@@ -308,16 +328,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   demoName: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 15,
     fontWeight: '600',
   },
   demoEmail: {
-    color: Colors.accentMuted,
+    color: SemanticColors.textTertiary,
     fontSize: 12,
   },
   demoDesc: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     marginTop: 4,
   },

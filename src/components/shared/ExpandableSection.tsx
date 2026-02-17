@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 
@@ -25,7 +25,7 @@ export function ExpandableSection({
   title,
   subtitle,
   badge,
-  badgeColor = Colors.accentDeep,
+  badgeColor = SemanticColors.actionPrimary,
   children,
   defaultExpanded = false,
   onToggle,
@@ -59,7 +59,7 @@ export function ExpandableSection({
             <Ionicons
               name={expanded ? 'chevron-down' : 'chevron-forward'}
               size={16}
-              color={Colors.muted}
+              color={SemanticColors.textSecondary}
             />
           </View>
         </View>
@@ -68,7 +68,7 @@ export function ExpandableSection({
         <View style={styles.content}>
           {isEmpty && emptyMessage ? (
             <View style={styles.emptyState}>
-              <Ionicons name="folder-open-outline" size={24} color={Colors.muted} />
+              <Ionicons name="folder-open-outline" size={24} color={SemanticColors.textSecondary} />
               <Text style={styles.emptyText}>{emptyMessage}</Text>
             </View>
           ) : (
@@ -82,10 +82,10 @@ export function ExpandableSection({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: Radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     overflow: 'hidden',
     // Shadow for depth
     shadowColor: '#000',
@@ -110,12 +110,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 15,
     fontWeight: '600',
   },
   subtitle: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     marginTop: 2,
   },
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
     paddingTop: 0,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   emptyState: {
     alignItems: 'center',
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emptyText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 13,
   },
 });

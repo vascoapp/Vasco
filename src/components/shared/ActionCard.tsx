@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 
@@ -12,7 +12,7 @@ type ActionCardProps = {
   disabled?: boolean;
 };
 
-export function ActionCard({ label, icon, onPress, badge, color = Colors.accentDeep, disabled = false }: ActionCardProps) {
+export function ActionCard({ label, icon, onPress, badge, color = SemanticColors.actionPrimary, disabled = false }: ActionCardProps) {
   return (
     <Pressable
       style={[
@@ -41,14 +41,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     minHeight: 80,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   containerDisabled: {
     opacity: 0.5,
@@ -81,12 +81,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   label: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
   },
   labelDisabled: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
   },
 });

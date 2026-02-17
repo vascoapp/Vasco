@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Typography } from '../../theme/typography';
 import {
@@ -17,10 +17,10 @@ import { formatCurrency } from '../../modules/countryModules';
 type TabId = 'overview' | 'register' | 'report';
 
 const RATING_COLORS: Record<RiskRating, string> = {
-  critical: Colors.danger,
+  critical: SemanticColors.feedbackError,
   high: '#F97316',
-  medium: Colors.warning,
-  low: Colors.success,
+  medium: SemanticColors.feedbackWarning,
+  low: SemanticColors.feedbackSuccess,
 };
 
 const TREND_ICONS: Record<RiskTrend, string> = {
@@ -58,11 +58,11 @@ export function RiskDashboard() {
   const getTrendColor = (trend: RiskTrend) => {
     switch (trend) {
       case 'improving':
-        return Colors.success;
+        return SemanticColors.feedbackSuccess;
       case 'stable':
-        return Colors.muted;
+        return SemanticColors.textSecondary;
       case 'worsening':
-        return Colors.danger;
+        return SemanticColors.feedbackError;
     }
   };
 
@@ -79,14 +79,14 @@ export function RiskDashboard() {
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
-            <Text style={[styles.summaryValue, { color: Colors.danger }]}>
+            <Text style={[styles.summaryValue, { color: SemanticColors.feedbackError }]}>
               {(dashboard.byRating['critical'] || 0) + (dashboard.byRating['high'] || 0)}
             </Text>
             <Text style={styles.summaryLabel}>High/Critical</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
-            <Text style={[styles.summaryValue, { color: Colors.danger }]}>
+            <Text style={[styles.summaryValue, { color: SemanticColors.feedbackError }]}>
               {dashboard.worseningRisks.length}
             </Text>
             <Text style={styles.summaryLabel}>Worsening</Text>
@@ -367,11 +367,11 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   summaryBanner: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: Spacing.md,
   },
   summaryMain: {
@@ -383,33 +383,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   summaryValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 28,
     fontWeight: '700',
   },
   summaryLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     marginTop: 4,
   },
   summaryDivider: {
     width: 1,
     height: 40,
-    backgroundColor: Colors.border,
+    backgroundColor: SemanticColors.borderDefault,
   },
   exposureCard: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 12,
     padding: Spacing.md,
     gap: 4,
   },
   exposureLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
   },
   exposureValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '700',
     marginBottom: 8,
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   tabRow: {
     flexDirection: 'row',
     gap: Spacing.xs,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 12,
     padding: 4,
   },
@@ -428,25 +428,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabActive: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   tabText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     fontWeight: '600',
   },
   tabTextActive: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
   },
   content: {
     gap: Spacing.md,
   },
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: Spacing.md,
   },
   ratingGrid: {
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
   },
   ratingCard: {
     flex: 1,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 12,
     padding: Spacing.md,
     alignItems: 'center',
@@ -467,12 +467,12 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   ratingValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 20,
     fontWeight: '700',
   },
   ratingLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
   },
   riskRow: {
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   riskInfo: {
     flex: 1,
@@ -506,37 +506,37 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   riskTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
   },
   riskMeta: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   riskScore: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   riskScoreValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '700',
   },
   alertCard: {
-    backgroundColor: Colors.danger + '15',
+    backgroundColor: SemanticColors.feedbackError + '15',
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.danger + '30',
+    borderColor: SemanticColors.feedbackError + '30',
     gap: Spacing.sm,
   },
   alertTitle: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -546,10 +546,10 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.danger + '20',
+    borderBottomColor: SemanticColors.feedbackError + '20',
   },
   trendWarning: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -557,44 +557,44 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   alertRiskTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
   },
   alertRiskMeta: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   warningCard: {
-    backgroundColor: Colors.warning + '15',
+    backgroundColor: SemanticColors.feedbackWarning + '15',
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.warning + '30',
+    borderColor: SemanticColors.feedbackWarning + '30',
     gap: Spacing.sm,
   },
   warningTitle: {
-    color: Colors.warning,
+    color: SemanticColors.feedbackWarning,
     fontSize: 14,
     fontWeight: '700',
   },
   warningRow: {
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.warning + '20',
+    borderBottomColor: SemanticColors.feedbackWarning + '20',
     gap: 2,
   },
   warningRisk: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 12,
     fontWeight: '600',
   },
   warningMitigation: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   warningDue: {
-    color: Colors.warning,
+    color: SemanticColors.feedbackWarning,
     fontSize: 10,
     fontWeight: '600',
   },
@@ -604,7 +604,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   categoryItem: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -612,12 +612,12 @@ const styles = StyleSheet.create({
     minWidth: 80,
   },
   categoryCount: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 16,
     fontWeight: '700',
   },
   categoryLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     marginTop: 2,
   },
@@ -627,19 +627,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   reviewDate: {
-    color: Colors.accentMuted,
+    color: SemanticColors.textTertiary,
     fontSize: 12,
     fontWeight: '600',
   },
   registerCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: Spacing.sm,
   },
   registerHeader: {
@@ -648,21 +648,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statusBadge: {
-    color: Colors.accentMuted,
+    color: SemanticColors.textTertiary,
     fontSize: 10,
     fontWeight: '600',
     textTransform: 'uppercase',
   },
   statusClosed: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
   },
   registerTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 15,
     fontWeight: '700',
   },
   registerDescription: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
   },
   registerMeta: {
@@ -671,54 +671,54 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   registerMetaItem: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   riskDetails: {
     marginTop: Spacing.md,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: SemanticColors.borderDefault,
     gap: Spacing.md,
   },
   detailSection: {
     gap: 4,
   },
   detailLabel: {
-    color: Colors.accentMuted,
+    color: SemanticColors.textTertiary,
     fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
   detailValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 12,
   },
   mitigationItem: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 8,
     padding: Spacing.sm,
     marginTop: 4,
   },
   mitigationDesc: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 12,
   },
   mitigationMeta: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     marginTop: 4,
   },
   indicatorItem: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 11,
     paddingLeft: 8,
   },
   generateButton: {
-    backgroundColor: Colors.accentDeep,
+    backgroundColor: SemanticColors.actionPrimary,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
@@ -729,18 +729,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   reportCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   reportContent: {
     maxHeight: 500,
     padding: Spacing.md,
   },
   reportText: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 11,
     fontFamily: 'monospace',
     lineHeight: 18,

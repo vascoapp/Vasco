@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../src/theme/colors';
+import { SemanticColors } from '../../src/theme/colors';
 import { SiteLeadDashboard } from '../../src/components/dashboards';
 
 export default function SiteScheduleScreen() {
@@ -14,6 +14,6 @@ export default function SiteScheduleScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
 });

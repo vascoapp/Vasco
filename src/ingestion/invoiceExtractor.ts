@@ -180,17 +180,13 @@ class InvoiceExtractorService {
         sourceUri,
       };
 
-      // 7. Feed into pricing moat
-      const moatResults = await this.feedPricingMoat(invoice);
-
-      // Track extraction event
+      // Track extraction event (pricing moat now handled by intelligenceBridge)
       trackUserAction('invoice_extracted', {
         documentType,
         supplierId: supplier?.id,
         supplierName: supplier?.name,
         lineItemCount: lineItems.length,
         totalAmount: totals.total,
-        priceObservationsCreated: moatResults.observationsCreated,
       });
 
       return {
@@ -198,8 +194,8 @@ class InvoiceExtractorService {
         invoice,
         errors,
         warnings,
-        priceObservationsCreated: moatResults.observationsCreated,
-        materialsResolved: moatResults.materialsResolved,
+        priceObservationsCreated: 0,
+        materialsResolved: 0,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

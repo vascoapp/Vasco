@@ -4,14 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../src/components/Screen';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
-import { Colors } from '../../src/theme/colors';
+import { SemanticColors } from '../../src/theme/colors';
 import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { moneybirdConnected, mollieConnected } = useAppState();
+  const { moneybirdConnected, mollieConnected, businessProfile, customers } = useAppState();
   const { user, roleConfig, logout } = useAuth();
 
   const handleLogout = () => {
@@ -34,7 +34,7 @@ export default function ProfileScreen() {
     },
   ];
 
-  const primaryColor = roleConfig?.primaryColor || Colors.accentDeep;
+  const primaryColor = roleConfig?.primaryColor || SemanticColors.actionPrimary;
 
   return (
     <Screen>
@@ -92,6 +92,44 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* Business Settings */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionLabel}>Business settings</Text>
+        </View>
+
+        <View style={styles.card}>
+          <Pressable
+            style={styles.menuItem}
+            onPress={() => router.push('/(modals)/business-settings' as never)}
+          >
+            <View style={styles.menuItemLeft}>
+              <Ionicons name="business-outline" size={20} color={SemanticColors.textPrimary} />
+              <View>
+                <Text style={styles.menuItemText}>Bedrijfsgegevens</Text>
+                <Text style={{ color: SemanticColors.textSecondary, fontSize: 12 }}>
+                  {businessProfile.completenessPercent}% compleet
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
+          </Pressable>
+          <Pressable
+            style={[styles.menuItem, styles.menuItemBorder]}
+            onPress={() => router.push('/(modals)/customers' as never)}
+          >
+            <View style={styles.menuItemLeft}>
+              <Ionicons name="people-outline" size={20} color={SemanticColors.textPrimary} />
+              <View>
+                <Text style={styles.menuItemText}>Klanten</Text>
+                <Text style={{ color: SemanticColors.textSecondary, fontSize: 12 }}>
+                  {customers.length} klanten
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
+          </Pressable>
+        </View>
+
         {/* Integrations */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>Integrations</Text>
@@ -138,10 +176,10 @@ export default function ProfileScreen() {
             onPress={() => router.push('/(contractor)/certificaten' as never)}
           >
             <View style={styles.menuItemLeft}>
-              <Ionicons name="ribbon-outline" size={20} color={Colors.text} />
+              <Ionicons name="ribbon-outline" size={20} color={SemanticColors.textPrimary} />
               <Text style={styles.menuItemText}>Certificaten en documenten</Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={Colors.muted} />
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
           </Pressable>
         </View>
 
@@ -153,24 +191,24 @@ export default function ProfileScreen() {
         <View style={styles.card}>
           <Pressable style={styles.menuItem}>
             <View style={styles.menuItemLeft}>
-              <Ionicons name="notifications-outline" size={20} color={Colors.text} />
+              <Ionicons name="notifications-outline" size={20} color={SemanticColors.textPrimary} />
               <Text style={styles.menuItemText}>Notifications</Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={Colors.muted} />
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
           </Pressable>
           <Pressable style={[styles.menuItem, styles.menuItemBorder]}>
             <View style={styles.menuItemLeft}>
-              <Ionicons name="shield-outline" size={20} color={Colors.text} />
+              <Ionicons name="shield-outline" size={20} color={SemanticColors.textPrimary} />
               <Text style={styles.menuItemText}>Privacy settings</Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={Colors.muted} />
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
           </Pressable>
           <Pressable style={[styles.menuItem, styles.menuItemBorder]}>
             <View style={styles.menuItemLeft}>
-              <Ionicons name="help-circle-outline" size={20} color={Colors.text} />
+              <Ionicons name="help-circle-outline" size={20} color={SemanticColors.textPrimary} />
               <Text style={styles.menuItemText}>Help & Support</Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={Colors.muted} />
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
           </Pressable>
         </View>
 
@@ -179,7 +217,7 @@ export default function ProfileScreen() {
           style={({ pressed }) => [styles.logoutButton, pressed && styles.pressed]}
           onPress={handleLogout}
         >
-          <Ionicons name="log-out-outline" size={20} color={Colors.danger} />
+          <Ionicons name="log-out-outline" size={20} color={SemanticColors.feedbackError} />
           <Text style={styles.logoutButtonText}>Sign Out</Text>
         </Pressable>
 
@@ -197,7 +235,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   sectionLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
@@ -207,7 +245,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   userCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: Radius.xl,
     padding: Spacing.lg,
     borderWidth: 1,
@@ -231,12 +269,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   userName: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 20,
     fontWeight: '700',
   },
   userEmail: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 14,
   },
   roleBadge: {
@@ -251,20 +289,20 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: Spacing.md,
   },
   cardTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 16,
     fontWeight: '600',
   },
   roleDescription: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -278,7 +316,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   featureText: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
   },
   field: {
@@ -289,39 +327,39 @@ const styles = StyleSheet.create({
   },
   fieldBorder: {
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: SemanticColors.borderDefault,
     paddingTop: Spacing.md,
     marginTop: Spacing.xs,
   },
   fieldLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 14,
   },
   fieldValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '500',
   },
   fieldValueMuted: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
   },
   integrationList: {
     gap: Spacing.sm,
   },
   integrationCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: Radius.md,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   integrationCardConnected: {
-    backgroundColor: Colors.success + '08',
-    borderColor: Colors.success + '25',
+    backgroundColor: SemanticColors.feedbackSuccess + '08',
+    borderColor: SemanticColors.feedbackSuccess + '25',
   },
   cardPressed: {
     opacity: 0.85,
@@ -330,12 +368,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   integrationName: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 15,
     fontFamily: 'Inter_600SemiBold',
   },
   integrationDesc: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     fontFamily: 'Inter_400Regular',
   },
@@ -345,18 +383,18 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
   },
   integrationStatusActive: {
-    backgroundColor: Colors.success + '20',
+    backgroundColor: SemanticColors.feedbackSuccess + '20',
   },
   integrationStatusInactive: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
   },
   integrationStatusText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     fontFamily: 'Inter_600SemiBold',
   },
   integrationStatusTextActive: {
-    color: Colors.success,
+    color: SemanticColors.feedbackSuccess,
   },
   menuItem: {
     flexDirection: 'row',
@@ -366,7 +404,7 @@ const styles = StyleSheet.create({
   },
   menuItemBorder: {
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: SemanticColors.borderDefault,
     paddingTop: Spacing.md,
     marginTop: Spacing.xs,
   },
@@ -376,12 +414,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   menuItemText: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '500',
   },
   logoutButton: {
-    backgroundColor: Colors.danger + '15',
+    backgroundColor: SemanticColors.feedbackError + '15',
     borderRadius: Radius.md,
     paddingVertical: 14,
     flexDirection: 'row',
@@ -389,11 +427,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: Colors.danger + '30',
+    borderColor: SemanticColors.feedbackError + '30',
     minHeight: 44,
   },
   logoutButtonText: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -401,7 +439,7 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   versionText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     textAlign: 'center',
     marginTop: Spacing.sm,

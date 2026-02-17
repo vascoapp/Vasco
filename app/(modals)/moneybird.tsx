@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Screen } from '../../src/components/Screen';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
-import { Colors } from '../../src/theme/colors';
+import { SemanticColors } from '../../src/theme/colors';
 import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
@@ -11,7 +11,7 @@ export default function MoneybirdConnectModal() {
   const { connectMoneybird, moneybirdConnected } = useAppState();
 
   return (
-    <Screen backgroundColor={Colors.surface}>
+    <Screen backgroundColor={SemanticColors.surfacePrimary}>
       <View style={styles.container}>
         <Text style={Typography.title}>Connect Moneybird</Text>
         <Text style={Typography.muted}>
@@ -41,11 +41,11 @@ const styles = StyleSheet.create({
     gap: Spacing.lg,
   },
   card: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     gap: Spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
 });

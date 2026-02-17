@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Typography } from '../../theme/typography';
 import { formatCurrency } from '../../modules/countryModules';
@@ -301,20 +301,20 @@ export function DocumentInbox() {
   const getStatusColor = (status: DocumentStatus) => {
     switch (status) {
       case 'pending':
-        return Colors.warning;
+        return SemanticColors.feedbackWarning;
       case 'reviewed':
-        return Colors.accentMuted;
+        return SemanticColors.textTertiary;
       case 'approved':
-        return Colors.success;
+        return SemanticColors.feedbackSuccess;
       case 'rejected':
-        return Colors.danger;
+        return SemanticColors.feedbackError;
     }
   };
 
   const getConfidenceColor = (score: number) => {
-    if (score >= 0.85) return Colors.success;
-    if (score >= 0.7) return Colors.warning;
-    return Colors.danger;
+    if (score >= 0.85) return SemanticColors.feedbackSuccess;
+    if (score >= 0.7) return SemanticColors.feedbackWarning;
+    return SemanticColors.feedbackError;
   };
 
   const renderDocumentPreview = (doc: IngestedDocument) => {
@@ -386,17 +386,17 @@ export function DocumentInbox() {
       <View style={styles.statsBanner}>
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: Colors.warning }]}>{stats.pending}</Text>
+            <Text style={[styles.statValue, { color: SemanticColors.feedbackWarning }]}>{stats.pending}</Text>
             <Text style={styles.statLabel}>Pending</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: Colors.success }]}>{stats.approved}</Text>
+            <Text style={[styles.statValue, { color: SemanticColors.feedbackSuccess }]}>{stats.approved}</Text>
             <Text style={styles.statLabel}>Approved</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: Colors.accentMuted }]}>{stats.highConfidence}</Text>
+            <Text style={[styles.statValue, { color: SemanticColors.textTertiary }]}>{stats.highConfidence}</Text>
             <Text style={styles.statLabel}>High Confidence</Text>
           </View>
         </View>
@@ -631,11 +631,11 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   statsBanner: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   statsRow: {
     flexDirection: 'row',
@@ -646,24 +646,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 24,
     fontWeight: '700',
   },
   statLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     marginTop: 4,
   },
   statDivider: {
     width: 1,
     height: 40,
-    backgroundColor: Colors.border,
+    backgroundColor: SemanticColors.borderDefault,
   },
   tabRow: {
     flexDirection: 'row',
     gap: Spacing.xs,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 12,
     padding: 4,
   },
@@ -674,15 +674,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabActive: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   tabText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     fontWeight: '600',
   },
   tabTextActive: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
   },
   content: {
     gap: Spacing.md,
@@ -696,15 +696,15 @@ const styles = StyleSheet.create({
     fontSize: 48,
   },
   emptyText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 14,
   },
   documentCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: Spacing.sm,
   },
   docHeader: {
@@ -716,7 +716,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -727,12 +727,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   docFileName: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
   },
   docMeta: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   confidenceBadge: {
@@ -754,30 +754,30 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   previewSection: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 10,
     padding: Spacing.md,
     gap: 4,
   },
   previewLabel: {
-    color: Colors.accentMuted,
+    color: SemanticColors.textTertiary,
     fontSize: 11,
     fontWeight: '600',
   },
   previewValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 15,
     fontWeight: '700',
   },
   previewMeta: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   warningsSection: {
     gap: 4,
   },
   warningText: {
-    color: Colors.warning,
+    color: SemanticColors.feedbackWarning,
     fontSize: 11,
   },
   actionButtons: {
@@ -785,11 +785,11 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingTop: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   approveButton: {
     flex: 1,
-    backgroundColor: Colors.success,
+    backgroundColor: SemanticColors.feedbackSuccess,
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
@@ -801,52 +801,52 @@ const styles = StyleSheet.create({
   },
   reviewButton: {
     flex: 1,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   reviewButtonText: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 12,
     fontWeight: '600',
   },
   rejectButton: {
     flex: 1,
-    backgroundColor: Colors.danger + '20',
+    backgroundColor: SemanticColors.feedbackError + '20',
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.danger,
+    borderColor: SemanticColors.feedbackError,
   },
   rejectButtonText: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
     fontSize: 12,
     fontWeight: '600',
   },
   uploadTime: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     textAlign: 'right',
   },
   reviewInfo: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontStyle: 'italic',
   },
   bulkActionCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: Spacing.md,
   },
   bulkActionDesc: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
   },
   bulkActionOption: {
@@ -855,23 +855,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   bulkActionInfo: {
     flex: 1,
     gap: 2,
   },
   bulkActionTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
   },
   bulkActionMeta: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   bulkButton: {
-    backgroundColor: Colors.accentDeep,
+    backgroundColor: SemanticColors.actionPrimary,
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 16,
@@ -882,11 +882,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   ingestionStats: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: Spacing.md,
   },
   statsGrid: {
@@ -895,18 +895,18 @@ const styles = StyleSheet.create({
   },
   statsCell: {
     flex: 1,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 10,
     padding: Spacing.md,
     alignItems: 'center',
   },
   statsCellValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 18,
     fontWeight: '700',
   },
   statsCellLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     marginTop: 4,
     textAlign: 'center',

@@ -5,6 +5,19 @@
 // This creates the pricing moat through continuous learning from market data
 // =============================================================================
 
+import { isSupabaseConfigured } from '../lib/supabase';
+import {
+  insertPriceObservation,
+  bulkInsertPriceObservations,
+  getPriceHistory as dbGetPriceHistory,
+  getPriceReference as dbGetPriceReference,
+  searchMaterials as dbSearchMaterials,
+  upsertMaterial as dbUpsertMaterial,
+  addMaterialAlias as dbAddMaterialAlias,
+  getSuppliers as dbGetSuppliers,
+  getSupplierById as dbGetSupplierById,
+} from '../lib/intelligenceDataProvider';
+
 const API_BASE = 'http://localhost:8000';
 
 // ============================================
@@ -167,6 +180,27 @@ export interface MaterialCatalogEntry {
 // PRICING API - RPC Style
 // ============================================
 
+function mapSupplierRow(r: any): SupplierProfile {
+  return {
+    id: r.id,
+    name: r.name,
+    accountStatus: r.account_status ?? 'active',
+    creditTerms: r.credit_terms,
+    discountTier: r.discount_tier,
+    reliabilityScore: r.reliability_score ?? 50,
+    avgLeadTimeDays: r.avg_lead_time_days ?? 0,
+    onTimeDeliveryRate: r.on_time_delivery_rate ?? 0,
+    qualityScore: r.quality_score ?? 0,
+    avgPriceVsMarket: r.avg_price_vs_market ?? 0,
+    priceConsistency: r.price_consistency ?? 0,
+    totalSpend: r.total_spend ?? 0,
+    totalOrders: r.total_orders ?? 0,
+    lastOrderDate: r.last_order_date ?? '',
+    apiEnabled: r.api_enabled ?? false,
+    catalogUrl: r.catalog_url,
+  };
+}
+
 export const pricingApi = {
   // -----------------------------------------
   // Price Observations
@@ -176,7 +210,30 @@ export const pricingApi = {
    * Record a new price observation from any source
    * This is the core data ingestion for the pricing moat
    */
-  async recordPriceObservation(observation: Omit<PriceObservation, 'id'>): Promise<{ id: string; reference: PriceReference }> {
+  async recordPriceObservation(observation: Omit<PriceObservation, 'id'>): Promise<{ id: string; reference: PriceReference | null }> {
+    if (isSupabaseConfigured) {
+      const id = await insertPriceObservation({
+        material_id: observation.materialId,
+        material_name: observation.materialName,
+        supplier_id: observation.supplierId,
+        supplier_name: observation.supplierName,
+        price: observation.price,
+        currency: observation.currency,
+        unit: observation.unit,
+        source: observation.source,
+        confidence: observation.confidence,
+        is_sale: observation.isSale,
+        sale_end_date: observation.saleEndDate,
+        regular_price: observation.regularPrice,
+        in_stock: observation.inStock,
+        stock_level: observation.stockLevel,
+        lead_time_days: observation.leadTimeDays,
+        min_quantity: observation.minQuantity,
+        bulk_pricing: observation.bulkPricing,
+      });
+      const ref = await dbGetPriceReference(observation.materialId);
+      return { id: id ?? '', reference: ref };
+    }
     const res = await fetch(`${API_BASE}/pricing/observations`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -190,6 +247,23 @@ export const pricingApi = {
    * Bulk import price observations (from invoice parsing, catalog scrape, etc)
    */
   async bulkImportPrices(observations: Omit<PriceObservation, 'id'>[]): Promise<{ imported: number; errors: string[] }> {
+    if (isSupabaseConfigured) {
+      const rows = observations.map((o) => ({
+        material_id: o.materialId,
+        material_name: o.materialName,
+        supplier_id: o.supplierId,
+        supplier_name: o.supplierName,
+        price: o.price,
+        currency: o.currency,
+        unit: o.unit,
+        source: o.source,
+        confidence: o.confidence,
+        is_sale: o.isSale,
+        in_stock: o.inStock,
+      }));
+      const count = await bulkInsertPriceObservations(rows);
+      return { imported: count, errors: [] };
+    }
     const res = await fetch(`${API_BASE}/pricing/observations/bulk`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -208,6 +282,30 @@ export const pricingApi = {
     endDate?: string;
     limit?: number;
   }): Promise<PriceObservation[]> {
+    if (isSupabaseConfigured) {
+      const rows = await dbGetPriceHistory(materialId, {
+        supplierId: options?.supplierId,
+        startDate: options?.startDate,
+        limit: options?.limit,
+      });
+      return rows.map((r: any) => ({
+        id: r.id,
+        materialId: r.material_id,
+        materialName: r.material_name,
+        supplierId: r.supplier_id,
+        supplierName: r.supplier_name,
+        price: r.price,
+        currency: r.currency,
+        unit: r.unit,
+        observedAt: r.observed_at,
+        source: r.source,
+        confidence: r.confidence,
+        isSale: r.is_sale,
+        inStock: r.in_stock,
+        stockLevel: r.stock_level,
+        leadTimeDays: r.lead_time_days,
+      }));
+    }
     const params = new URLSearchParams();
     if (options?.supplierId) params.set('supplier_id', options.supplierId);
     if (options?.startDate) params.set('start_date', options.startDate);
@@ -228,6 +326,28 @@ export const pricingApi = {
    * These are pre-aggregated for fast lookups
    */
   async getPriceReference(materialId: string): Promise<PriceReference> {
+    if (isSupabaseConfigured) {
+      const ref = await dbGetPriceReference(materialId);
+      if (ref) {
+        return {
+          materialId: ref.material_id,
+          avgPrice30d: ref.avg_price_30d ?? 0,
+          avgPrice90d: ref.avg_price_90d ?? 0,
+          minPrice30d: ref.min_price_30d ?? 0,
+          maxPrice30d: ref.max_price_30d ?? 0,
+          trend: 'stable',
+          trendStrength: 0,
+          volatility: ref.volatility ?? 0,
+          yourAvgPurchasePrice: ref.avg_price_90d ?? 0,
+          yourLastPurchasePrice: 0,
+          yourLastPurchaseDate: ref.last_observed_at ?? '',
+          yourPreferredSupplier: '',
+          percentileVsMarket: 50,
+          potentialSavings: 0,
+          updatedAt: ref.last_observed_at ?? new Date().toISOString(),
+        };
+      }
+    }
     const res = await fetch(`${API_BASE}/pricing/references/${materialId}`);
     if (!res.ok) throw new Error((await res.json()).detail || 'Failed to get reference');
     return res.json();
@@ -268,6 +388,10 @@ export const pricingApi = {
    * Get supplier profile with performance metrics
    */
   async getSupplierProfile(supplierId: string): Promise<SupplierProfile> {
+    if (isSupabaseConfigured) {
+      const row = await dbGetSupplierById(supplierId);
+      if (row) return mapSupplierRow(row);
+    }
     const res = await fetch(`${API_BASE}/pricing/suppliers/${supplierId}`);
     if (!res.ok) throw new Error((await res.json()).detail || 'Failed to get supplier');
     return res.json();
@@ -277,6 +401,10 @@ export const pricingApi = {
    * Get all suppliers with their profiles
    */
   async getSuppliers(): Promise<SupplierProfile[]> {
+    if (isSupabaseConfigured) {
+      const rows = await dbGetSuppliers();
+      return rows.map(mapSupplierRow);
+    }
     const res = await fetch(`${API_BASE}/pricing/suppliers`);
     if (!res.ok) throw new Error((await res.json()).detail || 'Failed to get suppliers');
     return res.json();
@@ -313,6 +441,29 @@ export const pricingApi = {
     category?: string;
     limit?: number;
   }): Promise<MaterialCatalogEntry[]> {
+    if (isSupabaseConfigured) {
+      const rows = await dbSearchMaterials(query, {
+        category: options?.category,
+        limit: options?.limit,
+      });
+      return rows.map((r: any) => ({
+        id: r.id,
+        name: r.name,
+        brand: r.brand,
+        category: r.category,
+        subcategory: r.subcategory,
+        sku: r.sku,
+        ean: r.ean,
+        manufacturerCode: r.manufacturer_code,
+        baseUnit: r.base_unit,
+        unitConversions: r.unit_conversions,
+        aliases: r.aliases ?? [],
+        specifications: r.specifications,
+        demandPattern: r.demand_pattern,
+        avgMonthlyUsage: r.avg_monthly_usage,
+        reorderPoint: r.reorder_point,
+      }));
+    }
     const params = new URLSearchParams({ q: query });
     if (options?.category) params.set('category', options.category);
     if (options?.limit) params.set('limit', String(options.limit));
@@ -344,6 +495,10 @@ export const pricingApi = {
    * Add alias for a material (learning from user corrections)
    */
   async addMaterialAlias(materialId: string, alias: string): Promise<void> {
+    if (isSupabaseConfigured) {
+      await dbAddMaterialAlias(materialId, alias);
+      return;
+    }
     const res = await fetch(`${API_BASE}/pricing/materials/${materialId}/aliases`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

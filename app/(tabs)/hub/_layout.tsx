@@ -1,20 +1,20 @@
 import { Stack } from 'expo-router';
-import { Colors } from '../../../src/theme/colors';
+import { SemanticColors } from '../../../src/theme/colors';
 
 export default function HubLayout() {
   return (
     <Stack
       screenOptions={{
         headerStyle: {
-          backgroundColor: Colors.background,
+          backgroundColor: SemanticColors.surfaceBackground,
         },
-        headerTintColor: Colors.text,
+        headerTintColor: SemanticColors.textPrimary,
         headerTitleStyle: {
           fontWeight: '600',
         },
         headerShadowVisible: false,
         contentStyle: {
-          backgroundColor: Colors.background,
+          backgroundColor: SemanticColors.surfaceBackground,
         },
       }}
     >

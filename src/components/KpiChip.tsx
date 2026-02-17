@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../theme/colors';
+import { SemanticColors } from '../theme/colors';
 import { Radius } from '../theme/radius';
 import { Shadows } from '../theme/shadows';
 import { Spacing } from '../theme/spacing';
@@ -21,12 +21,12 @@ export function KpiChip({ label, value }: KpiChipProps) {
 
 const styles = StyleSheet.create({
   chip: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     minWidth: 88,
     flexShrink: 1,
     ...Shadows.sm,

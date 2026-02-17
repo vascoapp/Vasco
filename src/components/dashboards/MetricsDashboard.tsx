@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Typography } from '../../theme/typography';
 import {
@@ -51,12 +51,12 @@ export function MetricsDashboard() {
   };
 
   const getTrendColor = (trend: string, direction: string) => {
-    if (trend === 'stable') return Colors.muted;
-    if (trend === 'improving') return Colors.success;
+    if (trend === 'stable') return SemanticColors.textSecondary;
+    if (trend === 'improving') return SemanticColors.feedbackSuccess;
     if (trend === 'declining') {
-      return direction === 'lower-better' ? Colors.success : Colors.danger;
+      return direction === 'lower-better' ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError;
     }
-    return Colors.muted;
+    return SemanticColors.textSecondary;
   };
 
   const formatValue = (value: number, unit: string) => {
@@ -276,14 +276,14 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   valueCard: {
-    backgroundColor: Colors.accentDeep + '15',
+    backgroundColor: SemanticColors.actionPrimary + '15',
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.accentDeep + '30',
+    borderColor: SemanticColors.actionPrimary + '30',
   },
   valueHeadline: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 18,
     fontWeight: '700',
     textAlign: 'center',
@@ -297,25 +297,25 @@ const styles = StyleSheet.create({
   valueItem: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: Spacing.md,
     alignItems: 'center',
   },
   valueNumber: {
-    color: Colors.accentDeep,
+    color: SemanticColors.actionPrimary,
     fontSize: 20,
     fontWeight: '700',
   },
   valueLabel: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 12,
     fontWeight: '600',
     marginTop: 4,
     textAlign: 'center',
   },
   valueComparison: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     marginTop: 2,
   },
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   tabRow: {
     flexDirection: 'row',
     gap: Spacing.xs,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 12,
     padding: 4,
   },
@@ -336,27 +336,27 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   tabActive: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   tabText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     fontWeight: '600',
   },
   tabTextActive: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
   },
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: Spacing.md,
   },
   cardWarning: {
-    backgroundColor: Colors.warning + '08',
-    borderColor: Colors.warning + '30',
+    backgroundColor: SemanticColors.feedbackWarning + '08',
+    borderColor: SemanticColors.feedbackWarning + '30',
   },
   roiGrid: {
     flexDirection: 'row',
@@ -364,24 +364,24 @@ const styles = StyleSheet.create({
   },
   roiCard: {
     flex: 1,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 12,
     padding: Spacing.md,
     alignItems: 'center',
   },
   roiValue: {
-    color: Colors.success,
+    color: SemanticColors.feedbackSuccess,
     fontSize: 22,
     fontWeight: '700',
   },
   roiLabel: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 12,
     fontWeight: '600',
     marginTop: 4,
   },
   roiSubtext: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     marginTop: 2,
   },
@@ -391,18 +391,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   categoryInfo: {
     flex: 1,
   },
   categoryName: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '600',
   },
   categorySubtext: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     marginTop: 2,
   },
@@ -414,26 +414,26 @@ const styles = StyleSheet.create({
   progressBar: {
     width: 80,
     height: 8,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 4,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
     borderRadius: 4,
-    backgroundColor: Colors.muted,
+    backgroundColor: SemanticColors.textSecondary,
   },
   progressGreen: {
-    backgroundColor: Colors.success,
+    backgroundColor: SemanticColors.feedbackSuccess,
   },
   progressYellow: {
-    backgroundColor: Colors.warning,
+    backgroundColor: SemanticColors.feedbackWarning,
   },
   progressRed: {
-    backgroundColor: Colors.danger,
+    backgroundColor: SemanticColors.feedbackError,
   },
   progressPercent: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 12,
     fontWeight: '600',
     width: 35,
@@ -445,13 +445,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   improvementInfo: {
     flex: 1,
   },
   improvementName: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -461,10 +461,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   improvementPositive: {
-    backgroundColor: Colors.success + '20',
+    backgroundColor: SemanticColors.feedbackSuccess + '20',
   },
   improvementText: {
-    color: Colors.success,
+    color: SemanticColors.feedbackSuccess,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -474,29 +474,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.warning + '30',
+    borderBottomColor: SemanticColors.feedbackWarning + '30',
   },
   attentionInfo: {
     flex: 1,
   },
   attentionName: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '500',
   },
   attentionSubtext: {
-    color: Colors.warning,
+    color: SemanticColors.feedbackWarning,
     fontSize: 11,
     marginTop: 2,
   },
   gapBadge: {
-    backgroundColor: Colors.warning + '20',
+    backgroundColor: SemanticColors.feedbackWarning + '20',
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 8,
   },
   gapText: {
-    color: Colors.warning,
+    color: SemanticColors.feedbackWarning,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -504,11 +504,11 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   metricCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 14,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 8,
   },
   metricHeader: {
@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   metricName: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '600',
     flex: 1,
@@ -528,20 +528,20 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   targetMet: {
-    backgroundColor: Colors.success + '20',
+    backgroundColor: SemanticColors.feedbackSuccess + '20',
   },
   targetMissed: {
-    backgroundColor: Colors.danger + '20',
+    backgroundColor: SemanticColors.feedbackError + '20',
   },
   targetBadgeText: {
     fontSize: 10,
     fontWeight: '600',
   },
   targetMetText: {
-    color: Colors.success,
+    color: SemanticColors.feedbackSuccess,
   },
   targetMissedText: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
   },
   metricValueRow: {
     flexDirection: 'row',
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   metricValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 24,
     fontWeight: '700',
   },
@@ -563,7 +563,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   metricPrevious: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   targetRow: {
@@ -571,15 +571,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   targetLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   benchmarkLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   metricDescription: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     marginTop: 4,
   },

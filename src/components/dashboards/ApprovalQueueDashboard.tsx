@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Typography } from '../../theme/typography';
 import {
@@ -180,22 +180,22 @@ export function ApprovalQueueDashboard() {
 
   const getCategoryColor = (category: ActionCategory) => {
     switch (category) {
-      case 'financial': return Colors.success;
-      case 'contractual': return Colors.accentDeep;
-      case 'compliance': return Colors.accentMuted;
+      case 'financial': return SemanticColors.feedbackSuccess;
+      case 'contractual': return SemanticColors.actionPrimary;
+      case 'compliance': return SemanticColors.textTertiary;
       case 'communication': return '#9B59B6';
-      case 'schedule': return Colors.warning;
-      case 'risk': return Colors.danger;
-      default: return Colors.muted;
+      case 'schedule': return SemanticColors.feedbackWarning;
+      case 'risk': return SemanticColors.feedbackError;
+      default: return SemanticColors.textSecondary;
     }
   };
 
   const getRiskColor = (risk: ActionRiskLevel) => {
     switch (risk) {
-      case 'critical': return Colors.danger;
-      case 'high': return Colors.warning;
-      case 'medium': return Colors.accentMuted;
-      case 'low': return Colors.success;
+      case 'critical': return SemanticColors.feedbackError;
+      case 'high': return SemanticColors.feedbackWarning;
+      case 'medium': return SemanticColors.textTertiary;
+      case 'low': return SemanticColors.feedbackSuccess;
     }
   };
 
@@ -252,16 +252,16 @@ export function ApprovalQueueDashboard() {
             </View>
           </View>
           <View style={[styles.statusBadge, {
-            backgroundColor: action.status === 'pending-approval' ? Colors.warning + '20' :
-                            action.status === 'approved' ? Colors.success + '20' :
-                            action.status === 'executed' ? Colors.accentDeep + '20' :
-                            action.status === 'rejected' ? Colors.danger + '20' : Colors.muted + '20'
+            backgroundColor: action.status === 'pending-approval' ? SemanticColors.feedbackWarning + '20' :
+                            action.status === 'approved' ? SemanticColors.feedbackSuccess + '20' :
+                            action.status === 'executed' ? SemanticColors.actionPrimary + '20' :
+                            action.status === 'rejected' ? SemanticColors.feedbackError + '20' : SemanticColors.textSecondary + '20'
           }]}>
             <Text style={[styles.statusText, {
-              color: action.status === 'pending-approval' ? Colors.warning :
-                     action.status === 'approved' ? Colors.success :
-                     action.status === 'executed' ? Colors.accentDeep :
-                     action.status === 'rejected' ? Colors.danger : Colors.muted
+              color: action.status === 'pending-approval' ? SemanticColors.feedbackWarning :
+                     action.status === 'approved' ? SemanticColors.feedbackSuccess :
+                     action.status === 'executed' ? SemanticColors.actionPrimary :
+                     action.status === 'rejected' ? SemanticColors.feedbackError : SemanticColors.textSecondary
             }]}>
               {action.status.replace(/-/g, ' ')}
             </Text>
@@ -402,24 +402,24 @@ export function ApprovalQueueDashboard() {
       {Object.keys(dashboard.byRiskLevel).length > 0 && (
         <View style={styles.riskSummaryRow}>
           {dashboard.byRiskLevel.critical && (
-            <View style={[styles.riskSummaryItem, { backgroundColor: Colors.danger + '20' }]}>
-              <Text style={[styles.riskSummaryValue, { color: Colors.danger }]}>
+            <View style={[styles.riskSummaryItem, { backgroundColor: SemanticColors.feedbackError + '20' }]}>
+              <Text style={[styles.riskSummaryValue, { color: SemanticColors.feedbackError }]}>
                 {dashboard.byRiskLevel.critical}
               </Text>
               <Text style={styles.riskSummaryLabel}>Critical</Text>
             </View>
           )}
           {dashboard.byRiskLevel.high && (
-            <View style={[styles.riskSummaryItem, { backgroundColor: Colors.warning + '20' }]}>
-              <Text style={[styles.riskSummaryValue, { color: Colors.warning }]}>
+            <View style={[styles.riskSummaryItem, { backgroundColor: SemanticColors.feedbackWarning + '20' }]}>
+              <Text style={[styles.riskSummaryValue, { color: SemanticColors.feedbackWarning }]}>
                 {dashboard.byRiskLevel.high}
               </Text>
               <Text style={styles.riskSummaryLabel}>High</Text>
             </View>
           )}
           {dashboard.byRiskLevel.medium && (
-            <View style={[styles.riskSummaryItem, { backgroundColor: Colors.accentMuted + '20' }]}>
-              <Text style={[styles.riskSummaryValue, { color: Colors.accentMuted }]}>
+            <View style={[styles.riskSummaryItem, { backgroundColor: SemanticColors.textTertiary + '20' }]}>
+              <Text style={[styles.riskSummaryValue, { color: SemanticColors.textTertiary }]}>
                 {dashboard.byRiskLevel.medium}
               </Text>
               <Text style={styles.riskSummaryLabel}>Medium</Text>
@@ -482,34 +482,34 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     flex: 1,
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 14,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     alignItems: 'center',
   },
   summaryCardHighlight: {
-    backgroundColor: Colors.accentDeep + '10',
-    borderColor: Colors.accentDeep + '40',
+    backgroundColor: SemanticColors.actionPrimary + '10',
+    borderColor: SemanticColors.actionPrimary + '40',
   },
   summaryCardWarning: {
-    backgroundColor: Colors.warning + '10',
-    borderColor: Colors.warning + '40',
+    backgroundColor: SemanticColors.feedbackWarning + '10',
+    borderColor: SemanticColors.feedbackWarning + '40',
   },
   summaryValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 24,
     fontWeight: '700',
   },
   summaryValueHighlight: {
-    color: Colors.accentDeep,
+    color: SemanticColors.actionPrimary,
   },
   summaryValueWarning: {
-    color: Colors.warning,
+    color: SemanticColors.feedbackWarning,
   },
   summaryLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     marginTop: 4,
   },
@@ -528,14 +528,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   riskSummaryLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     marginTop: 2,
   },
   tabRow: {
     flexDirection: 'row',
     gap: Spacing.xs,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 12,
     padding: 4,
   },
@@ -546,25 +546,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabActive: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   tabText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
   },
   tabTextActive: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
   },
   actionsList: {
     gap: Spacing.md,
   },
   actionCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 10,
   },
   actionHeader: {
@@ -605,21 +605,21 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   actionTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 15,
     fontWeight: '600',
   },
   actionDescription: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
   },
   actionAmount: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 20,
     fontWeight: '700',
   },
   expiryText: {
-    color: Colors.warning,
+    color: SemanticColors.feedbackWarning,
     fontSize: 11,
     fontWeight: '600',
   },
@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   approvalsLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
   },
@@ -637,55 +637,55 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   approvalBadge: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   approvalApproved: {
-    backgroundColor: Colors.success + '20',
-    borderColor: Colors.success + '40',
+    backgroundColor: SemanticColors.feedbackSuccess + '20',
+    borderColor: SemanticColors.feedbackSuccess + '40',
   },
   approvalRejected: {
-    backgroundColor: Colors.danger + '20',
-    borderColor: Colors.danger + '40',
+    backgroundColor: SemanticColors.feedbackError + '20',
+    borderColor: SemanticColors.feedbackError + '40',
   },
   approvalText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     fontWeight: '600',
     textTransform: 'capitalize',
   },
   approvalTextApproved: {
-    color: Colors.success,
+    color: SemanticColors.feedbackSuccess,
   },
   approvalTextRejected: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
   },
   expandedContent: {
     gap: Spacing.md,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   generatedContent: {
     gap: 8,
   },
   generatedLabel: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 12,
     fontWeight: '600',
   },
   generatedScroll: {
     maxHeight: 150,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 10,
     padding: Spacing.sm,
   },
   generatedText: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 11,
     fontFamily: 'monospace',
     lineHeight: 16,
@@ -694,7 +694,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   auditLabel: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -703,21 +703,21 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 4,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   auditTime: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     width: 80,
   },
   auditAction: {
-    color: Colors.accentMuted,
+    color: SemanticColors.textTertiary,
     fontSize: 10,
     fontWeight: '600',
     width: 60,
   },
   auditDetails: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     flex: 1,
   },
@@ -733,17 +733,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   rejectButton: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderWidth: 1,
-    borderColor: Colors.danger + '40',
+    borderColor: SemanticColors.feedbackError + '40',
   },
   rejectButtonText: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
     fontSize: 14,
     fontWeight: '600',
   },
   approveButton: {
-    backgroundColor: Colors.success,
+    backgroundColor: SemanticColors.feedbackSuccess,
   },
   approveButtonText: {
     color: '#0B0C0F',
@@ -751,7 +751,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   executeButton: {
-    backgroundColor: Colors.accentDeep,
+    backgroundColor: SemanticColors.actionPrimary,
     marginTop: Spacing.sm,
   },
   executeButtonText: {
@@ -765,21 +765,21 @@ const styles = StyleSheet.create({
   },
   emptyIcon: {
     fontSize: 48,
-    color: Colors.success,
+    color: SemanticColors.feedbackSuccess,
     marginBottom: Spacing.md,
   },
   emptyText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 14,
   },
   confirmationRequired: {
-    backgroundColor: Colors.warning + '15',
+    backgroundColor: SemanticColors.feedbackWarning + '15',
     borderRadius: 8,
     padding: 8,
     marginTop: Spacing.xs,
   },
   confirmationRequiredText: {
-    color: Colors.warning,
+    color: SemanticColors.feedbackWarning,
     fontSize: 11,
     fontWeight: '500',
     textAlign: 'center',

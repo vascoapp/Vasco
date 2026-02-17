@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AssistBanner } from '../../src/components/AssistBanner';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
 import { Screen } from '../../src/components/Screen';
-import { Colors } from '../../src/theme/colors';
+import { SemanticColors } from '../../src/theme/colors';
 import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
@@ -136,23 +136,23 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     gap: Spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   actions: {
     gap: Spacing.sm,
   },
   exportedText: {
-    color: Colors.success,
+    color: SemanticColors.feedbackSuccess,
     fontSize: 12,
     fontFamily: 'Inter_500Medium',
   },
   paymentText: {
-    color: Colors.accentMuted,
+    color: SemanticColors.textTertiary,
     fontSize: 12,
     fontFamily: 'Inter_500Medium',
   },

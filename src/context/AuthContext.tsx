@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import type { Session } from '@supabase/supabase-js';
 
 // ============================================
 // ROLE TYPES
@@ -14,6 +16,9 @@ export interface User {
   company: string;
   projects: string[]; // Project IDs user has access to
 }
+
+/** True when the app is running in demo mode (no Supabase credentials) */
+export const isDemoMode = !isSupabaseConfigured;
 
 // ============================================
 // MOCK USERS (Demo)
@@ -190,8 +195,11 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isDemoMode: boolean;
+  session: Session | null;
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  signUp: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
   roleConfig: RoleConfig | null;
 }
 
@@ -199,29 +207,99 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const login = useCallback(async (email: string, _password: string): Promise<boolean> => {
+  // Listen for Supabase auth changes when configured
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
+    // Check existing session on mount
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      if (s?.user) {
+        setUser({
+          id: s.user.id,
+          email: s.user.email ?? '',
+          name: s.user.user_metadata?.name ?? s.user.email ?? '',
+          role: (s.user.user_metadata?.role as UserRole) ?? 'contractor',
+          company: s.user.user_metadata?.company ?? '',
+          projects: [],
+        });
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+      if (s?.user) {
+        setUser({
+          id: s.user.id,
+          email: s.user.email ?? '',
+          name: s.user.user_metadata?.name ?? s.user.email ?? '',
+          role: (s.user.user_metadata?.role as UserRole) ?? 'contractor',
+          company: s.user.user_metadata?.company ?? '',
+          projects: [],
+        });
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
+    // --- Check for demo account first (works in all modes) ---
     const normalizedEmail = email.toLowerCase().trim();
     const mockUser = MOCK_USERS[normalizedEmail];
 
     if (mockUser) {
+      // If Supabase is configured, try real auth first
+      if (isSupabaseConfigured) {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (!error) {
+          setIsLoading(false);
+          return true;
+        }
+        // Supabase auth failed — fall back to demo user
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+      }
       setUser(mockUser);
       setIsLoading(false);
       return true;
+    }
+
+    // --- Real Supabase auth for non-demo accounts ---
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      setIsLoading(false);
+      return !error;
     }
 
     setIsLoading(false);
     return false;
   }, []);
 
-  const logout = useCallback(() => {
+  const signUp = useCallback(async (email: string, password: string) => {
+    if (!isSupabaseConfigured) {
+      return { success: false, error: 'Supabase not configured – running in demo mode' };
+    }
+    setIsLoading(true);
+    const { error } = await supabase.auth.signUp({ email, password });
+    setIsLoading(false);
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  }, []);
+
+  const logout = useCallback(async () => {
+    if (isSupabaseConfigured) {
+      await supabase.auth.signOut();
+    }
     setUser(null);
+    setSession(null);
   }, []);
 
   const roleConfig = user ? ROLE_CONFIGS[user.role] : null;
@@ -232,7 +310,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isAuthenticated: !!user,
         isLoading,
+        isDemoMode,
+        session,
         login,
+        signUp,
         logout,
         roleConfig,
       }}

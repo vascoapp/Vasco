@@ -248,7 +248,7 @@ Phase 2 (1–2 months)
 Phase 3 (3–6 months)
 - Add compliance/safety modules.
 - Build benchmarking and predictive analytics.
-- Expand to more trades.
+- Expand to more trades.s
 
 
 What to Implement First (High Impact)

@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 
@@ -36,12 +36,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   greeting: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 14,
     marginBottom: 4,
   },
   title: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 24,
     fontWeight: '700',
   },

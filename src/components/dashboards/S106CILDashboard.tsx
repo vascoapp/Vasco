@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Typography } from '../../theme/typography';
 import {
@@ -69,22 +69,22 @@ export function S106CILDashboard() {
     switch (status) {
       case 'discharged':
       case 'paid':
-        return Colors.success;
+        return SemanticColors.feedbackSuccess;
       case 'triggered':
       case 'pending':
-        return Colors.warning;
+        return SemanticColors.feedbackWarning;
       case 'overdue':
-        return Colors.danger;
+        return SemanticColors.feedbackError;
       default:
-        return Colors.muted;
+        return SemanticColors.textSecondary;
     }
   };
 
   const getAlertSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return Colors.danger;
-      case 'warning': return Colors.warning;
-      default: return Colors.muted;
+      case 'critical': return SemanticColors.feedbackError;
+      case 'warning': return SemanticColors.feedbackWarning;
+      default: return SemanticColors.textSecondary;
     }
   };
 
@@ -160,8 +160,8 @@ export function S106CILDashboard() {
           <Text style={styles.cilAuthority}>{liability.localAuthority}</Text>
           <Text style={styles.cilZone}>{liability.zone} - {liability.useClass}</Text>
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: Colors.accentDeep + '20' }]}>
-          <Text style={[styles.statusText, { color: Colors.accentDeep }]}>
+        <View style={[styles.statusBadge, { backgroundColor: SemanticColors.actionPrimary + '20' }]}>
+          <Text style={[styles.statusText, { color: SemanticColors.actionPrimary }]}>
             {liability.status.replace(/-/g, ' ')}
           </Text>
         </View>
@@ -238,8 +238,8 @@ export function S106CILDashboard() {
   const renderAlert = (alert: S106CILAlert) => (
     <View key={alert.id} style={[styles.alertCard, { borderLeftColor: getAlertSeverityColor(alert.severity) }]}>
       <View style={styles.alertHeader}>
-        <View style={[styles.alertTypeBadge, { backgroundColor: alert.type === 's106' ? Colors.accentDeep + '20' : Colors.accentMuted + '20' }]}>
-          <Text style={[styles.alertTypeText, { color: alert.type === 's106' ? Colors.accentDeep : Colors.accentMuted }]}>
+        <View style={[styles.alertTypeBadge, { backgroundColor: alert.type === 's106' ? SemanticColors.actionPrimary + '20' : SemanticColors.textTertiary + '20' }]}>
+          <Text style={[styles.alertTypeText, { color: alert.type === 's106' ? SemanticColors.actionPrimary : SemanticColors.textTertiary }]}>
             {alert.type.toUpperCase()}
           </Text>
         </View>
@@ -350,8 +350,8 @@ export function S106CILDashboard() {
             {dashboard.pendingPayments.slice(0, 5).map((payment, index) => (
               <View key={index} style={styles.paymentRow}>
                 <View style={styles.paymentInfo}>
-                  <View style={[styles.paymentTypeBadge, { backgroundColor: payment.type === 's106' ? Colors.accentDeep + '20' : Colors.accentMuted + '20' }]}>
-                    <Text style={[styles.paymentTypeText, { color: payment.type === 's106' ? Colors.accentDeep : Colors.accentMuted }]}>
+                  <View style={[styles.paymentTypeBadge, { backgroundColor: payment.type === 's106' ? SemanticColors.actionPrimary + '20' : SemanticColors.textTertiary + '20' }]}>
+                    <Text style={[styles.paymentTypeText, { color: payment.type === 's106' ? SemanticColors.actionPrimary : SemanticColors.textTertiary }]}>
                       {payment.type.toUpperCase()}
                     </Text>
                   </View>
@@ -430,34 +430,34 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     flex: 1,
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 14,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     alignItems: 'center',
   },
   summaryCardWarning: {
-    backgroundColor: Colors.warning + '10',
-    borderColor: Colors.warning + '40',
+    backgroundColor: SemanticColors.feedbackWarning + '10',
+    borderColor: SemanticColors.feedbackWarning + '40',
   },
   summaryValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 16,
     fontWeight: '700',
   },
   summaryValueWarning: {
-    color: Colors.warning,
+    color: SemanticColors.feedbackWarning,
   },
   summaryLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     marginTop: 4,
   },
   tabRow: {
     flexDirection: 'row',
     gap: Spacing.xs,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 12,
     padding: 4,
   },
@@ -468,22 +468,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabActive: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   tabText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     fontWeight: '600',
   },
   tabTextActive: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
   },
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: Spacing.md,
   },
   progressSection: {
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   progressLabel: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -505,17 +505,17 @@ const styles = StyleSheet.create({
   progressBar: {
     flex: 1,
     height: 8,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 4,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: Colors.accentDeep,
+    backgroundColor: SemanticColors.actionPrimary,
     borderRadius: 4,
   },
   progressText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
   },
@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   paymentInfo: {
     flexDirection: 'row',
@@ -542,11 +542,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   paymentDue: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
   },
   paymentAmount: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   categoryInfo: {
     flexDirection: 'row',
@@ -567,7 +567,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   categoryName: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '500',
   },
@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   categoryValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -593,11 +593,11 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   headCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 14,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 10,
   },
   headHeader: {
@@ -618,13 +618,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headCategory: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.5,
   },
   headClause: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   statusBadge: {
@@ -638,7 +638,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   headDescription: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -648,36 +648,36 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   detailItem: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 8,
     padding: 10,
     minWidth: '45%',
     flex: 1,
   },
   detailLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
   },
   detailValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '700',
     marginTop: 2,
   },
   indexedValue: {
-    color: Colors.accentDeep,
+    color: SemanticColors.actionPrimary,
   },
   triggerRow: {
     flexDirection: 'row',
     gap: 6,
   },
   triggerLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
   },
   triggerText: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 11,
     flex: 1,
   },
@@ -686,16 +686,16 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   dueDateLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
   },
   dueDateValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 11,
   },
   overdue: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
     fontWeight: '700',
   },
   recipientRow: {
@@ -703,23 +703,23 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   recipientLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
   },
   recipientText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   cilList: {
     gap: Spacing.md,
   },
   cilCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: Spacing.md,
   },
   cilHeader: {
@@ -728,12 +728,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   cilAuthority: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 16,
     fontWeight: '700',
   },
   cilZone: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     marginTop: 2,
   },
@@ -741,7 +741,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sectionLabel: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -751,23 +751,23 @@ const styles = StyleSheet.create({
   },
   areaItem: {
     flex: 1,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 10,
     padding: Spacing.sm,
     alignItems: 'center',
   },
   areaValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 16,
     fontWeight: '700',
   },
   areaLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     marginTop: 2,
   },
   chargeableArea: {
-    color: Colors.accentDeep,
+    color: SemanticColors.actionPrimary,
   },
   calcSection: {
     gap: 8,
@@ -779,17 +779,17 @@ const styles = StyleSheet.create({
   },
   totalRow: {
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: SemanticColors.borderDefault,
     paddingTop: 10,
     marginTop: 6,
   },
   totalLabel: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '700',
   },
   totalValue: {
-    color: Colors.accentDeep,
+    color: SemanticColors.actionPrimary,
     fontSize: 18,
     fontWeight: '700',
   },
@@ -802,16 +802,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   instalmentInfo: {},
   instalmentNumber: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
   },
   instalmentDue: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     marginTop: 2,
   },
@@ -820,7 +820,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   instalmentAmount: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -838,11 +838,11 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   alertCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 14,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     borderLeftWidth: 4,
     gap: 8,
   },
@@ -865,16 +865,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   alertTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '600',
   },
   alertDescription: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
   },
   alertAmount: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -883,15 +883,15 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingTop: 6,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   alertActionLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
   },
   alertActionText: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 11,
     flex: 1,
   },
@@ -901,11 +901,11 @@ const styles = StyleSheet.create({
   },
   emptyIcon: {
     fontSize: 48,
-    color: Colors.success,
+    color: SemanticColors.feedbackSuccess,
     marginBottom: Spacing.md,
   },
   emptyText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 14,
   },
 });

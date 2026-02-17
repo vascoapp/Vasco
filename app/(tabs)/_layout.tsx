@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../src/theme/colors';
+import { SemanticColors } from '../../src/theme/colors';
 import { useAuth, type UserRole } from '../../src/context/AuthContext';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -22,7 +22,7 @@ const getTabsForRole = (role: UserRole | undefined): {
     case 'cfo':
       return [
         { name: 'index', title: 'Overview', icon: 'analytics-outline', iconFocused: 'analytics' },
-        { name: 'cfo-costs', title: 'Costs', icon: 'trending-down-outline', iconFocused: 'trending-down' },
+        { name: 'cfo-costs', title: 'Savings', icon: 'trending-down-outline', iconFocused: 'trending-down' },
         { name: 'cfo-cashflow', title: 'Cash Flow', icon: 'cash-outline', iconFocused: 'cash' },
         { name: 'cfo-returns', title: 'Returns', icon: 'pie-chart-outline', iconFocused: 'pie-chart' },
       ];
@@ -62,21 +62,21 @@ const getTabsForRole = (role: UserRole | undefined): {
 export default function TabsLayout() {
   const { user, roleConfig } = useAuth();
   const tabs = getTabsForRole(user?.role);
-  const primaryColor = roleConfig?.primaryColor || Colors.accentDeep;
+  const primaryColor = roleConfig?.primaryColor || SemanticColors.actionPrimary;
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.surface,
-          borderTopColor: Colors.border,
+          backgroundColor: SemanticColors.surfacePrimary,
+          borderTopColor: SemanticColors.borderDefault,
           paddingTop: 8,
           paddingBottom: 34,
           height: 90,
         },
         tabBarActiveTintColor: primaryColor,
-        tabBarInactiveTintColor: Colors.muted,
+        tabBarInactiveTintColor: SemanticColors.textTertiary,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600', marginTop: 4 },
       }}
     >

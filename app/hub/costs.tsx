@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing } from '../../src/theme/spacing';
-import { InlineInsight } from '../../src/components/shared/VascoInsightCard';
+import { InlineInsight, VascoInsightCard } from '../../src/components/shared/VascoInsightCard';
+import { useVascoGuidance, useInlineInsight } from '../../src/services/vascoGuidanceService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -79,6 +80,11 @@ function getCPIColor(cpi: number): string {
 // -----------------------------------------------------------------------------
 
 export default function CostsScreen() {
+  const insights = useVascoGuidance('cfo', 'cfo-costs');
+  const inlineTip = useInlineInsight('cfo', 'cfo-costs', 'budget');
+  const contingencyTip = useInlineInsight('cfo', 'cfo-costs', 'contingency');
+  const topInsight = insights[0] ?? null;
+
   const totalBudget = 45200000;
   const totalSpent = 28700000;
   const spentPercent = Math.round((totalSpent / totalBudget) * 100);
@@ -125,11 +131,9 @@ export default function CostsScreen() {
         </View>
       </View>
 
-      {/* Vasco Inline Insight */}
-      <InlineInsight
-        icon="shield-checkmark"
-        message="Vasco controleert automatisch alle facturen op dubbele betalingen en overbetaling."
-      />
+      {/* Vasco AI Guidance */}
+      {inlineTip && <InlineInsight icon={inlineTip.icon as IconName} message={inlineTip.message} />}
+      {topInsight && <VascoInsightCard insight={topInsight} compact />}
 
       {/* Section Header - Project Costs */}
       <View style={styles.sectionHeader}>
@@ -189,6 +193,7 @@ export default function CostsScreen() {
       })}
 
       {/* Section Header - Contingency */}
+      {contingencyTip && <InlineInsight icon={contingencyTip.icon as IconName} message={contingencyTip.message} />}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Contingency Tracker</Text>
       </View>

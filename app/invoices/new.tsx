@@ -1,18 +1,26 @@
 import { Link } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { AssistBanner } from '../../src/components/AssistBanner';
 import { Screen } from '../../src/components/Screen';
-import { Colors } from '../../src/theme/colors';
+import { InlineInsight, VascoInsightCard } from '../../src/components/shared/VascoInsightCard';
+import { useAppState } from '../../src/state/AppState';
+import { useInlineInsight, useVascoGuidance } from '../../src/services/vascoGuidanceService';
+import { SemanticColors } from '../../src/theme/colors';
 import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
 
-const quotes = [
-  { id: 'q-102', customer: 'De Jong', amount: '€2,450', job: 'Interior repaint' },
-  { id: 'q-103', customer: 'Van Dijk', amount: '€1,120', job: 'Exterior repaint' },
-];
-
 export default function InvoiceFromQuoteSelect() {
+  const { quotes } = useAppState();
+
+  // AI guidance
+  const inlineInsight = useInlineInsight('contractor', 'invoice-new', 'select');
+  const insights = useVascoGuidance('contractor', 'invoice-new');
+  const topInsight = insights.length > 0 ? insights[0] : null;
+
+  // Only show sent quotes (ready for invoicing)
+  const sentQuotes = quotes.filter((q) => q.status === 'sent');
+  const draftQuotes = quotes.filter((q) => q.status === 'draft');
+
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.container}>
@@ -21,26 +29,60 @@ export default function InvoiceFromQuoteSelect() {
           <Text style={Typography.muted}>Pick a quote to invoice</Text>
         </View>
 
-        <AssistBanner
-          title="Get paid faster"
-          description="Invoices sent within 24 hours are paid sooner."
-          actionLabel="Pick a quote"
-          meta="Guided"
-        />
+        {inlineInsight && (
+          <InlineInsight
+            icon={inlineInsight.icon as any}
+            message={inlineInsight.message}
+            actionLabel={inlineInsight.actionLabel}
+            actionRoute={inlineInsight.actionRoute}
+          />
+        )}
+        {topInsight && (
+          <VascoInsightCard insight={topInsight} compact showSource />
+        )}
 
-        <View style={styles.card}>
-          {quotes.map((quote) => (
-            <Link key={quote.id} href={`/quotes/${quote.id}/invoice`} asChild>
-              <Pressable style={styles.row}>
-                <View>
-                  <Text style={Typography.body}>{quote.customer}</Text>
-                  <Text style={Typography.muted}>{quote.job}</Text>
-                </View>
-                <Text style={Typography.body}>{quote.amount}</Text>
-              </Pressable>
-            </Link>
-          ))}
-        </View>
+        {sentQuotes.length > 0 && (
+          <View style={styles.card}>
+            <Text style={Typography.subtitle}>Sent quotes</Text>
+            {sentQuotes.map((quote) => (
+              <Link key={quote.id} href={`/quotes/${quote.id}/invoice`} asChild>
+                <Pressable style={styles.row}>
+                  <View>
+                    <Text style={Typography.body}>{quote.customer}</Text>
+                    <Text style={Typography.muted}>{quote.job}</Text>
+                  </View>
+                  <Text style={Typography.body}>€{quote.amount.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}</Text>
+                </Pressable>
+              </Link>
+            ))}
+          </View>
+        )}
+
+        {draftQuotes.length > 0 && (
+          <View style={styles.card}>
+            <Text style={Typography.subtitle}>Draft quotes</Text>
+            <Text style={[Typography.muted, { marginBottom: Spacing.xs }]}>
+              Send these first, then invoice
+            </Text>
+            {draftQuotes.map((quote) => (
+              <Link key={quote.id} href={`/quotes/${quote.id}`} asChild>
+                <Pressable style={[styles.row, { opacity: 0.6 }]}>
+                  <View>
+                    <Text style={Typography.body}>{quote.customer}</Text>
+                    <Text style={Typography.muted}>{quote.job}</Text>
+                  </View>
+                  <Text style={[Typography.muted, { fontSize: 12 }]}>Draft</Text>
+                </Pressable>
+              </Link>
+            ))}
+          </View>
+        )}
+
+        {quotes.length === 0 && (
+          <View style={styles.card}>
+            <Text style={Typography.muted}>No quotes yet. Create a quote first.</Text>
+          </View>
+        )}
       </ScrollView>
     </Screen>
   );
@@ -55,18 +97,19 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     gap: Spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: Spacing.xs,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
 });

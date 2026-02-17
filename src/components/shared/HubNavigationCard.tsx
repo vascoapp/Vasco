@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 
@@ -42,7 +42,7 @@ export function HubNavigationCard({
         </View>
       )}
       <View style={styles.chevronContainer}>
-        <Ionicons name="chevron-forward" size={16} color={Colors.muted} />
+        <Ionicons name="chevron-forward" size={16} color={SemanticColors.textSecondary} />
       </View>
     </Pressable>
   );
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.sm,
     borderWidth: 1,
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   title: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -74,14 +74,14 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
     paddingTop: Spacing.xs,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   statValue: {
     fontSize: 16,
     fontWeight: '700',
   },
   statLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     marginTop: 2,
   },

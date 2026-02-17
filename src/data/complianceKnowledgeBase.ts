@@ -261,7 +261,6 @@ const translationOverrides: Record<LanguageCode, Record<string, string>> = {
       'Lift-oplevering en onderhoudsdocumentatie',
     'Provide commissioning, inspection, and maintenance handover records.':
       'Lever inbedrijfstelling, inspectie en onderhoudsoverdracht.',
-    'Periodic inspection planning': 'Periodieke inspectieplanning',
     'Ensure periodic inspection schedule is documented and followed.':
       'Zorg dat periodieke inspectieplanning is vastgelegd en gevolgd.',
     'Installation certificate': 'Installatiecertificaat',

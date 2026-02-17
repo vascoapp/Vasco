@@ -4,7 +4,8 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing } from '../../src/theme/spacing';
-import { InlineInsight } from '../../src/components/shared/VascoInsightCard';
+import { InlineInsight, VascoInsightCard } from '../../src/components/shared/VascoInsightCard';
+import { useVascoGuidance, useInlineInsight } from '../../src/services/vascoGuidanceService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -68,6 +69,9 @@ function getStatusConfig(status: string): { label: string; color: string } {
 export default function RisksScreen() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'critical' | 'open'>('all');
+  const insights = useVascoGuidance('cfo', 'cfo-risks');
+  const inlineTip = useInlineInsight('cfo', 'cfo-risks', 'overview');
+  const topInsight = insights[0] ?? null;
 
   const filteredRisks = MOCK_RISKS.filter(r => {
     if (filter === 'critical') return r.score >= 15;
@@ -96,10 +100,8 @@ export default function RisksScreen() {
         </View>
       </View>
 
-      <InlineInsight
-        icon="shield"
-        message="Projecten met actief risicomanagement tonen 30% minder kostenoverschrijdingen."
-      />
+      {inlineTip && <InlineInsight icon={inlineTip.icon as IconName} message={inlineTip.message} />}
+      {topInsight && <VascoInsightCard insight={topInsight} compact />}
 
       {/* Filter tabs */}
       <View style={styles.filterRow}>

@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../theme/colors';
+import { SemanticColors } from '../theme/colors';
 import { Radius } from '../theme/radius';
 import { Shadows } from '../theme/shadows';
 import { Spacing } from '../theme/spacing';
@@ -18,25 +18,25 @@ type ActionTileProps = {
 
 const toneColors = {
   default: {
-    background: Colors.surface,
-    border: Colors.border,
-    badge: Colors.surfaceElevated,
-    badgeText: Colors.text,
-    impact: Colors.accentMuted,
+    background: SemanticColors.surfacePrimary,
+    border: SemanticColors.borderDefault,
+    badge: SemanticColors.surfaceSecondary,
+    badgeText: SemanticColors.textPrimary,
+    impact: SemanticColors.textTertiary,
   },
   warning: {
-    background: Colors.warning + '08',
-    border: Colors.warning + '30',
-    badge: Colors.warning + '20',
-    badgeText: Colors.warning,
-    impact: Colors.warning,
+    background: SemanticColors.feedbackWarning + '08',
+    border: SemanticColors.feedbackWarning + '30',
+    badge: SemanticColors.feedbackWarning + '20',
+    badgeText: SemanticColors.feedbackWarning,
+    impact: SemanticColors.feedbackWarning,
   },
   danger: {
-    background: Colors.danger + '08',
-    border: Colors.danger + '30',
-    badge: Colors.danger + '20',
-    badgeText: Colors.danger,
-    impact: Colors.danger,
+    background: SemanticColors.feedbackError + '08',
+    border: SemanticColors.feedbackError + '30',
+    badge: SemanticColors.feedbackError + '20',
+    badgeText: SemanticColors.feedbackError,
+    impact: SemanticColors.feedbackError,
   },
 };
 
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   why: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     fontFamily: 'Inter_400Regular',
     marginTop: 2,
@@ -144,12 +144,12 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   chevron: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     fontFamily: 'Inter_600SemiBold',
   },

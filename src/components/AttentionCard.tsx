@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../theme/colors';
+import { SemanticColors } from '../theme/colors';
 import { Radius } from '../theme/radius';
 import { Shadows } from '../theme/shadows';
 import { Spacing } from '../theme/spacing';
@@ -17,7 +17,7 @@ type AttentionCardProps = {
 };
 
 const toneColors = {
-  default: Colors.surfaceElevated,
+  default: SemanticColors.surfaceSecondary,
   warning: '#2C2312',
   danger: '#2A1414',
 };
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: Spacing.sm,
     ...Shadows.sm,
   },
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   meta: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     fontFamily: 'Inter_500Medium',
   },
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   reason: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     lineHeight: 18,
   },
 });

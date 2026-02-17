@@ -113,6 +113,48 @@ const INLINE_INSIGHTS: Record<string, InlineInsightData[]> = {
   'contractor:meer:overview': [
     { icon: 'sparkles', message: 'Ontdek alle tools die Vasco biedt — van AI-offertes tot slimme planning en leveranciersvergelijking.' },
   ],
+  // --- WORKFLOW: Quote creation ---
+  'contractor:quote-new:form': [
+    { icon: 'bulb', message: 'Offertes met een duidelijke scope en materiaallijst worden 30% vaker geaccepteerd.' },
+  ],
+  'contractor:quote-new:pricing': [
+    { icon: 'analytics', message: 'Vasco vergelijkt je prijs met eerdere offertes voor dit type klus.' },
+  ],
+  'contractor:quote-new:customer': [
+    { icon: 'person', message: 'Vasco analyseert het betalingsgedrag van deze klant automatisch.' },
+  ],
+  // --- WORKFLOW: Invoice creation ---
+  'contractor:invoice-new:select': [
+    { icon: 'flash', message: 'Facturen die binnen 24 uur na oplevering worden verstuurd, worden 3 dagen sneller betaald.' },
+  ],
+  'contractor:invoice-create:total': [
+    { icon: 'camera', message: 'Voeg foto\'s van het eindresultaat toe — klanten betalen sneller met visueel bewijs.' },
+  ],
+  'contractor:invoice-create:customer': [
+    { icon: 'person', message: 'Vasco controleert het betalingsgedrag van deze klant automatisch.' },
+  ],
+  // --- WORKFLOW: Job detail ---
+  'contractor:job-detail:overview': [
+    { icon: 'analytics', message: 'Vasco analyseert je kosten en planning automatisch — bekijk de margetracker.' },
+  ],
+  'contractor:job-detail:materials': [
+    { icon: 'cube', message: 'Bestel materialen op tijd om vertragingen te voorkomen.' },
+  ],
+  // --- WORKFLOW: Jobs list ---
+  'contractor:jobs-list:active': [
+    { icon: 'briefcase', message: 'Focus op klussen dicht bij oplevering voor snellere facturatie.' },
+  ],
+  'contractor:jobs-list:pipeline': [
+    { icon: 'trending-up', message: 'Vasco voorspelt je pipeline-conversie op basis van historische data.' },
+  ],
+  // --- WORKFLOW: Quotes list ---
+  'contractor:quotes:pipeline': [
+    { icon: 'document-text', message: 'Conceptoffertes die snel worden verstuurd hebben een hogere acceptatieratio.' },
+  ],
+  // --- WORKFLOW: Invoices list ---
+  'contractor:invoices:overdue': [
+    { icon: 'warning', message: 'Verlopen facturen kosten werkkapitaal. Stuur vandaag een herinnering.' },
+  ],
   // --- SITE LEAD ---
   'sitelead:overview:overview': [
     { icon: 'people', message: 'Vasco volgt alle werkploegen real-time. Het Loodgieter Team loopt achter op schema \u2014 materiaallevering vertraagd. Overweeg extra personeel in te zetten of de planning aan te passen.' },
@@ -135,6 +177,33 @@ const INLINE_INSIGHTS: Record<string, InlineInsightData[]> = {
   ],
   'cfo:costs:overview': [
     { icon: 'shield-checkmark', message: 'Vasco controleert automatisch alle facturen op dubbele betalingen en overbetaling.' },
+  ],
+  // --- CFO PROJECT HUB SCREENS ---
+  'cfo:cfo-projects:overview': [
+    { icon: 'analytics', message: 'Vasco analyseert je volledige portfolio — focus op projecten met de grootste afwijkingen.' },
+  ],
+  'cfo:cfo-costs:budget': [
+    { icon: 'wallet', message: 'Projecten met CPI < 0.95 vereisen directe aandacht — kosten lopen sneller op dan verwacht.' },
+  ],
+  'cfo:cfo-costs:contingency': [
+    { icon: 'umbrella', message: 'Contingency-verbruik dat vooruitloopt op projectvoortgang is een vroeg waarschuwingssignaal.' },
+  ],
+  'cfo:cfo-appraisal:overview': [
+    { icon: 'trending-up', message: 'Projecten met IRR boven 20% presteren boven target — behoud de huidige strategie.' },
+  ],
+  'cfo:cfo-risks:overview': [
+    { icon: 'shield', message: 'Risico\'s met een score ≥15 vereisen directe mitigatie — plan een review meeting deze week.' },
+  ],
+  'cfo:cfo-approvals:overview': [
+    { icon: 'timer', message: 'Elke dag vertraging bij goedkeuringen kost gemiddeld 1 werkdag projectvertraging.' },
+  ],
+  // --- COO HUB SCREENS ---
+  'coo:coo-schedule:overview': [
+    { icon: 'analytics', message: 'De fragiliteitscore voorspelt vertragingsrisico 2 weken vooruit — hoe lager, hoe beter.' },
+  ],
+  // --- DIRECTOR HUB SCREENS ---
+  'director:director-metrics:overview': [
+    { icon: 'rocket', message: 'Vasco levert waarde door automatisering, foutpreventie en snellere incasso.' },
   ],
   'cfo:cashflow:overview': [
     { icon: 'bulb', message: 'Handovers die vastlopen vertragen betalingen. Controleer de handover status voor snellere incasso.' },

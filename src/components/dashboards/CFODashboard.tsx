@@ -14,8 +14,6 @@ import {
   TextInput,
   View,
   Modal,
-  ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,44 +30,27 @@ import {
   getCurrencyForCountry,
 } from '../../modules/countryModules';
 
-// AI Services
-import { useAuditFindings, useAuditStats } from '../../services/auditorService';
-import {
-  useFinancialAuditStats,
-  useFinancialAuditFindings,
-  useOverpaymentAnalysis,
-  useUnnecessarySpendAnalysis,
-  useBudgetReconciliation,
-} from '../../services/financialAuditorService';
+// AI Services (auditorService and financialAuditorService hooks removed — unused)
 
 // Vasco Guidance
 import { useVascoGuidance, useInlineInsight } from '../../services/vascoGuidanceService';
-import { VascoInsightList, InlineInsight } from '../shared/VascoInsightCard';
-import type { VascoInsight } from '../shared/VascoInsightCard';
+import { InlineInsight } from '../shared/VascoInsightCard';
 import { recordScreenVisit } from '../../intelligence/learningStorage';
 import { FinancialAuditorDashboard } from '../financial-auditor/FinancialAuditorDashboard';
 import { FinancialKPIGrid } from '../shared/FinancialKPIGrid';
-import { PLStatementView } from '../shared/PLStatementView';
 import { TrendBarChart } from '../shared/TrendBarChart';
 import { ReceivablesAgingBar } from '../shared/ReceivablesAgingBar';
 import { ScenarioComparisonCard } from '../shared/ScenarioComparisonCard';
 
-// Supplier Negotiation & TCO (moved from contractor besparen)
+
+// AI Savings
+import { useSavingsAggregation } from '../../services/savingsAggregatorService';
+
+// Savings tab: Budget Optimizer + Supplier Negotiation + TCO data
+import BudgetOptimizerDashboard from './BudgetOptimizerDashboard';
 import { useSupplierNegotiation } from '../../services/supplierNegotiationService';
 import { useTCOSummary } from '../../services/tcoCalculatorService';
 
-// AI Savings
-import { useSavingsAggregation, useSavingsTimeline } from '../../services/savingsAggregatorService';
-
-// Cross-Role Workflows
-import {
-  useWorkflowsForRole,
-  usePendingWorkflows,
-  useJobToPaymentWorkflows,
-  useWorkflowStats,
-  crossRoleWorkflowService,
-} from '../../services/crossRoleWorkflowService';
-import type { Workflow } from '../../services/crossRoleWorkflowService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -239,11 +220,11 @@ const MOCK_PENDING_HANDOVERS: PendingHandover[] = [
   },
 ];
 
-export type CFOTabView = 'overview' | 'costs' | 'cashflow' | 'returns';
+export type CFOTabView = 'overview' | 'savings' | 'cashflow' | 'returns';
 type TabView = CFOTabView;
 
-// Role color - matches theme roleCFO token
-const CFO_COLOR = '#2563EB'; // Blue for CFO (per theme)
+// Role color - theme token
+const CFO_COLOR = SemanticColors.roleCFO;
 
 // =============================================================================
 // NEW MOCK DATA FOR FINANCIAL COMPONENTS
@@ -259,7 +240,7 @@ const MOCK_MONTHLY_SPEND = [
 ];
 
 const MOCK_AGING_BUCKETS = [
-  { label: 'Huidig', amount: 2400000, color: '#2563EB' },
+  { label: 'Huidig', amount: 2400000, color: SemanticColors.roleCFO },
   { label: '30d', amount: 850000, color: '#EAB308' },
   { label: '60d', amount: 320000, color: '#F97316' },
   { label: '90d+', amount: 180000, color: '#EF4444' },
@@ -300,12 +281,6 @@ function formatCompact(value: number, currency: string = 'GBP'): string {
   return `${symbol}${value.toFixed(0)}`;
 }
 
-function formatVariance(value: number, currency: string = 'GBP'): string {
-  const formatted = formatCompact(Math.abs(value), currency);
-  return value >= 0 ? `+${formatted}` : `-${formatted.replace(/[£€$]/, '')}`;
-}
-
-
 // =============================================================================
 // COMPONENTS
 // =============================================================================
@@ -326,10 +301,10 @@ function TabButton({ label, icon, isActive, badge, onPress }: TabButtonProps) {
     >
       <Ionicons
         name={icon}
-        size={18}
+        size={15}
         color={isActive ? '#fff' : SemanticColors.textSecondary}
       />
-      <Text style={[styles.tabButtonText, isActive && styles.tabButtonTextActive]} numberOfLines={1}>
+      <Text style={[styles.tabButtonText, isActive && styles.tabButtonTextActive]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
         {label}
       </Text>
       {badge !== undefined && badge > 0 && (
@@ -360,10 +335,10 @@ function ApprovalCard({ approval, onApprove, onReview }: ApprovalCardProps) {
 
   const getStatusLabel = () => {
     switch (approval.status) {
-      case 'ai-verified': return 'AI Verified';
-      case 'requires-review': return 'Needs Review';
-      case 'blocked': return 'Blocked';
-      default: return 'Pending';
+      case 'ai-verified': return 'AI Geverifieerd';
+      case 'requires-review': return 'Controle Nodig';
+      case 'blocked': return 'Geblokkeerd';
+      default: return 'In Afwachting';
     }
   };
 
@@ -391,7 +366,7 @@ function ApprovalCard({ approval, onApprove, onReview }: ApprovalCardProps) {
             styles.approvalDue,
             approval.dueDate === 'Today' && { color: SemanticColors.feedbackError },
           ]}>
-            Due: {approval.dueDate}
+            Vervalt: {approval.dueDate}
           </Text>
         </View>
       </View>
@@ -401,14 +376,14 @@ function ApprovalCard({ approval, onApprove, onReview }: ApprovalCardProps) {
         <View style={styles.aiVerificationContainer}>
           <View style={styles.aiVerificationHeader}>
             <Ionicons name="shield-checkmark" size={14} color={CFO_COLOR} />
-            <Text style={styles.aiVerificationTitle}>AI Verification</Text>
+            <Text style={styles.aiVerificationTitle}>AI Verificatie</Text>
           </View>
           <View style={styles.aiCheckRow}>
             {[
               { key: 'budgetCheck', label: 'Budget' },
               { key: 'contractCheck', label: 'Contract' },
-              { key: 'handoverComplete', label: 'Handover' },
-              { key: 'rateCheck', label: 'Rate' },
+              { key: 'handoverComplete', label: 'Overdracht' },
+              { key: 'rateCheck', label: 'Tarief' },
             ].map(({ key, label }) => (
               <View key={key} style={styles.aiCheckItem}>
                 <Ionicons
@@ -441,65 +416,28 @@ function ApprovalCard({ approval, onApprove, onReview }: ApprovalCardProps) {
           style={[
             styles.approvalActionButton,
             approval.status === 'ai-verified' && styles.approvalActionButtonPrimary,
+            approval.status === 'blocked' && styles.approvalActionButtonBlocked,
           ]}
           onPress={approval.status === 'blocked' ? onReview : onApprove}
         >
+          <Ionicons
+            name={approval.status === 'blocked' ? 'warning' : approval.status === 'ai-verified' ? 'checkmark-circle' : 'eye'}
+            size={15}
+            color={approval.status === 'ai-verified' ? '#fff' : approval.status === 'blocked' ? SemanticColors.feedbackError : SemanticColors.textPrimary}
+          />
           <Text style={[
             styles.approvalActionButtonText,
             approval.status === 'ai-verified' && styles.approvalActionButtonTextPrimary,
-          ]}>
-            {approval.status === 'blocked' ? 'Review Issues' : approval.status === 'ai-verified' ? 'Approve' : 'Review & Approve'}
+            approval.status === 'blocked' && styles.approvalActionButtonTextBlocked,
+          ]} numberOfLines={1}>
+            {approval.status === 'blocked' ? 'Problemen' : approval.status === 'ai-verified' ? 'Goedkeuren' : 'Bekijken'}
           </Text>
         </Pressable>
         <Pressable style={styles.approvalActionButtonSecondary} onPress={onReview}>
+          <Ionicons name="document-text" size={14} color={CFO_COLOR} />
           <Text style={styles.approvalActionButtonTextSecondary}>Details</Text>
         </Pressable>
       </View>
-    </View>
-  );
-}
-
-interface AuditFindingCardProps {
-  finding: any;
-  onAction?: () => void;
-}
-
-function AuditFindingCard({ finding, onAction }: AuditFindingCardProps) {
-  const getSeverityColor = () => {
-    switch (finding.severity) {
-      case 'critical': return SemanticColors.feedbackError;
-      case 'high': return SemanticColors.feedbackWarning;
-      case 'medium': return CFO_COLOR;
-      default: return SemanticColors.textTertiary;
-    }
-  };
-
-  return (
-    <View style={[styles.findingCard, { borderLeftColor: getSeverityColor() }]}>
-      <View style={styles.findingHeader}>
-        <View style={[styles.findingSeverityBadge, { backgroundColor: getSeverityColor() + '20' }]}>
-          <Text style={[styles.findingSeverityText, { color: getSeverityColor() }]}>
-            {finding.severity.toUpperCase()}
-          </Text>
-        </View>
-        <Text style={styles.findingCategory}>{finding.category?.name || finding.auditType}</Text>
-      </View>
-      <Text style={styles.findingTitle}>{finding.title}</Text>
-      <Text style={styles.findingDescription} numberOfLines={2}>{finding.description}</Text>
-      {(finding.impact?.financial || finding.financialDetails?.variance) && (
-        <View style={styles.findingImpact}>
-          <Ionicons name="cash" size={14} color={getSeverityColor()} />
-          <Text style={[styles.findingImpactText, { color: getSeverityColor() }]}>
-            Impact: {formatCompact(finding.impact?.financial || Math.abs(finding.financialDetails?.variance || 0))}
-          </Text>
-        </View>
-      )}
-      {finding.suggestedAction && (
-        <Pressable style={styles.findingAction} onPress={onAction}>
-          <Text style={styles.findingActionText} numberOfLines={1}>{finding.suggestedAction.type.replace(/-/g, ' ')}</Text>
-          <Ionicons name="chevron-forward" size={14} color={CFO_COLOR} />
-        </Pressable>
-      )}
     </View>
   );
 }
@@ -522,30 +460,30 @@ function ConfirmationModal({ visible, approval, onConfirm, onCancel }: Confirmat
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <Ionicons name="shield-checkmark" size={32} color={CFO_COLOR} />
-            <Text style={styles.modalTitle}>Confirm Approval</Text>
+            <Text style={styles.modalTitle}>Goedkeuring Bevestigen</Text>
           </View>
 
           <View style={styles.modalBody}>
-            <Text style={styles.modalLabel}>Action</Text>
+            <Text style={styles.modalLabel}>Actie</Text>
             <Text style={styles.modalValue}>{approval.title}</Text>
 
-            <Text style={styles.modalLabel}>Amount</Text>
+            <Text style={styles.modalLabel}>Bedrag</Text>
             <Text style={[styles.modalValue, styles.modalAmount]}>{formatCompact(approval.amount)}</Text>
 
-            <Text style={styles.modalLabel}>Recipient</Text>
+            <Text style={styles.modalLabel}>Ontvanger</Text>
             <Text style={styles.modalValue}>{approval.vendor || approval.project}</Text>
 
             <View style={styles.modalWarning}>
               <Ionicons name="information-circle" size={16} color={CFO_COLOR} />
               <Text style={styles.modalWarningText}>
-                This action cannot be undone. Please confirm you want to proceed.
+                Deze actie kan niet ongedaan worden gemaakt. Bevestig dat u wilt doorgaan.
               </Text>
             </View>
 
-            <Text style={styles.modalLabel}>Enter confirmation code</Text>
+            <Text style={styles.modalLabel}>Voer bevestigingscode in</Text>
             <TextInput
               style={styles.confirmInput}
-              placeholder="Enter APPROVE"
+              placeholder="Voer GOEDKEUREN in"
               value={confirmCode}
               onChangeText={setConfirmCode}
               autoCapitalize="characters"
@@ -554,72 +492,22 @@ function ConfirmationModal({ visible, approval, onConfirm, onCancel }: Confirmat
 
           <View style={styles.modalActions}>
             <Pressable style={styles.modalCancelButton} onPress={onCancel}>
-              <Text style={styles.modalCancelText}>Cancel</Text>
+              <Text style={styles.modalCancelText}>Annuleren</Text>
             </Pressable>
             <Pressable
               style={[
                 styles.modalConfirmButton,
-                confirmCode !== 'APPROVE' && styles.modalConfirmButtonDisabled,
+                confirmCode !== 'GOEDKEUREN' && styles.modalConfirmButtonDisabled,
               ]}
               onPress={onConfirm}
-              disabled={confirmCode !== 'APPROVE'}
+              disabled={confirmCode !== 'GOEDKEUREN'}
             >
-              <Text style={styles.modalConfirmText}>Confirm & Execute</Text>
+              <Text style={styles.modalConfirmText}>Bevestigen & Uitvoeren</Text>
             </Pressable>
           </View>
         </View>
       </View>
     </Modal>
-  );
-}
-
-interface QuickActionProps {
-  icon: IconName;
-  label: string;
-  badge?: number;
-  onPress: () => void;
-}
-
-function QuickAction({ icon, label, badge, onPress }: QuickActionProps) {
-  return (
-    <Pressable style={styles.quickAction} onPress={onPress}>
-      <View style={styles.quickActionIcon}>
-        <Ionicons name={icon} size={20} color={CFO_COLOR} />
-        {badge !== undefined && badge > 0 && (
-          <View style={styles.quickActionBadge}>
-            <Text style={styles.quickActionBadgeText}>{badge}</Text>
-          </View>
-        )}
-      </View>
-      <Text style={styles.quickActionLabel} numberOfLines={1}>{label}</Text>
-    </Pressable>
-  );
-}
-
-interface MetricCardProps {
-  value: string;
-  label: string;
-  color?: string;
-  subtitle?: string;
-  trend?: 'up' | 'down' | 'stable';
-}
-
-function MetricCard({ value, label, color, subtitle, trend }: MetricCardProps) {
-  return (
-    <View style={styles.metricCard}>
-      <View style={styles.metricValueRow}>
-        <Text style={[styles.metricValue, color && { color }]}>{value}</Text>
-        {trend && (
-          <Ionicons
-            name={trend === 'up' ? 'trending-up' : trend === 'down' ? 'trending-down' : 'remove'}
-            size={14}
-            color={trend === 'up' ? SemanticColors.feedbackSuccess : trend === 'down' ? SemanticColors.feedbackError : SemanticColors.textTertiary}
-          />
-        )}
-      </View>
-      <Text style={styles.metricLabel}>{label}</Text>
-      {subtitle && <Text style={styles.metricSubtitle}>{subtitle}</Text>}
-    </View>
   );
 }
 
@@ -638,57 +526,35 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
   const [selectedProjectId, setSelectedProjectId] = useState<string>('uk-001');
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [selectedApproval, setSelectedApproval] = useState<PendingApproval | null>(null);
-  const [dismissedGuidance, setDismissedGuidance] = useState<Set<string>>(new Set());
-  const [snoozedGuidance, setSnoozedGuidance] = useState<Set<string>>(new Set());
   const [showFullAuditor, setShowFullAuditor] = useState(false);
-
-  // AI Service Hooks
-  const { findings: auditFindings, loading: auditLoading } = useAuditFindings('cfo');
-  const auditStats = useAuditStats('cfo');
-  const financialStats = useFinancialAuditStats();
-  const { findings: financialFindings } = useFinancialAuditFindings();
-  const { analysis: overpaymentAnalysis, totalOverpaid } = useOverpaymentAnalysis('project-001');
-  const { analysis: savingsAnalysis, totalSavings } = useUnnecessarySpendAnalysis('project-001');
-  const { report: budgetReport } = useBudgetReconciliation('project-001');
-  const negotiation = useSupplierNegotiation();
-  const tco = useTCOSummary();
 
   // Derived data
   const selectedProject = useMemo(() => getProjectById(selectedProjectId), [selectedProjectId]);
-  const appraisal = useMemo(() => mockAppraisals[selectedProjectId], [selectedProjectId]);
   const deliveryMetrics = useMemo(() => mockDeliveryMetrics[selectedProjectId], [selectedProjectId]);
   const currency = useMemo(() => selectedProject ? getCurrencyForCountry(selectedProject.country) : 'GBP', [selectedProject]);
 
   // Track screen visits for learning profile
-  const screenContext = activeTab === 'overview' ? 'today' : activeTab;
+  const screenContext = activeTab === 'overview' ? 'today' : activeTab === 'savings' ? 'costs' : activeTab;
   useEffect(() => { recordScreenVisit(screenContext); }, [screenContext]);
 
   // Vasco AI Guidance (from service)
   const allGuidance = useVascoGuidance('cfo', screenContext as any);
-  const activeGuidance = useMemo(
-    () => allGuidance.filter(g => !dismissedGuidance.has(g.id) && !snoozedGuidance.has(g.id)),
-    [allGuidance, dismissedGuidance, snoozedGuidance]
-  );
   const criticalGuidanceCount = useMemo(
-    () => activeGuidance.filter(g => g.priority === 'critical' || g.priority === 'high').length,
-    [activeGuidance]
+    () => allGuidance.filter(g => g.priority === 'critical' || g.priority === 'high').length,
+    [allGuidance]
   );
   // Inline insights per tab
-  const overviewInsight = useInlineInsight('cfo', 'overview', 'overview');
-  const costsInsight = useInlineInsight('cfo', 'costs', 'overview');
   const cashflowInsight = useInlineInsight('cfo', 'cashflow', 'overview');
   const returnsInsight = useInlineInsight('cfo', 'returns', 'overview');
 
   // AI Savings data
   const aiSavings = useSavingsAggregation();
-  const savingsTimeline = useSavingsTimeline();
+
+  // Budget Optimizer data for Savings tab
+  const negotiation = useSupplierNegotiation();
+  const tco = useTCOSummary();
   const timeSavings = useMemo(() => aiSavings.breakdown.find(c => c.id === 'time'), [aiSavings]);
   const hoursPerMonth = timeSavings ? parseFloat(timeSavings.description.match(/[\d.]+/)?.[0] || '0') : 0;
-
-  // Cross-role workflow data
-  const cfoPendingWorkflows = usePendingWorkflows('cfo');
-  const { workflows: jobToPaymentWorkflows } = useJobToPaymentWorkflows();
-  const workflowStats = useWorkflowStats();
 
   // Pending approvals requiring action
   const pendingApprovalCount = useMemo(
@@ -743,21 +609,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
     };
   }, [selectedProject, deliveryMetrics]);
 
-  const fmt = (amount: number) => formatCompact(amount, currency);
-
   // Handlers
-  const handleDismissGuidance = useCallback((id: string) => {
-    setDismissedGuidance(prev => new Set(prev).add(id));
-  }, []);
-
-  const handleSnoozeGuidance = useCallback((id: string) => {
-    setSnoozedGuidance(prev => new Set(prev).add(id));
-  }, []);
-
-  const handleGuidanceAction = useCallback((insight: VascoInsight) => {
-    if (insight.actionRoute) router.push(insight.actionRoute as any);
-  }, [router]);
-
   const handleApprove = useCallback((approval: PendingApproval) => {
     setSelectedApproval(approval);
     setConfirmModalVisible(true);
@@ -775,39 +627,43 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
     switch (activeTab) {
       case 'overview':
         return {
-          title: 'Financial Overview',
-          subtitle: `${mockProjects.length} active projects`,
+          title: 'Financieel Overzicht',
+          subtitle: `${mockProjects.length} actieve projecten`,
           metrics: [
-            { value: formatCompact(portfolioMetrics.totalGdv, 'GBP'), label: 'Total GDV' },
-            { value: formatPercent(portfolioMetrics.avgIrr), label: 'Avg IRR', color: CFO_COLOR },
-            { value: formatCompact(portfolioMetrics.uncommitted, 'GBP'), label: 'Uncommitted' },
+            { value: formatCompact(portfolioMetrics.totalGdv, 'GBP'), label: 'Totaal GDV' },
+            { value: formatPercent(portfolioMetrics.avgIrr), label: 'Gem. IRR', color: CFO_COLOR },
+            { value: formatCompact(portfolioMetrics.uncommitted, 'GBP'), label: 'Ongecommitteerd' },
           ],
         };
-      case 'costs':
+      case 'savings':
         return {
-          title: 'Kostenanalyse',
-          subtitle: selectedProject?.name || '',
-          metrics: [],
+          title: 'Savings',
+          subtitle: 'AI Budget Optimalisatie',
+          metrics: [
+            { value: `\u20AC${aiSavings.totalSavedThisYear.toLocaleString('nl-NL')}`, label: 'Bespaard dit jaar', color: SemanticColors.feedbackSuccess },
+            { value: `\u20AC${negotiation.totalDiscountPotential}/jr`, label: 'Leverancierskansen', color: CFO_COLOR },
+            { value: `\u20AC${tco.totalSavingsThisYear}/jr`, label: 'TCO Besparing' },
+          ],
         };
       case 'cashflow':
         return {
-          title: 'Cash Flow',
+          title: 'Cashflow',
           subtitle: selectedProject?.name || '',
           metrics: [],
         };
       case 'returns':
         return {
-          title: 'Returns & IRR',
-          subtitle: 'Portfolio performance',
+          title: 'Rendement & IRR',
+          subtitle: 'Portefeuilleprestaties',
           metrics: [
             { value: formatCompact(portfolioMetrics.totalGdv, 'GBP'), label: 'GDV' },
             { value: formatPercent(portfolioMetrics.avgIrr), label: 'IRR', color: CFO_COLOR },
-            { value: formatCompact(portfolioMetrics.totalGdv - portfolioMetrics.totalBudget, 'GBP'), label: 'Profit' },
+            { value: formatCompact(portfolioMetrics.totalGdv - portfolioMetrics.totalBudget, 'GBP'), label: 'Winst' },
           ],
         };
       default:
         return {
-          title: 'Financial Overview',
+          title: 'Financieel Overzicht',
           subtitle: '',
           metrics: [],
         };
@@ -854,17 +710,17 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
       {showTabBar && (
         <View style={styles.tabBar}>
           <TabButton
-            label="Overview"
+            label="Overzicht"
             icon="grid"
             isActive={activeTab === 'overview'}
             badge={criticalGuidanceCount}
             onPress={() => setActiveTab('overview')}
           />
           <TabButton
-            label="Costs"
-            icon="cash"
-            isActive={activeTab === 'costs'}
-            onPress={() => setActiveTab('costs')}
+            label="Savings"
+            icon="trending-down"
+            isActive={activeTab === 'savings'}
+            onPress={() => setActiveTab('savings')}
           />
           <TabButton
             label="Cash"
@@ -873,7 +729,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
             onPress={() => setActiveTab('cashflow')}
           />
           <TabButton
-            label="Returns"
+            label="Rendement"
             icon="trending-up"
             isActive={activeTab === 'returns'}
             onPress={() => setActiveTab('returns')}
@@ -881,6 +737,17 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
         </View>
       )}
 
+      {/* SAVINGS TAB — rendered outside ScrollView to avoid nesting */}
+      {activeTab === 'savings' && (
+        <BudgetOptimizerDashboard
+          accentColor={CFO_COLOR}
+          embedded
+          supplierNegotiation={negotiation}
+          tcoSummary={tco}
+        />
+      )}
+
+      {activeTab !== 'savings' && (
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -898,7 +765,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
                 { label: 'Totaal Budget', value: formatCompact(portfolioMetrics.totalBudget, 'GBP'), budgetLabel: `${mockProjects.length} projecten` },
                 { label: 'Totaal Besteed', value: formatCompact(portfolioMetrics.totalSpent, 'GBP'), variance: '-2.1%', varianceDirection: 'down', status: 'amber' },
                 { label: 'Ongecommitteerd', value: formatCompact(portfolioMetrics.uncommitted, 'GBP'), status: 'green' },
-                { label: 'Goedkeuringen', value: `${pendingApprovalCount}`, status: pendingApprovalCount > 2 ? 'red' : 'amber', onPress: () => setActiveTab('costs') },
+                { label: 'Goedkeuringen', value: `${pendingApprovalCount}`, status: pendingApprovalCount > 2 ? 'red' : 'amber', onPress: () => setActiveTab('savings') },
               ]}
             />
 
@@ -918,109 +785,6 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
               <ReceivablesAgingBar buckets={MOCK_AGING_BUCKETS} currency="GBP" />
             </View>
 
-            {/* AI Savings Card — pressable → full breakdown */}
-            <Pressable style={styles.card} onPress={() => router.push('/hub/savings' as any)}>
-              <View style={styles.cardHeader}>
-                <View style={[styles.cardHeaderIcon, { backgroundColor: Palette.hermesOrange + '15' }]}>
-                  <Ionicons name="sparkles" size={18} color={Palette.hermesOrange} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.cardTitle} numberOfLines={1}>Vasco AI Besparingen</Text>
-                  <Text style={styles.cardSubtitle} numberOfLines={1}>Automatisch bespaard door AI</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-              </View>
-              <View style={styles.aiSavingsKPIs}>
-                <View style={styles.aiSavingsKPI}>
-                  <Text style={[styles.aiSavingsKPIValue, { color: Palette.hermesOrange }]}>
-                    {'\u20AC'}{aiSavings.totalSavedThisMonth.toLocaleString('nl-NL')}
-                  </Text>
-                  <Text style={styles.aiSavingsKPILabel}>deze maand</Text>
-                </View>
-                <View style={styles.aiSavingsKPIDivider} />
-                <View style={styles.aiSavingsKPI}>
-                  <Text style={styles.aiSavingsKPIValue}>
-                    {'\u20AC'}{aiSavings.totalSavedThisYear.toLocaleString('nl-NL')}
-                  </Text>
-                  <Text style={styles.aiSavingsKPILabel}>dit jaar</Text>
-                </View>
-                <View style={styles.aiSavingsKPIDivider} />
-                <View style={styles.aiSavingsKPI}>
-                  <Text style={styles.aiSavingsKPIValue}>
-                    {'\u20AC'}{(aiSavings.projectedAnnual / 1000).toFixed(1)}K
-                  </Text>
-                  <Text style={styles.aiSavingsKPILabel}>geprojecteerd</Text>
-                </View>
-              </View>
-            </Pressable>
-
-            {/* Hours Saved Card */}
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <View style={[styles.cardHeaderIcon, { backgroundColor: SemanticColors.feedbackSuccess + '15' }]}>
-                  <Ionicons name="time" size={18} color={SemanticColors.feedbackSuccess} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.cardTitle}>Tijd Bespaard</Text>
-                  <Text style={styles.cardSubtitle}>Uren bespaard door automatisering</Text>
-                </View>
-              </View>
-              <View style={styles.aiSavingsKPIs}>
-                <View style={styles.aiSavingsKPI}>
-                  <Text style={[styles.aiSavingsKPIValue, { color: SemanticColors.feedbackSuccess }]}>
-                    {hoursPerMonth}u
-                  </Text>
-                  <Text style={styles.aiSavingsKPILabel}>deze maand</Text>
-                </View>
-                <View style={styles.aiSavingsKPIDivider} />
-                <View style={styles.aiSavingsKPI}>
-                  <Text style={styles.aiSavingsKPIValue}>
-                    {'\u20AC'}{timeSavings?.amount.toLocaleString('nl-NL') || 0}
-                  </Text>
-                  <Text style={styles.aiSavingsKPILabel}>waarde</Text>
-                </View>
-                <View style={styles.aiSavingsKPIDivider} />
-                <View style={styles.aiSavingsKPI}>
-                  <Text style={[styles.aiSavingsKPIValue, { color: SemanticColors.feedbackSuccess }]}>
-                    {'\u2191'}{timeSavings?.trendPercent || 0}%
-                  </Text>
-                  <Text style={styles.aiSavingsKPILabel}>trend</Text>
-                </View>
-              </View>
-              <View style={styles.hoursSavedDetails}>
-                {[
-                  { label: 'Offerte-opvolging', hours: 4.2, icon: 'document-text' as IconName },
-                  { label: 'Automatische herinneringen', hours: 3.5, icon: 'notifications' as IconName },
-                  { label: 'Facturatie & admin', hours: 2.8, icon: 'receipt' as IconName },
-                  { label: 'Leveranciersanalyse', hours: 1.6, icon: 'analytics' as IconName },
-                ].map((item, idx) => (
-                  <View key={idx} style={styles.hoursSavedRow}>
-                    <Ionicons name={item.icon} size={14} color={SemanticColors.textTertiary} />
-                    <Text style={styles.hoursSavedLabel}>{item.label}</Text>
-                    <Text style={styles.hoursSavedValue}>{item.hours}u</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            {/* Vasco AI Guidance */}
-            <VascoInsightList
-              insights={activeGuidance}
-              title="Vasco AI Guidance"
-              compact
-              maxVisible={1}
-              onDismiss={handleDismissGuidance}
-              onAction={handleGuidanceAction}
-              onSnooze={handleSnoozeGuidance}
-            />
-
-            {overviewInsight && (
-              <InlineInsight
-                icon={overviewInsight.icon as IconName}
-                message={overviewInsight.message}
-              />
-            )}
-
             {/* Financial Auditor (compact card) */}
             <FinancialAuditorDashboard
               projectId="project-001"
@@ -1035,8 +799,8 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
                   <Ionicons name="checkmark-done" size={18} color={CFO_COLOR} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.cardTitle}>Pending Approvals</Text>
-                  <Text style={styles.cardSubtitle}>AI-verified payment requests</Text>
+                  <Text style={styles.cardTitle}>Openstaande Goedkeuringen</Text>
+                  <Text style={styles.cardSubtitle}>AI-geverifieerde betalingsverzoeken</Text>
                 </View>
                 <View style={styles.badgePill}>
                   <Text style={styles.badgePillText}>{pendingApprovalCount}</Text>
@@ -1055,452 +819,6 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
               </View>
             </View>
 
-            {/* Tools */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Tools</Text>
-              <View style={styles.actionsList}>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/ai-assistant' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: CFO_COLOR + '15' }]}>
-                    <Ionicons name="sparkles" size={18} color={CFO_COLOR} />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle} numberOfLines={1}>AI Assistent</Text>
-                    <Text style={styles.actionSubtitle} numberOfLines={2}>Snelle financiële vragen & AI hulp</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/compliance' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
-                    <Ionicons name="shield-checkmark" size={18} color={SemanticColors.feedbackWarning} />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle} numberOfLines={1}>Compliance</Text>
-                    <Text style={styles.actionSubtitle} numberOfLines={2}>Regelgeving & nalevingsoverzicht</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/documents' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
-                    <Ionicons name="folder-open" size={18} color={SemanticColors.feedbackInfo} />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle} numberOfLines={1}>Documenten</Text>
-                    <Text style={styles.actionSubtitle} numberOfLines={2}>Financiële documentkluis</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
-              </View>
-            </View>
-
-            {/* Cross-Role Payment Workflows */}
-            {jobToPaymentWorkflows.length > 0 && (
-              <View style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <View style={[styles.cardHeaderIcon, { backgroundColor: CFO_COLOR + '15' }]}>
-                    <Ionicons name="git-network" size={18} color={CFO_COLOR} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.cardTitle}>Betaling Workflows</Text>
-                    <Text style={styles.cardSubtitle}>Cross-role goedkeuringsprocessen</Text>
-                  </View>
-                  {workflowStats.pendingPaymentValue > 0 && (
-                    <View style={[styles.badgePill, { backgroundColor: SemanticColors.feedbackWarning }]}>
-                      <Text style={styles.badgePillText}>{formatCompact(workflowStats.pendingPaymentValue)}</Text>
-                    </View>
-                  )}
-                </View>
-
-                {/* Workflow Stats Summary */}
-                <View style={styles.wfStatsRow}>
-                  <View style={styles.wfStatItem}>
-                    <Text style={[styles.wfStatValue, { color: CFO_COLOR }]}>
-                      {workflowStats.total}
-                    </Text>
-                    <Text style={styles.wfStatLabel}>Totaal</Text>
-                  </View>
-                  <View style={styles.wfStatItem}>
-                    <Text style={[styles.wfStatValue, { color: SemanticColors.feedbackWarning }]}>
-                      {cfoPendingWorkflows.length}
-                    </Text>
-                    <Text style={styles.wfStatLabel}>Wachtend</Text>
-                  </View>
-                  <View style={styles.wfStatItem}>
-                    <Text style={[styles.wfStatValue, { color: SemanticColors.feedbackSuccess }]}>
-                      {workflowStats.byStatus['completed'] || 0}
-                    </Text>
-                    <Text style={styles.wfStatLabel}>Afgerond</Text>
-                  </View>
-                </View>
-
-                {/* Active Payment Workflows */}
-                {jobToPaymentWorkflows
-                  .filter(wf => wf.status !== 'completed' && wf.status !== 'cancelled')
-                  .slice(0, 3)
-                  .map((wf) => {
-                    const currentStep = wf.steps.find(s => s.id === wf.currentStepId);
-                    const completedSteps = wf.steps.filter(s => s.status === 'completed').length;
-                    const isCfoStep = currentStep?.assignedRole === 'cfo';
-
-                    return (
-                      <View key={wf.id} style={styles.wfPaymentItem}>
-                        <View style={styles.wfPaymentHeader}>
-                          <View style={{ flex: 1 }}>
-                            <Text style={styles.wfPaymentTitle} numberOfLines={1}>{wf.title}</Text>
-                            <Text style={styles.wfPaymentMeta} numberOfLines={1}>
-                              {wf.projectName} · {wf.initiatedBy.userName}
-                            </Text>
-                          </View>
-                          <View style={styles.wfPaymentAmount}>
-                            <Text style={styles.wfPaymentAmountText}>
-                              {wf.currency === 'GBP' ? '£' : '€'}{wf.amount?.toLocaleString()}
-                            </Text>
-                          </View>
-                        </View>
-
-                        {/* Step Progress */}
-                        <View style={styles.wfStepsTrack}>
-                          {wf.steps.map((step, idx) => (
-                            <View key={step.id} style={styles.wfStepIndicator}>
-                              <View style={[
-                                styles.wfStepCircle,
-                                step.status === 'completed' && { backgroundColor: SemanticColors.feedbackSuccess },
-                                step.status === 'in-progress' && { backgroundColor: CFO_COLOR },
-                                step.status === 'pending' && { backgroundColor: SemanticColors.surfaceSecondary },
-                              ]}>
-                                {step.status === 'completed' && (
-                                  <Ionicons name="checkmark" size={8} color="#fff" />
-                                )}
-                              </View>
-                              {idx < wf.steps.length - 1 && (
-                                <View style={[
-                                  styles.wfStepLine,
-                                  step.status === 'completed' && { backgroundColor: SemanticColors.feedbackSuccess },
-                                ]} />
-                              )}
-                            </View>
-                          ))}
-                        </View>
-
-                        {currentStep && (
-                          <View style={styles.wfCurrentStep}>
-                            <Ionicons
-                              name={isCfoStep ? 'arrow-forward-circle' : 'time'}
-                              size={14}
-                              color={isCfoStep ? CFO_COLOR : SemanticColors.textTertiary}
-                            />
-                            <Text style={[
-                              styles.wfCurrentStepText,
-                              isCfoStep && { color: CFO_COLOR, fontWeight: '600' },
-                            ]}>
-                              {currentStep.name}
-                              {isCfoStep ? ' (jouw actie)' : ` (${currentStep.assignedRole})`}
-                            </Text>
-                          </View>
-                        )}
-
-                        {isCfoStep && (
-                          <View style={styles.wfCfoActions}>
-                            <Pressable
-                              style={[styles.wfCfoApproveBtn, { backgroundColor: SemanticColors.feedbackSuccess }]}
-                              onPress={() => {
-                                crossRoleWorkflowService.approvePayment(
-                                  wf.id, 'cfo-001', 'Sarah Chen', `pay-${wf.id}`
-                                );
-                              }}
-                            >
-                              <Ionicons name="checkmark" size={14} color="#fff" />
-                              <Text style={styles.wfCfoApproveBtnText}>Goedkeuren</Text>
-                            </Pressable>
-                            <Pressable style={styles.wfCfoReviewBtn}>
-                              <Text style={styles.wfCfoReviewBtnText}>Bekijken</Text>
-                            </Pressable>
-                          </View>
-                        )}
-                      </View>
-                    );
-                  })}
-              </View>
-            )}
-          </>
-        )}
-
-        {/* COSTS TAB */}
-        {activeTab === 'costs' && costHealth && selectedProject && (
-          <>
-            {/* KPI Scorecard Grid */}
-            <FinancialKPIGrid
-              accentColor={CFO_COLOR}
-              tiles={[
-                {
-                  label: 'CPI',
-                  value: costHealth.cpi.toFixed(2),
-                  status: costHealth.status === 'healthy' ? 'green' : costHealth.status === 'at-risk' ? 'amber' : 'red',
-                },
-                {
-                  label: 'Budget Variantie',
-                  value: fmt(costHealth.budgetVariance),
-                  variance: `${Math.abs(Math.round((costHealth.budgetVariance / selectedProject.totalBudget) * 100))}%`,
-                  varianceDirection: costHealth.budgetVariance >= 0 ? 'up' : 'down',
-                  status: costHealth.budgetVariance >= 0 ? 'green' : 'red',
-                },
-                {
-                  label: 'EAC',
-                  value: fmt(costHealth.eac),
-                  budgetLabel: `Budget: ${fmt(selectedProject.totalBudget)}`,
-                },
-                {
-                  label: 'Contingency Resterend',
-                  value: `${Math.round(costHealth.contingencyPercent * 100)}%`,
-                  budgetLabel: fmt(costHealth.contingencyRemaining),
-                  status: costHealth.contingencyPercent < 0.3 ? 'red' : costHealth.contingencyPercent < 0.5 ? 'amber' : 'green',
-                },
-              ]}
-            />
-            {costsInsight && (
-              <InlineInsight icon={costsInsight.icon as IconName} message={costsInsight.message} />
-            )}
-
-            {/* Project Selector */}
-            <View style={styles.section}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={styles.projectRow}>
-                  {mockProjects.map((project) => (
-                    <Pressable
-                      key={project.id}
-                      style={[
-                        styles.projectPill,
-                        selectedProjectId === project.id && styles.projectPillActive,
-                      ]}
-                      onPress={() => setSelectedProjectId(project.id)}
-                    >
-                      <Text style={styles.projectCountry}>{project.country}</Text>
-                      <Text style={[
-                        styles.projectName,
-                        selectedProjectId === project.id && styles.projectNameActive,
-                      ]} numberOfLines={1}>
-                        {project.name}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-              </ScrollView>
-            </View>
-
-            {/* P&L Statement */}
-            <View style={styles.card}>
-              <Text style={styles.sectionLabel}>P&L</Text>
-              <PLStatementView
-                accentColor={CFO_COLOR}
-                currency={currency}
-                rows={[
-                  { label: 'Omzet (GDV)', actual: selectedProject.totalBudget * 1.25, budget: selectedProject.totalBudget * 1.2 },
-                  { label: 'Grondkosten', actual: selectedProject.actualSpent * 0.3, budget: selectedProject.totalBudget * 0.28 },
-                  { label: 'Bouwkosten', actual: selectedProject.actualSpent * 0.45, budget: selectedProject.totalBudget * 0.42 },
-                  { label: 'Bruto Marge', actual: selectedProject.totalBudget * 1.25 - selectedProject.actualSpent * 0.75, budget: selectedProject.totalBudget * 1.2 - selectedProject.totalBudget * 0.7, isSubtotal: true },
-                  { label: 'Advieskosten', actual: selectedProject.actualSpent * 0.08, budget: selectedProject.totalBudget * 0.07 },
-                  { label: 'Wettelijke kosten', actual: selectedProject.actualSpent * 0.03, budget: selectedProject.totalBudget * 0.03 },
-                  { label: 'Financieringskosten', actual: selectedProject.actualSpent * 0.05, budget: selectedProject.totalBudget * 0.04 },
-                  { label: 'Netto Ontwikkelwinst', actual: selectedProject.totalBudget * 1.25 - selectedProject.actualSpent * 0.91, budget: selectedProject.totalBudget * 1.2 - selectedProject.totalBudget * 0.84, isTotal: true },
-                ]}
-              />
-            </View>
-
-            {/* Budget Waterfall */}
-            <View style={styles.card}>
-              <Text style={styles.sectionLabel}>BUDGET VS ACTUALS</Text>
-              {[
-                { label: 'Budget', value: selectedProject.totalBudget, color: CFO_COLOR, percent: 100 },
-                { label: 'Spent', value: selectedProject.actualSpent, color: Palette.hermesOrange, percent: (selectedProject.actualSpent / selectedProject.totalBudget) * 100 },
-                { label: 'EAC', value: costHealth.eac, color: costHealth.budgetVariance < 0 ? SemanticColors.feedbackError : SemanticColors.feedbackWarning, percent: (costHealth.eac / selectedProject.totalBudget) * 100 },
-              ].map((row) => (
-                <View key={row.label} style={styles.waterfallRow}>
-                  <View style={styles.waterfallLabel}>
-                    <Text style={styles.waterfallLabelText}>{row.label}</Text>
-                    <Text style={[styles.waterfallValueText, { color: row.color }]}>{fmt(row.value)}</Text>
-                  </View>
-                  <View style={styles.waterfallBarTrack}>
-                    <View style={[styles.waterfallBarFill, { width: `${Math.min(row.percent, 100)}%`, backgroundColor: row.color }]} />
-                  </View>
-                </View>
-              ))}
-              {/* Variance callout */}
-              <View style={[styles.varianceCallout, { backgroundColor: costHealth.budgetVariance >= 0 ? SemanticColors.feedbackSuccessBg : SemanticColors.feedbackErrorBg }]}>
-                <Ionicons
-                  name={costHealth.budgetVariance >= 0 ? 'trending-up' : 'trending-down'}
-                  size={16}
-                  color={costHealth.budgetVariance >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError}
-                />
-                <Text style={[styles.varianceText, { color: costHealth.budgetVariance >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
-                  {formatVariance(costHealth.budgetVariance, currency)} variance
-                </Text>
-                <Text style={styles.variancePercent}>
-                  ({Math.abs(Math.round((costHealth.budgetVariance / selectedProject.totalBudget) * 100))}%)
-                </Text>
-              </View>
-            </View>
-
-            {/* AI-Detected Cost Issues */}
-            {(totalOverpaid > 0 || totalSavings > 0) && (
-              <View style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <View style={[styles.cardHeaderIcon, { backgroundColor: SemanticColors.feedbackWarningBg }]}>
-                    <Ionicons name="alert-circle" size={18} color={SemanticColors.feedbackWarning} />
-                  </View>
-                  <Text style={styles.cardTitle}>AI Cost Analysis</Text>
-                </View>
-                <View style={styles.costAnalysisGrid}>
-                  {totalOverpaid > 0 && (
-                    <View style={styles.costAnalysisItem}>
-                      <Ionicons name="trending-down" size={20} color={SemanticColors.feedbackError} />
-                      <Text style={styles.costAnalysisLabel}>Overpayments Detected</Text>
-                      <Text style={[styles.costAnalysisValue, { color: SemanticColors.feedbackError }]}>
-                        {formatCompact(totalOverpaid)}
-                      </Text>
-                      <Text style={styles.costAnalysisCount}>
-                        {overpaymentAnalysis?.findings.length || 0} findings
-                      </Text>
-                    </View>
-                  )}
-                  {totalSavings > 0 && (
-                    <View style={styles.costAnalysisItem}>
-                      <Ionicons name="bulb" size={20} color={SemanticColors.feedbackSuccess} />
-                      <Text style={styles.costAnalysisLabel}>Savings Opportunities</Text>
-                      <Text style={[styles.costAnalysisValue, { color: SemanticColors.feedbackSuccess }]}>
-                        {formatCompact(totalSavings)}
-                      </Text>
-                      <Text style={styles.costAnalysisCount}>
-                        {savingsAnalysis?.findings.length || 0} opportunities
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            )}
-
-            {/* Contingency */}
-            <View style={styles.card}>
-              <View style={styles.contingencyHeader}>
-                <Text style={styles.cardTitle}>Contingency</Text>
-                <Text style={[
-                  styles.contingencyPercent,
-                  costHealth.contingencyPercent < 0.3 && { color: SemanticColors.feedbackError }
-                ]}>
-                  {formatPercent(costHealth.contingencyPercent)} remaining
-                </Text>
-              </View>
-
-              <View style={styles.contingencyBar}>
-                <View style={[
-                  styles.contingencyUsed,
-                  { width: `${(1 - costHealth.contingencyPercent) * 100}%` },
-                  costHealth.contingencyPercent < 0.3 && styles.contingencyUsedDanger,
-                ]} />
-              </View>
-
-              <View style={styles.contingencyDetails}>
-                <View style={styles.contingencyDetail}>
-                  <Text style={styles.contingencyDetailLabel}>Total</Text>
-                  <Text style={styles.contingencyDetailValue}>{fmt(selectedProject.contingency)}</Text>
-                </View>
-                <View style={styles.contingencyDetail}>
-                  <Text style={styles.contingencyDetailLabel}>Used</Text>
-                  <Text style={[styles.contingencyDetailValue, { color: SemanticColors.feedbackWarning }]}>
-                    {fmt(selectedProject.contingencyUsed)}
-                  </Text>
-                </View>
-                <View style={styles.contingencyDetail}>
-                  <Text style={styles.contingencyDetailLabel}>Remaining</Text>
-                  <Text style={[styles.contingencyDetailValue, { color: CFO_COLOR }]}>
-                    {fmt(costHealth.contingencyRemaining)}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Kosten Tools */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Kosten Tools</Text>
-              <View style={styles.actionsList}>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/benchmark' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: CFO_COLOR + '15' }]}>
-                    <Ionicons name="bar-chart" size={18} color={CFO_COLOR} />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle} numberOfLines={1}>Benchmarking</Text>
-                    <Text style={styles.actionSubtitle} numberOfLines={2}>Kostenvergelijking tussen projecten</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/purchasing' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackSuccess + '15' }]}>
-                    <Ionicons name="cart" size={18} color={SemanticColors.feedbackSuccess} />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle} numberOfLines={1}>Leveranciers</Text>
-                    <Text style={styles.actionSubtitle} numberOfLines={2}>Leverancierskostenbeheer</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
-              </View>
-            </View>
-
-            {/* Onderhandelingskansen (moved from contractor besparen) */}
-            {negotiation.quickWins.length > 0 && (
-              <View style={styles.card}>
-                <Text style={styles.cardTitle}>Onderhandelingskansen</Text>
-                <View style={styles.actionsList}>
-                  {negotiation.quickWins.map((win, index) => (
-                    <Pressable
-                      key={win.supplier}
-                      style={[styles.actionItem, index < negotiation.quickWins.length - 1 && { borderBottomWidth: 1, borderBottomColor: SemanticColors.borderMuted }]}
-                      onPress={() => Alert.alert(
-                        `${win.supplier} \u2014 Actie`,
-                        `${win.action}\n\nGeschatte besparing: \u20AC${win.saving}/jaar`,
-                        [{ text: 'Later' }, { text: 'Contact opnemen', onPress: () => Alert.alert('Herinnering ingesteld', `We herinneren je om contact op te nemen met ${win.supplier}.`) }]
-                      )}
-                    >
-                      <View style={[styles.actionIcon, { backgroundColor: '#8B5CF6' + '15' }]}>
-                        <Ionicons name="business" size={18} color="#8B5CF6" />
-                      </View>
-                      <View style={styles.actionContent}>
-                        <Text style={styles.actionTitle} numberOfLines={1}>{win.supplier}</Text>
-                        <Text style={styles.actionSubtitle} numberOfLines={1}>{win.action}</Text>
-                      </View>
-                      <Text style={{ fontSize: 14, fontWeight: '700', color: SemanticColors.feedbackSuccess }}>{'\u20AC'}{win.saving}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* TCO Vergelijking (moved from contractor besparen) */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>TCO Vergelijking</Text>
-              <View style={styles.actionsList}>
-                {tco.comparisons.map((comp, index) => (
-                  <Pressable
-                    key={comp.category}
-                    style={[styles.actionItem, index < tco.comparisons.length - 1 && { borderBottomWidth: 1, borderBottomColor: SemanticColors.borderMuted }]}
-                    onPress={() => Alert.alert(
-                      `TCO: ${comp.category}`,
-                      `${comp.customerPitch}\n\nAanbeveling: ${comp.recommendation.name} (${comp.recommendation.brand})\nTCO/jaar: \u20AC${comp.recommendation.tcoPerYear} vs \u20AC${comp.materials[0].tcoPerYear} (budget)\n\nBesparing: \u20AC${comp.savingsVsBudget}/jaar`,
-                    )}
-                  >
-                    <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
-                      <Ionicons name="calculator" size={18} color={SemanticColors.feedbackInfo} />
-                    </View>
-                    <View style={styles.actionContent}>
-                      <Text style={styles.actionTitle} numberOfLines={1}>{comp.category}</Text>
-                      <Text style={styles.actionSubtitle} numberOfLines={1}>{comp.recommendation.brand} {comp.recommendation.name} — beste TCO</Text>
-                    </View>
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={{ fontSize: 14, fontWeight: '700', color: SemanticColors.feedbackSuccess }}>-{'\u20AC'}{comp.savingsVsBudget}/jr</Text>
-                      <Text style={{ fontSize: 10, color: SemanticColors.textTertiary }}>vs budget</Text>
-                    </View>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
           </>
         )}
 
@@ -1546,8 +864,8 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
                   <Ionicons name="server" size={18} color={CFO_COLOR} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.cardTitle}>Facility Utilization</Text>
-                  <Text style={styles.cardSubtitle}>£18.5M total facility</Text>
+                  <Text style={styles.cardTitle}>Faciliteitsbenutting</Text>
+                  <Text style={styles.cardSubtitle}>£18.5M totale faciliteit</Text>
                 </View>
                 <Text style={[styles.facilityUtilPercent, { color: CFO_COLOR }]}>82%</Text>
               </View>
@@ -1565,17 +883,17 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
               <View style={styles.facilityLegend}>
                 <View style={styles.facilityLegendItem}>
                   <View style={[styles.facilityLegendDot, { backgroundColor: CFO_COLOR }]} />
-                  <Text style={styles.facilityLegendLabel}>Drawn</Text>
+                  <Text style={styles.facilityLegendLabel}>Opgenomen</Text>
                   <Text style={[styles.facilityLegendValue, { color: CFO_COLOR }]}>£12.4M</Text>
                 </View>
                 <View style={styles.facilityLegendItem}>
                   <View style={[styles.facilityLegendDot, { backgroundColor: Palette.hermesOrange }]} />
-                  <Text style={styles.facilityLegendLabel}>Committed</Text>
+                  <Text style={styles.facilityLegendLabel}>Gecommitteerd</Text>
                   <Text style={[styles.facilityLegendValue, { color: Palette.hermesOrange }]}>£2.8M</Text>
                 </View>
                 <View style={styles.facilityLegendItem}>
                   <View style={[styles.facilityLegendDot, { backgroundColor: SemanticColors.feedbackSuccess }]} />
-                  <Text style={styles.facilityLegendLabel}>Available</Text>
+                  <Text style={styles.facilityLegendLabel}>Beschikbaar</Text>
                   <Text style={[styles.facilityLegendValue, { color: SemanticColors.feedbackSuccess }]}>£4.2M</Text>
                 </View>
               </View>
@@ -1584,14 +902,14 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
             {/* Net Cash Position */}
             <View style={styles.netCashCard}>
               <View style={styles.netCashLeft}>
-                <Text style={styles.netCashLabel}>Net Cash Position</Text>
-                <Text style={styles.netCashSublabel}>30-day forecast</Text>
+                <Text style={styles.netCashLabel}>Netto Cashpositie</Text>
+                <Text style={styles.netCashSublabel}>30-daagse prognose</Text>
               </View>
               <View style={styles.netCashRight}>
                 <Text style={styles.netCashValue}>£1.4M</Text>
                 <View style={styles.netCashTrend}>
                   <Ionicons name="trending-down" size={12} color={SemanticColors.feedbackWarning} />
-                  <Text style={[styles.netCashTrendText, { color: SemanticColors.feedbackWarning }]}>-£320K vs last month</Text>
+                  <Text style={[styles.netCashTrendText, { color: SemanticColors.feedbackWarning }]}>-£320K vs vorige maand</Text>
                 </View>
               </View>
             </View>
@@ -1603,8 +921,8 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
                   <Ionicons name="document-attach" size={18} color={SemanticColors.feedbackWarning} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.cardTitle}>Handovers Blocking Payment</Text>
-                  <Text style={styles.cardSubtitle}>Complete handover to release funds</Text>
+                  <Text style={styles.cardTitle}>Overdrachten die Betaling Blokkeren</Text>
+                  <Text style={styles.cardSubtitle}>Rond overdracht af om betaling vrij te geven</Text>
                 </View>
                 <View style={[styles.badgePill, { backgroundColor: SemanticColors.feedbackWarning }]}>
                   <Text style={styles.badgePillText}>{MOCK_PENDING_HANDOVERS.length}</Text>
@@ -1629,8 +947,8 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
                           handover.handoverStatus === 'pending' && styles.handoverStatusPending,
                         ]}>
                           <Text style={styles.handoverStatusText}>
-                            {handover.handoverStatus === 'awaiting-signoff' ? 'Awaiting Sign-off' :
-                             handover.handoverStatus === 'in-review' ? 'In Review' : 'Pending'}
+                            {handover.handoverStatus === 'awaiting-signoff' ? 'Wacht op Aftekening' :
+                             handover.handoverStatus === 'in-review' ? 'In Beoordeling' : 'In Afwachting'}
                           </Text>
                         </View>
                       </View>
@@ -1666,10 +984,10 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
                         styles.handoverDue,
                         handover.dueDate === 'Today' && { color: SemanticColors.feedbackError },
                       ]}>
-                        Payment due: {handover.dueDate}
+                        Betaling vervalt: {handover.dueDate}
                       </Text>
                       <Pressable style={styles.handoverAction}>
-                        <Text style={styles.handoverActionText} numberOfLines={1}>View Pack</Text>
+                        <Text style={styles.handoverActionText} numberOfLines={1}>Bekijk Pakket</Text>
                         <Ionicons name="chevron-forward" size={14} color={CFO_COLOR} />
                       </Pressable>
                     </View>
@@ -1681,10 +999,25 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
               <View style={styles.handoverSummary}>
                 <Ionicons name="lock-closed" size={16} color={SemanticColors.feedbackWarning} />
                 <Text style={styles.handoverSummaryText}>
-                  {formatCompact(MOCK_PENDING_HANDOVERS.reduce((sum, h) => sum + h.paymentAmount, 0), 'GBP')} blocked pending handover completion
+                  {formatCompact(MOCK_PENDING_HANDOVERS.reduce((sum, h) => sum + h.paymentAmount, 0), 'GBP')} geblokkeerd in afwachting van overdracht
                 </Text>
               </View>
             </View>
+
+            {/* Herbestellen — standalone action below handovers */}
+            <Pressable
+              style={[styles.card, { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }]}
+              onPress={() => router.push('/contractor/reorder' as any)}
+            >
+              <View style={[styles.cardHeaderIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
+                <Ionicons name="repeat" size={18} color={SemanticColors.feedbackWarning} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.cardTitle}>Herbestellen</Text>
+                <Text style={styles.cardSubtitle}>Inkooptiming & cashflow-impact</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+            </Pressable>
 
             {/* Pending Draw Requests */}
             <View style={styles.card}>
@@ -1692,7 +1025,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
                 <View style={styles.cardHeaderIcon}>
                   <Ionicons name="document-text" size={18} color={CFO_COLOR} />
                 </View>
-                <Text style={styles.cardTitle}>Pending Draw Requests</Text>
+                <Text style={styles.cardTitle}>Lopende Opnameverzoeken</Text>
                 <View style={styles.badgePill}>
                   <Text style={styles.badgePillText}>3</Text>
                 </View>
@@ -1715,7 +1048,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
                         request.status === 'in-review' && styles.drawRequestStatusReview,
                       ]}>
                         <Text style={styles.drawRequestStatusText}>
-                          {request.status === 'awaiting' ? 'Awaiting' : 'In Review'}
+                          {request.status === 'awaiting' ? 'In Afwachting' : 'In Beoordeling'}
                         </Text>
                       </View>
                     </View>
@@ -1726,25 +1059,15 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
 
             {/* Cashflow Tools */}
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Cashflow Tools</Text>
+              <Text style={styles.cardTitle}>Cashflow Analyse</Text>
               <View style={styles.actionsList}>
                 <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/cashflow' as any)}>
                   <View style={[styles.actionIcon, { backgroundColor: CFO_COLOR + '15' }]}>
                     <Ionicons name="swap-horizontal" size={18} color={CFO_COLOR} />
                   </View>
                   <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle} numberOfLines={1}>Cash Flow</Text>
+                    <Text style={styles.actionTitle} numberOfLines={1}>Cashflow</Text>
                     <Text style={styles.actionSubtitle} numberOfLines={2}>Gedetailleerde cashflowanalyse</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/reorder' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
-                    <Ionicons name="repeat" size={18} color={SemanticColors.feedbackWarning} />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle} numberOfLines={1}>Herbestellen</Text>
-                    <Text style={styles.actionSubtitle} numberOfLines={2}>Inkooptiming & cashflow-impact</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
@@ -1774,7 +1097,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
 
             {/* IRR Comparison Bars */}
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>IRR by Project</Text>
+              <Text style={styles.cardTitle}>IRR per Project</Text>
               {mockProjects.map((project) => {
                 const appr = mockAppraisals[project.id];
                 if (!appr) return null;
@@ -1807,7 +1130,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
               })}
               <View style={styles.irrTargetLegend}>
                 <View style={styles.irrTargetLegendLine} />
-                <Text style={styles.irrTargetLegendText}>20% target</Text>
+                <Text style={styles.irrTargetLegendText}>20% doelstelling</Text>
               </View>
             </View>
 
@@ -1817,7 +1140,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
                 <View style={styles.cardHeaderIcon}>
                   <Ionicons name="people" size={18} color={CFO_COLOR} />
                 </View>
-                <Text style={styles.cardTitle}>Investor Capital Flow</Text>
+                <Text style={styles.cardTitle}>Investeerders Kapitaalstromen</Text>
               </View>
               {[
                 { name: 'Equity Partner A', committed: 5000000, distributed: 2100000, irr: 0.28 },
@@ -1835,8 +1158,8 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
                       <View style={[styles.investorFlowBarFill, { width: `${distPercent}%` }]} />
                     </View>
                     <View style={styles.investorFlowFooter}>
-                      <Text style={styles.investorFlowDistributed}>{formatCompact(investor.distributed, 'GBP')} distributed</Text>
-                      <Text style={styles.investorFlowCommitted}>of {formatCompact(investor.committed, 'GBP')}</Text>
+                      <Text style={styles.investorFlowDistributed}>{formatCompact(investor.distributed, 'GBP')} uitgekeerd</Text>
+                      <Text style={styles.investorFlowCommitted}>van {formatCompact(investor.committed, 'GBP')}</Text>
                     </View>
                   </View>
                 );
@@ -1923,37 +1246,12 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
               </View>
             </View>
 
-            {/* Rendement Tools */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Rendement Tools</Text>
-              <View style={styles.actionsList}>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/smart-pricing' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: CFO_COLOR + '15' }]}>
-                    <Ionicons name="pricetag" size={18} color={CFO_COLOR} />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle} numberOfLines={1}>Smart Pricing</Text>
-                    <Text style={styles.actionSubtitle} numberOfLines={2}>Prijsimpact op marges & rendement</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/warranty' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
-                    <Ionicons name="shield" size={18} color={SemanticColors.feedbackWarning} />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle} numberOfLines={1}>Garantie</Text>
-                    <Text style={styles.actionSubtitle} numberOfLines={2}>Garantiekostenblootstelling</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
-              </View>
-            </View>
           </>
         )}
 
         <View style={{ height: 100 }} />
       </ScrollView>
+      )}
 
       {/* Financial Auditor Full-Screen Modal */}
       <Modal
@@ -1965,8 +1263,8 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
         <View style={{ flex: 1, backgroundColor: SemanticColors.surfaceBackground }}>
           <View style={styles.auditorModalHeader}>
             <View>
-              <Text style={styles.auditorModalTitle}>Financiele Auditor</Text>
-              <Text style={styles.auditorModalSubtitle}>AI-gestuurde financiele controle</Text>
+              <Text style={styles.auditorModalTitle}>Financiële Auditor</Text>
+              <Text style={styles.auditorModalSubtitle}>AI-gestuurde financiële controle</Text>
             </View>
             <Pressable onPress={() => setShowFullAuditor(false)} style={styles.auditorModalClose}>
               <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
@@ -2078,10 +1376,10 @@ const styles = StyleSheet.create({
   // Tab Bar
   tabBar: {
     flexDirection: 'row',
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     backgroundColor: SemanticColors.surfacePrimary,
-    gap: Spacing.sm,
+    gap: 5,
   },
   tabButton: {
     flex: 1,
@@ -2090,6 +1388,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 4,
     paddingVertical: 10,
+    paddingHorizontal: 4,
     borderRadius: 10,
     backgroundColor: SemanticColors.surfaceSecondary,
   },
@@ -2097,7 +1396,7 @@ const styles = StyleSheet.create({
     backgroundColor: CFO_COLOR,
   },
   tabButtonText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: SemanticColors.textSecondary,
   },
@@ -2132,145 +1431,12 @@ const styles = StyleSheet.create({
   },
 
   // Section
-  section: {
-    gap: Spacing.sm,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  sectionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  sectionTitle: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: SemanticColors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  sectionSubtitle: {
-    fontSize: 12,
-    color: SemanticColors.textTertiary,
-  },
   sectionLabel: {
     fontSize: 10,
     fontWeight: '700',
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-  },
-
-  // Vasco Guidance
-  guidanceList: {
-    gap: Spacing.sm,
-  },
-  guidanceCard: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
-    padding: Spacing.md,
-    borderLeftWidth: 4,
-    gap: 8,
-  },
-  guidanceHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  guidanceIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  guidanceHeaderText: {
-    flex: 1,
-  },
-  guidanceTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
-  },
-  guidanceTimestamp: {
-    fontSize: 11,
-    color: SemanticColors.textTertiary,
-  },
-  guidanceMessage: {
-    fontSize: 13,
-    color: SemanticColors.textSecondary,
-    lineHeight: 18,
-  },
-  guidanceImpact: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  guidanceImpactText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  guidanceAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 4,
-    paddingTop: 4,
-  },
-  guidanceActionText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: CFO_COLOR,
-  },
-
-  // Quick Actions
-  quickActionsRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  quickAction: {
-    flex: 1,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-  },
-  quickActionIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: CFO_COLOR + '15',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickActionBadge: {
-    position: 'absolute',
-    top: -3,
-    right: -3,
-    backgroundColor: SemanticColors.feedbackError,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickActionBadgeText: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  quickActionLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
-    textAlign: 'center',
   },
 
   // Cards
@@ -2318,89 +1484,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: '#fff',
-  },
-
-  // Audit Stats
-  auditStatsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  auditStatItem: {
-    flex: 1,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
-    padding: 10,
-    alignItems: 'center',
-  },
-  auditStatValue: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  auditStatLabel: {
-    fontSize: 10,
-    color: SemanticColors.textTertiary,
-    marginTop: 2,
-  },
-
-  // Findings
-  findingsList: {
-    gap: 10,
-  },
-  findingCard: {
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
-    padding: Spacing.sm,
-    borderLeftWidth: 3,
-    gap: 6,
-  },
-  findingHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  findingSeverityBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  findingSeverityText: {
-    fontSize: 9,
-    fontWeight: '700',
-  },
-  findingCategory: {
-    fontSize: 11,
-    color: SemanticColors.textTertiary,
-  },
-  findingTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
-  },
-  findingDescription: {
-    fontSize: 12,
-    color: SemanticColors.textSecondary,
-    lineHeight: 16,
-  },
-  findingImpact: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  findingImpactText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  findingAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 4,
-  },
-  findingActionText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: CFO_COLOR,
-    textTransform: 'capitalize',
   },
 
   // Approvals
@@ -2516,17 +1599,26 @@ const styles = StyleSheet.create({
   approvalActions: {
     flexDirection: 'row',
     gap: 8,
-    paddingTop: 4,
+    paddingTop: 8,
   },
   approvalActionButton: {
     flex: 1,
+    flexDirection: 'row',
     backgroundColor: SemanticColors.surfaceTertiary,
-    borderRadius: 8,
+    borderRadius: 10,
     paddingVertical: 10,
+    paddingHorizontal: 12,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
   },
   approvalActionButtonPrimary: {
     backgroundColor: CFO_COLOR,
+  },
+  approvalActionButtonBlocked: {
+    backgroundColor: SemanticColors.feedbackError + '15',
+    borderWidth: 1,
+    borderColor: SemanticColors.feedbackError + '30',
   },
   approvalActionButtonText: {
     fontSize: 13,
@@ -2536,10 +1628,19 @@ const styles = StyleSheet.create({
   approvalActionButtonTextPrimary: {
     color: '#fff',
   },
+  approvalActionButtonTextBlocked: {
+    color: SemanticColors.feedbackError,
+  },
   approvalActionButtonSecondary: {
+    flexDirection: 'row',
     paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: CFO_COLOR + '30',
   },
   approvalActionButtonTextSecondary: {
     fontSize: 13,
@@ -2651,215 +1752,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#fff',
-  },
-
-  // Project Selector
-  projectRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  projectPill: {
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-    minWidth: 100,
-  },
-  projectPillActive: {
-    borderColor: CFO_COLOR,
-    backgroundColor: CFO_COLOR + '10',
-  },
-  projectCountry: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: CFO_COLOR,
-  },
-  projectName: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: SemanticColors.textSecondary,
-    marginTop: 2,
-  },
-  projectNameActive: {
-    color: SemanticColors.textPrimary,
-  },
-
-  // CPI Banner
-  cpiBanner: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: Spacing.md,
-    borderRadius: 14,
-  },
-  cpiBannerHealthy: {
-    backgroundColor: SemanticColors.feedbackSuccessBg,
-  },
-  cpiBannerWarning: {
-    backgroundColor: SemanticColors.feedbackWarningBg,
-  },
-  cpiBannerCritical: {
-    backgroundColor: SemanticColors.feedbackErrorBg,
-  },
-  cpiLeft: {},
-  cpiLabel: {
-    fontSize: 12,
-    color: SemanticColors.textSecondary,
-  },
-  cpiStatus: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-    marginTop: 2,
-  },
-  cpiCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: SemanticColors.surfacePrimary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cpiValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-
-  // Cost Metrics
-  costMetrics: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  metricCard: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
-    padding: Spacing.sm,
-    alignItems: 'center',
-  },
-  metricValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  metricValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-  metricLabel: {
-    fontSize: 10,
-    color: SemanticColors.textTertiary,
-    marginTop: 2,
-  },
-  metricSubtitle: {
-    fontSize: 10,
-    color: SemanticColors.textSecondary,
-    marginTop: 2,
-  },
-
-  // Cost Analysis Grid
-  costAnalysisGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  costAnalysisItem: {
-    flex: 1,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
-    padding: Spacing.sm,
-    alignItems: 'center',
-    gap: 6,
-  },
-  costAnalysisLabel: {
-    fontSize: 11,
-    color: SemanticColors.textSecondary,
-    textAlign: 'center',
-  },
-  costAnalysisValue: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  costAnalysisCount: {
-    fontSize: 10,
-    color: SemanticColors.textTertiary,
-  },
-
-  // Contingency
-  contingencyHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  contingencyPercent: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: CFO_COLOR,
-  },
-  contingencyBar: {
-    height: 8,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  contingencyUsed: {
-    height: '100%',
-    backgroundColor: SemanticColors.feedbackWarning,
-    borderRadius: 4,
-  },
-  contingencyUsedDanger: {
-    backgroundColor: SemanticColors.feedbackError,
-  },
-  contingencyDetails: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  contingencyDetail: {
-    flex: 1,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
-    padding: 10,
-    alignItems: 'center',
-  },
-  contingencyDetailLabel: {
-    fontSize: 10,
-    color: SemanticColors.textTertiary,
-  },
-  contingencyDetailValue: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-    marginTop: 2,
-  },
-
-  // Cash Position
-  cashPositionGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  cashPositionItem: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
-    padding: Spacing.sm,
-    alignItems: 'center',
-  },
-  cashPositionLabel: {
-    fontSize: 11,
-    color: SemanticColors.textTertiary,
-  },
-  cashPositionValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-    marginTop: 4,
   },
 
   // Handover Styles
@@ -3056,285 +1948,6 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
 
-  // Tax Calculator
-  taxCountryRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  taxCountryPill: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-  },
-  taxCountryPillActive: {
-    backgroundColor: CFO_COLOR + '15',
-    borderColor: CFO_COLOR,
-  },
-  taxCountryText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: SemanticColors.textSecondary,
-  },
-  taxCountryTextActive: {
-    color: CFO_COLOR,
-  },
-  taxInputContainer: {
-    gap: 6,
-  },
-  taxInputLabel: {
-    fontSize: 12,
-    color: SemanticColors.textSecondary,
-  },
-  taxInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-  },
-  taxCurrency: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: SemanticColors.textSecondary,
-    paddingLeft: 12,
-    paddingRight: 4,
-  },
-  taxInput: {
-    flex: 1,
-    padding: 12,
-    color: SemanticColors.textPrimary,
-    fontSize: 14,
-  },
-  taxResult: {
-    backgroundColor: CFO_COLOR + '10',
-    borderRadius: 10,
-    padding: Spacing.md,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: CFO_COLOR + '30',
-  },
-  taxResultRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  taxResultLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
-  },
-  taxResultValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: CFO_COLOR,
-  },
-  taxEffectiveLabel: {
-    fontSize: 12,
-    color: SemanticColors.textSecondary,
-  },
-  taxEffectiveValue: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: SemanticColors.textSecondary,
-  },
-
-  // Portfolio Returns
-  portfolioReturnsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  portfolioReturnItem: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
-    padding: Spacing.sm,
-    alignItems: 'center',
-  },
-  portfolioReturnLabel: {
-    fontSize: 11,
-    color: SemanticColors.textTertiary,
-  },
-  portfolioReturnValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-    marginTop: 4,
-  },
-
-  // Project Returns List
-  projectReturnsList: {
-    gap: 10,
-  },
-  projectReturnItem: {
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
-    padding: Spacing.sm,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  projectReturnItemActive: {
-    borderColor: CFO_COLOR,
-    backgroundColor: CFO_COLOR + '08',
-  },
-  projectReturnHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  projectReturnName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
-  },
-  projectReturnCountry: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: CFO_COLOR,
-  },
-  projectReturnMetrics: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  projectReturnMetric: {
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 6,
-    paddingVertical: 6,
-  },
-  projectReturnMetricLabel: {
-    fontSize: 10,
-    color: SemanticColors.textTertiary,
-  },
-  projectReturnMetricValue: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-    marginTop: 2,
-  },
-
-  // Investor Returns
-  investorReturnsList: {
-    gap: 10,
-  },
-  investorReturnItem: {
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
-    padding: Spacing.sm,
-  },
-  investorReturnTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  investorReturnName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
-  },
-  investorReturnIRR: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  investorReturnBottom: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  investorReturnStat: {
-    flex: 1,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 6,
-    padding: 8,
-    alignItems: 'center',
-  },
-  investorReturnStatLabel: {
-    fontSize: 10,
-    color: SemanticColors.textTertiary,
-  },
-  investorReturnStatValue: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
-    marginTop: 2,
-  },
-
-  // Sensitivity Analysis
-  sensitivityGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  sensitivityItem: {
-    width: '31%',
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
-    padding: 10,
-    alignItems: 'center',
-  },
-  sensitivityScenario: {
-    fontSize: 10,
-    color: SemanticColors.textTertiary,
-    textAlign: 'center',
-  },
-  sensitivityIRR: {
-    fontSize: 14,
-    fontWeight: '700',
-    marginTop: 4,
-  },
-
-  // Budget Waterfall
-  waterfallRow: {
-    gap: 6,
-  },
-  waterfallLabel: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  waterfallLabelText: {
-    fontSize: 12,
-    color: SemanticColors.textSecondary,
-  },
-  waterfallValueText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  waterfallBarTrack: {
-    height: 6,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  waterfallBarFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  varianceCallout: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    padding: Spacing.sm,
-    borderRadius: 10,
-    marginTop: 4,
-  },
-  varianceText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  variancePercent: {
-    fontSize: 12,
-    color: SemanticColors.textTertiary,
-  },
-
   // Facility Utilization
   facilityUtilPercent: {
     fontSize: 20,
@@ -3414,62 +2027,6 @@ const styles = StyleSheet.create({
   netCashTrendText: {
     fontSize: 11,
     fontWeight: '600',
-  },
-
-  // Hero Scorecard
-  heroScorecard: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: CFO_COLOR + '30',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  heroRing: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 6,
-    borderColor: CFO_COLOR,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: CFO_COLOR + '08',
-  },
-  heroRingValue: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: CFO_COLOR,
-  },
-  heroRingLabel: {
-    fontSize: 11,
-    color: SemanticColors.textSecondary,
-    marginTop: 2,
-  },
-  heroSubMetrics: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 0,
-    width: '100%',
-  },
-  heroSubMetric: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 4,
-  },
-  heroSubValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-  heroSubLabel: {
-    fontSize: 10,
-    color: SemanticColors.textTertiary,
-  },
-  heroSubDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: SemanticColors.borderDefault,
   },
 
   // IRR Comparison Bars
@@ -3586,129 +2143,6 @@ const styles = StyleSheet.create({
     color: SemanticColors.textTertiary,
   },
 
-  // Cross-Role Workflow Styles
-  wfStatsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  wfStatItem: {
-    flex: 1,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
-    padding: 10,
-    alignItems: 'center',
-  },
-  wfStatValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-  wfStatLabel: {
-    fontSize: 10,
-    color: SemanticColors.textTertiary,
-    marginTop: 2,
-  },
-  wfPaymentItem: {
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
-    padding: 12,
-    gap: 8,
-  },
-  wfPaymentHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  wfPaymentTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: SemanticColors.textPrimary,
-  },
-  wfPaymentMeta: {
-    fontSize: 12,
-    color: SemanticColors.textSecondary,
-    marginTop: 2,
-  },
-  wfPaymentAmount: {
-    backgroundColor: CFO_COLOR + '10',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  wfPaymentAmountText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: CFO_COLOR,
-  },
-  wfStepsTrack: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  wfStepIndicator: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  wfStepCircle: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  wfStepLine: {
-    flex: 1,
-    height: 2,
-    backgroundColor: SemanticColors.borderDefault,
-    marginHorizontal: 2,
-  },
-  wfCurrentStep: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  wfCurrentStepText: {
-    fontSize: 12,
-    color: SemanticColors.textSecondary,
-  },
-  wfCfoActions: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
-  },
-  wfCfoApproveBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  wfCfoApproveBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  wfCfoReviewBtn: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-  },
-  wfCfoReviewBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: SemanticColors.textSecondary,
-  },
-
   // Financial Auditor Modal
   auditorModalHeader: {
     flexDirection: 'row',
@@ -3801,49 +2235,5 @@ const styles = StyleSheet.create({
     width: 1,
     backgroundColor: SemanticColors.borderDefault,
     marginHorizontal: 4,
-  },
-  aiSavingsBreakdown: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: Spacing.sm,
-  },
-  aiSavingsChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  aiSavingsChipText: {
-    fontSize: 11,
-    color: SemanticColors.textSecondary,
-  },
-  aiSavingsChipAmount: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-  hoursSavedDetails: {
-    marginTop: Spacing.sm,
-    gap: 6,
-  },
-  hoursSavedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingVertical: 4,
-  },
-  hoursSavedLabel: {
-    flex: 1,
-    fontSize: 13,
-    color: SemanticColors.textSecondary,
-  },
-  hoursSavedValue: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
   },
 });

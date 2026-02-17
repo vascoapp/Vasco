@@ -51,6 +51,22 @@ const GENERATOR_DISPLAY_NAMES: Record<string, string> = {
   'cascading-delay': 'Cascadevertraging',
   'estimation-variance-type': 'Schattingsafwijking',
   'static-tip': 'Vasco Tip',
+  // CFO project generators
+  'project-budget-variance': 'Budgetvariantie',
+  'contingency-burn': 'Contingency Tracker',
+  'approval-bottleneck': 'Approval Tracker',
+  'project-risk-score': 'Risico Analyse',
+  'portfolio-irr': 'IRR Analyse',
+  // COO generators
+  'schedule-fragility': 'Planningsfragiliteit',
+  'supplier-risk': 'Procurement Risico',
+  'permit-delay': 'Vergunning Tracker',
+  'change-order-velocity': 'Change Order Tracker',
+  // Director generators
+  'handover-bottleneck': 'Handover Tracker',
+  'portfolio-health': 'Portfolio Gezondheid',
+  'value-delivery': 'Platform ROI',
+  'cross-project-risk': 'Cross-Project Risico',
 };
 
 // =============================================================================
@@ -208,7 +224,7 @@ const ROLE_WEIGHTS: Record<UserRole, ScoringWeights> = {
 // SCREEN RELEVANCE WEIGHTS
 // =============================================================================
 
-const SCREEN_RELEVANCE: Record<string, Record<ScreenContext, number>> = {
+const SCREEN_RELEVANCE: Record<string, Partial<Record<ScreenContext, number>>> = {
   'overdue-invoice': { today: 0.9, invoices: 1.0, savings: 0.3, decisions: 0.2, meer: 0.1, schedule: 0.1, dispatch: 0.1, costs: 0.5, cashflow: 0.8, returns: 0.2, approvals: 0.1, risks: 0.3, performance: 0.2, permits: 0.1, procurement: 0.1, financials: 0.5, efficiency: 0.2, market: 0.1, emerging: 0.1, portfolio: 0.2, overview: 0.3, safety: 0.1, quality: 0.1, issues: 0.1 },
   'savings-opportunity': { today: 0.7, invoices: 0.3, savings: 1.0, decisions: 0.4, meer: 0.3, schedule: 0.1, dispatch: 0.1, costs: 0.5, cashflow: 0.3, returns: 0.2, approvals: 0.1, risks: 0.1, performance: 0.3, permits: 0.1, procurement: 0.5, financials: 0.3, efficiency: 0.3, market: 0.2, emerging: 0.1, portfolio: 0.1, overview: 0.3, safety: 0.1, quality: 0.1, issues: 0.1 },
   'margin-drift': { today: 0.8, invoices: 0.5, savings: 0.9, decisions: 0.7, meer: 0.2, schedule: 0.1, dispatch: 0.1, costs: 0.9, cashflow: 0.5, returns: 0.3, approvals: 0.1, risks: 0.4, performance: 0.5, permits: 0.1, procurement: 0.2, financials: 0.7, efficiency: 0.4, market: 0.1, emerging: 0.1, portfolio: 0.2, overview: 0.5, safety: 0.1, quality: 0.1, issues: 0.1 },
@@ -230,7 +246,29 @@ const SCREEN_RELEVANCE: Record<string, Record<ScreenContext, number>> = {
   'customer-lifecycle': { today: 0.7, invoices: 0.8, savings: 0.2, decisions: 0.7, meer: 0.3, schedule: 0.1, dispatch: 0.1, costs: 0.3, cashflow: 0.5, returns: 0.3, approvals: 0.1, risks: 0.3, performance: 0.5, permits: 0.1, procurement: 0.1, financials: 0.4, efficiency: 0.1, market: 0.2, emerging: 0.1, portfolio: 0.3, overview: 0.4, safety: 0.1, quality: 0.1, issues: 0.1 },
   'cascading-delay': { today: 0.9, invoices: 0.1, savings: 0.1, decisions: 0.7, meer: 0.1, schedule: 1.0, dispatch: 0.7, costs: 0.3, cashflow: 0.2, returns: 0.1, approvals: 0.1, risks: 0.5, performance: 0.3, permits: 0.1, procurement: 0.1, financials: 0.2, efficiency: 0.6, market: 0.1, emerging: 0.1, portfolio: 0.1, overview: 0.3, safety: 0.1, quality: 0.2, issues: 0.2 },
   'estimation-variance-type': { today: 0.6, invoices: 0.2, savings: 0.9, decisions: 0.7, meer: 0.3, schedule: 0.1, dispatch: 0.1, costs: 0.7, cashflow: 0.1, returns: 0.1, approvals: 0.1, risks: 0.2, performance: 0.5, permits: 0.1, procurement: 0.1, financials: 0.3, efficiency: 0.4, market: 0.1, emerging: 0.1, portfolio: 0.1, overview: 0.3, safety: 0.1, quality: 0.1, issues: 0.1 },
-  'static-tip': { today: 0.3, invoices: 0.3, savings: 0.3, decisions: 0.3, meer: 0.3, schedule: 0.3, dispatch: 0.3, costs: 0.3, cashflow: 0.3, returns: 0.3, approvals: 0.3, risks: 0.3, performance: 0.3, permits: 0.3, procurement: 0.3, financials: 0.3, efficiency: 0.3, market: 0.3, emerging: 0.3, portfolio: 0.3, overview: 0.3, safety: 0.3, quality: 0.3, issues: 0.3 },
+  'static-tip': { today: 0.3, invoices: 0.3, savings: 0.3, decisions: 0.3, meer: 0.3, schedule: 0.3, dispatch: 0.3, costs: 0.3, cashflow: 0.3, returns: 0.3, approvals: 0.3, risks: 0.3, performance: 0.3, permits: 0.3, procurement: 0.3, financials: 0.3, efficiency: 0.3, market: 0.3, emerging: 0.3, portfolio: 0.3, overview: 0.3, safety: 0.3, quality: 0.3, issues: 0.3, 'quote-new': 0.3, 'invoice-new': 0.3, 'invoice-create': 0.3, 'job-detail': 0.3, 'job-materials': 0.3, 'jobs-list': 0.3, 'cfo-projects': 0.3, 'cfo-costs': 0.3, 'cfo-appraisal': 0.3, 'cfo-risks': 0.3, 'cfo-approvals': 0.3, 'coo-schedule': 0.3, 'director-metrics': 0.3 },
+  // Workflow generators
+  'quote-benchmark': { 'quote-new': 1.0, today: 0.4 },
+  'material-suggestion': { 'job-materials': 1.0, 'job-detail': 0.7 },
+  'customer-payment-history': { 'invoice-new': 0.9, 'invoice-create': 0.9, 'quote-new': 0.7 },
+  'margin-warning': { 'job-detail': 1.0, 'quote-new': 0.8 },
+  'similar-job-comparison': { 'jobs-list': 0.8, 'job-detail': 0.9, 'quote-new': 0.7 },
+  // CFO project generators
+  'project-budget-variance': { 'cfo-costs': 1.0, 'cfo-projects': 0.8 },
+  'contingency-burn': { 'cfo-costs': 0.9, 'cfo-projects': 0.7 },
+  'approval-bottleneck': { 'cfo-approvals': 1.0, 'cfo-projects': 0.6 },
+  'project-risk-score': { 'cfo-risks': 1.0, 'cfo-projects': 0.7 },
+  'portfolio-irr': { 'cfo-appraisal': 1.0, 'cfo-projects': 0.8 },
+  // COO generators
+  'schedule-fragility': { efficiency: 1.0, 'coo-schedule': 1.0, schedule: 0.9 },
+  'supplier-risk': { emerging: 0.9, procurement: 1.0 },
+  'permit-delay': { market: 1.0, permits: 1.0 },
+  'change-order-velocity': { financials: 0.8, efficiency: 0.7, costs: 0.6 },
+  // Director generators
+  'handover-bottleneck': { portfolio: 0.9, approvals: 0.7 },
+  'portfolio-health': { portfolio: 1.0, performance: 0.7 },
+  'value-delivery': { performance: 1.0, 'director-metrics': 1.0 },
+  'cross-project-risk': { risks: 1.0, portfolio: 0.8 },
 };
 
 // =============================================================================

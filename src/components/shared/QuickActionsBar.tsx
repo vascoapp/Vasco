@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import { ActionCard } from './ActionCard';
@@ -18,7 +18,7 @@ type QuickActionsBarProps = {
   roleColor?: string;
 };
 
-export function QuickActionsBar({ actions, roleColor = Colors.accentDeep }: QuickActionsBarProps) {
+export function QuickActionsBar({ actions, roleColor = SemanticColors.actionPrimary }: QuickActionsBarProps) {
   return (
     <View style={styles.container}>
       <View style={[styles.accent, { backgroundColor: roleColor }]} />
@@ -40,10 +40,10 @@ export function QuickActionsBar({ actions, roleColor = Colors.accentDeep }: Quic
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: Radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     overflow: 'hidden',
   },
   accent: {

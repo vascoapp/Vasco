@@ -11,7 +11,11 @@ export type ScreenContext =
   | 'dispatch' | 'costs' | 'cashflow' | 'returns' | 'approvals'
   | 'risks' | 'performance' | 'permits' | 'procurement' | 'financials'
   | 'efficiency' | 'market' | 'emerging' | 'portfolio' | 'meer'
-  | 'overview' | 'safety' | 'quality' | 'issues';
+  | 'overview' | 'safety' | 'quality' | 'issues'
+  | 'quote-new' | 'invoice-new' | 'invoice-create'
+  | 'job-detail' | 'job-materials' | 'jobs-list'
+  | 'cfo-projects' | 'cfo-costs' | 'cfo-appraisal' | 'cfo-risks' | 'cfo-approvals'
+  | 'coo-schedule' | 'director-metrics';
 
 export interface GeneratorContext {
   role: UserRole;

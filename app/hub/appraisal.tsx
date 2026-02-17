@@ -4,7 +4,8 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing } from '../../src/theme/spacing';
-import { InlineInsight } from '../../src/components/shared/VascoInsightCard';
+import { InlineInsight, VascoInsightCard } from '../../src/components/shared/VascoInsightCard';
+import { useVascoGuidance, useInlineInsight } from '../../src/services/vascoGuidanceService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -44,6 +45,9 @@ function getStatusColor(status: string): string {
 
 export default function AppraisalScreen() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const insights = useVascoGuidance('cfo', 'cfo-appraisal');
+  const inlineTip = useInlineInsight('cfo', 'cfo-appraisal', 'overview');
+  const topInsight = insights[0] ?? null;
 
   const totals = MOCK_APPRAISALS.reduce((acc, p) => ({
     gdv: acc.gdv + p.gdv,
@@ -78,10 +82,8 @@ export default function AppraisalScreen() {
         </View>
       </View>
 
-      <InlineInsight
-        icon="trending-up"
-        message="Projecten met IRR boven 20% presteren het best in de huidige marktomstandigheden."
-      />
+      {inlineTip && <InlineInsight icon={inlineTip.icon as IconName} message={inlineTip.message} />}
+      {topInsight && <VascoInsightCard insight={topInsight} compact />}
 
       {/* Project Appraisals */}
       {MOCK_APPRAISALS.map(project => (

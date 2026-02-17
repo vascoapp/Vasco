@@ -11,6 +11,7 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SemanticColors } from '../../src/theme/colors';
 import { CapacityPlanning } from '../../src/components/contractor/CapacityPlanning';
 
 export default function PlanningScreen() {
@@ -24,6 +25,6 @@ export default function PlanningScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: SemanticColors.surfaceBackground,
   },
 });

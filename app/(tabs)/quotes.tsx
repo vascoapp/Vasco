@@ -1,10 +1,12 @@
 import { Link, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
 import { Screen } from '../../src/components/Screen';
-import { Colors } from '../../src/theme/colors';
+import { InlineInsight } from '../../src/components/shared/VascoInsightCard';
+import { useInlineInsight } from '../../src/services/vascoGuidanceService';
+import { SemanticColors } from '../../src/theme/colors';
 import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
@@ -16,22 +18,24 @@ const formatCurrency = (amount: number) =>
 
 export default function QuotesScreen() {
   const router = useRouter();
-  const { quotes, removeQuote } = useAppState();
+  const { quotes, removeQuote, isLoading, refreshData } = useAppState();
   const [refreshing, setRefreshing] = useState(false);
 
-  const onRefresh = useCallback(() => {
+  // AI guidance
+  const pipelineInsight = useInlineInsight('contractor', 'quotes', 'pipeline');
+
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-      hapticSuccess();
-    }, 600);
-  }, []);
+    await refreshData();
+    setRefreshing(false);
+    hapticSuccess();
+  }, [refreshData]);
 
   return (
     <Screen>
       <ScrollView
         contentContainerStyle={styles.container}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.accentDeep} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={SemanticColors.actionPrimary} />}
       >
         <View style={styles.header}>
           <View>
@@ -45,6 +49,19 @@ export default function QuotesScreen() {
             <PrimaryButton label="New quote" onPress={() => router.push('/quotes/new')} />
           </View>
         </View>
+
+        {pipelineInsight && (
+          <InlineInsight
+            icon={pipelineInsight.icon as any}
+            message={pipelineInsight.message}
+            actionLabel={pipelineInsight.actionLabel}
+            actionRoute={pipelineInsight.actionRoute}
+          />
+        )}
+
+        {isLoading && quotes.length === 0 && (
+          <ActivityIndicator size="large" color={SemanticColors.actionPrimary} style={{ marginVertical: Spacing.xl }} />
+        )}
 
         <View style={styles.section}>
           {quotes.filter((q) => q.status === 'draft').map((draft) => (
@@ -92,24 +109,24 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   refreshButton: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     minHeight: 44,
     minWidth: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
   refreshText: {
-    color: Colors.accentDeep,
+    color: SemanticColors.actionPrimary,
     fontSize: 12,
     fontFamily: 'Inter_600SemiBold',
   },
   sectionLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
@@ -117,19 +134,19 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_500Medium',
   },
   section: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     gap: Spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: Spacing.xs,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: SemanticColors.borderDefault,
     gap: Spacing.sm,
   },
   rowContent: {
@@ -139,7 +156,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   deleteButton: {
-    backgroundColor: Colors.danger,
+    backgroundColor: SemanticColors.feedbackError,
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: Radius.sm,
@@ -149,12 +166,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   deleteText: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 11,
     fontFamily: 'Inter_600SemiBold',
   },
   swipeAction: {
-    backgroundColor: Colors.danger,
+    backgroundColor: SemanticColors.feedbackError,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -164,7 +181,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   swipeActionText: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 12,
     fontFamily: 'Inter_600SemiBold',
   },

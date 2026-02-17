@@ -4,8 +4,11 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
-import type { Job, JobStatus } from '../../types/contractor';
-import { MOCK_JOBS, MOCK_CUSTOMERS, JOB_STATUS_CONFIG } from '../../data/mockContractor';
+import type { Job, JobStatus } from '../../domain/jobs';
+import { JOB_STATUS_CONFIG } from '../../data/mockContractor';
+import { useAppState } from '../../state/AppState';
+import { InlineInsight, VascoInsightCard } from '../shared/VascoInsightCard';
+import { useInlineInsight, useVascoGuidance } from '../../services/vascoGuidanceService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -18,10 +21,16 @@ interface JobsListProps {
 }
 
 export function JobsList({ onSelectJob, onNewJob, onNewQuote }: JobsListProps) {
+  const { jobs: allJobs, customers } = useAppState();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
 
-  const formatCurrency = (amount: number) => `€${amount.toLocaleString('nl-NL')}`;
+  // AI guidance — context key changes based on filter state
+  const contextKey = filterStatus === 'quoted' ? 'pipeline' : 'active';
+  const inlineInsight = useInlineInsight('contractor', 'jobs-list', contextKey);
+  const insights = useVascoGuidance('contractor', 'jobs-list');
+  const topInsight = insights.length > 0 ? insights[0] : null;
+
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString('nl-NL', {
       day: 'numeric',
@@ -29,15 +38,15 @@ export function JobsList({ onSelectJob, onNewJob, onNewQuote }: JobsListProps) {
     });
 
   // Filter jobs
-  const filteredJobs = MOCK_JOBS.filter((job) => {
+  const filteredJobs = allJobs.filter((job) => {
     // Search filter
-    const customer = MOCK_CUSTOMERS.find((c) => c.id === job.customerId);
+    const customer = customers.find((c) => c.id === job.customerId);
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch =
       !searchQuery ||
       job.title.toLowerCase().includes(searchLower) ||
       customer?.name.toLowerCase().includes(searchLower) ||
-      job.address.street.toLowerCase().includes(searchLower);
+      (job.description ?? '').toLowerCase().includes(searchLower);
 
     // Status filter
     let matchesStatus = true;
@@ -71,21 +80,21 @@ export function JobsList({ onSelectJob, onNewJob, onNewQuote }: JobsListProps) {
   const groupOrder = ['In Progress', 'Scheduled', 'Pipeline', 'Completed', 'Other'];
 
   const filters: { id: FilterStatus; label: string; count: number }[] = [
-    { id: 'all', label: 'All', count: MOCK_JOBS.length },
+    { id: 'all', label: 'All', count: allJobs.length },
     {
       id: 'active',
       label: 'Active',
-      count: MOCK_JOBS.filter((j) => ['scheduled', 'in-progress'].includes(j.status)).length,
+      count: allJobs.filter((j) => ['scheduled', 'in-progress'].includes(j.status)).length,
     },
     {
       id: 'quoted',
       label: 'Pipeline',
-      count: MOCK_JOBS.filter((j) => ['lead', 'quoted', 'accepted'].includes(j.status)).length,
+      count: allJobs.filter((j) => ['lead', 'quoted', 'accepted'].includes(j.status)).length,
     },
     {
       id: 'completed',
       label: 'Done',
-      count: MOCK_JOBS.filter((j) => ['completed', 'invoiced', 'paid'].includes(j.status)).length,
+      count: allJobs.filter((j) => ['completed', 'invoiced', 'paid'].includes(j.status)).length,
     },
   ];
 
@@ -162,6 +171,17 @@ export function JobsList({ onSelectJob, onNewJob, onNewQuote }: JobsListProps) {
 
       {/* Jobs List */}
       <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
+        {inlineInsight && (
+          <InlineInsight
+            icon={inlineInsight.icon as any}
+            message={inlineInsight.message}
+            actionLabel={inlineInsight.actionLabel}
+            actionRoute={inlineInsight.actionRoute}
+          />
+        )}
+        {topInsight && (
+          <VascoInsightCard insight={topInsight} compact showSource />
+        )}
         {groupOrder.map((group) => {
           const jobs = groupedJobs[group];
           if (!jobs || jobs.length === 0) return null;
@@ -170,7 +190,7 @@ export function JobsList({ onSelectJob, onNewJob, onNewQuote }: JobsListProps) {
             <View key={group} style={styles.group}>
               <Text style={styles.groupTitle}>{group}</Text>
               {jobs.map((job) => {
-                const customer = MOCK_CUSTOMERS.find((c) => c.id === job.customerId);
+                const customer = customers.find((c) => c.id === job.customerId);
                 const statusConfig = JOB_STATUS_CONFIG[job.status];
 
                 return (
@@ -201,60 +221,63 @@ export function JobsList({ onSelectJob, onNewJob, onNewQuote }: JobsListProps) {
                     </View>
 
                     <View style={styles.jobCardDetails}>
-                      <View style={styles.jobCardDetail}>
-                        <Ionicons
-                          name="location-outline"
-                          size={14}
-                          color={SemanticColors.textTertiary}
-                        />
-                        <Text style={styles.jobCardDetailText} numberOfLines={1}>
-                          {job.address.street}, {job.address.city}
-                        </Text>
-                      </View>
-                      {job.scheduledDate && (
+                      {job.address ? (
                         <View style={styles.jobCardDetail}>
                           <Ionicons
-                            name="calendar-outline"
+                            name="location-outline"
                             size={14}
                             color={SemanticColors.textTertiary}
                           />
-                          <Text style={styles.jobCardDetailText}>
-                            {formatDate(job.scheduledDate)}
+                          <Text style={styles.jobCardDetailText} numberOfLines={1}>
+                            {job.address.street}{job.address.city ? `, ${job.address.city}` : ''}
                           </Text>
                         </View>
-                      )}
+                      ) : customer?.address ? (
+                        <View style={styles.jobCardDetail}>
+                          <Ionicons
+                            name="location-outline"
+                            size={14}
+                            color={SemanticColors.textTertiary}
+                          />
+                          <Text style={styles.jobCardDetailText} numberOfLines={1}>
+                            {customer.address}
+                          </Text>
+                        </View>
+                      ) : null}
+                      <View style={styles.jobCardDetail}>
+                        <Ionicons
+                          name="calendar-outline"
+                          size={14}
+                          color={SemanticColors.textTertiary}
+                        />
+                        <Text style={styles.jobCardDetailText}>
+                          {job.scheduledDate
+                            ? formatDate(job.scheduledDate)
+                            : formatDate(job.updatedAt)}
+                        </Text>
+                      </View>
                     </View>
 
                     <View style={styles.jobCardFooter}>
-                      {job.agreedAmount ? (
+                      {(job.agreedAmount ?? job.quotedAmount) ? (
                         <Text style={styles.jobCardAmount}>
-                          {formatCurrency(job.agreedAmount)}
-                        </Text>
-                      ) : job.quotedAmount ? (
-                        <Text style={styles.jobCardQuoted}>
-                          Quoted: {formatCurrency(job.quotedAmount)}
+                          {`€${(job.agreedAmount ?? job.quotedAmount!).toLocaleString('nl-NL')}`}
                         </Text>
                       ) : (
-                        <Text style={styles.jobCardNoAmount}>No quote</Text>
+                        <Text style={styles.jobCardNoAmount}>
+                          {job.description ? job.description.substring(0, 40) + (job.description.length > 40 ? '...' : '') : 'No description'}
+                        </Text>
                       )}
                       <View style={styles.jobCardMeta}>
                         {job.photos.length > 0 && (
                           <View style={styles.metaIcon}>
-                            <Ionicons
-                              name="camera"
-                              size={12}
-                              color={SemanticColors.textTertiary}
-                            />
+                            <Ionicons name="camera-outline" size={12} color={SemanticColors.textTertiary} />
                             <Text style={styles.metaText}>{job.photos.length}</Text>
                           </View>
                         )}
                         {job.timeEntries.length > 0 && (
                           <View style={styles.metaIcon}>
-                            <Ionicons
-                              name="time"
-                              size={12}
-                              color={SemanticColors.textTertiary}
-                            />
+                            <Ionicons name="time-outline" size={12} color={SemanticColors.textTertiary} />
                             <Text style={styles.metaText}>{job.timeEntries.length}</Text>
                           </View>
                         )}

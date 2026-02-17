@@ -19,6 +19,18 @@ import type {
   ContractorProfile,
   MarketIntelligence,
 } from './dataSchema';
+import { isSupabaseConfigured } from '../lib/supabase';
+import {
+  insertEvent as dbInsertEvent,
+  updateEventOutcome as dbUpdateEventOutcome,
+  upsertEntity as dbUpsertEntity,
+  findEntitiesByType as dbFindEntitiesByType,
+  getEntityById as dbGetEntityById,
+  saveFeedbackObservations,
+  loadAllFeedbackWeights,
+  insertPrediction as dbInsertPrediction,
+  insertTrainingExample as dbInsertTrainingExample,
+} from '../lib/intelligenceDataProvider';
 
 // ============================================
 // FEEDBACK OBSERVATIONS - Timestamped data points
@@ -235,6 +247,26 @@ async function saveFeedbackWeights(weights: FeedbackWeights): Promise<void> {
   try {
     weights.lastUpdated = new Date().toISOString();
     await AsyncStorage.setItem(FEEDBACK_WEIGHTS_KEY, JSON.stringify(weights));
+
+    // Sync to Supabase (fire-and-forget)
+    if (isSupabaseConfigured) {
+      const syncTasks: Promise<void>[] = [];
+      for (const [key, obs] of Object.entries(weights.quoteAcceptance.byBracket)) {
+        syncTasks.push(saveFeedbackObservations('quote_acceptance_bracket', key, obs));
+      }
+      for (const [key, obs] of Object.entries(weights.quoteAcceptance.byCustomerType)) {
+        syncTasks.push(saveFeedbackObservations('quote_acceptance_customer', key, obs));
+      }
+      for (const [key, obs] of Object.entries(weights.jobDuration.byCategory)) {
+        syncTasks.push(saveFeedbackObservations('job_duration_category', key, obs));
+      }
+      for (const [key, obs] of Object.entries(weights.paymentTiming.bySegment)) {
+        syncTasks.push(saveFeedbackObservations('payment_timing_segment', key, obs));
+      }
+      Promise.all(syncTasks).catch((err) =>
+        console.warn('[Intelligence] Feedback sync failed:', err)
+      );
+    }
   } catch {
     // Silent
   }
@@ -337,7 +369,17 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
     // Queue for batch processing
     this.eventQueue.push(fullEvent);
 
-    // In real implementation: send to backend
+    // Persist to Supabase (fire-and-forget)
+    if (isSupabaseConfigured) {
+      dbInsertEvent({
+        event_type: fullEvent.eventType,
+        session_id: fullEvent.sessionId,
+        context: fullEvent.context as unknown as Record<string, unknown>,
+        payload: fullEvent.payload,
+        entities: fullEvent.entities,
+      }).catch((err) => console.warn('[Intelligence] Event persist failed:', err));
+    }
+
     console.log('[Intelligence] Event tracked:', fullEvent.eventType);
 
     // Process feedback loops
@@ -394,6 +436,19 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
       updatedAt: now,
     };
     this.entityCache.set(id, newEntity);
+
+    // Persist to Supabase
+    if (isSupabaseConfigured) {
+      dbUpsertEntity({
+        entity_type: type,
+        name,
+        aliases: [],
+        attributes: context || {},
+        stats: { totalInteractions: 0, lastInteraction: now },
+        confidence: 1.0,
+        sources: ['entity-resolution'],
+      }).catch((err) => console.warn('[Intelligence] Entity persist failed:', err));
+    }
 
     return {
       id,
@@ -624,8 +679,10 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
 
   // Record outcome for learning
   async recordOutcome(eventId: string, outcome: DataEvent['outcome']): Promise<void> {
-    // Find original event and update with outcome
-    // This creates training data for our models
+    // Persist to Supabase
+    if (isSupabaseConfigured && outcome) {
+      await dbUpdateEventOutcome(eventId, outcome as unknown as Record<string, unknown>);
+    }
     console.log('[Intelligence] Outcome recorded for event:', eventId, outcome);
   }
 

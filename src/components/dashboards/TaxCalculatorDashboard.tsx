@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable, TextInput } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import {
@@ -132,7 +132,7 @@ export function TaxCalculatorDashboard() {
           <TextInput
             style={styles.input}
             placeholder="Enter amount"
-            placeholderTextColor={Colors.muted}
+            placeholderTextColor={SemanticColors.textSecondary}
             value={taxAmount}
             onChangeText={setTaxAmount}
             keyboardType="numeric"
@@ -222,13 +222,13 @@ const styles = StyleSheet.create({
     borderLeftColor: CFO_COLOR,
   },
   infoTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
   },
   infoText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   sectionTitle: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -251,17 +251,17 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: Spacing.sm,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   countryPillActive: {
     backgroundColor: CFO_COLOR + '20',
     borderColor: CFO_COLOR,
   },
   countryPillText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     color: CFO_COLOR,
   },
   countryPillSubtext: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     marginTop: 2,
   },
@@ -282,9 +282,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: Radius.sm,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     alignItems: 'center',
   },
   bundeslandPillActive: {
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     backgroundColor: CFO_COLOR + '15',
   },
   bundeslandText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     color: CFO_COLOR,
   },
   bundeslandRate: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     marginTop: 2,
   },
@@ -312,17 +312,17 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     borderRadius: Radius.sm,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   togglePillActive: {
     backgroundColor: CFO_COLOR + '20',
     borderColor: CFO_COLOR,
   },
   toggleText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 13,
     fontWeight: '500',
   },
@@ -332,10 +332,10 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     overflow: 'hidden',
   },
   currencyLabel: {
@@ -344,17 +344,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     borderRightWidth: 1,
-    borderRightColor: Colors.border,
+    borderRightColor: SemanticColors.borderDefault,
     paddingVertical: Spacing.sm,
   },
   input: {
     flex: 1,
     padding: Spacing.sm,
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 16,
   },
   resultCard: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.lg,
     padding: Spacing.md,
     borderWidth: 1,
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   resultLabel: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
   },
   resultDivider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: SemanticColors.borderDefault,
     marginVertical: Spacing.sm,
   },
   resultDetails: {
@@ -388,11 +388,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   resultDetailLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 13,
   },
   resultDetailValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -400,10 +400,10 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     paddingTop: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   breakdownTitle: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -415,35 +415,35 @@ const styles = StyleSheet.create({
   },
   breakdownRange: {
     flex: 2,
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   breakdownRate: {
     flex: 1,
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 11,
     textAlign: 'center',
   },
   breakdownTax: {
     flex: 1,
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 11,
     fontWeight: '500',
     textAlign: 'right',
   },
   infoBox: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.md,
   },
   infoBoxTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
     marginBottom: 4,
   },
   infoBoxText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     lineHeight: 18,
   },

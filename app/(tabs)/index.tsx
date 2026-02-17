@@ -8,7 +8,7 @@ import {
   DirectorDashboard,
 } from '../../src/components/dashboards';
 import { useAuth } from '../../src/context/AuthContext';
-import { Colors } from '../../src/theme/colors';
+import { SemanticColors } from '../../src/theme/colors';
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 16,
   },
 });

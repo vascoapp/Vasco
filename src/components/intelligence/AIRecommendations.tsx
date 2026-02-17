@@ -82,7 +82,7 @@ const DEMO_RECOMMENDATIONS: Recommendation[] = [
     confidence: 0.85,
     impact: 'medium',
     actionLabel: 'Optimize',
-    actionRoute: '/contractor/jobs',
+    actionRoute: '/(contractor)',
     reasoning: [
       'Prinsengracht 123 & 145 are nearby',
       'Both scheduled for Tuesday afternoon',

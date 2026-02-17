@@ -4,7 +4,8 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing } from '../../src/theme/spacing';
-import { InlineInsight } from '../../src/components/shared/VascoInsightCard';
+import { InlineInsight, VascoInsightCard } from '../../src/components/shared/VascoInsightCard';
+import { useVascoGuidance, useInlineInsight } from '../../src/services/vascoGuidanceService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -100,6 +101,9 @@ function getFragilityColor(score: number): string {
 
 export default function ScheduleScreen() {
   const [projects] = useState(MOCK_PROJECTS);
+  const insights = useVascoGuidance('coo', 'coo-schedule');
+  const inlineTip = useInlineInsight('coo', 'coo-schedule', 'overview');
+  const topInsight = insights[0] ?? null;
 
   const avgSpi = projects.reduce((sum, p) => sum + p.spi, 0) / projects.length;
   const totalCriticalItems = projects.reduce((sum, p) => sum + p.criticalItems, 0);
@@ -126,10 +130,8 @@ export default function ScheduleScreen() {
         </View>
       </View>
 
-      <InlineInsight
-        icon="analytics"
-        message="De fragiliteitscore voorspelt vertragingsrisico 2 weken vooruit — hoe lager, hoe beter."
-      />
+      {inlineTip && <InlineInsight icon={inlineTip.icon as IconName} message={inlineTip.message} />}
+      {topInsight && <VascoInsightCard insight={topInsight} compact />}
 
       {/* Project timeline cards */}
       {projects.map(project => (

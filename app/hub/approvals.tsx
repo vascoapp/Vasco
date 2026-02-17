@@ -4,7 +4,8 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-nati
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing } from '../../src/theme/spacing';
-import { InlineInsight } from '../../src/components/shared/VascoInsightCard';
+import { InlineInsight, VascoInsightCard } from '../../src/components/shared/VascoInsightCard';
+import { useVascoGuidance, useInlineInsight } from '../../src/services/vascoGuidanceService';
 import { useAuth } from '../../src/context/AuthContext';
 import {
   useJobToPaymentWorkflows,
@@ -60,6 +61,9 @@ function getPriorityColor(priority: string): string {
 export default function ApprovalsScreen() {
   const { user } = useAuth();
   const [approvals, setApprovals] = useState(MOCK_APPROVALS);
+  const cfoInsights = useVascoGuidance('cfo', 'cfo-approvals');
+  const inlineTip = useInlineInsight('cfo', 'cfo-approvals', 'overview');
+  const topInsight = cfoInsights[0] ?? null;
   const { workflows: paymentWorkflows } = useJobToPaymentWorkflows();
   const workflowStats = useWorkflowStats();
   const activePaymentWorkflows = paymentWorkflows.filter(wf => wf.status !== 'completed' && wf.status !== 'cancelled');
@@ -98,10 +102,8 @@ export default function ApprovalsScreen() {
         </View>
       </View>
 
-      <InlineInsight
-        icon="timer"
-        message="Goedkeuringen die langer dan 48 uur wachten vertragen projecten gemiddeld 5 werkdagen."
-      />
+      {inlineTip && <InlineInsight icon={inlineTip.icon as IconName} message={inlineTip.message} />}
+      {topInsight && <VascoInsightCard insight={topInsight} compact />}
 
       {/* Cross-Role Payment Workflows */}
       {activePaymentWorkflows.length > 0 && (

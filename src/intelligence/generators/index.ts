@@ -35,6 +35,32 @@ import { useMarginRootCauseInsight } from './marginRootCauseGenerator';
 import { useCustomerLifecycleInsight } from './customerLifecycleGenerator';
 import { useCascadingDelayInsight } from './cascadingDelayGenerator';
 
+// Workflow generators
+import { useQuoteBenchmarkInsight } from './quoteBenchmarkGenerator';
+import { useMaterialSuggestionInsight } from './materialSuggestionGenerator';
+import { useCustomerPaymentHistoryInsight } from './customerPaymentHistoryGenerator';
+import { useMarginWarningInsight } from './marginWarningGenerator';
+import { useSimilarJobComparisonInsight } from './similarJobComparisonGenerator';
+
+// CFO project generators
+import { useProjectBudgetVarianceInsight } from './projectBudgetVarianceGenerator';
+import { useContingencyBurnInsight } from './contingencyBurnGenerator';
+import { useApprovalBottleneckInsight } from './approvalBottleneckGenerator';
+import { useProjectRiskScoreInsight } from './projectRiskScoreGenerator';
+import { usePortfolioIRRInsight } from './portfolioIRRGenerator';
+
+// COO generators
+import { useScheduleFragilityInsight } from './scheduleFragilityGenerator';
+import { useSupplierRiskInsight } from './supplierRiskGenerator';
+import { usePermitDelayInsight } from './permitDelayGenerator';
+import { useChangeOrderVelocityInsight } from './changeOrderVelocityGenerator';
+
+// Director generators
+import { useHandoverBottleneckInsight } from './handoverBottleneckGenerator';
+import { usePortfolioHealthInsight } from './portfolioHealthGenerator';
+import { useValueDeliveryInsight } from './valueDeliveryGenerator';
+import { useCrossProjectRiskInsight } from './crossProjectRiskGenerator';
+
 // Static generators (no hooks needed)
 import { weatherScheduleGenerator } from './weatherScheduleGenerator';
 import { staticTipGenerator } from './staticTipGenerator';
@@ -77,8 +103,33 @@ const GENERATOR_REGISTRY: GeneratorRegistration[] = [
   { id: 'estimation-variance-type', screens: ['today', 'savings', 'decisions'], roles: ['contractor'] },
   { id: 'static-tip', screens: ['today', 'invoices', 'savings', 'decisions', 'meer', 'overview', 'dispatch',
     'costs', 'cashflow', 'returns', 'approvals', 'risks', 'performance',
-    'financials', 'efficiency', 'market', 'emerging', 'portfolio', 'safety', 'quality', 'issues'],
+    'financials', 'efficiency', 'market', 'emerging', 'portfolio', 'safety', 'quality', 'issues',
+    'quote-new', 'invoice-new', 'invoice-create', 'job-detail', 'job-materials', 'jobs-list',
+    'cfo-projects', 'cfo-costs', 'cfo-appraisal', 'cfo-risks', 'cfo-approvals',
+    'coo-schedule', 'director-metrics'],
     roles: ['contractor', 'sitelead', 'coo', 'cfo', 'director'] },
+  // Workflow generators
+  { id: 'quote-benchmark', screens: ['quote-new', 'today'], roles: ['contractor'] },
+  { id: 'material-suggestion', screens: ['job-materials', 'job-detail'], roles: ['contractor'] },
+  { id: 'customer-payment-history', screens: ['invoice-new', 'invoice-create', 'quote-new'], roles: ['contractor'] },
+  { id: 'margin-warning', screens: ['job-detail', 'quote-new'], roles: ['contractor'] },
+  { id: 'similar-job-comparison', screens: ['jobs-list', 'job-detail', 'quote-new'], roles: ['contractor'] },
+  // CFO project generators
+  { id: 'project-budget-variance', screens: ['cfo-costs', 'cfo-projects'], roles: ['cfo', 'director'] },
+  { id: 'contingency-burn', screens: ['cfo-costs', 'cfo-projects'], roles: ['cfo', 'director'] },
+  { id: 'approval-bottleneck', screens: ['cfo-approvals', 'cfo-projects'], roles: ['cfo', 'director'] },
+  { id: 'project-risk-score', screens: ['cfo-risks', 'cfo-projects'], roles: ['cfo', 'director', 'coo'] },
+  { id: 'portfolio-irr', screens: ['cfo-appraisal', 'cfo-projects'], roles: ['cfo', 'director'] },
+  // COO generators
+  { id: 'schedule-fragility', screens: ['efficiency', 'coo-schedule', 'schedule'], roles: ['coo', 'director'] },
+  { id: 'supplier-risk', screens: ['emerging', 'procurement'], roles: ['coo', 'sitelead'] },
+  { id: 'permit-delay', screens: ['market', 'permits'], roles: ['coo', 'director'] },
+  { id: 'change-order-velocity', screens: ['financials', 'efficiency', 'costs'], roles: ['coo', 'cfo'] },
+  // Director generators
+  { id: 'handover-bottleneck', screens: ['portfolio', 'approvals'], roles: ['director', 'cfo'] },
+  { id: 'portfolio-health', screens: ['portfolio', 'performance'], roles: ['director'] },
+  { id: 'value-delivery', screens: ['performance', 'director-metrics'], roles: ['director', 'cfo'] },
+  { id: 'cross-project-risk', screens: ['risks', 'portfolio'], roles: ['director'] },
 ];
 
 // =============================================================================
@@ -115,6 +166,32 @@ export function useAllGenerators(ctx: GeneratorContext): ScoredInsight[] {
   const customerLifecycle = useCustomerLifecycleInsight(ctx);
   const cascadingDelay = useCascadingDelayInsight(ctx);
 
+  // Workflow generators
+  const quoteBenchmark = useQuoteBenchmarkInsight(ctx);
+  const materialSuggestion = useMaterialSuggestionInsight(ctx);
+  const customerPaymentHistory = useCustomerPaymentHistoryInsight(ctx);
+  const marginWarning = useMarginWarningInsight(ctx);
+  const similarJobComparison = useSimilarJobComparisonInsight(ctx);
+
+  // CFO project generators
+  const projectBudgetVariance = useProjectBudgetVarianceInsight(ctx);
+  const contingencyBurn = useContingencyBurnInsight(ctx);
+  const approvalBottleneck = useApprovalBottleneckInsight(ctx);
+  const projectRiskScore = useProjectRiskScoreInsight(ctx);
+  const portfolioIRR = usePortfolioIRRInsight(ctx);
+
+  // COO generators
+  const scheduleFragility = useScheduleFragilityInsight(ctx);
+  const supplierRisk = useSupplierRiskInsight(ctx);
+  const permitDelay = usePermitDelayInsight(ctx);
+  const changeOrderVelocity = useChangeOrderVelocityInsight(ctx);
+
+  // Director generators
+  const handoverBottleneck = useHandoverBottleneckInsight(ctx);
+  const portfolioHealth = usePortfolioHealthInsight(ctx);
+  const valueDelivery = useValueDeliveryInsight(ctx);
+  const crossProjectRisk = useCrossProjectRiskInsight(ctx);
+
   // Static generators (no hooks)
   const weather = weatherScheduleGenerator.generate(ctx);
   const staticTip = staticTipGenerator.generate(ctx);
@@ -144,6 +221,24 @@ export function useAllGenerators(ctx: GeneratorContext): ScoredInsight[] {
       { id: 'cascading-delay', insight: cascadingDelay },
       { id: 'estimation-variance-type', insight: estimationVarianceType },
       { id: 'static-tip', insight: staticTip },
+      { id: 'quote-benchmark', insight: quoteBenchmark },
+      { id: 'material-suggestion', insight: materialSuggestion },
+      { id: 'customer-payment-history', insight: customerPaymentHistory },
+      { id: 'margin-warning', insight: marginWarning },
+      { id: 'similar-job-comparison', insight: similarJobComparison },
+      { id: 'project-budget-variance', insight: projectBudgetVariance },
+      { id: 'contingency-burn', insight: contingencyBurn },
+      { id: 'approval-bottleneck', insight: approvalBottleneck },
+      { id: 'project-risk-score', insight: projectRiskScore },
+      { id: 'portfolio-irr', insight: portfolioIRR },
+      { id: 'schedule-fragility', insight: scheduleFragility },
+      { id: 'supplier-risk', insight: supplierRisk },
+      { id: 'permit-delay', insight: permitDelay },
+      { id: 'change-order-velocity', insight: changeOrderVelocity },
+      { id: 'handover-bottleneck', insight: handoverBottleneck },
+      { id: 'portfolio-health', insight: portfolioHealth },
+      { id: 'value-delivery', insight: valueDelivery },
+      { id: 'cross-project-risk', insight: crossProjectRisk },
     ];
 
     // Filter: only include generators relevant for current role + screen
@@ -162,6 +257,13 @@ export function useAllGenerators(ctx: GeneratorContext): ScoredInsight[] {
     estimationCal, dsoTrend, certExpiry, supplierPrice, weather,
     dailyPlanning, crossService, cashGap, capacity, goalProgress,
     profitability, financialAudit, marginRootCause, customerLifecycle,
-    cascadingDelay, estimationVarianceType, staticTip, ctx.role, ctx.screen,
+    cascadingDelay, estimationVarianceType, staticTip,
+    quoteBenchmark, materialSuggestion, customerPaymentHistory,
+    marginWarning, similarJobComparison,
+    projectBudgetVariance, contingencyBurn, approvalBottleneck,
+    projectRiskScore, portfolioIRR,
+    scheduleFragility, supplierRisk, permitDelay, changeOrderVelocity,
+    handoverBottleneck, portfolioHealth, valueDelivery, crossProjectRisk,
+    ctx.role, ctx.screen,
   ]);
 }

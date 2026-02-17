@@ -23,13 +23,15 @@ import {
   useComplianceAlerts,
   useComplianceStats,
   useExpiryCalendar,
+  useTradeRequirements,
   License,
   Certification,
   RegulatoryUpdate,
   InsurancePolicy,
 } from '../../services/complianceService';
+import type { TradeCompliance } from '../../domain/complianceKnowledge';
 
-type TabType = 'overview' | 'licenses' | 'certifications' | 'insurance' | 'regulatory';
+type TabType = 'overview' | 'licenses' | 'certifications' | 'insurance' | 'regulatory' | 'requirements';
 
 export function ComplianceCenter() {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -37,6 +39,8 @@ export function ComplianceCenter() {
   const [showLicenseModal, setShowLicenseModal] = useState(false);
   const [selectedUpdate, setSelectedUpdate] = useState<RegulatoryUpdate | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [selectedTradeId, setSelectedTradeId] = useState<string | null>(null);
+  const [expandedReqId, setExpandedReqId] = useState<string | null>(null);
 
   const { licenses } = useLicenses();
   const { certifications } = useCertifications();
@@ -45,6 +49,11 @@ export function ComplianceCenter() {
   const { alerts, acknowledge } = useComplianceAlerts();
   const stats = useComplianceStats();
   const expiryCalendar = useExpiryCalendar(6);
+  const { trades, getTradeCompliance, registryChecks } = useTradeRequirements('NL');
+
+  const selectedTrade: TradeCompliance | undefined = selectedTradeId
+    ? getTradeCompliance(selectedTradeId)
+    : undefined;
 
   const tabs: { id: TabType; label: string; icon: string }[] = [
     { id: 'overview', label: 'Overzicht', icon: 'shield-checkmark' },
@@ -52,6 +61,7 @@ export function ComplianceCenter() {
     { id: 'certifications', label: 'Certificaten', icon: 'ribbon' },
     { id: 'insurance', label: 'Verzekering', icon: 'umbrella' },
     { id: 'regulatory', label: 'Regelgeving', icon: 'newspaper' },
+    { id: 'requirements', label: 'Vakvereisten', icon: 'construct' },
   ];
 
   const renderComplianceScore = () => (
@@ -470,6 +480,185 @@ export function ComplianceCenter() {
     </ScrollView>
   );
 
+  const renderRequirementsTab = () => (
+    <ScrollView style={styles.tabContent}>
+      {/* Trade picker chips */}
+      <View style={styles.tradePickerRow}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {trades.map((t) => (
+            <TouchableOpacity
+              key={t.tradeId}
+              style={[
+                styles.tradeChip,
+                selectedTradeId === t.tradeId && styles.tradeChipActive,
+              ]}
+              onPress={() =>
+                setSelectedTradeId(selectedTradeId === t.tradeId ? null : t.tradeId)
+              }
+            >
+              <Text
+                style={[
+                  styles.tradeChipText,
+                  selectedTradeId === t.tradeId && styles.tradeChipTextActive,
+                ]}
+              >
+                {t.localizedLabel || t.tradeLabel}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {!selectedTrade && (
+        <View style={styles.emptyTrade}>
+          <Ionicons name="construct" size={40} color={SemanticColors.textSecondary} />
+          <Text style={styles.emptyTradeTitle}>Kies een vakgebied</Text>
+          <Text style={styles.emptyTradeSubtitle}>
+            Selecteer hierboven een vak om de vereisten, bewijsstukken en checklists te bekijken.
+          </Text>
+        </View>
+      )}
+
+      {selectedTrade && (
+        <>
+          {/* Requirements */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Vereisten</Text>
+            <Text style={styles.reqCount}>
+              {selectedTrade.requirements.length}
+            </Text>
+          </View>
+
+          {selectedTrade.requirements.map((req) => {
+            const isExpanded = expandedReqId === req.id;
+            const nlTitle = req.titleLocalizations?.nl || req.title;
+            const nlDesc = req.descriptionLocalizations?.nl || req.description;
+            const nlNotes = req.applicabilityNotesLocalizations?.nl || req.applicabilityNotes;
+
+            return (
+              <TouchableOpacity
+                key={req.id}
+                style={styles.reqCard}
+                onPress={() => setExpandedReqId(isExpanded ? null : req.id)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.reqHeader}>
+                  <View style={[styles.reqLevelBadge, { backgroundColor: getReqLevelColor(req.level) + '20' }]}>
+                    <Text style={[styles.reqLevelText, { color: getReqLevelColor(req.level) }]}>
+                      {getReqLevelName(req.level)}
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                    size={18}
+                    color={SemanticColors.textSecondary}
+                  />
+                </View>
+                <Text style={styles.reqTitle}>{nlTitle}</Text>
+                {isExpanded && (
+                  <>
+                    <Text style={styles.reqDescription}>{nlDesc}</Text>
+                    {nlNotes && (
+                      <View style={styles.reqNotesBox}>
+                        <Ionicons name="information-circle" size={14} color={SemanticColors.feedbackInfo} />
+                        <Text style={styles.reqNotesText}>{nlNotes}</Text>
+                      </View>
+                    )}
+                  </>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+
+          {/* Evidence */}
+          {selectedTrade.evidence.length > 0 && (
+            <>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Bewijsstukken</Text>
+              </View>
+              {selectedTrade.evidence.map((ev) => {
+                const nlLabel = ev.labelLocalizations?.nl || ev.label;
+                const nlDesc = ev.descriptionLocalizations?.nl || ev.description;
+                return (
+                  <View key={ev.id} style={styles.evidenceCard}>
+                    <View style={styles.evidenceHeader}>
+                      <Ionicons
+                        name={ev.required ? 'document-attach' : 'document-outline'}
+                        size={20}
+                        color={ev.required ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
+                      />
+                      <Text style={styles.evidenceLabel}>{nlLabel}</Text>
+                      {ev.required && (
+                        <View style={styles.requiredBadge}>
+                          <Text style={styles.requiredBadgeText}>Verplicht</Text>
+                        </View>
+                      )}
+                    </View>
+                    {nlDesc && <Text style={styles.evidenceDesc}>{nlDesc}</Text>}
+                  </View>
+                );
+              })}
+            </>
+          )}
+
+          {/* Checklists */}
+          {selectedTrade.checklists.length > 0 && (
+            <>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Checklist</Text>
+              </View>
+              {selectedTrade.checklists.map((item) => {
+                const nlLabel = item.labelLocalizations?.nl || item.label;
+                return (
+                  <View key={item.id} style={styles.checklistRow}>
+                    <Ionicons
+                      name={item.required ? 'checkbox' : 'square-outline'}
+                      size={20}
+                      color={item.required ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
+                    />
+                    <Text style={styles.checklistLabel}>{nlLabel}</Text>
+                  </View>
+                );
+              })}
+            </>
+          )}
+
+          {/* Registry checks */}
+          {registryChecks.length > 0 && (
+            <>
+              <View style={[styles.sectionHeader, { marginTop: 20 }]}>
+                <Text style={styles.sectionTitle}>Registercontroles</Text>
+              </View>
+              {registryChecks.map((rc) => {
+                const nlLabel = rc.labelLocalizations?.nl || rc.label;
+                const nlDesc = rc.descriptionLocalizations?.nl || rc.description;
+                return (
+                  <View key={rc.id} style={styles.registryCard}>
+                    <View style={styles.registryHeader}>
+                      <Ionicons name="search" size={18} color={SemanticColors.actionPrimary} />
+                      <Text style={styles.registryLabel}>{nlLabel}</Text>
+                    </View>
+                    <Text style={styles.registryDesc}>{nlDesc}</Text>
+                    <View style={styles.registryFields}>
+                      {rc.inputs.map((input) => (
+                        <Text key={input.key} style={styles.registryField}>
+                          {input.labelLocalizations?.nl || input.label}
+                          {input.required ? ' *' : ''}
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+                );
+              })}
+            </>
+          )}
+
+          <View style={{ height: 40 }} />
+        </>
+      )}
+    </ScrollView>
+  );
+
   const renderLicenseModal = () => (
     <Modal
       visible={showLicenseModal}
@@ -695,6 +884,7 @@ export function ComplianceCenter() {
       {activeTab === 'certifications' && renderCertificationsTab()}
       {activeTab === 'insurance' && renderInsuranceTab()}
       {activeTab === 'regulatory' && renderRegulatoryTab()}
+      {activeTab === 'requirements' && renderRequirementsTab()}
 
       {renderLicenseModal()}
       {renderUpdateModal()}
@@ -789,6 +979,24 @@ function getCategoryUpdateName(category: string): string {
     industry_news: 'Nieuws',
   };
   return names[category] || category;
+}
+
+function getReqLevelColor(level: string): string {
+  const colors: Record<string, string> = {
+    mandatory: SemanticColors.feedbackError,
+    recommended: SemanticColors.feedbackWarning,
+    optional: SemanticColors.feedbackInfo,
+  };
+  return colors[level] || SemanticColors.textSecondary;
+}
+
+function getReqLevelName(level: string): string {
+  const names: Record<string, string> = {
+    mandatory: 'Verplicht',
+    recommended: 'Aanbevolen',
+    optional: 'Optioneel',
+  };
+  return names[level] || level;
 }
 
 function getInsuranceIcon(type: string): string {
@@ -1613,6 +1821,187 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: SemanticColors.feedbackError,
     marginTop: 10,
+  },
+  // Trade Requirements tab
+  tradePickerRow: {
+    marginBottom: 16,
+  },
+  tradeChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 16,
+    marginRight: 8,
+  },
+  tradeChipActive: {
+    backgroundColor: SemanticColors.actionPrimary,
+  },
+  tradeChipText: {
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+  },
+  tradeChipTextActive: {
+    fontSize: 13,
+    color: Palette.white,
+    fontWeight: '500',
+  },
+  emptyTrade: {
+    alignItems: 'center',
+    padding: 40,
+    gap: 8,
+  },
+  emptyTradeTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  emptyTradeSubtitle: {
+    fontSize: 14,
+    color: SemanticColors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  reqCount: {
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+    backgroundColor: SemanticColors.surfacePrimary,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  reqCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+  },
+  reqHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  reqLevelBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  reqLevelText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  reqTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  reqDescription: {
+    fontSize: 14,
+    color: SemanticColors.textSecondary,
+    lineHeight: 20,
+    marginTop: 8,
+  },
+  reqNotesBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    marginTop: 8,
+    backgroundColor: SemanticColors.feedbackInfo + '10',
+    padding: 10,
+    borderRadius: 8,
+  },
+  reqNotesText: {
+    flex: 1,
+    fontSize: 13,
+    color: SemanticColors.feedbackInfo,
+    lineHeight: 18,
+  },
+  evidenceCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
+  },
+  evidenceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  evidenceLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
+    color: SemanticColors.textPrimary,
+  },
+  evidenceDesc: {
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+    marginTop: 6,
+    marginLeft: 28,
+  },
+  requiredBadge: {
+    backgroundColor: SemanticColors.feedbackError + '15',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  requiredBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: SemanticColors.feedbackError,
+  },
+  checklistRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 6,
+  },
+  checklistLabel: {
+    flex: 1,
+    fontSize: 14,
+    color: SemanticColors.textPrimary,
+  },
+  registryCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+  },
+  registryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  registryLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  registryDesc: {
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+  registryFields: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  registryField: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+    backgroundColor: SemanticColors.surfaceBackground,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    overflow: 'hidden',
   },
 });
 

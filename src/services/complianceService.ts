@@ -5,6 +5,17 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { complianceKnowledgeBase } from '../data/complianceKnowledgeBase';
+import type {
+  CountryCode,
+  LanguageCode,
+  TradeCompliance,
+  RegistryCheck,
+} from '../domain/complianceKnowledge';
+
+const COUNTRY_LANGUAGE: Record<CountryCode, LanguageCode> = {
+  UK: 'en', NL: 'nl', DE: 'de', FR: 'fr', ES: 'es', IT: 'it',
+};
 
 // =============================================================================
 // TYPES
@@ -723,6 +734,28 @@ class ComplianceService {
     };
   }
 
+  // Knowledge Base — Trade Requirements
+  getAvailableTrades(country: CountryCode): { tradeId: string; tradeLabel: string; localizedLabel?: string }[] {
+    const countryData = complianceKnowledgeBase.countries.find(c => c.country === country);
+    if (!countryData) return [];
+    const lang = COUNTRY_LANGUAGE[country];
+    return countryData.trades.map(t => ({
+      tradeId: t.tradeId,
+      tradeLabel: t.tradeLabel,
+      localizedLabel: t.tradeLabelLocalizations?.[lang] ?? t.tradeLabelLocalizations?.en,
+    }));
+  }
+
+  getTradeCompliance(country: CountryCode, tradeId: string): TradeCompliance | undefined {
+    const countryData = complianceKnowledgeBase.countries.find(c => c.country === country);
+    return countryData?.trades.find(t => t.tradeId === tradeId);
+  }
+
+  getRegistryChecks(country: CountryCode): RegistryCheck[] {
+    const countryData = complianceKnowledgeBase.countries.find(c => c.country === country);
+    return countryData?.registryChecks ?? [];
+  }
+
   // Expiry Calendar
   getExpiryCalendar(months: number = 6): { date: Date; items: { type: string; name: string; id: string }[] }[] {
     const now = new Date();
@@ -775,7 +808,7 @@ export const complianceService = ComplianceService.getInstance();
 // REACT HOOKS
 // =============================================================================
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 export function useLicenses() {
   const [licenses, setLicenses] = useState<License[]>([]);
@@ -940,4 +973,23 @@ export function useExpiryCalendar(months: number = 6) {
   }, [months]);
 
   return calendar;
+}
+
+export function useTradeRequirements(country: CountryCode = 'NL') {
+  const trades = useMemo(
+    () => complianceService.getAvailableTrades(country),
+    [country],
+  );
+
+  const getTradeCompliance = useCallback(
+    (tradeId: string) => complianceService.getTradeCompliance(country, tradeId),
+    [country],
+  );
+
+  const registryChecks = useMemo(
+    () => complianceService.getRegistryChecks(country),
+    [country],
+  );
+
+  return { trades, getTradeCompliance, registryChecks };
 }

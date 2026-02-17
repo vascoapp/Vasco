@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import {
@@ -82,13 +82,13 @@ export function ProcurementDashboard() {
         <Text style={styles.sectionTitle}>Contracts</Text>
         <View style={styles.contractsGrid}>
           <View style={styles.contractItem}>
-            <Text style={[styles.contractValue, { color: Colors.success }]}>
+            <Text style={[styles.contractValue, { color: SemanticColors.feedbackSuccess }]}>
               {procurementStatus.awarded}
             </Text>
             <Text style={styles.contractLabel}>Awarded</Text>
           </View>
           <View style={styles.contractItem}>
-            <Text style={[styles.contractValue, { color: Colors.warning }]}>
+            <Text style={[styles.contractValue, { color: SemanticColors.feedbackWarning }]}>
               {procurementStatus.pending}
             </Text>
             <Text style={styles.contractLabel}>Pending Award</Text>
@@ -112,7 +112,7 @@ export function ProcurementDashboard() {
               </View>
               <View style={styles.coRow}>
                 <Text style={styles.coDetailLabel}>Approved</Text>
-                <Text style={[styles.coDetailValue, { color: Colors.success }]}>
+                <Text style={[styles.coDetailValue, { color: SemanticColors.feedbackSuccess }]}>
                   {procurementStatus.changeOrdersApproved}
                 </Text>
               </View>
@@ -137,11 +137,11 @@ export function ProcurementDashboard() {
             </View>
             <View style={[
               styles.performanceBadge,
-              { backgroundColor: procurementStatus.avgCycleTime <= 14 ? Colors.success + '20' : Colors.warning + '20' }
+              { backgroundColor: procurementStatus.avgCycleTime <= 14 ? SemanticColors.feedbackSuccess + '20' : SemanticColors.feedbackWarning + '20' }
             ]}>
               <Text style={[
                 styles.performanceBadgeText,
-                { color: procurementStatus.avgCycleTime <= 14 ? Colors.success : Colors.warning }
+                { color: procurementStatus.avgCycleTime <= 14 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackWarning }
               ]}>
                 {procurementStatus.avgCycleTime <= 14 ? 'On Target' : 'Above Target'}
               </Text>
@@ -155,7 +155,7 @@ export function ProcurementDashboard() {
                   styles.targetFill,
                   {
                     width: `${Math.min((procurementStatus.avgCycleTime / 14) * 100, 100)}%`,
-                    backgroundColor: procurementStatus.avgCycleTime <= 14 ? Colors.success : Colors.warning
+                    backgroundColor: procurementStatus.avgCycleTime <= 14 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackWarning
                   }
                 ]}
               />
@@ -168,7 +168,7 @@ export function ProcurementDashboard() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Procurement Risk</Text>
         <View style={styles.riskCard}>
-          <Ionicons name="warning-outline" size={24} color={Colors.warning} />
+          <Ionicons name="warning-outline" size={24} color={SemanticColors.feedbackWarning} />
           <View style={styles.riskInfo}>
             <Text style={styles.riskValue}>{fmt(procurementStatus.riskValue || 0)}</Text>
             <Text style={styles.riskLabel}>At-Risk Value</Text>
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 16,
   },
   projectSelector: {
@@ -230,11 +230,11 @@ const styles = StyleSheet.create({
   },
   projectPill: {
     flex: 1,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.xs,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   projectPillActive: {
     borderColor: COO_COLOR,
@@ -245,18 +245,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   projectName: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
   },
   projectNameActive: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
   },
   section: {
     gap: Spacing.xs,
   },
   sectionTitle: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -268,23 +268,23 @@ const styles = StyleSheet.create({
   },
   contractItem: {
     flex: 1,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.md,
     alignItems: 'center',
   },
   contractValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 32,
     fontWeight: '700',
   },
   contractLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     marginTop: 4,
   },
   changeOrderCard: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.md,
   },
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   coLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
   },
   coDetails: {
@@ -321,16 +321,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   coDetailLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
   },
   coDetailValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
   },
   performanceCard: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.md,
     gap: Spacing.sm,
@@ -344,12 +344,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   performanceValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 18,
     fontWeight: '700',
   },
   performanceLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   performanceBadge: {
@@ -365,12 +365,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   targetLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   targetBar: {
     height: 6,
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -381,27 +381,27 @@ const styles = StyleSheet.create({
   riskCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.warning + '10',
+    backgroundColor: SemanticColors.feedbackWarning + '10',
     borderRadius: Radius.md,
     padding: Spacing.md,
     gap: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.warning + '30',
+    borderColor: SemanticColors.feedbackWarning + '30',
   },
   riskInfo: {
     flex: 1,
   },
   riskValue: {
-    color: Colors.warning,
+    color: SemanticColors.feedbackWarning,
     fontSize: 22,
     fontWeight: '700',
   },
   riskLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
   },
   contractList: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     overflow: 'hidden',
   },
@@ -410,18 +410,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   contractListInfo: {
     flex: 1,
   },
   contractListName: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '500',
   },
   contractListType: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     marginTop: 2,
   },
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   contractListValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
   },

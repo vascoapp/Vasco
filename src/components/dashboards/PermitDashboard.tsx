@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import {
@@ -42,14 +42,14 @@ export function PermitDashboard() {
     switch (status) {
       case 'approved':
       case 'approved-with-conditions':
-        return { name: 'checkmark-circle', color: Colors.success };
+        return { name: 'checkmark-circle', color: SemanticColors.feedbackSuccess };
       case 'under-review':
       case 'submitted':
-        return { name: 'time', color: Colors.warning };
+        return { name: 'time', color: SemanticColors.feedbackWarning };
       case 'not-submitted':
-        return { name: 'ellipse-outline', color: Colors.muted };
+        return { name: 'ellipse-outline', color: SemanticColors.textSecondary };
       default:
-        return { name: 'help-circle', color: Colors.muted };
+        return { name: 'help-circle', color: SemanticColors.textSecondary };
     }
   };
 
@@ -91,19 +91,19 @@ export function PermitDashboard() {
       {/* Summary Grid */}
       <View style={styles.summaryGrid}>
         <View style={styles.summaryItem}>
-          <Text style={[styles.summaryValue, { color: Colors.success }]}>
+          <Text style={[styles.summaryValue, { color: SemanticColors.feedbackSuccess }]}>
             {permitStatus.approved.length}
           </Text>
           <Text style={styles.summaryLabel}>Approved</Text>
         </View>
         <View style={styles.summaryItem}>
-          <Text style={[styles.summaryValue, { color: Colors.warning }]}>
+          <Text style={[styles.summaryValue, { color: SemanticColors.feedbackWarning }]}>
             {permitStatus.pending.length}
           </Text>
           <Text style={styles.summaryLabel}>Pending</Text>
         </View>
         <View style={styles.summaryItem}>
-          <Text style={[styles.summaryValue, { color: Colors.danger }]}>
+          <Text style={[styles.summaryValue, { color: SemanticColors.feedbackError }]}>
             {permitStatus.atRisk.length}
           </Text>
           <Text style={styles.summaryLabel}>At Risk</Text>
@@ -136,8 +136,8 @@ export function PermitDashboard() {
       {permitStatus.atRisk.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="warning" size={16} color={Colors.danger} />
-            <Text style={[styles.sectionTitle, { color: Colors.danger }]}>At Risk</Text>
+            <Ionicons name="warning" size={16} color={SemanticColors.feedbackError} />
+            <Text style={[styles.sectionTitle, { color: SemanticColors.feedbackError }]}>At Risk</Text>
           </View>
           <View style={styles.permitList}>
             {permitStatus.atRisk.map((permit) => {
@@ -152,7 +152,7 @@ export function PermitDashboard() {
                   </View>
                   {status && (
                     <View style={styles.daysRemaining}>
-                      <Text style={[styles.daysValue, { color: Colors.danger }]}>
+                      <Text style={[styles.daysValue, { color: SemanticColors.feedbackError }]}>
                         {status.daysRemaining}
                       </Text>
                       <Text style={styles.daysLabel}>days</Text>
@@ -216,7 +216,7 @@ export function PermitDashboard() {
             </>
           ) : (
             <>
-              <Ionicons name="checkmark-circle" size={32} color={Colors.success} />
+              <Ionicons name="checkmark-circle" size={32} color={SemanticColors.feedbackSuccess} />
               <Text style={styles.conditionsLabel}>All conditions discharged</Text>
             </>
           )}
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 16,
   },
   projectSelector: {
@@ -247,11 +247,11 @@ const styles = StyleSheet.create({
   },
   projectPill: {
     flex: 1,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.xs,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   projectPillActive: {
     borderColor: COO_COLOR,
@@ -262,12 +262,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   projectName: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
   },
   projectNameActive: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
   },
   summaryGrid: {
     flexDirection: 'row',
@@ -275,23 +275,23 @@ const styles = StyleSheet.create({
   },
   summaryItem: {
     flex: 1,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.sm,
     padding: Spacing.sm,
     alignItems: 'center',
   },
   summaryValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 24,
     fontWeight: '700',
   },
   summaryLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     marginTop: 4,
   },
   progressCard: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.md,
     gap: Spacing.xs,
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   progressTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -313,13 +313,13 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 8,
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 4,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: Colors.success,
+    backgroundColor: SemanticColors.feedbackSuccess,
     borderRadius: 4,
   },
   section: {
@@ -331,14 +331,14 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   sectionTitle: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   permitList: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     overflow: 'hidden',
   },
@@ -347,23 +347,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: SemanticColors.borderDefault,
     gap: Spacing.sm,
   },
   permitItemAtRisk: {
     borderLeftWidth: 3,
-    borderLeftColor: Colors.danger,
+    borderLeftColor: SemanticColors.feedbackError,
   },
   permitInfo: {
     flex: 1,
   },
   permitType: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
   },
   permitRef: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     marginTop: 2,
   },
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
     textTransform: 'capitalize',
   },
   permitDays: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     marginTop: 2,
   },
@@ -388,11 +388,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   daysLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
   },
   conditionsBadge: {
-    backgroundColor: Colors.warning + '20',
+    backgroundColor: SemanticColors.feedbackWarning + '20',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: Radius.sm,
@@ -400,24 +400,24 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   conditionsText: {
-    color: Colors.warning,
+    color: SemanticColors.feedbackWarning,
     fontSize: 10,
     fontWeight: '500',
   },
   conditionsCard: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.lg,
     alignItems: 'center',
     gap: Spacing.xs,
   },
   conditionsCount: {
-    color: Colors.warning,
+    color: SemanticColors.feedbackWarning,
     fontSize: 32,
     fontWeight: '700',
   },
   conditionsLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
   },
 });

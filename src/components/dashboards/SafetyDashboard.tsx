@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import { formatPercent } from '../../modules/countryModules';
@@ -35,13 +35,13 @@ export function SafetyDashboard() {
   const getSafetyColor = (status: string) => {
     switch (status) {
       case 'excellent':
-        return Colors.success;
+        return SemanticColors.feedbackSuccess;
       case 'good':
         return SITE_LEAD_COLOR;
       case 'needs-attention':
-        return Colors.warning;
+        return SemanticColors.feedbackWarning;
       default:
-        return Colors.muted;
+        return SemanticColors.textSecondary;
     }
   };
 
@@ -128,19 +128,19 @@ export function SafetyDashboard() {
             <Text style={styles.metricLabel}>Hours Worked</Text>
           </View>
           <View style={styles.metricItem}>
-            <Text style={[styles.metricValue, safetyHealth.incidentsTotal > 0 && { color: Colors.danger }]}>
+            <Text style={[styles.metricValue, safetyHealth.incidentsTotal > 0 && { color: SemanticColors.feedbackError }]}>
               {safetyHealth.incidentsTotal}
             </Text>
             <Text style={styles.metricLabel}>Total Incidents</Text>
           </View>
           <View style={styles.metricItem}>
-            <Text style={[styles.metricValue, safetyHealth.incidentsThisPeriod > 0 && { color: Colors.danger }]}>
+            <Text style={[styles.metricValue, safetyHealth.incidentsThisPeriod > 0 && { color: SemanticColors.feedbackError }]}>
               {safetyHealth.incidentsThisPeriod}
             </Text>
             <Text style={styles.metricLabel}>This Period</Text>
           </View>
           <View style={styles.metricItem}>
-            <Text style={[styles.metricValue, { color: Colors.warning }]}>
+            <Text style={[styles.metricValue, { color: SemanticColors.feedbackWarning }]}>
               {safetyHealth.nearMisses}
             </Text>
             <Text style={styles.metricLabel}>Near Misses</Text>
@@ -151,7 +151,7 @@ export function SafetyDashboard() {
       {/* Incident Alert */}
       {safetyHealth.incidentsThisPeriod > 0 && (
         <View style={styles.alertCard}>
-          <Ionicons name="warning" size={24} color={Colors.danger} />
+          <Ionicons name="warning" size={24} color={SemanticColors.feedbackError} />
           <View style={styles.alertContent}>
             <Text style={styles.alertTitle}>
               {safetyHealth.incidentsThisPeriod} incident{safetyHealth.incidentsThisPeriod > 1 ? 's' : ''} this period
@@ -167,7 +167,7 @@ export function SafetyDashboard() {
         <View style={styles.closureCard}>
           <View style={styles.closureHeader}>
             <Text style={styles.closureTitle}>Defect Closure Rate</Text>
-            <Text style={[styles.closureValue, { color: Colors.success }]}>
+            <Text style={[styles.closureValue, { color: SemanticColors.feedbackSuccess }]}>
               {formatPercent(safetyHealth.defectClosureRate)}
             </Text>
           </View>
@@ -182,7 +182,7 @@ export function SafetyDashboard() {
               <Text style={styles.defectLabel}>Open</Text>
             </View>
             <View style={styles.defectItem}>
-              <Text style={[styles.defectValue, { color: Colors.success }]}>
+              <Text style={[styles.defectValue, { color: SemanticColors.feedbackSuccess }]}>
                 {siteMetrics.defectsClosedTotal}
               </Text>
               <Text style={styles.defectLabel}>Closed</Text>
@@ -205,7 +205,7 @@ export function SafetyDashboard() {
               <Ionicons
                 name={check.done ? 'checkbox' : 'square-outline'}
                 size={20}
-                color={check.done ? Colors.success : Colors.muted}
+                color={check.done ? SemanticColors.feedbackSuccess : SemanticColors.textSecondary}
               />
               <Text style={[styles.checklistText, check.done && styles.checklistDone]}>
                 {check.item}
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 16,
   },
   projectSelector: {
@@ -239,11 +239,11 @@ const styles = StyleSheet.create({
   },
   projectPill: {
     flex: 1,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.xs,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   projectPillActive: {
     borderColor: SITE_LEAD_COLOR,
@@ -254,15 +254,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   projectName: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
   },
   projectNameActive: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
   },
   ltirCard: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.lg,
     padding: Spacing.md,
     gap: Spacing.sm,
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   ltirTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -297,13 +297,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   ltirTarget: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     marginTop: 4,
   },
   ltirBar: {
     height: 8,
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 4,
     overflow: 'hidden',
     position: 'relative',
@@ -318,13 +318,13 @@ const styles = StyleSheet.create({
     top: -2,
     width: 2,
     height: 12,
-    backgroundColor: Colors.text,
+    backgroundColor: SemanticColors.textPrimary,
   },
   section: {
     gap: Spacing.xs,
   },
   sectionTitle: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -338,18 +338,18 @@ const styles = StyleSheet.create({
   metricItem: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.sm,
     padding: Spacing.sm,
     alignItems: 'center',
   },
   metricValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 20,
     fontWeight: '700',
   },
   metricLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     marginTop: 4,
     textAlign: 'center',
@@ -357,28 +357,28 @@ const styles = StyleSheet.create({
   alertCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.danger + '15',
+    backgroundColor: SemanticColors.feedbackError + '15',
     borderRadius: Radius.md,
     padding: Spacing.md,
     gap: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.danger + '30',
+    borderColor: SemanticColors.feedbackError + '30',
   },
   alertContent: {
     flex: 1,
   },
   alertTitle: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
     fontSize: 14,
     fontWeight: '600',
   },
   alertSubtitle: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     marginTop: 2,
   },
   closureCard: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.md,
     gap: Spacing.sm,
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   closureTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '500',
   },
@@ -399,13 +399,13 @@ const styles = StyleSheet.create({
   },
   closureBar: {
     height: 8,
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 4,
     overflow: 'hidden',
   },
   closureFill: {
     height: '100%',
-    backgroundColor: Colors.success,
+    backgroundColor: SemanticColors.feedbackSuccess,
     borderRadius: 4,
   },
   defectRow: {
@@ -413,23 +413,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingTop: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   defectItem: {
     alignItems: 'center',
   },
   defectValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 18,
     fontWeight: '700',
   },
   defectLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     marginTop: 2,
   },
   checklistCard: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.sm,
   },
@@ -440,11 +440,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
   },
   checklistText: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
   },
   checklistDone: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     textDecorationLine: 'line-through',
   },
 });

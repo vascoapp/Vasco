@@ -1,11 +1,17 @@
 // Job Detail Screen - Full job view with actions, photos, time, materials
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors } from '../../theme/colors';
+import { Palette, SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import type { Job, JobPhoto, TimeEntry, MaterialUsage } from '../../types/contractor';
-import { JOB_STATUS_CONFIG, MOCK_CUSTOMERS } from '../../data/mockContractor';
+import type { Customer } from '../../domain/customers';
+import type { JobMaterial, JobMaterialStatus } from '../../domain/materials';
+import { JOB_STATUS_CONFIG } from '../../data/mockContractor';
+import { useAppState } from '../../state/AppState';
+import { InlineInsight, VascoInsightCard } from '../shared/VascoInsightCard';
+import { useInlineInsight, useVascoGuidance } from '../../services/vascoGuidanceService';
+import { AddJobMaterialModal } from './AddJobMaterialModal';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -28,10 +34,21 @@ export function JobDetailScreen({
   onClockOut,
   onAddMaterial,
 }: JobDetailScreenProps) {
+  const { customers, jobMaterials: jobMaterialsMap, materials: materialCatalog, suppliers } = useAppState();
   const [activeTab, setActiveTab] = useState<'details' | 'photos' | 'time' | 'materials'>('details');
+  const [showAddMaterial, setShowAddMaterial] = useState(false);
 
-  const customer = MOCK_CUSTOMERS.find((c) => c.id === job.customerId);
+  // AI guidance
+  const overviewInsight = useInlineInsight('contractor', 'job-detail', 'overview');
+  const materialsInsight = useInlineInsight('contractor', 'job-detail', 'materials');
+  const insights = useVascoGuidance('contractor', 'job-detail');
+  const topInsights = insights.slice(0, 2);
+
+  const customer = customers.find((c) => c.id === job.customerId);
   const statusConfig = JOB_STATUS_CONFIG[job.status];
+
+  // Typed job materials from AppState
+  const typedJobMaterials = jobMaterialsMap[job.id] ?? [];
 
   const formatCurrency = (amount: number) => `€${amount.toLocaleString('nl-NL')}`;
   const formatDate = (date: string) => new Date(date).toLocaleDateString('nl-NL', {
@@ -42,7 +59,7 @@ export function JobDetailScreen({
 
   // Calculate totals
   const totalTimeMinutes = job.timeEntries.reduce((sum, t) => sum + t.totalMinutes, 0);
-  const totalMaterialsCost = job.materials.reduce((sum, m) => sum + m.totalCost, 0);
+  const totalMaterialsCost = typedJobMaterials.reduce((sum, m) => sum + (m.totalPrice ?? 0), 0);
   const totalMaterialsCharge = job.materials.reduce((sum, m) => sum + (m.chargeToCustomer || 0), 0);
 
   const getNextStatus = (): Job['status'] | null => {
@@ -78,7 +95,7 @@ export function JobDetailScreen({
     { id: 'details', label: 'Details', icon: 'information-circle-outline' },
     { id: 'photos', label: 'Photos', icon: 'camera-outline', badge: job.photos.length },
     { id: 'time', label: 'Time', icon: 'time-outline', badge: job.timeEntries.length },
-    { id: 'materials', label: 'Materials', icon: 'cube-outline', badge: job.materials.length },
+    { id: 'materials', label: 'Materials', icon: 'cube-outline', badge: typedJobMaterials.length },
   ];
 
   return (
@@ -120,7 +137,7 @@ export function JobDetailScreen({
             </Pressable>
             <Pressable
               style={styles.quickActionBtn}
-              onPress={() => onAddMaterial?.(job.id)}
+              onPress={() => setShowAddMaterial(true)}
             >
               <Ionicons name="add-circle" size={18} color={SemanticColors.textPrimary} />
               <Text style={styles.quickActionText}>Material</Text>
@@ -139,6 +156,25 @@ export function JobDetailScreen({
           </Pressable>
         )}
       </View>
+
+      {/* AI Insight Strip */}
+      {topInsights.length > 0 && (
+        <View style={{ paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xs, gap: Spacing.xs }}>
+          {topInsights.map((insight) => (
+            <VascoInsightCard key={insight.id} insight={insight} compact showSource />
+          ))}
+        </View>
+      )}
+      {overviewInsight && !topInsights.length && (
+        <View style={{ paddingHorizontal: Spacing.sm, paddingTop: Spacing.xs }}>
+          <InlineInsight
+            icon={overviewInsight.icon as any}
+            message={overviewInsight.message}
+            actionLabel={overviewInsight.actionLabel}
+            actionRoute={overviewInsight.actionRoute}
+          />
+        </View>
+      )}
 
       {/* Tab Bar */}
       <View style={styles.tabBar}>
@@ -180,16 +216,32 @@ export function JobDetailScreen({
             onClockIn={() => onClockIn?.(job.id)}
           />
         )}
+        {activeTab === 'materials' && materialsInsight && (
+          <InlineInsight
+            icon={materialsInsight.icon as any}
+            message={materialsInsight.message}
+            actionLabel={materialsInsight.actionLabel}
+            actionRoute={materialsInsight.actionRoute}
+          />
+        )}
         {activeTab === 'materials' && (
-          <MaterialsTab
-            materials={job.materials}
+          <TypedMaterialsTab
+            jobMaterials={typedJobMaterials}
+            materialCatalog={materialCatalog}
+            supplierList={suppliers}
             totalCost={totalMaterialsCost}
-            totalCharge={totalMaterialsCharge}
             formatCurrency={formatCurrency}
-            onAddMaterial={() => onAddMaterial?.(job.id)}
+            onAddMaterial={() => setShowAddMaterial(true)}
           />
         )}
       </ScrollView>
+
+      {/* Add Material Modal */}
+      <AddJobMaterialModal
+        visible={showAddMaterial}
+        jobId={job.id}
+        onClose={() => setShowAddMaterial(false)}
+      />
 
       {/* Bottom Summary */}
       <View style={styles.bottomSummary}>
@@ -224,7 +276,7 @@ function DetailsTab({
   formatDate,
 }: {
   job: Job;
-  customer?: typeof MOCK_CUSTOMERS[0];
+  customer?: Customer;
   formatCurrency: (n: number) => string;
   formatDate: (d: string) => string;
 }) {
@@ -295,9 +347,6 @@ function DetailsTab({
             </View>
             <View style={styles.customerInfo}>
               <Text style={styles.customerName}>{customer.name}</Text>
-              {customer.company && (
-                <Text style={styles.customerCompany}>{customer.company}</Text>
-              )}
             </View>
           </View>
           <View style={styles.contactActions}>
@@ -555,6 +604,122 @@ function MaterialsTab({
       <Pressable style={styles.addMaterialButton} onPress={onAddMaterial}>
         <Ionicons name="add-circle" size={20} color={SemanticColors.actionPrimary} />
         <Text style={styles.addMaterialText}>Add Material</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+// Typed Materials Tab using domain types
+const JM_STATUS_CONFIG: Record<JobMaterialStatus, { label: string; color: string; icon: string }> = {
+  planned: { label: 'Gepland', color: '#6B7280', icon: 'time-outline' },
+  ordered: { label: 'Besteld', color: '#3B82F6', icon: 'cart-outline' },
+  delivered: { label: 'Geleverd', color: '#F59E0B', icon: 'cube-outline' },
+  installed: { label: 'Verwerkt', color: '#16A34A', icon: 'checkmark-circle-outline' },
+};
+
+function TypedMaterialsTab({
+  jobMaterials,
+  materialCatalog,
+  supplierList,
+  totalCost,
+  formatCurrency,
+  onAddMaterial,
+}: {
+  jobMaterials: JobMaterial[];
+  materialCatalog: { id: string; name: string; brand?: string }[];
+  supplierList: { id: string; name: string }[];
+  totalCost: number;
+  formatCurrency: (n: number) => string;
+  onAddMaterial: () => void;
+}) {
+  const materialLookup = useMemo(() => {
+    const map = new Map<string, { name: string; brand?: string }>();
+    for (const m of materialCatalog) map.set(m.id, { name: m.name, brand: m.brand });
+    return map;
+  }, [materialCatalog]);
+
+  const supplierLookup = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const s of supplierList) map.set(s.id, s.name);
+    return map;
+  }, [supplierList]);
+
+  return (
+    <View style={styles.tabContent}>
+      {/* Summary */}
+      <View style={styles.materialsSummary}>
+        <View style={styles.materialsSummaryItem}>
+          <Text style={styles.materialsSummaryLabel}>Totaal kosten</Text>
+          <Text style={styles.materialsSummaryValue}>{formatCurrency(totalCost)}</Text>
+        </View>
+        <View style={styles.materialsSummaryItem}>
+          <Text style={styles.materialsSummaryLabel}>Items</Text>
+          <Text style={styles.materialsSummaryValue}>{jobMaterials.length}</Text>
+        </View>
+        <View style={styles.materialsSummaryItem}>
+          <Text style={styles.materialsSummaryLabel}>Verwerkt</Text>
+          <Text style={[styles.materialsSummaryValue, { color: SemanticColors.feedbackSuccess }]}>
+            {jobMaterials.filter((jm) => jm.status === 'installed').length}/{jobMaterials.length}
+          </Text>
+        </View>
+      </View>
+
+      {/* Materials List */}
+      {jobMaterials.length > 0 ? (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Materialen</Text>
+          {jobMaterials.map((jm) => {
+            const mat = materialLookup.get(jm.materialId);
+            const sup = jm.supplierId ? supplierLookup.get(jm.supplierId) : undefined;
+            const statusCfg = JM_STATUS_CONFIG[jm.status] ?? JM_STATUS_CONFIG.planned;
+
+            return (
+              <View key={jm.id} style={styles.materialItem}>
+                <View style={styles.materialMain}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.materialName} numberOfLines={1}>
+                      {mat?.name ?? 'Onbekend materiaal'}
+                    </Text>
+                    {mat?.brand && (
+                      <Text style={{ fontSize: 11, color: '#999' }}>{mat.brand}</Text>
+                    )}
+                  </View>
+                  <Text style={styles.materialCost}>
+                    {jm.totalPrice != null ? formatCurrency(jm.totalPrice) : '-'}
+                  </Text>
+                </View>
+                <View style={styles.materialDetails}>
+                  <Text style={styles.materialQty}>
+                    {jm.quantity} {jm.unit}
+                    {jm.unitPrice != null ? ` @ ${formatCurrency(jm.unitPrice)}` : ''}
+                  </Text>
+                  {sup && <Text style={styles.materialSupplier}>{sup}</Text>}
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                  <Ionicons name={statusCfg.icon as any} size={12} color={statusCfg.color} />
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: statusCfg.color }}>
+                    {statusCfg.label}
+                  </Text>
+                  {jm.notes && (
+                    <Text style={{ fontSize: 11, color: '#999', marginLeft: 8 }} numberOfLines={1}>
+                      {jm.notes}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      ) : (
+        <View style={styles.emptyState}>
+          <Ionicons name="cube-outline" size={48} color={SemanticColors.textTertiary} />
+          <Text style={styles.emptyStateText}>Nog geen materialen toegevoegd</Text>
+        </View>
+      )}
+
+      <Pressable style={styles.addMaterialButton} onPress={onAddMaterial}>
+        <Ionicons name="add-circle" size={20} color={SemanticColors.actionPrimary} />
+        <Text style={styles.addMaterialText}>Materiaal toevoegen</Text>
       </Pressable>
     </View>
   );

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import {
@@ -43,13 +43,13 @@ export function ScheduleDashboard() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ahead':
-        return Colors.success;
+        return SemanticColors.feedbackSuccess;
       case 'on-track':
         return COO_COLOR;
       case 'delayed':
-        return Colors.danger;
+        return SemanticColors.feedbackError;
       default:
-        return Colors.muted;
+        return SemanticColors.textSecondary;
     }
   };
 
@@ -91,7 +91,7 @@ export function ScheduleDashboard() {
       {/* Schedule Header Card */}
       <View style={styles.headerCard}>
         <View style={styles.spiCircle}>
-          <Text style={[styles.spiValue, { color: scheduleHealth.spi >= 0.95 ? Colors.success : Colors.warning }]}>
+          <Text style={[styles.spiValue, { color: scheduleHealth.spi >= 0.95 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackWarning }]}>
             {scheduleHealth.spi.toFixed(2)}
           </Text>
           <Text style={styles.spiLabel}>SPI</Text>
@@ -163,13 +163,13 @@ export function ScheduleDashboard() {
                     style={[
                       styles.progressFill,
                       { width: `${activity.percentComplete}%` },
-                      activity.status === 'delayed' && { backgroundColor: Colors.danger },
+                      activity.status === 'delayed' && { backgroundColor: SemanticColors.feedbackError },
                     ]}
                   />
                 </View>
                 <Text style={[
                   styles.progressText,
-                  activity.status === 'delayed' && { color: Colors.danger }
+                  activity.status === 'delayed' && { color: SemanticColors.feedbackError }
                 ]}>
                   {activity.percentComplete}%
                 </Text>
@@ -193,7 +193,7 @@ export function ScheduleDashboard() {
             <Text style={styles.summaryLabel}>Total</Text>
           </View>
           <View style={styles.summaryItem}>
-            <Text style={[styles.summaryValue, { color: Colors.success }]}>
+            <Text style={[styles.summaryValue, { color: SemanticColors.feedbackSuccess }]}>
               {selectedProject.scheduleActivities.filter(a => a.status === 'completed').length}
             </Text>
             <Text style={styles.summaryLabel}>Completed</Text>
@@ -205,7 +205,7 @@ export function ScheduleDashboard() {
             <Text style={styles.summaryLabel}>In Progress</Text>
           </View>
           <View style={styles.summaryItem}>
-            <Text style={[styles.summaryValue, { color: Colors.danger }]}>
+            <Text style={[styles.summaryValue, { color: SemanticColors.feedbackError }]}>
               {scheduleHealth.delayedCount}
             </Text>
             <Text style={styles.summaryLabel}>Delayed</Text>
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 16,
   },
   projectSelector: {
@@ -237,11 +237,11 @@ const styles = StyleSheet.create({
   },
   projectPill: {
     flex: 1,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.xs,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   projectPillActive: {
     borderColor: COO_COLOR,
@@ -252,16 +252,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   projectName: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
   },
   projectNameActive: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
   },
   headerCard: {
     flexDirection: 'row',
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.md,
     gap: Spacing.md,
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 4,
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   spiLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   scheduleInfo: {
@@ -295,11 +295,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scheduleLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
   },
   scheduleValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   sectionTitle: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   datesCard: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.md,
   },
@@ -352,11 +352,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dateLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   dateValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '600',
     marginTop: 4,
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   dateDivider: {
     width: 1,
     height: 30,
-    backgroundColor: Colors.border,
+    backgroundColor: SemanticColors.borderDefault,
   },
   forecastRow: {
     flexDirection: 'row',
@@ -373,10 +373,10 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
     paddingTop: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   forecastLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
   },
   forecastValue: {
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   activityList: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.sm,
   },
@@ -393,18 +393,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   activityInfo: {
     flex: 1,
   },
   activityName: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '500',
   },
   activityWbs: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   activityProgress: {
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
   progressBar: {
     width: 60,
     height: 6,
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -425,21 +425,21 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   progressText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
     width: 35,
     textAlign: 'right',
   },
   delayBadge: {
-    backgroundColor: Colors.danger + '20',
+    backgroundColor: SemanticColors.feedbackError + '20',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: Radius.sm,
     marginLeft: 8,
   },
   delayText: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
     fontSize: 9,
     fontWeight: '700',
   },
@@ -449,18 +449,18 @@ const styles = StyleSheet.create({
   },
   summaryItem: {
     flex: 1,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.sm,
     padding: Spacing.sm,
     alignItems: 'center',
   },
   summaryValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 20,
     fontWeight: '700',
   },
   summaryLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     marginTop: 4,
   },

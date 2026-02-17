@@ -76,7 +76,10 @@ export type MetricKey =
   | 'savingsTotal'
   | 'overdueAmount'
   | 'complianceScore'
-  | 'capacityUtilization';
+  | 'capacityUtilization'
+  | 'quoteMedian'
+  | 'customerOverdueRate'
+  | 'jobMargin';
 
 export interface MetricSnapshot {
   metric: MetricKey;

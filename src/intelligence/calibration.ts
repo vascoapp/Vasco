@@ -8,6 +8,13 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { isSupabaseConfigured } from '../lib/supabase';
+import {
+  insertCalibrationEntry as dbInsertCalibration,
+  resolveCalibrationEntry as dbResolveCalibration,
+  getAllCalibrationScores as dbGetCalibrationScores,
+  getCalibrationEntriesByGenerator as dbGetCalibrationByGen,
+} from '../lib/intelligenceDataProvider';
 
 // =============================================================================
 // TYPES
@@ -101,6 +108,16 @@ export async function logPrediction(entry: Omit<CalibrationEntry, 'id'>): Promis
   }
 
   await saveStore(store);
+
+  // Persist to Supabase (fire-and-forget)
+  if (isSupabaseConfigured) {
+    dbInsertCalibration({
+      generator_id: entry.generatorId,
+      prediction: entry.prediction,
+      predicted_value: entry.predictedValue,
+    }).catch(() => {});
+  }
+
   return id;
 }
 
@@ -123,9 +140,30 @@ export async function resolvePrediction(
   }
 
   await saveStore(store);
+
+  // Persist to Supabase
+  if (isSupabaseConfigured) {
+    dbResolveCalibration(entryId, actualValue, entry.accurate ?? false).catch(() => {});
+  }
 }
 
 export async function getCalibrationScores(): Promise<CalibrationScore[]> {
+  // Prefer Supabase when available
+  if (isSupabaseConfigured) {
+    try {
+      const dbScores = await dbGetCalibrationScores();
+      if (dbScores.length > 0) {
+        return dbScores.map((s) => ({
+          generatorId: s.generator_id,
+          totalPredictions: s.total,
+          resolvedPredictions: s.resolved,
+          accurateCount: s.accurate,
+          accuracyRate: s.rate,
+        }));
+      }
+    } catch { /* fall through to local */ }
+  }
+
   const store = await loadStore();
   const byGenerator = new Map<string, CalibrationEntry[]>();
 

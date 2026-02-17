@@ -59,6 +59,8 @@ function RootLayoutNav() {
       <Stack.Screen name="(modals)/pdf" options={{ presentation: 'modal' }} />
       <Stack.Screen name="(modals)/mollie" options={{ presentation: 'modal' }} />
       <Stack.Screen name="(modals)/moneybird" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="(modals)/business-settings" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="(modals)/customers" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }

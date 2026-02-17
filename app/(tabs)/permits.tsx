@@ -3,7 +3,7 @@ import { Screen } from '../../src/components/Screen';
 import { COODashboard } from '../../src/components/dashboards';
 import { useAuth } from '../../src/context/AuthContext';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors } from '../../src/theme/colors';
+import { SemanticColors } from '../../src/theme/colors';
 
 export default function PermitsScreen() {
   const { user } = useAuth();
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   text: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 16,
   },
 });

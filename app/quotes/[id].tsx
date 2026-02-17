@@ -4,7 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AssistBanner } from '../../src/components/AssistBanner';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
 import { Screen } from '../../src/components/Screen';
-import { Colors } from '../../src/theme/colors';
+import { SemanticColors } from '../../src/theme/colors';
 import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
@@ -132,18 +132,18 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     gap: Spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: SemanticColors.borderDefault,
     paddingVertical: Spacing.xs,
   },
   actions: {
@@ -154,17 +154,17 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surfaceElevated,
+    borderColor: SemanticColors.borderDefault,
+    backgroundColor: SemanticColors.surfaceSecondary,
     minHeight: 44,
     justifyContent: 'center',
   },
   secondaryText: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontWeight: '600',
   },
   appliedText: {
-    color: Colors.success,
+    color: SemanticColors.feedbackSuccess,
     fontSize: 12,
     fontFamily: 'Inter_500Medium',
   },

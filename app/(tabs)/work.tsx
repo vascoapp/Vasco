@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Screen } from '../../src/components/Screen';
 import { useAppState } from '../../src/state/AppState';
-import { Colors } from '../../src/theme/colors';
+import { SemanticColors } from '../../src/theme/colors';
 import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   sectionLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
@@ -302,15 +302,15 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_500Medium',
   },
   statsBadge: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.pill,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   statsText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontFamily: 'Inter_600SemiBold',
   },
@@ -320,41 +320,41 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     flex: 1,
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: Radius.md,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     alignItems: 'center',
   },
   summaryCardDanger: {
-    backgroundColor: Colors.danger + '10',
-    borderColor: Colors.danger + '40',
+    backgroundColor: SemanticColors.feedbackError + '10',
+    borderColor: SemanticColors.feedbackError + '40',
   },
   summaryValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 24,
     fontFamily: 'Inter_700Bold',
   },
   summaryValueDanger: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
   },
   summaryLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontFamily: 'Inter_500Medium',
     marginTop: 4,
     textAlign: 'center',
   },
   summaryLabelDanger: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
   },
   alertCard: {
-    backgroundColor: Colors.danger + '15',
+    backgroundColor: SemanticColors.feedbackError + '15',
     borderRadius: Radius.md,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.danger + '30',
+    borderColor: SemanticColors.feedbackError + '30',
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: Radius.pill,
-    backgroundColor: Colors.danger,
+    backgroundColor: SemanticColors.feedbackError,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -376,18 +376,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   alertTitle: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
     fontSize: 15,
     fontFamily: 'Inter_700Bold',
   },
   alertSubtitle: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
     fontSize: 12,
     fontFamily: 'Inter_400Regular',
     opacity: 0.8,
   },
   alertAction: {
-    backgroundColor: Colors.danger,
+    backgroundColor: SemanticColors.feedbackError,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: Radius.md,
@@ -403,11 +403,11 @@ const styles = StyleSheet.create({
   },
   tabSwitcher: {
     flexDirection: 'row',
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: Radius.md,
     padding: 4,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   tab: {
     flex: 1,
@@ -418,21 +418,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabActive: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
   },
   tabText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 14,
     fontFamily: 'Inter_600SemiBold',
   },
   tabTextActive: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
   },
   list: {
     gap: Spacing.sm,
   },
   listHeader: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -441,21 +441,21 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   listHeaderDanger: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
   },
   listItem: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: Radius.md,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   listItemDanger: {
-    backgroundColor: Colors.danger + '08',
-    borderColor: Colors.danger + '25',
+    backgroundColor: SemanticColors.feedbackError + '08',
+    borderColor: SemanticColors.feedbackError + '25',
   },
   listItemPressed: {
     opacity: 0.85,
@@ -472,58 +472,58 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
   },
   statusDraft: {
-    backgroundColor: Colors.warning,
+    backgroundColor: SemanticColors.feedbackWarning,
   },
   statusSent: {
-    backgroundColor: Colors.accentDeep,
+    backgroundColor: SemanticColors.actionPrimary,
   },
   statusOverdue: {
-    backgroundColor: Colors.danger,
+    backgroundColor: SemanticColors.feedbackError,
   },
   statusPaid: {
-    backgroundColor: Colors.success,
+    backgroundColor: SemanticColors.feedbackSuccess,
   },
   itemTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 15,
     fontFamily: 'Inter_600SemiBold',
   },
   itemSubtitle: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     fontFamily: 'Inter_400Regular',
   },
   itemSubtitleDanger: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
   },
   itemRight: {
     alignItems: 'flex-end',
     gap: 4,
   },
   riskBadge: {
-    backgroundColor: Colors.success + '20',
+    backgroundColor: SemanticColors.feedbackSuccess + '20',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: Radius.sm,
   },
   riskBadgeText: {
-    color: Colors.success,
+    color: SemanticColors.feedbackSuccess,
     fontSize: 11,
     fontFamily: 'Inter_700Bold',
   },
   itemAmount: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 15,
     fontFamily: 'Inter_700Bold',
   },
   itemAmountDanger: {
-    color: Colors.danger,
+    color: SemanticColors.feedbackError,
   },
   itemAmountPaid: {
-    color: Colors.success,
+    color: SemanticColors.feedbackSuccess,
   },
   createButton: {
-    backgroundColor: Colors.accentDeep,
+    backgroundColor: SemanticColors.actionPrimary,
     borderRadius: Radius.md,
     paddingVertical: 16,
     alignItems: 'center',

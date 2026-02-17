@@ -21,6 +21,9 @@ const DEFAULT_THRESHOLDS: Record<MetricKey, number> = {
   overdueAmount: 2000,
   complianceScore: 80,       // alert if below
   capacityUtilization: 85,   // alert if below
+  quoteMedian: 0,            // not used for alerting
+  customerOverdueRate: 0.3,  // alert if >30% overdue rate
+  jobMargin: 0.15,           // alert if margin <15%
 };
 
 // Metrics where LOWER values are bad (alert when below threshold)
@@ -131,6 +134,9 @@ const SEASONAL_MULTIPLIERS: Record<MetricKey, number[]> = {
   overdueAmount:         [1.10, 1.05, 1.0, 0.95, 0.90, 0.90, 0.95, 1.0, 1.0, 1.05, 1.10, 1.15],
   complianceScore:       [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
   capacityUtilization:   [0.85, 0.90, 0.95, 1.05, 1.10, 1.10, 1.05, 1.0, 1.0, 1.05, 0.95, 0.85],
+  quoteMedian:           [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+  customerOverdueRate:   [1.10, 1.05, 1.0, 0.95, 0.90, 0.90, 0.95, 1.0, 1.0, 1.05, 1.10, 1.15],
+  jobMargin:             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
 };
 
 /**

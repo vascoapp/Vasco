@@ -29,7 +29,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 type IconName = keyof typeof Ionicons.glyphMap;
 
 export type InsightPriority = 'critical' | 'high' | 'medium' | 'low';
-export type InsightCategory = 'alert' | 'opportunity' | 'compliance' | 'financial' | 'schedule' | 'tip' | 'weather';
+export type InsightCategory = 'alert' | 'opportunity' | 'compliance' | 'financial' | 'schedule' | 'tip' | 'weather' | 'operational';
 
 export interface VascoInsight {
   id: string;
@@ -94,6 +94,7 @@ function getCategoryLabel(category: InsightCategory): string {
     case 'schedule': return 'Planning';
     case 'tip': return 'Tip';
     case 'weather': return 'Weer';
+    case 'operational': return 'Operationeel';
   }
 }
 

@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing } from '../../src/theme/spacing';
-import { InlineInsight } from '../../src/components/shared/VascoInsightCard';
+import { InlineInsight, VascoInsightCard } from '../../src/components/shared/VascoInsightCard';
+import { useVascoGuidance, useInlineInsight } from '../../src/services/vascoGuidanceService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -55,6 +56,10 @@ function getTrendColor(trend: string): string {
 }
 
 export default function MetricsScreen() {
+  const insights = useVascoGuidance('director', 'director-metrics');
+  const inlineTip = useInlineInsight('director', 'director-metrics', 'overview');
+  const topInsight = insights[0] ?? null;
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Platform Performance */}
@@ -79,10 +84,8 @@ export default function MetricsScreen() {
         ))}
       </View>
 
-      <InlineInsight
-        icon="rocket"
-        message="Vasco heeft deze maand £48K aan waarde geleverd door automatisering en vroege detectie."
-      />
+      {inlineTip && <InlineInsight icon={inlineTip.icon as IconName} message={inlineTip.message} />}
+      {topInsight && <VascoInsightCard insight={topInsight} compact />}
 
       {/* ROI Breakdown */}
       <View style={styles.sectionHeader}>

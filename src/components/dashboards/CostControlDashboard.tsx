@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import {
@@ -51,9 +51,9 @@ export function CostControlDashboard() {
   const fmt = (amount: number) => formatCurrency(amount, currency);
 
   const getCpiColor = (cpi: number) => {
-    if (cpi >= 0.95) return Colors.success;
-    if (cpi >= 0.85) return Colors.warning;
-    return Colors.danger;
+    if (cpi >= 0.95) return SemanticColors.feedbackSuccess;
+    if (cpi >= 0.85) return SemanticColors.feedbackWarning;
+    return SemanticColors.feedbackError;
   };
 
   if (!selectedProject || !costHealth) {
@@ -116,7 +116,7 @@ export function CostControlDashboard() {
           </View>
           <View style={styles.costItem}>
             <Text style={styles.costLabel}>EAC</Text>
-            <Text style={[styles.costValue, costHealth.budgetVariance < 0 && { color: Colors.danger }]}>
+            <Text style={[styles.costValue, costHealth.budgetVariance < 0 && { color: SemanticColors.feedbackError }]}>
               {fmt(costHealth.eac)}
             </Text>
           </View>
@@ -136,7 +136,7 @@ export function CostControlDashboard() {
             <Text style={styles.cpiRowLabel}>Variance</Text>
             <Text style={[
               styles.cpiRowValue,
-              { color: costHealth.budgetVariance >= 0 ? Colors.success : Colors.danger }
+              { color: costHealth.budgetVariance >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }
             ]}>
               {costHealth.budgetVariance >= 0 ? '+' : ''}{fmt(costHealth.budgetVariance)}
             </Text>
@@ -197,7 +197,7 @@ export function CostControlDashboard() {
                         style={[
                           styles.budgetLineFill,
                           { width: `${Math.min(percentSpent * 100, 100)}%` },
-                          percentSpent > 1 && { backgroundColor: Colors.danger }
+                          percentSpent > 1 && { backgroundColor: SemanticColors.feedbackError }
                         ]}
                       />
                     </View>
@@ -212,7 +212,7 @@ export function CostControlDashboard() {
                 ]}>
                   <Text style={[
                     styles.varianceText,
-                    { color: isOver ? Colors.danger : Colors.success },
+                    { color: isOver ? SemanticColors.feedbackError : SemanticColors.feedbackSuccess },
                   ]}>
                     {variance >= 0 ? '+' : ''}{fmt(variance)}
                   </Text>
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 16,
   },
   projectSelector: {
@@ -247,11 +247,11 @@ const styles = StyleSheet.create({
   },
   projectPill: {
     flex: 1,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.xs,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   projectPillActive: {
     borderColor: CFO_COLOR,
@@ -262,12 +262,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   projectName: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
   },
   projectNameActive: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
   },
   statusBadge: {
     alignSelf: 'flex-start',
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   sectionTitle: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -297,23 +297,23 @@ const styles = StyleSheet.create({
   costItem: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.sm,
     padding: Spacing.sm,
   },
   costLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   costValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 14,
     fontWeight: '700',
     marginTop: 4,
   },
   cpiCard: {
     flexDirection: 'row',
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.md,
     gap: Spacing.md,
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   cpiLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
   },
   cpiInfo: {
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   cpiRowLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
   },
   cpiRowValue: {
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   contingencyCard: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.md,
     gap: Spacing.sm,
@@ -364,23 +364,23 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
   },
   contingencyAmount: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 20,
     fontWeight: '700',
   },
   contingencyPercent: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
   },
   contingencyBar: {
     height: 8,
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 4,
     overflow: 'hidden',
   },
   contingencyUsed: {
     height: '100%',
-    backgroundColor: Colors.warning,
+    backgroundColor: SemanticColors.feedbackWarning,
     borderRadius: 4,
   },
   contingencyDetails: {
@@ -391,17 +391,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   contingencyLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
   },
   contingencyValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 12,
     fontWeight: '500',
   },
   budgetLinesList: {
     gap: 8,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.sm,
   },
@@ -411,14 +411,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   budgetLineInfo: {
     flex: 1,
     gap: 4,
   },
   budgetLineName: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '500',
   },
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
   },
   budgetLineBar: {
     height: 4,
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   budgetLineSpent: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   varianceBadge: {
@@ -447,10 +447,10 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
   },
   varianceOver: {
-    backgroundColor: Colors.danger + '20',
+    backgroundColor: SemanticColors.feedbackError + '20',
   },
   varianceUnder: {
-    backgroundColor: Colors.success + '20',
+    backgroundColor: SemanticColors.feedbackSuccess + '20',
   },
   varianceText: {
     fontSize: 11,

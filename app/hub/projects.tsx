@@ -4,7 +4,8 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing } from '../../src/theme/spacing';
-import { InlineInsight } from '../../src/components/shared/VascoInsightCard';
+import { InlineInsight, VascoInsightCard } from '../../src/components/shared/VascoInsightCard';
+import { useVascoGuidance, useInlineInsight } from '../../src/services/vascoGuidanceService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -136,6 +137,9 @@ const PORTFOLIO_STATS = [
 
 export default function ProjectsScreen() {
   const [projects] = useState(MOCK_PROJECTS);
+  const insights = useVascoGuidance('cfo', 'cfo-projects');
+  const inlineTip = useInlineInsight('cfo', 'cfo-projects', 'overview');
+  const topInsight = insights[0] ?? null;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -157,10 +161,8 @@ export default function ProjectsScreen() {
       </View>
 
       {/* AI Insight */}
-      <InlineInsight
-        icon="analytics"
-        message="Projecten met actieve what-if analyses tonen 23% minder onverwachte kostenoverschrijdingen."
-      />
+      {inlineTip && <InlineInsight icon={inlineTip.icon as IconName} message={inlineTip.message} />}
+      {topInsight && <VascoInsightCard insight={topInsight} compact />}
 
       {/* Section header */}
       <View style={styles.sectionHeader}>

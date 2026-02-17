@@ -1,13 +1,13 @@
 import { PropsWithChildren } from 'react';
 import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
-import { Colors } from '../theme/colors';
+import { SemanticColors } from '../theme/colors';
 
 type ScreenProps = PropsWithChildren<{ backgroundColor?: string }>;
 
 export function Screen({ children, backgroundColor }: ScreenProps) {
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: backgroundColor ?? Colors.background }]}
+      style={[styles.container, { backgroundColor: backgroundColor ?? SemanticColors.surfaceBackground }]}
     >
       <StatusBar barStyle="light-content" />
       {children}

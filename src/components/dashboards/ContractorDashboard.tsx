@@ -15,16 +15,8 @@ import { HoursSavedCard } from '../contractor/HoursSavedCard';
 import { Palette } from '../../theme/colors';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
-import {
-  MOCK_CONTRACTOR_METRICS,
-  MOCK_JOBS,
-  MOCK_QUOTES,
-  MOCK_CONTRACTOR_INVOICES,
-  MOCK_SCHEDULE,
-  MOCK_CONTRACTOR_PROFILE,
-  JOB_STATUS_CONFIG,
-} from '../../data/mockContractor';
-import { MOCK_ACTIVE_TRACKERS } from '../../data/mockDecisions';
+import { JOB_STATUS_CONFIG } from '../../data/mockContractor';
+import { useAppState } from '../../state/AppState';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type TabView = 'dashboard' | 'jobs' | 'money' | 'tools';
@@ -65,34 +57,54 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
   const [showIntelligence, setShowIntelligence] = useState(false);
   const [showROI, setShowROI] = useState(false);
 
-  const metrics = MOCK_CONTRACTOR_METRICS;
-  const profile = MOCK_CONTRACTOR_PROFILE;
-
-  // Get today's jobs
-  const today = new Date().toISOString().split('T')[0];
-  const todaysSchedule = MOCK_SCHEDULE.filter((s) => s.date === today || s.date === '2024-02-01');
+  const { jobs, quotes, invoices, metrics, businessProfile, jobMaterials, materials, suppliers, priceObservations } = useAppState();
 
   // Get active jobs
-  const activeJobs = MOCK_JOBS.filter((j) => j.status === 'in-progress' || j.status === 'scheduled');
+  const activeJobs = jobs.filter((j) => j.status === 'in-progress' || j.status === 'scheduled');
 
   // Get jobs ready for completion (in-progress jobs that can be marked complete)
-  const jobsReadyToComplete = MOCK_JOBS.filter((j) => j.status === 'in-progress');
+  const jobsReadyToComplete = jobs.filter((j) => j.status === 'in-progress');
 
   // Get jobs ready for handover (completed jobs that need handover package)
-  const jobsReadyForHandover = MOCK_JOBS.filter((j) => j.status === 'completed');
+  const jobsReadyForHandover = jobs.filter((j) => j.status === 'completed');
 
   // Get pending quotes
-  const pendingQuotes = MOCK_QUOTES.filter((q) => q.status === 'sent' || q.status === 'viewed');
+  const pendingQuotes = quotes.filter((q) => q.status === 'sent');
 
   // Get outstanding invoices
-  const outstandingInvoices = MOCK_CONTRACTOR_INVOICES.filter(
+  const outstandingInvoices = invoices.filter(
     (i) => i.status === 'sent' || i.status === 'overdue'
   );
 
-  // Get customer decision stats
-  const decisionTrackers = MOCK_ACTIVE_TRACKERS;
-  const totalOverdueDecisions = decisionTrackers.reduce((sum, t) => sum + t.overdueCount, 0);
-  const totalPendingDecisions = decisionTrackers.reduce((sum, t) => sum + t.pendingCount, 0);
+  // Schedule: derive from jobs with scheduled date and active status
+  const todaysSchedule = jobs
+    .filter((j) => j.scheduledDate && ['scheduled', 'in-progress'].includes(j.status))
+    .map((j) => ({
+      id: j.id,
+      title: j.title,
+      startTime: j.scheduledStartTime,
+      endTime: j.scheduledEndTime,
+      color: j.status === 'in-progress' ? SemanticColors.feedbackSuccess : CONTRACTOR_COLOR,
+      address: j.address ? { street: j.address.street, city: j.address.city } : undefined,
+    }));
+
+  // Decision trackers (not yet wired)
+  const totalOverdueDecisions = 0;
+  const totalPendingDecisions = 0;
+
+  // ── Material spend KPIs ──
+  const allJobMaterials = Object.values(jobMaterials).flat();
+  const totalMaterialSpend = allJobMaterials.reduce((s, jm) => s + (jm.totalPrice ?? 0), 0);
+  const pendingMaterials = allJobMaterials.filter((jm) => jm.status === 'planned' || jm.status === 'ordered');
+  const topSupplier = suppliers.length > 0
+    ? suppliers.reduce((best, s) => (s.totalSpend > best.totalSpend ? s : best), suppliers[0])
+    : null;
+
+  // Find sale opportunities from price observations
+  const saleAlerts = Object.values(priceObservations)
+    .flat()
+    .filter((po) => po.isSale)
+    .slice(0, 3);
 
   const formatCurrency = (amount: number) => {
     return `€${amount.toLocaleString('nl-NL')}`;
@@ -147,7 +159,7 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
             styles.decisionsAlert,
             totalOverdueDecisions > 0 && styles.decisionsAlertUrgent
           ]}
-          onPress={() => router.push('/contractor/decisions')}
+          onPress={() => router.push('/(contractor)/decisions')}
         >
           <View style={[
             styles.decisionsAlertIcon,
@@ -173,7 +185,7 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
               }
             </Text>
             <Text style={styles.decisionsAlertSubtitle}>
-              {decisionTrackers.length} actieve projecten · Tap om herinneringen te sturen
+              Tap om herinneringen te sturen
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
@@ -227,6 +239,64 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
           </View>
         )}
       </View>
+
+      {/* Material Spend Snapshot */}
+      {(totalMaterialSpend > 0 || saleAlerts.length > 0) && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Materialen</Text>
+            <Pressable style={styles.seeAllButton} onPress={() => router.push('/hub/materials')}>
+              <Text style={styles.seeAllText}>Catalogus</Text>
+              <Ionicons name="chevron-forward" size={14} color={CONTRACTOR_COLOR} />
+            </Pressable>
+          </View>
+
+          {/* Spend strip */}
+          <View style={styles.materialStatsStrip}>
+            <View style={styles.materialStatItem}>
+              <Text style={styles.materialStatValue}>{formatCurrency(totalMaterialSpend)}</Text>
+              <Text style={styles.materialStatLabel}>Totaal besteed</Text>
+            </View>
+            <View style={styles.materialStatDivider} />
+            <View style={styles.materialStatItem}>
+              <Text style={styles.materialStatValue}>{pendingMaterials.length}</Text>
+              <Text style={styles.materialStatLabel}>In bestelling</Text>
+            </View>
+            <View style={styles.materialStatDivider} />
+            <View style={styles.materialStatItem}>
+              <Text style={[styles.materialStatValue, topSupplier ? { fontSize: 13 } : undefined]} numberOfLines={1}>
+                {topSupplier?.name ?? '-'}
+              </Text>
+              <Text style={styles.materialStatLabel}>Top leverancier</Text>
+            </View>
+          </View>
+
+          {/* Sale alerts */}
+          {saleAlerts.length > 0 && (
+            <View style={styles.saleAlertsCard}>
+              <View style={styles.saleAlertsHeader}>
+                <Ionicons name="pricetag" size={14} color={SemanticColors.feedbackSuccess} />
+                <Text style={styles.saleAlertsTitle}>Actie-aanbiedingen</Text>
+              </View>
+              {saleAlerts.map((po) => (
+                <View key={po.id} style={styles.saleAlertRow}>
+                  <Text style={styles.saleAlertName} numberOfLines={1}>{po.materialName}</Text>
+                  <View style={styles.saleAlertPrices}>
+                    {po.regularPrice && (
+                      <Text style={styles.saleAlertOldPrice}>
+                        €{po.regularPrice.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}
+                      </Text>
+                    )}
+                    <Text style={styles.saleAlertNewPrice}>
+                      €{po.price.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
 
       {/* Quick Actions */}
       <View style={styles.quickActions}>
@@ -303,17 +373,16 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
               <Pressable
                 key={job.id}
                 style={styles.completeJobCard}
-                onPress={() => router.push(`/contractor/complete-job/${job.id}`)}
+                onPress={() => router.push('/contractor/complete-job')}
               >
                 <View style={styles.completeJobIcon}>
                   <Ionicons name="checkmark-circle" size={24} color={SemanticColors.feedbackSuccess} />
                 </View>
                 <View style={styles.completeJobContent}>
                   <Text style={styles.completeJobTitle}>{job.title}</Text>
-                  <Text style={styles.completeJobCustomer}>{job.address.city}</Text>
+                  <Text style={styles.completeJobCustomer}>{job.customerId ?? ''}</Text>
                 </View>
                 <View style={styles.completeJobAction}>
-                  <Text style={styles.completeJobAmount}>{formatCurrency(job.agreedAmount || 0)}</Text>
                   <View style={styles.completeButton}>
                     <Ionicons name="camera" size={14} color="#fff" />
                     <Text style={styles.completeButtonText}>Complete</Text>
@@ -347,7 +416,7 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
                 </View>
                 <View style={styles.handoverJobContent}>
                   <Text style={styles.handoverJobTitle}>{job.title}</Text>
-                  <Text style={styles.handoverJobCustomer}>{job.address.city}</Text>
+                  <Text style={styles.handoverJobCustomer}>{job.customerId ?? ''}</Text>
                 </View>
                 <View style={styles.handoverJobAction}>
                   <View style={styles.handoverButton}>
@@ -379,7 +448,7 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
                   <View style={styles.jobInfo}>
                     <Text style={styles.jobTitle}>{job.title}</Text>
                     <Text style={styles.jobCustomer}>
-                      {MOCK_JOBS.find((j) => j.id === job.id)?.address.street}
+                      {job.description ?? ''}
                     </Text>
                   </View>
                   <View style={[styles.jobStatus, { backgroundColor: statusConfig.color + '20' }]}>
@@ -396,11 +465,8 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
                 <View style={styles.jobFooter}>
                   <View style={styles.jobDetail}>
                     <Ionicons name="calendar-outline" size={12} color={SemanticColors.textTertiary} />
-                    <Text style={styles.jobDetailText}>{job.scheduledDate}</Text>
+                    <Text style={styles.jobDetailText}>{new Date(job.updatedAt).toLocaleDateString('nl-NL')}</Text>
                   </View>
-                  {job.agreedAmount && (
-                    <Text style={styles.jobAmount}>{formatCurrency(job.agreedAmount)}</Text>
-                  )}
                 </View>
               </Pressable>
             );
@@ -422,39 +488,27 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
             {pendingQuotes.map((quote) => (
               <Pressable key={quote.id} style={styles.quoteCard}>
                 <View style={styles.quoteHeader}>
-                  <Text style={styles.quoteRef}>{quote.reference}</Text>
+                  <Text style={styles.quoteRef}>{quote.id}</Text>
                   <View
                     style={[
                       styles.quoteStatus,
-                      {
-                        backgroundColor:
-                          quote.status === 'viewed'
-                            ? SemanticColors.feedbackSuccessBg
-                            : SemanticColors.feedbackInfoBg,
-                      },
+                      { backgroundColor: SemanticColors.feedbackInfoBg },
                     ]}
                   >
                     <Text
                       style={[
                         styles.quoteStatusText,
-                        {
-                          color:
-                            quote.status === 'viewed'
-                              ? SemanticColors.feedbackSuccess
-                              : SemanticColors.feedbackInfo,
-                        },
+                        { color: SemanticColors.feedbackInfo },
                       ]}
                     >
-                      {quote.status === 'viewed' ? 'Viewed' : 'Sent'}
+                      Sent
                     </Text>
                   </View>
                 </View>
-                <Text style={styles.quoteTitle}>{quote.title}</Text>
+                <Text style={styles.quoteTitle}>{quote.job || quote.customer}</Text>
                 <View style={styles.quoteFooter}>
-                  <Text style={styles.quoteExpiry}>
-                    Valid until {new Date(quote.validUntil).toLocaleDateString('nl-NL')}
-                  </Text>
-                  <Text style={styles.quoteAmount}>{formatCurrency(quote.total)}</Text>
+                  <Text style={styles.quoteExpiry}>{quote.lastUpdated}</Text>
+                  <Text style={styles.quoteAmount}>{formatCurrency(quote.amount)}</Text>
                 </View>
               </Pressable>
             ))}
@@ -508,44 +562,48 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
           )}
         </View>
         <View style={styles.invoicesList}>
-          {outstandingInvoices.map((invoice) => (
-            <Pressable key={invoice.id} style={styles.invoiceCard}>
-              <View style={styles.invoiceHeader}>
-                <Text style={styles.invoiceNumber}>{invoice.invoiceNumber}</Text>
-                <View
-                  style={[
-                    styles.invoiceStatus,
-                    {
-                      backgroundColor:
-                        invoice.status === 'overdue'
-                          ? SemanticColors.feedbackErrorBg
-                          : SemanticColors.feedbackWarningBg,
-                    },
-                  ]}
-                >
-                  <Text
+          {outstandingInvoices.map((invoice) => {
+            const dueDate = new Date();
+            dueDate.setDate(dueDate.getDate() + invoice.dueInDays);
+            return (
+              <Pressable key={invoice.id} style={styles.invoiceCard}>
+                <View style={styles.invoiceHeader}>
+                  <Text style={styles.invoiceNumber}>{invoice.id}</Text>
+                  <View
                     style={[
-                      styles.invoiceStatusText,
+                      styles.invoiceStatus,
                       {
-                        color:
+                        backgroundColor:
                           invoice.status === 'overdue'
-                            ? SemanticColors.feedbackError
-                            : SemanticColors.feedbackWarning,
+                            ? SemanticColors.feedbackErrorBg
+                            : SemanticColors.feedbackWarningBg,
                       },
                     ]}
                   >
-                    {invoice.status === 'overdue' ? 'Overdue' : 'Pending'}
-                  </Text>
+                    <Text
+                      style={[
+                        styles.invoiceStatusText,
+                        {
+                          color:
+                            invoice.status === 'overdue'
+                              ? SemanticColors.feedbackError
+                              : SemanticColors.feedbackWarning,
+                        },
+                      ]}
+                    >
+                      {invoice.status === 'overdue' ? 'Overdue' : 'Pending'}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-              <View style={styles.invoiceFooter}>
-                <Text style={styles.invoiceDue}>
-                  Due {new Date(invoice.dueDate).toLocaleDateString('nl-NL')}
-                </Text>
-                <Text style={styles.invoiceAmount}>{formatCurrency(invoice.amountDue)}</Text>
-              </View>
-            </Pressable>
-          ))}
+                <View style={styles.invoiceFooter}>
+                  <Text style={styles.invoiceDue}>
+                    Due {dueDate.toLocaleDateString('nl-NL')}
+                  </Text>
+                  <Text style={styles.invoiceAmount}>{formatCurrency(invoice.amount)}</Text>
+                </View>
+              </Pressable>
+            );
+          })}
         </View>
       </View>
 
@@ -554,23 +612,20 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
         <Text style={styles.sectionTitle}>Performance</Text>
         <View style={styles.performanceGrid}>
           <View style={styles.performanceCard}>
-            <Text style={styles.performanceValue}>{metrics.quoteConversionRate}%</Text>
-            <Text style={styles.performanceLabel}>Quote Win Rate</Text>
+            <Text style={styles.performanceValue}>{metrics.activeJobsCount}</Text>
+            <Text style={styles.performanceLabel}>Active Jobs</Text>
           </View>
           <View style={styles.performanceCard}>
-            <Text style={styles.performanceValue}>{metrics.averagePaymentDays}d</Text>
-            <Text style={styles.performanceLabel}>Avg. Payment</Text>
+            <Text style={styles.performanceValue}>{metrics.quotesOutstanding}</Text>
+            <Text style={styles.performanceLabel}>Quotes Out</Text>
           </View>
           <View style={styles.performanceCard}>
-            <Text style={styles.performanceValue}>{metrics.repeatCustomerRate}%</Text>
-            <Text style={styles.performanceLabel}>Repeat Rate</Text>
+            <Text style={styles.performanceValue}>{metrics.scheduledJobsCount}</Text>
+            <Text style={styles.performanceLabel}>Scheduled</Text>
           </View>
           <View style={styles.performanceCard}>
-            <View style={styles.ratingRow}>
-              <Ionicons name="star" size={16} color="#F59E0B" />
-              <Text style={styles.performanceValue}>{metrics.averageRating}</Text>
-            </View>
-            <Text style={styles.performanceLabel}>{metrics.totalReviews} reviews</Text>
+            <Text style={styles.performanceValue}>{metrics.overdueInvoices}</Text>
+            <Text style={styles.performanceLabel}>Overdue</Text>
           </View>
         </View>
       </View>
@@ -747,7 +802,7 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
         <View style={styles.headerTop}>
           <View>
             <Text style={styles.greeting}>Good morning</Text>
-            <Text style={styles.businessName}>{profile.tradeName || profile.businessName}</Text>
+            <Text style={styles.businessName}>{businessProfile.businessName || 'My Business'}</Text>
           </View>
           <View style={styles.tradeBadge}>
             <Ionicons name="color-palette" size={14} color={CONTRACTOR_COLOR} />
@@ -1788,5 +1843,80 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     gap: Spacing.lg,
     paddingBottom: 100,
+  },
+
+  // Material Spend KPIs
+  materialStatsStrip: {
+    flexDirection: 'row',
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 12,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  materialStatItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  materialStatValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  materialStatLabel: {
+    fontSize: 10,
+    color: SemanticColors.textTertiary,
+    marginTop: 2,
+  },
+  materialStatDivider: {
+    width: 1,
+    backgroundColor: SemanticColors.borderDefault,
+    marginHorizontal: Spacing.xs,
+  },
+  saleAlertsCard: {
+    backgroundColor: SemanticColors.feedbackSuccessBg,
+    borderRadius: 12,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.feedbackSuccess + '20',
+    gap: Spacing.xs,
+  },
+  saleAlertsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  saleAlertsTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: SemanticColors.feedbackSuccess,
+  },
+  saleAlertRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  saleAlertName: {
+    flex: 1,
+    fontSize: 13,
+    color: SemanticColors.textPrimary,
+    fontWeight: '500',
+  },
+  saleAlertPrices: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  saleAlertOldPrice: {
+    fontSize: 12,
+    color: SemanticColors.textTertiary,
+    textDecorationLine: 'line-through',
+  },
+  saleAlertNewPrice: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: SemanticColors.feedbackSuccess,
   },
 });

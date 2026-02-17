@@ -112,9 +112,11 @@ class PricingAgent {
       ]);
 
       // Check if this creates a new opportunity
-      await this.checkForOpportunity(observation.materialId, result.reference);
+      if (result.reference) {
+        await this.checkForOpportunity(observation.materialId, result.reference);
+      }
 
-      return result.reference;
+      return result.reference!;
     } catch (error) {
       console.error('[PricingAgent] Failed to record price:', error);
       throw error;

@@ -1,7 +1,7 @@
 // =============================================================================
 // BUDGET OPTIMIZER DASHBOARD — AI Budget Optimization for Directors
 // =============================================================================
-// 4-tab dashboard: Overzicht | Top Impact | Categorieën | Regels
+// 2-tab dashboard: Overzicht | Details
 // Processes mock budget workbook through enrichment + optimization pipeline.
 // =============================================================================
 
@@ -46,9 +46,17 @@ import type { TCOSummary } from '../../services/tcoCalculatorService';
 // =============================================================================
 
 type IconName = keyof typeof Ionicons.glyphMap;
-type TabView = 'overview' | 'impact' | 'categories' | 'lines';
+type TabView = 'overview' | 'details';
 
 const DIRECTOR_COLOR = SemanticColors.roleDirector;
+
+// ── Mock projects for dropdown ────────────────────────────────────────────────
+
+const MOCK_PROJECTS = [
+  'Renovatie Kantoorgebouw',
+  'Nieuwbouw Appartementen',
+  'Utiliteitsbouw Logistiek',
+];
 
 // ── Number formatting ───────────────────────────────────────────────────────
 
@@ -170,12 +178,14 @@ function TabButton({ label, icon, isActive, onPress, activeColor }: TabButtonPro
     >
       <Ionicons
         name={icon}
-        size={18}
+        size={15}
         color={isActive ? '#fff' : SemanticColors.textSecondary}
       />
       <Text
         style={[styles.tabButtonText, isActive && styles.tabButtonTextActive]}
         numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.8}
       >
         {label}
       </Text>
@@ -211,6 +221,8 @@ export default function BudgetOptimizerDashboard({
   const [expandedCatName, setExpandedCatName] = useState<string | null>(null);
   const [detailLine, setDetailLine] = useState<EnrichedBudgetLine | null>(null);
   const [filterAction, setFilterAction] = useState<string | null>(null);
+  const [selectedProjectIdx, setSelectedProjectIdx] = useState(0);
+  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
 
   const ACCENT = accentColor ?? DIRECTOR_COLOR;
 
@@ -255,7 +267,7 @@ export default function BudgetOptimizerDashboard({
     [scenarios],
   );
 
-  const projectName = optimizer.extractionResult?.projectName ?? 'Geen project';
+  const projectName = optimizer.extractionResult?.projectName ?? MOCK_PROJECTS[selectedProjectIdx];
   const totalBudget = optimizer.extractionResult?.totalBudget ?? 0;
   const lineCount = optimizer.extractionResult?.lines.length ?? 0;
 
@@ -276,7 +288,7 @@ export default function BudgetOptimizerDashboard({
     return activeScenario.optimizations.filter((o) => o.action === filterAction);
   }, [activeScenario, filterAction]);
 
-  // Filtered enriched lines for Regels tab
+  // Filtered enriched lines for Details tab — search filters across categories AND lines
   const filteredLines = useMemo(() => {
     if (!searchQuery.trim()) return enrichedLines;
     const q = searchQuery.toLowerCase();
@@ -287,6 +299,37 @@ export default function BudgetOptimizerDashboard({
         l.category.toLowerCase().includes(q),
     );
   }, [enrichedLines, searchQuery]);
+
+  // Group filtered enriched lines by category for integrated Details view
+  const linesByCategory = useMemo(() => {
+    const map = new Map<string, EnrichedBudgetLine[]>();
+    for (const line of filteredLines) {
+      const cat = line.category || 'Overig';
+      if (!map.has(cat)) map.set(cat, []);
+      map.get(cat)!.push(line);
+    }
+    return map;
+  }, [filteredLines]);
+
+  // Filtered categories for Details tab
+  const filteredCategories = useMemo(() => {
+    if (!activeScenario) return [];
+    if (!searchQuery.trim()) return activeScenario.categoryBreakdown;
+    const q = searchQuery.toLowerCase();
+    return activeScenario.categoryBreakdown.filter((cat) => {
+      // Keep category if name matches
+      if (cat.name.toLowerCase().includes(q)) return true;
+      // Keep category if any of its optimizations match
+      const catOpts = activeScenario.optimizations.filter(
+        (o) => (o.category || 'Overig') === cat.name,
+      );
+      return catOpts.some(
+        (o) =>
+          o.costCode.toLowerCase().includes(q) ||
+          o.description.toLowerCase().includes(q),
+      );
+    });
+  }, [activeScenario, searchQuery]);
 
   // ── Export handler ────────────────────────────────────────────────────────
 
@@ -364,7 +407,7 @@ export default function BudgetOptimizerDashboard({
   }
 
   // =========================================================================
-  // TAB 1: OVERZICHT
+  // TAB 1: OVERZICHT (combines old overview + top impact)
   // =========================================================================
 
   const renderOverview = () => (
@@ -414,143 +457,215 @@ export default function BudgetOptimizerDashboard({
         </View>
       )}
 
-      {/* Scenario selector cards */}
-      <Text style={styles.sectionTitle}>Optimalisatie scenario</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scenarioRow}
-      >
-        {scenarioList.map((s) => {
-          if (!s) return null;
-          const meta = scenarioMeta[s.scenario];
-          const isActive = selectedScenario === s.scenario;
-          return (
-            <Pressable
-              key={s.scenario}
-              style={[
-                styles.scenarioCard,
-                isActive && { borderColor: ACCENT, borderWidth: 2 },
-              ]}
-              onPress={() => setSelectedScenario(s.scenario)}
-            >
-              <View style={styles.scenarioHeader}>
-                <Ionicons name={meta.icon} size={20} color={isActive ? ACCENT : SemanticColors.textSecondary} />
-                <Text
-                  style={[
-                    styles.scenarioLabel,
-                    isActive && { color: ACCENT },
-                  ]}
-                >
+      {/* Scenario selector — big buttons with savings below */}
+      {activeScenario && (
+        <View style={styles.scenarioButtonRow}>
+          {scenarioList.map((s) => {
+            if (!s) return null;
+            const meta = scenarioMeta[s.scenario];
+            const isActive = selectedScenario === s.scenario;
+            return (
+              <Pressable
+                key={s.scenario}
+                style={[
+                  styles.scenarioButton,
+                  isActive && { backgroundColor: ACCENT, borderColor: ACCENT },
+                ]}
+                onPress={() => setSelectedScenario(s.scenario)}
+              >
+                <Ionicons name={meta.icon} size={18} color={isActive ? '#fff' : SemanticColors.textSecondary} />
+                <Text style={[styles.scenarioButtonLabel, isActive && { color: '#fff' }]}>
                   {s.label}
                 </Text>
-              </View>
-              <Text style={styles.scenarioSavings}>{fmt(Math.round(s.totalSavings))}</Text>
-              <Text style={styles.scenarioSavingsPct}>
-                {fmtPct(s.savingsPercent)} besparing
-              </Text>
-              <View style={styles.scenarioRisk}>
-                <View
-                  style={[styles.riskDot, { backgroundColor: meta.riskColor }]}
-                />
-                <Text style={styles.scenarioRiskText}>{meta.riskLabel}</Text>
-              </View>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-
-      {/* Summary stats */}
-      {activeScenario && (
-        <View style={styles.card}>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryStat}>
-              <Text style={styles.summaryStatValue}>
-                {activeScenario.optimizations.length}
-              </Text>
-              <Text style={styles.summaryStatLabel}>optimalisaties</Text>
-            </View>
-            <View style={styles.summaryStatDivider} />
-            <View style={styles.summaryStat}>
-              <Text style={styles.summaryStatValue}>
-                {activeScenario.categoryBreakdown.filter((c) => c.savings > 0).length}
-              </Text>
-              <Text style={styles.summaryStatLabel}>categorieën</Text>
-            </View>
-            <View style={styles.summaryStatDivider} />
-            <View style={styles.summaryStat}>
-              <Text style={styles.summaryStatValue}>
-                {fmtPct(activeScenario.confidenceAvg * 100)}
-              </Text>
-              <Text style={styles.summaryStatLabel}>gem. zekerheid</Text>
-            </View>
-          </View>
+                <Text style={[styles.scenarioButtonSaving, isActive && { color: '#fff' }]}>
+                  {fmtCompact(Math.round(s.totalSavings))}
+                </Text>
+                <Text style={[styles.scenarioButtonMeta, isActive && { color: 'rgba(255,255,255,0.7)' }]}>
+                  {s.optimizations.length} kansen · {fmtPct(s.savingsPercent)}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       )}
 
-      {/* Category breakdown */}
+      {/* Integrated category overview with supplier & TCO insights */}
       {activeScenario && (
         <>
-          <Text style={styles.sectionTitle}>Categorie overzicht</Text>
-          {activeScenario.categoryBreakdown.map((cat) => (
-            <View key={cat.name} style={styles.card}>
-              <View style={styles.catBarHeader}>
-                <Text style={styles.catBarName} numberOfLines={1}>
-                  {cat.name}
-                </Text>
-                <Text style={styles.catBarSavings}>
-                  {cat.savings > 0 ? `-${fmt(Math.round(cat.savings))}` : '—'}
-                </Text>
-              </View>
-              <View style={styles.catBarContainer}>
-                <View
-                  style={[
-                    styles.catBarOptimized,
-                    {
-                      width: `${
-                        cat.currentTotal > 0
-                          ? Math.round(
-                              (cat.optimizedTotal / cat.currentTotal) * 100,
-                            )
-                          : 100
-                      }%`,
-                    },
-                  ]}
-                />
-                {cat.savings > 0 && (
-                  <View
-                    style={[
-                      styles.catBarSaved,
-                      {
-                        width: `${
-                          cat.currentTotal > 0
-                            ? Math.round(
-                                (cat.savings / cat.currentTotal) * 100,
-                              )
-                            : 0
-                        }%`,
-                      },
-                    ]}
-                  />
-                )}
-              </View>
-              <View style={styles.catBarFooter}>
-                <Text style={styles.catBarFooterText}>
-                  {fmtCompact(cat.optimizedTotal)} van {fmtCompact(cat.currentTotal)}
-                </Text>
-                {cat.savingsPercent > 0 && (
-                  <Text
-                    style={[
-                      styles.catBarFooterText,
-                      { color: SemanticColors.feedbackSuccess },
-                    ]}
-                  >
-                    -{fmtPct(cat.savingsPercent)}
+          <Text style={styles.sectionTitle}>Besparingskansen</Text>
+          {activeScenario.categoryBreakdown.map((cat) => {
+            const catOpts = activeScenario.optimizations
+              .filter((o) => (o.category || 'Overig') === cat.name)
+              .sort((a, b) => b.savings - a.savings);
+            const topActions = [...new Set(catOpts.map(o => ACTION_LABELS[o.action] ?? o.action))].slice(0, 3);
+            // Match TCO comparisons to this category
+            const tcoMatch = tcoSummary?.comparisons.find(
+              (c) => cat.name.toLowerCase().includes(c.category.toLowerCase().split(' ')[0]) ||
+                     c.category.toLowerCase().includes(cat.name.toLowerCase().split(' ')[0]),
+            );
+            // Match supplier wins to this category (via optimizations referencing suppliers)
+            const catSuppliers = new Set(
+              catOpts.map((o) => {
+                const line = enrichedLines.find((l) => l.costCode === o.costCode);
+                return line?.supplier?.toLowerCase();
+              }).filter(Boolean),
+            );
+            const matchedSupplierWins = supplierNegotiation?.quickWins.filter(
+              (w) => catSuppliers.has(w.supplier.toLowerCase()),
+            ) ?? [];
+
+            return (
+              <View key={cat.name} style={styles.catBarCard}>
+                {/* Header: name + total savings */}
+                <View style={styles.catBarHeader}>
+                  <Text style={styles.catBarName} numberOfLines={1}>{cat.name}</Text>
+                  {cat.savings > 0 && (
+                    <Text style={styles.catBarSavingsBig}>
+                      -{fmtCompact(Math.round(cat.savings))}
+                    </Text>
+                  )}
+                </View>
+                {/* Budget line + progress */}
+                <View style={styles.catBarBudgetRow}>
+                  <Text style={styles.catBarBudgetText}>
+                    {fmtCompact(cat.currentTotal)} → {fmtCompact(cat.optimizedTotal)}
+                  </Text>
+                  {cat.savingsPercent > 0 && (
+                    <Text style={styles.catBarPct}>-{fmtPct(cat.savingsPercent)}</Text>
+                  )}
+                </View>
+                <View style={styles.catBarContainer}>
+                  <View style={[styles.catBarOptimized, { width: `${cat.currentTotal > 0 ? Math.round((cat.optimizedTotal / cat.currentTotal) * 100) : 100}%` }]} />
+                  {cat.savings > 0 && (
+                    <View style={[styles.catBarSaved, { width: `${cat.currentTotal > 0 ? Math.round((cat.savings / cat.currentTotal) * 100) : 0}%` }]} />
+                  )}
+                </View>
+                {/* Action types */}
+                {topActions.length > 0 && (
+                  <Text style={styles.catBarContext}>
+                    {topActions.join(' · ')} — {catOpts.length} kansen
                   </Text>
                 )}
+                {/* Top impact drivers */}
+                {catOpts.slice(0, 3).map((opt) => (
+                  <View key={opt.costCode} style={styles.catImpactRow}>
+                    <Text style={styles.catImpactDesc} numberOfLines={1}>{opt.description}</Text>
+                    <Text style={styles.catImpactSaving}>-{fmtCompact(Math.round(opt.savings))}</Text>
+                    <View style={[styles.catImpactBadge, { backgroundColor: ACTION_COLORS[opt.action] ?? SemanticColors.textTertiary }]}>
+                      <Text style={styles.catImpactBadgeText}>{ACTION_LABELS[opt.action] ?? opt.action}</Text>
+                    </View>
+                  </View>
+                ))}
+                {/* TCO match inline */}
+                {tcoMatch && (
+                  <Pressable
+                    style={styles.catInlineInsight}
+                    onPress={() => Alert.alert(
+                      `TCO: ${tcoMatch.category}`,
+                      `${tcoMatch.customerPitch}\n\nAanbeveling: ${tcoMatch.recommendation.name} (${tcoMatch.recommendation.brand})\nTCO/jaar: €${tcoMatch.recommendation.tcoPerYear} vs €${tcoMatch.materials[0].tcoPerYear} (budget)\n\nBesparing: €${tcoMatch.savingsVsBudget}/jaar`,
+                    )}
+                  >
+                    <Ionicons name="calculator" size={13} color={SemanticColors.feedbackInfo} />
+                    <Text style={styles.catInlineInsightText} numberOfLines={1}>
+                      TCO: {tcoMatch.recommendation.brand} {tcoMatch.recommendation.name}
+                    </Text>
+                    <Text style={styles.catInlineInsightSaving}>-€{tcoMatch.savingsVsBudget}/jr</Text>
+                  </Pressable>
+                )}
+                {/* Supplier wins inline */}
+                {matchedSupplierWins.map((win) => (
+                  <Pressable
+                    key={win.supplier}
+                    style={styles.catInlineInsight}
+                    onPress={() => Alert.alert(
+                      `${win.supplier} — Actie`,
+                      `${win.action}\n\nGeschatte besparing: €${win.saving}/jaar`,
+                      [
+                        { text: 'Later' },
+                        { text: 'Contact opnemen', onPress: () => Alert.alert('Herinnering ingesteld', `We herinneren je om contact op te nemen met ${win.supplier}.`) },
+                      ],
+                    )}
+                  >
+                    <Ionicons name="business" size={13} color="#7C3AED" />
+                    <Text style={styles.catInlineInsightText} numberOfLines={1}>
+                      {win.supplier}: {win.action}
+                    </Text>
+                    <Text style={styles.catInlineInsightSaving}>€{win.saving}/jr</Text>
+                  </Pressable>
+                ))}
+                {catOpts.length === 0 && !tcoMatch && matchedSupplierWins.length === 0 && (
+                  <Text style={styles.catBarNoOpts}>Geen optimalisaties gevonden</Text>
+                )}
               </View>
-            </View>
-          ))}
+            );
+          })}
+
+          {/* Unmatched supplier wins — shown as compact rows at the end */}
+          {(() => {
+            const matchedSupplierNames = new Set<string>();
+            activeScenario.categoryBreakdown.forEach((cat) => {
+              const catOpts = activeScenario.optimizations.filter((o) => (o.category || 'Overig') === cat.name);
+              const catSuppliers = new Set(
+                catOpts.map((o) => {
+                  const line = enrichedLines.find((l) => l.costCode === o.costCode);
+                  return line?.supplier?.toLowerCase();
+                }).filter(Boolean),
+              );
+              supplierNegotiation?.quickWins.forEach((w) => {
+                if (catSuppliers.has(w.supplier.toLowerCase())) matchedSupplierNames.add(w.supplier);
+              });
+            });
+            const unmatchedWins = supplierNegotiation?.quickWins.filter((w) => !matchedSupplierNames.has(w.supplier)) ?? [];
+            if (unmatchedWins.length === 0) return null;
+            return unmatchedWins.map((win) => (
+              <Pressable
+                key={win.supplier}
+                style={styles.catInlineInsightStandalone}
+                onPress={() => Alert.alert(
+                  `${win.supplier} — Actie`,
+                  `${win.action}\n\nGeschatte besparing: €${win.saving}/jaar`,
+                )}
+              >
+                <Ionicons name="business" size={14} color="#7C3AED" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.catInlineStandaloneTitle}>{win.supplier}</Text>
+                  <Text style={styles.catInlineStandaloneSub}>{win.action}</Text>
+                </View>
+                <Text style={styles.catInlineInsightSaving}>€{win.saving}/jr</Text>
+              </Pressable>
+            ));
+          })()}
+
+          {/* Unmatched TCO comparisons */}
+          {(() => {
+            const matchedTcoCategories = new Set<string>();
+            activeScenario.categoryBreakdown.forEach((cat) => {
+              const match = tcoSummary?.comparisons.find(
+                (c) => cat.name.toLowerCase().includes(c.category.toLowerCase().split(' ')[0]) ||
+                       c.category.toLowerCase().includes(cat.name.toLowerCase().split(' ')[0]),
+              );
+              if (match) matchedTcoCategories.add(match.category);
+            });
+            const unmatchedTco = tcoSummary?.comparisons.filter((c) => !matchedTcoCategories.has(c.category)) ?? [];
+            if (unmatchedTco.length === 0) return null;
+            return unmatchedTco.map((comp) => (
+              <Pressable
+                key={comp.category}
+                style={styles.catInlineInsightStandalone}
+                onPress={() => Alert.alert(
+                  `TCO: ${comp.category}`,
+                  `${comp.customerPitch}\n\nAanbeveling: ${comp.recommendation.name} (${comp.recommendation.brand})\nBesparing: €${comp.savingsVsBudget}/jaar`,
+                )}
+              >
+                <Ionicons name="calculator" size={14} color={SemanticColors.feedbackInfo} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.catInlineStandaloneTitle}>{comp.category}</Text>
+                  <Text style={styles.catInlineStandaloneSub}>{comp.recommendation.brand} {comp.recommendation.name} — beste TCO</Text>
+                </View>
+                <Text style={styles.catInlineInsightSaving}>-€{comp.savingsVsBudget}/jr</Text>
+              </Pressable>
+            ));
+          })()}
         </>
       )}
 
@@ -580,30 +695,63 @@ export default function BudgetOptimizerDashboard({
           </Text>
         </Pressable>
       )}
+
+      {/* Inkoop kansen link */}
+      <Pressable
+        style={[styles.card, styles.enrichLinkCard]}
+        onPress={() => router.push('/contractor/purchasing' as any)}
+      >
+        <View style={[styles.enrichIconBox, { backgroundColor: SemanticColors.feedbackSuccess + '15' }]}>
+          <Ionicons name="cart" size={18} color={SemanticColors.feedbackSuccess} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.enrichItemTitle}>Bekijk alle inkooptips</Text>
+          <Text style={styles.enrichItemSubtitle}>Prijsalerts, trends & besteladvies</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+      </Pressable>
+
+      {/* Benchmarking link */}
+      <Pressable
+        style={[styles.card, styles.enrichLinkCard]}
+        onPress={() => router.push('/contractor/benchmark' as any)}
+      >
+        <View style={[styles.enrichIconBox, { backgroundColor: ACCENT + '15' }]}>
+          <Ionicons name="bar-chart" size={18} color={ACCENT} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.enrichItemTitle}>Kostenbenchmarking</Text>
+          <Text style={styles.enrichItemSubtitle}>Kostenvergelijking tussen projecten</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+      </Pressable>
     </>
   );
 
   // =========================================================================
-  // TAB 2: TOP IMPACT
+  // TAB 2: DETAILS (combines old categories accordion + lines search)
   // =========================================================================
 
-  const renderImpact = () => {
+  const renderDetails = () => {
     if (!activeScenario) return null;
 
     return (
       <>
-        {/* Header */}
-        <View style={styles.card}>
-          <Text style={styles.impactHeaderText}>
-            Goedgekeurde besparingen:{' '}
-            <Text style={{ color: SemanticColors.feedbackSuccess }}>
-              {fmt(Math.round(approvedSavings))}
-            </Text>
-            {' '}van{' '}
-            <Text style={{ color: ACCENT }}>
-              {fmt(Math.round(activeScenario.totalSavings))}
-            </Text>
-          </Text>
+        {/* Search bar — compact */}
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={16} color={SemanticColors.textTertiary} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Zoek op code, omschrijving of categorie..."
+            placeholderTextColor={SemanticColors.textTertiary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <Pressable onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={16} color={SemanticColors.textTertiary} />
+            </Pressable>
+          )}
         </View>
 
         {/* Filter chips */}
@@ -613,622 +761,150 @@ export default function BudgetOptimizerDashboard({
           contentContainerStyle={styles.chipRow}
         >
           <Pressable
-            style={[
-              styles.chip,
-              !filterAction && [styles.chipActive, { backgroundColor: ACCENT }],
-            ]}
+            style={[styles.chip, !filterAction && [styles.chipActive, { backgroundColor: ACCENT }]]}
             onPress={() => setFilterAction(null)}
           >
-            <Text
-              style={[
-                styles.chipText,
-                !filterAction && styles.chipTextActive,
-              ]}
-            >
-              Alle
-            </Text>
+            <Text style={[styles.chipText, !filterAction && styles.chipTextActive]}>Alle</Text>
           </Pressable>
           {actionTypes.map((type) => (
             <Pressable
               key={type}
-              style={[
-                styles.chip,
-                filterAction === type && {
-                  backgroundColor: ACTION_COLORS[type] ?? SemanticColors.textTertiary,
-                },
-              ]}
-              onPress={() =>
-                setFilterAction(filterAction === type ? null : type)
-              }
+              style={[styles.chip, filterAction === type && { backgroundColor: ACTION_COLORS[type] ?? SemanticColors.textTertiary }]}
+              onPress={() => setFilterAction(filterAction === type ? null : type)}
             >
-              <Text
-                style={[
-                  styles.chipText,
-                  filterAction === type && { color: '#fff' },
-                ]}
-              >
+              <Text style={[styles.chipText, filterAction === type && { color: '#fff' }]}>
                 {ACTION_LABELS[type] ?? type}
               </Text>
             </Pressable>
           ))}
         </ScrollView>
 
-        {/* Optimization cards */}
-        {filteredOptimizations.map((opt) => {
-          const isExpanded = expandedOptId === opt.costCode;
-          const isApproved = approvals.get(opt.costCode) === true;
-          const isRejected = approvals.get(opt.costCode) === false;
-          const actionColor =
-            ACTION_COLORS[opt.action] ?? SemanticColors.textTertiary;
-
-          return (
-            <Pressable
-              key={opt.costCode}
-              style={[
-                styles.card,
-                isApproved && {
-                  borderColor: SemanticColors.feedbackSuccess,
-                  borderWidth: 1.5,
-                },
-                isRejected && { opacity: 0.5 },
-              ]}
-              onPress={() =>
-                setExpandedOptId(isExpanded ? null : opt.costCode)
-              }
-            >
-              <View style={styles.optRow}>
-                {/* Cost code badge */}
-                <View style={styles.optCodeBadge}>
-                  <Text style={styles.optCodeText}>{opt.costCode}</Text>
-                </View>
-                <View style={{ flex: 1, marginLeft: Spacing.xs }}>
-                  <Text style={styles.optDescription} numberOfLines={2}>
-                    {opt.description}
-                  </Text>
-                  <Text style={styles.optCategory}>{opt.category}</Text>
-                </View>
-              </View>
-
-              {/* Price arrow */}
-              <View style={styles.optPriceRow}>
-                <Text style={[styles.optPrice, { color: SemanticColors.feedbackError }]}>
-                  {fmt(Math.round(opt.currentTotal))}
-                </Text>
-                <Ionicons
-                  name="arrow-forward"
-                  size={14}
-                  color={SemanticColors.textTertiary}
-                />
-                <Text style={[styles.optPrice, { color: SemanticColors.feedbackSuccess }]}>
-                  {fmt(Math.round(opt.suggestedTotal))}
-                </Text>
-                <Text style={styles.optSavingsBadge}>
-                  -{fmtPct(opt.savingsPercent)}
-                </Text>
-              </View>
-
-              {/* Action badge + confidence bar */}
-              <View style={styles.optMetaRow}>
-                <View style={[styles.actionBadge, { backgroundColor: actionColor }]}>
-                  <Text style={styles.actionBadgeText}>
-                    {ACTION_LABELS[opt.action] ?? opt.action}
-                  </Text>
-                </View>
-                <View style={styles.confidenceBarContainer}>
-                  <View
-                    style={[
-                      styles.confidenceBar,
-                      {
-                        width: `${Math.round(opt.confidence * 100)}%`,
-                        backgroundColor: ACCENT,
-                      },
-                    ]}
-                  />
-                </View>
-                <Text style={styles.confidenceText}>
-                  {Math.round(opt.confidence * 100)}%
-                </Text>
-              </View>
-
-              {/* Expanded area */}
-              {isExpanded && (
-                <View style={styles.optExpanded}>
-                  <Text style={styles.optReasoning}>{opt.reasoning}</Text>
-                  {opt.sources.length > 0 && (
-                    <View style={styles.optSourcesList}>
-                      <Text style={styles.optSourcesLabel}>Bronnen:</Text>
-                      {opt.sources.map((src, i) => (
-                        <Text key={i} style={styles.optSourceItem}>
-                          • {src}
-                        </Text>
-                      ))}
-                    </View>
-                  )}
-                </View>
-              )}
-
-              {/* Approve / Reject buttons */}
-              <View style={styles.optActions}>
-                <Pressable
-                  style={[
-                    styles.optActionButton,
-                    isApproved && {
-                      backgroundColor: SemanticColors.feedbackSuccessBg,
-                    },
-                  ]}
-                  onPress={() => approveOptimization(opt.costCode)}
-                >
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={24}
-                    color={
-                      isApproved
-                        ? SemanticColors.feedbackSuccess
-                        : SemanticColors.textTertiary
-                    }
-                  />
-                </Pressable>
-                <Pressable
-                  style={[
-                    styles.optActionButton,
-                    isRejected && {
-                      backgroundColor: SemanticColors.feedbackErrorBg,
-                    },
-                  ]}
-                  onPress={() => rejectOptimization(opt.costCode)}
-                >
-                  <Ionicons
-                    name="close-circle"
-                    size={24}
-                    color={
-                      isRejected
-                        ? SemanticColors.feedbackError
-                        : SemanticColors.textTertiary
-                    }
-                  />
-                </Pressable>
-              </View>
-            </Pressable>
-          );
-        })}
-
-        {filteredOptimizations.length === 0 && (
-          <View style={styles.emptyState}>
-            <Ionicons
-              name="search"
-              size={40}
-              color={SemanticColors.textTertiary}
-            />
-            <Text style={styles.emptyStateText}>
-              Geen optimalisaties gevonden voor dit filter
-            </Text>
-          </View>
-        )}
-
-        {/* Leverancier Kansen — from supplier negotiation data */}
-        {supplierNegotiation && supplierNegotiation.quickWins.length > 0 && (
-          <>
-            <View style={styles.enrichSectionHeader}>
-              <Text style={styles.sectionTitle}>Leverancier Kansen</Text>
-              <Text style={styles.enrichSectionBadgeSuccess}>
-                €{supplierNegotiation.totalDiscountPotential}/jr potentieel
-              </Text>
-            </View>
-            {supplierNegotiation.quickWins.map((win) => (
-              <Pressable
-                key={win.supplier}
-                style={styles.card}
-                onPress={() => Alert.alert(
-                  `${win.supplier} \u2014 Actie`,
-                  `${win.action}\n\nGeschatte besparing: \u20AC${win.saving}/jaar`,
-                  [
-                    { text: 'Later' },
-                    { text: 'Contact opnemen', onPress: () => Alert.alert('Herinnering ingesteld', `We herinneren je om contact op te nemen met ${win.supplier}.`) },
-                  ],
-                )}
-              >
-                <View style={styles.enrichRow}>
-                  <View style={[styles.enrichIconBox, { backgroundColor: '#7C3AED15' }]}>
-                    <Ionicons name="business" size={18} color="#7C3AED" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.enrichItemTitle}>{win.supplier}</Text>
-                    <Text style={styles.enrichItemSubtitle}>{win.action}</Text>
-                  </View>
-                  <Text style={styles.enrichSavingText}>€{win.saving}/jr</Text>
-                </View>
-              </Pressable>
-            ))}
-          </>
-        )}
-
-        {/* Inkoop kansen link */}
-        <Pressable
-          style={[styles.card, styles.enrichLinkCard]}
-          onPress={() => router.push('/contractor/purchasing' as any)}
-        >
-          <View style={[styles.enrichIconBox, { backgroundColor: SemanticColors.feedbackSuccess + '15' }]}>
-            <Ionicons name="cart" size={18} color={SemanticColors.feedbackSuccess} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.enrichItemTitle}>Bekijk alle inkooptips</Text>
-            <Text style={styles.enrichItemSubtitle}>Prijsalerts, trends & besteladvies</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-        </Pressable>
-      </>
-    );
-  };
-
-  // =========================================================================
-  // TAB 3: CATEGORIEËN
-  // =========================================================================
-
-  const renderCategories = () => {
-    if (!activeScenario) return null;
-
-    return (
-      <>
-        {activeScenario.categoryBreakdown.map((cat) => {
+        {/* Integrated category sections with optimizations + lines */}
+        {filteredCategories.map((cat) => {
           const isExpanded = expandedCatName === cat.name;
-          const catOptimizations = activeScenario.optimizations.filter(
+          let catOptimizations = activeScenario.optimizations.filter(
             (o) => (o.category || 'Overig') === cat.name,
           );
+          if (filterAction) catOptimizations = catOptimizations.filter((o) => o.action === filterAction);
+          if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase();
+            catOptimizations = catOptimizations.filter(
+              (o) => o.costCode.toLowerCase().includes(q) || o.description.toLowerCase().includes(q) || cat.name.toLowerCase().includes(q),
+            );
+          }
+          const catLines = linesByCategory.get(cat.name) ?? [];
 
           return (
             <View key={cat.name}>
+              {/* Category header — pressable to expand */}
               <Pressable
-                style={styles.card}
-                onPress={() =>
-                  setExpandedCatName(isExpanded ? null : cat.name)
-                }
+                style={styles.detailCatHeader}
+                onPress={() => setExpandedCatName(isExpanded ? null : cat.name)}
               >
-                <View style={styles.catAccordionHeader}>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={styles.catAccordionName}>{cat.name}</Text>
-                      {catOptimizations.length > 0 && (
-                        <View style={styles.catCountBadge}>
-                          <Text style={styles.catCountText}>
-                            {catOptimizations.length}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                    <View style={styles.catAccordionSubRow}>
-                      <Text style={styles.catAccordionSub}>
-                        {fmtCompact(cat.currentTotal)} → {fmtCompact(cat.optimizedTotal)}
-                      </Text>
-                      {cat.savings > 0 && (
-                        <Text
-                          style={[
-                            styles.catAccordionSavings,
-                            { color: SemanticColors.feedbackSuccess },
-                          ]}
-                        >
-                          -{fmt(Math.round(cat.savings))} ({fmtPct(cat.savingsPercent)})
-                        </Text>
-                      )}
-                    </View>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={styles.detailCatName}>{cat.name}</Text>
+                    {catOptimizations.length > 0 && (
+                      <View style={styles.catCountBadge}>
+                        <Text style={styles.catCountText}>{catOptimizations.length}</Text>
+                      </View>
+                    )}
+                    <Text style={styles.detailCatLineCount}>{catLines.length} regels</Text>
                   </View>
-                  {/* Mini savings bar */}
-                  <View style={styles.miniBarContainer}>
-                    <View
-                      style={[
-                        styles.miniBar,
-                        {
-                          width: `${
-                            cat.currentTotal > 0
-                              ? Math.min(
-                                  100,
-                                  Math.round(
-                                    (cat.savings / cat.currentTotal) * 100,
-                                  ),
-                                )
-                              : 0
-                          }%`,
-                          backgroundColor: SemanticColors.feedbackSuccess,
-                        },
-                      ]}
-                    />
-                  </View>
-                  <Ionicons
-                    name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                    size={18}
-                    color={SemanticColors.textTertiary}
-                  />
+                  <Text style={styles.detailCatSub}>
+                    {fmtCompact(cat.currentTotal)} → {fmtCompact(cat.optimizedTotal)}
+                    {cat.savings > 0 ? `  ·  -${fmtCompact(Math.round(cat.savings))} (${fmtPct(cat.savingsPercent)})` : ''}
+                  </Text>
                 </View>
+                <Ionicons
+                  name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color={SemanticColors.textTertiary}
+                />
               </Pressable>
 
-              {/* Expanded: lines in this category */}
-              {isExpanded &&
-                catOptimizations.map((opt) => {
-                  const isApproved = approvals.get(opt.costCode) === true;
-                  const isRejected = approvals.get(opt.costCode) === false;
-                  return (
-                    <View
-                      key={opt.costCode}
-                      style={[
-                        styles.catLineCard,
-                        isApproved && {
-                          borderLeftColor: SemanticColors.feedbackSuccess,
-                          borderLeftWidth: 3,
-                        },
-                        isRejected && { opacity: 0.5 },
-                      ]}
-                    >
-                      <View style={styles.catLineRow}>
-                        <Text style={styles.catLineCode}>{opt.costCode}</Text>
-                        <Text style={styles.catLineDesc} numberOfLines={1}>
-                          {opt.description}
-                        </Text>
-                      </View>
-                      <View style={styles.catLineRow}>
-                        <Text style={styles.catLineSaving}>
-                          -{fmt(Math.round(opt.savings))}
-                        </Text>
-                        <View
-                          style={[
-                            styles.actionBadgeSmall,
-                            {
-                              backgroundColor:
-                                ACTION_COLORS[opt.action] ??
-                                SemanticColors.textTertiary,
-                            },
-                          ]}
-                        >
-                          <Text style={styles.actionBadgeSmallText}>
-                            {ACTION_LABELS[opt.action] ?? opt.action}
+              {/* Expanded content: optimizations first, then lines */}
+              {isExpanded && (
+                <View style={styles.detailCatContent}>
+                  {/* Optimizations */}
+                  {catOptimizations.length > 0 && (
+                    <View style={styles.detailOptSection}>
+                      <Text style={styles.detailOptTitle}>
+                        Optimalisaties ({catOptimizations.length})
+                      </Text>
+                      {catOptimizations.map((opt) => {
+                        const isApproved = approvals.get(opt.costCode) === true;
+                        const isRejected = approvals.get(opt.costCode) === false;
+                        return (
+                          <View
+                            key={opt.costCode}
+                            style={[
+                              styles.detailOptRow,
+                              isApproved && { borderLeftColor: SemanticColors.feedbackSuccess, borderLeftWidth: 2 },
+                              isRejected && { opacity: 0.5 },
+                            ]}
+                          >
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.detailOptDesc} numberOfLines={1}>{opt.description}</Text>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                                <Text style={styles.detailOptCode}>{opt.costCode}</Text>
+                                <View style={[styles.actionBadgeSmall, { backgroundColor: ACTION_COLORS[opt.action] ?? SemanticColors.textTertiary }]}>
+                                  <Text style={styles.actionBadgeSmallText}>{ACTION_LABELS[opt.action] ?? opt.action}</Text>
+                                </View>
+                              </View>
+                            </View>
+                            <Text style={styles.detailOptSaving}>-{fmtCompact(Math.round(opt.savings))}</Text>
+                            <Pressable onPress={() => approveOptimization(opt.costCode)}>
+                              <Ionicons name="checkmark-circle" size={18} color={isApproved ? SemanticColors.feedbackSuccess : SemanticColors.textTertiary} />
+                            </Pressable>
+                            <Pressable onPress={() => rejectOptimization(opt.costCode)}>
+                              <Ionicons name="close-circle" size={18} color={isRejected ? SemanticColors.feedbackError : SemanticColors.textTertiary} />
+                            </Pressable>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  )}
+                  {/* Budget lines in this category — compact rows */}
+                  {catLines.map((line) => {
+                    const status = getPriceStatus(line);
+                    return (
+                      <Pressable
+                        key={line.id}
+                        style={styles.detailLineRow}
+                        onPress={() => setDetailLine(line)}
+                      >
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.detailLineDesc} numberOfLines={1}>{line.description}</Text>
+                          <Text style={styles.detailLineMeta}>
+                            {line.costCode} · {fmtDec(line.unitRate)}/{line.unit} · {line.quantity} {line.unit}
                           </Text>
                         </View>
-                        <View style={{ flexDirection: 'row', gap: 4 }}>
-                          <Pressable
-                            onPress={() => approveOptimization(opt.costCode)}
-                          >
-                            <Ionicons
-                              name="checkmark-circle"
-                              size={18}
-                              color={
-                                isApproved
-                                  ? SemanticColors.feedbackSuccess
-                                  : SemanticColors.textTertiary
-                              }
-                            />
-                          </Pressable>
-                          <Pressable
-                            onPress={() => rejectOptimization(opt.costCode)}
-                          >
-                            <Ionicons
-                              name="close-circle"
-                              size={18}
-                              color={
-                                isRejected
-                                  ? SemanticColors.feedbackError
-                                  : SemanticColors.textTertiary
-                              }
-                            />
-                          </Pressable>
+                        <View style={{ alignItems: 'flex-end' }}>
+                          <Text style={styles.detailLineTotal}>{fmtCompact(Math.round(line.total))}</Text>
+                          <View style={[styles.detailLineStatus, { backgroundColor: status.color + '15' }]}>
+                            <View style={[styles.riskDot, { backgroundColor: status.color, width: 5, height: 5, borderRadius: 3 }]} />
+                            <Text style={[styles.detailLineStatusText, { color: status.color }]}>{status.label}</Text>
+                          </View>
                         </View>
-                      </View>
-                    </View>
-                  );
-                })}
-
-              {isExpanded && catOptimizations.length === 0 && (
-                <View style={styles.catLineCard}>
-                  <Text style={styles.emptyStateTextSmall}>
-                    Geen optimalisaties in deze categorie
-                  </Text>
+                      </Pressable>
+                    );
+                  })}
                 </View>
               )}
             </View>
           );
         })}
 
-        {/* TCO Vergelijking — from TCO calculator data */}
-        {tcoSummary && tcoSummary.comparisons.length > 0 && (
-          <>
-            <View style={styles.enrichSectionHeader}>
-              <Text style={styles.sectionTitle}>TCO Vergelijking</Text>
-              <Text style={styles.enrichSectionCount}>
-                {tcoSummary.comparisons.length} categorieën
-              </Text>
-            </View>
-            {tcoSummary.comparisons.map((comp) => (
-              <Pressable
-                key={comp.category}
-                style={styles.card}
-                onPress={() => Alert.alert(
-                  `TCO: ${comp.category}`,
-                  `${comp.customerPitch}\n\nAanbeveling: ${comp.recommendation.name} (${comp.recommendation.brand})\nTCO/jaar: \u20AC${comp.recommendation.tcoPerYear} vs \u20AC${comp.materials[0].tcoPerYear} (budget)\n\nBesparing: \u20AC${comp.savingsVsBudget}/jaar`,
-                )}
-              >
-                <View style={styles.enrichRow}>
-                  <View style={[styles.enrichIconBox, { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
-                    <Ionicons name="calculator" size={18} color={SemanticColors.feedbackInfo} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.enrichItemTitle}>{comp.category}</Text>
-                    <Text style={styles.enrichItemSubtitle}>
-                      {comp.recommendation.brand} {comp.recommendation.name} — beste TCO
-                    </Text>
-                  </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={styles.enrichSavingText}>-€{comp.savingsVsBudget}/jr</Text>
-                    <Text style={styles.enrichSavingMeta}>vs budget</Text>
-                  </View>
-                </View>
-              </Pressable>
-            ))}
-          </>
+        {filteredCategories.length === 0 && (
+          <View style={styles.emptyState}>
+            <Ionicons name="document-text" size={40} color={SemanticColors.textTertiary} />
+            <Text style={styles.emptyStateText}>Geen resultaten gevonden</Text>
+          </View>
         )}
-
-        {/* Benchmarking link */}
-        <Pressable
-          style={[styles.card, styles.enrichLinkCard]}
-          onPress={() => router.push('/contractor/benchmark' as any)}
-        >
-          <View style={[styles.enrichIconBox, { backgroundColor: ACCENT + '15' }]}>
-            <Ionicons name="bar-chart" size={18} color={ACCENT} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.enrichItemTitle}>Kostenbenchmarking</Text>
-            <Text style={styles.enrichItemSubtitle}>Kostenvergelijking tussen projecten</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
-        </Pressable>
       </>
     );
   };
-
-  // =========================================================================
-  // TAB 4: REGELS (Line Details)
-  // =========================================================================
-
-  const renderLines = () => (
-    <>
-      {/* Search bar */}
-      <View style={styles.searchBar}>
-        <Ionicons
-          name="search"
-          size={18}
-          color={SemanticColors.textTertiary}
-        />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Zoek op code, omschrijving of categorie..."
-          placeholderTextColor={SemanticColors.textTertiary}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        {searchQuery.length > 0 && (
-          <Pressable onPress={() => setSearchQuery('')}>
-            <Ionicons
-              name="close-circle"
-              size={18}
-              color={SemanticColors.textTertiary}
-            />
-          </Pressable>
-        )}
-      </View>
-
-      {/* Results count */}
-      <Text style={styles.linesCount}>
-        {filteredLines.length} regel{filteredLines.length !== 1 ? 's' : ''}
-        {searchQuery.length > 0 ? ' gevonden' : ''}
-      </Text>
-
-      {/* Line cards */}
-      {filteredLines.map((line) => {
-        const delta = getLineDelta(line);
-        const status = getPriceStatus(line);
-        const marketPrice = line.marketData?.marketAvg ?? 0;
-
-        return (
-          <Pressable
-            key={line.id}
-            style={styles.lineCard}
-            onPress={() => setDetailLine(line)}
-          >
-            {/* Header: code + category */}
-            <View style={styles.lineCardHeader}>
-              <View style={styles.lineCodeBadge}>
-                <Text style={styles.lineCodeText}>{line.costCode}</Text>
-              </View>
-              <Text style={styles.lineCardCategory} numberOfLines={1}>
-                {line.category}
-              </Text>
-              <Ionicons
-                name="chevron-forward"
-                size={14}
-                color={SemanticColors.textTertiary}
-                style={{ marginLeft: 'auto' }}
-              />
-            </View>
-
-            {/* Description */}
-            <Text style={styles.lineCardDesc} numberOfLines={2}>
-              {line.description}
-            </Text>
-
-            {/* Price grid */}
-            <View style={styles.lineCardPrices}>
-              <View style={styles.linePriceCol}>
-                <Text style={styles.linePriceLabel}>Tarief</Text>
-                <Text style={styles.linePriceValue}>
-                  {fmtDec(line.unitRate)}
-                  <Text style={styles.linePriceUnit}>/{line.unit}</Text>
-                </Text>
-              </View>
-              <View style={styles.linePriceCol}>
-                <Text style={styles.linePriceLabel}>Totaal</Text>
-                <Text style={[styles.linePriceValue, { fontWeight: '700' }]}>
-                  {fmt(Math.round(line.total))}
-                </Text>
-              </View>
-              <View style={styles.linePriceCol}>
-                <Text style={styles.linePriceLabel}>Markt</Text>
-                <Text
-                  style={[
-                    styles.linePriceValue,
-                    marketPrice === 0 && { color: SemanticColors.textTertiary },
-                  ]}
-                >
-                  {marketPrice > 0 ? fmtDec(marketPrice) : '—'}
-                </Text>
-              </View>
-            </View>
-
-            {/* Footer: status + delta + savings */}
-            <View style={styles.lineCardFooter}>
-              <View
-                style={[
-                  styles.lineStatusBadge,
-                  { backgroundColor: status.color + '18' },
-                ]}
-              >
-                <View
-                  style={[styles.riskDot, { backgroundColor: status.color }]}
-                />
-                <Text style={[styles.lineStatusText, { color: status.color }]}>
-                  {status.label}
-                </Text>
-              </View>
-              {marketPrice > 0 && (
-                <View
-                  style={[
-                    styles.lineDeltaBadge,
-                    { backgroundColor: delta.color + '18' },
-                  ]}
-                >
-                  <Text style={[styles.lineDeltaText, { color: delta.color }]}>
-                    {delta.value >= 0 ? '+' : ''}
-                    {fmtPct(delta.value)}
-                  </Text>
-                </View>
-              )}
-              {line.savingsPotential && (
-                <Text style={styles.lineSavingHint}>
-                  Besparing: {fmt(Math.round(line.savingsPotential.savingsAmount))}
-                </Text>
-              )}
-            </View>
-          </Pressable>
-        );
-      })}
-
-      {filteredLines.length === 0 && (
-        <View style={styles.emptyState}>
-          <Ionicons
-            name="document-text"
-            size={40}
-            color={SemanticColors.textTertiary}
-          />
-          <Text style={styles.emptyStateText}>Geen regels gevonden</Text>
-        </View>
-      )}
-    </>
-  );
 
   // =========================================================================
   // LINE DETAIL MODAL
@@ -1497,7 +1173,7 @@ export default function BudgetOptimizerDashboard({
   };
 
   // =========================================================================
-  // RENDER
+  // RENDER — everything scrolls together
   // =========================================================================
 
   return (
@@ -1517,76 +1193,81 @@ export default function BudgetOptimizerDashboard({
         </View>
       )}
 
-      {/* Embedded summary strip — replaces hidden header context */}
-      {embedded && activeScenario && (
-        <View style={[styles.embeddedSummary, { borderBottomColor: ACCENT + '30' }]}>
-          <View style={{ flex: 1, gap: 2 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <View style={[styles.embeddedDot, { backgroundColor: ACCENT }]} />
-              <Text style={styles.embeddedScenario}>{projectName}</Text>
-            </View>
-            <Text style={styles.embeddedMeta}>
-              {activeScenario.label} — {activeScenario.optimizations.length} optimalisaties
-            </Text>
-          </View>
-          <View style={{ alignItems: 'flex-end', gap: 2 }}>
-            <Text style={[styles.embeddedSavings, { color: SemanticColors.feedbackSuccess }]}>
-              {fmt(Math.round(activeScenario.totalSavings))}
-            </Text>
-            {approvedSavings > 0 ? (
-              <Text style={styles.embeddedApproved}>
-                {fmt(Math.round(approvedSavings))} goedgekeurd
-              </Text>
-            ) : (
-              <Text style={styles.embeddedSavingsPct}>
-                -{fmtPct(activeScenario.savingsPercent)} potentieel
-              </Text>
-            )}
-          </View>
-        </View>
-      )}
-
-      {/* Tab Bar */}
-      <View style={styles.tabBar}>
-        <TabButton
-          label="Overzicht"
-          icon="grid"
-          isActive={activeTab === 'overview'}
-          onPress={() => setActiveTab('overview')}
-          activeColor={ACCENT}
-        />
-        <TabButton
-          label="Top Impact"
-          icon="trending-down"
-          isActive={activeTab === 'impact'}
-          onPress={() => setActiveTab('impact')}
-          activeColor={ACCENT}
-        />
-        <TabButton
-          label="Categorieën"
-          icon="layers"
-          isActive={activeTab === 'categories'}
-          onPress={() => setActiveTab('categories')}
-          activeColor={ACCENT}
-        />
-        <TabButton
-          label="Regels"
-          icon="list"
-          isActive={activeTab === 'lines'}
-          onPress={() => setActiveTab('lines')}
-          activeColor={ACCENT}
-        />
-      </View>
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Project dropdown selector */}
+        {embedded && (
+          <View style={styles.projectDropdownWrapper}>
+            <Pressable
+              style={styles.projectDropdown}
+              onPress={() => setShowProjectDropdown(!showProjectDropdown)}
+            >
+              <Ionicons name="business" size={14} color={ACCENT} />
+              <Text style={styles.projectDropdownText} numberOfLines={1}>
+                {MOCK_PROJECTS[selectedProjectIdx]}
+              </Text>
+              <Ionicons
+                name={showProjectDropdown ? 'chevron-up' : 'chevron-down'}
+                size={16}
+                color={SemanticColors.textTertiary}
+              />
+            </Pressable>
+            {showProjectDropdown && (
+              <View style={styles.projectDropdownList}>
+                {MOCK_PROJECTS.map((name, idx) => (
+                  <Pressable
+                    key={name}
+                    style={[
+                      styles.projectDropdownItem,
+                      idx === selectedProjectIdx && { backgroundColor: ACCENT + '12' },
+                    ]}
+                    onPress={() => {
+                      setSelectedProjectIdx(idx);
+                      setShowProjectDropdown(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.projectDropdownItemText,
+                        idx === selectedProjectIdx && { color: ACCENT, fontWeight: '700' },
+                      ]}
+                    >
+                      {name}
+                    </Text>
+                    {idx === selectedProjectIdx && (
+                      <Ionicons name="checkmark" size={16} color={ACCENT} />
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Tab Bar — now INSIDE ScrollView */}
+        <View style={styles.tabBar}>
+          <TabButton
+            label="Overzicht"
+            icon="grid"
+            isActive={activeTab === 'overview'}
+            onPress={() => setActiveTab('overview')}
+            activeColor={ACCENT}
+          />
+          <TabButton
+            label="Details"
+            icon="list"
+            isActive={activeTab === 'details'}
+            onPress={() => setActiveTab('details')}
+            activeColor={ACCENT}
+          />
+        </View>
+
+        {/* Tab content */}
         {activeTab === 'overview' && renderOverview()}
-        {activeTab === 'impact' && renderImpact()}
-        {activeTab === 'categories' && renderCategories()}
-        {activeTab === 'lines' && renderLines()}
+        {activeTab === 'details' && renderDetails()}
       </ScrollView>
 
       {/* Detail modal */}
@@ -1624,44 +1305,48 @@ const styles = StyleSheet.create({
     color: SemanticColors.textTertiary,
   },
 
-  // Embedded summary strip
-  embeddedSummary: {
+  // Project dropdown selector
+  projectDropdownWrapper: {
+    zIndex: 10,
+    marginBottom: 4,
+  },
+  projectDropdown: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: SafeArea.side,
-    paddingVertical: Spacing.sm,
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderBottomWidth: 1,
   },
-  embeddedDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  embeddedScenario: {
-    fontSize: 13,
+  projectDropdownText: {
+    flex: 1,
+    fontSize: 14,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
-  embeddedSavings: {
-    fontSize: 18,
-    fontWeight: '700',
+  projectDropdownList: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    marginTop: 4,
+    overflow: 'hidden',
   },
-  embeddedMeta: {
-    fontSize: 11,
-    color: SemanticColors.textTertiary,
-    marginLeft: 14,
+  projectDropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.borderDefault,
   },
-  embeddedSavingsPct: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: SemanticColors.textTertiary,
-  },
-  embeddedApproved: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: SemanticColors.feedbackSuccess,
+  projectDropdownItemText: {
+    fontSize: 14,
+    color: SemanticColors.textPrimary,
   },
 
   // Header
@@ -1693,24 +1378,24 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
 
-  // Tab Bar
+  // Tab Bar — compressed padding
   tabBar: {
     flexDirection: 'row',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.borderDefault,
+    paddingHorizontal: 0,
+    paddingVertical: Spacing.xs,
+    backgroundColor: SemanticColors.surfaceBackground,
     gap: 6,
+    marginBottom: Spacing.xs,
   },
   tabButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 12,
-    borderRadius: 12,
+    gap: 4,
+    paddingVertical: 7,
+    paddingHorizontal: 4,
+    borderRadius: 10,
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   tabButtonActive: {
@@ -1732,7 +1417,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: Spacing.md,
     paddingHorizontal: SafeArea.side,
-    gap: Spacing.md,
+    gap: Spacing.sm,
     paddingBottom: SafeArea.bottom + Spacing.xl,
   },
 
@@ -1824,123 +1509,188 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // ── Scenario Selector ─────────────────────────────────────────────────────
-  scenarioRow: {
-    gap: Spacing.xs,
-    paddingVertical: 4,
-  },
-  scenarioCard: {
-    width: 170,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-    padding: Spacing.md,
-  },
-  scenarioHeader: {
+  // ── Scenario Buttons — big with savings below ────────────────────────────
+  scenarioButtonRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 8,
-    marginBottom: Spacing.xs,
   },
-  scenarioLabel: {
-    fontSize: 14,
+  scenarioButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 6,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: SemanticColors.borderDefault,
+    backgroundColor: SemanticColors.surfacePrimary,
+    gap: 2,
+  },
+  scenarioButtonLabel: {
+    fontSize: 12,
     fontWeight: '700',
     color: SemanticColors.textPrimary,
+    marginTop: 2,
   },
-  scenarioSavings: {
-    fontSize: 20,
-    fontWeight: '700',
+  scenarioButtonSaving: {
+    fontSize: 16,
+    fontWeight: '800',
     color: SemanticColors.feedbackSuccess,
   },
-  scenarioSavingsPct: {
-    fontSize: 12,
-    color: SemanticColors.textSecondary,
-    marginTop: 4,
-  },
-  scenarioRisk: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: Spacing.xs,
+  scenarioButtonMeta: {
+    fontSize: 9,
+    color: SemanticColors.textTertiary,
+    marginTop: 1,
   },
   riskDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
   },
-  scenarioRiskText: {
-    fontSize: 11,
-    color: SemanticColors.textTertiary,
-  },
 
-  // ── Summary Stats ─────────────────────────────────────────────────────────
-  summaryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  summaryStat: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  summaryStatValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
-  summaryStatLabel: {
-    fontSize: 11,
-    color: SemanticColors.textTertiary,
-    marginTop: 2,
-  },
-  summaryStatDivider: {
-    width: 1,
-    height: 24,
-    backgroundColor: SemanticColors.borderDefault,
-  },
+  // (summaryCompact removed)
 
-  // ── Category Bars (Overview) ──────────────────────────────────────────────
+  // ── Category Bars (Overview) — tightened ───────────────────────────────────
+  catBarCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    padding: 12,
+  },
   catBarHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   catBarName: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
     flex: 1,
   },
-  catBarSavings: {
-    fontSize: 13,
+  catBarSavingsBig: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: SemanticColors.feedbackSuccess,
+  },
+  catBarBudgetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  catBarBudgetText: {
+    fontSize: 11,
+    color: SemanticColors.textSecondary,
+  },
+  catBarPct: {
+    fontSize: 11,
     fontWeight: '600',
     color: SemanticColors.feedbackSuccess,
   },
+  catBarNoOpts: {
+    fontSize: 11,
+    color: SemanticColors.textTertiary,
+    fontStyle: 'italic',
+    marginTop: 4,
+  },
+  // Inline insight rows (TCO/supplier inside category cards)
+  catInlineInsight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 8,
+    marginTop: 4,
+  },
+  catInlineInsightText: {
+    flex: 1,
+    fontSize: 11,
+    color: SemanticColors.textSecondary,
+  },
+  catInlineInsightSaving: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: SemanticColors.feedbackSuccess,
+  },
+  // Standalone insight rows (unmatched supplier/TCO after categories)
+  catInlineInsightStandalone: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  catInlineStandaloneTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  catInlineStandaloneSub: {
+    fontSize: 10,
+    color: SemanticColors.textSecondary,
+    marginTop: 1,
+  },
   catBarContainer: {
     flexDirection: 'row',
-    height: 10,
-    borderRadius: 5,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: SemanticColors.surfaceSecondary,
     overflow: 'hidden',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   catBarOptimized: {
     height: '100%',
     backgroundColor: SemanticColors.feedbackSuccess,
-    borderRadius: 4,
+    borderRadius: 3,
   },
   catBarSaved: {
     height: '100%',
     backgroundColor: SemanticColors.feedbackSuccessBg,
   },
-  catBarFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  catBarFooterText: {
-    fontSize: 12,
+  // (catBarFooter removed — budget info now in catBarBudgetRow)
+  catBarContext: {
+    fontSize: 10,
     color: SemanticColors.textTertiary,
+    marginBottom: 3,
+  },
+
+  // ── Inline impact rows (under category bars) ──────────────────────────────
+  catImpactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingTop: 4,
+    paddingLeft: 2,
+  },
+  // (catImpactCode removed)
+  catImpactDesc: {
+    flex: 1,
+    fontSize: 11,
+    color: SemanticColors.textSecondary,
+  },
+  catImpactSaving: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: SemanticColors.feedbackSuccess,
+  },
+  catImpactBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  catImpactBadgeText: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: '#fff',
   },
 
   // ── Secondary Button ──────────────────────────────────────────────────────
@@ -2129,47 +1879,47 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfaceSecondary,
   },
 
-  // ── Categories Tab ────────────────────────────────────────────────────────
+  // ── Categories Tab — compressed ─────────────────────────────────────────
   catAccordionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    gap: 6,
   },
   catAccordionName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
     color: SemanticColors.textPrimary,
   },
   catAccordionSubRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
-    marginTop: 4,
+    gap: 6,
+    marginTop: 2,
   },
   catAccordionSub: {
-    fontSize: 12,
+    fontSize: 11,
     color: SemanticColors.textSecondary,
   },
   catAccordionSavings: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
   catCountBadge: {
     backgroundColor: SemanticColors.feedbackSuccess + '20',
-    paddingHorizontal: 6,
+    paddingHorizontal: 5,
     paddingVertical: 1,
-    borderRadius: 8,
-    minWidth: 20,
+    borderRadius: 6,
+    minWidth: 18,
     alignItems: 'center',
   },
   catCountText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
     color: SemanticColors.feedbackSuccess,
   },
   miniBarContainer: {
-    width: 40,
-    height: 6,
+    width: 36,
+    height: 5,
     borderRadius: 3,
     backgroundColor: SemanticColors.surfaceSecondary,
     overflow: 'hidden',
@@ -2180,37 +1930,143 @@ const styles = StyleSheet.create({
   },
   catLineCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
-    padding: Spacing.sm,
-    marginLeft: Spacing.md,
+    padding: 8,
+    marginLeft: 12,
   },
   catLineRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
-    marginBottom: 4,
+    gap: 6,
+    marginBottom: 2,
   },
   catLineCode: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: SemanticColors.textTertiary,
-    width: 52,
+    width: 48,
   },
   catLineDesc: {
-    fontSize: 13,
+    fontSize: 12,
     color: SemanticColors.textPrimary,
     flex: 1,
   },
   catLineSaving: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     color: SemanticColors.feedbackSuccess,
     flex: 1,
   },
 
-  // ── Lines Tab ─────────────────────────────────────────────────────────────
+  // ── Details Tab — integrated categories + lines ──────────────────────────
+  detailCatHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    padding: 10,
+    gap: 8,
+  },
+  detailCatName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  detailCatLineCount: {
+    fontSize: 10,
+    color: SemanticColors.textTertiary,
+    marginLeft: 'auto',
+  },
+  detailCatSub: {
+    fontSize: 11,
+    color: SemanticColors.textSecondary,
+    marginTop: 2,
+  },
+  detailCatContent: {
+    marginLeft: 8,
+    borderLeftWidth: 2,
+    borderLeftColor: SemanticColors.borderDefault,
+    paddingLeft: 8,
+    gap: 2,
+    marginBottom: 4,
+  },
+  detailOptSection: {
+    marginBottom: 2,
+  },
+  detailOptTitle: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: SemanticColors.feedbackSuccess,
+    paddingVertical: 4,
+  },
+  detailOptRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    backgroundColor: SemanticColors.feedbackSuccessBg,
+    borderRadius: 8,
+    marginBottom: 2,
+  },
+  detailOptDesc: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  detailOptCode: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: SemanticColors.textTertiary,
+  },
+  detailOptSaving: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: SemanticColors.feedbackSuccess,
+  },
+  detailLineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.borderDefault + '40',
+  },
+  detailLineDesc: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: SemanticColors.textPrimary,
+  },
+  detailLineMeta: {
+    fontSize: 10,
+    color: SemanticColors.textTertiary,
+    marginTop: 1,
+  },
+  detailLineTotal: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  detailLineStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+    marginTop: 2,
+  },
+  detailLineStatusText: {
+    fontSize: 9,
+    fontWeight: '600',
+  },
+
+  // ── Lines Tab (legacy — for modal references) ──────────────────────────
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',

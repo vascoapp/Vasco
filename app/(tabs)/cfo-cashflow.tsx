@@ -1,7 +1,6 @@
-import { ScrollView, StyleSheet, View, Text } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../src/theme/colors';
-import { Spacing } from '../../src/theme/spacing';
+import { SemanticColors } from '../../src/theme/colors';
 import { CFODashboard } from '../../src/components/dashboards/CFODashboard';
 
 export default function CFOCashflowScreen() {
@@ -15,6 +14,6 @@ export default function CFOCashflowScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
 });

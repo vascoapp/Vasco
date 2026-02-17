@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 
@@ -17,9 +17,9 @@ type MetricCardProps = {
 };
 
 const TREND_CONFIG: Record<TrendDirection, { icon: keyof typeof Ionicons.glyphMap; color: string }> = {
-  up: { icon: 'trending-up', color: Colors.success },
-  down: { icon: 'trending-down', color: Colors.danger },
-  neutral: { icon: 'remove', color: Colors.muted },
+  up: { icon: 'trending-up', color: SemanticColors.feedbackSuccess },
+  down: { icon: 'trending-down', color: SemanticColors.feedbackError },
+  neutral: { icon: 'remove', color: SemanticColors.textSecondary },
 };
 
 export function MetricCard({
@@ -27,7 +27,7 @@ export function MetricCard({
   label,
   trend,
   trendValue,
-  color = Colors.accentDeep,
+  color = SemanticColors.actionPrimary,
   onPress,
   size = 'default',
 }: MetricCardProps) {
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.sm,
     alignItems: 'center',
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
   },
   label: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     marginTop: 4,
     textAlign: 'center',

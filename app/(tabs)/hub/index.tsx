@@ -66,8 +66,8 @@ const FEATURE_SECTIONS: Record<Category, { title: string; features: FeatureCard[
     features: [
       { id: 'pricebook', title: 'Pricebook', icon: 'book-outline', route: '/contractor/pricebook', stat: '12', statLabel: 'services' },
       { id: 'payments', title: 'Payments', icon: 'card-outline', route: '/contractor/payments', stat: '\u20AC450', statLabel: 'outstanding' },
-      { id: 'jobs', title: 'Jobs', icon: 'briefcase-outline', route: '/contractor/jobs', stat: '3', statLabel: 'active' },
-      { id: 'time', title: 'Time Track', icon: 'time-outline', route: '/contractor/jobs', stat: '6.5h', statLabel: 'today' },
+      { id: 'materials', title: 'Materials', icon: 'cube-outline', route: '/hub/materials', stat: '6', statLabel: 'items' },
+      { id: 'suppliers', title: 'Suppliers', icon: 'business-outline', route: '/hub/suppliers', stat: '5', statLabel: 'active' },
     ],
   },
   sitelead: {
@@ -83,7 +83,7 @@ const FEATURE_SECTIONS: Record<Category, { title: string; features: FeatureCard[
     title: 'BuildOS',
     features: [
       { id: 'projects', title: 'Projects', icon: 'business-outline', route: '/hub/projects', stat: '3', statLabel: 'active' },
-      { id: 'documents', title: 'Documents', icon: 'document-text-outline', route: '/hub/documents', stat: '2', statLabel: 'pending' },
+      { id: 'documents', title: 'Documents', icon: 'document-text-outline', route: 'documents', stat: '2', statLabel: 'pending' },
       { id: 'approvals', title: 'Approvals', icon: 'checkmark-circle-outline', route: '/hub/approvals', stat: '3', statLabel: 'waiting' },
       { id: 'risks', title: 'Risks', icon: 'warning-outline', route: '/hub/risks', stat: '2', statLabel: 'high' },
     ],

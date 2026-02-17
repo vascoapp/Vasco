@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import {
@@ -19,9 +19,9 @@ export function QualityDashboard() {
   const siteMetrics = useMemo(() => mockSiteMetrics[selectedProjectId], [selectedProjectId]);
 
   const getRiskColor = (score: number) => {
-    if (score >= 12) return Colors.danger;
-    if (score >= 6) return Colors.warning;
-    return Colors.success;
+    if (score >= 12) return SemanticColors.feedbackError;
+    if (score >= 6) return SemanticColors.feedbackWarning;
+    return SemanticColors.feedbackSuccess;
   };
 
   if (!selectedProject || !siteMetrics) {
@@ -66,13 +66,13 @@ export function QualityDashboard() {
       {/* Summary Grid */}
       <View style={styles.summaryGrid}>
         <View style={styles.summaryItem}>
-          <Text style={[styles.summaryValue, { color: Colors.warning }]}>
+          <Text style={[styles.summaryValue, { color: SemanticColors.feedbackWarning }]}>
             {siteMetrics.defectsOpenTotal}
           </Text>
           <Text style={styles.summaryLabel}>Open Defects</Text>
         </View>
         <View style={styles.summaryItem}>
-          <Text style={[styles.summaryValue, { color: Colors.success }]}>
+          <Text style={[styles.summaryValue, { color: SemanticColors.feedbackSuccess }]}>
             {siteMetrics.defectsClosedTotal}
           </Text>
           <Text style={styles.summaryLabel}>Closed</Text>
@@ -82,7 +82,7 @@ export function QualityDashboard() {
           <Text style={styles.summaryLabel}>Constraints</Text>
         </View>
         <View style={styles.summaryItem}>
-          <Text style={[styles.summaryValue, { color: Colors.success }]}>
+          <Text style={[styles.summaryValue, { color: SemanticColors.feedbackSuccess }]}>
             {siteMetrics.constraintsClearedThisWeek}
           </Text>
           <Text style={styles.summaryLabel}>Cleared (Week)</Text>
@@ -95,7 +95,7 @@ export function QualityDashboard() {
         <View style={styles.rfiCard}>
           <View style={styles.rfiHeader}>
             <View style={styles.rfiCircle}>
-              <Text style={[styles.rfiValue, { color: siteMetrics.openRfis > 10 ? Colors.warning : SITE_LEAD_COLOR }]}>
+              <Text style={[styles.rfiValue, { color: siteMetrics.openRfis > 10 ? SemanticColors.feedbackWarning : SITE_LEAD_COLOR }]}>
                 {siteMetrics.openRfis}
               </Text>
               <Text style={styles.rfiLabel}>Open</Text>
@@ -113,7 +113,7 @@ export function QualityDashboard() {
           </View>
           {siteMetrics.openRfis > 10 && (
             <View style={styles.rfiWarning}>
-              <Ionicons name="alert-circle" size={16} color={Colors.warning} />
+              <Ionicons name="alert-circle" size={16} color={SemanticColors.feedbackWarning} />
               <Text style={styles.rfiWarningText}>
                 High RFI backlog - prioritize responses
               </Text>
@@ -161,14 +161,14 @@ export function QualityDashboard() {
         <View style={styles.constraintCard}>
           <View style={styles.constraintRow}>
             <View style={styles.constraintItem}>
-              <Ionicons name="lock-closed" size={20} color={Colors.warning} />
+              <Ionicons name="lock-closed" size={20} color={SemanticColors.feedbackWarning} />
               <Text style={styles.constraintValue}>{siteMetrics.openConstraints}</Text>
               <Text style={styles.constraintLabel}>Open</Text>
             </View>
             <View style={styles.constraintDivider} />
             <View style={styles.constraintItem}>
-              <Ionicons name="lock-open" size={20} color={Colors.success} />
-              <Text style={[styles.constraintValue, { color: Colors.success }]}>
+              <Ionicons name="lock-open" size={20} color={SemanticColors.feedbackSuccess} />
+              <Text style={[styles.constraintValue, { color: SemanticColors.feedbackSuccess }]}>
                 {siteMetrics.constraintsClearedThisWeek}
               </Text>
               <Text style={styles.constraintLabel}>Cleared (Week)</Text>
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 16,
   },
   projectSelector: {
@@ -201,11 +201,11 @@ const styles = StyleSheet.create({
   },
   projectPill: {
     flex: 1,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.xs,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   projectPillActive: {
     borderColor: SITE_LEAD_COLOR,
@@ -216,12 +216,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   projectName: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
   },
   projectNameActive: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
   },
   summaryGrid: {
     flexDirection: 'row',
@@ -231,18 +231,18 @@ const styles = StyleSheet.create({
   summaryItem: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.sm,
     padding: Spacing.sm,
     alignItems: 'center',
   },
   summaryValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 24,
     fontWeight: '700',
   },
   summaryLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     marginTop: 4,
   },
@@ -255,14 +255,14 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   sectionTitle: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   countBadge: {
-    backgroundColor: Colors.warning,
+    backgroundColor: SemanticColors.feedbackWarning,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   rfiCard: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.md,
     gap: Spacing.sm,
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   rfiLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
   },
   rfiDetails: {
@@ -310,11 +310,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   rfiRowLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
   },
   rfiRowValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -322,17 +322,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
-    backgroundColor: Colors.warning + '15',
+    backgroundColor: SemanticColors.feedbackWarning + '15',
     padding: Spacing.sm,
     borderRadius: Radius.sm,
   },
   rfiWarningText: {
-    color: Colors.warning,
+    color: SemanticColors.feedbackWarning,
     fontSize: 12,
     flex: 1,
   },
   riskList: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     overflow: 'hidden',
   },
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     padding: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   riskScore: {
     width: 40,
@@ -358,13 +358,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   riskCategory: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     fontWeight: '600',
     textTransform: 'uppercase',
   },
   riskDesc: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     marginTop: 2,
   },
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   riskStatus: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 10,
     textTransform: 'capitalize',
   },
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   constraintCard: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.md,
   },
@@ -398,17 +398,17 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   constraintValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 24,
     fontWeight: '700',
   },
   constraintLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
   },
   constraintDivider: {
     width: 1,
     height: 50,
-    backgroundColor: Colors.border,
+    backgroundColor: SemanticColors.borderDefault,
   },
 });

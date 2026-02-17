@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import {
@@ -35,13 +35,13 @@ export function ProgressDashboard() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'on-track':
-        return Colors.success;
+        return SemanticColors.feedbackSuccess;
       case 'at-risk':
-        return Colors.warning;
+        return SemanticColors.feedbackWarning;
       case 'behind':
-        return Colors.danger;
+        return SemanticColors.feedbackError;
       default:
-        return Colors.muted;
+        return SemanticColors.textSecondary;
     }
   };
 
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 16,
   },
   projectSelector: {
@@ -180,11 +180,11 @@ const styles = StyleSheet.create({
   },
   projectPill: {
     flex: 1,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     padding: Spacing.xs,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   projectPillActive: {
     borderColor: SITE_LEAD_COLOR,
@@ -195,15 +195,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   projectName: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
   },
   projectNameActive: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
   },
   progressCard: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.lg,
     padding: Spacing.md,
     gap: Spacing.md,
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   progressTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   progressLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 14,
     marginTop: 4,
   },
@@ -249,14 +249,14 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   barLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     width: 50,
   },
   barTrack: {
     flex: 1,
     height: 10,
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 5,
     overflow: 'hidden',
   },
@@ -267,11 +267,11 @@ const styles = StyleSheet.create({
   },
   barFillPlan: {
     height: '100%',
-    backgroundColor: Colors.muted,
+    backgroundColor: SemanticColors.textSecondary,
     borderRadius: 5,
   },
   barValue: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 12,
     fontWeight: '600',
     width: 40,
@@ -283,10 +283,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: SemanticColors.borderDefault,
   },
   varianceLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 13,
   },
   varianceValue: {
@@ -297,14 +297,14 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   sectionTitle: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   activityList: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     overflow: 'hidden',
   },
@@ -313,18 +313,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: SemanticColors.borderDefault,
   },
   activityInfo: {
     flex: 1,
   },
   activityName: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '500',
   },
   activityWbs: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     marginTop: 2,
   },
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   activityBar: {
     width: 60,
     height: 6,
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   activityPercent: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 12,
     fontWeight: '600',
     width: 35,

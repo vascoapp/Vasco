@@ -6,7 +6,7 @@ import {
   COODashboard,
   SiteLeadDashboard,
 } from '../../../src/components/dashboards';
-import { Colors } from '../../../src/theme/colors';
+import { SemanticColors } from '../../../src/theme/colors';
 import { Radius } from '../../../src/theme/radius';
 import { Spacing } from '../../../src/theme/spacing';
 
@@ -89,11 +89,11 @@ const styles = StyleSheet.create({
   },
   roleSwitch: {
     flexDirection: 'row',
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: Radius.md,
     padding: 4,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   rolePill: {
     flex: 1,
@@ -104,31 +104,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   rolePillActive: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
   },
   roleLabel: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontWeight: '600',
     fontSize: 14,
   },
   roleLabelActive: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
   },
   roleInfo: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: Radius.md,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: 4,
   },
   roleTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 15,
     fontWeight: '700',
   },
   roleDescription: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
   },
 });

@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../theme/colors';
+import { SemanticColors } from '../theme/colors';
 import { Radius } from '../theme/radius';
 import { Shadows } from '../theme/shadows';
 import { Spacing } from '../theme/spacing';
@@ -30,11 +30,11 @@ export function AssistBanner({ title, description, actionLabel, onPress, meta }:
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.surface,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
     gap: Spacing.sm,
     ...Shadows.sm,
   },
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   meta: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 12,
     fontFamily: 'Inter_500Medium',
   },
@@ -53,15 +53,15 @@ const styles = StyleSheet.create({
   },
   cta: {
     marginTop: Spacing.xs,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: Radius.md,
     paddingVertical: 12,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: SemanticColors.borderDefault,
   },
   ctaText: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontWeight: '600',
     fontSize: 15,
   },

@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../theme/colors';
+import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 
@@ -28,21 +28,21 @@ const SEVERITY_CONFIG: Record<AlertSeverity, {
   icon: keyof typeof Ionicons.glyphMap;
 }> = {
   critical: {
-    color: Colors.danger,
-    bg: Colors.danger + '15',
-    border: Colors.danger + '40',
+    color: SemanticColors.feedbackError,
+    bg: SemanticColors.feedbackError + '15',
+    border: SemanticColors.feedbackError + '40',
     icon: 'alert-circle',
   },
   warning: {
-    color: Colors.warning,
-    bg: Colors.warning + '15',
-    border: Colors.warning + '40',
+    color: SemanticColors.feedbackWarning,
+    bg: SemanticColors.feedbackWarning + '15',
+    border: SemanticColors.feedbackWarning + '40',
     icon: 'warning',
   },
   info: {
-    color: Colors.accentDeep,
-    bg: Colors.accentDeep + '15',
-    border: Colors.accentDeep + '40',
+    color: SemanticColors.actionPrimary,
+    bg: SemanticColors.actionPrimary + '15',
+    border: SemanticColors.actionPrimary + '40',
     icon: 'information-circle',
   },
 };
@@ -123,12 +123,12 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(0,0,0,0.05)',
   },
   itemTitle: {
-    color: Colors.text,
+    color: SemanticColors.textPrimary,
     fontSize: 13,
     fontWeight: '500',
   },
   itemSubtitle: {
-    color: Colors.muted,
+    color: SemanticColors.textSecondary,
     fontSize: 11,
     marginTop: 2,
   },
