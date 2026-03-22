@@ -10,7 +10,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   TextInput,
   Modal,
 } from 'react-native';
@@ -105,7 +105,7 @@ export function DocumentVault() {
     const isImage = doc.mimeType.startsWith('image/');
 
     return (
-      <TouchableOpacity key={doc.id} style={styles.documentCard} onPress={() => openDocument(doc)}>
+      <Pressable key={doc.id} style={styles.documentCard} onPress={() => openDocument(doc)}>
         <View style={[styles.documentIcon, { backgroundColor: typeStyle.color + '15' }]}>
           <Ionicons name={typeStyle.icon as any} size={24} color={typeStyle.color} />
         </View>
@@ -134,7 +134,7 @@ export function DocumentVault() {
             <Ionicons name="time-outline" size={16} color={Palette.orange500} />
           )}
         </View>
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 
@@ -151,22 +151,22 @@ export function DocumentVault() {
           onChangeText={setSearchQuery}
         />
         {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
+          <Pressable onPress={() => setSearchQuery('')}>
             <Ionicons name="close-circle" size={20} color={SemanticColors.textSecondary} />
-          </TouchableOpacity>
+          </Pressable>
         )}
       </View>
 
       {/* Type Filter */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.typeFilter}>
-        <TouchableOpacity
+        <Pressable
           style={[styles.typeChip, !selectedType && styles.typeChipActive]}
           onPress={() => setSelectedType(null)}
         >
           <Text style={[styles.typeChipText, !selectedType && styles.typeChipTextActive]}>Alle</Text>
-        </TouchableOpacity>
+        </Pressable>
         {documentTypes.map((dt) => (
-          <TouchableOpacity
+          <Pressable
             key={dt.type}
             style={[styles.typeChip, selectedType === dt.type && styles.typeChipActive]}
             onPress={() => setSelectedType(selectedType === dt.type ? null : dt.type)}
@@ -179,7 +179,7 @@ export function DocumentVault() {
             <Text style={[styles.typeChipText, selectedType === dt.type && styles.typeChipTextActive]}>
               {dt.label}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </ScrollView>
 
@@ -225,7 +225,7 @@ export function DocumentVault() {
     }[item.urgency];
 
     return (
-      <TouchableOpacity
+      <Pressable
         key={item.document.id}
         style={[styles.expiringCard, { borderLeftColor: urgencyStyle.color }]}
         onPress={() => openDocument(item.document)}
@@ -242,10 +242,10 @@ export function DocumentVault() {
           </Text>
           <Text style={styles.expiringAction}>{item.actionRequired}</Text>
         </View>
-        <TouchableOpacity style={styles.renewButton}>
+        <Pressable style={styles.renewButton}>
           <Text style={styles.renewText}>Vernieuw</Text>
-        </TouchableOpacity>
-      </TouchableOpacity>
+        </Pressable>
+      </Pressable>
     );
   };
 
@@ -274,7 +274,7 @@ export function DocumentVault() {
   );
 
   const renderFolderCard = (folder: typeof folders[0]) => (
-    <TouchableOpacity key={folder.id} style={styles.folderCard}>
+    <Pressable key={folder.id} style={styles.folderCard}>
       <View style={[styles.folderIcon, { backgroundColor: folder.color || Palette.gray500 }]}>
         <Ionicons name="folder" size={24} color="#fff" />
       </View>
@@ -283,22 +283,22 @@ export function DocumentVault() {
         <Text style={styles.folderCount}>{folder.documentCount} documenten</Text>
       </View>
       <Ionicons name="chevron-forward" size={20} color={SemanticColors.textSecondary} />
-    </TouchableOpacity>
+    </Pressable>
   );
 
   const renderFoldersTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
       {folders.map(renderFolderCard)}
 
-      <TouchableOpacity style={styles.addFolderButton}>
+      <Pressable style={styles.addFolderButton}>
         <Ionicons name="add-circle-outline" size={24} color={Palette.blue500} />
         <Text style={styles.addFolderText}>Nieuwe map maken</Text>
-      </TouchableOpacity>
+      </Pressable>
     </ScrollView>
   );
 
   const renderTemplateCard = (template: DocumentTemplate) => (
-    <TouchableOpacity key={template.id} style={styles.templateCard}>
+    <Pressable key={template.id} style={styles.templateCard}>
       <View style={styles.templatePreview}>
         <Ionicons name="document-outline" size={32} color={Palette.hermesOrange} />
       </View>
@@ -310,10 +310,10 @@ export function DocumentVault() {
           <Text style={styles.templateFieldsText}>{template.fields.length} velden</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.useTemplateButton}>
+      <Pressable style={styles.useTemplateButton}>
         <Text style={styles.useTemplateText}>Gebruik</Text>
-      </TouchableOpacity>
-    </TouchableOpacity>
+      </Pressable>
+    </Pressable>
   );
 
   const renderTemplatesTab = () => (
@@ -332,7 +332,7 @@ export function DocumentVault() {
       {/* Tabs */}
       <View style={styles.tabBar}>
         {tabs.map((tab) => (
-          <TouchableOpacity
+          <Pressable
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.activeTab]}
             onPress={() => setActiveTab(tab.key)}
@@ -352,7 +352,7 @@ export function DocumentVault() {
             <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
               {tab.label}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 
@@ -363,9 +363,9 @@ export function DocumentVault() {
       {activeTab === 'templates' && renderTemplatesTab()}
 
       {/* Upload Button */}
-      <TouchableOpacity style={styles.uploadButton}>
+      <Pressable style={styles.uploadButton}>
         <Ionicons name="cloud-upload-outline" size={28} color="#fff" />
-      </TouchableOpacity>
+      </Pressable>
 
       {/* Document Modal */}
       <Modal
@@ -376,13 +376,13 @@ export function DocumentVault() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowDocumentModal(false)}>
+            <Pressable onPress={() => setShowDocumentModal(false)}>
               <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
-            </TouchableOpacity>
+            </Pressable>
             <Text style={styles.modalTitle}>Document</Text>
-            <TouchableOpacity>
+            <Pressable>
               <Ionicons name="ellipsis-horizontal" size={24} color={SemanticColors.textPrimary} />
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           {selectedDocument && (
@@ -432,22 +432,22 @@ export function DocumentVault() {
               </View>
 
               <View style={styles.docActions}>
-                <TouchableOpacity style={styles.docActionButton}>
+                <Pressable style={styles.docActionButton}>
                   <Ionicons name="eye-outline" size={20} color={Palette.blue500} />
                   <Text style={styles.docActionText}>Bekijken</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.docActionButton}>
+                </Pressable>
+                <Pressable style={styles.docActionButton}>
                   <Ionicons name="share-outline" size={20} color={Palette.blue500} />
                   <Text style={styles.docActionText}>Delen</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.docActionButton}>
+                </Pressable>
+                <Pressable style={styles.docActionButton}>
                   <Ionicons name="download-outline" size={20} color={Palette.blue500} />
                   <Text style={styles.docActionText}>Download</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.docActionButton, { borderColor: Palette.red500 }]}>
+                </Pressable>
+                <Pressable style={[styles.docActionButton, { borderColor: Palette.red500 }]}>
                   <Ionicons name="trash-outline" size={20} color={Palette.red500} />
                   <Text style={[styles.docActionText, { color: Palette.red500 }]}>Verwijder</Text>
-                </TouchableOpacity>
+                </Pressable>
               </View>
             </ScrollView>
           )}

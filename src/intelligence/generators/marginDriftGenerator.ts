@@ -7,6 +7,7 @@ import { useJobCostSummary } from '../../services/jobCostTrackingService';
 import { logPrediction } from '../calibration';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { detectAnomaly, getSeasonalMultiplier } from '../adaptiveThresholds';
+import { gt } from '../generatorTranslations';
 
 export const marginDriftGenerator: InsightGenerator = {
   id: 'margin-drift',
@@ -53,18 +54,18 @@ export function useMarginDriftInsight(ctx: GeneratorContext): ScoredInsight | nu
     category: isNegative ? 'alert' : 'opportunity',
     priority,
     title: isNegative
-      ? `Marge-erosie: €${amount.toLocaleString('nl-NL')}`
-      : `Marge boven verwachting: +€${amount.toLocaleString('nl-NL')}`,
+      ? gt('margin_title_erosion', ctx.language, { amount: amount.toLocaleString('nl-NL') })
+      : gt('margin_title_above', ctx.language, { amount: amount.toLocaleString('nl-NL') }),
     message: isNegative
-      ? `Je marges zijn deze maand lager dan begroot. Controleer je kostenvariaties per klus.${seasonNote}`
-      : `Je marges presteren beter dan gepland. Goed bezig!`,
+      ? gt('margin_message_below', ctx.language) + seasonNote
+      : gt('margin_message_above', ctx.language),
     detail: isNegative
       ? `De grootste afwijkingen zitten waarschijnlijk in materiaalkosten en extra uren. Bekijk de details per klus.${anomaly.isAnomaly ? ` ${anomaly.description}` : ''}`
       : `Blijf je huidige werkwijze handhaven — je kostenbeheersing is sterk.`,
     icon: isNegative ? 'trending-down' : 'trending-up',
     actionLabel: isNegative ? 'Kostenvariaties bekijken' : undefined,
     actionRoute: isNegative ? '/(contractor)/besparen' : undefined,
-    source: 'Margeanalyse',
+    source: gt('source_margin', ctx.language),
     metric: {
       label: 'Marge impact',
       value: `${isNegative ? '-' : '+'}€${amount.toLocaleString('nl-NL')}`,
@@ -88,5 +89,11 @@ export function useMarginDriftInsight(ctx: GeneratorContext): ScoredInsight | nu
     dataPoints: jobCount,
     confidence: anomaly.isAnomaly ? Math.min(0.95, 0.85 + 0.05) : 0.85,
     freshness: 2,
+    action: {
+      type: 'adjust_quote',
+      label: 'Prijzen aanpassen',
+      params: {},
+      requiresApproval: true,
+    },
   };
 }

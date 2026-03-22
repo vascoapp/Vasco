@@ -12,33 +12,42 @@ export default function ContractorLayout() {
     >
       <Stack.Screen name="pricebook" />
       <Stack.Screen name="tiered-quote" />
-      <Stack.Screen name="purchasing" />
       <Stack.Screen name="payments" />
       <Stack.Screen name="job/[id]" />
       <Stack.Screen name="ai-assistant" />
-      <Stack.Screen name="smart-pricing" />
       <Stack.Screen name="follow-up" />
-      <Stack.Screen name="customer-insights" />
-      <Stack.Screen name="reputation" />
-      <Stack.Screen name="leads" />
       <Stack.Screen name="receipts" />
-      <Stack.Screen name="reorder" />
-      <Stack.Screen name="team" />
-      <Stack.Screen name="planning" />
-      <Stack.Screen name="route" />
-      <Stack.Screen name="capacity" />
-      <Stack.Screen name="documents" />
-      <Stack.Screen name="compliance" />
       <Stack.Screen name="cashflow" />
       <Stack.Screen name="insurance" />
       <Stack.Screen name="inkoop" />
       <Stack.Screen name="profile" />
       <Stack.Screen name="warranty" />
-      <Stack.Screen name="benchmark" />
-      <Stack.Screen name="complete-job" />
-      <Stack.Screen name="ai-quote" />
       <Stack.Screen name="materials" />
-      <Stack.Screen name="handover/[jobId]" />
+      <Stack.Screen name="handover" />
+      <Stack.Screen name="timesheet" />
+      <Stack.Screen name="purchase-orders" />
+      <Stack.Screen name="permits" />
+      <Stack.Screen name="subcontractors" />
+      <Stack.Screen name="pipeline" />
+      <Stack.Screen name="profit-loss" />
+      <Stack.Screen name="payroll" />
+      <Stack.Screen name="quote-templates" />
+      <Stack.Screen name="expenses" />
+      <Stack.Screen name="closeout" />
+      <Stack.Screen name="projects" />
+      <Stack.Screen name="market-prices" />
+      <Stack.Screen name="search" />
+      <Stack.Screen name="automations" />
+      <Stack.Screen name="customer" />
+      <Stack.Screen name="notifications" />
+      <Stack.Screen name="doc-requirements" />
+      <Stack.Screen name="reconciliation" />
+      <Stack.Screen name="drag-schedule" />
+      <Stack.Screen name="customer-view" />
+      <Stack.Screen name="schedule-optimizer" />
+      <Stack.Screen name="customer-crm" />
+      <Stack.Screen name="integrations" />
+      {/* service-agreements, ai-quote, customer-insights, leads, planning, smart-pricing — deleted */}
     </Stack>
   );
 }

@@ -10,7 +10,6 @@ import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { IntelligenceDashboard } from './IntelligenceDashboard';
-import { AgentActionsPanel } from '../contractor/AgentActionsPanel';
 import { HoursSavedCard } from '../contractor/HoursSavedCard';
 import { Palette } from '../../theme/colors';
 import { SemanticColors } from '../../theme/colors';
@@ -192,11 +191,6 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
         </Pressable>
       )}
 
-      {/* Agent Actions Panel - One-tap approvals */}
-      <View style={styles.section}>
-        <AgentActionsPanel />
-      </View>
-
       {/* Today's Schedule */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
@@ -373,7 +367,7 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
               <Pressable
                 key={job.id}
                 style={styles.completeJobCard}
-                onPress={() => router.push('/contractor/complete-job')}
+                onPress={() => router.push('/contractor/closeout')}
               >
                 <View style={styles.completeJobIcon}>
                   <Ionicons name="checkmark-circle" size={24} color={SemanticColors.feedbackSuccess} />
@@ -695,7 +689,7 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
             <Text style={styles.toolTitle}>Smart Quote</Text>
             <Text style={styles.toolDesc}>Good-Better-Best</Text>
           </Pressable>
-          <Pressable style={styles.toolCard} onPress={() => router.push('/contractor/purchasing')}>
+          <Pressable style={styles.toolCard} onPress={() => router.push('/contractor/purchase-orders')}>
             <View style={[styles.toolIcon, { backgroundColor: SemanticColors.feedbackInfoBg }]}>
               <Ionicons name="trending-down" size={22} color={SemanticColors.feedbackInfo} />
             </View>

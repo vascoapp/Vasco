@@ -22,7 +22,7 @@ export default function KostenToolsScreen() {
       <View style={[styles.sectionHeader, { marginTop: 0 }]}>
         <Text style={styles.sectionTitle}>Benchmarking</Text>
       </View>
-      <Pressable style={styles.card} onPress={() => router.push('/contractor/benchmark' as any)}>
+      <Pressable style={styles.card} onPress={() => router.push('/contractor/market-prices' as any)}>
         <View style={styles.row}>
           <View style={[styles.iconBox, { backgroundColor: CFO_COLOR + '15' }]}>
             <Ionicons name="bar-chart" size={18} color={CFO_COLOR} />
@@ -39,7 +39,7 @@ export default function KostenToolsScreen() {
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Leveranciers</Text>
       </View>
-      <Pressable style={styles.card} onPress={() => router.push('/contractor/purchasing' as any)}>
+      <Pressable style={styles.card} onPress={() => router.push('/contractor/purchase-orders' as any)}>
         <View style={styles.row}>
           <View style={[styles.iconBox, { backgroundColor: SemanticColors.feedbackSuccess + '15' }]}>
             <Ionicons name="cart" size={18} color={SemanticColors.feedbackSuccess} />

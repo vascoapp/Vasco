@@ -9,7 +9,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Palette } from '../../src/theme/colors';
+import { Palette, SemanticColors } from '../../src/theme/colors';
+import { PAGE_BG } from '../../src/theme/tabStyles';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { Spacing } from '../../src/theme/spacing';
 import {
@@ -20,6 +21,7 @@ import {
 import { ShareDecisionTracker } from '../../src/components/contractor/ShareDecisionTracker';
 import type { CustomerDecisionTracker, DecisionTemplate } from '../../src/types/decisions';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
+import { useDecisionUpdates } from '../../src/services/decisionSyncService';
 
 type ViewMode = 'list' | 'detail' | 'template-picker';
 
@@ -29,16 +31,22 @@ export default function KeuzeScreen() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Decision sync — shows badge when customer submits new decisions
+  const { newCount: decisionNewCount, submissions: decisionSubmissions, refresh: refreshDecisions } = useDecisionUpdates(
+    selectedTracker?.id ?? null
+  );
+
   // Screen visit tracking
   useEffect(() => { recordScreenVisit('decisions'); }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
+    refreshDecisions();
     setTimeout(() => {
       setRefreshing(false);
       hapticSuccess();
     }, 800);
-  }, []);
+  }, [refreshDecisions]);
 
   const handleSelectTracker = (tracker: CustomerDecisionTracker) => {
     setSelectedTracker(tracker);
@@ -153,7 +161,14 @@ export default function KeuzeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <Text style={styles.pageTitle}>Klant Keuzes</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.pageTitle}>Klant Keuzes</Text>
+        {decisionNewCount > 0 && (
+          <View style={styles.newBadge}>
+            <Text style={styles.newBadgeText}>{decisionNewCount} nieuw</Text>
+          </View>
+        )}
+      </View>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ flexGrow: 1 }}
@@ -208,14 +223,30 @@ export default function KeuzeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Palette.salmonLight,
+    backgroundColor: PAGE_BG,
   },
-  pageTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#1A1A1A',
+  titleRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.xs,
+  },
+  pageTitle: {
+    fontSize: 22,
+    fontFamily: 'Manrope_700Bold',
+    color: '#1A1A1A',
+  },
+  newBadge: {
+    backgroundColor: Palette.hermesOrange,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  newBadgeText: {
+    fontSize: 11,
+    fontFamily: 'Manrope_700Bold',
+    color: '#FFF',
   },
 });

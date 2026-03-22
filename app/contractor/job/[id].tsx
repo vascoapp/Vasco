@@ -26,6 +26,7 @@ import { hapticSuccess } from '../../../src/utils/haptics';
 import { smartSchedulerService, LIFECYCLE_ORDER, LIFECYCLE_LABELS, LIFECYCLE_COLORS, LIFECYCLE_NEXT_ACTION, useJobLifecyclePipeline } from '../../../src/services/smartSchedulerService';
 import type { JobLifecycleStatus } from '../../../src/services/smartSchedulerService';
 import { useJobCostVariance } from '../../../src/services/jobCostTrackingService';
+import { useAppState } from '../../../src/state/AppState';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -126,6 +127,7 @@ export default function JobDetailPage() {
   const job = useMemo(() => smartSchedulerService.getJob(id || ''), [id]);
   const { advance, recordHours } = useJobLifecyclePipeline();
   const costVariance = useJobCostVariance(id || '');
+  const { addInvoiceFromJob } = useAppState();
 
   // Show cost section for jobs that are bezig or later
   const showCostSection = job && ['bezig', 'gereed', 'gefactureerd', 'betaald'].includes(job.lifecycleStatus);
@@ -288,7 +290,12 @@ export default function JobDetailPage() {
                 `Wil je de status wijzigen naar "${LIFECYCLE_LABELS[LIFECYCLE_ORDER[LIFECYCLE_ORDER.indexOf(job.lifecycleStatus) + 1]]}"?`,
                 [
                   { text: 'Annuleren', style: 'cancel' },
-                  { text: 'Bevestigen', onPress: () => advance(job.id) },
+                  { text: 'Bevestigen', onPress: () => {
+                    advance(job.id);
+                    if (job.lifecycleStatus === 'gereed') {
+                      router.push('/(contractor)/facturen' as any);
+                    }
+                  }},
                 ]
               );
             }}
@@ -619,6 +626,25 @@ export default function JobDetailPage() {
         </View>
 
         {/* ============================================ */}
+        {/* 7b. FACTUREER BUTTON (gereed jobs)          */}
+        {/* ============================================ */}
+        {job.lifecycleStatus === 'gereed' && (
+          <Pressable
+            style={styles.factureerButton}
+            onPress={async () => {
+              hapticSuccess();
+              try {
+                await addInvoiceFromJob(job.id);
+              } catch (_) { /* ignore if fails */ }
+              router.push('/(contractor)/facturen' as any);
+            }}
+          >
+            <Ionicons name="receipt" size={18} color="#fff" />
+            <Text style={styles.factureerButtonText}>Factureer deze klus</Text>
+          </Pressable>
+        )}
+
+        {/* ============================================ */}
         {/* 8. EVIDENCE PHOTO GALLERY                   */}
         {/* ============================================ */}
         {showGallery && (
@@ -722,11 +748,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 18,
     padding: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
     gap: 12,
   },
   heroTop: {
@@ -749,7 +770,6 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     fontWeight: '700',
-    textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
   typeBadge: {
@@ -794,7 +814,7 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.pastelOrange + '30',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   durationText: {
     fontSize: 11,
@@ -813,7 +833,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: '#999',
-    textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
 
@@ -822,11 +841,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
   },
 
   // Contact
@@ -875,7 +889,7 @@ const styles = StyleSheet.create({
   contactActionIcon: {
     width: 32,
     height: 32,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -891,11 +905,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
   },
   routeAccent: {
     width: 4,
@@ -911,7 +920,7 @@ const styles = StyleSheet.create({
   routeIconWrap: {
     width: 44,
     height: 44,
-    borderRadius: 14,
+    borderRadius: 16,
     backgroundColor: Palette.hermesOrange + '0C',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1005,7 +1014,7 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange,
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: 10,
+    borderRadius: 12,
   },
   reorderBtnText: {
     fontSize: 12,
@@ -1017,13 +1026,8 @@ const styles = StyleSheet.create({
   vascoGuidance: {
     flexDirection: 'row',
     backgroundColor: '#fff',
-    borderRadius: 14,
+    borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
   },
   vascoGuidanceAccent: {
     width: 4,
@@ -1043,7 +1047,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: Palette.hermesOrange,
-    textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
   vascoGuidanceText: {
@@ -1057,7 +1060,7 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.pastelOrange + '30',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   upsellBadgeText: {
     fontSize: 12,
@@ -1069,13 +1072,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     backgroundColor: '#fff',
-    borderRadius: 14,
+    borderRadius: 16,
     padding: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
   },
   upsellIconWrap: {
     width: 40,
@@ -1138,7 +1136,7 @@ const styles = StyleSheet.create({
   pipelineDot: {
     width: 12,
     height: 12,
-    borderRadius: 6,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1148,11 +1146,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 2,
     borderColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 2,
   },
   pipelineLine: {
     width: 16,
@@ -1164,7 +1157,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     textAlign: 'center',
-    textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
 
@@ -1177,11 +1169,6 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange,
     borderRadius: 12,
     paddingVertical: 12,
-    shadowColor: Palette.hermesOrange,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
   },
   nextStepText: {
     fontSize: 14,
@@ -1203,7 +1190,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: '#999',
-    textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
   costColValue: {
@@ -1244,13 +1230,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 15,
-    borderRadius: 14,
+    borderRadius: 16,
     backgroundColor: Palette.hermesOrange,
-    shadowColor: Palette.hermesOrange,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
   },
   actionPrimaryText: {
     fontSize: 15,
@@ -1263,18 +1244,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 4,
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: 16,
     backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
   },
   actionSecondaryText: {
     fontSize: 11,
     fontWeight: '600',
     color: '#555',
+  },
+
+  // Factureer button
+  factureerButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 8,
+    paddingVertical: 15,
+    borderRadius: 16,
+    backgroundColor: '#8B5CF6',
+  },
+  factureerButtonText: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#fff',
   },
 
   // Photo Gallery
@@ -1305,7 +1297,6 @@ const styles = StyleSheet.create({
   galleryLabelText: {
     fontSize: 10,
     fontWeight: '700' as const,
-    textTransform: 'uppercase' as const,
     letterSpacing: 0.3,
   },
   galleryAddItem: {

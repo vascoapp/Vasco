@@ -7,6 +7,7 @@ import type { VascoInsight } from '../../components/shared/VascoInsightCard';
 import { usePredictiveSavingsSummary } from '../../services/predictiveSavingsService';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export const savingsOpportunityGenerator: InsightGenerator = {
   id: 'savings-opportunity',
@@ -48,7 +49,7 @@ export function useSavingsOpportunityInsight(ctx: GeneratorContext): ScoredInsig
     icon: top.icon as VascoInsight['icon'],
     actionLabel: top.actionLabel,
     actionRoute: '/(contractor)/besparen',
-    source: 'Besparingsanalyse',
+    source: gt('source_savings', ctx.language),
     metric: { label: 'Potentieel', value: `€${top.potentialSaving}`, trend: 'up' },
 
     rootCauseTags: ['savings', 'procurement'],

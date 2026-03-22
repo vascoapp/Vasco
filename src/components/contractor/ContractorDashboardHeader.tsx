@@ -1,17 +1,18 @@
 // =============================================================================
-// CONTRACTOR DASHBOARD HEADER - Compact KPI strip for all contractor tabs
+// CONTRACTOR DASHBOARD HEADER - Redesigned KPI strip with icon circles + tints
 // =============================================================================
 
+import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
 export interface KPIItem {
   icon: IconName;
-  value: string;
+  value: string | React.ReactNode;
   label: string;
   color?: string;
   onPress?: () => void;
@@ -25,34 +26,36 @@ export function ContractorDashboardHeader({ kpis }: ContractorDashboardHeaderPro
   return (
     <View style={styles.container}>
       {kpis.map((kpi, index) => {
+        const accent = kpi.color || Palette.hermesOrange;
         const content = (
-          <>
-            <View style={styles.kpiTop}>
-              <Ionicons
-                name={kpi.icon}
-                size={14}
-                color={kpi.color || SemanticColors.textSecondary}
-              />
-              <Text style={[styles.kpiValue, kpi.color ? { color: kpi.color } : undefined]} numberOfLines={1}>
+          <View style={styles.kpiCell}>
+            <View style={[styles.iconCircle, { backgroundColor: accent + '12' }]}>
+              <Ionicons name={kpi.icon} size={18} color={accent} />
+            </View>
+            {typeof kpi.value === 'string' ? (
+              <Text style={[styles.kpiValue, { color: accent }]} numberOfLines={1}>
                 {kpi.value}
               </Text>
-            </View>
-            <Text style={styles.kpiLabel} numberOfLines={1}>{kpi.label}</Text>
-          </>
-        );
-
-        return (
-          <View key={index} style={styles.kpiWrapper}>
-            {index > 0 && <View style={styles.divider} />}
-            {kpi.onPress ? (
-              <Pressable style={styles.kpiCell} onPress={kpi.onPress}>
-                {content}
-              </Pressable>
             ) : (
-              <View style={styles.kpiCell}>
-                {content}
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {kpi.value}
               </View>
             )}
+            <Text style={styles.kpiLabel} numberOfLines={1}>{kpi.label}</Text>
+          </View>
+        );
+
+        return kpi.onPress ? (
+          <Pressable
+            key={index}
+            style={({ pressed }) => [styles.kpiWrapper, pressed && { opacity: 0.85 }]}
+            onPress={kpi.onPress}
+          >
+            {content}
+          </Pressable>
+        ) : (
+          <View key={index} style={styles.kpiWrapper}>
+            {content}
           </View>
         );
       })}
@@ -63,43 +66,41 @@ export function ContractorDashboardHeader({ kpis }: ContractorDashboardHeaderPro
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.xs,
+    gap: 8,
   },
   kpiWrapper: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  divider: {
-    width: 1,
-    height: 32,
-    backgroundColor: SemanticColors.borderDefault,
   },
   kpiCell: {
-    flex: 1,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  kpiTop: {
-    flexDirection: 'row',
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
   },
   kpiValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: SemanticColors.textPrimary,
+    fontSize: 18,
+    fontFamily: 'Manrope_800ExtraBold',
     fontVariant: ['tabular-nums'] as any,
   },
   kpiLabel: {
-    fontSize: 11,
+    fontSize: 10,
+    fontFamily: 'Manrope_500Medium',
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
   },
 });

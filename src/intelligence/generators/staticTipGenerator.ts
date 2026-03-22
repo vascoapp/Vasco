@@ -7,6 +7,7 @@
 
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import type { VascoInsight } from '../../components/shared/VascoInsightCard';
+import { gt } from '../generatorTranslations';
 
 interface StaticTip {
   roles: GeneratorContext['role'][];
@@ -28,7 +29,7 @@ const STATIC_TIPS: StaticTip[] = [
       message: "Facturen met een gedetailleerde omschrijving worden gemiddeld 3 dagen sneller betaald.",
       detail: "Voeg foto's van het afgeronde werk toe aan je factuur. Klanten die het resultaat zien betalen sneller.",
       icon: 'bulb',
-      source: 'Vasco AI',
+      source: 'source_vasco_ai',
     },
   },
   {
@@ -42,7 +43,7 @@ const STATIC_TIPS: StaticTip[] = [
       message: 'Je bestelt gemiddeld 3x per week bij dezelfde leverancier. Door te bundelen bespaar je €45/maand aan verzendkosten.',
       icon: 'cart',
       actionLabel: 'Bundelen instellen',
-      source: 'Inkoopanalyse',
+      source: 'source_procurement',
       metric: { label: 'Potentiële besparing', value: '€540/jaar', trend: 'up' },
     },
   },
@@ -58,7 +59,7 @@ const STATIC_TIPS: StaticTip[] = [
       icon: 'chatbubble',
       actionLabel: 'Opvolgen',
       actionRoute: '/(contractor)/decisions',
-      source: 'Klantinzichten',
+      source: 'source_customer',
     },
   },
   // Site Lead tips
@@ -73,7 +74,7 @@ const STATIC_TIPS: StaticTip[] = [
       message: 'Overweeg om klussen van morgen naar vandaag te verplaatsen bij onderbezetting.',
       icon: 'people',
       actionLabel: 'Herverdelen',
-      source: 'Capaciteitsplanner',
+      source: 'source_capacity',
     },
   },
   {
@@ -87,7 +88,7 @@ const STATIC_TIPS: StaticTip[] = [
       message: 'Controleer of alle PBM-middelen compleet zijn voor de geplande inspectie.',
       icon: 'shield-checkmark',
       actionLabel: 'Checklist bekijken',
-      source: 'Compliance',
+      source: 'source_compliance',
     },
   },
   // CFO tips
@@ -102,7 +103,7 @@ const STATIC_TIPS: StaticTip[] = [
       message: 'Overweeg draw requests te versnellen bij verwacht tekort.',
       icon: 'trending-down',
       actionLabel: 'Draw requests',
-      source: 'Cash Flow Analyse',
+      source: 'source_cashflow',
     },
   },
   // COO tips
@@ -117,7 +118,7 @@ const STATIC_TIPS: StaticTip[] = [
       message: 'Vertragingen op het kritieke pad kunnen de totale oplevering beïnvloeden.',
       icon: 'warning',
       actionLabel: 'What-if analyse',
-      source: 'Schedule Fragility',
+      source: 'source_scheduling',
     },
   },
   // Director tips
@@ -132,7 +133,7 @@ const STATIC_TIPS: StaticTip[] = [
       message: 'Controleer projecten die aandacht vereisen op basis van budget en planning.',
       icon: 'pie-chart',
       actionLabel: 'Portfolio overzicht',
-      source: 'Portfolio Monitor',
+      source: 'source_portfolio',
     },
   },
 ];
@@ -160,7 +161,7 @@ function generateDynamicTip(ctx: GeneratorContext): ScoredInsight | null {
         message: `Je klussen duren gemiddeld ${Math.round((avgRatio - 1) * 100)}% langer dan begroot. Verhoog je uurschatting bij de volgende offerte.`,
         detail: `Op basis van ${jobs.length} afgeronde klussen.`,
         icon: 'bulb',
-        source: 'Vasco AI (persoonlijk)',
+        source: gt('source_vasco_personal', ctx.language),
         rootCauseTags: ['tip', 'personalized'],
         rawScore: 0,
         reasoning: {
@@ -186,7 +187,7 @@ function generateDynamicTip(ctx: GeneratorContext): ScoredInsight | null {
       title: `${savings.savingsStreak} maanden besparingen op rij!`,
       message: `Je bespaart al ${savings.savingsStreak} maanden achter elkaar. ${savings.topSavingsCategory ? `Je beste categorie: ${savings.topSavingsCategory}.` : 'Goed bezig!'}`,
       icon: 'trophy',
-      source: 'Vasco AI (persoonlijk)',
+      source: gt('source_vasco_personal', ctx.language),
       rootCauseTags: ['tip', 'personalized'],
       rawScore: 0,
       reasoning: {
@@ -211,7 +212,7 @@ function generateDynamicTip(ctx: GeneratorContext): ScoredInsight | null {
       title: 'Betaalgedrag verbeteren',
       message: `Slechts ${Math.round(invoices.onTimeRate * 100)}% van je facturen wordt op tijd betaald. Automatische herinneringen kunnen dit verbeteren.`,
       icon: 'bulb',
-      source: 'Vasco AI (persoonlijk)',
+      source: gt('source_vasco_personal', ctx.language),
       actionLabel: 'Herinneringen instellen',
       actionRoute: '/(contractor)/facturen',
       rootCauseTags: ['tip', 'personalized'],
@@ -257,6 +258,7 @@ export const staticTipGenerator: InsightGenerator = {
 
     return {
       ...selected.insight,
+      source: gt(selected.insight.source as string, ctx.language),
       id: `static-${selected.tipId}`,
       generatorId: 'static-tip',
       rootCauseTags: ['tip', 'general'],

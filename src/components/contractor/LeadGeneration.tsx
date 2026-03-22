@@ -10,7 +10,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   TextInput,
   Linking,
 } from 'react-native';
@@ -100,10 +100,9 @@ const LeadCard: React.FC<{
   );
 
   return (
-    <TouchableOpacity
+    <Pressable
       style={styles.leadCard}
       onPress={() => setExpanded(!expanded)}
-      activeOpacity={0.7}
     >
       <View style={styles.leadHeader}>
         <View style={styles.leadInfo}>
@@ -165,12 +164,12 @@ const LeadCard: React.FC<{
           )}
 
           <View style={styles.leadActions}>
-            <TouchableOpacity style={styles.actionButton} onPress={onContact}>
+            <Pressable style={styles.actionButton} onPress={onContact}>
               <Ionicons name="call" size={18} color={Palette.white} />
               <Text style={styles.actionButtonText}>Bellen</Text>
-            </TouchableOpacity>
+            </Pressable>
             {lead.status === 'new' && (
-              <TouchableOpacity
+              <Pressable
                 style={[styles.actionButton, styles.secondaryButton]}
                 onPress={() => onUpdateStage('contacted')}
               >
@@ -178,10 +177,10 @@ const LeadCard: React.FC<{
                 <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>
                   Gecontacteerd
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             )}
             {lead.status === 'contacted' && (
-              <TouchableOpacity
+              <Pressable
                 style={[styles.actionButton, styles.secondaryButton]}
                 onPress={() => onUpdateStage('qualified')}
               >
@@ -189,12 +188,21 @@ const LeadCard: React.FC<{
                 <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>
                   Kwalificeer
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
+            )}
+            {(lead.status === 'qualified' || lead.status === 'negotiating') && (
+              <Pressable
+                style={[styles.actionButton, { backgroundColor: Palette.hermesOrange }]}
+                onPress={() => onUpdateStage('proposal_sent')}
+              >
+                <Ionicons name="document-text" size={18} color={Palette.white} />
+                <Text style={styles.actionButtonText}>Offerte maken</Text>
+              </Pressable>
             )}
           </View>
         </View>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
@@ -411,9 +419,9 @@ export const LeadGeneration: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Lead Generatie</Text>
-        <TouchableOpacity style={styles.addButton}>
+        <Pressable style={styles.addButton}>
           <Ionicons name="add" size={24} color={Palette.white} />
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       <View style={styles.tabs}>
@@ -422,7 +430,7 @@ export const LeadGeneration: React.FC = () => {
           { key: 'hot', label: 'Hot', icon: 'flame-outline' },
           { key: 'stats', label: 'Statistieken', icon: 'stats-chart-outline' },
         ].map(tab => (
-          <TouchableOpacity
+          <Pressable
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.tabActive]}
             onPress={() => setActiveTab(tab.key as TabType)}
@@ -435,7 +443,7 @@ export const LeadGeneration: React.FC = () => {
             <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
               {tab.label}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 

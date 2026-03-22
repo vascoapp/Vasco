@@ -51,8 +51,8 @@ const Palette = {
   orange800: '#9A3412',
   orange900: '#7C2D12',
 
-  // Vasco Brand - Hermes/Luxury Orange Palette
-  hermesOrange: '#E35205',     // Primary - Hermes luxury orange
+  // Vasco Brand - Bright Construction Orange
+  hermesOrange: '#F26522',     // Primary - bright, punchy orange
   terracotta: '#D2691E',       // Secondary - warm terracotta
   burntSienna: '#E07A5F',      // Accent - softer burnt sienna
   pastelOrange: '#F8B195',     // Light - pastel peach/orange
@@ -60,7 +60,7 @@ const Palette = {
   salmonLight: '#FFFFFF',       // Contractor background - porcelain white
 
   // Legacy Vasco (keep for backward compat)
-  vascoPrimary: '#E35205',     // Updated to Hermes
+  vascoPrimary: '#F26522',     // Updated to bright orange
   vascoSecondary: '#E07A5F',   // Terracotta/Sienna
   vascoTertiary: '#F8B195',    // Pastel orange
   vascoSubtle: '#FFDAB9',      // Peach cream
@@ -253,32 +253,32 @@ const LightTheme = {
 // WARM THEME (Hermes Orange + Cream - Current Default)
 // -----------------------------------------------------------------------------
 const WarmTheme = {
-  // Surfaces - Warm cream/off-white backgrounds
-  surfaceBackground: Palette.cream50,           // Warm off-white
-  surfacePrimary: Palette.white,                // Pure white cards
-  surfaceSecondary: Palette.cream100,           // Slightly warm
-  surfaceTertiary: Palette.cream200,            // More warmth
-  surfaceOverlay: 'rgba(45, 41, 38, 0.5)',      // Charcoal overlay
-  surfaceInverse: Palette.charcoal,             // Dark inverse
+  // Surfaces - Clean white backgrounds with subtle warmth
+  surfaceBackground: Palette.white,              // Pure white background
+  surfacePrimary: Palette.white,                 // White cards
+  surfaceSecondary: '#F7F5F3',                   // Very subtle warm gray
+  surfaceTertiary: Palette.cream200,             // Warm accent surface
+  surfaceOverlay: 'rgba(0, 0, 0, 0.5)',          // Clean overlay
+  surfaceInverse: '#1A1A1A',                     // Near-black inverse
 
-  // Borders - Subtle warm tones
-  borderDefault: Palette.sand200,
-  borderMuted: Palette.cream300,
+  // Borders - Clean, visible
+  borderDefault: '#E8E5E1',
+  borderMuted: '#F0EEEB',
   borderFocused: Palette.hermesOrange,
-  borderDisabled: Palette.cream200,
+  borderDisabled: '#F0EEEB',
 
-  // Text - Charcoal for readability
-  textPrimary: Palette.charcoal,                // Main content
-  textSecondary: Palette.charcoalMuted,         // Supporting
-  textTertiary: '#8B8279',                      // Warm gray
-  textDisabled: '#B8AFA6',                      // Muted warm
-  textInverse: Palette.white,                   // On dark backgrounds
-  textLink: Palette.hermesOrange,               // Links
+  // Text - High contrast
+  textPrimary: '#1A1A1A',                        // Near-black for max contrast
+  textSecondary: '#666660',                       // Medium gray
+  textTertiary: '#999690',                        // Light gray
+  textDisabled: '#C4C0BA',                        // Disabled
+  textInverse: Palette.white,                     // On dark backgrounds
+  textLink: Palette.hermesOrange,                 // Links
 
   // Icons
-  iconPrimary: Palette.charcoal,
-  iconSecondary: Palette.charcoalMuted,
-  iconDisabled: '#B8AFA6',
+  iconPrimary: '#1A1A1A',
+  iconSecondary: '#666660',
+  iconDisabled: '#C4C0BA',
   iconInverse: Palette.white,
 
   // Actions - Hermes Orange primary

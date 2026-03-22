@@ -9,6 +9,7 @@ import type { ScoredInsight, GeneratorContext } from './types';
 import { useAppState } from '../../state/AppState';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export function useQuoteBenchmarkInsight(ctx: GeneratorContext): ScoredInsight | null {
   const { quotes, jobs } = useAppState();
@@ -81,7 +82,7 @@ export function useQuoteBenchmarkInsight(ctx: GeneratorContext): ScoredInsight |
     detail: `Op basis van ${bestAmounts.length} offertes. Prijsrange: €${sorted[0].toLocaleString('nl-NL')} – €${sorted[sorted.length - 1].toLocaleString('nl-NL')}.${trendText}`,
     icon: 'analytics',
     actionLabel: 'Pas prijs aan',
-    source: 'Offerte Benchmark',
+    source: gt('source_quote_benchmark', ctx.language),
     metric: { label: 'Mediaan', value: `€${median.toLocaleString('nl-NL')}`, trend: 'neutral' },
 
     rootCauseTags: ['pricing', 'quotes'],

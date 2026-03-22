@@ -16,13 +16,25 @@ The intelligence engine is the learning backbone of Vasco. It generates personal
 | `src/intelligence/generators/types.ts` | `ScoredInsight`, `InsightGenerator`, `ReasoningChain` types |
 | `src/intelligence/generators/index.ts` | Generator registry |
 
-### Generators (22 total)
+### Generators (45 total)
 
 **Core (18):** marginDrift, overdueInvoice, savingsOpportunity, complianceAlert, laborEfficiency, estimationCalibration, dsoTrend, certExpiry, supplierPrice, weatherSchedule, dailyPlanning, cashGap, capacity, goalProgress, profitability, financialAudit, customerLifecycle, staticTip
 
 **Cross-Service (3):** marginRootCause, customerLifecycle, cascadingDelay
 
 **Profile-Driven (1):** estimationVarianceByType (Session 6)
+
+**Procurement (1):** supplierPriceAnomaly (Session 11)
+
+**Workflow (5):** quoteBenchmark, materialSuggestion, customerPaymentHistory, marginWarning, similarJobComparison
+
+**CFO Project (5):** projectBudgetVariance, contingencyBurn, approvalBottleneck, projectRiskScore, portfolioIRR
+
+**COO (4):** scheduleFragility, supplierRisk, permitDelay, changeOrderVelocity
+
+**Director (4):** handoverBottleneck, portfolioHealth, valueDelivery, crossProjectRisk
+
+**Site Lead (4):** crewPerformance, incidentTrend, defectCluster, certRenewalPlanner (Session 13)
 
 ---
 
@@ -607,3 +619,92 @@ New term:
 | `generators/types.ts` | `confidenceWarning?: string` on ScoredInsight |
 | `generators/goalProgressGenerator.ts` | recordMetricSnapshot, getTrend in evidence |
 | `VascoInsightCard.tsx` | confidenceWarning badge display, `confidenceRow` style |
+
+---
+
+### Session 13 — Site Lead AI Implementation (2026-03-21)
+
+4 new site-lead-specific generators, 5 screens wired with inline insights, outcome recording for calibration feedback loops.
+
+#### 1. New Generators (4)
+
+| Generator | File | Screens | Roles | Purpose |
+|-----------|------|---------|-------|---------|
+| `crew-performance` | `crewPerformanceGenerator.ts` | today, overview, schedule, dispatch | sitelead | Workforce utilization trends from daily reports. Detects declining bezetting, low avg progress, productivity anomalies. Uses 7-day rolling window, compares recent vs older periods. |
+| `incident-trend` | `incidentTrendGenerator.ts` | today, safety, overview | sitelead, coo | Z-score spike detection on incidents + near-misses. Combines incident reports + daily report safety counts. Baseline = monthly rate / weeks. Triggers on z > 1.5 or high-severity incidents. |
+| `defect-cluster` | `defectClusterGenerator.ts` | today, quality, overview, issues | sitelead, coo | Pattern detection in open defects: clusters by trade (>50% concentration), clusters by zone, oldest-age tracking. Suggests targeted QC rounds for dominant trades. |
+| `cert-renewal-planner` | `certRenewalPlannerGenerator.ts` | today, safety, compliance, overview | sitelead | Reads worker cert data from AsyncStorage. Detects batch expirations (multiple in same month), expired-cert workers, staggered renewal opportunities. Lead time warnings (2-4 week renewal estimate). |
+
+**Total generators: 45** (was 41)
+- Contractor: 22 generators
+- Site Lead: 11 (7 cross-role + 4 dedicated)
+- CFO: 9, COO: 6, Director: 4
+
+#### 2. InsightCategory Extended
+
+Added 3 new categories to `VascoInsightCard.tsx`:
+- `'operations'` — crew performance, capacity (site lead operational)
+- `'safety'` — incident trends, safety compliance
+- `'quality'` — defect patterns, inspection quality
+
+Full type: `'alert' | 'opportunity' | 'compliance' | 'financial' | 'schedule' | 'tip' | 'weather' | 'operational' | 'operations' | 'safety' | 'quality'`
+
+#### 3. Site Lead Metric Keys (4 new)
+
+Added to `learningStorage.ts` MetricKey type:
+- `workforceUtilization` — % present vs planned (from daily reports)
+- `incidentRate` — incidents + near-misses count (from daily reports + incident reports)
+- `defectCount` — open defect count (updated on close)
+- `inspectionScore` — % checked items / total items (from inspections)
+
+#### 4. Outcome Recording
+
+Wired into `siteLeadDataService.ts` — every CRUD action now records metrics for AI calibration:
+
+| Action | Metric Recorded | Value |
+|--------|----------------|-------|
+| `closeDefect()` | `defectCount` | remaining open count |
+| `addReport()` | `workforceUtilization` | present/planned × 100 |
+| `addReport()` | `incidentRate` | incidents + near-misses (if > 0) |
+| `addInspection()` | `inspectionScore` | checked/total × 100 |
+| `addIncident()` | `incidentRate` | total incident count |
+
+These feed the `recordMetricSnapshot()` pipeline: weekly snapshots → trend analysis → generator evidence strings.
+
+#### 5. Inline Insights on Secondary Screens
+
+Added 6 new inline insight entries to `vascoGuidanceService.ts`:
+
+| Screen Key | Icon | Message Theme |
+|-----------|------|---------------|
+| `sitelead:daily-report:overview` | analytics | Consistent reporting improves AI predictions 40% |
+| `sitelead:worker-certs:overview` | ribbon | Current certs = 60% fewer safety incidents |
+| `sitelead:compliance:overview` | shield-checkmark | Vasco monitors certs/permits automatically |
+| `sitelead:close-defect:overview` | construct | Defects closed within 7 days = 35% cheaper |
+| `sitelead:incident-report:overview` | warning | Every report improves safety patterns; near-misses prevent 10x serious incidents |
+
+Wired into 5 screens with `useInlineInsight()` hook + `<InlineInsight>` component:
+- `app/sitelead/daily-report.tsx`
+- `app/sitelead/worker-certs.tsx`
+- `app/sitelead/compliance.tsx`
+- `app/sitelead/close-defect.tsx`
+- `app/sitelead/incident-report.tsx`
+
+#### Files Modified/Created
+
+| File | Changes |
+|------|---------|
+| `generators/crewPerformanceGenerator.ts` | **NEW** — workforce utilization analysis |
+| `generators/incidentTrendGenerator.ts` | **NEW** — z-score anomaly detection |
+| `generators/defectClusterGenerator.ts` | **NEW** — trade/zone clustering |
+| `generators/certRenewalPlannerGenerator.ts` | **NEW** — batch expiry + renewal planning |
+| `generators/index.ts` | 4 new imports, 4 registry entries, 4 hook calls, 4 allResults entries, deps array updated |
+| `VascoInsightCard.tsx` | InsightCategory extended with operations/safety/quality |
+| `learningStorage.ts` | 4 new MetricKeys (workforceUtilization, incidentRate, defectCount, inspectionScore) |
+| `siteLeadDataService.ts` | recordMetricSnapshot calls in closeDefect, addReport, addInspection, addIncident |
+| `vascoGuidanceService.ts` | 6 new INLINE_INSIGHTS entries for site lead screens |
+| `app/sitelead/daily-report.tsx` | InlineInsight + useInlineInsight wired |
+| `app/sitelead/worker-certs.tsx` | InlineInsight + useInlineInsight wired |
+| `app/sitelead/compliance.tsx` | InlineInsight + useInlineInsight wired |
+| `app/sitelead/close-defect.tsx` | InlineInsight + useInlineInsight wired |
+| `app/sitelead/incident-report.tsx` | InlineInsight + useInlineInsight wired |

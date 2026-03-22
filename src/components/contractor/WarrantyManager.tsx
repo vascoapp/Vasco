@@ -10,7 +10,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -84,10 +84,9 @@ const WarrantyCard: React.FC<{
   };
 
   return (
-    <TouchableOpacity
+    <Pressable
       style={styles.warrantyCard}
       onPress={() => setExpanded(!expanded)}
-      activeOpacity={0.7}
     >
       <View style={styles.warrantyHeader}>
         <View style={styles.warrantyInfo}>
@@ -157,12 +156,12 @@ const WarrantyCard: React.FC<{
           )}
 
           <View style={styles.warrantyActions}>
-            <TouchableOpacity style={styles.actionButton} onPress={onViewDetails}>
+            <Pressable style={styles.actionButton} onPress={onViewDetails}>
               <Ionicons name="document-text-outline" size={18} color={SemanticColors.actionPrimary} />
               <Text style={styles.actionButtonText}>Details</Text>
-            </TouchableOpacity>
+            </Pressable>
             {warranty.status !== 'expired' && (
-              <TouchableOpacity
+              <Pressable
                 style={[styles.actionButton, styles.primaryButton]}
                 onPress={onFileClaim}
               >
@@ -170,12 +169,12 @@ const WarrantyCard: React.FC<{
                 <Text style={[styles.actionButtonText, styles.primaryButtonText]}>
                   Claim Indienen
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             )}
           </View>
         </View>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
@@ -188,7 +187,7 @@ const ClaimCard: React.FC<{
   );
 
   return (
-    <TouchableOpacity style={styles.claimCard} onPress={onViewDetails} activeOpacity={0.7}>
+    <Pressable style={styles.claimCard} onPress={onViewDetails}>
       <View style={styles.claimHeader}>
         <View style={styles.claimInfo}>
           <Text style={styles.claimNumber}>{claim.claimNumber}</Text>
@@ -216,7 +215,7 @@ const ClaimCard: React.FC<{
           <Text style={styles.claimValueAmount}>€{claim.estimatedCost}</Text>
         </View>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
@@ -395,10 +394,10 @@ export const WarrantyManager: React.FC = () => {
           <View style={styles.tabContent}>
             <View style={styles.claimsHeader}>
               <Text style={styles.claimsTitle}>Garantieclaims</Text>
-              <TouchableOpacity style={styles.newClaimButton}>
+              <Pressable style={styles.newClaimButton}>
                 <Ionicons name="add" size={18} color={Palette.white} />
                 <Text style={styles.newClaimButtonText}>Nieuwe Claim</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
 
             <View style={styles.claimsStats}>
@@ -441,9 +440,9 @@ export const WarrantyManager: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Garantiebeheer</Text>
-        <TouchableOpacity style={styles.searchButton}>
+        <Pressable style={styles.searchButton}>
           <Ionicons name="search-outline" size={24} color={SemanticColors.textPrimary} />
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       <View style={styles.tabs}>
@@ -452,7 +451,7 @@ export const WarrantyManager: React.FC = () => {
           { key: 'expiring', label: 'Verlopend', icon: 'warning-outline' },
           { key: 'claims', label: 'Claims', icon: 'document-text-outline' },
         ].map(tab => (
-          <TouchableOpacity
+          <Pressable
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.tabActive]}
             onPress={() => setActiveTab(tab.key as TabType)}
@@ -465,7 +464,7 @@ export const WarrantyManager: React.FC = () => {
             <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
               {tab.label}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 

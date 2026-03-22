@@ -11,7 +11,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Modal,
   TextInput,
   Alert,
@@ -116,19 +116,19 @@ export function CustomerFollowUp() {
               {todayFollowUps.map((f) => f.customerName).join(', ')}
             </Text>
           </View>
-          <TouchableOpacity
+          <Pressable
             style={styles.todayButton}
             onPress={() => setSelectedFollowUp(todayFollowUps[0])}
           >
             <Text style={styles.todayButtonText}>Start</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       )}
 
       {/* Tab Bar */}
       <View style={styles.tabBar}>
         {tabs.map((tab) => (
-          <TouchableOpacity
+          <Pressable
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.tabActive]}
             onPress={() => setActiveTab(tab.key)}
@@ -146,7 +146,7 @@ export function CustomerFollowUp() {
                 <Text style={styles.badgeText}>{tab.badge}</Text>
               </View>
             )}
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 
@@ -159,7 +159,7 @@ export function CustomerFollowUp() {
               <Ionicons name="bulb" size={16} color={SemanticColors.actionPrimary} /> Aanbevelingen
             </Text>
             {suggestedFollowUps.map((suggestion, idx) => (
-              <TouchableOpacity
+              <Pressable
                 key={idx}
                 style={styles.suggestionCard}
                 onPress={() => {
@@ -179,7 +179,7 @@ export function CustomerFollowUp() {
                 <View style={styles.suggestionAction}>
                   <Ionicons name="add-circle" size={24} color={SemanticColors.actionPrimary} />
                 </View>
-              </TouchableOpacity>
+              </Pressable>
             ))}
           </View>
         )}
@@ -231,12 +231,12 @@ export function CustomerFollowUp() {
       </ScrollView>
 
       {/* FAB */}
-      <TouchableOpacity
+      <Pressable
         style={styles.fab}
         onPress={() => setShowScheduleModal(true)}
       >
         <Ionicons name="add" size={28} color="#FFFFFF" />
-      </TouchableOpacity>
+      </Pressable>
 
       {/* Follow-up Detail Modal */}
       <Modal
@@ -363,7 +363,7 @@ function FollowUpCard({
   };
 
   return (
-    <TouchableOpacity style={styles.followUpCard} onPress={onPress}>
+    <Pressable style={styles.followUpCard} onPress={onPress}>
       <View style={styles.followUpHeader}>
         <View style={[styles.typeIcon, { backgroundColor: getStatusColor(followUp.status) + '20' }]}>
           <Ionicons
@@ -440,7 +440,7 @@ function FollowUpCard({
         </View>
 
         {(followUp.status === 'due' || followUp.status === 'overdue') && (
-          <TouchableOpacity
+          <Pressable
             style={styles.quickCompleteButton}
             onPress={(e) => {
               e.stopPropagation();
@@ -448,10 +448,10 @@ function FollowUpCard({
             }}
           >
             <Ionicons name="checkmark" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
+          </Pressable>
         )}
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
@@ -497,9 +497,9 @@ function FollowUpDetailModal({
       <View style={styles.modalContent}>
         <View style={styles.modalHeader}>
           <Text style={styles.modalTitle}>Follow-up</Text>
-          <TouchableOpacity onPress={onClose} style={styles.modalClose}>
+          <Pressable onPress={onClose} style={styles.modalClose}>
             <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         <ScrollView style={styles.modalBody}>
@@ -587,7 +587,7 @@ function FollowUpDetailModal({
         ) : (
           <View style={styles.modalActions}>
             <View style={styles.secondaryActions}>
-              <TouchableOpacity
+              <Pressable
                 style={styles.snoozeButton}
                 onPress={() => {
                   Alert.alert('Uitstellen', 'Hoelang uitstellen?', [
@@ -599,8 +599,8 @@ function FollowUpDetailModal({
                 }}
               >
                 <Ionicons name="time" size={20} color={SemanticColors.textSecondary} />
-              </TouchableOpacity>
-              <TouchableOpacity
+              </Pressable>
+              <Pressable
                 style={styles.cancelButton}
                 onPress={() => {
                   Alert.alert(
@@ -614,21 +614,21 @@ function FollowUpDetailModal({
                 }}
               >
                 <Ionicons name="trash-outline" size={20} color={SemanticColors.feedbackError} />
-              </TouchableOpacity>
+              </Pressable>
             </View>
 
-            <TouchableOpacity style={styles.contactButton} onPress={getContactAction}>
+            <Pressable style={styles.contactButton} onPress={getContactAction}>
               <Ionicons name="chatbubble" size={20} color="#FFFFFF" />
               <Text style={styles.contactButtonText}>Contact</Text>
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity
+            <Pressable
               style={styles.completeButton}
               onPress={() => setShowOutcomeOptions(true)}
             >
               <Ionicons name="checkmark" size={20} color="#FFFFFF" />
               <Text style={styles.completeButtonText}>Afronden</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         )}
 
@@ -637,40 +637,40 @@ function FollowUpDetailModal({
           <View style={styles.outcomeOverlay}>
             <View style={styles.outcomeModal}>
               <Text style={styles.outcomeTitle}>Resultaat</Text>
-              <TouchableOpacity
+              <Pressable
                 style={styles.outcomeOption}
                 onPress={() => onComplete('responded')}
               >
                 <Ionicons name="chatbubble-outline" size={24} color={SemanticColors.actionPrimary} />
                 <Text style={styles.outcomeOptionText}>Reactie ontvangen</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </Pressable>
+              <Pressable
                 style={styles.outcomeOption}
                 onPress={() => onComplete('converted')}
               >
                 <Ionicons name="trophy-outline" size={24} color={SemanticColors.feedbackSuccess} />
                 <Text style={styles.outcomeOptionText}>Deal gewonnen!</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </Pressable>
+              <Pressable
                 style={styles.outcomeOption}
                 onPress={() => onComplete('no_response')}
               >
                 <Ionicons name="hourglass-outline" size={24} color={SemanticColors.textSecondary} />
                 <Text style={styles.outcomeOptionText}>Geen reactie</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </Pressable>
+              <Pressable
                 style={styles.outcomeOption}
                 onPress={() => onComplete('declined')}
               >
                 <Ionicons name="close-circle-outline" size={24} color={SemanticColors.feedbackError} />
                 <Text style={styles.outcomeOptionText}>Afgewezen</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </Pressable>
+              <Pressable
                 style={styles.outcomeCancel}
                 onPress={() => setShowOutcomeOptions(false)}
               >
                 <Text style={styles.outcomeCancelText}>Annuleren</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
         )}
@@ -725,9 +725,9 @@ function ScheduleFollowUpModal({
       <View style={styles.scheduleModal}>
         <View style={styles.modalHeader}>
           <Text style={styles.modalTitle}>Follow-up plannen</Text>
-          <TouchableOpacity onPress={onClose} style={styles.modalClose}>
+          <Pressable onPress={onClose} style={styles.modalClose}>
             <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         <ScrollView style={styles.modalBody}>
@@ -739,7 +739,7 @@ function ScheduleFollowUpModal({
             style={styles.customerList}
           >
             {customers.map((customer) => (
-              <TouchableOpacity
+              <Pressable
                 key={customer.id}
                 style={[
                   styles.customerOption,
@@ -761,7 +761,7 @@ function ScheduleFollowUpModal({
                 >
                   {customer.name}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             ))}
           </ScrollView>
 
@@ -769,7 +769,7 @@ function ScheduleFollowUpModal({
           <Text style={styles.fieldLabel}>Type follow-up</Text>
           <View style={styles.typeGrid}>
             {followUpTypes.map((typeOption) => (
-              <TouchableOpacity
+              <Pressable
                 key={typeOption.type}
                 style={[
                   styles.typeOption,
@@ -794,7 +794,7 @@ function ScheduleFollowUpModal({
                 >
                   {typeOption.label}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             ))}
           </View>
 
@@ -810,7 +810,7 @@ function ScheduleFollowUpModal({
                 .toISOString()
                 .split('T')[0];
               return (
-                <TouchableOpacity
+                <Pressable
                   key={option.days}
                   style={[
                     styles.dateOption,
@@ -826,7 +826,7 @@ function ScheduleFollowUpModal({
                   >
                     {option.label}
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               );
             })}
           </View>
@@ -854,10 +854,10 @@ function ScheduleFollowUpModal({
         </ScrollView>
 
         <View style={styles.scheduleActions}>
-          <TouchableOpacity style={styles.scheduleCancelButton} onPress={onClose}>
+          <Pressable style={styles.scheduleCancelButton} onPress={onClose}>
             <Text style={styles.scheduleCancelText}>Annuleren</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+          </Pressable>
+          <Pressable
             style={[
               styles.scheduleConfirmButton,
               !selectedCustomer && styles.scheduleConfirmDisabled,
@@ -867,7 +867,7 @@ function ScheduleFollowUpModal({
           >
             <Ionicons name="calendar" size={20} color="#FFFFFF" />
             <Text style={styles.scheduleConfirmText}>Plannen</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
     </View>

@@ -232,7 +232,7 @@ export async function getAllCalibrationScores(): Promise<
   if (!isSupabaseConfigured) return [];
   const { data, error } = await from('calibration_entries')
     .select('generator_id, resolved_at, accurate');
-  if (error) { console.warn('[IntelDP] getCalScores:', error.message); return []; }
+  if (error) { return []; }
 
   const byGen = new Map<string, { total: number; resolved: number; accurate: number }>();
   for (const row of data ?? []) {

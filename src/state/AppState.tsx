@@ -1,4 +1,5 @@
-import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { businessProfile as initialBusinessProfile } from '../data/mockBusiness';
 import { invoices as initialInvoices, quotes as initialQuotes } from '../data/mockDocuments';
 import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
@@ -16,6 +17,8 @@ import { Material, JobMaterial, JobMaterialStatus, PriceObservation } from '../d
 import { Supplier } from '../domain/suppliers';
 import { PriceRiskSignal } from '../domain/insights';
 import { QuoteLineItem } from '../domain/lineItems';
+import type { Project, ProjectPnL } from '../types/project';
+import { upsertEntity, addRelation, propagateJobCompletion, propagatePayment } from '../intelligence/ontology';
 import { isSupabaseConfigured } from '../lib/supabase';
 import {
   loadQuotes,
@@ -52,6 +55,19 @@ import {
   saveExtractedLineItems,
 } from '../lib/intelligenceDataProvider';
 import { rowToExtractedDocument } from '../ingestion/extractionBridge';
+import { schedulePaymentReminder, scheduleQuoteFollowUp } from '../services/pushNotificationService';
+import {
+  emitQuoteCreated,
+  emitQuoteAccepted,
+  emitInvoiceSent,
+  emitPaymentReceived,
+  emitJobStarted,
+  emitJobCompleted,
+  emitMaterialPurchased,
+  recordPricingData,
+  emitQuoteRejected,
+  recordPricingOutcome,
+} from '../intelligence/dataCollector';
 
 export type ContractorMetrics = {
   revenueThisMonth: number;
@@ -119,6 +135,15 @@ type AppState = {
   removeJobMaterial: (id: string, jobId: string) => void;
   connectMollie: () => void;
   createPaymentLink: (invoiceId: string, amount: number) => Promise<void>;
+  addInvoiceFromJob: (jobId: string) => Promise<string>;
+  convertQuoteToJob: (quoteId: string) => Promise<string>;
+  updateQuote: (id: string, updates: Partial<Quote>) => void;
+  // Project mode (aannemer)
+  projects: Project[];
+  addProject: (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'totalInvoiced' | 'totalPaid'>) => string;
+  updateProject: (id: string, updates: Partial<Project>) => void;
+  addJobToProject: (projectId: string, jobId: string) => void;
+  getProjectPnL: (projectId: string) => ProjectPnL;
   pendingBudgetExtraction: BudgetExtractionResult | null;
   setPendingBudgetExtraction: (e: BudgetExtractionResult | null) => void;
 };
@@ -126,18 +151,27 @@ type AppState = {
 const AppStateContext = createContext<AppState | null>(null);
 
 export function AppStateProvider({ children }: PropsWithChildren) {
+  const aiUserId = 'current-user'; // placeholder until AuthContext is accessible here
   const [isLoading, setIsLoading] = useState(isSupabaseConfigured);
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile>(
     isSupabaseConfigured ? { isComplete: false, completenessPercent: 0 } : initialBusinessProfile,
   );
   const [quotes, setQuotes] = useState<Quote[]>(isSupabaseConfigured ? [] : initialQuotes);
   const [invoices, setInvoices] = useState<Invoice[]>(isSupabaseConfigured ? [] : initialInvoices);
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobs, setJobs] = useState<Job[]>(isSupabaseConfigured ? [] : [
+    { id: 'j-seed-1', customerId: 'cust-001', title: 'CV-ketel onderhoud — Fam. de Vries', description: null, status: 'scheduled', trade: 'plumbing', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], estimatedDuration: 3, quotedAmount: 450, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - 86400000 * 3).toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'j-seed-2', customerId: 'cust-002', title: 'Badkamer renovatie — Fam. Jansen', description: null, status: 'in-progress', trade: 'plumbing', priority: 'normal', estimatedDuration: 24, quotedAmount: 4200, agreedAmount: 4200, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - 86400000 * 7).toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'j-seed-3', customerId: 'cust-003', title: 'Lekkage reparatie — Bakkerij Smit', description: null, status: 'completed', trade: 'plumbing', priority: 'normal', estimatedDuration: 2, quotedAmount: 280, agreedAmount: 280, completedAt: new Date(Date.now() - 86400000 * 12).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - 86400000 * 14).toISOString(), updatedAt: new Date(Date.now() - 86400000 * 12).toISOString() },
+  ]);
   const [extractedDocs, setExtractedDocs] = useState<ExtractedDocument[]>([]);
   const [lineItems, setLineItems] = useState<Record<string, QuoteLineItem[]>>(
     isSupabaseConfigured ? {} : initialLineItems,
   );
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>(isSupabaseConfigured ? [] : [
+    { id: 'cust-001', name: 'Fam. de Vries', email: 'devries@gmail.com', phone: '+31 6 12345678', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'cust-002', name: 'Fam. Jansen', email: 'jansen@hotmail.com', phone: '+31 6 87654321', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'cust-003', name: 'Bakkerij Smit', email: 'info@bakkerijsmit.nl', phone: '+31 20 1234567', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+  ]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [jobMaterialsMap, setJobMaterialsMap] = useState<Record<string, JobMaterial[]>>({});
@@ -147,6 +181,25 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   const [mollieConnected, setMollieConnected] = useState(false);
   const [lastMolliePayment, setLastMolliePayment] = useState<Record<string, string>>({});
   const [pendingBudgetExtraction, setPendingBudgetExtraction] = useState<BudgetExtractionResult | null>(null);
+  // Seed projects for aannemer demo
+  const SEED_PROJECTS: Project[] = [
+    {
+      id: 'proj-seed-1', title: 'Badkamer renovatie — Fam. Jansen', customerId: 'cust-002', customerName: 'Fam. Jansen',
+      status: 'active', totalBudget: 12500, totalQuoted: 12500, totalInvoiced: 0, totalPaid: 0,
+      jobIds: ['j-seed-2'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [],
+      startDate: new Date(Date.now() - 86400000 * 7).toISOString().split('T')[0],
+      targetEndDate: new Date(Date.now() + 86400000 * 21).toISOString().split('T')[0],
+      createdAt: new Date(Date.now() - 86400000 * 14).toISOString(), updatedAt: new Date().toISOString(),
+    },
+    {
+      id: 'proj-seed-2', title: 'Keuken verbouwing — Bakkerij Smit', customerId: 'cust-003', customerName: 'Bakkerij Smit',
+      status: 'planning', totalBudget: 18000, totalQuoted: 16500, totalInvoiced: 0, totalPaid: 0,
+      jobIds: ['j-seed-3'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [],
+      targetEndDate: new Date(Date.now() + 86400000 * 45).toISOString().split('T')[0],
+      createdAt: new Date(Date.now() - 86400000 * 3).toISOString(), updatedAt: new Date().toISOString(),
+    },
+  ];
+  const [projects, setProjects] = useState<Project[]>(isSupabaseConfigured ? [] : SEED_PROJECTS);
 
   const refreshData = useCallback(async () => {
     setIsLoading(true);
@@ -197,6 +250,55 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     refreshData();
   }, [refreshData]);
+
+  // Hydrate from AsyncStorage when offline (no Supabase)
+  // Only override seed data if AsyncStorage has non-empty arrays
+  const hydrated = useRef(false);
+  useEffect(() => {
+    if (!isSupabaseConfigured && !hydrated.current) {
+      hydrated.current = true;
+      const loadIfNonEmpty = (key: string, setter: (v: any) => void) => {
+        AsyncStorage.getItem(key).then(raw => {
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length > 0) setter(parsed);
+          }
+        }).catch(() => {});
+      };
+      loadIfNonEmpty('@vasco_jobs', setJobs);
+      loadIfNonEmpty('@vasco_invoices', setInvoices);
+      loadIfNonEmpty('@vasco_quotes', setQuotes);
+      loadIfNonEmpty('@vasco_customers', setCustomers);
+      loadIfNonEmpty('@vasco_projects', setProjects);
+    }
+  }, []);
+
+  // Persist to AsyncStorage on changes (fire-and-forget)
+  useEffect(() => {
+    if (!isSupabaseConfigured && hydrated.current) {
+      AsyncStorage.setItem('@vasco_jobs', JSON.stringify(jobs)).catch(() => {});
+    }
+  }, [jobs]);
+  useEffect(() => {
+    if (!isSupabaseConfigured && hydrated.current) {
+      AsyncStorage.setItem('@vasco_invoices', JSON.stringify(invoices)).catch(() => {});
+    }
+  }, [invoices]);
+  useEffect(() => {
+    if (!isSupabaseConfigured && hydrated.current) {
+      AsyncStorage.setItem('@vasco_quotes', JSON.stringify(quotes)).catch(() => {});
+    }
+  }, [quotes]);
+  useEffect(() => {
+    if (!isSupabaseConfigured && hydrated.current) {
+      AsyncStorage.setItem('@vasco_customers', JSON.stringify(customers)).catch(() => {});
+    }
+  }, [customers]);
+  useEffect(() => {
+    if (!isSupabaseConfigured && hydrated.current) {
+      AsyncStorage.setItem('@vasco_projects', JSON.stringify(projects)).catch(() => {});
+    }
+  }, [projects]);
 
   const recalcQuoteTotal = (quoteId: string, items: QuoteLineItem[]) => {
     const total = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
@@ -318,9 +420,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             console.warn('[AppState] addJob persist failed:', err);
           }
         }
+        // Ontology: create job entity + link to customer
+        upsertEntity({ id: tempId, type: 'job', name: title, attributes: { trade: extra?.trade, status: 'lead' }, scores: { reliability: 50, quality: 50, value: extra?.quoted_amount ?? 0, frequency: 0 }, lastUpdated: new Date().toISOString() }).catch(() => {});
+        if (customerId) {
+          addRelation({ fromId: customerId, fromType: 'customer', toId: tempId, toType: 'job', relationType: 'owns', metadata: {} }).catch(() => {});
+        }
         return tempId;
       },
       updateJobStatus: (id, status) => {
+        const job = jobs.find(j => j.id === id);
         setJobs((prev) =>
           prev.map((j) =>
             j.id === id ? { ...j, status, updatedAt: new Date().toISOString() } : j,
@@ -330,6 +438,62 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           dbUpdateJob(id, { status }).catch((err) =>
             console.warn('[AppState] updateJobStatus persist failed:', err),
           );
+        }
+        // AI data collector — track job lifecycle events
+        if (job && status === 'in-progress') {
+          emitJobStarted(aiUserId, id, {
+            trade: job.trade ?? 'general',
+            jobType: job.title,
+            estimatedHours: job.estimatedDuration ?? 0,
+            crewSize: 1,
+          }).catch(() => {});
+        }
+        if (job && status === 'completed') {
+          const actualHours = (job as any).timeEntries?.reduce((s: number, e: any) => s + (e.hours ?? 0), 0) ?? 0;
+          const materialCost = (job as any).materials?.reduce((s: number, m: any) => s + (m.totalCost ?? 0), 0) ?? 0;
+          const estimatedCost = job.quotedAmount ?? job.agreedAmount ?? 0;
+          const actualCost = materialCost + (actualHours * 45); // rough labor estimate
+          emitJobCompleted(aiUserId, id, {
+            trade: job.trade ?? 'general',
+            jobType: job.title,
+            estimatedHours: job.estimatedDuration ?? 0,
+            actualHours,
+            estimatedCost,
+            actualCost,
+            marginPercent: estimatedCost > 0 ? Math.round(((estimatedCost - actualCost) / estimatedCost) * 100) : 0,
+            scopeChanges: 0,
+            materialDelays: false,
+          }).catch(() => {});
+          // Ontology: propagate job completion
+          propagateJobCompletion(id, {
+            actualCost,
+            estimatedCost,
+            actualHours,
+            estimatedHours: job.estimatedDuration ?? 0,
+            customerPaidOnTime: false,
+            defectCount: 0,
+          }).catch(() => {});
+          // Record pricing outcome for calibration
+          if (job.quoteId) {
+            recordPricingOutcome(aiUserId, job.quoteId, {
+              wasAccepted: true,
+              actualCost,
+              actualHours,
+              marginPercent: estimatedCost > 0 ? Math.round(((estimatedCost - actualCost) / estimatedCost) * 100) : 0,
+            }).catch(() => {});
+          }
+          // EVE pattern: auto-queue invoice draft for approval
+          import('../services/aiActionQueueService').then(({ addToQueue }) => {
+            addToQueue({
+              type: 'draft_invoice',
+              title: `Factuur voor ${job.title}`,
+              description: `Klus afgerond · €${(estimatedCost).toLocaleString('nl-NL')}`,
+              preparedData: { jobId: id, amount: estimatedCost, customer: job.customerId },
+              actionLabel: 'Factuur aanmaken',
+              estimatedImpact: `€${(estimatedCost).toLocaleString('nl-NL')} omzet`,
+              expiresAt: new Date(Date.now() + 7 * 86400000).toISOString(),
+            });
+          }).catch(() => {});
         }
       },
       removeJob: (id) => {
@@ -370,11 +534,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             console.warn('[AppState] markQuoteSent persist failed:', err)
           );
         }
+        scheduleQuoteFollowUp({ quoteId: id, customerName: 'Klant', daysAfterSent: 3 }).catch(() => {});
       },
       markInvoiceSent: (id) => {
+        const invoice = invoices.find((inv) => inv.id === id);
         setInvoices((prev) =>
-          prev.map((invoice) =>
-            invoice.id === id ? { ...invoice, status: 'sent', dueInDays: 14 } : invoice
+          prev.map((inv) =>
+            inv.id === id ? { ...inv, status: 'sent', dueInDays: 14 } : inv
           )
         );
         if (isSupabaseConfigured) {
@@ -382,8 +548,18 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             console.warn('[AppState] markInvoiceSent persist failed:', err)
           );
         }
+        schedulePaymentReminder({ invoiceId: id, customerName: 'Klant', amount: invoice?.amount ?? 0, daysUntilDue: 14 }).catch(() => {});
+        // AI data collector
+        const sentDue = new Date();
+        sentDue.setDate(sentDue.getDate() + 14);
+        emitInvoiceSent(aiUserId, id, {
+          customerId: invoice?.customer ?? '',
+          amount: invoice?.amount ?? 0,
+          dueDate: sentDue.toISOString(),
+        }).catch(() => {});
       },
       markInvoicePaid: (id) => {
+        const paidInv = invoices.find((i) => i.id === id);
         setInvoices((prev) =>
           prev.map((invoice) =>
             invoice.id === id ? { ...invoice, status: 'paid', dueInDays: 0 } : invoice
@@ -394,6 +570,16 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             console.warn('[AppState] markInvoicePaid persist failed:', err)
           );
         }
+        // AI data collector
+        emitPaymentReceived(aiUserId, id, {
+          customerId: paidInv?.customer ?? '',
+          amount: paidInv?.amount ?? 0,
+          daysToPayment: 0,
+          paymentMethod: 'unknown',
+          wasOverdue: (paidInv?.dueInDays ?? 0) < 0,
+        }).catch(() => {});
+        // Ontology: propagate payment
+        propagatePayment(id, 0).catch(() => {});
       },
       addQuote: async (customer, job, items) => {
         const total = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
@@ -435,6 +621,25 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           } catch (err) {
             console.warn('[AppState] addQuote persist failed:', err);
           }
+        }
+
+        // AI data collector — quote event + per-line pricing intelligence
+        emitQuoteCreated(aiUserId, docNumber, {
+          customerId: customer,
+          totalAmount: total,
+          lineItemCount: items.length,
+          trade: 'general',
+        }).catch(() => {});
+        // Record each line item for pricing intelligence
+        for (const item of items) {
+          recordPricingData(aiUserId, {
+            trade: 'general',
+            country: 'NL',
+            lineDescription: item.description,
+            quotedUnitPrice: item.unitPrice,
+            quotedQuantity: item.quantity,
+            vatRate: (item as any).vatRate ?? 21,
+          }).catch(() => {});
         }
 
         return docNumber;
@@ -495,6 +700,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             console.warn('[AppState] addInvoice persist failed:', err);
           }
         }
+
+        // AI data collector
+        emitInvoiceSent(aiUserId, docNumber, {
+          customerId: sourceQuote.customer,
+          amount: sourceQuote.amount,
+          dueDate: dueDate.toISOString(),
+        }).catch(() => {});
 
         return docNumber;
       },
@@ -638,6 +850,17 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             console.warn('[AppState] addJobMaterial persist failed:', err);
           }
         }
+        // AI data collector — material purchase event
+        emitMaterialPurchased(aiUserId, {
+          materialName: jm.materialId ?? 'unknown',
+          supplierId: jm.supplierId ?? 'unknown',
+          supplierName: jm.supplierId ?? 'unknown',
+          price: jm.unitPrice ?? 0,
+          quantity: jm.quantity ?? 1,
+          unit: jm.unit ?? 'stuk',
+          trade: 'general',
+          jobId: jm.jobId,
+        }).catch(() => {});
         return tempId;
       },
       updateJobMaterialStatus: (id, jobId, status) => {
@@ -674,6 +897,188 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           }));
         }
       },
+      addInvoiceFromJob: async (jobId: string) => {
+        const job = jobs.find((j) => j.id === jobId);
+        if (!job) throw new Error(`Job ${jobId} not found`);
+
+        const amount = job.agreedAmount ?? job.quotedAmount ?? 0;
+        const docNumber = await nextDocumentNumber('invoice');
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 14);
+
+        const newInvoice: Invoice = {
+          id: docNumber,
+          customer: job.customerId ?? '',
+          job: job.title,
+          amount,
+          status: 'draft',
+          dueInDays: 14,
+        };
+
+        setInvoices((prev) => [newInvoice, ...prev]);
+
+        if (isSupabaseConfigured) {
+          try {
+            await createDocument({
+              doc_type: 'invoice',
+              status: 'draft',
+              document_number: docNumber,
+              customer_id: job.customerId ?? undefined,
+              job_id: jobId,
+              total_amount: amount,
+              due_date: dueDate.toISOString(),
+            });
+          } catch (err) {
+            console.warn('[AppState] addInvoiceFromJob persist failed:', err);
+          }
+        }
+        return docNumber;
+      },
+
+      convertQuoteToJob: async (quoteId: string) => {
+        const quote = quotes.find((q) => q.id === quoteId);
+        if (!quote) throw new Error(`Quote ${quoteId} not found`);
+
+        const tempId = `j-${Date.now()}`;
+        const now = new Date().toISOString();
+        const newJob: Job = {
+          id: tempId,
+          customerId: quote.customer ?? null,
+          title: quote.job || `Klus van offerte ${quoteId}`,
+          description: null,
+          status: 'scheduled',
+          quotedAmount: quote.amount,
+          agreedAmount: quote.amount,
+          priority: 'normal',
+          photos: [],
+          notes: [],
+          timeEntries: [],
+          materials: [],
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        setJobs((prev) => [newJob, ...prev]);
+        // Mark quote as accepted
+        setQuotes((prev) =>
+          prev.map((q) => (q.id === quoteId ? { ...q, status: 'accepted' as Quote['status'] } : q)),
+        );
+
+        // AI data collector — quote accepted + pricing outcome
+        emitQuoteAccepted(aiUserId, quoteId, {
+          customerId: quote.customer ?? '',
+          quotedAmount: quote.amount,
+          acceptedAmount: quote.amount,
+          daysToAccept: 0,
+        }).catch(() => {});
+        recordPricingOutcome(aiUserId, quoteId, {
+          wasAccepted: true,
+          acceptedPrice: quote.amount,
+        }).catch(() => {});
+
+        if (isSupabaseConfigured) {
+          try {
+            const row = await dbCreateJob({
+              title: newJob.title,
+              customer_id: quote.customer,
+              quoted_amount: quote.amount,
+              agreed_amount: quote.amount,
+            });
+            setJobs((prev) =>
+              prev.map((j) => (j.id === tempId ? { ...j, id: row.id } : j)),
+            );
+            await updateDocument(quoteId, { status: 'accepted' }).catch(() => {});
+            return row.id;
+          } catch (err) {
+            console.warn('[AppState] convertQuoteToJob persist failed:', err);
+          }
+        }
+        return tempId;
+      },
+
+      updateQuote: (id, updates) => {
+        const quote = quotes.find(q => q.id === id);
+        setQuotes((prev) =>
+          prev.map((q) => (q.id === id ? { ...q, ...updates } : q)),
+        );
+        if (isSupabaseConfigured) {
+          const dbUpdates: Record<string, unknown> = {};
+          if (updates.amount !== undefined) dbUpdates.total_amount = updates.amount;
+          if (updates.status !== undefined) dbUpdates.status = updates.status;
+          if (updates.customer !== undefined) dbUpdates.customer_id = updates.customer;
+          if (updates.job !== undefined) dbUpdates.job_id = updates.job;
+          updateDocument(id, dbUpdates).catch((err) =>
+            console.warn('[AppState] updateQuote persist failed:', err),
+          );
+        }
+        // AI data collector — track quote rejection
+        if (updates.status === 'rejected' && quote) {
+          emitQuoteRejected(aiUserId, id, {
+            customerId: quote.customer ?? '',
+            quotedAmount: quote.amount,
+            reason: 'customer_declined',
+          }).catch(() => {});
+          recordPricingOutcome(aiUserId, id, { wasAccepted: false }).catch(() => {});
+        }
+      },
+
+      // Project mode (aannemer)
+      projects,
+      addProject: (project) => {
+        const id = `proj-${Date.now()}`;
+        const now = new Date().toISOString();
+        const newProject: Project = {
+          ...project,
+          id,
+          totalInvoiced: 0,
+          totalPaid: 0,
+          createdAt: now,
+          updatedAt: now,
+        };
+        setProjects(prev => [newProject, ...prev]);
+        return id;
+      },
+      updateProject: (id, updates) => {
+        setProjects(prev => prev.map(p =>
+          p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p
+        ));
+      },
+      addJobToProject: (projectId, jobId) => {
+        setProjects(prev => prev.map(p =>
+          p.id === projectId ? { ...p, jobIds: [...p.jobIds, jobId], updatedAt: new Date().toISOString() } : p
+        ));
+      },
+      getProjectPnL: (projectId): ProjectPnL => {
+        const project = projects.find(p => p.id === projectId);
+        if (!project) return { projectId, revenue: 0, materialCosts: 0, laborCosts: 0, subcontractorCosts: 0, otherCosts: 0, grossProfit: 0, grossMargin: 0, budgetVariance: 0, budgetVariancePct: 0 };
+        const projectJobs = jobs.filter(j => project.jobIds.includes(j.id));
+        const projectInvoices = invoices.filter((i: any) => project.invoiceIds?.includes(i.id));
+        const revenue = projectInvoices.reduce((s: number, i: any) => s + (i.amount || 0), 0);
+        const materialCosts = projectJobs.reduce((s, j) => {
+          const mats = jobMaterialsMap[j.id] ?? [];
+          return s + mats.reduce((ms, m) => ms + (m.totalPrice ?? 0), 0);
+        }, 0);
+        const laborCosts = projectJobs.reduce((s, j) => {
+          const hours = (j as any).timeEntries?.reduce((h: number, e: any) => h + (e.hours ?? 0), 0) ?? 0;
+          return s + hours * 45;
+        }, 0);
+        const totalCosts = materialCosts + laborCosts;
+        const grossProfit = revenue - totalCosts;
+        const grossMargin = revenue > 0 ? Math.round((grossProfit / revenue) * 100) : 0;
+        return {
+          projectId,
+          revenue,
+          materialCosts,
+          laborCosts,
+          subcontractorCosts: 0,
+          otherCosts: 0,
+          grossProfit,
+          grossMargin,
+          budgetVariance: project.totalBudget - totalCosts,
+          budgetVariancePct: project.totalBudget > 0 ? Math.round(((project.totalBudget - totalCosts) / project.totalBudget) * 100) : 0,
+        };
+      },
+
       pendingBudgetExtraction,
       setPendingBudgetExtraction,
       connectMollie: () => setMollieConnected(true),
@@ -707,6 +1112,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       lastMoneybirdExport,
       lastMolliePayment,
       pendingBudgetExtraction,
+      projects,
     ]
   );
 

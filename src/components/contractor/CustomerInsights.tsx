@@ -10,7 +10,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   TextInput,
   Alert,
 } from 'react-native';
@@ -110,10 +110,9 @@ const CustomerCard: React.FC<{
   );
 
   return (
-    <TouchableOpacity
+    <Pressable
       style={styles.customerCard}
       onPress={() => setExpanded(!expanded)}
-      activeOpacity={0.7}
     >
       <View style={styles.customerHeader}>
         <View style={styles.customerInfo}>
@@ -194,18 +193,18 @@ const CustomerCard: React.FC<{
           )}
 
           <View style={styles.customerActions}>
-            <TouchableOpacity style={styles.actionButton} onPress={onView}>
+            <Pressable style={styles.actionButton} onPress={onView}>
               <Ionicons name="person-outline" size={18} color={SemanticColors.actionPrimary} />
               <Text style={styles.actionButtonText}>Profiel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionButton, styles.primaryButton]}>
+            </Pressable>
+            <Pressable style={[styles.actionButton, styles.primaryButton]}>
               <Ionicons name="call" size={18} color={Palette.white} />
               <Text style={[styles.actionButtonText, styles.primaryButtonText]}>Bellen</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
@@ -325,10 +324,10 @@ const ChurnCard: React.FC<{
         ))}
       </View>
 
-      <TouchableOpacity style={styles.takeActionButton} onPress={onTakeAction}>
+      <Pressable style={styles.takeActionButton} onPress={onTakeAction}>
         <Ionicons name="call" size={18} color={Palette.white} />
         <Text style={styles.takeActionButtonText}>Neem Contact Op</Text>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 };
@@ -531,9 +530,9 @@ export const CustomerInsights: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Klant Inzichten</Text>
-        <TouchableOpacity style={styles.filterButton}>
+        <Pressable style={styles.filterButton}>
           <Ionicons name="filter-outline" size={24} color={SemanticColors.textPrimary} />
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       <View style={styles.tabs}>
@@ -542,7 +541,7 @@ export const CustomerInsights: React.FC = () => {
           { key: 'segments', label: 'Segmenten', icon: 'pie-chart-outline' },
           { key: 'churn', label: 'Churn Risico', icon: 'warning-outline' },
         ].map(tab => (
-          <TouchableOpacity
+          <Pressable
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.tabActive]}
             onPress={() => setActiveTab(tab.key as TabType)}
@@ -555,7 +554,7 @@ export const CustomerInsights: React.FC = () => {
             <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
               {tab.label}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 

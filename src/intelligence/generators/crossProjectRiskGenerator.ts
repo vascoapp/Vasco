@@ -2,6 +2,7 @@
 import type { ScoredInsight, GeneratorContext } from './types';
 import { mockProjects } from '../../data/mockProjects';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export function useCrossProjectRiskInsight(ctx: GeneratorContext): ScoredInsight | null {
   if (ctx.role !== 'director') return null;
@@ -58,7 +59,7 @@ export function useCrossProjectRiskInsight(ctx: GeneratorContext): ScoredInsight
     icon: 'layers',
     actionLabel: 'Bekijk risico\'s',
     actionRoute: '/hub/risks',
-    source: 'Cross-Project Analyse',
+    source: gt('source_cross_project', ctx.language),
     metric: { label: 'Projecten', value: `${uniqueProjects.size}`, trend: maxScore >= 15 ? 'down' : 'neutral' },
     rootCauseTags: ['cross-project', 'systematic-risk'],
     rawScore: 0,

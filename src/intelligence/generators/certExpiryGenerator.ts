@@ -5,6 +5,7 @@
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import { useExpiryCalendar } from '../../services/complianceService';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export const certExpiryGenerator: InsightGenerator = {
   id: 'cert-expiry',
@@ -42,13 +43,13 @@ export function useCertExpiryInsight(ctx: GeneratorContext): ScoredInsight | nul
     category: 'compliance',
     priority,
     title: daysUntil <= 7
-      ? `${soonest.name} verloopt deze week!`
-      : `${soonest.name} verloopt over ${daysUntil} dagen`,
-    message: `Vernieuw je ${soonest.type} op tijd om werkonderbrekingen te voorkomen.${expiringItems.length > 1 ? ` Nog ${expiringItems.length - 1} andere items verlopen binnenkort.` : ''}`,
+      ? gt('cert_expires_this_week', ctx.language, { name: soonest.name })
+      : gt('cert_expires_in_days', ctx.language, { name: soonest.name, days: daysUntil }),
+    message: `${gt('cert_renew_message', ctx.language, { type: soonest.type })}${expiringItems.length > 1 ? ` ${gt('cert_more_expiring', ctx.language, { count: expiringItems.length - 1 })}` : ''}`,
     icon: 'document-text',
     actionLabel: 'Vernieuwen',
     actionRoute: '/(contractor)/certificaten',
-    source: 'Compliance',
+    source: gt('source_compliance', ctx.language),
 
     rootCauseTags: ['compliance', 'certification'],
     rawScore: 0,
@@ -56,12 +57,19 @@ export function useCertExpiryInsight(ctx: GeneratorContext): ScoredInsight | nul
       observation: `${expiringItems.length} certificaat/vergunning${expiringItems.length > 1 ? 'en' : ''} verloop${expiringItems.length > 1 ? 'en' : 't'} binnenkort`,
       evidence: `Op basis van je certificatenregister`,
       implication: daysUntil <= 14
-        ? 'Verlopen certificaten kunnen leiden tot werkstop en boetes'
-        : 'Tijdig vernieuwen voorkomt last-minute kosten en stress',
+        ? gt('cert_implication_urgent', ctx.language)
+        : gt('cert_implication_plan', ctx.language),
       suggestion: `Start het vernieuwingsproces voor ${soonest.name} zo snel mogelijk`,
     },
     dataPoints: expiringItems.length,
     confidence: 0.95,
     freshness: 1,
+    action: {
+      type: 'renew_cert',
+      label: gt('action_renew_cert', ctx.language),
+      params: { certName: soonest.name, certType: soonest.type, daysUntil },
+      requiresApproval: false,
+      estimatedImpact: daysUntil <= 14 ? gt('cert_impact_prevent', ctx.language) : gt('cert_impact_plan', ctx.language),
+    },
   };
 }

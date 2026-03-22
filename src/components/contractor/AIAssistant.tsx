@@ -10,7 +10,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   TextInput,
   KeyboardAvoidingView,
   Platform,
@@ -96,10 +96,10 @@ export function AIAssistant() {
             {message.content}
           </Text>
           {message.metadata?.actionable && (
-            <TouchableOpacity style={styles.messageAction}>
+            <Pressable style={styles.messageAction}>
               <Text style={styles.messageActionText}>Actie ondernemen</Text>
               <Ionicons name="arrow-forward" size={14} color={Palette.blue500} />
-            </TouchableOpacity>
+            </Pressable>
           )}
         </View>
       </View>
@@ -133,14 +133,14 @@ export function AIAssistant() {
             <Text style={styles.quickActionsTitle}>Snelle acties</Text>
             <View style={styles.quickActionsGrid}>
               {quickActions.slice(0, 6).map((action) => (
-                <TouchableOpacity
+                <Pressable
                   key={action.id}
                   style={styles.quickActionCard}
                   onPress={() => handleQuickAction(action)}
                 >
                   <Ionicons name={action.icon as any} size={24} color={Palette.blue500} />
                   <Text style={styles.quickActionLabel}>{action.label}</Text>
-                </TouchableOpacity>
+                </Pressable>
               ))}
             </View>
 
@@ -152,13 +152,13 @@ export function AIAssistant() {
                 <Text style={styles.capabilityDesc}>{cap.description}</Text>
                 <View style={styles.capabilityExamples}>
                   {cap.examples.slice(0, 2).map((ex, i) => (
-                    <TouchableOpacity
+                    <Pressable
                       key={i}
                       style={styles.exampleChip}
                       onPress={() => sendMessage(ex)}
                     >
                       <Text style={styles.exampleText}>"{ex}"</Text>
-                    </TouchableOpacity>
+                    </Pressable>
                   ))}
                 </View>
               </View>
@@ -182,7 +182,7 @@ export function AIAssistant() {
           multiline
           maxLength={500}
         />
-        <TouchableOpacity
+        <Pressable
           style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
           onPress={handleSend}
           disabled={!inputText.trim()}
@@ -192,7 +192,7 @@ export function AIAssistant() {
             size={20}
             color={inputText.trim() ? '#fff' : SemanticColors.textSecondary}
           />
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </KeyboardAvoidingView>
   );
@@ -218,17 +218,17 @@ export function AIAssistant() {
 
           <View style={styles.insightActions}>
             {insight.actionLabel && (
-              <TouchableOpacity style={styles.insightActionButton}>
+              <Pressable style={styles.insightActionButton}>
                 <Text style={styles.insightActionText}>{insight.actionLabel}</Text>
                 <Ionicons name="arrow-forward" size={14} color={Palette.blue500} />
-              </TouchableOpacity>
+              </Pressable>
             )}
-            <TouchableOpacity
+            <Pressable
               style={styles.dismissButton}
               onPress={() => dismissInsight(insight.id)}
             >
               <Ionicons name="close" size={18} color={SemanticColors.textSecondary} />
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </View>
@@ -294,10 +294,10 @@ export function AIAssistant() {
         ))}
       </View>
 
-      <TouchableOpacity style={styles.implementButton}>
+      <Pressable style={styles.implementButton}>
         <Ionicons name="rocket-outline" size={18} color="#fff" />
         <Text style={styles.implementButtonText}>Implementeer suggestie</Text>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 
@@ -318,7 +318,7 @@ export function AIAssistant() {
     <View style={styles.container}>
       {/* View Selector */}
       <View style={styles.viewSelector}>
-        <TouchableOpacity
+        <Pressable
           style={[styles.viewButton, viewMode === 'chat' && styles.viewButtonActive]}
           onPress={() => setViewMode('chat')}
         >
@@ -330,9 +330,9 @@ export function AIAssistant() {
           <Text style={[styles.viewButtonText, viewMode === 'chat' && styles.viewButtonTextActive]}>
             Chat
           </Text>
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity
+        <Pressable
           style={[styles.viewButton, viewMode === 'insights' && styles.viewButtonActive]}
           onPress={() => setViewMode('insights')}
         >
@@ -351,9 +351,9 @@ export function AIAssistant() {
           <Text style={[styles.viewButtonText, viewMode === 'insights' && styles.viewButtonTextActive]}>
             Inzichten
           </Text>
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity
+        <Pressable
           style={[styles.viewButton, viewMode === 'suggestions' && styles.viewButtonActive]}
           onPress={() => setViewMode('suggestions')}
         >
@@ -365,7 +365,7 @@ export function AIAssistant() {
           <Text style={[styles.viewButtonText, viewMode === 'suggestions' && styles.viewButtonTextActive]}>
             Suggesties
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Content */}

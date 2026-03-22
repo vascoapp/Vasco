@@ -6,6 +6,7 @@ import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types'
 import type { VascoInsight } from '../../components/shared/VascoInsightCard';
 import { useCrossServiceIntelligence } from '../../services/crossServiceIntelligenceService';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export const crossServiceGenerator: InsightGenerator = {
   id: 'cross-service',
@@ -49,7 +50,7 @@ export function useCrossServiceInsight(ctx: GeneratorContext): ScoredInsight | n
     message: relevantInsight.description,
     icon: relevantInsight.icon as VascoInsight['icon'],
     actionLabel: relevantInsight.actionLabel,
-    source: 'Cross-analyse',
+    source: gt('source_cross_analysis', ctx.language),
     metric: hasMoneyImpact
       ? {
           label: 'Impact',

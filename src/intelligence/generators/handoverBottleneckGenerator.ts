@@ -2,6 +2,7 @@
 import type { ScoredInsight, GeneratorContext } from './types';
 import { mockProjects, mockDeliveryMetrics } from '../../data/mockProjects';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 // Simulated handover data per project (matches DirectorDashboard mock)
 const PORTFOLIO_HANDOVERS = [
@@ -42,7 +43,7 @@ export function useHandoverBottleneckInsight(ctx: GeneratorContext): ScoredInsig
     icon: 'swap-horizontal',
     actionLabel: 'Bekijk handovers',
     actionRoute: '/hub/projects',
-    source: 'Handover Tracker',
+    source: gt('source_handover', ctx.language),
     metric: { label: 'Pending', value: `${totalPendingSignoff}`, trend: totalPendingSignoff > 2 ? 'down' : 'neutral' },
     rootCauseTags: ['handover', 'payments'],
     rawScore: 0,

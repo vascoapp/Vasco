@@ -406,3 +406,49 @@ export const DUTCH_INVOICE_REQUIREMENTS = [
   { field: 'btwAmount', required: true, description: 'BTW-bedrag' },
   { field: 'totalAmount', required: true, description: 'Totaalbedrag inclusief BTW' },
 ];
+
+// ============================================
+// GDPR / AVG COMPLIANCE
+// ============================================
+
+export interface GDPRConsent {
+  type: 'marketing' | 'analytics' | 'data_processing' | 'third_party';
+  granted: boolean;
+  grantedAt?: string;
+  expiresAt?: string;
+}
+
+export interface DataProcessingAgreement {
+  id: string;
+  counterparty: string; // e.g., Moneybird, Mollie
+  purpose: string;
+  dataCategories: string[];
+  retentionDays: number;
+  signedAt?: string;
+  expiresAt?: string;
+}
+
+export const DUTCH_RETENTION_PERIODS = {
+  invoices: 7 * 365, // 7 years (fiscale bewaarplicht)
+  contracts: 7 * 365,
+  employeeRecords: 5 * 365, // 5 years after end of employment
+  customerData: 2 * 365, // 2 years after last contact
+  websiteAnalytics: 365, // 1 year
+};
+
+// ============================================
+// ENVIRONMENTAL CERTIFICATIONS
+// ============================================
+
+export type EnergyLabel = 'A++++' | 'A+++' | 'A++' | 'A+' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
+
+export interface EnvironmentalCertification {
+  type: 'energielabel' | 'breeam' | 'well' | 'gpr' | 'epc';
+  label?: EnergyLabel;
+  score?: number;
+  issuedAt?: string;
+  expiresAt?: string;
+  registrationNumber?: string;
+}
+
+export const BREEAM_LEVELS = ['Pass', 'Good', 'Very Good', 'Excellent', 'Outstanding'] as const;

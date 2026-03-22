@@ -8,6 +8,7 @@
 import type { ScoredInsight, GeneratorContext } from './types';
 import { useAppState } from '../../state/AppState';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export function useSimilarJobComparisonInsight(ctx: GeneratorContext): ScoredInsight | null {
   const { jobs, quotes } = useAppState();
@@ -113,7 +114,7 @@ export function useSimilarJobComparisonInsight(ctx: GeneratorContext): ScoredIns
     detail: `Klus "${activeJob.title}" lijkt op eerdere klus "${pastJob.title}". Gebruik eerdere ervaring om beter te plannen en te prijzen.`,
     icon: 'git-compare',
     actionLabel: 'Bekijk details',
-    source: 'Klusvergelijking',
+    source: gt('source_job_comparison', ctx.language),
     metric: pastJob.agreedAmount
       ? { label: 'Vorige offerte', value: `€${pastJob.agreedAmount.toLocaleString('nl-NL')}`, trend: 'neutral' }
       : undefined,

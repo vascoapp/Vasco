@@ -1,0 +1,462 @@
+// =============================================================================
+// GELD — Money tab. Clean answer to: "Where's my money?"
+// =============================================================================
+// KPIs → VascoCard (financial AI) → Facturen+Offertes → Cashflow
+// No dashboards, no bleed between sections. Vasco is the financial brain.
+// =============================================================================
+
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+import { SemanticColors, Palette } from '../../src/theme/colors';
+import { SafeArea } from '../../src/theme/spacing';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
+import { useAppState } from '../../src/state/AppState';
+import { useCashFlow } from '../../src/services/cashFlowService';
+import { hapticSuccess } from '../../src/utils/haptics';
+import { recordScreenVisit } from '../../src/intelligence/learningStorage';
+import { FadeIn } from '../../src/components/shared/FadeIn';
+import { Sparkline } from '../../src/components/shared/Sparkline';
+import { VascoCard } from '../../src/components/shared/VascoCard';
+import { useAIQueue } from '../../src/services/aiActionQueueService';
+import { useVascoGuidance } from '../../src/services/vascoGuidanceService';
+
+export default function GeldScreen() {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
+  const { invoices, quotes } = useAppState();
+  const cashFlow = useCashFlow();
+
+  const aiQueue = useAIQueue();
+  const allGuidance = useVascoGuidance('contractor', 'geld');
+  const topInsight = allGuidance.filter(g => g.priority === 'critical' || g.priority === 'high')[0] ?? null;
+
+  useEffect(() => { recordScreenVisit('geld'); }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
+  }, []);
+
+  // Invoice stats
+  const outstandingTotal = invoices
+    .filter((inv: any) => inv.status !== 'paid')
+    .reduce((sum: number, inv: any) => sum + (inv.total || inv.amount || 0), 0);
+  const overdueCount = invoices.filter((inv: any) => inv.status === 'overdue').length;
+  const paidTotal = invoices
+    .filter((inv: any) => inv.status === 'paid')
+    .reduce((sum: number, inv: any) => sum + (inv.total || inv.amount || 0), 0);
+
+  // All documents: invoices + quotes, sorted by status priority (overdue first)
+  const documents = useMemo(() => {
+    const statusOrder: Record<string, number> = { overdue: 0, sent: 1, draft: 2, accepted: 3, paid: 4 };
+    const docs = [
+      ...invoices.map((inv: any) => ({
+        id: inv.id,
+        type: 'factuur' as const,
+        name: inv.customer || inv.customerName || inv.reference || inv.id,
+        description: inv.job || 'Factuur',
+        amount: inv.total || inv.amount || 0,
+        status: inv.status,
+        route: '/(contractor)/facturen',
+      })),
+      ...quotes.map((q: any) => ({
+        id: q.id,
+        type: 'offerte' as const,
+        name: q.customer || q.id,
+        description: q.job || q.description || 'Offerte',
+        amount: q.amount || 0,
+        status: q.status,
+        route: `/quotes/${q.id}`,
+      })),
+    ];
+    return docs.sort((a, b) => (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3));
+  }, [invoices, quotes]);
+
+  // Sparkline from paid invoices
+  const sparkData = useMemo(() => {
+    const months: Record<string, number> = {};
+    invoices.filter((i: any) => i.status === 'paid').forEach((inv: any) => {
+      const month = (inv.lastUpdated || inv.dueDate || '2026-01').slice(0, 7);
+      months[month] = (months[month] || 0) + (inv.amount || 0);
+    });
+    const sorted = Object.entries(months).sort(([a], [b]) => a.localeCompare(b));
+    return sorted.slice(-6).map(([, v]) => v);
+  }, [invoices]);
+
+  return (
+    <View style={s.container}>
+      <View style={s.header}>
+        <Text style={s.headerTitle}>{t('tabs.money', 'Geld')}</Text>
+      </View>
+
+      <ScrollView
+        style={s.scroll}
+        contentContainerStyle={s.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />}
+      >
+        {/* KPIs — the 3 numbers that matter */}
+        <FadeIn delay={0}>
+          <View style={s.kpiCard}>
+            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)}>
+              <Text style={s.kpiLabel}>Uitstaand</Text>
+              <Text style={s.kpiValue}>{'\u20AC'}{outstandingTotal.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
+            </Pressable>
+            <View style={s.kpiDivider} />
+            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)}>
+              <Text style={s.kpiLabel}>Achterstallig</Text>
+              <Text style={[s.kpiValue, overdueCount > 0 && { color: SemanticColors.feedbackError }]}>{overdueCount}</Text>
+            </Pressable>
+            <View style={s.kpiDivider} />
+            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)}>
+              <Text style={s.kpiLabel}>Ontvangen</Text>
+              <Text style={[s.kpiValue, { color: SemanticColors.feedbackSuccess }]}>{'\u20AC'}{paidTotal.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
+            </Pressable>
+          </View>
+        </FadeIn>
+
+        {/* Vasco — financial AI (overdue reminders, payment predictions, expense tips) */}
+        <FadeIn delay={40}>
+          <VascoCard
+            briefing={null}
+            queueItems={aiQueue.items.filter(i => i.type === 'draft_invoice' || i.type === 'draft_reminder')}
+            topInsight={topInsight}
+            automationsCount={0}
+            overdueInvoices={overdueCount}
+            onApproveQueueItem={(id) => { hapticSuccess(); aiQueue.approve(id); }}
+            onRejectQueueItem={(id) => aiQueue.reject(id)}
+            onInsightAction={(insight) => {
+              if ((insight as any).actionRoute) router.push((insight as any).actionRoute as any);
+            }}
+            onOverduePress={async () => {
+              hapticSuccess();
+              const msg = `Beste klant,\n\nHierbij een vriendelijke herinnering voor ${overdueCount} openstaande factuur${overdueCount > 1 ? 'en' : ''}.\n\nMet vriendelijke groet`;
+              try {
+                const { Share, Platform } = require('react-native');
+                if (Platform.OS === 'web') {
+                  await navigator.clipboard.writeText(msg);
+                  alert('Herinnering gekopieerd naar klembord');
+                } else {
+                  await Share.share({ message: msg, title: 'Betaalherinnering' });
+                }
+              } catch {}
+            }}
+          />
+        </FadeIn>
+
+        {/* Facturen & Offertes — full list, above cashflow */}
+        <FadeIn delay={80}>
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>Facturen & Offertes</Text>
+
+            {/* New quote CTA */}
+            <Pressable
+              style={({ pressed }) => [s.newQuoteBtn, pressed && { opacity: 0.9 }]}
+              onPress={() => router.push('/contractor/tiered-quote' as any)}
+            >
+              <Ionicons name="add-circle-outline" size={18} color={Palette.white} />
+              <Text style={s.newQuoteBtnText}>Nieuwe offerte</Text>
+            </Pressable>
+
+            {/* Full document list — all invoices + quotes */}
+            {documents.length > 0 ? (
+              <View style={s.docList}>
+                {documents.map((doc) => (
+                  <Pressable
+                    key={doc.id}
+                    style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9 }]}
+                    onPress={() => router.push(doc.route as any)}
+                  >
+                    <View style={[s.docDot, { backgroundColor: getStatusColor(doc.status) }]} />
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={s.docName} numberOfLines={1}>{doc.name}</Text>
+                        <View style={[s.docTypeBadge, doc.type === 'offerte' && { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
+                          <Text style={[s.docTypeText, doc.type === 'offerte' && { color: SemanticColors.feedbackInfo }]}>
+                            {doc.type === 'factuur' ? 'Factuur' : 'Offerte'}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text style={s.docDesc} numberOfLines={1}>{doc.description}</Text>
+                    </View>
+                    <Text style={s.docAmount}>
+                      {'\u20AC'}{doc.amount.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : (
+              <View style={s.emptyCard}>
+                <Text style={s.emptyText}>Nog geen documenten</Text>
+              </View>
+            )}
+          </View>
+        </FadeIn>
+
+        {/* Cashflow — below documents */}
+        <FadeIn delay={120}>
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>Cashflow</Text>
+            <View style={s.cfCard}>
+              <View style={s.cfRow}>
+                <View style={s.cfItem}>
+                  <Text style={[s.cfValue, { color: SemanticColors.feedbackSuccess }]}>
+                    {'\u20AC'}{paidTotal.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}
+                  </Text>
+                  <Text style={s.cfLabel}>Omzet</Text>
+                </View>
+                <View style={s.cfDivider} />
+                <View style={s.cfItem}>
+                  <Text style={s.cfValue}>
+                    {'\u20AC'}{(cashFlow?.summary?.pendingExpenses ?? 0).toLocaleString('nl-NL', { maximumFractionDigits: 0 })}
+                  </Text>
+                  <Text style={s.cfLabel}>Kosten</Text>
+                </View>
+                <View style={s.cfDivider} />
+                <View style={s.cfItem}>
+                  <Text style={[s.cfValue, { color: (paidTotal - (cashFlow?.summary?.pendingExpenses ?? 0)) >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
+                    {'\u20AC'}{(paidTotal - (cashFlow?.summary?.pendingExpenses ?? 0)).toLocaleString('nl-NL', { maximumFractionDigits: 0 })}
+                  </Text>
+                  <Text style={s.cfLabel}>Winst</Text>
+                </View>
+              </View>
+              <View style={s.marginBar}>
+                <View style={[s.marginFill, { width: `${Math.min(Math.max(paidTotal > 0 ? ((paidTotal - (cashFlow?.summary?.pendingExpenses ?? 0)) / paidTotal * 100) : 0, 0), 100)}%` }]} />
+              </View>
+              {sparkData.length >= 2 && (
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Sparkline data={sparkData} width={120} height={28} color={SemanticColors.feedbackSuccess} />
+                </View>
+              )}
+            </View>
+          </View>
+        </FadeIn>
+
+        <View style={{ height: 100 }} />
+      </ScrollView>
+
+      {/* FAB — new quote */}
+      <Pressable
+        style={({ pressed }) => [s.fab, pressed && { opacity: 0.9, transform: [{ scale: 0.96 }] }]}
+        onPress={() => { hapticSuccess(); router.push('/contractor/tiered-quote' as any); }}
+        accessibilityLabel="Nieuwe offerte"
+      >
+        <Ionicons name="add" size={28} color={Palette.white} />
+      </Pressable>
+    </View>
+  );
+}
+
+function getStatusColor(status?: string): string {
+  switch (status) {
+    case 'paid': return SemanticColors.feedbackSuccess;
+    case 'sent': return SemanticColors.feedbackInfo;
+    case 'overdue': return SemanticColors.feedbackError;
+    case 'accepted': return SemanticColors.feedbackSuccess;
+    case 'draft': return SemanticColors.textTertiary;
+    default: return SemanticColors.textTertiary;
+  }
+}
+
+const s = StyleSheet.create({
+  container: { flex: 1, backgroundColor: PAGE_BG },
+
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: SafeArea.top,
+    paddingHorizontal: SafeArea.side,
+    paddingBottom: GRID.sm,
+    backgroundColor: PAGE_BG,
+  },
+  headerTitle: {
+    fontSize: TYPE.displaySize,
+    fontFamily: TYPE.displayFamily,
+    color: SemanticColors.textPrimary,
+    letterSpacing: TYPE.displayTracking,
+  },
+
+  scroll: { flex: 1 },
+  scrollContent: { paddingHorizontal: SafeArea.side, gap: GRID.lg },
+
+  // KPIs
+  kpiCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
+    padding: 20,
+  },
+  kpiItem: { flex: 1, alignItems: 'center' },
+  kpiLabel: {
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textSecondary,
+  },
+  kpiValue: {
+    fontSize: 22,
+    fontFamily: TYPE.displayFamily,
+    color: SemanticColors.textPrimary,
+    letterSpacing: -0.5,
+    marginTop: 4,
+  },
+  kpiDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 36,
+    backgroundColor: SemanticColors.borderDefault,
+  },
+
+  // Sections
+  section: { gap: GRID.sm },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sectionTitle: {
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
+    letterSpacing: TYPE.sectionTracking,
+  },
+  seeAll: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.hermesOrange,
+  },
+
+  // New quote button
+  newQuoteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Palette.hermesOrange,
+    borderRadius: RADIUS.md,
+    paddingVertical: 14,
+  },
+  newQuoteBtnText: {
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.white,
+  },
+
+  // Document list
+  docList: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
+    overflow: 'hidden',
+  },
+  docRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: SemanticColors.borderDefault,
+  },
+  docDot: { width: 8, height: 8, borderRadius: 4 },
+  docName: {
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
+    flexShrink: 1,
+  },
+  docTypeBadge: {
+    backgroundColor: SemanticColors.textTertiary + '15',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  docTypeText: {
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.tinyFamily,
+    color: SemanticColors.textTertiary,
+  },
+  docDesc: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textSecondary,
+    marginTop: 1,
+  },
+  docAmount: {
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
+  },
+  emptyCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
+    padding: 24,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.bodyFamily,
+    color: SemanticColors.textTertiary,
+  },
+
+  // Cashflow card
+  cfCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
+    padding: 20,
+    gap: 14,
+  },
+  cfRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cfItem: { flex: 1, alignItems: 'center' },
+  cfLabel: {
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textSecondary,
+    marginTop: 2,
+  },
+  cfValue: {
+    fontSize: 18,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
+    letterSpacing: -0.3,
+  },
+  cfDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 32,
+    backgroundColor: SemanticColors.borderDefault,
+  },
+  marginBar: {
+    height: 6,
+    backgroundColor: SemanticColors.borderDefault,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  marginFill: {
+    height: 6,
+    backgroundColor: SemanticColors.feedbackSuccess,
+    borderRadius: 3,
+  },
+
+  // FAB
+  fab: {
+    position: 'absolute',
+    right: SafeArea.side,
+    bottom: 110,
+    width: 56,
+    height: 56,
+    borderRadius: RADIUS.full,
+    backgroundColor: Palette.hermesOrange,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+});

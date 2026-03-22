@@ -14,7 +14,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -132,7 +132,7 @@ export function InvoiceVerificationPanel({ projectId, onInvoiceSelect }: Props) 
     const hasDiscrepancies = (verification?.verificationResult.discrepancies.length ?? 0) > 0;
 
     return (
-      <TouchableOpacity
+      <Pressable
         key={invoice.id}
         style={[
           styles.invoiceCard,
@@ -187,15 +187,15 @@ export function InvoiceVerificationPanel({ projectId, onInvoiceSelect }: Props) 
         )}
 
         {!verification && !isVerifying && (
-          <TouchableOpacity
+          <Pressable
             style={styles.verifyButton}
             onPress={() => handleVerify(invoice.id)}
           >
             <Ionicons name="shield-checkmark-outline" size={16} color={theme.colors.accent} />
             <Text style={styles.verifyButtonText}>Verify Invoice</Text>
-          </TouchableOpacity>
+          </Pressable>
         )}
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 
@@ -261,10 +261,10 @@ export function InvoiceVerificationPanel({ projectId, onInvoiceSelect }: Props) 
             {MOCK_PENDING_INVOICES.length} invoices pending review
           </Text>
         </View>
-        <TouchableOpacity style={styles.verifyAllButton} onPress={handleVerifyAll}>
+        <Pressable style={styles.verifyAllButton} onPress={handleVerifyAll}>
           <Ionicons name="checkmark-done" size={18} color={theme.colors.surface} />
           <Text style={styles.verifyAllButtonText}>Verify All</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Summary Stats */}
@@ -302,9 +302,9 @@ export function InvoiceVerificationPanel({ projectId, onInvoiceSelect }: Props) 
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Invoice Details</Text>
-            <TouchableOpacity onPress={() => setDetailModalVisible(false)}>
+            <Pressable onPress={() => setDetailModalVisible(false)}>
               <Ionicons name="close" size={24} color={theme.colors.text} />
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           {selectedVerification && (
@@ -344,18 +344,18 @@ export function InvoiceVerificationPanel({ projectId, onInvoiceSelect }: Props) 
 
               {/* Actions */}
               <View style={styles.actionButtons}>
-                <TouchableOpacity style={[styles.actionButton, styles.actionButtonReject]}>
+                <Pressable style={[styles.actionButton, styles.actionButtonReject]}>
                   <Ionicons name="close-circle" size={18} color={theme.colors.error} />
                   <Text style={styles.actionButtonTextReject}>Reject</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.actionButton, styles.actionButtonCredit]}>
+                </Pressable>
+                <Pressable style={[styles.actionButton, styles.actionButtonCredit]}>
                   <Ionicons name="return-down-back" size={18} color={theme.colors.warning} />
                   <Text style={styles.actionButtonTextCredit}>Request Credit</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.actionButton, styles.actionButtonApprove]}>
+                </Pressable>
+                <Pressable style={[styles.actionButton, styles.actionButtonApprove]}>
                   <Ionicons name="checkmark-circle" size={18} color={theme.colors.success} />
                   <Text style={styles.actionButtonTextApprove}>Approve</Text>
-                </TouchableOpacity>
+                </Pressable>
               </View>
             </ScrollView>
           )}

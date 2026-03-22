@@ -10,7 +10,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
@@ -109,13 +109,12 @@ const JobCard: React.FC<{
         {!isLast && <View style={styles.timelineLine} />}
       </View>
 
-      <TouchableOpacity
+      <Pressable
         style={[
           styles.jobCard,
           job.status === 'completed' && styles.jobCardCompleted,
         ]}
         onPress={() => setExpanded(!expanded)}
-        activeOpacity={0.7}
       >
         <View style={styles.jobHeader}>
           <View style={styles.jobTime}>
@@ -148,13 +147,13 @@ const JobCard: React.FC<{
             )}
 
             <View style={styles.jobActions}>
-              <TouchableOpacity style={styles.navigateButton}>
+              <Pressable style={styles.navigateButton}>
                 <Ionicons name="navigate-outline" size={18} color={SemanticColors.actionPrimary} />
                 <Text style={styles.navigateButtonText}>Navigeren</Text>
-              </TouchableOpacity>
+              </Pressable>
 
               {nextStatus && (
-                <TouchableOpacity
+                <Pressable
                   style={styles.statusButton}
                   onPress={() => onUpdateStatus(nextStatus)}
                 >
@@ -176,12 +175,12 @@ const JobCard: React.FC<{
                       ? 'Aangekomen'
                       : 'Afgerond'}
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               )}
             </View>
           </View>
         )}
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 };
@@ -308,10 +307,10 @@ export const RouteOptimizer: React.FC = () => {
               <View style={styles.emptyState}>
                 <Ionicons name="map-outline" size={48} color={SemanticColors.textSecondary} />
                 <Text style={styles.emptyText}>Geen routes voor vandaag</Text>
-                <TouchableOpacity style={styles.createRouteButton}>
+                <Pressable style={styles.createRouteButton}>
                   <Ionicons name="add" size={18} color={Palette.white} />
                   <Text style={styles.createRouteButtonText}>Route Maken</Text>
-                </TouchableOpacity>
+                </Pressable>
               </View>
             ) : (
               routes.map(route => (
@@ -439,10 +438,10 @@ export const RouteOptimizer: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Route Planner</Text>
-        <TouchableOpacity style={styles.optimizeButton}>
+        <Pressable style={styles.optimizeButton}>
           <Ionicons name="flash" size={18} color={Palette.white} />
           <Text style={styles.optimizeButtonText}>Optimaliseer</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       <View style={styles.tabs}>
@@ -451,7 +450,7 @@ export const RouteOptimizer: React.FC = () => {
           { key: 'map', label: 'Kaart', icon: 'map-outline' },
           { key: 'stats', label: 'Statistieken', icon: 'stats-chart-outline' },
         ].map(tab => (
-          <TouchableOpacity
+          <Pressable
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.tabActive]}
             onPress={() => setActiveTab(tab.key as TabType)}
@@ -464,7 +463,7 @@ export const RouteOptimizer: React.FC = () => {
             <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
               {tab.label}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 

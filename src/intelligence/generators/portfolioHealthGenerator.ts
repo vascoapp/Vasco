@@ -2,6 +2,7 @@
 import type { ScoredInsight, GeneratorContext } from './types';
 import { mockProjects, mockDeliveryMetrics, mockAppraisals } from '../../data/mockProjects';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export function usePortfolioHealthInsight(ctx: GeneratorContext): ScoredInsight | null {
   if (ctx.role !== 'director') return null;
@@ -47,7 +48,7 @@ export function usePortfolioHealthInsight(ctx: GeneratorContext): ScoredInsight 
     icon: 'business',
     actionLabel: 'Bekijk portfolio',
     actionRoute: '/hub/projects',
-    source: 'Portfolio Analyse',
+    source: gt('source_portfolio', ctx.language),
     metric: { label: 'Risico', value: `${atRisk + behind}`, trend: behind > 0 ? 'down' : 'neutral' },
     rootCauseTags: ['portfolio', 'health'],
     rawScore: 0,

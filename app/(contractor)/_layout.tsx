@@ -2,19 +2,22 @@
 // CONTRACTOR TAB LAYOUT
 // =============================================================================
 // Primary app experience for solo contractors
-// ServiceTitan-inspired navigation focused on daily workflow
+// 5 tabs: Vandaag | Werk | Geld | Klanten | Compliance
 // =============================================================================
 
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { View, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../src/theme/colors';
+import { OfflineBanner } from '../../src/components/shared/OfflineBanner';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
 interface TabConfig {
   name: string;
-  title: string;
+  i18nKey: string;
+  fallbackTitle: string;
   icon: IconName;
   iconFocused: IconName;
 }
@@ -22,38 +25,49 @@ interface TabConfig {
 const CONTRACTOR_TABS: TabConfig[] = [
   {
     name: 'index',
-    title: 'Vandaag',
+    i18nKey: 'tabs.today',
+    fallbackTitle: 'Vandaag',
     icon: 'today-outline',
     iconFocused: 'today',
   },
   {
-    name: 'besparen',
-    title: 'Besparen',
-    icon: 'cash-outline',
-    iconFocused: 'cash',
+    name: 'werk',
+    i18nKey: 'tabs.jobs',
+    fallbackTitle: 'Werk',
+    icon: 'briefcase-outline',
+    iconFocused: 'briefcase',
   },
   {
-    name: 'decisions',
-    title: 'Keuzes',
-    icon: 'checkbox-outline',
-    iconFocused: 'checkbox',
+    name: 'geld',
+    i18nKey: 'tabs.money',
+    fallbackTitle: 'Geld',
+    icon: 'wallet-outline',
+    iconFocused: 'wallet',
   },
   {
-    name: 'facturen',
-    title: 'Facturen',
-    icon: 'document-text-outline',
-    iconFocused: 'document-text',
-  },
-  {
-    name: 'meer',
-    title: 'Meer',
-    icon: 'grid-outline',
-    iconFocused: 'grid',
+    name: 'ai',
+    i18nKey: 'tabs.ai',
+    fallbackTitle: 'Vasco',
+    icon: 'flash-outline',
+    iconFocused: 'flash',
   },
 ];
 
+// Hidden screens: accessible via navigation but not in tab bar
+const HIDDEN_TABS = [
+  'certificaten',
+  'besparen',
+  'decisions',
+  'facturen',
+  'bedrijf',
+];
+
 export default function ContractorLayout() {
+  const { t } = useTranslation();
+
   return (
+    <>
+    <OfflineBanner />
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -69,7 +83,7 @@ export default function ContractorLayout() {
           key={tab.name}
           name={tab.name}
           options={{
-            title: tab.title,
+            title: t(tab.i18nKey, tab.fallbackTitle),
             tabBarIcon: ({ color, focused }) => (
               <View style={styles.iconContainer}>
                 <Ionicons
@@ -77,7 +91,6 @@ export default function ContractorLayout() {
                   size={24}
                   color={color}
                 />
-                {/* Active indicator dot */}
                 {focused && <View style={styles.activeIndicator} />}
               </View>
             ),
@@ -85,44 +98,44 @@ export default function ContractorLayout() {
         />
       ))}
       {/* Hidden screens accessible via navigation but not shown in tab bar */}
-      <Tabs.Screen
-        name="certificaten"
-        options={{ href: null }}
-      />
+      {HIDDEN_TABS.map((name) => (
+        <Tabs.Screen key={name} name={name} options={{ href: null }} />
+      ))}
     </Tabs>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 0,
-    height: 90,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: SemanticColors.borderDefault,
+    height: 88,
     paddingTop: 8,
     paddingBottom: 34,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 4,
   },
   tabLabel: {
     fontSize: 11,
-    fontWeight: '600',
-    marginTop: 4,
+    fontFamily: 'Inter_500Medium',
+    marginTop: 2,
   },
   tabItem: {
-    paddingTop: 4,
+    paddingTop: 6,
   },
   iconContainer: {
     alignItems: 'center',
   },
   activeIndicator: {
     position: 'absolute',
-    top: -8,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+    top: -6,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
     backgroundColor: Palette.hermesOrange,
   },
 });

@@ -8,6 +8,7 @@
 import type { ScoredInsight, GeneratorContext } from './types';
 import { mockProjects, mockDeliveryMetrics } from '../../data/mockProjects';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export function useChangeOrderVelocityInsight(ctx: GeneratorContext): ScoredInsight | null {
   if (ctx.role !== 'coo' && ctx.role !== 'cfo') return null;
@@ -54,7 +55,7 @@ export function useChangeOrderVelocityInsight(ctx: GeneratorContext): ScoredInsi
     icon: 'swap-horizontal',
     actionLabel: 'Bekijk wijzigingen',
     actionRoute: '/hub/costs',
-    source: 'Change Order Tracker',
+    source: gt('source_change_order', ctx.language),
     metric: { label: 'Doorlooptijd', value: `${Math.round(avgCycleTime)}d`, trend: avgCycleTime > 21 ? 'down' : 'neutral' },
     rootCauseTags: ['change-orders', 'approvals'],
     rawScore: 0,

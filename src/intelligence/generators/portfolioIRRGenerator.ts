@@ -8,6 +8,7 @@
 import type { ScoredInsight, GeneratorContext } from './types';
 import { mockAppraisals } from '../../data/mockProjects';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 const TARGET_IRR = 0.15; // 15% minimum target IRR
 
@@ -50,7 +51,7 @@ export function usePortfolioIRRInsight(ctx: GeneratorContext): ScoredInsight | n
     icon: 'trending-up',
     actionLabel: 'Bekijk taxatie',
     actionRoute: '/hub/appraisal',
-    source: 'IRR Analyse',
+    source: gt('source_portfolio_irr', ctx.language),
     metric: { label: 'Gem. IRR', value: formatPct(avgIRR), trend: isAboveTarget ? 'up' : 'down' },
     rootCauseTags: ['irr', 'portfolio-returns'],
     rawScore: 0,

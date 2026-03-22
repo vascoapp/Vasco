@@ -11,6 +11,7 @@ import { useProjectProfitability } from '../../services/projectProfitabilityServ
 import { logPrediction } from '../calibration';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { isAboveThreshold } from '../adaptiveThresholds';
+import { gt } from '../generatorTranslations';
 
 export const profitabilityGenerator: InsightGenerator = {
   id: 'profitability',
@@ -76,7 +77,7 @@ export function useProfitabilityInsight(ctx: GeneratorContext): ScoredInsight | 
     message: parts.join(' + '),
     detail: detailLines.join('\n'),
     icon: topInsight.icon as VascoInsight['icon'],
-    source: 'Winstgevendheid',
+    source: gt('source_profitability', ctx.language),
     metric: {
       label: 'Totale impact',
       value: `€${totalImpact.toLocaleString('nl-NL')}`,

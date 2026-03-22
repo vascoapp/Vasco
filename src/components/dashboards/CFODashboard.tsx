@@ -8,6 +8,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,8 +17,10 @@ import {
   Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { hapticSuccess } from '../../utils/haptics';
 import { Spacing, SafeArea } from '../../theme/spacing';
 import {
   mockProjects,
@@ -37,6 +40,7 @@ import { useVascoGuidance, useInlineInsight } from '../../services/vascoGuidance
 import { InlineInsight } from '../shared/VascoInsightCard';
 import { recordScreenVisit } from '../../intelligence/learningStorage';
 import { FinancialAuditorDashboard } from '../financial-auditor/FinancialAuditorDashboard';
+import { FadeIn } from '../shared/FadeIn';
 import { FinancialKPIGrid } from '../shared/FinancialKPIGrid';
 import { TrendBarChart } from '../shared/TrendBarChart';
 import { ReceivablesAgingBar } from '../shared/ReceivablesAgingBar';
@@ -527,6 +531,12 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [selectedApproval, setSelectedApproval] = useState<PendingApproval | null>(null);
   const [showFullAuditor, setShowFullAuditor] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
+  }, []);
 
   // Derived data
   const selectedProject = useMemo(() => getProjectById(selectedProjectId), [selectedProjectId]);
@@ -752,11 +762,13 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={CFO_COLOR} />}
       >
         {/* OVERVIEW TAB */}
         {activeTab === 'overview' && (
           <>
             {/* KPI Scorecard Grid */}
+            <FadeIn delay={0} duration={400}>
             <FinancialKPIGrid
               accentColor={CFO_COLOR}
               tiles={[
@@ -768,6 +780,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
                 { label: 'Goedkeuringen', value: `${pendingApprovalCount}`, status: pendingApprovalCount > 2 ? 'red' : 'amber', onPress: () => setActiveTab('savings') },
               ]}
             />
+            </FadeIn>
 
             {/* Monthly Spend Trend */}
             <View style={styles.card}>
@@ -1315,7 +1328,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   headerSubtitle: {
@@ -1339,7 +1352,7 @@ const styles = StyleSheet.create({
   },
   alertBadgeText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: '#fff',
   },
   headerAccent: {
@@ -1359,7 +1372,7 @@ const styles = StyleSheet.create({
   },
   headerMetricValue: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   headerMetricLabel: {
@@ -1397,7 +1410,7 @@ const styles = StyleSheet.create({
   },
   tabButtonText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textSecondary,
   },
   tabButtonTextActive: {
@@ -1417,7 +1430,7 @@ const styles = StyleSheet.create({
   },
   tabBadgeText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: '#fff',
   },
 
@@ -1433,7 +1446,7 @@ const styles = StyleSheet.create({
   // Section
   sectionLabel: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -1463,7 +1476,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   cardSubtitle: {
@@ -1482,7 +1495,7 @@ const styles = StyleSheet.create({
   },
   badgePillText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: '#fff',
   },
 
@@ -1510,7 +1523,7 @@ const styles = StyleSheet.create({
   },
   approvalTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   approvalStatusBadge: {
@@ -1528,7 +1541,7 @@ const styles = StyleSheet.create({
   },
   approvalStatusText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
   },
   approvalProject: {
     fontSize: 12,
@@ -1545,7 +1558,7 @@ const styles = StyleSheet.create({
   },
   approvalAmountValue: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   approvalDue: {
@@ -1566,7 +1579,7 @@ const styles = StyleSheet.create({
   },
   aiVerificationTitle: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: CFO_COLOR,
   },
   aiCheckRow: {
@@ -1622,7 +1635,7 @@ const styles = StyleSheet.create({
   },
   approvalActionButtonText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   approvalActionButtonTextPrimary: {
@@ -1644,7 +1657,7 @@ const styles = StyleSheet.create({
   },
   approvalActionButtonTextSecondary: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: CFO_COLOR,
   },
 
@@ -1671,7 +1684,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   modalBody: {
@@ -1686,12 +1699,12 @@ const styles = StyleSheet.create({
   },
   modalValue: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   modalAmount: {
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: CFO_COLOR,
   },
   modalWarning: {
@@ -1713,7 +1726,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     textAlign: 'center',
     color: SemanticColors.textPrimary,
     borderWidth: 1,
@@ -1735,7 +1748,7 @@ const styles = StyleSheet.create({
   },
   modalCancelText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textSecondary,
   },
   modalConfirmButton: {
@@ -1750,7 +1763,7 @@ const styles = StyleSheet.create({
   },
   modalConfirmText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: '#fff',
   },
 
@@ -1773,7 +1786,7 @@ const styles = StyleSheet.create({
   },
   handoverProject: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   handoverWorkPackage: {
@@ -1791,7 +1804,7 @@ const styles = StyleSheet.create({
   },
   handoverAmount: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   handoverStatusBadge: {
@@ -1811,7 +1824,7 @@ const styles = StyleSheet.create({
   },
   handoverStatusText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textSecondary,
   },
   handoverProgressContainer: {
@@ -1841,7 +1854,7 @@ const styles = StyleSheet.create({
   },
   handoverProgressText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textSecondary,
     width: 32,
     textAlign: 'right',
@@ -1879,7 +1892,7 @@ const styles = StyleSheet.create({
   },
   handoverActionText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: CFO_COLOR,
   },
   handoverSummary: {
@@ -1895,7 +1908,7 @@ const styles = StyleSheet.create({
   },
   handoverSummaryText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
 
@@ -1916,7 +1929,7 @@ const styles = StyleSheet.create({
   },
   drawRequestProject: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   drawRequestStage: {
@@ -1929,7 +1942,7 @@ const styles = StyleSheet.create({
   },
   drawRequestAmount: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   drawRequestStatus: {
@@ -1944,14 +1957,14 @@ const styles = StyleSheet.create({
   },
   drawRequestStatusText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textSecondary,
   },
 
   // Facility Utilization
   facilityUtilPercent: {
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: 'Manrope_800ExtraBold',
   },
   facilityBarContainer: {
     gap: 8,
@@ -1985,7 +1998,7 @@ const styles = StyleSheet.create({
   },
   facilityLegendValue: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
   },
 
   // Net Cash Card
@@ -2002,7 +2015,7 @@ const styles = StyleSheet.create({
   netCashLeft: {},
   netCashLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   netCashSublabel: {
@@ -2015,7 +2028,7 @@ const styles = StyleSheet.create({
   },
   netCashValue: {
     fontSize: 24,
-    fontWeight: '800',
+    fontFamily: 'Manrope_800ExtraBold',
     color: CFO_COLOR,
   },
   netCashTrend: {
@@ -2026,7 +2039,7 @@ const styles = StyleSheet.create({
   },
   netCashTrendText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
   },
 
   // IRR Comparison Bars
@@ -2041,7 +2054,7 @@ const styles = StyleSheet.create({
   },
   irrBarProject: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   irrBarCountry: {
@@ -2077,7 +2090,7 @@ const styles = StyleSheet.create({
   irrBarValue: {
     width: 42,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     textAlign: 'right',
   },
   irrTargetLegend: {
@@ -2111,12 +2124,12 @@ const styles = StyleSheet.create({
   },
   investorFlowName: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   investorFlowIRR: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
   },
   investorFlowBarTrack: {
     height: 8,
@@ -2135,7 +2148,7 @@ const styles = StyleSheet.create({
   },
   investorFlowDistributed: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: CFO_COLOR,
   },
   investorFlowCommitted: {
@@ -2157,7 +2170,7 @@ const styles = StyleSheet.create({
   },
   auditorModalTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   auditorModalSubtitle: {
@@ -2198,7 +2211,7 @@ const styles = StyleSheet.create({
   },
   actionTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   actionSubtitle: {
@@ -2222,7 +2235,7 @@ const styles = StyleSheet.create({
   },
   aiSavingsKPIValue: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   aiSavingsKPILabel: {

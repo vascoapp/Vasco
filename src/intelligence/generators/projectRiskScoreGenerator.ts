@@ -8,6 +8,7 @@
 import type { ScoredInsight, GeneratorContext } from './types';
 import { mockProjects } from '../../data/mockProjects';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export function useProjectRiskScoreInsight(ctx: GeneratorContext): ScoredInsight | null {
   if (ctx.role !== 'cfo' && ctx.role !== 'director' && ctx.role !== 'coo') return null;
@@ -63,7 +64,7 @@ export function useProjectRiskScoreInsight(ctx: GeneratorContext): ScoredInsight
     icon: 'shield',
     actionLabel: 'Bekijk risico\'s',
     actionRoute: '/hub/risks',
-    source: 'Risico Analyse',
+    source: gt('source_risk', ctx.language),
     metric: { label: 'Kritiek', value: `${criticalRisks.length}`, trend: criticalRisks.length > 1 ? 'down' : 'neutral' },
     rootCauseTags: ['risk', 'portfolio'],
     rawScore: 0,

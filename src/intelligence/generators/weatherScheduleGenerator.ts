@@ -4,6 +4,7 @@
 
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export const weatherScheduleGenerator: InsightGenerator = {
   id: 'weather-schedule',
@@ -37,7 +38,7 @@ export const weatherScheduleGenerator: InsightGenerator = {
       message: 'Tussen 14:00-17:00 wordt regen verwacht. Plan buitenwerk indien mogelijk voor de ochtend.',
       detail: 'Buienradar voorspelt 8mm neerslag. Overweeg om buitenwerkzaamheden te verplaatsen.',
       icon: 'rainy',
-      source: 'Weer',
+      source: gt('source_weather', ctx.language),
       timestamp: `${String(hour).padStart(2, '0')}:15`,
 
       rootCauseTags: ['schedule', 'weather'],

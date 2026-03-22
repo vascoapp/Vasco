@@ -8,6 +8,7 @@
 import type { ScoredInsight, GeneratorContext } from './types';
 import { mockProjects } from '../../data/mockProjects';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export function usePermitDelayInsight(ctx: GeneratorContext): ScoredInsight | null {
   if (ctx.role !== 'coo' && ctx.role !== 'director') return null;
@@ -57,7 +58,7 @@ export function usePermitDelayInsight(ctx: GeneratorContext): ScoredInsight | nu
     icon: 'document-text',
     actionLabel: 'Bekijk vergunningen',
     actionRoute: '/hub/projects',
-    source: 'Vergunning Tracker',
+    source: gt('source_permits', ctx.language),
     metric: { label: 'Verlopen', value: `${overduePermits.length}`, trend: hasOverdue ? 'down' : 'neutral' },
     rootCauseTags: ['permits', 'regulatory'],
     rawScore: 0,

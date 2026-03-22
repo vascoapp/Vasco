@@ -6,8 +6,21 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../src/i18n/i18n';
 import { Palette, SemanticColors } from '../../src/theme/colors';
+import { PAGE_BG, TYPE, RADIUS } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
+import { useAuth } from '../../src/context/AuthContext';
+
+const LANG_OPTIONS = [
+  { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
+  { code: 'en', label: 'English', flag: '🇬🇧' },
+  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+  { code: 'fr', label: 'Français', flag: '🇫🇷' },
+  { code: 'es', label: 'Español', flag: '🇪🇸' },
+  { code: 'it', label: 'Italiano', flag: '🇮🇹' },
+];
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -52,7 +65,31 @@ const PROFILE_SECTIONS: ProfileSection[] = [
 ];
 
 export default function ProfileScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
+  const { user, updateUser, logout } = useAuth();
+  const currentLang = LANG_OPTIONS.find(l => l.code === i18n.language) ?? LANG_OPTIONS[0];
+
+  const handleLanguageSwitch = () => {
+    Alert.alert(
+      t('settings.language', 'Taal'),
+      undefined,
+      LANG_OPTIONS.map(lang => ({
+        text: `${lang.flag} ${lang.label}`,
+        onPress: () => {
+          i18n.changeLanguage(lang.code);
+          updateUser({ language: lang.code as any });
+        },
+      })),
+    );
+  };
+
+  const handleLogout = () => {
+    Alert.alert(t('settings.logout', 'Uitloggen'), t('common.confirm', 'Weet je het zeker?'), [
+      { text: t('common.cancel', 'Annuleren'), style: 'cancel' },
+      { text: t('settings.logout', 'Uitloggen'), style: 'destructive', onPress: () => { logout(); router.replace('/login'); } },
+    ]);
+  };
 
   return (
     <View style={styles.container}>
@@ -85,6 +122,7 @@ export default function ProfileScreen() {
                   key={item.id}
                   style={[styles.row, index < section.items.length - 1 && styles.rowBorder]}
                   onPress={() => {
+                    if (item.id === 'language') { handleLanguageSwitch(); return; }
                     Alert.alert(item.label, item.value || 'Instelling openen...');
                   }}
                 >
@@ -92,7 +130,9 @@ export default function ProfileScreen() {
                     <Ionicons name={item.icon} size={18} color={Palette.hermesOrange} />
                   </View>
                   <Text style={styles.rowLabel}>{item.label}</Text>
-                  {item.value && <Text style={styles.rowValue}>{item.value}</Text>}
+                  {item.id === 'language'
+                    ? <Text style={styles.rowValue}>{currentLang.flag} {currentLang.label}</Text>
+                    : item.value && <Text style={styles.rowValue}>{item.value}</Text>}
                   <Ionicons name="chevron-forward" size={16} color="#CCC" />
                 </Pressable>
               ))}
@@ -103,16 +143,22 @@ export default function ProfileScreen() {
         {/* Logout */}
         <Pressable
           style={styles.logoutButton}
-          onPress={() => Alert.alert('Uitloggen', 'Weet je zeker dat je wilt uitloggen?', [
-            { text: 'Annuleren', style: 'cancel' },
-            { text: 'Uitloggen', style: 'destructive' },
-          ])}
+          onPress={handleLogout}
         >
           <Ionicons name="log-out-outline" size={18} color={SemanticColors.feedbackError} />
           <Text style={styles.logoutText}>Uitloggen</Text>
         </Pressable>
 
         <Text style={styles.versionText}>Vasco v1.0.0</Text>
+
+        {/* GDPR Retention Notice */}
+        <View style={styles.retentionNotice}>
+          <Ionicons name="shield-checkmark-outline" size={14} color={SemanticColors.textTertiary} />
+          <Text style={styles.retentionText}>
+            Bewaartermijnen: Facturen 7 jaar · Contracten 7 jaar · Klantgegevens 2 jaar · Personeelsgegevens 5 jaar
+          </Text>
+        </View>
+
         <View style={{ height: 100 }} />
       </ScrollView>
     </View>
@@ -120,7 +166,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAFAF8' },
+  container: { flex: 1, backgroundColor: PAGE_BG },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -130,7 +176,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   backBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#1A1A1A' },
+  headerTitle: { fontSize: 18, fontFamily: 'Manrope_700Bold', color: '#1A1A1A' },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, gap: 20 },
   avatarSection: { alignItems: 'center', paddingVertical: Spacing.lg },
@@ -138,27 +184,40 @@ const styles = StyleSheet.create({
     width: 72, height: 72, borderRadius: 24,
     backgroundColor: Palette.hermesOrange, alignItems: 'center', justifyContent: 'center',
   },
-  avatarText: { fontSize: 24, fontWeight: '800', color: '#fff' },
-  nameText: { fontSize: 20, fontWeight: '700', color: '#1A1A1A', marginTop: 12 },
+  avatarText: { fontSize: 24, fontFamily: 'Manrope_800ExtraBold', color: '#fff' },
+  nameText: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: '#1A1A1A', marginTop: 12 },
   roleText: { fontSize: 13, color: '#999', marginTop: 4 },
   section: { gap: 8 },
-  sectionTitle: { fontSize: 12, fontWeight: '700', color: '#999', textTransform: 'uppercase', letterSpacing: 0.8, paddingHorizontal: 4 },
+  sectionTitle: { fontSize: 12, fontFamily: 'Manrope_700Bold', color: '#999', letterSpacing: 0.8, paddingHorizontal: 4 },
   card: {
-    backgroundColor: '#fff', borderRadius: 14, overflow: 'hidden',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
+    backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden',
   },
   row: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 },
   rowBorder: { borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
   rowIcon: {
-    width: 32, height: 32, borderRadius: 10,
+    width: 32, height: 32, borderRadius: 12,
     backgroundColor: Palette.hermesOrange + '0C', alignItems: 'center', justifyContent: 'center',
   },
-  rowLabel: { flex: 1, fontSize: 14, fontWeight: '500', color: '#1A1A1A' },
+  rowLabel: { flex: 1, fontSize: 14, fontFamily: 'Inter_500Medium', color: '#1A1A1A' },
   rowValue: { fontSize: 13, color: '#999', marginRight: 4 },
   logoutButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     paddingVertical: 14, backgroundColor: SemanticColors.feedbackErrorBg, borderRadius: 12,
   },
-  logoutText: { fontSize: 14, fontWeight: '600', color: SemanticColors.feedbackError },
+  logoutText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: SemanticColors.feedbackError },
   versionText: { fontSize: 12, color: '#CCC', textAlign: 'center', marginTop: 8 },
+  retentionNotice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    marginTop: 12,
+    paddingHorizontal: 4,
+  },
+  retentionText: {
+    flex: 1,
+    fontSize: 11,
+    fontFamily: 'Inter_400Regular',
+    color: SemanticColors.textTertiary,
+    lineHeight: 16,
+  },
 });

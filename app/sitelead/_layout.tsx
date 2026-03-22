@@ -11,13 +11,15 @@ export default function SiteLeadLayout() {
       }}
     >
       <Stack.Screen name="dispatch" />
-      <Stack.Screen name="reports" />
       <Stack.Screen name="team/[id]" />
       <Stack.Screen name="incident-report" />
       <Stack.Screen name="inspection" />
       <Stack.Screen name="compliance" />
       <Stack.Screen name="log-defect" />
       <Stack.Screen name="close-defect" />
+      <Stack.Screen name="daily-report" />
+      <Stack.Screen name="safety-docs" />
+      <Stack.Screen name="worker-certs" />
     </Stack>
   );
 }

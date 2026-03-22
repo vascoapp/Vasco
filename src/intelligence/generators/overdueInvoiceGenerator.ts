@@ -7,6 +7,7 @@ import { useCashFlow } from '../../services/cashFlowService';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { isAboveThreshold, detectAnomaly, getSeasonalMultiplier } from '../adaptiveThresholds';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export const overdueInvoiceGenerator: InsightGenerator = {
   id: 'overdue-invoice',
@@ -75,7 +76,7 @@ export function useOverdueInvoiceInsight(ctx: GeneratorContext): ScoredInsight |
     icon: 'receipt',
     actionLabel: 'Herinneringen sturen',
     actionRoute: '/(contractor)/facturen',
-    source: 'Facturatie',
+    source: gt('source_billing', ctx.language),
     metric: { label: 'Openstaand', value: `€${totalOverdue.toLocaleString('nl-NL')}`, trend: 'down' },
 
     rootCauseTags: ['cashflow', 'overdue'],
@@ -85,11 +86,18 @@ export function useOverdueInvoiceInsight(ctx: GeneratorContext): ScoredInsight |
       evidence: `Op basis van ${invoices.length} facturen${trend ? `, trend: ${trend.direction}` : ''}${anomaly.isAnomaly ? ` — anomalie gedetecteerd (${anomaly.zScore.toFixed(1)}σ)` : ''}`,
       implication: `€${totalOverdue.toLocaleString('nl-NL')} werkkapitaal geblokkeerd${trendText}${seasonNote}`,
       suggestion: avgDaysOverdue > 14
-        ? 'Overweeg telefonisch contact — facturen ouder dan 14 dagen vereisen persoonlijke opvolging'
-        : 'Stuur een vriendelijke herinnering per e-mail',
+        ? gt('overdue_suggestion_phone', ctx.language)
+        : gt('overdue_suggestion_email', ctx.language),
     },
     dataPoints: invoices.length,
     confidence: anomaly.isAnomaly ? Math.min(0.95, 0.9 + 0.05) : 0.9,
     freshness: 1,
+    action: {
+      type: 'send_reminder',
+      label: gt('action_send_reminder', ctx.language),
+      params: { invoiceCount: overdueInvoices.length, totalAmount: totalOverdue },
+      requiresApproval: false,
+      estimatedImpact: `${gt('overdue_impact_faster', ctx.language)} — €${totalOverdue.toLocaleString('nl-NL')}`,
+    },
   };
 }

@@ -1,38 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TextInput,
-  TouchableOpacity,
-  Alert,
+  Pressable,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Spacing } from '../../src/theme/spacing';
+import { SemanticColors, Palette } from '../../src/theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
+import { Spacing, SafeArea } from '../../src/theme/spacing';
+import { hapticSuccess } from '../../src/utils/haptics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { showPhotoPicker, type PhotoResult } from '../../src/utils/photoPicker';
+import { Toast } from '../../src/components/shared/Toast';
+import { useIncidents } from '../../src/services/siteLeadDataService';
+import { useTranslation } from 'react-i18next';
+import { FadeIn } from '../../src/components/shared/FadeIn';
+import { InlineInsight } from '../../src/components/shared/VascoInsightCard';
+import { useInlineInsight } from '../../src/services/vascoGuidanceService';
 
 type IncidentType = 'Incident' | 'Bijna-ongeluk' | 'Observatie';
 type Severity = 'Laag' | 'Middel' | 'Hoog' | 'Kritiek';
 
 export default function IncidentReportScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
+  const inlineTip = useInlineInsight('sitelead', 'incident-report', 'overview');
   const [selectedType, setSelectedType] = useState<IncidentType>('Incident');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [people, setPeople] = useState('');
   const [severity, setSeverity] = useState<Severity>('Laag');
+  const [photos, setPhotos] = useState<PhotoResult[]>([]);
+  const [showToast, setShowToast] = useState(false);
+  const { addIncident } = useIncidents();
+
+  const FORM_KEY = '@vasco_incident_draft';
+
+  // Restore saved draft
+  useEffect(() => {
+    AsyncStorage.getItem(FORM_KEY).then(saved => {
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (data.type) setSelectedType(data.type);
+        if (data.location) setLocation(data.location);
+        if (data.description) setDescription(data.description);
+        if (data.severity) setSeverity(data.severity);
+      }
+    }).catch(() => {});
+  }, []);
+
+  // Auto-save draft on changes
+  useEffect(() => {
+    const draft = { type: selectedType, location, description, severity };
+    AsyncStorage.setItem(FORM_KEY, JSON.stringify(draft)).catch(() => {});
+  }, [selectedType, location, description, severity]);
 
   const handleSubmit = () => {
-    Alert.alert(
-      'Incident Gemeld',
-      'Het incident is succesvol geregistreerd.',
-      [{ text: 'OK', onPress: () => router.back() }]
-    );
+    const typeMap: Record<IncidentType, 'incident' | 'near-miss' | 'observation'> = {
+      'Incident': 'incident',
+      'Bijna-ongeluk': 'near-miss',
+      'Observatie': 'observation',
+    };
+    addIncident({
+      type: typeMap[selectedType],
+      date: new Date().toISOString().split('T')[0],
+      location,
+      description,
+      severity,
+      peopleInvolved: people || '',
+      photoCount: photos.length,
+    });
+    hapticSuccess();
+    AsyncStorage.removeItem(FORM_KEY).catch(() => {});
+    setShowToast(true);
+  };
+
+  const typeLabels: Record<IncidentType, string> = {
+    'Incident': t('sitelead.incidentTypeIncident', 'Incident'),
+    'Bijna-ongeluk': t('sitelead.incidentTypeNearMiss', 'Bijna-ongeluk'),
+    'Observatie': t('sitelead.incidentTypeObservation', 'Observatie'),
   };
 
   const renderTypeChip = (type: IncidentType) => (
-    <TouchableOpacity
+    <Pressable
       key={type}
       style={[
         styles.chip,
@@ -46,13 +101,20 @@ export default function IncidentReportScreen() {
           selectedType === type && styles.chipTextSelected,
         ]}
       >
-        {type}
+        {typeLabels[type]}
       </Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 
+  const severityLabels: Record<Severity, string> = {
+    'Laag': t('sitelead.incidentSeverityLow', 'Laag'),
+    'Middel': t('sitelead.incidentSeverityMedium', 'Middel'),
+    'Hoog': t('sitelead.incidentSeverityHigh', 'Hoog'),
+    'Kritiek': t('sitelead.incidentSeverityCritical', 'Kritiek'),
+  };
+
   const renderSeverityChip = (sev: Severity) => (
-    <TouchableOpacity
+    <Pressable
       key={sev}
       style={[
         styles.chip,
@@ -66,25 +128,28 @@ export default function IncidentReportScreen() {
           severity === sev && styles.chipTextSelected,
         ]}
       >
-        {sev}
+        {severityLabels[sev]}
       </Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#2D2926" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Incident Melden</Text>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+        </Pressable>
+        <Text style={styles.headerTitle}>{t('sitelead.incidentReport', 'Incident Melden')}</Text>
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        {inlineTip && <InlineInsight icon={inlineTip.icon as any} message={inlineTip.message} />}
+
+        <FadeIn delay={0} duration={400}>
         {/* Type Selector */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Type</Text>
+          <Text style={styles.sectionLabel}>{t('sitelead.incidentType', 'Type')}</Text>
           <View style={styles.chipRow}>
             {(['Incident', 'Bijna-ongeluk', 'Observatie'] as IncidentType[]).map(renderTypeChip)}
           </View>
@@ -92,11 +157,11 @@ export default function IncidentReportScreen() {
 
         {/* Location */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Locatie</Text>
+          <Text style={styles.sectionLabel}>{t('sitelead.incidentLocation', 'Locatie')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Bijv. Bouwplaats Amsterdam-Zuid, 2e verdieping"
-            placeholderTextColor="#8A7E76"
+            placeholder={t('sitelead.incidentLocationPlaceholder', 'Bijv. Bouwplaats Amsterdam-Zuid, 2e verdieping')}
+            placeholderTextColor={SemanticColors.textSecondary}
             value={location}
             onChangeText={setLocation}
           />
@@ -104,11 +169,11 @@ export default function IncidentReportScreen() {
 
         {/* Description */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Beschrijving</Text>
+          <Text style={styles.sectionLabel}>{t('sitelead.incidentDescription', 'Beschrijving')}</Text>
           <TextInput
             style={[styles.input, styles.textArea]}
-            placeholder="Beschrijf wat er is gebeurd..."
-            placeholderTextColor="#8A7E76"
+            placeholder={t('sitelead.incidentDescriptionPlaceholder', 'Beschrijf wat er is gebeurd...')}
+            placeholderTextColor={SemanticColors.textSecondary}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -119,11 +184,11 @@ export default function IncidentReportScreen() {
 
         {/* People Involved */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Betrokken personen</Text>
+          <Text style={styles.sectionLabel}>{t('sitelead.incidentPeopleInvolved', 'Betrokken personen')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Namen van betrokkenen"
-            placeholderTextColor="#8A7E76"
+            placeholder={t('sitelead.incidentPeoplePlaceholder', 'Namen van betrokkenen')}
+            placeholderTextColor={SemanticColors.textSecondary}
             value={people}
             onChangeText={setPeople}
           />
@@ -131,7 +196,7 @@ export default function IncidentReportScreen() {
 
         {/* Severity */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Ernst</Text>
+          <Text style={styles.sectionLabel}>{t('sitelead.incidentSeverity', 'Ernst')}</Text>
           <View style={styles.chipRow}>
             {(['Laag', 'Middel', 'Hoog', 'Kritiek'] as Severity[]).map(renderSeverityChip)}
           </View>
@@ -139,18 +204,40 @@ export default function IncidentReportScreen() {
 
         {/* Photo Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Foto's</Text>
-          <TouchableOpacity style={styles.photoButton}>
-            <Ionicons name="camera-outline" size={24} color="#D2691E" />
-            <Text style={styles.photoButtonText}>Foto toevoegen</Text>
-          </TouchableOpacity>
+          <Text style={styles.sectionLabel}>{t('sitelead.incidentPhotos', "Foto's")}</Text>
+          <Pressable style={styles.photoButton} onPress={() => showPhotoPicker((photo) => setPhotos(prev => [...prev, photo]))}>
+            <Ionicons name="camera-outline" size={24} color={Palette.hermesOrange} />
+            <Text style={styles.photoButtonText}>{t('sitelead.incidentAddPhoto', 'Foto toevoegen')}</Text>
+          </Pressable>
+          {photos.length > 0 && (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+              {photos.map((p, i) => (
+                <View key={i} style={{ width: 64, height: 64, borderRadius: 8, overflow: 'hidden', position: 'relative' }}>
+                  <Image source={{ uri: p.uri }} style={{ width: 64, height: 64 }} />
+                  <Pressable
+                    style={{ position: 'absolute', top: -4, right: -4 }}
+                    onPress={() => setPhotos(prev => prev.filter((_, j) => j !== i))}
+                  >
+                    <Ionicons name="close-circle" size={18} color={SemanticColors.feedbackError} />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
 
         {/* Submit Button */}
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Incident Melden</Text>
-        </TouchableOpacity>
+        <Pressable style={styles.submitButton} onPress={handleSubmit}>
+          <Text style={styles.submitButtonText}>{t('sitelead.incidentSubmit', 'Incident Melden')}</Text>
+        </Pressable>
+        </FadeIn>
       </ScrollView>
+      <Toast
+        message={t('sitelead.incidentSubmitted', 'Incident Gemeld') + ' — ' + t('sitelead.incidentSubmittedDesc', 'Het incident is succesvol geregistreerd.')}
+        visible={showToast}
+        onHide={() => { setShowToast(false); router.back(); }}
+        type="success"
+      />
     </View>
   );
 }
@@ -158,28 +245,23 @@ export default function IncidentReportScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF6F1',
+    backgroundColor: PAGE_BG,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xl * 2,
+    paddingTop: SafeArea.top,
     paddingBottom: Spacing.lg,
-    backgroundColor: '#FFFDF9',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   backButton: {
     marginRight: Spacing.md,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#2D2926',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
   },
   scrollView: {
     flex: 1,
@@ -191,9 +273,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   sectionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2D2926',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
     marginBottom: Spacing.sm,
   },
   chipRow: {
@@ -204,39 +286,29 @@ const styles = StyleSheet.create({
   chip: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    borderRadius: 20,
-    backgroundColor: '#FFFDF9',
+    borderRadius: RADIUS.xl,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderWidth: 1,
-    borderColor: '#F0EAE2',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    borderColor: SemanticColors.surfaceSecondary,
   },
   chipSelected: {
-    backgroundColor: '#D2691E',
-    borderColor: '#D2691E',
+    backgroundColor: Palette.hermesOrange,
+    borderColor: Palette.hermesOrange,
   },
   chipText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#2D2926',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textPrimary,
   },
   chipTextSelected: {
-    color: '#FFFDF9',
+    color: SemanticColors.surfacePrimary,
   },
   input: {
-    backgroundColor: '#FFFDF9',
-    borderRadius: 12,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
-    fontSize: 15,
-    color: '#2D2926',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    fontSize: TYPE.bodySize,
+    color: SemanticColors.textPrimary,
   },
   textArea: {
     minHeight: 100,
@@ -246,40 +318,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFDF9',
-    borderRadius: 12,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md,
     padding: Spacing.lg,
     borderWidth: 2,
-    borderColor: '#F0EAE2',
+    borderColor: SemanticColors.surfaceSecondary,
     borderStyle: 'dashed',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
   },
   photoButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#D2691E',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.hermesOrange,
     marginLeft: Spacing.sm,
   },
   submitButton: {
-    backgroundColor: '#D2691E',
-    borderRadius: 12,
+    backgroundColor: Palette.hermesOrange,
+    borderRadius: RADIUS.md,
     padding: Spacing.lg,
     alignItems: 'center',
     marginTop: Spacing.md,
     marginBottom: Spacing.xl,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
   },
   submitButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFDF9',
+    fontSize: TYPE.titleSize,
+    fontFamily: 'Manrope_700Bold',
+    color: SemanticColors.surfacePrimary,
   },
 });

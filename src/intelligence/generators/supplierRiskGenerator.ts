@@ -8,6 +8,7 @@
 import type { ScoredInsight, GeneratorContext } from './types';
 import { mockProjects, mockDeliveryMetrics } from '../../data/mockProjects';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export function useSupplierRiskInsight(ctx: GeneratorContext): ScoredInsight | null {
   if (ctx.role !== 'coo' && ctx.role !== 'sitelead') return null;
@@ -50,7 +51,7 @@ export function useSupplierRiskInsight(ctx: GeneratorContext): ScoredInsight | n
     icon: 'git-network',
     actionLabel: 'Bekijk leveranciers',
     actionRoute: '/hub/suppliers',
-    source: 'Procurement Analyse',
+    source: gt('source_procurement', ctx.language),
     metric: { label: 'Pending', value: `${totalPending}`, trend: totalPending > 10 ? 'down' : 'neutral' },
     rootCauseTags: ['procurement', 'suppliers'],
     rawScore: 0,

@@ -15,6 +15,7 @@ import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useSavingsAggregation, useSavingsTimeline } from '../../src/services/savingsAggregatorService';
 import { useInventory, useReorderSuggestions } from '../../src/services/reorderService';
 import { ReceiptScanner } from '../../src/components/contractor/ReceiptScanner';
+import { feedPricingMoat, type ScannedInvoice } from '../../src/services/invoiceScanService';
 
 export default function InkoopScreen() {
   const router = useRouter();
@@ -83,7 +84,7 @@ export default function InkoopScreen() {
             <Ionicons name="storefront" size={16} color={Palette.hermesOrange} />
             <Text style={styles.quickChipText}>Leveranciers</Text>
           </Pressable>
-          <Pressable style={styles.quickChip} onPress={() => router.push('/contractor/benchmark' as any)}>
+          <Pressable style={styles.quickChip} onPress={() => router.push('/contractor/market-prices' as any)}>
             <Ionicons name="bar-chart" size={16} color={Palette.hermesOrange} />
             <Text style={styles.quickChipText}>Benchmarking</Text>
           </Pressable>
@@ -285,7 +286,39 @@ export default function InkoopScreen() {
 
       {/* Receipt Scanner Modal */}
       <Modal visible={showReceiptScanner} animationType="slide" presentationStyle="fullScreen">
-        <ReceiptScanner onClose={() => setShowReceiptScanner(false)} />
+        <ReceiptScanner
+          onClose={() => setShowReceiptScanner(false)}
+          onComplete={(result: any) => {
+            if (result?.success && result.invoice) {
+              const scanned: ScannedInvoice = {
+                id: `scan-${Date.now()}`,
+                documentType: result.invoice.type ?? 'invoice',
+                supplierName: result.invoice.supplier?.name ?? 'Onbekend',
+                documentNumber: result.invoice.header?.documentNumber,
+                documentDate: result.invoice.header?.date ?? new Date().toISOString().split('T')[0],
+                lineItems: (result.invoice.lineItems ?? []).map((li: any) => ({
+                  description: li.description ?? '',
+                  articleNumber: li.articleNumber,
+                  brand: li.brand,
+                  category: li.category ?? 'general',
+                  quantity: li.quantity ?? 1,
+                  unit: li.unit ?? 'stuk',
+                  unitPrice: li.unitPrice ?? 0,
+                  vatRate: li.vatRate ?? 21,
+                  totalPrice: li.totalPrice ?? 0,
+                  confidence: li.confidence ?? 70,
+                })),
+                subtotal: result.invoice.totals?.subtotal ?? 0,
+                vatAmount: result.invoice.totals?.vatAmount ?? 0,
+                total: result.invoice.totals?.total ?? 0,
+                confidence: result.confidence ?? 70,
+                scannedAt: new Date().toISOString(),
+              };
+              feedPricingMoat(scanned).catch(() => {});
+            }
+            setShowReceiptScanner(false);
+          }}
+        />
       </Modal>
     </View>
   );
@@ -317,12 +350,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: '#1A1A1A',
   },
   headerBadge: {
     backgroundColor: SemanticColors.feedbackError,
-    borderRadius: 10,
+    borderRadius: 12,
     width: 22,
     height: 22,
     alignItems: 'center',
@@ -330,7 +363,7 @@ const styles = StyleSheet.create({
   },
   headerBadgeText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: '#fff',
   },
   scrollView: { flex: 1 },
@@ -358,7 +391,7 @@ const styles = StyleSheet.create({
   },
   quickChipText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#1A1A1A',
   },
   chipBadge: {
@@ -371,7 +404,7 @@ const styles = StyleSheet.create({
   },
   chipBadgeText: {
     fontSize: 10,
-    fontWeight: '700' as const,
+    fontFamily: 'Manrope_700Bold' as const,
     color: '#fff',
   },
 
@@ -387,11 +420,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 16,
     paddingHorizontal: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
   },
   heroIconWrap: {
     width: 36,
@@ -404,7 +432,7 @@ const styles = StyleSheet.create({
   },
   heroValue: {
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: 'Manrope_800ExtraBold',
     color: '#1A1A1A',
   },
   heroLabel: {
@@ -424,9 +452,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: '#999',
-    textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   alertPill: {
@@ -446,7 +473,7 @@ const styles = StyleSheet.create({
   },
   alertPillText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.feedbackError,
   },
 
@@ -454,13 +481,8 @@ const styles = StyleSheet.create({
   supplierCard: {
     flexDirection: 'row',
     backgroundColor: '#fff',
-    borderRadius: 14,
+    borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
   },
   priorityBar: { width: 4 },
   supplierContent: {
@@ -475,7 +497,7 @@ const styles = StyleSheet.create({
   },
   materialName: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#1A1A1A',
   },
   supplierMeta: {
@@ -495,11 +517,11 @@ const styles = StyleSheet.create({
   urgencyChip: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   urgencyValue: {
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: 'Manrope_800ExtraBold',
   },
 
   // Stock bar
@@ -522,7 +544,7 @@ const styles = StyleSheet.create({
   stockText: {
     fontSize: 10,
     color: '#BBB',
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     minWidth: 32,
   },
   reasonText: {
@@ -542,7 +564,7 @@ const styles = StyleSheet.create({
   },
   qtyText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: '#1A1A1A',
   },
   costText: {
@@ -557,7 +579,7 @@ const styles = StyleSheet.create({
   },
   savingsChipText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.feedbackSuccess,
   },
   orderBtn: {
@@ -574,17 +596,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 32,
     backgroundColor: '#fff',
-    borderRadius: 14,
+    borderRadius: 16,
     gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
   },
   emptyText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#999',
   },
 
@@ -594,25 +611,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     backgroundColor: '#fff',
-    borderRadius: 14,
+    borderRadius: 16,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
   },
   scannerIcon: {
     width: 42,
     height: 42,
-    borderRadius: 14,
+    borderRadius: 16,
     backgroundColor: Palette.hermesOrange + '10',
     alignItems: 'center',
     justifyContent: 'center',
   },
   scannerTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#1A1A1A',
   },
   scannerSub: {
@@ -626,11 +638,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
   },
 
   // Breakdown
@@ -659,7 +666,7 @@ const styles = StyleSheet.create({
   },
   legendAmount: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#1A1A1A',
     marginRight: 8,
   },
@@ -683,7 +690,7 @@ const styles = StyleSheet.create({
   },
   timelineAmount: {
     fontSize: 22,
-    fontWeight: '800',
+    fontFamily: 'Manrope_800ExtraBold',
     color: '#1A1A1A',
   },
   trendPill: {
@@ -697,7 +704,7 @@ const styles = StyleSheet.create({
   },
   trendText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.feedbackSuccess,
   },
   chartRow: {
@@ -719,7 +726,7 @@ const styles = StyleSheet.create({
   },
   barValue: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: Palette.hermesOrange,
     marginBottom: 4,
   },
@@ -730,6 +737,6 @@ const styles = StyleSheet.create({
   },
   barLabelActive: {
     color: '#1A1A1A',
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
   },
 });

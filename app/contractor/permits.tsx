@@ -1,0 +1,501 @@
+// =============================================================================
+// PERMITS — Contractor Permit Dashboard & Wizard
+// =============================================================================
+// View, create, and track permits for contractor jobs
+// =============================================================================
+
+import { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, TextInput } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { SemanticColors, Palette } from '../../src/theme/colors';
+import { PAGE_BG } from '../../src/theme/tabStyles';
+import { Spacing, SafeArea } from '../../src/theme/spacing';
+import { useAppState } from '../../src/state/AppState';
+import type { PermitStatus, PermitType } from '../../src/types/buildos';
+
+type IconName = keyof typeof Ionicons.glyphMap;
+type TabType = 'overzicht' | 'nieuw';
+
+// =============================================================================
+// STATUS CONFIG
+// =============================================================================
+
+const getStatusConfig = (t: (key: string, defaultValue: string) => string): Record<PermitStatus, { label: string; color: string; icon: IconName }> => ({
+  'not-submitted': { label: t('permits.statusNotSubmitted', 'Niet ingediend'), color: SemanticColors.textTertiary, icon: 'document-outline' },
+  'submitted': { label: t('permits.statusSubmitted', 'Ingediend'), color: SemanticColors.feedbackInfo, icon: 'paper-plane-outline' },
+  'under-review': { label: t('permits.statusUnderReview', 'In behandeling'), color: Palette.hermesOrange, icon: 'hourglass-outline' },
+  'information-requested': { label: t('permits.statusInfoRequested', 'Info gevraagd'), color: SemanticColors.feedbackWarning, icon: 'alert-circle-outline' },
+  'approved': { label: t('permits.statusApproved', 'Goedgekeurd'), color: SemanticColors.feedbackSuccess, icon: 'checkmark-circle' },
+  'approved-with-conditions': { label: t('permits.statusConditional', 'Voorwaardelijk'), color: SemanticColors.feedbackSuccess, icon: 'checkmark-circle-outline' },
+  'rejected': { label: t('permits.statusRejected', 'Afgewezen'), color: SemanticColors.feedbackError, icon: 'close-circle' },
+  'appealed': { label: t('permits.statusAppealed', 'Bezwaar'), color: '#a855f7', icon: 'flag-outline' },
+});
+
+const getPermitTypes = (t: (key: string, defaultValue: string) => string): { id: PermitType; label: string; description: string; icon: IconName }[] => [
+  { id: 'omgevingsvergunning', label: t('permits.typeEnvironmental', 'Omgevingsvergunning'), description: t('permits.typeEnvironmentalDesc', 'Bouw, verbouw, of gebruik wijziging'), icon: 'business-outline' },
+  { id: 'building-control', label: t('permits.typeBuildingControl', 'Bouwtoezicht'), description: t('permits.typeBuildingControlDesc', 'Constructieve veiligheid en brandveiligheid'), icon: 'shield-checkmark-outline' },
+  { id: 'environmental', label: t('permits.typeEnvPermit', 'Milieuvergunning'), description: t('permits.typeEnvPermitDesc', 'Milieu-impact en afvalverwerking'), icon: 'leaf-outline' },
+  { id: 'other', label: t('permits.typeOther', 'Overig'), description: t('permits.typeOtherDesc', 'Sloopmelding, gebruiksvergunning, etc.'), icon: 'document-text-outline' },
+];
+
+// =============================================================================
+// MOCK DATA
+// =============================================================================
+
+interface ContractorPermit {
+  id: string;
+  type: PermitType;
+  reference: string;
+  authority: string;
+  status: PermitStatus;
+  jobTitle: string;
+  address: string;
+  submissionDate?: string;
+  targetDecisionDate?: string;
+  notes?: string;
+  documents: string[];
+}
+
+const mockPermits: ContractorPermit[] = [
+  {
+    id: 'p-1',
+    type: 'omgevingsvergunning',
+    reference: 'OV-2026-1234',
+    authority: 'Gemeente Amsterdam',
+    status: 'under-review',
+    jobTitle: 'Warmtepomp installatie — Bakkerij Jansen',
+    address: 'Winkelstraat 12, Utrecht',
+    submissionDate: '2026-03-01',
+    targetDecisionDate: '2026-04-26',
+    documents: ['Bouwtekening', 'Constructieberekening'],
+  },
+  {
+    id: 'p-2',
+    type: 'building-control',
+    reference: 'BT-2026-0089',
+    authority: 'Gemeente Utrecht',
+    status: 'approved',
+    jobTitle: 'CV-ketel onderhoud — Fam. de Groot',
+    address: 'Hoofdstraat 45, Amsterdam',
+    submissionDate: '2026-02-15',
+    targetDecisionDate: '2026-03-15',
+    documents: ['Installatieschema', 'Veiligheidsrapport'],
+  },
+  {
+    id: 'p-3',
+    type: 'environmental',
+    reference: '',
+    authority: '',
+    status: 'not-submitted',
+    jobTitle: 'Airco installatie — Kantoor Zuidas',
+    address: 'Gustav Mahlerlaan 10, Amsterdam',
+    documents: [],
+  },
+];
+
+// =============================================================================
+// WIZARD STATE
+// =============================================================================
+
+interface WizardState {
+  step: number;
+  permitType?: PermitType;
+  jobTitle: string;
+  address: string;
+  authority: string;
+  notes: string;
+}
+
+// =============================================================================
+// SCREEN
+// =============================================================================
+
+export default function PermitsScreen() {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const { jobs } = useAppState();
+  const STATUS_CONFIG = getStatusConfig(t);
+  const PERMIT_TYPES = getPermitTypes(t);
+  const [activeTab, setActiveTab] = useState<TabType>('overzicht');
+  const [permits, setPermits] = useState<ContractorPermit[]>(mockPermits);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [wizard, setWizard] = useState<WizardState>({
+    step: 1,
+    jobTitle: '',
+    address: '',
+    authority: '',
+    notes: '',
+  });
+
+  // Stats
+  const approved = permits.filter(p => p.status === 'approved' || p.status === 'approved-with-conditions').length;
+  const pending = permits.filter(p => ['submitted', 'under-review', 'information-requested'].includes(p.status)).length;
+  const notSubmitted = permits.filter(p => p.status === 'not-submitted').length;
+
+  const handleCreatePermit = () => {
+    if (!wizard.permitType || !wizard.jobTitle.trim()) {
+      Alert.alert(t('permits.fillRequired', 'Vul vereiste velden in'), t('permits.fillRequiredDesc', 'Kies een vergunningstype en vul de klusnaam in.'));
+      return;
+    }
+
+    const newPermit: ContractorPermit = {
+      id: `p-${Date.now()}`,
+      type: wizard.permitType,
+      reference: '',
+      authority: wizard.authority || 'Gemeente',
+      status: 'not-submitted',
+      jobTitle: wizard.jobTitle,
+      address: wizard.address,
+      notes: wizard.notes || undefined,
+      documents: [],
+    };
+
+    setPermits(prev => [newPermit, ...prev]);
+    setWizard({ step: 1, jobTitle: '', address: '', authority: '', notes: '' });
+    setSelectedJobId(null);
+    setActiveTab('overzicht');
+    Alert.alert(t('permits.permitCreated', 'Vergunning aangemaakt'), t('permits.permitCreatedDesc', 'De vergunning is opgeslagen als concept. Voeg documenten toe en dien in bij de gemeente.'));
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Terug">
+          <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+        </Pressable>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>{t('permits.title', 'Vergunningen')}</Text>
+          <Text style={styles.headerSubtitle}>
+            {t('permits.headerStats', `${approved} goedgekeurd · ${pending} in behandeling · ${notSubmitted} concept`)}
+          </Text>
+        </View>
+      </View>
+
+      {/* Tabs */}
+      <View style={styles.tabBar}>
+        <Pressable
+          style={[styles.tab, activeTab === 'overzicht' && styles.tabActive]}
+          onPress={() => setActiveTab('overzicht')}
+        >
+          <Text style={[styles.tabText, activeTab === 'overzicht' && styles.tabTextActive]}>{t('permits.overview', 'Overzicht')}</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.tab, activeTab === 'nieuw' && styles.tabActive]}
+          onPress={() => { setActiveTab('nieuw'); setWizard(w => ({ ...w, step: 1 })); }}
+        >
+          <Text style={[styles.tabText, activeTab === 'nieuw' && styles.tabTextActive]}>{t('permits.newRequest', '+ Nieuwe aanvraag')}</Text>
+        </Pressable>
+      </View>
+
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {activeTab === 'overzicht' ? (
+          /* Overview Tab */
+          <View style={{ gap: 6 }}>
+            {permits.map(permit => {
+              const config = STATUS_CONFIG[permit.status];
+              const isExpanded = expandedId === permit.id;
+
+              return (
+                <View key={permit.id}>
+                  <Pressable
+                    style={styles.permitCard}
+                    onPress={() => setExpandedId(isExpanded ? null : permit.id)}
+                  >
+                    <View style={[styles.permitAccent, { backgroundColor: config.color }]} />
+                    <Ionicons name={config.icon} size={20} color={config.color} style={{ marginLeft: Spacing.sm }} />
+                    <View style={styles.permitInfo}>
+                      <Text style={styles.permitTitle} numberOfLines={1}>{permit.jobTitle}</Text>
+                      <Text style={styles.permitType} numberOfLines={1}>
+                        {PERMIT_TYPES.find(t => t.id === permit.type)?.label ?? permit.type}
+                      </Text>
+                      {permit.reference ? (
+                        <Text style={styles.permitRef}>{permit.reference}</Text>
+                      ) : null}
+                    </View>
+                    <View style={styles.permitRight}>
+                      <Text style={[styles.permitStatus, { color: config.color }]}>{config.label}</Text>
+                    </View>
+                  </Pressable>
+
+                  {isExpanded && (
+                    <View style={styles.expandedContent}>
+                      {permit.address ? (
+                        <View style={styles.detailRow}>
+                          <Ionicons name="location-outline" size={14} color={SemanticColors.textSecondary} />
+                          <Text style={styles.detailText}>{permit.address}</Text>
+                        </View>
+                      ) : null}
+                      {permit.authority ? (
+                        <View style={styles.detailRow}>
+                          <Ionicons name="business-outline" size={14} color={SemanticColors.textSecondary} />
+                          <Text style={styles.detailText}>{permit.authority}</Text>
+                        </View>
+                      ) : null}
+                      {permit.submissionDate ? (
+                        <View style={styles.detailRow}>
+                          <Ionicons name="calendar-outline" size={14} color={SemanticColors.textSecondary} />
+                          <Text style={styles.detailText}>
+                            {t('permits.submitted', 'Ingediend')}: {new Date(permit.submissionDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </Text>
+                        </View>
+                      ) : null}
+                      {permit.targetDecisionDate ? (
+                        <View style={styles.detailRow}>
+                          <Ionicons name="time-outline" size={14} color={SemanticColors.textSecondary} />
+                          <Text style={styles.detailText}>
+                            {t('permits.decisionExpected', 'Besluit verwacht')}: {new Date(permit.targetDecisionDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </Text>
+                        </View>
+                      ) : null}
+                      {permit.documents.length > 0 && (
+                        <View style={styles.docsRow}>
+                          <Ionicons name="attach-outline" size={14} color={SemanticColors.textSecondary} />
+                          <Text style={styles.detailText}>{permit.documents.join(', ')}</Text>
+                        </View>
+                      )}
+                      {permit.status === 'not-submitted' && (
+                        <Pressable
+                          style={styles.submitButton}
+                          onPress={() => {
+                            Alert.alert(t('permits.documentsNeeded', 'Documenten nodig'), t('permits.documentsNeededDesc', 'Upload eerst de vereiste documenten voordat u de aanvraag kunt indienen.'));
+                          }}
+                        >
+                          <Text style={styles.submitButtonText}>{t('permits.submitRequest', 'Aanvraag indienen')}</Text>
+                        </Pressable>
+                      )}
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        ) : (
+          /* Wizard Tab */
+          <View style={{ gap: Spacing.md }}>
+            {wizard.step === 1 ? (
+              /* Step 1: Choose permit type */
+              <View style={{ gap: Spacing.sm }}>
+                <Text style={styles.wizardTitle}>{t('permits.step1Title', 'Stap 1: Type vergunning')}</Text>
+                <Text style={styles.wizardSubtitle}>{t('permits.step1Subtitle', 'Kies het type vergunning dat u nodig heeft')}</Text>
+                {PERMIT_TYPES.map(type => (
+                  <Pressable
+                    key={type.id}
+                    style={[styles.typeCard, wizard.permitType === type.id && styles.typeCardSelected]}
+                    onPress={() => setWizard(w => ({ ...w, permitType: type.id, step: 2 }))}
+                  >
+                    <Ionicons
+                      name={type.icon}
+                      size={24}
+                      color={wizard.permitType === type.id ? Palette.hermesOrange : SemanticColors.textSecondary}
+                    />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.typeName}>{type.label}</Text>
+                      <Text style={styles.typeDesc}>{type.description}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+                  </Pressable>
+                ))}
+              </View>
+            ) : (
+              /* Step 2: Details */
+              <View style={{ gap: Spacing.sm }}>
+                <Pressable onPress={() => setWizard(w => ({ ...w, step: 1 }))}>
+                  <Text style={styles.wizardBack}>{t('permits.backToType', '← Terug naar type')}</Text>
+                </Pressable>
+                <Text style={styles.wizardTitle}>{t('permits.step2Title', 'Stap 2: Projectgegevens')}</Text>
+                <Text style={styles.wizardSubtitle}>
+                  {PERMIT_TYPES.find(t => t.id === wizard.permitType)?.label}
+                </Text>
+
+                {/* Job picker for auto-fill */}
+                {jobs.length > 0 && (
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>{t('permits.selectJob', 'Koppel aan klus')}</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -2 }}>
+                      <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 2, paddingVertical: 2 }}>
+                        <Pressable
+                          style={[styles.jobPickerChip, !selectedJobId && styles.jobPickerChipActive]}
+                          onPress={() => {
+                            setSelectedJobId(null);
+                            setWizard(w => ({ ...w, jobTitle: '', address: '' }));
+                          }}
+                        >
+                          <Text style={[styles.jobPickerChipText, !selectedJobId && styles.jobPickerChipTextActive]}>
+                            {t('permits.manualEntry', 'Handmatig')}
+                          </Text>
+                        </Pressable>
+                        {jobs.map(j => (
+                          <Pressable
+                            key={j.id}
+                            style={[styles.jobPickerChip, selectedJobId === j.id && styles.jobPickerChipActive]}
+                            onPress={() => {
+                              setSelectedJobId(j.id);
+                              const addr = j.address ? [j.address.street, j.address.city].filter(Boolean).join(', ') : '';
+                              setWizard(w => ({ ...w, jobTitle: j.title, address: addr }));
+                            }}
+                          >
+                            <Text style={[styles.jobPickerChipText, selectedJobId === j.id && styles.jobPickerChipTextActive]} numberOfLines={1}>
+                              {j.title}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                    </ScrollView>
+                  </View>
+                )}
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>{t('permits.jobName', 'Klusnaam')} *</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={wizard.jobTitle}
+                    onChangeText={v => setWizard(w => ({ ...w, jobTitle: v }))}
+                    placeholder={t('permits.jobNamePlaceholder', 'bijv. Warmtepomp installatie')}
+                    placeholderTextColor={SemanticColors.textTertiary}
+                  />
+                </View>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>{t('permits.address', 'Adres')}</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={wizard.address}
+                    onChangeText={v => setWizard(w => ({ ...w, address: v }))}
+                    placeholder={t('permits.addressPlaceholder', 'Straat, stad')}
+                    placeholderTextColor={SemanticColors.textTertiary}
+                  />
+                </View>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>{t('permits.authority', 'Bevoegd gezag')}</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={wizard.authority}
+                    onChangeText={v => setWizard(w => ({ ...w, authority: v }))}
+                    placeholder={t('permits.authorityPlaceholder', 'bijv. Gemeente Amsterdam')}
+                    placeholderTextColor={SemanticColors.textTertiary}
+                  />
+                </View>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>{t('permits.notes', 'Notities')}</Text>
+                  <TextInput
+                    style={[styles.textInput, { height: 80, textAlignVertical: 'top' }]}
+                    value={wizard.notes}
+                    onChangeText={v => setWizard(w => ({ ...w, notes: v }))}
+                    placeholder={t('permits.optional', 'Optioneel')}
+                    placeholderTextColor={SemanticColors.textTertiary}
+                    multiline
+                  />
+                </View>
+
+                <Pressable style={styles.createButton} onPress={handleCreatePermit}>
+                  <Ionicons name="checkmark-circle" size={20} color="#fff" />
+                  <Text style={styles.createButtonText}>{t('permits.createPermit', 'Vergunning aanmaken')}</Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
+        )}
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </View>
+  );
+}
+
+// =============================================================================
+// STYLES
+// =============================================================================
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: PAGE_BG },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingHorizontal: SafeArea.side,
+    paddingTop: SafeArea.top,
+    paddingBottom: Spacing.sm,
+  },
+  backButton: { padding: 4 },
+  headerTitle: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  headerSubtitle: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 2 },
+  tabBar: { flexDirection: 'row', paddingHorizontal: Spacing.lg, gap: 6, paddingBottom: Spacing.md },
+  tab: { flex: 1, paddingVertical: 8, borderRadius: 12, backgroundColor: SemanticColors.surfacePrimary, alignItems: 'center' },
+  tabActive: { backgroundColor: Palette.hermesOrange },
+  tabText: { fontSize: 13, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textTertiary },
+  tabTextActive: { color: '#fff' },
+  scrollView: { flex: 1, paddingHorizontal: SafeArea.side },
+
+  // Permit cards
+  permitCard: {
+    flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingRight: Spacing.sm,
+    gap: Spacing.sm, backgroundColor: SemanticColors.surfacePrimary, borderRadius: 12, overflow: 'hidden',
+  },
+  permitAccent: { width: 3, alignSelf: 'stretch' },
+  permitInfo: { flex: 1 },
+  permitTitle: { fontSize: 14, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textPrimary },
+  permitType: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 1 },
+  permitRef: { fontSize: 11, color: SemanticColors.textTertiary, marginTop: 1 },
+  permitRight: { alignItems: 'flex-end' },
+  permitStatus: { fontSize: 11, fontFamily: 'Manrope_600SemiBold' },
+
+  // Expanded
+  expandedContent: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    marginTop: -6, marginBottom: 6,
+    borderBottomLeftRadius: 12, borderBottomRightRadius: 12,
+    padding: Spacing.sm, paddingTop: Spacing.xs, gap: 6,
+  },
+  detailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  docsRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  detailText: { fontSize: 12, color: SemanticColors.textSecondary },
+  submitButton: {
+    alignItems: 'center', backgroundColor: Palette.hermesOrange + '10',
+    paddingVertical: 8, borderRadius: 8, marginTop: 4,
+  },
+  submitButtonText: { fontSize: 13, fontFamily: 'Manrope_600SemiBold', color: Palette.hermesOrange },
+
+  // Wizard
+  wizardTitle: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  wizardSubtitle: { fontSize: 14, color: SemanticColors.textSecondary },
+  wizardBack: { fontSize: 14, color: Palette.hermesOrange, fontFamily: 'Manrope_600SemiBold' },
+  typeCard: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: 12,
+    padding: Spacing.md, borderWidth: 1, borderColor: SemanticColors.borderDefault,
+  },
+  typeCardSelected: { borderColor: Palette.hermesOrange, backgroundColor: Palette.hermesOrange + '08' },
+  typeName: { fontSize: 15, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textPrimary },
+  typeDesc: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 2 },
+  inputGroup: { gap: 4 },
+  inputLabel: { fontSize: 13, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textSecondary },
+  textInput: {
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: 12,
+    padding: Spacing.sm, paddingHorizontal: Spacing.md,
+    fontSize: 15, color: SemanticColors.textPrimary,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
+  },
+  jobPickerChip: {
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
+    maxWidth: 180,
+  },
+  jobPickerChipActive: {
+    borderColor: Palette.hermesOrange, backgroundColor: Palette.hermesOrange + '08',
+  },
+  jobPickerChipText: {
+    fontSize: 13, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textSecondary,
+  },
+  jobPickerChipTextActive: {
+    color: Palette.hermesOrange,
+  },
+  createButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: Spacing.xs, backgroundColor: Palette.hermesOrange,
+    borderRadius: 12, padding: Spacing.md, paddingVertical: 14, marginTop: Spacing.sm,
+  },
+  createButtonText: { fontSize: 16, fontFamily: 'Manrope_700Bold', color: '#fff' },
+});

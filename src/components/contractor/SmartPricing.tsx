@@ -10,7 +10,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -170,13 +170,13 @@ export function SmartPricing() {
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.applyButton}>
+          <Pressable style={styles.applyButton}>
             <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
             <Text style={styles.applyButtonText}>Pas toe in offerte</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.adjustButton}>
+          </Pressable>
+          <Pressable style={styles.adjustButton}>
             <Ionicons name="options-outline" size={18} color={Palette.blue500} />
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
     );
@@ -184,7 +184,7 @@ export function SmartPricing() {
 
   const renderPricingTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <TouchableOpacity
+      <Pressable
         style={styles.newPriceButton}
         onPress={() => setShowPricingModal(true)}
       >
@@ -196,7 +196,7 @@ export function SmartPricing() {
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={20} color={SemanticColors.textSecondary} />
-      </TouchableOpacity>
+      </Pressable>
 
       {suggestion ? (
         renderPriceSuggestion(suggestion)
@@ -388,7 +388,7 @@ export function SmartPricing() {
       {/* Tabs */}
       <View style={styles.tabBar}>
         {tabs.map((tab) => (
-          <TouchableOpacity
+          <Pressable
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.activeTab]}
             onPress={() => setActiveTab(tab.key)}
@@ -401,7 +401,7 @@ export function SmartPricing() {
             <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
               {tab.label}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 
@@ -420,13 +420,13 @@ export function SmartPricing() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowPricingModal(false)}>
+            <Pressable onPress={() => setShowPricingModal(false)}>
               <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
-            </TouchableOpacity>
+            </Pressable>
             <Text style={styles.modalTitle}>Prijs berekenen</Text>
-            <TouchableOpacity onPress={handleSuggestPrice}>
+            <Pressable onPress={handleSuggestPrice}>
               <Text style={styles.modalAction}>Bereken</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           <ScrollView style={styles.modalContent}>
@@ -434,7 +434,7 @@ export function SmartPricing() {
             <Text style={styles.inputLabel}>Type project</Text>
             <View style={styles.typeGrid}>
               {projectTypes.map((type) => (
-                <TouchableOpacity
+                <Pressable
                   key={type}
                   style={[styles.typeOption, selectedProjectType === type && styles.typeOptionSelected]}
                   onPress={() => setSelectedProjectType(type)}
@@ -442,7 +442,7 @@ export function SmartPricing() {
                   <Text style={[styles.typeOptionText, selectedProjectType === type && styles.typeOptionTextSelected]}>
                     {type}
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               ))}
             </View>
 
@@ -454,7 +454,7 @@ export function SmartPricing() {
                 { key: 'medium' as const, label: 'Middel', price: 'Meerdere ruimtes' },
                 { key: 'large' as const, label: 'Groot', price: 'Complete woning' },
               ].map((scope) => (
-                <TouchableOpacity
+                <Pressable
                   key={scope.key}
                   style={[styles.scopeOption, selectedScope === scope.key && styles.scopeOptionSelected]}
                   onPress={() => setSelectedScope(scope.key)}
@@ -465,14 +465,14 @@ export function SmartPricing() {
                   <Text style={[styles.scopeDesc, selectedScope === scope.key && styles.scopeDescSelected]}>
                     {scope.price}
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               ))}
             </View>
 
             {/* Customer Type */}
             <Text style={styles.inputLabel}>Klanttype</Text>
             <View style={styles.customerTypeOptions}>
-              <TouchableOpacity
+              <Pressable
                 style={[styles.customerTypeOption, selectedCustomerType === 'particulier' && styles.customerTypeSelected]}
                 onPress={() => setSelectedCustomerType('particulier')}
               >
@@ -484,8 +484,8 @@ export function SmartPricing() {
                 <Text style={[styles.customerTypeLabel, selectedCustomerType === 'particulier' && styles.customerTypeLabelSelected]}>
                   Particulier
                 </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </Pressable>
+              <Pressable
                 style={[styles.customerTypeOption, selectedCustomerType === 'zakelijk' && styles.customerTypeSelected]}
                 onPress={() => setSelectedCustomerType('zakelijk')}
               >
@@ -497,7 +497,7 @@ export function SmartPricing() {
                 <Text style={[styles.customerTypeLabel, selectedCustomerType === 'zakelijk' && styles.customerTypeLabelSelected]}>
                   Zakelijk
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </ScrollView>
         </View>

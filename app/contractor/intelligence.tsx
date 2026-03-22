@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 22,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   headerSubtitle: {
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   statLabel: {
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
     marginBottom: 2,
   },
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: 12,
     padding: Spacing.sm,
     marginBottom: 6,
     borderWidth: 1,
@@ -496,11 +496,11 @@ const styles = StyleSheet.create({
   accuracyBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 10,
+    borderRadius: 12,
   },
   accuracyText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
 
   // Generator Rows
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: 12,
     padding: Spacing.sm,
     marginBottom: 6,
     gap: Spacing.sm,
@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
   },
   generatorLabel: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
     color: SemanticColors.textPrimary,
     marginBottom: 4,
   },
@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
   },
   ratePercent: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: Palette.green500,
     minWidth: 36,
     textAlign: 'right',
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
   },
   screenCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: 12,
     padding: 10,
     alignItems: 'center',
     minWidth: 70,
@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
   },
   screenCount: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   screenLabel: {

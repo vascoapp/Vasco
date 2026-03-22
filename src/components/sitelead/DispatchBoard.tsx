@@ -13,8 +13,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { PAGE_BG } from '../../theme/tabStyles';
 import type { Worker, DispatchJob } from '../../types/sitelead';
 import { MOCK_WORKERS, MOCK_DISPATCH_JOBS } from '../../data/mockSiteLead';
+import { useTranslation } from 'react-i18next';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -22,28 +24,28 @@ type IconName = keyof typeof Ionicons.glyphMap;
 // CONFIGURATION
 // ============================================
 
-const WORKER_STATUS_CONFIG: Record<Worker['status'], { label: string; color: string; icon: IconName }> = {
-  available: { label: 'Available', color: SemanticColors.feedbackSuccess, icon: 'checkmark-circle' },
-  'on-job': { label: 'On Job', color: SemanticColors.feedbackInfo, icon: 'construct' },
-  traveling: { label: 'En Route', color: SemanticColors.feedbackWarning, icon: 'car' },
-  break: { label: 'On Break', color: SemanticColors.textTertiary, icon: 'cafe' },
-  'off-duty': { label: 'Off Duty', color: SemanticColors.textTertiary, icon: 'moon' },
+const WORKER_STATUS_CONFIG: Record<Worker['status'], { labelKey: string; fallback: string; color: string; icon: IconName }> = {
+  available: { labelKey: 'sitelead.dispatchWorkerStatusAvailable', fallback: 'Beschikbaar', color: SemanticColors.feedbackSuccess, icon: 'checkmark-circle' },
+  'on-job': { labelKey: 'sitelead.dispatchWorkerStatusOnJob', fallback: 'Bezig', color: SemanticColors.feedbackInfo, icon: 'construct' },
+  traveling: { labelKey: 'sitelead.dispatchWorkerStatusTraveling', fallback: 'Onderweg', color: SemanticColors.feedbackWarning, icon: 'car' },
+  break: { labelKey: 'sitelead.dispatchWorkerStatusBreak', fallback: 'Pauze', color: SemanticColors.textTertiary, icon: 'cafe' },
+  'off-duty': { labelKey: 'sitelead.dispatchWorkerStatusOffDuty', fallback: 'Vrij', color: SemanticColors.textTertiary, icon: 'moon' },
 };
 
-const JOB_PRIORITY_CONFIG: Record<DispatchJob['priority'], { label: string; color: string }> = {
-  low: { label: 'Low', color: SemanticColors.textTertiary },
-  medium: { label: 'Medium', color: SemanticColors.feedbackInfo },
-  high: { label: 'High', color: SemanticColors.feedbackWarning },
-  urgent: { label: 'Urgent', color: SemanticColors.feedbackError },
+const JOB_PRIORITY_CONFIG: Record<DispatchJob['priority'], { labelKey: string; fallback: string; color: string }> = {
+  low: { labelKey: 'sitelead.dispatchPriorityLow', fallback: 'Laag', color: SemanticColors.textTertiary },
+  medium: { labelKey: 'sitelead.dispatchPriorityMedium', fallback: 'Middel', color: SemanticColors.feedbackInfo },
+  high: { labelKey: 'sitelead.dispatchPriorityHigh', fallback: 'Hoog', color: SemanticColors.feedbackWarning },
+  urgent: { labelKey: 'sitelead.dispatchPriorityUrgent', fallback: 'Urgent', color: SemanticColors.feedbackError },
 };
 
-const JOB_STATUS_CONFIG: Record<DispatchJob['status'], { label: string; color: string; icon: IconName }> = {
-  unassigned: { label: 'Unassigned', color: SemanticColors.feedbackError, icon: 'alert-circle' },
-  assigned: { label: 'Assigned', color: SemanticColors.feedbackInfo, icon: 'person' },
-  'en-route': { label: 'En Route', color: SemanticColors.feedbackWarning, icon: 'car' },
-  'in-progress': { label: 'In Progress', color: SemanticColors.actionPrimary, icon: 'construct' },
-  completed: { label: 'Completed', color: SemanticColors.feedbackSuccess, icon: 'checkmark-circle' },
-  cancelled: { label: 'Cancelled', color: SemanticColors.textTertiary, icon: 'close-circle' },
+const JOB_STATUS_CONFIG: Record<DispatchJob['status'], { labelKey: string; fallback: string; color: string; icon: IconName }> = {
+  unassigned: { labelKey: 'sitelead.dispatchJobUnassigned', fallback: 'Niet toegewezen', color: SemanticColors.feedbackError, icon: 'alert-circle' },
+  assigned: { labelKey: 'sitelead.dispatchJobAssigned', fallback: 'Toegewezen', color: SemanticColors.feedbackInfo, icon: 'person' },
+  'en-route': { labelKey: 'sitelead.dispatchJobEnRoute', fallback: 'Onderweg', color: SemanticColors.feedbackWarning, icon: 'car' },
+  'in-progress': { labelKey: 'sitelead.dispatchJobInProgress', fallback: 'Bezig', color: SemanticColors.actionPrimary, icon: 'construct' },
+  completed: { labelKey: 'sitelead.dispatchJobCompleted', fallback: 'Gereed', color: SemanticColors.feedbackSuccess, icon: 'checkmark-circle' },
+  cancelled: { labelKey: 'sitelead.dispatchJobCancelled', fallback: 'Geannuleerd', color: SemanticColors.textTertiary, icon: 'close-circle' },
 };
 
 // ============================================
@@ -91,14 +93,14 @@ function WorkerCard({ worker, isSelected, onSelect, assignedJob }: WorkerCardPro
 
       <View style={styles.workerStats}>
         <View style={styles.workerStat}>
-          <Ionicons name="star" size={12} color="#F59E0B" />
+          <Ionicons name="star" size={12} color={SemanticColors.feedbackWarning} />
           <Text style={styles.workerStatText}>{worker.rating}</Text>
         </View>
         <View style={styles.workerStat}>
           <Ionicons name="briefcase-outline" size={12} color={SemanticColors.textSecondary} />
           <Text style={styles.workerStatText}>{worker.jobsCompleted}</Text>
         </View>
-        <Text style={styles.workerRate}>{'\u20AC'}{worker.hourlyRate}/hr</Text>
+        <Text style={styles.workerRate}>{'\u20AC'}{worker.hourlyRate}/u</Text>
       </View>
     </Pressable>
   );
@@ -111,6 +113,7 @@ interface JobCardProps {
 }
 
 function JobCard({ job, onAssign, onViewDetails }: JobCardProps) {
+  const { t } = useTranslation();
   const priorityConfig = JOB_PRIORITY_CONFIG[job.priority];
   const statusConfig = JOB_STATUS_CONFIG[job.status];
 
@@ -136,7 +139,7 @@ function JobCard({ job, onAssign, onViewDetails }: JobCardProps) {
             <Text style={styles.jobTitle} numberOfLines={1}>{job.title}</Text>
             <View style={[styles.priorityBadge, { backgroundColor: priorityConfig.color + '20' }]}>
               <Text style={[styles.priorityText, { color: priorityConfig.color }]}>
-                {priorityConfig.label}
+                {t(priorityConfig.labelKey, priorityConfig.fallback)}
               </Text>
             </View>
           </View>
@@ -155,7 +158,7 @@ function JobCard({ job, onAssign, onViewDetails }: JobCardProps) {
         <View style={[styles.statusBadge, { backgroundColor: statusConfig.color + '20' }]}>
           <Ionicons name={statusConfig.icon} size={12} color={statusConfig.color} />
           <Text style={[styles.statusText, { color: statusConfig.color }]}>
-            {statusConfig.label}
+            {t(statusConfig.labelKey, statusConfig.fallback)}
           </Text>
         </View>
 
@@ -164,7 +167,7 @@ function JobCard({ job, onAssign, onViewDetails }: JobCardProps) {
         {job.status === 'unassigned' && (
           <Pressable style={styles.assignButton} onPress={onAssign}>
             <Ionicons name="person-add" size={14} color={SemanticColors.actionPrimary} />
-            <Text style={styles.assignButtonText}>Assign</Text>
+            <Text style={styles.assignButtonText}>{t('sitelead.dispatchAssign', 'Toewijzen')}</Text>
           </Pressable>
         )}
       </View>
@@ -194,6 +197,7 @@ interface DispatchBoardProps {
 }
 
 export function DispatchBoard({ onClose }: DispatchBoardProps) {
+  const { t } = useTranslation();
   const [workers] = useState<Worker[]>(MOCK_WORKERS);
   const [jobs] = useState<DispatchJob[]>(MOCK_DISPATCH_JOBS);
   const [selectedWorker, setSelectedWorker] = useState<string | null>(null);
@@ -211,7 +215,7 @@ export function DispatchBoard({ onClose }: DispatchBoardProps) {
 
   const handleAssignJob = (jobId: string) => {
     if (!selectedWorker) {
-      Alert.alert('Select Worker', 'Please select a worker first to assign the job.');
+      Alert.alert(t('sitelead.dispatchSelectWorker', 'Selecteer medewerker'), t('sitelead.dispatchSelectWorkerDesc', 'Selecteer eerst een medewerker om de klus toe te wijzen.'));
       return;
     }
 
@@ -219,14 +223,14 @@ export function DispatchBoard({ onClose }: DispatchBoardProps) {
     const job = jobs.find((j) => j.id === jobId);
 
     Alert.alert(
-      'Assign Job',
-      `Assign "${job?.title}" to ${worker?.name}?`,
+      t('sitelead.dispatchAssignJob', 'Klus toewijzen'),
+      t('sitelead.dispatchAssignConfirm', '"{{job}}" toewijzen aan {{worker}}?', { job: job?.title, worker: worker?.name }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('sitelead.dispatchCancel', 'Annuleren'), style: 'cancel' },
         {
-          text: 'Assign',
+          text: t('sitelead.dispatchAssign', 'Toewijzen'),
           onPress: () => {
-            Alert.alert('Assigned', `Job assigned to ${worker?.name}`);
+            Alert.alert(t('sitelead.dispatchAssigned', 'Toegewezen'), t('sitelead.dispatchAssignedDesc', 'Klus toegewezen aan {{worker}}', { worker: worker?.name }));
             setSelectedWorker(null);
           },
         },
@@ -243,8 +247,8 @@ export function DispatchBoard({ onClose }: DispatchBoardProps) {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.title}>Dispatch Board</Text>
-          <Text style={styles.subtitle}>Today, Feb 1st</Text>
+          <Text style={styles.title}>{t('sitelead.dispatchTitle', 'Dispatch Overzicht')}</Text>
+          <Text style={styles.subtitle}>{t('sitelead.dispatchToday', 'Vandaag')}, 1 feb</Text>
         </View>
         <View style={styles.headerActions}>
           <Pressable
@@ -271,26 +275,26 @@ export function DispatchBoard({ onClose }: DispatchBoardProps) {
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{unassignedJobs.length}</Text>
-          <Text style={styles.statLabel}>Unassigned</Text>
+          <Text style={styles.statLabel}>{t('sitelead.dispatchUnassigned', 'Niet toegewezen')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{activeJobs.length}</Text>
-          <Text style={styles.statLabel}>In Progress</Text>
+          <Text style={styles.statLabel}>{t('sitelead.dispatchActive', 'Bezig')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{availableWorkers}</Text>
-          <Text style={styles.statLabel}>Available</Text>
+          <Text style={styles.statLabel}>{t('sitelead.dispatchAvailable', 'Beschikbaar')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{workingWorkers}</Text>
-          <Text style={styles.statLabel}>Working</Text>
+          <Text style={styles.statLabel}>{t('sitelead.dispatchWorking', 'Aan het werk')}</Text>
         </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Workers Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Team ({workers.length})</Text>
+          <Text style={styles.sectionTitle}>{t('sitelead.dispatchWorkers', 'Medewerkers')} ({workers.length})</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.workersScroll}>
             {workers.map((worker) => (
               <WorkerCard
@@ -308,7 +312,7 @@ export function DispatchBoard({ onClose }: DispatchBoardProps) {
         {unassignedJobs.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Unassigned Jobs</Text>
+              <Text style={styles.sectionTitle}>{t('sitelead.dispatchUnassignedJobs', 'Niet-toegewezen klussen')}</Text>
               <View style={styles.alertBadge}>
                 <Ionicons name="alert-circle" size={14} color={SemanticColors.feedbackError} />
                 <Text style={styles.alertBadgeText}>{unassignedJobs.length}</Text>
@@ -319,7 +323,7 @@ export function DispatchBoard({ onClose }: DispatchBoardProps) {
                 key={job.id}
                 job={job}
                 onAssign={() => handleAssignJob(job.id)}
-                onViewDetails={() => Alert.alert('Job Details', job.description)}
+                onViewDetails={() => Alert.alert(t('sitelead.dispatchJobDetails', 'Klusdetails'), job.description)}
               />
             ))}
           </View>
@@ -327,13 +331,13 @@ export function DispatchBoard({ onClose }: DispatchBoardProps) {
 
         {/* Active Jobs */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Active Jobs ({activeJobs.length})</Text>
+          <Text style={styles.sectionTitle}>{t('sitelead.dispatchActiveJobs', 'Actieve klussen')} ({activeJobs.length})</Text>
           {activeJobs.map((job) => (
             <JobCard
               key={job.id}
               job={job}
               onAssign={() => handleAssignJob(job.id)}
-              onViewDetails={() => Alert.alert('Job Details', job.description)}
+              onViewDetails={() => Alert.alert(t('sitelead.dispatchJobDetails', 'Klusdetails'), job.description)}
             />
           ))}
         </View>
@@ -341,13 +345,13 @@ export function DispatchBoard({ onClose }: DispatchBoardProps) {
         {/* Completed Today */}
         {completedJobs.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Completed Today ({completedJobs.length})</Text>
+            <Text style={styles.sectionTitle}>{t('sitelead.dispatchCompletedToday', 'Vandaag gereed')} ({completedJobs.length})</Text>
             {completedJobs.map((job) => (
               <JobCard
                 key={job.id}
                 job={job}
                 onAssign={() => {}}
-                onViewDetails={() => Alert.alert('Job Details', job.description)}
+                onViewDetails={() => Alert.alert(t('sitelead.dispatchJobDetails', 'Klusdetails'), job.description)}
               />
             ))}
           </View>
@@ -359,7 +363,7 @@ export function DispatchBoard({ onClose }: DispatchBoardProps) {
       {/* FAB - New Job */}
       <Pressable
         style={styles.fab}
-        onPress={() => Alert.alert('New Job', 'Create new dispatch job')}
+        onPress={() => Alert.alert(t('sitelead.dispatchNewJob', 'Nieuwe klus'), t('sitelead.dispatchNewJobDesc', 'Nieuwe dispatch klus aanmaken'))}
       >
         <Ionicons name="add" size={24} color="#fff" />
       </Pressable>
@@ -374,7 +378,7 @@ export function DispatchBoard({ onClose }: DispatchBoardProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.surfaceBackground,
+    backgroundColor: PAGE_BG,
   },
   header: {
     flexDirection: 'row',
@@ -388,7 +392,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   subtitle: {
@@ -403,7 +407,7 @@ const styles = StyleSheet.create({
   },
   viewToggle: {
     padding: 8,
-    borderRadius: 8,
+    borderRadius: 12,
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   viewToggleActive: {
@@ -428,11 +432,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   statValue: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   statLabel: {
@@ -457,7 +461,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
     marginBottom: Spacing.sm,
   },
@@ -472,7 +476,7 @@ const styles = StyleSheet.create({
   },
   alertBadgeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.feedbackError,
   },
 
@@ -487,10 +491,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: Spacing.md,
     marginRight: Spacing.sm,
-    borderWidth: 2,
-    borderColor: 'transparent',
   },
   workerCardSelected: {
+    borderWidth: 2,
     borderColor: SemanticColors.actionPrimary,
     backgroundColor: SemanticColors.actionPrimary + '10',
   },
@@ -509,7 +512,7 @@ const styles = StyleSheet.create({
   },
   workerInitials: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.actionPrimary,
   },
   workerInfo: {
@@ -518,7 +521,7 @@ const styles = StyleSheet.create({
   },
   workerName: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   workerTrade: {
@@ -562,7 +565,7 @@ const styles = StyleSheet.create({
   },
   workerRate: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
     marginLeft: 'auto',
   },
@@ -586,7 +589,7 @@ const styles = StyleSheet.create({
   },
   jobTime: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   jobDuration: {
@@ -606,7 +609,7 @@ const styles = StyleSheet.create({
   },
   jobTitle: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
     flex: 1,
   },
@@ -617,7 +620,7 @@ const styles = StyleSheet.create({
   },
   priorityText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
   jobLocationRow: {
     flexDirection: 'row',
@@ -657,11 +660,11 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
   jobValue: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
     marginLeft: 'auto',
   },
@@ -676,7 +679,7 @@ const styles = StyleSheet.create({
   },
   assignButtonText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.actionPrimary,
   },
   assignedWorkers: {
@@ -693,7 +696,7 @@ const styles = StyleSheet.create({
   },
   assignedWorkerText: {
     fontSize: 11,
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
     color: SemanticColors.feedbackInfo,
   },
 

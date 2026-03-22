@@ -24,6 +24,11 @@ const DEFAULT_THRESHOLDS: Record<MetricKey, number> = {
   quoteMedian: 0,            // not used for alerting
   customerOverdueRate: 0.3,  // alert if >30% overdue rate
   jobMargin: 0.15,           // alert if margin <15%
+  // Site lead metrics
+  workforceUtilization: 70,  // alert if below 70%
+  incidentRate: 3,           // alert if >3 per week
+  defectCount: 10,           // alert if >10 open
+  inspectionScore: 80,       // alert if below 80%
 };
 
 // Metrics where LOWER values are bad (alert when below threshold)
@@ -63,19 +68,34 @@ export function getAdaptiveThreshold(
     };
   }
 
-  const values = snapshots.map(s => s.value);
-  const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
-  const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / values.length;
+  // --- Seasonality: prefer month-specific stats when available ---
+  const currentMonth = new Date().getMonth();
+  const monthSnapshots = snapshots.filter(s => {
+    const recorded = new Date(s.recordedAt);
+    return recorded.getMonth() === currentMonth;
+  });
+
+  const useMonthly = monthSnapshots.length >= 2;
+  const baseSnapshots = useMonthly ? monthSnapshots : snapshots;
+
+  // --- Outlier filtering: IQR method (remove values > 3 stddev from median) ---
+  const filteredValues = removeOutliers(baseSnapshots.map(s => s.value));
+
+  const mean = filteredValues.reduce((sum, v) => sum + v, 0) / filteredValues.length;
+  const variance = filteredValues.reduce((sum, v) => sum + (v - mean) ** 2, 0) / filteredValues.length;
   const stddev = Math.sqrt(variance);
 
+  // --- Adaptive sigma: increase if contractor frequently dismisses alerts ---
+  const sigma = getAdaptiveSigma(profile, metric);
+
   // For "higher is bad" metrics (dso, marginLeakage, idlePercent, overdueAmount):
-  //   threshold = mean + 1 stddev
+  //   threshold = mean + sigma * stddev
   // For "lower is bad" metrics (estimationAccuracy, complianceScore, capacityUtilization):
-  //   threshold = mean - 1 stddev
+  //   threshold = mean - sigma * stddev
   const isLowerBad = LOWER_IS_BAD.includes(metric);
   const threshold = isLowerBad
-    ? mean - stddev
-    : mean + stddev;
+    ? mean - sigma * stddev
+    : mean + sigma * stddev;
 
   return {
     metric,
@@ -83,8 +103,53 @@ export function getAdaptiveThreshold(
     isAdaptive: true,
     mean,
     stddev,
-    dataPoints: snapshots.length,
+    dataPoints: filteredValues.length,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Outlier removal: exclude values beyond 3 stddev from median (IQR-inspired)
+// ---------------------------------------------------------------------------
+function removeOutliers(values: number[]): number[] {
+  if (values.length < 4) return values;
+
+  const sorted = [...values].sort((a, b) => a - b);
+  const q1 = sorted[Math.floor(sorted.length * 0.25)];
+  const q3 = sorted[Math.floor(sorted.length * 0.75)];
+  const iqr = q3 - q1;
+
+  // Use 3x IQR as outlier fence (generous — only removes extreme outliers)
+  const lowerFence = q1 - 3 * iqr;
+  const upperFence = q3 + 3 * iqr;
+
+  const filtered = values.filter(v => v >= lowerFence && v <= upperFence);
+  // Safety: never filter away everything
+  return filtered.length >= 2 ? filtered : values;
+}
+
+// ---------------------------------------------------------------------------
+// Adaptive sigma: if contractor dismisses alerts frequently, widen threshold
+// ---------------------------------------------------------------------------
+function getAdaptiveSigma(profile: ContractorLearningProfile, metric: MetricKey): number {
+  const baseSigma = 1.0;
+
+  // Count recent dismissals of insights related to this metric (last 30 days)
+  const now = Date.now();
+  const thirtyDaysAgo = now - 30 * 86400000;
+  const recentDismissals = profile.insightInteractions.filter(i => {
+    if (i.action !== 'dismissed' && i.action !== 'ignored') return false;
+    const ts = new Date(i.timestamp).getTime();
+    if (ts < thirtyDaysAgo) return false;
+    // Match generators that relate to this metric by convention
+    // Generator IDs often contain the metric name or a related keyword
+    const gen = i.generatorId.toLowerCase();
+    const metricLower = metric.toLowerCase();
+    return gen.includes(metricLower) || gen.includes(metric.replace(/([A-Z])/g, '-$1').toLowerCase());
+  }).length;
+
+  // Each dismissal adds 0.1 sigma, capped at +1.0 (so max sigma = 2.0)
+  const dismissalBoost = Math.min(1.0, recentDismissals * 0.1);
+  return baseSigma + dismissalBoost;
 }
 
 export function isAboveThreshold(
@@ -137,6 +202,11 @@ const SEASONAL_MULTIPLIERS: Record<MetricKey, number[]> = {
   quoteMedian:           [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
   customerOverdueRate:   [1.10, 1.05, 1.0, 0.95, 0.90, 0.90, 0.95, 1.0, 1.0, 1.05, 1.10, 1.15],
   jobMargin:             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+  // Site lead metrics — no strong seasonal pattern
+  workforceUtilization:  [0.90, 0.95, 1.0, 1.05, 1.05, 1.05, 1.0, 1.0, 1.0, 1.0, 0.95, 0.90],
+  incidentRate:          [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+  defectCount:           [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+  inspectionScore:       [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
 };
 
 /**

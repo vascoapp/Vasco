@@ -1,3 +1,4 @@
+import '../src/i18n/i18n';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -6,10 +7,22 @@ import {
   Inter_500Medium,
   Inter_600SemiBold,
   Inter_700Bold,
-  useFonts,
 } from '@expo-google-fonts/inter';
+import {
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+  useFonts,
+} from '@expo-google-fonts/manrope';
 import { AppStateProvider } from '../src/state/AppState';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
+import ErrorBoundary from '../src/components/shared/ErrorBoundary';
+import { startAutoSync, stopAutoSync } from '../src/intelligence/cloudSync';
+import { startEventFlushing, stopEventFlushing } from '../src/intelligence/dataCollector';
+import { registerForPushNotifications } from '../src/services/pushNotificationService';
+import { startBackgroundJobScheduler, stopBackgroundJobScheduler } from '../src/intelligence/backgroundJobScheduler';
 
 // Enterprise roles use the (tabs) layout
 const ENTERPRISE_ROLES = ['cfo', 'coo', 'site-lead', 'director'];
@@ -19,9 +32,22 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
 
+  // Start cloud sync when authenticated
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      startAutoSync(user.id, user.role ?? 'contractor', user.trade, user.country);
+      startEventFlushing(user.id);
+      registerForPushNotifications().catch(() => {});
+      // Start EVE-style background job scheduler (audits + morning briefing)
+      startBackgroundJobScheduler(() => ({ invoices: [], quotes: [], jobs: [] })); // AppState not accessible here; will be populated on Vandaag mount
+      return () => { stopAutoSync(); stopEventFlushing(); stopBackgroundJobScheduler(); };
+    }
+  }, [isAuthenticated, user?.id]);
+
   useEffect(() => {
     const inAuthGroup = segments[0] === 'login';
     const inCustomerPortal = segments[0] === 'customer';
+    const inOnboarding = segments[0] === 'onboarding';
 
     // Customer portal is public - no auth required
     if (inCustomerPortal) {
@@ -36,10 +62,10 @@ function RootLayoutNav() {
       const isEnterprise = user?.role && ENTERPRISE_ROLES.includes(user.role);
 
       if (isEnterprise) {
-        // Enterprise users (CFO/COO/Site Lead) go to project software
         router.replace('/(tabs)');
+      } else if (user?.onboardingComplete === false) {
+        router.replace('/onboarding');
       } else {
-        // Solo contractors go to contractor app (default experience)
         router.replace('/(contractor)');
       }
     }
@@ -48,6 +74,7 @@ function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="login" />
+      <Stack.Screen name="onboarding" />
       <Stack.Screen name="(contractor)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="contractor" />
@@ -59,6 +86,7 @@ function RootLayoutNav() {
       <Stack.Screen name="(modals)/pdf" options={{ presentation: 'modal' }} />
       <Stack.Screen name="(modals)/mollie" options={{ presentation: 'modal' }} />
       <Stack.Screen name="(modals)/moneybird" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="(modals)/moneybird-auth" options={{ presentation: 'modal' }} />
       <Stack.Screen name="(modals)/business-settings" options={{ presentation: 'modal' }} />
       <Stack.Screen name="(modals)/customers" options={{ presentation: 'modal' }} />
     </Stack>
@@ -71,6 +99,11 @@ export default function RootLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
   });
 
   if (!fontsLoaded) {
@@ -81,7 +114,9 @@ export default function RootLayout() {
     <AuthProvider>
       <AppStateProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <RootLayoutNav />
+          <ErrorBoundary>
+            <RootLayoutNav />
+          </ErrorBoundary>
         </GestureHandlerRootView>
       </AppStateProvider>
     </AuthProvider>

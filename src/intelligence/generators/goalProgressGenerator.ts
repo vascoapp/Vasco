@@ -6,6 +6,7 @@ import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types'
 import { useSavingsAggregation } from '../../services/savingsAggregatorService';
 import { logPrediction } from '../calibration';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
+import { gt } from '../generatorTranslations';
 
 export const goalProgressGenerator: InsightGenerator = {
   id: 'goal-progress',
@@ -53,7 +54,7 @@ export function useGoalProgressInsight(ctx: GeneratorContext): ScoredInsight | n
     icon: isOnTrack ? 'trophy' : 'flag',
     actionLabel: isOnTrack ? undefined : 'Bekijk kansen',
     actionRoute: isOnTrack ? undefined : '/(contractor)/besparen',
-    source: 'Besparingsdoel',
+    source: gt('source_savings', ctx.language),
     metric: {
       label: 'Voortgang',
       value: `${progressPercent}%`,

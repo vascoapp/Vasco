@@ -9,6 +9,8 @@ import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
 import { useAppState } from '../../src/state/AppState';
 import { hapticError, hapticSuccess } from '../../src/utils/haptics';
+import { generateInvoicePdf } from '../../src/services/invoicePdfService';
+import { invoiceAutomationService } from '../../src/services/invoiceAutomationService';
 
 export default function InvoiceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -104,7 +106,13 @@ export default function InvoiceDetailScreen() {
         </View>
 
         <View style={styles.actions}>
-          <PrimaryButton label="Generate PDF" onPress={() => router.push('/(modals)/pdf?source=invoice')} />
+          <PrimaryButton label="PDF bekijken & delen" onPress={async () => {
+            hapticSuccess();
+            const autoInv = invoiceAutomationService.getInvoice(invoice.id);
+            if (autoInv) {
+              await generateInvoicePdf(autoInv);
+            }
+          }} />
           <PrimaryButton
             label={mollieConnected ? 'Create iDEAL link' : 'Connect Mollie'}
             onPress={() =>

@@ -10,7 +10,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Modal,
   TextInput,
 } from 'react-native';
@@ -159,7 +159,7 @@ export function ProjectPlanner() {
 
   const renderPredictTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <TouchableOpacity
+      <Pressable
         style={styles.predictButton}
         onPress={() => setShowPredictModal(true)}
       >
@@ -171,7 +171,7 @@ export function ProjectPlanner() {
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={20} color={SemanticColors.textSecondary} />
-      </TouchableOpacity>
+      </Pressable>
 
       {prediction ? (
         renderPredictionCard(prediction)
@@ -310,7 +310,7 @@ export function ProjectPlanner() {
   );
 
   const renderTemplateCard = (template: ProjectTemplate) => (
-    <TouchableOpacity key={template.id} style={styles.templateCard}>
+    <Pressable key={template.id} style={styles.templateCard}>
       <View style={styles.templateHeader}>
         <View style={styles.templateIcon}>
           <Ionicons name="document-text-outline" size={24} color={Palette.blue500} />
@@ -352,11 +352,11 @@ export function ProjectPlanner() {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.useTemplateButton}>
+      <Pressable style={styles.useTemplateButton}>
         <Text style={styles.useTemplateText}>Gebruik template</Text>
         <Ionicons name="arrow-forward" size={16} color={Palette.blue500} />
-      </TouchableOpacity>
-    </TouchableOpacity>
+      </Pressable>
+    </Pressable>
   );
 
   const renderTemplatesTab = () => (
@@ -374,7 +374,7 @@ export function ProjectPlanner() {
       {/* Tabs */}
       <View style={styles.tabBar}>
         {tabs.map((tab) => (
-          <TouchableOpacity
+          <Pressable
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.activeTab]}
             onPress={() => setActiveTab(tab.key)}
@@ -387,7 +387,7 @@ export function ProjectPlanner() {
             <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
               {tab.label}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 
@@ -406,13 +406,13 @@ export function ProjectPlanner() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowPredictModal(false)}>
+            <Pressable onPress={() => setShowPredictModal(false)}>
               <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
-            </TouchableOpacity>
+            </Pressable>
             <Text style={styles.modalTitle}>Project voorspellen</Text>
-            <TouchableOpacity onPress={handlePredict}>
+            <Pressable onPress={handlePredict}>
               <Text style={styles.modalAction}>Voorspel</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           <ScrollView style={styles.modalContent}>
@@ -420,7 +420,7 @@ export function ProjectPlanner() {
             <Text style={styles.inputLabel}>Type project</Text>
             <View style={styles.typeGrid}>
               {projectTypes.map((type) => (
-                <TouchableOpacity
+                <Pressable
                   key={type}
                   style={[styles.typeOption, selectedProjectType === type && styles.typeOptionSelected]}
                   onPress={() => setSelectedProjectType(type)}
@@ -428,7 +428,7 @@ export function ProjectPlanner() {
                   <Text style={[styles.typeOptionText, selectedProjectType === type && styles.typeOptionTextSelected]}>
                     {type}
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               ))}
             </View>
 
@@ -436,7 +436,7 @@ export function ProjectPlanner() {
             <Text style={styles.inputLabel}>Omvang</Text>
             <View style={styles.scopeOptions}>
               {scopes.map((scope) => (
-                <TouchableOpacity
+                <Pressable
                   key={scope.key}
                   style={[styles.scopeOption, selectedScope === scope.key && styles.scopeOptionSelected]}
                   onPress={() => setSelectedScope(scope.key)}
@@ -447,12 +447,12 @@ export function ProjectPlanner() {
                   <Text style={[styles.scopeDesc, selectedScope === scope.key && styles.scopeDescSelected]}>
                     {scope.description}
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               ))}
             </View>
 
             {/* Outdoor Toggle */}
-            <TouchableOpacity
+            <Pressable
               style={styles.outdoorToggle}
               onPress={() => setIsOutdoor(!isOutdoor)}
             >
@@ -465,7 +465,7 @@ export function ProjectPlanner() {
                 <Text style={styles.outdoorLabel}>Buitenwerk</Text>
                 <Text style={styles.outdoorHint}>Weersafhankelijke werkzaamheden</Text>
               </View>
-            </TouchableOpacity>
+            </Pressable>
           </ScrollView>
         </View>
       </Modal>

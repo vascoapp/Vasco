@@ -1,5 +1,5 @@
 // Job Detail Screen - Full job view with actions, photos, time, materials
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Palette, SemanticColors } from '../../theme/colors';
@@ -12,6 +12,8 @@ import { useAppState } from '../../state/AppState';
 import { InlineInsight, VascoInsightCard } from '../shared/VascoInsightCard';
 import { useInlineInsight, useVascoGuidance } from '../../services/vascoGuidanceService';
 import { AddJobMaterialModal } from './AddJobMaterialModal';
+import { getNextAction as getLoopNextAction, getStageLabel, getLoopProgress, type LoopStage } from '../../services/accountingLoopService';
+import { getAIRecommendation } from '../../intelligence/loopIntelligence';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -23,6 +25,7 @@ interface JobDetailScreenProps {
   onClockIn?: (jobId: string) => void;
   onClockOut?: (jobId: string) => void;
   onAddMaterial?: (jobId: string) => void;
+  onNavigateToInvoice?: (jobId: string) => void;
 }
 
 export function JobDetailScreen({
@@ -33,10 +36,12 @@ export function JobDetailScreen({
   onClockIn,
   onClockOut,
   onAddMaterial,
+  onNavigateToInvoice,
 }: JobDetailScreenProps) {
   const { customers, jobMaterials: jobMaterialsMap, materials: materialCatalog, suppliers } = useAppState();
   const [activeTab, setActiveTab] = useState<'details' | 'photos' | 'time' | 'materials'>('details');
   const [showAddMaterial, setShowAddMaterial] = useState(false);
+  const [loopRecommendation, setLoopRecommendation] = useState<{ message: string; priority: 'low' | 'medium' | 'high'; actionLabel?: string } | null>(null);
 
   // AI guidance
   const overviewInsight = useInlineInsight('contractor', 'job-detail', 'overview');
@@ -46,6 +51,23 @@ export function JobDetailScreen({
 
   const customer = customers.find((c) => c.id === job.customerId);
   const statusConfig = JOB_STATUS_CONFIG[job.status];
+
+  // Map job status to accounting loop stage for AI recommendation
+  const statusToStage: Record<string, LoopStage> = {
+    'lead': 'quote_created', 'quoted': 'quote_sent', 'accepted': 'quote_accepted',
+    'scheduled': 'job_scheduled', 'in-progress': 'job_in_progress', 'completed': 'job_completed',
+    'invoiced': 'invoice_sent', 'paid': 'payment_received',
+  };
+  const loopStage = statusToStage[job.status] ?? 'quote_created';
+
+  // Fetch async AI recommendation
+  useEffect(() => {
+    getAIRecommendation({
+      jobId: job.id, customerId: job.customerId, currentStage: loopStage,
+      history: [{ stage: loopStage, timestamp: job.updatedAt || job.createdAt || new Date().toISOString() }],
+      amounts: { quoted: job.quotedAmount || 0, agreed: job.agreedAmount || 0, invoiced: 0, paid: 0 },
+    }).then(setLoopRecommendation).catch(() => {});
+  }, [job.id, job.status]);
 
   // Typed job materials from AppState
   const typedJobMaterials = jobMaterialsMap[job.id] ?? [];
@@ -80,14 +102,33 @@ export function JobDetailScreen({
   const handleAdvanceStatus = () => {
     const nextStatus = getNextStatus();
     if (nextStatus && onStatusChange) {
-      Alert.alert(
-        'Update Status',
-        `Move job to "${JOB_STATUS_CONFIG[nextStatus].label}"?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Confirm', onPress: () => onStatusChange(job.id, nextStatus) },
-        ]
-      );
+      if (nextStatus === 'completed' || nextStatus === 'invoiced') {
+        Alert.alert(
+          'Klus afgerond!',
+          'Factuur aanmaken?',
+          [
+            { text: 'Later', style: 'cancel', onPress: () => onStatusChange(job.id, nextStatus) },
+            {
+              text: 'Factureer nu',
+              onPress: () => {
+                onStatusChange(job.id, nextStatus);
+                if (onNavigateToInvoice) {
+                  onNavigateToInvoice(job.id);
+                }
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert(
+          'Update Status',
+          `Move job to "${JOB_STATUS_CONFIG[nextStatus].label}"?`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Confirm', onPress: () => onStatusChange(job.id, nextStatus) },
+          ]
+        );
+      }
     }
   };
 
@@ -116,6 +157,38 @@ export function JobDetailScreen({
           </Text>
         </View>
       </View>
+
+      {/* Accounting Loop — next step banner */}
+      {(() => {
+        const nextAction = getLoopNextAction(loopStage);
+        const progress = getLoopProgress({
+          jobId: job.id, customerId: job.customerId, currentStage: loopStage,
+          history: [{ stage: loopStage, timestamp: new Date().toISOString() }],
+          amounts: { quoted: job.quotedAmount || 0, agreed: job.agreedAmount || 0, invoiced: 0, paid: 0 },
+        });
+        return nextAction ? (
+          <View style={styles.loopBanner}>
+            <View style={styles.loopProgress}>
+              <View style={[styles.loopProgressFill, { width: `${progress.percent}%` }]} />
+            </View>
+            <View style={styles.loopRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.loopStage}>{getStageLabel(loopStage)}</Text>
+                {loopRecommendation ? (
+                  <Text style={styles.loopHint}>{loopRecommendation.message}</Text>
+                ) : (
+                  <Text style={styles.loopHint}>Volgende: {nextAction}</Text>
+                )}
+              </View>
+              {loopRecommendation?.actionLabel && (
+                <Pressable style={styles.loopAction} onPress={handleAdvanceStatus}>
+                  <Text style={styles.loopActionText}>{loopRecommendation.actionLabel}</Text>
+                </Pressable>
+              )}
+            </View>
+          </View>
+        ) : null;
+      })()}
 
       {/* Quick Actions Bar */}
       <View style={styles.quickActions}>
@@ -244,6 +317,14 @@ export function JobDetailScreen({
       />
 
       {/* Bottom Summary */}
+      {!!(job.quotedAmount && job.agreedAmount && job.agreedAmount < job.quotedAmount * 0.85 && (job.status === 'completed' || job.status === 'invoiced')) && (
+        <View style={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.xs }}>
+          <Text style={{ color: SemanticColors.feedbackWarning, fontSize: 13, lineHeight: 18 }}>
+            <Ionicons name="alert-circle" size={13} color={SemanticColors.feedbackWarning} />{' '}
+            Let op: deze klus is {Math.round((1 - job.agreedAmount / job.quotedAmount) * 100)}% onder de offerte afgesloten. Reden loggen helpt toekomstige schattingen.
+          </Text>
+        </View>
+      )}
       <View style={styles.bottomSummary}>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryLabel}>Quoted</Text>
@@ -730,6 +811,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: SemanticColors.surfaceBackground,
   },
+  // Accounting loop banner
+  loopBanner: { marginHorizontal: Spacing.md, marginBottom: Spacing.sm, gap: 6 },
+  loopProgress: { height: 3, backgroundColor: SemanticColors.borderDefault, borderRadius: 1.5, overflow: 'hidden' },
+  loopProgressFill: { height: 3, backgroundColor: Palette.hermesOrange, borderRadius: 1.5 },
+  loopRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  loopStage: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
+  loopHint: { fontSize: 12, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
+  loopAction: { backgroundColor: Palette.hermesOrange, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  loopActionText: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: '#fff' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

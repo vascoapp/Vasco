@@ -1,123 +1,90 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  Alert,
+  Pressable,
+  RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Spacing } from '../../src/theme/spacing';
+import { SemanticColors, Palette } from '../../src/theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
+import { Spacing, SafeArea } from '../../src/theme/spacing';
+import { hapticSuccess } from '../../src/utils/haptics';
+import { useDefects } from '../../src/services/siteLeadDataService';
+import { useTranslation } from 'react-i18next';
+import { FadeIn } from '../../src/components/shared/FadeIn';
+import { InlineInsight } from '../../src/components/shared/VascoInsightCard';
+import { useInlineInsight } from '../../src/services/vascoGuidanceService';
 
 type Severity = 'alle' | 'hoog' | 'middel' | 'laag';
 
-interface Defect {
-  id: string;
-  title: string;
-  location: string;
-  severity: 'hoog' | 'middel' | 'laag';
-  trade: string;
-  date: string;
-  desc: string;
-}
-
-const MOCK_DEFECTS: Defect[] = [
-  {
-    id: 'd1',
-    title: 'Lekkage CV-leiding',
-    location: 'Blok B - Verdieping 1',
-    severity: 'hoog',
-    trade: 'Loodgieter',
-    date: '05-02-2026',
-    desc: 'Lekkage bij koppeling CV-leiding badkamer',
-  },
-  {
-    id: 'd2',
-    title: 'Scheuren in stucwerk',
-    location: 'Blok A - Begane grond',
-    severity: 'middel',
-    trade: 'Stukadoor',
-    date: '04-02-2026',
-    desc: 'Haarscheuren in nieuw stucwerk hal',
-  },
-  {
-    id: 'd3',
-    title: 'Stopcontact los',
-    location: 'Blok C - Verdieping 3',
-    severity: 'laag',
-    trade: 'Elektricien',
-    date: '03-02-2026',
-    desc: 'Stopcontact bij bureau zit los in muur',
-  },
-  {
-    id: 'd4',
-    title: 'Kozijn klemt',
-    location: 'Blok A - Verdieping 2',
-    severity: 'middel',
-    trade: 'Timmerman',
-    date: '02-02-2026',
-    desc: 'Raamkozijn slaapkamer sluit niet goed',
-  },
-  {
-    id: 'd5',
-    title: 'Waterdruk te laag',
-    location: 'Blok B - Verdieping 2',
-    severity: 'hoog',
-    trade: 'Loodgieter',
-    date: '01-02-2026',
-    desc: 'Waterdruk onvoldoende in badkamer',
-  },
-];
-
 export default function CloseDefectScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
+  const inlineTip = useInlineInsight('sitelead', 'close-defect', 'overview');
   const [filter, setFilter] = useState<Severity>('alle');
-  const [defects, setDefects] = useState<Defect[]>(MOCK_DEFECTS);
+  const { defects: allDefects, closeDefect } = useDefects('open');
 
   const getSeverityColor = (severity: 'hoog' | 'middel' | 'laag') => {
     switch (severity) {
       case 'hoog':
-        return '#DC2626';
+        return SemanticColors.feedbackError;
       case 'middel':
-        return '#F59E0B';
+        return SemanticColors.feedbackWarning;
       case 'laag':
-        return '#10B981';
+        return SemanticColors.feedbackSuccess;
     }
   };
 
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
+  }, []);
+
   const handleResolve = (defectId: string) => {
-    Alert.alert('Gebrek Gesloten', 'Het gebrek is als opgelost gemarkeerd.', [
-      {
-        text: 'OK',
-        onPress: () => {
-          setDefects((prev) => prev.filter((d) => d.id !== defectId));
-        },
-      },
-    ]);
+    hapticSuccess();
+    closeDefect(defectId);
   };
 
-  const filteredDefects =
-    filter === 'alle'
-      ? defects
-      : defects.filter((d) => d.severity === filter);
+  const filteredDefects = useMemo(
+    () => filter === 'alle' ? allDefects : allDefects.filter((d) => d.severity === filter),
+    [filter, allDefects],
+  );
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#2D2926" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Sluit Gebrek</Text>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+        </Pressable>
+        <Text style={styles.headerTitle}>{t('sitelead.closeDefectTitle', 'Sluit Gebrek')}</Text>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />}
+      >
+        {inlineTip && <InlineInsight icon={inlineTip.icon as any} message={inlineTip.message} />}
+
+        <FadeIn delay={0} duration={400}>
         {/* Filter Chips */}
         <View style={styles.filterRow}>
-          {(['alle', 'hoog', 'middel', 'laag'] as Severity[]).map((f) => (
-            <TouchableOpacity
+          {(['alle', 'hoog', 'middel', 'laag'] as Severity[]).map((f) => {
+            const filterLabels: Record<Severity, string> = {
+              'alle': t('sitelead.closeDefectFilterAll', 'Alle'),
+              'hoog': t('sitelead.closeDefectFilterHigh', 'Hoog'),
+              'middel': t('sitelead.closeDefectFilterMedium', 'Middel'),
+              'laag': t('sitelead.closeDefectFilterLow', 'Laag'),
+            };
+            return (
+            <Pressable
               key={f}
               style={[
                 styles.filterChip,
@@ -131,18 +98,19 @@ export default function CloseDefectScreen() {
                   filter === f && styles.filterChipTextActive,
                 ]}
               >
-                {f.charAt(0).toUpperCase() + f.slice(1)}
+                {filterLabels[f]}
               </Text>
-            </TouchableOpacity>
-          ))}
+            </Pressable>
+            );
+          })}
         </View>
 
         {/* Defects List */}
         <View style={styles.defectsList}>
           {filteredDefects.length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="checkmark-circle-outline" size={48} color="#8A7E76" />
-              <Text style={styles.emptyStateText}>Geen openstaande gebreken</Text>
+              <Ionicons name="checkmark-circle-outline" size={48} color={SemanticColors.textSecondary} />
+              <Text style={styles.emptyStateText}>{t('sitelead.closeDefectEmpty', 'Geen openstaande gebreken')}</Text>
             </View>
           ) : (
             filteredDefects.map((defect) => (
@@ -161,11 +129,28 @@ export default function CloseDefectScreen() {
                 </View>
 
                 <Text style={styles.defectLocation}>
-                  <Ionicons name="location-outline" size={14} color="#8A7E76" />{' '}
+                  <Ionicons name="location-outline" size={14} color={SemanticColors.textSecondary} />{' '}
                   {defect.location}
                 </Text>
 
-                <Text style={styles.defectDesc}>{defect.desc}</Text>
+                <Text style={styles.defectDesc}>{defect.description}</Text>
+
+                {defect.photos && defect.photos.length > 0 && (
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.photoRow}
+                    contentContainerStyle={styles.photoRowContent}
+                  >
+                    {defect.photos.map((uri, idx) => (
+                      <Image
+                        key={`${defect.id}-photo-${idx}`}
+                        source={{ uri }}
+                        style={styles.photoThumb}
+                      />
+                    ))}
+                  </ScrollView>
+                )}
 
                 <View style={styles.defectFooter}>
                   <View style={styles.tradeTag}>
@@ -173,14 +158,14 @@ export default function CloseDefectScreen() {
                     <Text style={styles.tradeText}>{defect.trade}</Text>
                   </View>
 
-                  <TouchableOpacity
+                  <Pressable
                     style={styles.resolveButton}
                     onPress={() => handleResolve(defect.id)}
                   >
                     <Text style={styles.resolveButtonText}>
-                      Markeer als opgelost
+                      {t('sitelead.closeDefectResolve', 'Markeer als opgelost')}
                     </Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
               </View>
             ))
@@ -188,6 +173,7 @@ export default function CloseDefectScreen() {
         </View>
 
         <View style={{ height: Spacing.xl }} />
+        </FadeIn>
       </ScrollView>
     </View>
   );
@@ -196,28 +182,23 @@ export default function CloseDefectScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF6F1',
+    backgroundColor: PAGE_BG,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xl + 20,
-    paddingBottom: Spacing.lg,
-    backgroundColor: '#FFFDF9',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
+    paddingHorizontal: SafeArea.side,
+    paddingTop: SafeArea.top,
+    paddingBottom: Spacing.sm,
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   backButton: {
     marginRight: Spacing.md,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#2D2926',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
   },
   content: {
     flex: 1,
@@ -232,24 +213,19 @@ const styles = StyleSheet.create({
   filterChip: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    borderRadius: 20,
-    backgroundColor: '#FFFDF9',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    borderRadius: RADIUS.xl,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   filterChipActive: {
-    backgroundColor: '#D2691E',
+    backgroundColor: Palette.hermesOrange,
   },
   filterChipText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#8A7E76',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textSecondary,
   },
   filterChipTextActive: {
-    color: '#FFFDF9',
+    color: Palette.white,
   },
   defectsList: {
     gap: Spacing.md,
@@ -259,19 +235,14 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xxl * 2,
   },
   emptyStateText: {
-    fontSize: 16,
-    color: '#8A7E76',
+    fontSize: TYPE.titleSize,
+    color: SemanticColors.textSecondary,
     marginTop: Spacing.md,
   },
   defectCard: {
-    backgroundColor: '#FFFDF9',
-    borderRadius: 12,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md,
     padding: Spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
   },
   defectHeader: {
     flexDirection: 'row',
@@ -291,25 +262,37 @@ const styles = StyleSheet.create({
     marginRight: Spacing.sm,
   },
   defectTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2D2926',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
     flex: 1,
   },
   defectDate: {
-    fontSize: 13,
-    color: '#8A7E76',
+    fontSize: TYPE.captionSize,
+    color: SemanticColors.textSecondary,
   },
   defectLocation: {
-    fontSize: 14,
-    color: '#8A7E76',
+    fontSize: TYPE.bodySize,
+    color: SemanticColors.textSecondary,
     marginBottom: Spacing.sm,
   },
   defectDesc: {
-    fontSize: 14,
-    color: '#2D2926',
+    fontSize: TYPE.bodySize,
+    color: SemanticColors.textPrimary,
     lineHeight: 20,
     marginBottom: Spacing.md,
+  },
+  photoRow: {
+    marginBottom: Spacing.md,
+  },
+  photoRowContent: {
+    gap: 8,
+  },
+  photoThumb: {
+    width: 40,
+    height: 40,
+    borderRadius: RADIUS.sm,
+    backgroundColor: SemanticColors.surfaceSecondary,
   },
   defectFooter: {
     flexDirection: 'row',
@@ -320,26 +303,26 @@ const styles = StyleSheet.create({
   tradeTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F0EAE2',
+    backgroundColor: SemanticColors.surfaceSecondary,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     gap: 4,
   },
   tradeText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#D2691E',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
+    color: Palette.hermesOrange,
   },
   resolveButton: {
-    backgroundColor: '#D2691E',
+    backgroundColor: Palette.hermesOrange,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   resolveButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#FFFDF9',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.white,
   },
 });

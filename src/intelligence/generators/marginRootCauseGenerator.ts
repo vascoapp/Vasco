@@ -14,6 +14,7 @@ import { useEstimationAccuracy } from '../../services/estimationFeedbackService'
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { logPrediction } from '../calibration';
 import { isAboveThreshold, getAdaptiveThreshold } from '../adaptiveThresholds';
+import { gt } from '../generatorTranslations';
 
 export function useMarginRootCauseInsight(ctx: GeneratorContext): ScoredInsight | null {
   const costSummary = useJobCostSummary();
@@ -52,7 +53,7 @@ export function useMarginRootCauseInsight(ctx: GeneratorContext): ScoredInsight 
       id: 'estimation',
       label: 'Schatfouten',
       amount: Math.round(estImpact),
-      explanation: `Schattingsnauwkeurigheid ${estimation.overallScore}% — uren afwijking ${estimation.averageHoursDeviation > 0 ? '+' : ''}${estimation.averageHoursDeviation.toFixed(1)}%, materiaal afwijking ${estimation.averageMaterialDeviation > 0 ? '+' : ''}${estimation.averageMaterialDeviation.toFixed(1)}%`,
+      explanation: `Schattingsnauwkeurigheid ${estimation.overallScore}% — uren afwijking ${estimation.averageHoursDeviation > 0 ? '+' : ''}${estimation.averageHoursDeviation.toFixed(1)}%, materiaal hoeveelheid ${estimation.averageMaterialQuantityDeviation > 0 ? '+' : ''}${estimation.averageMaterialQuantityDeviation.toFixed(1)}%, materiaal prijs ${estimation.averageMaterialPriceDeviation > 0 ? '+' : ''}${estimation.averageMaterialPriceDeviation.toFixed(1)}%`,
     });
   }
 
@@ -103,7 +104,7 @@ export function useMarginRootCauseInsight(ctx: GeneratorContext): ScoredInsight 
     icon: 'git-branch',
     actionLabel: 'Analyseer',
     actionRoute: '/(contractor)/decisions',
-    source: 'Cross-Service Analyse',
+    source: gt('source_cross_service', ctx.language),
     metric: {
       label: 'Marge-lek',
       value: `€${costSummary.totalMarginLeakage.toLocaleString('nl-NL')}`,

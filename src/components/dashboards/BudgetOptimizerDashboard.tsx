@@ -699,7 +699,7 @@ export default function BudgetOptimizerDashboard({
       {/* Inkoop kansen link */}
       <Pressable
         style={[styles.card, styles.enrichLinkCard]}
-        onPress={() => router.push('/contractor/purchasing' as any)}
+        onPress={() => router.push('/contractor/purchase-orders' as any)}
       >
         <View style={[styles.enrichIconBox, { backgroundColor: SemanticColors.feedbackSuccess + '15' }]}>
           <Ionicons name="cart" size={18} color={SemanticColors.feedbackSuccess} />
@@ -714,7 +714,7 @@ export default function BudgetOptimizerDashboard({
       {/* Benchmarking link */}
       <Pressable
         style={[styles.card, styles.enrichLinkCard]}
-        onPress={() => router.push('/contractor/benchmark' as any)}
+        onPress={() => router.push('/contractor/market-prices' as any)}
       >
         <View style={[styles.enrichIconBox, { backgroundColor: ACCENT + '15' }]}>
           <Ionicons name="bar-chart" size={18} color={ACCENT} />

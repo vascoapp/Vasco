@@ -11,69 +11,42 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { HandoverPackBuilder } from '../../../src/components/contractor/HandoverPackBuilder';
 import { SemanticColors } from '../../../src/theme/colors';
 import { Spacing } from '../../../src/theme/spacing';
+import { useAppState } from '../../../src/state/AppState';
 import type { HandoverPackage } from '../../../src/types/contractor';
-
-// Mock job data - in real app this would come from a job service
-const MOCK_JOBS: Record<string, {
-  id: string;
-  title: string;
-  customerName: string;
-  customerEmail: string;
-  address: string;
-  agreedAmount: number;
-  description: string;
-}> = {
-  'job-001': {
-    id: 'job-001',
-    title: 'Kitchen Renovation',
-    customerName: 'Van der Berg Family',
-    customerEmail: 'info@vanderberg.nl',
-    address: 'Keizersgracht 123, Amsterdam',
-    agreedAmount: 2450.00,
-    description: 'Complete kitchen renovation including cabinets, countertops, and appliance installation',
-  },
-  'job-002': {
-    id: 'job-002',
-    title: 'Bathroom Remodel',
-    customerName: 'De Groot',
-    customerEmail: 'degroot@email.nl',
-    address: 'Herengracht 456, Amsterdam',
-    agreedAmount: 3800.00,
-    description: 'Full bathroom remodel with new fixtures, tiling, and plumbing',
-  },
-  'job-003': {
-    id: 'job-003',
-    title: 'Office Painting',
-    customerName: 'Tech Startup BV',
-    customerEmail: 'facilities@techstartup.nl',
-    address: 'Zuidas 789, Amsterdam',
-    agreedAmount: 1200.00,
-    description: 'Interior painting of office space including walls and ceilings',
-  },
-};
 
 export default function HandoverScreen() {
   const router = useRouter();
   const { jobId } = useLocalSearchParams<{ jobId: string }>();
+  const { jobs, customers } = useAppState();
   const [isLoading, setIsLoading] = useState(true);
-  const [job, setJob] = useState<typeof MOCK_JOBS[string] | null>(null);
+  const [job, setJob] = useState<{ id: string; title: string; customerName: string; customerEmail: string; address: string; agreedAmount: number; description: string } | null>(null);
 
   useEffect(() => {
     const loadJob = async () => {
       setIsLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      if (jobId && MOCK_JOBS[jobId]) {
-        setJob(MOCK_JOBS[jobId]);
+      // Find real job from AppState
+      const realJob = jobs.find(j => j.id === jobId);
+      if (realJob) {
+        const customer = customers.find(c => c.id === realJob.customerId);
+        setJob({
+          id: realJob.id,
+          title: realJob.title || realJob.description || 'Project',
+          customerName: customer?.name || realJob.customerId || 'Klant',
+          customerEmail: customer?.email || '',
+          address: (realJob as any).address?.street ? `${(realJob as any).address.street}, ${(realJob as any).address.city || ''}` : '',
+          agreedAmount: realJob.agreedAmount || realJob.quotedAmount || 0,
+          description: realJob.description || realJob.title || '',
+        });
       } else if (jobId) {
         setJob({
           id: jobId,
-          title: 'Construction Project',
-          customerName: 'Customer',
-          customerEmail: 'customer@email.com',
-          address: 'Project Site',
+          title: 'Project',
+          customerName: 'Klant',
+          customerEmail: '',
+          address: '',
           agreedAmount: 0,
-          description: 'Project work',
+          description: '',
         });
       }
       setIsLoading(false);

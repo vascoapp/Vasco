@@ -35,10 +35,10 @@ const getTabsForRole = (role: UserRole | undefined): {
       ];
     case 'site-lead':
       return [
-        { name: 'index', title: 'Overzicht', icon: 'grid-outline', iconFocused: 'grid' },
+        { name: 'index', title: 'Vandaag', icon: 'today-outline', iconFocused: 'today' },
         { name: 'site-schedule', title: 'Planning', icon: 'calendar-outline', iconFocused: 'calendar' },
         { name: 'site-safety', title: 'Veiligheid', icon: 'shield-checkmark-outline', iconFocused: 'shield-checkmark' },
-        { name: 'site-quality', title: 'Kwaliteit', icon: 'ribbon-outline', iconFocused: 'ribbon' },
+        { name: 'site-more', title: 'Vasco', icon: 'flash-outline', iconFocused: 'flash' },
       ];
     case 'director':
       return [
@@ -69,15 +69,26 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: SemanticColors.surfacePrimary,
-          borderTopColor: SemanticColors.borderDefault,
+          position: 'absolute' as const,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: 'rgba(255,255,255,0.92)',
+          borderTopWidth: 0,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
           paddingTop: 8,
           paddingBottom: 34,
-          height: 90,
+          height: 88,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 16,
+          elevation: 8,
         },
         tabBarActiveTintColor: primaryColor,
         tabBarInactiveTintColor: SemanticColors.textTertiary,
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600', marginTop: 4 },
+        tabBarLabelStyle: { fontSize: 11, fontFamily: 'Manrope_600SemiBold', marginTop: 4 },
       }}
     >
       {tabs.map((tab) => (
@@ -114,7 +125,8 @@ export default function TabsLayout() {
       {!tabs.find(t => t.name === 'site-safety') && <Tabs.Screen name="site-safety" options={{ href: null }} />}
       {!tabs.find(t => t.name === 'site-quality') && <Tabs.Screen name="site-quality" options={{ href: null }} />}
       {!tabs.find(t => t.name === 'site-schedule') && <Tabs.Screen name="site-schedule" options={{ href: null }} />}
-      <Tabs.Screen name="site-issues" options={{ href: null }} />
+      {!tabs.find(t => t.name === 'site-more') && <Tabs.Screen name="site-more" options={{ href: null }} />}
+      {/* site-issues removed — duplicate of site-safety */}
       {/* Director tabs */}
       {!tabs.find(t => t.name === 'dir-approvals') && <Tabs.Screen name="dir-approvals" options={{ href: null }} />}
       {!tabs.find(t => t.name === 'dir-risks') && <Tabs.Screen name="dir-risks" options={{ href: null }} />}

@@ -10,7 +10,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -79,10 +79,9 @@ const InvoiceCard: React.FC<{
   const remainingAmount = invoice.total - invoice.paidAmount;
 
   return (
-    <TouchableOpacity
+    <Pressable
       style={styles.invoiceCard}
       onPress={() => setExpanded(!expanded)}
-      activeOpacity={0.7}
     >
       <View style={styles.invoiceHeader}>
         <View style={styles.invoiceInfo}>
@@ -171,13 +170,13 @@ const InvoiceCard: React.FC<{
           )}
 
           <View style={styles.invoiceActions}>
-            <TouchableOpacity style={styles.actionButton} onPress={onView}>
+            <Pressable style={styles.actionButton} onPress={onView}>
               <Ionicons name="eye-outline" size={18} color={SemanticColors.actionPrimary} />
               <Text style={styles.actionButtonText}>Bekijken</Text>
-            </TouchableOpacity>
+            </Pressable>
 
             {invoice.status === 'draft' && (
-              <TouchableOpacity
+              <Pressable
                 style={[styles.actionButton, styles.primaryButton]}
                 onPress={onSend}
               >
@@ -185,12 +184,12 @@ const InvoiceCard: React.FC<{
                 <Text style={[styles.actionButtonText, styles.primaryButtonText]}>
                   Versturen
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             )}
 
             {(invoice.status === 'sent' || invoice.status === 'viewed' || invoice.status === 'reminded') && (
               <>
-                <TouchableOpacity
+                <Pressable
                   style={[styles.actionButton, styles.successButton]}
                   onPress={onMarkPaid}
                 >
@@ -198,12 +197,12 @@ const InvoiceCard: React.FC<{
                   <Text style={[styles.actionButtonText, styles.primaryButtonText]}>
                     Betaald
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               </>
             )}
 
             {invoice.status === 'overdue' && (
-              <TouchableOpacity
+              <Pressable
                 style={[styles.actionButton, styles.warningButton]}
                 onPress={onSendReminder}
               >
@@ -211,12 +210,12 @@ const InvoiceCard: React.FC<{
                 <Text style={[styles.actionButtonText, styles.primaryButtonText]}>
                   Herinnering
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             )}
           </View>
         </View>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
@@ -241,12 +240,12 @@ const ReminderCard: React.FC<{
       <Text style={styles.suggestedAction}>{reminder.suggestedAction}</Text>
     </View>
 
-    <TouchableOpacity style={styles.sendReminderButton} onPress={onSendReminder}>
+    <Pressable style={styles.sendReminderButton} onPress={onSendReminder}>
       <Ionicons name="notifications" size={18} color={Palette.white} />
       <Text style={styles.sendReminderText}>
         {reminder.nextReminderType === 'collection' ? 'Start Incasso' : 'Verstuur Herinnering'}
       </Text>
-    </TouchableOpacity>
+    </Pressable>
   </View>
 );
 
@@ -318,9 +317,9 @@ export const InvoiceAutomation: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Facturatie</Text>
-        <TouchableOpacity style={styles.addButton}>
+        <Pressable style={styles.addButton}>
           <Ionicons name="add" size={24} color={Palette.white} />
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       <View style={styles.statsSection}>
@@ -375,7 +374,7 @@ export const InvoiceAutomation: React.FC = () => {
           { key: 'overdue', label: 'Te laat', count: invoices.filter(i => i.status === 'overdue').length },
           { key: 'paid', label: 'Betaald', count: invoices.filter(i => i.status === 'paid').length },
         ].map(tab => (
-          <TouchableOpacity
+          <Pressable
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.tabActive]}
             onPress={() => setActiveTab(tab.key as TabType)}
@@ -388,7 +387,7 @@ export const InvoiceAutomation: React.FC = () => {
                 {tab.count}
               </Text>
             </View>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 

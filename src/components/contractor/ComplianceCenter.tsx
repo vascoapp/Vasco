@@ -10,7 +10,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -106,9 +106,9 @@ export function ComplianceCenter() {
             </Text>
           )}
         </View>
-        <TouchableOpacity style={styles.alertsButton}>
+        <Pressable style={styles.alertsButton}>
           <Text style={styles.alertsButtonText}>Bekijk</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     );
   };
@@ -200,12 +200,12 @@ export function ComplianceCenter() {
             )}
           </View>
           {!alert.acknowledged && (
-            <TouchableOpacity
+            <Pressable
               style={styles.alertAction}
               onPress={() => acknowledge(alert.id)}
             >
               <Ionicons name="checkmark" size={20} color={SemanticColors.actionPrimary} />
-            </TouchableOpacity>
+            </Pressable>
           )}
         </View>
       ))}
@@ -215,7 +215,7 @@ export function ComplianceCenter() {
   const renderLicensesTab = () => (
     <ScrollView style={styles.tabContent}>
       {licenses.map((license) => (
-        <TouchableOpacity
+        <Pressable
           key={license.id}
           style={styles.licenseCard}
           onPress={() => {
@@ -254,13 +254,13 @@ export function ComplianceCenter() {
               <Text style={styles.requiredForText}>{license.requiredFor.join(', ')}</Text>
             </View>
           )}
-        </TouchableOpacity>
+        </Pressable>
       ))}
 
-      <TouchableOpacity style={styles.addButton}>
+      <Pressable style={styles.addButton}>
         <Ionicons name="add-circle" size={24} color={SemanticColors.actionPrimary} />
         <Text style={styles.addButtonText}>Licentie toevoegen</Text>
-      </TouchableOpacity>
+      </Pressable>
     </ScrollView>
   );
 
@@ -332,10 +332,10 @@ export function ComplianceCenter() {
           </View>
         ))}
 
-        <TouchableOpacity style={styles.addButton}>
+        <Pressable style={styles.addButton}>
           <Ionicons name="add-circle" size={24} color={SemanticColors.actionPrimary} />
           <Text style={styles.addButtonText}>Certificaat toevoegen</Text>
-        </TouchableOpacity>
+        </Pressable>
       </ScrollView>
     );
   };
@@ -417,22 +417,22 @@ export function ComplianceCenter() {
   const renderRegulatoryTab = () => (
     <ScrollView style={styles.tabContent}>
       <View style={styles.regulatoryFilters}>
-        <TouchableOpacity style={[styles.filterChip, styles.filterChipActive]}>
+        <Pressable style={[styles.filterChip, styles.filterChipActive]}>
           <Text style={styles.filterChipTextActive}>Alles</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterChip}>
+        </Pressable>
+        <Pressable style={styles.filterChip}>
           <Text style={styles.filterChipText}>Wetgeving</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterChip}>
+        </Pressable>
+        <Pressable style={styles.filterChip}>
           <Text style={styles.filterChipText}>Normen</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterChip}>
+        </Pressable>
+        <Pressable style={styles.filterChip}>
           <Text style={styles.filterChipText}>Subsidies</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {updates.map((update) => (
-        <TouchableOpacity
+        <Pressable
           key={update.id}
           style={[styles.updateCard, !update.read && styles.updateCardUnread]}
           onPress={() => {
@@ -466,16 +466,16 @@ export function ComplianceCenter() {
                   <Text style={styles.actionRequiredText}>Actie vereist</Text>
                 </View>
               )}
-              <TouchableOpacity onPress={() => toggleBookmark(update.id)}>
+              <Pressable onPress={() => toggleBookmark(update.id)}>
                 <Ionicons
                   name={update.bookmarked ? 'bookmark' : 'bookmark-outline'}
                   size={20}
                   color={update.bookmarked ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
                 />
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
-        </TouchableOpacity>
+        </Pressable>
       ))}
     </ScrollView>
   );
@@ -486,7 +486,7 @@ export function ComplianceCenter() {
       <View style={styles.tradePickerRow}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {trades.map((t) => (
-            <TouchableOpacity
+            <Pressable
               key={t.tradeId}
               style={[
                 styles.tradeChip,
@@ -504,7 +504,7 @@ export function ComplianceCenter() {
               >
                 {t.localizedLabel || t.tradeLabel}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           ))}
         </ScrollView>
       </View>
@@ -536,11 +536,10 @@ export function ComplianceCenter() {
             const nlNotes = req.applicabilityNotesLocalizations?.nl || req.applicabilityNotes;
 
             return (
-              <TouchableOpacity
+              <Pressable
                 key={req.id}
                 style={styles.reqCard}
                 onPress={() => setExpandedReqId(isExpanded ? null : req.id)}
-                activeOpacity={0.7}
               >
                 <View style={styles.reqHeader}>
                   <View style={[styles.reqLevelBadge, { backgroundColor: getReqLevelColor(req.level) + '20' }]}>
@@ -566,7 +565,7 @@ export function ComplianceCenter() {
                     )}
                   </>
                 )}
-              </TouchableOpacity>
+              </Pressable>
             );
           })}
 
@@ -668,13 +667,13 @@ export function ComplianceCenter() {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
-          <TouchableOpacity onPress={() => setShowLicenseModal(false)}>
+          <Pressable onPress={() => setShowLicenseModal(false)}>
             <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
           <Text style={styles.modalTitle}>Licentie Details</Text>
-          <TouchableOpacity>
+          <Pressable>
             <Ionicons name="create-outline" size={24} color={SemanticColors.actionPrimary} />
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         {selectedLicense && (
@@ -740,19 +739,19 @@ export function ComplianceCenter() {
 
             <View style={styles.modalActions}>
               {selectedLicense.status === 'expiring_soon' && (
-                <TouchableOpacity style={styles.primaryAction}>
+                <Pressable style={styles.primaryAction}>
                   <Ionicons name="refresh" size={20} color={Palette.white} />
                   <Text style={styles.primaryActionText}>Verlenging Starten</Text>
-                </TouchableOpacity>
+                </Pressable>
               )}
-              <TouchableOpacity style={styles.secondaryAction}>
+              <Pressable style={styles.secondaryAction}>
                 <Ionicons name="document-attach" size={20} color={SemanticColors.actionPrimary} />
                 <Text style={styles.secondaryActionText}>Document Uploaden</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.secondaryAction}>
+              </Pressable>
+              <Pressable style={styles.secondaryAction}>
                 <Ionicons name="share" size={20} color={SemanticColors.actionPrimary} />
                 <Text style={styles.secondaryActionText}>Delen</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </ScrollView>
         )}
@@ -769,17 +768,17 @@ export function ComplianceCenter() {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
-          <TouchableOpacity onPress={() => setShowUpdateModal(false)}>
+          <Pressable onPress={() => setShowUpdateModal(false)}>
             <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
           <Text style={styles.modalTitle}>Update Details</Text>
-          <TouchableOpacity onPress={() => selectedUpdate && toggleBookmark(selectedUpdate.id)}>
+          <Pressable onPress={() => selectedUpdate && toggleBookmark(selectedUpdate.id)}>
             <Ionicons
               name={selectedUpdate?.bookmarked ? 'bookmark' : 'bookmark-outline'}
               size={24}
               color={selectedUpdate?.bookmarked ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
             />
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         {selectedUpdate && (
@@ -856,7 +855,7 @@ export function ComplianceCenter() {
       <View style={styles.tabBar}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {tabs.map((tab) => (
-            <TouchableOpacity
+            <Pressable
               key={tab.id}
               style={[styles.tab, activeTab === tab.id && styles.activeTab]}
               onPress={() => setActiveTab(tab.id)}
@@ -874,7 +873,7 @@ export function ComplianceCenter() {
               >
                 {tab.label}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           ))}
         </ScrollView>
       </View>

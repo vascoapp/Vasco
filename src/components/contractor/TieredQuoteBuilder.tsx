@@ -1,16 +1,97 @@
-// Tiered Quote Builder - Good-Better-Best pricing presentation
-import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+// =============================================================================
+// Tiered Quote Builder — 2-step: select services → preview with Vasco insights
+// =============================================================================
+// Step 1: Trade-tailored pricebook + quantity controls
+// Step 2: Preview tiers + Vasco AI (calibration, pricing, tips) → send
+// =============================================================================
+
+import { useEffect, useState, useMemo } from 'react';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors } from '../../theme/colors';
-import { Spacing } from '../../theme/spacing';
+import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
+import { Spacing, SafeArea } from '../../theme/spacing';
 import type { Customer } from '../../types/contractor';
 import type { TieredQuote, QuoteTier, PricebookItem } from '../../types/contractor-features';
 import { MOCK_PRICEBOOK } from '../../data/mockPricebook';
 import { intelligence } from '../../intelligence/intelligenceEngine';
-import { useInlineInsight } from '../../services/vascoGuidanceService';
 import { useQuoteCalibration } from '../../services/estimationFeedbackService';
-import type { QuoteCalibrationSuggestion } from '../../services/estimationFeedbackService';
+import { predictPrice, type PricePrediction } from '../../intelligence/predictions';
+import { predictQuoteWin, type QuoteWinPrediction } from '../../intelligence/mlModels';
+import { useAuth } from '../../context/AuthContext';
+import { searchCatalog, type CatalogItem } from '../../integrations/suppliers';
+import { AIQuoteFromPhoto } from './AIQuoteFromPhoto';
+import { useQuoteTemplates, type QuoteTemplate, TEMPLATE_CATEGORIES } from '../../services/quoteTemplateService';
+import { hapticSuccess } from '../../utils/haptics';
+
+type IconName = keyof typeof Ionicons.glyphMap;
+
+// =============================================================================
+// Trade-specific pricebook items — shown when MOCK_PRICEBOOK doesn't have trade items
+// =============================================================================
+const TRADE_PRICEBOOK: Record<string, { id: string; name: string; basePrice: number; unit: string }[]> = {
+  plumbing: [
+    { id: 'plb-1', name: 'Lekkage reparatie', basePrice: 85, unit: 'uur' },
+    { id: 'plb-2', name: 'CV-ketel onderhoud', basePrice: 120, unit: 'stuk' },
+    { id: 'plb-3', name: 'Radiator plaatsen', basePrice: 95, unit: 'stuk' },
+    { id: 'plb-4', name: 'Badkamer sanitair', basePrice: 75, unit: 'uur' },
+    { id: 'plb-5', name: 'Rioolontstopping', basePrice: 110, unit: 'stuk' },
+    { id: 'plb-6', name: 'Waterleiding aanleggen', basePrice: 65, unit: 'm' },
+  ],
+  electrical: [
+    { id: 'elc-1', name: 'Groepenkast vervangen', basePrice: 450, unit: 'stuk' },
+    { id: 'elc-2', name: 'Stopcontact plaatsen', basePrice: 45, unit: 'stuk' },
+    { id: 'elc-3', name: 'Bekabeling trekken', basePrice: 35, unit: 'm' },
+    { id: 'elc-4', name: 'Verlichting installatie', basePrice: 55, unit: 'punt' },
+    { id: 'elc-5', name: 'Periodieke keuring', basePrice: 180, unit: 'stuk' },
+    { id: 'elc-6', name: 'Laadpaal installatie', basePrice: 650, unit: 'stuk' },
+  ],
+  gas: [
+    { id: 'gas-1', name: 'Gasleiding keuring', basePrice: 150, unit: 'stuk' },
+    { id: 'gas-2', name: 'CV-installatie', basePrice: 95, unit: 'uur' },
+    { id: 'gas-3', name: 'Warmtepomp plaatsen', basePrice: 850, unit: 'stuk' },
+    { id: 'gas-4', name: 'Vloerverwarming', basePrice: 45, unit: 'm²' },
+    { id: 'gas-5', name: 'Gaslek detectie', basePrice: 120, unit: 'stuk' },
+  ],
+  carpentry: [
+    { id: 'crp-1', name: 'Kozijn plaatsen', basePrice: 180, unit: 'stuk' },
+    { id: 'crp-2', name: 'Dakkapel bouwen', basePrice: 3500, unit: 'stuk' },
+    { id: 'crp-3', name: 'Trap renovatie', basePrice: 85, unit: 'uur' },
+    { id: 'crp-4', name: 'Houtrot reparatie', basePrice: 65, unit: 'uur' },
+    { id: 'crp-5', name: 'Vloer leggen', basePrice: 35, unit: 'm²' },
+  ],
+  general: [
+    { id: 'gen-1', name: 'Renovatie — arbeid', basePrice: 55, unit: 'uur' },
+    { id: 'gen-2', name: 'Sloopwerk', basePrice: 45, unit: 'uur' },
+    { id: 'gen-3', name: 'Stucwerk', basePrice: 30, unit: 'm²' },
+    { id: 'gen-4', name: 'Tegelwerk', basePrice: 40, unit: 'm²' },
+    { id: 'gen-5', name: 'Transport & afvoer', basePrice: 150, unit: 'rit' },
+  ],
+};
+
+const TRADE_LABELS: Record<string, string> = {
+  painting: 'Schilderwerk',
+  plumbing: 'Loodgieterswerk',
+  electrical: 'Elektra',
+  gas: 'Installatie',
+  carpentry: 'Timmerwerk',
+  general: 'Bouw & Renovatie',
+};
+
+const TRADE_SUGGESTIONS: Record<string, string[]> = {
+  painting: ['Afplakband', 'Grondverf', 'Schuurpapier', 'Primer'],
+  plumbing: ['Teflon tape', 'Afdichtingsring', 'Soldeer', 'Koppelingen'],
+  electrical: ['Krimpkous', 'Lasklemmen', 'Kabelgoot', 'Zekeringen'],
+  gas: ['Gaslekzoeker', 'Afdichtpasta', 'O-ringen', 'Koperen buis'],
+  carpentry: ['Schroeven', 'Houtlijm', 'Schuurpapier', 'Beits'],
+  general: ['Schroeven', 'Pluggen', 'Afdekfolie', 'Siliconenkit'],
+};
+
+const TIER_CONFIG = {
+  good: { name: 'Basis', tagline: 'Standaard uitvoering', color: SemanticColors.textSecondary, icon: 'checkmark-circle-outline' as const },
+  better: { name: 'Standaard', tagline: 'Meest gekozen', color: Palette.hermesOrange, icon: 'star-outline' as const },
+  best: { name: 'Premium', tagline: 'Beste kwaliteit', color: '#8B5CF6', icon: 'diamond-outline' as const },
+};
 
 interface TieredQuoteBuilderProps {
   customer?: Customer;
@@ -18,852 +99,537 @@ interface TieredQuoteBuilderProps {
   onClose: () => void;
 }
 
-const TIER_CONFIG = {
-  good: {
-    name: 'Basic',
-    tagline: 'Gets the job done',
-    color: SemanticColors.textSecondary,
-    icon: 'checkmark-circle-outline' as const,
-  },
-  better: {
-    name: 'Standard',
-    tagline: 'Most popular choice',
-    color: SemanticColors.actionPrimary,
-    icon: 'star-outline' as const,
-  },
-  best: {
-    name: 'Premium',
-    tagline: 'Best value & quality',
-    color: '#8B5CF6',
-    icon: 'diamond-outline' as const,
-  },
-};
-
 export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBuilderProps) {
-  const [selectedServices, setSelectedServices] = useState<{
-    item: PricebookItem;
-    quantity: number;
-    unit: string;
-  }[]>([]);
+  const { user } = useAuth();
+  const trade = user?.trade ?? 'general';
+  const country = user?.country ?? 'NL';
+  const [step, setStep] = useState<'select' | 'preview'>('select');
+  const [selectedServices, setSelectedServices] = useState<{ item: PricebookItem; quantity: number; unit: string }[]>([]);
   const [showPricebook, setShowPricebook] = useState(false);
+  const [showAIQuote, setShowAIQuote] = useState(false);
   const [calibrationApplied, setCalibrationApplied] = useState(false);
-  const inlineInsight = useInlineInsight('contractor', 'invoices', 'list');
+  const { templates, use: useTemplate } = useQuoteTemplates();
+  const [priceSuggestion, setPriceSuggestion] = useState<PricePrediction | null>(null);
+  const [winPrediction, setWinPrediction] = useState<QuoteWinPrediction | null>(null);
 
-  // P4: Quote calibration
-  const calibrationLineItems = selectedServices.map(s => ({
-    description: s.item.name,
-    estimate: s.item.basePrice * s.quantity,
-  }));
+  // AI predictions
+  useEffect(() => {
+    predictPrice({ trade, country }).then(setPriceSuggestion).catch(() => {});
+  }, [trade, country]);
+
+  useEffect(() => {
+    if (selectedServices.length > 0) {
+      const total = selectedServices.reduce((s, sv) => s + sv.item.basePrice * sv.quantity, 0);
+      predictQuoteWin({ trade, amount: total }).then(setWinPrediction).catch(() => {});
+    }
+  }, [selectedServices.length, trade]);
+
+  // Calibration
+  const calibrationLineItems = selectedServices.map(s => ({ description: s.item.name, estimate: s.item.basePrice * s.quantity }));
   const calibrations = useQuoteCalibration(calibrationLineItems);
 
-  const formatCurrency = (amount: number) => `€${amount.toFixed(2)}`;
+  // Build trade-specific pricebook
+  const tradePricebook = useMemo(() => {
+    // First try MOCK_PRICEBOOK (has variants for painting)
+    const fromMock = MOCK_PRICEBOOK.filter(i => i.variants && i.variants.length > 0);
+    if (trade === 'painting' && fromMock.length > 0) return fromMock;
 
-  // Calculate tier prices based on selected services
+    // For other trades, build from TRADE_PRICEBOOK
+    const tradeItems = TRADE_PRICEBOOK[trade] ?? TRADE_PRICEBOOK.general;
+    return tradeItems.map(item => ({
+      ...item,
+      contractorId: '',
+      description: `${TRADE_LABELS[trade] ?? trade}`,
+      category: trade,
+      pricingType: 'fixed' as const,
+    })) as unknown as PricebookItem[];
+  }, [trade]);
+
+  const fmt = (n: number) => `€${n.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}`;
+
   const calculateTiers = (): QuoteTier[] => {
-    const tiers: QuoteTier[] = [];
-
-    (['good', 'better', 'best'] as const).forEach((tierKey) => {
+    return (['good', 'better', 'best'] as const).map(tierKey => {
+      const multiplier = tierKey === 'good' ? 1 : tierKey === 'better' ? 1.25 : 1.55;
       let subtotal = 0;
       const features: string[] = [];
-      const lineItems = selectedServices.map((service) => {
-        const variant = service.item.variants?.find((v) => v.tier === tierKey);
-        const price = variant ? variant.price : service.item.basePrice;
+      const lineItems = selectedServices.map(service => {
+        const variant = service.item.variants?.find(v => v.tier === tierKey);
+        const price = variant ? variant.price : Math.round(service.item.basePrice * multiplier);
         const total = price * service.quantity;
         subtotal += total;
-
-        if (variant) {
-          variant.features.forEach((f) => {
-            if (!features.includes(f)) features.push(f);
-          });
-        }
-
-        return {
-          pricebookItemId: service.item.id,
-          description: variant ? `${service.item.name} - ${variant.name}` : service.item.name,
-          quantity: service.quantity,
-          unit: service.unit,
-          unitPrice: price,
-          total,
-          includedInTier: true,
-        };
+        if (variant) variant.features.forEach(f => { if (!features.includes(f)) features.push(f); });
+        return { pricebookItemId: service.item.id, description: service.item.name, quantity: service.quantity, unit: service.unit, unitPrice: price, total, includedInTier: true };
       });
-
-      const vatRate = 21;
-      const vatAmount = subtotal * (vatRate / 100);
-
-      tiers.push({
-        tier: tierKey,
-        name: TIER_CONFIG[tierKey].name,
-        tagline: TIER_CONFIG[tierKey].tagline,
-        lineItems,
-        subtotal,
-        vatRate,
-        vatAmount,
-        total: subtotal + vatAmount,
-        features: features.slice(0, 5),
+      const vatAmount = subtotal * 0.21;
+      return {
+        tier: tierKey, name: TIER_CONFIG[tierKey].name, tagline: TIER_CONFIG[tierKey].tagline,
+        lineItems, subtotal, vatRate: 21, vatAmount, total: subtotal + vatAmount,
+        features: features.length > 0 ? features.slice(0, 5) : [
+          tierKey === 'good' ? 'Standaard materiaal' : tierKey === 'better' ? 'Kwaliteitsmateriaal' : 'Premium materiaal',
+          tierKey !== 'good' ? 'Garantie 2 jaar' : 'Garantie 1 jaar',
+          tierKey === 'best' ? 'Gratis nacontrole' : '',
+        ].filter(Boolean),
         isRecommended: tierKey === 'better',
-      });
+      };
     });
-
-    return tiers;
   };
 
   const tiers = calculateTiers();
 
   const addService = (item: PricebookItem) => {
-    const existing = selectedServices.find((s) => s.item.id === item.id);
+    const existing = selectedServices.find(s => s.item.id === item.id);
     if (existing) {
-      setSelectedServices(
-        selectedServices.map((s) =>
-          s.item.id === item.id ? { ...s, quantity: s.quantity + 1 } : s
-        )
-      );
+      setSelectedServices(selectedServices.map(s => s.item.id === item.id ? { ...s, quantity: s.quantity + 1 } : s));
     } else {
-      setSelectedServices([
-        ...selectedServices,
-        { item, quantity: 1, unit: item.unit || 'each' },
-      ]);
+      setSelectedServices([...selectedServices, { item, quantity: 1, unit: item.unit || 'stuk' }]);
     }
     setShowPricebook(false);
   };
 
-  const removeService = (itemId: string) => {
-    setSelectedServices(selectedServices.filter((s) => s.item.id !== itemId));
+  const removeService = (itemId: string) => setSelectedServices(selectedServices.filter(s => s.item.id !== itemId));
+  const updateQuantity = (itemId: string, qty: number) => {
+    if (qty <= 0) removeService(itemId);
+    else setSelectedServices(selectedServices.map(s => s.item.id === itemId ? { ...s, quantity: qty } : s));
   };
 
-  const updateQuantity = (itemId: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeService(itemId);
-    } else {
-      setSelectedServices(
-        selectedServices.map((s) =>
-          s.item.id === itemId ? { ...s, quantity } : s
-        )
-      );
-    }
+  const loadTemplate = (template: QuoteTemplate) => {
+    useTemplate(template.id);
+    const mapped = template.items.map((item, idx) => ({
+      item: { id: `tpl-${template.id}-${idx}`, contractorId: '', name: item.description, description: `${template.name}`, category: item.type === 'labour' ? 'labour' : 'materials', pricingType: 'fixed', basePrice: item.unitPrice, unit: item.unit } as unknown as PricebookItem,
+      quantity: item.quantity, unit: item.unit,
+    }));
+    setSelectedServices(mapped);
+    hapticSuccess();
   };
 
   const handleSend = () => {
-    if (selectedServices.length === 0) {
-      Alert.alert('No Services', 'Please add at least one service to the quote.');
-      return;
-    }
-
-    Alert.alert(
-      'Send Quote',
-      `Send this tiered quote to ${customer?.name || 'customer'}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Send',
-          onPress: () => {
-            const quote: Partial<TieredQuote> = {
-              reference: `TQ-${Date.now()}`,
-              title: 'Project Quote',
-              tiers,
-              validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-              paymentTerms: '30% deposit, 70% on completion',
-              status: 'sent',
-            };
-
-            // Track quote sent for intelligence learning
-            intelligence.trackEvent({
-              eventType: 'quote_sent',
-              userId: 'current-user',
-              sessionId: 'current',
-              context: {
-                platform: 'ios',
-                appVersion: '1.0.0',
-                dayOfWeek: new Date().getDay(),
-                hourOfDay: new Date().getHours(),
-                isWeekend: new Date().getDay() === 0 || new Date().getDay() === 6,
-                season: 'winter',
-              },
-              payload: {
-                quoteReference: quote.reference,
-                tierCount: 3,
-                goodTotal: tiers[0].total,
-                betterTotal: tiers[1].total,
-                bestTotal: tiers[2].total,
-                serviceCount: selectedServices.length,
-                customerId: customer?.id,
-              },
-              entities: customer ? [{
-                id: customer.id,
-                type: 'customer',
-                name: customer.name,
-                confidence: 1.0,
-              }] : [],
-            });
-
-            onSend(quote);
-          },
-        },
-      ]
-    );
+    if (selectedServices.length === 0) return;
+    const quote: Partial<TieredQuote> = {
+      reference: `TQ-${Date.now()}`, title: 'Offerte', tiers,
+      validUntil: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+      paymentTerms: '30% aanbetaling, 70% bij oplevering', status: 'sent',
+    };
+    intelligence.trackEvent({
+      eventType: 'quote_sent', userId: 'current-user', sessionId: 'current',
+      context: { platform: 'ios', appVersion: '1.0.0', dayOfWeek: new Date().getDay(), hourOfDay: new Date().getHours(), isWeekend: [0, 6].includes(new Date().getDay()), season: 'winter' },
+      payload: { quoteReference: quote.reference, tierCount: 3, goodTotal: tiers[0].total, betterTotal: tiers[1].total, bestTotal: tiers[2].total, serviceCount: selectedServices.length, customerId: customer?.id },
+      entities: customer ? [{ id: customer.id, type: 'customer', name: customer.name, confidence: 1.0 }] : [],
+    });
+    onSend(quote);
   };
 
+  // =========================================================================
+  // STEP 1: SELECT SERVICES
+  // =========================================================================
   if (showPricebook) {
     return (
-      <PricebookSelector
-        onSelect={addService}
-        onClose={() => setShowPricebook(false)}
-        selectedIds={selectedServices.map((s) => s.item.id)}
-      />
+      <View style={s.container}>
+        <View style={s.header}>
+          <Pressable onPress={() => setShowPricebook(false)} style={s.closeBtn}>
+            <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
+          </Pressable>
+          <View style={{ flex: 1 }}>
+            <Text style={s.headerTitle}>Diensten toevoegen</Text>
+            <Text style={s.headerSub}>{TRADE_LABELS[trade] ?? 'Diensten'}</Text>
+          </View>
+        </View>
+        <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent}>
+          {tradePricebook.map(item => {
+            const isSelected = selectedServices.some(sv => sv.item.id === item.id);
+            return (
+              <Pressable key={item.id} style={[s.pbItem, isSelected && s.pbItemSelected]} onPress={() => addService(item)}>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.pbName}>{item.name}</Text>
+                  <Text style={s.pbPrice}>{fmt(item.basePrice)}/{item.unit || 'stuk'}</Text>
+                </View>
+                <Ionicons name={isSelected ? 'checkmark-circle' : 'add-circle-outline'} size={22} color={isSelected ? SemanticColors.feedbackSuccess : Palette.hermesOrange} />
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
     );
   }
 
-  return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable onPress={onClose} style={styles.closeButton}>
-          <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
-        </Pressable>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Create Tiered Quote</Text>
-          {customer && <Text style={styles.headerSubtitle}>{customer.name}</Text>}
+  if (step === 'select') {
+    return (
+      <View style={s.container}>
+        <View style={s.header}>
+          <Pressable onPress={onClose} style={s.closeBtn}>
+            <Ionicons name="close" size={22} color={SemanticColors.textPrimary} />
+          </Pressable>
+          <View style={{ flex: 1 }}>
+            <Text style={s.headerTitle}>Nieuwe offerte</Text>
+            {customer && <Text style={s.headerSub}>{customer.name}</Text>}
+          </View>
         </View>
-      </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-        {/* Vasco Guidance Tip */}
-        {inlineInsight && (
-          <View style={styles.guidanceTip}>
-            <Ionicons name="sparkles" size={16} color="#E35205" />
-            <Text style={styles.guidanceTipText}>{inlineInsight.message}</Text>
+        <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent}>
+          {/* AI Scan — compact */}
+          <Pressable style={s.aiScanRow} onPress={() => setShowAIQuote(true)}>
+            <Ionicons name="camera" size={18} color={Palette.hermesOrange} />
+            <Text style={s.aiScanText}>Scan met AI — foto naar offerte</Text>
+            <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+          </Pressable>
+
+          {/* Services section */}
+          <View style={s.section}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={s.sectionTitle}>{TRADE_LABELS[trade] ?? 'Diensten'}</Text>
+              <Pressable style={s.addBtn} onPress={() => setShowPricebook(true)}>
+                <Ionicons name="add" size={16} color={Palette.hermesOrange} />
+                <Text style={s.addBtnText}>Toevoegen</Text>
+              </Pressable>
+            </View>
+
+            {selectedServices.length > 0 ? (
+              <View style={s.serviceList}>
+                {selectedServices.map(sv => (
+                  <View key={sv.item.id} style={s.serviceRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.serviceName}>{sv.item.name}</Text>
+                      <Text style={s.servicePrice}>{fmt(sv.item.basePrice)}/{sv.unit}</Text>
+                    </View>
+                    <View style={s.qtyRow}>
+                      <Pressable style={s.qtyBtn} onPress={() => updateQuantity(sv.item.id, sv.quantity - 1)}>
+                        <Ionicons name="remove" size={14} color={SemanticColors.textPrimary} />
+                      </Pressable>
+                      <Text style={s.qtyText}>{sv.quantity}</Text>
+                      <Pressable style={s.qtyBtn} onPress={() => updateQuantity(sv.item.id, sv.quantity + 1)}>
+                        <Ionicons name="add" size={14} color={SemanticColors.textPrimary} />
+                      </Pressable>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <>
+                {/* Templates */}
+                {templates.length > 0 && (
+                  <View style={{ gap: 8 }}>
+                    <Text style={s.templateLabel}>Of start van sjabloon:</Text>
+                    {templates.slice(0, 3).map(tpl => (
+                      <Pressable key={tpl.id} style={s.templateRow} onPress={() => loadTemplate(tpl)}>
+                        <Ionicons name="copy-outline" size={16} color={Palette.hermesOrange} />
+                        <Text style={s.templateName}>{tpl.name}</Text>
+                        <Text style={s.templateMeta}>{tpl.items.length} regels</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+                <Pressable style={s.emptyBox} onPress={() => setShowPricebook(true)}>
+                  <Ionicons name="document-text-outline" size={28} color={SemanticColors.textTertiary} />
+                  <Text style={s.emptyText}>Kies diensten uit je prijslijst</Text>
+                </Pressable>
+              </>
+            )}
+
+            {/* Trade-specific suggestions */}
+            {selectedServices.length > 0 && (
+              <View style={s.suggestRow}>
+                <Ionicons name="bulb-outline" size={14} color={SemanticColors.textTertiary} />
+                <Text style={s.suggestLabel}>Vergeten?</Text>
+                {(TRADE_SUGGESTIONS[trade] ?? TRADE_SUGGESTIONS.general).slice(0, 3).map(item => (
+                  <View key={item} style={s.suggestChip}>
+                    <Text style={s.suggestChipText}>{item}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        </ScrollView>
+
+        {/* Bottom: go to preview */}
+        {selectedServices.length > 0 && (
+          <View style={s.bottom}>
+            <Text style={s.bottomSummary}>{selectedServices.length} diensten · {fmt(tiers[1].total)} (standaard)</Text>
+            <Pressable style={s.nextBtn} onPress={() => { hapticSuccess(); setStep('preview'); }}>
+              <Text style={s.nextBtnText}>Bekijk offerte</Text>
+              <Ionicons name="arrow-forward" size={18} color={Palette.white} />
+            </Pressable>
           </View>
         )}
 
-        {/* Selected Services */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Services</Text>
-            <Pressable style={styles.addServiceBtn} onPress={() => setShowPricebook(true)}>
-              <Ionicons name="add" size={18} color={SemanticColors.actionPrimary} />
-              <Text style={styles.addServiceText}>Add from Pricebook</Text>
-            </Pressable>
+        {/* AI Quote Modal */}
+        <Modal visible={showAIQuote} animationType="slide" presentationStyle="pageSheet">
+          <AIQuoteFromPhoto
+            onCreateQuote={(items) => {
+              const mapped = items.filter(i => i.selected).map(item => ({
+                item: { id: item.id, name: item.description, description: item.category, basePrice: item.suggestedPrice, unit: item.unit, category: item.category } as PricebookItem,
+                quantity: item.suggestedQuantity, unit: item.unit,
+              }));
+              setSelectedServices(prev => [...prev, ...mapped]);
+              setShowAIQuote(false);
+            }}
+            onClose={() => setShowAIQuote(false)}
+          />
+        </Modal>
+      </View>
+    );
+  }
+
+  // =========================================================================
+  // STEP 2: PREVIEW — Vasco insights inline before sending
+  // =========================================================================
+  return (
+    <View style={s.container}>
+      <View style={s.header}>
+        <Pressable onPress={() => setStep('select')} style={s.closeBtn}>
+          <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
+        </Pressable>
+        <View style={{ flex: 1 }}>
+          <Text style={s.headerTitle}>Offerte controleren</Text>
+          {customer && <Text style={s.headerSub}>{customer.name}</Text>}
+        </View>
+      </View>
+
+      <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent}>
+        {/* Vasco insights — inline in preview (not cluttering build step) */}
+        <View style={s.vascoCard}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Ionicons name="flash" size={16} color={Palette.hermesOrange} />
+            <Text style={s.vascoTitle}>Vasco advies</Text>
           </View>
 
-          {selectedServices.length > 0 ? (
-            <View style={styles.servicesList}>
-              {selectedServices.map((service) => (
-                <View key={service.item.id} style={styles.serviceRow}>
-                  <View style={styles.serviceInfo}>
-                    <Text style={styles.serviceName}>{service.item.name}</Text>
-                    <Text style={styles.serviceBase}>
-                      Base: {formatCurrency(service.item.basePrice)}/{service.unit}
-                    </Text>
-                  </View>
-                  <View style={styles.quantityControl}>
-                    <Pressable
-                      style={styles.quantityBtn}
-                      onPress={() => updateQuantity(service.item.id, service.quantity - 1)}
-                    >
-                      <Ionicons name="remove" size={16} color={SemanticColors.textPrimary} />
-                    </Pressable>
-                    <Text style={styles.quantityText}>
-                      {service.quantity} {service.unit}
-                    </Text>
-                    <Pressable
-                      style={styles.quantityBtn}
-                      onPress={() => updateQuantity(service.item.id, service.quantity + 1)}
-                    >
-                      <Ionicons name="add" size={16} color={SemanticColors.textPrimary} />
-                    </Pressable>
-                  </View>
-                </View>
-              ))}
+          {/* Calibration */}
+          {calibrations.length > 0 && !calibrationApplied && (
+            <View style={s.vascoRow}>
+              <Text style={s.vascoText}>
+                Op basis van {calibrations[0]?.basedOnJobCount || 0} eerdere klussen: uren{' '}
+                {calibrations.some(c => c.combinedMultiplier > 1)
+                  ? `+${Math.round((Math.max(...calibrations.map(c => c.combinedMultiplier)) - 1) * 100)}%`
+                  : 'op schema'}
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 6 }}>
+                <Pressable style={s.vascoApply} onPress={() => {
+                  setSelectedServices(prev => prev.map((sv, idx) => {
+                    const cal = calibrations[idx];
+                    return cal && cal.combinedMultiplier > 1 ? { ...sv, quantity: Math.ceil(sv.quantity * cal.combinedMultiplier) } : sv;
+                  }));
+                  setCalibrationApplied(true);
+                }}>
+                  <Text style={s.vascoApplyText}>Toepassen</Text>
+                </Pressable>
+                <Pressable style={s.vascoSkip} onPress={() => setCalibrationApplied(true)}>
+                  <Text style={s.vascoSkipText}>Negeer</Text>
+                </Pressable>
+              </View>
             </View>
-          ) : (
-            <Pressable style={styles.emptyServices} onPress={() => setShowPricebook(true)}>
-              <Ionicons name="document-text-outline" size={32} color={SemanticColors.textTertiary} />
-              <Text style={styles.emptyServicesText}>Add services from your pricebook</Text>
-            </Pressable>
+          )}
+          {calibrationApplied && calibrations.length > 0 && (
+            <View style={s.vascoRow}>
+              <Ionicons name="checkmark-circle" size={14} color={SemanticColors.feedbackSuccess} />
+              <Text style={[s.vascoText, { color: SemanticColors.feedbackSuccess }]}>Kalibratie toegepast</Text>
+            </View>
+          )}
+
+          {/* Pricing advice */}
+          {priceSuggestion && (priceSuggestion.suggestedPrice ?? 0) > 0 && (
+            <View style={s.vascoRow}>
+              <Text style={s.vascoText}>
+                Aanbevolen uurprijs: {fmt(priceSuggestion.suggestedPrice ?? 0)} · Acceptatiekans: {Math.round((priceSuggestion.acceptanceRate ?? 0) * 100)}%
+              </Text>
+            </View>
+          )}
+
+          {/* Win probability */}
+          {winPrediction && (
+            <View style={s.vascoRow}>
+              <Text style={s.vascoText}>
+                Win-kans:{' '}
+                <Text style={{ color: winPrediction.probability >= 0.7 ? SemanticColors.feedbackSuccess : winPrediction.probability >= 0.5 ? SemanticColors.feedbackWarning : SemanticColors.feedbackError, fontFamily: TYPE.titleFamily }}>
+                  {Math.round(winPrediction.probability * 100)}%
+                </Text>
+              </Text>
+            </View>
           )}
         </View>
 
-        {/* Vasco Kalibratie Banner (P4) */}
-        {selectedServices.length > 0 && calibrations.length > 0 && !calibrationApplied && (
-          <View style={styles.calibrationBanner}>
-            <View style={styles.calibrationHeader}>
-              <Ionicons name="sparkles" size={16} color="#E35205" />
-              <Text style={styles.calibrationTitle}>Vasco Kalibratie</Text>
-            </View>
-            <Text style={styles.calibrationText}>
-              Op basis van {calibrations[0]?.basedOnJobCount || 0} eerdere klussen: uren{' '}
-              {calibrations.some(c => c.multiplier > 1)
-                ? `+${Math.round((Math.max(...calibrations.map(c => c.multiplier)) - 1) * 100)}%`
-                : 'op schema'
-              }
-            </Text>
-            <View style={styles.calibrationActions}>
-              <Pressable
-                style={styles.calibrationApply}
-                onPress={() => {
-                  // Apply calibration multipliers to quantities
-                  setSelectedServices(prev =>
-                    prev.map((s, idx) => {
-                      const cal = calibrations[idx];
-                      if (cal && cal.multiplier > 1) {
-                        return { ...s, quantity: Math.ceil(s.quantity * cal.multiplier) };
-                      }
-                      return s;
-                    })
-                  );
-                  setCalibrationApplied(true);
-                }}
-              >
-                <Ionicons name="checkmark" size={16} color="#fff" />
-                <Text style={styles.calibrationApplyText}>Toepassen</Text>
-              </Pressable>
-              <Pressable
-                style={styles.calibrationIgnore}
-                onPress={() => setCalibrationApplied(true)}
-              >
-                <Text style={styles.calibrationIgnoreText}>Negeren</Text>
-              </Pressable>
-            </View>
-          </View>
-        )}
-        {calibrationApplied && calibrations.length > 0 && (
-          <View style={[styles.calibrationBanner, { borderLeftColor: '#16A34A' }]}>
-            <View style={styles.calibrationHeader}>
-              <Ionicons name="checkmark-circle" size={16} color="#16A34A" />
-              <Text style={[styles.calibrationTitle, { color: '#16A34A' }]}>Kalibratie toegepast</Text>
-            </View>
-          </View>
-        )}
-
-        {/* Tiered Preview */}
-        {selectedServices.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Quote Preview</Text>
-            <Text style={styles.sectionSubtitle}>
-              Customer will see these three options
-            </Text>
-
-            <View style={styles.tiersPreview}>
-              {tiers.map((tier) => {
-                const config = TIER_CONFIG[tier.tier];
-                return (
-                  <View
-                    key={tier.tier}
-                    style={[
-                      styles.tierCard,
-                      tier.isRecommended && styles.tierCardRecommended,
-                    ]}
-                  >
-                    {tier.isRecommended && (
-                      <View style={styles.recommendedRibbon}>
-                        <Text style={styles.recommendedRibbonText}>RECOMMENDED</Text>
-                      </View>
-                    )}
-
-                    <View style={[styles.tierIcon, { backgroundColor: config.color + '15' }]}>
-                      <Ionicons name={config.icon} size={24} color={config.color} />
-                    </View>
-
-                    <Text style={[styles.tierName, { color: config.color }]}>{tier.name}</Text>
-                    <Text style={styles.tierTagline}>{tier.tagline}</Text>
-
-                    <Text style={styles.tierPrice}>{formatCurrency(tier.total)}</Text>
-                    <Text style={styles.tierPriceLabel}>incl. VAT</Text>
-
-                    <View style={styles.tierFeatures}>
-                      {tier.features.map((feature, idx) => (
-                        <View key={idx} style={styles.tierFeatureRow}>
-                          <Ionicons
-                            name="checkmark-circle"
-                            size={14}
-                            color={SemanticColors.feedbackSuccess}
-                          />
-                          <Text style={styles.tierFeatureText} numberOfLines={1}>
-                            {feature}
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-
-                    {tier.tier === 'better' && (
-                      <View style={styles.upsellNote}>
-                        <Text style={styles.upsellNoteText}>
-                          +{formatCurrency(tiers[2].total - tier.total)} for Premium
-                        </Text>
-                      </View>
-                    )}
+        {/* Tier preview cards */}
+        <Text style={s.sectionTitle}>Klant ziet drie opties</Text>
+        <View style={s.tiersRow}>
+          {tiers.map(tier => {
+            const cfg = TIER_CONFIG[tier.tier];
+            return (
+              <View key={tier.tier} style={[s.tierCard, tier.isRecommended && { borderColor: Palette.hermesOrange, borderWidth: 2 }]}>
+                {tier.isRecommended && (
+                  <View style={s.recRibbon}>
+                    <Text style={s.recRibbonText}>AANBEVOLEN</Text>
                   </View>
-                );
-              })}
-            </View>
-
-            {/* Upsell Stats */}
-            <View style={styles.upsellStats}>
-              <Ionicons name="trending-up" size={16} color={SemanticColors.feedbackSuccess} />
-              <Text style={styles.upsellStatsText}>
-                83% of your customers choose Better or Best options
-              </Text>
-            </View>
-          </View>
-        )}
-      </ScrollView>
-
-      {/* Bottom Actions */}
-      {selectedServices.length > 0 && (
-        <View style={styles.bottomActions}>
-          <Pressable style={styles.previewButton}>
-            <Ionicons name="eye-outline" size={20} color={SemanticColors.textPrimary} />
-            <Text style={styles.previewButtonText}>Preview</Text>
-          </Pressable>
-          <Pressable style={styles.sendButton} onPress={handleSend}>
-            <Ionicons name="send" size={20} color="#fff" />
-            <Text style={styles.sendButtonText}>Send to Customer</Text>
-          </Pressable>
-        </View>
-      )}
-    </View>
-  );
-}
-
-// Simple Pricebook Selector
-function PricebookSelector({
-  onSelect,
-  onClose,
-  selectedIds,
-}: {
-  onSelect: (item: PricebookItem) => void;
-  onClose: () => void;
-  selectedIds: string[];
-}) {
-  const itemsWithVariants = MOCK_PRICEBOOK.filter((i) => i.variants && i.variants.length > 0);
-
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={onClose} style={styles.closeButton}>
-          <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
-        </Pressable>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Select Service</Text>
-          <Text style={styles.headerSubtitle}>Services with tiered pricing</Text>
-        </View>
-      </View>
-
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-        {itemsWithVariants.map((item) => {
-          const isSelected = selectedIds.includes(item.id);
-          return (
-            <Pressable
-              key={item.id}
-              style={[styles.pricebookItem, isSelected && styles.pricebookItemSelected]}
-              onPress={() => onSelect(item)}
-            >
-              <View style={styles.pricebookItemInfo}>
-                <Text style={styles.pricebookItemName}>{item.name}</Text>
-                <Text style={styles.pricebookItemDesc}>{item.description}</Text>
-                <View style={styles.pricebookItemPrices}>
-                  {item.variants?.map((v) => (
-                    <Text key={v.id} style={styles.pricebookItemPrice}>
-                      {v.tier}: €{v.price}/{item.unit}
-                    </Text>
-                  ))}
+                )}
+                <View style={[s.tierIconCircle, { backgroundColor: cfg.color + '15' }]}>
+                  <Ionicons name={cfg.icon} size={20} color={cfg.color} />
                 </View>
+                <Text style={[s.tierName, { color: cfg.color }]}>{tier.name}</Text>
+                <Text style={s.tierPrice}>{fmt(tier.total)}</Text>
+                <Text style={s.tierVat}>incl. btw</Text>
+                {tier.features.map((f, i) => (
+                  <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, width: '100%' }}>
+                    <Ionicons name="checkmark" size={12} color={SemanticColors.feedbackSuccess} />
+                    <Text style={s.tierFeature} numberOfLines={1}>{f}</Text>
+                  </View>
+                ))}
               </View>
-              {isSelected ? (
-                <Ionicons name="checkmark-circle" size={24} color={SemanticColors.feedbackSuccess} />
-              ) : (
-                <Ionicons name="add-circle-outline" size={24} color={SemanticColors.actionPrimary} />
-              )}
-            </Pressable>
-          );
-        })}
+            );
+          })}
+        </View>
+
+        {/* Upsell stat */}
+        <View style={s.upsellRow}>
+          <Ionicons name="trending-up" size={14} color={SemanticColors.feedbackSuccess} />
+          <Text style={s.upsellText}>83% van klanten kiest Standaard of Premium</Text>
+        </View>
+
+        {/* Line items summary */}
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>Regels (standaard)</Text>
+          <View style={s.serviceList}>
+            {selectedServices.map(sv => (
+              <View key={sv.item.id} style={s.serviceRow}>
+                <Text style={s.serviceName}>{sv.item.name}</Text>
+                <Text style={s.servicePrice}>{sv.quantity} × {fmt(sv.item.basePrice * 1.25)}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
       </ScrollView>
+
+      {/* Send */}
+      <View style={s.bottom}>
+        <Pressable style={s.sendBtn} onPress={handleSend}>
+          <Ionicons name="send" size={18} color={Palette.white} />
+          <Text style={s.sendBtnText}>Offerte versturen</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: SemanticColors.surfaceBackground,
-  },
-  guidanceTip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#E3520508',
-    borderRadius: 10,
-    padding: 12,
-    borderLeftWidth: 3,
-    borderLeftColor: '#E35205',
-    marginBottom: 4,
-  },
-  guidanceTipText: {
-    flex: 1,
-    fontSize: 13,
-    color: SemanticColors.textSecondary,
-    lineHeight: 18,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.md,
-    paddingTop: Spacing.xl,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.borderDefault,
-    gap: Spacing.sm,
-  },
-  closeButton: {
-    padding: Spacing.xs,
-  },
-  headerContent: {
-    flex: 1,
-  },
-  headerTitle: {
-    color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  headerSubtitle: {
-    color: SemanticColors.textSecondary,
-    fontSize: 12,
-  },
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: Spacing.md,
-    paddingBottom: 120,
-    gap: Spacing.lg,
-  },
-  section: {
-    gap: Spacing.sm,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  sectionTitle: {
-    color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  sectionSubtitle: {
-    color: SemanticColors.textSecondary,
-    fontSize: 12,
-  },
-  addServiceBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: SemanticColors.actionPrimary + '15',
-    borderRadius: 8,
-  },
-  addServiceText: {
-    color: SemanticColors.actionPrimary,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  servicesList: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-    overflow: 'hidden',
-  },
-  serviceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.borderMuted,
-  },
-  serviceInfo: {
-    flex: 1,
-  },
-  serviceName: {
-    color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  serviceBase: {
-    color: SemanticColors.textSecondary,
-    fontSize: 12,
-  },
-  quantityControl: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  quantityBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quantityText: {
-    color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
-    minWidth: 60,
-    textAlign: 'center',
-  },
-  emptyServices: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
-    padding: Spacing.xl,
-    alignItems: 'center',
-    gap: Spacing.sm,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-    borderStyle: 'dashed',
-  },
-  emptyServicesText: {
-    color: SemanticColors.textTertiary,
-    fontSize: 14,
-  },
-  tiersPreview: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-  },
-  tierCard: {
-    flex: 1,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
-    padding: Spacing.sm,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-    alignItems: 'center',
-    gap: 6,
-  },
-  tierCardRecommended: {
-    borderColor: SemanticColors.actionPrimary,
-    borderWidth: 2,
-  },
-  recommendedRibbon: {
-    position: 'absolute',
-    top: -1,
-    left: -1,
-    right: -1,
-    backgroundColor: SemanticColors.actionPrimary,
-    paddingVertical: 3,
-    alignItems: 'center',
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-  },
-  recommendedRibbonText: {
-    color: '#fff',
-    fontSize: 8,
-    fontWeight: '700',
-  },
-  tierIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 12,
-  },
-  tierName: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  tierTagline: {
-    color: SemanticColors.textTertiary,
-    fontSize: 9,
-    textAlign: 'center',
-  },
-  tierPrice: {
-    color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 4,
-  },
-  tierPriceLabel: {
-    color: SemanticColors.textTertiary,
-    fontSize: 9,
-  },
-  tierFeatures: {
-    width: '100%',
-    gap: 3,
-    marginTop: 8,
-  },
-  tierFeatureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  tierFeatureText: {
-    color: SemanticColors.textSecondary,
-    fontSize: 9,
-    flex: 1,
-  },
-  upsellNote: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: SemanticColors.borderMuted,
-    width: '100%',
-  },
-  upsellNoteText: {
-    color: SemanticColors.actionPrimary,
-    fontSize: 9,
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  upsellStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: SemanticColors.feedbackSuccessBg,
-    padding: Spacing.md,
-    borderRadius: 10,
-  },
-  upsellStatsText: {
-    color: SemanticColors.feedbackSuccess,
-    fontSize: 12,
-    flex: 1,
-  },
-  bottomActions: {
-    flexDirection: 'row',
-    padding: Spacing.md,
-    gap: Spacing.sm,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderTopWidth: 1,
-    borderTopColor: SemanticColors.borderDefault,
-  },
-  previewButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
-  },
-  previewButtonText: {
-    color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  sendButton: {
-    flex: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    backgroundColor: SemanticColors.actionPrimary,
-    borderRadius: 12,
-  },
-  sendButtonText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  pricebookItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-    marginBottom: Spacing.sm,
-  },
-  pricebookItemSelected: {
-    borderColor: SemanticColors.feedbackSuccess,
-    backgroundColor: SemanticColors.feedbackSuccessBg,
-  },
-  pricebookItemInfo: {
-    flex: 1,
-    gap: 4,
-  },
-  pricebookItemName: {
-    color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  pricebookItemDesc: {
-    color: SemanticColors.textSecondary,
-    fontSize: 12,
-  },
-  pricebookItemPrices: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 4,
-  },
-  pricebookItemPrice: {
-    color: SemanticColors.textTertiary,
-    fontSize: 10,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
+// =============================================================================
+// STYLES
+// =============================================================================
+const s = StyleSheet.create({
+  container: { flex: 1, backgroundColor: PAGE_BG },
 
-  // Calibration Banner (P4)
-  calibrationBanner: {
-    backgroundColor: '#E3520508',
-    borderRadius: 12,
-    padding: Spacing.md,
-    borderLeftWidth: 3,
-    borderLeftColor: '#E35205',
-    gap: Spacing.sm,
+  header: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.sm,
+    paddingTop: SafeArea.top, paddingHorizontal: SafeArea.side, paddingBottom: GRID.sm,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: SemanticColors.borderDefault,
   },
-  calibrationHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  closeBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: PAGE_BG, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  headerSub: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 1 },
+
+  scroll: { flex: 1 },
+  scrollContent: { padding: SafeArea.side, gap: GRID.lg, paddingBottom: 120 },
+
+  // AI Scan — compact row
+  aiScanRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: Palette.hermesOrange + '08', borderRadius: RADIUS.md, padding: 12,
   },
-  calibrationTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#E35205',
+  aiScanText: { flex: 1, fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
+
+  // Sections
+  section: { gap: GRID.sm },
+  sectionTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+
+  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Palette.hermesOrange + '10', borderRadius: RADIUS.sm, paddingHorizontal: 10, paddingVertical: 6 },
+  addBtnText: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange },
+
+  // Service list
+  serviceList: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden' },
+  serviceRow: {
+    flexDirection: 'row', alignItems: 'center', padding: 14, gap: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: SemanticColors.borderDefault,
   },
-  calibrationText: {
-    fontSize: 13,
-    color: SemanticColors.textSecondary,
-    lineHeight: 18,
+  serviceName: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  servicePrice: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
+
+  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  qtyBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: SemanticColors.surfaceSecondary, alignItems: 'center', justifyContent: 'center' },
+  qtyText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary, minWidth: 24, textAlign: 'center' },
+
+  // Templates
+  templateLabel: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
+  templateRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md, padding: 12,
   },
-  calibrationActions: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
+  templateName: { flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  templateMeta: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
+
+  // Empty
+  emptyBox: { alignItems: 'center', gap: 8, padding: 32, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: SemanticColors.borderDefault, borderStyle: 'dashed' },
+  emptyText: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textTertiary },
+
+  // Suggestions
+  suggestRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
+  suggestLabel: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary, marginRight: 4 },
+  suggestChip: { backgroundColor: Palette.hermesOrange + '10', borderRadius: RADIUS.sm, paddingHorizontal: 8, paddingVertical: 3 },
+  suggestChipText: { fontSize: TYPE.tinySize, fontFamily: TYPE.captionFamily, color: Palette.hermesOrange },
+
+  // Pricebook selector
+  pbItem: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md, padding: 14, marginBottom: 6,
   },
-  calibrationApply: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  pbItemSelected: { borderWidth: 1, borderColor: SemanticColors.feedbackSuccess },
+  pbName: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  pbPrice: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 1 },
+
+  // Bottom bar
+  bottom: {
+    padding: SafeArea.side, paddingBottom: 34,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: SemanticColors.borderDefault,
     gap: 6,
-    backgroundColor: '#E35205',
-    paddingVertical: 10,
-    borderRadius: 10,
   },
-  calibrationApplyText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#fff',
+  bottomSummary: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, textAlign: 'center' },
+  nextBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.md, paddingVertical: 14,
   },
-  calibrationIgnore: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: SemanticColors.surfaceSecondary,
+  nextBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: Palette.white },
+
+  sendBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.md, paddingVertical: 14,
   },
-  calibrationIgnoreText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: SemanticColors.textSecondary,
+  sendBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: Palette.white },
+
+  // Vasco card — preview step
+  vascoCard: {
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: 14, gap: 8,
+    borderLeftWidth: 3, borderLeftColor: Palette.hermesOrange,
   },
+  vascoTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  vascoRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  vascoText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, flex: 1 },
+  vascoApply: { backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.sm, paddingHorizontal: 10, paddingVertical: 5 },
+  vascoApplyText: { fontSize: TYPE.tinySize, fontFamily: TYPE.titleFamily, color: Palette.white },
+  vascoSkip: { backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.sm, paddingHorizontal: 10, paddingVertical: 5 },
+  vascoSkipText: { fontSize: TYPE.tinySize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
+
+  // Tier cards
+  tiersRow: { flexDirection: 'row', gap: GRID.xs },
+  tierCard: {
+    flex: 1, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md,
+    padding: 10, alignItems: 'center', gap: 4, borderWidth: 1, borderColor: SemanticColors.borderDefault,
+  },
+  recRibbon: {
+    position: 'absolute', top: -1, left: -1, right: -1,
+    backgroundColor: Palette.hermesOrange, paddingVertical: 3, alignItems: 'center',
+    borderTopLeftRadius: RADIUS.md - 1, borderTopRightRadius: RADIUS.md - 1,
+  },
+  recRibbonText: { fontSize: 8, fontFamily: TYPE.titleFamily, color: Palette.white, letterSpacing: 0.5 },
+  tierIconCircle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
+  tierName: { fontSize: TYPE.captionSize, fontFamily: TYPE.sectionFamily },
+  tierPrice: { fontSize: TYPE.sectionSize, fontFamily: TYPE.displayFamily, color: SemanticColors.textPrimary, marginTop: 2 },
+  tierVat: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textTertiary },
+  tierFeature: { fontSize: 9, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, flex: 1 },
+
+  upsellRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: SemanticColors.feedbackSuccess + '10', borderRadius: RADIUS.md, padding: 10 },
+  upsellText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.feedbackSuccess },
 });

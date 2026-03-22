@@ -4,13 +4,19 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   TextInput,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Spacing } from '../../src/theme/spacing';
+import { SemanticColors, Palette } from '../../src/theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
+import { Spacing, SafeArea } from '../../src/theme/spacing';
+import { hapticSuccess } from '../../src/utils/haptics';
+import { Toast } from '../../src/components/shared/Toast';
+import { useInspections } from '../../src/services/siteLeadDataService';
+import { useTranslation } from 'react-i18next';
+import { FadeIn } from '../../src/components/shared/FadeIn';
 
 interface ChecklistItem {
   id: string;
@@ -18,21 +24,32 @@ interface ChecklistItem {
   note?: string;
 }
 
-const CHECKLIST_ITEMS: ChecklistItem[] = [
-  { id: '1', label: 'PBM controle' },
-  { id: '2', label: 'Stellingen veilig' },
-  { id: '3', label: 'Brandblussers aanwezig' },
-  { id: '4', label: 'Vluchtroutes vrij' },
-  { id: '5', label: 'Gereedschap in orde' },
-  { id: '6', label: 'Elektra veilig' },
-  { id: '7', label: 'Steigers gekeurd' },
-  { id: '8', label: 'EHBO beschikbaar' },
+const CHECKLIST_KEYS = [
+  { id: '1', key: 'sitelead.inspectionPpeCheck', fallback: 'PBM controle' },
+  { id: '2', key: 'sitelead.inspectionScaffolding', fallback: 'Stellingen veilig' },
+  { id: '3', key: 'sitelead.inspectionFireExtinguishers', fallback: 'Brandblussers aanwezig' },
+  { id: '4', key: 'sitelead.inspectionEscapeRoutes', fallback: 'Vluchtroutes vrij' },
+  { id: '5', key: 'sitelead.inspectionTools', fallback: 'Gereedschap in orde' },
+  { id: '6', key: 'sitelead.inspectionElectrical', fallback: 'Elektra veilig' },
+  { id: '7', key: 'sitelead.inspectionScaffoldApproved', fallback: 'Steigers gekeurd' },
+  { id: '8', key: 'sitelead.inspectionFirstAid', fallback: 'EHBO beschikbaar' },
 ];
 
 export default function InspectionScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
   const [notes, setNotes] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  const [customItems, setCustomItems] = useState<{id: string; label: string}[]>([]);
+  const [newItemText, setNewItemText] = useState('');
+  const [showAddItem, setShowAddItem] = useState(false);
+  const { addInspection } = useInspections();
+
+  const checklistItems: ChecklistItem[] = CHECKLIST_KEYS.map(ck => ({
+    id: ck.id,
+    label: t(ck.key, ck.fallback),
+  }));
 
   const toggleItem = (id: string) => {
     setCheckedItems((prev) => {
@@ -47,41 +64,46 @@ export default function InspectionScreen() {
   };
 
   const handleComplete = () => {
-    Alert.alert(
-      'Inspectie Afgerond',
-      'De inspectie is afgerond en automatisch toegevoegd aan het compliance overzicht.',
-      [{ text: 'OK', onPress: () => router.back() }]
-    );
+    addInspection({
+      date: new Date().toISOString().split('T')[0],
+      location: 'Bouwplaats Amsterdam-Zuid',
+      checkedItems: Array.from(checkedItems),
+      totalItems: checklistItems.length + customItems.length,
+      notes: notes || '',
+    });
+    hapticSuccess();
+    setShowToast(true);
   };
 
   const checkedCount = checkedItems.size;
-  const totalCount = CHECKLIST_ITEMS.length;
+  const totalCount = checklistItems.length + customItems.length;
   const progress = totalCount > 0 ? checkedCount / totalCount : 0;
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#2D2926" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Veiligheidsinspectie</Text>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+        </Pressable>
+        <Text style={styles.headerTitle}>{t('sitelead.inspectionTitle', 'Veiligheidsinspectie')}</Text>
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        <FadeIn delay={0} duration={400}>
         {/* Location */}
         <View style={styles.locationCard}>
-          <Ionicons name="location" size={20} color="#D2691E" />
-          <Text style={styles.locationText}>Bouwplaats Amsterdam-Zuid</Text>
+          <Ionicons name="location" size={20} color={Palette.hermesOrange} />
+          <Text style={styles.locationText}>{t('sitelead.inspectionLocation', 'Bouwplaats Amsterdam-Zuid')}</Text>
         </View>
 
         {/* Checklist Items */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Controle Punten</Text>
-          {CHECKLIST_ITEMS.map((item) => {
+          <Text style={styles.sectionLabel}>{t('sitelead.inspectionCheckpoints', 'Controle Punten')}</Text>
+          {checklistItems.map((item) => {
             const isChecked = checkedItems.has(item.id);
             return (
-              <TouchableOpacity
+              <Pressable
                 key={item.id}
                 style={styles.checklistItem}
                 onPress={() => toggleItem(item.id)}
@@ -89,7 +111,7 @@ export default function InspectionScreen() {
                 <Ionicons
                   name={isChecked ? 'checkmark-circle' : 'ellipse-outline'}
                   size={28}
-                  color={isChecked ? '#D2691E' : '#8A7E76'}
+                  color={isChecked ? Palette.hermesOrange : SemanticColors.textSecondary}
                 />
                 <View style={styles.checklistContent}>
                   <Text style={[styles.checklistLabel, isChecked && styles.checklistLabelDone]}>
@@ -99,15 +121,81 @@ export default function InspectionScreen() {
                     <Text style={styles.checklistNote}>{item.note}</Text>
                   )}
                 </View>
-              </TouchableOpacity>
+              </Pressable>
             );
           })}
+
+          {/* Custom Items */}
+          {customItems.map((item) => {
+            const isChecked = checkedItems.has(item.id);
+            return (
+              <Pressable
+                key={item.id}
+                style={styles.checklistItem}
+                onPress={() => toggleItem(item.id)}
+              >
+                <Ionicons
+                  name={isChecked ? 'checkmark-circle' : 'ellipse-outline'}
+                  size={28}
+                  color={isChecked ? Palette.hermesOrange : SemanticColors.textSecondary}
+                />
+                <View style={styles.checklistContent}>
+                  <Text style={[styles.checklistLabel, isChecked && styles.checklistLabelDone]}>
+                    {item.label}
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          })}
+
+          {/* Add Custom Item */}
+          {showAddItem && (
+            <View style={styles.addItemRow}>
+              <TextInput
+                style={styles.addItemInput}
+                placeholder="Nieuw controlepunt..."
+                placeholderTextColor={SemanticColors.textSecondary}
+                value={newItemText}
+                onChangeText={setNewItemText}
+                autoFocus
+                onSubmitEditing={() => {
+                  if (newItemText.trim()) {
+                    setCustomItems(prev => [...prev, { id: 'c-' + Date.now(), label: newItemText.trim() }]);
+                    setNewItemText('');
+                    setShowAddItem(false);
+                  }
+                }}
+              />
+              <Pressable
+                style={[styles.addItemConfirm, !newItemText.trim() && { opacity: 0.4 }]}
+                onPress={() => {
+                  if (newItemText.trim()) {
+                    setCustomItems(prev => [...prev, { id: 'c-' + Date.now(), label: newItemText.trim() }]);
+                    setNewItemText('');
+                    setShowAddItem(false);
+                  }
+                }}
+              >
+                <Text style={styles.addItemConfirmText}>Toevoegen</Text>
+              </Pressable>
+            </View>
+          )}
+
+          <Pressable
+            style={styles.addItemButton}
+            onPress={() => setShowAddItem(!showAddItem)}
+          >
+            <Ionicons name={showAddItem ? 'close' : 'add-circle-outline'} size={22} color={Palette.hermesOrange} />
+            <Text style={styles.addItemButtonText}>
+              {showAddItem ? 'Annuleren' : 'Punt toevoegen'}
+            </Text>
+          </Pressable>
         </View>
 
         {/* Progress */}
         <View style={styles.progressSection}>
           <Text style={styles.progressText}>
-            {checkedCount}/{totalCount} punten gecontroleerd
+            {t('sitelead.inspectionProgress', '{{checked}}/{{total}} punten gecontroleerd', { checked: checkedCount, total: totalCount })}
           </Text>
           <View style={styles.progressBarContainer}>
             <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
@@ -116,11 +204,11 @@ export default function InspectionScreen() {
 
         {/* Notes */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Aanvullende notities</Text>
+          <Text style={styles.sectionLabel}>{t('sitelead.inspectionNotes', 'Aanvullende notities')}</Text>
           <TextInput
             style={styles.notesInput}
-            placeholder="Voeg eventuele opmerkingen toe..."
-            placeholderTextColor="#8A7E76"
+            placeholder={t('sitelead.inspectionNotesPlaceholder', 'Voeg eventuele opmerkingen toe...')}
+            placeholderTextColor={SemanticColors.textSecondary}
             value={notes}
             onChangeText={setNotes}
             multiline
@@ -130,13 +218,20 @@ export default function InspectionScreen() {
         </View>
 
         {/* Complete Button */}
-        <TouchableOpacity
+        <Pressable
           style={[styles.completeButton, checkedCount < totalCount && styles.completeButtonDisabled]}
           onPress={handleComplete}
         >
-          <Text style={styles.completeButtonText}>Inspectie Afronden</Text>
-        </TouchableOpacity>
+          <Text style={styles.completeButtonText}>{t('sitelead.inspectionComplete', 'Inspectie Afronden')}</Text>
+        </Pressable>
+        </FadeIn>
       </ScrollView>
+      <Toast
+        message={t('sitelead.inspectionCompleted', 'Inspectie succesvol afgerond')}
+        visible={showToast}
+        onHide={() => { setShowToast(false); router.back(); }}
+        type="success"
+      />
     </View>
   );
 }
@@ -144,28 +239,23 @@ export default function InspectionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF6F1',
+    backgroundColor: PAGE_BG,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xl * 2,
+    paddingTop: SafeArea.top,
     paddingBottom: Spacing.lg,
-    backgroundColor: '#FFFDF9',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   backButton: {
     marginRight: Spacing.md,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#2D2926',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
   },
   scrollView: {
     flex: 1,
@@ -176,123 +266,137 @@ const styles = StyleSheet.create({
   locationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFDF9',
-    borderRadius: 12,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     marginBottom: Spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
   },
   locationText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#2D2926',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
     marginLeft: Spacing.sm,
   },
   section: {
     marginBottom: Spacing.xl,
   },
   sectionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2D2926',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
     marginBottom: Spacing.md,
   },
   checklistItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFDF9',
-    borderRadius: 12,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     marginBottom: Spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
   },
   checklistContent: {
     flex: 1,
     marginLeft: Spacing.md,
   },
   checklistLabel: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#2D2926',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textPrimary,
   },
   checklistLabelDone: {
-    color: '#8A7E76',
+    color: SemanticColors.textSecondary,
     textDecorationLine: 'line-through',
   },
   checklistNote: {
-    fontSize: 13,
-    color: '#8A7E76',
+    fontSize: TYPE.captionSize,
+    color: SemanticColors.textSecondary,
     marginTop: Spacing.xs,
   },
   progressSection: {
-    backgroundColor: '#FFFDF9',
-    borderRadius: 12,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     marginBottom: Spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
   },
   progressText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2D2926',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
     marginBottom: Spacing.sm,
   },
   progressBarContainer: {
     height: 8,
-    backgroundColor: '#F0EAE2',
+    backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: 4,
     overflow: 'hidden',
   },
   progressBar: {
     height: '100%',
-    backgroundColor: '#D2691E',
+    backgroundColor: Palette.hermesOrange,
     borderRadius: 4,
   },
   notesInput: {
-    backgroundColor: '#FFFDF9',
-    borderRadius: 12,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
-    fontSize: 15,
-    color: '#2D2926',
+    fontSize: TYPE.bodySize,
+    color: SemanticColors.textPrimary,
     minHeight: 100,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
     paddingTop: Spacing.md,
   },
   completeButton: {
-    backgroundColor: '#D2691E',
-    borderRadius: 12,
+    backgroundColor: Palette.hermesOrange,
+    borderRadius: RADIUS.md,
     padding: Spacing.lg,
     alignItems: 'center',
     marginTop: Spacing.md,
     marginBottom: Spacing.xl,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
   },
   completeButtonDisabled: {
     opacity: 0.5,
   },
   completeButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFDF9',
+    fontSize: TYPE.titleSize,
+    fontFamily: 'Manrope_700Bold',
+    color: SemanticColors.surfacePrimary,
+  },
+  addItemButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    gap: Spacing.xs,
+    marginTop: Spacing.xs,
+  },
+  addItemButtonText: {
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.hermesOrange,
+  },
+  addItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  addItemInput: {
+    flex: 1,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md,
+    padding: Spacing.md,
+    fontSize: TYPE.bodySize,
+    color: SemanticColors.textPrimary,
+    borderWidth: 1,
+    borderColor: Palette.hermesOrange + '40',
+  },
+  addItemConfirm: {
+    backgroundColor: Palette.hermesOrange,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  addItemConfirmText: {
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.white,
   },
 });

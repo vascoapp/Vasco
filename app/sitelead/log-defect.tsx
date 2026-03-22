@@ -4,19 +4,28 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   TextInput,
-  Alert,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Spacing } from '../../src/theme/spacing';
+import { SemanticColors, Palette } from '../../src/theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
+import { Spacing, SafeArea } from '../../src/theme/spacing';
+import { hapticSuccess } from '../../src/utils/haptics';
+import { showPhotoPicker, type PhotoResult } from '../../src/utils/photoPicker';
+import { Toast } from '../../src/components/shared/Toast';
+import { useDefects } from '../../src/services/siteLeadDataService';
+import { useTranslation } from 'react-i18next';
+import { FadeIn } from '../../src/components/shared/FadeIn';
 
 type DefectType = 'Gebrek' | 'Garantie';
 type Severity = 'Laag' | 'Middel' | 'Hoog' | 'Kritiek';
 type Trade = 'Elektra' | 'Loodgieter' | 'Timmerman' | 'Schilder' | 'Anders';
 
 export default function LogDefectScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [defectType, setDefectType] = useState<DefectType>('Gebrek');
   const [location, setLocation] = useState('');
@@ -25,37 +34,43 @@ export default function LogDefectScreen() {
   const [trade, setTrade] = useState<Trade | null>(null);
   const [guaranteeRef, setGuaranteeRef] = useState('');
   const [guaranteeExpiry, setGuaranteeExpiry] = useState('');
+  const [photos, setPhotos] = useState<PhotoResult[]>([]);
+  const [showToast, setShowToast] = useState(false);
+  const { addDefect } = useDefects();
 
   const handleSubmit = () => {
-    const type = defectType === 'Gebrek' ? 'Gebrek' : 'Garantie';
-    Alert.alert(
-      'Geregistreerd',
-      `Het ${type.toLowerCase()} is succesvol geregistreerd en toegewezen voor afhandeling.`,
-      [
-        {
-          text: 'OK',
-          onPress: () => router.back(),
-        },
-      ]
-    );
+    addDefect({
+      type: defectType.toLowerCase() as any,
+      title: description.slice(0, 50) || 'Nieuw gebrek',
+      location,
+      description,
+      severity: severity ? severity.toLowerCase() as any : 'laag',
+      trade: trade || 'Anders',
+      photos: photos.map(p => p.uri),
+      guaranteeRef: guaranteeRef || undefined,
+      guaranteeExpiry: guaranteeExpiry || undefined,
+    });
+    hapticSuccess();
+    setShowToast(true);
   };
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#2D2926" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Log Gebrek / Garantie</Text>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+        </Pressable>
+        <Text style={styles.headerTitle}>{t('sitelead.defectTitle', 'Log Gebrek / Garantie')}</Text>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <FadeIn delay={0} duration={400}>
         {/* Type Selector */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Type</Text>
+          <Text style={styles.sectionLabel}>{t('sitelead.defectType', 'Type')}</Text>
           <View style={styles.chipRow}>
-            <TouchableOpacity
+            <Pressable
               style={[
                 styles.chip,
                 defectType === 'Gebrek' && styles.chipActive,
@@ -68,10 +83,10 @@ export default function LogDefectScreen() {
                   defectType === 'Gebrek' && styles.chipTextActive,
                 ]}
               >
-                Gebrek
+                {t('sitelead.defectTypeDefect', 'Gebrek')}
               </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
+            </Pressable>
+            <Pressable
               style={[
                 styles.chip,
                 defectType === 'Garantie' && styles.chipActive,
@@ -84,19 +99,19 @@ export default function LogDefectScreen() {
                   defectType === 'Garantie' && styles.chipTextActive,
                 ]}
               >
-                Garantie
+                {t('sitelead.defectTypeWarranty', 'Garantie')}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
 
         {/* Location */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Locatie</Text>
+          <Text style={styles.sectionLabel}>{t('sitelead.defectLocation', 'Locatie')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="bijv. Blok A - Badkamer 201"
-            placeholderTextColor="#8A7E76"
+            placeholder={t('sitelead.defectLocationPlaceholder', 'bijv. Blok A - Badkamer 201')}
+            placeholderTextColor={SemanticColors.textSecondary}
             value={location}
             onChangeText={setLocation}
           />
@@ -104,11 +119,11 @@ export default function LogDefectScreen() {
 
         {/* Description */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Beschrijving</Text>
+          <Text style={styles.sectionLabel}>{t('sitelead.defectDescription', 'Beschrijving')}</Text>
           <TextInput
             style={[styles.input, styles.inputMultiline]}
-            placeholder="Beschrijf het probleem..."
-            placeholderTextColor="#8A7E76"
+            placeholder={t('sitelead.defectDescriptionPlaceholder', 'Beschrijf het probleem...')}
+            placeholderTextColor={SemanticColors.textSecondary}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -119,10 +134,17 @@ export default function LogDefectScreen() {
 
         {/* Severity */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Ernst</Text>
+          <Text style={styles.sectionLabel}>{t('sitelead.defectSeverity', 'Ernst')}</Text>
           <View style={styles.chipRow}>
-            {(['Laag', 'Middel', 'Hoog', 'Kritiek'] as Severity[]).map((sev) => (
-              <TouchableOpacity
+            {(['Laag', 'Middel', 'Hoog', 'Kritiek'] as Severity[]).map((sev) => {
+              const sevLabels: Record<Severity, string> = {
+                'Laag': t('sitelead.incidentSeverityLow', 'Laag'),
+                'Middel': t('sitelead.incidentSeverityMedium', 'Middel'),
+                'Hoog': t('sitelead.incidentSeverityHigh', 'Hoog'),
+                'Kritiek': t('sitelead.incidentSeverityCritical', 'Kritiek'),
+              };
+              return (
+              <Pressable
                 key={sev}
                 style={[
                   styles.chip,
@@ -136,37 +158,47 @@ export default function LogDefectScreen() {
                     severity === sev && styles.chipTextActive,
                   ]}
                 >
-                  {sev}
+                  {sevLabels[sev]}
                 </Text>
-              </TouchableOpacity>
-            ))}
+              </Pressable>
+              );
+            })}
           </View>
         </View>
 
         {/* Trade */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Vakgebied</Text>
+          <Text style={styles.sectionLabel}>{t('sitelead.defectTrade', 'Vakgebied')}</Text>
           <View style={styles.chipRow}>
             {(['Elektra', 'Loodgieter', 'Timmerman', 'Schilder', 'Anders'] as Trade[]).map(
-              (t) => (
-                <TouchableOpacity
-                  key={t}
+              (tr) => {
+                const tradeLabels: Record<Trade, string> = {
+                  'Elektra': t('sitelead.defectTradeElectrical', 'Elektra'),
+                  'Loodgieter': t('sitelead.defectTradePlumber', 'Loodgieter'),
+                  'Timmerman': t('sitelead.defectTradeCarpenter', 'Timmerman'),
+                  'Schilder': t('sitelead.defectTradePainter', 'Schilder'),
+                  'Anders': t('sitelead.defectTradeOther', 'Anders'),
+                };
+                return (
+                <Pressable
+                  key={tr}
                   style={[
                     styles.chip,
-                    trade === t && styles.chipActive,
+                    trade === tr && styles.chipActive,
                   ]}
-                  onPress={() => setTrade(t)}
+                  onPress={() => setTrade(tr)}
                 >
                   <Text
                     style={[
                       styles.chipText,
-                      trade === t && styles.chipTextActive,
+                      trade === tr && styles.chipTextActive,
                     ]}
                   >
-                    {t}
+                    {tradeLabels[tr]}
                   </Text>
-                </TouchableOpacity>
-              )
+                </Pressable>
+                );
+              }
             )}
           </View>
         </View>
@@ -175,22 +207,22 @@ export default function LogDefectScreen() {
         {defectType === 'Garantie' && (
           <>
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Garantie referentie</Text>
+              <Text style={styles.sectionLabel}>{t('sitelead.defectGuaranteeRef', 'Garantie referentie')}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Referentienummer"
-                placeholderTextColor="#8A7E76"
+                placeholder={t('sitelead.defectGuaranteeRefPlaceholder', 'Referentienummer')}
+                placeholderTextColor={SemanticColors.textSecondary}
                 value={guaranteeRef}
                 onChangeText={setGuaranteeRef}
               />
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Garantie verloopdatum</Text>
+              <Text style={styles.sectionLabel}>{t('sitelead.defectGuaranteeExpiry', 'Garantie verloopdatum')}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="DD-MM-JJJJ"
-                placeholderTextColor="#8A7E76"
+                placeholder={t('sitelead.defectGuaranteeExpiryPlaceholder', 'DD-MM-JJJJ')}
+                placeholderTextColor={SemanticColors.textSecondary}
                 value={guaranteeExpiry}
                 onChangeText={setGuaranteeExpiry}
               />
@@ -200,21 +232,43 @@ export default function LogDefectScreen() {
 
         {/* Photo Section */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.photoButton}>
-            <Ionicons name="camera-outline" size={24} color="#D2691E" />
-            <Text style={styles.photoButtonText}>Foto toevoegen</Text>
-          </TouchableOpacity>
+          <Pressable style={styles.photoButton} onPress={() => showPhotoPicker((photo) => setPhotos(prev => [...prev, photo]))}>
+            <Ionicons name="camera-outline" size={24} color={Palette.hermesOrange} />
+            <Text style={styles.photoButtonText}>{t('sitelead.defectAddPhoto', 'Foto toevoegen')}</Text>
+          </Pressable>
+          {photos.length > 0 && (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+              {photos.map((p, i) => (
+                <View key={i} style={{ width: 64, height: 64, borderRadius: 8, overflow: 'hidden', position: 'relative' }}>
+                  <Image source={{ uri: p.uri }} style={{ width: 64, height: 64 }} />
+                  <Pressable
+                    style={{ position: 'absolute', top: -4, right: -4 }}
+                    onPress={() => setPhotos(prev => prev.filter((_, j) => j !== i))}
+                  >
+                    <Ionicons name="close-circle" size={18} color={SemanticColors.feedbackError} />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
 
         {/* Submit Button */}
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+        <Pressable style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitButtonText}>
-            {defectType === 'Gebrek' ? 'Gebrek Registreren' : 'Garantie Registreren'}
+            {defectType === 'Gebrek' ? t('sitelead.defectSubmitDefect', 'Gebrek Registreren') : t('sitelead.defectSubmitWarranty', 'Garantie Registreren')}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
 
         <View style={{ height: Spacing.xl }} />
+        </FadeIn>
       </ScrollView>
+      <Toast
+        message={defectType === 'Gebrek' ? t('sitelead.defectRegisteredDefect', 'Gebrek succesvol geregistreerd') : t('sitelead.defectRegisteredWarranty', 'Garantie succesvol geregistreerd')}
+        visible={showToast}
+        onHide={() => { setShowToast(false); router.back(); }}
+        type="success"
+      />
     </View>
   );
 }
@@ -222,28 +276,23 @@ export default function LogDefectScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF6F1',
+    backgroundColor: PAGE_BG,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xl + 20,
+    paddingTop: SafeArea.top,
     paddingBottom: Spacing.lg,
-    backgroundColor: '#FFFDF9',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   backButton: {
     marginRight: Spacing.md,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#2D2926',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
   },
   content: {
     flex: 1,
@@ -254,9 +303,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   sectionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2D2926',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
     marginBottom: Spacing.sm,
   },
   chipRow: {
@@ -267,37 +316,27 @@ const styles = StyleSheet.create({
   chip: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    borderRadius: 20,
-    backgroundColor: '#FFFDF9',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    borderRadius: RADIUS.xl,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   chipActive: {
-    backgroundColor: '#D2691E',
+    backgroundColor: Palette.hermesOrange,
   },
   chipText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#8A7E76',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textSecondary,
   },
   chipTextActive: {
-    color: '#FFFDF9',
+    color: SemanticColors.surfacePrimary,
   },
   input: {
-    backgroundColor: '#FFFDF9',
-    borderRadius: 12,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
-    fontSize: 15,
-    color: '#2D2926',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    fontSize: TYPE.bodySize,
+    color: SemanticColors.textPrimary,
   },
   inputMultiline: {
     minHeight: 100,
@@ -307,36 +346,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFDF9',
-    borderRadius: 12,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md,
     paddingVertical: Spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
     gap: Spacing.sm,
   },
   photoButtonText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#D2691E',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.labelFamily,
+    color: Palette.hermesOrange,
   },
   submitButton: {
-    backgroundColor: '#D2691E',
-    borderRadius: 12,
+    backgroundColor: Palette.hermesOrange,
+    borderRadius: RADIUS.md,
     paddingVertical: Spacing.lg,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
     marginTop: Spacing.md,
   },
   submitButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFDF9',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.surfacePrimary,
   },
 });

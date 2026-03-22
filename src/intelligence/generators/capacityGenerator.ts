@@ -7,6 +7,7 @@ import { useCapacityForecast } from '../../services/capacityPlanningService';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { logPrediction } from '../calibration';
 import { getSeasonalMultiplier, detectAnomaly, getAdaptiveThreshold } from '../adaptiveThresholds';
+import { gt } from '../generatorTranslations';
 
 export const capacityGenerator: InsightGenerator = {
   id: 'capacity',
@@ -67,7 +68,7 @@ export function useCapacityInsight(ctx: GeneratorContext): ScoredInsight | null 
       message: `Je planning is ${overCapDays.length > 1 ? 'op meerdere dagen' : 'op een dag'} boven ${Math.round(overCapThreshold)}% bezetting. Overweeg om klussen te verschuiven.${seasonNote}${anomaly.isAnomaly ? ` ${anomaly.description}` : ''}`,
       icon: 'alert-circle',
       actionLabel: 'Planning bekijken',
-      source: 'Capaciteitsplanner',
+      source: gt('source_capacity', ctx.language),
 
       rootCauseTags: ['capacity', 'schedule'],
       rawScore: 0,
@@ -80,6 +81,12 @@ export function useCapacityInsight(ctx: GeneratorContext): ScoredInsight | null 
       dataPoints: forecast.length,
       confidence: anomaly.isAnomaly ? Math.min(0.95, 0.8 + 0.05) : 0.8,
       freshness: 2,
+      action: {
+        type: 'schedule_job',
+        label: 'Planning optimaliseren',
+        params: { utilizationRate: peakUtil },
+        requiresApproval: false,
+      },
     };
   }
 
@@ -91,7 +98,7 @@ export function useCapacityInsight(ctx: GeneratorContext): ScoredInsight | null 
     title: `${lowCapDays.length} dag${lowCapDays.length > 1 ? 'en' : ''} met ruimte`,
     message: `Je hebt ruimte in je planning — ideaal om offertes op te volgen of extra klussen aan te nemen.${seasonNote}`,
     icon: 'calendar',
-    source: 'Capaciteitsplanner',
+    source: gt('source_capacity', ctx.language),
 
     rootCauseTags: ['capacity', 'schedule'],
     rawScore: 0,
@@ -104,5 +111,11 @@ export function useCapacityInsight(ctx: GeneratorContext): ScoredInsight | null 
     dataPoints: forecast.length,
     confidence: 0.75,
     freshness: 4,
+    action: {
+      type: 'schedule_job',
+      label: 'Planning optimaliseren',
+      params: { utilizationRate: avgUtil },
+      requiresApproval: false,
+    },
   };
 }

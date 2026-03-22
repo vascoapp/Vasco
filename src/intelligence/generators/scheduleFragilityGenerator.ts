@@ -8,6 +8,7 @@
 import type { ScoredInsight, GeneratorContext } from './types';
 import { mockProjects, mockDeliveryMetrics } from '../../data/mockProjects';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export function useScheduleFragilityInsight(ctx: GeneratorContext): ScoredInsight | null {
   if (ctx.role !== 'coo' && ctx.role !== 'director') return null;
@@ -45,7 +46,7 @@ export function useScheduleFragilityInsight(ctx: GeneratorContext): ScoredInsigh
     icon: 'time',
     actionLabel: 'Bekijk planning',
     actionRoute: '/hub/schedule',
-    source: 'Schedule Analyse',
+    source: gt('source_scheduling', ctx.language),
     metric: { label: 'SPI', value: worst.spi.toFixed(2), trend: worst.spi < 0.90 ? 'down' : 'neutral' },
     rootCauseTags: ['schedule', 'spi', 'delay'],
     rawScore: 0,

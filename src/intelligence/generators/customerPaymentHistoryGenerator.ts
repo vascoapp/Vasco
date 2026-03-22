@@ -9,6 +9,7 @@ import type { ScoredInsight, GeneratorContext } from './types';
 import { useAppState } from '../../state/AppState';
 import { recordMetricSnapshot } from '../learningStorage';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export function useCustomerPaymentHistoryInsight(ctx: GeneratorContext): ScoredInsight | null {
   const { invoices, customers } = useAppState();
@@ -80,7 +81,7 @@ export function useCustomerPaymentHistoryInsight(ctx: GeneratorContext): ScoredI
     detail: `${slowestPayer.totalInvoices} facturen, totaal €${slowestPayer.totalAmount.toLocaleString('nl-NL')}. Gemiddelde betaaltermijn: ~${slowestPayer.avgDaysToPayEstimate} dagen.`,
     icon: 'person',
     actionLabel: isSevere ? 'Betaalkorting aanbieden' : 'Stuur herinnering',
-    source: 'Klantanalyse',
+    source: gt('source_customer', ctx.language),
     metric: { label: 'Verlopen', value: `${overdueRate}%`, trend: isSevere ? 'down' : 'neutral' },
 
     rootCauseTags: ['cashflow', 'customer-risk'],

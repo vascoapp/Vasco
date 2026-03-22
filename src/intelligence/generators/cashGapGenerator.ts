@@ -8,6 +8,7 @@ import { useDSOMetrics } from '../../services/collectionsAgentService';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { logPrediction } from '../calibration';
 import { getSeasonalMultiplier, detectAnomaly } from '../adaptiveThresholds';
+import { gt } from '../generatorTranslations';
 
 export const cashGapGenerator: InsightGenerator = {
   id: 'cash-gap',
@@ -98,7 +99,7 @@ export function useCashGapInsight(ctx: GeneratorContext): ScoredInsight | null {
     icon: 'alert-circle',
     actionLabel: 'Incasso bekijken',
     actionRoute: '/(contractor)/facturen',
-    source: 'Incasso Agent',
+    source: gt('source_collections', ctx.language),
     metric: { label: 'DSO', value: `${dso.currentDSO}d`, trend: dso.currentDSO > dso.targetDSO ? 'down' : 'up' },
 
     rootCauseTags: ['cashflow', 'cash-gap'],
@@ -114,5 +115,11 @@ export function useCashGapInsight(ctx: GeneratorContext): ScoredInsight | null {
     dataPoints: sequences.length + 1, // +1 for DSO metric
     confidence: anomaly.isAnomaly ? Math.min(0.95, 0.85 + 0.05) : 0.85,
     freshness: 1,
+    action: {
+      type: 'send_reminder',
+      label: 'Incasso versnellen',
+      params: { gapAmount: dso.currentDSO - dso.targetDSO },
+      requiresApproval: false,
+    },
   };
 }

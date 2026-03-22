@@ -7,6 +7,7 @@ import { useLaborCosts } from '../../services/laborCostService';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { logPrediction } from '../calibration';
 import { isAboveThreshold, detectAnomaly, getSeasonalMultiplier } from '../adaptiveThresholds';
+import { gt } from '../generatorTranslations';
 
 export const laborEfficiencyGenerator: InsightGenerator = {
   id: 'labor-efficiency',
@@ -64,7 +65,7 @@ export function useLaborEfficiencyInsight(ctx: GeneratorContext): ScoredInsight 
     message: `${labor.idleTime.totalIdleHours} uur niet-productief. ${labor.idleTime.suggestion}${seasonNote}`,
     detail: trendText ? trendText.trim() : undefined,
     icon: 'time',
-    source: 'Arbeidsanalyse',
+    source: gt('source_labor', ctx.language),
     metric: { label: 'Verloren waarde', value: `€${labor.idleTime.idleCost}`, trend: 'down' },
 
     rootCauseTags: ['idle-time', 'labor'],

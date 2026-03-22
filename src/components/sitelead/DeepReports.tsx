@@ -130,9 +130,9 @@ export function DeepReports({ onClose }: DeepReportsProps) {
   const [period, setPeriod] = useState<'week' | 'month' | 'quarter'>('week');
 
   const periods = [
-    { id: 'week' as const, label: 'This Week' },
-    { id: 'month' as const, label: 'This Month' },
-    { id: 'quarter' as const, label: 'This Quarter' },
+    { id: 'week' as const, label: 'Deze Week' },
+    { id: 'month' as const, label: 'Deze Maand' },
+    { id: 'quarter' as const, label: 'Dit Kwartaal' },
   ];
 
   return (
@@ -140,8 +140,8 @@ export function DeepReports({ onClose }: DeepReportsProps) {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.title}>Reports</Text>
-          <Text style={styles.subtitle}>Deep Analytics & Insights</Text>
+          <Text style={styles.title}>Rapporten</Text>
+          <Text style={styles.subtitle}>Gedetailleerde Analyses & Inzichten</Text>
         </View>
         {onClose && (
           <Pressable onPress={onClose} style={styles.closeButton}>
@@ -167,31 +167,31 @@ export function DeepReports({ onClose }: DeepReportsProps) {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Financial Overview */}
-        <ReportSection title="Financial Overview" icon="wallet" color={SemanticColors.feedbackSuccess}>
+        <ReportSection title="Financieel Overzicht" icon="wallet" color={SemanticColors.feedbackSuccess}>
           <View style={styles.statsGrid}>
             <StatBlock
-              label="Total Revenue"
+              label="Totale Omzet"
               value={report.overview.totalRevenue}
               prefix={'\u20AC'}
               icon="trending-up"
               color={SemanticColors.feedbackSuccess}
             />
             <StatBlock
-              label="Total Costs"
+              label="Totale Kosten"
               value={report.overview.totalCosts}
               prefix={'\u20AC'}
               icon="trending-down"
               color={SemanticColors.feedbackError}
             />
             <StatBlock
-              label="Gross Profit"
+              label="Brutowinst"
               value={report.overview.grossProfit}
               prefix={'\u20AC'}
               icon="cash"
               color={SemanticColors.actionPrimary}
             />
             <StatBlock
-              label="Gross Margin"
+              label="Brutomarge"
               value={report.overview.grossMargin}
               suffix="%"
               icon="pie-chart"
@@ -201,7 +201,7 @@ export function DeepReports({ onClose }: DeepReportsProps) {
 
           {/* Profit Visualization */}
           <View style={styles.profitCard}>
-            <Text style={styles.profitCardTitle}>Profit Breakdown</Text>
+            <Text style={styles.profitCardTitle}>Winstopbouw</Text>
             <View style={styles.profitBar}>
               <View
                 style={[
@@ -225,64 +225,64 @@ export function DeepReports({ onClose }: DeepReportsProps) {
             <View style={styles.profitLegend}>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: SemanticColors.feedbackSuccess }]} />
-                <Text style={styles.legendText}>Profit ({report.overview.grossMargin}%)</Text>
+                <Text style={styles.legendText}>Winst ({report.overview.grossMargin}%)</Text>
               </View>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: SemanticColors.feedbackError }]} />
-                <Text style={styles.legendText}>Costs ({100 - report.overview.grossMargin}%)</Text>
+                <Text style={styles.legendText}>Kosten ({100 - report.overview.grossMargin}%)</Text>
               </View>
             </View>
           </View>
         </ReportSection>
 
         {/* Workforce Analytics */}
-        <ReportSection title="Workforce Analytics" icon="people" color={SemanticColors.feedbackInfo}>
+        <ReportSection title="Personeel Analyse" icon="people" color={SemanticColors.feedbackInfo}>
           <View style={styles.statsGrid}>
             <StatBlock
-              label="Total Hours"
+              label="Totaal Uren"
               value={report.workforce.totalHours}
-              suffix="h"
+              suffix="u"
               icon="time"
             />
             <StatBlock
-              label="Billable Hours"
+              label="Declarabele Uren"
               value={report.workforce.billableHours}
-              suffix="h"
+              suffix="u"
               icon="cash"
               color={SemanticColors.feedbackSuccess}
             />
             <StatBlock
-              label="Utilization"
+              label="Bezettingsgraad"
               value={report.workforce.utilizationRate}
               suffix="%"
               icon="speedometer"
               color={SemanticColors.feedbackInfo}
             />
             <StatBlock
-              label="Overtime"
+              label="Overuren"
               value={report.workforce.overtimeHours}
-              suffix="h"
+              suffix="u"
               icon="alarm"
               color={SemanticColors.feedbackWarning}
             />
           </View>
 
           <View style={styles.utilizationCard}>
-            <Text style={styles.cardTitle}>Utilization Breakdown</Text>
+            <Text style={styles.cardTitle}>Bezettingsgraad Overzicht</Text>
             <ProgressBar
-              label="Billable"
+              label="Declarabel"
               value={report.workforce.billableHours}
               max={report.workforce.totalHours}
               color={SemanticColors.feedbackSuccess}
             />
             <ProgressBar
-              label="Non-Billable"
+              label="Niet-declarabel"
               value={report.workforce.totalHours - report.workforce.billableHours}
               max={report.workforce.totalHours}
               color={SemanticColors.feedbackWarning}
             />
             <ProgressBar
-              label="Overtime"
+              label="Overuren"
               value={report.workforce.overtimeHours}
               max={report.workforce.totalHours}
               color={SemanticColors.feedbackError}
@@ -291,13 +291,13 @@ export function DeepReports({ onClose }: DeepReportsProps) {
 
           {/* Top Performers */}
           <View style={styles.performersCard}>
-            <Text style={styles.cardTitle}>Top Performers</Text>
+            <Text style={styles.cardTitle}>Beste Presteerders</Text>
             {report.workforce.topPerformers.map((performer, index) => (
               <View key={performer.workerId} style={styles.performerRow}>
                 <Text style={styles.performerRank}>#{index + 1}</Text>
                 <Text style={styles.performerName}>{performer.workerName}</Text>
                 <View style={styles.performerMetrics}>
-                  <Text style={styles.performerJobs}>{performer.jobsCompleted} jobs</Text>
+                  <Text style={styles.performerJobs}>{performer.jobsCompleted} klussen</Text>
                   <Text style={styles.performerRevenue}>{'\u20AC'}{performer.revenue.toLocaleString()}</Text>
                 </View>
               </View>
@@ -306,23 +306,23 @@ export function DeepReports({ onClose }: DeepReportsProps) {
         </ReportSection>
 
         {/* Materials & Costs */}
-        <ReportSection title="Materials & Costs" icon="cube" color={SemanticColors.feedbackWarning}>
+        <ReportSection title="Materialen & Kosten" icon="cube" color={SemanticColors.feedbackWarning}>
           <View style={styles.statsGrid}>
             <StatBlock
-              label="Material Spend"
+              label="Materiaaluitgaven"
               value={report.materials.totalSpend}
               prefix={'\u20AC'}
               icon="cart"
             />
             <StatBlock
-              label="Budget Variance"
+              label="Budgetafwijking"
               value={report.materials.budgetVariance}
               prefix={report.materials.budgetVariance >= 0 ? '+\u20AC' : '-\u20AC'}
               icon={report.materials.budgetVariance >= 0 ? 'arrow-up' : 'arrow-down'}
               color={report.materials.budgetVariance >= 0 ? SemanticColors.feedbackError : SemanticColors.feedbackSuccess}
             />
             <StatBlock
-              label="Waste"
+              label="Verspilling"
               value={report.materials.wastePercent}
               suffix="%"
               icon="trash"
@@ -332,12 +332,12 @@ export function DeepReports({ onClose }: DeepReportsProps) {
 
           {/* Top Materials */}
           <View style={styles.materialsCard}>
-            <Text style={styles.cardTitle}>Top Materials by Cost</Text>
+            <Text style={styles.cardTitle}>Duurste Materialen</Text>
             {report.materials.topMaterials.map((material, index) => (
               <View key={index} style={styles.materialRow}>
                 <View style={styles.materialInfo}>
                   <Text style={styles.materialName}>{material.name}</Text>
-                  <Text style={styles.materialQty}>{material.quantity} units</Text>
+                  <Text style={styles.materialQty}>{material.quantity} stuks</Text>
                 </View>
                 <View style={styles.materialCost}>
                   <Text style={styles.materialCostValue}>{'\u20AC'}{material.cost}</Text>
@@ -359,37 +359,37 @@ export function DeepReports({ onClose }: DeepReportsProps) {
         </ReportSection>
 
         {/* Safety */}
-        <ReportSection title="Safety & Compliance" icon="shield-checkmark" color={SemanticColors.feedbackSuccess}>
+        <ReportSection title="Veiligheid & Naleving" icon="shield-checkmark" color={SemanticColors.feedbackSuccess}>
           <View style={styles.safetyCard}>
             <View style={styles.safetyScoreCircle}>
               <Text style={styles.safetyScoreValue}>{report.safety.safetyScore}</Text>
-              <Text style={styles.safetyScoreLabel}>Safety Score</Text>
+              <Text style={styles.safetyScoreLabel}>Veiligheidsscore</Text>
             </View>
             <View style={styles.safetyStats}>
               <View style={styles.safetyStat}>
                 <Text style={styles.safetyStatValue}>{report.safety.daysSinceIncident}</Text>
-                <Text style={styles.safetyStatLabel}>Days Since Incident</Text>
+                <Text style={styles.safetyStatLabel}>Dagen Sinds Incident</Text>
               </View>
               <View style={styles.safetyStat}>
                 <Text style={styles.safetyStatValue}>{report.safety.incidentCount}</Text>
-                <Text style={styles.safetyStatLabel}>Incidents</Text>
+                <Text style={styles.safetyStatLabel}>Incidenten</Text>
               </View>
               <View style={styles.safetyStat}>
                 <Text style={styles.safetyStatValue}>{report.safety.nearMissCount}</Text>
-                <Text style={styles.safetyStatLabel}>Near Misses</Text>
+                <Text style={styles.safetyStatLabel}>Bijna-ongelukken</Text>
               </View>
             </View>
           </View>
         </ReportSection>
 
         {/* Schedule Performance */}
-        <ReportSection title="Schedule Performance" icon="calendar" color="#8B5CF6">
+        <ReportSection title="Planning Prestaties" icon="calendar" color={SemanticColors.feedbackInfo}>
           <View style={styles.scheduleCard}>
             <View style={styles.scheduleHeader}>
               <Text style={styles.scheduleMetric}>
                 {report.schedule.plannedVsActual}%
               </Text>
-              <Text style={styles.scheduleMetricLabel}>On Schedule</Text>
+              <Text style={styles.scheduleMetricLabel}>Op Schema</Text>
             </View>
 
             <View style={[
@@ -429,11 +429,11 @@ export function DeepReports({ onClose }: DeepReportsProps) {
                       : SemanticColors.feedbackError,
                 },
               ]}>
-                Critical Path: {report.schedule.criticalPathStatus.replace('-', ' ')}
+                Kritiek Pad: {report.schedule.criticalPathStatus === 'on-track' ? 'op schema' : report.schedule.criticalPathStatus === 'at-risk' ? 'risico' : 'vertraagd'}
               </Text>
             </View>
 
-            <Text style={styles.cardTitle}>Upcoming Milestones</Text>
+            <Text style={styles.cardTitle}>Aankomende Mijlpalen</Text>
             {report.schedule.upcomingMilestones.map((milestone, index) => (
               <View key={index} style={styles.milestoneRow}>
                 <View style={[
@@ -450,7 +450,7 @@ export function DeepReports({ onClose }: DeepReportsProps) {
                 <View style={styles.milestoneInfo}>
                   <Text style={styles.milestoneName}>{milestone.name}</Text>
                   <Text style={styles.milestoneDate}>
-                    {milestone.daysUntil === 0 ? 'Today' : `In ${milestone.daysUntil} days`}
+                    {milestone.daysUntil === 0 ? 'Vandaag' : `Over ${milestone.daysUntil} dagen`}
                   </Text>
                 </View>
               </View>
@@ -459,30 +459,30 @@ export function DeepReports({ onClose }: DeepReportsProps) {
         </ReportSection>
 
         {/* Customer Metrics */}
-        <ReportSection title="Customer Metrics" icon="happy" color={SemanticColors.actionPrimary}>
+        <ReportSection title="Klantstatistieken" icon="happy" color={SemanticColors.actionPrimary}>
           <View style={styles.statsGrid}>
             <StatBlock
-              label="Jobs Completed"
+              label="Klussen Afgerond"
               value={report.overview.jobsCompleted}
               icon="checkmark-done"
               color={SemanticColors.feedbackSuccess}
             />
             <StatBlock
-              label="On-Time Rate"
+              label="Op Tijd"
               value={report.overview.onTimeRate}
               suffix="%"
               icon="time"
               color={SemanticColors.feedbackInfo}
             />
             <StatBlock
-              label="Satisfaction"
+              label="Tevredenheid"
               value={report.overview.customerSatisfaction}
               suffix="/5"
               icon="star"
-              color="#F59E0B"
+              color={SemanticColors.feedbackWarning}
             />
             <StatBlock
-              label="Repeat Rate"
+              label="Terugkeerpercentage"
               value={report.overview.repeatCustomerRate}
               suffix="%"
               icon="repeat"
@@ -497,8 +497,8 @@ export function DeepReports({ onClose }: DeepReportsProps) {
       {/* Export Button */}
       <View style={styles.exportBar}>
         <Pressable style={styles.exportButton}>
-          <Ionicons name="download-outline" size={20} color="#fff" />
-          <Text style={styles.exportButtonText}>Export Report</Text>
+          <Ionicons name="download-outline" size={20} color={SemanticColors.textInverse} />
+          <Text style={styles.exportButtonText}>Rapport Exporteren</Text>
         </Pressable>
       </View>
     </View>
@@ -563,7 +563,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   periodTextActive: {
-    color: '#fff',
+    color: SemanticColors.textInverse,
   },
 
   content: {
@@ -926,7 +926,7 @@ const styles = StyleSheet.create({
   exportButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: SemanticColors.textInverse,
   },
 });
 

@@ -1,0 +1,236 @@
+// =============================================================================
+// PROJECT DETAIL — View/manage a multi-trade project
+// =============================================================================
+
+import { useState, useMemo, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+import { SemanticColors, Palette } from '../../../src/theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../../src/theme/tabStyles';
+import { SafeArea } from '../../../src/theme/spacing';
+import { useAppState } from '../../../src/state/AppState';
+import { hapticSuccess } from '../../../src/utils/haptics';
+import { FadeIn } from '../../../src/components/shared/FadeIn';
+import type { ProjectStatus } from '../../../src/types/project';
+
+type IconName = keyof typeof Ionicons.glyphMap;
+
+const STATUS_OPTIONS: { key: ProjectStatus; label: string; icon: IconName }[] = [
+  { key: 'planning', label: 'Planning', icon: 'document-text-outline' },
+  { key: 'active', label: 'Actief', icon: 'hammer-outline' },
+  { key: 'on_hold', label: 'Gepauzeerd', icon: 'pause-circle-outline' },
+  { key: 'completed', label: 'Afgerond', icon: 'checkmark-circle-outline' },
+];
+
+export default function ProjectDetailScreen() {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { projects, updateProject, jobs, invoices, customers, getProjectPnL, addJobToProject } = useAppState();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const project = useMemo(() => projects.find(p => p.id === id), [projects, id]);
+  const pnl = useMemo(() => project ? getProjectPnL(project.id) : null, [project]);
+  const projectJobs = useMemo(() => project ? jobs.filter(j => project.jobIds.includes(j.id)) : [], [project, jobs]);
+  const unassignedJobs = useMemo(() => jobs.filter(j => !projects.some(p => p.jobIds.includes(j.id))), [jobs, projects]);
+  const customer = useMemo(() => project ? customers.find(c => c.id === project.customerId) : null, [project, customers]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
+  }, []);
+
+  const handleStatusChange = () => {
+    if (!project) return;
+    Alert.alert('Status wijzigen', undefined,
+      STATUS_OPTIONS.map(opt => ({
+        text: opt.label,
+        onPress: () => { hapticSuccess(); updateProject(project.id, { status: opt.key }); },
+      }))
+    );
+  };
+
+  const handleAssignJob = () => {
+    if (!project || unassignedJobs.length === 0) {
+      Alert.alert('Geen klussen', 'Alle klussen zijn al aan een project toegewezen.');
+      return;
+    }
+    Alert.alert('Klus toevoegen', 'Selecteer een klus om toe te voegen:',
+      unassignedJobs.slice(0, 5).map(j => ({
+        text: j.title,
+        onPress: () => { hapticSuccess(); addJobToProject(project.id, j.id); },
+      }))
+    );
+  };
+
+  if (!project) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} hitSlop={8}>
+            <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+          </Pressable>
+          <Text style={styles.headerTitle}>Project niet gevonden</Text>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} hitSlop={8}>
+          <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+        </Pressable>
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={styles.headerTitle} numberOfLines={1}>{project.title}</Text>
+          <Text style={styles.headerSub}>{customer?.name ?? 'Geen klant'}</Text>
+        </View>
+        <Pressable onPress={handleStatusChange} style={styles.statusBtn}>
+          <Text style={styles.statusBtnText}>
+            {STATUS_OPTIONS.find(o => o.key === project.status)?.label ?? project.status}
+          </Text>
+        </Pressable>
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />}
+      >
+        {/* P&L Card */}
+        {pnl && (
+          <FadeIn delay={0}>
+            <View style={styles.pnlCard}>
+              <Text style={styles.sectionTitle}>Financieel overzicht</Text>
+              <View style={styles.pnlRow}>
+                <View style={styles.pnlItem}>
+                  <Text style={styles.pnlValue}>€{project.totalBudget.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
+                  <Text style={styles.pnlLabel}>Budget</Text>
+                </View>
+                <View style={styles.pnlDivider} />
+                <View style={styles.pnlItem}>
+                  <Text style={styles.pnlValue}>€{pnl.revenue.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
+                  <Text style={styles.pnlLabel}>Omzet</Text>
+                </View>
+                <View style={styles.pnlDivider} />
+                <View style={styles.pnlItem}>
+                  <Text style={[styles.pnlValue, { color: pnl.grossProfit >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
+                    €{pnl.grossProfit.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}
+                  </Text>
+                  <Text style={styles.pnlLabel}>Winst</Text>
+                </View>
+              </View>
+              <View style={styles.pnlRow}>
+                <View style={styles.pnlItem}>
+                  <Text style={styles.pnlValue}>€{pnl.materialCosts.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
+                  <Text style={styles.pnlLabel}>Materiaal</Text>
+                </View>
+                <View style={styles.pnlDivider} />
+                <View style={styles.pnlItem}>
+                  <Text style={styles.pnlValue}>€{pnl.laborCosts.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
+                  <Text style={styles.pnlLabel}>Arbeid</Text>
+                </View>
+                <View style={styles.pnlDivider} />
+                <View style={styles.pnlItem}>
+                  <Text style={[styles.pnlValue, { color: Palette.hermesOrange }]}>{pnl.grossMargin}%</Text>
+                  <Text style={styles.pnlLabel}>Marge</Text>
+                </View>
+              </View>
+            </View>
+          </FadeIn>
+        )}
+
+        {/* Jobs section */}
+        <FadeIn delay={100}>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Klussen ({projectJobs.length})</Text>
+              <Pressable onPress={handleAssignJob} hitSlop={8}>
+                <Ionicons name="add-circle" size={24} color={Palette.hermesOrange} />
+              </Pressable>
+            </View>
+
+            {projectJobs.length === 0 ? (
+              <Text style={styles.emptyText}>Nog geen klussen toegevoegd</Text>
+            ) : (
+              projectJobs.map(job => (
+                <Pressable
+                  key={job.id}
+                  style={styles.jobCard}
+                  onPress={() => router.push(`/quotes/${job.id}` as any)}
+                >
+                  <View style={[styles.jobAccent, { backgroundColor: Palette.hermesOrange }]} />
+                  <View style={{ flex: 1, padding: 12 }}>
+                    <Text style={styles.jobTitle} numberOfLines={1}>{job.title}</Text>
+                    <Text style={styles.jobMeta}>{job.status} · €{(job.quotedAmount ?? 0).toLocaleString('nl-NL')}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} style={{ marginRight: 12 }} />
+                </Pressable>
+              ))
+            )}
+          </View>
+        </FadeIn>
+
+        {/* Milestones placeholder */}
+        <FadeIn delay={200}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Mijlpalen</Text>
+            {project.milestones.length === 0 ? (
+              <Text style={styles.emptyText}>Nog geen mijlpalen gepland</Text>
+            ) : (
+              project.milestones.map(m => (
+                <View key={m.id} style={styles.milestoneRow}>
+                  <Ionicons
+                    name={m.completed ? 'checkmark-circle' : 'ellipse-outline'}
+                    size={18}
+                    color={m.completed ? SemanticColors.feedbackSuccess : SemanticColors.textTertiary}
+                  />
+                  <Text style={[styles.milestoneText, m.completed && styles.milestoneComplete]}>{m.title}</Text>
+                  <Text style={styles.milestoneWeek}>Week {m.weekNumber}</Text>
+                </View>
+              ))
+            )}
+          </View>
+        </FadeIn>
+
+        <View style={{ height: 100 }} />
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: PAGE_BG },
+  header: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingTop: SafeArea.top, paddingHorizontal: SafeArea.side, paddingBottom: 12,
+  },
+  headerTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  headerSub: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
+  statusBtn: { backgroundColor: Palette.hermesOrange + '15', borderRadius: RADIUS.sm, paddingHorizontal: 10, paddingVertical: 6 },
+  statusBtnText: { fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: Palette.hermesOrange },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingHorizontal: SafeArea.side, gap: GRID.md },
+  sectionTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, letterSpacing: TYPE.sectionTracking },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  section: { gap: GRID.sm },
+  emptyText: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textTertiary },
+  pnlCard: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: 16, gap: 12 },
+  pnlRow: { flexDirection: 'row', alignItems: 'center' },
+  pnlItem: { flex: 1, alignItems: 'center' },
+  pnlValue: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  pnlLabel: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textSecondary, marginTop: 2 },
+  pnlDivider: { width: 1, height: 28, backgroundColor: SemanticColors.borderDefault },
+  jobCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden' },
+  jobAccent: { width: 4, alignSelf: 'stretch' },
+  jobTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  jobMeta: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
+  milestoneRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
+  milestoneText: { flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary },
+  milestoneComplete: { textDecorationLine: 'line-through', color: SemanticColors.textTertiary },
+  milestoneWeek: { fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: SemanticColors.textSecondary },
+});

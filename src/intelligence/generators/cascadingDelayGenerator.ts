@@ -12,6 +12,7 @@ import { useScheduler } from '../../services/smartSchedulerService';
 import { logPrediction } from '../calibration';
 import { getTrend } from '../learningStorage';
 import { getAdaptiveThreshold } from '../adaptiveThresholds';
+import { gt } from '../generatorTranslations';
 
 export function useCascadingDelayInsight(ctx: GeneratorContext): ScoredInsight | null {
   const { data: alerts } = useCapacityAlerts('active');
@@ -87,7 +88,7 @@ export function useCascadingDelayInsight(ctx: GeneratorContext): ScoredInsight |
       icon: 'git-merge',
       actionLabel: 'Planning bekijken',
       actionRoute: '/(contractor)/index',
-      source: 'Cascade Analyse',
+      source: gt('source_cascade', ctx.language),
 
       rootCauseTags: ['schedule', 'cascade'],
       rawScore: 0,
@@ -123,7 +124,7 @@ export function useCascadingDelayInsight(ctx: GeneratorContext): ScoredInsight |
     icon: 'git-merge',
     actionLabel: 'Herplannen',
     actionRoute: '/(contractor)/index',
-    source: 'Cascade Analyse',
+    source: gt('source_cascade', ctx.language),
     metric: {
       label: 'Uitloop',
       value: `${totalDelayHours.toFixed(1)}u`,

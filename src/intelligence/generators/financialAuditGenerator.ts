@@ -5,6 +5,7 @@
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import { useFinancialAuditStats } from '../../services/financialAuditorService';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export const financialAuditGenerator: InsightGenerator = {
   id: 'financial-audit',
@@ -42,7 +43,7 @@ export function useFinancialAuditInsight(ctx: GeneratorContext): ScoredInsight |
     icon: 'alert-circle',
     actionLabel: 'Bekijk bevindingen',
     actionRoute: ctx.role === 'contractor' ? '/(contractor)/facturen' : undefined,
-    source: 'Financieel Auditor',
+    source: gt('source_financial', ctx.language),
     metric: stats.potentialSavings > 0 ? {
       label: 'Potentiële besparing',
       value: `€${stats.potentialSavings.toLocaleString('nl-NL')}`,

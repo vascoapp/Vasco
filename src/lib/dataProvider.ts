@@ -495,6 +495,81 @@ export async function loadJobMaterials(): Promise<Record<string, JobMaterial[]>>
 
 // ── Price Observations ──────────────────────────────────────
 
+export async function createPriceObservation(
+  obs: {
+    material_name: string;
+    supplier_name?: string;
+    price: number;
+    unit?: string;
+    source?: string;
+    confidence?: number;
+    observed_at?: string;
+  },
+): Promise<PriceObservationRow | null> {
+  if (!isSupabaseConfigured) return null;
+
+  const userId = await getUserId();
+  const { data, error } = await supabase
+    .from('price_observations')
+    .insert({
+      user_id: userId,
+      material_id: crypto.randomUUID?.() ?? userId, // placeholder UUID — no catalog link yet
+      material_name: obs.material_name,
+      supplier_name: obs.supplier_name ?? null,
+      price: obs.price,
+      currency: 'EUR',
+      unit: obs.unit ?? 'stuk',
+      source: obs.source ?? 'job_completion',
+      confidence: obs.confidence ?? 1.0,
+      observed_at: obs.observed_at ?? new Date().toISOString(),
+    } as any)
+    .select()
+    .single();
+
+  if (error) {
+    console.warn('[dataProvider] createPriceObservation failed:', error);
+    return null;
+  }
+  return data as PriceObservationRow;
+}
+
+export async function createPriceObservationsBatch(
+  observations: Array<{
+    material_name: string;
+    supplier_name?: string;
+    price: number;
+    unit?: string;
+    source?: string;
+    observed_at?: string;
+  }>,
+): Promise<number> {
+  if (!isSupabaseConfigured || observations.length === 0) return 0;
+
+  const userId = await getUserId();
+  const rows = observations.map(obs => ({
+    user_id: userId,
+    material_id: crypto.randomUUID?.() ?? userId,
+    material_name: obs.material_name,
+    supplier_name: obs.supplier_name ?? null,
+    price: obs.price,
+    currency: 'EUR',
+    unit: obs.unit ?? 'stuk',
+    source: obs.source ?? 'job_completion',
+    confidence: 1.0,
+    observed_at: obs.observed_at ?? new Date().toISOString(),
+  }));
+
+  const { error, count } = await supabase
+    .from('price_observations')
+    .insert(rows as any);
+
+  if (error) {
+    console.warn('[dataProvider] createPriceObservationsBatch failed:', error);
+    return 0;
+  }
+  return count ?? observations.length;
+}
+
 export async function loadPriceObservations(): Promise<Record<string, PriceObservation[]>> {
   if (!isSupabaseConfigured) return mockPriceObsMap;
 
@@ -515,4 +590,40 @@ export async function loadPriceObservations(): Promise<Record<string, PriceObser
     grouped[po.materialId].push(po);
   }
   return grouped;
+}
+
+/** Loads price history grouped by "materialName|supplierName" key for anomaly detection */
+export async function loadPriceHistoryByMaterialSupplier(): Promise<
+  Record<string, Array<{ price: number; observedAt: string }>>
+> {
+  if (!isSupabaseConfigured) {
+    // Build from mock data
+    const result: Record<string, Array<{ price: number; observedAt: string }>> = {};
+    for (const [, observations] of Object.entries(mockPriceObsMap)) {
+      for (const obs of observations) {
+        const key = `${obs.materialName}|${obs.supplierName ?? 'onbekend'}`;
+        if (!result[key]) result[key] = [];
+        result[key].push({ price: obs.price, observedAt: obs.observedAt });
+      }
+    }
+    return result;
+  }
+
+  const { data, error } = await supabase
+    .from('price_observations')
+    .select('material_name, supplier_name, price, observed_at')
+    .order('observed_at', { ascending: true });
+
+  if (error) {
+    console.warn('[dataProvider] loadPriceHistoryByMaterialSupplier failed:', error);
+    return {};
+  }
+
+  const result: Record<string, Array<{ price: number; observedAt: string }>> = {};
+  for (const row of (data ?? []) as any[]) {
+    const key = `${row.material_name}|${row.supplier_name ?? 'onbekend'}`;
+    if (!result[key]) result[key] = [];
+    result[key].push({ price: Number(row.price), observedAt: row.observed_at });
+  }
+  return result;
 }

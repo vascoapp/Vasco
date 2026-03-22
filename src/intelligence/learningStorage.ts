@@ -79,7 +79,12 @@ export type MetricKey =
   | 'capacityUtilization'
   | 'quoteMedian'
   | 'customerOverdueRate'
-  | 'jobMargin';
+  | 'jobMargin'
+  // Site lead metrics
+  | 'workforceUtilization'
+  | 'incidentRate'
+  | 'defectCount'
+  | 'inspectionScore';
 
 export interface MetricSnapshot {
   metric: MetricKey;
@@ -327,6 +332,15 @@ export async function recordScreenVisit(screenName: string): Promise<void> {
   const profile = await getProfile();
   profile.serviceUsageStats[screenName] = (profile.serviceUsageStats[screenName] || 0) + 1;
   debouncedSave(profile);
+}
+
+export async function getRecentScreens(): Promise<string[]> {
+  const profile = await getProfile();
+  // Return screens sorted by visit count (most visited first)
+  return Object.entries(profile.serviceUsageStats)
+    .sort(([, a], [, b]) => (b as number) - (a as number))
+    .map(([screen]) => screen)
+    .slice(0, 10);
 }
 
 export async function recordJobOutcome(outcome: JobOutcome): Promise<void> {
@@ -758,4 +772,39 @@ export function useLearningProfile(): {
   }, [load]);
 
   return { profile, loading, refresh: load };
+}
+
+// =============================================================================
+// CROSS-DOMAIN OUTCOME RECORDERS (for intelligence feedback loops)
+// =============================================================================
+
+export async function recordInsuranceOutcome(data: {
+  claimId: string;
+  type: string;
+  wasApproved: boolean;
+  amount: number;
+  daysToResolve: number;
+}): Promise<void> {
+  await recordMetricSnapshot('complianceScore', data.wasApproved ? 1 : 0);
+}
+
+export async function recordPermitOutcome(data: {
+  permitId: string;
+  type: string;
+  wasGranted: boolean;
+  daysToDecision: number;
+}): Promise<void> {
+  await recordMetricSnapshot('complianceScore', data.wasGranted ? 1 : 0);
+}
+
+export async function recordSubcontractorQuality(data: {
+  subcontractorId: string;
+  jobId: string;
+  qualityScore: number; // 1-5
+  onTime: boolean;
+  reworkRequired: boolean;
+}): Promise<void> {
+  // Track via capacity utilization as proxy for sub performance
+  const score = data.qualityScore * 20; // normalize to 0-100
+  await recordMetricSnapshot('capacityUtilization', score);
 }

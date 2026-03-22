@@ -1,17 +1,219 @@
+// =============================================================================
+// MOLLIE INTEGRATION — European payment provider
+// =============================================================================
+// API docs: https://docs.mollie.com/
+// Supports: iDEAL, Bancontact, Credit Card, SEPA, Klarna, Apple/Google Pay
+// Primary payment method for Dutch contractors
+// =============================================================================
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const STORAGE_KEY = '@vasco_mollie';
+const API_BASE = 'https://api.mollie.com/v2';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface MollieConfig {
+  apiKey: string; // live or test key
+  profileId?: string;
+}
+
+export type MolliePaymentStatus =
+  | 'open'
+  | 'canceled'
+  | 'pending'
+  | 'authorized'
+  | 'expired'
+  | 'failed'
+  | 'paid';
+
+export interface MolliePayment {
+  id: string;
+  status: MolliePaymentStatus;
+  amount: { value: string; currency: string };
+  description: string;
+  redirectUrl: string;
+  webhookUrl?: string;
+  metadata?: Record<string, string>;
+  _links: {
+    checkout?: { href: string };
+    dashboard?: { href: string };
+  };
+  createdAt: string;
+  paidAt?: string;
+  method?: string;
+}
+
 export type MolliePaymentResult = {
   success: boolean;
   paymentId: string;
   checkoutUrl: string;
+  error?: string;
 };
+
+export interface MolliePaymentRequest {
+  invoiceId: string;
+  amount: number;
+  currency?: string;
+  description: string;
+  redirectUrl: string;
+  webhookUrl?: string;
+  customerEmail?: string;
+  locale?: 'nl_NL' | 'nl_BE' | 'en_US' | 'en_GB' | 'de_DE' | 'fr_FR' | 'fr_BE' | 'es_ES' | 'it_IT';
+  method?: string[]; // ['ideal', 'bancontact', 'creditcard', etc.]
+}
+
+// ---------------------------------------------------------------------------
+// Config persistence
+// ---------------------------------------------------------------------------
+
+async function getConfig(): Promise<MollieConfig | null> {
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveMollieConfig(config: MollieConfig): Promise<void> {
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+}
+
+export async function clearMollieConfig(): Promise<void> {
+  await AsyncStorage.removeItem(STORAGE_KEY);
+}
+
+export async function isConnected(): Promise<boolean> {
+  const config = await getConfig();
+  return config !== null && config.apiKey.length > 0;
+}
+
+// ---------------------------------------------------------------------------
+// API helpers
+// ---------------------------------------------------------------------------
+
+async function apiCall<T>(path: string, options?: RequestInit): Promise<T | null> {
+  const config = await getConfig();
+  if (!config) return null;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const res = await fetch(`${API_BASE}/${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${config.apiKey}`,
+        'Content-Type': 'application/json',
+        ...(options?.headers ?? {}),
+      },
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    clearTimeout(timeout);
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Payments — core integration
+// ---------------------------------------------------------------------------
+
+export async function createPayment(req: MolliePaymentRequest): Promise<MolliePaymentResult> {
+  const connected = await isConnected();
+  if (!connected) {
+    // Mock fallback for demo mode
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    return {
+      success: true,
+      paymentId: `pay_demo_${req.invoiceId}`,
+      checkoutUrl: 'https://www.mollie.com/demo/checkout',
+    };
+  }
+
+  const result = await apiCall<MolliePayment>('payments', {
+    method: 'POST',
+    body: JSON.stringify({
+      amount: {
+        currency: req.currency ?? 'EUR',
+        value: req.amount.toFixed(2),
+      },
+      description: req.description,
+      redirectUrl: req.redirectUrl,
+      webhookUrl: req.webhookUrl,
+      metadata: { invoiceId: req.invoiceId },
+      locale: req.locale ?? 'nl_NL',
+      method: req.method,
+    }),
+  });
+
+  if (result?.id) {
+    return {
+      success: true,
+      paymentId: result.id,
+      checkoutUrl: result._links.checkout?.href ?? '',
+    };
+  }
+  return { success: false, paymentId: '', checkoutUrl: '', error: 'Payment creation failed' };
+}
+
+export async function getPayment(paymentId: string): Promise<MolliePayment | null> {
+  return apiCall<MolliePayment>(`payments/${paymentId}`);
+}
+
+export async function listPayments(limit = 25): Promise<MolliePayment[]> {
+  const result = await apiCall<{ _embedded: { payments: MolliePayment[] } }>(`payments?limit=${limit}`);
+  return result?._embedded?.payments ?? [];
+}
+
+// ---------------------------------------------------------------------------
+// Payment link — shareable link for customers
+// ---------------------------------------------------------------------------
+
+export async function createPaymentLink(req: {
+  invoiceId: string;
+  amount: number;
+  description: string;
+  expiresAt?: string;
+}): Promise<{ url: string; id: string } | null> {
+  const connected = await isConnected();
+  if (!connected) {
+    return { url: `https://pay.vasco.app/demo/${req.invoiceId}`, id: `pl_demo_${req.invoiceId}` };
+  }
+
+  const result = await apiCall<{ id: string; _links: { paymentLink: { href: string } } }>('payment-links', {
+    method: 'POST',
+    body: JSON.stringify({
+      amount: { currency: 'EUR', value: req.amount.toFixed(2) },
+      description: req.description,
+      expiresAt: req.expiresAt,
+    }),
+  });
+
+  if (result?.id) {
+    return { url: result._links.paymentLink.href, id: result.id };
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Legacy stub (backwards compatible)
+// ---------------------------------------------------------------------------
 
 export async function createMolliePayment(
   invoiceId: string,
   amount: number
 ): Promise<MolliePaymentResult> {
-  await new Promise((resolve) => setTimeout(resolve, 400));
-  return {
-    success: true,
-    paymentId: `pay_${invoiceId}`,
-    checkoutUrl: 'https://www.mollie.com/payments',
-  };
+  return createPayment({
+    invoiceId,
+    amount,
+    description: `Factuur ${invoiceId}`,
+    redirectUrl: 'https://app.vasco.nl/payment/success',
+  });
 }

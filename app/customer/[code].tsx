@@ -20,6 +20,10 @@ import {
   validateAccessCode,
 } from '../../src/data/mockCustomerPortal';
 import { decisionIntelligence } from '../../src/intelligence/decisionIntelligence';
+import {
+  submitDecision as syncSubmitDecision,
+  logActivity as syncLogActivity,
+} from '../../src/services/decisionSyncService';
 import type {
   CustomerPortalData,
   CustomerDecisionSubmission,
@@ -76,6 +80,14 @@ export default function CustomerPortalScreen() {
         completedDecisions: data.completedDecisions,
         overdueDecisions: data.overdueDecisions,
       });
+
+      // Persist portal access via sync service
+      syncLogActivity(data.accessToken, 'portal_accessed', undefined, {
+        accessCode,
+        totalDecisions: data.totalDecisions,
+        completedDecisions: data.completedDecisions,
+        overdueDecisions: data.overdueDecisions,
+      }).catch((err) => console.error('Failed to sync portal access:', err));
     } else {
       setError('Project niet gevonden. Controleer de code en probeer opnieuw.');
     }
@@ -131,6 +143,23 @@ export default function CustomerPortalScreen() {
       );
     } catch (err) {
       console.error('Failed to process decision intelligence:', err);
+    }
+
+    // Persist decision via sync service (local + Supabase when configured)
+    try {
+      await syncSubmitDecision({
+        trackerId: portalData.accessToken,
+        itemId: submission.itemId,
+        submittedBy: 'customer',
+        value: String(submission.value),
+        notes: submission.notes,
+        photos: submission.photoUrls,
+        linkedProductUrl: submission.linkedProduct?.url,
+        timeToDecideSeconds: timeToDecide,
+        submittedAt: submission.submittedAt,
+      });
+    } catch (err) {
+      console.error('Failed to sync decision:', err);
     }
 
     // Update local state to reflect the decision

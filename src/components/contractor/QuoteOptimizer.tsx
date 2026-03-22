@@ -11,7 +11,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Modal,
   Dimensions,
 } from 'react-native';
@@ -115,7 +115,7 @@ export function QuoteOptimizer({
       {/* Tab Bar */}
       <View style={styles.tabBar}>
         {tabs.map((tab) => (
-          <TouchableOpacity
+          <Pressable
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.tabActive]}
             onPress={() => setActiveTab(tab.key)}
@@ -135,7 +135,7 @@ export function QuoteOptimizer({
                 <Text style={styles.badgeText}>{pendingOptimizations.length}</Text>
               </View>
             )}
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 
@@ -369,7 +369,7 @@ function OptimizeTab({
             Aanbevelingen ({pending.length})
           </Text>
           {pending.map((opt) => (
-            <TouchableOpacity
+            <Pressable
               key={`${opt.lineItemId}_${opt.type}`}
               style={styles.optimizationCard}
               onPress={() => onSelect(opt)}
@@ -401,7 +401,7 @@ function OptimizeTab({
                 </View>
               </View>
               <Ionicons name="chevron-forward" size={20} color={SemanticColors.textSecondary} />
-            </TouchableOpacity>
+            </Pressable>
           ))}
         </>
       )}
@@ -502,7 +502,7 @@ function UpsellTab({
       </Text>
 
       {suggestions.map((upsell) => (
-        <TouchableOpacity
+        <Pressable
           key={upsell.id}
           style={styles.upsellCard}
           onPress={() => onSelect(upsell)}
@@ -535,7 +535,7 @@ function UpsellTab({
             <Ionicons name="bulb-outline" size={16} color={SemanticColors.actionPrimary} />
             <Text style={styles.upsellReasonText}>{upsell.reason}</Text>
           </View>
-        </TouchableOpacity>
+        </Pressable>
       ))}
     </View>
   );
@@ -682,9 +682,9 @@ function OptimizationDetailModal({
       <View style={styles.modalContent}>
         <View style={styles.modalHeader}>
           <Text style={styles.modalTitle}>{optimization.title}</Text>
-          <TouchableOpacity onPress={onClose} style={styles.modalClose}>
+          <Pressable onPress={onClose} style={styles.modalClose}>
             <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         <ScrollView style={styles.modalBody}>
@@ -749,19 +749,19 @@ function OptimizationDetailModal({
         </ScrollView>
 
         <View style={styles.modalActions}>
-          <TouchableOpacity
+          <Pressable
             style={[styles.modalButton, styles.modalButtonSecondary]}
             onPress={() => onReject()}
           >
             <Text style={styles.modalButtonSecondaryText}>Afwijzen</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+          </Pressable>
+          <Pressable
             style={[styles.modalButton, styles.modalButtonPrimary]}
             onPress={onApply}
           >
             <Ionicons name="checkmark" size={20} color="#FFFFFF" />
             <Text style={styles.modalButtonPrimaryText}>Toepassen</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
     </View>
@@ -782,9 +782,9 @@ function UpsellDetailModal({
       <View style={styles.modalContent}>
         <View style={styles.modalHeader}>
           <Text style={styles.modalTitle}>Upsell Toevoegen</Text>
-          <TouchableOpacity onPress={onClose} style={styles.modalClose}>
+          <Pressable onPress={onClose} style={styles.modalClose}>
             <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         <ScrollView style={styles.modalBody}>
@@ -822,19 +822,19 @@ function UpsellDetailModal({
         </ScrollView>
 
         <View style={styles.modalActions}>
-          <TouchableOpacity
+          <Pressable
             style={[styles.modalButton, styles.modalButtonSecondary]}
             onPress={onClose}
           >
             <Text style={styles.modalButtonSecondaryText}>Annuleren</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+          </Pressable>
+          <Pressable
             style={[styles.modalButton, styles.modalButtonPrimary]}
             onPress={onApply}
           >
             <Ionicons name="add" size={20} color="#FFFFFF" />
             <Text style={styles.modalButtonPrimaryText}>Toevoegen aan offerte</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
     </View>

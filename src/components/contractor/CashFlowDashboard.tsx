@@ -10,7 +10,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -51,7 +51,7 @@ export function CashFlowDashboard() {
   const getStatusStyle = (status: Invoice['status']) => {
     switch (status) {
       case 'paid': return { color: Palette.green500, bg: Palette.green500 + '20', label: 'Betaald' };
-      case 'sent': return { color: Palette.blue500, bg: Palette.blue500 + '20', label: 'Verstuurd' };
+      case 'sent': return { color: Palette.hermesOrange, bg: Palette.hermesOrange + '20', label: 'Verstuurd' };
       case 'viewed': return { color: Palette.hermesOrange, bg: Palette.hermesOrange + '20', label: 'Bekeken' };
       case 'overdue': return { color: Palette.red500, bg: Palette.red500 + '20', label: 'Verlopen' };
       case 'draft': return { color: Palette.gray500, bg: Palette.gray500 + '20', label: 'Concept' };
@@ -100,11 +100,11 @@ export function CashFlowDashboard() {
       {summary.alerts.length > 0 && (
         <View style={styles.alertsSection}>
           {summary.alerts.map((alert) => (
-            <TouchableOpacity key={alert.id} style={[styles.alertCard, { borderLeftColor: alert.type === 'warning' ? Palette.orange500 : Palette.blue500 }]}>
+            <Pressable key={alert.id} style={[styles.alertCard, { borderLeftColor: alert.type === 'warning' ? Palette.orange500 : Palette.hermesOrange }]}>
               <Ionicons
                 name={alert.type === 'warning' ? 'warning-outline' : 'bulb-outline'}
                 size={20}
-                color={alert.type === 'warning' ? Palette.orange500 : Palette.blue500}
+                color={alert.type === 'warning' ? Palette.orange500 : Palette.hermesOrange}
               />
               <View style={styles.alertContent}>
                 <Text style={styles.alertTitle}>{alert.title}</Text>
@@ -113,7 +113,7 @@ export function CashFlowDashboard() {
               {alert.actionable && (
                 <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
               )}
-            </TouchableOpacity>
+            </Pressable>
           ))}
         </View>
       )}
@@ -170,13 +170,13 @@ export function CashFlowDashboard() {
                 <Text style={styles.reminderAmount}>{formatCurrency(reminder.amount)}</Text>
                 <Text style={styles.reminderDays}>{reminder.daysOverdue} dagen verlopen</Text>
               </View>
-              <TouchableOpacity
+              <Pressable
                 style={styles.reminderButton}
                 onPress={() => sendReminder(reminder.invoiceId)}
               >
-                <Ionicons name="mail-outline" size={18} color={Palette.blue500} />
+                <Ionicons name="mail-outline" size={18} color={Palette.hermesOrange} />
                 <Text style={styles.reminderButtonText}>Herinner</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           ))}
         </View>
@@ -187,7 +187,7 @@ export function CashFlowDashboard() {
         <View style={styles.financingSection}>
           <Text style={styles.sectionTitle}>Financieringsopties</Text>
           {financingSuggestions.map((suggestion) => (
-            <TouchableOpacity key={suggestion.id} style={styles.financingCard}>
+            <Pressable key={suggestion.id} style={styles.financingCard}>
               <View style={styles.financingIcon}>
                 <Ionicons name="cash-outline" size={24} color={Palette.hermesOrange} />
               </View>
@@ -199,7 +199,7 @@ export function CashFlowDashboard() {
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
-            </TouchableOpacity>
+            </Pressable>
           ))}
         </View>
       )}
@@ -209,7 +209,7 @@ export function CashFlowDashboard() {
   const renderInvoiceCard = (invoice: Invoice) => {
     const status = getStatusStyle(invoice.status);
     return (
-      <TouchableOpacity key={invoice.id} style={styles.invoiceCard} onPress={() => openInvoice(invoice)}>
+      <Pressable key={invoice.id} style={styles.invoiceCard} onPress={() => openInvoice(invoice)}>
         <View style={styles.invoiceMain}>
           <View style={styles.invoiceHeader}>
             <Text style={styles.invoiceCustomer}>{invoice.customerName}</Text>
@@ -228,7 +228,7 @@ export function CashFlowDashboard() {
           </View>
         </View>
         <Text style={styles.invoiceAmount}>{formatCurrency(invoice.amount)}</Text>
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 
@@ -304,7 +304,7 @@ export function CashFlowDashboard() {
                 key={pattern.month}
                 style={[styles.seasonalItem, isCurrentMonth && styles.seasonalItemCurrent]}
               >
-                <Text style={[styles.seasonalMonth, isCurrentMonth && { color: Palette.blue500 }]}>
+                <Text style={[styles.seasonalMonth, isCurrentMonth && { color: Palette.hermesOrange }]}>
                   {pattern.month}
                 </Text>
                 <View style={[styles.seasonalIndicator, {
@@ -354,7 +354,7 @@ export function CashFlowDashboard() {
 
   const getCategoryStyle = (category: string) => {
     switch (category) {
-      case 'materialen': return { color: Palette.blue500, icon: 'cube-outline' };
+      case 'materialen': return { color: Palette.hermesOrange, icon: 'cube-outline' };
       case 'gereedschap': return { color: Palette.hermesOrange, icon: 'hammer-outline' };
       case 'voertuig': return { color: Palette.orange500, icon: 'car-outline' };
       case 'verzekering': return { color: Palette.green500, icon: 'shield-checkmark-outline' };
@@ -426,10 +426,10 @@ export function CashFlowDashboard() {
         </View>
 
         {/* Add Expense Button */}
-        <TouchableOpacity style={styles.addExpenseButton}>
-          <Ionicons name="add-circle-outline" size={24} color={Palette.blue500} />
+        <Pressable style={styles.addExpenseButton}>
+          <Ionicons name="add-circle-outline" size={24} color={Palette.hermesOrange} />
           <Text style={styles.addExpenseText}>Uitgave toevoegen</Text>
-        </TouchableOpacity>
+        </Pressable>
       </ScrollView>
     );
   };
@@ -439,7 +439,7 @@ export function CashFlowDashboard() {
       {/* Tabs */}
       <View style={styles.tabBar}>
         {tabs.map((tab) => (
-          <TouchableOpacity
+          <Pressable
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.activeTab]}
             onPress={() => setActiveTab(tab.key)}
@@ -447,12 +447,12 @@ export function CashFlowDashboard() {
             <Ionicons
               name={tab.icon as any}
               size={18}
-              color={activeTab === tab.key ? Palette.blue500 : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? Palette.hermesOrange : SemanticColors.textSecondary}
             />
             <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
               {tab.label}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 
@@ -471,9 +471,9 @@ export function CashFlowDashboard() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowInvoiceModal(false)}>
+            <Pressable onPress={() => setShowInvoiceModal(false)}>
               <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
-            </TouchableOpacity>
+            </Pressable>
             <Text style={styles.modalTitle}>Factuur details</Text>
             <View style={{ width: 24 }} />
           </View>
@@ -516,7 +516,7 @@ export function CashFlowDashboard() {
 
               {selectedInvoice.status !== 'paid' && (
                 <View style={styles.invoiceActions}>
-                  <TouchableOpacity
+                  <Pressable
                     style={styles.markPaidButton}
                     onPress={() => {
                       markPaid(selectedInvoice.id, 'bank_transfer');
@@ -525,16 +525,16 @@ export function CashFlowDashboard() {
                   >
                     <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
                     <Text style={styles.markPaidText}>Markeer als betaald</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
+                  </Pressable>
+                  <Pressable
                     style={styles.sendReminderButton}
                     onPress={() => {
                       sendReminder(selectedInvoice.id);
                     }}
                   >
-                    <Ionicons name="mail-outline" size={20} color={Palette.blue500} />
+                    <Ionicons name="mail-outline" size={20} color={Palette.hermesOrange} />
                     <Text style={styles.sendReminderText}>Stuur herinnering</Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
               )}
             </ScrollView>
@@ -548,35 +548,35 @@ export function CashFlowDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.surfaceBackground,
+    backgroundColor: '#F2F2F7',
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.surfacePrimary,
-    paddingHorizontal: 8,
+    backgroundColor: '#F2F2F7',
+    paddingHorizontal: 16,
     paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.borderDefault,
+    gap: 8,
   },
   tab: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    borderRadius: 8,
-    gap: 4,
+    paddingVertical: 12,
+    borderRadius: 16,
+    gap: 6,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   activeTab: {
-    backgroundColor: Palette.blue500 + '15',
+    backgroundColor: Palette.hermesOrange + '12',
   },
   tabText: {
-    fontSize: 12,
+    fontSize: 14,
     color: SemanticColors.textSecondary,
-    fontWeight: '500',
+    fontFamily: 'Inter_600SemiBold',
   },
   activeTabText: {
-    color: Palette.blue500,
+    color: Palette.hermesOrange,
   },
   tabContent: {
     flex: 1,
@@ -585,9 +585,10 @@ const styles = StyleSheet.create({
 
   // Section Title
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 20,
+    fontFamily: 'Manrope_800ExtraBold',
     color: SemanticColors.textPrimary,
+    letterSpacing: -0.5,
     marginBottom: 12,
   },
 
@@ -595,11 +596,9 @@ const styles = StyleSheet.create({
   healthCard: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
   },
   healthLeft: {
     alignItems: 'center',
@@ -620,7 +619,7 @@ const styles = StyleSheet.create({
   },
   healthScore: {
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: 'Manrope_800ExtraBold',
   },
   healthRight: {
     flex: 1,
@@ -634,7 +633,7 @@ const styles = StyleSheet.create({
   },
   healthStatValue: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
 
@@ -657,7 +656,7 @@ const styles = StyleSheet.create({
   },
   alertTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   alertDescription: {
@@ -675,7 +674,7 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
@@ -688,7 +687,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
     marginTop: 4,
   },
@@ -696,7 +695,7 @@ const styles = StyleSheet.create({
   // Aging
   agingCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -716,7 +715,7 @@ const styles = StyleSheet.create({
   },
   agingValue: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
   agingCount: {
     fontSize: 10,
@@ -743,7 +742,7 @@ const styles = StyleSheet.create({
   },
   reminderCustomer: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
     color: SemanticColors.textPrimary,
   },
   reminderAmount: {
@@ -759,7 +758,7 @@ const styles = StyleSheet.create({
   reminderButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Palette.blue500 + '15',
+    backgroundColor: Palette.hermesOrange + '15',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
@@ -767,8 +766,8 @@ const styles = StyleSheet.create({
   },
   reminderButtonText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: Palette.blue500,
+    fontFamily: 'Inter_600SemiBold',
+    color: Palette.hermesOrange,
   },
 
   // Financing
@@ -779,7 +778,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 8,
     borderWidth: 1,
@@ -799,7 +798,7 @@ const styles = StyleSheet.create({
   },
   financingTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   financingDesc: {
@@ -810,7 +809,7 @@ const styles = StyleSheet.create({
   financingAmount: {
     fontSize: 12,
     color: Palette.hermesOrange,
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
     marginTop: 4,
   },
 
@@ -819,7 +818,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 8,
     borderWidth: 1,
@@ -836,7 +835,7 @@ const styles = StyleSheet.create({
   },
   invoiceCustomer: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   statusBadge: {
@@ -846,7 +845,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
   invoiceProject: {
     fontSize: 13,
@@ -867,14 +866,14 @@ const styles = StyleSheet.create({
   },
   invoiceAmount: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
 
   // Forecast
   forecastCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -907,7 +906,7 @@ const styles = StyleSheet.create({
   },
   forecastBarValue: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
   forecastLegend: {
     flexDirection: 'row',
@@ -933,7 +932,7 @@ const styles = StyleSheet.create({
   // Seasonal
   seasonalCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -951,11 +950,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   seasonalItemCurrent: {
-    backgroundColor: Palette.blue500 + '15',
+    backgroundColor: Palette.hermesOrange + '15',
   },
   seasonalMonth: {
     fontSize: 12,
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
     color: SemanticColors.textPrimary,
     marginBottom: 4,
   },
@@ -966,13 +965,13 @@ const styles = StyleSheet.create({
   },
   seasonalTrend: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
 
   // Forecast Details
   forecastDetails: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -987,7 +986,7 @@ const styles = StyleSheet.create({
   forecastDetailPeriod: {
     width: 60,
     fontSize: 13,
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
     color: SemanticColors.textPrimary,
   },
   forecastDetailValues: {
@@ -1007,7 +1006,7 @@ const styles = StyleSheet.create({
   },
   forecastDetailNet: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
   confidenceBadge: {
     backgroundColor: SemanticColors.surfaceBackground,
@@ -1023,7 +1022,7 @@ const styles = StyleSheet.create({
   // Expenses
   expenseSummary: {
     backgroundColor: Palette.red500,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 20,
     marginBottom: 16,
     alignItems: 'center',
@@ -1034,13 +1033,13 @@ const styles = StyleSheet.create({
   },
   expenseSummaryValue: {
     fontSize: 32,
-    fontWeight: '700',
+    fontFamily: 'Manrope_800ExtraBold',
     color: '#fff',
     marginTop: 4,
   },
   categoryBreakdown: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -1078,12 +1077,12 @@ const styles = StyleSheet.create({
   },
   categoryAmount: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   recentExpenses: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -1118,25 +1117,25 @@ const styles = StyleSheet.create({
   },
   expenseAmount: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   addExpenseButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Palette.blue500 + '15',
-    borderRadius: 12,
+    backgroundColor: Palette.hermesOrange + '15',
+    borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: Palette.blue500,
+    borderColor: Palette.hermesOrange,
     borderStyle: 'dashed',
     gap: 8,
   },
   addExpenseText: {
     fontSize: 15,
-    fontWeight: '600',
-    color: Palette.blue500,
+    fontFamily: 'Inter_600SemiBold',
+    color: Palette.hermesOrange,
   },
 
   // Modal
@@ -1156,7 +1155,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 17,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   modalContent: {
@@ -1169,7 +1168,7 @@ const styles = StyleSheet.create({
   },
   invoiceDetailAmount: {
     fontSize: 36,
-    fontWeight: '700',
+    fontFamily: 'Manrope_800ExtraBold',
     color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
@@ -1199,12 +1198,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: Palette.green500,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     gap: 8,
   },
   markPaidText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#fff',
   },
   sendReminderButton: {
@@ -1213,14 +1212,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: Palette.blue500,
+    borderColor: Palette.hermesOrange,
     gap: 8,
   },
   sendReminderText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: Palette.blue500,
+    fontFamily: 'Inter_600SemiBold',
+    color: Palette.hermesOrange,
   },
 });

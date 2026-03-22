@@ -7,6 +7,7 @@ import { useEstimationAccuracy } from '../../services/estimationFeedbackService'
 import { logPrediction } from '../calibration';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { isAboveThreshold } from '../adaptiveThresholds';
+import { gt } from '../generatorTranslations';
 
 export const estimationCalibrationGenerator: InsightGenerator = {
   id: 'estimation-calibration',
@@ -51,7 +52,7 @@ export function useEstimationCalibrationInsight(ctx: GeneratorContext): ScoredIn
     icon: 'analytics',
     actionLabel: 'Bekijk kalibratie',
     actionRoute: '/(contractor)/besparen',
-    source: 'Offerte-analyse',
+    source: gt('source_estimation', ctx.language),
     metric: { label: 'Nauwkeurigheid', value: `${accuracy.overallScore}%`, trend: accuracy.trend === 'improving' ? 'up' : 'down' },
 
     rootCauseTags: ['estimation', 'accuracy'],

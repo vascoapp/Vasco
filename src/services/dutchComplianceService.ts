@@ -207,6 +207,43 @@ const MOCK_INSURANCE: DutchInsurance[] = [
 ];
 
 // ============================================
+// LATE PAYMENT INTEREST (Wet Betalingstermijnen)
+// ============================================
+
+export const DUTCH_LATE_PAYMENT_RATES = {
+  commercial: 0.08, // 8% for B2B (wettelijke handelsrente)
+  consumer: 0.02,   // 2% for B2C (wettelijke rente)
+};
+
+export function calculateLatePaymentInterest(
+  amount: number,
+  daysOverdue: number,
+  type: 'commercial' | 'consumer' = 'commercial',
+): { interest: number; dailyRate: number; total: number } {
+  const annualRate = DUTCH_LATE_PAYMENT_RATES[type];
+  const dailyRate = annualRate / 365;
+  const interest = amount * dailyRate * daysOverdue;
+  return {
+    interest: Math.round(interest * 100) / 100,
+    dailyRate: Math.round(dailyRate * 10000) / 10000,
+    total: Math.round((amount + interest) * 100) / 100,
+  };
+}
+
+// ============================================
+// GOVERNMENT PORTALS
+// ============================================
+
+export const DUTCH_GOVERNMENT_PORTALS = {
+  omgevingsloket: { name: 'Omgevingsloket', url: 'https://www.omgevingsloket.nl', description: 'Vergunningen aanvragen en checken' },
+  mijnOverheid: { name: 'MijnOverheid', url: 'https://mijn.overheid.nl', description: 'Persoonlijke overheidsberichten' },
+  kvk: { name: 'KVK', url: 'https://www.kvk.nl', description: 'Handelsregister en bedrijfsgegevens' },
+  belastingdienst: { name: 'Belastingdienst', url: 'https://www.belastingdienst.nl', description: 'BTW-aangifte en belastingen' },
+  rvo: { name: 'RVO', url: 'https://www.rvo.nl', description: 'Subsidies en regelingen' },
+  inspectie: { name: 'Inspectie SZW', url: 'https://www.nlarbeidsinspectie.nl', description: 'Arbeidsinspectie en veiligheid' },
+};
+
+// ============================================
 // SERVICE CLASS
 // ============================================
 

@@ -35,6 +35,9 @@ import { useMarginRootCauseInsight } from './marginRootCauseGenerator';
 import { useCustomerLifecycleInsight } from './customerLifecycleGenerator';
 import { useCascadingDelayInsight } from './cascadingDelayGenerator';
 
+// Procurement intelligence generators
+import { useSupplierPriceAnomalyInsight } from './supplierPriceAnomalyGenerator';
+
 // Workflow generators
 import { useQuoteBenchmarkInsight } from './quoteBenchmarkGenerator';
 import { useMaterialSuggestionInsight } from './materialSuggestionGenerator';
@@ -61,12 +64,18 @@ import { usePortfolioHealthInsight } from './portfolioHealthGenerator';
 import { useValueDeliveryInsight } from './valueDeliveryGenerator';
 import { useCrossProjectRiskInsight } from './crossProjectRiskGenerator';
 
+// Site lead-specific generators
+import { useCrewPerformanceInsight } from './crewPerformanceGenerator';
+import { useIncidentTrendInsight } from './incidentTrendGenerator';
+import { useDefectClusterInsight } from './defectClusterGenerator';
+import { useCertRenewalPlannerInsight } from './certRenewalPlannerGenerator';
+
 // Static generators (no hooks needed)
 import { weatherScheduleGenerator } from './weatherScheduleGenerator';
 import { staticTipGenerator } from './staticTipGenerator';
 
 // Re-export types
-export type { GeneratorContext, ScoredInsight, UserRole, ScreenContext, ReasoningChain, InsightGenerator } from './types';
+export type { GeneratorContext, ScoredInsight, UserRole, ScreenContext, ReasoningChain, InsightGenerator, GeneratorLanguage, InsightAction, InsightActionType } from './types';
 
 // =============================================================================
 // Screen relevance mapping — which generators are relevant for which screens
@@ -101,6 +110,7 @@ const GENERATOR_REGISTRY: GeneratorRegistration[] = [
   { id: 'customer-lifecycle', screens: ['today', 'invoices', 'decisions'], roles: ['contractor'] },
   { id: 'cascading-delay', screens: ['today', 'schedule', 'decisions', 'dispatch'], roles: ['contractor', 'sitelead', 'coo'] },
   { id: 'estimation-variance-type', screens: ['today', 'savings', 'decisions'], roles: ['contractor'] },
+  { id: 'supplier-price-anomaly', screens: ['today', 'savings', 'decisions', 'procurement', 'financials'], roles: ['contractor', 'cfo', 'coo'] },
   { id: 'static-tip', screens: ['today', 'invoices', 'savings', 'decisions', 'meer', 'overview', 'dispatch',
     'costs', 'cashflow', 'returns', 'approvals', 'risks', 'performance',
     'financials', 'efficiency', 'market', 'emerging', 'portfolio', 'safety', 'quality', 'issues',
@@ -125,6 +135,11 @@ const GENERATOR_REGISTRY: GeneratorRegistration[] = [
   { id: 'supplier-risk', screens: ['emerging', 'procurement'], roles: ['coo', 'sitelead'] },
   { id: 'permit-delay', screens: ['market', 'permits'], roles: ['coo', 'director'] },
   { id: 'change-order-velocity', screens: ['financials', 'efficiency', 'costs'], roles: ['coo', 'cfo'] },
+  // Site lead-specific generators
+  { id: 'crew-performance', screens: ['today', 'overview', 'schedule', 'dispatch'], roles: ['sitelead'] },
+  { id: 'incident-trend', screens: ['today', 'safety', 'overview'], roles: ['sitelead', 'coo'] },
+  { id: 'defect-cluster', screens: ['today', 'quality', 'overview', 'issues'], roles: ['sitelead', 'coo'] },
+  { id: 'cert-renewal-planner', screens: ['today', 'safety', 'compliance', 'overview'], roles: ['sitelead'] },
   // Director generators
   { id: 'handover-bottleneck', screens: ['portfolio', 'approvals'], roles: ['director', 'cfo'] },
   { id: 'portfolio-health', screens: ['portfolio', 'performance'], roles: ['director'] },
@@ -166,6 +181,9 @@ export function useAllGenerators(ctx: GeneratorContext): ScoredInsight[] {
   const customerLifecycle = useCustomerLifecycleInsight(ctx);
   const cascadingDelay = useCascadingDelayInsight(ctx);
 
+  // Procurement intelligence generators
+  const supplierPriceAnomaly = useSupplierPriceAnomalyInsight(ctx);
+
   // Workflow generators
   const quoteBenchmark = useQuoteBenchmarkInsight(ctx);
   const materialSuggestion = useMaterialSuggestionInsight(ctx);
@@ -185,6 +203,12 @@ export function useAllGenerators(ctx: GeneratorContext): ScoredInsight[] {
   const supplierRisk = useSupplierRiskInsight(ctx);
   const permitDelay = usePermitDelayInsight(ctx);
   const changeOrderVelocity = useChangeOrderVelocityInsight(ctx);
+
+  // Site lead-specific generators
+  const crewPerformance = useCrewPerformanceInsight(ctx);
+  const incidentTrend = useIncidentTrendInsight(ctx);
+  const defectCluster = useDefectClusterInsight(ctx);
+  const certRenewalPlanner = useCertRenewalPlannerInsight(ctx);
 
   // Director generators
   const handoverBottleneck = useHandoverBottleneckInsight(ctx);
@@ -220,6 +244,7 @@ export function useAllGenerators(ctx: GeneratorContext): ScoredInsight[] {
       { id: 'customer-lifecycle', insight: customerLifecycle },
       { id: 'cascading-delay', insight: cascadingDelay },
       { id: 'estimation-variance-type', insight: estimationVarianceType },
+      { id: 'supplier-price-anomaly', insight: supplierPriceAnomaly },
       { id: 'static-tip', insight: staticTip },
       { id: 'quote-benchmark', insight: quoteBenchmark },
       { id: 'material-suggestion', insight: materialSuggestion },
@@ -239,6 +264,10 @@ export function useAllGenerators(ctx: GeneratorContext): ScoredInsight[] {
       { id: 'portfolio-health', insight: portfolioHealth },
       { id: 'value-delivery', insight: valueDelivery },
       { id: 'cross-project-risk', insight: crossProjectRisk },
+      { id: 'crew-performance', insight: crewPerformance },
+      { id: 'incident-trend', insight: incidentTrend },
+      { id: 'defect-cluster', insight: defectCluster },
+      { id: 'cert-renewal-planner', insight: certRenewalPlanner },
     ];
 
     // Filter: only include generators relevant for current role + screen
@@ -257,13 +286,14 @@ export function useAllGenerators(ctx: GeneratorContext): ScoredInsight[] {
     estimationCal, dsoTrend, certExpiry, supplierPrice, weather,
     dailyPlanning, crossService, cashGap, capacity, goalProgress,
     profitability, financialAudit, marginRootCause, customerLifecycle,
-    cascadingDelay, estimationVarianceType, staticTip,
+    cascadingDelay, estimationVarianceType, supplierPriceAnomaly, staticTip,
     quoteBenchmark, materialSuggestion, customerPaymentHistory,
     marginWarning, similarJobComparison,
     projectBudgetVariance, contingencyBurn, approvalBottleneck,
     projectRiskScore, portfolioIRR,
     scheduleFragility, supplierRisk, permitDelay, changeOrderVelocity,
     handoverBottleneck, portfolioHealth, valueDelivery, crossProjectRisk,
+    crewPerformance, incidentTrend, defectCluster, certRenewalPlanner,
     ctx.role, ctx.screen,
   ]);
 }

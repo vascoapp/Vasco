@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { startAutoSync, stopAutoSync } from '../intelligence/cloudSync';
 import type { Session } from '@supabase/supabase-js';
 
 // ============================================
@@ -8,6 +9,9 @@ import type { Session } from '@supabase/supabase-js';
 
 export type UserRole = 'cfo' | 'coo' | 'site-lead' | 'director' | 'contractor';
 
+export type Country = 'UK' | 'NL' | 'DE' | 'FR' | 'ES' | 'IT';
+export type Language = 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
+
 export interface User {
   id: string;
   email: string;
@@ -15,6 +19,11 @@ export interface User {
   role: UserRole;
   company: string;
   projects: string[]; // Project IDs user has access to
+  country?: Country;
+  language?: Language;
+  trade?: string;
+  onboardingComplete?: boolean;
+  isAannemer?: boolean; // Coordinates multiple trades per project (renovation GC)
 }
 
 /** True when the app is running in demo mode (no Supabase credentials) */
@@ -64,6 +73,23 @@ const MOCK_USERS: Record<string, User> = {
     role: 'contractor',
     company: 'VDB Painters',
     projects: [], // Contractors don't have projects, they have jobs
+    country: 'NL',
+    language: 'nl',
+    trade: 'painting',
+    onboardingComplete: true,
+  },
+  'aannemer@vasco.dev': {
+    id: 'user-aannemer-001',
+    email: 'aannemer@vasco.dev',
+    name: 'Pieter van Dijk',
+    role: 'contractor',
+    company: 'Van Dijk Renovaties',
+    projects: [],
+    country: 'NL',
+    language: 'nl',
+    trade: 'general',
+    onboardingComplete: true,
+    isAannemer: true,
   },
 };
 
@@ -200,6 +226,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   signUp: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  updateUser: (updates: Partial<User>) => void;
   roleConfig: RoleConfig | null;
 }
 
@@ -280,6 +307,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setUser(mockUser);
       setIsLoading(false);
+      // Start AI cloud sync
+      startAutoSync(normalizedEmail, mockUser.role ?? 'contractor', mockUser.trade, mockUser.country);
       return true;
     }
 
@@ -306,11 +335,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    stopAutoSync();
     if (isSupabaseConfigured) {
       await supabase.auth.signOut();
     }
     setUser(null);
     setSession(null);
+  }, []);
+
+  const updateUser = useCallback((updates: Partial<User>) => {
+    setUser((prev) => (prev ? { ...prev, ...updates } : null));
   }, []);
 
   const roleConfig = user ? ROLE_CONFIGS[user.role] : null;
@@ -326,6 +360,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         signUp,
         logout,
+        updateUser,
         roleConfig,
       }}
     >

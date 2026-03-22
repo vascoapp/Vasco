@@ -10,6 +10,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Alert,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,9 +18,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Palette } from '../../theme/colors';
+import { useTranslation } from 'react-i18next';
+import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing, SafeArea } from '../../theme/spacing';
+import { PAGE_BG, TYPE, GRID, RADIUS } from '../../theme/tabStyles';
+import { useNotifications } from '../../services/notificationService';
+import { hapticSuccess } from '../../utils/haptics';
 import { useAuth } from '../../context/AuthContext';
+import { useDefects, useDailyReports } from '../../services/siteLeadDataService';
 import {
   mockSiteMetrics,
   getProjectById,
@@ -34,11 +40,15 @@ import {
 import { useVascoGuidance, useInlineInsight } from '../../services/vascoGuidanceService';
 import { VascoInsightList, InlineInsight } from '../shared/VascoInsightCard';
 import type { VascoInsight } from '../shared/VascoInsightCard';
+import { ProgressRing } from '../shared/ProgressRing';
+import { FadeIn } from '../shared/FadeIn';
 import { recordScreenVisit } from '../../intelligence/learningStorage';
 import { ContractorDashboardHeader } from '../contractor/ContractorDashboardHeader';
+import { VascoCard } from '../shared/VascoCard';
+import { getActionStats } from '../../intelligence/actionExecutor';
 
 type IconName = keyof typeof Ionicons.glyphMap;
-export type SiteLeadTabView = 'overview' | 'dispatch' | 'safety' | 'quality';
+export type SiteLeadTabView = 'overview' | 'dispatch' | 'safety' | 'more';
 type TabView = SiteLeadTabView;
 
 // =============================================================================
@@ -68,11 +78,11 @@ interface TeamDayAssignment {
 }
 
 const SITE_ZONES: SiteZone[] = [
-  { id: 'z-abg', name: 'Blok A - BG', phase: 'afbouw', color: '#2E7D32' },
-  { id: 'z-av2', name: 'Blok A - Verd. 2', phase: 'installatie', color: '#2563EB' },
-  { id: 'z-bv1', name: 'Blok B - Verd. 1', phase: 'installatie', color: '#7C3AED' },
-  { id: 'z-bbuit', name: 'Blok B - Buiten', phase: 'ruwbouw', color: '#D97706' },
-  { id: 'z-cv3', name: 'Blok C - Verd. 3', phase: 'afbouw', color: '#DB2777' },
+  { id: 'z-abg', name: 'Blok A - BG', phase: 'afbouw', color: SemanticColors.feedbackSuccess },
+  { id: 'z-av2', name: 'Blok A - Verd. 2', phase: 'installatie', color: Palette.hermesOrange },
+  { id: 'z-bv1', name: 'Blok B - Verd. 1', phase: 'installatie', color: Palette.hermesOrange },
+  { id: 'z-bbuit', name: 'Blok B - Buiten', phase: 'ruwbouw', color: Palette.hermesOrange },
+  { id: 'z-cv3', name: 'Blok C - Verd. 3', phase: 'afbouw', color: Palette.hermesOrange },
 ];
 
 const MOCK_ASSIGNMENTS: TeamDayAssignment[] = [
@@ -143,17 +153,6 @@ const MOCK_WORK_TEAMS: WorkTeam[] = [
   { id: 'wt-5', name: 'Metselwerk', trade: 'Metselaar', tradeIcon: 'cube', lead: 'Jan van Bergen', members: 3, task: 'Gevelstenen buitenmuur', location: 'Blok B - Buitenzijde', progress: 100, plannedProgress: 100, status: 'completed', startTime: '06:30', estimatedEnd: '15:00' },
 ];
 
-// Site Lead palette
-const SL = {
-  terracotta: '#D2691E',
-  terracottaLight: '#E8956A',
-  terracottaMuted: '#D2691E18',
-  charcoal: '#2D2926',
-  sand: '#FFFFFF',
-  sandDark: '#F5F5F5',
-  cream: '#FFFFFF',
-  warmGray: '#8A7E76',
-};
 
 // =============================================================================
 // PLANNING TAB — Team Schedule type + PlanningTeamCard
@@ -183,11 +182,11 @@ const PLANNING_STATUS_ORDER: Record<PlanningTeamStatus, number> = {
 };
 
 const ACCENT_COLORS: Record<PlanningTeamStatus, string> = {
-  blocked: '#C62828',
-  behind: '#C62828',
-  'at-risk': '#D97706',
-  'on-track': SL.terracotta,
-  completed: '#2E7D32',
+  blocked: SemanticColors.feedbackError,
+  behind: SemanticColors.feedbackWarning,
+  'at-risk': SemanticColors.textTertiary,
+  'on-track': Palette.hermesOrange,
+  completed: SemanticColors.feedbackSuccess,
 };
 
 function PlanningTeamCard({ entry, onPress }: { entry: TeamScheduleEntry; onPress: () => void }) {
@@ -214,14 +213,14 @@ function PlanningTeamCard({ entry, onPress }: { entry: TeamScheduleEntry; onPres
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={[pStyles.teamName, isCompleted && { color: SL.warmGray }]} numberOfLines={1}>{team.name}</Text>
-              {isCompleted && <Ionicons name="checkmark-circle" size={14} color="#2E7D32" />}
+              <Text style={[pStyles.teamName, isCompleted && { color: SemanticColors.textSecondary }]} numberOfLines={1}>{team.name}</Text>
+              {isCompleted && <Ionicons name="checkmark-circle" size={14} color={SemanticColors.feedbackSuccess} />}
             </View>
             <Text style={pStyles.teamLead} numberOfLines={1}>{team.lead} · {team.members} pers.</Text>
           </View>
           {timeRange ? (
             <View style={pStyles.timePill}>
-              <Ionicons name="time-outline" size={11} color={SL.warmGray} />
+              <Ionicons name="time-outline" size={11} color={SemanticColors.textSecondary} />
               <Text style={pStyles.timePillText}>{timeRange}</Text>
             </View>
           ) : null}
@@ -252,7 +251,7 @@ function PlanningTeamCard({ entry, onPress }: { entry: TeamScheduleEntry; onPres
         {isBlocked && blocker?.blockerNote && (
           <View style={pStyles.blockerStrip}>
             <View style={pStyles.blockerIconCircle}>
-              <Ionicons name="lock-closed" size={12} color="#C62828" />
+              <Ionicons name="lock-closed" size={12} color={SemanticColors.feedbackError} />
             </View>
             <Text style={pStyles.blockerText} numberOfLines={1}>{blocker.blockerNote}</Text>
           </View>
@@ -261,7 +260,7 @@ function PlanningTeamCard({ entry, onPress }: { entry: TeamScheduleEntry; onPres
         {/* Delay strip */}
         {delayNote && (
           <View style={pStyles.delayStrip}>
-            <Ionicons name="alert-circle" size={13} color="#D97706" />
+            <Ionicons name="alert-circle" size={13} color={SemanticColors.feedbackWarning} />
             <Text style={pStyles.delayText} numberOfLines={1}>{delayNote.blockerNote}</Text>
           </View>
         )}
@@ -281,8 +280,31 @@ interface SiteLeadDashboardProps {
 
 export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboardProps) {
   const router = useRouter();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [activeTab] = useState<TabView>(initialTab);
+  const [refreshing, setRefreshing] = useState(false);
+  const [actionStats, setActionStats] = useState<{ total: number; successful: number; positiveOutcomes: number } | null>(null);
+  useEffect(() => { getActionStats().then(setActionStats).catch(() => {}); }, []);
+  const { notifications } = useNotifications();
+  const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
+
+  // Real defect data from AsyncStorage
+  const { defects: realOpenDefects } = useDefects('open');
+  const { defects: realClosedDefects } = useDefects('closed');
+
+  // Daily reports for today-status
+  const { reports: dailyReports } = useDailyReports();
+  const todayStr = new Date().toISOString().split('T')[0];
+  const hasTodayReport = useMemo(
+    () => dailyReports.some(r => r.date === todayStr),
+    [dailyReports, todayStr]
+  );
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
+  }, []);
 
   // Fixed project for site lead (no multi-site selection)
   const selectedProjectId = 'uk-001';
@@ -403,53 +425,58 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
 
   const qualityHealth = useMemo(() => {
     if (!siteMetrics) return null;
+    // Use real defect counts from AsyncStorage when available, fall back to mock
+    const openCount = realOpenDefects.length > 0 ? realOpenDefects.length : siteMetrics.defectsOpenTotal;
+    const closedCount = realClosedDefects.length > 0 ? realClosedDefects.length : siteMetrics.defectsClosedTotal;
+    const total = openCount + closedCount;
+    const closureRate = total > 0 ? Math.round((closedCount / total) * 100) : siteMetrics.defectClosureRate;
     return {
-      defectsOpen: siteMetrics.defectsOpenTotal,
-      defectsClosed: siteMetrics.defectsClosedTotal,
-      closureRate: siteMetrics.defectClosureRate,
+      defectsOpen: openCount,
+      defectsClosed: closedCount,
+      closureRate,
       reworkCost: siteMetrics.reworkCostToDate,
     };
-  }, [siteMetrics]);
+  }, [siteMetrics, realOpenDefects, realClosedDefects]);
 
   const fmt = (amount: number) => formatCurrency(amount, currency);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Goedemorgen';
-    if (hour < 18) return 'Goedemiddag';
-    return 'Goedenavond';
+    if (hour < 12) return t('sitelead.greeting');
+    if (hour < 18) return t('sitelead.greetingAfternoon');
+    return t('sitelead.greetingEvening');
   };
 
   const getSafetyColor = (score: string) => {
     switch (score) {
       case 'excellent':
-      case 'good': return '#2E7D32';
-      case 'fair': return '#D97706';
-      default: return '#C62828';
+      case 'good': return SemanticColors.feedbackSuccess;
+      case 'fair': return SemanticColors.feedbackWarning;
+      default: return SemanticColors.feedbackError;
     }
   };
 
   const getProgressColor = (status: string) => {
     switch (status) {
-      case 'on-track': return '#2E7D32';
-      case 'at-risk': return '#D97706';
-      default: return '#C62828';
+      case 'on-track': return SemanticColors.feedbackSuccess;
+      case 'at-risk': return SemanticColors.feedbackWarning;
+      default: return SemanticColors.feedbackError;
     }
   };
 
   const getTeamColor = (status: TeamStatus) => {
     switch (status) {
-      case 'on-track': return SL.terracotta;
-      case 'at-risk': return SL.warmGray;
-      case 'behind': return '#C62828';
-      case 'completed': return '#2E7D32';
+      case 'on-track': return Palette.hermesOrange;
+      case 'at-risk': return SemanticColors.textSecondary;
+      case 'behind': return SemanticColors.feedbackError;
+      case 'completed': return SemanticColors.feedbackSuccess;
     }
   };
 
   if (!selectedProject || !siteMetrics || !progressHealth || !safetyHealth || !qualityHealth) {
     return (
       <View style={styles.container}>
-        <Text style={styles.emptyText}>Laden...</Text>
+        <Text style={styles.emptyText}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -465,10 +492,21 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
           <View style={{ flex: 1 }}>
             <Text style={styles.headerGreeting} numberOfLines={1}>{getGreeting()}, {userName}</Text>
             <View style={styles.headerLocationRow}>
-              <Ionicons name="location" size={14} color={SL.terracotta} />
+              <Ionicons name="location" size={14} color={Palette.hermesOrange} />
               <Text style={styles.headerLocation} numberOfLines={1}>{selectedProject.name}</Text>
             </View>
           </View>
+          <Pressable
+            style={styles.headerNotifBtn}
+            onPress={() => router.push('/sitelead/dispatch' as any)}
+          >
+            <Ionicons name="notifications-outline" size={20} color={SemanticColors.textPrimary} />
+            {unreadCount > 0 && (
+              <View style={styles.headerNotifBadge}>
+                <Text style={styles.headerNotifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+              </View>
+            )}
+          </Pressable>
           <View style={styles.headerAvatar}>
             <Text style={styles.headerAvatarText}>{userName.charAt(0).toUpperCase()}</Text>
           </View>
@@ -479,79 +517,64 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />}
       >
         {/* ============================================ */}
         {/* OVERVIEW TAB */}
         {/* ============================================ */}
         {activeTab === 'overview' && (
           <>
-            {/* Dashboard voortgang — compact gauges */}
-            <View style={styles.gaugeRow}>
-              <View style={styles.gaugeCard}>
-                <Text style={[styles.gaugeValue, { color: getProgressColor(progressHealth.status) }]}>
-                  {progressHealth.actual}%
-                </Text>
-                <Text style={styles.gaugeLabel}>Voortgang</Text>
-                <View style={styles.gaugeBar}>
-                  <View style={[styles.gaugeBarFill, { width: `${progressHealth.actual}%`, backgroundColor: getProgressColor(progressHealth.status) }]} />
-                </View>
-              </View>
-              <View style={styles.gaugeCard}>
-                <Text style={[styles.gaugeValue, { color: getSafetyColor(safetyHealth.score) }]}>
-                  {safetyHealth.ltir.toFixed(1)}
-                </Text>
-                <Text style={styles.gaugeLabel}>LTIR</Text>
-                <View style={styles.gaugeBar}>
-                  <View style={[styles.gaugeBarFill, { width: `${Math.min((safetyHealth.ltir / 2) * 100, 100)}%`, backgroundColor: getSafetyColor(safetyHealth.score) }]} />
-                </View>
-              </View>
-              <View style={styles.gaugeCard}>
-                <Text style={[styles.gaugeValue, { color: qualityHealth.defectsOpen > 20 ? '#D97706' : '#2E7D32' }]}>
-                  {qualityHealth.defectsOpen}
-                </Text>
-                <Text style={styles.gaugeLabel}>Open</Text>
-                <View style={styles.gaugeBar}>
-                  <View style={[styles.gaugeBarFill, { width: `${Math.min((qualityHealth.defectsOpen / 40) * 100, 100)}%`, backgroundColor: qualityHealth.defectsOpen > 20 ? '#D97706' : '#2E7D32' }]} />
-                </View>
-              </View>
-            </View>
+            {/* Vasco Card — AI first (EVE pattern) */}
+            <FadeIn delay={0}>
+              <VascoCard
+                briefing={null}
+                queueItems={[]}
+                topInsight={activeGuidance.length > 0 ? activeGuidance[0] : null}
+                automationsCount={0}
+                onApproveQueueItem={() => {}}
+                onRejectQueueItem={() => {}}
+                onInsightAction={handleGuidanceAction}
+              />
+            </FadeIn>
 
-            {/* Vasco AI Guidance */}
-            <VascoInsightList
-              insights={activeGuidance}
-              title="Vasco Intelligentie"
-              compact
-              maxVisible={2}
-              onDismiss={handleDismissGuidance}
-              onAction={handleGuidanceAction}
-              onSnooze={handleSnoozeGuidance}
-            />
-            {overviewInsight && (
-              <InlineInsight icon={overviewInsight.icon as IconName} message={overviewInsight.message} />
-            )}
+            {/* KPI header — pressable */}
+            <FadeIn delay={40}>
+              <ContractorDashboardHeader
+                kpis={[
+                  { icon: 'trending-up', value: `${progressHealth.actual}%`, label: t('sitelead.progress'), color: getProgressColor(progressHealth.status), onPress: () => router.push('/sitelead/dispatch' as any) },
+                  { icon: 'shield-checkmark', value: safetyHealth.ltir.toFixed(1), label: 'LTIR', color: Palette.hermesOrange, onPress: () => router.push('/sitelead/incident-report' as any) },
+                  { icon: 'construct', value: String(qualityHealth.defectsOpen), label: t('sitelead.open'), color: Palette.hermesOrange, onPress: () => router.push('/sitelead/log-defect' as any) },
+                ]}
+              />
+            </FadeIn>
 
-            {/* Werkploegen — pressable, clean colors */}
+            {/* Daily report status */}
+            <FadeIn delay={80}>
+              <Pressable
+                style={styles.dailyReportBanner}
+                onPress={() => router.push('/sitelead/daily-report' as any)}
+              >
+                <Ionicons
+                  name={hasTodayReport ? 'checkmark-circle' : 'document-text-outline'}
+                  size={18}
+                  color={hasTodayReport ? SemanticColors.feedbackSuccess : SemanticColors.textTertiary}
+                />
+                <Text style={[styles.dailyReportText, { color: hasTodayReport ? SemanticColors.feedbackSuccess : SemanticColors.textSecondary }]}>
+                  {hasTodayReport ? 'Dagrapport ingediend' : 'Dagrapport nog niet ingevuld'}
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+              </Pressable>
+            </FadeIn>
+
+            {/* Werkploegen */}
+            <FadeIn delay={120}>
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Werkploegen</Text>
+                <Text style={styles.sectionTitle}>{t('sitelead.teams')}</Text>
                 <View style={styles.sectionBadge}>
-                  <Text style={styles.sectionBadgeText}>{activeTeams.length} actief</Text>
+                  <Text style={styles.sectionBadgeText}>{t('sitelead.teamsActive', { count: activeTeams.length })}</Text>
                 </View>
               </View>
-
-              {/* AI scheduling chip */}
-              <Pressable
-                style={styles.aiChip}
-                onPress={() => Alert.alert(
-                  'AI Inzet Planning',
-                  'Vasco analyseert weer, prioriteiten, beschikbaarheid en vakanties om een optimale bezetting voor te stellen.',
-                  [{ text: 'OK' }]
-                )}
-              >
-                <Ionicons name="sparkles" size={14} color={SL.terracotta} />
-                <Text style={styles.aiChipText} numberOfLines={1}>AI inzet planning</Text>
-                <Ionicons name="chevron-forward" size={14} color={SL.terracotta} />
-              </Pressable>
 
               {MOCK_WORK_TEAMS.map((team) => {
                 const deviation = team.progress - team.plannedProgress;
@@ -572,13 +595,13 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
                         <Text style={styles.teamMeta} numberOfLines={1}>{team.lead} · {team.members} pers.</Text>
                       </View>
                       {team.status === 'completed' ? (
-                        <Ionicons name="checkmark-circle" size={18} color="#2E7D32" />
+                        <Ionicons name="checkmark-circle" size={18} color={SemanticColors.feedbackSuccess} />
                       ) : (
                         <Text style={[styles.teamDeviation, { color }]}>
                           {deviation >= 0 ? '+' : ''}{deviation}%
                         </Text>
                       )}
-                      <Ionicons name="chevron-forward" size={16} color="#CCC" />
+                      <Ionicons name="chevron-forward" size={16} color={SemanticColors.textDisabled} />
                     </View>
 
                     <Text style={styles.teamTask} numberOfLines={1}>{team.task}</Text>
@@ -595,51 +618,18 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
                       <Text style={styles.teamTime}>{team.startTime} - {team.estimatedEnd}</Text>
                       {team.blockers && (
                         <View style={styles.teamBlocker}>
-                          <Ionicons name="alert-circle" size={11} color="#D97706" />
+                          <Ionicons name="alert-circle" size={11} color={SemanticColors.feedbackWarning} />
                           <Text style={styles.teamBlockerText} numberOfLines={1}>{team.blockers}</Text>
                         </View>
                       )}
                     </View>
-
-                    {/* Substitute worker button */}
-                    {team.status !== 'completed' && (
-                      <Pressable
-                        style={styles.substituteBtn}
-                        onPress={() => {
-                          Alert.alert(
-                            'Vervangen / Bijplaatsen',
-                            `Wil je een werknemer vervangen of bijplaatsen bij ${team.name}?`,
-                            [
-                              { text: 'Annuleer', style: 'cancel' },
-                              { text: 'AI Voorstel', onPress: () => Alert.alert('AI Planning', 'Vasco analyseert beschikbaarheid, vakkennis, weer en reistijd om de beste vervanging voor te stellen.') },
-                              { text: 'Handmatig', onPress: () => router.push(`/sitelead/team/${team.id}` as any) },
-                            ]
-                          );
-                        }}
-                      >
-                        <Ionicons name="swap-horizontal" size={13} color={SL.terracotta} />
-                        <Text style={styles.substituteBtnText} numberOfLines={1}>Vervangen</Text>
-                      </Pressable>
-                    )}
                   </Pressable>
                 );
               })}
             </View>
+            </FadeIn>
 
-            {/* Quick actions */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Snelle acties</Text>
-              <View style={styles.quickRow}>
-                <Pressable style={styles.quickPill} onPress={() => router.push('/contractor/ai-assistant' as any)}>
-                  <Ionicons name="sparkles" size={16} color={SL.terracotta} />
-                  <Text style={styles.quickPillText} numberOfLines={1}>AI Assistent</Text>
-                </Pressable>
-                <Pressable style={styles.quickPill} onPress={() => router.push('/contractor/documents' as any)}>
-                  <Ionicons name="document-text" size={16} color={SL.terracotta} />
-                  <Text style={styles.quickPillText} numberOfLines={1}>Documenten</Text>
-                </Pressable>
-              </View>
-            </View>
+            {/* VascoCard moved to top of overview */}
           </>
         )}
 
@@ -648,55 +638,54 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
         {/* ============================================ */}
         {activeTab === 'safety' && (
           <>
+            {/* Safety + Quality KPIs — pressable */}
             <ContractorDashboardHeader
               kpis={[
-                { icon: 'shield-checkmark', value: safetyHealth.ltir.toFixed(2), label: 'LTIR', color: getSafetyColor(safetyHealth.score) },
-                { icon: 'warning', value: String(safetyHealth.incidentsThisPeriod), label: 'Incidenten', color: safetyHealth.incidentsThisPeriod > 0 ? '#C62828' : undefined },
-                { icon: 'eye', value: String(safetyHealth.nearMisses), label: 'Near-misses' },
+                { icon: 'shield-checkmark', value: safetyHealth.ltir.toFixed(2), label: 'LTIR', color: Palette.hermesOrange, onPress: () => router.push('/sitelead/incident-report' as any) },
+                { icon: 'warning', value: String(safetyHealth.incidentsThisPeriod), label: t('sitelead.incidents'), color: safetyHealth.incidentsThisPeriod > 2 ? SemanticColors.feedbackError : Palette.hermesOrange, onPress: () => router.push('/sitelead/incident-report' as any) },
+                { icon: 'eye', value: String(safetyHealth.nearMisses), label: t('sitelead.nearMisses'), onPress: () => router.push('/sitelead/inspection' as any) },
               ]}
             />
-            {safetyInsight && (
-              <InlineInsight icon={safetyInsight.icon as IconName} message={safetyInsight.message} />
-            )}
+            <ContractorDashboardHeader
+              kpis={[
+                { icon: 'ribbon', value: String(qualityHealth.defectsOpen), label: t('sitelead.openDefects'), color: Palette.hermesOrange, onPress: () => router.push('/sitelead/log-defect' as any) },
+                { icon: 'checkmark-circle', value: `${qualityHealth.closureRate}%`, label: t('sitelead.closureRate'), onPress: () => router.push('/sitelead/close-defect' as any) },
+                { icon: 'construct', value: `\u20AC${qualityHealth.reworkCost.toLocaleString('nl-NL')}`, label: t('sitelead.repairCosts') },
+              ]}
+            />
 
-            {/* Safety Dashboard — pressable overview */}
-            <Pressable
-              style={styles.dashboardCard}
-              onPress={() => router.push('/hub/reports' as any)}
-            >
+            {/* Safety Dashboard — score + bars */}
+            <View style={styles.dashboardCard}>
               <View style={styles.dashboardCardHeader}>
-                <Text style={styles.dashboardCardTitle} numberOfLines={1}>Veiligheid Dashboard</Text>
-                <Ionicons name="chevron-forward" size={18} color="#CCC" />
+                <Text style={styles.dashboardCardTitle} numberOfLines={1}>{t('sitelead.safetyDashboard')}</Text>
               </View>
 
-              {/* Safety score banner */}
-              <View style={[styles.safetyBanner, { backgroundColor: getSafetyColor(safetyHealth.score) + '12' }]}>
+              <View style={[styles.safetyBanner, { backgroundColor: SemanticColors.surfaceSecondary }]}>
                 <View>
-                  <Text style={styles.safetyBannerLabel}>Safety Score</Text>
-                  <Text style={[styles.safetyBannerScore, { color: getSafetyColor(safetyHealth.score) }]}>
+                  <Text style={styles.safetyBannerLabel}>{t('sitelead.safetyScore')}</Text>
+                  <Text style={[styles.safetyBannerScore, { color: SemanticColors.textPrimary }]}>
                     {safetyHealth.score.toUpperCase()}
                   </Text>
                 </View>
                 <View style={{ alignItems: 'center' }}>
                   <Text style={styles.ltirLabel}>LTIR</Text>
-                  <Text style={[styles.ltirValue, { color: getSafetyColor(safetyHealth.score) }]}>
+                  <Text style={[styles.ltirValue, { color: SemanticColors.textPrimary }]}>
                     {safetyHealth.ltir.toFixed(2)}
                   </Text>
                 </View>
               </View>
 
-              {/* Incident bars */}
               <View style={styles.barGroup}>
                 {[
-                  { label: 'Gewerkte uren', value: safetyHealth.hoursWorked.toLocaleString(), pct: 100, color: SL.terracotta },
-                  { label: 'Incidenten (totaal)', value: String(safetyHealth.incidents), pct: safetyHealth.incidents > 0 ? Math.max((safetyHealth.incidents / 10) * 100, 15) : 0, color: '#C62828' },
-                  { label: 'Deze periode', value: String(safetyHealth.incidentsThisPeriod), pct: safetyHealth.incidentsThisPeriod > 0 ? Math.max((safetyHealth.incidentsThisPeriod / 5) * 100, 10) : 0, color: '#D97706' },
-                  { label: 'Near-misses', value: String(safetyHealth.nearMisses), pct: safetyHealth.nearMisses > 0 ? Math.max((safetyHealth.nearMisses / 5) * 100, 10) : 0, color: Palette.hermesOrange },
+                  { label: t('sitelead.workedHours'), value: safetyHealth.hoursWorked.toLocaleString(), pct: 100, color: Palette.hermesOrange },
+                  { label: t('sitelead.incidentsTotal'), value: String(safetyHealth.incidents), pct: safetyHealth.incidents > 0 ? Math.max((safetyHealth.incidents / 10) * 100, 15) : 0, color: Palette.hermesOrange },
+                  { label: t('sitelead.thisPeriod'), value: String(safetyHealth.incidentsThisPeriod), pct: safetyHealth.incidentsThisPeriod > 0 ? Math.max((safetyHealth.incidentsThisPeriod / 5) * 100, 10) : 0, color: Palette.hermesOrange },
+                  { label: t('sitelead.nearMisses'), value: String(safetyHealth.nearMisses), pct: safetyHealth.nearMisses > 0 ? Math.max((safetyHealth.nearMisses / 5) * 100, 10) : 0, color: Palette.hermesOrange },
                 ].map((item) => (
                   <View key={item.label} style={styles.barRow}>
                     <View style={styles.barLabelRow}>
                       <Text style={styles.barLabel}>{item.label}</Text>
-                      <Text style={[styles.barValue, { color: item.color }]}>{item.value}</Text>
+                      <Text style={[styles.barValue, { color: SemanticColors.textPrimary }]}>{item.value}</Text>
                     </View>
                     <View style={styles.barTrack}>
                       <View style={[styles.barFill, { width: `${Math.min(item.pct, 100)}%`, backgroundColor: item.color }]} />
@@ -704,149 +693,227 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
                   </View>
                 ))}
               </View>
-            </Pressable>
-
-            {/* Safety Actions — wired */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Veiligheid Acties</Text>
-              <View style={styles.actionsList}>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/sitelead/incident-report' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: '#C6282815' }]}>
-                    <Ionicons name="warning" size={18} color="#C62828" />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle} numberOfLines={1}>Incident Melden</Text>
-                    <Text style={styles.actionSubtitle} numberOfLines={2}>Meld veiligheidsincident of bijna-ongeluk</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#CCC" />
-                </Pressable>
-
-                <Pressable style={styles.actionItem} onPress={() => router.push('/sitelead/inspection' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: SL.terracotta + '15' }]}>
-                    <Ionicons name="clipboard" size={18} color={SL.terracotta} />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle} numberOfLines={1}>Veiligheidsinspectie</Text>
-                    <Text style={styles.actionSubtitle} numberOfLines={2}>Voer site veiligheidsronde uit</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#CCC" />
-                </Pressable>
-
-                <Pressable style={styles.actionItem} onPress={() => router.push('/sitelead/compliance' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: '#1565C015' }]}>
-                    <Ionicons name="shield-checkmark" size={18} color="#1565C0" />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle} numberOfLines={1}>Compliance & Certificaten</Text>
-                    <Text style={styles.actionSubtitle} numberOfLines={2}>Nalevingsstatus, VCA, NEN certificaten</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#CCC" />
-                </Pressable>
-              </View>
             </View>
-          </>
-        )}
 
-        {/* ============================================ */}
-        {/* QUALITY TAB */}
-        {/* ============================================ */}
-        {activeTab === 'quality' && (
-          <>
-            <ContractorDashboardHeader
-              kpis={[
-                { icon: 'ribbon', value: String(qualityHealth.defectsOpen), label: 'Open Gebreken', color: qualityHealth.defectsOpen > 20 ? '#D97706' : '#2E7D32' },
-                { icon: 'checkmark-circle', value: `${qualityHealth.closureRate}%`, label: 'Closure Rate' },
-                { icon: 'construct', value: `\u20AC${qualityHealth.reworkCost.toLocaleString('nl-NL')}`, label: 'Herstelkosten' },
-              ]}
-            />
-            {qualityInsight && (
-              <InlineInsight icon={qualityInsight.icon as IconName} message={qualityInsight.message} />
-            )}
-
-            {/* Quality Dashboard — pressable */}
-            <Pressable
-              style={styles.dashboardCard}
-              onPress={() => router.push('/hub/reports' as any)}
-            >
+            {/* Quality dashboard — merged into Safety tab */}
+            <View style={styles.dashboardCard}>
               <View style={styles.dashboardCardHeader}>
-                <Text style={styles.dashboardCardTitle} numberOfLines={1}>Kwaliteit Dashboard</Text>
-                <Ionicons name="chevron-forward" size={18} color="#CCC" />
+                <Text style={styles.dashboardCardTitle} numberOfLines={1}>{t('sitelead.qualityDashboard')}</Text>
               </View>
 
-              {/* Pipeline Bar */}
               <View style={styles.defectPipelineBar}>
                 {qualityHealth.defectsClosed > 0 && (
-                  <View style={[styles.defectPipelineSegment, { flex: qualityHealth.defectsClosed, backgroundColor: '#2E7D32' }]} />
+                  <View style={[styles.defectPipelineSegment, { flex: qualityHealth.defectsClosed, backgroundColor: SemanticColors.feedbackSuccess }]} />
                 )}
                 {qualityHealth.defectsOpen > 0 && (
-                  <View style={[styles.defectPipelineSegment, { flex: qualityHealth.defectsOpen, backgroundColor: '#D97706' }]} />
+                  <View style={[styles.defectPipelineSegment, { flex: qualityHealth.defectsOpen, backgroundColor: Palette.hermesOrange }]} />
                 )}
               </View>
               <View style={styles.defectLegend}>
                 <View style={styles.defectLegendItem}>
-                  <View style={[styles.defectDot, { backgroundColor: '#2E7D32' }]} />
-                  <Text style={styles.defectLegendText}>Gesloten</Text>
+                  <View style={[styles.defectDot, { backgroundColor: SemanticColors.feedbackSuccess }]} />
+                  <Text style={styles.defectLegendText}>{t('sitelead.closed')}</Text>
                   <Text style={styles.defectLegendCount}>{qualityHealth.defectsClosed}</Text>
                 </View>
                 <View style={styles.defectLegendItem}>
-                  <View style={[styles.defectDot, { backgroundColor: '#D97706' }]} />
-                  <Text style={styles.defectLegendText}>Open</Text>
+                  <View style={[styles.defectDot, { backgroundColor: Palette.hermesOrange }]} />
+                  <Text style={styles.defectLegendText}>{t('sitelead.open')}</Text>
                   <Text style={styles.defectLegendCount}>{qualityHealth.defectsOpen}</Text>
                 </View>
               </View>
 
-              {/* Closure Rate */}
               <View style={styles.closureRow}>
-                <View style={[styles.closureRing, { borderColor: qualityHealth.closureRate >= 80 ? '#2E7D32' : '#D97706' }]}>
-                  <Text style={[styles.closureRingValue, { color: qualityHealth.closureRate >= 80 ? '#2E7D32' : '#D97706' }]}>
-                    {formatPercent(qualityHealth.closureRate)}
-                  </Text>
-                  <Text style={styles.closureRingLabel}>Closure</Text>
-                </View>
+                <ProgressRing
+                  progress={qualityHealth.closureRate}
+                  size={72}
+                  color={Palette.hermesOrange}
+                  value={`${qualityHealth.closureRate}%`}
+                />
                 <View style={{ flex: 1, gap: 6 }}>
                   <View style={styles.closureStat}>
-                    <Ionicons name="construct" size={14} color="#D97706" />
-                    <Text style={styles.closureStatLabel}>Herstelkosten</Text>
+                    <Ionicons name="construct" size={14} color={Palette.hermesOrange} />
+                    <Text style={styles.closureStatLabel}>{t('sitelead.repairCosts')}</Text>
                     <Text style={styles.closureStatValue}>{fmt(qualityHealth.reworkCost)}</Text>
                   </View>
                   <View style={styles.closureStat}>
-                    <Ionicons name="trending-up" size={14} color={qualityHealth.closureRate >= 80 ? '#2E7D32' : '#C62828'} />
-                    <Text style={styles.closureStatLabel}>Trend</Text>
-                    <Text style={[styles.closureStatValue, { color: qualityHealth.closureRate >= 80 ? '#2E7D32' : '#C62828' }]}>
-                      {qualityHealth.closureRate >= 80 ? 'Goed' : 'Aandacht nodig'}
+                    <Ionicons name="trending-up" size={14} color={Palette.hermesOrange} />
+                    <Text style={styles.closureStatLabel}>{t('sitelead.trend')}</Text>
+                    <Text style={[styles.closureStatValue, { color: Palette.hermesOrange }]}>
+                      {qualityHealth.closureRate >= 80 ? t('sitelead.good') : t('sitelead.needsAttention')}
                     </Text>
                   </View>
                 </View>
               </View>
-            </Pressable>
-
-            {/* Quality Actions — wired */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Kwaliteit Acties</Text>
-              <View style={styles.actionsList}>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/sitelead/log-defect' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: '#D9770615' }]}>
-                    <Ionicons name="bug" size={18} color="#D97706" />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle} numberOfLines={1}>Log Gebrek / Garantie</Text>
-                    <Text style={styles.actionSubtitle} numberOfLines={2}>Registreer kwaliteitsprobleem met foto's</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#CCC" />
-                </Pressable>
-
-                <Pressable style={styles.actionItem} onPress={() => router.push('/sitelead/close-defect' as any)}>
-                  <View style={[styles.actionIcon, { backgroundColor: '#2E7D3215' }]}>
-                    <Ionicons name="checkmark-circle" size={18} color="#2E7D32" />
-                  </View>
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle} numberOfLines={1}>Sluit Gebrek</Text>
-                    <Text style={styles.actionSubtitle} numberOfLines={2}>Markeer gebreken als opgelost</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#CCC" />
-                </Pressable>
-              </View>
             </View>
+
+            {/* Safety actions — single ingress point (moved from Vasco tab) */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{t('sitelead.safetyActions', 'Acties')}</Text>
+              {[
+                { icon: 'warning-outline' as IconName, title: t('sitelead.reportIncident'), route: '/sitelead/incident-report' },
+                { icon: 'clipboard-outline' as IconName, title: t('sitelead.safetyInspection'), route: '/sitelead/inspection' },
+                { icon: 'construct-outline' as IconName, title: t('sitelead.closeDefect'), route: '/sitelead/close-defect' },
+                { icon: 'add-circle-outline' as IconName, title: t('sitelead.defect'), route: '/sitelead/log-defect' },
+              ].map((item) => (
+                <Pressable key={item.route} style={({ pressed }) => [styles.meerItem, pressed && { opacity: 0.85 }]} onPress={() => router.push(item.route as any)}>
+                  <View style={styles.meerIcon}>
+                    <Ionicons name={item.icon} size={20} color={SemanticColors.textSecondary} />
+                  </View>
+                  <Text style={[styles.meerTitle, { flex: 1 }]} numberOfLines={1}>{item.title}</Text>
+                  <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+                </Pressable>
+              ))}
+            </View>
+
+            {/* AI insights — safety + quality combined */}
+            {safetyInsight && (
+              <InlineInsight icon={safetyInsight.icon as IconName} message={safetyInsight.message} />
+            )}
+            {qualityInsight && (
+              <InlineInsight icon={qualityInsight.icon as IconName} message={qualityInsight.message} />
+            )}
+          </>
+        )}
+
+        {/* ============================================ */}
+        {/* MEER TAB — Less frequent tools & settings */}
+        {/* ============================================ */}
+        {activeTab === 'more' && (
+          <>
+            {/* Status summary — proactive actions from site data */}
+            <FadeIn delay={0}>
+              <View style={styles.vascoStatusCard}>
+                <View style={styles.vascoStatusIcon}>
+                  <Ionicons name="flash" size={20} color={Palette.hermesOrange} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.vascoStatusTitle}>
+                    {(blockedTeams.length + (qualityHealth?.defectsOpen ?? 0) + (safetyHealth?.incidentsThisPeriod ?? 0) + (!hasTodayReport ? 1 : 0)) > 0
+                      ? `${blockedTeams.length + (qualityHealth?.defectsOpen ?? 0) + (!hasTodayReport ? 1 : 0)} acties voor je klaar`
+                      : 'Alles bijgewerkt'}
+                  </Text>
+                  <Text style={styles.vascoStatusDesc}>Vasco scant je teams, veiligheid en kwaliteit</Text>
+                </View>
+              </View>
+            </FadeIn>
+
+            {/* Proactive action cards — site lead specific */}
+            {!hasTodayReport && (
+              <FadeIn delay={30}>
+                <View style={[styles.vascoActionCard, { borderLeftColor: Palette.hermesOrange }]}>
+                  <View style={styles.vascoActionHeader}>
+                    <View style={[styles.vascoActionIcon, { backgroundColor: Palette.hermesOrange + '12' }]}>
+                      <Ionicons name="create-outline" size={18} color={Palette.hermesOrange} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.vascoActionTitle}>Dagrapport invullen</Text>
+                      <Text style={styles.vascoActionReason}>Nog niet ingediend vandaag</Text>
+                    </View>
+                  </View>
+                  <View style={styles.vascoActionBtns}>
+                    <Pressable style={styles.vascoApproveBtn} onPress={() => { hapticSuccess(); router.push('/sitelead/daily-report' as any); }}>
+                      <Ionicons name="arrow-forward" size={14} color={Palette.white} />
+                      <Text style={styles.vascoApproveBtnText}>Invullen</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              </FadeIn>
+            )}
+
+            {blockedTeams.length > 0 && blockedTeams.map((bt, idx) => (
+              <FadeIn key={bt.team.id} delay={60 + idx * 30}>
+                <View style={[styles.vascoActionCard, { borderLeftColor: SemanticColors.feedbackError }]}>
+                  <View style={styles.vascoActionHeader}>
+                    <View style={[styles.vascoActionIcon, { backgroundColor: SemanticColors.feedbackError + '12' }]}>
+                      <Ionicons name="lock-closed" size={18} color={SemanticColors.feedbackError} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.vascoActionTitle}>{bt.team.name} geblokkeerd</Text>
+                      <Text style={styles.vascoActionReason} numberOfLines={2}>
+                        {bt.assignments.find(a => a.status === 'geblokkeerd')?.blockerNote || 'Wacht op ander team'}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.vascoActionBtns}>
+                    <Pressable style={styles.vascoApproveBtn} onPress={() => { hapticSuccess(); router.push(`/sitelead/team/${bt.team.id}` as any); }}>
+                      <Ionicons name="arrow-forward" size={14} color={Palette.white} />
+                      <Text style={styles.vascoApproveBtnText}>Oplossen</Text>
+                    </Pressable>
+                    <Pressable style={styles.vascoDismissBtn}><Text style={styles.vascoDismissBtnText}>Later</Text></Pressable>
+                  </View>
+                </View>
+              </FadeIn>
+            ))}
+
+            {(qualityHealth?.defectsOpen ?? 0) > 0 && (
+              <FadeIn delay={90}>
+                <View style={[styles.vascoActionCard, { borderLeftColor: Palette.hermesOrange }]}>
+                  <View style={styles.vascoActionHeader}>
+                    <View style={[styles.vascoActionIcon, { backgroundColor: Palette.hermesOrange + '12' }]}>
+                      <Ionicons name="construct-outline" size={18} color={Palette.hermesOrange} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.vascoActionTitle}>{qualityHealth!.defectsOpen} open gebreken</Text>
+                      <Text style={styles.vascoActionReason}>Afsluitpercentage: {qualityHealth!.closureRate}%</Text>
+                    </View>
+                  </View>
+                  <View style={styles.vascoActionBtns}>
+                    <Pressable style={styles.vascoApproveBtn} onPress={() => { hapticSuccess(); router.push('/sitelead/close-defect' as any); }}>
+                      <Ionicons name="checkmark" size={14} color={Palette.white} />
+                      <Text style={styles.vascoApproveBtnText}>Afsluiten</Text>
+                    </Pressable>
+                    <Pressable style={styles.vascoDismissBtn} onPress={() => router.push('/sitelead/log-defect' as any)}>
+                      <Text style={styles.vascoDismissBtnText}>Nieuw loggen</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              </FadeIn>
+            )}
+
+            {/* Recommendations from guidance */}
+            {activeGuidance.length > 0 && (
+              <FadeIn delay={120}>
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Aanbevelingen</Text>
+                  {activeGuidance.slice(0, 3).map((rec: any) => (
+                    <Pressable
+                      key={rec.id}
+                      style={({ pressed }) => [styles.vascoRecCard, pressed && { opacity: 0.85 }]}
+                      onPress={() => rec.actionRoute ? router.push(rec.actionRoute as any) : null}
+                    >
+                      <Ionicons name={(rec.icon as IconName) || 'bulb-outline'} size={18} color={Palette.hermesOrange} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.vascoRecTitle} numberOfLines={1}>{rec.title}</Text>
+                        <Text style={styles.vascoRecDesc} numberOfLines={2}>{rec.message}</Text>
+                      </View>
+                      {rec.actionRoute && <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />}
+                    </Pressable>
+                  ))}
+                </View>
+              </FadeIn>
+            )}
+
+            {/* Quick links — documents + management at bottom */}
+            <FadeIn delay={160}>
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Beheer</Text>
+                <View style={{ backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden' }}>
+                  {[
+                    { icon: 'document-lock-outline' as IconName, title: t('sitelead.ramsDocs'), route: '/sitelead/safety-docs' },
+                    { icon: 'card-outline' as IconName, title: t('sitelead.workerCerts'), route: '/sitelead/worker-certs' },
+                    { icon: 'shield-checkmark-outline' as IconName, title: t('sitelead.compliance'), route: '/sitelead/compliance' },
+                    { icon: 'git-branch-outline' as IconName, title: t('sitelead.dispatch'), route: '/sitelead/dispatch' },
+                    { icon: 'notifications-outline' as IconName, title: t('settings.notifications', 'Meldingen'), route: '/contractor/notifications' },
+                  ].map((item) => (
+                    <Pressable key={item.route} style={({ pressed }) => [styles.meerItem, pressed && { opacity: 0.85 }]} onPress={() => router.push(item.route as any)}>
+                      <Ionicons name={item.icon} size={18} color={SemanticColors.textSecondary} />
+                      <Text style={[styles.meerTitle, { flex: 1 }]} numberOfLines={1}>{item.title}</Text>
+                      <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            </FadeIn>
           </>
         )}
 
@@ -855,6 +922,15 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
         {/* ============================================ */}
         {activeTab === 'dispatch' && (
           <>
+            {/* Planning KPIs — pressable */}
+            <ContractorDashboardHeader
+              kpis={[
+                { icon: 'people', value: String(planningStats.totalPersons), label: 'Werknemers', color: Palette.hermesOrange, onPress: () => router.push('/sitelead/dispatch' as any) },
+                { icon: 'grid', value: `${planningStats.occupiedZones}/${planningStats.totalZones}`, label: 'Zones', color: Palette.hermesOrange },
+                { icon: 'alert-circle', value: String(planningStats.blockers), label: 'Blokkades', color: planningStats.blockers > 0 ? SemanticColors.feedbackError : SemanticColors.feedbackSuccess },
+              ]}
+            />
+
             {/* Blocker banner — only when blockers exist */}
             {blockedTeams.length > 0 && (
               <Pressable
@@ -862,7 +938,7 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
                 onPress={() => router.push(`/sitelead/team/${blockedTeams[0].team.id}` as any)}
               >
                 <View style={pStyles.blockerBannerIcon}>
-                  <Ionicons name="lock-closed" size={14} color="#C62828" />
+                  <Ionicons name="lock-closed" size={14} color={SemanticColors.feedbackError} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={pStyles.blockerBannerTitle} numberOfLines={1}>
@@ -876,14 +952,14 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
                     </Text>
                   )}
                 </View>
-                <Ionicons name="chevron-forward" size={16} color="#C62828" />
+                <Ionicons name="chevron-forward" size={16} color={SemanticColors.feedbackError} />
               </Pressable>
             )}
 
             {/* Date navigation */}
             <View style={pStyles.dateNav}>
               <Pressable style={pStyles.dateChevron} onPress={() => setSelectedDate(navigateDay(selectedDate, -1))}>
-                <Ionicons name="chevron-back" size={18} color={SL.charcoal} />
+                <Ionicons name="chevron-back" size={18} color={SemanticColors.textPrimary} />
               </Pressable>
               <View style={pStyles.dateCenterCol}>
                 <Text style={pStyles.dateHeader}>{formatDateHeader(selectedDate)}</Text>
@@ -911,7 +987,7 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
                 </View>
               </View>
               <Pressable style={pStyles.dateChevron} onPress={() => setSelectedDate(navigateDay(selectedDate, 1))}>
-                <Ionicons name="chevron-forward" size={18} color={SL.charcoal} />
+                <Ionicons name="chevron-forward" size={18} color={SemanticColors.textPrimary} />
               </Pressable>
             </View>
 
@@ -933,13 +1009,8 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
               </View>
             </View>
 
-            {/* Inline AI insight */}
-            {dispatchInsight && (
-              <InlineInsight icon={dispatchInsight.icon as IconName} message={dispatchInsight.message} />
-            )}
-
             {/* Team schedule cards */}
-            <View style={{ gap: 10 }}>
+            <View style={{ gap: GRID.sm }}>
               {teamSchedule.map(entry => (
                 <PlanningTeamCard
                   key={entry.team.id}
@@ -949,18 +1020,11 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
               ))}
             </View>
 
-            {/* AI Dagplanning button */}
-            <Pressable
-              style={pStyles.aiButton}
-              onPress={() => Alert.alert(
-                'AI Dagplanning',
-                'Vasco analyseert weer, beschikbaarheid, prioriteiten en afhankelijkheden om een optimale dagplanning voor te stellen.',
-                [{ text: 'OK' }]
-              )}
-            >
-              <Ionicons name="sparkles" size={18} color="#fff" />
-              <Text style={pStyles.aiButtonText}>AI Dagplanning</Text>
-            </Pressable>
+            {/* AI insight — bottom */}
+            {dispatchInsight && (
+              <InlineInsight icon={dispatchInsight.icon as IconName} message={dispatchInsight.message} />
+            )}
+
           </>
         )}
 
@@ -977,12 +1041,12 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SL.sand,
+    backgroundColor: PAGE_BG,
   },
 
   // Header — light sand with greeting
   header: {
-    backgroundColor: SL.sand,
+    backgroundColor: PAGE_BG,
     paddingHorizontal: 20,
     paddingTop: SafeArea.top,
     paddingBottom: 12,
@@ -992,9 +1056,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerGreeting: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: SL.charcoal,
+    fontSize: TYPE.displaySize,
+    fontFamily: TYPE.displayFamily,
+    color: SemanticColors.textPrimary,
+    letterSpacing: TYPE.displayTracking,
   },
   headerLocationRow: {
     flexDirection: 'row',
@@ -1003,22 +1068,48 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   headerLocation: {
-    fontSize: 14,
-    color: SL.warmGray,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    color: SemanticColors.textSecondary,
+    fontFamily: TYPE.captionFamily,
+  },
+  headerNotifBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  } as any,
+  headerNotifBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: SemanticColors.feedbackError,
+    borderRadius: 7,
+    minWidth: 14,
+    height: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  } as any,
+  headerNotifBadgeText: {
+    fontSize: 8,
+    fontFamily: 'Manrope_700Bold',
+    color: Palette.white,
   },
   headerAvatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: SL.terracotta,
+    backgroundColor: Palette.hermesOrange,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerAvatarText: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#fff',
+    fontFamily: 'Manrope_700Bold',
+    color: Palette.white,
   },
 
   // Scroll
@@ -1038,41 +1129,140 @@ const styles = StyleSheet.create({
   },
   gaugeCard: {
     flex: 1,
-    backgroundColor: SL.cream,
-    borderRadius: 14,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 16,
     paddingVertical: 14,
     paddingHorizontal: 10,
     alignItems: 'center',
     gap: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
   },
   gaugeValue: {
     fontSize: 22,
-    fontWeight: '800',
-    color: SL.charcoal,
+    fontFamily: 'Manrope_800ExtraBold',
+    color: SemanticColors.textPrimary,
   },
   gaugeLabel: {
     fontSize: 10,
-    fontWeight: '600',
-    color: SL.warmGray,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textSecondary,
   },
   gaugeBar: {
     width: '100%',
     height: 4,
     borderRadius: 2,
-    backgroundColor: SL.sandDark,
+    backgroundColor: SemanticColors.surfaceSecondary,
     marginTop: 4,
     overflow: 'hidden',
   },
   gaugeBarFill: {
     height: '100%',
     borderRadius: 2,
+  },
+
+  // Action strip — horizontal scroll buttons (matching Werk tab)
+  actionStrip: {
+    gap: GRID.sm,
+    paddingRight: 20,
+  },
+  actionStripBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: GRID.sm,
+    backgroundColor: Palette.hermesOrange + '10',
+    borderRadius: RADIUS.lg,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+  },
+  actionStripText: {
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.hermesOrange,
+  },
+
+  // Meer tab items
+  // Vasco AI tab — proactive action queue
+  vascoStatusCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg,
+    borderLeftWidth: 3, borderLeftColor: Palette.hermesOrange, padding: 16,
+  },
+  vascoStatusIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: Palette.hermesOrange + '12', alignItems: 'center', justifyContent: 'center' },
+  vascoStatusTitle: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  vascoStatusDesc: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
+
+  vascoActionCard: {
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: 14, gap: 10,
+    borderLeftWidth: 3,
+  },
+  vascoActionHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  vascoActionIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
+  vascoActionTitle: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  vascoActionReason: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
+  vascoActionBtns: { flexDirection: 'row', gap: 6, paddingLeft: 46 },
+  vascoApproveBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.sm,
+    paddingHorizontal: 14, paddingVertical: 8, flex: 1, justifyContent: 'center',
+  },
+  vascoApproveBtnText: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.white },
+  vascoDismissBtn: {
+    borderRadius: RADIUS.sm, paddingHorizontal: 12, paddingVertical: 8,
+    backgroundColor: SemanticColors.surfaceSecondary, alignItems: 'center', justifyContent: 'center',
+  },
+  vascoDismissBtnText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
+
+  vascoRecCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: 14,
+    borderLeftWidth: 3, borderLeftColor: Palette.hermesOrange,
+  },
+  vascoRecTitle: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  vascoRecDesc: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 1 },
+
+  meerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
+    padding: 14,
+    gap: 12,
+  },
+  meerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: RADIUS.md,
+    backgroundColor: Palette.hermesOrange + '10',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  meerTitle: {
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
+  },
+  meerDesc: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textSecondary,
+    marginTop: 2,
+  },
+
+  // Daily report banner
+  dailyReportBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 12,
+    gap: 8,
+  },
+  dailyReportText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: TYPE.titleFamily,
   },
 
   // Sections
@@ -1085,31 +1275,57 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sectionTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: SL.charcoal,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
+    letterSpacing: TYPE.sectionTracking,
     flex: 1,
   },
   sectionBadge: {
-    backgroundColor: SL.terracottaMuted,
+    backgroundColor: Palette.hermesOrange + '18',
     paddingHorizontal: 10,
     paddingVertical: 3,
-    borderRadius: 10,
+    borderRadius: 12,
   },
   sectionBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: SL.terracotta,
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.tinyFamily,
+    color: Palette.hermesOrange,
   },
 
   // AI chip
+  primaryAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Palette.hermesOrange + '30',
+  },
+  primaryActionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    backgroundColor: Palette.hermesOrange,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryActionTitle: {
+    fontSize: 16,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
+  },
+  primaryActionDesc: {
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+  },
   aiChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: SL.terracotta + '0A',
+    backgroundColor: Palette.hermesOrange + '0A',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 20,
@@ -1117,21 +1333,16 @@ const styles = StyleSheet.create({
   },
   aiChipText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: SL.terracotta,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.hermesOrange,
   },
 
   // Team cards
   teamCard: {
-    backgroundColor: SL.cream,
-    borderRadius: 14,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 16,
     padding: 14,
     gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
   },
   teamTop: {
     flexDirection: 'row',
@@ -1147,26 +1358,26 @@ const styles = StyleSheet.create({
   },
   teamName: {
     fontSize: 14,
-    fontWeight: '600',
-    color: SL.charcoal,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
   },
   teamMeta: {
     fontSize: 11,
-    color: SL.warmGray,
+    color: SemanticColors.textSecondary,
     marginTop: 1,
   },
   teamDeviation: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
   },
   teamTask: {
     fontSize: 12,
-    color: SL.warmGray,
+    color: SemanticColors.textSecondary,
   },
   teamBarTrack: {
     height: 4,
     borderRadius: 2,
-    backgroundColor: SL.sandDark,
+    backgroundColor: SemanticColors.surfaceSecondary,
     overflow: 'visible',
   },
   teamBarFill: {
@@ -1178,7 +1389,7 @@ const styles = StyleSheet.create({
     top: -3,
     width: 2,
     height: 10,
-    backgroundColor: SL.charcoal,
+    backgroundColor: SemanticColors.textPrimary,
     borderRadius: 1,
     opacity: 0.3,
   },
@@ -1189,7 +1400,7 @@ const styles = StyleSheet.create({
   },
   teamTime: {
     fontSize: 11,
-    color: SL.warmGray,
+    color: SemanticColors.textSecondary,
   },
   teamBlocker: {
     flexDirection: 'row',
@@ -1199,8 +1410,14 @@ const styles = StyleSheet.create({
   },
   teamBlockerText: {
     fontSize: 10,
-    color: '#D97706',
+    color: SemanticColors.feedbackWarning,
     flex: 1,
+  },
+  teamActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
   },
   substituteBtn: {
     flexDirection: 'row',
@@ -1209,13 +1426,27 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingVertical: 5,
     paddingHorizontal: 10,
-    borderRadius: 14,
-    backgroundColor: SL.terracotta + '0C',
+    borderRadius: 16,
+    backgroundColor: Palette.hermesOrange + '0C',
   },
   substituteBtnText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: SL.terracotta,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.hermesOrange,
+  },
+  escalateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: SemanticColors.feedbackErrorBg,
+  },
+  escalateBtnText: {
+    fontSize: 12,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.feedbackError,
   },
 
   // Quick actions
@@ -1224,54 +1455,44 @@ const styles = StyleSheet.create({
     gap: 8,
     flexWrap: 'wrap',
   },
+  quickGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   quickPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: SL.cream,
+    backgroundColor: SemanticColors.surfacePrimary,
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 3,
-    elevation: 1,
   },
   quickPillText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: SL.charcoal,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
   },
 
   // Cards
   card: {
-    backgroundColor: SL.cream,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: Spacing.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
     gap: Spacing.md,
   },
   cardTitle: {
     fontSize: 15,
-    fontWeight: '600',
-    color: SL.charcoal,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
   },
 
   // Dashboard Card (pressable overview)
   dashboardCard: {
-    backgroundColor: SL.cream,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: Spacing.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
     gap: Spacing.md,
   },
   dashboardCardHeader: {
@@ -1281,8 +1502,8 @@ const styles = StyleSheet.create({
   },
   dashboardCardTitle: {
     fontSize: 15,
-    fontWeight: '600',
-    color: SL.charcoal,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
   },
 
   // Safety Banner
@@ -1295,20 +1516,20 @@ const styles = StyleSheet.create({
   },
   safetyBannerLabel: {
     fontSize: 12,
-    color: '#777',
+    color: SemanticColors.textSecondary,
   },
   safetyBannerScore: {
     fontSize: 22,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     marginTop: 2,
   },
   ltirLabel: {
     fontSize: 10,
-    color: '#999',
+    color: SemanticColors.textTertiary,
   },
   ltirValue: {
     fontSize: 28,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
   },
 
   // Bar charts
@@ -1325,16 +1546,16 @@ const styles = StyleSheet.create({
   },
   barLabel: {
     fontSize: 11,
-    color: '#777',
+    color: SemanticColors.textSecondary,
   },
   barValue: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
   },
   barTrack: {
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: SL.sandDark,
+    backgroundColor: SemanticColors.surfaceSecondary,
     overflow: 'hidden',
   },
   barFill: {
@@ -1348,7 +1569,7 @@ const styles = StyleSheet.create({
     height: 14,
     borderRadius: 7,
     overflow: 'hidden',
-    backgroundColor: SL.sandDark,
+    backgroundColor: SemanticColors.surfaceSecondary,
   },
   defectPipelineSegment: {
     height: '100%',
@@ -1369,12 +1590,12 @@ const styles = StyleSheet.create({
   defectLegendText: {
     flex: 1,
     fontSize: 12,
-    color: '#777',
+    color: SemanticColors.textSecondary,
   },
   defectLegendCount: {
     fontSize: 13,
-    fontWeight: '600',
-    color: SL.charcoal,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
   },
 
   // Closure Rate
@@ -1390,15 +1611,15 @@ const styles = StyleSheet.create({
     borderWidth: 5,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SL.sandDark,
+    backgroundColor: SemanticColors.surfaceSecondary,
   },
   closureRingValue: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
   },
   closureRingLabel: {
     fontSize: 9,
-    color: '#999',
+    color: SemanticColors.textTertiary,
   },
   closureStat: {
     flexDirection: 'row',
@@ -1408,12 +1629,12 @@ const styles = StyleSheet.create({
   closureStatLabel: {
     flex: 1,
     fontSize: 12,
-    color: '#777',
+    color: SemanticColors.textSecondary,
   },
   closureStatValue: {
     fontSize: 13,
-    fontWeight: '600',
-    color: SL.charcoal,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
   },
 
   // Actions List
@@ -1423,7 +1644,7 @@ const styles = StyleSheet.create({
   actionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SL.sand,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: 12,
     gap: 12,
@@ -1431,7 +1652,7 @@ const styles = StyleSheet.create({
   actionIcon: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1440,19 +1661,19 @@ const styles = StyleSheet.create({
   },
   actionTitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: SL.charcoal,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
   },
   actionSubtitle: {
     fontSize: 12,
-    color: SL.warmGray,
+    color: SemanticColors.textSecondary,
     marginTop: 2,
   },
 
   // Empty
   emptyText: {
     fontSize: 14,
-    color: SL.warmGray,
+    color: SemanticColors.textSecondary,
     padding: 20,
     paddingTop: 100,
     textAlign: 'center',
@@ -1469,9 +1690,9 @@ const pStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#FEF2F2',
+    backgroundColor: SemanticColors.feedbackErrorBg,
     borderWidth: 1,
-    borderColor: '#FECACA',
+    borderColor: SemanticColors.feedbackError + '30',
     borderRadius: 12,
     padding: 12,
   },
@@ -1479,18 +1700,18 @@ const pStyles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#FECACA',
+    backgroundColor: SemanticColors.feedbackError + '30',
     alignItems: 'center',
     justifyContent: 'center',
   },
   blockerBannerTitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#C62828',
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.feedbackError,
   },
   blockerBannerSub: {
     fontSize: 12,
-    color: '#991B1B',
+    color: SemanticColors.feedbackError,
     marginTop: 1,
   },
 
@@ -1504,14 +1725,9 @@ const pStyles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: SL.cream,
+    backgroundColor: SemanticColors.surfacePrimary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
   },
   dateCenterCol: {
     flex: 1,
@@ -1520,8 +1736,8 @@ const pStyles = StyleSheet.create({
   },
   dateHeader: {
     fontSize: 17,
-    fontWeight: '700',
-    color: SL.charcoal,
+    fontFamily: 'Manrope_700Bold',
+    color: SemanticColors.textPrimary,
   },
   dayDots: {
     flexDirection: 'row',
@@ -1530,40 +1746,35 @@ const pStyles = StyleSheet.create({
   dayDot: {
     width: 34,
     height: 28,
-    borderRadius: 14,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SL.sandDark,
+    backgroundColor: SemanticColors.surfaceSecondary,
   },
   dayDotSelected: {
-    backgroundColor: SL.terracotta,
+    backgroundColor: Palette.hermesOrange,
   },
   dayDotToday: {
     borderWidth: 1.5,
-    borderColor: SL.terracotta,
+    borderColor: Palette.hermesOrange,
   },
   dayDotText: {
     fontSize: 11,
-    fontWeight: '600',
-    color: SL.warmGray,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textSecondary,
   },
   dayDotTextSelected: {
-    color: '#fff',
+    color: Palette.white,
   },
 
   // Summary strip
   summaryStrip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SL.cream,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
   },
   summaryItem: {
     flex: 1,
@@ -1572,33 +1783,26 @@ const pStyles = StyleSheet.create({
   },
   summaryValue: {
     fontSize: 18,
-    fontWeight: '700',
-    color: SL.charcoal,
+    fontFamily: 'Manrope_700Bold',
+    color: SemanticColors.textPrimary,
   },
   summaryLabel: {
     fontSize: 10,
-    fontWeight: '600',
-    color: SL.warmGray,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textSecondary,
   },
   summaryDivider: {
     width: 1,
     height: 28,
-    backgroundColor: SL.sandDark,
+    backgroundColor: SemanticColors.surfaceSecondary,
   },
 
   // Planning Team Card
   card: {
     flexDirection: 'row',
-    backgroundColor: SL.cream,
-    borderRadius: 14,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
   },
   accentBar: {
     width: 4,
@@ -1616,38 +1820,38 @@ const pStyles = StyleSheet.create({
   tradeIcon: {
     width: 34,
     height: 34,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   teamName: {
     fontSize: 14,
-    fontWeight: '600',
-    color: SL.charcoal,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
   },
   teamLead: {
     fontSize: 11,
-    color: SL.warmGray,
+    color: SemanticColors.textSecondary,
     marginTop: 1,
   },
   timePill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: SL.sandDark,
+    backgroundColor: SemanticColors.surfaceSecondary,
     paddingVertical: 4,
     paddingHorizontal: 8,
-    borderRadius: 10,
+    borderRadius: 12,
   },
   timePillText: {
     fontSize: 11,
-    fontWeight: '500',
-    color: SL.warmGray,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textSecondary,
   },
   taskText: {
     fontSize: 13,
-    color: SL.charcoal,
-    fontWeight: '500',
+    color: SemanticColors.textPrimary,
+    fontFamily: TYPE.labelFamily,
   },
   zoneTags: {
     flexDirection: 'row',
@@ -1660,7 +1864,7 @@ const pStyles = StyleSheet.create({
     gap: 4,
     paddingVertical: 3,
     paddingHorizontal: 8,
-    borderRadius: 10,
+    borderRadius: 12,
   },
   zoneTagDot: {
     width: 6,
@@ -1669,7 +1873,7 @@ const pStyles = StyleSheet.create({
   },
   zoneTagText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
 
   // Progress row (bar + inline %)
@@ -1682,7 +1886,7 @@ const pStyles = StyleSheet.create({
     flex: 1,
     height: 6,
     borderRadius: 3,
-    backgroundColor: SL.sandDark,
+    backgroundColor: SemanticColors.surfaceSecondary,
     overflow: 'hidden',
   },
   progressFill: {
@@ -1691,7 +1895,7 @@ const pStyles = StyleSheet.create({
   },
   progressText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     minWidth: 32,
     textAlign: 'right',
   },
@@ -1701,7 +1905,7 @@ const pStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#FEF2F2',
+    backgroundColor: SemanticColors.feedbackErrorBg,
     padding: 8,
     borderRadius: 8,
   },
@@ -1709,14 +1913,14 @@ const pStyles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#FECACA',
+    backgroundColor: SemanticColors.feedbackError + '30',
     alignItems: 'center',
     justifyContent: 'center',
   },
   blockerText: {
     fontSize: 12,
-    color: '#C62828',
-    fontWeight: '500',
+    color: SemanticColors.feedbackError,
+    fontFamily: TYPE.labelFamily,
     flex: 1,
   },
 
@@ -1725,15 +1929,15 @@ const pStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: SemanticColors.feedbackWarningBg,
     paddingVertical: 6,
     paddingHorizontal: 8,
     borderRadius: 8,
   },
   delayText: {
     fontSize: 11,
-    color: '#D97706',
-    fontWeight: '500',
+    color: SemanticColors.feedbackWarning,
+    fontFamily: TYPE.labelFamily,
     flex: 1,
   },
 
@@ -1743,10 +1947,10 @@ const pStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: SL.terracotta,
+    backgroundColor: Palette.hermesOrange,
     paddingVertical: 14,
-    borderRadius: 14,
-    shadowColor: SL.terracotta,
+    borderRadius: 16,
+    shadowColor: Palette.hermesOrange,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -1754,7 +1958,7 @@ const pStyles = StyleSheet.create({
   },
   aiButtonText: {
     fontSize: 15,
-    fontWeight: '700',
-    color: '#fff',
+    fontFamily: 'Manrope_700Bold',
+    color: Palette.white,
   },
 });

@@ -9,6 +9,7 @@ import type { ScoredInsight, GeneratorContext } from './types';
 import { useAppState } from '../../state/AppState';
 import { recordMetricSnapshot } from '../learningStorage';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export function useMarginWarningInsight(ctx: GeneratorContext): ScoredInsight | null {
   const { jobs, jobMaterials, quotes } = useAppState();
@@ -77,7 +78,7 @@ export function useMarginWarningInsight(ctx: GeneratorContext): ScoredInsight | 
     detail: `Offerte: €${worstQuoted.toLocaleString('nl-NL')}. Materialen: €${worstMaterialCost.toLocaleString('nl-NL')}. Geschatte arbeid: €${Math.round(estimatedLabor).toLocaleString('nl-NL')}. Totale kosten: €${Math.round(totalCost).toLocaleString('nl-NL')}.`,
     icon: 'warning',
     actionLabel: 'Bekijk kostenoverzicht',
-    source: 'Marge Analyse',
+    source: gt('source_margin', ctx.language),
     metric: { label: 'Marge', value: `${marginPct}%`, trend: isNegative ? 'down' : 'neutral' },
 
     rootCauseTags: ['margin', 'cost-variance'],

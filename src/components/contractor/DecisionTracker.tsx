@@ -1,6 +1,6 @@
 // Decision Tracker - Help contractors guide customers through project decisions
 // Reduces delays, improves customer experience, builds repeat business
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Alert,
   Linking,
@@ -20,11 +20,33 @@ import type {
   CustomerDecisionItem,
   DecisionTemplate,
 } from '../../types/decisions';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   MOCK_ACTIVE_TRACKERS,
   DECISION_TEMPLATES,
   getTrackerStats,
 } from '../../data/mockDecisions';
+
+const TRACKER_KEY = '@vasco_decision_trackers';
+function usePersistedTrackers(): CustomerDecisionTracker[] {
+  const [trackers, setTrackers] = useState<CustomerDecisionTracker[]>([]);
+  useEffect(() => {
+    AsyncStorage.getItem(TRACKER_KEY).then(raw => {
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        // Validate data shape — filter out corrupted entries
+        const valid = (Array.isArray(parsed) ? parsed : []).filter(
+          (t: any) => t && t.id && Array.isArray(t.categories)
+        );
+        setTrackers(valid.length > 0 ? valid : MOCK_ACTIVE_TRACKERS);
+      } else {
+        setTrackers(MOCK_ACTIVE_TRACKERS);
+        AsyncStorage.setItem(TRACKER_KEY, JSON.stringify(MOCK_ACTIVE_TRACKERS)).catch(() => {});
+      }
+    }).catch(() => setTrackers(MOCK_ACTIVE_TRACKERS));
+  }, []);
+  return trackers;
+}
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -41,7 +63,7 @@ export function DecisionTrackerList({
   onSelectTracker,
   onCreateNew,
 }: DecisionTrackerListProps) {
-  const trackers = MOCK_ACTIVE_TRACKERS;
+  const trackers = usePersistedTrackers();
   const [filter, setFilter] = useState<'all' | 'overdue' | 'pending'>('all');
 
   const totalOverdue = trackers.reduce((sum, t) => sum + t.overdueCount, 0);

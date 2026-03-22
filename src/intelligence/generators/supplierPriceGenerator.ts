@@ -5,6 +5,7 @@
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import { useSupplierNegotiation } from '../../services/supplierNegotiationService';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export const supplierPriceGenerator: InsightGenerator = {
   id: 'supplier-price',
@@ -42,7 +43,7 @@ export function useSupplierPriceInsight(ctx: GeneratorContext): ScoredInsight | 
     icon: 'pricetag',
     actionLabel: 'Bekijk kansen',
     actionRoute: '/(contractor)/besparen',
-    source: 'Leveranciersanalyse',
+    source: gt('source_procurement', ctx.language),
     metric: {
       label: 'Besparing mogelijk',
       value: `€${negotiation.totalDiscountPotential.toLocaleString('nl-NL')}`,
@@ -64,5 +65,11 @@ export function useSupplierPriceInsight(ctx: GeneratorContext): ScoredInsight | 
     dataPoints: negotiation.suppliers.length,
     confidence: 0.7,
     freshness: 24,
+    action: {
+      type: 'switch_supplier',
+      label: 'Leverancier vergelijken',
+      params: {},
+      requiresApproval: false,
+    },
   };
 }

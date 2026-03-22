@@ -23,7 +23,6 @@ export { RecommendationFeedbackCard as RecommendationFeedback } from './Recommen
 export { TemplateSuggestion } from './TemplateSuggestion';
 
 // Supplier & Market Intelligence
-export { SupplierTracker } from './SupplierTracker';
 export { PriceComparison } from './PriceComparison';
 export { MarketIntelligence } from './MarketIntelligence';
 export { PriceAlerts } from './PriceAlerts';
@@ -34,15 +33,11 @@ export { SmartReorder } from './SmartReorder';
 export { CustomerFollowUp } from './CustomerFollowUp';
 
 // Phase 4: Network & Integration
-export { ContractorNetwork } from './ContractorNetwork';
-export { SupplierHub } from './SupplierHub';
 
 // Phase 5: Advanced Intelligence
 export { AnalyticsDashboard } from './AnalyticsDashboard';
 export { ProjectPlanner } from './ProjectPlanner';
 export { SmartPricing } from './SmartPricing';
-export { ReputationManager } from './ReputationManager';
-export { KnowledgeBase } from './KnowledgeBase';
 
 // Phase 6: Financial Intelligence & Workflow Automation
 export { CashFlowDashboard } from './CashFlowDashboard';
@@ -50,30 +45,20 @@ export { SmartScheduler } from './SmartScheduler';
 export { DocumentVault } from './DocumentVault';
 export { AIAssistant } from './AIAssistant';
 
-// Phase 7: Ecosystem Integration & Predictive Intelligence
-export { TeamManagement } from './TeamManagement';
-export { EquipmentTracker } from './EquipmentTracker';
+// Phase 7: Ecosystem Integration
 export { ComplianceCenter } from './ComplianceCenter';
-export { PredictiveMaintenance } from './PredictiveMaintenance';
 
-// Phase 8: Customer Lifecycle & Revenue Optimization
-export { ServiceContracts } from './ServiceContracts';
+// Phase 8: Customer Lifecycle
 export { LeadGeneration } from './LeadGeneration';
 export { WarrantyManager } from './WarrantyManager';
-export { UpsellEngine } from './UpsellEngine';
 
 // Phase 9: Business Intelligence & Automation
 export { InvoiceAutomation } from './InvoiceAutomation';
 export { RouteOptimizer } from './RouteOptimizer';
 export { CustomerInsights } from './CustomerInsights';
-export { BusinessBenchmarking } from './BusinessBenchmarking';
-
-// Phase 10: Predictive Capacity Planning
-export { CapacityPlanning } from './CapacityPlanning';
 
 // Evidence & Materials
 export { AIQuoteFromPhoto } from './AIQuoteFromPhoto';
 export { JobCompletionEvidence } from './JobCompletionEvidence';
 export { JobMaterialsSuggestion } from './JobMaterialsSuggestion';
 export { HandoverPackBuilder } from './HandoverPackBuilder';
-export { AgentActionsPanel } from './AgentActionsPanel';

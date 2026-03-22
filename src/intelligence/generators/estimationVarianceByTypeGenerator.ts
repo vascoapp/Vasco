@@ -7,6 +7,7 @@
 
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export const estimationVarianceByTypeGenerator: InsightGenerator = {
   id: 'estimation-variance-type',
@@ -96,7 +97,7 @@ export function useEstimationVarianceByTypeInsight(ctx: GeneratorContext): Score
     icon: 'bar-chart',
     actionLabel: 'Bekijk kalibratie',
     actionRoute: '/(contractor)/besparen',
-    source: 'Offerte-analyse',
+    source: gt('source_estimation', ctx.language),
     metric: {
       label: 'Overschrijding',
       value: `+${overrunPct}%`,

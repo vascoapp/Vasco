@@ -7,7 +7,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -239,9 +239,9 @@ const OutstandingInvoiceCard: React.FC<OutstandingInvoiceCardProps> = ({
           <View style={styles.paymentLinkInfo}>
             <Ionicons name="link" size={16} color={Colors.primary} />
             <Text style={styles.paymentLinkUrl}>{paymentLink.shortUrl}</Text>
-            <TouchableOpacity onPress={onCopyLink} style={styles.copyButton}>
+            <Pressable onPress={onCopyLink} style={styles.copyButton}>
               <Ionicons name="copy-outline" size={16} color={Colors.textSecondary} />
-            </TouchableOpacity>
+            </Pressable>
           </View>
           <View style={styles.linkStats}>
             <Text style={styles.linkStatText}>
@@ -253,25 +253,25 @@ const OutstandingInvoiceCard: React.FC<OutstandingInvoiceCardProps> = ({
           </View>
         </View>
       ) : (
-        <TouchableOpacity style={styles.createLinkButton} onPress={onCreateLink}>
+        <Pressable style={styles.createLinkButton} onPress={onCreateLink}>
           <Ionicons name="add-circle-outline" size={18} color={Colors.primary} />
           <Text style={styles.createLinkText}>Create Payment Link</Text>
-        </TouchableOpacity>
+        </Pressable>
       )}
 
       <View style={styles.invoiceActions}>
-        <TouchableOpacity style={styles.actionButton} onPress={onSendReminder}>
+        <Pressable style={styles.actionButton} onPress={onSendReminder}>
           <Ionicons name="notifications-outline" size={16} color={Colors.textSecondary} />
           <Text style={styles.actionButtonText}>Send Reminder</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
+        </Pressable>
+        <Pressable style={styles.actionButton}>
           <Ionicons name="chatbubble-outline" size={16} color={Colors.textSecondary} />
           <Text style={styles.actionButtonText}>WhatsApp</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
+        </Pressable>
+        <Pressable style={styles.actionButton}>
           <Ionicons name="qr-code-outline" size={16} color={Colors.textSecondary} />
           <Text style={styles.actionButtonText}>QR Code</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </View>
   );
@@ -474,9 +474,9 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
           <Text style={styles.subtitle}>iDEAL & Mollie Integration</Text>
         </View>
         {onClose && (
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+          <Pressable onPress={onClose} style={styles.closeButton}>
             <Ionicons name="close" size={24} color={Colors.textSecondary} />
-          </TouchableOpacity>
+          </Pressable>
         )}
       </View>
 
@@ -503,7 +503,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
       {/* Tabs */}
       <View style={styles.tabBar}>
         {tabs.map((tab) => (
-          <TouchableOpacity
+          <Pressable
             key={tab.id}
             style={[styles.tab, activeTab === tab.id && styles.tabActive]}
             onPress={() => setActiveTab(tab.id)}
@@ -516,7 +516,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
                 <Text style={styles.tabBadgeText}>{tab.badge}</Text>
               </View>
             )}
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 
@@ -591,7 +591,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
             <View style={styles.settingsSection}>
               <Text style={styles.settingsSectionTitle}>Preferences</Text>
 
-              <TouchableOpacity style={styles.settingsRow2}>
+              <Pressable style={styles.settingsRow2}>
                 <View style={styles.settingsRowLeft}>
                   <Ionicons name="notifications-outline" size={20} color={Colors.textSecondary} />
                   <View>
@@ -604,9 +604,9 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
                 <View style={[styles.toggle, settings.autoSendReminders && styles.toggleOn]}>
                   <View style={[styles.toggleKnob, settings.autoSendReminders && styles.toggleKnobOn]} />
                 </View>
-              </TouchableOpacity>
+              </Pressable>
 
-              <TouchableOpacity style={styles.settingsRow2}>
+              <Pressable style={styles.settingsRow2}>
                 <View style={styles.settingsRowLeft}>
                   <Ionicons name="cash-outline" size={20} color={Colors.textSecondary} />
                   <View>
@@ -619,9 +619,9 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
                 <View style={[styles.toggle, settings.requireDeposit && styles.toggleOn]}>
                   <View style={[styles.toggleKnob, settings.requireDeposit && styles.toggleKnobOn]} />
                 </View>
-              </TouchableOpacity>
+              </Pressable>
 
-              <TouchableOpacity style={styles.settingsRow2}>
+              <Pressable style={styles.settingsRow2}>
                 <View style={styles.settingsRowLeft}>
                   <Ionicons name="heart-outline" size={20} color={Colors.textSecondary} />
                   <View>
@@ -634,7 +634,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
                 <View style={[styles.toggle, settings.enableTipping && styles.toggleOn]}>
                   <View style={[styles.toggleKnob, settings.enableTipping && styles.toggleKnobOn]} />
                 </View>
-              </TouchableOpacity>
+              </Pressable>
             </View>
 
             {/* Payment Methods */}
@@ -645,7 +645,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
                   const info = PAYMENT_METHOD_INFO[method];
                   const isEnabled = settings.enabledMethods.includes(method);
                   return (
-                    <TouchableOpacity
+                    <Pressable
                       key={method}
                       style={[styles.methodCard, isEnabled && styles.methodCardEnabled]}
                     >
@@ -665,7 +665,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
                           style={styles.methodCardCheck}
                         />
                       )}
-                    </TouchableOpacity>
+                    </Pressable>
                   );
                 })}
               </View>
@@ -676,12 +676,12 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
 
       {/* Quick Action FAB */}
       {activeTab === 'outstanding' && (
-        <TouchableOpacity
+        <Pressable
           style={styles.fab}
           onPress={() => Alert.alert('Create Invoice', 'Create a new invoice with payment link?')}
         >
           <Ionicons name="add" size={24} color="#fff" />
-        </TouchableOpacity>
+        </Pressable>
       )}
     </View>
   );

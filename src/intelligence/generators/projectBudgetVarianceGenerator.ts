@@ -8,6 +8,7 @@
 import type { ScoredInsight, GeneratorContext } from './types';
 import { mockProjects, mockDeliveryMetrics } from '../../data/mockProjects';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export function useProjectBudgetVarianceInsight(ctx: GeneratorContext): ScoredInsight | null {
   // Only relevant for CFO/Director
@@ -52,7 +53,7 @@ export function useProjectBudgetVarianceInsight(ctx: GeneratorContext): ScoredIn
     icon: 'warning',
     actionLabel: 'Bekijk kostenoverzicht',
     actionRoute: '/hub/costs',
-    source: 'Budget Analyse',
+    source: gt('source_budget', ctx.language),
     metric: { label: 'CPI', value: worst.cpi.toFixed(2), trend: worst.cpi < 0.95 ? 'down' : 'neutral' },
     rootCauseTags: ['budget', 'cost-variance'],
     rawScore: 0,

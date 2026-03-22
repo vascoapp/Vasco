@@ -11,7 +11,7 @@ import { useMemo, useEffect, useState } from 'react';
 // Learning Engine imports
 import { useLearningProfile, incrementInsightsShown, setActiveRole } from '../intelligence/learningStorage';
 import { useAllGenerators } from '../intelligence/generators';
-import type { ScoredInsight, UserRole, ScreenContext } from '../intelligence/generators';
+import type { ScoredInsight, UserRole, ScreenContext, GeneratorLanguage } from '../intelligence/generators';
 import { scoreAndRankInsights, refreshCalibrationCache } from '../intelligence/insightScorer';
 
 // Re-export types for consumers
@@ -26,6 +26,9 @@ export type { ScoredInsight } from '../intelligence/generators';
 export function useVascoGuidance(role: UserRole, screen: ScreenContext): ScoredInsight[] {
   // Set active role for role-aware storage (must be before useLearningProfile)
   setActiveRole(role);
+  // Detect language from i18n
+  let currentLanguage: GeneratorLanguage = 'nl';
+  try { const i18n = require('i18next'); currentLanguage = (i18n.default?.language ?? i18n.language ?? 'nl') as GeneratorLanguage; } catch {}
   const { profile } = useLearningProfile();
 
   // Periodically update `now` so freshness/fatigue stay accurate in long sessions
@@ -46,7 +49,8 @@ export function useVascoGuidance(role: UserRole, screen: ScreenContext): ScoredI
     screen,
     profile,
     now,
-  }), [role, screen, profile, now]);
+    language: currentLanguage,
+  }), [role, screen, profile, now, currentLanguage]);
 
   // Run all generators (each is a hook internally)
   const rawInsights = useAllGenerators(ctx);
@@ -170,6 +174,22 @@ const INLINE_INSIGHTS: Record<string, InlineInsightData[]> = {
   ],
   'sitelead:issues:overview': [
     { icon: 'chatbubbles', message: 'RFI\'s die binnen 48 uur worden beantwoord voorkomen gemiddeld 3 dagen vertraging.' },
+  ],
+  // Site lead secondary screens
+  'sitelead:daily-report:overview': [
+    { icon: 'analytics', message: 'Consistent dagrapporten invullen verbetert Vasco\'s voorspellingen voor bezetting en voortgang met 40%.' },
+  ],
+  'sitelead:worker-certs:overview': [
+    { icon: 'ribbon', message: 'Medewerkers met actuele certificeringen hebben 60% minder veiligheidsincidenten. Houd vernieuwingen bij.' },
+  ],
+  'sitelead:compliance:overview': [
+    { icon: 'shield-checkmark', message: 'Vasco monitort automatisch certificaten en vergunningen. Items in rood vereisen directe actie.' },
+  ],
+  'sitelead:close-defect:overview': [
+    { icon: 'construct', message: 'Gebreken die binnen 7 dagen worden opgelost kosten gemiddeld 35% minder dan gebreken die langer open staan.' },
+  ],
+  'sitelead:incident-report:overview': [
+    { icon: 'warning', message: 'Elke melding verbetert het veiligheidspatroon. Bijna-ongelukken voorkomen 10x meer ernstige incidenten.' },
   ],
   // --- CFO ---
   'cfo:overview:overview': [

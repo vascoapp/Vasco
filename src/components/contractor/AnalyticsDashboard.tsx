@@ -10,7 +10,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -353,19 +353,19 @@ export function AnalyticsDashboard() {
 
           <View style={styles.insightActions}>
             {insight.actionable && (
-              <TouchableOpacity
+              <Pressable
                 style={styles.actionButton}
                 onPress={() => actOnInsight(insight.id)}
               >
                 <Text style={styles.actionButtonText}>Actie ondernemen</Text>
-              </TouchableOpacity>
+              </Pressable>
             )}
-            <TouchableOpacity
+            <Pressable
               style={styles.dismissButton}
               onPress={() => dismissInsight(insight.id)}
             >
               <Text style={styles.dismissButtonText}>Verbergen</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </View>
@@ -396,7 +396,7 @@ export function AnalyticsDashboard() {
       {/* Tabs */}
       <View style={styles.tabBar}>
         {tabs.map((tab) => (
-          <TouchableOpacity
+          <Pressable
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.activeTab]}
             onPress={() => setActiveTab(tab.key)}
@@ -409,7 +409,7 @@ export function AnalyticsDashboard() {
             <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
               {tab.label}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 

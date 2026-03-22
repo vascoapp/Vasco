@@ -8,6 +8,7 @@
 import type { ScoredInsight, GeneratorContext } from './types';
 import { mockProjects } from '../../data/mockProjects';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export function useContingencyBurnInsight(ctx: GeneratorContext): ScoredInsight | null {
   if (ctx.role !== 'cfo' && ctx.role !== 'director') return null;
@@ -59,7 +60,7 @@ export function useContingencyBurnInsight(ctx: GeneratorContext): ScoredInsight 
     icon: 'umbrella',
     actionLabel: 'Bekijk contingency',
     actionRoute: '/hub/costs',
-    source: 'Contingency Tracker',
+    source: gt('source_contingency', ctx.language),
     metric: { label: 'Verbruikt', value: `${burnPct}%`, trend: isAccelerated ? 'down' : 'neutral' },
     rootCauseTags: ['contingency', 'risk-reserves'],
     rawScore: 0,

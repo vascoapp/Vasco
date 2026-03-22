@@ -36,7 +36,8 @@ export interface CalibrationScore {
   totalPredictions: number;
   resolvedPredictions: number;
   accurateCount: number;
-  accuracyRate: number;        // 0-1
+  accuracyRate: number;        // 0-1 (time-weighted)
+  dataQuality: number;         // 0-1 (higher = more resolved + recent data)
 }
 
 interface CalibrationStore {
@@ -159,6 +160,7 @@ export async function getCalibrationScores(): Promise<CalibrationScore[]> {
           resolvedPredictions: s.resolved,
           accurateCount: s.accurate,
           accuracyRate: s.rate,
+          dataQuality: Math.min(1, s.resolved / 20) * (s.resolved > 0 ? 1 : 0.3),
         }));
       }
     } catch { /* fall through to local */ }
@@ -173,17 +175,43 @@ export async function getCalibrationScores(): Promise<CalibrationScore[]> {
     byGenerator.set(entry.generatorId, existing);
   }
 
+  const now = Date.now();
   const scores: CalibrationScore[] = [];
   for (const [generatorId, entries] of byGenerator) {
     const resolved = entries.filter(e => e.resolvedAt);
-    const accurate = resolved.filter(e => e.accurate === true);
+
+    // Time-weighted accuracy: recent resolutions count more
+    let weightedAccurate = 0;
+    let totalWeight = 0;
+    for (const entry of resolved) {
+      const ageDays = (now - new Date(entry.resolvedAt!).getTime()) / 86400000;
+      const weight = ageDays < 7 ? 1.0
+        : ageDays < 14 ? 0.8
+        : ageDays < 30 ? 0.5
+        : 0.2;
+      totalWeight += weight;
+      if (entry.accurate === true) weightedAccurate += weight;
+    }
+
+    const accuracyRate = totalWeight > 0 ? weightedAccurate / totalWeight : 0.5;
+
+    // Data quality: higher when more resolved predictions + recent data
+    const resolvedCount = resolved.length;
+    const volumeScore = Math.min(1, resolvedCount / 20); // saturates at 20 resolutions
+    const recentResolutions = resolved.filter(e => {
+      const age = (now - new Date(e.resolvedAt!).getTime()) / 86400000;
+      return age < 14;
+    }).length;
+    const recencyScore = resolvedCount > 0 ? Math.min(1, recentResolutions / Math.max(1, resolvedCount * 0.3)) : 0;
+    const dataQuality = volumeScore * 0.6 + recencyScore * 0.4;
 
     scores.push({
       generatorId,
       totalPredictions: entries.length,
-      resolvedPredictions: resolved.length,
-      accurateCount: accurate.length,
-      accuracyRate: resolved.length > 0 ? accurate.length / resolved.length : 0.5,
+      resolvedPredictions: resolvedCount,
+      accurateCount: resolved.filter(e => e.accurate === true).length,
+      accuracyRate,
+      dataQuality,
     });
   }
 

@@ -116,7 +116,7 @@ export function useCrossServiceIntelligence(): CrossIntelligenceSummary {
         type: 'causation',
         priority: 'high',
         title: `Inschattingsfouten kosten €${costSummary.totalMarginLeakage.toLocaleString('nl-NL')}/maand`,
-        description: `Schattingsscore ${estimation.overallScore}/100 — uren ${estimation.averageHoursDeviation}% te laag, materiaal ${estimation.averageMaterialDeviation}% te laag. Gebruik de kalibratie-tips om offertes te verbeteren.`,
+        description: `Schattingsscore ${estimation.overallScore}/100 — uren ${estimation.averageHoursDeviation}% te laag, materiaal hoeveelheid ${estimation.averageMaterialQuantityDeviation}% afwijking, materiaal prijs ${estimation.averageMaterialPriceDeviation}% afwijking. Gebruik de kalibratie-tips om offertes te verbeteren.`,
         sources: ['estimationFeedbackService', 'jobCostTrackingService'],
         impact: { value: costSummary.totalMarginLeakage, unit: '€/maand', direction: 'negative' },
         actionLabel: 'Kalibratie bekijken',

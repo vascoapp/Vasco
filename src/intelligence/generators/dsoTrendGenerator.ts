@@ -7,6 +7,7 @@ import { useDSOMetrics } from '../../services/collectionsAgentService';
 import { logPrediction } from '../calibration';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { detectAnomaly, getSeasonalMultiplier } from '../adaptiveThresholds';
+import { gt } from '../generatorTranslations';
 
 export const dsoTrendGenerator: InsightGenerator = {
   id: 'dso-trend',
@@ -57,7 +58,7 @@ export function useDSOTrendInsight(ctx: GeneratorContext): ScoredInsight | null 
     icon: 'timer',
     actionLabel: 'Incasso bekijken',
     actionRoute: '/(contractor)/facturen',
-    source: 'Incasso Agent',
+    source: gt('source_collections', ctx.language),
     metric: { label: 'DSO', value: `${dso.currentDSO}d`, trend: 'down' },
 
     rootCauseTags: ['cashflow', 'dso'],
@@ -73,5 +74,11 @@ export function useDSOTrendInsight(ctx: GeneratorContext): ScoredInsight | null 
     dataPoints: 1,
     confidence: anomaly.isAnomaly ? Math.min(0.95, 0.85 + 0.05) : 0.85,
     freshness: 2,
+    action: {
+      type: 'send_reminder',
+      label: 'Betalingsherinnering',
+      params: {},
+      requiresApproval: false,
+    },
   };
 }

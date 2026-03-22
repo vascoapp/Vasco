@@ -7,23 +7,26 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
+  Pressable,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth, ROLE_CONFIGS, type UserRole, isDemoMode } from '../src/context/AuthContext';
-import { SemanticColors } from '../src/theme/colors';
-import { Radius } from '../src/theme/radius';
-import { Spacing } from '../src/theme/spacing';
-import { Typography } from '../src/theme/typography';
+import { SemanticColors, Palette } from '../src/theme/colors';
+import { SafeArea, Spacing } from '../src/theme/spacing';
+import { FadeIn } from '../src/components/shared/FadeIn';
+import { GradientButton } from '../src/components/shared/GradientButton';
 
-const DEMO_ACCOUNTS: { email: string; role: UserRole; name: string }[] = [
-  { email: 'contractor@vasco.dev', role: 'contractor', name: 'Jan van der Berg' },
-  { email: 'cfo@vasco.dev', role: 'cfo', name: 'Sarah Chen' },
-  { email: 'coo@vasco.dev', role: 'coo', name: 'James Morrison' },
-  { email: 'site@vasco.dev', role: 'site-lead', name: 'Mike Thompson' },
-  { email: 'director@vasco.dev', role: 'director', name: 'Alexandra Wright' },
+const DEMO_ACCOUNTS: { email: string; role: UserRole; name: string; icon: keyof typeof Ionicons.glyphMap; isAannemer?: boolean }[] = [
+  { email: 'contractor@vasco.dev', role: 'contractor', name: 'Jan van der Berg', icon: 'hammer-outline' },
+  { email: 'aannemer@vasco.dev', role: 'contractor', name: 'Pieter van Dijk', icon: 'business-outline', isAannemer: true },
+  { email: 'site@vasco.dev', role: 'site-lead', name: 'Mike Thompson', icon: 'construct-outline' },
+  { email: 'cfo@vasco.dev', role: 'cfo', name: 'Sarah Chen', icon: 'cash-outline' },
+  { email: 'coo@vasco.dev', role: 'coo', name: 'James Morrison', icon: 'speedometer-outline' },
+  { email: 'director@vasco.dev', role: 'director', name: 'Alexandra Wright', icon: 'grid-outline' },
 ];
 
 const ENTERPRISE_ROLES: UserRole[] = ['cfo', 'coo', 'site-lead', 'director'];
@@ -36,6 +39,7 @@ const getRouteForEmail = (email: string) => {
 };
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -44,22 +48,15 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     setError('');
-
     if (!email.trim()) {
-      setError('Please enter your email');
+      setError(t('common.required', 'Vul je e-mailadres in'));
       return;
     }
-
     const success = await login(email, password);
-
     if (success) {
       router.replace(getRouteForEmail(email));
     } else {
-      setError(
-        isDemoMode
-          ? 'Invalid credentials. Try one of the demo accounts below.'
-          : 'Invalid email or password.',
-      );
+      setError(t('common.error', 'Ongeldige gegevens'));
     }
   };
 
@@ -72,108 +69,162 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
+        style={{ flex: 1 }}
       >
         <ScrollView
-          style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Logo / Header */}
-          <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <Text style={styles.logoText}>V</Text>
-            </View>
-            <Text style={styles.title}>Vasco</Text>
-            <Text style={styles.subtitle}>BuildOS Platform</Text>
-            {isDemoMode && (
-              <View style={styles.demoBadgeHeader}>
-                <Text style={styles.demoBadgeHeaderText}>Demo Mode</Text>
+          {/* Hero */}
+          <FadeIn delay={0} duration={600}>
+            <View style={styles.hero}>
+              {/* Little explorer guy */}
+              <View style={styles.guyWrapper}>
+                {/* Hat */}
+                <View style={styles.guyHatBrim} />
+                <View style={styles.guyHatTop} />
+                {/* Head */}
+                <View style={styles.guyHead}>
+                  <View style={styles.guyEyeL} />
+                  <View style={styles.guyEyeR} />
+                  <View style={styles.guySmile} />
+                </View>
+                {/* Body */}
+                <View style={styles.guyBody}>
+                  {/* Spyglass in hand */}
+                  <View style={styles.guySpyglass} />
+                  <View style={styles.guySpyglassLens} />
+                </View>
+                {/* Legs */}
+                <View style={styles.guyLegs}>
+                  <View style={styles.guyLegL} />
+                  <View style={styles.guyLegR} />
+                </View>
+                {/* Shadow */}
+                <View style={styles.guyShadow} />
               </View>
-            )}
-          </View>
+              <Text style={styles.brand}>Vasco</Text>
+              <Text style={styles.tagline}>Gebouwd voor de bouw</Text>
+            </View>
+          </FadeIn>
 
           {/* Login Form */}
-          <View style={styles.form}>
-            <Text style={styles.formTitle}>Sign in to your account</Text>
+          <FadeIn delay={200} duration={500}>
+            <View style={styles.form}>
+              <TextInput
+                style={styles.input}
+                placeholder="E-mailadres"
+                placeholderTextColor={SemanticColors.textTertiary}
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                autoComplete="email"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Wachtwoord"
+                placeholderTextColor={SemanticColors.textTertiary}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoComplete="password"
+              />
 
-            <TextInput
-              style={styles.input}
-              placeholder="Email address"
-              placeholderTextColor={SemanticColors.textSecondary}
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              autoComplete="email"
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor={SemanticColors.textSecondary}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoComplete="password"
-            />
-
-            {error !== '' && (
-              <View style={styles.errorCard}>
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            )}
-
-            <TouchableOpacity
-              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
-              onPress={handleLogin}
-              disabled={isLoading}
-              activeOpacity={0.8}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#0B0C0F" />
-              ) : (
-                <Text style={styles.loginButtonText}>Sign In</Text>
+              {error !== '' && (
+                <View style={styles.errorCard}>
+                  <Ionicons name="alert-circle" size={16} color={SemanticColors.feedbackError} />
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
               )}
-            </TouchableOpacity>
-          </View>
+
+              <GradientButton
+                label="Inloggen"
+                onPress={handleLogin}
+                loading={isLoading}
+                disabled={isLoading}
+                icon="arrow-forward"
+              />
+            </View>
+          </FadeIn>
 
           {/* Demo Accounts */}
-          <View style={styles.demoSection}>
-            <Text style={styles.demoTitle}>Demo Accounts</Text>
-            <Text style={styles.demoSubtitle}>
-              Tap to sign in with a role-specific demo account
-            </Text>
+          {isDemoMode && (
+            <FadeIn delay={400} duration={500}>
+              <View style={styles.demoSection}>
+                <View style={styles.dividerRow}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>Demo</Text>
+                  <View style={styles.dividerLine} />
+                </View>
 
-            <View style={styles.demoGrid}>
-              {DEMO_ACCOUNTS.map((account) => {
-                const config = ROLE_CONFIGS[account.role];
-                return (
-                  <TouchableOpacity
-                    key={account.email}
-                    style={[styles.demoCard, { borderColor: config.primaryColor + '50' }]}
-                    onPress={() => handleDemoLogin(account.email)}
-                    activeOpacity={0.7}
-                  >
-                    <View
-                      style={[styles.demoBadge, { backgroundColor: config.primaryColor + '20' }]}
-                    >
-                      <Text style={[styles.demoBadgeText, { color: config.primaryColor }]}>
-                        {config.label}
-                      </Text>
-                    </View>
-                    <Text style={styles.demoName}>{account.name}</Text>
-                    <Text style={styles.demoEmail}>{account.email}</Text>
-                    <Text style={styles.demoDesc}>{config.description}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
+                <View style={styles.demoGrid}>
+                  {DEMO_ACCOUNTS.map((account, i) => {
+                    const config = ROLE_CONFIGS[account.role];
+                    return (
+                      <FadeIn key={account.email} delay={500 + i * 80} duration={400}>
+                        <Pressable
+                          style={({ pressed }) => [styles.demoCard, pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 }]}
+                          onPress={() => handleDemoLogin(account.email)}
+                        >
+                          <View style={[styles.demoIcon, { backgroundColor: config.primaryColor + '15' }]}>
+                            <Ionicons name={account.icon} size={18} color={config.primaryColor} />
+                          </View>
+                          <View style={styles.demoInfo}>
+                            <Text style={styles.demoName}>{account.name}</Text>
+                            <Text style={styles.demoRole}>{config.label}</Text>
+                          </View>
+                          <View style={[styles.demoArrow, { backgroundColor: config.primaryColor + '10' }]}>
+                            <Ionicons name="arrow-forward" size={14} color={config.primaryColor} />
+                          </View>
+                        </Pressable>
+                      </FadeIn>
+                    );
+                  })}
+                </View>
+
+                {/* Onboarding demo — test the full onboarding flow */}
+                <Pressable
+                  style={({ pressed }) => [styles.onboardingBtn, pressed && { opacity: 0.85 }]}
+                  onPress={async () => {
+                    // Clear onboarding flag + AsyncStorage data to force fresh start
+                    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+                    await AsyncStorage.removeItem('@vasco_onboarding').catch(() => {});
+                    await AsyncStorage.removeItem('@vasco_jobs').catch(() => {});
+                    await AsyncStorage.removeItem('@vasco_invoices').catch(() => {});
+                    await AsyncStorage.removeItem('@vasco_quotes').catch(() => {});
+                    await AsyncStorage.removeItem('@vasco_customers').catch(() => {});
+                    await AsyncStorage.removeItem('@vasco_projects').catch(() => {});
+                    router.push('/onboarding' as any);
+                  }}
+                >
+                  <Ionicons name="rocket-outline" size={18} color={Palette.hermesOrange} />
+                  <Text style={styles.onboardingBtnText}>Test onboarding</Text>
+                </Pressable>
+
+                {/* Reset demo data */}
+                <Pressable
+                  style={({ pressed }) => [styles.resetBtn, pressed && { opacity: 0.85 }]}
+                  onPress={async () => {
+                    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+                    const keys = await AsyncStorage.getAllKeys();
+                    const vascoKeys = keys.filter((k: string) => k.startsWith('@vasco_'));
+                    if (vascoKeys.length > 0) await AsyncStorage.multiRemove(vascoKeys);
+                    alert(`${vascoKeys.length} items gewist. Log opnieuw in voor verse data.`);
+                  }}
+                >
+                  <Ionicons name="refresh-outline" size={16} color={SemanticColors.textTertiary} />
+                  <Text style={styles.resetBtnText}>Reset demo data</Text>
+                </Pressable>
+              </View>
+            </FadeIn>
+          )}
+
+          <View style={{ height: 40 }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -185,160 +236,242 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: SemanticColors.surfaceBackground,
   },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
   scrollContent: {
     flexGrow: 1,
-    padding: Spacing.lg,
-    paddingBottom: Spacing.xl,
+    paddingHorizontal: SafeArea.side + 4,
+    justifyContent: 'center',
   },
-  header: {
+
+  // Hero
+  hero: {
     alignItems: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: 40,
   },
-  logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: Radius.xl,
-    backgroundColor: SemanticColors.actionPrimary,
+  guyWrapper: {
+    alignItems: 'center',
+    marginBottom: 16,
+    height: 90,
+  },
+  guyHatTop: {
+    width: 24,
+    height: 14,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    backgroundColor: Palette.terracotta,
+    marginTop: -2,
+  },
+  guyHatBrim: {
+    width: 36,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: Palette.terracotta,
+    zIndex: 1,
+  },
+  guyHead: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#F5CBA7',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.md,
+    position: 'relative',
   },
-  logoText: {
-    color: '#0B0C0F',
-    fontSize: 40,
-    fontWeight: '700',
+  guyEyeL: {
+    position: 'absolute',
+    top: 10,
+    left: 7,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: SemanticColors.textPrimary,
   },
-  title: {
+  guyEyeR: {
+    position: 'absolute',
+    top: 10,
+    right: 7,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: SemanticColors.textPrimary,
+  },
+  guySmile: {
+    position: 'absolute',
+    bottom: 6,
+    width: 8,
+    height: 4,
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
+    backgroundColor: Palette.hermesOrange + '60',
+  },
+  guyBody: {
+    width: 22,
+    height: 18,
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    backgroundColor: Palette.hermesOrange,
+    alignItems: 'flex-end',
+    paddingRight: 2,
+    paddingTop: 2,
+    position: 'relative',
+  },
+  guySpyglass: {
+    position: 'absolute',
+    top: 2,
+    right: -12,
+    width: 16,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Palette.terracotta,
+    transform: [{ rotate: '-20deg' }],
+  },
+  guySpyglassLens: {
+    position: 'absolute',
+    top: -1,
+    right: -16,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: Palette.terracotta,
+    backgroundColor: '#87CEEB40',
+    transform: [{ rotate: '-20deg' }],
+  },
+  guyLegs: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  guyLegL: {
+    width: 8,
+    height: 14,
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
+    backgroundColor: SemanticColors.textPrimary,
+  },
+  guyLegR: {
+    width: 8,
+    height: 14,
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
+    backgroundColor: SemanticColors.textPrimary,
+  },
+  guyShadow: {
+    width: 30,
+    height: 4,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.06)',
+    marginTop: 2,
+  },
+  brand: {
+    fontSize: 36,
+    fontFamily: 'Manrope_800ExtraBold',
     color: SemanticColors.textPrimary,
-    fontSize: 32,
-    fontWeight: '700',
+    letterSpacing: -1,
   },
-  subtitle: {
+  tagline: {
+    fontSize: 15,
+    fontFamily: 'Manrope_500Medium',
     color: SemanticColors.textSecondary,
-    fontSize: 16,
     marginTop: 4,
   },
-  demoBadgeHeader: {
-    marginTop: Spacing.sm,
-    backgroundColor: SemanticColors.actionPrimary + '25',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: Radius.sm,
-  },
-  demoBadgeHeaderText: {
-    color: SemanticColors.actionPrimary,
-    fontSize: 12,
-    fontWeight: '600',
-  },
+
+  // Form
   form: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: Radius.xl,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-    gap: Spacing.md,
-    marginBottom: Spacing.lg,
-  },
-  formTitle: {
-    color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: Spacing.sm,
+    gap: 12,
+    marginBottom: 28,
   },
   input: {
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: Radius.md,
-    padding: Spacing.md,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    fontSize: 15,
+    fontFamily: 'Manrope_500Medium',
     color: SemanticColors.textPrimary,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
-    fontSize: 16,
   },
   errorCard: {
-    backgroundColor: SemanticColors.feedbackError + '20',
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: SemanticColors.feedbackError,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: SemanticColors.feedbackErrorBg,
+    borderRadius: 10,
+    padding: 12,
   },
   errorText: {
     color: SemanticColors.feedbackError,
     fontSize: 13,
-    textAlign: 'center',
+    fontFamily: 'Manrope_500Medium',
+    flex: 1,
   },
-  loginButton: {
-    backgroundColor: SemanticColors.actionPrimary,
-    borderRadius: Radius.md,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-    minHeight: 44,
-    justifyContent: 'center',
-  },
-  loginButtonDisabled: {
-    opacity: 0.7,
-  },
-  loginButtonText: {
-    color: '#0B0C0F',
-    fontSize: 16,
-    fontWeight: '700',
-  },
+  // Demo
   demoSection: {
-    gap: Spacing.md,
+    gap: 16,
   },
-  demoTitle: {
-    color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
+  onboardingBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    borderWidth: 1.5, borderColor: Palette.hermesOrange, borderRadius: 12,
+    paddingVertical: 12, marginTop: 4,
   },
-  demoSubtitle: {
-    color: SemanticColors.textSecondary,
-    fontSize: 13,
-    textAlign: 'center',
-    marginBottom: Spacing.sm,
+  onboardingBtnText: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
+  resetBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 10,
+  },
+  resetBtnText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: SemanticColors.textTertiary },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: SemanticColors.borderDefault,
+  },
+  dividerText: {
+    fontSize: 12,
+    fontFamily: 'Manrope_600SemiBold',
+    color: SemanticColors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   demoGrid: {
-    gap: Spacing.sm,
+    gap: 8,
   },
   demoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-    borderWidth: 1,
-    gap: 4,
-    minHeight: 44,
+    borderRadius: 14,
+    padding: 14,
+    gap: 12,
   },
-  demoBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: Radius.sm,
-    marginBottom: 4,
+  demoIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  demoBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
+  demoInfo: {
+    flex: 1,
   },
   demoName: {
-    color: SemanticColors.textPrimary,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
+    color: SemanticColors.textPrimary,
   },
-  demoEmail: {
-    color: SemanticColors.textTertiary,
+  demoRole: {
     fontSize: 12,
-  },
-  demoDesc: {
+    fontFamily: 'Manrope_400Regular',
     color: SemanticColors.textSecondary,
-    fontSize: 11,
-    marginTop: 4,
+  },
+  demoArrow: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

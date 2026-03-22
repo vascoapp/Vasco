@@ -14,7 +14,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -78,7 +78,7 @@ export function FinancialAuditDashboard({ projectId = 'project-001', initialTab 
     <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
       {/* Summary Cards */}
       <View style={styles.summaryGrid}>
-        <TouchableOpacity
+        <Pressable
           style={[styles.summaryCard, styles.summaryCardWarning]}
           onPress={() => setActiveTab('invoices')}
         >
@@ -90,9 +90,9 @@ export function FinancialAuditDashboard({ projectId = 'project-001', initialTab 
           <Text style={styles.summarySubtext}>
             {formatCurrency(stats?.totalDiscrepancyValue || 0)}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity
+        <Pressable
           style={[styles.summaryCard, styles.summaryCardInfo]}
           onPress={() => setActiveTab('spending')}
         >
@@ -104,9 +104,9 @@ export function FinancialAuditDashboard({ projectId = 'project-001', initialTab 
           <Text style={styles.summarySubtext}>
             {spendingAnalysis?.findings.length || 0} findings
           </Text>
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity
+        <Pressable
           style={[styles.summaryCard, styles.summaryCardError]}
           onPress={() => setActiveTab('overpayments')}
         >
@@ -118,7 +118,7 @@ export function FinancialAuditDashboard({ projectId = 'project-001', initialTab 
           <Text style={styles.summarySubtext}>
             {overpaymentAnalysis?.findings.length || 0} issues found
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Critical Findings */}
@@ -134,7 +134,7 @@ export function FinancialAuditDashboard({ projectId = 'project-001', initialTab 
 
         {/* Invoice Discrepancies Alert */}
         {(stats?.invoicesWithDiscrepancies || 0) > 0 && (
-          <TouchableOpacity
+          <Pressable
             style={styles.alertCard}
             onPress={() => setActiveTab('invoices')}
           >
@@ -148,12 +148,12 @@ export function FinancialAuditDashboard({ projectId = 'project-001', initialTab 
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
-          </TouchableOpacity>
+          </Pressable>
         )}
 
         {/* Overpayment Alert */}
         {totalOverpaid > 0 && (
-          <TouchableOpacity
+          <Pressable
             style={styles.alertCard}
             onPress={() => setActiveTab('overpayments')}
           >
@@ -167,12 +167,12 @@ export function FinancialAuditDashboard({ projectId = 'project-001', initialTab 
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
-          </TouchableOpacity>
+          </Pressable>
         )}
 
         {/* Unnecessary Spending Alert */}
         {totalSavings > 0 && (
-          <TouchableOpacity
+          <Pressable
             style={styles.alertCard}
             onPress={() => setActiveTab('spending')}
           >
@@ -186,7 +186,7 @@ export function FinancialAuditDashboard({ projectId = 'project-001', initialTab 
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
-          </TouchableOpacity>
+          </Pressable>
         )}
       </View>
 
@@ -205,9 +205,9 @@ export function FinancialAuditDashboard({ projectId = 'project-001', initialTab 
               </View>
               <View style={styles.actionSavings}>
                 <Text style={styles.actionSavingsAmount}>{formatCurrency(action.savingsAmount)}</Text>
-                <TouchableOpacity style={styles.actionButton}>
+                <Pressable style={styles.actionButton}>
                   <Text style={styles.actionButtonText}>Act</Text>
-                </TouchableOpacity>
+                </Pressable>
               </View>
             </View>
           ))}
@@ -382,9 +382,9 @@ export function FinancialAuditDashboard({ projectId = 'project-001', initialTab 
               <Text style={styles.recoveryActionApproach}>
                 {action.suggestedApproach.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
               </Text>
-              <TouchableOpacity style={styles.initiateButton}>
+              <Pressable style={styles.initiateButton}>
                 <Text style={styles.initiateButtonText}>Initiate Recovery</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           ))}
         </View>
@@ -403,7 +403,7 @@ export function FinancialAuditDashboard({ projectId = 'project-001', initialTab 
       {/* Tabs */}
       <View style={styles.tabBar}>
         {tabs.map((tab) => (
-          <TouchableOpacity
+          <Pressable
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.tabActive]}
             onPress={() => setActiveTab(tab.key)}
@@ -416,7 +416,7 @@ export function FinancialAuditDashboard({ projectId = 'project-001', initialTab 
             <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
               {tab.label}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 

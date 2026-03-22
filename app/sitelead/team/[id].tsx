@@ -4,31 +4,27 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Alert,
   StatusBar,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { SemanticColors, Palette } from '../../../src/theme/colors';
 import { Spacing, SafeArea } from '../../../src/theme/spacing';
+import { hapticSuccess } from '../../../src/utils/haptics';
 
-// Site Lead palette
+// Site Lead palette (references Palette where possible)
 const SL_COLORS = {
-  terracotta: '#D2691E',
-  charcoal: '#2D2926',
-  sand: '#FAF6F1',
-  sandDark: '#F0EAE2',
-  cream: '#FFFDF9',
-  warmGray: '#8A7E76',
+  terracotta: Palette.terracotta,
+  charcoal: SemanticColors.textPrimary,
+  sand: SemanticColors.surfaceBackground,
+  sandDark: SemanticColors.surfaceSecondary,
+  cream: SemanticColors.surfacePrimary,
+  warmGray: SemanticColors.textSecondary,
 };
 
-const SHADOW = {
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.04,
-  shadowRadius: 4,
-  elevation: 2,
-};
+
 
 interface Team {
   name: string;
@@ -104,10 +100,10 @@ const MEMBER_STATUS: Record<
   string,
   { label: string; color: string; bgColor: string }
 > = {
-  beschikbaar: { label: 'Beschikbaar', color: '#16A34A', bgColor: '#DCFCE7' },
-  bezig: { label: 'Bezig', color: '#D2691E', bgColor: '#FFF4ED' },
-  pauze: { label: 'Pauze', color: '#8A7E76', bgColor: '#F5F0EB' },
-  ziek: { label: 'Ziek', color: '#DC2626', bgColor: '#FEE2E2' },
+  beschikbaar: { label: 'Beschikbaar', color: SemanticColors.feedbackSuccess, bgColor: SemanticColors.feedbackSuccessBg },
+  bezig: { label: 'Bezig', color: Palette.terracotta, bgColor: Palette.terracotta + '12' },
+  pauze: { label: 'Pauze', color: SemanticColors.textSecondary, bgColor: SemanticColors.surfaceSecondary },
+  ziek: { label: 'Ziek', color: SemanticColors.feedbackError, bgColor: SemanticColors.feedbackErrorBg },
 };
 
 const SCHEDULE_BLOCKS = [
@@ -185,10 +181,10 @@ export default function TeamPlanningScreen() {
   }
 
   const statusColors = {
-    'on-track': '#16A34A',
-    behind: '#DC2626',
-    'at-risk': '#F59E0B',
-    completed: '#8A7E76',
+    'on-track': SemanticColors.feedbackSuccess,
+    behind: SemanticColors.feedbackError,
+    'at-risk': SemanticColors.feedbackWarning,
+    completed: SemanticColors.textSecondary,
   };
 
   return (
@@ -197,12 +193,12 @@ export default function TeamPlanningScreen() {
       <ScrollView style={styles.scrollView}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
+          <Pressable
             onPress={() => router.back()}
             style={styles.backButton}
           >
             <Ionicons name="arrow-back" size={24} color={SL_COLORS.charcoal} />
-          </TouchableOpacity>
+          </Pressable>
           <View style={styles.headerTextContainer}>
             <Text style={styles.headerTitle} numberOfLines={1}>{team.name}</Text>
             <Text style={styles.headerSubtitle} numberOfLines={1}>Planning</Text>
@@ -406,7 +402,7 @@ export default function TeamPlanningScreen() {
         </View>
 
         {/* AI Scheduling Section */}
-        <TouchableOpacity
+        <Pressable
           style={styles.aiSuggestionCard}
           onPress={() =>
             Alert.alert(
@@ -435,7 +431,7 @@ export default function TeamPlanningScreen() {
             size={20}
             color={SL_COLORS.warmGray}
           />
-        </TouchableOpacity>
+        </Pressable>
 
         {/* Progress Notes */}
         <View style={styles.sectionHeader}>
@@ -459,7 +455,7 @@ export default function TeamPlanningScreen() {
 
         {/* Actions */}
         <View style={styles.actionsContainer}>
-          <TouchableOpacity
+          <Pressable
             style={[styles.actionButton, styles.actionButtonPrimary]}
             onPress={() =>
               Alert.alert(
@@ -477,9 +473,9 @@ export default function TeamPlanningScreen() {
             <Text style={styles.actionButtonTextPrimary}>
               Werknemer Vervangen
             </Text>
-          </TouchableOpacity>
+          </Pressable>
 
-          <TouchableOpacity
+          <Pressable
             style={[styles.actionButton, styles.actionButtonSecondary]}
             onPress={() =>
               Alert.alert(
@@ -497,7 +493,7 @@ export default function TeamPlanningScreen() {
             <Text style={styles.actionButtonTextSecondary}>
               Notitie Toevoegen
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         <View style={styles.bottomSpacer} />
@@ -541,7 +537,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SL_COLORS.charcoal,
   },
   headerSubtitle: {
@@ -557,7 +553,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     borderRadius: 12,
     padding: Spacing.lg,
-    ...SHADOW,
   },
 
   // Team Info Card
@@ -582,7 +577,7 @@ const styles = StyleSheet.create({
   },
   teamInfoTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SL_COLORS.charcoal,
   },
   teamInfoSubtitle: {
@@ -621,7 +616,7 @@ const styles = StyleSheet.create({
   teamInfoValue: {
     fontSize: 14,
     color: SL_COLORS.charcoal,
-    fontWeight: '500',
+    fontFamily: 'Manrope_500Medium',
     flex: 1,
   },
   progressContainer: {
@@ -633,12 +628,12 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SL_COLORS.charcoal,
   },
   progressPercentage: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SL_COLORS.terracotta,
   },
   progressBarContainer: {
@@ -663,7 +658,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SL_COLORS.charcoal,
   },
   sectionDate: {
@@ -691,7 +686,7 @@ const styles = StyleSheet.create({
   },
   memberInitials: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SL_COLORS.terracotta,
   },
   memberInfo: {
@@ -699,7 +694,7 @@ const styles = StyleSheet.create({
   },
   memberName: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SL_COLORS.charcoal,
   },
   memberRole: {
@@ -714,7 +709,7 @@ const styles = StyleSheet.create({
   },
   memberStatusText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
   },
 
   // Schedule Blocks
@@ -733,7 +728,7 @@ const styles = StyleSheet.create({
   },
   scheduleTime: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SL_COLORS.warmGray,
   },
   scheduleTimeline: {
@@ -760,7 +755,7 @@ const styles = StyleSheet.create({
   },
   scheduleTask: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SL_COLORS.charcoal,
     marginBottom: 4,
   },
@@ -787,7 +782,7 @@ const styles = StyleSheet.create({
   },
   scheduleProgressText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SL_COLORS.warmGray,
     width: 40,
     textAlign: 'right',
@@ -803,7 +798,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     padding: Spacing.lg,
     borderRadius: 12,
-    ...SHADOW,
   },
   aiIconCircle: {
     width: 40,
@@ -818,7 +812,7 @@ const styles = StyleSheet.create({
   },
   aiTitle: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SL_COLORS.charcoal,
     marginBottom: 2,
   },
@@ -838,7 +832,7 @@ const styles = StyleSheet.create({
   },
   noteTime: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SL_COLORS.terracotta,
     marginBottom: 4,
   },
@@ -860,7 +854,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderRadius: 12,
     marginBottom: Spacing.md,
-    ...SHADOW,
   },
   actionButtonPrimary: {
     backgroundColor: SL_COLORS.terracotta,
@@ -875,12 +868,12 @@ const styles = StyleSheet.create({
   },
   actionButtonTextPrimary: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SL_COLORS.cream,
   },
   actionButtonTextSecondary: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SL_COLORS.terracotta,
   },
 

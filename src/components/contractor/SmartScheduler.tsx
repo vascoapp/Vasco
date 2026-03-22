@@ -10,7 +10,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,15 +25,33 @@ import {
   ScheduleConflict,
   ScheduleOptimization,
 } from '../../services/smartSchedulerService';
+import { predictDuration, type DurationPrediction } from '../../intelligence/predictions';
+import { useAuth } from '../../context/AuthContext';
 
 type ViewType = 'day' | 'week' | 'list';
 
 export function SmartScheduler() {
+  const { user } = useAuth();
   const [viewType, setViewType] = useState<ViewType>('week');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showJobModal, setShowJobModal] = useState(false);
   const [selectedJob, setSelectedJob] = useState<ScheduledJob | null>(null);
   const [showOptimizations, setShowOptimizations] = useState(false);
+  const [durationPrediction, setDurationPrediction] = useState<DurationPrediction | null>(null);
+
+  // Fetch duration prediction when a job is selected
+  React.useEffect(() => {
+    if (selectedJob) {
+      predictDuration({
+        trade: user?.trade ?? 'general',
+        country: user?.country ?? 'NL',
+        jobType: selectedJob.type,
+        estimatedHours: selectedJob.duration ? selectedJob.duration / 60 : undefined,
+      }).then(setDurationPrediction).catch(() => setDurationPrediction(null));
+    } else {
+      setDurationPrediction(null);
+    }
+  }, [selectedJob, user?.trade, user?.country]);
 
   const { jobs, conflicts, optimizations, rescheduleJob, cancelJob, updateStatus } = useScheduler();
   const daySchedule = useDaySchedule(selectedDate);
@@ -102,13 +120,13 @@ export function SmartScheduler() {
     if (conflicts.length === 0) return null;
 
     return (
-      <TouchableOpacity style={styles.conflictBanner}>
+      <Pressable style={styles.conflictBanner}>
         <Ionicons name="warning-outline" size={20} color={Palette.red500} />
         <Text style={styles.conflictText}>
           {conflicts.length} planning{conflicts.length > 1 ? 'conflicten' : 'conflict'} gedetecteerd
         </Text>
         <Ionicons name="chevron-forward" size={18} color={Palette.red500} />
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 
@@ -116,7 +134,7 @@ export function SmartScheduler() {
     if (optimizations.length === 0) return null;
 
     return (
-      <TouchableOpacity
+      <Pressable
         style={styles.optimizationBanner}
         onPress={() => setShowOptimizations(true)}
       >
@@ -125,7 +143,7 @@ export function SmartScheduler() {
           {optimizations.length} optimalisatie{optimizations.length > 1 ? 'suggesties' : 'suggestie'}
         </Text>
         <Ionicons name="chevron-forward" size={18} color={Palette.green500} />
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 
@@ -148,7 +166,7 @@ export function SmartScheduler() {
     const hasWeatherWarning = job.weatherSensitive && weatherAlerts.some((a) => a.jobId === job.id);
 
     return (
-      <TouchableOpacity
+      <Pressable
         key={job.id}
         style={[styles.jobCard, compact && styles.jobCardCompact]}
         onPress={() => openJob(job)}
@@ -177,7 +195,7 @@ export function SmartScheduler() {
             </>
           )}
         </View>
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 
@@ -190,7 +208,7 @@ export function SmartScheduler() {
 
     return (
       <View key={dateStr} style={[styles.dayColumn, isSelected && styles.dayColumnSelected]}>
-        <TouchableOpacity
+        <Pressable
           style={[styles.dayHeader, isToday && styles.dayHeaderToday]}
           onPress={() => setSelectedDate(dateStr)}
         >
@@ -199,7 +217,7 @@ export function SmartScheduler() {
           <View style={styles.dayWeather}>
             <Ionicons name={weatherStyle.icon as any} size={14} color={weatherStyle.color} />
           </View>
-        </TouchableOpacity>
+        </Pressable>
 
         <View style={styles.dayJobs}>
           {schedule.jobs.length === 0 ? (
@@ -244,13 +262,13 @@ export function SmartScheduler() {
     <ScrollView style={styles.dayView} showsVerticalScrollIndicator={false}>
       {/* Day Header */}
       <View style={styles.dayViewHeader}>
-        <TouchableOpacity onPress={() => {
+        <Pressable onPress={() => {
           const prev = new Date(selectedDate);
           prev.setDate(prev.getDate() - 1);
           setSelectedDate(prev.toISOString().split('T')[0]);
         }}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
-        </TouchableOpacity>
+        </Pressable>
         <View style={styles.dayViewTitle}>
           <Text style={styles.dayViewDate}>{formatDate(selectedDate)}</Text>
           <View style={styles.dayViewWeather}>
@@ -265,13 +283,13 @@ export function SmartScheduler() {
             )}
           </View>
         </View>
-        <TouchableOpacity onPress={() => {
+        <Pressable onPress={() => {
           const next = new Date(selectedDate);
           next.setDate(next.getDate() + 1);
           setSelectedDate(next.toISOString().split('T')[0]);
         }}>
           <Ionicons name="chevron-forward" size={24} color={SemanticColors.textPrimary} />
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Day Stats */}
@@ -345,9 +363,9 @@ export function SmartScheduler() {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
-          <TouchableOpacity onPress={() => setShowOptimizations(false)}>
+          <Pressable onPress={() => setShowOptimizations(false)}>
             <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
           <Text style={styles.modalTitle}>Optimalisaties</Text>
           <View style={{ width: 24 }} />
         </View>
@@ -370,9 +388,9 @@ export function SmartScheduler() {
                   <Text style={styles.optimizationSavingText}>{opt.potentialSaving}</Text>
                 </View>
               </View>
-              <TouchableOpacity style={styles.applyButton}>
+              <Pressable style={styles.applyButton}>
                 <Text style={styles.applyButtonText}>Toepassen</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           ))}
         </ScrollView>
@@ -389,13 +407,13 @@ export function SmartScheduler() {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
-          <TouchableOpacity onPress={() => setShowJobModal(false)}>
+          <Pressable onPress={() => setShowJobModal(false)}>
             <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
           <Text style={styles.modalTitle}>Afspraak details</Text>
-          <TouchableOpacity>
+          <Pressable>
             <Ionicons name="create-outline" size={24} color={Palette.blue500} />
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         {selectedJob && (
@@ -455,17 +473,17 @@ export function SmartScheduler() {
             </View>
 
             <View style={styles.jobActions}>
-              <TouchableOpacity style={styles.startJobButton}>
+              <Pressable style={styles.startJobButton}>
                 <Ionicons name="play-circle-outline" size={20} color="#fff" />
                 <Text style={styles.startJobText}>Start werkzaamheden</Text>
-              </TouchableOpacity>
+              </Pressable>
 
               <View style={styles.jobActionRow}>
-                <TouchableOpacity style={styles.rescheduleButton}>
+                <Pressable style={styles.rescheduleButton}>
                   <Ionicons name="calendar-outline" size={18} color={Palette.blue500} />
                   <Text style={styles.rescheduleText}>Verplaatsen</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
+                </Pressable>
+                <Pressable
                   style={styles.cancelButton}
                   onPress={() => {
                     cancelJob(selectedJob.id);
@@ -474,7 +492,7 @@ export function SmartScheduler() {
                 >
                   <Ionicons name="close-circle-outline" size={18} color={Palette.red500} />
                   <Text style={styles.cancelText}>Annuleren</Text>
-                </TouchableOpacity>
+                </Pressable>
               </View>
             </View>
           </ScrollView>
@@ -488,7 +506,7 @@ export function SmartScheduler() {
       {/* View Selector */}
       <View style={styles.viewSelector}>
         {(['day', 'week', 'list'] as ViewType[]).map((view) => (
-          <TouchableOpacity
+          <Pressable
             key={view}
             style={[styles.viewButton, viewType === view && styles.viewButtonActive]}
             onPress={() => setViewType(view)}
@@ -501,7 +519,7 @@ export function SmartScheduler() {
             <Text style={[styles.viewButtonText, viewType === view && styles.viewButtonTextActive]}>
               {view === 'day' ? 'Dag' : view === 'week' ? 'Week' : 'Lijst'}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 
@@ -516,9 +534,9 @@ export function SmartScheduler() {
       {viewType === 'list' && renderListView()}
 
       {/* Add Button */}
-      <TouchableOpacity style={styles.addButton}>
+      <Pressable style={styles.addButton}>
         <Ionicons name="add" size={28} color="#fff" />
-      </TouchableOpacity>
+      </Pressable>
 
       {/* Modals */}
       {renderOptimizationsModal()}

@@ -6,7 +6,7 @@ import { SiteLeadDashboard } from '../../src/components/dashboards';
 export default function SiteQualityScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <SiteLeadDashboard initialTab="quality" showTabBar={false} />
+      <SiteLeadDashboard initialTab="safety" showTabBar={false} />
     </SafeAreaView>
   );
 }

@@ -7,6 +7,7 @@
 import type { ScoredInsight, GeneratorContext } from './types';
 import { mockProjects, mockDeliveryMetrics } from '../../data/mockProjects';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 // Simulated pending approvals data (matches hub/approvals.tsx mock)
 const PENDING_APPROVALS = [
@@ -45,7 +46,7 @@ export function useApprovalBottleneckInsight(ctx: GeneratorContext): ScoredInsig
     icon: 'timer',
     actionLabel: 'Bekijk goedkeuringen',
     actionRoute: '/hub/approvals',
-    source: 'Approval Tracker',
+    source: gt('source_approval', ctx.language),
     metric: { label: 'Wachtend', value: `${overdueApprovals.length}`, trend: maxWaiting > 3 ? 'down' : 'neutral' },
     rootCauseTags: ['approvals', 'bottleneck'],
     rawScore: 0,

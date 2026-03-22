@@ -28,6 +28,7 @@ export interface AutoInvoice {
   paidAmount: number;
   paymentMethod?: 'bank_transfer' | 'ideal' | 'card' | 'cash';
   paidDate?: Date;
+  payments: PaymentRecord[];
   reminders: ReminderSent[];
   notes?: string;
 }
@@ -38,6 +39,15 @@ export interface InvoiceLineItem {
   unitPrice: number;
   vatRate: number;
   total: number;
+}
+
+export interface PaymentRecord {
+  id: string;
+  date: Date;
+  amount: number;
+  method: 'bank_transfer' | 'ideal' | 'card' | 'cash';
+  reference?: string;
+  type: 'deposit' | 'milestone' | 'final' | 'partial';
 }
 
 export interface ReminderSent {
@@ -72,6 +82,10 @@ export interface InvoiceStats {
 // MOCK DATA
 // =============================================================================
 
+const VAT_RATES = [0, 9, 21] as const;
+export type VatRate = typeof VAT_RATES[number];
+export { VAT_RATES };
+
 const mockInvoices: AutoInvoice[] = [
   {
     id: 'inv-1', invoiceNumber: 'F2024-0125', jobId: 'job-100', customerId: 'cust-1', customerName: 'Familie de Groot',
@@ -79,10 +93,10 @@ const mockInvoices: AutoInvoice[] = [
     issueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), dueDate: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000),
     status: 'sent',
     lineItems: [
-      { description: 'CV-ketel onderhoud', quantity: 1, unitPrice: 125, vatRate: 21, total: 151.25 },
+      { description: 'CV-ketel onderhoud (arbeid)', quantity: 1, unitPrice: 125, vatRate: 9, total: 136.25 },
       { description: 'Onderdelen - ontluchtingsventiel', quantity: 2, unitPrice: 15, vatRate: 21, total: 36.30 },
     ],
-    subtotal: 155, vatAmount: 32.55, total: 187.55, paidAmount: 0, reminders: [],
+    subtotal: 155, vatAmount: 17.55, total: 172.55, paidAmount: 0, payments: [], reminders: [],
   },
   {
     id: 'inv-2', invoiceNumber: 'F2024-0124', jobId: 'job-99', customerId: 'cust-2', customerName: 'Bakkerij Jansen',
@@ -90,7 +104,7 @@ const mockInvoices: AutoInvoice[] = [
     issueDate: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000), dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
     status: 'overdue',
     lineItems: [{ description: 'Airco service', quantity: 3, unitPrice: 95, vatRate: 21, total: 344.85 }],
-    subtotal: 285, vatAmount: 59.85, total: 344.85, paidAmount: 0,
+    subtotal: 285, vatAmount: 59.85, total: 344.85, paidAmount: 0, payments: [],
     reminders: [{ date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), type: 'friendly', method: 'email', opened: true }],
   },
   {
@@ -100,7 +114,9 @@ const mockInvoices: AutoInvoice[] = [
     status: 'paid',
     lineItems: [{ description: 'Warmtepomp storing', quantity: 1, unitPrice: 185, vatRate: 21, total: 223.85 }],
     subtotal: 185, vatAmount: 38.85, total: 223.85, paidAmount: 223.85, paidDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
-    paymentMethod: 'ideal', reminders: [],
+    paymentMethod: 'ideal',
+    payments: [{ id: 'pay-1', date: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), amount: 223.85, method: 'ideal', type: 'final' }],
+    reminders: [],
   },
 ];
 
@@ -147,7 +163,7 @@ class InvoiceAutomationService {
       jobId, customerId, customerName, customerEmail, customerAddress,
       issueDate: new Date(), dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       status: 'draft', lineItems, subtotal, vatAmount: Math.round(vatAmount * 100) / 100, total: Math.round((subtotal + vatAmount) * 100) / 100,
-      paidAmount: 0, reminders: [],
+      paidAmount: 0, payments: [], reminders: [],
     };
     this.invoices.unshift(invoice);
     trackUserAction('invoice_generated', { jobId, total: invoice.total });
@@ -185,6 +201,30 @@ class InvoiceAutomationService {
           isOverdue: invoice.dueDate < invoice.paidDate!,
         }).catch(() => {});
       }).catch(() => {});
+    }
+  }
+
+  addPayment(invoiceId: string, amount: number, method: PaymentRecord['method'], type: PaymentRecord['type'], reference?: string): void {
+    const invoice = this.invoices.find(i => i.id === invoiceId);
+    if (invoice) {
+      const payment: PaymentRecord = {
+        id: `pay-${Date.now()}`,
+        date: new Date(),
+        amount,
+        method,
+        type,
+        reference,
+      };
+      invoice.payments.push(payment);
+      invoice.paidAmount = invoice.payments.reduce((sum, p) => sum + p.amount, 0);
+
+      if (invoice.paidAmount >= invoice.total) {
+        invoice.status = 'paid';
+        invoice.paidDate = new Date();
+        invoice.paymentMethod = method;
+        trackUserAction('invoice_paid', { invoiceId, method, amount: invoice.paidAmount });
+      }
+      this.notify();
     }
   }
 
@@ -260,9 +300,11 @@ export function useAutoInvoices(status?: AutoInvoice['status']) {
     invoiceAutomationService.generateInvoice(jId, cId, cName, cAddr, items, email), []);
   const send = useCallback((id: string) => invoiceAutomationService.sendInvoice(id), []);
   const markPaid = useCallback((id: string, method: AutoInvoice['paymentMethod'], amount?: number) => invoiceAutomationService.markPaid(id, method, amount), []);
+  const addPayment = useCallback((id: string, amount: number, method: PaymentRecord['method'], type: PaymentRecord['type'], ref?: string) =>
+    invoiceAutomationService.addPayment(id, amount, method, type, ref), []);
   const sendReminder = useCallback((id: string, type: ReminderSent['type']) => invoiceAutomationService.sendReminder(id, type), []);
 
-  return { invoices, loading, generate, send, markPaid, sendReminder };
+  return { invoices, loading, generate, send, markPaid, addPayment, sendReminder };
 }
 
 export function usePaymentReminders() {

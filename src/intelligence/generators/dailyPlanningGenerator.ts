@@ -5,6 +5,7 @@
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import { useDaySchedule } from '../../services/smartSchedulerService';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export const dailyPlanningGenerator: InsightGenerator = {
   id: 'daily-planning',
@@ -63,7 +64,7 @@ export function useDailyPlanningInsight(ctx: GeneratorContext): ScoredInsight | 
     icon: 'time',
     actionLabel: 'Bekijk klussen',
     actionRoute: '/(contractor)/besparen',
-    source: 'Planner',
+    source: gt('source_scheduling', ctx.language),
     timestamp: 'Nu',
 
     rootCauseTags: ['schedule', 'idle-time'],
@@ -77,5 +78,11 @@ export function useDailyPlanningInsight(ctx: GeneratorContext): ScoredInsight | 
     dataPoints: daySchedule.jobs.length,
     confidence: 0.85,
     freshness: 0.5,
+    action: {
+      type: 'schedule_job',
+      label: 'Dag vullen',
+      params: { gapHours: maxGapHours },
+      requiresApproval: false,
+    },
   };
 }

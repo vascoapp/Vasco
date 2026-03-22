@@ -1,4 +1,7 @@
--- Intelligence Layer: Supabase persistence for Vasco's agentic moat
+-- SUPERSEDED by 001_intelligence_tables.sql + 002_ai_moat_infrastructure.sql
+-- Kept for reference only. All tables use IF NOT EXISTS so no conflicts.
+--
+-- Original: Intelligence Layer: Supabase persistence for Vasco's agentic moat
 -- Tables: data_events, entities, entity_relationships, feedback_weights,
 --         calibration_entries, training_examples, model_predictions,
 --         price_observations, material_catalog, suppliers

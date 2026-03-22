@@ -8,6 +8,7 @@
 import type { ScoredInsight, GeneratorContext } from './types';
 import { useAppState } from '../../state/AppState';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export function useMaterialSuggestionInsight(ctx: GeneratorContext): ScoredInsight | null {
   const { jobs, jobMaterials, materials, priceObservations } = useAppState();
@@ -77,7 +78,7 @@ export function useMaterialSuggestionInsight(ctx: GeneratorContext): ScoredInsig
     detail: `${topCount} van ${jobsWithMaterials.length} klussen bevatten dit materiaal. Categorie: ${topMaterial.category}.`,
     icon: 'cube',
     actionLabel: 'Voeg toe',
-    source: 'Materiaalanalyse',
+    source: gt('source_material', ctx.language),
     metric: { label: 'Gebruik', value: `${usagePct}%`, trend: 'neutral' },
 
     rootCauseTags: ['materials', 'efficiency'],

@@ -14,6 +14,7 @@ import {
   Pressable,
   RefreshControl,
   Modal,
+  Linking,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,6 +34,8 @@ import {
   InsurancePolicy,
 } from '../../src/services/complianceService';
 import { useAuditFindings } from '../../src/services/auditorService';
+import { useKvKRegistration, useBtwRegistration, DUTCH_GOVERNMENT_PORTALS } from '../../src/services/dutchComplianceService';
+import { useTranslation } from 'react-i18next';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -59,33 +62,34 @@ interface ComplianceItem {
 // HELPER FUNCTIONS
 // ============================================
 
-function getStatusConfig(status: ItemStatus) {
+function getStatusConfig(status: ItemStatus, t?: (key: string, fallback: string) => string) {
+  const tr = t || ((k: string, f: string) => f);
   switch (status) {
     case 'valid':
     case 'active':
       return {
-        label: status === 'active' ? 'Actief' : 'Geldig',
+        label: status === 'active' ? tr('compliance.statusActive', 'Actief') : tr('compliance.statusValid', 'Geldig'),
         color: SemanticColors.feedbackSuccess,
         bg: SemanticColors.feedbackSuccessBg,
         icon: 'checkmark-circle' as IconName,
       };
     case 'expiring_soon':
       return {
-        label: 'Verloopt binnenkort',
+        label: tr('compliance.statusExpiringSoon', 'Verloopt binnenkort'),
         color: SemanticColors.feedbackWarning,
         bg: SemanticColors.feedbackWarningBg,
         icon: 'alert-circle' as IconName,
       };
     case 'expired':
       return {
-        label: 'Verlopen',
+        label: tr('compliance.statusExpired', 'Verlopen'),
         color: SemanticColors.feedbackError,
         bg: SemanticColors.feedbackErrorBg,
         icon: 'close-circle' as IconName,
       };
     case 'pending_renewal':
       return {
-        label: 'In aanvraag',
+        label: tr('compliance.statusPendingRenewal', 'In aanvraag'),
         color: SemanticColors.feedbackInfo,
         bg: SemanticColors.feedbackInfoBg,
         icon: 'time' as IconName,
@@ -93,14 +97,14 @@ function getStatusConfig(status: ItemStatus) {
     case 'suspended':
     case 'cancelled':
       return {
-        label: status === 'cancelled' ? 'Geannuleerd' : 'Opgeschort',
+        label: status === 'cancelled' ? tr('compliance.statusCancelled', 'Geannuleerd') : tr('compliance.statusSuspended', 'Opgeschort'),
         color: SemanticColors.feedbackError,
         bg: SemanticColors.feedbackErrorBg,
         icon: 'ban' as IconName,
       };
     default:
       return {
-        label: 'Onbekend',
+        label: tr('compliance.statusUnknown', 'Onbekend'),
         color: SemanticColors.textTertiary,
         bg: SemanticColors.surfaceSecondary,
         icon: 'help-circle' as IconName,
@@ -121,6 +125,7 @@ function formatDate(date: Date): string {
 // ============================================
 
 function ComplianceScoreRing({ score, size = 100 }: { score: number; size?: number }) {
+  const { t } = useTranslation();
   const getScoreColor = () => {
     if (score >= 90) return SemanticColors.feedbackSuccess;
     if (score >= 70) return SemanticColors.feedbackWarning;
@@ -128,9 +133,9 @@ function ComplianceScoreRing({ score, size = 100 }: { score: number; size?: numb
   };
 
   const getScoreLabel = () => {
-    if (score >= 90) return 'Uitstekend';
-    if (score >= 70) return 'Actie nodig';
-    return 'Kritiek';
+    if (score >= 90) return t('compliance.scoreExcellent', 'Uitstekend');
+    if (score >= 70) return t('compliance.scoreActionNeeded', 'Actie nodig');
+    return t('compliance.scoreCritical', 'Kritiek');
   };
 
   return (
@@ -144,6 +149,7 @@ function ComplianceScoreRing({ score, size = 100 }: { score: number; size?: numb
 }
 
 function AlertCard({ alert, onPress }: { alert: any; onPress?: () => void }) {
+  const { t } = useTranslation();
   const severityConfig = {
     critical: { bg: SemanticColors.feedbackErrorBg, color: SemanticColors.feedbackError, icon: 'warning' as IconName },
     high: { bg: SemanticColors.feedbackWarningBg, color: SemanticColors.feedbackWarning, icon: 'alert-circle' as IconName },
@@ -162,7 +168,7 @@ function AlertCard({ alert, onPress }: { alert: any; onPress?: () => void }) {
           <Text style={[styles.alertDays, { color: config.color }]}>
             {(() => {
               const days = Math.ceil((new Date(alert.dueDate).getTime() - Date.now()) / 86400000);
-              return days < 0 ? `${Math.abs(days)} dagen geleden` : `Nog ${days} dagen`;
+              return days < 0 ? `${Math.abs(days)} ${t('compliance.daysAgo', 'dagen geleden')}` : `${t('compliance.daysRemaining', 'Nog')} ${days} ${t('compliance.days', 'dagen')}`;
             })()}
           </Text>
         )}
@@ -213,7 +219,8 @@ function TabButton({ id, label, icon, isActive, onPress }: {
 }
 
 function ItemCard({ item, onPress }: { item: ComplianceItem; onPress?: () => void }) {
-  const status = getStatusConfig(item.status);
+  const { t } = useTranslation();
+  const status = getStatusConfig(item.status, t);
   const daysUntil = getDaysUntilExpiry(item.expiryDate);
 
   const getTypeIcon = (): IconName => {
@@ -248,8 +255,8 @@ function ItemCard({ item, onPress }: { item: ComplianceItem; onPress?: () => voi
             item.status === 'expiring_soon' && { color: SemanticColors.feedbackWarning },
           ]}>
             {item.status === 'expired' || item.status === 'cancelled'
-              ? `${item.status === 'cancelled' ? 'Geannuleerd' : 'Verlopen'} ${formatDate(item.expiryDate)}`
-              : `Verloopt ${formatDate(item.expiryDate)}`}
+              ? `${item.status === 'cancelled' ? t('compliance.statusCancelled', 'Geannuleerd') : t('compliance.statusExpired', 'Verlopen')} ${formatDate(item.expiryDate)}`
+              : `${t('compliance.expires', 'Verloopt')} ${formatDate(item.expiryDate)}`}
             {item.status === 'expiring_soon' && ` (${daysUntil}d)`}
           </Text>
         </View>
@@ -257,7 +264,7 @@ function ItemCard({ item, onPress }: { item: ComplianceItem; onPress?: () => voi
         {(item.status === 'expired' || item.status === 'expiring_soon' || item.status === 'cancelled') && (
           <Pressable style={styles.renewButton}>
             <Ionicons name="refresh" size={14} color={Palette.hermesOrange} />
-            <Text style={styles.renewButtonText}>Vernieuw</Text>
+            <Text style={styles.renewButtonText}>{t('compliance.renew', 'Vernieuw')}</Text>
           </Pressable>
         )}
       </View>
@@ -266,11 +273,12 @@ function ItemCard({ item, onPress }: { item: ComplianceItem; onPress?: () => voi
 }
 
 function ExpiryTimeline({ items }: { items: { name: string; date: Date; type: string }[] }) {
+  const { t } = useTranslation();
   if (items.length === 0) return null;
 
   return (
     <View style={styles.timeline}>
-      <Text style={styles.timelineTitle}>Komende vervaldatums</Text>
+      <Text style={styles.timelineTitle}>{t('compliance.upcomingExpiries', 'Komende vervaldatums')}</Text>
       {items.slice(0, 4).map((item, index) => {
         const days = getDaysUntilExpiry(item.date);
         const isUrgent = days <= 30;
@@ -292,6 +300,7 @@ function ExpiryTimeline({ items }: { items: { name: string; date: Date; type: st
 }
 
 function BlockedWorkBanner({ blockedCount }: { blockedCount: number }) {
+  const { t } = useTranslation();
   if (blockedCount === 0) return null;
 
   return (
@@ -300,11 +309,11 @@ function BlockedWorkBanner({ blockedCount }: { blockedCount: number }) {
         <Ionicons name="lock-closed" size={18} color="#fff" />
       </View>
       <View style={styles.blockedContent}>
-        <Text style={styles.blockedTitle} numberOfLines={1}>{blockedCount} type{blockedCount > 1 ? 's' : ''} werk geblokkeerd</Text>
-        <Text style={styles.blockedSubtitle} numberOfLines={1}>Door ontbrekende certificaten</Text>
+        <Text style={styles.blockedTitle} numberOfLines={1}>{blockedCount} {t('compliance.workBlocked', 'type{{s}} werk geblokkeerd', { s: blockedCount > 1 ? 's' : '' })}</Text>
+        <Text style={styles.blockedSubtitle} numberOfLines={1}>{t('compliance.missingCertificates', 'Door ontbrekende certificaten')}</Text>
       </View>
       <Pressable style={styles.blockedAction}>
-        <Text style={styles.blockedActionText} numberOfLines={1}>Bekijk</Text>
+        <Text style={styles.blockedActionText} numberOfLines={1}>{t('compliance.view', 'Bekijk')}</Text>
       </Pressable>
     </View>
   );
@@ -315,6 +324,7 @@ function BlockedWorkBanner({ blockedCount }: { blockedCount: number }) {
 // ============================================
 
 export default function CertificatenScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [refreshing, setRefreshing] = useState(false);
@@ -328,6 +338,9 @@ export default function CertificatenScreen() {
   const stats = useComplianceStats();
   const calendar = useExpiryCalendar(6);
   const { findings: auditFindings } = useAuditFindings('contractor');
+  const { kvk, verify: verifyKvK } = useKvKRegistration();
+  const { btw } = useBtwRegistration();
+  const [kvkVerifying, setKvkVerifying] = useState(false);
 
   // Combine items for unified view
   const allItems = useMemo((): ComplianceItem[] => {
@@ -427,7 +440,7 @@ export default function CertificatenScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Certificaten & Compliance',
+          title: t('compliance.title', 'Certificaten & Compliance'),
           headerStyle: { backgroundColor: SemanticColors.surfacePrimary },
           headerTintColor: SemanticColors.textPrimary,
           headerShadowVisible: false,
@@ -439,28 +452,28 @@ export default function CertificatenScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabScroll}>
           <TabButton
             id="overview"
-            label="Overzicht"
+            label={t('compliance.tabOverview', 'Overzicht')}
             icon="grid"
             isActive={activeTab === 'overview'}
             onPress={() => setActiveTab('overview')}
           />
           <TabButton
             id="certificates"
-            label="Certificaten"
+            label={t('compliance.tabCertificates', 'Certificaten')}
             icon="school"
             isActive={activeTab === 'certificates'}
             onPress={() => setActiveTab('certificates')}
           />
           <TabButton
             id="insurance"
-            label="Verzekeringen"
+            label={t('compliance.tabInsurance', 'Verzekeringen')}
             icon="shield-checkmark"
             isActive={activeTab === 'insurance'}
             onPress={() => setActiveTab('insurance')}
           />
           <TabButton
             id="licenses"
-            label="Vergunningen"
+            label={t('compliance.tabLicenses', 'Vergunningen')}
             icon="ribbon"
             isActive={activeTab === 'licenses'}
             onPress={() => setActiveTab('licenses')}
@@ -479,25 +492,25 @@ export default function CertificatenScreen() {
             {/* Compliance Score Card */}
             <View style={styles.scoreCard}>
               <View style={styles.scoreCardLeft}>
-                <Text style={styles.scoreCardTitle}>Compliance Status</Text>
+                <Text style={styles.scoreCardTitle}>{t('compliance.complianceStatus', 'Compliance Status')}</Text>
                 <View style={styles.statsRow}>
                   <StatCard
                     icon="checkmark-circle"
                     value={validCount}
-                    label="Geldig"
+                    label={t('compliance.statusValid', 'Geldig')}
                     color={SemanticColors.feedbackSuccess}
                     onPress={() => setActiveTab('certificates')}
                   />
                   <StatCard
                     icon="alert-circle"
                     value={expiringCount}
-                    label="Verloopt"
+                    label={t('compliance.expiring', 'Verloopt')}
                     color={SemanticColors.feedbackWarning}
                   />
                   <StatCard
                     icon="close-circle"
                     value={expiredCount}
-                    label="Verlopen"
+                    label={t('compliance.expired', 'Verlopen')}
                     color={SemanticColors.feedbackError}
                   />
                 </View>
@@ -511,7 +524,7 @@ export default function CertificatenScreen() {
             {/* Critical Alerts */}
             {criticalAlerts.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Acties vereist</Text>
+                <Text style={styles.sectionTitle}>{t('compliance.actionsRequired', 'Acties vereist')}</Text>
                 {criticalAlerts.slice(0, 3).map(alert => (
                   <AlertCard key={alert.id} alert={alert} />
                 ))}
@@ -521,10 +534,60 @@ export default function CertificatenScreen() {
             {/* Upcoming Expiries Timeline */}
             <ExpiryTimeline items={upcomingExpiries} />
 
+            {/* KvK & BTW Verification */}
+            <View style={styles.verificationSection}>
+              <Text style={styles.sectionTitle}>{t('compliance.registrations', 'Registraties')}</Text>
+              {/* KvK Row */}
+              <View style={styles.verificationRow}>
+                <View style={[styles.verificationIcon, { backgroundColor: kvk.verificationStatus === 'verified' ? SemanticColors.feedbackSuccessBg : SemanticColors.feedbackWarningBg }]}>
+                  <Ionicons name="business" size={18} color={kvk.verificationStatus === 'verified' ? SemanticColors.feedbackSuccess : SemanticColors.feedbackWarning} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.verificationLabel}>KvK</Text>
+                  <Text style={styles.verificationValue}>{kvk.kvkNumber} — {kvk.businessName}</Text>
+                  <Text style={styles.verificationMeta}>
+                    {kvk.verificationStatus === 'verified'
+                      ? t('compliance.verified', 'Geverifieerd')
+                      : t('compliance.unverified', 'Niet geverifieerd')}
+                    {kvk.lastVerified ? ` · ${new Date(kvk.lastVerified).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}` : ''}
+                  </Text>
+                </View>
+                <Pressable
+                  style={[styles.verifyButton, kvkVerifying && { opacity: 0.5 }]}
+                  disabled={kvkVerifying}
+                  onPress={async () => {
+                    setKvkVerifying(true);
+                    try { await verifyKvK(); } finally { setKvkVerifying(false); }
+                  }}
+                >
+                  <Ionicons name="shield-checkmark" size={14} color={Palette.hermesOrange} />
+                  <Text style={styles.verifyButtonText}>{kvkVerifying ? t('compliance.checking', 'Bezig...') : t('compliance.checkKvK', 'Controleer')}</Text>
+                </Pressable>
+              </View>
+              {/* BTW Row */}
+              <View style={styles.verificationRow}>
+                <View style={[styles.verificationIcon, { backgroundColor: btw.isActive ? SemanticColors.feedbackSuccessBg : SemanticColors.feedbackErrorBg }]}>
+                  <Ionicons name="receipt" size={18} color={btw.isActive ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.verificationLabel}>BTW</Text>
+                  <Text style={styles.verificationValue}>{btw.btwNumber}</Text>
+                  <Text style={styles.verificationMeta}>
+                    {btw.isActive ? t('compliance.active', 'Actief') : t('compliance.inactive', 'Inactief')}
+                    {btw.viesVerified ? ` · VIES ${t('compliance.verified', 'Geverifieerd')}` : ''}
+                    {btw.nextFilingDeadline ? ` · ${t('compliance.nextFiling', 'Aangifte')}: ${new Date(btw.nextFilingDeadline).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}` : ''}
+                  </Text>
+                </View>
+                <View style={[styles.statusBadge, { backgroundColor: btw.isActive ? SemanticColors.feedbackSuccessBg : SemanticColors.feedbackErrorBg }]}>
+                  <Ionicons name={btw.isActive ? 'checkmark' : 'close'} size={16} color={btw.isActive ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError} />
+                </View>
+              </View>
+            </View>
+
             {/* Quick Add Button */}
             <Pressable style={styles.addButton}>
               <Ionicons name="add-circle" size={22} color={Palette.hermesOrange} />
-              <Text style={styles.addButtonText} numberOfLines={1}>Certificaat toevoegen</Text>
+              <Text style={styles.addButtonText} numberOfLines={1}>{t('compliance.addCertificate', 'Certificaat toevoegen')}</Text>
             </Pressable>
           </>
         )}
@@ -534,11 +597,11 @@ export default function CertificatenScreen() {
             {/* Section Header with count */}
             <View style={styles.listHeader}>
               <Text style={styles.listTitle}>
-                {activeTab === 'certificates' && 'Certificaten'}
-                {activeTab === 'insurance' && 'Verzekeringen'}
-                {activeTab === 'licenses' && 'Vergunningen'}
+                {activeTab === 'certificates' && t('compliance.tabCertificates', 'Certificaten')}
+                {activeTab === 'insurance' && t('compliance.tabInsurance', 'Verzekeringen')}
+                {activeTab === 'licenses' && t('compliance.tabLicenses', 'Vergunningen')}
               </Text>
-              <Text style={styles.listCount}>{filteredItems.length} items</Text>
+              <Text style={styles.listCount}>{filteredItems.length} {t('compliance.items', 'items')}</Text>
             </View>
 
             {/* Items sorted by urgency */}
@@ -560,9 +623,9 @@ export default function CertificatenScreen() {
             {filteredItems.length === 0 && (
               <View style={styles.emptyState}>
                 <Ionicons name="document-outline" size={48} color={SemanticColors.textTertiary} />
-                <Text style={styles.emptyStateText}>Geen items gevonden</Text>
+                <Text style={styles.emptyStateText}>{t('compliance.noItemsFound', 'Geen items gevonden')}</Text>
                 <Pressable style={styles.emptyStateButton}>
-                  <Text style={styles.emptyStateButtonText} numberOfLines={1}>Voeg toe</Text>
+                  <Text style={styles.emptyStateButtonText} numberOfLines={1}>{t('compliance.add', 'Voeg toe')}</Text>
                 </Pressable>
               </View>
             )}
@@ -571,13 +634,36 @@ export default function CertificatenScreen() {
             <Pressable style={styles.addButton}>
               <Ionicons name="add-circle" size={22} color={Palette.hermesOrange} />
               <Text style={styles.addButtonText} numberOfLines={1}>
-                {activeTab === 'certificates' && 'Certificaat toevoegen'}
-                {activeTab === 'insurance' && 'Verzekering toevoegen'}
-                {activeTab === 'licenses' && 'Vergunning toevoegen'}
+                {activeTab === 'certificates' && t('compliance.addCertificate', 'Certificaat toevoegen')}
+                {activeTab === 'insurance' && t('compliance.addInsurance', 'Verzekering toevoegen')}
+                {activeTab === 'licenses' && t('compliance.addLicense', 'Vergunning toevoegen')}
               </Text>
             </Pressable>
           </>
         )}
+
+        {/* Government Portals */}
+        <View style={styles.portalsSection}>
+          <Text style={styles.portalsSectionTitle}>{t('compliance.governmentPortals', 'Overheidsloketten')}</Text>
+          <View style={styles.portalsCard}>
+            {Object.values(DUTCH_GOVERNMENT_PORTALS).map((portal, index) => (
+              <Pressable
+                key={portal.name}
+                style={[styles.portalRow, index < Object.values(DUTCH_GOVERNMENT_PORTALS).length - 1 && styles.portalRowBorder]}
+                onPress={() => Linking.openURL(portal.url)}
+              >
+                <View style={styles.portalIcon}>
+                  <Ionicons name="globe-outline" size={16} color={Palette.hermesOrange} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.portalName}>{portal.name}</Text>
+                  <Text style={styles.portalDesc}>{portal.description}</Text>
+                </View>
+                <Ionicons name="open-outline" size={14} color={SemanticColors.textTertiary} />
+              </Pressable>
+            ))}
+          </View>
+        </View>
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -600,37 +686,37 @@ export default function CertificatenScreen() {
 
             <ScrollView style={styles.modalContent}>
               <View style={styles.modalSection}>
-                <Text style={styles.modalLabel}>Uitgever</Text>
+                <Text style={styles.modalLabel}>{t('compliance.issuer', 'Uitgever')}</Text>
                 <Text style={styles.modalValue}>{selectedItem.issuer}</Text>
               </View>
 
               <View style={styles.modalSection}>
-                <Text style={styles.modalLabel}>Status</Text>
-                <View style={[styles.statusBadgeLarge, { backgroundColor: getStatusConfig(selectedItem.status).bg }]}>
+                <Text style={styles.modalLabel}>{t('compliance.status', 'Status')}</Text>
+                <View style={[styles.statusBadgeLarge, { backgroundColor: getStatusConfig(selectedItem.status, t).bg }]}>
                   <Ionicons
-                    name={getStatusConfig(selectedItem.status).icon}
+                    name={getStatusConfig(selectedItem.status, t).icon}
                     size={18}
-                    color={getStatusConfig(selectedItem.status).color}
+                    color={getStatusConfig(selectedItem.status, t).color}
                   />
-                  <Text style={[styles.statusTextLarge, { color: getStatusConfig(selectedItem.status).color }]}>
-                    {getStatusConfig(selectedItem.status).label}
+                  <Text style={[styles.statusTextLarge, { color: getStatusConfig(selectedItem.status, t).color }]}>
+                    {getStatusConfig(selectedItem.status, t).label}
                   </Text>
                 </View>
               </View>
 
               <View style={styles.modalSection}>
-                <Text style={styles.modalLabel}>Vervaldatum</Text>
+                <Text style={styles.modalLabel}>{t('compliance.expiryDate', 'Vervaldatum')}</Text>
                 <Text style={styles.modalValue}>{formatDate(selectedItem.expiryDate)}</Text>
                 <Text style={styles.modalSubvalue}>
                   {getDaysUntilExpiry(selectedItem.expiryDate) > 0
-                    ? `Nog ${getDaysUntilExpiry(selectedItem.expiryDate)} dagen`
-                    : `${Math.abs(getDaysUntilExpiry(selectedItem.expiryDate))} dagen geleden verlopen`}
+                    ? `${t('compliance.daysRemaining', 'Nog')} ${getDaysUntilExpiry(selectedItem.expiryDate)} ${t('compliance.days', 'dagen')}`
+                    : `${Math.abs(getDaysUntilExpiry(selectedItem.expiryDate))} ${t('compliance.daysExpiredAgo', 'dagen geleden verlopen')}`}
                 </Text>
               </View>
 
               {selectedItem.renewalCost && (
                 <View style={styles.modalSection}>
-                  <Text style={styles.modalLabel}>Vernieuwingskosten</Text>
+                  <Text style={styles.modalLabel}>{t('compliance.renewalCost', 'Vernieuwingskosten')}</Text>
                   <Text style={styles.modalValue}>€{selectedItem.renewalCost.toLocaleString('nl-NL')}</Text>
                 </View>
               )}
@@ -639,17 +725,17 @@ export default function CertificatenScreen() {
                 {selectedItem.documentUrl && (
                   <Pressable style={styles.modalButton}>
                     <Ionicons name="document-text" size={20} color={Palette.hermesOrange} />
-                    <Text style={styles.modalButtonText}>Document bekijken</Text>
+                    <Text style={styles.modalButtonText}>{t('compliance.viewDocument', 'Document bekijken')}</Text>
                   </Pressable>
                 )}
                 <Pressable style={styles.modalButton}>
                   <Ionicons name="share-outline" size={20} color={Palette.hermesOrange} />
-                  <Text style={styles.modalButtonText}>Delen</Text>
+                  <Text style={styles.modalButtonText}>{t('compliance.share', 'Delen')}</Text>
                 </Pressable>
                 {(selectedItem.status === 'expired' || selectedItem.status === 'expiring_soon' || selectedItem.status === 'cancelled') && (
                   <Pressable style={[styles.modalButton, styles.modalButtonPrimary]}>
                     <Ionicons name="refresh" size={20} color="#fff" />
-                    <Text style={[styles.modalButtonText, { color: '#fff' }]}>Vernieuwen</Text>
+                    <Text style={[styles.modalButtonText, { color: '#fff' }]}>{t('compliance.renewAction', 'Vernieuwen')}</Text>
                   </Pressable>
                 )}
               </View>
@@ -694,7 +780,7 @@ const styles = StyleSheet.create({
   },
   tabButtonText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textSecondary,
   },
   tabButtonTextActive: {
@@ -724,7 +810,7 @@ const styles = StyleSheet.create({
   },
   scoreCardTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
     marginBottom: Spacing.md,
   },
@@ -739,12 +825,11 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
   },
   statLabel: {
     fontSize: 10,
     color: SemanticColors.textTertiary,
-    textTransform: 'uppercase',
   },
   scoreRing: {
     alignItems: 'center',
@@ -760,7 +845,7 @@ const styles = StyleSheet.create({
   },
   scoreValue: {
     fontSize: 28,
-    fontWeight: '800',
+    fontFamily: 'Manrope_800ExtraBold',
   },
   scoreLabel: {
     fontSize: 10,
@@ -775,8 +860,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: Spacing.md,
     gap: Spacing.sm,
-    borderWidth: 1,
-    borderColor: SemanticColors.feedbackErrorBorder,
   },
   blockedIcon: {
     width: 36,
@@ -791,7 +874,7 @@ const styles = StyleSheet.create({
   },
   blockedTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.feedbackError,
   },
   blockedSubtitle: {
@@ -802,12 +885,12 @@ const styles = StyleSheet.create({
   blockedAction: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: 14,
     backgroundColor: SemanticColors.feedbackError,
   },
   blockedActionText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: '#fff',
   },
 
@@ -817,7 +900,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
     marginBottom: Spacing.xs,
   },
@@ -835,7 +918,7 @@ const styles = StyleSheet.create({
   },
   alertTitle: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
   },
   alertDays: {
     fontSize: 11,
@@ -847,12 +930,10 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 14,
     padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
   },
   timelineTitle: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
     marginBottom: Spacing.md,
   },
@@ -893,7 +974,7 @@ const styles = StyleSheet.create({
   },
   listTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   listCount: {
@@ -906,8 +987,6 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 14,
     padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
     gap: Spacing.sm,
   },
   itemHeader: {
@@ -927,7 +1006,7 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   itemIssuer: {
@@ -965,12 +1044,12 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: 6,
     paddingHorizontal: 10,
-    borderRadius: 6,
+    borderRadius: 14,
     backgroundColor: Palette.hermesOrange + '15',
   },
   renewButtonText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: Palette.hermesOrange,
   },
 
@@ -993,8 +1072,59 @@ const styles = StyleSheet.create({
   },
   emptyStateButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: '#fff',
+  },
+
+  // Verification Section
+  verificationSection: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 14,
+    padding: Spacing.md,
+    gap: Spacing.sm,
+  },
+  verificationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.xs,
+  },
+  verificationIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  verificationLabel: {
+    fontSize: 11,
+    color: SemanticColors.textTertiary,
+    letterSpacing: 0.5,
+  },
+  verificationValue: {
+    fontSize: 14,
+    fontFamily: 'Manrope_600SemiBold',
+    color: SemanticColors.textPrimary,
+    marginTop: 1,
+  },
+  verificationMeta: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+    marginTop: 2,
+  },
+  verifyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 14,
+    backgroundColor: Palette.hermesOrange + '15',
+  },
+  verifyButtonText: {
+    fontSize: 12,
+    fontFamily: 'Manrope_600SemiBold',
+    color: Palette.hermesOrange,
   },
 
   // Add Button
@@ -1006,13 +1136,11 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Palette.hermesOrange + '40',
     borderStyle: 'dashed',
   },
   addButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: Palette.hermesOrange,
   },
 
@@ -1032,7 +1160,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
     flex: 1,
     marginRight: Spacing.md,
@@ -1048,12 +1176,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: SemanticColors.textTertiary,
     marginBottom: 4,
-    textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   modalValue: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   modalSubvalue: {
@@ -1072,7 +1199,7 @@ const styles = StyleSheet.create({
   },
   statusTextLarge: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
   },
   modalActions: {
     gap: Spacing.sm,
@@ -1093,7 +1220,52 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: Palette.hermesOrange,
+  },
+  portalsSection: {
+    marginTop: Spacing.lg,
+    gap: 8,
+  },
+  portalsSectionTitle: {
+    fontSize: 15,
+    fontFamily: 'Manrope_700Bold',
+    color: SemanticColors.textPrimary,
+    letterSpacing: -0.2,
+    paddingHorizontal: 4,
+  },
+  portalsCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  portalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+  },
+  portalRowBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: SemanticColors.borderDefault,
+  },
+  portalIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Palette.hermesOrange + '0A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  portalName: {
+    fontSize: 14,
+    fontFamily: 'Inter_500Medium',
+    color: SemanticColors.textPrimary,
+  },
+  portalDesc: {
+    fontSize: 12,
+    fontFamily: 'Inter_400Regular',
+    color: SemanticColors.textSecondary,
+    marginTop: 1,
   },
 });

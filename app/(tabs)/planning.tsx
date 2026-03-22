@@ -1,24 +1,18 @@
 /**
- * Contractor Planning Screen
- *
- * Provides predictive capacity planning features:
- * - See availability at a glance
- * - Get accurate job duration estimates
- * - Identify potential delays
- * - Generate customer-ready responses
+ * Planning Screen (stub — CapacityPlanning removed in contractor declutter)
  */
 
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet } from 'react-native';
 import { SemanticColors } from '../../src/theme/colors';
-import { CapacityPlanning } from '../../src/components/contractor/CapacityPlanning';
+import { SafeArea } from '../../src/theme/spacing';
 
 export default function PlanningScreen() {
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <CapacityPlanning />
-    </SafeAreaView>
+    <View style={styles.container}>
+      <Text style={styles.title}>Planning</Text>
+      <Text style={styles.subtitle}>Binnenkort beschikbaar</Text>
+    </View>
   );
 }
 
@@ -26,5 +20,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceBackground,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: SafeArea.top,
   },
+  title: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  subtitle: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 8 },
 });

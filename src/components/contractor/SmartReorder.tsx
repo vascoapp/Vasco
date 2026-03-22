@@ -11,7 +11,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Modal,
   Alert,
 } from 'react-native';
@@ -92,7 +92,7 @@ export function SmartReorder() {
       {/* Tab Bar */}
       <View style={styles.tabBar}>
         {tabs.map((tab) => (
-          <TouchableOpacity
+          <Pressable
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.tabActive]}
             onPress={() => setActiveTab(tab.key)}
@@ -110,7 +110,7 @@ export function SmartReorder() {
                 <Text style={styles.badgeText}>{tab.badge}</Text>
               </View>
             )}
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 
@@ -309,7 +309,7 @@ function SuggestionCard({
   };
 
   return (
-    <TouchableOpacity style={styles.suggestionCard} onPress={onPress}>
+    <Pressable style={styles.suggestionCard} onPress={onPress}>
       <View style={styles.suggestionHeader}>
         <View
           style={[
@@ -361,7 +361,7 @@ function SuggestionCard({
           </View>
         )}
 
-        <TouchableOpacity
+        <Pressable
           style={styles.quickOrderButton}
           onPress={(e) => {
             e.stopPropagation();
@@ -369,9 +369,9 @@ function SuggestionCard({
           }}
         >
           <Ionicons name="cart" size={18} color="#FFFFFF" />
-        </TouchableOpacity>
+        </Pressable>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
@@ -402,16 +402,16 @@ function InventoryTab({
         style={styles.categoryFilter}
         contentContainerStyle={styles.categoryFilterContent}
       >
-        <TouchableOpacity
+        <Pressable
           style={[styles.categoryChip, !selectedCategory && styles.categoryChipActive]}
           onPress={() => setSelectedCategory(null)}
         >
           <Text style={[styles.categoryChipText, !selectedCategory && styles.categoryChipTextActive]}>
             Alle
           </Text>
-        </TouchableOpacity>
+        </Pressable>
         {categories.map((cat) => (
-          <TouchableOpacity
+          <Pressable
             key={cat}
             style={[styles.categoryChip, selectedCategory === cat && styles.categoryChipActive]}
             onPress={() => setSelectedCategory(cat)}
@@ -424,7 +424,7 @@ function InventoryTab({
             >
               {cat}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </ScrollView>
 
@@ -526,18 +526,18 @@ function InventoryCard({
           </Text>
         </View>
         <View style={styles.stockButtons}>
-          <TouchableOpacity
+          <Pressable
             style={styles.stockButton}
             onPress={() => onUpdateStock(item.id, Math.max(0, item.currentStock - 1))}
           >
             <Ionicons name="remove" size={18} color={SemanticColors.textPrimary} />
-          </TouchableOpacity>
-          <TouchableOpacity
+          </Pressable>
+          <Pressable
             style={styles.stockButton}
             onPress={() => onUpdateStock(item.id, item.currentStock + 1)}
           >
             <Ionicons name="add" size={18} color={SemanticColors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
     </View>
@@ -569,7 +569,7 @@ function BundlesTab({
         Deze bundels zijn geselecteerd op basis van je huidige bestelsugesties en bieden extra korting.
       </Text>
       {bundles.map((bundle) => (
-        <TouchableOpacity
+        <Pressable
           key={bundle.id}
           style={styles.bundleCard}
           onPress={() => onSelect(bundle)}
@@ -617,7 +617,7 @@ function BundlesTab({
               </Text>
             </View>
           </View>
-        </TouchableOpacity>
+        </Pressable>
       ))}
     </View>
   );
@@ -658,9 +658,9 @@ function SuggestionDetailModal({
       <View style={styles.modalContent}>
         <View style={styles.modalHeader}>
           <Text style={styles.modalTitle}>Bestelsugestie</Text>
-          <TouchableOpacity onPress={onClose} style={styles.modalClose}>
+          <Pressable onPress={onClose} style={styles.modalClose}>
             <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         <ScrollView style={styles.modalBody}>
@@ -753,17 +753,17 @@ function SuggestionDetailModal({
 
         {/* Actions */}
         <View style={styles.modalActions}>
-          <TouchableOpacity style={styles.snoozeButton} onPress={() => onSnooze(3)}>
+          <Pressable style={styles.snoozeButton} onPress={() => onSnooze(3)}>
             <Ionicons name="time" size={20} color={SemanticColors.textSecondary} />
             <Text style={styles.snoozeText}>3 dagen</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.dismissButton} onPress={() => onDismiss()}>
+          </Pressable>
+          <Pressable style={styles.dismissButton} onPress={() => onDismiss()}>
             <Text style={styles.dismissText}>Afwijzen</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.orderButton} onPress={onOrder}>
+          </Pressable>
+          <Pressable style={styles.orderButton} onPress={onOrder}>
             <Ionicons name="cart" size={20} color="#FFFFFF" />
             <Text style={styles.orderText}>Bestellen</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
     </View>
@@ -784,9 +784,9 @@ function BundleDetailModal({
       <View style={styles.modalContent}>
         <View style={styles.modalHeader}>
           <Text style={styles.modalTitle}>Bundel Details</Text>
-          <TouchableOpacity onPress={onClose} style={styles.modalClose}>
+          <Pressable onPress={onClose} style={styles.modalClose}>
             <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         <ScrollView style={styles.modalBody}>
@@ -849,13 +849,13 @@ function BundleDetailModal({
         </ScrollView>
 
         <View style={styles.modalActions}>
-          <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+          <Pressable style={styles.cancelButton} onPress={onClose}>
             <Text style={styles.cancelText}>Annuleren</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.orderButton} onPress={onOrder}>
+          </Pressable>
+          <Pressable style={styles.orderButton} onPress={onOrder}>
             <Ionicons name="cart" size={20} color="#FFFFFF" />
             <Text style={styles.orderText}>Bundel Bestellen</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
     </View>

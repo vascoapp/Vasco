@@ -10,6 +10,7 @@ import type { ScoredInsight, GeneratorContext } from './types';
 import { useTopCustomers, useAtRiskCustomers } from '../../services/projectProfitabilityService';
 import { useCollectionsAgent } from '../../services/collectionsAgentService';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 export function useCustomerLifecycleInsight(ctx: GeneratorContext): ScoredInsight | null {
   const topCustomers = useTopCustomers(5);
@@ -60,7 +61,7 @@ export function useCustomerLifecycleInsight(ctx: GeneratorContext): ScoredInsigh
       icon: 'people',
       actionLabel: 'Klant bekijken',
       actionRoute: '/(contractor)/facturen',
-      source: 'Klantanalyse',
+      source: gt('source_customer', ctx.language),
       metric: {
         label: 'At-risk CLV',
         value: `€${totalAtRiskCLV.toLocaleString('nl-NL')}`,
@@ -78,6 +79,12 @@ export function useCustomerLifecycleInsight(ctx: GeneratorContext): ScoredInsigh
       dataPoints: topCustomers.length + sequences.length,
       confidence: 0.78,
       freshness: 4,
+      action: {
+        type: 'send_followup',
+        label: 'Klant opvolgen',
+        params: {},
+        requiresApproval: false,
+      },
     };
   }
 
@@ -94,7 +101,7 @@ export function useCustomerLifecycleInsight(ctx: GeneratorContext): ScoredInsigh
       title: `${loyalTopCustomers.length} trouwe topklant${loyalTopCustomers.length > 1 ? 'en' : ''} — upsell kans`,
       message: `${best.customerName} (${best.jobCount} klussen, gem. €${best.avgJobValue.toLocaleString('nl-NL')}) betaalt altijd op tijd. Overweeg een onderhoudscontract.`,
       icon: 'star',
-      source: 'Klantanalyse',
+      source: gt('source_customer', ctx.language),
       metric: {
         label: 'Upsell potentieel',
         value: `€${Math.round(oppValue).toLocaleString('nl-NL')}`,
@@ -112,6 +119,12 @@ export function useCustomerLifecycleInsight(ctx: GeneratorContext): ScoredInsigh
       dataPoints: topCustomers.length,
       confidence: 0.65,
       freshness: 24,
+      action: {
+        type: 'send_followup',
+        label: 'Klant opvolgen',
+        params: {},
+        requiresApproval: false,
+      },
     };
   }
 

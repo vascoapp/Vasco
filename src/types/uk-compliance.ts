@@ -808,3 +808,16 @@ export const UK_COMPLIANCE_GATES: Record<string, UKComplianceRequirement[]> = {
     { id: 'cs2', name: 'Public Liability Insurance', type: 'insurance', required: true, currentStatus: 'missing' },
   ],
 };
+
+// ---------------------------------------------------------------------------
+// Government Portals
+// ---------------------------------------------------------------------------
+
+export const UK_GOVERNMENT_PORTALS = {
+  hmrc: { name: 'HMRC', url: 'https://www.gov.uk/government/organisations/hm-revenue-customs', description: 'VAT returns, tax, PAYE' },
+  companiesHouse: { name: 'Companies House', url: 'https://www.gov.uk/government/organisations/companies-house', description: 'Company registration and filings' },
+  hse: { name: 'HSE', url: 'https://www.hse.gov.uk', description: 'Health and safety regulations' },
+  gasSafe: { name: 'Gas Safe Register', url: 'https://www.gassaferegister.co.uk', description: 'Gas engineer registration' },
+  citb: { name: 'CITB', url: 'https://www.citb.co.uk', description: 'Construction Industry Training Board' },
+  planningPortal: { name: 'Planning Portal', url: 'https://www.planningportal.co.uk', description: 'Planning permission applications' },
+} as const;

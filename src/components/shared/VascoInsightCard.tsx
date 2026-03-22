@@ -29,7 +29,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 type IconName = keyof typeof Ionicons.glyphMap;
 
 export type InsightPriority = 'critical' | 'high' | 'medium' | 'low';
-export type InsightCategory = 'alert' | 'opportunity' | 'compliance' | 'financial' | 'schedule' | 'tip' | 'weather' | 'operational';
+export type InsightCategory = 'alert' | 'opportunity' | 'compliance' | 'financial' | 'schedule' | 'tip' | 'weather' | 'operational' | 'operations' | 'safety' | 'quality';
 
 export interface VascoInsight {
   id: string;
@@ -95,6 +95,10 @@ function getCategoryLabel(category: InsightCategory): string {
     case 'tip': return 'Tip';
     case 'weather': return 'Weer';
     case 'operational': return 'Operationeel';
+    case 'operations': return 'Operaties';
+    case 'safety': return 'Veiligheid';
+    case 'quality': return 'Kwaliteit';
+    default: return category;
   }
 }
 
@@ -199,6 +203,21 @@ export function VascoInsightCard({
       category: insight.category,
       dwellTimeMs: Date.now() - mountTimeRef.current,
     });
+
+    // Layer 5: Execute AI action if available
+    const insightAction = (insight as any).action;
+    if (insightAction && insightAction.type) {
+      import('../../intelligence/actionExecutor').then(({ executeActionWithConfirmation }) => {
+        executeActionWithConfirmation(insightAction, insight.id, generatorId, (result) => {
+          if (result.success && result.data?.route) {
+            router.push(result.data.route as any);
+          }
+        });
+      }).catch(() => {});
+      setActedOn(true);
+      return;
+    }
+
     if (onAction) {
       onAction(insight);
     }
@@ -440,10 +459,15 @@ export function VascoInsightCard({
               <Text style={styles.secondaryActionText} numberOfLines={1}>{insight.secondaryActionLabel}</Text>
             </Pressable>
           )}
-          {insight.actionLabel && (
+          {(insight.actionLabel || (insight as any).action?.label) && (
             <Pressable style={styles.primaryAction} onPress={handlePrimaryAction}>
-              <Text style={styles.primaryActionText} numberOfLines={1}>{insight.actionLabel}</Text>
-              <Ionicons name="chevron-forward" size={14} color={Palette.hermesOrange} />
+              <Ionicons name={(insight as any).action ? 'flash' : 'chevron-forward'} size={14} color={Palette.hermesOrange} />
+              <Text style={styles.primaryActionText} numberOfLines={1}>{(insight as any).action?.label ?? insight.actionLabel}</Text>
+              {(insight as any).action?.estimatedImpact && (
+                <Text style={{ fontSize: 10, color: SemanticColors.feedbackSuccess, fontFamily: 'Inter_400Regular' }} numberOfLines={1}>
+                  {(insight as any).action.estimatedImpact}
+                </Text>
+              )}
             </Pressable>
           )}
         </View>

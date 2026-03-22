@@ -1,6 +1,7 @@
 // Value Delivery Generator - Tracks platform ROI metrics
 import type { ScoredInsight, GeneratorContext } from './types';
 import { logPrediction } from '../calibration';
+import { gt } from '../generatorTranslations';
 
 // Platform value metrics (matches hub/metrics.tsx mock)
 const PLATFORM_VALUE = {
@@ -37,7 +38,7 @@ export function useValueDeliveryInsight(ctx: GeneratorContext): ScoredInsight | 
     icon: 'rocket',
     actionLabel: 'Bekijk metrics',
     actionRoute: '/hub/metrics',
-    source: 'Platform ROI',
+    source: gt('source_roi', ctx.language),
     metric: { label: 'Waarde', value: `£${(PLATFORM_VALUE.valueDelivered / 1000).toFixed(0)}K`, trend: isGrowing ? 'up' : 'down' },
     rootCauseTags: ['roi', 'platform'],
     rawScore: 0,

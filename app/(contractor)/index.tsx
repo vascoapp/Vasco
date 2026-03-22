@@ -5,7 +5,7 @@
 // accent touches to create visual rhythm between content blocks.
 // =============================================================================
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,18 +16,28 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
+import { PAGE_BG } from '../../src/theme/tabStyles';
+import { useNotifications } from '../../src/services/notificationService';
+import { FadeIn } from '../../src/components/shared/FadeIn';
+import { LoadingSkeleton } from '../../src/components/shared/LoadingSkeleton';
+import { getActionStats } from '../../src/intelligence/actionExecutor';
+import { useAIQueue, populateQueue } from '../../src/services/aiActionQueueService';
+import { getMorningBriefing, generateMorningBriefing, type MorningBriefing } from '../../src/intelligence/backgroundJobScheduler';
+import { VascoCard } from '../../src/components/shared/VascoCard';
+import { GradientButton } from '../../src/components/shared/GradientButton';
+import { CountUp } from '../../src/components/shared/CountUp';
 // Core services
 import { useDaySchedule, useJobLifecyclePipeline, LIFECYCLE_COLORS, LIFECYCLE_LABELS } from '../../src/services/smartSchedulerService';
 import type { JobLifecycleStatus } from '../../src/services/smartSchedulerService';
 import { useCashFlow } from '../../src/services/cashFlowService';
 
 // AI services
-import { useAuditFindings } from '../../src/services/auditorService';
 import { useSavingsAggregation } from '../../src/services/savingsAggregatorService';
-import { useLaborCosts } from '../../src/services/laborCostService';
-import { useJobCostSummary } from '../../src/services/jobCostTrackingService';
+import { useAutomations } from '../../src/services/automationService';
+import type { AutomationContext } from '../../src/services/automationService';
 
 // Vasco Guidance + Learning
 import { useVascoGuidance } from '../../src/services/vascoGuidanceService';
@@ -38,6 +48,9 @@ import type { VascoInsight } from '../../src/components/shared/VascoInsightCard'
 // Dashboard Header
 import { ContractorDashboardHeader } from '../../src/components/contractor/ContractorDashboardHeader';
 import { hapticSuccess, hapticWarning } from '../../src/utils/haptics';
+import { getCohortBenchmark } from '../../src/intelligence/cloudSync';
+import { useAuth } from '../../src/context/AuthContext';
+import { useAppState } from '../../src/state/AppState';
 
 // ============================================
 // TYPES
@@ -58,13 +71,13 @@ interface JobItem {
 // COMPONENTS
 // ============================================
 
-function JobCard({ job, onPress }: { job: JobItem; onPress: () => void }) {
+function JobCard({ job, onPress, onClockIn }: { job: JobItem; onPress: () => void; onClockIn?: () => void }) {
   return (
-    <Pressable style={styles.jobCard} onPress={onPress}>
+    <Pressable style={({ pressed }) => [styles.jobCard, pressed && { opacity: 0.95 }]} onPress={onPress}>
       <View style={[styles.jobAccent, {
         backgroundColor: job.status === 'active' ? Palette.hermesOrange
-          : job.status === 'completed' ? '#16A34A'
-          : '#E8E4DF',
+          : job.status === 'completed' ? SemanticColors.feedbackSuccess
+          : SemanticColors.borderDefault,
       }]} />
       <View style={styles.jobCardContent}>
         <View style={styles.jobCardHeader}>
@@ -90,47 +103,70 @@ function JobCard({ job, onPress }: { job: JobItem; onPress: () => void }) {
         </View>
         <Text style={styles.jobTitle} numberOfLines={1}>{job.title}</Text>
         <Text style={styles.jobCustomer} numberOfLines={1}>{job.customer}</Text>
-        <View style={styles.jobAddress}>
-          <Ionicons name="location-outline" size={12} color="#C4C0BB" />
-          <Text style={styles.jobAddressText} numberOfLines={1}>{job.address}</Text>
+        <View style={styles.jobCardFooter}>
+          <View style={styles.jobAddress}>
+            <Ionicons name="location-outline" size={12} color={SemanticColors.textDisabled} />
+            <Text style={styles.jobAddressText} numberOfLines={1}>{job.address}</Text>
+          </View>
+          {job.status === 'upcoming' && onClockIn && (
+            <Pressable
+              style={({ pressed }) => [styles.clockInBtn, pressed && { opacity: 0.85 }]}
+              onPress={(e) => { e.stopPropagation?.(); onClockIn(); }}
+              hitSlop={4}
+            >
+              <Ionicons name="play" size={12} color={Palette.white} />
+              <Text style={styles.clockInBtnText}>Start</Text>
+            </Pressable>
+          )}
         </View>
       </View>
     </Pressable>
   );
 }
 
-function AuditFindingBanner({ finding, onPress }: { finding: any; onPress: () => void }) {
-  const getSeverityColor = () => {
-    switch (finding.severity) {
-      case 'critical': return SemanticColors.feedbackError;
-      case 'high': return SemanticColors.feedbackWarning;
-      default: return Palette.hermesOrange;
-    }
-  };
-
-  return (
-    <Pressable style={[styles.auditBanner, { borderLeftColor: getSeverityColor() }]} onPress={onPress}>
-      <View style={[styles.auditBannerIcon, { backgroundColor: getSeverityColor() + '10' }]}>
-        <Ionicons name="shield-checkmark" size={16} color={getSeverityColor()} />
-      </View>
-      <View style={styles.auditBannerContent}>
-        <Text style={styles.auditBannerTitle} numberOfLines={1}>{finding.title}</Text>
-        <Text style={styles.auditBannerText} numberOfLines={1}>{finding.description}</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={16} color="#C4C0BB" />
-    </Pressable>
-  );
-}
 
 // ============================================
 // MAIN SCREEN
 // ============================================
 
 export default function TodayScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const [dismissedGuidance, setDismissedGuidance] = useState<Set<string>>(new Set());
   const [snoozedGuidance, setSnoozedGuidance] = useState<Set<string>>(new Set());
+  const [showAutomations, setShowAutomations] = useState(false);
+  const { notifications } = useNotifications();
+  const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
+  const { jobs, invoices, quotes, customers, isLoading, addInvoiceFromJob } = useAppState();
+  const [actionStats, setActionStats] = useState<{ total: number; successful: number; positiveOutcomes: number } | null>(null);
+  useEffect(() => { getActionStats().then(setActionStats).catch(() => {}); }, []);
+  const aiQueue = useAIQueue();
+  const [briefing, setBriefing] = useState<MorningBriefing | null>(null);
+  // Generate morning briefing + populate AI queue
+  useEffect(() => {
+    getMorningBriefing().then(b => {
+      if (b) setBriefing(b);
+      else generateMorningBriefing({ invoices, quotes, jobs }).then(setBriefing).catch(() => {});
+    }).catch(() => {});
+  }, []);
+  useEffect(() => {
+    const completedJobs = jobs.filter((j: any) => j.status === 'completed');
+    const overdueInvoices = invoices.filter((i: any) => i.status === 'overdue');
+    const sentQuotes = quotes.filter((q: any) => q.status === 'sent');
+    populateQueue({ completedJobs, overdueInvoices, sentQuotes, expiringCerts: [] }).then(() => aiQueue.refresh());
+  }, [jobs.length, invoices.length, quotes.length]);
+
+  // Build automation context from app state
+  const automationCtx = useMemo<AutomationContext>(() => ({
+    jobs: jobs.map(j => ({ id: j.id, title: j.title, status: j.status, customerId: j.customerId ?? '', agreedAmount: j.agreedAmount, completedAt: j.completedAt })),
+    invoices: invoices.map(i => ({ id: i.id, customer: i.customer ?? '', amount: i.amount ?? 0, status: i.status, dueInDays: i.dueInDays ?? 0 })),
+    quotes: quotes.map(q => ({ id: q.id, customer: q.customer ?? '', amount: q.amount ?? 0, status: q.status, lastUpdated: q.lastUpdated })),
+    customers: customers.map(c => ({ id: c.id, name: c.name })),
+  }), [jobs, invoices, quotes, customers]);
+
+  const { results: automationResults, timeSaved } = useAutomations(automationCtx);
+  const pendingAutomations = useMemo(() => automationResults.filter(r => !r.actionTaken).length, [automationResults]);
 
   // Clock-in timer state
   const [clockedInJobId, setClockedInJobId] = useState<string | null>(null);
@@ -160,19 +196,24 @@ export default function TodayScreen() {
 
   // Core services
   const daySchedule = useDaySchedule(today);
-  const { summary: cashFlowSummary } = useCashFlow();
+  const { summary: cashFlowSummary, invoices: cfInvoices } = useCashFlow();
+  const overdueCount = useMemo(() => cfInvoices.filter(inv => inv.status === 'overdue').length, [cfInvoices]);
 
   // AI services
-  const { findings: auditFindings } = useAuditFindings('contractor');
   const savings = useSavingsAggregation();
-  const labor = useLaborCosts();
+  const { user } = useAuth();
+
+  // Cohort benchmark (async, non-blocking)
+  const [dsoBenchmark, setDsoBenchmark] = useState<{ median: number } | null>(null);
+  useEffect(() => {
+    getCohortBenchmark(user?.trade ?? 'general', user?.country ?? 'NL', 'dso')
+      .then(setDsoBenchmark)
+      .catch(() => {});
+  }, [user?.trade, user?.country]);
 
   // Job Lifecycle Pipeline (P1)
   const { counts: lifecycleCounts } = useJobLifecyclePipeline();
   const pipelineCount = lifecycleCounts.lead + lifecycleCounts.offerte + lifecycleCounts.geaccepteerd;
-
-  // Cost tracking (P2)
-  const costSummary = useJobCostSummary();
 
   // Vasco AI Guidance (critical/high only)
   const allGuidance = useVascoGuidance('contractor', 'today');
@@ -204,8 +245,7 @@ export default function TodayScreen() {
   }, [daySchedule.jobs]);
 
   // Time-grouped sections
-  const morningJobs = useMemo(() => todayJobs.filter(j => j.startHour < 12), [todayJobs]);
-  const afternoonJobs = useMemo(() => todayJobs.filter(j => j.startHour >= 12), [todayJobs]);
+  // morningJobs/afternoonJobs removed — single flat schedule list
 
   // Daily earnings (completed jobs)
   const dailyEarnings = useMemo(() =>
@@ -234,24 +274,16 @@ export default function TodayScreen() {
     [clockedInJobId, todayJobs]
   );
 
-  // Critical findings
-  const criticalFindings = useMemo(() => {
-    return auditFindings.filter(f =>
-      (f.severity === 'critical' || f.severity === 'high') &&
-      f.status === 'new'
-    ).slice(0, 2);
-  }, [auditFindings]);
-
   // KPI data
   const outstanding = cashFlowSummary.pendingIncome;
 
   // Greeting
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Goedemorgen';
-    if (hour < 18) return 'Goedemiddag';
-    return 'Goedenavond';
-  }, []);
+    if (hour < 12) return t('dashboard.goodMorning', 'Goedemorgen');
+    if (hour < 18) return t('dashboard.goodAfternoon', 'Goedemiddag');
+    return t('dashboard.goodEvening', 'Goedenavond');
+  }, [t]);
 
   const formattedDate = new Date().toLocaleDateString('nl-NL', {
     weekday: 'long',
@@ -281,17 +313,40 @@ export default function TodayScreen() {
     }, 800);
   }, []);
 
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <View style={{ paddingTop: 80, paddingHorizontal: 20 }}>
+          <LoadingSkeleton variant="full-screen" />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* Header — flex constrained so greeting doesn't bleed into buttons */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>{greeting}, Mark</Text>
+        <View style={{ flex: 1, marginRight: 12 }}>
+          <Text style={styles.greeting} numberOfLines={1}>{greeting}, Mark</Text>
           <Text style={styles.date}>{formattedDate}</Text>
         </View>
-        <Pressable style={styles.profileButton} onPress={() => router.push('/contractor/profile' as any)}>
-          <Ionicons name="person" size={22} color={Palette.hermesOrange} />
-        </Pressable>
+        <View style={{ flexDirection: 'row', gap: 8, flexShrink: 0 }}>
+          <Pressable style={styles.profileButton} onPress={() => router.push('/contractor/search' as any)} accessibilityLabel="Zoeken">
+            <Ionicons name="search" size={20} color={SemanticColors.textPrimary} />
+          </Pressable>
+          <Pressable style={styles.profileButton} onPress={() => router.push('/contractor/notifications' as any)} accessibilityLabel="Meldingen">
+            <Ionicons name="notifications-outline" size={20} color={SemanticColors.textPrimary} />
+            {unreadCount > 0 && (
+              <View style={styles.notifBadge}>
+                <Text style={styles.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+              </View>
+            )}
+          </Pressable>
+          <Pressable style={styles.profileButton} onPress={() => router.push('/contractor/profile' as any)} accessibilityLabel="Profiel">
+            <Ionicons name="person" size={22} color={Palette.hermesOrange} />
+          </Pressable>
+        </View>
       </View>
 
       {/* Clock-in Timer Strip */}
@@ -313,7 +368,7 @@ export default function TodayScreen() {
               setTimerDisplay('00:00:00');
             }}
           >
-            <Ionicons name="stop" size={14} color="#fff" />
+            <Ionicons name="stop" size={14} color={Palette.white} />
             <Text style={styles.timerStopText}>Stop</Text>
           </Pressable>
         </Pressable>
@@ -328,102 +383,101 @@ export default function TodayScreen() {
         }
       >
         {/* KPI Header */}
+        <FadeIn delay={0} duration={400}>
         <ContractorDashboardHeader
           kpis={[
-            { icon: 'calendar', value: String(todayJobs.length), label: 'Afspraken', color: Palette.hermesOrange },
-            { icon: 'wallet', value: `\u20AC${dailyEarnings.toLocaleString('nl-NL')}`, label: 'Verdiend', color: '#16A34A' },
-            { icon: 'git-branch', value: String(pipelineCount), label: 'Pipeline', color: '#8B5CF6', onPress: () => router.push('/(contractor)/facturen') },
+            { icon: 'calendar', value: String(todayJobs.length), label: t('dashboard.appointments', 'Afspraken'), color: Palette.hermesOrange, onPress: () => router.push('/contractor/drag-schedule' as any) },
+            { icon: 'wallet', value: <CountUp to={dailyEarnings} prefix={'\u20AC'} duration={800} style={{ fontSize: 18, fontFamily: 'Manrope_800ExtraBold', color: SemanticColors.feedbackSuccess }} />, label: t('dashboard.earned', 'Verdiend'), color: SemanticColors.feedbackSuccess, onPress: () => router.push('/(contractor)/geld' as any) },
+            { icon: 'briefcase', value: String(lifecycleCounts.ingepland + lifecycleCounts.bezig), label: t('dashboard.activeJobs', 'Actief'), color: Palette.hermesOrange, onPress: () => router.push('/(contractor)/werk' as any) },
           ]}
         />
+        </FadeIn>
 
-        {/* — dark orange divider — */}
-        <View style={styles.dividerDark} />
+        {/* Vasco Card — ONE unified AI section */}
+        <FadeIn delay={60}>
+          <VascoCard
+            briefing={briefing}
+            queueItems={aiQueue.items}
+            topInsight={activeGuidance.length > 0 ? activeGuidance[0] : null}
+            automationsCount={pendingAutomations}
+            onApproveQueueItem={async (id) => {
+              hapticSuccess();
+              const item = aiQueue.items.find(i => i.id === id);
+              if (item?.type === 'draft_invoice' && item.preparedData?.jobId) {
+                try { await addInvoiceFromJob(item.preparedData.jobId); } catch {}
+              }
+              aiQueue.approve(id);
+            }}
+            onRejectQueueItem={(id) => aiQueue.reject(id)}
+            onInsightAction={handleGuidanceAction}
+            overdueInvoices={overdueCount}
+            onOverduePress={async () => {
+              hapticSuccess();
+              const msg = `Beste klant,\n\nHierbij een vriendelijke herinnering voor ${overdueCount} openstaande factuur${overdueCount > 1 ? 'en' : ''}.\n\nMet vriendelijke groet`;
+              try {
+                const { Share, Platform } = require('react-native');
+                if (Platform.OS === 'web') {
+                  await navigator.clipboard.writeText(msg);
+                  alert('Herinnering gekopieerd naar klembord');
+                } else {
+                  await Share.share({ message: msg, title: 'Betaalherinnering' });
+                }
+              } catch {}
+            }}
+          />
+        </FadeIn>
 
-        {/* Vasco AI Guidance (critical/high, max 2) */}
-        <VascoInsightList
-          insights={activeGuidance}
-          title="Vasco voor jou"
-          maxVisible={2}
-          compact
-          onDismiss={handleDismissGuidance}
-          onAction={handleGuidanceAction}
-          onSnooze={handleSnoozeGuidance}
-        />
-
-        {/* Marge vandaag (P2) */}
-        {costSummary.totalMarginLeakage !== 0 && (
-          <Pressable
-            style={styles.marginBanner}
-            onPress={() => router.push('/(contractor)/besparen')}
-          >
-            <View style={[styles.marginBannerIcon, {
-              backgroundColor: costSummary.totalMarginLeakage > 0 ? '#DC262614' : '#16A34A14',
-            }]}>
-              <Ionicons
-                name={costSummary.totalMarginLeakage > 0 ? 'trending-down' : 'trending-up'}
-                size={16}
-                color={costSummary.totalMarginLeakage > 0 ? '#DC2626' : '#16A34A'}
-              />
-            </View>
-            <Text style={styles.marginBannerText}>
-              Marge: {costSummary.totalMarginLeakage > 0 ? '-' : '+'}
-              {'\u20AC'}{Math.abs(costSummary.totalMarginLeakage).toLocaleString('nl-NL')} deze maand
-            </Text>
-            <Ionicons name="chevron-forward" size={14} color="#C4C0BB" />
-          </Pressable>
+        {/* First job banner for new users */}
+        {pipelineCount === 0 && todayJobs.length === 0 && (
+          <FadeIn delay={200} duration={500}>
+            <Pressable
+              style={({ pressed }) => [styles.firstJobBanner, pressed && { transform: [{ scale: 0.98 }] }]}
+              onPress={() => router.push('/contractor/pipeline' as any)}
+            >
+              <View style={styles.firstJobIcon}>
+                <Ionicons name="rocket" size={24} color={Palette.white} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.firstJobTitle}>{t('jobs.newJob', 'Eerste klus aanmaken')}</Text>
+                <Text style={styles.firstJobDesc}>{t('dashboard.startPlanning', 'Begin met het plannen van je werk')}</Text>
+              </View>
+              <Ionicons name="arrow-forward" size={20} color={Palette.hermesOrange} />
+            </Pressable>
+          </FadeIn>
         )}
 
-        {/* Audit Findings */}
-        {criticalFindings.length > 0 && (
-          <View style={styles.findingsSection}>
-            {criticalFindings.map(finding => (
-              <AuditFindingBanner
-                key={finding.id}
-                finding={finding}
-                onPress={() => router.push('/(contractor)/facturen')}
-              />
-            ))}
-          </View>
-        )}
-
-        {/* — light orange divider — */}
-        <View style={styles.dividerLight} />
+        {/* Action Required — now inside VascoCard above */}
 
         {/* Today's Schedule - Time Grouped */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionLabelRow}>
               <View style={styles.sectionDot} />
-              <Text style={styles.sectionTitle}>Planning</Text>
+              <Text style={styles.sectionTitle}>{t('dashboard.schedule', 'Planning')}</Text>
             </View>
-            <Text style={styles.sectionCount}>{todayJobs.length} afspraken</Text>
+            <Text style={styles.sectionCount}>{t('dashboard.appointmentCount', { count: todayJobs.length, defaultValue: `${todayJobs.length} afspraken` })}</Text>
           </View>
           {todayJobs.length === 0 ? (
             <View style={styles.emptyJobs}>
-              <Ionicons name="calendar-outline" size={32} color="#C4C0BB" />
-              <Text style={styles.emptyJobsText}>Geen afspraken vandaag</Text>
-              <Text style={styles.emptyJobsSubtext}>Geniet van je vrije dag!</Text>
+              <Ionicons name="calendar-outline" size={32} color={SemanticColors.textDisabled} />
+              <Text style={styles.emptyJobsText}>{t('dashboard.noJobsToday', 'Geen afspraken vandaag')}</Text>
+              <Text style={styles.emptyJobsSubtext}>{t('dashboard.enjoyFreeDay', 'Geniet van je vrije dag!')}</Text>
             </View>
           ) : (
             <View style={styles.jobsList}>
-              {/* Ochtend section */}
-              <View style={styles.timeGroupHeader}>
-                <Ionicons name="sunny-outline" size={14} color={Palette.hermesOrange} />
-                <Text style={styles.timeGroupTitle}>Ochtend</Text>
-                <View style={styles.timeGroupChip}>
-                  <Text style={styles.timeGroupCount}>{morningJobs.length}</Text>
-                </View>
-              </View>
-              {morningJobs.length === 0 ? (
-                <Text style={styles.noJobsText}>Geen afspraken</Text>
-              ) : (
-                morningJobs.map((job) => (
+              {/* All jobs — no morning/afternoon split */}
+              {todayJobs.map((job) => (
                   <View key={job.id}>
                     <JobCard
                       job={job}
                       onPress={() => {
                         hapticSuccess();
                         router.push(`/contractor/job/${job.id}` as any);
+                      }}
+                      onClockIn={() => {
+                        hapticSuccess();
+                        setClockedInJobId(job.id);
+                        setClockInStartTime(Date.now());
                       }}
                     />
                     {nextJobCountdown && nextJobCountdown.jobId === job.id && (
@@ -438,41 +492,7 @@ export default function TodayScreen() {
                     )}
                   </View>
                 ))
-              )}
-
-              {/* Middag section */}
-              <View style={[styles.timeGroupHeader, { marginTop: 16 }]}>
-                <Ionicons name="partly-sunny-outline" size={14} color={Palette.hermesOrange} />
-                <Text style={styles.timeGroupTitle}>Middag</Text>
-                <View style={styles.timeGroupChip}>
-                  <Text style={styles.timeGroupCount}>{afternoonJobs.length}</Text>
-                </View>
-              </View>
-              {afternoonJobs.length === 0 ? (
-                <Text style={styles.noJobsText}>Geen afspraken</Text>
-              ) : (
-                afternoonJobs.map((job) => (
-                  <View key={job.id}>
-                    <JobCard
-                      job={job}
-                      onPress={() => {
-                        hapticSuccess();
-                        router.push(`/contractor/job/${job.id}` as any);
-                      }}
-                    />
-                    {nextJobCountdown && nextJobCountdown.jobId === job.id && (
-                      <View style={styles.countdownChip}>
-                        <Ionicons name="time-outline" size={12} color={Palette.hermesOrange} />
-                        <Text style={styles.countdownText}>
-                          Over {nextJobCountdown.minutes < 60
-                            ? `${nextJobCountdown.minutes} min`
-                            : `${Math.floor(nextJobCountdown.minutes / 60)}u ${nextJobCountdown.minutes % 60}m`}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                ))
-              )}
+              }
             </View>
           )}
         </View>
@@ -490,7 +510,7 @@ export default function TodayScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAF8',
+    backgroundColor: PAGE_BG,
   },
   header: {
     flexDirection: 'row',
@@ -499,59 +519,154 @@ const styles = StyleSheet.create({
     paddingHorizontal: SafeArea.side,
     paddingTop: SafeArea.top,
     paddingBottom: Spacing.sm,
-    backgroundColor: '#FAFAF8',
+    backgroundColor: PAGE_BG,
   },
   greeting: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1A1A1A',
+    fontSize: 28,
+    fontFamily: 'Manrope_800ExtraBold',
+    color: SemanticColors.textPrimary,
+    letterSpacing: -0.8,
   },
   date: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 2,
-    fontWeight: '500',
+    fontSize: 15,
+    fontFamily: 'Inter_500Medium',
+    color: SemanticColors.textTertiary,
+    marginTop: 4,
   },
   profileButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    backgroundColor: Palette.hermesOrange + '0A',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: SemanticColors.surfacePrimary,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
+    position: 'relative' as const,
+  },
+  notifBadge: {
+    position: 'absolute' as const,
+    top: 2,
+    right: 2,
+    backgroundColor: SemanticColors.feedbackError,
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    paddingHorizontal: 3,
+  },
+  notifBadgeText: {
+    fontSize: 9,
+    fontWeight: '700' as const,
+    color: Palette.white,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: SafeArea.content,
-    paddingVertical: Spacing.md,
-    gap: Spacing.md,
+    paddingVertical: Spacing.lg,
+    gap: 0,
   },
 
-  // Section dividers — the only place orange appears as a surface
-  dividerDark: {
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: Palette.hermesOrange,
-    marginHorizontal: Spacing.sm,
+  // Invoice CTA — core flow: complete → invoice → paid
+  invoiceCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  dividerLight: {
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: Palette.pastelOrange,
-    marginHorizontal: Spacing.sm,
+  invoiceCtaIcon: {
+    width: 36, height: 36, borderRadius: 10,
+    backgroundColor: Palette.hermesOrange,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  invoiceCtaTitle: { fontSize: 16, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
+  invoiceCtaDesc: { fontSize: 13, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
+
+  // Time Saved Card
+  timeSavedCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 16,
+    padding: 16,
+    borderLeftWidth: 3,
+    borderLeftColor: Palette.hermesOrange,
+    marginBottom: 24,
+  },
+  timeSavedIcon: {
+    width: 36, height: 36, borderRadius: 10,
+    backgroundColor: Palette.hermesOrange + '10',
+    alignItems: 'center' as const, justifyContent: 'center' as const,
+  },
+  timeSavedTitle: { fontSize: 15, fontFamily: 'Inter_500Medium', color: SemanticColors.textPrimary },
+  timeSavedDesc: { fontSize: 13, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary, marginTop: 2 },
+  automationBadge: {
+    backgroundColor: Palette.hermesOrange,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    paddingHorizontal: 6,
+  },
+  automationBadgeText: {
+    fontSize: 11,
+    fontFamily: 'Manrope_700Bold',
+    color: '#FFF',
+  },
+  automationList: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 14,
+    marginTop: 4,
+    overflow: 'hidden' as const,
+  },
+  automationItem: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 10,
+    padding: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: SemanticColors.borderDefault,
+  },
+  automationItemTitle: {
+    fontSize: 13,
+    fontFamily: 'Inter_500Medium',
+    color: SemanticColors.textPrimary,
+  },
+  automationItemDesc: {
+    fontSize: 11,
+    fontFamily: 'Inter_400Regular',
+    color: SemanticColors.textSecondary,
+    marginTop: 1,
   },
 
   // Section
   section: {
     gap: Spacing.sm,
+    marginBottom: 20,
+  },
+  sectionBlock: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    marginBottom: 8,
+    paddingHorizontal: SafeArea.content || 20,
+    paddingVertical: 16,
+    borderRadius: 16,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Spacing.xs,
+    marginTop: 12,
   },
   sectionLabelRow: {
     flexDirection: 'row',
@@ -565,80 +680,106 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange,
   },
   sectionTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Palette.hermesOrange,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    fontSize: 18,
+    fontFamily: 'Manrope_700Bold',
+    color: SemanticColors.textPrimary,
+    letterSpacing: -0.3,
+    marginBottom: 4,
   },
   sectionCount: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Palette.hermesOrange,
-    fontVariant: ['tabular-nums'] as any,
-  },
-
-  // Audit Banner
-  findingsSection: {
-    gap: Spacing.xs,
-  },
-  auditBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    borderLeftWidth: 3,
-    gap: Spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  auditBannerIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  auditBannerContent: {
-    flex: 1,
-  },
-  auditBannerTitle: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#1A1A1A',
-  },
-  auditBannerText: {
-    fontSize: 12,
-    color: '#999',
+    fontFamily: 'Inter_500Medium',
+    color: SemanticColors.textTertiary,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    overflow: 'hidden' as const,
   },
 
-  // Jobs List
-  jobsList: {
+  // First Job Banner — Wolt-style clean card
+  firstJobBanner: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 16,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 16,
+    padding: 20,
+  },
+  firstJobIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Palette.hermesOrange + '10',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  firstJobTitle: {
+    fontSize: 17,
+    fontFamily: 'Manrope_700Bold',
+    color: SemanticColors.textPrimary,
+  },
+  firstJobDesc: {
+    fontSize: 14,
+    fontFamily: 'Inter_500Medium',
+    color: SemanticColors.textSecondary,
+    marginTop: 2,
+  },
+
+  // Action Required
+  actionSection: {
     gap: 10,
+    marginTop: 8,
+  },
+  actionSectionTitle: {
+    fontSize: 18,
+    fontFamily: 'Manrope_700Bold',
+    color: SemanticColors.feedbackError,
+    letterSpacing: -0.3,
+    marginBottom: 4,
+  },
+  actionCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 14,
+    padding: 16,
+    gap: 14,
+  },
+  actionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  actionCardTitle: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: SemanticColors.textPrimary,
+  },
+  actionCardDesc: {
+    fontSize: 12,
+    color: SemanticColors.textSecondary,
+  },
+
+  // Jobs List — Wolt-style flat cards
+  jobsList: {
+    gap: 12,
   },
   jobCard: {
     flexDirection: 'row' as const,
-    backgroundColor: '#fff',
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 14,
     overflow: 'hidden' as const,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
   },
   jobAccent: {
-    width: 4,
+    width: 3,
   },
   jobCardContent: {
     flex: 1,
-    padding: 14,
-    gap: 4,
+    padding: 16,
+    gap: 6,
   },
   jobCardHeader: {
     flexDirection: 'row' as const,
@@ -654,36 +795,27 @@ const styles = StyleSheet.create({
   jobTime: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: '#555',
+    color: SemanticColors.textSecondary,
     fontVariant: ['tabular-nums'] as any,
   },
   jobTimeActive: {
     color: Palette.hermesOrange,
   },
   jobDurationChip: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: SemanticColors.surfaceSecondary,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 5,
   },
   jobDuration: {
     fontSize: 12,
-    color: '#999',
+    color: SemanticColors.textTertiary,
     fontWeight: '600' as const,
   },
   jobLifecycleTag: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  jobActiveTag: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 4,
-    backgroundColor: Palette.hermesOrange + '10',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -700,90 +832,64 @@ const styles = StyleSheet.create({
     color: Palette.hermesOrange,
     letterSpacing: 0.5,
   },
-  jobCompletedTag: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 4,
-    backgroundColor: '#16A34A14',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  jobCompletedText: {
-    fontSize: 10,
-    fontWeight: '700' as const,
-    color: '#16A34A',
-    letterSpacing: 0.5,
-  },
   jobTitle: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: '#1A1A1A',
+    fontSize: 16,
+    fontFamily: 'Inter_600SemiBold',
+    color: SemanticColors.textPrimary,
   },
   jobCustomer: {
     fontSize: 13,
-    color: '#777',
+    fontFamily: 'Inter_400Regular',
+    color: SemanticColors.textSecondary,
+  },
+  jobCardFooter: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    marginTop: 4,
   },
   jobAddress: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 4,
-    marginTop: 4,
+    flex: 1,
+  },
+  clockInBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 5,
+    backgroundColor: Palette.hermesOrange,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10,
+    marginLeft: 8,
+  },
+  clockInBtnText: {
+    fontSize: 12,
+    fontFamily: 'Inter_600SemiBold',
+    color: Palette.white,
   },
   jobAddressText: {
     fontSize: 12,
-    color: '#BBB',
+    color: SemanticColors.textDisabled,
     flex: 1,
   },
   emptyJobs: {
     alignItems: 'center' as const,
     padding: Spacing.xl,
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    gap: Spacing.xs,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 16,
+    gap: Spacing.sm,
   },
   emptyJobsText: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: '#777',
+    fontSize: 16,
+    fontFamily: 'Inter_600SemiBold',
+    color: SemanticColors.textSecondary,
   },
   emptyJobsSubtext: {
-    fontSize: 13,
-    color: '#BBB',
-  },
-
-  // Margin Banner (P2)
-  marginBanner: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
-    paddingHorizontal: 14,
-    gap: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  marginBannerIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  marginBannerText: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: '#1A1A1A',
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
+    color: SemanticColors.textTertiary,
   },
 
   // Timer Strip
@@ -807,18 +913,18 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#fff',
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   timerJobName: {
     flex: 1,
     fontSize: 13,
     fontWeight: '600' as const,
-    color: '#fff',
+    color: Palette.white,
   },
   timerClock: {
     fontSize: 16,
     fontWeight: '800' as const,
-    color: '#fff',
+    color: Palette.white,
     fontVariant: ['tabular-nums'] as any,
     letterSpacing: 0.5,
   },
@@ -834,7 +940,7 @@ const styles = StyleSheet.create({
   timerStopText: {
     fontSize: 12,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: Palette.white,
   },
 
   // Time Group Headers
@@ -842,15 +948,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 6,
-    paddingHorizontal: 4,
-    marginBottom: 6,
+    backgroundColor: SemanticColors.surfacePrimary,
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 4,
   },
   timeGroupTitle: {
-    fontSize: 12,
-    fontWeight: '700' as const,
-    color: '#999',
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
+    fontSize: 13,
+    fontFamily: 'Inter_600SemiBold',
+    color: SemanticColors.textSecondary,
     flex: 1,
   },
   timeGroupChip: {
@@ -867,7 +973,7 @@ const styles = StyleSheet.create({
   },
   noJobsText: {
     fontSize: 13,
-    color: '#CCC',
+    color: SemanticColors.textDisabled,
     fontStyle: 'italic' as const,
     paddingHorizontal: 4,
     paddingVertical: 4,
@@ -891,6 +997,28 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: Palette.hermesOrange,
     fontVariant: ['tabular-nums'] as any,
+  },
+
+  // Accounting Loop Pipeline
+  loopPipeline: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 4,
+  },
+  loopStage: {
+    alignItems: 'center' as const,
+    gap: 2,
+  },
+  loopStageCount: {
+    fontSize: 18,
+    fontFamily: 'Manrope_700Bold',
+  },
+  loopStageLabel: {
+    fontSize: 10,
+    fontFamily: 'Inter_500Medium',
+    color: SemanticColors.textTertiary,
+    textAlign: 'center' as const,
   },
 
 });

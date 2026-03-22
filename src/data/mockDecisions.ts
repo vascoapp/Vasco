@@ -858,23 +858,25 @@ export function getTemplatesByTrade(trade: string): DecisionTemplate[] {
 }
 
 export function getTrackerStats(tracker: CustomerDecisionTracker) {
-  const overdue = tracker.categories.flatMap(c =>
-    c.items.filter(i => i.isOverdue && i.status === 'pending')
+  const cats = tracker.categories ?? [];
+  const overdue = cats.flatMap(c =>
+    (c.items ?? []).filter(i => i.isOverdue && i.status === 'pending')
   );
 
-  const upcoming = tracker.categories.flatMap(c =>
-    c.items.filter(i => !i.isOverdue && i.status === 'pending')
+  const upcoming = cats.flatMap(c =>
+    (c.items ?? []).filter(i => !i.isOverdue && i.status === 'pending')
   );
 
-  const decided = tracker.categories.flatMap(c =>
-    c.items.filter(i => i.status === 'decided')
+  const decided = cats.flatMap(c =>
+    (c.items ?? []).filter(i => i.status === 'decided')
   );
 
+  const total = overdue.length + upcoming.length + decided.length;
   return {
     overdue: overdue.length,
     upcoming: upcoming.length,
     decided: decided.length,
-    total: overdue.length + upcoming.length + decided.length,
-    completionPercent: Math.round((decided.length / (overdue.length + upcoming.length + decided.length)) * 100),
+    total,
+    completionPercent: total > 0 ? Math.round((decided.length / total) * 100) : 0,
   };
 }

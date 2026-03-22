@@ -24,17 +24,29 @@ import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { TieredQuoteBuilder } from '../../src/components/contractor/TieredQuoteBuilder';
 import { useCashFlow, type Invoice } from '../../src/services/cashFlowService';
 import { ContractorDashboardHeader } from '../../src/components/contractor/ContractorDashboardHeader';
+import { LoadingSkeleton } from '../../src/components/shared/LoadingSkeleton';
+import { BottomSheet, type BottomSheetAction } from '../../src/components/shared/BottomSheet';
+import { useAppState } from '../../src/state/AppState';
 
 // Integrate financial auditor for invoice verification
 import { useFinancialAuditFindings } from '../../src/services/financialAuditorService';
 import { hapticSuccess } from '../../src/utils/haptics';
+import { Share } from 'react-native';
+import { invoiceAutomationService } from '../../src/services/invoiceAutomationService';
+import { generateInvoicePdf, buildInvoiceShareText } from '../../src/services/invoicePdfService';
+import { createPaymentLink } from '../../src/integrations/mollie';
 import { useSavingsAggregation } from '../../src/services/savingsAggregatorService';
+import { calculateLatePaymentInterest } from '../../src/services/dutchComplianceService';
 import { useLaborCosts } from '../../src/services/laborCostService';
+import { useTranslation } from 'react-i18next';
 
 // P3: Collections Agent
 import { useCollectionsAgent } from '../../src/services/collectionsAgentService';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
+import { useQuoteApprovals, useApprovalStats } from '../../src/services/quoteApprovalService';
 import type { DunningSequence as DunningSeqType } from '../../src/services/collectionsAgentService';
+import { predictCustomerDSO } from '../../src/intelligence/predictions';
+import { Toast } from '../../src/components/shared/Toast';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -61,19 +73,48 @@ interface Quote {
 // COMPONENTS
 // ============================================
 
+function DSOHint({ customerId, amount }: { customerId: string; amount?: number }) {
+  const { t } = useTranslation();
+  const [dsoData, setDsoData] = useState<{ predictedDSO: number } | null>(null);
+  const [mlPrediction, setMlPrediction] = useState<{ predictedDays: number; risk: string; probability30d: number } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    predictCustomerDSO(customerId).then((result) => {
+      if (!cancelled) setDsoData(result);
+    });
+    // ML payment prediction
+    import('../../src/intelligence/mlModels').then(({ predictPaymentTiming }) => {
+      predictPaymentTiming({ customerId, amount: amount ?? 0 }).then((result) => {
+        if (!cancelled) setMlPrediction(result);
+      });
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [customerId, amount]);
+  if (!dsoData && !mlPrediction) return null;
+  const days = mlPrediction?.predictedDays ?? dsoData?.predictedDSO ?? 21;
+  const riskColor = mlPrediction?.risk === 'low' ? SemanticColors.feedbackSuccess : mlPrediction?.risk === 'high' ? SemanticColors.feedbackError : Palette.hermesOrange;
+  return (
+    <Text style={{ fontSize: 11, fontFamily: 'Inter_400Regular', color: riskColor, marginTop: 2 }}>
+      {t('invoices.expectedPayment', 'Verwachte betaling')}: ~{days} {t('invoices.days', 'dagen')}
+      {mlPrediction ? ` · ${Math.round(mlPrediction.probability30d * 100)}% binnen 30d` : ''}
+    </Text>
+  );
+}
+
 function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoice[]; expandedId: string | null; onToggleExpand: (id: string) => void }) {
+  const { t } = useTranslation();
   const getStatusConfig = (status: Invoice['status']) => {
     switch (status) {
       case 'paid':
-        return { label: 'Betaald', color: SemanticColors.feedbackSuccess, icon: 'checkmark-circle' as IconName };
+        return { label: t('invoices.statusPaid', 'Betaald'), color: SemanticColors.feedbackSuccess, icon: 'checkmark-circle' as IconName };
       case 'sent':
-        return { label: 'Verzonden', color: SemanticColors.feedbackInfo, icon: 'paper-plane' as IconName };
+        return { label: t('invoices.statusSent', 'Verzonden'), color: SemanticColors.feedbackInfo, icon: 'paper-plane' as IconName };
       case 'viewed':
-        return { label: 'Bekeken', color: Palette.hermesOrange, icon: 'eye' as IconName };
+        return { label: t('invoices.statusViewed', 'Bekeken'), color: Palette.hermesOrange, icon: 'eye' as IconName };
       case 'overdue':
-        return { label: 'Verlopen', color: SemanticColors.feedbackError, icon: 'alert-circle' as IconName };
+        return { label: t('invoices.statusOverdue', 'Verlopen'), color: SemanticColors.feedbackError, icon: 'alert-circle' as IconName };
       default:
-        return { label: 'Concept', color: SemanticColors.textTertiary, icon: 'document' as IconName };
+        return { label: t('invoices.statusDraft', 'Concept'), color: SemanticColors.textTertiary, icon: 'document' as IconName };
     }
   };
 
@@ -81,7 +122,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
     return (
       <View style={styles.emptyState}>
         <Ionicons name="receipt-outline" size={40} color={SemanticColors.textTertiary} />
-        <Text style={styles.emptyStateText}>Nog geen facturen</Text>
+        <Text style={styles.emptyStateText}>{t('invoices.emptyInvoices', 'Nog geen facturen')}</Text>
       </View>
     );
   }
@@ -120,6 +161,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
               <View style={styles.invoiceInfo}>
                 <Text style={styles.invoiceCustomer} numberOfLines={1}>{invoice.customerName}</Text>
                 <Text style={styles.invoiceProject} numberOfLines={1}>{invoice.projectName}</Text>
+                {invoice.status !== 'paid' && <DSOHint customerId={invoice.id} />}
               </View>
               <View style={styles.invoiceRight}>
                 <Text style={[
@@ -129,38 +171,78 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                   €{invoice.amount.toLocaleString('nl-NL')}
                 </Text>
                 <Text style={[styles.invoiceStatus, { color: status.color }]}>{status.label}</Text>
+                {invoice.status === 'overdue' && (() => {
+                  const daysOverdue = Math.max(1, Math.floor((Date.now() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24)));
+                  const interest = calculateLatePaymentInterest(invoice.amount, daysOverdue);
+                  return (
+                    <Text style={{ fontSize: 10, fontFamily: 'Inter_400Regular', color: SemanticColors.feedbackError, marginTop: 2 }}>
+                      Rente: €{interest.interest.toLocaleString('nl-NL', { minimumFractionDigits: 2 })} (8% handelsrente)
+                    </Text>
+                  );
+                })()}
               </View>
             </Pressable>
             {isExpanded && showActions && (
               <View style={styles.invoiceActions}>
                 <Pressable
                   style={styles.invoiceActionBtn}
-                  onPress={() => {
-                    hapticSuccess();
-                    Alert.alert('Herinnering verstuurd', `Betaalherinnering verstuurd aan ${invoice.customerName}.`);
+                  onPress={async () => {
+                    const autoInv = invoiceAutomationService.getInvoice(invoice.id);
+                    if (autoInv) {
+                      const link = await createPaymentLink({
+                        invoiceId: invoice.id,
+                        amount: autoInv.total,
+                        description: `Factuur ${autoInv.invoiceNumber}`,
+                      });
+                      const text = buildInvoiceShareText(autoInv, undefined, link?.url);
+                      await Share.share({ message: text, title: t('invoices.sendReminder', 'Herinnering') + ` ${autoInv.invoiceNumber}` });
+                    } else {
+                      hapticSuccess();
+                      Alert.alert(t('invoices.reminderSent', 'Herinnering verstuurd'), t('invoices.reminderSentDesc', 'Betaalherinnering verstuurd.'));
+                    }
                   }}
                 >
                   <Ionicons name="notifications-outline" size={16} color={Palette.hermesOrange} />
-                  <Text style={styles.invoiceActionText}>Herinnering</Text>
+                  <Text style={styles.invoiceActionText}>{t('invoices.reminder', 'Herinnering')}</Text>
                 </Pressable>
                 <Pressable
                   style={styles.invoiceActionBtn}
-                  onPress={() => {
-                    hapticSuccess();
-                    Alert.alert('Betaallink', `Mollie betaallink aangemaakt voor €${invoice.amount.toLocaleString('nl-NL')}. Link gekopieerd naar klembord.`);
+                  onPress={async () => {
+                    const autoInv = invoiceAutomationService.getInvoice(invoice.id);
+                    if (autoInv) {
+                      hapticSuccess();
+                      const link = await createPaymentLink({
+                        invoiceId: invoice.id,
+                        amount: autoInv.total,
+                        description: `Factuur ${autoInv.invoiceNumber}`,
+                      });
+                      await generateInvoicePdf(autoInv, undefined, link?.url);
+                    } else {
+                      Alert.alert(t('invoices.downloadPdf', 'PDF'), t('invoices.invoiceNotFound', 'Factuur niet gevonden in automatiseringssysteem.'));
+                    }
+                  }}
+                >
+                  <Ionicons name="document-outline" size={16} color={Palette.hermesOrange} />
+                  <Text style={styles.invoiceActionText}>{t('invoices.sharePdf', 'PDF delen')}</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.invoiceActionBtn}
+                  onPress={async () => {
+                    const link = await createPaymentLink({
+                      invoiceId: invoice.id,
+                      amount: invoice.amount,
+                      description: `Factuur ${invoice.id}`,
+                    });
+                    if (link?.url) {
+                      hapticSuccess();
+                      await Share.share({ message: `${t('invoices.paymentLink', 'Betaallink')}: €${invoice.amount.toLocaleString('nl-NL')}\n${link.url}`, title: t('invoices.paymentLink', 'Betaallink') });
+                    } else {
+                      Alert.alert(t('invoices.error', 'Fout'), t('invoices.paymentLinkFailed', 'Betaallink kon niet worden aangemaakt.'));
+                    }
                   }}
                 >
                   <Ionicons name="link-outline" size={16} color={Palette.hermesOrange} />
-                  <Text style={styles.invoiceActionText}>Betaallink</Text>
-                </Pressable>
-                <Pressable
-                  style={styles.invoiceActionBtn}
-                  onPress={() => {
-                    Linking.openURL('tel:+31600000000');
-                  }}
-                >
-                  <Ionicons name="call-outline" size={16} color={Palette.hermesOrange} />
-                  <Text style={styles.invoiceActionText}>Bel klant</Text>
+                  <Text style={styles.invoiceActionText}>{t('invoices.paymentLink', 'Betaallink')}</Text>
                 </Pressable>
               </View>
             )}
@@ -172,16 +254,17 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
 }
 
 function QuoteItem({ quote, onPress }: { quote: Quote; onPress: () => void }) {
+  const { t } = useTranslation();
   const getStatusConfig = (status: QuoteStatus) => {
     switch (status) {
       case 'viewed':
-        return { label: 'Bekeken', color: Palette.hermesOrange, icon: 'eye' as IconName };
+        return { label: t('invoices.quoteViewed', 'Bekeken'), color: Palette.hermesOrange, icon: 'eye' as IconName };
       case 'accepted':
-        return { label: 'Geaccepteerd', color: SemanticColors.feedbackSuccess, icon: 'checkmark-circle' as IconName };
+        return { label: t('invoices.quoteAccepted', 'Geaccepteerd'), color: SemanticColors.feedbackSuccess, icon: 'checkmark-circle' as IconName };
       case 'rejected':
-        return { label: 'Afgewezen', color: SemanticColors.feedbackError, icon: 'close-circle' as IconName };
+        return { label: t('invoices.quoteRejected', 'Afgewezen'), color: SemanticColors.feedbackError, icon: 'close-circle' as IconName };
       default:
-        return { label: 'Verstuurd', color: SemanticColors.feedbackInfo, icon: 'paper-plane' as IconName };
+        return { label: t('invoices.quoteSent', 'Verstuurd'), color: SemanticColors.feedbackInfo, icon: 'paper-plane' as IconName };
     }
   };
 
@@ -210,16 +293,27 @@ function QuoteItem({ quote, onPress }: { quote: Quote; onPress: () => void }) {
 type TabView = 'offertes' | 'facturen' | 'incasso';
 
 export default function FacturenScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabView>('offertes');
   const [showQuoteBuilder, setShowQuoteBuilder] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [overdueDismissed, setOverdueDismissed] = useState(false);
   const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [bottomSheet, setBottomSheet] = useState<{ visible: boolean; title: string; actions: BottomSheetAction[] }>({ visible: false, title: '', actions: [] });
+  const closeBottomSheet = useCallback(() => setBottomSheet(prev => ({ ...prev, visible: false })), []);
+  const [toast, setToast] = useState<{ visible: boolean; message: string }>({ visible: false, message: '' });
   const scrollViewRef = useRef<ScrollView>(null);
 
   // Screen visit tracking
   useEffect(() => { recordScreenVisit('invoices'); }, []);
+
+  // Brief loading state with 300ms minimum to prevent flicker
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -230,6 +324,7 @@ export default function FacturenScreen() {
   }, []);
 
   // Connect to services
+  const { jobs, addInvoiceFromJob } = useAppState();
   const { invoices, summary } = useCashFlow();
   const { findings: auditFindings } = useFinancialAuditFindings();
   const savings = useSavingsAggregation();
@@ -237,6 +332,10 @@ export default function FacturenScreen() {
 
   // P3: Collections Agent
   const { summary: collectionsSummary, sequences: dunningSequences, alerts: cashGapAlerts, dso } = useCollectionsAgent();
+
+  // Quote Approvals
+  const { approvals: pendingApprovals, approve: approveQuote, reject: rejectQuote } = useQuoteApprovals('pending');
+  const approvalStats = useApprovalStats();
 
   // Compute KPI values
   const pendingInvoices = invoices.filter(i => ['sent', 'viewed'].includes(i.status));
@@ -272,8 +371,8 @@ export default function FacturenScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Facturen</Text>
-          <Text style={styles.headerSubtitle}>{invoices.length} facturen · {quotes.length} offertes</Text>
+          <Text style={styles.headerTitle}>{t('invoices.title', 'Facturen')}</Text>
+          <Text style={styles.headerSubtitle}>{invoices.length} {t('invoices.invoices', 'facturen')} · {quotes.length} {t('invoices.quotes', 'offertes')}</Text>
         </View>
         <Pressable
           style={styles.addButton}
@@ -287,9 +386,9 @@ export default function FacturenScreen() {
       <View style={{ paddingHorizontal: Spacing.md }}>
         <ContractorDashboardHeader
           kpis={[
-            { icon: 'receipt', value: `€${pendingValue.toLocaleString('nl-NL')}`, label: 'Openstaand' },
+            { icon: 'receipt', value: `€${pendingValue.toLocaleString('nl-NL')}`, label: t('invoices.outstanding', 'Openstaand') },
             { icon: 'timer', value: `${dso.currentDSO}d`, label: 'DSO', color: dso.trend === 'worsening' ? SemanticColors.feedbackError : dso.trend === 'improving' ? SemanticColors.feedbackSuccess : undefined },
-            { icon: 'document-text', value: String(quotes.length), label: 'Offertes', color: Palette.hermesOrange },
+            { icon: 'document-text', value: String(quotes.length), label: t('invoices.quotes', 'Offertes'), color: Palette.hermesOrange },
           ]}
         />
       </View>
@@ -299,19 +398,21 @@ export default function FacturenScreen() {
         <View style={styles.auditAlert}>
           <Ionicons name="alert-circle" size={16} color={SemanticColors.feedbackError} />
           <Text style={styles.auditAlertText}>
-            Factuur discrepantie gedetecteerd
+            {t('invoices.auditDiscrepancy', 'Factuur discrepantie gedetecteerd')}
           </Text>
           <Pressable onPress={() => {
             const critical = auditFindings.find(f => f.severity === 'critical' && f.status === 'new');
             if (critical) {
-              Alert.alert(
-                'Factuur Discrepantie',
-                `${critical.title}\n\n${critical.description}${critical.suggestedAction ? `\n\nAanbeveling: ${critical.suggestedAction.description}` : ''}`,
-                [{ text: 'Sluiten' }]
-              );
+              setBottomSheet({
+                visible: true,
+                title: `${t('invoices.invoiceDiscrepancy', 'Factuur Discrepantie')}\n\n${critical.title}\n\n${critical.description}${critical.suggestedAction ? `\n\n${t('invoices.recommendation', 'Aanbeveling')}: ${critical.suggestedAction.description}` : ''}`,
+                actions: [
+                  { label: t('invoices.close', 'Sluiten'), icon: 'close-outline', onPress: closeBottomSheet },
+                ],
+              });
             }
           }}>
-            <Text style={styles.auditAlertAction}>Bekijk</Text>
+            <Text style={styles.auditAlertAction}>{t('invoices.view', 'Bekijk')}</Text>
           </Pressable>
         </View>
       )}
@@ -320,9 +421,9 @@ export default function FacturenScreen() {
       {!overdueDismissed && overdueValue > 0 && (
         <View style={styles.stickyOverdueBanner}>
           <View style={styles.stickyOverdueLeft}>
-            <Ionicons name="alert-circle" size={16} color="#DC2626" />
+            <Ionicons name="alert-circle" size={16} color={SemanticColors.feedbackError} />
             <Text style={styles.stickyOverdueText}>
-              {overdueInvoices.length} facturen verlopen · {'\u20AC'}{overdueValue.toLocaleString('nl-NL')}
+              {overdueInvoices.length} {t('invoices.invoicesOverdue', 'facturen verlopen')} · {'\u20AC'}{overdueValue.toLocaleString('nl-NL')}
             </Text>
           </View>
           <View style={styles.stickyOverdueActions}>
@@ -332,10 +433,10 @@ export default function FacturenScreen() {
                 hapticSuccess();
               }}
             >
-              <Text style={styles.stickyOverdueAction}>Bekijk</Text>
+              <Text style={styles.stickyOverdueAction}>{t('invoices.view', 'Bekijk')}</Text>
             </Pressable>
             <Pressable onPress={() => setOverdueDismissed(true)}>
-              <Ionicons name="close" size={16} color="#DC2626" />
+              <Ionicons name="close" size={16} color={SemanticColors.feedbackError} />
             </Pressable>
           </View>
         </View>
@@ -348,7 +449,7 @@ export default function FacturenScreen() {
           onPress={() => setActiveTab('offertes')}
         >
           <Text style={[styles.tabText, activeTab === 'offertes' && styles.tabTextActive]}>
-            Offertes
+            {t('invoices.tabQuotes', 'Offertes')}
           </Text>
         </Pressable>
         <Pressable
@@ -356,7 +457,7 @@ export default function FacturenScreen() {
           onPress={() => setActiveTab('facturen')}
         >
           <Text style={[styles.tabText, activeTab === 'facturen' && styles.tabTextActive]}>
-            Facturen
+            {t('invoices.tabInvoices', 'Facturen')}
           </Text>
         </Pressable>
         <Pressable
@@ -364,12 +465,17 @@ export default function FacturenScreen() {
           onPress={() => setActiveTab('incasso')}
         >
           <Text style={[styles.tabText, activeTab === 'incasso' && styles.tabTextActive]}>
-            Incasso
+            {t('invoices.tabCollections', 'Incasso')}
           </Text>
         </Pressable>
       </View>
 
       {/* Content */}
+      {loading ? (
+        <View style={{ padding: Spacing.md }}>
+          <LoadingSkeleton variant="list-item" count={4} />
+        </View>
+      ) : (
       <ScrollView
         ref={scrollViewRef}
         style={styles.scrollView}
@@ -381,6 +487,75 @@ export default function FacturenScreen() {
       >
         {activeTab === 'offertes' ? (
           <View style={{ gap: Spacing.sm }}>
+            {/* Nieuwe Offerte CTA — front and center */}
+            <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
+              <Pressable
+                style={[styles.nieuweOfferteCta, { flex: 1 }]}
+                onPress={() => setShowQuoteBuilder(true)}
+              >
+                <Ionicons name="add-circle" size={24} color={Palette.white} />
+                <Text style={styles.nieuweOfferteCtaText}>{t('invoices.newQuote', 'Nieuwe offerte')}</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [{
+                  flexDirection: 'row', alignItems: 'center', gap: 6,
+                  backgroundColor: SemanticColors.surfacePrimary, borderRadius: 12,
+                  paddingHorizontal: 14, paddingVertical: 12,
+                  borderWidth: 1, borderColor: SemanticColors.borderDefault,
+                }, pressed && { opacity: 0.85 }]}
+                onPress={() => router.push('/contractor/quote-templates' as any)}
+              >
+                <Ionicons name="copy-outline" size={18} color={Palette.hermesOrange} />
+                <Text style={{ fontSize: 13, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textPrimary }}>Templates</Text>
+              </Pressable>
+            </View>
+
+            {/* Pending Approvals */}
+            {pendingApprovals.length > 0 && (
+              <View style={styles.approvalBanner}>
+                <View style={styles.approvalHeader}>
+                  <Ionicons name="shield-checkmark-outline" size={18} color={SemanticColors.feedbackWarning} />
+                  <Text style={styles.approvalTitle}>
+                    {pendingApprovals.length} {t('invoices.pendingApproval', 'offerte(s) wacht op goedkeuring')}
+                  </Text>
+                </View>
+                {pendingApprovals.slice(0, 3).map(approval => (
+                  <View key={approval.id} style={styles.approvalItem}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.approvalCustomer}>{approval.customerName}</Text>
+                      <Text style={styles.approvalRef}>{approval.quoteReference} · €{approval.amount.toLocaleString('nl-NL')}</Text>
+                    </View>
+                    <View style={styles.approvalActions}>
+                      <Pressable
+                        style={styles.approvalRejectBtn}
+                        onPress={() => {
+                          setBottomSheet({
+                            visible: true,
+                            title: `${approval.quoteReference} ${t('invoices.rejectConfirm', 'afwijzen')}?`,
+                            actions: [
+                              { label: t('invoices.reject', 'Afwijzen'), icon: 'close-circle-outline', destructive: true, onPress: () => { rejectQuote(approval.id, 'Eigenaar', 'Afgewezen'); closeBottomSheet(); } },
+                              { label: t('invoices.cancel', 'Annuleren'), icon: 'arrow-back-outline', onPress: closeBottomSheet },
+                            ],
+                          });
+                        }}
+                      >
+                        <Ionicons name="close" size={16} color={SemanticColors.feedbackError} />
+                      </Pressable>
+                      <Pressable
+                        style={styles.approvalApproveBtn}
+                        onPress={() => {
+                          approveQuote(approval.id, 'Eigenaar');
+                          hapticSuccess();
+                        }}
+                      >
+                        <Ionicons name="checkmark" size={16} color={SemanticColors.feedbackSuccess} />
+                      </Pressable>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+
             {quotes.length > 0 ? (
               <View style={styles.quoteCardList}>
                 {quotes.map((quote) => (
@@ -394,50 +569,101 @@ export default function FacturenScreen() {
             ) : (
               <View style={styles.emptyState}>
                 <Ionicons name="document-text-outline" size={40} color={SemanticColors.textTertiary} />
-                <Text style={styles.emptyStateText}>Geen actieve offertes</Text>
+                <Text style={styles.emptyStateText}>{t('invoices.emptyQuotes', 'Geen actieve offertes')}</Text>
               </View>
             )}
-
-            {/* Nieuwe Offerte banner */}
-            <Pressable
-              style={styles.nieuweOfferteBanner}
-              onPress={() => setShowQuoteBuilder(true)}
-            >
-              <Ionicons name="add-circle" size={22} color="#fff" />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.nieuweOfferteBannerTitle} numberOfLines={1}>Nieuwe Offerte</Text>
-                <Text style={styles.nieuweOfferteBannerSub} numberOfLines={1}>Maak een Smart Offerte met Vasco AI</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="#fff" />
-            </Pressable>
           </View>
         ) : activeTab === 'facturen' ? (
           <View style={{ gap: Spacing.xs }}>
             <InvoiceList invoices={invoices} expandedId={expandedInvoiceId} onToggleExpand={setExpandedInvoiceId} />
+
+            {/* Nieuwe Factuur van Klus */}
+            {jobs.filter(j => ['completed', 'in-progress'].includes(j.status)).length > 0 && (
+              <Pressable
+                style={styles.nieuweFactuurBanner}
+                onPress={() => {
+                  const completedJobs = jobs.filter(j => ['completed', 'in-progress'].includes(j.status));
+                  if (completedJobs.length === 1) {
+                    const job = completedJobs[0];
+                    setBottomSheet({
+                      visible: true,
+                      title: `${t('invoices.createInvoiceFor', 'Factuur maken voor')} "${job.title}" (\u20AC${(job.agreedAmount || job.quotedAmount || 0).toLocaleString('nl-NL')})?`,
+                      actions: [
+                        {
+                          label: t('invoices.create', 'Aanmaken'),
+                          icon: 'receipt-outline',
+                          onPress: async () => {
+                            closeBottomSheet();
+                            await addInvoiceFromJob(job.id);
+                            hapticSuccess();
+                            setToast({ visible: true, message: `${t('invoices.invoiceCreated', 'Factuur aangemaakt')} — ${t('invoices.invoiceCreatedDesc', 'De factuur is aangemaakt als concept.')}` });
+                          },
+                        },
+                        { label: t('invoices.cancel', 'Annuleren'), icon: 'close-outline', onPress: closeBottomSheet },
+                      ],
+                    });
+                  } else {
+                    setBottomSheet({
+                      visible: true,
+                      title: t('invoices.chooseJobDesc', 'Kies een klus om te factureren:'),
+                      actions: [
+                        ...completedJobs.slice(0, 5).map(job => ({
+                          label: `${job.title} · \u20AC${(job.agreedAmount || job.quotedAmount || 0).toLocaleString('nl-NL')}`,
+                          icon: 'briefcase-outline' as const,
+                          onPress: async () => {
+                            closeBottomSheet();
+                            await addInvoiceFromJob(job.id);
+                            hapticSuccess();
+                            setToast({ visible: true, message: `${t('invoices.invoiceCreated', 'Factuur aangemaakt')} — ${t('invoices.invoiceCreatedDesc', 'De factuur is aangemaakt als concept.')}` });
+                          },
+                        })),
+                        { label: t('invoices.cancel', 'Annuleren'), icon: 'close-outline' as const, onPress: closeBottomSheet },
+                      ],
+                    });
+                  }
+                }}
+              >
+                <Ionicons name="receipt" size={22} color={Palette.white} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.nieuweOfferteBannerTitle} numberOfLines={1}>{t('invoices.newInvoice', 'Nieuwe Factuur')}</Text>
+                  <Text style={styles.nieuweOfferteBannerSub} numberOfLines={1}>
+                    {t('invoices.newInvoiceDesc', 'Maak een factuur direct van een klus')}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={Palette.white} />
+              </Pressable>
+            )}
 
             {/* Verlopen banner — below invoices */}
             {overdueValue > 0 && (
               <Pressable
                 style={styles.overdueBanner}
                 onPress={() => {
-                  Alert.alert(
-                    'Herinneringen versturen',
-                    `Vasco stuurt automatische herinneringen voor ${overdueInvoices.length} verlopen facturen (\u20AC${overdueValue.toLocaleString('nl-NL')}).`,
-                    [
-                      { text: 'Annuleren', style: 'cancel' },
-                      { text: 'Versturen', onPress: () => Alert.alert('Verstuurd', 'Herinneringen zijn verstuurd naar alle klanten met verlopen facturen.') },
-                    ]
-                  );
+                  setBottomSheet({
+                    visible: true,
+                    title: t('invoices.sendReminders', 'Herinneringen versturen'),
+                    actions: [
+                      {
+                        label: t('invoices.send', 'Versturen'),
+                        icon: 'paper-plane-outline',
+                        onPress: () => {
+                          closeBottomSheet();
+                          setToast({ visible: true, message: t('invoices.remindersSentAll', 'Herinneringen zijn verstuurd naar alle klanten met verlopen facturen.') });
+                        },
+                      },
+                      { label: t('invoices.cancel', 'Annuleren'), icon: 'close-outline', onPress: closeBottomSheet },
+                    ],
+                  });
                 }}
               >
-                <Ionicons name="notifications" size={22} color="#fff" />
+                <Ionicons name="notifications" size={22} color={Palette.white} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.overdueBannerTitle} numberOfLines={1}>Stuur Herinnering</Text>
+                  <Text style={styles.overdueBannerTitle} numberOfLines={1}>{t('invoices.sendReminder', 'Stuur Herinnering')}</Text>
                   <Text style={styles.overdueBannerSub} numberOfLines={1}>
                     {'\u20AC'}{overdueValue.toLocaleString('nl-NL')} verlopen · {overdueInvoices.length} facturen
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#fff" />
+                <Ionicons name="chevron-forward" size={18} color={Palette.white} />
               </Pressable>
             )}
           </View>
@@ -448,19 +674,19 @@ export default function FacturenScreen() {
             <View style={styles.dsoCard}>
               <View style={styles.dsoMain}>
                 <Text style={styles.dsoValue}>{dso.currentDSO}d</Text>
-                <Text style={styles.dsoLabel}>Days Sales Outstanding</Text>
+                <Text style={styles.dsoLabel}>{t('invoices.dsoLabel', 'Days Sales Outstanding')}</Text>
               </View>
               <View style={styles.dsoDetails}>
                 <View style={styles.dsoDetailItem}>
-                  <Text style={styles.dsoDetailLabel}>Doel</Text>
+                  <Text style={styles.dsoDetailLabel}>{t('invoices.target', 'Doel')}</Text>
                   <Text style={styles.dsoDetailValue}>{dso.targetDSO}d</Text>
                 </View>
                 <View style={styles.dsoDetailItem}>
-                  <Text style={styles.dsoDetailLabel}>Vorige</Text>
+                  <Text style={styles.dsoDetailLabel}>{t('invoices.previous', 'Vorige')}</Text>
                   <Text style={styles.dsoDetailValue}>{dso.previousDSO}d</Text>
                 </View>
                 <View style={styles.dsoDetailItem}>
-                  <Text style={styles.dsoDetailLabel}>Branche</Text>
+                  <Text style={styles.dsoDetailLabel}>{t('invoices.industry', 'Branche')}</Text>
                   <Text style={styles.dsoDetailValue}>{dso.industryAverage}d</Text>
                 </View>
               </View>
@@ -468,13 +694,13 @@ export default function FacturenScreen() {
 
             {/* Dunning Sequences */}
             <View style={{ gap: Spacing.xs }}>
-              <Text style={styles.incassoSectionTitle}>Dunning Sequences</Text>
+              <Text style={styles.incassoSectionTitle}>{t('invoices.dunningSequences', 'Dunning Sequences')}</Text>
               {dunningSequences.map((seq: DunningSeqType) => {
                 const stepColors: Record<string, string> = {
-                  vriendelijk: '#3B82F6',
-                  herinnering: '#F59E0B',
-                  urgent: '#DC2626',
-                  aanmaning: '#DC2626',
+                  vriendelijk: SemanticColors.feedbackInfo,
+                  herinnering: SemanticColors.feedbackWarning,
+                  urgent: SemanticColors.feedbackError,
+                  aanmaning: SemanticColors.feedbackError,
                   incasso: Palette.hermesOrange,
                 };
                 return (
@@ -484,12 +710,12 @@ export default function FacturenScreen() {
                       <Text style={styles.dunningAmount}>{'\u20AC'}{seq.invoiceAmount.toLocaleString('nl-NL')}</Text>
                     </View>
                     <View style={styles.dunningMeta}>
-                      <View style={[styles.dunningStepBadge, { backgroundColor: (stepColors[seq.currentStep] || '#999') + '14' }]}>
-                        <Text style={[styles.dunningStepText, { color: stepColors[seq.currentStep] || '#999' }]} numberOfLines={1}>
+                      <View style={[styles.dunningStepBadge, { backgroundColor: (stepColors[seq.currentStep] || SemanticColors.textTertiary) + '14' }]}>
+                        <Text style={[styles.dunningStepText, { color: stepColors[seq.currentStep] || SemanticColors.textTertiary }]} numberOfLines={1}>
                           {seq.currentStep.toUpperCase()}
                         </Text>
                       </View>
-                      <Text style={styles.dunningDays}>{seq.daysOverdue} dagen verlopen</Text>
+                      <Text style={styles.dunningDays}>{seq.daysOverdue} {t('invoices.daysOverdue', 'dagen verlopen')}</Text>
                       {seq.autoSendEnabled && (
                         <View style={styles.dunningAutoTag}>
                           <Ionicons name="flash" size={10} color={SemanticColors.feedbackSuccess} />
@@ -503,16 +729,16 @@ export default function FacturenScreen() {
                         <View key={idx} style={styles.dunningStepDot}>
                           <View style={[
                             styles.dunningDot,
-                            { backgroundColor: step.status === 'sent' ? '#16A34A' : step.status === 'pending' ? '#E0E0E0' : '#999' }
+                            { backgroundColor: step.status === 'sent' ? SemanticColors.feedbackSuccess : step.status === 'pending' ? SemanticColors.textDisabled : SemanticColors.textTertiary }
                           ]} />
                         </View>
                       ))}
                     </View>
                     <Pressable
                       style={styles.dunningAction}
-                      onPress={() => Alert.alert('Verstuurd', `Herinnering verstuurd naar ${seq.customerName}.`)}
+                      onPress={() => setToast({ visible: true, message: t('invoices.reminderSentTo', 'Herinnering verstuurd naar {{name}}.', { name: seq.customerName }) })}
                     >
-                      <Text style={styles.dunningActionText} numberOfLines={1}>Verstuur nu</Text>
+                      <Text style={styles.dunningActionText} numberOfLines={1}>{t('invoices.sendNow', 'Verstuur nu')}</Text>
                     </Pressable>
                   </View>
                 );
@@ -522,22 +748,22 @@ export default function FacturenScreen() {
             {/* Cash Gap Alerts */}
             {cashGapAlerts.length > 0 && (
               <View style={{ gap: Spacing.xs }}>
-                <Text style={styles.incassoSectionTitle}>Cash Gap Alerts</Text>
+                <Text style={styles.incassoSectionTitle}>{t('invoices.cashGapAlerts', 'Cash Gap Alerts')}</Text>
                 {cashGapAlerts.map((alert) => (
                   <View key={alert.id} style={[styles.cashGapCard, {
-                    borderLeftColor: alert.severity === 'kritiek' ? '#DC2626' : '#F59E0B',
+                    borderLeftColor: alert.severity === 'kritiek' ? SemanticColors.feedbackError : SemanticColors.feedbackWarning,
                   }]}>
                     <Ionicons
                       name={alert.severity === 'kritiek' ? 'alert-circle' : 'warning'}
                       size={18}
-                      color={alert.severity === 'kritiek' ? '#DC2626' : '#F59E0B'}
+                      color={alert.severity === 'kritiek' ? SemanticColors.feedbackError : SemanticColors.feedbackWarning}
                     />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.cashGapTitle} numberOfLines={1}>{alert.title}</Text>
                       <Text style={styles.cashGapDesc} numberOfLines={2}>{alert.description}</Text>
                     </View>
                     <Text style={[styles.cashGapAmount, {
-                      color: alert.severity === 'kritiek' ? '#DC2626' : '#F59E0B',
+                      color: alert.severity === 'kritiek' ? SemanticColors.feedbackError : SemanticColors.feedbackWarning,
                     }]}>{'\u20AC'}{alert.gapAmount.toLocaleString('nl-NL')}</Text>
                   </View>
                 ))}
@@ -551,7 +777,7 @@ export default function FacturenScreen() {
           <View style={styles.finIntelStrip}>
             <View style={styles.finIntelItem}>
               <Text style={styles.finIntelValue}>{'\u20AC'}{labor.effectiveRate}/u</Text>
-              <Text style={styles.finIntelLabel}>Effectief tarief</Text>
+              <Text style={styles.finIntelLabel}>{t('invoices.effectiveRate', 'Effectief tarief')}</Text>
               <View style={styles.finIntelBadge}>
                 <Ionicons name="arrow-up" size={10} color={SemanticColors.feedbackSuccess} />
                 <Text style={styles.finIntelBadgeText}>+{labor.rateVsBenchmark}%</Text>
@@ -560,7 +786,7 @@ export default function FacturenScreen() {
             <View style={styles.finIntelDivider} />
             <View style={styles.finIntelItem}>
               <Text style={styles.finIntelValue}>{'\u20AC'}{savings.savingsPerJob}</Text>
-              <Text style={styles.finIntelLabel}>Besparing/klus</Text>
+              <Text style={styles.finIntelLabel}>{t('invoices.savingsPerJob', 'Besparing/klus')}</Text>
               <View style={styles.finIntelBadge}>
                 <Ionicons name="trending-up" size={10} color={SemanticColors.feedbackSuccess} />
                 <Text style={styles.finIntelBadgeText}>+{savings.savingsVsBenchmark}%</Text>
@@ -571,6 +797,7 @@ export default function FacturenScreen() {
 
         <View style={{ height: 20 }} />
       </ScrollView>
+      )}
 
       {/* Quote Builder Modal */}
       <Modal
@@ -581,14 +808,25 @@ export default function FacturenScreen() {
         <TieredQuoteBuilder
           onSend={(quote) => {
             setShowQuoteBuilder(false);
-            Alert.alert(
-              'Offerte verstuurd',
-              'Je offerte is succesvol aangemaakt en verstuurd naar de klant.',
-            );
+            setToast({ visible: true, message: t('invoices.quoteSentDesc', 'Je offerte is succesvol aangemaakt en verstuurd naar de klant.') });
           }}
           onClose={() => setShowQuoteBuilder(false)}
         />
       </Modal>
+
+      <BottomSheet
+        visible={bottomSheet.visible}
+        onClose={closeBottomSheet}
+        title={bottomSheet.title}
+        actions={bottomSheet.actions}
+      />
+
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type="success"
+        onHide={() => setToast({ visible: false, message: '' })}
+      />
 
     </View>
   );
@@ -601,7 +839,7 @@ export default function FacturenScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAF8',
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   header: {
     flexDirection: 'row',
@@ -610,18 +848,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: SafeArea.side,
     paddingTop: SafeArea.top,
     paddingBottom: Spacing.sm,
-    backgroundColor: '#FAFAF8',
+    backgroundColor: SemanticColors.surfaceBackground,
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: '700',
-    color: '#1A1A1A',
+    fontFamily: 'Manrope_700Bold',
+    color: SemanticColors.textPrimary,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#999',
+    color: SemanticColors.textTertiary,
     marginTop: 2,
-    fontWeight: '500',
+    fontFamily: 'Manrope_500Medium',
   },
   addButton: {
     width: 40,
@@ -649,7 +887,7 @@ const styles = StyleSheet.create({
   },
   auditAlertAction: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.feedbackError,
   },
 
@@ -664,7 +902,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     borderRadius: 10,
-    backgroundColor: '#fff',
+    backgroundColor: Palette.white,
     alignItems: 'center',
   },
   tabActive: {
@@ -672,11 +910,11 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#999',
+    fontFamily: 'Manrope_600SemiBold',
+    color: SemanticColors.textTertiary,
   },
   tabTextActive: {
-    color: '#fff',
+    color: Palette.white,
   },
 
   scrollView: {
@@ -699,14 +937,9 @@ const styles = StyleSheet.create({
     paddingRight: Spacing.sm,
     paddingLeft: 0,
     gap: Spacing.sm,
-    backgroundColor: '#fff',
+    backgroundColor: Palette.white,
     borderRadius: 12,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
   },
   quoteCardAccent: {
     width: 3,
@@ -717,7 +950,7 @@ const styles = StyleSheet.create({
   },
   quoteCustomer: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   quoteTitle: {
@@ -730,13 +963,13 @@ const styles = StyleSheet.create({
   },
   quoteAmount: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
     fontVariant: ['tabular-nums'] as any,
   },
   quoteStatus: {
     fontSize: 11,
-    fontWeight: '500',
+    fontFamily: 'Manrope_500Medium',
     marginTop: 1,
   },
 
@@ -751,14 +984,9 @@ const styles = StyleSheet.create({
     paddingRight: Spacing.sm,
     paddingLeft: 0,
     gap: Spacing.sm,
-    backgroundColor: '#fff',
+    backgroundColor: Palette.white,
     borderRadius: 12,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
   },
   invoiceCardAccent: {
     width: 3,
@@ -769,7 +997,7 @@ const styles = StyleSheet.create({
   },
   invoiceCustomer: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   invoiceProject: {
@@ -782,13 +1010,13 @@ const styles = StyleSheet.create({
   },
   invoiceAmount: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
     fontVariant: ['tabular-nums'] as any,
   },
   invoiceStatus: {
     fontSize: 11,
-    fontWeight: '500',
+    fontFamily: 'Manrope_500Medium',
     marginTop: 1,
   },
 
@@ -811,8 +1039,8 @@ const styles = StyleSheet.create({
   },
   emptyStateButtonText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#fff',
+    fontFamily: 'Manrope_600SemiBold',
+    color: Palette.white,
   },
 
   // Financial Intelligence Strip
@@ -831,7 +1059,7 @@ const styles = StyleSheet.create({
   },
   finIntelValue: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
     fontVariant: ['tabular-nums'] as any,
   },
@@ -850,7 +1078,7 @@ const styles = StyleSheet.create({
   },
   finIntelBadgeText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.feedbackSuccess,
   },
   finIntelDivider: {
@@ -861,14 +1089,9 @@ const styles = StyleSheet.create({
 
   // Incasso Tab Content (P3)
   dsoCard: {
-    backgroundColor: '#fff',
+    backgroundColor: Palette.white,
     borderRadius: 16,
     padding: Spacing.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
     gap: Spacing.md,
   },
   dsoMain: {
@@ -877,7 +1100,7 @@ const styles = StyleSheet.create({
   },
   dsoValue: {
     fontSize: 36,
-    fontWeight: '800',
+    fontFamily: 'Manrope_800ExtraBold',
     color: Palette.hermesOrange,
     letterSpacing: -1,
     fontVariant: ['tabular-nums'] as any,
@@ -885,7 +1108,7 @@ const styles = StyleSheet.create({
   dsoLabel: {
     fontSize: 12,
     color: SemanticColors.textSecondary,
-    fontWeight: '500',
+    fontFamily: 'Manrope_500Medium',
   },
   dsoDetails: {
     flexDirection: 'row',
@@ -898,33 +1121,26 @@ const styles = StyleSheet.create({
   dsoDetailLabel: {
     fontSize: 10,
     color: SemanticColors.textTertiary,
-    textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
   dsoDetailValue: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
     fontVariant: ['tabular-nums'] as any,
   },
   incassoSectionTitle: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textSecondary,
-    textTransform: 'uppercase',
     letterSpacing: 0.5,
     paddingHorizontal: Spacing.xs,
   },
   dunningCard: {
-    backgroundColor: '#fff',
+    backgroundColor: Palette.white,
     borderRadius: 14,
     padding: Spacing.md,
     gap: Spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
   },
   dunningHeader: {
     flexDirection: 'row',
@@ -933,12 +1149,12 @@ const styles = StyleSheet.create({
   },
   dunningCustomer: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   dunningAmount: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
     fontVariant: ['tabular-nums'] as any,
   },
@@ -954,7 +1170,7 @@ const styles = StyleSheet.create({
   },
   dunningStepText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     letterSpacing: 0.3,
   },
   dunningDays: {
@@ -972,7 +1188,7 @@ const styles = StyleSheet.create({
   },
   dunningAutoText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.feedbackSuccess,
   },
   dunningSteps: {
@@ -995,26 +1211,21 @@ const styles = StyleSheet.create({
   },
   dunningActionText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: Palette.hermesOrange,
   },
   cashGapCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    backgroundColor: '#fff',
+    backgroundColor: Palette.white,
     borderRadius: 12,
     padding: Spacing.md,
     borderLeftWidth: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
   },
   cashGapTitle: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   cashGapDesc: {
@@ -1024,29 +1235,103 @@ const styles = StyleSheet.create({
   },
   cashGapAmount: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     fontVariant: ['tabular-nums'] as any,
   },
 
-  // Nieuwe Offerte banner
-  nieuweOfferteBanner: {
+  // Approval Banner
+  approvalBanner: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 14,
+    padding: Spacing.md,
+    borderLeftWidth: 3,
+    borderLeftColor: SemanticColors.feedbackWarning,
+    gap: Spacing.sm,
+  },
+  approvalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  approvalTitle: {
+    fontSize: 13,
+    fontFamily: 'Manrope_700Bold',
+    color: SemanticColors.feedbackWarning,
+  },
+  approvalItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    backgroundColor: Palette.hermesOrange,
-    borderRadius: 14,
-    padding: Spacing.md,
-    paddingVertical: 16,
+    paddingVertical: 4,
   },
+  approvalCustomer: {
+    fontSize: 14,
+    fontFamily: 'Manrope_600SemiBold',
+    color: SemanticColors.textPrimary,
+  },
+  approvalRef: {
+    fontSize: 11,
+    color: SemanticColors.textSecondary,
+    marginTop: 1,
+  },
+  approvalActions: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  approvalRejectBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: SemanticColors.feedbackError + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  approvalApproveBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: SemanticColors.feedbackSuccess + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Nieuwe Offerte CTA
+  nieuweOfferteCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: Palette.hermesOrange,
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: Spacing.md,
+  },
+  nieuweOfferteCtaText: {
+    fontSize: 17,
+    fontFamily: 'Manrope_700Bold',
+    color: Palette.white,
+  },
+  // Legacy banner styles (used by Nieuwe Factuur banner title/sub)
   nieuweOfferteBannerTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#fff',
+    fontFamily: 'Manrope_700Bold',
+    color: Palette.white,
   },
   nieuweOfferteBannerSub: {
     fontSize: 12,
-    color: '#ffffffCC',
+    color: Palette.white + 'CC',
     marginTop: 2,
+  },
+
+  // Nieuwe Factuur banner
+  nieuweFactuurBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: SemanticColors.feedbackSuccess,
+    borderRadius: 14,
+    padding: Spacing.md,
+    paddingVertical: 16,
   },
 
   // Sticky Overdue Banner
@@ -1058,10 +1343,10 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
     padding: Spacing.sm,
     paddingHorizontal: Spacing.md,
-    backgroundColor: '#DC262610',
+    backgroundColor: SemanticColors.feedbackError + '10',
     borderRadius: 10,
     borderLeftWidth: 3,
-    borderLeftColor: '#DC2626',
+    borderLeftColor: SemanticColors.feedbackError,
   },
   stickyOverdueLeft: {
     flexDirection: 'row',
@@ -1071,8 +1356,8 @@ const styles = StyleSheet.create({
   },
   stickyOverdueText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#DC2626',
+    fontFamily: 'Manrope_600SemiBold',
+    color: SemanticColors.feedbackError,
     fontVariant: ['tabular-nums'] as any,
   },
   stickyOverdueActions: {
@@ -1082,8 +1367,8 @@ const styles = StyleSheet.create({
   },
   stickyOverdueAction: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#DC2626',
+    fontFamily: 'Manrope_700Bold',
+    color: SemanticColors.feedbackError,
   },
 
   // Invoice Quick Actions
@@ -1106,7 +1391,7 @@ const styles = StyleSheet.create({
   },
   invoiceActionText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: Palette.hermesOrange,
   },
 
@@ -1122,12 +1407,12 @@ const styles = StyleSheet.create({
   },
   overdueBannerTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#fff',
+    fontFamily: 'Manrope_700Bold',
+    color: Palette.white,
   },
   overdueBannerSub: {
     fontSize: 12,
-    color: '#ffffffCC',
+    color: Palette.white + 'CC',
     marginTop: 2,
   },
 });

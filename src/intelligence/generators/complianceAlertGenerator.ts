@@ -7,6 +7,7 @@ import { useComplianceAlerts } from '../../services/complianceService';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { logPrediction } from '../calibration';
 import { detectAnomaly } from '../adaptiveThresholds';
+import { gt } from '../generatorTranslations';
 
 export const complianceAlertGenerator: InsightGenerator = {
   id: 'compliance-alert',
@@ -71,7 +72,7 @@ export function useComplianceAlertInsight(ctx: GeneratorContext): ScoredInsight 
     icon: 'shield-checkmark',
     actionLabel: 'Bekijk details',
     actionRoute: '/(contractor)/certificaten',
-    source: 'Compliance Monitor',
+    source: gt('source_compliance', ctx.language),
     timestamp: 'Nu',
     metric: { label: 'Score', value: `${complianceScore}/100`, trend: complianceScore < 70 ? 'down' : 'up' },
 
@@ -88,5 +89,11 @@ export function useComplianceAlertInsight(ctx: GeneratorContext): ScoredInsight 
     dataPoints: totalAlerts,
     confidence: anomaly.isAnomaly ? Math.min(0.98, 0.95 + 0.02) : 0.95,
     freshness: 0.5,
+    action: {
+      type: 'renew_cert',
+      label: 'Compliance herstellen',
+      params: {},
+      requiresApproval: false,
+    },
   };
 }

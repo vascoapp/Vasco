@@ -1,0 +1,336 @@
+// =============================================================================
+// AI DATA COLLECTOR — feeds the data moat from every user action
+// =============================================================================
+// Captures business events from the accounting loop + daily operations
+// Stores locally (AsyncStorage) + syncs to Supabase for cross-user learning
+// =============================================================================
+
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const LOCAL_QUEUE_KEY = '@vasco_event_queue';
+const MAX_LOCAL_QUEUE = 500;
+const BATCH_SIZE = 50;
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface BusinessEvent {
+  eventType: string;
+  entityType: 'quote' | 'job' | 'invoice' | 'customer' | 'material' | 'payment';
+  entityId: string;
+  payload: Record<string, any>;
+  trade?: string;
+  country?: string;
+  screenContext?: string;
+}
+
+interface QueuedEvent extends BusinessEvent {
+  id: string;
+  userId: string;
+  timestamp: string;
+}
+
+// ---------------------------------------------------------------------------
+// Event emission — call from anywhere in the app
+// ---------------------------------------------------------------------------
+
+export async function emitBusinessEvent(
+  userId: string,
+  event: BusinessEvent,
+): Promise<void> {
+  const queuedEvent: QueuedEvent = {
+    ...event,
+    id: `evt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    userId,
+    timestamp: new Date().toISOString(),
+  };
+
+  // Always store locally first (offline-first)
+  await enqueueLocally(queuedEvent);
+
+  // Try to sync to cloud
+  if (isSupabaseConfigured) {
+    await flushToCloud(userId);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Convenience emitters for common events
+// ---------------------------------------------------------------------------
+
+export async function emitQuoteCreated(userId: string, quoteId: string, data: {
+  customerId: string;
+  totalAmount: number;
+  lineItemCount: number;
+  trade: string;
+  jobType?: string;
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'quote_created',
+    entityType: 'quote',
+    entityId: quoteId,
+    payload: data,
+    trade: data.trade,
+  });
+}
+
+export async function emitQuoteAccepted(userId: string, quoteId: string, data: {
+  customerId: string;
+  quotedAmount: number;
+  acceptedAmount: number;
+  daysToAccept: number;
+  tierChosen?: string; // 'good', 'better', 'best' from TieredQuoteBuilder
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'quote_accepted',
+    entityType: 'quote',
+    entityId: quoteId,
+    payload: data,
+  });
+}
+
+export async function emitQuoteRejected(userId: string, quoteId: string, data: {
+  customerId: string;
+  quotedAmount: number;
+  reason?: string;
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'quote_rejected',
+    entityType: 'quote',
+    entityId: quoteId,
+    payload: data,
+  });
+}
+
+export async function emitJobStarted(userId: string, jobId: string, data: {
+  trade: string;
+  jobType?: string;
+  estimatedHours: number;
+  crewSize: number;
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'job_started',
+    entityType: 'job',
+    entityId: jobId,
+    payload: data,
+    trade: data.trade,
+  });
+}
+
+export async function emitJobCompleted(userId: string, jobId: string, data: {
+  trade: string;
+  jobType?: string;
+  estimatedHours: number;
+  actualHours: number;
+  estimatedCost: number;
+  actualCost: number;
+  marginPercent: number;
+  scopeChanges: number;
+  materialDelays: boolean;
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'job_completed',
+    entityType: 'job',
+    entityId: jobId,
+    payload: data,
+    trade: data.trade,
+  });
+}
+
+export async function emitInvoiceSent(userId: string, invoiceId: string, data: {
+  customerId: string;
+  amount: number;
+  dueDate: string;
+  paymentMethod?: string;
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'invoice_sent',
+    entityType: 'invoice',
+    entityId: invoiceId,
+    payload: data,
+  });
+}
+
+export async function emitPaymentReceived(userId: string, invoiceId: string, data: {
+  customerId: string;
+  amount: number;
+  daysToPayment: number;
+  paymentMethod: string;
+  wasOverdue: boolean;
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'payment_received',
+    entityType: 'payment',
+    entityId: invoiceId,
+    payload: data,
+  });
+}
+
+export async function emitMaterialPurchased(userId: string, data: {
+  materialName: string;
+  supplierId: string;
+  supplierName: string;
+  price: number;
+  quantity: number;
+  unit: string;
+  trade: string;
+  jobId?: string;
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'material_purchased',
+    entityType: 'material',
+    entityId: `${data.supplierId}_${data.materialName}`,
+    payload: data,
+    trade: data.trade,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Pricing intelligence collection
+// ---------------------------------------------------------------------------
+
+export async function recordPricingData(userId: string, data: {
+  trade: string;
+  country: string;
+  jobType?: string;
+  lineDescription: string;
+  quotedUnitPrice: number;
+  quotedQuantity: number;
+  vatRate: number;
+  customerType?: string;
+  region?: string;
+}): Promise<void> {
+  if (!isSupabaseConfigured) return;
+
+  const season = getSeason();
+  try {
+    await supabase.from('pricing_intelligence').insert({
+      user_id: userId,
+      trade: data.trade,
+      country: data.country,
+      job_type: data.jobType,
+      line_description: data.lineDescription,
+      quoted_unit_price: data.quotedUnitPrice,
+      quoted_quantity: data.quotedQuantity,
+      quoted_total: data.quotedUnitPrice * data.quotedQuantity,
+      vat_rate: data.vatRate,
+      customer_type: data.customerType,
+      region: data.region,
+      season,
+    });
+  } catch {
+    // Silent fail — don't block the UI
+  }
+}
+
+export async function recordPricingOutcome(userId: string, quoteId: string, data: {
+  wasAccepted: boolean;
+  acceptedPrice?: number;
+  actualCost?: number;
+  actualHours?: number;
+  marginPercent?: number;
+}): Promise<void> {
+  if (!isSupabaseConfigured) return;
+
+  try {
+    await supabase.from('pricing_intelligence')
+      .update({
+        was_accepted: data.wasAccepted,
+        accepted_price: data.acceptedPrice,
+        actual_cost: data.actualCost,
+        actual_hours: data.actualHours,
+        margin_percent: data.marginPercent,
+        [data.wasAccepted ? 'accepted_at' : 'completed_at']: new Date().toISOString(),
+      })
+      .eq('quote_id', quoteId)
+      .eq('user_id', userId);
+  } catch {
+    // Silent fail
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Local queue management (offline-first)
+// ---------------------------------------------------------------------------
+
+async function enqueueLocally(event: QueuedEvent): Promise<void> {
+  try {
+    const raw = await AsyncStorage.getItem(LOCAL_QUEUE_KEY);
+    const queue: QueuedEvent[] = raw ? JSON.parse(raw) : [];
+    queue.push(event);
+
+    // Trim if over limit
+    const trimmed = queue.length > MAX_LOCAL_QUEUE ? queue.slice(-MAX_LOCAL_QUEUE) : queue;
+    await AsyncStorage.setItem(LOCAL_QUEUE_KEY, JSON.stringify(trimmed));
+  } catch {
+    // Silent fail
+  }
+}
+
+async function flushToCloud(userId: string): Promise<void> {
+  if (!isSupabaseConfigured) return;
+
+  try {
+    const raw = await AsyncStorage.getItem(LOCAL_QUEUE_KEY);
+    if (!raw) return;
+
+    const queue: QueuedEvent[] = JSON.parse(raw);
+    if (queue.length === 0) return;
+
+    // Take a batch
+    const batch = queue.slice(0, BATCH_SIZE);
+    const rows = batch.map(e => ({
+      user_id: e.userId,
+      event_type: e.eventType,
+      entity_type: e.entityType,
+      entity_id: e.entityId,
+      payload: e.payload,
+      trade: e.trade,
+      country: e.country,
+      screen_context: e.screenContext,
+      created_at: e.timestamp,
+    }));
+
+    const { error } = await supabase.from('business_events').insert(rows);
+    if (!error) {
+      // Remove flushed events
+      const remaining = queue.slice(BATCH_SIZE);
+      await AsyncStorage.setItem(LOCAL_QUEUE_KEY, JSON.stringify(remaining));
+    }
+  } catch {
+    // Will retry on next flush
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function getSeason(): string {
+  const month = new Date().getMonth();
+  if (month >= 2 && month <= 4) return 'spring';
+  if (month >= 5 && month <= 7) return 'summer';
+  if (month >= 8 && month <= 10) return 'autumn';
+  return 'winter';
+}
+
+// ---------------------------------------------------------------------------
+// Flush timer (call from app root alongside cloudSync)
+// ---------------------------------------------------------------------------
+
+let flushTimer: ReturnType<typeof setInterval> | null = null;
+
+export function startEventFlushing(userId: string): void {
+  if (flushTimer) return;
+  flushTimer = setInterval(() => flushToCloud(userId), 30_000); // every 30s
+  flushToCloud(userId); // initial flush
+}
+
+export function stopEventFlushing(): void {
+  if (flushTimer) {
+    clearInterval(flushTimer);
+    flushTimer = null;
+  }
+}
