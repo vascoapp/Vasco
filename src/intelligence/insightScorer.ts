@@ -7,6 +7,7 @@
 // =============================================================================
 
 import type { ScoredInsight, ScreenContext, UserRole } from './generators/types';
+import { MS_PER_HOUR } from '../utils/timeConstants';
 import { priorityToUrgencyScore } from './generators/types';
 import {
   getEngagementRate,
@@ -23,6 +24,7 @@ import {
 import { getConfidenceMultiplier, getCalibrationScores, logPrediction } from './calibration';
 import type { CalibrationScore } from './calibration';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getQueueHistory } from '../services/aiActionQueueService';
 
 // =============================================================================
 // GENERATOR DISPLAY NAMES (for consolidation evidence)
@@ -137,6 +139,51 @@ function getCalibratedMultiplier(generatorId: string): number {
   const multiplier = calibrationCache.get(generatorId);
   if (multiplier !== undefined) return multiplier;
   return 1.0; // neutral default if no calibration data
+}
+
+// =============================================================================
+// APPROVAL RATE CACHE — learns from queue history (Initiative 3)
+// =============================================================================
+// Per-generator approval rate from the AI action queue. High approval rate
+// means the contractor trusts this generator's suggestions → boost score.
+// Low approval rate means noise → dampen score.
+// =============================================================================
+
+let approvalRateCache: Map<string, number> = new Map(); // generatorId → approval rate (0..1)
+let approvalRateCacheAge = 0;
+const APPROVAL_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+export async function refreshApprovalRateCache(): Promise<void> {
+  try {
+    const history = await getQueueHistory();
+    const stats: Record<string, { approved: number; total: number }> = {};
+    for (const item of history) {
+      const gen = item.sourceGeneratorId || 'unknown';
+      if (!stats[gen]) stats[gen] = { approved: 0, total: 0 };
+      stats[gen].total++;
+      if (item.status === 'approved') stats[gen].approved++;
+    }
+    const newCache = new Map<string, number>();
+    for (const [gen, s] of Object.entries(stats)) {
+      if (s.total >= 2) { // need at least 2 data points
+        newCache.set(gen, s.approved / s.total);
+      }
+    }
+    approvalRateCache = newCache;
+    approvalRateCacheAge = Date.now();
+  } catch { /* silent */ }
+}
+
+function getApprovalRateMultiplier(generatorId: string): number {
+  // Auto-refresh stale cache
+  if (approvalRateCacheAge === 0 || Date.now() - approvalRateCacheAge > APPROVAL_CACHE_TTL_MS) {
+    refreshApprovalRateCache().catch(() => {});
+  }
+  const rate = approvalRateCache.get(generatorId);
+  if (rate === undefined) return 1.0; // no history → neutral
+  if (rate >= 0.8) return 1.3;        // 80%+ approval → boost
+  if (rate <= 0.2) return 0.5;        // 20%- approval → dampen
+  return 1.0;                          // middle ground → neutral
 }
 
 // =============================================================================
@@ -297,14 +344,14 @@ function getFatiguePenalty(
   // Same generator shown in last 4 hours
   const lastShown = getLastShownTime(profile, generatorId);
   if (lastShown) {
-    const hoursSince = (now.getTime() - new Date(lastShown).getTime()) / 3600000;
+    const hoursSince = (now.getTime() - new Date(lastShown).getTime()) / MS_PER_HOUR;
     if (hoursSince < 4) penalty += fatigueLevels.sameGenerator4h;
   }
 
   // Dismissed in last 24 hours (escalating: more dismissals = higher penalty)
   const lastDismissed = getLastDismissedTime(profile, generatorId);
   if (lastDismissed) {
-    const hoursSince = (now.getTime() - new Date(lastDismissed).getTime()) / 3600000;
+    const hoursSince = (now.getTime() - new Date(lastDismissed).getTime()) / MS_PER_HOUR;
     if (hoursSince < 24) penalty += fatigueLevels.dismissed24h;
   }
 
@@ -346,7 +393,7 @@ export function scoreInsight(
   // Cross-screen dedup: penalize enterprise roles seeing same generator on different screen within 6h
   let crossScreenPenalty = 0;
   if (role !== 'contractor') {
-    const sixHoursAgo = new Date(now.getTime() - 6 * 3600000).toISOString();
+    const sixHoursAgo = new Date(now.getTime() - 6 * MS_PER_HOUR).toISOString();
     const recentOnOtherScreen = profile.insightInteractions.some(
       i => i.generatorId === insight.generatorId
         && i.action === 'viewed'
@@ -392,7 +439,10 @@ export function scoreInsight(
   // Outcome-based boost: generators whose insights led to positive results get a bonus
   const outcomeBoost = outcomeRate > 0.6 ? 0.05 : outcomeRate < 0.3 ? -0.05 : 0;
 
-  const finalScore = (baseScore + crossBoost + outcomeBoost) * calibrationMult * dataPointFactor;
+  // Approval rate from queue history: learn what the contractor actually acts on
+  const approvalMult = getApprovalRateMultiplier(insight.generatorId);
+
+  const finalScore = (baseScore + crossBoost + outcomeBoost) * calibrationMult * dataPointFactor * approvalMult;
 
   // Low-data confidence warning for insights based on few data points
   const confidenceWarning = dp < 5

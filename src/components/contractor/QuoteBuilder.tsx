@@ -58,7 +58,7 @@ export function QuoteBuilder({
   const vatAmount = subtotal * (vatRate / 100);
   const total = subtotal + vatAmount;
 
-  const formatCurrency = (amount: number) => `€${amount.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}`;
+  const formatCurrency = (amount: number) => `€${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
   const generateReference = () => {
     const year = new Date().getFullYear();

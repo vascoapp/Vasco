@@ -613,7 +613,7 @@ function BundlesTab({
             <View style={styles.bundleValid}>
               <Ionicons name="time-outline" size={14} color={SemanticColors.textSecondary} />
               <Text style={styles.bundleValidText}>
-                Geldig t/m {new Date(bundle.validUntil).toLocaleDateString('nl-NL')}
+                Geldig t/m {new Date(bundle.validUntil).toLocaleDateString(undefined)}
               </Text>
             </View>
           </View>
@@ -698,7 +698,7 @@ function SuggestionDetailModal({
               <View style={styles.orderDetail}>
                 <Text style={styles.orderDetailLabel}>Bestel voor</Text>
                 <Text style={styles.orderDetailValue}>
-                  {new Date(suggestion.suggestedOrderDate).toLocaleDateString('nl-NL')}
+                  {new Date(suggestion.suggestedOrderDate).toLocaleDateString(undefined)}
                 </Text>
               </View>
             </View>
@@ -843,7 +843,7 @@ function BundleDetailModal({
           <View style={styles.bundleDetailValid}>
             <Ionicons name="calendar-outline" size={16} color={SemanticColors.textSecondary} />
             <Text style={styles.bundleDetailValidText}>
-              Aanbieding geldig t/m {new Date(bundle.validUntil).toLocaleDateString('nl-NL')}
+              Aanbieding geldig t/m {new Date(bundle.validUntil).toLocaleDateString(undefined)}
             </Text>
           </View>
         </ScrollView>

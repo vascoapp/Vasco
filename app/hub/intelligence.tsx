@@ -97,21 +97,21 @@ export default function IntelligenceHubScreen() {
           <View style={styles.heroRow}>
             <View style={styles.heroKPI}>
               <Text style={styles.heroValue}>
-                {stats.materialsCount.toLocaleString('nl-NL')}
+                {stats.materialsCount.toLocaleString(undefined)}
               </Text>
               <Text style={styles.heroLabel}>Materialen</Text>
             </View>
             <View style={styles.heroDivider} />
             <View style={styles.heroKPI}>
               <Text style={styles.heroValue}>
-                {stats.priceObservationsCount.toLocaleString('nl-NL')}
+                {stats.priceObservationsCount.toLocaleString(undefined)}
               </Text>
               <Text style={styles.heroLabel}>Prijsobservaties</Text>
             </View>
             <View style={styles.heroDivider} />
             <View style={styles.heroKPI}>
               <Text style={styles.heroValue}>
-                {stats.suppliersCount.toLocaleString('nl-NL')}
+                {stats.suppliersCount.toLocaleString(undefined)}
               </Text>
               <Text style={styles.heroLabel}>Leveranciers</Text>
             </View>
@@ -167,7 +167,7 @@ export default function IntelligenceHubScreen() {
                   <Text style={styles.timelineDetail}>
                     {evt.lineItemCount} regelitems
                     {evt.total > 0
-                      ? ` · \u20AC${evt.total.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}`
+                      ? ` · \u20AC${evt.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
                       : ''}
                   </Text>
                 </View>

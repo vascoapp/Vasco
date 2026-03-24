@@ -3,7 +3,7 @@
 // =============================================================================
 
 import { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Linking } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -65,7 +65,7 @@ export default function CustomerDetailScreen() {
         <FadeIn delay={0}>
           <View style={s.kpiRow}>
             <View style={s.kpi}>
-              <Text style={s.kpiValue}>€{totalSpent.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
+              <Text style={s.kpiValue}>€{totalSpent.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
               <Text style={s.kpiLabel}>Besteed</Text>
             </View>
             <View style={s.kpiDivider} />
@@ -93,11 +93,11 @@ export default function CustomerDetailScreen() {
               <Ionicons name="document-text-outline" size={20} color={Palette.hermesOrange} />
               <Text style={s.actionBtnText}>Offerte</Text>
             </Pressable>
-            <Pressable style={s.actionBtn} onPress={() => { if (customer.phone) { const { Linking } = require('react-native'); Linking.openURL(`tel:${customer.phone}`); } }}>
+            <Pressable style={s.actionBtn} onPress={() => { if (customer.phone) { Linking.openURL(`tel:${customer.phone}`); } }}>
               <Ionicons name="call-outline" size={20} color={Palette.hermesOrange} />
               <Text style={s.actionBtnText}>Bellen</Text>
             </Pressable>
-            <Pressable style={s.actionBtn} onPress={() => { if (customer.email) { const { Linking } = require('react-native'); Linking.openURL(`mailto:${customer.email}`); } }}>
+            <Pressable style={s.actionBtn} onPress={() => { if (customer.email) { Linking.openURL(`mailto:${customer.email}`); } }}>
               <Ionicons name="mail-outline" size={20} color={Palette.hermesOrange} />
               <Text style={s.actionBtnText}>E-mail</Text>
             </Pressable>
@@ -113,7 +113,7 @@ export default function CustomerDetailScreen() {
                 <View style={[s.accent, { backgroundColor: job.status === 'completed' ? SemanticColors.feedbackSuccess : Palette.hermesOrange }]} />
                 <View style={s.cardContent}>
                   <Text style={s.cardTitle} numberOfLines={1}>{job.title}</Text>
-                  <Text style={s.cardMeta}>{job.status} · €{(job.quotedAmount ?? 0).toLocaleString('nl-NL')}</Text>
+                  <Text style={s.cardMeta}>{job.status} · €{(job.quotedAmount ?? 0).toLocaleString(undefined)}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
               </Pressable>
@@ -130,7 +130,7 @@ export default function CustomerDetailScreen() {
                 <View style={[s.accent, { backgroundColor: q.status === 'accepted' ? SemanticColors.feedbackSuccess : SemanticColors.textTertiary }]} />
                 <View style={s.cardContent}>
                   <Text style={s.cardTitle} numberOfLines={1}>{q.id} — {q.job || 'Offerte'}</Text>
-                  <Text style={s.cardMeta}>{q.status} · €{(q.amount ?? 0).toLocaleString('nl-NL')}</Text>
+                  <Text style={s.cardMeta}>{q.status} · €{(q.amount ?? 0).toLocaleString(undefined)}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
               </Pressable>
@@ -147,7 +147,7 @@ export default function CustomerDetailScreen() {
                 <View style={[s.accent, { backgroundColor: inv.status === 'paid' ? SemanticColors.feedbackSuccess : inv.status === 'overdue' ? SemanticColors.feedbackError : Palette.hermesOrange }]} />
                 <View style={s.cardContent}>
                   <Text style={s.cardTitle} numberOfLines={1}>{inv.id}</Text>
-                  <Text style={s.cardMeta}>{inv.status} · €{(inv.amount ?? 0).toLocaleString('nl-NL')}</Text>
+                  <Text style={s.cardMeta}>{inv.status} · €{(inv.amount ?? 0).toLocaleString(undefined)}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
               </Pressable>

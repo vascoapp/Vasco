@@ -372,7 +372,7 @@ class BudgetOptimizerService {
         : (currentRate * (1 - savingsAmount / line.total)).toFixed(2);
 
     const fmt = (n: number) =>
-      n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     switch (action.type) {
       case 'negotiate_rate':

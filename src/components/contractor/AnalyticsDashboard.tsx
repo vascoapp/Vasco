@@ -43,7 +43,7 @@ export function AnalyticsDashboard() {
   ];
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(amount);
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'EUR' }).format(amount);
   };
 
   const formatPercent = (value: number) => `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;

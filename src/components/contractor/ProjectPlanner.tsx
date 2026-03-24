@@ -69,7 +69,7 @@ export function ProjectPlanner() {
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+    return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
   };
 
   const getFactorIcon = (impact: string) => {

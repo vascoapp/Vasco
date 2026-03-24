@@ -2,6 +2,33 @@ import { Invoice, Quote } from '../domain/documents';
 
 export const quotes: Quote[] = [
   {
+    id: 'q-seed-1',
+    customer: 'cust-004',
+    job: 'Lekkage inspectie — Fam. Bakker',
+    amount: 180,
+    status: 'sent',
+    trade: 'plumbing',
+    lastUpdated: '1 day ago',
+  },
+  {
+    id: 'q-seed-2',
+    customer: 'cust-001',
+    job: 'CV-ketel onderhoud — Fam. de Vries',
+    amount: 450,
+    status: 'accepted',
+    trade: 'plumbing',
+    lastUpdated: '3 days ago',
+  },
+  {
+    id: 'q-seed-3',
+    customer: 'cust-002',
+    job: 'Badkamer renovatie — Fam. Jansen',
+    amount: 4200,
+    status: 'accepted',
+    trade: 'plumbing',
+    lastUpdated: '1 week ago',
+  },
+  {
     id: 'q-102',
     customer: 'De Jong',
     job: 'Interior repaint',

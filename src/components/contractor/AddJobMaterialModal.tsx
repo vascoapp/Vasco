@@ -12,6 +12,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Palette, SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
@@ -29,6 +30,7 @@ interface AddJobMaterialModalProps {
 type Step = 'select' | 'configure';
 
 export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialModalProps) {
+  const { t } = useTranslation();
   const { materials, suppliers, priceObservations, addJobMaterial } = useAppState();
 
   const [step, setStep] = useState<Step>('select');
@@ -75,7 +77,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
 
     const qty = parseFloat(quantity);
     if (isNaN(qty) || qty <= 0) {
-      Alert.alert('Ongeldig', 'Vul een geldige hoeveelheid in.');
+      Alert.alert(t('common.invalid', 'Invalid'), t('materials.enterValidQuantity', 'Enter a valid quantity.'));
       return;
     }
 
@@ -95,7 +97,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
       });
       handleClose();
     } catch {
-      Alert.alert('Fout', 'Kon materiaal niet toevoegen.');
+      Alert.alert(t('common.error', 'Error'), t('materials.couldNotAdd', 'Could not add material.'));
     } finally {
       setSaving(false);
     }
@@ -117,7 +119,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
     setSelectedMaterial(null);
   };
 
-  const formatCurrency = (n: number) => `€${n.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}`;
+  const formatCurrency = (n: number) => `€${n.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
   const renderMaterialItem = ({ item }: { item: Material }) => (
     <Pressable style={s.materialRow} onPress={() => handleSelectMaterial(item)}>
@@ -150,7 +152,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
             />
           </Pressable>
           <Text style={s.headerTitle}>
-            {step === 'select' ? 'Materiaal kiezen' : 'Hoeveelheid & leverancier'}
+            {step === 'select' ? t('materials.selectMaterial', 'Select material') : t('materials.quantityAndSupplier', 'Quantity & supplier')}
           </Text>
           <View style={s.headerBtn} />
         </View>
@@ -162,7 +164,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
               <Ionicons name="search" size={18} color={SemanticColors.textTertiary} />
               <TextInput
                 style={s.searchInput}
-                placeholder="Zoek materiaal..."
+                placeholder={t('materials.searchMaterial', 'Search material...')}
                 placeholderTextColor={SemanticColors.textTertiary}
                 value={search}
                 onChangeText={setSearch}
@@ -185,7 +187,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
             ) : (
               <View style={s.emptyState}>
                 <Ionicons name="search-outline" size={40} color={SemanticColors.textTertiary} />
-                <Text style={s.emptyText}>Geen materialen gevonden</Text>
+                <Text style={s.emptyText}>{t('materials.noMaterialsFound', 'No materials found')}</Text>
               </View>
             )}
           </View>
@@ -213,7 +215,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
             {/* Quantity row */}
             <View style={s.fieldRow}>
               <View style={s.fieldGroup}>
-                <Text style={s.fieldLabel}>Hoeveelheid</Text>
+                <Text style={s.fieldLabel}>{t('materials.quantity', 'Quantity')}</Text>
                 <TextInput
                   style={s.fieldInput}
                   value={quantity}
@@ -224,7 +226,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
                 />
               </View>
               <View style={[s.fieldGroup, { flex: 0.6 }]}>
-                <Text style={s.fieldLabel}>Eenheid</Text>
+                <Text style={s.fieldLabel}>{t('materials.unit', 'Unit')}</Text>
                 <TextInput
                   style={s.fieldInput}
                   value={unit}
@@ -237,7 +239,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
 
             {/* Supplier picker */}
             <View style={s.fieldSection}>
-              <Text style={s.fieldLabel}>Leverancier</Text>
+              <Text style={s.fieldLabel}>{t('materials.supplier', 'Supplier')}</Text>
               <View style={s.supplierList}>
                 {suppliers.map((sup) => {
                   const isSelected = selectedSupplierId === sup.id;
@@ -261,12 +263,12 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
 
             {/* Notes */}
             <View style={s.fieldSection}>
-              <Text style={s.fieldLabel}>Notities (optioneel)</Text>
+              <Text style={s.fieldLabel}>{t('materials.notesOptional', 'Notes (optional)')}</Text>
               <TextInput
                 style={[s.fieldInput, { height: 60, textAlignVertical: 'top' }]}
                 value={notes}
                 onChangeText={setNotes}
-                placeholder="Bijv. specifieke kleurcode..."
+                placeholder={t('materials.notesPlaceholder', 'E.g. specific color code...')}
                 placeholderTextColor={SemanticColors.textTertiary}
                 multiline
               />
@@ -275,7 +277,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
             {/* Cost preview */}
             {bestPrice && quantity && (
               <View style={s.costPreview}>
-                <Text style={s.costLabel}>Geschatte kosten</Text>
+                <Text style={s.costLabel}>{t('materials.estimatedCost', 'Estimated cost')}</Text>
                 <Text style={s.costValue}>
                   {formatCurrency(bestPrice.price * (parseFloat(quantity) || 0))}
                 </Text>
@@ -290,7 +292,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
             >
               <Ionicons name="add-circle" size={20} color="#fff" />
               <Text style={s.saveButtonText}>
-                {saving ? 'Toevoegen...' : 'Materiaal toevoegen'}
+                {saving ? t('materials.adding', 'Adding...') : t('materials.addMaterial', 'Add material')}
               </Text>
             </Pressable>
           </View>

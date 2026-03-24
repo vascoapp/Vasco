@@ -283,6 +283,95 @@ export async function propagatePayment(invoiceId: string, daysToPayment: number)
 }
 
 // ---------------------------------------------------------------------------
+// Build ontology from app state — seed the entity graph from existing data
+// ---------------------------------------------------------------------------
+
+export async function buildOntologyFromAppState(data: {
+  jobs: Array<{ id: string; title: string; customerId?: string | null; trade?: string; status?: string; quotedAmount?: number; agreedAmount?: number }>;
+  customers: Array<{ id: string; name: string; email?: string; phone?: string }>;
+  invoices: Array<{ id: string; customer?: string; job?: string; amount: number; status?: string }>;
+  quotes: Array<{ id: string; customer?: string; job?: string; amount: number; status?: string }>;
+}): Promise<void> {
+  const graph = await loadOntology();
+
+  // Seed customers
+  for (const c of (data.customers ?? [])) {
+    if (!graph.entities.has(c.id)) {
+      graph.entities.set(c.id, {
+        id: c.id,
+        type: 'customer',
+        name: c.name,
+        attributes: { email: c.email, phone: c.phone },
+        scores: { reliability: 50, quality: 50, value: 0, frequency: 0 },
+        lastUpdated: new Date().toISOString(),
+      });
+    }
+  }
+
+  // Seed jobs
+  for (const j of (data.jobs ?? [])) {
+    if (!graph.entities.has(j.id)) {
+      graph.entities.set(j.id, {
+        id: j.id,
+        type: 'job',
+        name: j.title,
+        attributes: { trade: j.trade, status: j.status },
+        scores: { reliability: 50, quality: 50, value: j.agreedAmount ?? j.quotedAmount ?? 0, frequency: 0 },
+        lastUpdated: new Date().toISOString(),
+      });
+    }
+    // Link customer → job
+    if (j.customerId) {
+      const exists = graph.relations.some(r =>
+        r.fromId === j.customerId && r.toId === j.id && r.relationType === 'owns'
+      );
+      if (!exists) {
+        graph.relations.push({
+          id: `rel-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          fromId: j.customerId,
+          fromType: 'customer',
+          toId: j.id,
+          toType: 'job',
+          relationType: 'owns',
+          metadata: {},
+          createdAt: new Date().toISOString(),
+        });
+      }
+    }
+  }
+
+  // Seed invoices
+  for (const inv of (data.invoices ?? [])) {
+    if (!graph.entities.has(inv.id)) {
+      graph.entities.set(inv.id, {
+        id: inv.id,
+        type: 'invoice',
+        name: `Invoice ${inv.id}`,
+        attributes: { amount: inv.amount, status: inv.status },
+        scores: { reliability: 50, quality: 50, value: inv.amount, frequency: 0 },
+        lastUpdated: new Date().toISOString(),
+      });
+    }
+  }
+
+  // Seed quotes
+  for (const q of (data.quotes ?? [])) {
+    if (!graph.entities.has(q.id)) {
+      graph.entities.set(q.id, {
+        id: q.id,
+        type: 'quote',
+        name: `Quote ${q.id}`,
+        attributes: { amount: q.amount, status: q.status },
+        scores: { reliability: 50, quality: 50, value: q.amount, frequency: 0 },
+        lastUpdated: new Date().toISOString(),
+      });
+    }
+  }
+
+  await saveOntology();
+}
+
+// ---------------------------------------------------------------------------
 // Graph statistics
 // ---------------------------------------------------------------------------
 

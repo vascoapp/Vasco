@@ -33,8 +33,6 @@ import {
   getCurrencyForCountry,
 } from '../../modules/countryModules';
 
-// AI Services (auditorService and financialAuditorService hooks removed — unused)
-
 // Vasco Guidance
 import { useVascoGuidance, useInlineInsight } from '../../services/vascoGuidanceService';
 import { InlineInsight } from '../shared/VascoInsightCard';
@@ -57,8 +55,6 @@ import { useTCOSummary } from '../../services/tcoCalculatorService';
 
 
 type IconName = keyof typeof Ionicons.glyphMap;
-
-// (Vasco AI Guidance now provided via useVascoGuidance service)
 
 // =============================================================================
 // PENDING APPROVALS (Enhanced with AI verification)
@@ -627,7 +623,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
 
   const handleConfirmApproval = useCallback(() => {
     // In reality, would call approval API
-    console.log('Approved:', selectedApproval?.id);
+    if (__DEV__) console.log('Approved:', selectedApproval?.id);
     setConfirmModalVisible(false);
     setSelectedApproval(null);
   }, [selectedApproval]);
@@ -650,7 +646,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
           title: 'Savings',
           subtitle: 'AI Budget Optimalisatie',
           metrics: [
-            { value: `\u20AC${aiSavings.totalSavedThisYear.toLocaleString('nl-NL')}`, label: 'Bespaard dit jaar', color: SemanticColors.feedbackSuccess },
+            { value: `\u20AC${aiSavings.totalSavedThisYear.toLocaleString(undefined)}`, label: 'Bespaard dit jaar', color: SemanticColors.feedbackSuccess },
             { value: `\u20AC${negotiation.totalDiscountPotential}/jr`, label: 'Leverancierskansen', color: CFO_COLOR },
             { value: `\u20AC${tco.totalSavingsThisYear}/jr`, label: 'TCO Besparing' },
           ],
@@ -1203,7 +1199,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
               <View style={styles.aiSavingsKPIs}>
                 <View style={styles.aiSavingsKPI}>
                   <Text style={[styles.aiSavingsKPIValue, { color: Palette.hermesOrange }]}>
-                    {'\u20AC'}{aiSavings.totalSavedThisYear.toLocaleString('nl-NL')}
+                    {'\u20AC'}{aiSavings.totalSavedThisYear.toLocaleString(undefined)}
                   </Text>
                   <Text style={styles.aiSavingsKPILabel}>bespaard dit jaar</Text>
                 </View>
@@ -1252,7 +1248,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
                 <View style={styles.aiSavingsKPIDivider} />
                 <View style={styles.aiSavingsKPI}>
                   <Text style={styles.aiSavingsKPIValue}>
-                    {'\u20AC'}{((timeSavings?.amount || 0) * 6).toLocaleString('nl-NL')}
+                    {'\u20AC'}{((timeSavings?.amount || 0) * 6).toLocaleString(undefined)}
                   </Text>
                   <Text style={styles.aiSavingsKPILabel}>waarde 6 mnd</Text>
                 </View>

@@ -130,7 +130,7 @@ export function ROIDashboard({ onClose }: ROIDashboardProps) {
                   <View key={index} style={styles.roiBreakdownItem}>
                     <Text style={styles.roiBreakdownLabel}>{item.category}</Text>
                     <Text style={styles.roiBreakdownValue}>
-                      €{item.value.toLocaleString('nl-NL')}
+                      €{item.value.toLocaleString(undefined)}
                     </Text>
                   </View>
                 ))}
@@ -138,7 +138,7 @@ export function ROIDashboard({ onClose }: ROIDashboardProps) {
               <View style={styles.roiTotal}>
                 <Text style={styles.roiTotalLabel}>Total Value Generated</Text>
                 <Text style={styles.roiTotalValue}>
-                  €{automationROI.totalValue.toLocaleString('nl-NL')}
+                  €{automationROI.totalValue.toLocaleString(undefined)}
                 </Text>
               </View>
             </View>

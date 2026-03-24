@@ -186,7 +186,7 @@ class UpsellEngineService {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
       performances.push({
-        period: date.toLocaleDateString('nl-NL', { month: 'short' }),
+        period: date.toLocaleDateString(undefined, { month: 'short' }),
         presented: Math.floor(15 + Math.random() * 10),
         accepted: Math.floor(5 + Math.random() * 5),
         acceptanceRate: Math.floor(25 + Math.random() * 20),

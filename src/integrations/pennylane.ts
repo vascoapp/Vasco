@@ -7,6 +7,7 @@
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MS_PER_DAY } from '../utils/timeConstants';
 
 const STORAGE_KEY = '@vasco_pennylane';
 const API_BASE = 'https://app.pennylane.com/api/external/v2';
@@ -235,7 +236,7 @@ export async function createInvoice(invoice: {
       invoice: {
         customer_id: invoice.customerId,
         date: new Date().toISOString().split('T')[0],
-        deadline: invoice.dueDate ?? new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+        deadline: invoice.dueDate ?? new Date(Date.now() + 30 * MS_PER_DAY).toISOString().split('T')[0],
         currency: 'EUR',
         line_items,
       },

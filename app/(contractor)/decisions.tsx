@@ -13,6 +13,7 @@ import { Palette, SemanticColors } from '../../src/theme/colors';
 import { PAGE_BG } from '../../src/theme/tabStyles';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { Spacing } from '../../src/theme/spacing';
+import { MS_PER_DAY } from '../../src/utils/timeConstants';
 import {
   DecisionTrackerList,
   DecisionTrackerDetail,
@@ -72,7 +73,7 @@ export default function KeuzeScreen() {
         categoryId: cat.id,
         name: cat.name,
         phase: cat.phase,
-        dueDate: new Date(Date.now() + cat.daysBeforePhaseStart * 86400000).toISOString(),
+        dueDate: new Date(Date.now() + cat.daysBeforePhaseStart * MS_PER_DAY).toISOString(),
         items: cat.items.map(item => ({
           id: item.id,
           itemId: item.id,
@@ -82,7 +83,7 @@ export default function KeuzeScreen() {
           options: item.options,
           priority: item.priority,
           status: 'pending' as const,
-          dueDate: new Date(Date.now() + cat.daysBeforePhaseStart * 86400000).toISOString(),
+          dueDate: new Date(Date.now() + cat.daysBeforePhaseStart * MS_PER_DAY).toISOString(),
           isOverdue: false,
           remindersSent: 0,
         })),

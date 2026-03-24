@@ -31,19 +31,18 @@ import {
   insertPrediction as dbInsertPrediction,
   insertTrainingExample as dbInsertTrainingExample,
 } from '../lib/intelligenceDataProvider';
+import { MS_PER_DAY } from '../utils/timeConstants';
 
-// ============================================
-// FEEDBACK OBSERVATIONS - Timestamped data points
-// ============================================
+// ═══════════════════════════════════════════════════════════════════════════════
+// SECTION: Types (FeedbackObservation, FeedbackWeights, IntelligenceAPI)
+// ═══════════════════════════════════════════════════════════════════════════════
 
 export interface FeedbackObservation {
   timestamp: string;   // ISO date
   value: number;       // 1 = accepted/positive, 0 = rejected/negative, or ratio value
 }
 
-// ============================================
-// FEEDBACK WEIGHTS - Persisted learned data (v2: observation arrays)
-// ============================================
+// Feedback weights — persisted learned data (v2: observation arrays)
 
 export interface FeedbackWeights {
   version: number;  // 2 = observation-based
@@ -102,7 +101,7 @@ function migrateFeedbackWeightsV1ToV2(legacy: LegacyFeedbackWeights): FeedbackWe
   function spreadCounters(accepted: number, total: number): FeedbackObservation[] {
     const observations: FeedbackObservation[] = [];
     for (let i = 0; i < total && i < MAX_OBSERVATIONS_PER_KEY; i++) {
-      const ageMs = ((total - i) / total) * SPREAD_DAYS * 86400000;
+      const ageMs = ((total - i) / total) * SPREAD_DAYS * MS_PER_DAY;
       observations.push({
         timestamp: new Date(now - ageMs).toISOString(),
         value: i < accepted ? 1 : 0,
@@ -116,7 +115,7 @@ function migrateFeedbackWeightsV1ToV2(legacy: LegacyFeedbackWeights): FeedbackWe
     const avgRatio = totalRatio / count;
     const observations: FeedbackObservation[] = [];
     for (let i = 0; i < count && i < MAX_OBSERVATIONS_PER_KEY; i++) {
-      const ageMs = ((count - i) / count) * SPREAD_DAYS * 86400000;
+      const ageMs = ((count - i) / count) * SPREAD_DAYS * MS_PER_DAY;
       observations.push({
         timestamp: new Date(now - ageMs).toISOString(),
         value: avgRatio,
@@ -130,7 +129,7 @@ function migrateFeedbackWeightsV1ToV2(legacy: LegacyFeedbackWeights): FeedbackWe
     const avgDays = totalDays / count;
     const observations: FeedbackObservation[] = [];
     for (let i = 0; i < count && i < MAX_OBSERVATIONS_PER_KEY; i++) {
-      const ageMs = ((count - i) / count) * SPREAD_DAYS * 86400000;
+      const ageMs = ((count - i) / count) * SPREAD_DAYS * MS_PER_DAY;
       observations.push({
         timestamp: new Date(now - ageMs).toISOString(),
         value: avgDays,
@@ -178,7 +177,7 @@ export function getDecayedRate(
 
   for (const obs of observations) {
     const ageMs = now - new Date(obs.timestamp).getTime();
-    const ageDays = Math.max(0, ageMs / 86400000);
+    const ageDays = Math.max(0, ageMs / MS_PER_DAY);
     const weight = Math.exp(-FEEDBACK_DECAY * ageDays);
     weightedSum += obs.value * weight;
     totalWeight += weight;
@@ -212,6 +211,10 @@ export function confidenceInterval(
 
   return { lower, upper, width, certaintyLevel };
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SECTION: Feature Analysis (decayed rates, confidence intervals, migration)
+// ═══════════════════════════════════════════════════════════════════════════════
 
 /** Push observation and trim to max cap */
 function pushObservation(arr: FeedbackObservation[], obs: FeedbackObservation): FeedbackObservation[] {
@@ -272,9 +275,9 @@ async function saveFeedbackWeights(weights: FeedbackWeights): Promise<void> {
   }
 }
 
-// ============================================
-// INTELLIGENCE API
-// ============================================
+// ═══════════════════════════════════════════════════════════════════════════════
+// SECTION: Intelligence API Interface & Recommendation Types
+// ═══════════════════════════════════════════════════════════════════════════════
 
 export interface IntelligenceAPI {
   // Data capture
@@ -348,9 +351,9 @@ export type RecommendationType =
   | 'cost_saving'
   | 'market_insight';
 
-// ============================================
-// INTELLIGENCE ENGINE IMPLEMENTATION
-// ============================================
+// ═══════════════════════════════════════════════════════════════════════════════
+// SECTION: Event Processing (trackEvent, resolveEntity, entity cache)
+// ═══════════════════════════════════════════════════════════════════════════════
 
 class VascoIntelligenceEngine implements IntelligenceAPI {
   private eventQueue: DataEvent[] = [];
@@ -380,7 +383,7 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
       }).catch((err) => console.warn('[Intelligence] Event persist failed:', err));
     }
 
-    console.log('[Intelligence] Event tracked:', fullEvent.eventType);
+    if (__DEV__) console.log('[Intelligence] Event tracked:', fullEvent.eventType);
 
     // Process feedback loops
     await this.processFeedbackLoops(fullEvent);
@@ -683,12 +686,17 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
     if (isSupabaseConfigured && outcome) {
       await dbUpdateEventOutcome(eventId, outcome as unknown as Record<string, unknown>);
     }
-    console.log('[Intelligence] Outcome recorded for event:', eventId, outcome);
+    if (__DEV__) console.log('[Intelligence] Outcome recorded for event:', eventId, outcome);
   }
 
-  // ============================================
-  // PREDICTION MODELS (Heuristic implementations)
-  // ============================================
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SECTION: Recommendations Engine (getRecommendations, getMarketIntelligence)
+  // ... continues into Prediction Models below
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SECTION: Prediction Models (quote acceptance, pricing, duration, payment)
+  // ═══════════════════════════════════════════════════════════════════════════
 
   private async predictQuoteAcceptance(input: Record<string, unknown>): Promise<ModelPrediction> {
     const quoteValue = (input.quoteValue as number) || 0;
@@ -998,9 +1006,9 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
     };
   }
 
-  // ============================================
-  // FEEDBACK LOOP PROCESSING
-  // ============================================
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SECTION: Tracking & Metrics (feedback loops, learning from outcomes)
+  // ═══════════════════════════════════════════════════════════════════════════
 
   private async processFeedbackLoops(event: DataEvent): Promise<void> {
     const weights = await loadFeedbackWeights();
@@ -1143,13 +1151,13 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
 
     if (updated) {
       await saveFeedbackWeights(weights);
-      console.log('[Intelligence] Feedback weights updated for:', event.eventType);
+      if (__DEV__) console.log('[Intelligence] Feedback weights updated for:', event.eventType);
     }
   }
 
-  // ============================================
-  // UTILITIES
-  // ============================================
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SECTION: Utilities (context creation, season detection)
+  // ═══════════════════════════════════════════════════════════════════════════
 
   private createContext(): EventContext {
     const now = new Date();
@@ -1174,9 +1182,9 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
 // Export singleton
 export const intelligence = new VascoIntelligenceEngine();
 
-// ============================================
-// REACT HOOKS FOR INTELLIGENCE
-// ============================================
+// ═══════════════════════════════════════════════════════════════════════════════
+// SECTION: React Hooks (useIntelligence, useRecommendations, useMarketIntelligence)
+// ═══════════════════════════════════════════════════════════════════════════════
 
 export function useIntelligence() {
   return {
@@ -1204,9 +1212,9 @@ export function useMarketIntelligence(region: string, trade: string) {
   };
 }
 
-// ============================================
-// CONVENIENCE TRACKING FUNCTION
-// ============================================
+// ═══════════════════════════════════════════════════════════════════════════════
+// SECTION: Convenience Tracking (trackUserAction helper)
+// ═══════════════════════════════════════════════════════════════════════════════
 
 /**
  * Quick tracking function with auto-generated context

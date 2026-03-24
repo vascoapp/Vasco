@@ -158,7 +158,7 @@ export function ComplianceCenter() {
               {entry.date.getDate()}
             </Text>
             <Text style={styles.calendarMonth}>
-              {entry.date.toLocaleDateString('nl-NL', { month: 'short' })}
+              {entry.date.toLocaleDateString(undefined, { month: 'short' })}
             </Text>
           </View>
           <View style={styles.calendarItems}>
@@ -195,7 +195,7 @@ export function ComplianceCenter() {
             <Text style={styles.alertDescription}>{alert.description}</Text>
             {alert.dueDate && (
               <Text style={styles.alertDue}>
-                Deadline: {alert.dueDate.toLocaleDateString('nl-NL')}
+                Deadline: {alert.dueDate.toLocaleDateString(undefined)}
               </Text>
             )}
           </View>
@@ -243,7 +243,7 @@ export function ComplianceCenter() {
             <View style={styles.licenseDetail}>
               <Ionicons name="calendar" size={14} color={SemanticColors.textSecondary} />
               <Text style={styles.licenseDetailText}>
-                Verloopt: {license.expiryDate.toLocaleDateString('nl-NL')}
+                Verloopt: {license.expiryDate.toLocaleDateString(undefined)}
               </Text>
             </View>
           </View>
@@ -293,7 +293,7 @@ export function ComplianceCenter() {
                 </View>
                 <View style={styles.certFooter}>
                   <Text style={styles.certExpiry}>
-                    Geldig tot: {cert.expiryDate.toLocaleDateString('nl-NL')}
+                    Geldig tot: {cert.expiryDate.toLocaleDateString(undefined)}
                   </Text>
                 </View>
               </View>
@@ -325,7 +325,7 @@ export function ComplianceCenter() {
             </View>
             <View style={styles.certFooter}>
               <Text style={styles.certExpiry}>
-                Geldig tot: {cert.expiryDate.toLocaleDateString('nl-NL')}
+                Geldig tot: {cert.expiryDate.toLocaleDateString(undefined)}
               </Text>
               <Text style={styles.certIssuerSmall}>{cert.issuingBody}</Text>
             </View>
@@ -345,7 +345,7 @@ export function ComplianceCenter() {
       <View style={styles.insuranceSummary}>
         <Text style={styles.insuranceSummaryTitle}>Totale Dekking</Text>
         <Text style={styles.insuranceSummaryValue}>
-          €{policies.reduce((sum, p) => sum + p.coverage, 0).toLocaleString('nl-NL')}
+          €{policies.reduce((sum, p) => sum + p.coverage, 0).toLocaleString(undefined)}
         </Text>
         <Text style={styles.insuranceSummaryPremium}>
           Maandpremie: €{policies.reduce((sum, p) => {
@@ -381,13 +381,13 @@ export function ComplianceCenter() {
             <View style={styles.insuranceDetailItem}>
               <Text style={styles.insuranceDetailLabel}>Dekking</Text>
               <Text style={styles.insuranceDetailValue}>
-                €{policy.coverage.toLocaleString('nl-NL')}
+                €{policy.coverage.toLocaleString(undefined)}
               </Text>
             </View>
             <View style={styles.insuranceDetailItem}>
               <Text style={styles.insuranceDetailLabel}>Eigen risico</Text>
               <Text style={styles.insuranceDetailValue}>
-                €{policy.deductible.toLocaleString('nl-NL')}
+                €{policy.deductible.toLocaleString(undefined)}
               </Text>
             </View>
             <View style={styles.insuranceDetailItem}>
@@ -400,7 +400,7 @@ export function ComplianceCenter() {
 
           <View style={styles.insuranceFooter}>
             <Text style={styles.insuranceExpiry}>
-              Looptijd tot: {policy.endDate.toLocaleDateString('nl-NL')}
+              Looptijd tot: {policy.endDate.toLocaleDateString(undefined)}
             </Text>
             {policy.autoRenew && (
               <View style={styles.autoRenewBadge}>
@@ -448,7 +448,7 @@ export function ComplianceCenter() {
               </Text>
             </View>
             <Text style={styles.updateDate}>
-              {update.publishDate.toLocaleDateString('nl-NL')}
+              {update.publishDate.toLocaleDateString(undefined)}
             </Text>
           </View>
 
@@ -699,7 +699,7 @@ export function ComplianceCenter() {
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Uitgiftedatum</Text>
                 <Text style={styles.detailValue}>
-                  {selectedLicense.issueDate.toLocaleDateString('nl-NL')}
+                  {selectedLicense.issueDate.toLocaleDateString(undefined)}
                 </Text>
               </View>
               <View style={styles.detailRow}>
@@ -708,7 +708,7 @@ export function ComplianceCenter() {
                   styles.detailValue,
                   selectedLicense.status !== 'valid' && { color: getStatusColor(selectedLicense.status) },
                 ]}>
-                  {selectedLicense.expiryDate.toLocaleDateString('nl-NL')}
+                  {selectedLicense.expiryDate.toLocaleDateString(undefined)}
                 </Text>
               </View>
               {selectedLicense.renewalCost && (
@@ -795,7 +795,7 @@ export function ComplianceCenter() {
               <Text style={styles.updateMetaText}>{selectedUpdate.source}</Text>
               <Text style={styles.updateMetaText}>•</Text>
               <Text style={styles.updateMetaText}>
-                {selectedUpdate.publishDate.toLocaleDateString('nl-NL')}
+                {selectedUpdate.publishDate.toLocaleDateString(undefined)}
               </Text>
             </View>
 
@@ -803,7 +803,7 @@ export function ComplianceCenter() {
               <View style={styles.effectiveDate}>
                 <Ionicons name="calendar" size={16} color={SemanticColors.actionPrimary} />
                 <Text style={styles.effectiveDateText}>
-                  Ingangsdatum: {selectedUpdate.effectiveDate.toLocaleDateString('nl-NL')}
+                  Ingangsdatum: {selectedUpdate.effectiveDate.toLocaleDateString(undefined)}
                 </Text>
               </View>
             )}
@@ -834,7 +834,7 @@ export function ComplianceCenter() {
                 </Text>
                 {selectedUpdate.actionDeadline && (
                   <Text style={styles.actionDeadline}>
-                    Deadline: {selectedUpdate.actionDeadline.toLocaleDateString('nl-NL')}
+                    Deadline: {selectedUpdate.actionDeadline.toLocaleDateString(undefined)}
                   </Text>
                 )}
               </View>

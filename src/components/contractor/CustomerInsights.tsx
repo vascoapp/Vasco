@@ -14,6 +14,7 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import {
@@ -352,6 +353,7 @@ const StatCard: React.FC<{
 // =============================================================================
 
 export const CustomerInsights: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>('customers');
   const [searchQuery, setSearchQuery] = useState('');
   const { customers, loading } = useCustomerProfiles();
@@ -398,22 +400,22 @@ export const CustomerInsights: React.FC = () => {
     );
 
     Alert.alert(
-      `Actie voor ${prediction.customerName}`,
-      `Churn risico: ${prediction.probability}%\n` +
-      `Lifetime value: \u20AC${prediction.lifetimeValue.toLocaleString()}\n` +
-      `Laatste contact: ${daysSinceContact} dagen geleden`,
+      t('customerInsights.actionFor', 'Action for {{name}}', { name: prediction.customerName }),
+      `${t('customerInsights.churnRisk', 'Churn risk')}: ${prediction.probability}%\n` +
+      `${t('customerInsights.lifetimeValue', 'Lifetime value')}: \u20AC${prediction.lifetimeValue.toLocaleString()}\n` +
+      `${t('customerInsights.lastContact', 'Last contact')}: ${daysSinceContact} ${t('common.daysAgo', 'days ago')}`,
       [
-        { text: 'Annuleren', style: 'cancel' },
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
         {
-          text: 'Contact opnemen',
+          text: t('customerInsights.contactCustomer', 'Contact customer'),
           onPress: () => {
-            Alert.alert('Contact opnemen', `Neem contact op met ${prediction.customerName}.`);
+            Alert.alert(t('customerInsights.contactCustomer', 'Contact customer'), t('customerInsights.contactMessage', 'Contact {{name}}.', { name: prediction.customerName }));
           },
         },
         {
-          text: 'Herinnering sturen',
+          text: t('customerInsights.sendReminder', 'Send reminder'),
           onPress: () => {
-            Alert.alert('Herinnering', `Herinnering verstuurd naar ${prediction.customerName}.`);
+            Alert.alert(t('customerInsights.reminder', 'Reminder'), t('customerInsights.reminderSent', 'Reminder sent to {{name}}.', { name: prediction.customerName }));
           },
         },
       ],

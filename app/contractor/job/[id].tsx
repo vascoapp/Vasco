@@ -20,9 +20,11 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Palette } from '../../../src/theme/colors';
 import { SafeArea } from '../../../src/theme/spacing';
 import { hapticSuccess } from '../../../src/utils/haptics';
+import { useClockIn } from '../../../src/services/clockInService';
 import { smartSchedulerService, LIFECYCLE_ORDER, LIFECYCLE_LABELS, LIFECYCLE_COLORS, LIFECYCLE_NEXT_ACTION, useJobLifecyclePipeline } from '../../../src/services/smartSchedulerService';
 import type { JobLifecycleStatus } from '../../../src/services/smartSchedulerService';
 import { useJobCostVariance } from '../../../src/services/jobCostTrackingService';
@@ -32,6 +34,8 @@ type IconName = keyof typeof Ionicons.glyphMap;
 
 // ============================================
 // MOCK DATA for enriched job details
+// TODO: Replace with real data from API/AppState. Strings below are placeholder
+// Dutch text for demo purposes — will be replaced when connected to real backend.
 // ============================================
 
 interface ClientContact {
@@ -70,6 +74,7 @@ const MOCK_CONTACTS: Record<string, ClientContact> = {
   'cust_4': { name: 'Sandra Bakker', phone: '+31 6 66778899', email: 'sandra@bakker.nl' },
 };
 
+// TODO: Replace with real upsell suggestions from ontology service
 const MOCK_UPSELLS: Record<string, UpsellItem[]> = {
   'job_today_1': [
     { id: 'u1', title: 'Thermostaat upgrade', description: 'Slimme thermostaat bij CV-onderhoud', potentialRevenue: 285, confidence: 78, icon: 'thermometer' },
@@ -105,16 +110,17 @@ const MOCK_MATERIALS: Record<string, MaterialPrediction[]> = {
 // ============================================
 
 export default function JobDetailPage() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [notes, setNotes] = useState('');
-  const [clockedIn, setClockedIn] = useState(false);
+  const timer = useClockIn();
+  const clockedIn = timer.active && timer.jobId === id;
   const [photoCount, setPhotoCount] = useState(0);
   const [jobCompleted, setJobCompleted] = useState(false);
   const [orderedMaterials, setOrderedMaterials] = useState<Set<string>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
-  const clockInTime = useRef<number | null>(null);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -127,7 +133,29 @@ export default function JobDetailPage() {
   const job = useMemo(() => smartSchedulerService.getJob(id || ''), [id]);
   const { advance, recordHours } = useJobLifecyclePipeline();
   const costVariance = useJobCostVariance(id || '');
-  const { addInvoiceFromJob } = useAppState();
+  const { addInvoiceFromJob, jobs, invoices, quotes } = useAppState();
+
+  // Build audit trail from real data
+  const auditTrail = useMemo(() => {
+    const appJob = jobs.find((j: any) => j.id === id);
+    if (!appJob) return [];
+    const events: { icon: IconName; label: string; date: string; color: string }[] = [];
+    if (appJob.createdAt) events.push({ icon: 'add-circle-outline', label: 'Job created', date: appJob.createdAt, color: '#94A3B8' });
+    if (appJob.quoteId) {
+      const q = quotes.find((qu: any) => qu.id === appJob.quoteId);
+      if (q?.lastUpdated) events.push({ icon: 'document-text-outline', label: 'Quote sent', date: q.lastUpdated, color: '#F59E0B' });
+    }
+    if (appJob.scheduledDate) events.push({ icon: 'calendar-outline', label: 'Scheduled', date: appJob.scheduledDate, color: '#8B5CF6' });
+    if (appJob.status === 'in-progress' || appJob.status === 'completed' || appJob.status === 'invoiced' || appJob.status === 'paid')
+      events.push({ icon: 'play-circle-outline', label: 'Work started', date: appJob.updatedAt || appJob.createdAt, color: '#E35205' });
+    if (appJob.completedAt) events.push({ icon: 'checkmark-circle-outline', label: 'Completed', date: appJob.completedAt, color: '#16A34A' });
+    if (appJob.invoiceId) {
+      const inv = invoices.find((i: any) => i.id === appJob.invoiceId || i.job === appJob.title);
+      if (inv) events.push({ icon: 'receipt-outline', label: `Invoiced €${(inv.amount || 0).toLocaleString()}`, date: inv.lastUpdated || inv.dueDate || '', color: '#0EA5E9' });
+      if (inv?.status === 'paid') events.push({ icon: 'cash-outline', label: 'Paid', date: inv.lastUpdated || '', color: '#059669' });
+    }
+    return events.sort((a, b) => a.date.localeCompare(b.date));
+  }, [id, jobs, invoices, quotes]);
 
   // Show cost section for jobs that are bezig or later
   const showCostSection = job && ['bezig', 'gereed', 'gefactureerd', 'betaald'].includes(job.lifecycleStatus);
@@ -139,12 +167,12 @@ export default function JobDetailPage() {
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={22} color="#1A1A1A" />
           </Pressable>
-          <Text style={styles.headerTitle}>Klus niet gevonden</Text>
+          <Text style={styles.headerTitle}>{t('jobs.notFound', 'Job not found')}</Text>
           <View style={{ width: 40 }} />
         </View>
         <View style={styles.emptyState}>
           <Ionicons name="alert-circle-outline" size={48} color="#CCC" />
-          <Text style={styles.emptyText}>Deze klus kon niet gevonden worden</Text>
+          <Text style={styles.emptyText}>{t('jobs.notFoundDesc', 'This job could not be found')}</Text>
         </View>
       </View>
     );
@@ -155,15 +183,15 @@ export default function JobDetailPage() {
   const materials = MOCK_MATERIALS[job.id] || [];
   const reorderItems = materials.filter(m => m.reorderNeeded);
 
-  const startTime = new Date(job.startTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
-  const endTime = new Date(job.endTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+  const startTime = new Date(job.startTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  const endTime = new Date(job.endTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
   const getStatusLabel = () => {
     switch (job.status) {
-      case 'in_progress': return 'Bezig';
-      case 'completed': return 'Afgerond';
-      case 'cancelled': return 'Geannuleerd';
-      default: return 'Gepland';
+      case 'in_progress': return t('jobs.statusInProgress', 'In progress');
+      case 'completed': return t('jobs.statusCompleted', 'Completed');
+      case 'cancelled': return t('jobs.statusCancelled', 'Cancelled');
+      default: return t('jobs.statusScheduled', 'Scheduled');
     }
   };
   const getStatusColor = () => {
@@ -177,10 +205,10 @@ export default function JobDetailPage() {
 
   const getTypeLabel = () => {
     switch (job.type) {
-      case 'quote_visit': return 'Offerte bezoek';
-      case 'follow_up': return 'Opvolging';
-      case 'personal': return 'Persoonlijk';
-      default: return 'Klus';
+      case 'quote_visit': return t('jobs.typeQuoteVisit', 'Quote visit');
+      case 'follow_up': return t('jobs.typeFollowUp', 'Follow-up');
+      case 'personal': return t('jobs.typePersonal', 'Personal');
+      default: return t('jobs.typeJob', 'Job');
     }
   };
 
@@ -243,7 +271,7 @@ export default function JobDetailPage() {
                 <View style={styles.heroDetailIcon}>
                   <Ionicons name="car" size={14} color={Palette.terracotta} />
                 </View>
-                <Text style={styles.heroDetailText}>{job.travelTime} min reistijd</Text>
+                <Text style={styles.heroDetailText}>{job.travelTime} {t('jobs.minTravelTime', 'min travel')}</Text>
               </View>
             )}
           </View>
@@ -286,11 +314,11 @@ export default function JobDetailPage() {
             style={styles.nextStepButton}
             onPress={() => {
               Alert.alert(
-                'Status bijwerken',
-                `Wil je de status wijzigen naar "${LIFECYCLE_LABELS[LIFECYCLE_ORDER[LIFECYCLE_ORDER.indexOf(job.lifecycleStatus) + 1]]}"?`,
+                t('jobs.updateStatus', 'Update status'),
+                t('jobs.updateStatusDesc', { defaultValue: 'Change status to "{{status}}"?', status: LIFECYCLE_LABELS[LIFECYCLE_ORDER[LIFECYCLE_ORDER.indexOf(job.lifecycleStatus) + 1]] }),
                 [
-                  { text: 'Annuleren', style: 'cancel' },
-                  { text: 'Bevestigen', onPress: () => {
+                  { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+                  { text: t('common.confirm', 'Confirm'), onPress: () => {
                     advance(job.id);
                     if (job.lifecycleStatus === 'gereed') {
                       router.push('/(contractor)/facturen' as any);
@@ -309,7 +337,7 @@ export default function JobDetailPage() {
         {/* 2. CLIENT CONTACT                           */}
         {/* ============================================ */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Klant</Text>
+          <Text style={styles.sectionLabel}>{t('jobs.client', 'Client')}</Text>
           <View style={styles.card}>
             <View style={styles.contactRow}>
               <View style={styles.contactAvatar}>
@@ -330,7 +358,7 @@ export default function JobDetailPage() {
                 <View style={[styles.contactActionIcon, { backgroundColor: '#16A34A14' }]}>
                   <Ionicons name="call" size={16} color="#16A34A" />
                 </View>
-                <Text style={styles.contactActionLabel}>Bellen</Text>
+                <Text style={styles.contactActionLabel}>{t('jobs.call', 'Call')}</Text>
               </Pressable>
               <Pressable
                 style={styles.contactAction}
@@ -348,7 +376,7 @@ export default function JobDetailPage() {
                 <View style={[styles.contactActionIcon, { backgroundColor: Palette.hermesOrange + '14' }]}>
                   <Ionicons name="mail" size={16} color={Palette.hermesOrange} />
                 </View>
-                <Text style={styles.contactActionLabel}>E-mail</Text>
+                <Text style={styles.contactActionLabel}>{t('jobs.email', 'Email')}</Text>
               </Pressable>
             </View>
           </View>
@@ -358,7 +386,7 @@ export default function JobDetailPage() {
         {/* 3. ROUTE PLANNER                            */}
         {/* ============================================ */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Route</Text>
+          <Text style={styles.sectionLabel}>{t('jobs.route', 'Route')}</Text>
           <Pressable
             style={styles.routeCard}
             onPress={() => {
@@ -374,7 +402,7 @@ export default function JobDetailPage() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.routeAddress} numberOfLines={2}>{job.address}</Text>
                 {job.travelTime && (
-                  <Text style={styles.routeEta}>~{job.travelTime} min rijden</Text>
+                  <Text style={styles.routeEta}>~{job.travelTime} {t('jobs.minDrive', 'min drive')}</Text>
                 )}
               </View>
               <View style={styles.routeOpenBtn}>
@@ -388,11 +416,11 @@ export default function JobDetailPage() {
         {/* 4. JOB NOTES                                */}
         {/* ============================================ */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Notities</Text>
+          <Text style={styles.sectionLabel}>{t('jobs.notes', 'Notes')}</Text>
           <View style={styles.card}>
             <TextInput
               style={styles.notesInput}
-              placeholder="Typ je notities hier..."
+              placeholder={t('jobs.notesPlaceholder', 'Type your notes here...')}
               placeholderTextColor="#CCC"
               multiline
               value={notes || job.notes || ''}
@@ -408,11 +436,11 @@ export default function JobDetailPage() {
         {materials.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionRow}>
-              <Text style={styles.sectionLabel}>Materialen</Text>
+              <Text style={styles.sectionLabel}>{t('jobs.materials', 'Materials')}</Text>
               {reorderItems.length > 0 && (
                 <View style={styles.reorderBadge}>
                   <View style={styles.reorderDot} />
-                  <Text style={styles.reorderBadgeText}>{reorderItems.length} herbestellen</Text>
+                  <Text style={styles.reorderBadgeText}>{reorderItems.length} {t('jobs.reorder', 'reorder')}</Text>
                 </View>
               )}
             </View>
@@ -431,16 +459,16 @@ export default function JobDetailPage() {
                       style={styles.reorderBtn}
                       onPress={() => {
                         setOrderedMaterials(prev => new Set(prev).add(mat.id));
-                        Alert.alert('Besteld', `${mat.name} is besteld bij ${mat.supplier}.`);
+                        Alert.alert(t('jobs.ordered', 'Ordered'), t('jobs.orderedDesc', { defaultValue: '{{name}} has been ordered from {{supplier}}.', name: mat.name, supplier: mat.supplier }));
                       }}
                     >
                       <Ionicons name="cart" size={13} color="#fff" />
-                      <Text style={styles.reorderBtnText}>Bestel</Text>
+                      <Text style={styles.reorderBtnText}>{t('jobs.order', 'Order')}</Text>
                     </Pressable>
                   ) : mat.reorderNeeded && orderedMaterials.has(mat.id) ? (
                     <View style={[styles.reorderBtn, { backgroundColor: '#16A34A' }]}>
                       <Ionicons name="checkmark" size={13} color="#fff" />
-                      <Text style={styles.reorderBtnText}>Besteld</Text>
+                      <Text style={styles.reorderBtnText}>{t('jobs.ordered', 'Ordered')}</Text>
                     </View>
                   ) : (
                     <Text style={styles.materialCost}>€{mat.estimatedCost.toFixed(2)}</Text>
@@ -458,7 +486,10 @@ export default function JobDetailPage() {
                     <Text style={styles.vascoGuidanceTitle}>Vasco</Text>
                   </View>
                   <Text style={styles.vascoGuidanceText}>
-                    Vasco voorspelt dat je {reorderItems.map(m => m.name).join(' en ')} nodig hebt voor deze klus. Bestel nu om vertraging te voorkomen.
+                    {t('jobs.vascoMaterialPrediction', {
+                      defaultValue: 'Vasco predicts you need {{items}} for this job. Order now to prevent delays.',
+                      items: reorderItems.map(m => m.name).join(` ${t('common.and', 'and')} `),
+                    })}
                   </Text>
                 </View>
               </View>
@@ -471,24 +502,24 @@ export default function JobDetailPage() {
         {/* ============================================ */}
         {showCostSection && costVariance && (
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Kosten vs Offerte</Text>
+            <Text style={styles.sectionLabel}>{t('jobs.costVsQuote', 'Cost vs Quote')}</Text>
             <View style={styles.card}>
               <View style={styles.costGrid}>
                 <View style={styles.costCol}>
-                  <Text style={styles.costColHeader}>Offerte</Text>
-                  <Text style={styles.costColValue}>{'\u20AC'}{costVariance.estimatedTotal.toLocaleString('nl-NL')}</Text>
+                  <Text style={styles.costColHeader}>{t('quotes.quote', 'Quote')}</Text>
+                  <Text style={styles.costColValue}>{'\u20AC'}{costVariance.estimatedTotal.toLocaleString(undefined)}</Text>
                 </View>
                 <View style={styles.costCol}>
-                  <Text style={styles.costColHeader}>Werkelijk</Text>
-                  <Text style={styles.costColValue}>{'\u20AC'}{costVariance.actualTotal.toLocaleString('nl-NL')}</Text>
+                  <Text style={styles.costColHeader}>{t('jobs.actual', 'Actual')}</Text>
+                  <Text style={styles.costColValue}>{'\u20AC'}{costVariance.actualTotal.toLocaleString(undefined)}</Text>
                 </View>
                 <View style={styles.costCol}>
-                  <Text style={styles.costColHeader}>Verschil</Text>
+                  <Text style={styles.costColHeader}>{t('jobs.variance', 'Variance')}</Text>
                   <Text style={[
                     styles.costColValue,
                     { color: costVariance.marginDelta <= 0 ? '#16A34A' : '#DC2626' }
                   ]}>
-                    {costVariance.marginDelta > 0 ? '+' : ''}{'\u20AC'}{costVariance.marginDelta.toLocaleString('nl-NL')}
+                    {costVariance.marginDelta > 0 ? '+' : ''}{'\u20AC'}{costVariance.marginDelta.toLocaleString(undefined)}
                   </Text>
                 </View>
               </View>
@@ -507,7 +538,7 @@ export default function JobDetailPage() {
                   styles.marginBarLabel,
                   { color: costVariance.marginDelta <= 0 ? '#16A34A' : '#DC2626' }
                 ]}>
-                  {costVariance.marginDelta <= 0 ? 'Onder budget' : `${costVariance.marginPercent.toFixed(0)}% over`}
+                  {costVariance.marginDelta <= 0 ? t('jobs.underBudget', 'Under budget') : `${costVariance.marginPercent.toFixed(0)}% ${t('jobs.over', 'over')}`}
                 </Text>
               </View>
             </View>
@@ -520,7 +551,7 @@ export default function JobDetailPage() {
         {upsells.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionRow}>
-              <Text style={styles.sectionLabel}>Extra kansen</Text>
+              <Text style={styles.sectionLabel}>{t('jobs.upsellOpportunities', 'Upsell opportunities')}</Text>
               <View style={styles.upsellBadge}>
                 <Text style={styles.upsellBadgeText}>€{upsells.reduce((s, u) => s + u.potentialRevenue, 0)}</Text>
               </View>
@@ -531,10 +562,10 @@ export default function JobDetailPage() {
                 style={styles.upsellCard}
                 onPress={() => Alert.alert(
                   item.title,
-                  `${item.description}\n\nGeschatte omzet: €${item.potentialRevenue}\nKans: ${item.confidence}%`,
+                  `${item.description}\n\n${t('jobs.estRevenue', 'Est. revenue')}: €${item.potentialRevenue}\n${t('jobs.confidence', 'Confidence')}: ${item.confidence}%`,
                   [
-                    { text: 'Annuleren', style: 'cancel' },
-                    { text: 'Aanbieden', onPress: () => Alert.alert('Aangeboden', `${item.title} is als suggestie genoteerd.`) },
+                    { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+                    { text: t('jobs.offer', 'Offer'), onPress: () => Alert.alert(t('jobs.offered', 'Offered'), t('jobs.offeredDesc', { defaultValue: '{{title}} has been noted as a suggestion.', title: item.title })) },
                   ]
                 )}
               >
@@ -558,31 +589,55 @@ export default function JobDetailPage() {
         )}
 
         {/* ============================================ */}
-        {/* 7. QUICK ACTIONS                            */}
+        {/* 7. AUDIT TRAIL — Job lifecycle timeline     */}
+        {/* ============================================ */}
+        {auditTrail.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Timeline</Text>
+            <View style={styles.timelineContainer}>
+              {auditTrail.map((event, idx) => (
+                <View key={idx} style={styles.timelineRow}>
+                  <View style={styles.timelineLeft}>
+                    <View style={[styles.timelineDot, { backgroundColor: event.color }]}>
+                      <Ionicons name={event.icon} size={12} color="#fff" />
+                    </View>
+                    {idx < auditTrail.length - 1 && <View style={styles.timelineLine} />}
+                  </View>
+                  <View style={styles.timelineContent}>
+                    <Text style={styles.timelineLabel}>{event.label}</Text>
+                    <Text style={styles.timelineDate}>
+                      {event.date.length > 10
+                        ? new Date(event.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+                        : event.date}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* ============================================ */}
+        {/* 8. QUICK ACTIONS                            */}
         {/* ============================================ */}
         <View style={styles.actionsRow}>
           {!jobCompleted && (
             <Pressable
               style={[styles.actionPrimary, clockedIn && { backgroundColor: '#DC2626' }]}
-              onPress={() => {
+              onPress={async () => {
                 hapticSuccess();
                 if (clockedIn) {
-                  if (clockInTime.current) {
-                    const hoursWorked = (Date.now() - clockInTime.current) / 3600000;
-                    recordHours(job.id, Math.round(hoursWorked * 10) / 10);
-                    clockInTime.current = null;
-                  }
-                  setClockedIn(false);
-                  Alert.alert('Uitgeklokt', 'Je bent uitgeklokt van deze klus. Uren zijn opgeslagen.');
+                  const { hours } = await timer.clockOut();
+                  recordHours(job.id, Math.round(hours * 10) / 10);
+                  Alert.alert(t('jobs.clockedOut', 'Clocked out'), t('jobs.clockedOutDesc', 'You have been clocked out. Hours saved.'));
                 } else {
-                  clockInTime.current = Date.now();
-                  setClockedIn(true);
-                  Alert.alert('Ingeklokt', 'Je bent ingeklokt op deze klus.');
+                  await timer.clockIn(job.id, job.projectName || job.customerName || '');
+                  Alert.alert(t('jobs.clockedIn', 'Clocked in'), t('jobs.clockedInDesc', 'You are now clocked in on this job.'));
                 }
               }}
             >
               <Ionicons name={clockedIn ? 'stop' : 'play'} size={18} color="#fff" />
-              <Text style={styles.actionPrimaryText}>{clockedIn ? 'Uitklokken' : 'Inklokken'}</Text>
+              <Text style={styles.actionPrimaryText}>{clockedIn ? t('jobs.clockOut', 'Clock out') : t('jobs.clockIn', 'Clock in')}</Text>
             </Pressable>
           )}
           <Pressable
@@ -593,34 +648,34 @@ export default function JobDetailPage() {
               setShowGallery(prev => !prev);
               if (!showGallery) {
                 setPhotoCount(prev => prev + 1);
-                Alert.alert('Foto opgeslagen', `Foto ${photoCount + 1} toegevoegd aan bewijs.`);
+                Alert.alert(t('jobs.photoSaved', 'Photo saved'), t('jobs.photoSavedDesc', { defaultValue: 'Photo {{count}} added to evidence.', count: photoCount + 1 }));
               }
             }}
           >
             <Ionicons name="camera" size={18} color={Palette.hermesOrange} />
-            <Text style={styles.actionSecondaryText}>Foto{photoCount > 0 ? ` (${photoCount})` : ''}</Text>
+            <Text style={styles.actionSecondaryText}>{t('jobs.photo', 'Photo')}{photoCount > 0 ? ` (${photoCount})` : ''}</Text>
           </Pressable>
           {!jobCompleted ? (
             <Pressable
               style={styles.actionSecondary}
               onPress={() => {
-                Alert.alert('Klus afronden', 'Weet je zeker dat je deze klus wilt afronden?', [
-                  { text: 'Annuleren', style: 'cancel' },
-                  { text: 'Afronden', onPress: () => {
+                Alert.alert(t('jobs.completeJob', 'Complete job'), t('jobs.completeJobConfirm', 'Are you sure you want to complete this job?'), [
+                  { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+                  { text: t('jobs.complete', 'Complete'), onPress: () => {
                     hapticSuccess();
-                    setClockedIn(false);
+                    if (clockedIn) timer.clockOut();
                     setJobCompleted(true);
                   }},
                 ]);
               }}
             >
               <Ionicons name="checkmark-circle" size={18} color="#16A34A" />
-              <Text style={styles.actionSecondaryText}>Klaar</Text>
+              <Text style={styles.actionSecondaryText}>{t('jobs.done', 'Done')}</Text>
             </Pressable>
           ) : (
             <View style={[styles.actionSecondary, { backgroundColor: '#16A34A14' }]}>
               <Ionicons name="checkmark-done" size={18} color="#16A34A" />
-              <Text style={[styles.actionSecondaryText, { color: '#16A34A' }]}>Afgerond</Text>
+              <Text style={[styles.actionSecondaryText, { color: '#16A34A' }]}>{t('jobs.statusCompleted', 'Completed')}</Text>
             </View>
           )}
         </View>
@@ -640,7 +695,7 @@ export default function JobDetailPage() {
             }}
           >
             <Ionicons name="receipt" size={18} color="#fff" />
-            <Text style={styles.factureerButtonText}>Factureer deze klus</Text>
+            <Text style={styles.factureerButtonText}>{t('jobs.invoiceThisJob', 'Invoice this job')}</Text>
           </Pressable>
         )}
 
@@ -649,28 +704,49 @@ export default function JobDetailPage() {
         {/* ============================================ */}
         {showGallery && (
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Bewijs foto's</Text>
+            <Text style={styles.sectionLabel}>{t('jobs.evidencePhotos', 'Evidence photos')}</Text>
+            {photoCount > 0 && (
+              <Text style={{ fontSize: 13, color: '#16A34A', fontWeight: '600', marginBottom: 4 }}>
+                {t('jobs.photosCaptured', { defaultValue: '{{count}} photos captured', count: photoCount })}
+              </Text>
+            )}
             <View style={styles.galleryGrid}>
-              {['Voor', 'Voor', 'Voor', 'Na', 'Na'].map((label, idx) => (
+              {Array.from({ length: Math.min(photoCount, 6) }).map((_, idx) => (
                 <View key={idx} style={styles.galleryItem}>
-                  <View style={[styles.galleryThumb, { backgroundColor: label === 'Voor' ? '#E8E4DF' : '#D4EDDA' }]}>
-                    <Ionicons name="image" size={24} color={label === 'Voor' ? '#999' : '#16A34A'} />
+                  <View style={[styles.galleryThumb, { backgroundColor: idx < Math.ceil(photoCount / 2) ? '#E8E4DF' : '#D4EDDA' }]}>
+                    <Ionicons name="image" size={24} color={idx < Math.ceil(photoCount / 2) ? '#999' : '#16A34A'} />
                   </View>
-                  <View style={[styles.galleryLabel, { backgroundColor: label === 'Voor' ? '#F5F5F5' : '#16A34A14' }]}>
-                    <Text style={[styles.galleryLabelText, { color: label === 'Voor' ? '#777' : '#16A34A' }]}>{label}</Text>
+                  <View style={[styles.galleryLabel, { backgroundColor: idx < Math.ceil(photoCount / 2) ? '#F5F5F5' : '#16A34A14' }]}>
+                    <Text style={[styles.galleryLabelText, { color: idx < Math.ceil(photoCount / 2) ? '#777' : '#16A34A' }]}>
+                      {idx < Math.ceil(photoCount / 2) ? t('jobs.before', 'Before') : t('jobs.after', 'After')}
+                    </Text>
                   </View>
                 </View>
               ))}
               <Pressable
                 style={styles.galleryAddItem}
                 onPress={() => {
-                  hapticSuccess();
-                  setPhotoCount(prev => prev + 1);
-                  Alert.alert('Foto opgeslagen', `Foto ${photoCount + 1} toegevoegd aan bewijs.`);
+                  Alert.alert(
+                    t('jobs.takePhoto', 'Take Photo'),
+                    t('jobs.photoSourcePrompt', 'Choose a photo source'),
+                    [
+                      { text: t('jobs.camera', 'Camera'), onPress: () => {
+                        hapticSuccess();
+                        setPhotoCount(prev => prev + 1);
+                        Alert.alert(t('jobs.photoAdded', 'Photo added'), t('jobs.photoAddedDesc', { defaultValue: 'Photo {{count}} captured and saved.', count: photoCount + 1 }));
+                      }},
+                      { text: t('jobs.photoLibrary', 'Photo Library'), onPress: () => {
+                        hapticSuccess();
+                        setPhotoCount(prev => prev + 1);
+                        Alert.alert(t('jobs.photoAdded', 'Photo added'), t('jobs.photoAddedDesc', { defaultValue: 'Photo {{count}} captured and saved.', count: photoCount + 1 }));
+                      }},
+                      { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+                    ]
+                  );
                 }}
               >
-                <Ionicons name="add-circle" size={28} color={Palette.hermesOrange} />
-                <Text style={styles.galleryAddText}>Foto toevoegen</Text>
+                <Ionicons name="camera" size={28} color={Palette.hermesOrange} />
+                <Text style={styles.galleryAddText}>{t('jobs.takePhoto', 'Take Photo')}</Text>
               </Pressable>
             </View>
           </View>
@@ -1315,5 +1391,47 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: Palette.hermesOrange,
     textAlign: 'center' as const,
+  },
+
+  // Audit Trail / Timeline
+  timelineContainer: {
+    paddingLeft: 4,
+    gap: 0,
+  },
+  timelineRow: {
+    flexDirection: 'row' as const,
+    minHeight: 44,
+  },
+  timelineLeft: {
+    width: 28,
+    alignItems: 'center' as const,
+  },
+  timelineDot: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  timelineLine: {
+    width: 2,
+    flex: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: 2,
+  },
+  timelineContent: {
+    flex: 1,
+    paddingLeft: 10,
+    paddingBottom: 12,
+  },
+  timelineLabel: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#1A1A1A',
+  },
+  timelineDate: {
+    fontSize: 11,
+    color: '#999',
+    marginTop: 1,
   },
 });

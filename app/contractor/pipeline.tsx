@@ -120,7 +120,7 @@ export default function PipelineScreen() {
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>{t('pipeline.title', 'Pipeline')}</Text>
           <Text style={styles.headerSubtitle}>
-            {t('pipeline.headerStats', `${jobs.filter(j => j.status !== 'cancelled').length} klussen · €${totalValue.toLocaleString('nl-NL')} totaal`)}
+            {t('pipeline.headerStats', `${jobs.filter(j => j.status !== 'cancelled').length} klussen · €${totalValue.toLocaleString(undefined)} totaal`)}
           </Text>
         </View>
         <Pressable
@@ -233,7 +233,7 @@ export default function PipelineScreen() {
                 </View>
               </View>
               {columnValue > 0 && (
-                <Text style={styles.columnValue}>€{columnValue.toLocaleString('nl-NL')}</Text>
+                <Text style={styles.columnValue}>€{columnValue.toLocaleString(undefined)}</Text>
               )}
 
               {/* Job cards */}
@@ -259,7 +259,7 @@ export default function PipelineScreen() {
                         ) : null}
                         <View style={styles.jobMeta}>
                           {amount > 0 && (
-                            <Text style={styles.jobAmount}>€{amount.toLocaleString('nl-NL')}</Text>
+                            <Text style={styles.jobAmount}>€{amount.toLocaleString(undefined)}</Text>
                           )}
                           {job.trade && (
                             <View style={styles.jobTradeBadge}>

@@ -218,7 +218,7 @@ const OutstandingInvoiceCard: React.FC<OutstandingInvoiceCardProps> = ({
         </View>
         <View style={styles.invoiceAmountContainer}>
           <Text style={styles.invoiceAmount}>
-            {'\u20AC'}{invoice.total.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}
+            {'\u20AC'}{invoice.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </Text>
           <View style={[
             styles.dueBadge,
@@ -245,10 +245,10 @@ const OutstandingInvoiceCard: React.FC<OutstandingInvoiceCardProps> = ({
           </View>
           <View style={styles.linkStats}>
             <Text style={styles.linkStatText}>
-              Created {new Date(paymentLink.createdAt).toLocaleDateString('nl-NL')}
+              Created {new Date(paymentLink.createdAt).toLocaleDateString(undefined)}
             </Text>
             <Text style={styles.linkStatText}>
-              Expires {new Date(paymentLink.expiresAt).toLocaleDateString('nl-NL')}
+              Expires {new Date(paymentLink.expiresAt).toLocaleDateString(undefined)}
             </Text>
           </View>
         </View>
@@ -292,7 +292,7 @@ const PaidInvoiceCard: React.FC<PaidInvoiceCardProps> = ({ invoice, paymentLink 
         </View>
         <View style={styles.invoiceAmountContainer}>
           <Text style={[styles.invoiceAmount, styles.paidAmount]}>
-            {'\u20AC'}{paymentLink.paidAmount?.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}
+            {'\u20AC'}{paymentLink.paidAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </Text>
           <View style={styles.paidBadge}>
             <Ionicons name="checkmark-circle" size={12} color={Colors.success} />
@@ -311,7 +311,7 @@ const PaidInvoiceCard: React.FC<PaidInvoiceCardProps> = ({ invoice, paymentLink 
         <View style={styles.paymentDetailRow}>
           <Text style={styles.paymentDetailLabel}>Date</Text>
           <Text style={styles.paymentDetailValue}>
-            {new Date(paymentLink.paidAt!).toLocaleDateString('nl-NL', {
+            {new Date(paymentLink.paidAt!).toLocaleDateString(undefined, {
               day: 'numeric',
               month: 'short',
               year: 'numeric',
@@ -323,7 +323,7 @@ const PaidInvoiceCard: React.FC<PaidInvoiceCardProps> = ({ invoice, paymentLink 
         <View style={styles.paymentDetailRow}>
           <Text style={styles.paymentDetailLabel}>Net received</Text>
           <Text style={styles.paymentDetailValue}>
-            {'\u20AC'}{paymentLink.netAmount?.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}
+            {'\u20AC'}{paymentLink.netAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
             <Text style={styles.feeText}> (fee: {'\u20AC'}{paymentLink.providerFee})</Text>
           </Text>
         </View>
@@ -485,7 +485,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
         <View style={[styles.summaryCard, styles.summaryCardOutstanding]}>
           <Text style={styles.summaryLabel}>Outstanding</Text>
           <Text style={styles.summaryValue}>
-            {'\u20AC'}{totalOutstanding.toLocaleString('nl-NL', { minimumFractionDigits: 0 })}
+            {'\u20AC'}{totalOutstanding.toLocaleString(undefined, { minimumFractionDigits: 0 })}
           </Text>
           <Text style={styles.summarySubtext}>
             {outstandingInvoices.length} invoice{outstandingInvoices.length !== 1 ? 's' : ''}
@@ -494,7 +494,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
         <View style={[styles.summaryCard, styles.summaryCardOverdue]}>
           <Text style={styles.summaryLabel}>Overdue</Text>
           <Text style={[styles.summaryValue, { color: Colors.error }]}>
-            {'\u20AC'}{totalOverdue.toLocaleString('nl-NL', { minimumFractionDigits: 0 })}
+            {'\u20AC'}{totalOverdue.toLocaleString(undefined, { minimumFractionDigits: 0 })}
           </Text>
           <Text style={styles.summarySubtext}>Needs attention</Text>
         </View>

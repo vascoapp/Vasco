@@ -6,9 +6,10 @@
 // =============================================================================
 
 import { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, TextInput, Share, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TextInput, Share, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { hapticSuccess } from '../../utils/haptics';
@@ -25,75 +26,9 @@ interface VascoCardProps {
   automationsCount: number;
   complianceStatus?: { valid: number; expiring: number; expired: number } | null;
   pendingDecisions?: number;
-  overdueInvoices?: number;
   onApproveQueueItem: (id: string) => void;
   onRejectQueueItem: (id: string) => void;
   onInsightAction?: (insight: ScoredInsight) => void;
-  onOverduePress?: () => void;
-}
-
-// ---------------------------------------------------------------------------
-// Overdue Reminder — preview + edit before sending (EVE pattern)
-// Uses forward-referenced `s` styles (StyleSheet defined below)
-// ---------------------------------------------------------------------------
-
-function OverdueReminder({ count, onSend }: { count: number; onSend?: () => void }) {
-  const [editing, setEditing] = useState(false);
-  const defaultMsg = `Beste klant,\n\nHierbij een vriendelijke herinnering voor ${count} openstaande factuur${count > 1 ? 'en' : ''}.\n\nMet vriendelijke groet`;
-  const [text, setText] = useState(defaultMsg);
-
-  const handleSend = async () => {
-    try {
-      if (Platform.OS === 'web') {
-        await navigator.clipboard.writeText(text);
-        alert('Herinnering gekopieerd naar klembord');
-      } else {
-        await Share.share({ message: text, title: 'Betaalherinnering' });
-      }
-    } catch {}
-    setEditing(false);
-  };
-
-  if (!editing) {
-    return (
-      <Pressable style={s.overdueRow} onPress={() => setEditing(true)}>
-        <View style={s.overdueIcon}>
-          <Ionicons name="alert-circle" size={16} color={SemanticColors.feedbackError} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={s.overdueTitle}>{count} {count === 1 ? 'factuur' : 'facturen'} achterstallig</Text>
-          <Text style={s.overdueDesc}>Tik om herinnering te bekijken</Text>
-        </View>
-        <Ionicons name="create-outline" size={14} color={SemanticColors.feedbackError} />
-      </Pressable>
-    );
-  }
-
-  return (
-    <View style={s.overdueExpanded}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <Ionicons name="alert-circle" size={16} color={SemanticColors.feedbackError} />
-        <Text style={s.overdueTitle}>{count} {count === 1 ? 'factuur' : 'facturen'} achterstallig</Text>
-      </View>
-      <TextInput
-        style={s.overdueInput}
-        value={text}
-        onChangeText={setText}
-        multiline
-        placeholder="Bewerk het bericht..."
-        placeholderTextColor={SemanticColors.textTertiary}
-      />
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Pressable style={s.overdueSendBtn} onPress={handleSend}>
-          <Ionicons name="send" size={14} color={Palette.white} />
-          <Text style={s.overdueSendText}>Verstuur</Text>
-        </Pressable>
-        <Pressable style={s.overdueCancelBtn} onPress={() => setEditing(false)}>
-          <Text style={s.overdueCancelText}>Annuleer</Text>
-        </Pressable>
-      </View>
-    </View>
-  );
 }
 
 export function VascoCard({
@@ -103,26 +38,19 @@ export function VascoCard({
   automationsCount,
   complianceStatus,
   pendingDecisions,
-  overdueInvoices,
   onApproveQueueItem,
   onRejectQueueItem,
   onInsightAction,
-  onOverduePress,
 }: VascoCardProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true); // EVE pattern: show value first
   const router = useRouter();
 
   const findingsCount = briefing?.findings.length ?? 0;
   const queueCount = queueItems.length;
-  const hasContent = findingsCount > 0 || queueCount > 0 || topInsight || automationsCount > 0 || (overdueInvoices ?? 0) > 0;
+  const hasContent = findingsCount > 0 || queueCount > 0 || topInsight || automationsCount > 0;
 
   if (!hasContent) return null;
-
-  // Summary line
-  const summaryParts: string[] = [];
-  if (findingsCount > 0) summaryParts.push(`${findingsCount} bevindingen`);
-  if (queueCount > 0) summaryParts.push(`${queueCount} klaar`);
-  if (automationsCount > 0) summaryParts.push(`${automationsCount} actief`);
 
   return (
     <Pressable
@@ -134,13 +62,18 @@ export function VascoCard({
         <View style={s.iconCircle}>
           <Ionicons name="flash" size={16} color={Palette.hermesOrange} />
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={s.flex1}>
           <Text style={s.title}>Vasco</Text>
           <Text style={s.summary} numberOfLines={1}>
-            {queueCount > 0 ? `${queueCount} ${queueCount === 1 ? 'actie' : 'acties'} klaar` : findingsCount > 0 ? `${findingsCount} ${findingsCount === 1 ? 'bevinding' : 'bevindingen'}` : 'Alles op orde'}
+            {queueCount > 0
+              ? t('vasco.actionsReady', { defaultValue: '{{count}} actions ready', count: queueCount })
+              : findingsCount > 0
+                ? t('vasco.findingsCount', { defaultValue: '{{count}} findings', count: findingsCount })
+                : t('vasco.allGood', 'Alles op orde')}
           </Text>
         </View>
-        <Pressable onPress={() => router.push('/contractor/automations' as any)} hitSlop={8}>
+        {/* Expo Router requires 'as any' for dynamic routes — tracked in expo-router#123 */}
+        <Pressable onPress={() => router.push('/contractor/automations' as any)} hitSlop={8} accessibilityLabel={t('a11y.automationSettings', 'Automation settings')}>
           <Ionicons name="settings-outline" size={16} color={SemanticColors.textTertiary} />
         </Pressable>
         <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={SemanticColors.textTertiary} />
@@ -152,7 +85,7 @@ export function VascoCard({
           {/* Morning briefing findings — each is actionable (EVE pattern) */}
           {briefing && findingsCount > 0 && (
             <View style={s.section}>
-              <Text style={s.sectionLabel}>Vannacht gecontroleerd</Text>
+              <Text style={s.sectionLabel}>{t('vasco.checkedOvernight', 'Vannacht gecontroleerd')}</Text>
               {briefing.findings.slice(0, 3).map(f => (
                 <Pressable
                   key={f.id}
@@ -168,7 +101,7 @@ export function VascoCard({
                     size={14}
                     color={f.severity === 'critical' ? SemanticColors.feedbackError : f.severity === 'warning' ? Palette.hermesOrange : SemanticColors.textTertiary}
                   />
-                  <Text style={[s.findingText, { flex: 1 }]} numberOfLines={1}>{f.title}</Text>
+                  <Text style={[s.findingText, s.flex1]} numberOfLines={1}>{f.title}</Text>
                   {f.suggestedAction && (
                     <Text style={s.findingAction} numberOfLines={1}>{f.suggestedAction}</Text>
                   )}
@@ -180,7 +113,7 @@ export function VascoCard({
           {/* AI action queue — embedded approval (EVE pattern) */}
           {queueCount > 0 && (
             <View style={s.section}>
-              <Text style={s.sectionLabel}>Klaar voor goedkeuring</Text>
+              <Text style={s.sectionLabel}>{t('vasco.readyForApproval', 'Klaar voor goedkeuring')}</Text>
               {queueItems.slice(0, 3).map(item => (
                 <EmbeddedApproval
                   key={item.id}
@@ -192,21 +125,16 @@ export function VascoCard({
             </View>
           )}
 
-          {/* Overdue invoices — editable reminder */}
-          {(overdueInvoices ?? 0) > 0 && (
-            <OverdueReminder count={overdueInvoices!} onSend={onOverduePress} />
-          )}
-
           {/* Top insight with action */}
           {topInsight && (
             <View style={s.section}>
-              <Text style={s.sectionLabel}>Aanbeveling</Text>
+              <Text style={s.sectionLabel}>{t('vasco.recommendation', 'Aanbeveling')}</Text>
               <Pressable
                 style={s.insightRow}
                 onPress={() => onInsightAction?.(topInsight)}
               >
                 <Ionicons name={(topInsight.icon as IconName) || 'bulb'} size={16} color={Palette.hermesOrange} />
-                <View style={{ flex: 1 }}>
+                <View style={s.flex1}>
                   <Text style={s.insightTitle} numberOfLines={1}>{topInsight.title}</Text>
                   <Text style={s.insightDesc} numberOfLines={2}>{topInsight.message}</Text>
                 </View>
@@ -228,55 +156,93 @@ export function VascoCard({
 // Embedded Approval — mini-form per queue item (EVE pattern)
 // ---------------------------------------------------------------------------
 
+function getQueueIcon(type: string): IconName {
+  switch (type) {
+    case 'draft_invoice': case 'batch_invoices': case 'invoice_regenerate': return 'receipt-outline';
+    case 'draft_reminder': return 'notifications-outline';
+    case 'draft_followup': case 'quote_expiry': return 'document-text-outline';
+    case 'progress_note': return 'chatbubble-outline';
+    case 'reorder_materials': return 'cart-outline';
+    case 'cert_renewal': case 'permit_check': case 'permit_renewal': return 'shield-checkmark-outline';
+    case 'job_handover': return 'folder-open-outline';
+    case 'satisfaction_survey': return 'star-outline';
+    case 'safety_checklist': return 'checkbox-outline';
+    case 'supplier_comparison': case 'price_alert': return 'pricetag-outline';
+    case 'tax_prep': return 'calculator-outline';
+    case 'maintenance_due': return 'build-outline';
+    case 'accounting_export': return 'cloud-upload-outline';
+    case 'einvoice_submit': return 'document-attach-outline';
+    default: return 'ellipse-outline';
+  }
+}
+
 function EmbeddedApproval({ item, onApprove, onReject }: {
   item: QueueItem;
   onApprove: () => void;
   onReject: () => void;
 }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState('');
+  const [approving, setApproving] = useState(false);
+
+  // Types that share a message to the customer (editable before sending)
+  const isShareable = [
+    'draft_reminder', 'draft_followup', 'progress_note', 'quote_expiry',
+    'satisfaction_survey', 'job_handover',
+  ].includes(item.type);
+
+  // Types that display an amount
+  const isInvoiceType = [
+    'draft_invoice', 'batch_invoices', 'invoice_regenerate', 'draft_reminder',
+  ].includes(item.type);
 
   const handleApprove = async () => {
-    if (item.type === 'draft_reminder' || item.type === 'draft_followup') {
-      // For reminders/follow-ups: share the prepared text
-      const template = item.preparedData?.template || item.description;
-      const text = editText || template;
-      try {
-        await Share.share({ message: text, title: item.title });
-      } catch {}
+    if (approving) return; // Prevent double-tap
+    setApproving(true);
+    try {
+      if (isShareable) {
+        const template = item.preparedData?.template || item.description;
+        const text = editText || template;
+        try {
+          await Share.share({ message: text, title: item.title });
+        } catch {}
+      }
+      onApprove();
+    } finally {
+      setApproving(false);
     }
-    onApprove();
   };
 
   return (
     <View style={s.embeddedCard}>
       <View style={s.embeddedHeader}>
         <Ionicons
-          name={item.type === 'draft_invoice' ? 'receipt-outline' : item.type === 'draft_reminder' ? 'notifications-outline' : 'document-text-outline'}
+          name={getQueueIcon(item.type)}
           size={16}
           color={Palette.hermesOrange}
         />
-        <View style={{ flex: 1 }}>
+        <View style={s.flex1}>
           <Text style={s.queueTitle} numberOfLines={1}>{item.title}</Text>
           <Text style={s.queueDesc} numberOfLines={1}>{item.description}</Text>
         </View>
       </View>
 
-      {/* Editable preview for reminders/follow-ups */}
-      {editing && (item.type === 'draft_reminder' || item.type === 'draft_followup') && (
+      {/* Editable preview for shareable items (reminders, follow-ups, progress notes, etc.) */}
+      {editing && isShareable && (
         <TextInput
           style={s.editInput}
           value={editText || item.preparedData?.template || ''}
           onChangeText={setEditText}
           multiline
-          placeholder="Pas bericht aan..."
+          placeholder={t('vasco.editMessage', 'Pas bericht aan...')}
           placeholderTextColor={SemanticColors.textTertiary}
         />
       )}
 
-      {/* Amount display for invoices */}
-      {item.type === 'draft_invoice' && item.preparedData?.amount && (
-        <Text style={s.embeddedAmount}>€{Number(item.preparedData.amount).toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
+      {/* Amount display for all invoice-type items */}
+      {isInvoiceType && (item.preparedData?.amount || item.preparedData?.totalRevenue || item.preparedData?.newTotal) && (
+        <Text style={s.embeddedAmount}>€{Number(item.preparedData.newTotal || item.preparedData.totalRevenue || item.preparedData.amount).toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
       )}
 
       {/* Impact line */}
@@ -286,16 +252,20 @@ function EmbeddedApproval({ item, onApprove, onReject }: {
 
       {/* Action buttons */}
       <View style={s.embeddedActions}>
-        {(item.type === 'draft_reminder' || item.type === 'draft_followup') && (
+        {isShareable && (
           <Pressable style={s.editBtn} onPress={() => setEditing(!editing)}>
             <Ionicons name={editing ? 'checkmark' : 'create-outline'} size={14} color={Palette.hermesOrange} />
           </Pressable>
         )}
-        <Pressable style={s.approveBtn} onPress={handleApprove}>
-          <Ionicons name="checkmark" size={14} color={Palette.white} />
+        <Pressable style={[s.approveBtn, approving && s.disabled]} onPress={handleApprove} disabled={approving} accessibilityLabel={t('a11y.approveAction', 'Approve action')}>
+          {approving ? (
+            <ActivityIndicator size="small" color={Palette.white} />
+          ) : (
+            <Ionicons name="checkmark" size={14} color={Palette.white} />
+          )}
           <Text style={s.approveBtnText}>{item.actionLabel}</Text>
         </Pressable>
-        <Pressable style={s.rejectBtn} onPress={onReject}>
+        <Pressable style={s.rejectBtn} onPress={onReject} accessibilityLabel={t('a11y.rejectAction', 'Reject action')}>
           <Ionicons name="close" size={14} color={SemanticColors.textTertiary} />
         </Pressable>
       </View>
@@ -304,6 +274,9 @@ function EmbeddedApproval({ item, onApprove, onReject }: {
 }
 
 const s = StyleSheet.create({
+  flex1: {
+    flex: 1,
+  },
   card: {
     backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: RADIUS.lg,
@@ -458,79 +431,6 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Overdue invoices
-  overdueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: SemanticColors.feedbackError + '08',
-    borderRadius: RADIUS.md,
-    padding: 10,
-  },
-  overdueIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: SemanticColors.feedbackError + '15',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  overdueTitle: {
-    fontSize: TYPE.captionSize,
-    fontFamily: TYPE.titleFamily,
-    color: SemanticColors.feedbackError,
-  },
-  overdueDesc: {
-    fontSize: TYPE.tinySize,
-    fontFamily: TYPE.captionFamily,
-    color: SemanticColors.textSecondary,
-  },
-  // Overdue expanded
-  overdueExpanded: {
-    backgroundColor: SemanticColors.feedbackError + '08',
-    borderRadius: RADIUS.md,
-    padding: 10,
-    gap: 8,
-  },
-  overdueInput: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: RADIUS.sm,
-    padding: 10,
-    fontSize: TYPE.captionSize,
-    fontFamily: TYPE.captionFamily,
-    color: SemanticColors.textPrimary,
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  overdueSendBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: SemanticColors.feedbackError,
-    borderRadius: RADIUS.sm,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    flex: 1,
-    justifyContent: 'center',
-  },
-  overdueSendText: {
-    fontSize: TYPE.captionSize,
-    fontFamily: TYPE.titleFamily,
-    color: Palette.white,
-  },
-  overdueCancelBtn: {
-    borderRadius: RADIUS.sm,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: SemanticColors.surfaceSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  overdueCancelText: {
-    fontSize: TYPE.captionSize,
-    fontFamily: TYPE.captionFamily,
-    color: SemanticColors.textTertiary,
-  },
   // Insight
   insightRow: {
     flexDirection: 'row',
@@ -558,5 +458,8 @@ const s = StyleSheet.create({
     fontSize: TYPE.tinySize,
     fontFamily: TYPE.tinyFamily,
     color: Palette.hermesOrange,
+  },
+  disabled: {
+    opacity: 0.6,
   },
 });

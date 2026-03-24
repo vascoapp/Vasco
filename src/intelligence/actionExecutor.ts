@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Share, Alert } from 'react-native';
 import { emitBusinessEvent } from './dataCollector';
 import { recordMetricSnapshot } from './learningStorage';
+import i18n from '../i18n/i18n';
 
 import type { InsightAction, InsightActionType } from './generators/types';
 
@@ -47,72 +48,93 @@ type ActionHandler = (params: Record<string, any>) => Promise<ActionResult>;
 
 const handlers: Record<InsightActionType, ActionHandler> = {
   send_reminder: async (params) => {
+    const t = i18n.t.bind(i18n);
     const { customerName, invoiceId, amount } = params;
-    const text = `Beste ${customerName || 'klant'},\n\nHierbij een vriendelijke herinnering voor factuur ${invoiceId || ''} van €${(amount || 0).toLocaleString('nl-NL')}.\n\nMet vriendelijke groet`;
+    const text = t('action.reminderBody', {
+      defaultValue: 'Dear {{customer}},\n\nThis is a friendly reminder for invoice {{invoice}} of €{{amount}}.\n\nKind regards',
+      customer: customerName || t('action.customer', 'customer'),
+      invoice: invoiceId || '',
+      amount: (amount || 0).toLocaleString(),
+    });
     try {
-      await Share.share({ message: text, title: 'Betaalherinnering' });
-      return { success: true, message: `Herinnering verstuurd voor €${amount}` };
+      await Share.share({ message: text, title: t('action.reminderTitle', 'Payment reminder') });
+      return { success: true, message: t('action.reminderSent', { defaultValue: 'Reminder sent for €{{amount}}', amount }) };
     } catch {
-      return { success: false, message: 'Delen geannuleerd' };
+      return { success: false, message: t('action.shareCancelled', 'Share cancelled') };
     }
   },
 
   create_invoice: async (params) => {
-    // Triggers navigation — the actual creation happens in the UI
-    return { success: true, message: 'Factuur aanmaken...', data: { route: '/contractor/tiered-quote', jobId: params.jobId } };
+    const t = i18n.t.bind(i18n);
+    return { success: true, message: t('action.creatingInvoice', 'Creating invoice...'), data: { route: '/contractor/tiered-quote', jobId: params.jobId } };
   },
 
   order_materials: async (params) => {
-    return { success: true, message: `Inkooporder aangemaakt voor ${params.materialName || 'materialen'}`, data: { route: '/contractor/purchase-orders' } };
+    const t = i18n.t.bind(i18n);
+    return { success: true, message: t('action.orderCreated', { defaultValue: 'Purchase order created for {{material}}', material: params.materialName || t('action.materials', 'materials') }), data: { route: '/contractor/purchase-orders' } };
   },
 
   schedule_job: async (params) => {
-    return { success: true, message: `Klus ingepland: ${params.jobTitle || ''}`, data: { route: '/contractor/drag-schedule' } };
+    const t = i18n.t.bind(i18n);
+    return { success: true, message: t('action.jobScheduled', { defaultValue: 'Job scheduled: {{title}}', title: params.jobTitle || '' }), data: { route: '/contractor/drag-schedule' } };
   },
 
   adjust_quote: async (params) => {
+    const t = i18n.t.bind(i18n);
     const { quoteId, suggestedPrice } = params;
-    return { success: true, message: `Offerte ${quoteId} aangepast naar €${suggestedPrice}`, data: { route: `/quotes/${quoteId}` } };
+    return { success: true, message: t('action.quoteAdjusted', { defaultValue: 'Quote {{id}} adjusted to €{{price}}', id: quoteId, price: suggestedPrice }), data: { route: `/quotes/${quoteId}` } };
   },
 
   renew_cert: async (params) => {
-    return { success: true, message: `Vernieuwing gestart voor ${params.certName || 'certificaat'}`, data: { route: '/(contractor)/certificaten' } };
+    const t = i18n.t.bind(i18n);
+    return { success: true, message: t('action.renewalStarted', { defaultValue: 'Renewal started for {{cert}}', cert: params.certName || t('action.certificate', 'certificate') }), data: { route: '/(contractor)/certificaten' } };
   },
 
   send_followup: async (params) => {
+    const t = i18n.t.bind(i18n);
     const { customerName, quoteId } = params;
-    const text = `Beste ${customerName || 'klant'},\n\nGraag informeer ik of u de offerte ${quoteId || ''} heeft kunnen bekijken. Ik hoor graag of u vragen heeft.\n\nMet vriendelijke groet`;
+    const text = t('action.followupBody', {
+      defaultValue: 'Dear {{customer}},\n\nI would like to check if you have had a chance to review quote {{quote}}. Please let me know if you have any questions.\n\nKind regards',
+      customer: customerName || t('action.customer', 'customer'),
+      quote: quoteId || '',
+    });
     try {
-      await Share.share({ message: text, title: 'Offerte opvolging' });
-      return { success: true, message: 'Opvolging verstuurd' };
+      await Share.share({ message: text, title: t('action.followupTitle', 'Quote follow-up') });
+      return { success: true, message: t('action.followupSent', 'Follow-up sent') };
     } catch {
-      return { success: false, message: 'Delen geannuleerd' };
+      return { success: false, message: t('action.shareCancelled', 'Share cancelled') };
     }
   },
 
   escalate_issue: async (params) => {
-    return { success: true, message: `Escalatie gemeld: ${params.issue || ''}`, data: { route: '/sitelead/incident-report' } };
+    const t = i18n.t.bind(i18n);
+    return { success: true, message: t('action.escalated', { defaultValue: 'Escalation reported: {{issue}}', issue: params.issue || '' }), data: { route: '/sitelead/incident-report' } };
   },
 
   log_expense: async (params) => {
-    return { success: true, message: `Uitgave geregistreerd: €${params.amount || 0}`, data: { route: '/contractor/expenses' } };
+    const t = i18n.t.bind(i18n);
+    return { success: true, message: t('action.expenseLogged', { defaultValue: 'Expense logged: €{{amount}}', amount: params.amount || 0 }), data: { route: '/contractor/expenses' } };
   },
 
   switch_supplier: async (params) => {
+    const t = i18n.t.bind(i18n);
     const { currentSupplier, newSupplier, savings } = params;
-    return { success: true, message: `Wissel van ${currentSupplier} naar ${newSupplier} — bespaar €${savings}/bestelling`, data: { route: '/contractor/inkoop' } };
+    return { success: true, message: t('action.supplierSwitched', { defaultValue: 'Switch from {{from}} to {{to}} — save €{{savings}}/order', from: currentSupplier, to: newSupplier, savings }), data: { route: '/contractor/inkoop' } };
   },
 
   close_defect: async (params) => {
-    return { success: true, message: `Gebrek ${params.defectId || ''} gesloten`, data: { route: '/sitelead/close-defect' } };
+    const t = i18n.t.bind(i18n);
+    return { success: true, message: t('action.defectClosed', { defaultValue: 'Defect {{id}} closed', id: params.defectId || '' }), data: { route: '/sitelead/close-defect' } };
   },
 
   submit_report: async (params) => {
-    return { success: true, message: 'Rapport indienen...', data: { route: '/sitelead/daily-report' } };
+    const t = i18n.t.bind(i18n);
+    return { success: true, message: t('action.submittingReport', 'Submitting report...'), data: { route: '/sitelead/daily-report' } };
   },
 
   custom: async (params) => {
-    return { success: true, message: params.message || 'Actie uitgevoerd' };
+    const t = i18n.t.bind(i18n);
+    return { success: true, message: params.message || t('action.executed', 'Action executed') };
   },
 };
 
@@ -126,7 +148,7 @@ export async function executeAction(
   generatorId: string,
 ): Promise<ActionResult> {
   const handler = handlers[action.type];
-  if (!handler) return { success: false, message: `Onbekend actietype: ${action.type}` };
+  if (!handler) return { success: false, message: i18n.t('action.unknownType', { defaultValue: 'Unknown action type: {{type}}', type: action.type }) };
 
   const result = await handler(action.params);
 
@@ -178,9 +200,9 @@ export function executeActionWithConfirmation(
     action.label,
     action.estimatedImpact ? `${action.label}\n\n${action.estimatedImpact}` : action.label,
     [
-      { text: 'Annuleren', style: 'cancel' },
+      { text: i18n.t('common.cancel', 'Cancel'), style: 'cancel' },
       {
-        text: 'Uitvoeren',
+        text: i18n.t('common.execute', 'Execute'),
         onPress: () => executeAction(action, insightId, generatorId).then(onResult),
       },
     ],

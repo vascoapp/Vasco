@@ -6,7 +6,7 @@
 // =============================================================================
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Share, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -27,12 +27,30 @@ export default function GeldScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
-  const { invoices, quotes } = useAppState();
+  const { invoices, quotes, markInvoiceSent, removeInvoice, removeQuote } = useAppState();
   const cashFlow = useCashFlow();
 
   const aiQueue = useAIQueue();
   const allGuidance = useVascoGuidance('contractor', 'geld');
   const topInsight = allGuidance.filter(g => g.priority === 'critical' || g.priority === 'high')[0] ?? null;
+
+  const handleDeleteDocument = useCallback((docId: string, docType: 'factuur' | 'offerte', docName: string) => {
+    const title = docType === 'factuur'
+      ? t('invoices.deleteInvoice', 'Delete invoice?')
+      : t('quotes.deleteQuote', 'Delete quote?');
+    Alert.alert(title, docName, [
+      { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+      {
+        text: t('common.delete', 'Delete'),
+        style: 'destructive',
+        onPress: () => {
+          if (docType === 'factuur') removeInvoice(docId);
+          else removeQuote(docId);
+          hapticSuccess();
+        },
+      },
+    ]);
+  }, [removeInvoice, removeQuote, t]);
 
   useEffect(() => { recordScreenVisit('geld'); }, []);
 
@@ -58,19 +76,19 @@ export default function GeldScreen() {
         id: inv.id,
         type: 'factuur' as const,
         name: inv.customer || inv.customerName || inv.reference || inv.id,
-        description: inv.job || 'Factuur',
+        description: inv.job || t('invoices.invoice', 'Factuur'),
         amount: inv.total || inv.amount || 0,
         status: inv.status,
-        route: '/(contractor)/facturen',
+        route: inv.jobId ? `/contractor/job/${inv.jobId}` : '/(contractor)/facturen',
       })),
       ...quotes.map((q: any) => ({
         id: q.id,
         type: 'offerte' as const,
         name: q.customer || q.id,
-        description: q.job || q.description || 'Offerte',
+        description: q.job || q.description || t('quotes.quote', 'Offerte'),
         amount: q.amount || 0,
         status: q.status,
-        route: `/quotes/${q.id}`,
+        route: q.jobId ? `/contractor/job/${q.jobId}` : '/(contractor)/facturen',
       })),
     ];
     return docs.sort((a, b) => (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3));
@@ -103,18 +121,18 @@ export default function GeldScreen() {
         <FadeIn delay={0}>
           <View style={s.kpiCard}>
             <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)}>
-              <Text style={s.kpiLabel}>Uitstaand</Text>
-              <Text style={s.kpiValue}>{'\u20AC'}{outstandingTotal.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
+              <Text style={s.kpiLabel}>{t('money.outstanding', 'Uitstaand')}</Text>
+              <Text style={s.kpiValue}>{'\u20AC'}{outstandingTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
             </Pressable>
             <View style={s.kpiDivider} />
             <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)}>
-              <Text style={s.kpiLabel}>Achterstallig</Text>
+              <Text style={s.kpiLabel}>{t('money.overdue', 'Achterstallig')}</Text>
               <Text style={[s.kpiValue, overdueCount > 0 && { color: SemanticColors.feedbackError }]}>{overdueCount}</Text>
             </Pressable>
             <View style={s.kpiDivider} />
             <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)}>
-              <Text style={s.kpiLabel}>Ontvangen</Text>
-              <Text style={[s.kpiValue, { color: SemanticColors.feedbackSuccess }]}>{'\u20AC'}{paidTotal.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
+              <Text style={s.kpiLabel}>{t('money.received', 'Ontvangen')}</Text>
+              <Text style={[s.kpiValue, { color: SemanticColors.feedbackSuccess }]}>{'\u20AC'}{paidTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
             </Pressable>
           </View>
         </FadeIn>
@@ -126,24 +144,10 @@ export default function GeldScreen() {
             queueItems={aiQueue.items.filter(i => i.type === 'draft_invoice' || i.type === 'draft_reminder')}
             topInsight={topInsight}
             automationsCount={0}
-            overdueInvoices={overdueCount}
             onApproveQueueItem={(id) => { hapticSuccess(); aiQueue.approve(id); }}
             onRejectQueueItem={(id) => aiQueue.reject(id)}
             onInsightAction={(insight) => {
               if ((insight as any).actionRoute) router.push((insight as any).actionRoute as any);
-            }}
-            onOverduePress={async () => {
-              hapticSuccess();
-              const msg = `Beste klant,\n\nHierbij een vriendelijke herinnering voor ${overdueCount} openstaande factuur${overdueCount > 1 ? 'en' : ''}.\n\nMet vriendelijke groet`;
-              try {
-                const { Share, Platform } = require('react-native');
-                if (Platform.OS === 'web') {
-                  await navigator.clipboard.writeText(msg);
-                  alert('Herinnering gekopieerd naar klembord');
-                } else {
-                  await Share.share({ message: msg, title: 'Betaalherinnering' });
-                }
-              } catch {}
             }}
           />
         </FadeIn>
@@ -151,7 +155,7 @@ export default function GeldScreen() {
         {/* Facturen & Offertes — full list, above cashflow */}
         <FadeIn delay={80}>
           <View style={s.section}>
-            <Text style={s.sectionTitle}>Facturen & Offertes</Text>
+            <Text style={s.sectionTitle}>{t('money.invoicesAndQuotes', 'Facturen & Offertes')}</Text>
 
             {/* New quote CTA */}
             <Pressable
@@ -159,7 +163,7 @@ export default function GeldScreen() {
               onPress={() => router.push('/contractor/tiered-quote' as any)}
             >
               <Ionicons name="add-circle-outline" size={18} color={Palette.white} />
-              <Text style={s.newQuoteBtnText}>Nieuwe offerte</Text>
+              <Text style={s.newQuoteBtnText}>{t('quotes.newQuote', 'Nieuwe offerte')}</Text>
             </Pressable>
 
             {/* Full document list — all invoices + quotes */}
@@ -170,6 +174,7 @@ export default function GeldScreen() {
                     key={doc.id}
                     style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9 }]}
                     onPress={() => router.push(doc.route as any)}
+                    onLongPress={() => handleDeleteDocument(doc.id, doc.type, doc.name)}
                   >
                     <View style={[s.docDot, { backgroundColor: getStatusColor(doc.status) }]} />
                     <View style={{ flex: 1 }}>
@@ -177,21 +182,35 @@ export default function GeldScreen() {
                         <Text style={s.docName} numberOfLines={1}>{doc.name}</Text>
                         <View style={[s.docTypeBadge, doc.type === 'offerte' && { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
                           <Text style={[s.docTypeText, doc.type === 'offerte' && { color: SemanticColors.feedbackInfo }]}>
-                            {doc.type === 'factuur' ? 'Factuur' : 'Offerte'}
+                            {doc.type === 'factuur' ? t('invoices.invoice', 'Factuur') : t('quotes.quote', 'Offerte')}
                           </Text>
                         </View>
                       </View>
                       <Text style={s.docDesc} numberOfLines={1}>{doc.description}</Text>
                     </View>
                     <Text style={s.docAmount}>
-                      {'\u20AC'}{doc.amount.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}
+                      {'\u20AC'}{doc.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </Text>
+                    {doc.type === 'factuur' && doc.status === 'draft' && (
+                      <Pressable
+                        style={s.sendBtn}
+                        onPress={(e) => {
+                          e.stopPropagation?.();
+                          hapticSuccess();
+                          markInvoiceSent(doc.id);
+                        }}
+                        hitSlop={6}
+                        accessibilityLabel={t('a11y.sendInvoice', 'Send invoice')}
+                      >
+                        <Ionicons name="send" size={14} color={Palette.white} />
+                      </Pressable>
+                    )}
                   </Pressable>
                 ))}
               </View>
             ) : (
               <View style={s.emptyCard}>
-                <Text style={s.emptyText}>Nog geen documenten</Text>
+                <Text style={s.emptyText}>{t('money.noDocuments', 'Nog geen documenten')}</Text>
               </View>
             )}
           </View>
@@ -200,28 +219,28 @@ export default function GeldScreen() {
         {/* Cashflow — below documents */}
         <FadeIn delay={120}>
           <View style={s.section}>
-            <Text style={s.sectionTitle}>Cashflow</Text>
+            <Text style={s.sectionTitle}>{t('money.cashflow', 'Cashflow')}</Text>
             <View style={s.cfCard}>
               <View style={s.cfRow}>
                 <View style={s.cfItem}>
                   <Text style={[s.cfValue, { color: SemanticColors.feedbackSuccess }]}>
-                    {'\u20AC'}{paidTotal.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}
+                    {'\u20AC'}{paidTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </Text>
-                  <Text style={s.cfLabel}>Omzet</Text>
+                  <Text style={s.cfLabel}>{t('money.revenue', 'Omzet')}</Text>
                 </View>
                 <View style={s.cfDivider} />
                 <View style={s.cfItem}>
                   <Text style={s.cfValue}>
-                    {'\u20AC'}{(cashFlow?.summary?.pendingExpenses ?? 0).toLocaleString('nl-NL', { maximumFractionDigits: 0 })}
+                    {'\u20AC'}{(cashFlow?.summary?.pendingExpenses ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </Text>
-                  <Text style={s.cfLabel}>Kosten</Text>
+                  <Text style={s.cfLabel}>{t('money.costs', 'Kosten')}</Text>
                 </View>
                 <View style={s.cfDivider} />
                 <View style={s.cfItem}>
                   <Text style={[s.cfValue, { color: (paidTotal - (cashFlow?.summary?.pendingExpenses ?? 0)) >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
-                    {'\u20AC'}{(paidTotal - (cashFlow?.summary?.pendingExpenses ?? 0)).toLocaleString('nl-NL', { maximumFractionDigits: 0 })}
+                    {'\u20AC'}{(paidTotal - (cashFlow?.summary?.pendingExpenses ?? 0)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </Text>
-                  <Text style={s.cfLabel}>Winst</Text>
+                  <Text style={s.cfLabel}>{t('money.profit', 'Winst')}</Text>
                 </View>
               </View>
               <View style={s.marginBar}>
@@ -243,7 +262,7 @@ export default function GeldScreen() {
       <Pressable
         style={({ pressed }) => [s.fab, pressed && { opacity: 0.9, transform: [{ scale: 0.96 }] }]}
         onPress={() => { hapticSuccess(); router.push('/contractor/tiered-quote' as any); }}
-        accessibilityLabel="Nieuwe offerte"
+        accessibilityLabel={t('a11y.newQuote', 'New quote')}
       >
         <Ionicons name="add" size={28} color={Palette.white} />
       </Pressable>
@@ -388,6 +407,15 @@ const s = StyleSheet.create({
     fontSize: TYPE.titleSize,
     fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
+  },
+  sendBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: Palette.hermesOrange,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 6,
   },
   emptyCard: {
     backgroundColor: SemanticColors.surfacePrimary,

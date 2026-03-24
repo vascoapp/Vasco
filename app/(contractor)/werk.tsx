@@ -5,7 +5,7 @@
 // =============================================================================
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -21,12 +21,28 @@ import { useAuth } from '../../src/context/AuthContext';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
+/** Parse a time value that may be an ISO string, HH:MM, or invalid. Returns null on failure. */
+function parseTime(value: string | undefined | null): Date | null {
+  if (!value) return null;
+  // Try ISO / full date string first
+  const d = new Date(value);
+  if (!isNaN(d.getTime())) return d;
+  // Try HH:MM or HH:MM:SS
+  const match = value.match(/^(\d{1,2}):(\d{2})/);
+  if (match) {
+    const today = new Date();
+    today.setHours(parseInt(match[1], 10), parseInt(match[2], 10), 0, 0);
+    return today;
+  }
+  return null;
+}
+
 export default function WerkScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
-  const { jobs, addJob, customers, projects } = useAppState();
+  const { jobs, addJob, removeJob, customers, projects } = useAppState();
   const [showNewJob, setShowNewJob] = useState(false);
   const [newJobTitle, setNewJobTitle] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'status'>('date');
@@ -59,6 +75,17 @@ export default function WerkScreen() {
       .filter((t: string) => { if (!t || seen.has(t.toLowerCase())) return false; seen.add(t.toLowerCase()); return true; });
   }, [newJobTitle, jobs]);
 
+  const handleDeleteJob = useCallback((jobId: string, jobTitle: string) => {
+    Alert.alert(
+      t('jobs.deleteJob', 'Delete job?'),
+      jobTitle,
+      [
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+        { text: t('common.delete', 'Delete'), style: 'destructive', onPress: () => { removeJob(jobId); hapticSuccess(); } },
+      ],
+    );
+  }, [removeJob, t]);
+
   const activeJobs = jobs.filter((j: any) => ['scheduled', 'in-progress', 'ingepland', 'bezig'].includes(j.status));
   const completedJobs = jobs.filter((j: any) => ['completed', 'invoiced', 'paid', 'gereed', 'gefactureerd', 'betaald'].includes(j.status));
   const leadJobs = jobs.filter((j: any) => ['lead', 'quoted', 'accepted'].includes(j.status));
@@ -83,10 +110,10 @@ export default function WerkScreen() {
         {/* Action strip — horizontal scroll */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.actionStrip}>
           {([
-            { icon: 'calendar-outline' as IconName, label: 'Kalender', route: '/contractor/drag-schedule' },
-            { icon: 'time-outline' as IconName, label: 'Uren', route: '/contractor/timesheet' },
-            ...(user?.isAannemer ? [{ icon: 'folder-open-outline' as IconName, label: 'Projecten', route: '/contractor/projects' }] : []),
-            { icon: 'people-outline' as IconName, label: 'Klanten', route: '/contractor/customer-crm' },
+            { icon: 'calendar-outline' as IconName, label: t('jobs.calendar', 'Kalender'), route: '/contractor/drag-schedule' },
+            { icon: 'time-outline' as IconName, label: t('jobs.hours', 'Uren'), route: '/contractor/timesheet' },
+            ...(user?.isAannemer ? [{ icon: 'folder-open-outline' as IconName, label: t('jobs.projects', 'Projecten'), route: '/contractor/projects' }] : []),
+            { icon: 'people-outline' as IconName, label: t('jobs.customers', 'Klanten'), route: '/contractor/customer-crm' },
           ]).map(btn => (
             <Pressable
               key={btn.route}
@@ -102,7 +129,7 @@ export default function WerkScreen() {
         {/* Active Projects (aannemer only) */}
         {user?.isAannemer && projects.length > 0 && (
           <FadeIn delay={0}>
-            <Text style={s.sectionTitle}>Projecten</Text>
+            <Text style={s.sectionTitle}>{t('jobs.projects', 'Projecten')}</Text>
             {projects.filter(p => p.status === 'active' || p.status === 'planning').slice(0, 3).map(project => (
               <Pressable
                 key={project.id}
@@ -112,7 +139,7 @@ export default function WerkScreen() {
                 <View style={[s.jobAccent, { backgroundColor: project.status === 'active' ? Palette.hermesOrange : SemanticColors.textTertiary }]} />
                 <View style={s.jobContent}>
                   <Text style={s.jobTitle} numberOfLines={1}>{project.title}</Text>
-                  <Text style={s.jobMeta}>{project.jobIds.length} klussen · €{project.totalBudget.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
+                  <Text style={s.jobMeta}>{project.jobIds.length} {t('jobs.jobsCount', 'klussen')} · €{project.totalBudget.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
               </Pressable>
@@ -123,23 +150,21 @@ export default function WerkScreen() {
         {/* Today's Schedule */}
         <FadeIn delay={0}>
           <Text style={s.sectionTitle}>
-            Vandaag · {new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })}
+            {t('dashboard.today', 'Vandaag')} · {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
           </Text>
           {todayJobs.length > 0 ? (
             <View style={s.todayList}>
               {todayJobs.map((entry: any, i: number) => {
-                // Parse time properly from ISO string or HH:MM
-                const startDate = new Date(entry.startTime);
-                const endDate = entry.endTime ? new Date(entry.endTime) : null;
-                const timeStr = !isNaN(startDate.getTime())
-                  ? startDate.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })
-                  : (entry.startTime || '').slice(0, 5) || '09:00';
-                const endStr = endDate && !isNaN(endDate.getTime())
-                  ? endDate.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })
+                const startDate = parseTime(entry.startTime);
+                const endDate = parseTime(entry.endTime);
+                const timeStr = startDate
+                  ? startDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+                  : '09:00';
+                const endStr = endDate
+                  ? endDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
                   : '';
-                // Duration in hours from minutes or time diff
                 const durationMins = entry.duration
-                  || (endDate && !isNaN(endDate.getTime()) && !isNaN(startDate.getTime())
+                  || (endDate && startDate
                     ? Math.round((endDate.getTime() - startDate.getTime()) / 60000)
                     : 0);
                 const durationStr = durationMins > 0
@@ -149,7 +174,7 @@ export default function WerkScreen() {
                   <Pressable
                     key={entry.id || i}
                     style={({ pressed }) => [s.todayCard, pressed && { opacity: 0.85 }]}
-                    onPress={() => router.push(`/quotes/${entry.id}` as any)}
+                    onPress={() => router.push(`/contractor/job/${entry.id}` as any)}
                   >
                     <View style={s.todayLeft}>
                       <Text style={s.todayTime}>{timeStr}</Text>
@@ -158,7 +183,7 @@ export default function WerkScreen() {
                     <View style={s.todayDivider} />
                     <View style={s.todayContent}>
                       <Text style={s.todayTitle} numberOfLines={1}>
-                        {entry.title || entry.jobTitle || entry.projectName || 'Klus'}
+                        {entry.title || entry.jobTitle || entry.projectName || t('jobs.job', 'Job')}
                       </Text>
                       {(entry.customerName || entry.address) && (
                         <Text style={s.todayMeta} numberOfLines={1}>
@@ -189,10 +214,10 @@ export default function WerkScreen() {
         {activeJobs.length > 0 && (
           <FadeIn delay={100}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={s.sectionTitle}>Actief</Text>
+              <Text style={s.sectionTitle}>{t('jobs.active', 'Actief')}</Text>
               <Pressable onPress={() => setSortBy(prev => prev === 'date' ? 'status' : 'date')} hitSlop={8}>
                 <Text style={{ fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: Palette.hermesOrange }}>
-                  {sortBy === 'date' ? 'Op datum' : 'Op status'}
+                  {sortBy === 'date' ? t('jobs.byDate', 'Op datum') : t('jobs.byStatus', 'Op status')}
                 </Text>
               </Pressable>
             </View>
@@ -200,7 +225,9 @@ export default function WerkScreen() {
               <Pressable
                 key={job.id}
                 style={({ pressed }) => [s.jobCard, pressed && { opacity: 0.85 }]}
-                onPress={() => router.push(`/quotes/${job.id}` as any)}
+                onPress={() => router.push(`/contractor/job/${job.id}` as any)}
+                onLongPress={() => handleDeleteJob(job.id, job.title || job.description || '')}
+                accessibilityLabel={`${t('a11y.jobCard', 'Job')}: ${job.title || job.description || ''}`}
               >
                 <View style={[s.jobAccent, { backgroundColor: Palette.hermesOrange }]} />
                 <View style={s.jobContent}>
@@ -218,18 +245,19 @@ export default function WerkScreen() {
         {/* Leads / Quotes */}
         {leadJobs.length > 0 && (
           <FadeIn delay={150}>
-            <Text style={s.sectionTitle}>Leads & Offertes</Text>
+            <Text style={s.sectionTitle}>{t('jobs.leadsAndQuotes', 'Leads & Offertes')}</Text>
             {leadJobs.slice(0, 5).map((job: any) => (
               <Pressable
                 key={job.id}
                 style={({ pressed }) => [s.jobCard, pressed && { opacity: 0.85 }]}
-                onPress={() => router.push(`/quotes/${job.id}` as any)}
+                onPress={() => router.push(`/contractor/job/${job.id}` as any)}
+                onLongPress={() => handleDeleteJob(job.id, job.title || job.description || '')}
               >
                 <View style={[s.jobAccent, { backgroundColor: SemanticColors.textTertiary }]} />
                 <View style={s.jobContent}>
                   <Text style={s.jobTitle} numberOfLines={1}>{job.title || job.description}</Text>
                   <Text style={s.jobMeta} numberOfLines={1}>
-                    {job.quotedAmount ? `€${job.quotedAmount.toLocaleString('nl-NL')}` : ''} · {job.status}
+                    {job.quotedAmount ? `€${job.quotedAmount.toLocaleString(undefined)}` : ''} · {job.status}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
@@ -300,7 +328,7 @@ export default function WerkScreen() {
       <Pressable
         style={({ pressed }) => [s.fab, pressed && { opacity: 0.9, transform: [{ scale: 0.96 }] }]}
         onPress={() => { hapticSuccess(); router.push('/contractor/tiered-quote' as any); }}
-        accessibilityLabel="Nieuwe offerte"
+        accessibilityLabel={t('a11y.newQuote', 'New quote')}
       >
         <Ionicons name="add" size={28} color={Palette.white} />
       </Pressable>

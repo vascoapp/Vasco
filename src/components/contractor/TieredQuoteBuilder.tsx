@@ -6,13 +6,14 @@
 // =============================================================================
 
 import { useEffect, useState, useMemo } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing, SafeArea } from '../../theme/spacing';
 import type { Customer } from '../../types/contractor';
 import type { TieredQuote, QuoteTier, PricebookItem } from '../../types/contractor-features';
+import { MS_PER_DAY } from '../../utils/timeConstants';
 import { MOCK_PRICEBOOK } from '../../data/mockPricebook';
 import { intelligence } from '../../intelligence/intelligenceEngine';
 import { useQuoteCalibration } from '../../services/estimationFeedbackService';
@@ -108,6 +109,9 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
   const [showPricebook, setShowPricebook] = useState(false);
   const [showAIQuote, setShowAIQuote] = useState(false);
   const [calibrationApplied, setCalibrationApplied] = useState(false);
+  const [scopeText, setScopeText] = useState('');
+  const [aiDrafting, setAiDrafting] = useState(false);
+  const [aiExplanations, setAiExplanations] = useState<Record<string, string>>({});
   const { templates, use: useTemplate } = useQuoteTemplates();
   const [priceSuggestion, setPriceSuggestion] = useState<PricePrediction | null>(null);
   const [winPrediction, setWinPrediction] = useState<QuoteWinPrediction | null>(null);
@@ -145,7 +149,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
     })) as unknown as PricebookItem[];
   }, [trade]);
 
-  const fmt = (n: number) => `€${n.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}`;
+  const fmt = (n: number) => `€${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
   const calculateTiers = (): QuoteTier[] => {
     return (['good', 'better', 'best'] as const).map(tierKey => {
@@ -202,11 +206,131 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
     hapticSuccess();
   };
 
+  // Levenshtein distance for fuzzy matching misspelled scope words
+  const levenshtein = (a: string, b: string): number => {
+    const m = a.length;
+    const n = b.length;
+    if (m === 0) return n;
+    if (n === 0) return m;
+    const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        dp[i][j] = Math.min(
+          dp[i - 1][j] + 1,
+          dp[i][j - 1] + 1,
+          dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+        );
+      }
+    }
+    return dp[m][n];
+  };
+
+  // AI scope → line items: parse natural language into pricebook items
+  const handleAIDraft = () => {
+    if (!scopeText.trim() || aiDrafting) return;
+    setAiDrafting(true);
+    // Match scope words against trade pricebook items (fully case-insensitive)
+    const words = scopeText.toLowerCase().split(/[\s,.\-;:]+/).filter(w => w.length > 2);
+    const tradeItems = TRADE_PRICEBOOK[trade] ?? TRADE_PRICEBOOK.general;
+    const allItems = [...tradeItems, ...(TRADE_PRICEBOOK.general ?? [])];
+    const matched: { item: PricebookItem; quantity: number; unit: string; score: number }[] = [];
+    const usedIds = new Set(selectedServices.map(s => s.item.id));
+
+    for (const item of allItems) {
+      if (usedIds.has(item.id)) continue;
+      const itemWords = item.name.toLowerCase().split(/[\s\-]+/);
+      // Exact substring match (case-insensitive)
+      let score = words.filter(w => itemWords.some(iw => iw.includes(w) || w.includes(iw))).length;
+      // Fuzzy match: if no exact match, check Levenshtein distance <= 2 for words with 4+ chars
+      if (score === 0) {
+        const fuzzyScore = words.filter(w =>
+          w.length >= 4 && itemWords.some(iw => iw.length >= 4 && levenshtein(w, iw) <= 2)
+        ).length;
+        score = fuzzyScore * 0.5; // Lower weight for fuzzy matches
+      }
+      if (score > 0) {
+        matched.push({
+          item: { ...item, contractorId: '', description: TRADE_LABELS[trade] ?? trade, category: trade, pricingType: 'fixed' as const } as unknown as PricebookItem,
+          quantity: 1,
+          unit: item.unit,
+          score,
+        });
+        usedIds.add(item.id);
+      }
+    }
+
+    // Sort by score descending — best matches first
+    matched.sort((a, b) => b.score - a.score);
+
+    // If no matches AND no fallback items available, show user-friendly message
+    if (matched.length === 0) {
+      const availableFallbacks = tradeItems.filter(item => !usedIds.has(item.id));
+      if (availableFallbacks.length === 0) {
+        setTimeout(() => {
+          setAiDrafting(false);
+          Alert.alert(
+            'Geen overeenkomsten',
+            `Geen diensten gevonden voor "${scopeText}". Voeg diensten handmatig toe via de prijslijst.`,
+            [{ text: 'OK' }],
+          );
+        }, 600);
+        return;
+      }
+      // Suggest top 3 items from trade pricebook as fallback
+      for (const item of availableFallbacks.slice(0, 3)) {
+        matched.push({
+          item: { ...item, contractorId: '', description: TRADE_LABELS[trade] ?? trade, category: trade, pricingType: 'fixed' as const } as unknown as PricebookItem,
+          quantity: 1,
+          unit: item.unit,
+          score: 0,
+        });
+      }
+    }
+
+    // Estimate quantities from scope text (look for numbers)
+    const numbers = scopeText.match(/\d+/g);
+    if (numbers && matched.length > 0) {
+      const qty = parseInt(numbers[0], 10);
+      if (qty > 0 && qty <= 100) matched[0].quantity = qty;
+    }
+
+    // Generate explanations for each suggested item
+    const explanations: Record<string, string> = {};
+    for (const m of matched) {
+      const matchedWords = words.filter(w =>
+        m.item.name.toLowerCase().split(/[\s\-]+/).some((iw: string) => iw.includes(w) || w.includes(iw))
+      );
+      const fuzzyWords = matchedWords.length === 0 ? words.filter(w =>
+        w.length >= 4 && m.item.name.toLowerCase().split(/[\s\-]+/).some((iw: string) => iw.length >= 4 && levenshtein(w, iw) <= 2)
+      ) : [];
+      if (matchedWords.length > 0) {
+        explanations[m.item.id] = `Matched "${matchedWords.join(', ')}" from your description. ${TRADE_LABELS[trade] || trade} standard rate: \u20AC${m.item.basePrice}/${m.unit}.`;
+      } else if (fuzzyWords.length > 0) {
+        explanations[m.item.id] = `Fuzzy match for "${fuzzyWords.join(', ')}". ${TRADE_LABELS[trade] || trade} standard rate: \u20AC${m.item.basePrice}/${m.unit}.`;
+      } else {
+        explanations[m.item.id] = `Common ${TRADE_LABELS[trade] || trade} service \u2014 suggested based on typical ${trade} job scope.`;
+      }
+    }
+
+    // Strip the score before adding to selectedServices
+    const matchedClean = matched.map(({ score: _score, ...rest }) => rest);
+
+    setTimeout(() => {
+      setSelectedServices(prev => [...prev, ...matchedClean]);
+      setAiExplanations(prev => ({ ...prev, ...explanations }));
+      setScopeText('');
+      setAiDrafting(false);
+      hapticSuccess();
+    }, 600); // Brief delay for AI feel
+  };
+
   const handleSend = () => {
     if (selectedServices.length === 0) return;
     const quote: Partial<TieredQuote> = {
       reference: `TQ-${Date.now()}`, title: 'Offerte', tiers,
-      validUntil: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+      validUntil: new Date(Date.now() + 30 * MS_PER_DAY).toISOString().split('T')[0],
       paymentTerms: '30% aanbetaling, 70% bij oplevering', status: 'sent',
     };
     intelligence.trackEvent({
@@ -265,12 +389,34 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
         </View>
 
         <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent}>
-          {/* AI Scan — compact */}
-          <Pressable style={s.aiScanRow} onPress={() => setShowAIQuote(true)}>
-            <Ionicons name="camera" size={18} color={Palette.hermesOrange} />
-            <Text style={s.aiScanText}>Scan met AI — foto naar offerte</Text>
-            <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
-          </Pressable>
+          {/* AI Draft — describe scope → get line items */}
+          <View style={s.aiDraftSection}>
+            <View style={s.aiDraftInputRow}>
+              <Ionicons name="flash" size={16} color={Palette.hermesOrange} />
+              <TextInput
+                style={s.aiDraftInput}
+                value={scopeText}
+                onChangeText={setScopeText}
+                placeholder="Describe the job scope..."
+                placeholderTextColor={SemanticColors.textTertiary}
+                returnKeyType="send"
+                onSubmitEditing={handleAIDraft}
+                editable={!aiDrafting}
+              />
+              {aiDrafting ? (
+                <ActivityIndicator size="small" color={Palette.hermesOrange} />
+              ) : scopeText.trim() ? (
+                <Pressable onPress={handleAIDraft} hitSlop={8}>
+                  <Ionicons name="arrow-forward-circle" size={24} color={Palette.hermesOrange} />
+                </Pressable>
+              ) : null}
+            </View>
+            <Pressable style={s.aiScanRow} onPress={() => setShowAIQuote(true)}>
+              <Ionicons name="camera" size={16} color={Palette.hermesOrange} />
+              <Text style={s.aiScanText}>Or scan a photo</Text>
+              <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
+            </Pressable>
+          </View>
 
           {/* Services section */}
           <View style={s.section}>
@@ -289,6 +435,12 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
                     <View style={{ flex: 1 }}>
                       <Text style={s.serviceName}>{sv.item.name}</Text>
                       <Text style={s.servicePrice}>{fmt(sv.item.basePrice)}/{sv.unit}</Text>
+                      {aiExplanations[sv.item.id] && (
+                        <View style={s.aiExplanation}>
+                          <Ionicons name="flash" size={10} color={Palette.hermesOrange} />
+                          <Text style={s.aiExplanationText}>{aiExplanations[sv.item.id]}</Text>
+                        </View>
+                      )}
                     </View>
                     <View style={s.qtyRow}>
                       <Pressable style={s.qtyBtn} onPress={() => updateQuantity(sv.item.id, sv.quantity - 1)}>
@@ -432,7 +584,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
             </View>
           )}
 
-          {/* Win probability */}
+          {/* Win probability + explanation */}
           {winPrediction && (
             <View style={s.vascoRow}>
               <Text style={s.vascoText}>
@@ -441,6 +593,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
                   {Math.round(winPrediction.probability * 100)}%
                 </Text>
               </Text>
+              <Text style={s.vascoExplain}>{winPrediction.recommendation}</Text>
             </View>
           )}
         </View>
@@ -525,11 +678,23 @@ const s = StyleSheet.create({
   scrollContent: { padding: SafeArea.side, gap: GRID.lg, paddingBottom: 120 },
 
   // AI Scan — compact row
+  aiDraftSection: { gap: 8 },
+  aiDraftInputRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md, padding: 12,
+    borderWidth: 1, borderColor: Palette.hermesOrange + '30',
+  },
+  aiDraftInput: {
+    flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary,
+    paddingVertical: 0,
+  },
   aiScanRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: Palette.hermesOrange + '08', borderRadius: RADIUS.md, padding: 12,
+    backgroundColor: Palette.hermesOrange + '08', borderRadius: RADIUS.md, padding: 10,
   },
   aiScanText: { flex: 1, fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
+  aiExplanation: { flexDirection: 'row', alignItems: 'flex-start', gap: 4, marginTop: 4, paddingRight: 8 },
+  aiExplanationText: { flex: 1, fontSize: TYPE.tinySize, fontFamily: TYPE.captionFamily, color: Palette.hermesOrange, lineHeight: 14 },
 
   // Sections
   section: { gap: GRID.sm },
@@ -607,6 +772,7 @@ const s = StyleSheet.create({
   vascoTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
   vascoRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   vascoText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, flex: 1 },
+  vascoExplain: { fontSize: TYPE.tinySize, fontFamily: TYPE.captionFamily, color: Palette.hermesOrange, marginTop: 2 },
   vascoApply: { backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.sm, paddingHorizontal: 10, paddingVertical: 5 },
   vascoApplyText: { fontSize: TYPE.tinySize, fontFamily: TYPE.titleFamily, color: Palette.white },
   vascoSkip: { backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.sm, paddingHorizontal: 10, paddingVertical: 5 },

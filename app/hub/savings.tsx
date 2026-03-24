@@ -36,14 +36,14 @@ export default function SavingsHubScreen() {
           <View style={styles.heroRow}>
             <View style={styles.heroKPI}>
               <Text style={styles.heroValue}>
-                {'\u20AC'}{savings.totalSavedThisMonth.toLocaleString('nl-NL')}
+                {'\u20AC'}{savings.totalSavedThisMonth.toLocaleString(undefined)}
               </Text>
               <Text style={styles.heroLabel}>deze maand</Text>
             </View>
             <View style={styles.heroDivider} />
             <View style={styles.heroKPI}>
               <Text style={styles.heroValue}>
-                {'\u20AC'}{savings.totalSavedThisYear.toLocaleString('nl-NL')}
+                {'\u20AC'}{savings.totalSavedThisYear.toLocaleString(undefined)}
               </Text>
               <Text style={styles.heroLabel}>dit jaar</Text>
             </View>
@@ -126,7 +126,7 @@ export default function SavingsHubScreen() {
           <View style={styles.timelineCumulativeRow}>
             <Text style={styles.timelineCumulativeLabel}>Cumulatief</Text>
             <Text style={styles.timelineCumulativeValue}>
-              {'\u20AC'}{timeline[timeline.length - 1]?.cumulative.toLocaleString('nl-NL')}
+              {'\u20AC'}{timeline[timeline.length - 1]?.cumulative.toLocaleString(undefined)}
             </Text>
           </View>
         </View>

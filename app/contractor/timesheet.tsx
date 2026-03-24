@@ -23,6 +23,7 @@ import { PAGE_BG } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
+import { useClockIn } from '../../src/services/clockInService';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { emitBusinessEvent } from '../../src/intelligence/dataCollector';
 import { recordMetricSnapshot } from '../../src/intelligence/learningStorage';
@@ -45,20 +46,11 @@ interface SoloTimeEntry {
 type TabType = 'vandaag' | 'week' | 'maand';
 
 // =============================================================================
-// MOCK DATA
+// CONSTANTS
 // =============================================================================
 
 const now = new Date();
 const todayStr = now.toISOString().split('T')[0];
-
-const dayMs = 86400000;
-const mockEntries: SoloTimeEntry[] = [
-  { id: 'te-1', date: todayStr, clockIn: '07:30', clockOut: '12:00', breakMinutes: 0, jobId: 'j-1', jobTitle: 'CV-ketel onderhoud — Fam. de Groot', totalHours: 4.5 },
-  { id: 'te-2', date: todayStr, clockIn: '12:30', clockOut: '16:30', breakMinutes: 0, jobId: 'j-2', jobTitle: 'Warmtepomp installatie — Bakkerij Jansen', totalHours: 4.0 },
-  { id: 'te-3', date: new Date(now.getTime() - dayMs).toISOString().split('T')[0], clockIn: '08:00', clockOut: '17:00', breakMinutes: 30, jobId: 'j-3', jobTitle: 'Airco service — Hotel Krasnapolsky', totalHours: 8.5 },
-  { id: 'te-4', date: new Date(now.getTime() - dayMs * 2).toISOString().split('T')[0], clockIn: '07:00', clockOut: '15:30', breakMinutes: 30, jobTitle: 'CV-ketel onderhoud — Fam. Visser', totalHours: 8.0 },
-  { id: 'te-5', date: new Date(now.getTime() - dayMs * 3).toISOString().split('T')[0], clockIn: '08:30', clockOut: '16:00', breakMinutes: 30, jobTitle: 'Leidingwerk — Kantoor Zuidas', totalHours: 7.0 },
-];
 
 // =============================================================================
 // SCREEN
@@ -67,30 +59,24 @@ const mockEntries: SoloTimeEntry[] = [
 export default function TimesheetScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { jobs } = useAppState();
+  const { jobs, updateJob } = useAppState();
   const [activeTab, setActiveTab] = useState<TabType>('vandaag');
-  const [entries, setEntries] = useState<SoloTimeEntry[]>(mockEntries);
-  const [clockedIn, setClockedIn] = useState(false);
-  const [clockInTime, setClockInTime] = useState<string | null>(null);
-  const [clockInJobTitle, setClockInJobTitle] = useState<string | null>(null);
+  const [entries, setEntries] = useState<SoloTimeEntry[]>([]);
+
+  // Unified clock-in — shared with Vandaag tab and Job Detail
+  const timer = useClockIn();
+  const clockedIn = timer.active;
+  const clockInTime = timer.startTimeFormatted;
+  const clockInJobTitle = timer.jobTitle;
+  const clockInJobId = timer.jobId;
 
   // Persist entries to AsyncStorage
   const TS_KEY = '@vasco_timesheet_entries';
-  const TS_CLOCK_KEY = '@vasco_timesheet_clock';
 
   useEffect(() => {
     // Load persisted entries
     AsyncStorage.getItem(TS_KEY).then(saved => {
       if (saved) setEntries(JSON.parse(saved));
-    }).catch(() => {});
-    // Restore clock-in state
-    AsyncStorage.getItem(TS_CLOCK_KEY).then(saved => {
-      if (saved) {
-        const data = JSON.parse(saved);
-        setClockedIn(true);
-        setClockInTime(data.time);
-        setClockInJobTitle(data.jobTitle || null);
-      }
     }).catch(() => {});
   }, []);
 
@@ -122,57 +108,63 @@ export default function TimesheetScreen() {
     const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
     if (activeJobs.length === 0) {
-      setClockedIn(true);
-      setClockInTime(time);
-      AsyncStorage.setItem(TS_CLOCK_KEY, JSON.stringify({ time })).catch(() => {});
+      timer.clockIn();
       return;
     }
 
     Alert.alert(t('timesheet.chooseJob', 'Klus kiezen'), t('timesheet.whichJob', 'Voor welke klus ga je werken?'), [
       ...activeJobs.slice(0, 5).map(job => ({
         text: job.title,
-        onPress: () => {
-          setClockedIn(true);
-          setClockInTime(time);
-          setClockInJobTitle(job.title);
-          AsyncStorage.setItem(TS_CLOCK_KEY, JSON.stringify({ time, jobTitle: job.title })).catch(() => {});
-        },
+        onPress: () => { timer.clockIn(job.id, job.title); },
       })),
-      { text: t('timesheet.withoutJob', 'Zonder klus'), onPress: () => { setClockedIn(true); setClockInTime(time); AsyncStorage.setItem(TS_CLOCK_KEY, JSON.stringify({ time })).catch(() => {}); } },
+      { text: t('timesheet.withoutJob', 'Zonder klus'), onPress: () => { timer.clockIn(); } },
       { text: t('common.cancel', 'Annuleren'), style: 'cancel' as const },
     ]);
   };
 
-  const handleClockOut = () => {
+  const handleClockOut = async () => {
     const outTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    if (clockInTime) {
-      const [inH, inM] = clockInTime.split(':').map(Number);
-      const [outH, outM] = outTime.split(':').map(Number);
-      const hours = Math.round(((outH * 60 + outM) - (inH * 60 + inM)) / 60 * 10) / 10;
+    const { hours, state: prevState } = await timer.clockOut();
 
+    if (prevState.startTimeFormatted) {
       const newEntry: SoloTimeEntry = {
         id: `te-${Date.now()}`,
         date: todayStr,
-        clockIn: clockInTime,
+        clockIn: prevState.startTimeFormatted,
         clockOut: outTime,
         breakMinutes: 0,
-        jobTitle: clockInJobTitle ?? undefined,
+        jobId: prevState.jobId ?? undefined,
+        jobTitle: prevState.jobTitle ?? undefined,
         totalHours: Math.max(hours, 0),
       };
       setEntries(prev => [newEntry, ...prev]);
+
+      // PERSIST to job.timeEntries — links hours to the actual job object
+      if (prevState.jobId) {
+        const job = jobs.find((j: any) => j.id === prevState.jobId);
+        if (job) {
+          const existingEntries = (job as any).timeEntries ?? [];
+          updateJob(prevState.jobId, {
+            timeEntries: [...existingEntries, {
+              id: newEntry.id,
+              date: todayStr,
+              hours: newEntry.totalHours,
+              clockIn: prevState.startTimeFormatted,
+              clockOut: outTime,
+            }] as any,
+          });
+        }
+      }
+
       // AI data collector — timesheet clock-out
       emitBusinessEvent('current-user', {
         eventType: 'clock_out',
         entityType: 'job',
-        entityId: newEntry.jobId ?? newEntry.id,
+        entityId: prevState.jobId ?? newEntry.id,
         payload: { hours: newEntry.totalHours, jobTitle: newEntry.jobTitle, date: newEntry.date },
       }).catch(() => {});
       recordMetricSnapshot('capacityUtilization', Math.min(newEntry.totalHours / 8 * 100, 100)).catch(() => {});
     }
-    setClockedIn(false);
-    setClockInTime(null);
-    setClockInJobTitle(null);
-    AsyncStorage.removeItem(TS_CLOCK_KEY).catch(() => {});
   };
 
   const displayEntries = activeTab === 'vandaag' ? todayEntries
@@ -185,7 +177,7 @@ export default function TimesheetScreen() {
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
-    return d.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' });
+    return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
   };
 
   return (
@@ -255,7 +247,7 @@ export default function TimesheetScreen() {
         <View style={styles.summaryDivider} />
         <View style={styles.summaryItem}>
           <Text style={styles.summaryValue}>
-            €{(displayHours * 55).toLocaleString('nl-NL')}
+            €{(displayHours * 55).toLocaleString()}
           </Text>
           <Text style={styles.summaryLabel}>{t('timesheet.value', 'Waarde')}</Text>
         </View>

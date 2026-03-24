@@ -68,7 +68,7 @@ export default function QuoteTemplatesScreen() {
     ]);
   };
 
-  const fmt = (n: number) => `€${n.toLocaleString('nl-NL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  const fmt = (n: number) => `€${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
   return (
     <View style={styles.container}>

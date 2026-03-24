@@ -117,21 +117,21 @@ const WarrantyCard: React.FC<{
             <View style={styles.dateItem}>
               <Text style={styles.dateLabel}>Installatie</Text>
               <Text style={styles.dateValue}>
-                {warranty.installDate.toLocaleDateString('nl-NL')}
+                {warranty.installDate.toLocaleDateString(undefined)}
               </Text>
             </View>
             <View style={styles.dateDivider} />
             <View style={styles.dateItem}>
               <Text style={styles.dateLabel}>Start garantie</Text>
               <Text style={styles.dateValue}>
-                {warranty.warrantyStart.toLocaleDateString('nl-NL')}
+                {warranty.warrantyStart.toLocaleDateString(undefined)}
               </Text>
             </View>
             <View style={styles.dateDivider} />
             <View style={styles.dateItem}>
               <Text style={styles.dateLabel}>Einde garantie</Text>
               <Text style={styles.dateValue}>
-                {warranty.warrantyEnd.toLocaleDateString('nl-NL')}
+                {warranty.warrantyEnd.toLocaleDateString(undefined)}
               </Text>
             </View>
           </View>
@@ -261,8 +261,8 @@ export const WarrantyManager: React.FC = () => {
         `Klant: ${warranty.customerName}`,
         `Merk/Model: ${warranty.brand} ${warranty.model}`,
         warranty.serialNumber ? `Serienummer: ${warranty.serialNumber}` : null,
-        `Installatie: ${warranty.installDate.toLocaleDateString('nl-NL')}`,
-        `Garantie: ${warranty.warrantyStart.toLocaleDateString('nl-NL')} - ${warranty.warrantyEnd.toLocaleDateString('nl-NL')}`,
+        `Installatie: ${warranty.installDate.toLocaleDateString(undefined)}`,
+        `Garantie: ${warranty.warrantyStart.toLocaleDateString(undefined)} - ${warranty.warrantyEnd.toLocaleDateString(undefined)}`,
         expiryInfo,
         warranty.coverage.length > 0 ? `\nDekking: ${warranty.coverage.join(', ')}` : null,
       ].filter(Boolean).join('\n'),
@@ -303,7 +303,7 @@ export const WarrantyManager: React.FC = () => {
         `Product: ${claim.equipmentName}`,
         `Status: ${statusLabels[claim.status] || claim.status}`,
         `Probleem: ${claim.issueDescription}`,
-        `Ingediend: ${claim.claimDate.toLocaleDateString('nl-NL')} (${daysSinceFiled} dagen geleden)`,
+        `Ingediend: ${claim.claimDate.toLocaleDateString(undefined)} (${daysSinceFiled} dagen geleden)`,
         claim.estimatedCost ? `Geschatte waarde: \u20AC${claim.estimatedCost}` : null,
       ].filter(Boolean).join('\n'),
       [{ text: 'Sluiten', style: 'cancel' }],

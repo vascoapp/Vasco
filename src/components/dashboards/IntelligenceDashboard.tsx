@@ -139,7 +139,7 @@ export function IntelligenceDashboard({ onClose }: IntelligenceDashboardProps) {
     setRefreshing(false);
   }, [refreshRecommendations]);
 
-  const formatCurrency = (amount: number) => `€${amount.toLocaleString('nl-NL')}`;
+  const formatCurrency = (amount: number) => `€${amount.toLocaleString(undefined)}`;
 
   return (
     <View style={styles.container}>
@@ -230,7 +230,7 @@ function OverviewTab({ stats, peerComparisons }: { stats: IntelligenceStats; pee
         </View>
         <View style={styles.heroContent}>
           <Text style={styles.heroLabel}>Totaal Bespaard</Text>
-          <Text style={styles.heroValue}>€{stats.totalSavingsAllTime.toLocaleString('nl-NL')}</Text>
+          <Text style={styles.heroValue}>€{stats.totalSavingsAllTime.toLocaleString(undefined)}</Text>
           <Text style={styles.heroSubtext}>
             €{stats.savingsThisMonth} deze maand · {stats.priceAlertsActedOn} deals gepakt
           </Text>
@@ -455,7 +455,7 @@ function SavingsTab({ stats }: { stats: IntelligenceStats }) {
       {/* Total Savings Hero */}
       <View style={styles.savingsHero}>
         <Text style={styles.savingsHeroLabel}>Totaal Bespaard</Text>
-        <Text style={styles.savingsHeroValue}>€{stats.totalSavingsAllTime.toLocaleString('nl-NL')}</Text>
+        <Text style={styles.savingsHeroValue}>€{stats.totalSavingsAllTime.toLocaleString(undefined)}</Text>
         <View style={styles.savingsHeroStats}>
           <View style={styles.savingsHeroStat}>
             <Text style={styles.savingsHeroStatValue}>{stats.priceAlertsActedOn}</Text>

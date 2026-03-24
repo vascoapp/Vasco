@@ -84,7 +84,7 @@ export default function PayrollScreen() {
     return { lines, totalRegular, totalOvertime, grandTotal, totalHours };
   }, [members, entries, period]);
 
-  const fmt = (n: number) => `€${n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const fmt = (n: number) => `€${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const handleExport = async () => {
     const header = 'Naam;Functie;Uurtarief;Regulier (u);Overwerk (u);Regulier (€);Overwerk (€);Totaal (€)';

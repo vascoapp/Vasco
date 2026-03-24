@@ -17,11 +17,11 @@ import type { ProjectStatus } from '../../../src/types/project';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-const STATUS_OPTIONS: { key: ProjectStatus; label: string; icon: IconName }[] = [
-  { key: 'planning', label: 'Planning', icon: 'document-text-outline' },
-  { key: 'active', label: 'Actief', icon: 'hammer-outline' },
-  { key: 'on_hold', label: 'Gepauzeerd', icon: 'pause-circle-outline' },
-  { key: 'completed', label: 'Afgerond', icon: 'checkmark-circle-outline' },
+const STATUS_KEYS: { key: ProjectStatus; i18nKey: string; icon: IconName }[] = [
+  { key: 'planning', i18nKey: 'project.statusPlanning', icon: 'document-text-outline' },
+  { key: 'active', i18nKey: 'project.statusActive', icon: 'hammer-outline' },
+  { key: 'on_hold', i18nKey: 'project.statusOnHold', icon: 'pause-circle-outline' },
+  { key: 'completed', i18nKey: 'project.statusCompleted', icon: 'checkmark-circle-outline' },
 ];
 
 export default function ProjectDetailScreen() {
@@ -44,9 +44,9 @@ export default function ProjectDetailScreen() {
 
   const handleStatusChange = () => {
     if (!project) return;
-    Alert.alert('Status wijzigen', undefined,
-      STATUS_OPTIONS.map(opt => ({
-        text: opt.label,
+    Alert.alert(t('project.changeStatus'), undefined,
+      STATUS_KEYS.map(opt => ({
+        text: t(opt.i18nKey),
         onPress: () => { hapticSuccess(); updateProject(project.id, { status: opt.key }); },
       }))
     );
@@ -54,10 +54,10 @@ export default function ProjectDetailScreen() {
 
   const handleAssignJob = () => {
     if (!project || unassignedJobs.length === 0) {
-      Alert.alert('Geen klussen', 'Alle klussen zijn al aan een project toegewezen.');
+      Alert.alert(t('project.noJobs'), t('project.allJobsAssigned'));
       return;
     }
-    Alert.alert('Klus toevoegen', 'Selecteer een klus om toe te voegen:',
+    Alert.alert(t('project.addJob'), t('project.selectJob'),
       unassignedJobs.slice(0, 5).map(j => ({
         text: j.title,
         onPress: () => { hapticSuccess(); addJobToProject(project.id, j.id); },
@@ -72,7 +72,7 @@ export default function ProjectDetailScreen() {
           <Pressable onPress={() => router.back()} hitSlop={8}>
             <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
           </Pressable>
-          <Text style={styles.headerTitle}>Project niet gevonden</Text>
+          <Text style={styles.headerTitle}>{t('project.notFound')}</Text>
         </View>
       </View>
     );
@@ -86,11 +86,11 @@ export default function ProjectDetailScreen() {
         </Pressable>
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={styles.headerTitle} numberOfLines={1}>{project.title}</Text>
-          <Text style={styles.headerSub}>{customer?.name ?? 'Geen klant'}</Text>
+          <Text style={styles.headerSub}>{customer?.name ?? t('project.noCustomer')}</Text>
         </View>
         <Pressable onPress={handleStatusChange} style={styles.statusBtn}>
           <Text style={styles.statusBtnText}>
-            {STATUS_OPTIONS.find(o => o.key === project.status)?.label ?? project.status}
+            {t(STATUS_KEYS.find(o => o.key === project.status)?.i18nKey ?? '') || project.status}
           </Text>
         </Pressable>
       </View>
@@ -105,39 +105,39 @@ export default function ProjectDetailScreen() {
         {pnl && (
           <FadeIn delay={0}>
             <View style={styles.pnlCard}>
-              <Text style={styles.sectionTitle}>Financieel overzicht</Text>
+              <Text style={styles.sectionTitle}>{t('project.financialOverview')}</Text>
               <View style={styles.pnlRow}>
                 <View style={styles.pnlItem}>
-                  <Text style={styles.pnlValue}>€{project.totalBudget.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
-                  <Text style={styles.pnlLabel}>Budget</Text>
+                  <Text style={styles.pnlValue}>€{project.totalBudget.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+                  <Text style={styles.pnlLabel}>{t('project.budget')}</Text>
                 </View>
                 <View style={styles.pnlDivider} />
                 <View style={styles.pnlItem}>
-                  <Text style={styles.pnlValue}>€{pnl.revenue.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
-                  <Text style={styles.pnlLabel}>Omzet</Text>
+                  <Text style={styles.pnlValue}>€{pnl.revenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+                  <Text style={styles.pnlLabel}>{t('project.revenue')}</Text>
                 </View>
                 <View style={styles.pnlDivider} />
                 <View style={styles.pnlItem}>
                   <Text style={[styles.pnlValue, { color: pnl.grossProfit >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
-                    €{pnl.grossProfit.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}
+                    €{pnl.grossProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </Text>
-                  <Text style={styles.pnlLabel}>Winst</Text>
+                  <Text style={styles.pnlLabel}>{t('project.profit')}</Text>
                 </View>
               </View>
               <View style={styles.pnlRow}>
                 <View style={styles.pnlItem}>
-                  <Text style={styles.pnlValue}>€{pnl.materialCosts.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
-                  <Text style={styles.pnlLabel}>Materiaal</Text>
+                  <Text style={styles.pnlValue}>€{pnl.materialCosts.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+                  <Text style={styles.pnlLabel}>{t('project.material')}</Text>
                 </View>
                 <View style={styles.pnlDivider} />
                 <View style={styles.pnlItem}>
-                  <Text style={styles.pnlValue}>€{pnl.laborCosts.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
-                  <Text style={styles.pnlLabel}>Arbeid</Text>
+                  <Text style={styles.pnlValue}>€{pnl.laborCosts.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+                  <Text style={styles.pnlLabel}>{t('project.labor')}</Text>
                 </View>
                 <View style={styles.pnlDivider} />
                 <View style={styles.pnlItem}>
                   <Text style={[styles.pnlValue, { color: Palette.hermesOrange }]}>{pnl.grossMargin}%</Text>
-                  <Text style={styles.pnlLabel}>Marge</Text>
+                  <Text style={styles.pnlLabel}>{t('project.margin')}</Text>
                 </View>
               </View>
             </View>
@@ -148,14 +148,14 @@ export default function ProjectDetailScreen() {
         <FadeIn delay={100}>
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Klussen ({projectJobs.length})</Text>
+              <Text style={styles.sectionTitle}>{t('project.jobsCount', { count: projectJobs.length })}</Text>
               <Pressable onPress={handleAssignJob} hitSlop={8}>
                 <Ionicons name="add-circle" size={24} color={Palette.hermesOrange} />
               </Pressable>
             </View>
 
             {projectJobs.length === 0 ? (
-              <Text style={styles.emptyText}>Nog geen klussen toegevoegd</Text>
+              <Text style={styles.emptyText}>{t('project.noJobsAdded')}</Text>
             ) : (
               projectJobs.map(job => (
                 <Pressable
@@ -166,7 +166,7 @@ export default function ProjectDetailScreen() {
                   <View style={[styles.jobAccent, { backgroundColor: Palette.hermesOrange }]} />
                   <View style={{ flex: 1, padding: 12 }}>
                     <Text style={styles.jobTitle} numberOfLines={1}>{job.title}</Text>
-                    <Text style={styles.jobMeta}>{job.status} · €{(job.quotedAmount ?? 0).toLocaleString('nl-NL')}</Text>
+                    <Text style={styles.jobMeta}>{job.status} · €{(job.quotedAmount ?? 0).toLocaleString(undefined)}</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} style={{ marginRight: 12 }} />
                 </Pressable>
@@ -178,9 +178,9 @@ export default function ProjectDetailScreen() {
         {/* Milestones placeholder */}
         <FadeIn delay={200}>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Mijlpalen</Text>
+            <Text style={styles.sectionTitle}>{t('project.milestones')}</Text>
             {project.milestones.length === 0 ? (
-              <Text style={styles.emptyText}>Nog geen mijlpalen gepland</Text>
+              <Text style={styles.emptyText}>{t('project.noMilestones')}</Text>
             ) : (
               project.milestones.map(m => (
                 <View key={m.id} style={styles.milestoneRow}>
@@ -190,7 +190,7 @@ export default function ProjectDetailScreen() {
                     color={m.completed ? SemanticColors.feedbackSuccess : SemanticColors.textTertiary}
                   />
                   <Text style={[styles.milestoneText, m.completed && styles.milestoneComplete]}>{m.title}</Text>
-                  <Text style={styles.milestoneWeek}>Week {m.weekNumber}</Text>
+                  <Text style={styles.milestoneWeek}>{t('project.week')} {m.weekNumber}</Text>
                 </View>
               ))
             )}

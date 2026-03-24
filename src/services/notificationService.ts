@@ -7,6 +7,7 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
+import { MS_PER_DAY, MS_PER_HOUR } from '../utils/timeConstants';
 
 // =============================================================================
 // TYPES
@@ -61,42 +62,42 @@ const mockNotifications: AppNotification[] = [
     title: 'Offerte wacht op goedkeuring',
     body: 'Q-2026-0055 voor Bakkerij Jansen (€3.800) wacht op uw goedkeuring.',
     read: false, actionRoute: '/(contractor)/facturen', actionLabel: 'Bekijk',
-    createdAt: new Date(now.getTime() - 3600000 * 2),
+    createdAt: new Date(now.getTime() - MS_PER_HOUR * 2),
   },
   {
     id: 'n-2', type: 'overdue_invoice', priority: 'urgent',
     title: '2 facturen verlopen',
     body: '€344,85 openstaand bij Bakkerij Jansen — 5 dagen verlopen.',
     read: false, actionRoute: '/(contractor)/facturen',
-    createdAt: new Date(now.getTime() - 3600000 * 6),
+    createdAt: new Date(now.getTime() - MS_PER_HOUR * 6),
   },
   {
     id: 'n-3', type: 'schedule_change', priority: 'medium',
     title: 'Planning gewijzigd',
     body: 'Warmtepomp installatie is verplaatst naar morgen 08:00.',
     read: false,
-    createdAt: new Date(now.getTime() - 3600000 * 12),
+    createdAt: new Date(now.getTime() - MS_PER_HOUR * 12),
   },
   {
     id: 'n-4', type: 'delivery_update', priority: 'medium',
     title: 'Levering bevestigd',
     body: 'PO-2026-0042 van Technische Unie wordt morgen geleverd.',
     read: true, actionRoute: '/contractor/purchase-orders',
-    createdAt: new Date(now.getTime() - 86400000),
+    createdAt: new Date(now.getTime() - MS_PER_DAY),
   },
   {
     id: 'n-5', type: 'team_assignment', priority: 'low',
     title: 'Jan de Vries toegewezen',
     body: 'Onderaannemer Jan de Vries is toegewezen aan Warmtepomp installatie.',
     read: true,
-    createdAt: new Date(now.getTime() - 86400000 * 2),
+    createdAt: new Date(now.getTime() - MS_PER_DAY * 2),
   },
   {
     id: 'n-6', type: 'credential_expiry', priority: 'high',
     title: 'Certificaat verloopt binnenkort',
     body: 'KOMO Keurmerk van Pieter Bakker verloopt op 10 apr 2026.',
     read: true,
-    createdAt: new Date(now.getTime() - 86400000 * 3),
+    createdAt: new Date(now.getTime() - MS_PER_DAY * 3),
   },
 ];
 

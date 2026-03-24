@@ -8,6 +8,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MS_PER_HOUR } from '../utils/timeConstants';
 
 const TOKEN_KEY = '@vasco_push_token';
 
@@ -79,7 +80,7 @@ export async function schedulePaymentReminder(data: {
     const id = await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Betaalherinnering',
-        body: `Factuur voor ${data.customerName} (€${data.amount.toLocaleString('nl-NL')}) is over ${data.daysUntilDue} dagen verlopen`,
+        body: `Factuur voor ${data.customerName} (€${data.amount.toLocaleString(undefined)}) is over ${data.daysUntilDue} dagen verlopen`,
         data: { type: 'payment_reminder', invoiceId: data.invoiceId },
       },
       trigger: {
@@ -124,7 +125,7 @@ export async function scheduleJobReminder(data: {
 }): Promise<string | null> {
   try {
     // Remind 1 hour before
-    const reminderTime = new Date(data.scheduledTime.getTime() - 3600000);
+    const reminderTime = new Date(data.scheduledTime.getTime() - MS_PER_HOUR);
     if (reminderTime.getTime() <= Date.now()) return null;
 
     const id = await Notifications.scheduleNotificationAsync({

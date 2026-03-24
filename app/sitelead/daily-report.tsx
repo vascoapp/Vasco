@@ -96,7 +96,7 @@ export default function DailyReportScreen() {
   const { addReport } = useDailyReports();
 
   const today = new Date();
-  const dateStr = today.toLocaleDateString('nl-NL', {
+  const dateStr = today.toLocaleDateString(undefined, {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });
 

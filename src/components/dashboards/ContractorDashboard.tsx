@@ -106,7 +106,7 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
     .slice(0, 3);
 
   const formatCurrency = (amount: number) => {
-    return `€${amount.toLocaleString('nl-NL')}`;
+    return `€${amount.toLocaleString(undefined)}`;
   };
 
   // =============================================================================
@@ -278,11 +278,11 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
                   <View style={styles.saleAlertPrices}>
                     {po.regularPrice && (
                       <Text style={styles.saleAlertOldPrice}>
-                        €{po.regularPrice.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}
+                        €{po.regularPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </Text>
                     )}
                     <Text style={styles.saleAlertNewPrice}>
-                      €{po.price.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}
+                      €{po.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </Text>
                   </View>
                 </View>
@@ -459,7 +459,7 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
                 <View style={styles.jobFooter}>
                   <View style={styles.jobDetail}>
                     <Ionicons name="calendar-outline" size={12} color={SemanticColors.textTertiary} />
-                    <Text style={styles.jobDetailText}>{new Date(job.updatedAt).toLocaleDateString('nl-NL')}</Text>
+                    <Text style={styles.jobDetailText}>{new Date(job.updatedAt).toLocaleDateString(undefined)}</Text>
                   </View>
                 </View>
               </Pressable>
@@ -591,7 +591,7 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
                 </View>
                 <View style={styles.invoiceFooter}>
                   <Text style={styles.invoiceDue}>
-                    Due {dueDate.toLocaleDateString('nl-NL')}
+                    Due {dueDate.toLocaleDateString(undefined)}
                   </Text>
                   <Text style={styles.invoiceAmount}>{formatCurrency(invoice.amount)}</Text>
                 </View>

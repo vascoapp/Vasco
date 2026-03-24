@@ -53,11 +53,11 @@ export default function NotificationsScreen() {
 
   const formatTimeAgo = (date: Date) => {
     const mins = Math.floor((Date.now() - date.getTime()) / 60000);
-    if (mins < 60) return t('notifications.minutesAgo', `${mins}m geleden`);
+    if (mins < 60) return t('notifications.minutesAgo', '{{count}}m ago', { count: mins });
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return t('notifications.hoursAgo', `${hours}u geleden`);
+    if (hours < 24) return t('notifications.hoursAgo', '{{count}}h ago', { count: hours });
     const days = Math.floor(hours / 24);
-    return t('notifications.daysAgo', `${days}d geleden`);
+    return t('notifications.daysAgo', '{{count}}d ago', { count: days });
   };
 
   const handleNotificationPress = (notif: AppNotification) => {

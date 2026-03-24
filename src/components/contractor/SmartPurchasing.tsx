@@ -201,7 +201,7 @@ function AlertsTab({
               <View style={styles.alertExpiry}>
                 <Ionicons name="time-outline" size={12} color={SemanticColors.feedbackWarning} />
                 <Text style={styles.alertExpiryText}>
-                  Expires {new Date(alert.expiresAt).toLocaleDateString('nl-NL')}
+                  Expires {new Date(alert.expiresAt).toLocaleDateString(undefined)}
                 </Text>
               </View>
             )}

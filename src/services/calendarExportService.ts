@@ -52,8 +52,8 @@ export function generateIcsEvent(job: Job): string {
   const description = [
     job.description ?? '',
     job.trade ? `Vakgebied: ${job.trade}` : '',
-    job.quotedAmount ? `Offerte: €${job.quotedAmount.toLocaleString('nl-NL')}` : '',
-    job.agreedAmount ? `Afgesproken: €${job.agreedAmount.toLocaleString('nl-NL')}` : '',
+    job.quotedAmount ? `Offerte: €${job.quotedAmount.toLocaleString(undefined)}` : '',
+    job.agreedAmount ? `Afgesproken: €${job.agreedAmount.toLocaleString(undefined)}` : '',
   ].filter(Boolean).join('\\n');
 
   return [

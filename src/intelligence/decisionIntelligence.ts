@@ -63,7 +63,7 @@ class DecisionIntelligenceService {
   // -----------------------------------------
 
   start(): void {
-    console.log('[DecisionIntelligence] Starting...');
+    if (__DEV__) console.log('[DecisionIntelligence] Starting...');
 
     // Flush buffered activities periodically
     this.flushInterval = setInterval(() => {
@@ -77,7 +77,7 @@ class DecisionIntelligenceService {
       this.flushInterval = null;
     }
     this.flushActivityBuffer();
-    console.log('[DecisionIntelligence] Stopped');
+    if (__DEV__) console.log('[DecisionIntelligence] Stopped');
   }
 
   // -----------------------------------------
@@ -99,7 +99,7 @@ class DecisionIntelligenceService {
       propertyType?: 'apartment' | 'house' | 'commercial';
     }
   ): Promise<void> {
-    console.log('[DecisionIntelligence] Processing decision:', item.name);
+    if (__DEV__) console.log('[DecisionIntelligence] Processing decision:', item.name);
 
     // 1. Extract intelligence data
     const intelligenceData = this.extractIntelligenceData(submission, item, context);
@@ -178,7 +178,7 @@ class DecisionIntelligenceService {
     const extraction = this.extractProductDetails(linkedProduct, item);
 
     if (!extraction) {
-      console.log('[DecisionIntelligence] Could not extract product details');
+      if (__DEV__) console.log('[DecisionIntelligence] Could not extract product details');
       return;
     }
 
@@ -199,7 +199,7 @@ class DecisionIntelligenceService {
 
       try {
         await pricingApi.recordPriceObservation(observation);
-        console.log('[DecisionIntelligence] Price observation recorded:', extraction.name);
+        if (__DEV__) console.log('[DecisionIntelligence] Price observation recorded:', extraction.name);
       } catch (error) {
         console.error('[DecisionIntelligence] Failed to record price:', error);
       }
@@ -470,7 +470,7 @@ class DecisionIntelligenceService {
     this.activityBuffer = [];
 
     // In production, batch send to backend
-    console.log(`[DecisionIntelligence] Flushing ${activities.length} activities`);
+    if (__DEV__) console.log(`[DecisionIntelligence] Flushing ${activities.length} activities`);
 
     for (const activity of activities) {
       trackUserAction(`portal_${activity.action}`, {

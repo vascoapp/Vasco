@@ -252,7 +252,7 @@ function OverviewTab({
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Totale waarde</Text>
           <Text style={styles.summaryValue}>
-            €{analysis.totalValue.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}
+            €{analysis.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </Text>
         </View>
         <View style={styles.summaryRow}>
@@ -292,7 +292,7 @@ function OverviewTab({
           </View>
           <View style={styles.historyStat}>
             <Text style={[styles.historyStatValue, { color: SemanticColors.feedbackSuccess }]}>
-              €{statistics.totalSavingsGenerated.toLocaleString('nl-NL')}
+              €{statistics.totalSavingsGenerated.toLocaleString(undefined)}
             </Text>
             <Text style={styles.historyStatLabel}>Extra marge gegenereerd</Text>
           </View>

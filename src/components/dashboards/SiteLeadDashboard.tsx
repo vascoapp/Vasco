@@ -650,7 +650,7 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
               kpis={[
                 { icon: 'ribbon', value: String(qualityHealth.defectsOpen), label: t('sitelead.openDefects'), color: Palette.hermesOrange, onPress: () => router.push('/sitelead/log-defect' as any) },
                 { icon: 'checkmark-circle', value: `${qualityHealth.closureRate}%`, label: t('sitelead.closureRate'), onPress: () => router.push('/sitelead/close-defect' as any) },
-                { icon: 'construct', value: `\u20AC${qualityHealth.reworkCost.toLocaleString('nl-NL')}`, label: t('sitelead.repairCosts') },
+                { icon: 'construct', value: `\u20AC${qualityHealth.reworkCost.toLocaleString(undefined)}`, label: t('sitelead.repairCosts') },
               ]}
             />
 

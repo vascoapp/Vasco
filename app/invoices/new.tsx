@@ -51,7 +51,7 @@ export default function InvoiceFromQuoteSelect() {
                     <Text style={Typography.body}>{quote.customer}</Text>
                     <Text style={Typography.muted}>{quote.job}</Text>
                   </View>
-                  <Text style={Typography.body}>€{quote.amount.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}</Text>
+                  <Text style={Typography.body}>€{quote.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</Text>
                 </Pressable>
               </Link>
             ))}

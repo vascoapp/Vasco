@@ -88,7 +88,7 @@ export function DocumentVault() {
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('nl-NL', {
+    return new Date(dateStr).toLocaleDateString(undefined, {
       day: 'numeric',
       month: 'short',
       year: 'numeric',

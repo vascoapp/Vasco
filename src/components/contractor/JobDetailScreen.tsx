@@ -72,8 +72,8 @@ export function JobDetailScreen({
   // Typed job materials from AppState
   const typedJobMaterials = jobMaterialsMap[job.id] ?? [];
 
-  const formatCurrency = (amount: number) => `€${amount.toLocaleString('nl-NL')}`;
-  const formatDate = (date: string) => new Date(date).toLocaleDateString('nl-NL', {
+  const formatCurrency = (amount: number) => `€${amount.toLocaleString(undefined)}`;
+  const formatDate = (date: string) => new Date(date).toLocaleDateString(undefined, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
@@ -483,7 +483,7 @@ function DetailsTab({
             <View key={note.id} style={styles.noteItem}>
               <Text style={styles.noteItemText}>{note.text}</Text>
               <Text style={styles.noteItemMeta}>
-                {new Date(note.createdAt).toLocaleDateString('nl-NL')}
+                {new Date(note.createdAt).toLocaleDateString(undefined)}
                 {!note.isCustomerVisible && ' • Internal'}
               </Text>
             </View>
@@ -575,7 +575,7 @@ function TimeTab({
             <View key={entry.id} style={styles.timeEntry}>
               <View style={styles.timeEntryMain}>
                 <Text style={styles.timeEntryDate}>
-                  {new Date(entry.date).toLocaleDateString('nl-NL', {
+                  {new Date(entry.date).toLocaleDateString(undefined, {
                     weekday: 'short',
                     day: 'numeric',
                     month: 'short',

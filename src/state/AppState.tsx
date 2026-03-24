@@ -1,14 +1,10 @@
+// React
 import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+
+// Libraries
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { businessProfile as initialBusinessProfile } from '../data/mockBusiness';
-import { invoices as initialInvoices, quotes as initialQuotes } from '../data/mockDocuments';
-import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
-import { ExtractedDocument } from '../ingestion/pdfSchema';
-import type { BudgetExtractionResult } from '../ingestion/budgetExtractor';
-import { ingestPdfStub } from '../ingestion/ingestionStub';
-import { buildPriceRiskSignals } from '../logic/priceRisk';
-import { exportInvoiceToMoneybird } from '../integrations/moneybird';
-import { createMolliePayment } from '../integrations/mollie';
+
+// Domain types
 import { BusinessProfile } from '../domain/business';
 import { Customer } from '../domain/customers';
 import { Invoice, Quote } from '../domain/documents';
@@ -18,7 +14,30 @@ import { Supplier } from '../domain/suppliers';
 import { PriceRiskSignal } from '../domain/insights';
 import { QuoteLineItem } from '../domain/lineItems';
 import type { Project, ProjectPnL } from '../types/project';
+import { ExtractedDocument } from '../ingestion/pdfSchema';
+import type { BudgetExtractionResult } from '../ingestion/budgetExtractor';
+
+// Services / intelligence
 import { upsertEntity, addRelation, propagateJobCompletion, propagatePayment } from '../intelligence/ontology';
+import {
+  emitQuoteCreated,
+  emitQuoteAccepted,
+  emitInvoiceSent,
+  emitPaymentReceived,
+  emitJobStarted,
+  emitJobCompleted,
+  emitMaterialPurchased,
+  recordPricingData,
+  emitQuoteRejected,
+  recordPricingOutcome,
+} from '../intelligence/dataCollector';
+import { validateQuoteBeforeSend, validateInvoiceBeforeCreate, validateJobStatusChange } from '../services/workflowValidatorService';
+import { schedulePaymentReminder, scheduleQuoteFollowUp } from '../services/pushNotificationService';
+import { exportInvoiceToMoneybird } from '../integrations/moneybird';
+import { createMolliePayment } from '../integrations/mollie';
+import { buildPriceRiskSignals } from '../logic/priceRisk';
+import { ingestPdfStub } from '../ingestion/ingestionStub';
+import { rowToExtractedDocument } from '../ingestion/extractionBridge';
 import { isSupabaseConfigured } from '../lib/supabase';
 import {
   loadQuotes,
@@ -54,20 +73,13 @@ import {
   saveExtractedDocument,
   saveExtractedLineItems,
 } from '../lib/intelligenceDataProvider';
-import { rowToExtractedDocument } from '../ingestion/extractionBridge';
-import { schedulePaymentReminder, scheduleQuoteFollowUp } from '../services/pushNotificationService';
-import {
-  emitQuoteCreated,
-  emitQuoteAccepted,
-  emitInvoiceSent,
-  emitPaymentReceived,
-  emitJobStarted,
-  emitJobCompleted,
-  emitMaterialPurchased,
-  recordPricingData,
-  emitQuoteRejected,
-  recordPricingOutcome,
-} from '../intelligence/dataCollector';
+
+// Data / mocks
+import { MS_PER_DAY } from '../utils/timeConstants';
+import { logWarn } from '../utils/errorHandler';
+import { businessProfile as initialBusinessProfile } from '../data/mockBusiness';
+import { invoices as initialInvoices, quotes as initialQuotes } from '../data/mockDocuments';
+import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
 
 export type ContractorMetrics = {
   revenueThisMonth: number;
@@ -107,7 +119,8 @@ type AppState = {
     trade?: string;
     priority?: string;
   }) => Promise<string>;
-  updateJobStatus: (id: string, status: JobStatus) => void;
+  updateJobStatus: (id: string, status: JobStatus) => { warnings: string[] };
+  updateJob: (id: string, updates: Partial<Job>) => void;
   removeJob: (id: string) => void;
   moneybirdConnected: boolean;
   lastMoneybirdExport: Record<string, string>;
@@ -150,6 +163,10 @@ type AppState = {
 
 const AppStateContext = createContext<AppState | null>(null);
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// SECTION: Provider & State Initialization (seeds, defaults)
+// ═══════════════════════════════════════════════════════════════════════════════
+
 export function AppStateProvider({ children }: PropsWithChildren) {
   const aiUserId = 'current-user'; // placeholder until AuthContext is accessible here
   const [isLoading, setIsLoading] = useState(isSupabaseConfigured);
@@ -159,9 +176,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   const [quotes, setQuotes] = useState<Quote[]>(isSupabaseConfigured ? [] : initialQuotes);
   const [invoices, setInvoices] = useState<Invoice[]>(isSupabaseConfigured ? [] : initialInvoices);
   const [jobs, setJobs] = useState<Job[]>(isSupabaseConfigured ? [] : [
-    { id: 'j-seed-1', customerId: 'cust-001', title: 'CV-ketel onderhoud — Fam. de Vries', description: null, status: 'scheduled', trade: 'plumbing', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], estimatedDuration: 3, quotedAmount: 450, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - 86400000 * 3).toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'j-seed-2', customerId: 'cust-002', title: 'Badkamer renovatie — Fam. Jansen', description: null, status: 'in-progress', trade: 'plumbing', priority: 'normal', estimatedDuration: 24, quotedAmount: 4200, agreedAmount: 4200, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - 86400000 * 7).toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'j-seed-3', customerId: 'cust-003', title: 'Lekkage reparatie — Bakkerij Smit', description: null, status: 'completed', trade: 'plumbing', priority: 'normal', estimatedDuration: 2, quotedAmount: 280, agreedAmount: 280, completedAt: new Date(Date.now() - 86400000 * 12).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - 86400000 * 14).toISOString(), updatedAt: new Date(Date.now() - 86400000 * 12).toISOString() },
+    { id: 'j-seed-1', customerId: 'cust-004', title: 'Lekkage inspectie — Fam. Bakker', description: null, status: 'lead', trade: 'plumbing', priority: 'normal', quotedAmount: 180, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 1).toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'j-seed-2', customerId: 'cust-001', title: 'CV-ketel onderhoud — Fam. de Vries', description: null, status: 'scheduled', trade: 'plumbing', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], estimatedDuration: 3, quotedAmount: 450, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 3).toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'j-seed-3', customerId: 'cust-002', title: 'Badkamer renovatie — Fam. Jansen', description: null, status: 'in-progress', trade: 'plumbing', priority: 'normal', estimatedDuration: 24, quotedAmount: 4200, agreedAmount: 4200, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 7).toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'j-seed-4', customerId: 'cust-003', title: 'Lekkage reparatie — Bakkerij Smit', description: null, status: 'completed', trade: 'plumbing', priority: 'normal', estimatedDuration: 2, quotedAmount: 280, agreedAmount: 280, completedAt: new Date(Date.now() - MS_PER_DAY * 12).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 14).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 12).toISOString() },
+    { id: 'j-seed-5', customerId: 'cust-005', title: 'Vloerverwarming check — Hotel NH', description: null, status: 'invoiced', trade: 'plumbing', priority: 'normal', estimatedDuration: 2, quotedAmount: 350, agreedAmount: 350, completedAt: new Date(Date.now() - MS_PER_DAY * 20).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 25).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 20).toISOString() },
   ]);
   const [extractedDocs, setExtractedDocs] = useState<ExtractedDocument[]>([]);
   const [lineItems, setLineItems] = useState<Record<string, QuoteLineItem[]>>(
@@ -171,6 +190,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     { id: 'cust-001', name: 'Fam. de Vries', email: 'devries@gmail.com', phone: '+31 6 12345678', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
     { id: 'cust-002', name: 'Fam. Jansen', email: 'jansen@hotmail.com', phone: '+31 6 87654321', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
     { id: 'cust-003', name: 'Bakkerij Smit', email: 'info@bakkerijsmit.nl', phone: '+31 20 1234567', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'cust-004', name: 'Fam. Bakker', email: 'bakker@gmail.com', phone: '+31 6 55512345', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'cust-005', name: 'Hotel NH', email: 'facilitair@nh-hotels.nl', phone: '+31 20 5551234', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
   ]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -186,20 +207,24 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     {
       id: 'proj-seed-1', title: 'Badkamer renovatie — Fam. Jansen', customerId: 'cust-002', customerName: 'Fam. Jansen',
       status: 'active', totalBudget: 12500, totalQuoted: 12500, totalInvoiced: 0, totalPaid: 0,
-      jobIds: ['j-seed-2'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [],
-      startDate: new Date(Date.now() - 86400000 * 7).toISOString().split('T')[0],
-      targetEndDate: new Date(Date.now() + 86400000 * 21).toISOString().split('T')[0],
-      createdAt: new Date(Date.now() - 86400000 * 14).toISOString(), updatedAt: new Date().toISOString(),
+      jobIds: ['j-seed-3'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [],
+      startDate: new Date(Date.now() - MS_PER_DAY * 7).toISOString().split('T')[0],
+      targetEndDate: new Date(Date.now() + MS_PER_DAY * 21).toISOString().split('T')[0],
+      createdAt: new Date(Date.now() - MS_PER_DAY * 14).toISOString(), updatedAt: new Date().toISOString(),
     },
     {
       id: 'proj-seed-2', title: 'Keuken verbouwing — Bakkerij Smit', customerId: 'cust-003', customerName: 'Bakkerij Smit',
       status: 'planning', totalBudget: 18000, totalQuoted: 16500, totalInvoiced: 0, totalPaid: 0,
-      jobIds: ['j-seed-3'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [],
-      targetEndDate: new Date(Date.now() + 86400000 * 45).toISOString().split('T')[0],
-      createdAt: new Date(Date.now() - 86400000 * 3).toISOString(), updatedAt: new Date().toISOString(),
+      jobIds: ['j-seed-4'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [],
+      targetEndDate: new Date(Date.now() + MS_PER_DAY * 45).toISOString().split('T')[0],
+      createdAt: new Date(Date.now() - MS_PER_DAY * 3).toISOString(), updatedAt: new Date().toISOString(),
     },
   ];
   const [projects, setProjects] = useState<Project[]>(isSupabaseConfigured ? [] : SEED_PROJECTS);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SECTION: Data Hydration (refreshData, AsyncStorage persistence)
+  // ═══════════════════════════════════════════════════════════════════════════
 
   const refreshData = useCallback(async () => {
     setIsLoading(true);
@@ -236,11 +261,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             setExtractedDocs(docs);
           }
         } catch (err) {
-          console.warn('[AppState] loadExtractedDocs failed:', err);
+          logWarn('AppState', `loadExtractedDocs failed: ${err}`);
         }
       }
     } catch (err) {
-      console.warn('[AppState] refreshData failed:', err);
+      logWarn('AppState', `refreshData failed: ${err}`);
     } finally {
       setIsLoading(false);
     }
@@ -366,11 +391,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             );
             return (row as any).id as string;
           } catch (err) {
-            console.warn('[AppState] addCustomer persist failed:', err);
+            logWarn('AppState', `addCustomer persist failed: ${err}`);
           }
         }
         return tempId;
       },
+      // ═════════════════════════════════════════════════════════════════════
+      // SECTION: Job CRUD (addJob, updateJobStatus, updateJob, removeJob)
+      // ═════════════════════════════════════════════════════════════════════
+
       addJob: async (title, customerId, description, extra) => {
         const tempId = `j-${Date.now()}`;
         const now = new Date().toISOString();
@@ -417,7 +446,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             );
             return row.id;
           } catch (err) {
-            console.warn('[AppState] addJob persist failed:', err);
+            logWarn('AppState', `addJob persist failed: ${err}`);
           }
         }
         // Ontology: create job entity + link to customer
@@ -429,6 +458,21 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
       updateJobStatus: (id, status) => {
         const job = jobs.find(j => j.id === id);
+        const collectedWarnings: string[] = [];
+
+        // Validator layer: check transition is valid
+        if (job) {
+          const validation = validateJobStatusChange(job.status, status, job);
+          if (!validation.valid) {
+            console.error('[Validator] Job status change invalid:', validation.errors.map(e => e.message).join(', '));
+            collectedWarnings.push(...validation.errors.map(e => e.message));
+          }
+          if (validation.warnings.length > 0) {
+            console.error('[Validator] Job status warnings:', validation.warnings.map(w => w.message).join(', '));
+            collectedWarnings.push(...validation.warnings.map(w => w.message));
+          }
+        }
+
         setJobs((prev) =>
           prev.map((j) =>
             j.id === id ? { ...j, status, updatedAt: new Date().toISOString() } : j,
@@ -436,7 +480,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         );
         if (isSupabaseConfigured) {
           dbUpdateJob(id, { status }).catch((err) =>
-            console.warn('[AppState] updateJobStatus persist failed:', err),
+            logWarn('AppState', `updateJobStatus persist failed: ${err}`),
           );
         }
         // AI data collector — track job lifecycle events
@@ -482,28 +526,55 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               marginPercent: estimatedCost > 0 ? Math.round(((estimatedCost - actualCost) / estimatedCost) * 100) : 0,
             }).catch(() => {});
           }
+          // Record job outcome for intelligence calibration
+          import('../intelligence/learningStorage').then(({ recordJobOutcome }) => {
+            recordJobOutcome({
+              jobId: id,
+              jobType: job.trade ?? 'general',
+              estimatedHours: job.estimatedDuration ?? 0,
+              actualHours,
+              estimatedCost,
+              actualCost,
+              marginPercent: estimatedCost > 0 ? Math.round(((estimatedCost - actualCost) / estimatedCost) * 100) : 0,
+              completedAt: new Date().toISOString(),
+            }).catch(() => {});
+          }).catch(() => {});
           // EVE pattern: auto-queue invoice draft for approval
           import('../services/aiActionQueueService').then(({ addToQueue }) => {
             addToQueue({
               type: 'draft_invoice',
               title: `Factuur voor ${job.title}`,
-              description: `Klus afgerond · €${(estimatedCost).toLocaleString('nl-NL')}`,
+              description: `Klus afgerond · €${(estimatedCost).toLocaleString()}`,
               preparedData: { jobId: id, amount: estimatedCost, customer: job.customerId },
               actionLabel: 'Factuur aanmaken',
-              estimatedImpact: `€${(estimatedCost).toLocaleString('nl-NL')} omzet`,
-              expiresAt: new Date(Date.now() + 7 * 86400000).toISOString(),
+              estimatedImpact: `€${(estimatedCost).toLocaleString()} omzet`,
+              expiresAt: new Date(Date.now() + 7 * MS_PER_DAY).toISOString(),
             });
           }).catch(() => {});
         }
+        return { warnings: collectedWarnings };
       },
       removeJob: (id) => {
         setJobs((prev) => prev.filter((j) => j.id !== id));
         if (isSupabaseConfigured) {
           dbDeleteJob(id).catch((err) =>
-            console.warn('[AppState] removeJob persist failed:', err),
+            logWarn('AppState', `removeJob persist failed: ${err}`),
           );
         }
       },
+      updateJob: (id, updates) => {
+        setJobs((prev) =>
+          prev.map((j) =>
+            j.id === id ? { ...j, ...updates, updatedAt: new Date().toISOString() } : j,
+          ),
+        );
+        if (isSupabaseConfigured) {
+          dbUpdateJob(id, updates as Record<string, unknown>).catch((err) =>
+            logWarn('AppState', `updateJob persist failed: ${err}`),
+          );
+        }
+      },
+
       moneybirdConnected,
       lastMoneybirdExport,
       mollieConnected,
@@ -523,6 +594,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           return { ...prev, [quoteId]: updated };
         });
       },
+      // ═════════════════════════════════════════════════════════════════════
+      // SECTION: Quote & Invoice Management
+      // ═════════════════════════════════════════════════════════════════════
+
       markQuoteSent: (id) => {
         setQuotes((prev) =>
           prev.map((quote) =>
@@ -531,7 +606,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         );
         if (isSupabaseConfigured) {
           updateDocument(id, { status: 'sent', sent_at: new Date().toISOString() }).catch((err) =>
-            console.warn('[AppState] markQuoteSent persist failed:', err)
+            logWarn('AppState', `markQuoteSent persist failed: ${err}`)
           );
         }
         scheduleQuoteFollowUp({ quoteId: id, customerName: 'Klant', daysAfterSent: 3 }).catch(() => {});
@@ -545,7 +620,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         );
         if (isSupabaseConfigured) {
           updateDocument(id, { status: 'sent', sent_at: new Date().toISOString() }).catch((err) =>
-            console.warn('[AppState] markInvoiceSent persist failed:', err)
+            logWarn('AppState', `markInvoiceSent persist failed: ${err}`)
           );
         }
         schedulePaymentReminder({ invoiceId: id, customerName: 'Klant', amount: invoice?.amount ?? 0, daysUntilDue: 14 }).catch(() => {});
@@ -567,7 +642,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         );
         if (isSupabaseConfigured) {
           updateDocument(id, { status: 'paid', paid_at: new Date().toISOString() }).catch((err) =>
-            console.warn('[AppState] markInvoicePaid persist failed:', err)
+            logWarn('AppState', `markInvoicePaid persist failed: ${err}`)
           );
         }
         // AI data collector
@@ -583,6 +658,17 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
       addQuote: async (customer, job, items) => {
         const total = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
+
+        // Validator layer: catch fail states before committing
+        const validation = validateQuoteBeforeSend(
+          { customer, amount: total, lineItems: items },
+          quotes,
+        );
+        if (!validation.valid) {
+          console.error('[Validator] Quote validation failed:', validation.errors.map(e => e.message).join(', '));
+          // Still allow creation — contractors may have valid reasons for zero-amount quotes
+        }
+
         const docNumber = await nextDocumentNumber('quote');
         const newQuote: Quote = {
           id: docNumber,
@@ -619,7 +705,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               })),
             );
           } catch (err) {
-            console.warn('[AppState] addQuote persist failed:', err);
+            logWarn('AppState', `addQuote persist failed: ${err}`);
           }
         }
 
@@ -697,7 +783,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               );
             }
           } catch (err) {
-            console.warn('[AppState] addInvoice persist failed:', err);
+            logWarn('AppState', `addInvoice persist failed: ${err}`);
           }
         }
 
@@ -715,7 +801,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setQuotes((prev) => prev.filter((quote) => quote.id !== id));
         if (isSupabaseConfigured) {
           deleteDocument(id).catch((err) =>
-            console.warn('[AppState] removeQuote persist failed:', err)
+            logWarn('AppState', `removeQuote persist failed: ${err}`)
           );
         }
       },
@@ -723,7 +809,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setInvoices((prev) => prev.filter((invoice) => invoice.id !== id));
         if (isSupabaseConfigured) {
           deleteDocument(id).catch((err) =>
-            console.warn('[AppState] removeInvoice persist failed:', err)
+            logWarn('AppState', `removeInvoice persist failed: ${err}`)
           );
         }
       },
@@ -751,10 +837,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           if (updates.email !== undefined) dbUpdates.email = updates.email || null;
           if (updates.phone !== undefined) dbUpdates.phone = updates.phone || null;
           upsertBusinessSettings(dbUpdates).catch((err) =>
-            console.warn('[AppState] updateBusinessProfile persist failed:', err)
+            logWarn('AppState', `updateBusinessProfile persist failed: ${err}`)
           );
         }
       },
+      // ═════════════════════════════════════════════════════════════════════
+      // SECTION: Materials & Suppliers
+      // ═════════════════════════════════════════════════════════════════════
+
       addMaterial: async (material) => {
         const tempId = `mat-${Date.now()}`;
         const now = new Date().toISOString();
@@ -774,7 +864,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             );
             return (row as any).id as string;
           } catch (err) {
-            console.warn('[AppState] addMaterial persist failed:', err);
+            logWarn('AppState', `addMaterial persist failed: ${err}`);
           }
         }
         return tempId;
@@ -783,7 +873,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setMaterials((prev) => prev.filter((m) => m.id !== id));
         if (isSupabaseConfigured) {
           dbDeleteMaterial(id).catch((err) =>
-            console.warn('[AppState] removeMaterial persist failed:', err),
+            logWarn('AppState', `removeMaterial persist failed: ${err}`),
           );
         }
       },
@@ -804,7 +894,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             );
             return (row as any).id as string;
           } catch (err) {
-            console.warn('[AppState] addSupplier persist failed:', err);
+            logWarn('AppState', `addSupplier persist failed: ${err}`);
           }
         }
         return tempId;
@@ -813,7 +903,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setSuppliers((prev) => prev.filter((s) => s.id !== id));
         if (isSupabaseConfigured) {
           dbDeleteSupplier(id).catch((err) =>
-            console.warn('[AppState] removeSupplier persist failed:', err),
+            logWarn('AppState', `removeSupplier persist failed: ${err}`),
           );
         }
       },
@@ -847,7 +937,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             }));
             return (row as any).id as string;
           } catch (err) {
-            console.warn('[AppState] addJobMaterial persist failed:', err);
+            logWarn('AppState', `addJobMaterial persist failed: ${err}`);
           }
         }
         // AI data collector — material purchase event
@@ -872,7 +962,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }));
         if (isSupabaseConfigured) {
           dbUpdateJobMaterial(id, { status }).catch((err) =>
-            console.warn('[AppState] updateJobMaterialStatus persist failed:', err),
+            logWarn('AppState', `updateJobMaterialStatus persist failed: ${err}`),
           );
         }
       },
@@ -883,10 +973,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }));
         if (isSupabaseConfigured) {
           dbDeleteJobMaterial(id).catch((err) =>
-            console.warn('[AppState] removeJobMaterial persist failed:', err),
+            logWarn('AppState', `removeJobMaterial persist failed: ${err}`),
           );
         }
       },
+      // ═════════════════════════════════════════════════════════════════════
+      // SECTION: Integration State (Moneybird, Mollie)
+      // ═════════════════════════════════════════════════════════════════════
+
       connectMoneybird: () => setMoneybirdConnected(true),
       exportInvoice: async (invoiceId) => {
         const result = await exportInvoiceToMoneybird(invoiceId);
@@ -902,6 +996,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         if (!job) throw new Error(`Job ${jobId} not found`);
 
         const amount = job.agreedAmount ?? job.quotedAmount ?? 0;
+        if (amount <= 0) {
+          throw new Error(`Cannot create invoice: job "${job.title}" has no amount (€0). Set a quoted or agreed amount first.`);
+        }
         const docNumber = await nextDocumentNumber('invoice');
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 14);
@@ -929,7 +1026,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               due_date: dueDate.toISOString(),
             });
           } catch (err) {
-            console.warn('[AppState] addInvoiceFromJob persist failed:', err);
+            logWarn('AppState', `addInvoiceFromJob persist failed: ${err}`);
           }
         }
         return docNumber;
@@ -944,6 +1041,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const newJob: Job = {
           id: tempId,
           customerId: quote.customer ?? null,
+          quoteId: quoteId,
           title: quote.job || `Klus van offerte ${quoteId}`,
           description: null,
           status: 'scheduled',
@@ -990,7 +1088,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             await updateDocument(quoteId, { status: 'accepted' }).catch(() => {});
             return row.id;
           } catch (err) {
-            console.warn('[AppState] convertQuoteToJob persist failed:', err);
+            logWarn('AppState', `convertQuoteToJob persist failed: ${err}`);
           }
         }
         return tempId;
@@ -1008,9 +1106,57 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           if (updates.customer !== undefined) dbUpdates.customer_id = updates.customer;
           if (updates.job !== undefined) dbUpdates.job_id = updates.job;
           updateDocument(id, dbUpdates).catch((err) =>
-            console.warn('[AppState] updateQuote persist failed:', err),
+            logWarn('AppState', `updateQuote persist failed: ${err}`),
           );
         }
+        // Auto-create job when quote is accepted (EVE pattern: quote → job)
+        // Delegates to convertQuoteToJob which handles job creation, AI events, and persistence
+        if (updates.status === 'accepted' && quote) {
+          // convertQuoteToJob is defined on `value` — call it via a self-contained closure
+          // that replicates the same logic to avoid circular reference issues with useMemo
+          const tempId = `j-${Date.now()}`;
+          const nowTs = new Date().toISOString();
+          const autoJob: Job = {
+            id: tempId,
+            customerId: quote.customer ?? null,
+            quoteId: id,
+            title: quote.job || (quote as any).description || `Job from quote ${id}`,
+            description: null,
+            status: 'scheduled',
+            trade: (quote as any).trade,
+            quotedAmount: quote.amount,
+            agreedAmount: quote.amount,
+            priority: 'normal',
+            photos: [],
+            notes: [],
+            timeEntries: [],
+            materials: [],
+            createdAt: nowTs,
+            updatedAt: nowTs,
+          };
+          setJobs((prev) => [autoJob, ...prev]);
+          emitQuoteAccepted(aiUserId, id, {
+            customerId: quote.customer ?? '',
+            quotedAmount: quote.amount,
+            acceptedAmount: quote.amount,
+            daysToAccept: 0,
+          }).catch(() => {});
+          recordPricingOutcome(aiUserId, id, {
+            wasAccepted: true,
+            acceptedPrice: quote.amount,
+          }).catch(() => {});
+          if (isSupabaseConfigured) {
+            dbCreateJob({
+              title: autoJob.title,
+              customer_id: quote.customer,
+              quoted_amount: quote.amount,
+              agreed_amount: quote.amount,
+            }).then((row) => {
+              setJobs((prev) => prev.map((j) => (j.id === tempId ? { ...j, id: row.id } : j)));
+            }).catch((err) => logWarn('AppState', `auto-create job from updateQuote failed: ${err}`));
+          }
+        }
+
         // AI data collector — track quote rejection
         if (updates.status === 'rejected' && quote) {
           emitQuoteRejected(aiUserId, id, {
@@ -1022,7 +1168,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }
       },
 
-      // Project mode (aannemer)
+      // ═════════════════════════════════════════════════════════════════════
+      // SECTION: Project Management (aannemer mode)
+      // ═════════════════════════════════════════════════════════════════════
+
       projects,
       addProject: (project) => {
         const id = `proj-${Date.now()}`;

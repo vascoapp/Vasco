@@ -2,6 +2,7 @@
 // AUTOMATIONS — "Set it and forget it" workflow packs
 // =============================================================================
 
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
-import { useWorkflowPacks } from '../../src/services/workflowPackService';
+import { useWorkflowPacks, getPackROI } from '../../src/services/workflowPackService';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { hapticSuccess } from '../../src/utils/haptics';
 
@@ -19,6 +20,13 @@ export default function AutomationsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { packs, toggle, enabledCount } = useWorkflowPacks();
+  const [packROIs, setPackROIs] = useState<Record<string, { actionsTriggered: number; actionsApproved: number; estimatedRevenue: number; estimatedTimeSaved: number }>>({});
+
+  useEffect(() => {
+    packs.filter(p => p.enabled).forEach(p =>
+      getPackROI(p.id).then(roi => setPackROIs(prev => ({ ...prev, [p.id]: roi })))
+    );
+  }, [packs]);
 
   return (
     <View style={s.container}>
@@ -27,8 +35,8 @@ export default function AutomationsScreen() {
           <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text style={s.headerTitle}>Automatiseringen</Text>
-          <Text style={s.headerSub}>{enabledCount} actief · Vasco werkt voor je</Text>
+          <Text style={s.headerTitle}>{t('automations.title', 'Automatiseringen')}</Text>
+          <Text style={s.headerSub}>{t('automations.subtitle', { defaultValue: '{{count}} active · Vasco works for you', count: enabledCount })}</Text>
         </View>
       </View>
 
@@ -38,13 +46,14 @@ export default function AutomationsScreen() {
           <View style={s.heroCard}>
             <Ionicons name="flash" size={24} color={Palette.hermesOrange} />
             <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={s.heroTitle}>Bespaar tijd met automatiseringen</Text>
-              <Text style={s.heroDesc}>Activeer workflows en Vasco doet het werk. Je behoudt altijd controle.</Text>
+              <Text style={s.heroTitle}>{t('automations.heroTitle', 'Bespaar tijd met automatiseringen')}</Text>
+              <Text style={s.heroDesc}>{t('automations.heroDesc', 'Activeer workflows en Vasco doet het werk. Je behoudt altijd controle.')}</Text>
             </View>
           </View>
         </FadeIn>
 
-        {/* Packs */}
+        {/* Packs — names and descriptions come from workflowPackService (AsyncStorage).
+           These are persisted in the user's locale at creation time, which is fine for backwards compat. */}
         {packs.map((pack, i) => (
           <FadeIn key={pack.id} delay={50 + i * 30}>
             <View style={s.packCard}>
@@ -64,6 +73,13 @@ export default function AutomationsScreen() {
                 />
               </View>
 
+              {/* ROI stats */}
+              {pack.enabled && packROIs[pack.id] && (packROIs[pack.id].actionsTriggered > 0) && (
+                <Text style={s.roiText}>
+                  {packROIs[pack.id].actionsTriggered} {t('automations.actions', 'actions')} · {packROIs[pack.id].actionsApproved} {t('automations.approved', 'approved')}{packROIs[pack.id].estimatedRevenue > 0 ? ` · €${packROIs[pack.id].estimatedRevenue.toLocaleString(undefined)} ${t('automations.recovered', 'recovered')}` : ''} · {packROIs[pack.id].estimatedTimeSaved} min {t('automations.saved', 'saved')}
+                </Text>
+              )}
+
               {/* Steps preview */}
               {pack.enabled && (
                 <View style={s.stepsPreview}>
@@ -71,7 +87,12 @@ export default function AutomationsScreen() {
                     <View key={j} style={s.stepRow}>
                       <View style={s.stepDot} />
                       <Text style={s.stepText} numberOfLines={1}>
-                        {step.delayDays === 0 ? 'Direct' : step.delayDays < 0 ? `${Math.abs(step.delayDays)}d voor vervaldatum` : `Na ${step.delayDays} dagen`}: {step.action.replace(/_/g, ' ')}
+                        {step.delayDays === 0
+                          ? t('automations.immediately', 'Immediately')
+                          : step.delayDays < 0
+                            ? t('automations.beforeDue', { defaultValue: '{{days}}d before due', days: Math.abs(step.delayDays) })
+                            : t('automations.afterDays', { defaultValue: 'After {{days}} days', days: step.delayDays })
+                        }: {step.action.replace(/_/g, ' ')}
                       </Text>
                       <Text style={s.stepChannel}>{step.channel}</Text>
                     </View>
@@ -103,6 +124,7 @@ const s = StyleSheet.create({
   packIcon: { width: 44, height: 44, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' },
   packName: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
   packDesc: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
+  roiText: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: Palette.hermesOrange, paddingLeft: 56 },
   stepsPreview: { gap: 6, paddingLeft: 56 },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   stepDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Palette.hermesOrange },

@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { Alert, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { HandoverPackBuilder } from '../../../src/components/contractor/HandoverPackBuilder';
 import { SemanticColors } from '../../../src/theme/colors';
 import { Spacing } from '../../../src/theme/spacing';
@@ -15,6 +16,7 @@ import { useAppState } from '../../../src/state/AppState';
 import type { HandoverPackage } from '../../../src/types/contractor';
 
 export default function HandoverScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { jobId } = useLocalSearchParams<{ jobId: string }>();
   const { jobs, customers } = useAppState();
@@ -31,8 +33,8 @@ export default function HandoverScreen() {
         const customer = customers.find(c => c.id === realJob.customerId);
         setJob({
           id: realJob.id,
-          title: realJob.title || realJob.description || 'Project',
-          customerName: customer?.name || realJob.customerId || 'Klant',
+          title: realJob.title || realJob.description || t('common.project', 'Project'),
+          customerName: customer?.name || realJob.customerId || t('common.customer', 'Customer'),
           customerEmail: customer?.email || '',
           address: (realJob as any).address?.street ? `${(realJob as any).address.street}, ${(realJob as any).address.city || ''}` : '',
           agreedAmount: realJob.agreedAmount || realJob.quotedAmount || 0,
@@ -41,8 +43,8 @@ export default function HandoverScreen() {
       } else if (jobId) {
         setJob({
           id: jobId,
-          title: 'Project',
-          customerName: 'Klant',
+          title: t('common.project', 'Project'),
+          customerName: t('common.customer', 'Customer'),
           customerEmail: '',
           address: '',
           agreedAmount: 0,
@@ -57,10 +59,10 @@ export default function HandoverScreen() {
 
   const handleComplete = (handover: HandoverPackage) => {
     Alert.alert(
-      'Opleverpakket klaar',
-      `Het opleverpakket voor ${job?.title || 'deze klus'} is succesvol aangemaakt.`,
+      t('handover.packageReady', 'Handover package ready'),
+      t('handover.packageReadyMessage', 'The handover package for {{title}} has been created successfully.', { title: job?.title || t('common.thisJob', 'this job') }),
       [
-        { text: 'Terug', onPress: () => router.back() },
+        { text: t('common.back', 'Back'), onPress: () => router.back() },
       ]
     );
   };
@@ -69,7 +71,7 @@ export default function HandoverScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={SemanticColors.actionPrimary} />
-        <Text style={styles.loadingText}>Opleverpakket laden...</Text>
+        <Text style={styles.loadingText}>{t('handover.loading', 'Loading handover package...')}</Text>
       </View>
     );
   }
@@ -77,9 +79,9 @@ export default function HandoverScreen() {
   if (!job) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorTitle}>Klus niet gevonden</Text>
+        <Text style={styles.errorTitle}>{t('handover.jobNotFound', 'Job not found')}</Text>
         <Text style={styles.errorText}>
-          De gevraagde klus kon niet gevonden worden. Probeer het opnieuw.
+          {t('handover.jobNotFoundMessage', 'The requested job could not be found. Please try again.')}
         </Text>
       </View>
     );

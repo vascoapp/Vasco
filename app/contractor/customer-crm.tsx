@@ -129,6 +129,18 @@ export default function CustomerPhonebookScreen() {
                       contact.phone,
                     ].filter(Boolean).join(' · ')}
                   </Text>
+                  {(() => {
+                    const custInvoices = invoices.filter((inv: any) => inv.customer === contact.id);
+                    const totalInvoiced = custInvoices.reduce((sum: number, inv: any) => sum + (inv.total || inv.amount || 0), 0);
+                    const outstanding = custInvoices.filter((inv: any) => inv.status !== 'paid').reduce((sum: number, inv: any) => sum + (inv.total || inv.amount || 0), 0);
+                    if (totalInvoiced === 0 && contact.jobCount === 0) return null;
+                    return (
+                      <Text style={s.contactFinancial} numberOfLines={1}>
+                        {totalInvoiced > 0 ? `€${totalInvoiced.toLocaleString(undefined, { maximumFractionDigits: 0 })} total` : ''}
+                        {outstanding > 0 ? ` · €${outstanding.toLocaleString(undefined, { maximumFractionDigits: 0 })} outstanding` : ''}
+                      </Text>
+                    );
+                  })()}
                 </View>
 
                 {/* Quick actions — always visible */}
@@ -336,6 +348,12 @@ const s = StyleSheet.create({
     fontSize: TYPE.captionSize,
     fontFamily: TYPE.captionFamily,
     color: SemanticColors.textSecondary,
+    marginTop: 1,
+  },
+  contactFinancial: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: Palette.hermesOrange,
     marginTop: 1,
   },
 

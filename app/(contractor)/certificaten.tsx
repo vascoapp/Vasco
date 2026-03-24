@@ -7,6 +7,7 @@
 
 import { useState, useMemo } from 'react';
 import {
+  Alert,
   View,
   Text,
   StyleSheet,
@@ -20,6 +21,7 @@ import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
+import { MS_PER_DAY } from '../../src/utils/timeConstants';
 
 // Services
 import {
@@ -117,7 +119,7 @@ function getDaysUntilExpiry(date: Date): number {
 }
 
 function formatDate(date: Date): string {
-  return date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' });
+  return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 // ============================================
@@ -167,7 +169,7 @@ function AlertCard({ alert, onPress }: { alert: any; onPress?: () => void }) {
         {alert.dueDate && (
           <Text style={[styles.alertDays, { color: config.color }]}>
             {(() => {
-              const days = Math.ceil((new Date(alert.dueDate).getTime() - Date.now()) / 86400000);
+              const days = Math.ceil((new Date(alert.dueDate).getTime() - Date.now()) / MS_PER_DAY);
               return days < 0 ? `${Math.abs(days)} ${t('compliance.daysAgo', 'dagen geleden')}` : `${t('compliance.daysRemaining', 'Nog')} ${days} ${t('compliance.days', 'dagen')}`;
             })()}
           </Text>
@@ -262,7 +264,7 @@ function ItemCard({ item, onPress }: { item: ComplianceItem; onPress?: () => voi
         </View>
 
         {(item.status === 'expired' || item.status === 'expiring_soon' || item.status === 'cancelled') && (
-          <Pressable style={styles.renewButton}>
+          <Pressable style={styles.renewButton} onPress={() => Alert.alert(t('compliance.renew', 'Renew'), t('common.comingSoon', 'Coming soon'))}>
             <Ionicons name="refresh" size={14} color={Palette.hermesOrange} />
             <Text style={styles.renewButtonText}>{t('compliance.renew', 'Vernieuw')}</Text>
           </Pressable>
@@ -549,7 +551,7 @@ export default function CertificatenScreen() {
                     {kvk.verificationStatus === 'verified'
                       ? t('compliance.verified', 'Geverifieerd')
                       : t('compliance.unverified', 'Niet geverifieerd')}
-                    {kvk.lastVerified ? ` · ${new Date(kvk.lastVerified).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}` : ''}
+                    {kvk.lastVerified ? ` · ${new Date(kvk.lastVerified).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}` : ''}
                   </Text>
                 </View>
                 <Pressable
@@ -575,7 +577,7 @@ export default function CertificatenScreen() {
                   <Text style={styles.verificationMeta}>
                     {btw.isActive ? t('compliance.active', 'Actief') : t('compliance.inactive', 'Inactief')}
                     {btw.viesVerified ? ` · VIES ${t('compliance.verified', 'Geverifieerd')}` : ''}
-                    {btw.nextFilingDeadline ? ` · ${t('compliance.nextFiling', 'Aangifte')}: ${new Date(btw.nextFilingDeadline).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}` : ''}
+                    {btw.nextFilingDeadline ? ` · ${t('compliance.nextFiling', 'Aangifte')}: ${new Date(btw.nextFilingDeadline).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}` : ''}
                   </Text>
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: btw.isActive ? SemanticColors.feedbackSuccessBg : SemanticColors.feedbackErrorBg }]}>
@@ -585,7 +587,7 @@ export default function CertificatenScreen() {
             </View>
 
             {/* Quick Add Button */}
-            <Pressable style={styles.addButton}>
+            <Pressable style={styles.addButton} onPress={() => Alert.alert(t('compliance.addCertificate', 'Add certificate'), t('common.comingSoon', 'Coming soon'))}>
               <Ionicons name="add-circle" size={22} color={Palette.hermesOrange} />
               <Text style={styles.addButtonText} numberOfLines={1}>{t('compliance.addCertificate', 'Certificaat toevoegen')}</Text>
             </Pressable>
@@ -624,14 +626,19 @@ export default function CertificatenScreen() {
               <View style={styles.emptyState}>
                 <Ionicons name="document-outline" size={48} color={SemanticColors.textTertiary} />
                 <Text style={styles.emptyStateText}>{t('compliance.noItemsFound', 'Geen items gevonden')}</Text>
-                <Pressable style={styles.emptyStateButton}>
+                <Pressable style={styles.emptyStateButton} onPress={() => Alert.alert(t('compliance.add', 'Add'), t('common.comingSoon', 'Coming soon'))}>
                   <Text style={styles.emptyStateButtonText} numberOfLines={1}>{t('compliance.add', 'Voeg toe')}</Text>
                 </Pressable>
               </View>
             )}
 
             {/* Add Button */}
-            <Pressable style={styles.addButton}>
+            <Pressable style={styles.addButton} onPress={() => Alert.alert(
+              activeTab === 'certificates' ? t('compliance.addCertificate', 'Add certificate')
+                : activeTab === 'insurance' ? t('compliance.addInsurance', 'Add insurance')
+                : t('compliance.addLicense', 'Add license'),
+              t('common.comingSoon', 'Coming soon'),
+            )}>
               <Ionicons name="add-circle" size={22} color={Palette.hermesOrange} />
               <Text style={styles.addButtonText} numberOfLines={1}>
                 {activeTab === 'certificates' && t('compliance.addCertificate', 'Certificaat toevoegen')}
@@ -717,23 +724,23 @@ export default function CertificatenScreen() {
               {selectedItem.renewalCost && (
                 <View style={styles.modalSection}>
                   <Text style={styles.modalLabel}>{t('compliance.renewalCost', 'Vernieuwingskosten')}</Text>
-                  <Text style={styles.modalValue}>€{selectedItem.renewalCost.toLocaleString('nl-NL')}</Text>
+                  <Text style={styles.modalValue}>€{selectedItem.renewalCost.toLocaleString(undefined)}</Text>
                 </View>
               )}
 
               <View style={styles.modalActions}>
                 {selectedItem.documentUrl && (
-                  <Pressable style={styles.modalButton}>
+                  <Pressable style={styles.modalButton} onPress={() => { if (selectedItem.documentUrl) Linking.openURL(selectedItem.documentUrl); }}>
                     <Ionicons name="document-text" size={20} color={Palette.hermesOrange} />
                     <Text style={styles.modalButtonText}>{t('compliance.viewDocument', 'Document bekijken')}</Text>
                   </Pressable>
                 )}
-                <Pressable style={styles.modalButton}>
+                <Pressable style={styles.modalButton} onPress={() => Alert.alert(t('compliance.share', 'Share'), t('common.comingSoon', 'Coming soon'))}>
                   <Ionicons name="share-outline" size={20} color={Palette.hermesOrange} />
                   <Text style={styles.modalButtonText}>{t('compliance.share', 'Delen')}</Text>
                 </Pressable>
                 {(selectedItem.status === 'expired' || selectedItem.status === 'expiring_soon' || selectedItem.status === 'cancelled') && (
-                  <Pressable style={[styles.modalButton, styles.modalButtonPrimary]}>
+                  <Pressable style={[styles.modalButton, styles.modalButtonPrimary]} onPress={() => Alert.alert(t('compliance.renewAction', 'Renew'), t('common.comingSoon', 'Coming soon'))}>
                     <Ionicons name="refresh" size={20} color="#fff" />
                     <Text style={[styles.modalButtonText, { color: '#fff' }]}>{t('compliance.renewAction', 'Vernieuwen')}</Text>
                   </Pressable>

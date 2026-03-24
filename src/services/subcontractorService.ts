@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
+import { MS_PER_DAY } from '../utils/timeConstants';
 
 // =============================================================================
 // TYPES
@@ -128,7 +129,7 @@ const mockAssignments: SubcontractorAssignment[] = [
     jobId: 'j-2',
     jobTitle: 'Warmtepomp installatie — Bakkerij Jansen',
     status: 'in-progress',
-    startDate: new Date(now.getTime() - 3 * 86400000),
+    startDate: new Date(now.getTime() - 3 * MS_PER_DAY),
     agreedRate: 65,
     rateType: 'hourly',
     hoursLogged: 16,
@@ -141,8 +142,8 @@ const mockAssignments: SubcontractorAssignment[] = [
     jobId: 'j-1',
     jobTitle: 'CV-ketel onderhoud — Fam. de Groot',
     status: 'completed',
-    startDate: new Date(now.getTime() - 10 * 86400000),
-    endDate: new Date(now.getTime() - 7 * 86400000),
+    startDate: new Date(now.getTime() - 10 * MS_PER_DAY),
+    endDate: new Date(now.getTime() - 7 * MS_PER_DAY),
     agreedRate: 450,
     rateType: 'fixed',
     hoursLogged: 8,
@@ -214,7 +215,7 @@ class SubcontractorService {
 
   getStats(): SubcontractorStats {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const threeMonths = new Date(now.getTime() + 90 * 86400000);
+    const threeMonths = new Date(now.getTime() + 90 * MS_PER_DAY);
     const expiringCreds = this.subs.reduce((count, s) =>
       count + s.credentials.filter(c => c.expiryDate <= threeMonths).length, 0);
 

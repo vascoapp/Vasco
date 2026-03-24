@@ -99,7 +99,7 @@ export default function ProjectsScreen() {
             </View>
             <View style={styles.metricDivider} />
             <View style={styles.metric}>
-              <Text style={styles.metricValue}>€{(pnl.revenue || project.totalBudget).toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
+              <Text style={styles.metricValue}>€{(pnl.revenue || project.totalBudget).toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
               <Text style={styles.metricLabel}>Budget</Text>
             </View>
             <View style={styles.metricDivider} />

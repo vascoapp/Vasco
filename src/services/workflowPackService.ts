@@ -7,6 +7,8 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback } from 'react';
+import i18n from '../i18n/i18n';
+import { MS_PER_DAY } from '../utils/timeConstants';
 
 const PACKS_KEY = '@vasco_workflow_packs';
 
@@ -134,6 +136,43 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
       { trigger: 'bulk_opportunity', delayDays: 0, action: 'send_bulk_alert', channel: 'push', template: 'Combineer bestellingen voor {{material}} over {{jobCount}} klussen — bespaar €{{savings}} met bulkkorting.' },
     ],
   },
+  {
+    id: 'dagelijkse_update',
+    name: 'Dagelijkse Klant Update',
+    description: 'Automatisch voortgangsbericht naar klant na werkdag op klus',
+    icon: 'chatbubble-outline',
+    category: 'customer',
+    customizable: true,
+    enabled: true,
+    steps: [
+      { trigger: 'job_clockout', delayDays: 0, action: 'send_progress_note', channel: 'sms', template: 'Hi {{customer}}, update: {{hours}}u gewerkt aan {{job}} vandaag. Alles op schema. Vragen? Laat het weten!' },
+    ],
+  },
+  {
+    id: 'oplevering_pakket',
+    name: 'Oplevering Pakket',
+    description: "Automatisch opleveringspakket na afronding klus (foto's, uren, materialen)",
+    icon: 'folder-open-outline',
+    category: 'admin',
+    customizable: false,
+    enabled: true,
+    steps: [
+      { trigger: 'job_completed', delayDays: 0, action: 'prepare_handover', channel: 'in_app', template: "Opleveringspakket klaar: {{photoCount}} foto's, {{hours}}u gewerkt. Verstuur naar {{customer}}." },
+      { trigger: 'job_completed', delayDays: 7, action: 'send_satisfaction_survey', channel: 'sms', template: 'Hi {{customer}}, hoe was je ervaring met {{job}}? Je feedback helpt ons verbeteren!' },
+    ],
+  },
+  {
+    id: 'vergunning_check',
+    name: 'Vergunning & Permit Check',
+    description: 'Automatisch controleren van vereiste vergunningen per land bij nieuwe klus',
+    icon: 'shield-checkmark-outline',
+    category: 'admin',
+    customizable: false,
+    enabled: true,
+    steps: [
+      { trigger: 'job_created', delayDays: 0, action: 'check_permits', channel: 'in_app', template: 'Vergunningscheck voor {{job}}: {{permitCount}} vereisten gevonden voor {{country}}.' },
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -193,6 +232,34 @@ export function useWorkflowPacks() {
 }
 
 // ---------------------------------------------------------------------------
+// ROI calculation — compute return on investment per pack from queue history
+// ---------------------------------------------------------------------------
+
+export async function getPackROI(packId: string): Promise<{
+  actionsTriggered: number;
+  actionsApproved: number;
+  estimatedRevenue: number;
+  estimatedTimeSaved: number; // minutes
+}> {
+  const { getQueueHistory } = await import('./aiActionQueueService');
+  const history = await getQueueHistory();
+  const packActions = history.filter(h => h.sourceGeneratorId === `workflow_${packId}`);
+  const approved = packActions.filter(h => h.status === 'approved');
+  // Estimate revenue from approved invoice/reminder actions
+  const revenue = approved.reduce((sum, a) => {
+    if (a.type === 'draft_invoice') return sum + (a.preparedData?.amount ?? 0);
+    if (a.type === 'draft_reminder') return sum + (a.preparedData?.amount ?? 0) * 0.3; // 30% recovery rate
+    return sum;
+  }, 0);
+  return {
+    actionsTriggered: packActions.length,
+    actionsApproved: approved.length,
+    estimatedRevenue: Math.round(revenue),
+    estimatedTimeSaved: approved.length * 5, // 5 min saved per automated action
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Pack execution check — called periodically by automationService
 // ---------------------------------------------------------------------------
 
@@ -207,6 +274,198 @@ export async function getActiveAutomations(): Promise<{
     .map(p => ({
       packId: p.id,
       packName: p.name,
-      pendingActions: [], // Would be populated by checking trigger conditions against real data
+      pendingActions: [],
     }));
+}
+
+// ---------------------------------------------------------------------------
+// TRIGGER EVALUATION — check real data against enabled pack triggers
+// ---------------------------------------------------------------------------
+// Called on app open alongside populateQueue(). Evaluates each enabled pack's
+// trigger conditions against actual jobs/invoices/quotes and queues matching
+// actions into the AI Action Queue for one-tap approval.
+// ---------------------------------------------------------------------------
+
+interface TriggerContext {
+  invoices: Array<{ id: string; status?: string; amount?: number; total?: number; customer?: string; customerId?: string; sentAt?: string; createdAt?: string; lastUpdated?: string; dueDate?: string }>;
+  quotes: Array<{ id: string; status?: string; amount?: number; customer?: string; customerId?: string; sentAt?: string; createdAt?: string; lastUpdated?: string; description?: string; job?: string }>;
+  jobs: Array<{ id: string; status?: string; title?: string; customerId?: string | null; completedAt?: string; lastUpdated?: string }>;
+  customers: Array<{ id: string; name?: string }>;
+}
+
+export async function evaluateTriggers(context: TriggerContext): Promise<number> {
+  const { addToQueue } = await import('./aiActionQueueService');
+  const packs = await getWorkflowPacks();
+  const enabledPacks = packs.filter(p => p.enabled);
+  const now = Date.now();
+  let queued = 0;
+
+  for (const pack of enabledPacks) {
+    for (const step of pack.steps) {
+      const matches = matchTrigger(step, context, now);
+      for (const match of matches.slice(0, 2)) { // Max 2 per step to avoid queue spam
+        try {
+          const resolved = resolveTemplate(step.template, match);
+          const id = await addToQueue({
+            type: mapActionToQueueType(step.action),
+            title: `${pack.name}: ${match.label || ''}`,
+            description: resolved.slice(0, 100),
+            preparedData: {
+              template: resolved,
+              channel: step.channel,
+              customerId: match.customerId,
+              entityId: match.entityId,
+              packId: pack.id,
+            },
+            actionLabel: step.channel === 'email' || step.channel === 'sms' ? i18n.t('workflow.send') : i18n.t('workflow.view'),
+            estimatedImpact: getImpactEstimate(step.action),
+            expiresAt: new Date(now + 5 * MS_PER_DAY).toISOString(),
+            sourceGeneratorId: `workflow_${pack.id}`,
+          });
+          if (id) queued++;
+        } catch {
+          // Skip this match if addToQueue fails — don't block other triggers
+        }
+      }
+    }
+  }
+  return queued;
+}
+
+function matchTrigger(
+  step: WorkflowStep,
+  ctx: TriggerContext,
+  now: number,
+): { label: string; customerId?: string; entityId?: string; customer?: string; amount?: number; job?: string; invoice?: string }[] {
+  const dayMs = MS_PER_DAY;
+  // 2-day window so triggers aren't missed if the app isn't opened for a day
+  const windowMs = 2 * dayMs;
+  const results: { label: string; customerId?: string; entityId?: string; customer?: string; amount?: number; job?: string; invoice?: string }[] = [];
+
+  switch (step.trigger) {
+    case 'invoice_sent': {
+      // Invoices sent X days ago (delayDays < 0 means before due date)
+      const targetAge = Math.abs(step.delayDays) * dayMs;
+      for (const inv of ctx.invoices) {
+        if (!inv || inv.status !== 'sent') continue;
+        const sentAt = new Date(inv.sentAt || inv.createdAt || inv.lastUpdated || '').getTime();
+        if (!sentAt || isNaN(sentAt)) continue;
+        const age = now - sentAt;
+        if (age >= targetAge && age < targetAge + windowMs) {
+          const cust = (ctx.customers ?? []).find((c: any) => c.id === inv.customerId);
+          results.push({
+            label: cust?.name || inv.customer || inv.id || '',
+            customerId: inv.customerId,
+            entityId: inv.id,
+            customer: cust?.name || inv.customer || '',
+            amount: inv.amount || inv.total || 0,
+            invoice: inv.id || '',
+          });
+        }
+      }
+      break;
+    }
+    case 'invoice_overdue': {
+      const targetAge = step.delayDays * dayMs;
+      for (const inv of ctx.invoices) {
+        if (!inv || inv.status !== 'overdue') continue;
+        const dueAt = new Date(inv.dueDate || '').getTime();
+        if (!dueAt || isNaN(dueAt)) continue;
+        const overdueDays = now - dueAt;
+        if (overdueDays >= targetAge && overdueDays < targetAge + windowMs) {
+          const cust = (ctx.customers ?? []).find((c: any) => c.id === inv.customerId);
+          results.push({
+            label: cust?.name || inv.customer || inv.id || '',
+            customerId: inv.customerId,
+            entityId: inv.id,
+            customer: cust?.name || inv.customer || '',
+            amount: inv.amount || inv.total || 0,
+            invoice: inv.id || '',
+          });
+        }
+      }
+      break;
+    }
+    case 'quote_sent': {
+      const targetAge = step.delayDays * dayMs;
+      for (const q of ctx.quotes) {
+        if (!q || q.status !== 'sent') continue;
+        const sentAt = new Date(q.sentAt || q.createdAt || q.lastUpdated || '').getTime();
+        if (!sentAt || isNaN(sentAt)) continue;
+        const age = now - sentAt;
+        if (age >= targetAge && age < targetAge + windowMs) {
+          const cust = (ctx.customers ?? []).find((c: any) => c.id === q.customerId);
+          results.push({
+            label: cust?.name || q.customer || q.id || '',
+            customerId: q.customerId,
+            entityId: q.id,
+            customer: cust?.name || q.customer || '',
+            amount: q.amount ?? 0,
+            job: q.description || q.job || '',
+          });
+        }
+      }
+      break;
+    }
+    case 'job_completed': {
+      const targetAge = step.delayDays * dayMs;
+      for (const job of ctx.jobs) {
+        if (!job || (job.status !== 'completed' && job.status !== 'gereed')) continue;
+        const completedAt = new Date(job.completedAt || job.lastUpdated || '').getTime();
+        if (!completedAt || isNaN(completedAt)) continue;
+        const age = now - completedAt;
+        if (age >= targetAge && age < targetAge + windowMs) {
+          const cust = (ctx.customers ?? []).find((c: any) => c.id === job.customerId);
+          results.push({
+            label: cust?.name || job.title || '',
+            customerId: job.customerId,
+            entityId: job.id,
+            customer: cust?.name || '',
+            job: job.title || '',
+          });
+        }
+      }
+      break;
+    }
+    // daily_17:00 and decision_pending handled by background scheduler
+  }
+  return results;
+}
+
+function resolveTemplate(template: string, data: Record<string, any>): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+    const val = data[key];
+    if (val === undefined || val === null) return '';
+    if (typeof val === 'number') return val.toLocaleString(undefined);
+    return String(val);
+  });
+}
+
+function mapActionToQueueType(action: string): import('./aiActionQueueService').QueueItemType {
+  if (action.includes('progress_note') || action.includes('progress')) return 'progress_note';
+  if (action.includes('handover') || action.includes('prepare_handover')) return 'job_handover';
+  if (action.includes('satisfaction') || action.includes('survey')) return 'satisfaction_survey';
+  if (action.includes('permit') || action.includes('check_permits')) return 'permit_check';
+  if (action.includes('reminder') || action.includes('notice')) return 'draft_reminder';
+  if (action.includes('followup') || action.includes('follow')) return 'draft_followup';
+  if (action.includes('maintenance')) return 'maintenance_due';
+  if (action.includes('welcome') || action.includes('start')) return 'draft_followup';
+  if (action.includes('reorder')) return 'reorder_materials';
+  if (action.includes('price')) return 'price_alert';
+  if (action.includes('decision')) return 'decision_reminder';
+  return 'draft_followup';
+}
+
+function getImpactEstimate(action: string): string {
+  const t = i18n.t.bind(i18n);
+  if (action.includes('progress')) return t('workflow.customerSatisfaction');
+  if (action.includes('handover')) return t('workflow.professionalFinish', 'Professional finish');
+  if (action.includes('satisfaction')) return t('workflow.buildsReputation', 'Builds reputation');
+  if (action.includes('permit')) return t('workflow.staysCompliant', 'Stays compliant');
+  if (action.includes('reminder') || action.includes('notice')) return t('workflow.speedsUpPayment');
+  if (action.includes('followup') || action.includes('quote')) return t('workflow.increasesAcceptance');
+  if (action.includes('maintenance')) return t('workflow.recurringWork');
+  if (action.includes('welcome') || action.includes('start')) return t('workflow.customerSatisfaction');
+  if (action.includes('reorder')) return t('workflow.preventsDelay');
+  return t('workflow.savesTime');
 }

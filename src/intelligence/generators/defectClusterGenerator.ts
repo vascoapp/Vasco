@@ -10,6 +10,7 @@ import type { ScoredInsight, GeneratorContext } from './types';
 import { useDefects } from '../../services/siteLeadDataService';
 import { logPrediction } from '../calibration';
 import { gt } from '../generatorTranslations';
+import { MS_PER_DAY } from '../../utils/timeConstants';
 
 export function useDefectClusterInsight(ctx: GeneratorContext): ScoredInsight | null {
   const { defects } = useDefects();
@@ -43,7 +44,7 @@ export function useDefectClusterInsight(ctx: GeneratorContext): ScoredInsight | 
 
     // Calculate age of oldest open defect
     const oldestAge = Math.max(...openDefects.map(d =>
-      Math.ceil((ctx.now.getTime() - new Date(d.date).getTime()) / 86400000)
+      Math.ceil((ctx.now.getTime() - new Date(d.date).getTime()) / MS_PER_DAY)
     ));
 
     logPrediction({

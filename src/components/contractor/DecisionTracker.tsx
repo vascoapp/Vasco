@@ -515,7 +515,7 @@ function OverviewTab({
                   {phase.phase.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                 </Text>
                 <Text style={styles.timelineDate}>
-                  {new Date(phase.startDate).toLocaleDateString('nl-NL', {
+                  {new Date(phase.startDate).toLocaleDateString(undefined, {
                     day: 'numeric',
                     month: 'short',
                   })}
@@ -762,7 +762,7 @@ function DecisionItemCard({
           <View style={styles.dueInfo}>
             <Ionicons name="calendar" size={14} color={SemanticColors.textTertiary} />
             <Text style={styles.dueText}>
-              Due: {dueDate.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
+              Due: {dueDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
             </Text>
           </View>
         </View>
@@ -797,7 +797,7 @@ function CompletedItemsList({ items }: { items: CustomerDecisionItem[] }) {
             </Text>
             {item.decidedAt && (
               <Text style={styles.completedDate}>
-                {new Date(item.decidedAt).toLocaleDateString('nl-NL', {
+                {new Date(item.decidedAt).toLocaleDateString(undefined, {
                   day: 'numeric',
                   month: 'short',
                   hour: '2-digit',

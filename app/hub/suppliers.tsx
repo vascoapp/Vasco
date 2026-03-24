@@ -31,7 +31,7 @@ function scoreColor(score: number | undefined): string {
 }
 
 function formatCurrency(amount: number): string {
-  return `\u20AC${amount.toLocaleString('nl-NL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  return `\u20AC${amount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
 // ── Supplier Detail Panel ────────────────────────────────

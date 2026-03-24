@@ -112,7 +112,7 @@ export function CustomerDecisionPortal({
           <View style={styles.dateItem}>
             <Ionicons name="calendar-outline" size={16} color={SemanticColors.textSecondary} />
             <Text style={styles.dateText}>
-              Start: {new Date(portalData.projectStartDate).toLocaleDateString('nl-NL', {
+              Start: {new Date(portalData.projectStartDate).toLocaleDateString(undefined, {
                 day: 'numeric',
                 month: 'long',
               })}
@@ -122,7 +122,7 @@ export function CustomerDecisionPortal({
             <View style={styles.dateItem}>
               <Ionicons name="flag-outline" size={16} color={SemanticColors.textSecondary} />
               <Text style={styles.dateText}>
-                Klaar: {new Date(portalData.estimatedCompletionDate).toLocaleDateString('nl-NL', {
+                Klaar: {new Date(portalData.estimatedCompletionDate).toLocaleDateString(undefined, {
                   day: 'numeric',
                   month: 'long',
                 })}
@@ -275,7 +275,7 @@ function CategoryCard({ category, accentColor, onPress }: CategoryCardProps) {
           </Text>
         </View>
         <Text style={styles.categoryDue}>
-          Deadline: {new Date(category.dueDate).toLocaleDateString('nl-NL', {
+          Deadline: {new Date(category.dueDate).toLocaleDateString(undefined, {
             day: 'numeric',
             month: 'short',
           })}
@@ -688,7 +688,7 @@ function CompletedItemCard({ item, accentColor }: CompletedItemCardProps) {
         <Text style={[styles.completedValue, { color: accentColor }]}>{getDisplayValue()}</Text>
         {item.decidedAt && (
           <Text style={styles.completedDate}>
-            Gekozen op {new Date(item.decidedAt).toLocaleDateString('nl-NL', {
+            Gekozen op {new Date(item.decidedAt).toLocaleDateString(undefined, {
               day: 'numeric',
               month: 'long',
             })}

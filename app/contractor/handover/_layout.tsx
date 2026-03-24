@@ -1,7 +1,9 @@
 import { Stack } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { SemanticColors } from '../../../src/theme/colors';
 
 export default function HandoverLayout() {
+  const { t } = useTranslation();
   return (
     <Stack
       screenOptions={{
@@ -18,8 +20,8 @@ export default function HandoverLayout() {
       <Stack.Screen
         name="[jobId]"
         options={{
-          title: 'Handover Package',
-          headerBackTitle: 'Back',
+          title: t('handover.title', 'Handover Package'),
+          headerBackTitle: t('common.back', 'Back'),
         }}
       />
     </Stack>

@@ -251,7 +251,7 @@ export default function InkoopScreen() {
             <View style={styles.timelineTop}>
               <View>
                 <Text style={styles.timelineLabel}>Bespaard dit jaar</Text>
-                <Text style={styles.timelineAmount}>€{savings.totalSavedThisYear.toLocaleString('nl-NL')}</Text>
+                <Text style={styles.timelineAmount}>€{savings.totalSavedThisYear.toLocaleString(undefined)}</Text>
               </View>
               <View style={styles.trendPill}>
                 <Ionicons name="arrow-up" size={12} color={SemanticColors.feedbackSuccess} />
@@ -266,7 +266,7 @@ export default function InkoopScreen() {
                 return (
                   <View key={m.month} style={styles.barCol}>
                     {isCurrent && (
-                      <Text style={styles.barValue}>€{m.amount.toLocaleString('nl-NL')}</Text>
+                      <Text style={styles.barValue}>€{m.amount.toLocaleString(undefined)}</Text>
                     )}
                     <View style={[styles.bar, {
                       height: barH,

@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
+import { MS_PER_DAY } from '../utils/timeConstants';
 
 // =============================================================================
 // TYPES
@@ -75,7 +76,7 @@ const mockTemplates: QuoteTemplate[] = [
     estimatedDuration: '1.5 uur',
     subtotal: 135,
     usageCount: 34,
-    lastUsed: new Date(Date.now() - 3 * 86400000),
+    lastUsed: new Date(Date.now() - 3 * MS_PER_DAY),
     createdAt: new Date('2025-06-01'),
   },
   {
@@ -94,7 +95,7 @@ const mockTemplates: QuoteTemplate[] = [
     estimatedDuration: '2 dagen',
     subtotal: 4340,
     usageCount: 12,
-    lastUsed: new Date(Date.now() - 7 * 86400000),
+    lastUsed: new Date(Date.now() - 7 * MS_PER_DAY),
     createdAt: new Date('2025-09-15'),
   },
   {

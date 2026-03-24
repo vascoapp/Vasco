@@ -13,6 +13,10 @@ import {
   ScrollView,
   Pressable,
   RefreshControl,
+  Share,
+  Platform,
+  Alert,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,6 +29,8 @@ import { FadeIn } from '../../src/components/shared/FadeIn';
 import { LoadingSkeleton } from '../../src/components/shared/LoadingSkeleton';
 import { getActionStats } from '../../src/intelligence/actionExecutor';
 import { useAIQueue, populateQueue } from '../../src/services/aiActionQueueService';
+import { evaluateTriggers } from '../../src/services/workflowPackService';
+import { generatePeriodEndPackage, formatPeriodEndForExport } from '../../src/services/periodEndFinanceService';
 import { getMorningBriefing, generateMorningBriefing, type MorningBriefing } from '../../src/intelligence/backgroundJobScheduler';
 import { VascoCard } from '../../src/components/shared/VascoCard';
 import { GradientButton } from '../../src/components/shared/GradientButton';
@@ -36,7 +42,7 @@ import { useCashFlow } from '../../src/services/cashFlowService';
 
 // AI services
 import { useSavingsAggregation } from '../../src/services/savingsAggregatorService';
-import { useAutomations } from '../../src/services/automationService';
+import { useAutomations, runAllAutomations, getAutomationConfig } from '../../src/services/automationService';
 import type { AutomationContext } from '../../src/services/automationService';
 
 // Vasco Guidance + Learning
@@ -48,9 +54,12 @@ import type { VascoInsight } from '../../src/components/shared/VascoInsightCard'
 // Dashboard Header
 import { ContractorDashboardHeader } from '../../src/components/contractor/ContractorDashboardHeader';
 import { hapticSuccess, hapticWarning } from '../../src/utils/haptics';
+import { useClockIn } from '../../src/services/clockInService';
+import { MS_PER_DAY, MS_PER_HOUR } from '../../src/utils/timeConstants';
 import { getCohortBenchmark } from '../../src/intelligence/cloudSync';
 import { useAuth } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
+import { getAcceptanceStatus } from '../../src/services/customerQuoteAcceptanceService';
 
 // ============================================
 // TYPES
@@ -138,7 +147,7 @@ export default function TodayScreen() {
   const [showAutomations, setShowAutomations] = useState(false);
   const { notifications } = useNotifications();
   const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
-  const { jobs, invoices, quotes, customers, isLoading, addInvoiceFromJob } = useAppState();
+  const { jobs, invoices, quotes, customers, isLoading, addInvoiceFromJob, convertQuoteToJob } = useAppState();
   const [actionStats, setActionStats] = useState<{ total: number; successful: number; positiveOutcomes: number } | null>(null);
   useEffect(() => { getActionStats().then(setActionStats).catch(() => {}); }, []);
   const aiQueue = useAIQueue();
@@ -149,12 +158,22 @@ export default function TodayScreen() {
       if (b) setBriefing(b);
       else generateMorningBriefing({ invoices, quotes, jobs }).then(setBriefing).catch(() => {});
     }).catch(() => {});
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jobs.length, invoices.length, quotes.length]); // Re-generate when data count changes
   useEffect(() => {
-    const completedJobs = jobs.filter((j: any) => j.status === 'completed');
-    const overdueInvoices = invoices.filter((i: any) => i.status === 'overdue');
-    const sentQuotes = quotes.filter((q: any) => q.status === 'sent');
-    populateQueue({ completedJobs, overdueInvoices, sentQuotes, expiringCerts: [] }).then(() => aiQueue.refresh());
+    try {
+      const completedJobs = jobs.filter((j: any) => j.status === 'completed');
+      const overdueInvoices = invoices.filter((i: any) => i.status === 'overdue');
+      const sentQuotes = quotes.filter((q: any) => q.status === 'sent');
+      populateQueue({
+        completedJobs, overdueInvoices, sentQuotes, expiringCerts: [],
+        allJobs: jobs, allInvoices: invoices, allQuotes: quotes, customers,
+        country: user?.country || 'NL',
+      })
+        .then(() => evaluateTriggers({ invoices, quotes, jobs, customers }))
+        .then(() => aiQueue.refresh())
+        .catch(() => {});
+    } catch {}
   }, [jobs.length, invoices.length, quotes.length]);
 
   // Build automation context from app state
@@ -168,28 +187,36 @@ export default function TodayScreen() {
   const { results: automationResults, timeSaved } = useAutomations(automationCtx);
   const pendingAutomations = useMemo(() => automationResults.filter(r => !r.actionTaken).length, [automationResults]);
 
-  // Clock-in timer state
-  const [clockedInJobId, setClockedInJobId] = useState<string | null>(null);
-  const [clockInStartTime, setClockInStartTime] = useState<number | null>(null);
-  const [timerDisplay, setTimerDisplay] = useState('00:00:00');
+  // Run automations on mount (invoice reminders, quote follow-ups, etc.)
+  useEffect(() => {
+    getAutomationConfig().then((config) => {
+      runAllAutomations(automationCtx, config);
+    }).catch(() => {});
+  }, []);
+
+  // Unified clock-in timer — shared with Timesheet + Job Detail
+  const timer = useClockIn();
+  const clockedInJobId = timer.jobId;
+  const timerDisplay = timer.timerDisplay;
 
   // Screen visit tracking
   useEffect(() => { recordScreenVisit('today'); }, []);
 
-  // Timer update effect
+  // Check for accepted approval links → auto-convert to jobs
   useEffect(() => {
-    if (!clockInStartTime) return;
-    const interval = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - clockInStartTime) / 1000);
-      const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
-      const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
-      const s = String(elapsed % 60).padStart(2, '0');
-      setTimerDisplay(`${h}:${m}:${s}`);
-      // Haptic warning if exceeds ~2 hours (estimated job duration)
-      if (elapsed === 7200) hapticWarning();
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [clockInStartTime]);
+    (async () => {
+      for (const quote of quotes) {
+        if (quote.status === 'sent') {
+          const acceptance = await getAcceptanceStatus(quote.id);
+          if (acceptance?.status === 'accepted') {
+            try {
+              await convertQuoteToJob(quote.id);
+            } catch {}
+          }
+        }
+      }
+    })().catch(() => {});
+  }, [quotes.length]);
 
   // Get today's date
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
@@ -232,9 +259,9 @@ export default function TodayScreen() {
         id: job.id,
         title: job.projectName,
         customer: job.customerName,
-        address: job.address || 'Adres niet beschikbaar',
-        time: start.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
-        duration: `${Math.round((new Date(job.endTime).getTime() - start.getTime()) / 3600000)}u`,
+        address: job.address || t('jobs.noAddress', 'Address not available'),
+        time: start.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
+        duration: `${Math.round((new Date(job.endTime).getTime() - start.getTime()) / MS_PER_HOUR)}u`,
         status: job.status === 'in_progress' ? 'active' as const : job.status === 'completed' ? 'completed' as const : 'upcoming' as const,
         lifecycleStatus: job.lifecycleStatus,
         startHour: start.getHours(),
@@ -258,7 +285,7 @@ export default function TodayScreen() {
   // Next job countdown
   const nextJobCountdown = useMemo(() => {
     const now = Date.now();
-    const fourHoursMs = 4 * 3600000;
+    const fourHoursMs = 4 * MS_PER_HOUR;
     const upcoming = todayJobs
       .filter(j => j.status === 'upcoming' && j.rawStartTime > now && (j.rawStartTime - now) <= fourHoursMs)
       .sort((a, b) => a.rawStartTime - b.rawStartTime);
@@ -285,7 +312,7 @@ export default function TodayScreen() {
     return t('dashboard.goodEvening', 'Goedenavond');
   }, [t]);
 
-  const formattedDate = new Date().toLocaleDateString('nl-NL', {
+  const formattedDate = new Date().toLocaleDateString(undefined, {
     weekday: 'long',
     day: 'numeric',
     month: 'long'
@@ -328,7 +355,7 @@ export default function TodayScreen() {
       {/* Header — flex constrained so greeting doesn't bleed into buttons */}
       <View style={styles.header}>
         <View style={{ flex: 1, marginRight: 12 }}>
-          <Text style={styles.greeting} numberOfLines={1}>{greeting}, Mark</Text>
+          <Text style={styles.greeting} numberOfLines={1}>{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</Text>
           <Text style={styles.date}>{formattedDate}</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 8, flexShrink: 0 }}>
@@ -350,10 +377,11 @@ export default function TodayScreen() {
       </View>
 
       {/* Clock-in Timer Strip */}
-      {clockedInJob && clockInStartTime && (
+      {clockedInJob && timer.active && (
         <Pressable
           style={styles.timerStrip}
           onPress={() => router.push(`/contractor/job/${clockedInJobId}` as any)}
+          accessibilityLabel={t('a11y.clockInTimer', 'Clock-in timer, tap to view job')}
         >
           <View style={styles.timerPulse} />
           <Text style={styles.timerJobName} numberOfLines={1}>{clockedInJob.title}</Text>
@@ -363,9 +391,7 @@ export default function TodayScreen() {
             onPress={(e) => {
               e.stopPropagation?.();
               hapticSuccess();
-              setClockedInJobId(null);
-              setClockInStartTime(null);
-              setTimerDisplay('00:00:00');
+              timer.clockOut();
             }}
           >
             <Ionicons name="stop" size={14} color={Palette.white} />
@@ -403,27 +429,192 @@ export default function TodayScreen() {
             onApproveQueueItem={async (id) => {
               hapticSuccess();
               const item = aiQueue.items.find(i => i.id === id);
-              if (item?.type === 'draft_invoice' && item.preparedData?.jobId) {
-                try { await addInvoiceFromJob(item.preparedData.jobId); } catch {}
+              if (!item) { aiQueue.approve(id); return; }
+
+              try {
+              switch (item.type) {
+                // Invoice creation
+                case 'draft_invoice':
+                  if (item.preparedData?.jobId) {
+                    await addInvoiceFromJob(item.preparedData.jobId);
+                    Alert.alert(t('vasco.invoiceCreated', 'Invoice created'), t('vasco.invoiceCreatedDesc', 'Review it in the Money tab.'));
+                  }
+                  break;
+
+                // Batch invoices — create all at once
+                case 'batch_invoices':
+                  if (item.preparedData?.jobIds) {
+                    let created = 0;
+                    const errors: string[] = [];
+                    for (const jobId of item.preparedData.jobIds) {
+                      try {
+                        await addInvoiceFromJob(jobId);
+                        created++;
+                      } catch (e: any) {
+                        errors.push(e.message || jobId);
+                      }
+                    }
+                    if (errors.length > 0) {
+                      Alert.alert(
+                        t('vasco.batchPartial', 'Batch partially completed'),
+                        `${created} ${t('vasco.created', 'created')}, ${errors.length} ${t('vasco.failed', 'failed')}:\n${errors.join('\n')}`,
+                      );
+                    } else {
+                      Alert.alert(t('vasco.batchComplete', 'All invoices created'), `${created} ${t('vasco.invoicesCreated', 'invoices created')}`);
+                    }
+                  }
+                  break;
+
+                // Invoice regeneration — create updated invoice with late fee
+                case 'invoice_regenerate':
+                  if (item.preparedData?.jobId) {
+                    await addInvoiceFromJob(item.preparedData.jobId);
+                  }
+                  router.push('/(contractor)/facturen' as any);
+                  break;
+
+                // Permit check — show inline checklist
+                case 'permit_check': {
+                  const permits = item.preparedData?.permits ?? [];
+                  const permitList = permits.map((p: any) => `• ${p.name || p.type || 'Permit'} — ${p.authority || 'Authority'}`).join('\n');
+                  Alert.alert(
+                    item.title || t('vasco.permitCheck', 'Permit requirements'),
+                    permitList || t('vasco.noPermits', 'No specific permits identified.'),
+                    [
+                      { text: t('vasco.viewDetails', 'View details'), onPress: () => router.push('/(contractor)/certificaten' as any) },
+                      { text: t('vasco.markChecked', 'Mark checked'), style: 'default', onPress: () => { aiQueue.approve(id); hapticSuccess(); } },
+                    ],
+                  );
+                  return; // Don't auto-approve — user picks action
+                }
+
+                // Cert renewal — show cert info inline
+                case 'cert_renewal': {
+                  const certName = item.preparedData?.name || t('vasco.certificate', 'Certificate');
+                  const expiryDate = item.preparedData?.expiryDate;
+                  const daysLeft = expiryDate ? Math.ceil((new Date(expiryDate).getTime() - Date.now()) / MS_PER_DAY) : 0;
+                  const renewalUrl = item.preparedData?.renewalUrl;
+                  const certMsg = `${certName}\n${t('vasco.expiresIn', 'Expires in')} ${daysLeft} ${t('vasco.days', 'days')}${renewalUrl ? `\n\n${renewalUrl}` : ''}`;
+                  Alert.alert(
+                    item.title || t('vasco.certRenewal', 'Certificate renewal'),
+                    certMsg,
+                    [
+                      ...(renewalUrl ? [{ text: t('vasco.openRenewal', 'Open renewal'), onPress: () => { Linking.openURL(renewalUrl).catch(() => {}); } }] : []),
+                      { text: t('vasco.remindLater', 'Remind later'), style: 'cancel' as const },
+                    ],
+                  );
+                  return; // Don't auto-approve — user picks action
+                }
+
+                case 'permit_renewal':
+                case 'safety_checklist':
+                  router.push('/(contractor)/certificaten' as any);
+                  break;
+
+                // Navigate to handover package
+                case 'job_handover':
+                  if (item.preparedData?.jobId) {
+                    router.push(`/contractor/handover/${item.preparedData.jobId}` as any);
+                  }
+                  break;
+
+                // Material ordering — shareable order message
+                case 'reorder_materials': {
+                  const materialList = item.preparedData?.materialList || '';
+                  const totalCost = item.preparedData?.totalCost ?? 0;
+                  const orderMsg = `${t('vasco.materialOrder', 'Material Order')}\n\n${materialList}\n\n${t('vasco.total', 'Total')}: €${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+                  Alert.alert(
+                    item.title || t('vasco.orderMaterials', 'Order materials'),
+                    orderMsg,
+                    [
+                      {
+                        text: t('vasco.sendToSupplier', 'Send to supplier'),
+                        onPress: async () => {
+                          try {
+                            await Share.share({ message: orderMsg, title: t('vasco.materialOrder', 'Material Order') });
+                            aiQueue.approve(id);
+                            hapticSuccess();
+                          } catch {}
+                        },
+                      },
+                      { text: t('vasco.viewPO', 'View PO screen'), onPress: () => router.push('/contractor/purchase-orders' as any) },
+                    ],
+                  );
+                  return; // Don't auto-approve — user picks action
+                }
+
+                // Navigate to supplier comparison / market prices
+                case 'price_alert':
+                case 'supplier_comparison':
+                case 'bulk_purchase':
+                  router.push('/contractor/market-prices' as any);
+                  break;
+
+                // Tax prep — generate and share period-end summary
+                case 'tax_prep': {
+                  const pkg = generatePeriodEndPackage({
+                    invoices, jobs, quotes,
+                    country: user?.country || 'NL',
+                    quarter: item.preparedData?.quarter,
+                  });
+                  const exportText = formatPeriodEndForExport(pkg);
+                  try {
+                    await Share.share({ message: exportText, title: `${pkg.quarter} Finance Summary` });
+                  } catch {}
+                  break;
+                }
+
+                // Navigate to schedule for suggestions
+                case 'schedule_suggestion':
+                  router.push('/contractor/drag-schedule' as any);
+                  break;
+
+                // Navigate to tiered quote builder
+                case 'draft_quote':
+                  router.push('/contractor/tiered-quote' as any);
+                  break;
+
+                // Maintenance — navigate to job creation for repeat work
+                case 'maintenance_due':
+                  router.push('/contractor/tiered-quote' as any);
+                  break;
+
+                // Accounting export — generate CSV summary and share
+                case 'accounting_export': {
+                  const exportIds = item.preparedData?.invoiceIds || [];
+                  const exportInvoices = invoices.filter((inv: any) => exportIds.includes(inv.id));
+                  const csvLines = ['Invoice ID,Customer,Amount,Status,Date'];
+                  for (const inv of exportInvoices) {
+                    csvLines.push(`${inv.id},${inv.customer || ''},${inv.amount || 0},${inv.status},${inv.createdAt || ''}`);
+                  }
+                  const csvText = csvLines.join('\n');
+                  try {
+                    await Share.share({ message: csvText, title: t('automation.accountingExport', { defaultValue: 'Accounting Export' }) });
+                  } catch {}
+                  break;
+                }
+
+                // E-invoice submission — navigate to invoices with format context
+                case 'einvoice_submit':
+                  router.push('/(contractor)/facturen' as any);
+                  break;
+
+                // Shareable types (progress_note, draft_reminder, draft_followup,
+                // quote_expiry, satisfaction_survey, decision_reminder) are handled
+                // by VascoCard's EmbeddedApproval Share flow — no extra handler needed
               }
+              } catch (err: any) {
+                Alert.alert(
+                  t('common.error', 'Error'),
+                  err.message || t('vasco.actionFailed', 'Action could not be completed. Please try again.'),
+                );
+                return; // Don't approve if action failed
+              }
+
               aiQueue.approve(id);
             }}
             onRejectQueueItem={(id) => aiQueue.reject(id)}
             onInsightAction={handleGuidanceAction}
-            overdueInvoices={overdueCount}
-            onOverduePress={async () => {
-              hapticSuccess();
-              const msg = `Beste klant,\n\nHierbij een vriendelijke herinnering voor ${overdueCount} openstaande factuur${overdueCount > 1 ? 'en' : ''}.\n\nMet vriendelijke groet`;
-              try {
-                const { Share, Platform } = require('react-native');
-                if (Platform.OS === 'web') {
-                  await navigator.clipboard.writeText(msg);
-                  alert('Herinnering gekopieerd naar klembord');
-                } else {
-                  await Share.share({ message: msg, title: 'Betaalherinnering' });
-                }
-              } catch {}
-            }}
           />
         </FadeIn>
 
@@ -476,17 +667,19 @@ export default function TodayScreen() {
                       }}
                       onClockIn={() => {
                         hapticSuccess();
-                        setClockedInJobId(job.id);
-                        setClockInStartTime(Date.now());
+                        timer.clockIn(job.id, job.title);
                       }}
                     />
                     {nextJobCountdown && nextJobCountdown.jobId === job.id && (
                       <View style={styles.countdownChip}>
                         <Ionicons name="time-outline" size={12} color={Palette.hermesOrange} />
                         <Text style={styles.countdownText}>
-                          Over {nextJobCountdown.minutes < 60
-                            ? `${nextJobCountdown.minutes} min`
-                            : `${Math.floor(nextJobCountdown.minutes / 60)}u ${nextJobCountdown.minutes % 60}m`}
+                          {t('dashboard.inTime', {
+                            defaultValue: 'Over {{time}}',
+                            time: nextJobCountdown.minutes < 60
+                              ? `${nextJobCountdown.minutes} min`
+                              : `${Math.floor(nextJobCountdown.minutes / 60)}h ${nextJobCountdown.minutes % 60}m`,
+                          })}
                         </Text>
                       </View>
                     )}

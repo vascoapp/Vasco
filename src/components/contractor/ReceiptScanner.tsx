@@ -16,6 +16,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
@@ -38,6 +39,7 @@ interface ReceiptScannerProps {
 }
 
 export function ReceiptScanner({ onComplete, onClose }: ReceiptScannerProps) {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<'capture' | 'review' | 'result'>('capture');
   const [rawText, setRawText] = useState('');
   const [extractionResult, setExtractionResult] = useState<ExtractionResult | null>(null);
@@ -45,7 +47,7 @@ export function ReceiptScanner({ onComplete, onClose }: ReceiptScannerProps) {
 
   const handleExtract = useCallback(async () => {
     if (!rawText.trim()) {
-      Alert.alert('Geen tekst', 'Voer de boninhoud in of maak een foto.');
+      Alert.alert(t('receipt.noText', 'No text'), t('receipt.enterContentOrPhoto', 'Enter the receipt content or take a photo.'));
       return;
     }
 
@@ -56,7 +58,7 @@ export function ReceiptScanner({ onComplete, onClose }: ReceiptScannerProps) {
       setExtractionResult(result);
       setMode('review');
     } catch (error) {
-      Alert.alert('Fout', 'Kon de bon niet verwerken. Probeer opnieuw.');
+      Alert.alert(t('common.error', 'Error'), t('receipt.processingFailed', 'Could not process the receipt. Please try again.'));
     } finally {
       setIsProcessing(false);
     }
@@ -83,9 +85,9 @@ export function ReceiptScanner({ onComplete, onClose }: ReceiptScannerProps) {
           <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>
-          {mode === 'capture' && 'Bon Scannen'}
-          {mode === 'review' && 'Controleren'}
-          {mode === 'result' && 'Verwerkt'}
+          {mode === 'capture' && t('receipt.scanReceipt', 'Scan Receipt')}
+          {mode === 'review' && t('receipt.review', 'Review')}
+          {mode === 'result' && t('receipt.processed', 'Processed')}
         </Text>
         <View style={{ width: 32 }} />
       </View>

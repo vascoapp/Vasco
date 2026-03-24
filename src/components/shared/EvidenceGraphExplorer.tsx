@@ -302,7 +302,7 @@ export function EvidenceGraphExplorer() {
       <View style={styles.jobInfoCard}>
         <Text style={styles.jobInfoTitle}>{chain.jobTitle}</Text>
         <Text style={styles.jobInfoCustomer}>{chain.customer}</Text>
-        <Text style={styles.jobInfoValue}>€{chain.totalValue.toLocaleString('nl-NL')}</Text>
+        <Text style={styles.jobInfoValue}>€{chain.totalValue.toLocaleString(undefined)}</Text>
       </View>
 
       {/* Score */}

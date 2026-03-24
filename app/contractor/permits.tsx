@@ -239,7 +239,7 @@ export default function PermitsScreen() {
                         <View style={styles.detailRow}>
                           <Ionicons name="calendar-outline" size={14} color={SemanticColors.textSecondary} />
                           <Text style={styles.detailText}>
-                            {t('permits.submitted', 'Ingediend')}: {new Date(permit.submissionDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {t('permits.submitted', 'Ingediend')}: {new Date(permit.submissionDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                           </Text>
                         </View>
                       ) : null}
@@ -247,7 +247,7 @@ export default function PermitsScreen() {
                         <View style={styles.detailRow}>
                           <Ionicons name="time-outline" size={14} color={SemanticColors.textSecondary} />
                           <Text style={styles.detailText}>
-                            {t('permits.decisionExpected', 'Besluit verwacht')}: {new Date(permit.targetDecisionDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {t('permits.decisionExpected', 'Besluit verwacht')}: {new Date(permit.targetDecisionDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                           </Text>
                         </View>
                       ) : null}

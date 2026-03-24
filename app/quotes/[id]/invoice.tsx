@@ -86,7 +86,7 @@ export default function InvoiceFromQuoteScreen() {
           <View style={styles.row}>
             <Text style={Typography.muted}>Amount</Text>
             <Text style={[Typography.body, { fontWeight: '700' }]}>
-              €{quote.amount.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}
+              €{quote.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </Text>
           </View>
         </View>
@@ -118,7 +118,7 @@ export default function InvoiceFromQuoteScreen() {
             <View style={styles.row}>
               <Text style={Typography.body}>Invoice #{invoiceId}</Text>
               <Text style={Typography.body}>
-                €{quote.amount.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}
+                €{quote.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </Text>
             </View>
             <Text style={Typography.muted}>

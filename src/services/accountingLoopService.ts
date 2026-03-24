@@ -10,6 +10,7 @@
 import { exportInvoice, syncPaymentStatus } from '../integrations/accounting';
 import { createPaymentLink } from '../integrations/mollie';
 import type { UnifiedInvoice, UnifiedLineItem } from '../integrations/accounting';
+import { MS_PER_DAY } from '../utils/timeConstants';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -162,7 +163,7 @@ export async function executeStageAction(
           contactExternalId: state.customerId,
           reference: `INV-${state.jobId}`,
           invoiceDate: new Date().toISOString().split('T')[0],
-          dueDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+          dueDate: new Date(Date.now() + 14 * MS_PER_DAY).toISOString().split('T')[0],
           lineItems,
           currency: 'EUR',
           status: 'draft',
@@ -257,7 +258,7 @@ export function getTimeSinceLastAction(state: AccountingLoopState): number {
 
 export function needsAttention(state: AccountingLoopState): boolean {
   const ms = getTimeSinceLastAction(state);
-  const days = ms / 86400000;
+  const days = ms / MS_PER_DAY;
 
   switch (state.currentStage) {
     case 'quote_sent':

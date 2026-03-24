@@ -18,6 +18,7 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing, SafeArea } from '../../theme/spacing';
@@ -61,16 +62,16 @@ const MOCK_PROJECTS = [
 // ── Number formatting ───────────────────────────────────────────────────────
 
 const fmt = (n: number) =>
-  `€${n.toLocaleString('nl-NL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  `€${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
 const fmtDec = (n: number) =>
-  `€${n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  `€${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const fmtPct = (n: number) => `${n.toFixed(1)}%`;
 
 const fmtCompact = (n: number) => {
-  if (n >= 1_000_000) return `€${(n / 1_000_000).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M`;
-  if (n >= 1_000) return `€${(n / 1_000).toLocaleString('nl-NL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}K`;
+  if (n >= 1_000_000) return `€${(n / 1_000_000).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M`;
+  if (n >= 1_000) return `€${(n / 1_000).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}K`;
   return fmt(n);
 };
 
@@ -215,6 +216,7 @@ export default function BudgetOptimizerDashboard({
   tcoSummary,
 }: BudgetOptimizerDashboardProps = {}) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabView>('overview');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedOptId, setExpandedOptId] = useState<string | null>(null);
@@ -339,11 +341,11 @@ export default function BudgetOptimizerDashboard({
       (o) => approvals.get(o.costCode) === true,
     );
     if (approved.length === 0) {
-      Alert.alert('Geen goedkeuringen', 'Keur eerst optimalisaties goed voordat je exporteert.');
+      Alert.alert(t('budget.noApprovals', 'No approvals'), t('budget.approveFirst', 'Approve optimizations first before exporting.'));
       return;
     }
     exportBudgetPdf(projectName, activeScenario, approved).catch((err) => {
-      Alert.alert('Export mislukt', err instanceof Error ? err.message : 'Onbekende fout');
+      Alert.alert(t('budget.exportFailed', 'Export failed'), err instanceof Error ? err.message : t('common.unknownError', 'Unknown error'));
     });
   }, [activeScenario, approvals, projectName]);
 
@@ -582,7 +584,7 @@ export default function BudgetOptimizerDashboard({
                       `${win.action}\n\nGeschatte besparing: €${win.saving}/jaar`,
                       [
                         { text: 'Later' },
-                        { text: 'Contact opnemen', onPress: () => Alert.alert('Herinnering ingesteld', `We herinneren je om contact op te nemen met ${win.supplier}.`) },
+                        { text: t('budget.contactSupplier', 'Contact supplier'), onPress: () => Alert.alert(t('budget.reminderSet', 'Reminder set'), t('budget.reminderMessage', 'We will remind you to contact {{supplier}}.', { supplier: win.supplier })) },
                       ],
                     )}
                   >
@@ -959,7 +961,7 @@ export default function BudgetOptimizerDashboard({
                 <View style={styles.modalRow}>
                   <Text style={styles.modalLabel}>Hoeveelheid</Text>
                   <Text style={styles.modalValue}>
-                    {detailLine.quantity.toLocaleString('nl-NL')} {detailLine.unit}
+                    {detailLine.quantity.toLocaleString(undefined)} {detailLine.unit}
                   </Text>
                 </View>
                 <View style={styles.modalRow}>

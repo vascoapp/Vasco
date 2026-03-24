@@ -7,6 +7,7 @@
 
 import { trackUserAction, intelligence } from '../intelligence/intelligenceEngine';
 import { logPrediction } from '../intelligence/calibration';
+import { MS_PER_DAY } from '../utils/timeConstants';
 
 // ============================================
 // TYPES
@@ -248,7 +249,7 @@ class PricingEngineService {
     // Log resolved prediction for calibration: actual price vs suggested
     logPrediction({
       generatorId: 'smart-pricing',
-      predictedAt: new Date(Date.now() - 86400000).toISOString(), // assume predicted yesterday
+      predictedAt: new Date(Date.now() - MS_PER_DAY).toISOString(), // assume predicted yesterday
       prediction: `Prijs uitkomst: voorgesteld €${suggestedPrice}, werkelijk €${finalPrice}`,
       predictedValue: suggestedPrice,
     }).then(id => {

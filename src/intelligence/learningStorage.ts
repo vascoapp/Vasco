@@ -6,6 +6,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { MS_PER_DAY } from '../utils/timeConstants';
 
 // =============================================================================
 // TYPES
@@ -464,7 +465,7 @@ export async function recordInvoiceOutcome(outcome: InvoiceOutcome): Promise<voi
   if (outcome.paidDate) {
     const issued = new Date(outcome.issuedDate).getTime();
     const paid = new Date(outcome.paidDate).getTime();
-    const daysToPayment = Math.max(0, Math.round((paid - issued) / 86400000));
+    const daysToPayment = Math.max(0, Math.round((paid - issued) / MS_PER_DAY));
 
     // Running average DSO
     const prevTotal = profile.invoicePatterns.avgDSO * (profile.invoicePatterns.totalInvoices - 1);
@@ -484,7 +485,7 @@ export async function recordInvoiceOutcome(outcome: InvoiceOutcome): Promise<voi
   if (outcome.paidDate) {
     const issued = new Date(outcome.issuedDate).getTime();
     const paid = new Date(outcome.paidDate).getTime();
-    const actualDSO = Math.max(0, Math.round((paid - issued) / 86400000));
+    const actualDSO = Math.max(0, Math.round((paid - issued) / MS_PER_DAY));
 
     import('./calibration').then(({ resolveCalibrationPredictions }) => {
       resolveCalibrationPredictions([
@@ -506,7 +507,7 @@ function getMonthSpan(jobs: JobOutcome[]): number {
   if (jobs.length < 2) return 1;
   const dates = jobs.map(j => new Date(j.completedAt).getTime()).sort();
   const spanMs = dates[dates.length - 1] - dates[0];
-  return Math.max(1, Math.round(spanMs / (30 * 86400000)));
+  return Math.max(1, Math.round(spanMs / (30 * MS_PER_DAY)));
 }
 
 function countConsecutiveSavingsMonths(jobs: JobOutcome[]): number {
@@ -548,7 +549,7 @@ function getWeekKey(date: Date = new Date()): string {
   d.setHours(0, 0, 0, 0);
   d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
   const week1 = new Date(d.getFullYear(), 0, 4);
-  const weekNum = 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+  const weekNum = 1 + Math.round(((d.getTime() - week1.getTime()) / MS_PER_DAY - 3 + ((week1.getDay() + 6) % 7)) / 7);
   return `${d.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
 }
 
@@ -663,7 +664,7 @@ export function getEngagementRate(profile: ContractorLearningProfile, generatorI
   for (const interaction of interactions) {
     if (interaction.action === 'viewed' || interaction.action === 'snoozed') continue; // skip neutral
     const ageMs = now - new Date(interaction.timestamp).getTime();
-    const ageDays = Math.max(0, ageMs / 86400000);
+    const ageDays = Math.max(0, ageMs / MS_PER_DAY);
     const weight = Math.exp(-ENGAGEMENT_DECAY * ageDays);
 
     // Dwell-time bonus: expanded insights with >5s dwell get up to 1.5x weight
@@ -691,7 +692,7 @@ export function getHabituationScore(profile: ContractorLearningProfile, generato
     if (i.generatorId !== generatorId) return false;
     if (i.action !== 'dismissed' && i.action !== 'ignored') return false;
     const ageMs = now - new Date(i.timestamp).getTime();
-    return ageMs < 14 * 86400000; // last 14 days
+    return ageMs < 14 * MS_PER_DAY; // last 14 days
   });
   // 0 dismissals = 0, 1 = 0.15, 2 = 0.3, 3+ = 0.5+
   return Math.min(0.8, recentDismissals.length * 0.15);

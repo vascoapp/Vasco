@@ -334,7 +334,7 @@ export default function TeamPlanningScreen() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Planning Vandaag</Text>
           <Text style={styles.sectionDate}>
-            {new Date().toLocaleDateString('nl-NL', {
+            {new Date().toLocaleDateString(undefined, {
               weekday: 'short',
               day: 'numeric',
               month: 'short',

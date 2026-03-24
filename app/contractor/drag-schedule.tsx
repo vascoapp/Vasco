@@ -34,36 +34,59 @@ interface ScheduledJob {
   color: string;
 }
 
-// Mock schedule data
-const mockSchedule: ScheduledJob[] = [
-  { jobId: 'j-1', title: 'CV-ketel onderhoud', customerName: 'Fam. de Groot', startHour: 8, duration: 2, color: '#3B82F6' },
-  { jobId: 'j-2', title: 'Warmtepomp check', customerName: 'Bakkerij Jansen', startHour: 11, duration: 3, color: '#10B981' },
-  { jobId: 'j-3', title: 'Lekkage reparatie', customerName: 'Fam. Visser', startHour: 15, duration: 2, color: SemanticColors.feedbackWarning },
-];
-
-const mockUnassigned: { jobId: string; title: string; customerName: string; estimatedHours: number }[] = [
-  { jobId: 'j-4', title: 'Airco installatie', customerName: 'Kantoor Zuidas', estimatedHours: 4 },
-  { jobId: 'j-5', title: 'Radiator vervangen', customerName: 'Fam. Bakker', estimatedHours: 1.5 },
-  { jobId: 'j-6', title: 'Vloerverwarming check', customerName: 'Hotel NH', estimatedHours: 2 },
-];
-
-const COLORS = [Palette.terracotta, '#EC4899', '#14B8A6', '#F97316', '#6366F1'];
+const COLORS = [Palette.hermesOrange, '#3B82F6', '#10B981', '#EC4899', '#14B8A6', '#F97316', '#6366F1'];
 
 export default function DragScheduleScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { jobs } = useAppState();
-  const [schedule, setSchedule] = useState<ScheduledJob[]>(mockSchedule);
-  const [unassigned, setUnassigned] = useState(mockUnassigned);
+  const { jobs, customers, updateJobStatus, updateJob } = useAppState();
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  // Build schedule from REAL AppState jobs (already scheduled for today)
+  const initialSchedule: ScheduledJob[] = jobs
+    .filter((j: any) => j.scheduledDate === todayStr && (j.status === 'scheduled' || j.status === 'in-progress' || j.status === 'ingepland' || j.status === 'bezig'))
+    .map((j: any, idx: number) => {
+      const startHour = j.scheduledStartTime ? parseInt(j.scheduledStartTime.split(':')[0], 10) : 9;
+      const cust = customers.find((c: any) => c.id === j.customerId);
+      return {
+        jobId: j.id,
+        title: j.title,
+        customerName: cust?.name || j.customerId || '',
+        startHour: isNaN(startHour) ? 9 : startHour,
+        duration: j.estimatedDuration || 2,
+        color: COLORS[idx % COLORS.length],
+      };
+    });
+
+  // Unassigned = jobs that need scheduling (lead, quoted, accepted, or scheduled without a date)
+  const initialUnassigned = jobs
+    .filter((j: any) =>
+      ['lead', 'quoted', 'accepted', 'scheduled'].includes(j.status) &&
+      j.scheduledDate !== todayStr // not already on today's schedule
+    )
+    .slice(0, 10)
+    .map((j: any) => {
+      const cust = customers.find((c: any) => c.id === j.customerId);
+      return {
+        jobId: j.id,
+        title: j.title,
+        customerName: cust?.name || j.customerId || '',
+        estimatedHours: j.estimatedDuration || 2,
+      };
+    });
+
+  const [schedule, setSchedule] = useState<ScheduledJob[]>(initialSchedule);
+  const [unassigned, setUnassigned] = useState(initialUnassigned);
   const [draggedJob, setDraggedJob] = useState<string | null>(null);
   const [dropTargetHour, setDropTargetHour] = useState<number | null>(null);
 
-  const today = new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
+  const today = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
 
   const totalScheduledHours = schedule.reduce((sum, j) => sum + j.duration, 0);
   const utilizationPct = Math.round((totalScheduledHours / 10) * 100); // 10h workday
 
-  const handleDropOnSlot = (hour: number, job: typeof mockUnassigned[0]) => {
+  const handleDropOnSlot = (hour: number, job: { jobId: string; title: string; customerName: string; estimatedHours: number }) => {
     // Check for conflicts
     const hasConflict = schedule.some(s =>
       (hour >= s.startHour && hour < s.startHour + s.duration) ||
@@ -89,6 +112,17 @@ export default function DragScheduleScreen() {
     hapticSuccess();
     setDraggedJob(null);
     setDropTargetHour(null);
+
+    // PERSIST to AppState — update job with scheduled date/time and status
+    try {
+      updateJob(job.jobId, {
+        scheduledDate: todayStr,
+        scheduledStartTime: `${hour.toString().padStart(2, '0')}:00`,
+        scheduledEndTime: `${(hour + job.estimatedHours).toString().padStart(2, '0')}:00`,
+        estimatedDuration: job.estimatedHours,
+      });
+      updateJobStatus(job.jobId, 'scheduled');
+    } catch {}
 
     // Fire-and-forget push notification reminder (1h before scheduled time)
     const today = new Date();

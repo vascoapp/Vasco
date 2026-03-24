@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { MS_PER_DAY } from '../utils/timeConstants';
 
 // ============================================
 // TYPES
@@ -373,7 +374,7 @@ class CashFlowService {
         id: 'alert_overdue',
         type: 'warning',
         title: `${overdue.length} openstaande facturen`,
-        description: `€${overdueTotal.toLocaleString('nl-NL')} aan betalingen zijn verlopen`,
+        description: `€${overdueTotal.toLocaleString(undefined)} aan betalingen zijn verlopen`,
         actionable: true,
         action: 'Stuur herinneringen',
       });
@@ -532,20 +533,101 @@ export const cashFlowService = new CashFlowService();
 // ============================================
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useAppState } from '../state/AppState';
 
 export function useCashFlow() {
-  const [invoices, setInvoices] = useState<Invoice[]>(() => cashFlowService.getInvoices());
+  const { invoices: appInvoices } = useAppState();
+
+  // Map AppState invoices → CashFlowService Invoice shape
+  const invoices = useMemo<Invoice[]>(() =>
+    appInvoices.map((inv) => ({
+      id: inv.id,
+      customerId: inv.customerId ?? inv.customer ?? '',
+      customerName: inv.customerName ?? inv.customer ?? '',
+      projectId: inv.jobId ?? inv.job ?? '',
+      projectName: inv.job ?? '',
+      amount: inv.amount ?? 0,
+      status: inv.status === 'draft' ? 'draft' as const
+        : inv.status === 'sent' ? 'sent' as const
+        : inv.status === 'paid' ? 'paid' as const
+        : inv.status === 'overdue' ? 'overdue' as const
+        : 'draft' as const,
+      issueDate: inv.sentAt ?? inv.createdAt ?? new Date().toISOString(),
+      dueDate: inv.dueDate ?? new Date(Date.now() + (inv.dueInDays ?? 30) * MS_PER_DAY).toISOString().split('T')[0],
+      paidDate: inv.paidAt,
+      remindersSent: 0,
+    })),
+    [appInvoices],
+  );
+
+  // Expenses still come from singleton (no AppState equivalent yet)
   const [expenses, setExpenses] = useState<Expense[]>(() => cashFlowService.getExpenses());
 
   useEffect(() => {
     const unsubscribe = cashFlowService.subscribe(() => {
-      setInvoices(cashFlowService.getInvoices());
       setExpenses(cashFlowService.getExpenses());
     });
     return unsubscribe;
   }, []);
 
-  const summary = useMemo(() => cashFlowService.getCashFlowSummary(), [invoices, expenses]);
+  // Build summary from real invoices
+  const summary = useMemo<CashFlowSummary>(() => {
+    const pendingIncome = invoices
+      .filter((i) => i.status !== 'paid' && i.status !== 'cancelled')
+      .reduce((sum, i) => sum + i.amount, 0);
+
+    const pendingExpenses = expenses
+      .filter((e) => new Date(e.date) > new Date())
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    const paidTotal = invoices
+      .filter((i) => i.status === 'paid')
+      .reduce((sum, i) => sum + i.amount, 0);
+
+    const overdue = invoices.filter((i) => i.status === 'overdue');
+    const alerts: CashFlowAlert[] = [];
+
+    if (overdue.length > 0) {
+      const overdueTotal = overdue.reduce((sum, i) => sum + i.amount, 0);
+      alerts.push({
+        id: 'alert_overdue',
+        type: 'warning',
+        title: `${overdue.length} openstaande facturen`,
+        description: `€${overdueTotal.toLocaleString(undefined)} aan betalingen zijn verlopen`,
+        actionable: true,
+        action: 'Stuur herinneringen',
+      });
+    }
+
+    const projectedBalance30Days = paidTotal + pendingIncome - pendingExpenses;
+
+    if (projectedBalance30Days < 5000) {
+      alerts.push({
+        id: 'alert_low_balance',
+        type: 'warning',
+        title: 'Lage cashflow verwacht',
+        description: 'Je saldo kan binnen 30 dagen onder €5.000 komen',
+        actionable: true,
+        action: 'Bekijk financieringsopties',
+      });
+    }
+
+    const healthScore = Math.min(100, Math.max(0,
+      50 +
+      (overdue.length === 0 ? 20 : -overdue.length * 5) +
+      (projectedBalance30Days > 10000 ? 30 : projectedBalance30Days > 5000 ? 15 : 0)
+    ));
+
+    return {
+      currentBalance: paidTotal,
+      pendingIncome,
+      pendingExpenses,
+      projectedBalance30Days,
+      healthScore,
+      alerts,
+    };
+  }, [invoices, expenses]);
+
   const aging = useMemo(() => cashFlowService.getInvoiceAging(), [invoices]);
   const forecast = useMemo(() => cashFlowService.getCashFlowForecast(8), [invoices, expenses]);
 

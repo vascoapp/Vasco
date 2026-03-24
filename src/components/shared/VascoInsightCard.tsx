@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { recordInteraction, recordInsightOutcome } from '../../intelligence/learningStorage';
@@ -85,22 +86,7 @@ function getConfidenceColor(confidence: number): string {
   return SemanticColors.textTertiary;
 }
 
-function getCategoryLabel(category: InsightCategory): string {
-  switch (category) {
-    case 'alert': return 'Waarschuwing';
-    case 'opportunity': return 'Kans';
-    case 'compliance': return 'Compliance';
-    case 'financial': return 'Financieel';
-    case 'schedule': return 'Planning';
-    case 'tip': return 'Tip';
-    case 'weather': return 'Weer';
-    case 'operational': return 'Operationeel';
-    case 'operations': return 'Operaties';
-    case 'safety': return 'Veiligheid';
-    case 'quality': return 'Kwaliteit';
-    default: return category;
-  }
-}
+// Category labels are now resolved via i18n in the component
 
 export function VascoInsightCard({
   insight,
@@ -110,6 +96,7 @@ export function VascoInsightCard({
   compact = false,
   showSource = true,
 }: VascoInsightCardProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const [actedOn, setActedOn] = useState(false);
@@ -268,12 +255,12 @@ export function VascoInsightCard({
         <View style={styles.actedOnContent}>
           <Ionicons name="checkmark-circle" size={20} color={SemanticColors.feedbackSuccess} />
           <Text style={styles.actedOnText}>
-            {outcomeRecorded ? 'Bedankt voor je feedback' : insight.actionLabel ? `${insight.actionLabel} — klaar` : 'Afgehandeld'}
+            {outcomeRecorded ? t('insights.thanksFeedback', 'Bedankt voor je feedback') : insight.actionLabel ? `${insight.actionLabel} — ${t('common.done', 'klaar')}` : t('insights.handled', 'Afgehandeld')}
           </Text>
         </View>
         {!outcomeRecorded ? (
           <View style={styles.outcomeFeedback}>
-            <Text style={styles.outcomeLabel}>Nuttig?</Text>
+            <Text style={styles.outcomeLabel}>{t('insights.helpful', 'Nuttig?')}</Text>
             <Pressable onPress={() => handleOutcome('positive')} hitSlop={8} style={styles.outcomeButton}>
               <Ionicons name="thumbs-up-outline" size={14} color={SemanticColors.feedbackSuccess} />
             </Pressable>
@@ -394,7 +381,7 @@ export function VascoInsightCard({
         <View style={styles.reasoningSection}>
           <Pressable style={styles.reasoningToggle} onPress={toggleReasoning}>
             <Ionicons name="help-circle-outline" size={14} color={SemanticColors.textTertiary} />
-            <Text style={styles.reasoningToggleText}>Waarom?</Text>
+            <Text style={styles.reasoningToggleText}>{t('insights.why', 'Waarom?')}</Text>
             <Ionicons
               name={showReasoning ? 'chevron-up' : 'chevron-down'}
               size={12}
@@ -411,7 +398,7 @@ export function VascoInsightCard({
                 <View style={styles.confidenceRow}>
                   <View style={[styles.confidenceBadge, { backgroundColor: getConfidenceColor((insight as ScoredInsight).confidence) + '18' }]}>
                     <Text style={[styles.confidenceText, { color: getConfidenceColor((insight as ScoredInsight).confidence) }]}>
-                      {Math.round((insight as ScoredInsight).confidence * 100)}% zeker
+                      {Math.round((insight as ScoredInsight).confidence * 100)}% {t('insights.confident', 'zeker')}
                     </Text>
                     <Ionicons name="bar-chart" size={10} color={getConfidenceColor((insight as ScoredInsight).confidence)} />
                   </View>
@@ -426,15 +413,15 @@ export function VascoInsightCard({
                 </View>
               </View>
               <View style={styles.reasoningRow}>
-                <Text style={styles.reasoningLabel}>Observatie</Text>
+                <Text style={styles.reasoningLabel}>{t('insights.observation', 'Observatie')}</Text>
                 <Text style={styles.reasoningValue}>{(insight as ScoredInsight).reasoning.observation}</Text>
               </View>
               <View style={styles.reasoningRow}>
-                <Text style={styles.reasoningLabel}>Impact</Text>
+                <Text style={styles.reasoningLabel}>{t('insights.impact', 'Impact')}</Text>
                 <Text style={styles.reasoningValue}>{(insight as ScoredInsight).reasoning.implication}</Text>
               </View>
               <View style={styles.reasoningRow}>
-                <Text style={styles.reasoningLabel}>Advies</Text>
+                <Text style={styles.reasoningLabel}>{t('insights.advice', 'Advies')}</Text>
                 <Text style={styles.reasoningValue}>{(insight as ScoredInsight).reasoning.suggestion}</Text>
               </View>
             </View>
@@ -500,7 +487,7 @@ interface VascoInsightListProps {
 
 export function VascoInsightList({
   insights,
-  title = 'Vasco voor jou',
+  title,
   maxVisible = 3,
   compact = false,
   showSource = true,
@@ -508,6 +495,8 @@ export function VascoInsightList({
   onAction,
   onSnooze,
 }: VascoInsightListProps) {
+  const { t } = useTranslation();
+  const resolvedTitle = title ?? t('insights.vascoForYou', 'Vasco voor jou');
   const [showAll, setShowAll] = useState(false);
 
   const visibleInsights = showAll ? insights : insights.slice(0, maxVisible);
@@ -520,10 +509,10 @@ export function VascoInsightList({
       <View style={styles.listHeader}>
         <View style={styles.listTitleRow}>
           <Ionicons name="sparkles" size={16} color={Palette.hermesOrange} />
-          <Text style={styles.listTitle}>{title}</Text>
+          <Text style={styles.listTitle}>{resolvedTitle}</Text>
         </View>
         <Text style={styles.listCount}>
-          {insights.length} {insights.length === 1 ? 'inzicht' : 'inzichten'}
+          {t('insights.insightCount', { defaultValue: '{{count}} insights', count: insights.length })}
         </Text>
       </View>
 
@@ -550,7 +539,7 @@ export function VascoInsightList({
           }}
         >
           <Text style={styles.showMoreText}>
-            Toon alle {insights.length} inzichten
+            {t('insights.showAll', { defaultValue: 'Toon alle {{count}} inzichten', count: insights.length })}
           </Text>
           <Ionicons name="chevron-down" size={14} color={Palette.hermesOrange} />
         </Pressable>

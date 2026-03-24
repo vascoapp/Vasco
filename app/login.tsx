@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth, ROLE_CONFIGS, type UserRole, isDemoMode } from '../src/context/AuthContext';
 import { SemanticColors, Palette } from '../src/theme/colors';
 import { SafeArea, Spacing } from '../src/theme/spacing';
@@ -192,7 +193,6 @@ export default function LoginScreen() {
                   style={({ pressed }) => [styles.onboardingBtn, pressed && { opacity: 0.85 }]}
                   onPress={async () => {
                     // Clear onboarding flag + AsyncStorage data to force fresh start
-                    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
                     await AsyncStorage.removeItem('@vasco_onboarding').catch(() => {});
                     await AsyncStorage.removeItem('@vasco_jobs').catch(() => {});
                     await AsyncStorage.removeItem('@vasco_invoices').catch(() => {});
@@ -210,7 +210,6 @@ export default function LoginScreen() {
                 <Pressable
                   style={({ pressed }) => [styles.resetBtn, pressed && { opacity: 0.85 }]}
                   onPress={async () => {
-                    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
                     const keys = await AsyncStorage.getAllKeys();
                     const vascoKeys = keys.filter((k: string) => k.startsWith('@vasco_'));
                     if (vascoKeys.length > 0) await AsyncStorage.multiRemove(vascoKeys);

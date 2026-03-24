@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { emitBusinessEvent } from '../intelligence/dataCollector';
 import { recordMetricSnapshot } from '../intelligence/learningStorage';
+import { MS_PER_DAY } from '../utils/timeConstants';
 
 // =============================================================================
 // TYPES
@@ -55,7 +56,7 @@ export const EXPENSE_CATEGORIES: { id: ExpenseCategory; label: string; icon: str
 // =============================================================================
 
 const now = new Date();
-const dayMs = 86400000;
+const dayMs = MS_PER_DAY;
 
 const mockExpenses: Expense[] = [
   { id: 'exp-1', description: 'Koperen buis 22mm', category: 'materiaal', amount: 125, vatAmount: 26.25, vatRate: 21, date: new Date(now.getTime() - dayMs), supplier: 'Technische Unie', jobId: 'j-1', jobTitle: 'CV-ketel onderhoud', deductible: true, deductionPercentage: 100 },

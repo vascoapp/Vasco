@@ -63,7 +63,7 @@ class PricingAgent {
    * Start the pricing agent - call on app startup
    */
   start(): void {
-    console.log('[PricingAgent] Starting...');
+    if (__DEV__) console.log('[PricingAgent] Starting...');
 
     // Initial sync
     this.syncRecommendations();
@@ -84,7 +84,7 @@ class PricingAgent {
       clearInterval(this.syncInterval);
       this.syncInterval = null;
     }
-    console.log('[PricingAgent] Stopped');
+    if (__DEV__) console.log('[PricingAgent] Stopped');
   }
 
   // -----------------------------------------
@@ -336,7 +336,7 @@ class PricingAgent {
   async teachMaterialAlias(materialId: string, alias: string): Promise<void> {
     try {
       await pricingApi.addMaterialAlias(materialId, alias);
-      console.log('[PricingAgent] Learned new alias:', alias, '->', materialId);
+      if (__DEV__) console.log('[PricingAgent] Learned new alias:', alias, '->', materialId);
     } catch (error) {
       console.error('[PricingAgent] Failed to add alias:', error);
     }
@@ -412,7 +412,7 @@ class PricingAgent {
   async retrain(fullRetrain = false): Promise<{ status: string; modelsUpdated: number; accuracy: number }> {
     try {
       const result = await pricingApi.trainAgent({ fullRetrain });
-      console.log('[PricingAgent] Training complete:', result);
+      if (__DEV__) console.log('[PricingAgent] Training complete:', result);
       return result;
     } catch (error) {
       console.error('[PricingAgent] Training failed:', error);
@@ -426,7 +426,7 @@ class PricingAgent {
 
   private async syncRecommendations(): Promise<void> {
     try {
-      console.log('[PricingAgent] Syncing recommendations...');
+      if (__DEV__) console.log('[PricingAgent] Syncing recommendations...');
       const recommendations = await pricingApi.getRecommendations({
         minSavings: this.config.minSavingsToAlert,
       });
@@ -441,7 +441,7 @@ class PricingAgent {
         }
       }
 
-      console.log(`[PricingAgent] Synced ${recommendations.length} recommendations`);
+      if (__DEV__) console.log(`[PricingAgent] Synced ${recommendations.length} recommendations`);
     } catch (error) {
       console.error('[PricingAgent] Sync failed:', error);
     }
@@ -465,7 +465,7 @@ class PricingAgent {
     if (!this.config.enablePushNotifications) return;
 
     // In a real implementation, this would trigger push notifications
-    console.log('[PricingAgent] New opportunities:', recommendations.map(r => r.materialName));
+    if (__DEV__) console.log('[PricingAgent] New opportunities:', recommendations.map(r => r.materialName));
 
     // For now, we'll emit an event that the UI can subscribe to
     // This could be implemented with EventEmitter, Zustand, or similar

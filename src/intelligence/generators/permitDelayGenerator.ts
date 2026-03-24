@@ -9,6 +9,7 @@ import type { ScoredInsight, GeneratorContext } from './types';
 import { mockProjects } from '../../data/mockProjects';
 import { logPrediction } from '../calibration';
 import { gt } from '../generatorTranslations';
+import { MS_PER_DAY } from '../../utils/timeConstants';
 
 export function usePermitDelayInsight(ctx: GeneratorContext): ScoredInsight | null {
   if (ctx.role !== 'coo' && ctx.role !== 'director') return null;
@@ -33,7 +34,7 @@ export function usePermitDelayInsight(ctx: GeneratorContext): ScoredInsight | nu
   const hasOverdue = overduePermits.length > 0;
   const worstOverdue = overduePermits[0];
   const daysOverdue = worstOverdue
-    ? Math.round((now.getTime() - new Date(worstOverdue.targetDecisionDate!).getTime()) / 86400000)
+    ? Math.round((now.getTime() - new Date(worstOverdue.targetDecisionDate!).getTime()) / MS_PER_DAY)
     : 0;
 
   logPrediction({

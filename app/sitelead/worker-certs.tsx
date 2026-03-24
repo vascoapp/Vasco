@@ -200,7 +200,7 @@ export default function WorkerCertsScreen() {
                   {worker.certs.map((cert, i) => {
                     const cfg = STATUS_CONFIG[cert.status];
                     const expiryDate = new Date(cert.expiryDate);
-                    const dateStr = expiryDate.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' });
+                    const dateStr = expiryDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
                     return (
                       <View key={i} style={styles.certRow}>

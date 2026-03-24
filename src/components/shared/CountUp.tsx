@@ -41,7 +41,7 @@ export function CountUp({ to, duration = 800, prefix = '', suffix = '', decimals
 
   const formatted = decimals > 0
     ? display.toFixed(decimals)
-    : Math.round(display).toLocaleString('nl-NL');
+    : Math.round(display).toLocaleString(undefined);
 
   return <Text style={style}>{prefix}{formatted}{suffix}</Text>;
 }

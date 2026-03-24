@@ -1,6 +1,7 @@
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { AssistBanner } from '../../src/components/AssistBanner';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
 import { Screen } from '../../src/components/Screen';
@@ -11,8 +12,11 @@ import { Typography } from '../../src/theme/typography';
 import { useAppState } from '../../src/state/AppState';
 import { Ionicons } from '@expo/vector-icons';
 import { generateQuotePdf, type QuotePdfData } from '../../src/services/quotePdfService';
+import { shareQuoteWithAcceptanceLink } from '../../src/services/customerQuoteAcceptanceService';
+import { MS_PER_DAY } from '../../src/utils/timeConstants';
 
 export default function QuoteDetailScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { quotes, markQuoteSent, priceRisks, lineItems, applySuggestedPrice, convertQuoteToJob, businessProfile, updateQuote } = useAppState();
@@ -26,15 +30,15 @@ export default function QuoteDetailScreen() {
     return (
       <Screen>
         <View style={styles.container}>
-          <Text style={Typography.title}>Offerte niet gevonden</Text>
+          <Text style={Typography.title}>{t('quotes.notFound', 'Quote not found')}</Text>
         </View>
       </Screen>
     );
   }
 
-  const formattedTotal = `€${quote.amount.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}`;
+  const formattedTotal = `€${quote.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
   const formatCurrency = (value: number) =>
-    `€${value.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}`;
+    `€${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
   const riskItem = priceRisk
     ? quoteLineItems.find((item) => item.description === priceRisk.lineItem)
@@ -49,36 +53,49 @@ export default function QuoteDetailScreen() {
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
-            <Text style={Typography.title}>Offerte {quote.id}</Text>
+            <Text style={Typography.title}>{t('quotes.quote', 'Quote')} {quote.id}</Text>
             <Text style={Typography.muted}>{quote.status} · {quote.job}</Text>
           </View>
-          {quote.status === 'draft' && (
-            <Pressable onPress={() => setEditing(!editing)} hitSlop={8}>
+          {(quote.status === 'draft' || quote.status === 'sent') && (
+            <Pressable onPress={() => {
+              if (quote.status === 'sent' && !editing) {
+                Alert.alert(
+                  t('quotes.editSentQuote', 'Edit sent quote?'),
+                  t('quotes.editSentQuoteDesc', 'Editing will mark this quote as draft. You will need to re-send it.'),
+                  [
+                    { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+                    { text: t('common.edit', 'Edit'), onPress: () => { updateQuote(quote.id, { status: 'draft' }); setEditing(true); } },
+                  ],
+                );
+              } else {
+                setEditing(!editing);
+              }
+            }} hitSlop={8}>
               <Ionicons name={editing ? 'checkmark-circle' : 'create-outline'} size={24} color={editing ? SemanticColors.feedbackSuccess : SemanticColors.textSecondary} />
             </Pressable>
           )}
         </View>
 
         <View style={styles.card}>
-          <Text style={Typography.subtitle}>Klant</Text>
+          <Text style={Typography.subtitle}>{t('jobs.client', 'Client')}</Text>
           <Text style={Typography.body}>{quote.customer}</Text>
           <Text style={Typography.muted}>{quote.job}</Text>
         </View>
 
         <AssistBanner
-          title="Aanbevolen volgende stap"
-          description="Verstuur de offerte nu om uitval te voorkomen en betalingscycli te verkorten."
-          actionLabel="Offerte delen"
-          meta="Bespaart tijd"
+          title={t('quotes.recommendedNextStep', 'Recommended next step')}
+          description={t('quotes.sendQuoteNow', 'Send the quote now to prevent drop-off and shorten payment cycles.')}
+          actionLabel={t('quotes.shareQuote', 'Share quote')}
+          meta={t('quotes.savesTime', 'Saves time')}
           onPress={() => {
             markQuoteSent(quote.id);
-            Alert.alert('Offerte verstuurd!', 'Vasco herinnert je over 3 dagen om op te volgen.');
+            Alert.alert(t('quotes.quoteSent', 'Quote sent!'), t('quotes.quoteSentDesc', 'Vasco will remind you in 3 days to follow up.'));
           }}
         />
 
         {priceRisk ? (
           <View style={styles.card}>
-            <Text style={Typography.subtitle}>Voorgestelde aanpassing</Text>
+            <Text style={Typography.subtitle}>{t('quotes.suggestedAdjustment', 'Suggested adjustment')}</Text>
             <Text style={Typography.muted}>{priceRisk.reason}</Text>
             {priceRisk.lineItem ? (
               <Text style={Typography.body}>
@@ -87,11 +104,11 @@ export default function QuoteDetailScreen() {
               </Text>
             ) : null}
             <Text style={Typography.muted}>
-              Geschatte besparing: {formatCurrency(priceRisk.estimatedSavings)}
+              {t('quotes.estimatedSavings', 'Estimated savings')}: {formatCurrency(priceRisk.estimatedSavings)}
             </Text>
             {canApplySuggestion ? (
               <PrimaryButton
-                label="Voorgestelde prijs toepassen"
+                label={t('quotes.applySuggestedPrice', 'Apply suggested price')}
                 onPress={() => {
                   applySuggestedPrice(
                     quote.id,
@@ -103,13 +120,13 @@ export default function QuoteDetailScreen() {
               />
             ) : null}
             {applied ? (
-              <Text style={styles.appliedText}>Toegepast. Offerte totaal bijgewerkt.</Text>
+              <Text style={styles.appliedText}>{t('quotes.applied', 'Applied. Quote total updated.')}</Text>
             ) : null}
           </View>
         ) : null}
 
         <View style={styles.card}>
-          <Text style={Typography.subtitle}>Regels</Text>
+          <Text style={Typography.subtitle}>{t('quotes.lineItems', 'Line items')}</Text>
           {quoteLineItems.map((item) => (
             <View key={item.id} style={styles.row}>
               <Text style={Typography.body}>{item.description}</Text>
@@ -119,22 +136,22 @@ export default function QuoteDetailScreen() {
             </View>
           ))}
           <View style={styles.row}>
-            <Text style={Typography.subtitle}>Totaal</Text>
+            <Text style={Typography.subtitle}>{t('quotes.total', 'Total')}</Text>
             <Text style={Typography.subtitle}>{formattedTotal}</Text>
           </View>
         </View>
 
         <View style={styles.actions}>
-          <PrimaryButton label="Offerte als PDF delen" onPress={async () => {
+          <PrimaryButton label={t('quotes.sharePdf', 'Share quote as PDF')} onPress={async () => {
             const items = lineItems[quote.id] ?? [];
             const subtotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
             const vatAmount = Math.round(subtotal * 0.21 * 100) / 100;
             const pdfData: QuotePdfData = {
               quoteNumber: quote.id,
-              customerName: quote.customer ?? 'Klant',
-              jobTitle: quote.job ?? 'Klus',
-              issueDate: new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }),
-              validUntil: new Date(Date.now() + 30 * 86400000).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }),
+              customerName: quote.customer ?? t('jobs.client', 'Client'),
+              jobTitle: quote.job ?? t('jobs.typeJob', 'Job'),
+              issueDate: new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }),
+              validUntil: new Date(Date.now() + 30 * MS_PER_DAY).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }),
               lineItems: items.map(i => ({ description: i.description, quantity: i.quantity, unitPrice: i.unitPrice, vatRate: 21 })),
               subtotal,
               vatAmount,
@@ -144,20 +161,45 @@ export default function QuoteDetailScreen() {
             markQuoteSent(quote.id);
           }} />
 
+          {/* Share with approval link — customer can accept digitally */}
+          {quote.status === 'sent' && (
+            <Pressable
+              style={[styles.acceptButton, { backgroundColor: Palette.hermesOrange }]}
+              onPress={async () => {
+                await shareQuoteWithAcceptanceLink({
+                  id: quote.id,
+                  customer: quote.customer,
+                  customerName: quote.customer,
+                  amount: quote.amount,
+                  job: quote.job,
+                });
+              }}
+            >
+              <Ionicons name="link" size={18} color="#fff" />
+              <Text style={styles.acceptButtonText}>Share approval link</Text>
+            </Pressable>
+          )}
+
           {/* Accept & Convert to Job */}
           <Pressable
             style={styles.acceptButton}
             onPress={() => {
               Alert.alert(
-                'Offerte accepteren',
-                `Offerte accepteren en klus aanmaken voor ${formattedTotal}?`,
+                t('quotes.acceptQuote', 'Accept quote'),
+                t('quotes.acceptQuoteDesc', { defaultValue: 'Accept quote and create job for {{total}}?', total: formattedTotal }),
                 [
-                  { text: 'Annuleren', style: 'cancel' },
+                  { text: t('common.cancel', 'Cancel'), style: 'cancel' },
                   {
-                    text: 'Accepteren',
+                    text: t('quotes.accept', 'Accept'),
                     onPress: async () => {
-                      const jobId = await convertQuoteToJob(quote.id);
-                      Alert.alert('Klus aangemaakt', 'De offerte is geaccepteerd en een klus is aangemaakt.');
+                      try {
+                        const jobId = await convertQuoteToJob(quote.id);
+                        if (jobId) {
+                          Alert.alert(t('quotes.jobCreated', 'Job created'), t('quotes.jobCreatedDesc', 'The quote has been accepted and a job has been created.'));
+                        }
+                      } catch (err: any) {
+                        Alert.alert(t('common.error', 'Error'), err?.message || t('quotes.conversionFailed', 'Could not convert quote to job.'));
+                      }
                     },
                   },
                 ],
@@ -165,12 +207,12 @@ export default function QuoteDetailScreen() {
             }}
           >
             <Ionicons name="checkmark-circle" size={20} color="#fff" />
-            <Text style={styles.acceptButtonText}>Accepteer & maak klus</Text>
+            <Text style={styles.acceptButtonText}>{t('quotes.acceptAndCreateJob', 'Accept & create job')}</Text>
           </Pressable>
 
           <Link href={`/quotes/${id}/invoice`} asChild>
             <Pressable style={styles.secondaryButton}>
-              <Text style={styles.secondaryText}>Factuur aanmaken</Text>
+              <Text style={styles.secondaryText}>{t('quotes.createInvoice', 'Create invoice')}</Text>
             </Pressable>
           </Link>
         </View>

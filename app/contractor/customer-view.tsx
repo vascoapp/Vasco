@@ -78,7 +78,7 @@ export default function CustomerViewScreen() {
   const [accepted, setAccepted] = useState(false);
   const [viewRecorded, setViewRecorded] = useState(false);
 
-  const fmt = (n: number) => `€${n.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}`;
+  const fmt = (n: number) => `€${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
   // Record page view for data moat
   useEffect(() => {
@@ -244,7 +244,7 @@ export default function CustomerViewScreen() {
           </View>
           <View style={s.detailRow}>
             <Ionicons name="calendar-outline" size={16} color={SemanticColors.textSecondary} />
-            <Text style={s.detailText}>Geldig tot {new Date(MOCK_QUOTE.validUntil).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</Text>
+            <Text style={s.detailText}>Geldig tot {new Date(MOCK_QUOTE.validUntil).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}</Text>
           </View>
         </View>
 

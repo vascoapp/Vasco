@@ -78,6 +78,55 @@ import { staticTipGenerator } from './staticTipGenerator';
 export type { GeneratorContext, ScoredInsight, UserRole, ScreenContext, ReasoningChain, InsightGenerator, GeneratorLanguage, InsightAction, InsightActionType } from './types';
 
 // =============================================================================
+// DATA THRESHOLDS — minimum data required before a generator fires
+// =============================================================================
+// Generators NOT in this map fire always (e.g. overdue-invoice, cert-expiry,
+// weather, daily-planning, static-tip, compliance-alert — useful from day 1).
+// =============================================================================
+
+export interface DataCounts {
+  jobCount: number;
+  invoiceCount: number;
+  quoteCount: number;
+}
+
+const GENERATOR_THRESHOLDS: Record<string, { minJobs?: number; minInvoices?: number; minQuotes?: number }> = {
+  'labor-efficiency': { minJobs: 5 },
+  'estimation-calibration': { minJobs: 3 },
+  'margin-drift': { minJobs: 5, minInvoices: 5 },
+  'margin-warning': { minJobs: 3 },
+  'margin-root-cause': { minJobs: 5 },
+  'supplier-price-anomaly': { minJobs: 3 },
+  'crew-performance': { minJobs: 10 },
+  'cross-service': { minJobs: 10 },
+  'portfolio-health': { minJobs: 10 },
+  'portfolio-irr': { minJobs: 10 },
+  'contingency-burn': { minJobs: 5 },
+  'schedule-fragility': { minJobs: 5 },
+  'dso-trend': { minInvoices: 5 },
+  'customer-payment-history': { minInvoices: 5 },
+  'cash-gap': { minInvoices: 5 },
+  'profitability': { minJobs: 5 },
+  'quote-benchmark': { minQuotes: 5 },
+  'estimation-variance-type': { minJobs: 10 },
+  'similar-job-comparison': { minJobs: 5 },
+  'cross-project-risk': { minJobs: 10 },
+  'project-budget-variance': { minJobs: 5 },
+  'handover-bottleneck': { minJobs: 5 },
+  'change-order-velocity': { minJobs: 5 },
+  'approval-bottleneck': { minJobs: 5 },
+};
+
+function meetsDataThreshold(generatorId: string, counts: DataCounts): boolean {
+  const threshold = GENERATOR_THRESHOLDS[generatorId];
+  if (!threshold) return true; // no threshold = always fire
+  if (threshold.minJobs && counts.jobCount < threshold.minJobs) return false;
+  if (threshold.minInvoices && counts.invoiceCount < threshold.minInvoices) return false;
+  if (threshold.minQuotes && counts.quoteCount < threshold.minQuotes) return false;
+  return true;
+}
+
+// =============================================================================
 // Screen relevance mapping — which generators are relevant for which screens
 // =============================================================================
 
@@ -154,7 +203,7 @@ const GENERATOR_REGISTRY: GeneratorRegistration[] = [
 // This is a React hook because generators internally use service hooks.
 // =============================================================================
 
-export function useAllGenerators(ctx: GeneratorContext): ScoredInsight[] {
+export function useAllGenerators(ctx: GeneratorContext, dataCounts?: DataCounts): ScoredInsight[] {
   // Call all hook-based generators unconditionally (React rules of hooks)
   const overdueInvoice = useOverdueInvoiceInsight(ctx);
   const savingsOpp = useSavingsOpportunityInsight(ctx);
@@ -270,11 +319,15 @@ export function useAllGenerators(ctx: GeneratorContext): ScoredInsight[] {
       { id: 'cert-renewal-planner', insight: certRenewalPlanner },
     ];
 
-    // Filter: only include generators relevant for current role + screen
+    // Filter: only include generators relevant for current role + screen + data threshold
+    const counts = dataCounts || { jobCount: 0, invoiceCount: 0, quoteCount: 0 };
     const relevant = allResults.filter(r => {
       const reg = GENERATOR_REGISTRY.find(g => g.id === r.id);
       if (!reg) return false;
-      return reg.roles.includes(ctx.role) && reg.screens.includes(ctx.screen);
+      if (!reg.roles.includes(ctx.role) || !reg.screens.includes(ctx.screen)) return false;
+      // Suppress generators that don't have enough data yet
+      if (!meetsDataThreshold(r.id, counts)) return false;
+      return true;
     });
 
     // Collect non-null insights
@@ -294,6 +347,6 @@ export function useAllGenerators(ctx: GeneratorContext): ScoredInsight[] {
     scheduleFragility, supplierRisk, permitDelay, changeOrderVelocity,
     handoverBottleneck, portfolioHealth, valueDelivery, crossProjectRisk,
     crewPerformance, incidentTrend, defectCluster, certRenewalPlanner,
-    ctx.role, ctx.screen,
+    ctx.role, ctx.screen, dataCounts,
   ]);
 }

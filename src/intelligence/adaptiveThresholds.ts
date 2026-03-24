@@ -7,6 +7,7 @@
 // =============================================================================
 
 import type { ContractorLearningProfile, MetricKey } from './learningStorage';
+import { MS_PER_DAY } from '../utils/timeConstants';
 
 // =============================================================================
 // DEFAULT THRESHOLDS (for < 4 weeks of data)
@@ -135,7 +136,7 @@ function getAdaptiveSigma(profile: ContractorLearningProfile, metric: MetricKey)
 
   // Count recent dismissals of insights related to this metric (last 30 days)
   const now = Date.now();
-  const thirtyDaysAgo = now - 30 * 86400000;
+  const thirtyDaysAgo = now - 30 * MS_PER_DAY;
   const recentDismissals = profile.insightInteractions.filter(i => {
     if (i.action !== 'dismissed' && i.action !== 'ignored') return false;
     const ts = new Date(i.timestamp).getTime();

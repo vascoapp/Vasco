@@ -684,7 +684,7 @@ class JobDecisionLinker {
         autoLinked: true,
       });
 
-      console.log(
+      if (__DEV__) console.log(
         `[JobDecisionLinker] Created tracker for job "${job.title}" using template "${match.template.name}" (${Math.round(match.confidence * 100)}% confidence)`
       );
 

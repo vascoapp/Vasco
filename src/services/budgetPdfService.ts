@@ -11,7 +11,7 @@ import type { LineOptimization, ScenarioResult, CategoryOptimization } from './b
 // ── Number formatting (Dutch) ──────────────────────────────
 
 const fmt = (n: number) =>
-  n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const fmtPct = (n: number) => `${n.toFixed(1)}%`;
 
@@ -38,7 +38,7 @@ function buildHtml(
   scenario: ScenarioResult,
   approvedOptimizations: LineOptimization[],
 ): string {
-  const today = new Date().toLocaleDateString('nl-NL', {
+  const today = new Date().toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',

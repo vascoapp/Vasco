@@ -14,6 +14,7 @@ import {
   Pressable,
   RefreshControl,
   Share,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -144,11 +145,42 @@ export default function BesparenScreen() {
 
   const handleAction = (action: SavingAction) => {
     hapticSuccess();
+
+    if (action.type === 'procurement' || action.type === 'price-alert') {
+      // Navigate to purchase orders for ordering actions
+      router.push('/contractor/purchase-orders');
+    } else if (action.type === 'margin') {
+      // Navigate to market prices for supplier comparison
+      router.push('/contractor/market-prices');
+    } else if (action.type === 'tip') {
+      // Confirm activation of the tip
+      Alert.alert(
+        'Besparing activeren',
+        `Wil je "${action.title}" activeren? Verwachte besparing: €${action.saving.toLocaleString(undefined)}.`,
+        [
+          { text: 'Annuleren', style: 'cancel' },
+          {
+            text: 'Activeer',
+            onPress: () => {
+              setActioned(prev => new Set(prev).add(action.id));
+            },
+          },
+        ],
+      );
+      return; // Don't mark as actioned until confirmed
+    }
+
     setActioned(prev => new Set(prev).add(action.id));
   };
 
   const handleDismiss = (action: SavingAction) => {
     setDismissed(prev => new Set(prev).add(action.id));
+  };
+
+  const handleShare = async () => {
+    const lines = visibleActions.map(a => `• ${a.title}: €${a.saving.toLocaleString(undefined)} — ${a.reason}`);
+    const message = `Bespaarkansen gevonden door Vasco:\n\n${lines.join('\n')}\n\nTotaal potentieel: €${totalPotential.toLocaleString(undefined)}`;
+    await Share.share({ message, title: 'Bespaarkansen' });
   };
 
   const onRefresh = useCallback(() => {
@@ -164,7 +196,13 @@ export default function BesparenScreen() {
           <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={s.headerTitle}>Besparen</Text>
-        <View style={{ width: 44 }} />
+        {visibleActions.length > 0 ? (
+          <Pressable onPress={handleShare} hitSlop={12} style={s.backBtn}>
+            <Ionicons name="share-outline" size={20} color={SemanticColors.textPrimary} />
+          </Pressable>
+        ) : (
+          <View style={{ width: 44 }} />
+        )}
       </View>
 
       <ScrollView
@@ -187,12 +225,12 @@ export default function BesparenScreen() {
               </Text>
               {totalPotential > 0 && (
                 <Text style={s.summaryAmount}>
-                  Tot €{totalPotential.toLocaleString('nl-NL', { maximumFractionDigits: 0 })} potentieel
+                  Tot €{totalPotential.toLocaleString(undefined, { maximumFractionDigits: 0 })} potentieel
                 </Text>
               )}
               {savings.totalSavedThisMonth > 0 && (
                 <Text style={s.summarySaved}>
-                  €{savings.totalSavedThisMonth.toLocaleString('nl-NL', { maximumFractionDigits: 0 })} al bespaard deze maand
+                  €{savings.totalSavedThisMonth.toLocaleString(undefined, { maximumFractionDigits: 0 })} al bespaard deze maand
                 </Text>
               )}
             </View>
@@ -211,7 +249,7 @@ export default function BesparenScreen() {
                   <Text style={s.actionTitle} numberOfLines={1}>{action.title}</Text>
                   <Text style={s.actionReason} numberOfLines={2}>{action.reason}</Text>
                 </View>
-                <Text style={s.actionSaving}>€{action.saving.toLocaleString('nl-NL')}</Text>
+                <Text style={s.actionSaving}>€{action.saving.toLocaleString(undefined)}</Text>
               </View>
 
               {/* One-tap actions — EVE pattern */}

@@ -103,6 +103,7 @@ function DSOHint({ customerId, amount }: { customerId: string; amount?: number }
 
 function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoice[]; expandedId: string | null; onToggleExpand: (id: string) => void }) {
   const { t } = useTranslation();
+  const { businessProfile } = useAppState();
   const getStatusConfig = (status: Invoice['status']) => {
     switch (status) {
       case 'paid':
@@ -168,7 +169,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                   styles.invoiceAmount,
                   invoice.status === 'paid' && { color: SemanticColors.feedbackSuccess }
                 ]}>
-                  €{invoice.amount.toLocaleString('nl-NL')}
+                  €{invoice.amount.toLocaleString()}
                 </Text>
                 <Text style={[styles.invoiceStatus, { color: status.color }]}>{status.label}</Text>
                 {invoice.status === 'overdue' && (() => {
@@ -176,7 +177,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                   const interest = calculateLatePaymentInterest(invoice.amount, daysOverdue);
                   return (
                     <Text style={{ fontSize: 10, fontFamily: 'Inter_400Regular', color: SemanticColors.feedbackError, marginTop: 2 }}>
-                      Rente: €{interest.interest.toLocaleString('nl-NL', { minimumFractionDigits: 2 })} (8% handelsrente)
+                      {t('invoices.lateInterest', 'Interest')}: €{interest.interest.toLocaleString(undefined, { minimumFractionDigits: 2 })} ({t('invoices.commercialInterestRate', '8% commercial interest')})
                     </Text>
                   );
                 })()}
@@ -194,7 +195,8 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                         amount: autoInv.total,
                         description: `Factuur ${autoInv.invoiceNumber}`,
                       });
-                      const text = buildInvoiceShareText(autoInv, undefined, link?.url);
+                      hapticSuccess();
+                      const text = buildInvoiceShareText(autoInv, businessProfile.businessName, link?.url);
                       await Share.share({ message: text, title: t('invoices.sendReminder', 'Herinnering') + ` ${autoInv.invoiceNumber}` });
                     } else {
                       hapticSuccess();
@@ -216,7 +218,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                         amount: autoInv.total,
                         description: `Factuur ${autoInv.invoiceNumber}`,
                       });
-                      await generateInvoicePdf(autoInv, undefined, link?.url);
+                      await generateInvoicePdf(autoInv, businessProfile, link?.url);
                     } else {
                       Alert.alert(t('invoices.downloadPdf', 'PDF'), t('invoices.invoiceNotFound', 'Factuur niet gevonden in automatiseringssysteem.'));
                     }
@@ -235,7 +237,11 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                     });
                     if (link?.url) {
                       hapticSuccess();
-                      await Share.share({ message: `${t('invoices.paymentLink', 'Betaallink')}: €${invoice.amount.toLocaleString('nl-NL')}\n${link.url}`, title: t('invoices.paymentLink', 'Betaallink') });
+                      Alert.alert(
+                        t('invoices.paymentLinkCreated', 'Payment link created'),
+                        `${t('invoices.paymentLinkReady', 'Mollie payment link is ready to share')}:\n${link.url}`,
+                      );
+                      await Share.share({ message: `${t('invoices.paymentLink', 'Betaallink')}: €${invoice.amount.toLocaleString()}\n${link.url}`, title: t('invoices.paymentLink', 'Betaallink') });
                     } else {
                       Alert.alert(t('invoices.error', 'Fout'), t('invoices.paymentLinkFailed', 'Betaallink kon niet worden aangemaakt.'));
                     }
@@ -279,7 +285,7 @@ function QuoteItem({ quote, onPress }: { quote: Quote; onPress: () => void }) {
         <Text style={styles.quoteTitle} numberOfLines={1}>{quote.title}</Text>
       </View>
       <View style={styles.quoteRight}>
-        <Text style={styles.quoteAmount}>€{quote.total.toLocaleString('nl-NL')}</Text>
+        <Text style={styles.quoteAmount}>€{quote.total.toLocaleString()}</Text>
         <Text style={[styles.quoteStatus, { color: status.color }]}>{status.label}</Text>
       </View>
     </Pressable>
@@ -324,7 +330,7 @@ export default function FacturenScreen() {
   }, []);
 
   // Connect to services
-  const { jobs, addInvoiceFromJob } = useAppState();
+  const { jobs, addInvoiceFromJob, businessProfile } = useAppState();
   const { invoices, summary } = useCashFlow();
   const { findings: auditFindings } = useFinancialAuditFindings();
   const savings = useSavingsAggregation();
@@ -353,7 +359,7 @@ export default function FacturenScreen() {
         customer: inv.customerName,
         title: inv.projectName,
         status: inv.status === 'viewed' ? 'viewed' : inv.status === 'draft' ? 'draft' : 'sent',
-        sentDate: new Date(inv.issueDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }),
+        sentDate: new Date(inv.issueDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }),
         total: inv.amount,
         tiers: {
           good: Math.round(inv.amount * 0.75),
@@ -386,7 +392,7 @@ export default function FacturenScreen() {
       <View style={{ paddingHorizontal: Spacing.md }}>
         <ContractorDashboardHeader
           kpis={[
-            { icon: 'receipt', value: `€${pendingValue.toLocaleString('nl-NL')}`, label: t('invoices.outstanding', 'Openstaand') },
+            { icon: 'receipt', value: `€${pendingValue.toLocaleString()}`, label: t('invoices.outstanding', 'Openstaand') },
             { icon: 'timer', value: `${dso.currentDSO}d`, label: 'DSO', color: dso.trend === 'worsening' ? SemanticColors.feedbackError : dso.trend === 'improving' ? SemanticColors.feedbackSuccess : undefined },
             { icon: 'document-text', value: String(quotes.length), label: t('invoices.quotes', 'Offertes'), color: Palette.hermesOrange },
           ]}
@@ -423,7 +429,7 @@ export default function FacturenScreen() {
           <View style={styles.stickyOverdueLeft}>
             <Ionicons name="alert-circle" size={16} color={SemanticColors.feedbackError} />
             <Text style={styles.stickyOverdueText}>
-              {overdueInvoices.length} {t('invoices.invoicesOverdue', 'facturen verlopen')} · {'\u20AC'}{overdueValue.toLocaleString('nl-NL')}
+              {overdueInvoices.length} {t('invoices.invoicesOverdue', 'facturen verlopen')} · {'\u20AC'}{overdueValue.toLocaleString()}
             </Text>
           </View>
           <View style={styles.stickyOverdueActions}>
@@ -523,7 +529,7 @@ export default function FacturenScreen() {
                   <View key={approval.id} style={styles.approvalItem}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.approvalCustomer}>{approval.customerName}</Text>
-                      <Text style={styles.approvalRef}>{approval.quoteReference} · €{approval.amount.toLocaleString('nl-NL')}</Text>
+                      <Text style={styles.approvalRef}>{approval.quoteReference} · €{approval.amount.toLocaleString()}</Text>
                     </View>
                     <View style={styles.approvalActions}>
                       <Pressable
@@ -587,7 +593,7 @@ export default function FacturenScreen() {
                     const job = completedJobs[0];
                     setBottomSheet({
                       visible: true,
-                      title: `${t('invoices.createInvoiceFor', 'Factuur maken voor')} "${job.title}" (\u20AC${(job.agreedAmount || job.quotedAmount || 0).toLocaleString('nl-NL')})?`,
+                      title: `${t('invoices.createInvoiceFor', 'Factuur maken voor')} "${job.title}" (\u20AC${(job.agreedAmount || job.quotedAmount || 0).toLocaleString()})?`,
                       actions: [
                         {
                           label: t('invoices.create', 'Aanmaken'),
@@ -608,7 +614,7 @@ export default function FacturenScreen() {
                       title: t('invoices.chooseJobDesc', 'Kies een klus om te factureren:'),
                       actions: [
                         ...completedJobs.slice(0, 5).map(job => ({
-                          label: `${job.title} · \u20AC${(job.agreedAmount || job.quotedAmount || 0).toLocaleString('nl-NL')}`,
+                          label: `${job.title} · \u20AC${(job.agreedAmount || job.quotedAmount || 0).toLocaleString()}`,
                           icon: 'briefcase-outline' as const,
                           onPress: async () => {
                             closeBottomSheet();
@@ -660,7 +666,7 @@ export default function FacturenScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.overdueBannerTitle} numberOfLines={1}>{t('invoices.sendReminder', 'Stuur Herinnering')}</Text>
                   <Text style={styles.overdueBannerSub} numberOfLines={1}>
-                    {'\u20AC'}{overdueValue.toLocaleString('nl-NL')} verlopen · {overdueInvoices.length} facturen
+                    {'\u20AC'}{overdueValue.toLocaleString()} verlopen · {overdueInvoices.length} facturen
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={Palette.white} />
@@ -707,7 +713,7 @@ export default function FacturenScreen() {
                   <View key={seq.id} style={styles.dunningCard}>
                     <View style={styles.dunningHeader}>
                       <Text style={styles.dunningCustomer} numberOfLines={1}>{seq.customerName}</Text>
-                      <Text style={styles.dunningAmount}>{'\u20AC'}{seq.invoiceAmount.toLocaleString('nl-NL')}</Text>
+                      <Text style={styles.dunningAmount}>{'\u20AC'}{seq.invoiceAmount.toLocaleString()}</Text>
                     </View>
                     <View style={styles.dunningMeta}>
                       <View style={[styles.dunningStepBadge, { backgroundColor: (stepColors[seq.currentStep] || SemanticColors.textTertiary) + '14' }]}>
@@ -764,7 +770,7 @@ export default function FacturenScreen() {
                     </View>
                     <Text style={[styles.cashGapAmount, {
                       color: alert.severity === 'kritiek' ? SemanticColors.feedbackError : SemanticColors.feedbackWarning,
-                    }]}>{'\u20AC'}{alert.gapAmount.toLocaleString('nl-NL')}</Text>
+                    }]}>{'\u20AC'}{alert.gapAmount.toLocaleString()}</Text>
                   </View>
                 ))}
               </View>

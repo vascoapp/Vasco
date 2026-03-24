@@ -45,7 +45,7 @@ export function CashFlowDashboard() {
   ];
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(amount);
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'EUR' }).format(amount);
   };
 
   const getStatusStyle = (status: Invoice['status']) => {
@@ -220,7 +220,7 @@ export function CashFlowDashboard() {
           <Text style={styles.invoiceProject}>{invoice.projectName}</Text>
           <View style={styles.invoiceMeta}>
             <Text style={styles.invoiceDate}>
-              Vervaldatum: {new Date(invoice.dueDate).toLocaleDateString('nl-NL')}
+              Vervaldatum: {new Date(invoice.dueDate).toLocaleDateString(undefined)}
             </Text>
             {invoice.remindersSent > 0 && (
               <Text style={styles.invoiceReminders}>{invoice.remindersSent} herinnering(en)</Text>
@@ -415,7 +415,7 @@ export function CashFlowDashboard() {
                 <View style={styles.expenseInfo}>
                   <Text style={styles.expenseDescription}>{expense.description}</Text>
                   <Text style={styles.expenseDate}>
-                    {new Date(expense.date).toLocaleDateString('nl-NL')}
+                    {new Date(expense.date).toLocaleDateString(undefined)}
                     {expense.recurring && ' • Terugkerend'}
                   </Text>
                 </View>
@@ -503,13 +503,13 @@ export function CashFlowDashboard() {
                 <View style={styles.invoiceDetailSection}>
                   <Text style={styles.invoiceDetailLabel}>Factuurdatum</Text>
                   <Text style={styles.invoiceDetailValue}>
-                    {new Date(selectedInvoice.issueDate).toLocaleDateString('nl-NL')}
+                    {new Date(selectedInvoice.issueDate).toLocaleDateString(undefined)}
                   </Text>
                 </View>
                 <View style={styles.invoiceDetailSection}>
                   <Text style={styles.invoiceDetailLabel}>Vervaldatum</Text>
                   <Text style={styles.invoiceDetailValue}>
-                    {new Date(selectedInvoice.dueDate).toLocaleDateString('nl-NL')}
+                    {new Date(selectedInvoice.dueDate).toLocaleDateString(undefined)}
                   </Text>
                 </View>
               </View>

@@ -760,6 +760,7 @@ export const smartSchedulerService = new SmartSchedulerService();
 // ============================================
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useAppState } from '../state/AppState';
 
 export function useScheduler() {
   const [jobs, setJobs] = useState<ScheduledJob[]>(() => smartSchedulerService.getJobs());
@@ -803,17 +804,95 @@ export function useScheduler() {
 }
 
 export function useDaySchedule(date: string) {
-  const [schedule, setSchedule] = useState<DaySchedule>(() =>
-    smartSchedulerService.getDaySchedule(date)
-  );
+  const { jobs: appJobs, customers } = useAppState();
 
-  useEffect(() => {
-    setSchedule(smartSchedulerService.getDaySchedule(date));
-    const unsubscribe = smartSchedulerService.subscribe(() => {
-      setSchedule(smartSchedulerService.getDaySchedule(date));
+  const schedule = useMemo<DaySchedule>(() => {
+    // Filter AppState jobs for the given date
+    const dayJobs = appJobs.filter((j) => {
+      if (j.scheduledDate === date) return true;
+      // Also include in-progress jobs for today
+      if (date === new Date().toISOString().split('T')[0] && j.status === 'in-progress') return true;
+      return false;
     });
-    return unsubscribe;
-  }, [date]);
+
+    // Map real jobs → ScheduledJob shape
+    const mapped: ScheduledJob[] = dayJobs.map((job) => {
+      const customer = customers.find((c) => c.id === job.customerId);
+      const startTime = job.scheduledStartTime
+        ? `${date}T${job.scheduledStartTime}`
+        : `${date}T08:00:00`;
+      const durationMin = (job.estimatedDuration ?? 2) * 60;
+      const startMs = new Date(startTime).getTime();
+      const endTime = job.scheduledEndTime
+        ? `${date}T${job.scheduledEndTime}`
+        : new Date(startMs + durationMin * 60000).toISOString();
+
+      const statusMap: Record<string, ScheduledJob['status']> = {
+        'in-progress': 'in_progress',
+        completed: 'completed',
+        cancelled: 'cancelled',
+      };
+
+      const lifecycleMap: Record<string, JobLifecycleStatus> = {
+        lead: 'lead',
+        quoted: 'offerte',
+        accepted: 'geaccepteerd',
+        scheduled: 'ingepland',
+        'in-progress': 'bezig',
+        completed: 'gereed',
+        invoiced: 'gefactureerd',
+        paid: 'betaald',
+        cancelled: 'geannuleerd',
+      };
+
+      return {
+        id: job.id,
+        projectId: job.id,
+        projectName: job.title,
+        customerId: job.customerId ?? '',
+        customerName: customer?.name ?? '',
+        address: job.address
+          ? [job.address.street, job.address.city].filter(Boolean).join(', ')
+          : '',
+        startTime,
+        endTime,
+        duration: durationMin,
+        status: statusMap[job.status] ?? 'scheduled',
+        lifecycleStatus: lifecycleMap[job.status] ?? 'ingepland',
+        type: 'job',
+        priority: job.priority === 'emergency' ? 'urgent'
+          : job.priority === 'high' ? 'high'
+          : job.priority === 'low' ? 'low'
+          : 'medium',
+        isOutdoor: false,
+        weatherSensitive: false,
+        estimatedHours: job.estimatedDuration ?? 2,
+        quotedAmount: job.quotedAmount ?? job.agreedAmount ?? 0,
+      };
+    });
+
+    // Sort by start time
+    mapped.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
+    let totalWorkTime = 0;
+    let totalTravelTime = 0;
+    mapped.forEach((job, index) => {
+      totalWorkTime += job.duration;
+      if (index > 0) totalTravelTime += job.travelTime || 15;
+    });
+
+    const availableTime = 9 * 60;
+    const utilization = Math.round((totalWorkTime / availableTime) * 100);
+
+    return {
+      date,
+      jobs: mapped,
+      totalWorkTime,
+      totalTravelTime,
+      utilization: Math.min(utilization, 100),
+      weatherOverview: smartSchedulerService.getWeatherForecast(date),
+    };
+  }, [date, appJobs, customers]);
 
   return schedule;
 }
@@ -839,16 +918,61 @@ export function useWeatherAlerts() {
 }
 
 export function useJobLifecyclePipeline() {
-  const [jobs, setJobs] = useState<ScheduledJob[]>(() => smartSchedulerService.getJobs());
-  const [counts, setCounts] = useState(() => smartSchedulerService.getLifecycleCounts());
+  const { jobs: appJobs } = useAppState();
 
-  useEffect(() => {
-    const unsubscribe = smartSchedulerService.subscribe(() => {
-      setJobs(smartSchedulerService.getJobs());
-      setCounts(smartSchedulerService.getLifecycleCounts());
+  // Build lifecycle counts from real AppState jobs
+  const counts = useMemo(() => {
+    const c: Record<JobLifecycleStatus, number> = {
+      lead: 0, offerte: 0, geaccepteerd: 0, ingepland: 0,
+      bezig: 0, gereed: 0, gefactureerd: 0, betaald: 0, geannuleerd: 0,
+    };
+    const statusToLifecycle: Record<string, JobLifecycleStatus> = {
+      lead: 'lead',
+      quoted: 'offerte',
+      accepted: 'geaccepteerd',
+      scheduled: 'ingepland',
+      'in-progress': 'bezig',
+      completed: 'gereed',
+      invoiced: 'gefactureerd',
+      paid: 'betaald',
+      cancelled: 'geannuleerd',
+    };
+    appJobs.forEach((job) => {
+      const lifecycle = statusToLifecycle[job.status];
+      if (lifecycle) c[lifecycle]++;
     });
-    return unsubscribe;
-  }, []);
+    return c;
+  }, [appJobs]);
+
+  // Map AppState jobs → ScheduledJob[] for consumers that need the array
+  const jobs = useMemo<ScheduledJob[]>(() =>
+    appJobs.map((job) => ({
+      id: job.id,
+      projectId: job.id,
+      projectName: job.title,
+      customerId: job.customerId ?? '',
+      customerName: '',
+      address: job.address ? [job.address.street, job.address.city].filter(Boolean).join(', ') : '',
+      startTime: job.scheduledDate ? `${job.scheduledDate}T${job.scheduledStartTime ?? '08:00:00'}` : '',
+      endTime: job.scheduledDate ? `${job.scheduledDate}T${job.scheduledEndTime ?? '17:00:00'}` : '',
+      duration: (job.estimatedDuration ?? 2) * 60,
+      status: job.status === 'in-progress' ? 'in_progress' as const
+        : job.status === 'completed' ? 'completed' as const
+        : job.status === 'cancelled' ? 'cancelled' as const
+        : 'scheduled' as const,
+      lifecycleStatus: ({
+        lead: 'lead', quoted: 'offerte', accepted: 'geaccepteerd', scheduled: 'ingepland',
+        'in-progress': 'bezig', completed: 'gereed', invoiced: 'gefactureerd', paid: 'betaald', cancelled: 'geannuleerd',
+      } as Record<string, JobLifecycleStatus>)[job.status] ?? 'ingepland',
+      type: 'job' as const,
+      priority: job.priority === 'emergency' ? 'urgent' as const : job.priority as 'low' | 'medium' | 'high',
+      isOutdoor: false,
+      weatherSensitive: false,
+      estimatedHours: job.estimatedDuration ?? 2,
+      quotedAmount: job.quotedAmount ?? job.agreedAmount ?? 0,
+    })),
+    [appJobs],
+  );
 
   const advance = useCallback((jobId: string) => {
     return smartSchedulerService.advanceLifecycle(jobId);

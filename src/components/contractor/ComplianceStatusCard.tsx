@@ -309,7 +309,7 @@ function DeadlineItem({ deadline }: { deadline: ComplianceDeadline }) {
 
 // Helper function
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('nl-NL', {
+  return new Date(dateString).toLocaleDateString(undefined, {
     day: 'numeric',
     month: 'short',
   });

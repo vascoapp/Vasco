@@ -32,7 +32,7 @@ export function JobsList({ onSelectJob, onNewJob, onNewQuote }: JobsListProps) {
   const topInsight = insights.length > 0 ? insights[0] : null;
 
   const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString('nl-NL', {
+    new Date(date).toLocaleDateString(undefined, {
       day: 'numeric',
       month: 'short',
     });
@@ -261,7 +261,7 @@ export function JobsList({ onSelectJob, onNewJob, onNewQuote }: JobsListProps) {
                     <View style={styles.jobCardFooter}>
                       {(job.agreedAmount ?? job.quotedAmount) ? (
                         <Text style={styles.jobCardAmount}>
-                          {`€${(job.agreedAmount ?? job.quotedAmount!).toLocaleString('nl-NL')}`}
+                          {`€${(job.agreedAmount ?? job.quotedAmount!).toLocaleString(undefined)}`}
                         </Text>
                       ) : (
                         <Text style={styles.jobCardNoAmount}>

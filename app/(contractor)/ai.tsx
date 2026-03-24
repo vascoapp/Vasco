@@ -13,6 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { SafeArea } from '../../src/theme/spacing';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
+import { MS_PER_DAY } from '../../src/utils/timeConstants';
+import { useTranslation } from 'react-i18next';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { useAuth } from '../../src/context/AuthContext';
@@ -41,6 +43,7 @@ interface ProactiveAction {
 }
 
 export default function VascoScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
   const { jobs, invoices, quotes, customers } = useAppState();
@@ -82,16 +85,18 @@ export default function VascoScreen() {
     // 1. Overdue invoices → send reminder
     const overdueInvoices = invoices.filter((i: any) => i.status === 'overdue');
     overdueInvoices.forEach((inv: any) => {
-      const customerName = inv.customer || inv.customerName || 'klant';
+      const customerName = inv.customer || inv.customerName || t('ai.customer');
+      const invAmount = (inv.total || inv.amount || 0).toLocaleString(undefined);
+      const invRef = inv.reference || inv.id;
       actions.push({
         id: `overdue-${inv.id}`,
         icon: 'cash-outline',
         iconColor: SemanticColors.feedbackError,
-        title: `Betaalherinnering voor ${customerName}`,
-        reason: `Factuur ${inv.reference || inv.id} is ${Math.abs(inv.dueInDays || 7)} dagen achterstallig · €${(inv.total || inv.amount || 0).toLocaleString('nl-NL')}`,
-        actionLabel: 'Herinnering sturen',
+        title: t('ai.paymentReminder', { customer: customerName }),
+        reason: t('ai.invoiceOverdue', { reference: invRef, days: Math.abs(inv.dueInDays || 7), amount: invAmount }),
+        actionLabel: t('ai.sendReminder'),
         actionType: 'share',
-        shareText: `Beste ${customerName},\n\nHierbij een vriendelijke herinnering voor factuur ${inv.reference || inv.id} ter waarde van €${(inv.total || inv.amount || 0).toLocaleString('nl-NL')}.\n\nKunt u deze zo spoedig mogelijk voldoen?\n\nMet vriendelijke groet`,
+        shareText: t('ai.reminderMessage', { customer: customerName, reference: invRef, amount: invAmount }),
         priority: 'high',
       });
     });
@@ -102,13 +107,14 @@ export default function VascoScreen() {
       !invoices.some((i: any) => i.job === j.title || i.jobId === j.id)
     );
     completedNoInvoice.forEach((job: any) => {
+      const jobAmount = (job.quotedAmount || job.agreedAmount || 0).toLocaleString(undefined);
       actions.push({
         id: `invoice-${job.id}`,
         icon: 'receipt-outline',
         iconColor: Palette.hermesOrange,
-        title: `Factuur aanmaken voor "${job.title}"`,
-        reason: `Klus afgerond maar nog niet gefactureerd · €${(job.quotedAmount || job.agreedAmount || 0).toLocaleString('nl-NL')}`,
-        actionLabel: 'Factuur aanmaken',
+        title: t('ai.createInvoice', { title: job.title }),
+        reason: t('ai.jobNotInvoiced', { amount: jobAmount }),
+        actionLabel: t('ai.createInvoiceBtn'),
         actionType: 'navigate',
         route: `/(contractor)/facturen`,
         priority: 'high',
@@ -118,16 +124,18 @@ export default function VascoScreen() {
     // 3. Sent quotes without follow-up → nudge customer
     const sentQuotes = quotes.filter((q: any) => q.status === 'sent');
     sentQuotes.forEach((q: any) => {
-      const customerName = q.customer || 'klant';
+      const customerName = q.customer || t('ai.customer');
+      const qAmount = (q.amount || 0).toLocaleString(undefined);
+      const jobName = q.job || 'project';
       actions.push({
         id: `followup-${q.id}`,
         icon: 'chatbubble-outline',
         iconColor: SemanticColors.feedbackInfo,
-        title: `Opvolging offerte ${customerName}`,
-        reason: `Offerte voor "${q.job || 'project'}" is verstuurd maar nog niet beantwoord · €${(q.amount || 0).toLocaleString('nl-NL')}`,
-        actionLabel: 'Opvolging sturen',
+        title: t('ai.followUpQuote', { customer: customerName }),
+        reason: t('ai.quoteSentNotAnswered', { job: jobName, amount: qAmount }),
+        actionLabel: t('ai.sendFollowUp'),
         actionType: 'share',
-        shareText: `Beste ${customerName},\n\nIk wilde even informeren of u de offerte voor ${q.job || 'het project'} heeft kunnen bekijken.\n\nHeeft u vragen of wilt u wijzigingen bespreken? Ik hoor het graag.\n\nMet vriendelijke groet`,
+        shareText: t('ai.followUpMessage', { customer: customerName, job: jobName }),
         priority: 'medium',
       });
     });
@@ -138,17 +146,17 @@ export default function VascoScreen() {
     );
     upcomingJobs.forEach((job: any) => {
       const customer = customers.find((c: any) => c.id === job.customerId);
-      const daysUntil = Math.ceil((new Date(job.scheduledDate).getTime() - Date.now()) / 86400000);
+      const daysUntil = Math.ceil((new Date(job.scheduledDate).getTime() - Date.now()) / MS_PER_DAY);
       if (daysUntil > 0 && daysUntil <= 7) {
         actions.push({
           id: `prep-${job.id}`,
           icon: 'calendar-outline',
           iconColor: Palette.hermesOrange,
-          title: `${job.title} — over ${daysUntil} ${daysUntil === 1 ? 'dag' : 'dagen'}`,
-          reason: customer ? `${customer.name} · Bevestig afspraak en controleer materiaal` : 'Bevestig afspraak en controleer materiaal',
-          actionLabel: 'Bevestiging sturen',
+          title: t('ai.jobInDays', { title: job.title, count: daysUntil }),
+          reason: customer ? `${customer.name} · ${t('ai.confirmAppointment')}` : t('ai.confirmAppointment'),
+          actionLabel: t('ai.sendConfirmation'),
           actionType: 'share',
-          shareText: customer ? `Beste ${customer.name},\n\nDit is een bevestiging van onze afspraak voor ${job.title} op ${job.scheduledDate}.\n\nHeeft u nog vragen?\n\nMet vriendelijke groet` : undefined,
+          shareText: customer ? t('ai.confirmMessage', { customer: customer.name, title: job.title, date: job.scheduledDate }) : undefined,
           priority: 'medium',
         });
       }
@@ -163,7 +171,7 @@ export default function VascoScreen() {
           iconColor: Palette.hermesOrange,
           title: item.title,
           reason: item.description,
-          actionLabel: item.actionLabel || 'Goedkeuren',
+          actionLabel: item.actionLabel || t('ai.approve'),
           actionType: 'approve',
           priority: 'medium',
         });
@@ -184,7 +192,7 @@ export default function VascoScreen() {
       try {
         if (Platform.OS === 'web') {
           await navigator.clipboard.writeText(text);
-          alert('Gekopieerd naar klembord');
+          alert(t('ai.copiedToClipboard'));
         } else {
           await Share.share({ message: text });
         }
@@ -231,13 +239,13 @@ export default function VascoScreen() {
             <View style={{ flex: 1 }}>
               <Text style={s.statusTitle}>
                 {proactiveActions.length > 0
-                  ? `${proactiveActions.length} ${proactiveActions.length === 1 ? 'actie' : 'acties'} voor je klaar`
-                  : 'Alles bijgewerkt'}
+                  ? t('ai.actionsReady', { count: proactiveActions.length })
+                  : t('ai.allUpToDate')}
               </Text>
               <Text style={s.statusDesc}>
                 {proactiveActions.length > 0
-                  ? 'Vasco heeft je werk voorbereid — keur goed of pas aan'
-                  : 'Vasco scant je klussen, facturen en klanten. Zodra er iets te doen is, zie je het hier.'}
+                  ? t('ai.workPrepared')
+                  : t('ai.scanningDesc')}
               </Text>
             </View>
           </View>
@@ -265,7 +273,7 @@ export default function VascoScreen() {
                   value={editText || action.shareText}
                   onChangeText={setEditText}
                   multiline
-                  placeholder="Pas bericht aan..."
+                  placeholder={t('ai.editMessage')}
                   placeholderTextColor={SemanticColors.textTertiary}
                 />
               )}
@@ -298,7 +306,7 @@ export default function VascoScreen() {
                   style={s.dismissBtn}
                   onPress={() => handleDismiss(action.id)}
                 >
-                  <Text style={s.dismissBtnText}>Later</Text>
+                  <Text style={s.dismissBtnText}>{t('ai.later')}</Text>
                 </Pressable>
               </View>
             </View>
@@ -310,7 +318,7 @@ export default function VascoScreen() {
           <FadeIn delay={60}>
             <View style={s.doneRow}>
               <Ionicons name="checkmark-circle" size={16} color={SemanticColors.feedbackSuccess} />
-              <Text style={s.doneText}>{actioned.size} {actioned.size === 1 ? 'actie' : 'acties'} afgehandeld</Text>
+              <Text style={s.doneText}>{t('ai.actionsCompleted', { count: actioned.size })}</Text>
             </View>
           </FadeIn>
         )}
@@ -320,8 +328,8 @@ export default function VascoScreen() {
           <FadeIn delay={60}>
             <View style={s.emptyCard}>
               <Ionicons name="sparkles-outline" size={36} color={SemanticColors.textTertiary} />
-              <Text style={s.emptyTitle}>Niets te doen</Text>
-              <Text style={s.emptyDesc}>Vasco houdt je klussen, facturen en klanten in de gaten. Acties verschijnen hier automatisch.</Text>
+              <Text style={s.emptyTitle}>{t('ai.nothingToDo')}</Text>
+              <Text style={s.emptyDesc}>{t('ai.monitoringDesc')}</Text>
             </View>
           </FadeIn>
         )}
@@ -330,7 +338,7 @@ export default function VascoScreen() {
         {recommendations.length > 0 && (
           <FadeIn delay={80}>
             <View style={s.section}>
-              <Text style={s.sectionTitle}>Aanbevelingen</Text>
+              <Text style={s.sectionTitle}>{t('ai.recommendations')}</Text>
               {recommendations.map((rec: any) => (
                 <Pressable
                   key={rec.id}
@@ -353,17 +361,17 @@ export default function VascoScreen() {
         <FadeIn delay={120}>
           <View style={s.section}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={s.sectionTitle}>Automatiseringen</Text>
+              <Text style={s.sectionTitle}>{t('ai.automations')}</Text>
               {timeSaved.weeklyHoursSaved > 0 && (
-                <Text style={s.timeSaved}>{timeSaved.weeklyHoursSaved.toFixed(1)}u/week bespaard</Text>
+                <Text style={s.timeSaved}>{t('ai.hoursSavedPerWeek', { hours: timeSaved.weeklyHoursSaved.toFixed(1) })}</Text>
               )}
             </View>
             <View style={s.autoList}>
               {([
-                { key: 'autoInvoiceEnabled', icon: 'receipt-outline' as IconName, title: 'Auto-facturering', desc: 'Factuur wordt klaargezet wanneer een klus is afgerond', enabled: autoConfig.autoInvoiceEnabled },
-                { key: 'autoReminder', icon: 'notifications-outline' as IconName, title: 'Betaalherinneringen', desc: `Automatisch na ${autoConfig.autoReminderDays} dagen achterstallig`, enabled: autoConfig.autoReminderDays > 0 },
-                { key: 'autoFollowup', icon: 'chatbubble-outline' as IconName, title: 'Offerte opvolging', desc: `Automatisch opvolgen na ${autoConfig.autoFollowupDays} dagen`, enabled: autoConfig.autoFollowupDays > 0 },
-                { key: 'certExpiry', icon: 'shield-checkmark-outline' as IconName, title: 'Certificaat waarschuwing', desc: `${autoConfig.certExpiryWarningDays} dagen voor verlopen`, enabled: autoConfig.certExpiryWarningDays > 0 },
+                { key: 'autoInvoiceEnabled', icon: 'receipt-outline' as IconName, title: t('ai.autoInvoicing'), desc: t('ai.autoInvoicingDesc'), enabled: autoConfig.autoInvoiceEnabled },
+                { key: 'autoReminder', icon: 'notifications-outline' as IconName, title: t('ai.paymentReminders'), desc: t('ai.paymentRemindersDesc', { days: autoConfig.autoReminderDays }), enabled: autoConfig.autoReminderDays > 0 },
+                { key: 'autoFollowup', icon: 'chatbubble-outline' as IconName, title: t('ai.quoteFollowUp'), desc: t('ai.quoteFollowUpDesc', { days: autoConfig.autoFollowupDays }), enabled: autoConfig.autoFollowupDays > 0 },
+                { key: 'certExpiry', icon: 'shield-checkmark-outline' as IconName, title: t('ai.certWarning'), desc: t('ai.certWarningDesc', { days: autoConfig.certExpiryWarningDays }), enabled: autoConfig.certExpiryWarningDays > 0 },
               ]).map(auto => (
                 <Pressable
                   key={auto.key}
@@ -388,7 +396,7 @@ export default function VascoScreen() {
             </View>
             {automationResults.length > 0 && (
               <Text style={s.autoResultCount}>
-                {automationResults.filter(r => r.actionTaken).length} acties uitgevoerd deze week
+                {t('ai.actionsExecutedThisWeek', { count: automationResults.filter(r => r.actionTaken).length })}
               </Text>
             )}
           </View>
@@ -399,11 +407,11 @@ export default function VascoScreen() {
           <View style={s.linksRow}>
             <Pressable style={s.linkChip} onPress={() => router.push('/(contractor)/certificaten' as any)}>
               <Ionicons name="shield-checkmark-outline" size={14} color={SemanticColors.textSecondary} />
-              <Text style={s.linkChipText}>Certificaten</Text>
+              <Text style={s.linkChipText}>{t('ai.certificates')}</Text>
             </Pressable>
             <Pressable style={s.linkChip} onPress={() => router.push('/(contractor)/besparen' as any)}>
               <Ionicons name="wallet-outline" size={14} color={SemanticColors.textSecondary} />
-              <Text style={s.linkChipText}>Besparen</Text>
+              <Text style={s.linkChipText}>{t('ai.savings')}</Text>
             </Pressable>
           </View>
         </FadeIn>

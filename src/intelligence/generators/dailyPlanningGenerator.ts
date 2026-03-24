@@ -6,6 +6,7 @@ import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types'
 import { useDaySchedule } from '../../services/smartSchedulerService';
 import { logPrediction } from '../calibration';
 import { gt } from '../generatorTranslations';
+import { MS_PER_HOUR } from '../../utils/timeConstants';
 
 export const dailyPlanningGenerator: InsightGenerator = {
   id: 'daily-planning',
@@ -35,7 +36,7 @@ export function useDailyPlanningInsight(ctx: GeneratorContext): ScoredInsight | 
     const endCurrent = new Date(sortedJobs[i].endTime).getTime();
     const startNext = new Date(sortedJobs[i + 1].startTime).getTime();
     const gapMs = startNext - endCurrent;
-    const gapHrs = gapMs / 3600000;
+    const gapHrs = gapMs / MS_PER_HOUR;
     if (gapHrs > maxGapHours && gapHrs >= 1.5) {
       maxGapHours = gapHrs;
       gapStart = new Date(endCurrent).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });

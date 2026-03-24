@@ -88,8 +88,8 @@ export default function BedrijfScreen() {
   const handleSendReminder = useCallback(async (trackerId: string, customerName: string) => {
     try {
       await Share.share({
-        message: `Hoi, er staan nog open keuzes voor je project. Bekijk ze hier: https://vasco.app/c/demo`,
-        title: 'Herinnering',
+        message: t('customers.reminderMessage'),
+        title: t('customers.reminderTitle'),
       });
       // Update lastActivity to "Nu" after sharing
       setTrackers(prev =>
@@ -148,7 +148,7 @@ export default function BedrijfScreen() {
             <View style={styles.urgentBanner}>
               <Ionicons name="alert-circle" size={18} color={SemanticColors.feedbackError} />
               <Text style={styles.urgentText}>
-                {totalOverdue} beslissing{totalOverdue !== 1 ? 'en' : ''} achterstallig — klant herinneren
+                {t('customers.decisionsOverdue', { count: totalOverdue })}
               </Text>
             </View>
           </FadeIn>
@@ -157,9 +157,9 @@ export default function BedrijfScreen() {
         <FadeIn delay={50} duration={400}>
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Actieve trackers</Text>
+              <Text style={styles.sectionTitle}>{t('customers.activeTrackers')}</Text>
               <Pressable onPress={() => router.push('/(contractor)/decisions' as any)}>
-                <Text style={styles.seeAll}>Nieuw +</Text>
+                <Text style={styles.seeAll}>{t('customers.new')}</Text>
               </Pressable>
             </View>
 
@@ -169,8 +169,8 @@ export default function BedrijfScreen() {
                 onPress={() => router.push('/(contractor)/decisions' as any)}
               >
                 <Ionicons name="git-compare-outline" size={28} color={Palette.hermesOrange} />
-                <Text style={styles.emptyTitle}>Geen actieve beslissingentrackers</Text>
-                <Text style={styles.emptyDesc}>Start een tracker zodat klanten keuzes kunnen maken voor materialen, kleuren en planning</Text>
+                <Text style={styles.emptyTitle}>{t('customers.noActiveTrackers')}</Text>
+                <Text style={styles.emptyDesc}>{t('customers.startTrackerDesc')}</Text>
               </Pressable>
             ) : (
               <ScrollView
@@ -198,14 +198,14 @@ export default function BedrijfScreen() {
                           <Text style={styles.trackerCustomer}>{tracker.customerName}</Text>
                           <Text style={styles.trackerProject}>{tracker.project}</Text>
                           {(customerRevenueLookup[tracker.customerName] || 0) > 0 && (
-                            <Text style={styles.trackerRevenue}>{formatCurrency(customerRevenueLookup[tracker.customerName])} omzet</Text>
+                            <Text style={styles.trackerRevenue}>{formatCurrency(customerRevenueLookup[tracker.customerName])} {t('customers.revenue')}</Text>
                           )}
                         </View>
                         <View style={styles.trackerStats}>
                           <Text style={styles.trackerProgress}>{tracker.decided}/{tracker.totalDecisions}</Text>
                           {tracker.overdue > 0 && (
                             <View style={styles.overdueBadge}>
-                              <Text style={styles.overdueBadgeText}>{tracker.overdue} te laat</Text>
+                              <Text style={styles.overdueBadgeText}>{tracker.overdue} {t('customers.overdue')}</Text>
                             </View>
                           )}
                         </View>
@@ -217,7 +217,7 @@ export default function BedrijfScreen() {
                           onPress={() => handleSendReminder(tracker.id, tracker.customerName)}
                         >
                           <Ionicons name="notifications-outline" size={14} color={Palette.hermesOrange} />
-                          <Text style={styles.trackerActionText}>Herinnering</Text>
+                          <Text style={styles.trackerActionText}>{t('customers.reminder')}</Text>
                         </Pressable>
                         <Text style={styles.trackerTime}>{tracker.lastActivity}</Text>
                       </View>
@@ -231,7 +231,7 @@ export default function BedrijfScreen() {
             {completedTrackers.length > 0 && (
               <View style={styles.completedRow}>
                 <Ionicons name="checkmark-circle" size={16} color={SemanticColors.feedbackSuccess} />
-                <Text style={styles.completedText}>{completedTrackers.length} tracker{completedTrackers.length !== 1 ? 's' : ''} afgerond</Text>
+                <Text style={styles.completedText}>{t('customers.trackersCompleted', { count: completedTrackers.length })}</Text>
               </View>
             )}
           </View>
@@ -244,9 +244,9 @@ export default function BedrijfScreen() {
         <FadeIn delay={150} duration={400}>
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Klanten ({customers.length})</Text>
+              <Text style={styles.sectionTitle}>{t('customers.customersCount', { count: customers.length })}</Text>
               <Pressable onPress={() => router.push('/contractor/customer-crm' as any)}>
-                <Text style={styles.seeAll}>Alle bekijken</Text>
+                <Text style={styles.seeAll}>{t('customers.viewAll')}</Text>
               </Pressable>
             </View>
 
@@ -265,7 +265,7 @@ export default function BedrijfScreen() {
                 </Pressable>
               ))}
               {customers.length === 0 && (
-                <Text style={styles.noCustomers}>Nog geen klanten — voeg toe via +</Text>
+                <Text style={styles.noCustomers}>{t('customers.noCustomers')}</Text>
               )}
             </View>
           </View>
@@ -280,12 +280,12 @@ export default function BedrijfScreen() {
           <Pressable style={styles.modalOverlay} onPress={() => setShowAddModal(false)}>
             <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
               <View style={styles.modalHandle} />
-              <Text style={styles.modalTitle}>Nieuwe klant</Text>
-              <TextInput style={styles.modalInput} value={newName} onChangeText={setNewName} placeholder="Naam" placeholderTextColor={SemanticColors.textTertiary} autoFocus />
-              <TextInput style={styles.modalInput} value={newEmail} onChangeText={setNewEmail} placeholder="E-mail" placeholderTextColor={SemanticColors.textTertiary} keyboardType="email-address" autoCapitalize="none" />
-              <TextInput style={styles.modalInput} value={newPhone} onChangeText={setNewPhone} placeholder="Telefoon" placeholderTextColor={SemanticColors.textTertiary} keyboardType="phone-pad" />
+              <Text style={styles.modalTitle}>{t('customers.newCustomer')}</Text>
+              <TextInput style={styles.modalInput} value={newName} onChangeText={setNewName} placeholder={t('customers.name')} placeholderTextColor={SemanticColors.textTertiary} autoFocus />
+              <TextInput style={styles.modalInput} value={newEmail} onChangeText={setNewEmail} placeholder={t('customers.emailPlaceholder')} placeholderTextColor={SemanticColors.textTertiary} keyboardType="email-address" autoCapitalize="none" />
+              <TextInput style={styles.modalInput} value={newPhone} onChangeText={setNewPhone} placeholder={t('customers.phonePlaceholder')} placeholderTextColor={SemanticColors.textTertiary} keyboardType="phone-pad" />
               <Pressable style={[styles.modalSubmit, !newName.trim() && { opacity: 0.5 }]} onPress={handleAddCustomer} disabled={!newName.trim()}>
-                <Text style={styles.modalSubmitText}>Toevoegen</Text>
+                <Text style={styles.modalSubmitText}>{t('customers.addBtn')}</Text>
               </Pressable>
             </Pressable>
           </Pressable>

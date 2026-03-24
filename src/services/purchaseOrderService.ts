@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { MS_PER_DAY } from '../utils/timeConstants';
 
 // =============================================================================
 // TYPES
@@ -75,9 +76,9 @@ const mockOrders: PurchaseOrder[] = [
     total: 235.95,
     jobId: 'j-1',
     jobTitle: 'CV-ketel onderhoud — Fam. de Groot',
-    expectedDelivery: new Date(now.getTime() + 2 * 86400000),
-    createdAt: new Date(now.getTime() - 3 * 86400000),
-    updatedAt: new Date(now.getTime() - 1 * 86400000),
+    expectedDelivery: new Date(now.getTime() + 2 * MS_PER_DAY),
+    createdAt: new Date(now.getTime() - 3 * MS_PER_DAY),
+    updatedAt: new Date(now.getTime() - 1 * MS_PER_DAY),
   },
   {
     id: 'po-2',
@@ -95,10 +96,10 @@ const mockOrders: PurchaseOrder[] = [
     total: 3188.35,
     jobId: 'j-2',
     jobTitle: 'Warmtepomp installatie — Bakkerij Jansen',
-    expectedDelivery: new Date(now.getTime() - 2 * 86400000),
-    actualDelivery: new Date(now.getTime() - 1 * 86400000),
-    createdAt: new Date(now.getTime() - 10 * 86400000),
-    updatedAt: new Date(now.getTime() - 1 * 86400000),
+    expectedDelivery: new Date(now.getTime() - 2 * MS_PER_DAY),
+    actualDelivery: new Date(now.getTime() - 1 * MS_PER_DAY),
+    createdAt: new Date(now.getTime() - 10 * MS_PER_DAY),
+    updatedAt: new Date(now.getTime() - 1 * MS_PER_DAY),
   },
   {
     id: 'po-3',

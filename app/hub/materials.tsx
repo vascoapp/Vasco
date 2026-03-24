@@ -38,7 +38,7 @@ function getCategoryStyle(category?: string): { icon: IconName; color: string } 
 
 function formatDate(dateStr: string): string {
   if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString('nl-NL', {
+  return new Date(dateStr).toLocaleDateString(undefined, {
     day: 'numeric',
     month: 'short',
   });
@@ -143,7 +143,7 @@ function MaterialDetailPanel({ material }: { material: Material }) {
                 {po.supplierName ?? 'Onbekend'}
               </Text>
               <Text style={styles.priceAmount}>
-                {'\u20AC'}{po.price.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}
+                {'\u20AC'}{po.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </Text>
               {po.isSale && (
                 <View style={styles.saleBadge}>

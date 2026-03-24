@@ -3,7 +3,7 @@
 // =============================================================================
 
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Share, Platform } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
 
 interface ErrorBoundaryProps {
@@ -36,17 +36,35 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
         return this.props.fallback;
       }
 
+      const errorDetails = this.state.error?.message || 'Unknown error';
+      const handleCopyError = async () => {
+        const details = `Error: ${errorDetails}\n\nStack: ${this.state.error?.stack || 'N/A'}`;
+        try {
+          if (Platform.OS === 'web') {
+            await navigator.clipboard.writeText(details);
+          } else {
+            await Share.share({ message: details, title: 'Error details' });
+          }
+        } catch {}
+      };
+
       return (
         <View style={styles.container}>
-          <Text style={styles.title}>Er is iets misgegaan</Text>
+          <Text style={styles.title}>Something went wrong</Text>
           <Text style={styles.message}>
-            {this.state.error?.message || 'Onbekende fout'}
+            {errorDetails}
           </Text>
           <Pressable
             style={({ pressed }) => [styles.button, pressed && { opacity: 0.8 }]}
             onPress={() => this.setState({ hasError: false, error: null })}
           >
-            <Text style={styles.buttonText}>Opnieuw proberen</Text>
+            <Text style={styles.buttonText}>Try again</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.copyButton, pressed && { opacity: 0.8 }]}
+            onPress={handleCopyError}
+          >
+            <Text style={styles.copyButtonText}>Copy error details</Text>
           </Pressable>
         </View>
       );
@@ -88,5 +106,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: 'Inter_500Medium',
     color: '#FFFFFF',
+  },
+  copyButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    marginTop: 12,
+  },
+  copyButtonText: {
+    fontSize: 15,
+    fontFamily: 'Inter_500Medium',
+    color: SemanticColors.textSecondary,
   },
 });

@@ -39,6 +39,8 @@ export type Job = {
   scheduledEndTime?: string;
   estimatedDuration?: number;
   // Financial
+  quoteId?: string;
+  invoiceId?: string;
   quotedAmount?: number;
   agreedAmount?: number;
   // Work details

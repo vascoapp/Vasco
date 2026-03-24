@@ -28,7 +28,7 @@ export default function WorkScreen() {
   const totalOverdue = overdueInvoices.reduce((sum, i) => sum + i.amount, 0);
 
   const formatCurrency = (amount: number) =>
-    `€${amount.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}`;
+    `€${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
   const getQuoteRisk = (quoteId: string) =>
     priceRisks.find((r) => r.quoteId === quoteId);

@@ -163,7 +163,7 @@ export function HoursSavedWidget({ onPress }: { onPress?: () => void }) {
       </View>
       <View style={styles.widgetValueBadge}>
         <Text style={styles.widgetValueText}>
-          €{dashboard.moneyValueThisMonth.toLocaleString('nl-NL')}
+          €{dashboard.moneyValueThisMonth.toLocaleString(undefined)}
         </Text>
       </View>
     </Pressable>

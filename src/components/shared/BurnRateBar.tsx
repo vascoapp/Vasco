@@ -49,7 +49,7 @@ function ZoneBurnBar({ zone }: { zone: ZoneBudget }) {
         <View style={styles.zoneStats}>
           <Text style={[styles.zonePercent, { color: barColor }]}>{zone.budgetPercent}%</Text>
           <Text style={styles.zoneBudget}>
-            €{zone.budgetSpent.toLocaleString('nl-NL')} / €{zone.budgetTotal.toLocaleString('nl-NL')}
+            €{zone.budgetSpent.toLocaleString(undefined)} / €{zone.budgetTotal.toLocaleString(undefined)}
           </Text>
         </View>
       </View>
@@ -79,7 +79,7 @@ export function BurnRateBar({ zones, totalBudget, totalSpent, overallPercent }: 
         <View>
           <Text style={styles.summaryLabel}>Totaal verbruik</Text>
           <Text style={styles.summaryValue}>
-            €{totalSpent.toLocaleString('nl-NL')} / €{totalBudget.toLocaleString('nl-NL')}
+            €{totalSpent.toLocaleString(undefined)} / €{totalBudget.toLocaleString(undefined)}
           </Text>
         </View>
         <View style={[styles.overallBadge, { backgroundColor: getBarColor(overallPercent) + '20' }]}>

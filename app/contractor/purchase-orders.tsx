@@ -35,7 +35,7 @@ export default function PurchaseOrdersScreen() {
   const router = useRouter();
   const { orders, submit, updateStatus } = usePurchaseOrders();
   const stats = usePOStats();
-  const { suppliers } = useAppState();
+  const { suppliers, jobs } = useAppState();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(() => { setRefreshing(true); setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600); }, []);
@@ -85,7 +85,7 @@ export default function PurchaseOrdersScreen() {
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>{t('purchaseOrders.title', 'Inkooporders')}</Text>
           <Text style={styles.headerSubtitle}>
-            {stats.pendingOrders} {t('purchaseOrders.pending', 'openstaand')} · €{stats.pendingValue.toLocaleString('nl-NL')}
+            {stats.pendingOrders} {t('purchaseOrders.pending', 'openstaand')} · €{stats.pendingValue.toLocaleString(undefined)}
           </Text>
         </View>
       </View>
@@ -160,7 +160,7 @@ export default function PurchaseOrdersScreen() {
                   )}
                 </View>
                 <View style={styles.orderRight}>
-                  <Text style={styles.orderAmount}>€{order.total.toLocaleString('nl-NL')}</Text>
+                  <Text style={styles.orderAmount}>€{order.total.toLocaleString(undefined)}</Text>
                   <Text style={[styles.orderStatus, { color: config.color }]}>{t(config.labelKey, config.fallback)}</Text>
                 </View>
               </Pressable>
@@ -172,22 +172,22 @@ export default function PurchaseOrdersScreen() {
                     <View key={item.id} style={styles.lineItem}>
                       <Text style={styles.lineDesc} numberOfLines={1}>{item.description}</Text>
                       <Text style={styles.lineQty}>{item.quantity} {item.unit}</Text>
-                      <Text style={styles.lineTotal}>€{item.total.toLocaleString('nl-NL')}</Text>
+                      <Text style={styles.lineTotal}>€{item.total.toLocaleString(undefined)}</Text>
                     </View>
                   ))}
 
                   {/* Totals */}
                   <View style={styles.totalsRow}>
                     <Text style={styles.totalsLabel}>{t('purchaseOrders.subtotal', 'Subtotaal')}</Text>
-                    <Text style={styles.totalsValue}>€{order.subtotal.toLocaleString('nl-NL')}</Text>
+                    <Text style={styles.totalsValue}>€{order.subtotal.toLocaleString(undefined)}</Text>
                   </View>
                   <View style={styles.totalsRow}>
                     <Text style={styles.totalsLabel}>BTW {order.vatRate}%</Text>
-                    <Text style={styles.totalsValue}>€{order.vatAmount.toLocaleString('nl-NL')}</Text>
+                    <Text style={styles.totalsValue}>€{order.vatAmount.toLocaleString(undefined)}</Text>
                   </View>
                   <View style={[styles.totalsRow, styles.totalsFinal]}>
                     <Text style={styles.totalsFinalLabel}>{t('purchaseOrders.total', 'Totaal')}</Text>
-                    <Text style={styles.totalsFinalValue}>€{order.total.toLocaleString('nl-NL')}</Text>
+                    <Text style={styles.totalsFinalValue}>€{order.total.toLocaleString(undefined)}</Text>
                   </View>
 
                   {/* Expected delivery */}
@@ -195,7 +195,7 @@ export default function PurchaseOrdersScreen() {
                     <View style={styles.deliveryRow}>
                       <Ionicons name="calendar-outline" size={14} color={SemanticColors.textSecondary} />
                       <Text style={styles.deliveryText}>
-                        {t('purchaseOrders.expectedDelivery', 'Verwachte levering')}: {order.expectedDelivery.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
+                        {t('purchaseOrders.expectedDelivery', 'Verwachte levering')}: {order.expectedDelivery.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
                       </Text>
                     </View>
                   )}
@@ -216,8 +216,48 @@ export default function PurchaseOrdersScreen() {
             </View>
           );
         })}
-        <View style={{ height: 40 }} />
+        <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* FAB — new purchase order */}
+      <Pressable
+        style={({ pressed }) => [styles.fab, pressed && { opacity: 0.9, transform: [{ scale: 0.96 }] }]}
+        onPress={() => {
+          const jobsWithMaterials = jobs.filter((j: any) => j.materials && j.materials.length > 0).slice(0, 5);
+          if (jobsWithMaterials.length === 0) {
+            Alert.alert(
+              t('purchaseOrders.newPO', 'New Purchase Order'),
+              t('purchaseOrders.noJobsWithMaterials', 'No jobs with materials found. Add materials to a job first.'),
+            );
+            return;
+          }
+          Alert.alert(
+            t('purchaseOrders.newPO', 'New Purchase Order'),
+            t('purchaseOrders.selectJob', 'Select a job to create a purchase order from its materials list'),
+            [
+              ...jobsWithMaterials.map((j: any) => ({
+                text: j.title,
+                onPress: () => {
+                  hapticSuccess();
+                  const matCount = j.materials?.length ?? 0;
+                  Alert.alert(
+                    t('purchaseOrders.poCreated', 'PO Created'),
+                    t('purchaseOrders.poCreatedDesc', {
+                      defaultValue: 'PO created for "{{title}}" with {{count}} materials',
+                      title: j.title,
+                      count: matCount,
+                    }),
+                  );
+                },
+              })),
+              { text: t('purchaseOrders.cancel', 'Cancel'), style: 'cancel' as const },
+            ],
+          );
+        }}
+        accessibilityLabel={t('purchaseOrders.newPO', 'New Purchase Order')}
+      >
+        <Ionicons name="add" size={28} color={Palette.white} />
+      </Pressable>
     </View>
   );
 }
@@ -315,4 +355,20 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   actionButtonText: { fontSize: 13, fontFamily: 'Manrope_600SemiBold', color: Palette.hermesOrange },
+  fab: {
+    position: 'absolute' as const,
+    right: SafeArea.side,
+    bottom: 110,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Palette.hermesOrange,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+  },
 });

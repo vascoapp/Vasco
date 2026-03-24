@@ -11,7 +11,7 @@ import type { AutoInvoice } from './invoiceAutomationService';
 // ── Number formatting (Dutch) ──────────────────────────────
 
 const fmt = (n: number) =>
-  n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 // ── HTML Template ──────────────────────────────────────────
 
@@ -23,12 +23,12 @@ function buildInvoiceHtml(
   vatNumber: string,
   paymentUrl?: string,
 ): string {
-  const issueDate = invoice.issueDate.toLocaleDateString('nl-NL', {
+  const issueDate = invoice.issueDate.toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
-  const dueDate = invoice.dueDate.toLocaleDateString('nl-NL', {
+  const dueDate = invoice.dueDate.toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -210,12 +210,17 @@ export function buildInvoiceShareText(invoice: AutoInvoice, businessName?: strin
     `BTW: €${fmt(invoice.vatAmount)}`,
     `Totaal: €${fmt(invoice.total)}`,
     ``,
-    `Vervaldatum: ${invoice.dueDate.toLocaleDateString('nl-NL')}`,
+    `Vervaldatum: ${invoice.dueDate.toLocaleDateString(undefined)}`,
     `Vermeld "${invoice.invoiceNumber}" bij betaling.`,
   ];
 
   if (paymentUrl) {
     parts.push(``, `Betaal direct: ${paymentUrl}`);
+  }
+
+  // Customer portal link — primes the portal feature
+  if (invoice.customerId) {
+    parts.push(``, `Track your project: https://app.vasco.dev/customer/${invoice.customerId}`);
   }
 
   return parts.join('\n');

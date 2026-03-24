@@ -189,11 +189,16 @@ export default function OnboardingScreen() {
 
     // Seed data for new users — so screens aren't empty
     const tradeLabel = selectedTrades[0] ?? 'general';
+    const seedJobTitle = tradeLabel === 'plumbing'
+      ? t('onboarding.seedJobPlumbing', 'Boiler maintenance')
+      : tradeLabel === 'electrical'
+        ? t('onboarding.seedJobElectrical', 'Fuse box replacement')
+        : t('onboarding.seedJobGeneral', 'Example job');
     const seedJobs = [
-      { id: `j-seed-1`, title: tradeLabel === 'plumbing' ? 'CV-ketel onderhoud' : tradeLabel === 'electrical' ? 'Groepenkast vernieuwen' : 'Klus voorbeeld', customerId: null, description: 'Voorbeeldklus — verwijder of bewerk deze', status: 'lead' as const, trade: tradeLabel, priority: 'normal' as const, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: `j-seed-1`, title: seedJobTitle, customerId: null, description: t('onboarding.seedJobDescription', 'Example job — delete or edit this'), status: 'lead' as const, trade: tradeLabel, priority: 'normal' as const, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
     ];
     const seedCustomers = [
-      { id: 'c-seed-1', name: 'Fam. de Vries', email: 'devries@voorbeeld.nl', phone: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 'c-seed-1', name: t('onboarding.seedCustomer', 'Example customer'), email: '', phone: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
     ];
     await AsyncStorage.setItem('@vasco_jobs', JSON.stringify(seedJobs)).catch(() => {});
     await AsyncStorage.setItem('@vasco_customers', JSON.stringify(seedCustomers)).catch(() => {});
@@ -363,7 +368,7 @@ export default function OnboardingScreen() {
             <View style={styles.complianceInfoCard}>
               <Ionicons name="shield-checkmark-outline" size={18} color={Palette.hermesOrange} style={{ marginTop: 1 }} />
               <Text style={styles.complianceInfoText}>
-                Vasco bewaakt je certificaten en waarschuwt bij verlopen. Je ontvangt ook meldingen voor BTW-deadlines en verzekeringen.
+                {t('onboarding.complianceInfo', 'Vasco monitors your certifications and warns on expiry. You also receive notifications for VAT deadlines and insurance.')}
               </Text>
             </View>
           </View>
@@ -439,7 +444,7 @@ export default function OnboardingScreen() {
             <View style={styles.settingsHint}>
               <Ionicons name="information-circle-outline" size={16} color={SemanticColors.textTertiary} />
               <Text style={styles.settingsHintText}>
-                Je kunt koppelingen, meldingen en sjablonen later instellen via Compliance.
+                {t('onboarding.settingsHint', 'You can set up integrations, notifications and templates later via Compliance.')}
               </Text>
             </View>
 

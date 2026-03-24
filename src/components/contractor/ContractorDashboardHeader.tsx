@@ -50,6 +50,7 @@ export function ContractorDashboardHeader({ kpis }: ContractorDashboardHeaderPro
             key={index}
             style={({ pressed }) => [styles.kpiWrapper, pressed && { opacity: 0.85 }]}
             onPress={kpi.onPress}
+            accessibilityLabel={`${kpi.label}: ${typeof kpi.value === 'string' ? kpi.value : ''}`}
           >
             {content}
           </Pressable>

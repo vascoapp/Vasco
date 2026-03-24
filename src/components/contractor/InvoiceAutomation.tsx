@@ -98,7 +98,7 @@ const InvoiceCard: React.FC<{
         <View style={styles.metaItem}>
           <Ionicons name="calendar-outline" size={14} color={SemanticColors.textSecondary} />
           <Text style={styles.metaText}>
-            {invoice.issueDate.toLocaleDateString('nl-NL')}
+            {invoice.issueDate.toLocaleDateString(undefined)}
           </Text>
         </View>
         <View style={styles.metaDivider} />
@@ -116,7 +116,7 @@ const InvoiceCard: React.FC<{
           >
             {daysOverdue > 0
               ? `${daysOverdue} dagen te laat`
-              : `Vervalt ${invoice.dueDate.toLocaleDateString('nl-NL')}`}
+              : `Vervalt ${invoice.dueDate.toLocaleDateString(undefined)}`}
           </Text>
         </View>
       </View>
@@ -159,7 +159,7 @@ const InvoiceCard: React.FC<{
                     color={reminder.opened ? Palette.green500 : SemanticColors.textSecondary}
                   />
                   <Text style={styles.reminderText}>
-                    {reminder.type} - {reminder.date.toLocaleDateString('nl-NL')}
+                    {reminder.type} - {reminder.date.toLocaleDateString(undefined)}
                   </Text>
                   {reminder.opened && (
                     <Text style={styles.reminderOpened}>Geopend</Text>

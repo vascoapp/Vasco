@@ -9,6 +9,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { isSupabaseConfigured } from '../lib/supabase';
+import { MS_PER_DAY } from '../utils/timeConstants';
 import {
   insertCalibrationEntry as dbInsertCalibration,
   resolveCalibrationEntry as dbResolveCalibration,
@@ -184,7 +185,7 @@ export async function getCalibrationScores(): Promise<CalibrationScore[]> {
     let weightedAccurate = 0;
     let totalWeight = 0;
     for (const entry of resolved) {
-      const ageDays = (now - new Date(entry.resolvedAt!).getTime()) / 86400000;
+      const ageDays = (now - new Date(entry.resolvedAt!).getTime()) / MS_PER_DAY;
       const weight = ageDays < 7 ? 1.0
         : ageDays < 14 ? 0.8
         : ageDays < 30 ? 0.5
@@ -199,7 +200,7 @@ export async function getCalibrationScores(): Promise<CalibrationScore[]> {
     const resolvedCount = resolved.length;
     const volumeScore = Math.min(1, resolvedCount / 20); // saturates at 20 resolutions
     const recentResolutions = resolved.filter(e => {
-      const age = (now - new Date(e.resolvedAt!).getTime()) / 86400000;
+      const age = (now - new Date(e.resolvedAt!).getTime()) / MS_PER_DAY;
       return age < 14;
     }).length;
     const recencyScore = resolvedCount > 0 ? Math.min(1, recentResolutions / Math.max(1, resolvedCount * 0.3)) : 0;
@@ -230,7 +231,7 @@ export async function resolveByGenerator(
   generatorId: string,
   actualValue: number,
   tolerancePercent: number = 15,
-  maxAge: number = 30 * 86400000, // only resolve predictions < 30 days old
+  maxAge: number = 30 * MS_PER_DAY, // only resolve predictions < 30 days old
 ): Promise<number> {
   const store = await loadStore();
   let resolved = 0;

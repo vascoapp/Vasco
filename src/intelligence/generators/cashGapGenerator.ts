@@ -9,6 +9,7 @@ import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { logPrediction } from '../calibration';
 import { getSeasonalMultiplier, detectAnomaly } from '../adaptiveThresholds';
 import { gt } from '../generatorTranslations';
+import { MS_PER_DAY } from '../../utils/timeConstants';
 
 export const cashGapGenerator: InsightGenerator = {
   id: 'cash-gap',
@@ -69,7 +70,7 @@ export function useCashGapInsight(ctx: GeneratorContext): ScoredInsight | null {
         const prev = new Date(seq.steps[i - 1].sentDate || seq.steps[i - 1].scheduledDate || '');
         const curr = new Date(seq.steps[i].sentDate || seq.steps[i].scheduledDate || '');
         if (prev.getTime() > 0 && curr.getTime() > 0) {
-          totalIntervals += (curr.getTime() - prev.getTime()) / 86400000;
+          totalIntervals += (curr.getTime() - prev.getTime()) / MS_PER_DAY;
           intervalCount++;
         }
       }

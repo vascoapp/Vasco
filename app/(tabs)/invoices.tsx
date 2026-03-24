@@ -12,7 +12,7 @@ import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
 
 const formatCurrency = (amount: number) =>
-  `€${amount.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}`;
+  `€${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
 export default function InvoicesScreen() {
   const router = useRouter();

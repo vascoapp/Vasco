@@ -9,6 +9,7 @@ import { recordMetricSnapshot, loadProfile } from './learningStorage';
 import type { ContractorLearningProfile } from './learningStorage';
 import { logPrediction } from './calibration';
 import { syncJobOutcome, syncInvoiceOutcome } from './cloudSync';
+import { MS_PER_DAY, MS_PER_HOUR } from '../utils/timeConstants';
 
 import type { AccountingLoopState, LoopStage } from '../services/accountingLoopService';
 
@@ -44,7 +45,7 @@ export async function onStageTransition(
       const lastJob = loop.history.find(h => h.stage === 'job_in_progress');
       const completedAt = new Date().toISOString();
       const startedAt = lastJob?.timestamp ?? completedAt;
-      const hoursWorked = (Date.now() - new Date(startedAt).getTime()) / 3600000;
+      const hoursWorked = (Date.now() - new Date(startedAt).getTime()) / MS_PER_HOUR;
 
       // Use actual cost data from job metadata when available; fall back to heuristic
       const metadata = loop.history[loop.history.length - 1]?.metadata;
@@ -101,7 +102,7 @@ export async function onStageTransition(
       const paidAt = new Date().toISOString();
       const issuedAt = invoiceSent?.timestamp ?? paidAt;
       const daysToPayment = Math.round(
-        (Date.now() - new Date(issuedAt).getTime()) / 86400000
+        (Date.now() - new Date(issuedAt).getTime()) / MS_PER_DAY
       );
 
       await syncInvoiceOutcome(userId, {
@@ -109,7 +110,7 @@ export async function onStageTransition(
         customerId: loop.customerId,
         amount: loop.amounts.invoiced,
         issuedAt,
-        dueAt: new Date(new Date(issuedAt).getTime() + 14 * 86400000).toISOString(),
+        dueAt: new Date(new Date(issuedAt).getTime() + 14 * MS_PER_DAY).toISOString(),
         paidAt,
         daysToPayment,
         isOverdue: daysToPayment > 14,
@@ -165,7 +166,7 @@ export async function getAIRecommendation(loop: AccountingLoopState): Promise<{
 } | null> {
   const daysSinceLastAction = (Date.now() - new Date(
     loop.history[loop.history.length - 1]?.timestamp ?? Date.now()
-  ).getTime()) / 86400000;
+  ).getTime()) / MS_PER_DAY;
 
   // Load contractor learning profile for personalized thresholds
   const profile = await loadProfile();

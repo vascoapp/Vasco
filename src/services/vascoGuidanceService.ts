@@ -11,8 +11,9 @@ import { useMemo, useEffect, useState } from 'react';
 // Learning Engine imports
 import { useLearningProfile, incrementInsightsShown, setActiveRole } from '../intelligence/learningStorage';
 import { useAllGenerators } from '../intelligence/generators';
-import type { ScoredInsight, UserRole, ScreenContext, GeneratorLanguage } from '../intelligence/generators';
-import { scoreAndRankInsights, refreshCalibrationCache } from '../intelligence/insightScorer';
+import type { ScoredInsight, UserRole, ScreenContext, GeneratorLanguage, DataCounts } from '../intelligence/generators';
+import { scoreAndRankInsights, refreshCalibrationCache, refreshApprovalRateCache } from '../intelligence/insightScorer';
+import { useAppState } from '../state/AppState';
 
 // Re-export types for consumers
 export type { ScoredInsight } from '../intelligence/generators';
@@ -38,10 +39,19 @@ export function useVascoGuidance(role: UserRole, screen: ScreenContext): ScoredI
     return () => clearInterval(interval);
   }, []);
 
-  // Load calibration scores into scorer cache on mount
+  // Load calibration scores + approval rate cache on mount
   useEffect(() => {
     refreshCalibrationCache();
+    refreshApprovalRateCache();
   }, []);
+
+  // Compute data counts for generator thresholds (suppress noise on low data)
+  const { jobs, invoices, quotes } = useAppState();
+  const dataCounts = useMemo<DataCounts>(() => ({
+    jobCount: jobs?.length ?? 0,
+    invoiceCount: invoices?.length ?? 0,
+    quoteCount: quotes?.length ?? 0,
+  }), [jobs?.length, invoices?.length, quotes?.length]);
 
   // Build generator context
   const ctx = useMemo(() => ({
@@ -52,8 +62,8 @@ export function useVascoGuidance(role: UserRole, screen: ScreenContext): ScoredI
     language: currentLanguage,
   }), [role, screen, profile, now, currentLanguage]);
 
-  // Run all generators (each is a hook internally)
-  const rawInsights = useAllGenerators(ctx);
+  // Run all generators (each is a hook internally), with data threshold filtering
+  const rawInsights = useAllGenerators(ctx, dataCounts);
 
   // Score, rank, and cap insights (role-aware weights + diversity enforcement)
   const scoredInsights = useMemo(() => {

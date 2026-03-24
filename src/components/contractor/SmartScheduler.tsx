@@ -104,11 +104,11 @@ export function SmartScheduler() {
   };
 
   const formatTime = (dateStr: string) => {
-    return new Date(dateStr).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+    return new Date(dateStr).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' });
+    return new Date(dateStr).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
   };
 
   const openJob = (job: ScheduledJob) => {
@@ -203,7 +203,7 @@ export function SmartScheduler() {
     const isToday = dateStr === new Date().toISOString().split('T')[0];
     const isSelected = dateStr === selectedDate;
     const weatherStyle = getWeatherIcon(schedule.weatherOverview.condition);
-    const dayOfWeek = new Date(dateStr).toLocaleDateString('nl-NL', { weekday: 'short' });
+    const dayOfWeek = new Date(dateStr).toLocaleDateString(undefined, { weekday: 'short' });
     const dayNum = new Date(dateStr).getDate();
 
     return (

@@ -1,6 +1,7 @@
 // =============================================================================
 // AUTOMATION SERVICE — time-saving automations for contractors + site leads
 // =============================================================================
+import { MS_PER_DAY } from '../utils/timeConstants';
 // PDF research: contractors spend 40-50% on admin. Key automations:
 // 1. Auto-invoice from completed jobs (no "office time" needed)
 // 2. Auto-reminder for overdue invoices
@@ -113,7 +114,7 @@ export function checkAutoReminder(ctx: AutomationContext, config: AutomationConf
       id: `auto_reminder_${inv.id}`,
       type: 'auto_reminder' as AutomationType,
       title: `Herinnering: ${customer?.name ?? inv.customer}`,
-      description: `Factuur €${inv.amount.toLocaleString('nl-NL')} is ${daysOverdue} dagen verlopen — automatische herinnering versturen`,
+      description: `Factuur €${inv.amount.toLocaleString(undefined)} is ${daysOverdue} dagen verlopen — automatische herinnering versturen`,
       actionTaken: false,
       timestamp: new Date().toISOString(),
     };
@@ -125,17 +126,17 @@ export function checkAutoFollowup(ctx: AutomationContext, config: AutomationConf
   const staleQuotes = ctx.quotes.filter(q => {
     if (q.status !== 'sent') return false;
     const sentTime = new Date(q.lastUpdated).getTime();
-    return (now - sentTime) >= config.autoFollowupDays * 86400000;
+    return (now - sentTime) >= config.autoFollowupDays * MS_PER_DAY;
   });
 
   return staleQuotes.map(q => {
     const customer = ctx.customers.find(c => c.id === q.customer);
-    const days = Math.floor((now - new Date(q.lastUpdated).getTime()) / 86400000);
+    const days = Math.floor((now - new Date(q.lastUpdated).getTime()) / MS_PER_DAY);
     return {
       id: `auto_followup_${q.id}`,
       type: 'auto_followup' as AutomationType,
       title: `Opvolgen: ${customer?.name ?? q.customer}`,
-      description: `Offerte €${q.amount.toLocaleString('nl-NL')} is ${days} dagen geleden verstuurd — opvolgen verhoogt acceptatiekans`,
+      description: `Offerte €${q.amount.toLocaleString(undefined)} is ${days} dagen geleden verstuurd — opvolgen verhoogt acceptatiekans`,
       actionTaken: false,
       timestamp: new Date().toISOString(),
     };

@@ -9,6 +9,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { emitBusinessEvent, emitMaterialPurchased } from '../intelligence/dataCollector';
 import { recordMetricSnapshot } from '../intelligence/learningStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getMaterialBaselines } from './cohortBenchmarkService';
 
 const SCAN_HISTORY_KEY = '@vasco_invoice_scans';
 const RATE_LIMIT_KEY = '@vasco_last_invoice_scan';
@@ -209,7 +210,7 @@ export interface PriceRecommendation {
 
 export async function getPriceRecommendations(): Promise<PriceRecommendation[]> {
   const history = await getScanHistory();
-  if (history.length < 2) return [];
+  if (history.length < 1) return [];
 
   // Build price map: material → [{price, supplier, date}]
   const priceMap = new Map<string, { price: number; supplier: string; date: string }[]>();
@@ -224,22 +225,41 @@ export async function getPriceRecommendations(): Promise<PriceRecommendation[]> 
 
   const recommendations: PriceRecommendation[] = [];
 
+  // For single-scan users, enrich with material baselines
+  const baselines = getMaterialBaselines();
+  const allBaselines = [
+    ...baselines,
+    ...getMaterialBaselines('plumbing'),
+    ...getMaterialBaselines('electrical'),
+    ...getMaterialBaselines('gas'),
+    ...getMaterialBaselines('carpentry'),
+    ...getMaterialBaselines('painting'),
+  ];
+
   for (const [name, prices] of priceMap) {
-    if (prices.length < 2) continue;
+    if (prices.length < 1) continue;
 
     const sorted = prices.sort((a, b) => a.price - b.price);
     const avg = prices.reduce((s, p) => s + p.price, 0) / prices.length;
     const current = prices[prices.length - 1]; // most recent
-    const lowest = sorted[0];
+    let lowest = sorted[0];
+
+    // For single-price items, check against material baselines for comparison
+    const baseline = allBaselines.find(b => name.includes(b.name) || b.name.includes(name));
+    if (prices.length === 1 && baseline && baseline.avgPrice < current.price) {
+      lowest = { price: baseline.avgPrice, supplier: baseline.cheaperSupplier, date: current.date };
+    }
 
     // Determine trend (compare first half avg to second half avg)
-    const mid = Math.floor(prices.length / 2);
-    const firstHalf = prices.slice(0, mid);
-    const secondHalf = prices.slice(mid);
-    const firstAvg = firstHalf.reduce((s, p) => s + p.price, 0) / firstHalf.length;
-    const secondAvg = secondHalf.reduce((s, p) => s + p.price, 0) / secondHalf.length;
-    const trend: PriceRecommendation['trend'] =
-      secondAvg > firstAvg * 1.05 ? 'rising' : secondAvg < firstAvg * 0.95 ? 'falling' : 'stable';
+    let trend: PriceRecommendation['trend'] = 'stable';
+    if (prices.length >= 2) {
+      const mid = Math.floor(prices.length / 2);
+      const firstHalf = prices.slice(0, mid);
+      const secondHalf = prices.slice(mid);
+      const firstAvg = firstHalf.reduce((s, p) => s + p.price, 0) / firstHalf.length;
+      const secondAvg = secondHalf.reduce((s, p) => s + p.price, 0) / secondHalf.length;
+      trend = secondAvg > firstAvg * 1.05 ? 'rising' : secondAvg < firstAvg * 0.95 ? 'falling' : 'stable';
+    }
 
     const savingsPotential = Math.round((current.price - lowest.price) * 100) / 100;
 
@@ -272,6 +292,64 @@ export async function getPriceRecommendations(): Promise<PriceRecommendation[]> 
 
   // Sort by savings potential (highest first)
   return recommendations.sort((a, b) => b.savingsPotential - a.savingsPotential);
+}
+
+// ---------------------------------------------------------------------------
+// First scan insights — compares scanned prices against trade baselines
+// ---------------------------------------------------------------------------
+// Works with just 1 scanned invoice, giving immediate value to new users.
+
+export interface FirstScanInsight {
+  name: string;
+  scannedPrice: number;
+  marketAvg: number;
+  savings: number;
+  cheaperSupplier: string;
+  priceVsMarket: number; // ratio: 1.0 = at market, 1.15 = 15% above
+}
+
+export function getFirstScanInsights(scannedItems: ScannedLineItem[], trade: string = 'general'): FirstScanInsight[] {
+  // Gather baselines from the scanned trade + general
+  const baselines = [
+    ...getMaterialBaselines(trade),
+    ...getMaterialBaselines('general'),
+  ];
+  // Deduplicate by name
+  const seen = new Set<string>();
+  const uniqueBaselines = baselines.filter(b => {
+    if (seen.has(b.name)) return false;
+    seen.add(b.name);
+    return true;
+  });
+
+  const insights: FirstScanInsight[] = [];
+
+  for (const item of scannedItems) {
+    const itemName = item.description.toLowerCase().trim();
+    // Find matching baseline (fuzzy: check if either contains the other)
+    const match = uniqueBaselines.find(b =>
+      itemName.includes(b.name) || b.name.includes(itemName) ||
+      // Also try matching on significant words (3+ chars)
+      b.name.split(' ').filter(w => w.length >= 3).some(w => itemName.includes(w))
+    );
+
+    if (!match) continue;
+
+    const priceVsMarket = item.unitPrice / match.avgPrice;
+    const savings = Math.round((item.unitPrice - match.avgPrice) * item.quantity * 100) / 100;
+
+    insights.push({
+      name: item.description,
+      scannedPrice: item.unitPrice,
+      marketAvg: match.avgPrice,
+      savings: Math.max(0, savings),
+      cheaperSupplier: match.cheaperSupplier,
+      priceVsMarket: Math.round(priceVsMarket * 100) / 100,
+    });
+  }
+
+  // Sort by savings (highest first)
+  return insights.sort((a, b) => b.savings - a.savings);
 }
 
 // ---------------------------------------------------------------------------

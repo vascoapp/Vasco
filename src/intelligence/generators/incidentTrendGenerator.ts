@@ -10,6 +10,7 @@ import type { ScoredInsight, GeneratorContext } from './types';
 import { useIncidents, useDailyReports } from '../../services/siteLeadDataService';
 import { logPrediction } from '../calibration';
 import { gt } from '../generatorTranslations';
+import { MS_PER_DAY } from '../../utils/timeConstants';
 
 export function useIncidentTrendInsight(ctx: GeneratorContext): ScoredInsight | null {
   const { incidents } = useIncidents();
@@ -20,8 +21,8 @@ export function useIncidentTrendInsight(ctx: GeneratorContext): ScoredInsight | 
     if (incidents.length === 0 && reports.length < 3) return null;
 
     const now = ctx.now;
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * MS_PER_DAY);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * MS_PER_DAY);
 
     // Count incidents from incident reports
     const recentIncidents = incidents.filter(i => new Date(i.date) >= sevenDaysAgo);

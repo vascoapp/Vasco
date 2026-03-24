@@ -65,7 +65,7 @@ interface Props {
 // =============================================================================
 
 function formatBedrag(amount: number): string {
-  return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(amount);
+  return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'EUR' }).format(amount);
 }
 
 function formatCompact(value: number): string {

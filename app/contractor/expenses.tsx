@@ -51,7 +51,7 @@ export default function ExpensesScreen() {
 
   const filtered = selectedCategory ? expenses.filter(e => e.category === selectedCategory) : expenses;
 
-  const fmt = (n: number) => `€${n.toLocaleString('nl-NL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  const fmt = (n: number) => `€${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
   return (
     <View style={styles.container}>
@@ -195,14 +195,14 @@ export default function ExpensesScreen() {
               <View style={styles.expenseInfo}>
                 <Text style={styles.expenseName} numberOfLines={1}>{expense.description}</Text>
                 <Text style={styles.expenseMeta}>
-                  {catConfig?.label}{expense.supplier ? ` · ${expense.supplier}` : ''} · {expense.date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
+                  {catConfig?.label}{expense.supplier ? ` · ${expense.supplier}` : ''} · {expense.date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
                 </Text>
                 {expense.jobTitle && (
                   <Text style={styles.expenseJob} numberOfLines={1}>{expense.jobTitle}</Text>
                 )}
               </View>
               <View style={styles.expenseRight}>
-                <Text style={styles.expenseAmount}>€{expense.amount.toLocaleString('nl-NL')}</Text>
+                <Text style={styles.expenseAmount}>€{expense.amount.toLocaleString(undefined)}</Text>
                 {expense.deductible && (
                   <View style={styles.deductBadge}>
                     <Text style={styles.deductText}>{expense.deductionPercentage}% {t('expenses.deduction', 'aftrek')}</Text>

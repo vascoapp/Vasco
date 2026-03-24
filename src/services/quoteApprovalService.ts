@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
+import { MS_PER_DAY, MS_PER_HOUR } from '../utils/timeConstants';
 
 // =============================================================================
 // TYPES
@@ -54,21 +55,21 @@ const mockRules: ApprovalRule[] = [
 const mockApprovals: QuoteApproval[] = [
   {
     id: 'qa-1', quoteId: 'q-100', quoteReference: 'Q-2026-0055', customerName: 'Bakkerij Jansen',
-    amount: 3800, status: 'pending', requestedBy: 'Monteur', requestedAt: new Date(Date.now() - 3600000 * 4),
+    amount: 3800, status: 'pending', requestedBy: 'Monteur', requestedAt: new Date(Date.now() - MS_PER_HOUR * 4),
   },
   {
     id: 'qa-2', quoteId: 'q-101', quoteReference: 'Q-2026-0054', customerName: 'Hotel Krasnapolsky',
-    amount: 12500, status: 'pending', requestedBy: 'Monteur', requestedAt: new Date(Date.now() - 3600000 * 8),
+    amount: 12500, status: 'pending', requestedBy: 'Monteur', requestedAt: new Date(Date.now() - MS_PER_HOUR * 8),
   },
   {
     id: 'qa-3', quoteId: 'q-99', quoteReference: 'Q-2026-0053', customerName: 'Fam. de Groot',
-    amount: 1200, status: 'auto-approved', requestedBy: 'Monteur', requestedAt: new Date(Date.now() - 86400000),
+    amount: 1200, status: 'auto-approved', requestedBy: 'Monteur', requestedAt: new Date(Date.now() - MS_PER_DAY),
     notes: 'Onder drempel (€2.500)',
   },
   {
     id: 'qa-4', quoteId: 'q-98', quoteReference: 'Q-2026-0052', customerName: 'Kantoor Zuidas',
-    amount: 5600, status: 'approved', requestedBy: 'Monteur', requestedAt: new Date(Date.now() - 86400000 * 2),
-    reviewedBy: 'Eigenaar', reviewedAt: new Date(Date.now() - 86400000),
+    amount: 5600, status: 'approved', requestedBy: 'Monteur', requestedAt: new Date(Date.now() - MS_PER_DAY * 2),
+    reviewedBy: 'Eigenaar', reviewedAt: new Date(Date.now() - MS_PER_DAY),
   },
 ];
 
@@ -126,7 +127,7 @@ class QuoteApprovalService {
       status: rule ? 'pending' : 'auto-approved',
       requestedBy,
       requestedAt: new Date(),
-      notes: !rule ? `Onder drempel (€${this.rules.filter(r => r.enabled).sort((a, b) => a.threshold - b.threshold)[0]?.threshold.toLocaleString('nl-NL') ?? '0'})` : undefined,
+      notes: !rule ? `Onder drempel (€${this.rules.filter(r => r.enabled).sort((a, b) => a.threshold - b.threshold)[0]?.threshold.toLocaleString() ?? '0'})` : undefined,
     };
     this.approvals.unshift(approval);
     this.notify();
@@ -156,7 +157,7 @@ class QuoteApprovalService {
   }
 
   getStats(): ApprovalStats {
-    const weekAgo = new Date(Date.now() - 7 * 86400000);
+    const weekAgo = new Date(Date.now() - 7 * MS_PER_DAY);
     const pending = this.approvals.filter(a => a.status === 'pending').length;
     const approvedWeek = this.approvals.filter(a => a.status === 'approved' && a.reviewedAt && a.reviewedAt >= weekAgo).length;
     const rejectedWeek = this.approvals.filter(a => a.status === 'rejected' && a.reviewedAt && a.reviewedAt >= weekAgo).length;

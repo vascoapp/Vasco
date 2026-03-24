@@ -8,6 +8,7 @@ import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { isAboveThreshold, detectAnomaly, getSeasonalMultiplier } from '../adaptiveThresholds';
 import { logPrediction } from '../calibration';
 import { gt } from '../generatorTranslations';
+import { MS_PER_DAY } from '../../utils/timeConstants';
 
 export const overdueInvoiceGenerator: InsightGenerator = {
   id: 'overdue-invoice',
@@ -27,7 +28,7 @@ export function useOverdueInvoiceInsight(ctx: GeneratorContext): ScoredInsight |
   const totalOverdue = overdueInvoices.reduce((sum, i) => sum + i.amount, 0);
   const avgDaysOverdue = overdueInvoices.reduce((sum, i) => {
     const dueDate = new Date(i.dueDate);
-    const days = Math.floor((ctx.now.getTime() - dueDate.getTime()) / 86400000);
+    const days = Math.floor((ctx.now.getTime() - dueDate.getTime()) / MS_PER_DAY);
     return sum + Math.max(0, days);
   }, 0) / overdueInvoices.length;
 

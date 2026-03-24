@@ -7,6 +7,7 @@
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MS_PER_DAY } from '../utils/timeConstants';
 
 const STORAGE_KEY = '@vasco_holded';
 const API_BASE = 'https://api.holded.com/api';
@@ -210,7 +211,7 @@ export async function createInvoice(invoice: {
       date: Math.floor(Date.now() / 1000),
       dueDate: invoice.dueDate
         ? Math.floor(new Date(invoice.dueDate).getTime() / 1000)
-        : Math.floor((Date.now() + 30 * 86400000) / 1000),
+        : Math.floor((Date.now() + 30 * MS_PER_DAY) / 1000),
       currency: 'EUR',
       items,
     }),

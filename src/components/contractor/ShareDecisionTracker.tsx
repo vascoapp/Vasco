@@ -16,6 +16,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
@@ -30,6 +31,7 @@ interface ShareDecisionTrackerProps {
 }
 
 export function ShareDecisionTracker({ tracker, onClose }: ShareDecisionTrackerProps) {
+  const { t } = useTranslation();
   const [accessCode] = useState(() => generateAccessCode());
   const [copied, setCopied] = useState(false);
 
@@ -74,7 +76,7 @@ ${tracker.customerName ? 'Uw aannemer' : ''}`;
       : `whatsapp://send?text=${encodeURIComponent(shareMessage)}`;
 
     Linking.openURL(url).catch(() => {
-      Alert.alert('Fout', 'Kon WhatsApp niet openen');
+      Alert.alert(t('common.error', 'Error'), t('share.couldNotOpenWhatsApp', 'Could not open WhatsApp'));
     });
   };
 
@@ -83,17 +85,17 @@ ${tracker.customerName ? 'Uw aannemer' : ''}`;
     const url = `sms:${phone}?body=${encodeURIComponent(shareMessage)}`;
 
     Linking.openURL(url).catch(() => {
-      Alert.alert('Fout', 'Kon SMS niet openen');
+      Alert.alert(t('common.error', 'Error'), t('share.couldNotOpenSMS', 'Could not open SMS'));
     });
   };
 
   const handleShareEmail = () => {
     const email = tracker.customerEmail || '';
-    const subject = `Keuzes doorgeven: ${tracker.templateName}`;
+    const subject = `${t('share.submitChoices', 'Submit choices')}: ${tracker.templateName}`;
     const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(shareMessage)}`;
 
     Linking.openURL(url).catch(() => {
-      Alert.alert('Fout', 'Kon e-mail niet openen');
+      Alert.alert(t('common.error', 'Error'), t('share.couldNotOpenEmail', 'Could not open email'));
     });
   };
 
@@ -104,7 +106,7 @@ ${tracker.customerName ? 'Uw aannemer' : ''}`;
         title: 'Deel keuzeformulier',
       });
     } catch (error) {
-      console.log('Share error:', error);
+      if (__DEV__) console.log('Share error:', error);
     }
   };
 

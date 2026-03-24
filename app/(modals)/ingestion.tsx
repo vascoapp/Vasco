@@ -48,7 +48,7 @@ export default function IngestionModal() {
   const pdfCount = extractedDocs.length;
 
   const formatCurrency = (value: number) =>
-    `\u20AC${value.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    `\u20AC${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const confidenceLabel = (c: number) => {
     if (c >= 0.8) return 'High';
@@ -154,7 +154,7 @@ export default function IngestionModal() {
             setPendingBudgetExtraction(budgetResult);
 
             const fmtCurrency = (n: number) =>
-              `\u20AC${n.toLocaleString('nl-NL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+              `\u20AC${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
             Alert.alert(
               'Begroting gedetecteerd',

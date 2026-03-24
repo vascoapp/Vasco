@@ -14,6 +14,7 @@
 import { loadProfile, type ContractorLearningProfile, type JobOutcome } from './learningStorage';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import i18n from '../i18n/i18n';
 
 const MODEL_CACHE_KEY = '@vasco_ml_models';
 
@@ -73,13 +74,16 @@ export async function predictQuoteWin(params: {
   jobType?: string;
 }): Promise<QuoteWinPrediction> {
   const profile = await loadProfile();
+  const learned = await getLearnedCoefficients();
   const jobs = profile.jobCompletionHistory ?? [];
 
-  // Historical acceptance rate
+  // Historical acceptance rate — use learned coefficient if available
   const tradeJobs = jobs.filter(j => j.jobType === params.trade || !params.trade);
-  const baseRate = tradeJobs.length >= 3
-    ? tradeJobs.filter(j => j.marginPercent > 0).length / tradeJobs.length
-    : 0.65; // default
+  const baseRate = learned?.personalAcceptanceRate != null
+    ? learned.personalAcceptanceRate
+    : tradeJobs.length >= 3
+      ? tradeJobs.filter(j => j.marginPercent > 0).length / tradeJobs.length
+      : 0.65; // default
 
   // Price vs average
   const avgAmount = tradeJobs.length > 0
@@ -101,10 +105,11 @@ export async function predictQuoteWin(params: {
   const optimalLow = Math.round(avgAmount * 0.85);
   const optimalHigh = Math.round(avgAmount * 1.15);
 
+  const t = i18n.t.bind(i18n);
   let recommendation: string;
-  if (probability >= 0.75) recommendation = 'Goede kans op acceptatie. Prijs ligt in de markt.';
-  else if (probability >= 0.5) recommendation = 'Redelijke kans. Overweeg een kleine korting of extra waarde.';
-  else recommendation = 'Lage kans. De prijs ligt boven marktgemiddelde. Overweeg aanpassing.';
+  if (probability >= 0.75) recommendation = t('ml.quoteWinHigh', 'Good chance of acceptance. Price is competitive.');
+  else if (probability >= 0.5) recommendation = t('ml.quoteWinMedium', 'Reasonable chance. Consider a small discount or added value.');
+  else recommendation = t('ml.quoteWinLow', 'Low chance. Price is above market average. Consider adjusting.');
 
   return {
     probability: Math.round(probability * 100) / 100,
@@ -131,13 +136,16 @@ export async function predictJobDuration(params: {
   crewSize: number;
 }): Promise<DurationPrediction> {
   const profile = await loadProfile();
+  const learned = await getLearnedCoefficients();
   const jobs = profile.jobCompletionHistory ?? [];
 
-  // Historical accuracy for this trade
+  // Historical accuracy for this trade — use learned coefficient if available
   const tradeJobs = jobs.filter(j => j.jobType === params.trade && j.actualHours > 0);
-  const accuracyRatio = tradeJobs.length >= 3
-    ? tradeJobs.reduce((s, j) => s + j.actualHours / Math.max(j.estimatedHours, 1), 0) / tradeJobs.length
-    : 1.15; // contractors typically underestimate by 15%
+  const accuracyRatio = learned?.durationAccuracyRatio != null
+    ? learned.durationAccuracyRatio
+    : tradeJobs.length >= 3
+      ? tradeJobs.reduce((s, j) => s + j.actualHours / Math.max(j.estimatedHours, 1), 0) / tradeJobs.length
+      : 1.15; // contractors typically underestimate by 15%
 
   // Complexity multiplier based on materials
   const complexityMult = params.materialCount <= 5 ? 1.0
@@ -162,10 +170,11 @@ export async function predictJobDuration(params: {
     high: Math.round(predicted * 1.3 * 10) / 10,
   };
 
+  const t = i18n.t.bind(i18n);
   let recommendation: string;
-  if (accuracyRatio > 1.2) recommendation = `Je schat gemiddeld ${Math.round((accuracyRatio - 1) * 100)}% te laag. Plan extra buffer in.`;
-  else if (accuracyRatio < 0.9) recommendation = 'Je overschat consistent. Je kunt strakker plannen.';
-  else recommendation = 'Je schattingen zijn redelijk accuraat. Kleine buffer van 10% is verstandig.';
+  if (accuracyRatio > 1.2) recommendation = t('ml.durationUnderestimate', { defaultValue: 'You underestimate by {{pct}}% on average. Plan extra buffer.', pct: Math.round((accuracyRatio - 1) * 100) });
+  else if (accuracyRatio < 0.9) recommendation = t('ml.durationOverestimate', 'You consistently overestimate. You can plan tighter.');
+  else recommendation = t('ml.durationAccurate', 'Your estimates are fairly accurate. A small 10% buffer is wise.');
 
   return {
     predictedHours: Math.round(predicted * 10) / 10,
@@ -191,10 +200,11 @@ export async function predictPaymentTiming(params: {
   dayOfWeek?: number; // 0=Sun, 1=Mon, etc.
 }): Promise<PaymentPrediction> {
   const profile = await loadProfile();
+  const learned = await getLearnedCoefficients();
   const { invoicePatterns } = profile;
 
-  // Base DSO
-  const baseDSO = invoicePatterns.avgDSO || 21;
+  // Base DSO — use learned personal DSO if available
+  const baseDSO = learned?.personalBaseDSO ?? (invoicePatterns.avgDSO || 21);
 
   // Amount factor: larger invoices take longer
   const amountFactor = params.amount <= 500 ? 0.85
@@ -219,10 +229,11 @@ export async function predictPaymentTiming(params: {
 
   const risk: PaymentPrediction['risk'] = predicted <= 21 ? 'low' : predicted <= 35 ? 'medium' : 'high';
 
+  const t = i18n.t.bind(i18n);
   let recommendation: string;
-  if (risk === 'low') recommendation = 'Betaling verwacht binnen 3 weken. Geen actie nodig.';
-  else if (risk === 'medium') recommendation = 'Plan een herinnering op dag 14 voor snellere betaling.';
-  else recommendation = 'Hoog risico op late betaling. Overweeg aanbetaling of kortere betalingstermijn.';
+  if (risk === 'low') recommendation = t('ml.paymentLow', 'Payment expected within 3 weeks. No action needed.');
+  else if (risk === 'medium') recommendation = t('ml.paymentMedium', 'Schedule a reminder on day 14 for faster payment.');
+  else recommendation = t('ml.paymentHigh', 'High risk of late payment. Consider a deposit or shorter payment terms.');
 
   return {
     predictedDays: predicted,
@@ -282,5 +293,108 @@ export async function recordModelPrediction(
       entry.lastEvaluated = new Date().toISOString();
     }
     await AsyncStorage.setItem(MODEL_CACHE_KEY, JSON.stringify(accuracies));
+
+    // Auto-calibrate: store prediction/actual pairs for coefficient learning
+    await recordCalibrationPoint(model, predicted, actual);
   } catch {}
+}
+
+// ---------------------------------------------------------------------------
+// Per-contractor coefficient learning
+// ---------------------------------------------------------------------------
+// After enough data points (10+), the models shift from industry defaults
+// to personalized coefficients based on the contractor's actual patterns.
+// ---------------------------------------------------------------------------
+
+const COEFFICIENTS_KEY = '@vasco_ml_coefficients';
+const CALIBRATION_KEY = '@vasco_ml_calibration';
+
+interface CalibrationPoint {
+  model: string;
+  predicted: number;
+  actual: number;
+  timestamp: string;
+}
+
+interface LearnedCoefficients {
+  // Duration model: personal accuracy ratio (replaces default 1.15)
+  durationAccuracyRatio: number | null;
+  // Payment model: personal base DSO (replaces profile avgDSO)
+  personalBaseDSO: number | null;
+  // Quote model: personal base acceptance rate
+  personalAcceptanceRate: number | null;
+  // How many data points each coefficient is based on
+  dataPoints: { duration: number; payment: number; quote: number };
+  lastCalibrated: string;
+}
+
+async function recordCalibrationPoint(model: string, predicted: number, actual: number): Promise<void> {
+  try {
+    const raw = await AsyncStorage.getItem(CALIBRATION_KEY);
+    const points: CalibrationPoint[] = raw ? JSON.parse(raw) : [];
+    points.push({ model, predicted, actual, timestamp: new Date().toISOString() });
+    // Keep last 100 points per model
+    const pruned = points.slice(-300);
+    await AsyncStorage.setItem(CALIBRATION_KEY, JSON.stringify(pruned));
+  } catch {}
+}
+
+export async function calibrateModels(): Promise<LearnedCoefficients> {
+  try {
+    const raw = await AsyncStorage.getItem(CALIBRATION_KEY);
+    const points: CalibrationPoint[] = raw ? JSON.parse(raw) : [];
+
+    const durationPoints = points.filter(p => p.model === 'duration');
+    const paymentPoints = points.filter(p => p.model === 'payment');
+    const quotePoints = points.filter(p => p.model === 'quote_win');
+
+    const coefficients: LearnedCoefficients = {
+      durationAccuracyRatio: null,
+      personalBaseDSO: null,
+      personalAcceptanceRate: null,
+      dataPoints: {
+        duration: durationPoints.length,
+        payment: paymentPoints.length,
+        quote: quotePoints.length,
+      },
+      lastCalibrated: new Date().toISOString(),
+    };
+
+    // Need 10+ data points before personalizing
+    if (durationPoints.length >= 10) {
+      // Learn: on average, how far off are our predictions?
+      const avgRatio = durationPoints.reduce((s, p) => s + (p.actual / Math.max(p.predicted, 0.1)), 0) / durationPoints.length;
+      coefficients.durationAccuracyRatio = Math.round(avgRatio * 100) / 100;
+    }
+
+    if (paymentPoints.length >= 10) {
+      const avgActual = paymentPoints.reduce((s, p) => s + p.actual, 0) / paymentPoints.length;
+      coefficients.personalBaseDSO = Math.round(avgActual);
+    }
+
+    if (quotePoints.length >= 10) {
+      // actual = 1 (accepted) or 0 (rejected)
+      coefficients.personalAcceptanceRate = quotePoints.reduce((s, p) => s + p.actual, 0) / quotePoints.length;
+    }
+
+    await AsyncStorage.setItem(COEFFICIENTS_KEY, JSON.stringify(coefficients));
+    return coefficients;
+  } catch {
+    return {
+      durationAccuracyRatio: null,
+      personalBaseDSO: null,
+      personalAcceptanceRate: null,
+      dataPoints: { duration: 0, payment: 0, quote: 0 },
+      lastCalibrated: '',
+    };
+  }
+}
+
+export async function getLearnedCoefficients(): Promise<LearnedCoefficients | null> {
+  try {
+    const raw = await AsyncStorage.getItem(COEFFICIENTS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
 }

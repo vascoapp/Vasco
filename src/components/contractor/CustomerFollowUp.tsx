@@ -98,7 +98,7 @@ export function CustomerFollowUp() {
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={[styles.statValue, { color: SemanticColors.feedbackSuccess }]}>
-            €{statistics.savedDealValue.toLocaleString('nl-NL')}
+            €{statistics.savedDealValue.toLocaleString(undefined)}
           </Text>
           <Text style={styles.statLabel}>Deals gered</Text>
         </View>
@@ -514,7 +514,7 @@ function FollowUpDetailModal({
               <Text style={styles.customerName}>{followUp.customerName}</Text>
               <Text style={styles.customerMeta}>
                 {followUp.scheduledTime && `${followUp.scheduledTime} • `}
-                {new Date(followUp.scheduledDate).toLocaleDateString('nl-NL')}
+                {new Date(followUp.scheduledDate).toLocaleDateString(undefined)}
               </Text>
             </View>
           </View>
@@ -581,7 +581,7 @@ function FollowUpDetailModal({
           <View style={styles.completedInfo}>
             <Ionicons name="checkmark-circle" size={24} color={SemanticColors.feedbackSuccess} />
             <Text style={styles.completedText}>
-              Afgerond op {new Date(followUp.completedAt!).toLocaleDateString('nl-NL')}
+              Afgerond op {new Date(followUp.completedAt!).toLocaleDateString(undefined)}
             </Text>
           </View>
         ) : (
@@ -847,7 +847,7 @@ function ScheduleFollowUpModal({
               )}
               <Text style={styles.insightText}>
                 {selectedCustomer.totalProjects} projecten • €
-                {selectedCustomer.totalRevenue.toLocaleString('nl-NL')}
+                {selectedCustomer.totalRevenue.toLocaleString(undefined)}
               </Text>
             </View>
           )}

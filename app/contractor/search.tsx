@@ -26,11 +26,11 @@ interface SearchResult {
   route: string;
 }
 
-const TYPE_CONFIG: Record<ResultType, { icon: IconName; color: string; label: string }> = {
-  job: { icon: 'hammer', color: Palette.hermesOrange, label: 'Klus' },
-  quote: { icon: 'document-text', color: Palette.terracotta, label: 'Offerte' },
-  invoice: { icon: 'receipt', color: SemanticColors.feedbackSuccess, label: 'Factuur' },
-  customer: { icon: 'person', color: Palette.burntSienna, label: 'Klant' },
+const TYPE_CONFIG: Record<ResultType, { icon: IconName; color: string; labelKey: string }> = {
+  job: { icon: 'hammer', color: Palette.hermesOrange, labelKey: 'search.job' },
+  quote: { icon: 'document-text', color: Palette.hermesOrange, labelKey: 'search.quote' },
+  invoice: { icon: 'receipt', color: SemanticColors.feedbackSuccess, labelKey: 'search.invoice' },
+  customer: { icon: 'person', color: Palette.hermesOrange, labelKey: 'search.customer' },
 };
 
 export default function SearchScreen() {
@@ -62,15 +62,15 @@ export default function SearchScreen() {
 
     // Search quotes
     for (const quote of quotes) {
-      const amt = `€${(quote.amount ?? 0).toLocaleString('nl-NL')}`;
+      const amt = `€${(quote.amount ?? 0).toLocaleString(undefined)}`;
       if (quote.id?.toLowerCase().includes(q) || quote.customer?.toLowerCase().includes(q) || quote.job?.toLowerCase().includes(q)) {
         r.push({
           id: quote.id,
           type: 'quote',
-          title: `${quote.id} — ${quote.job || 'Offerte'}`,
+          title: `${quote.id} — ${quote.job || t('search.quote')}`,
           subtitle: `${quote.status} · ${amt}`,
           icon: 'document-text',
-          color: Palette.terracotta,
+          color: Palette.hermesOrange,
           route: `/quotes/${quote.id}`,
         });
       }
@@ -79,7 +79,7 @@ export default function SearchScreen() {
     // Search invoices
     for (const inv of invoices) {
       const invAny = inv as any;
-      const amt = `€${(invAny.amount ?? invAny.total ?? 0).toLocaleString('nl-NL')}`;
+      const amt = `€${(invAny.amount ?? invAny.total ?? 0).toLocaleString(undefined)}`;
       if (invAny.id?.toLowerCase().includes(q) || invAny.customer?.toLowerCase().includes(q)) {
         r.push({
           id: invAny.id,
@@ -102,7 +102,7 @@ export default function SearchScreen() {
           title: cust.name,
           subtitle: [cust.email, cust.phone].filter(Boolean).join(' · '),
           icon: 'person',
-          color: Palette.burntSienna,
+          color: Palette.hermesOrange,
           route: `/contractor/customer-crm`,
         });
       }
@@ -146,12 +146,12 @@ export default function SearchScreen() {
         {query.length < 2 ? (
           <View style={styles.hint}>
             <Ionicons name="search-outline" size={40} color={SemanticColors.textTertiary} />
-            <Text style={styles.hintText}>Zoek in klussen, offertes, facturen en klanten</Text>
+            <Text style={styles.hintText}>{t('search.placeholder')}</Text>
           </View>
         ) : results.length === 0 ? (
           <View style={styles.hint}>
             <Ionicons name="alert-circle-outline" size={40} color={SemanticColors.textTertiary} />
-            <Text style={styles.hintText}>Geen resultaten voor "{query}"</Text>
+            <Text style={styles.hintText}>{t('search.noResultsFor', { query })}</Text>
           </View>
         ) : (
           (['job', 'quote', 'invoice', 'customer'] as ResultType[]).map(type => {
@@ -160,7 +160,7 @@ export default function SearchScreen() {
             const cfg = TYPE_CONFIG[type];
             return (
               <FadeIn key={type} delay={0}>
-                <Text style={styles.groupTitle}>{cfg.label} ({items.length})</Text>
+                <Text style={styles.groupTitle}>{t(cfg.labelKey)} ({items.length})</Text>
                 {items.map(item => (
                   <Pressable
                     key={item.id}

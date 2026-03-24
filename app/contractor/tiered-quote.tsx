@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { TieredQuoteBuilder } from '../../src/components/contractor';
 import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
@@ -7,6 +8,7 @@ import { hapticSuccess } from '../../src/utils/haptics';
 export default function TieredQuoteScreen() {
   const router = useRouter();
   const { addQuote } = useAppState();
+  const { t } = useTranslation();
 
   return (
     <TieredQuoteBuilder
@@ -14,7 +16,7 @@ export default function TieredQuoteScreen() {
         // Extract line items from the "Better" tier (middle option) as default
         const tier = quote.tiers?.[1] ?? quote.tiers?.[0];
         if (!tier) {
-          Alert.alert('Fout', 'Geen items in de offerte.');
+          Alert.alert(t('tieredQuote.error'), t('tieredQuote.noItems'));
           return;
         }
 
@@ -27,17 +29,17 @@ export default function TieredQuoteScreen() {
 
         try {
           const quoteId = await addQuote(
-            'Klant', // customer placeholder
-            tier.name || 'Offerte',
+            t('tieredQuote.customer'),
+            tier.name || t('tieredQuote.quoteLabel'),
             lineItems,
           );
           hapticSuccess();
-          Alert.alert('Offerte aangemaakt', `Offerte ${quoteId} is opgeslagen.`, [
-            { text: 'Bekijken', onPress: () => router.replace(`/quotes/${quoteId}` as any) },
-            { text: 'Sluiten', onPress: () => router.back() },
+          Alert.alert(t('tieredQuote.quoteCreated'), t('tieredQuote.quoteSaved', { id: quoteId }), [
+            { text: t('tieredQuote.viewQuote'), onPress: () => router.replace(`/quotes/${quoteId}` as any) },
+            { text: t('common.close'), onPress: () => router.back() },
           ]);
         } catch (err) {
-          Alert.alert('Fout', 'Kon offerte niet opslaan.');
+          Alert.alert(t('tieredQuote.error'), t('tieredQuote.couldNotSave'));
         }
       }}
       onClose={() => router.back()}

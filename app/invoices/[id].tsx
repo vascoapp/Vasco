@@ -25,6 +25,7 @@ export default function InvoiceDetailScreen() {
     mollieConnected,
     createPaymentLink,
     lastMolliePayment,
+    businessProfile,
   } = useAppState();
   const invoice = invoices.find((item) => item.id === id);
 
@@ -38,7 +39,7 @@ export default function InvoiceDetailScreen() {
     );
   }
 
-  const formattedTotal = `€${invoice.amount.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}`;
+  const formattedTotal = `€${invoice.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
   const lastExport = lastMoneybirdExport[invoice.id];
   const lastPayment = lastMolliePayment[invoice.id];
 
@@ -110,7 +111,7 @@ export default function InvoiceDetailScreen() {
             hapticSuccess();
             const autoInv = invoiceAutomationService.getInvoice(invoice.id);
             if (autoInv) {
-              await generateInvoicePdf(autoInv);
+              await generateInvoicePdf(autoInv, businessProfile);
             }
           }} />
           <PrimaryButton

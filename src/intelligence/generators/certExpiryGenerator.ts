@@ -6,6 +6,7 @@ import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types'
 import { useExpiryCalendar } from '../../services/complianceService';
 import { logPrediction } from '../calibration';
 import { gt } from '../generatorTranslations';
+import { MS_PER_DAY } from '../../utils/timeConstants';
 
 export const certExpiryGenerator: InsightGenerator = {
   id: 'cert-expiry',
@@ -26,7 +27,7 @@ export function useCertExpiryInsight(ctx: GeneratorContext): ScoredInsight | nul
   if (expiringItems.length === 0) return null;
 
   const soonest = expiringItems[0];
-  const daysUntil = Math.ceil((new Date(soonest.date).getTime() - ctx.now.getTime()) / 86400000);
+  const daysUntil = Math.ceil((new Date(soonest.date).getTime() - ctx.now.getTime()) / MS_PER_DAY);
 
   // Log prediction for calibration
   logPrediction({

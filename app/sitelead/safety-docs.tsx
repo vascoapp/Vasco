@@ -140,7 +140,7 @@ export default function SafetyDocsScreen() {
     );
   };
 
-  const today = new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+  const today = new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
 
   // Template selection screen
   if (!selectedTemplate) {

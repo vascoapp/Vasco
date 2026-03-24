@@ -955,7 +955,7 @@ class EvidenceGraphService {
       if (sub.watchedNodeIds && data.nodeId && !sub.watchedNodeIds.includes(data.nodeId as string)) continue;
 
       // In production, send notification via appropriate channel
-      console.log(`Notification to ${sub.userId}:`, event);
+      if (__DEV__) console.log(`Notification to ${sub.userId}:`, event);
     }
   }
 
