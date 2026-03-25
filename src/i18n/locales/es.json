@@ -859,7 +859,17 @@
     "paymentReminder": "Recordatorio de pago",
     "invoicesOverdue": "{{count}} facturas vencidas",
     "tapToViewReminder": "Toca para ver el recordatorio",
-    "editMessage": "Editar mensaje..."
+    "editMessage": "Editar mensaje...",
+    "snooze": "Recordar despues",
+    "snoozeWhen": "Cuando quieres que te recordemos?",
+    "snooze1h": "1 hora",
+    "snoozeTomorrow": "Manana",
+    "snooze3d": "3 dias",
+    "didItWork": "Comentario rapido",
+    "didCustomerRespond": "Respondio el cliente?",
+    "yesResponded": "Si",
+    "notYet": "Todavia no",
+    "noResponse": "No"
   },
   "quotes": {
     "newQuote": "Nuevo presupuesto",

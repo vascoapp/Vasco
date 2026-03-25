@@ -859,7 +859,17 @@
     "paymentReminder": "Promemoria di pagamento",
     "invoicesOverdue": "{{count}} fatture scadute",
     "tapToViewReminder": "Tocca per vedere il promemoria",
-    "editMessage": "Modifica messaggio..."
+    "editMessage": "Modifica messaggio...",
+    "snooze": "Ricorda dopo",
+    "snoozeWhen": "Quando vuoi essere ricordato?",
+    "snooze1h": "1 ora",
+    "snoozeTomorrow": "Domani",
+    "snooze3d": "3 giorni",
+    "didItWork": "Feedback rapido",
+    "didCustomerRespond": "Il cliente ha risposto?",
+    "yesResponded": "Si",
+    "notYet": "Non ancora",
+    "noResponse": "No"
   },
   "quotes": {
     "newQuote": "Nuovo preventivo",

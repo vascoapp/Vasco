@@ -265,7 +265,7 @@ export default function GeldScreen() {
           </View>
         </FadeIn>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 140 }} />
       </ScrollView>
 
       {/* FAB — new quote */}
@@ -320,7 +320,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: RADIUS.lg,
-    padding: 20,
+    padding: GRID.md,
   },
   kpiItem: { flex: 1, alignItems: 'center' },
   kpiLabel: {
@@ -329,15 +329,15 @@ const s = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   kpiValue: {
-    fontSize: 22,
+    fontSize: 24,
     fontFamily: TYPE.displayFamily,
     color: SemanticColors.textPrimary,
     letterSpacing: -0.5,
-    marginTop: 4,
+    marginTop: GRID.xs,
   },
   kpiDivider: {
     width: StyleSheet.hairlineWidth,
-    height: 36,
+    height: 32,
     backgroundColor: SemanticColors.borderDefault,
   },
 
@@ -444,8 +444,8 @@ const s = StyleSheet.create({
   cfCard: {
     backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: RADIUS.lg,
-    padding: 20,
-    gap: 14,
+    padding: GRID.md,
+    gap: GRID.md - 2,
   },
   cfRow: {
     flexDirection: 'row',
@@ -459,7 +459,7 @@ const s = StyleSheet.create({
     marginTop: 2,
   },
   cfValue: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     letterSpacing: -0.3,

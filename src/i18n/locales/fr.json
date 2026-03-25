@@ -859,7 +859,17 @@
     "paymentReminder": "Rappel de paiement",
     "invoicesOverdue": "{{count}} factures en retard",
     "tapToViewReminder": "Appuyez pour voir le rappel",
-    "editMessage": "Modifier le message..."
+    "editMessage": "Modifier le message...",
+    "snooze": "Rappeler plus tard",
+    "snoozeWhen": "Quand souhaitez-vous un rappel ?",
+    "snooze1h": "1 heure",
+    "snoozeTomorrow": "Demain",
+    "snooze3d": "3 jours",
+    "didItWork": "Retour rapide",
+    "didCustomerRespond": "Le client a-t-il repondu ?",
+    "yesResponded": "Oui",
+    "notYet": "Pas encore",
+    "noResponse": "Non"
   },
   "quotes": {
     "newQuote": "Nouveau devis",

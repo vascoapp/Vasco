@@ -829,7 +829,17 @@
     "paymentReminder": "Payment reminder",
     "invoicesOverdue": "{{count}} invoices overdue",
     "tapToViewReminder": "Tap to view reminder",
-    "editMessage": "Edit message..."
+    "editMessage": "Edit message...",
+    "snooze": "Remind later",
+    "snoozeWhen": "When should we remind you?",
+    "snooze1h": "1 hour",
+    "snoozeTomorrow": "Tomorrow",
+    "snooze3d": "3 days",
+    "didItWork": "Quick feedback",
+    "didCustomerRespond": "Did the customer respond?",
+    "yesResponded": "Yes",
+    "notYet": "Not yet",
+    "noResponse": "No"
   },
   "quotes": {
     "newQuote": "New quote",

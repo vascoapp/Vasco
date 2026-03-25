@@ -292,7 +292,7 @@ export default function WerkScreen() {
           </FadeIn>
         )}
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 140 }} />
       </ScrollView>
 
       {/* New Job Modal */}
@@ -370,7 +370,7 @@ const s = StyleSheet.create({
   scrollContent: { paddingHorizontal: SafeArea.side, gap: GRID.lg },
 
   // Action strip
-  actionStrip: { gap: GRID.sm, paddingRight: 20 },
+  actionStrip: { gap: GRID.sm, paddingRight: GRID.lg },
   actionBtn: {
     flexDirection: 'row', alignItems: 'center', gap: GRID.sm,
     backgroundColor: Palette.hermesOrange + '10', borderRadius: RADIUS.lg,
@@ -398,10 +398,10 @@ const s = StyleSheet.create({
   durationText: { fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: SemanticColors.textSecondary },
 
   // Pipeline card
-  pipelineCard: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: 16, gap: 12 },
+  pipelineCard: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md, gap: GRID.md - 4 },
   pipelineRow: { flexDirection: 'row', alignItems: 'center' },
   pipelineStat: { flex: 1, alignItems: 'center' },
-  pipelineValue: { fontSize: 22, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  pipelineValue: { fontSize: 24, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
   pipelineLabel: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textSecondary, marginTop: 2 },
   pipelineDivider: { width: 1, height: 28, backgroundColor: SemanticColors.borderDefault },
 
@@ -413,7 +413,7 @@ const s = StyleSheet.create({
   jobMeta: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
 
   // Empty states
-  emptyCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: 20 },
+  emptyCard: { flexDirection: 'row', alignItems: 'center', gap: GRID.md - 4, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md },
   emptyText: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textTertiary },
   emptyFull: { alignItems: 'center', paddingVertical: 60, gap: 12 },
   emptyFullTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },

@@ -13,7 +13,7 @@
 // - 44px touch targets minimum
 // =============================================================================
 
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { SemanticColors, Palette } from './colors';
 import { Spacing, SafeArea } from './spacing';
 
@@ -76,6 +76,26 @@ export const TYPE = {
   // Tiny (overline)
   tinySize: 11,
   tinyFamily: 'Inter_500Medium',
+} as const;
+
+// Shadow scale — platform-aware
+export const SHADOW = {
+  none: {},
+  sm: Platform.select({
+    ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4 },
+    android: { elevation: 1 },
+    default: {},
+  }),
+  md: Platform.select({
+    ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8 },
+    android: { elevation: 2 },
+    default: {},
+  }),
+  lg: Platform.select({
+    ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 16 },
+    android: { elevation: 4 },
+    default: {},
+  }),
 } as const;
 
 // Touch targets (Wolt minimum: 44px)

@@ -859,7 +859,17 @@
     "paymentReminder": "Zahlungserinnerung",
     "invoicesOverdue": "{{count}} Rechnungen überfällig",
     "tapToViewReminder": "Tippen um Erinnerung anzuzeigen",
-    "editMessage": "Nachricht bearbeiten..."
+    "editMessage": "Nachricht bearbeiten...",
+    "snooze": "Später erinnern",
+    "snoozeWhen": "Wann sollen wir dich erinnern?",
+    "snooze1h": "1 Stunde",
+    "snoozeTomorrow": "Morgen",
+    "snooze3d": "3 Tage",
+    "didItWork": "Kurzes Feedback",
+    "didCustomerRespond": "Hat der Kunde geantwortet?",
+    "yesResponded": "Ja",
+    "notYet": "Noch nicht",
+    "noResponse": "Nein"
   },
   "quotes": {
     "newQuote": "Neues Angebot",

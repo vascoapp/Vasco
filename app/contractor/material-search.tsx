@@ -743,18 +743,18 @@ const styles = StyleSheet.create({
   // Cart badge
   cartBadge: {
     position: 'absolute',
-    top: -6,
-    right: -8,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
+    top: -GRID.sm + 2,
+    right: -GRID.sm,
+    minWidth: GRID.md + 2,
+    height: GRID.md + 2,
+    borderRadius: (GRID.md + 2) / 2,
     backgroundColor: Palette.hermesOrange,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: GRID.xs,
   },
   cartBadgeText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: TYPE.labelFamily,
     color: '#fff',
   },
@@ -770,8 +770,8 @@ const styles = StyleSheet.create({
     gap: GRID.sm,
     backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: RADIUS.md,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: GRID.md - 4,
+    paddingVertical: GRID.sm + 2,
   },
   searchInput: {
     flex: 1,
@@ -792,9 +792,9 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    gap: GRID.xs,
+    paddingHorizontal: GRID.md - 4,
+    paddingVertical: GRID.sm - 2,
     borderRadius: RADIUS.full,
     backgroundColor: SemanticColors.surfacePrimary,
   },
@@ -819,13 +819,13 @@ const styles = StyleSheet.create({
     marginBottom: GRID.sm,
     backgroundColor: Palette.hermesOrange + '08',
     borderRadius: RADIUS.md,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: GRID.md - 4,
+    paddingVertical: GRID.sm + 2,
   },
   aiCardIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: GRID.lg,
+    height: GRID.lg,
+    borderRadius: GRID.md - 4,
     backgroundColor: Palette.hermesOrange + '15',
     alignItems: 'center',
     justifyContent: 'center',
@@ -835,7 +835,7 @@ const styles = StyleSheet.create({
     fontSize: TYPE.captionSize,
     fontFamily: TYPE.captionFamily,
     color: SemanticColors.textSecondary,
-    lineHeight: 18,
+    lineHeight: TYPE.captionSize + 5,
   },
 
   // Country supplier context
@@ -859,9 +859,9 @@ const styles = StyleSheet.create({
   supplierChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    gap: GRID.xs,
+    paddingHorizontal: GRID.sm + 2,
+    paddingVertical: GRID.sm - 3,
     borderRadius: RADIUS.full,
     backgroundColor: SemanticColors.surfacePrimary,
   },
@@ -878,7 +878,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: SafeArea.side,
     gap: GRID.sm,
-    paddingBottom: 40,
+    paddingBottom: 130,
   },
 
   // Result card
@@ -894,7 +894,7 @@ const styles = StyleSheet.create({
   },
   resultInfo: {
     flex: 1,
-    gap: 4,
+    gap: GRID.xs,
   },
   resultName: {
     fontSize: TYPE.titleSize,
@@ -915,8 +915,8 @@ const styles = StyleSheet.create({
   priceBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: 6,
+    gap: GRID.xs - 1,
+    paddingHorizontal: GRID.sm - 2,
     paddingVertical: 2,
     borderRadius: RADIUS.sm,
   },
@@ -994,7 +994,7 @@ const styles = StyleSheet.create({
     paddingVertical: GRID.sm,
     paddingHorizontal: GRID.sm,
     borderRadius: RADIUS.sm,
-    marginBottom: 4,
+    marginBottom: GRID.xs,
   },
   compareRowBest: {
     backgroundColor: SemanticColors.feedbackSuccess + '10',
@@ -1016,7 +1016,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   bestBadge: {
-    paddingHorizontal: 6,
+    paddingHorizontal: GRID.sm - 2,
     paddingVertical: 1,
     borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.feedbackSuccess + '20',
@@ -1040,7 +1040,7 @@ const styles = StyleSheet.create({
   },
   comparePriceCol: {
     alignItems: 'flex-end',
-    gap: 2,
+    gap: GRID.xs / 2,
   },
   comparePrice: {
     fontSize: TYPE.titleSize,
@@ -1061,8 +1061,8 @@ const styles = StyleSheet.create({
   // Empty state
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 60,
-    gap: 12,
+    paddingVertical: GRID.xl * 2,
+    gap: GRID.md - 4,
     paddingHorizontal: GRID.lg,
   },
   emptyTitle: {
@@ -1115,7 +1115,7 @@ const styles = StyleSheet.create({
   cartGroupHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: GRID.sm - 2,
     marginBottom: GRID.xs,
   },
   cartGroupName: {
@@ -1151,12 +1151,12 @@ const styles = StyleSheet.create({
   cartItemQty: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: GRID.xs,
   },
   qtyBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: RADIUS.full,
+    height: RADIUS.full,
+    borderRadius: RADIUS.full / 2,
     backgroundColor: PAGE_BG,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1169,12 +1169,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   removeBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: RADIUS.full,
+    height: RADIUS.full,
+    borderRadius: RADIUS.full / 2,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 4,
+    marginLeft: GRID.xs,
   },
   cartTotalRow: {
     flexDirection: 'row',
@@ -1191,7 +1191,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   cartTotalValue: {
-    fontSize: TYPE.displaySize ?? 28,
+    fontSize: TYPE.displaySize,
     fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
@@ -1203,7 +1203,7 @@ const styles = StyleSheet.create({
     marginHorizontal: SafeArea.side,
     backgroundColor: Palette.hermesOrange,
     borderRadius: RADIUS.lg,
-    paddingVertical: 14,
+    paddingVertical: GRID.md - 2,
     marginBottom: GRID.sm,
   },
   createPOBtnText: {

@@ -900,15 +900,15 @@ export default function TodayScreen() {
         {/* Onboarding progress nudge */}
         {!onboardingDone && nextStep && (
           <Pressable
-            style={{ backgroundColor: Palette.hermesOrange + '08', borderRadius: RADIUS.lg, padding: GRID.md, marginHorizontal: SafeArea.side, marginBottom: GRID.md, flexDirection: 'row', alignItems: 'center', gap: GRID.sm }}
+            style={styles.onboardingCard}
             onPress={() => router.push(nextStep.route as any)}
           >
-            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: Palette.hermesOrange + '15', alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 14, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange }}>{onboardingProgress}%</Text>
+            <View style={styles.onboardingCircle}>
+              <Text style={styles.onboardingPercent}>{onboardingProgress}%</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary }}>{t('onboarding.setupProgress', 'Complete your setup')}</Text>
-              <Text style={{ fontSize: TYPE.tinySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary }}>{nextStep.action}</Text>
+              <Text style={styles.onboardingTitle}>{t('onboarding.setupProgress', 'Complete your setup')}</Text>
+              <Text style={styles.onboardingDesc}>{nextStep.action}</Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
           </Pressable>
@@ -986,7 +986,7 @@ export default function TodayScreen() {
           )}
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 140 }} />
       </ScrollView>
     </View>
   );
@@ -1054,7 +1054,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: SafeArea.content,
     paddingVertical: Spacing.lg,
-    gap: 0,
+    gap: GRID.lg,
   },
 
   // Invoice CTA — core flow: complete → invoice → paid
@@ -1140,8 +1140,8 @@ const styles = StyleSheet.create({
 
   // Section
   section: {
-    gap: Spacing.sm,
-    marginBottom: 20,
+    gap: GRID.sm,
+    marginBottom: GRID.lg,
   },
   sectionBlock: {
     backgroundColor: SemanticColors.surfacePrimary,
@@ -1184,6 +1184,39 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 8,
     overflow: 'hidden' as const,
+  },
+
+  // Onboarding progress nudge
+  onboardingCard: {
+    backgroundColor: Palette.hermesOrange + '08',
+    borderRadius: RADIUS.lg,
+    padding: GRID.md,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: GRID.sm,
+  },
+  onboardingCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Palette.hermesOrange + '15',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  onboardingPercent: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.hermesOrange,
+  },
+  onboardingTitle: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
+  },
+  onboardingDesc: {
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.bodyFamily,
+    color: SemanticColors.textSecondary,
   },
 
   // First Job Banner — Wolt-style clean card

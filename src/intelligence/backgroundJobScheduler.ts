@@ -12,6 +12,7 @@ import { populateQueue } from '../services/aiActionQueueService';
 import { evaluateTriggers } from '../services/workflowPackService';
 import { calibrateModels } from './mlModels';
 import { validateWorkflowState } from '../services/workflowValidatorService';
+import { getSeasonalContext } from './tradeContext';
 import { MS_PER_DAY } from '../utils/timeConstants';
 
 const SCHEDULER_KEY = '@vasco_scheduler_state';
@@ -40,6 +41,9 @@ export interface MorningBriefing {
   findings: AuditFinding[];
   actionsQueued: number;
   generatedAt: string;
+  personalSummary: string;        // Personalized 1-liner
+  tradeContext?: string;           // Trade-specific note
+  proactiveAlerts: string[];       // Forward-looking warnings
 }
 
 interface SchedulerState {
@@ -245,6 +249,242 @@ function auditCerts(certs: any[]): AuditFinding[] {
 }
 
 // ---------------------------------------------------------------------------
+// Trade-specific context tips (rotated daily)
+// ---------------------------------------------------------------------------
+
+const TRADE_TIPS: Record<string, Record<string, string[]>> = {
+  plumbing: {
+    NL: [
+      'KIWA audit season starts in Q2 — ensure certifications are current',
+      'New Scios Scope 8 requirements take effect soon — review gas work procedures',
+      'Water quality regulations tightening — check backflow prevention compliance',
+      'Winter freeze risk: remind customers about pipe insulation services',
+      'Legionella prevention checks due for commercial clients this quarter',
+    ],
+    DE: [
+      'VDE standard update effective April 2026 — review compliance',
+      'DVGW certification renewal window opens next month',
+      'Trinkwasserverordnung updates — check installation standards',
+      'Energy efficiency rebates available for heat pump installations',
+      'Handwerkskammer continuing education credits due this year',
+    ],
+    FR: [
+      'RGE qualification renewal — check your Qualibat status',
+      'New RT2020 thermal regulations affect plumbing installations',
+      'MaPrimeRénov subsidies updated — inform customers about savings',
+      'Assurance Décennale policy renewal window approaching',
+      'Consuel certification process updated — review requirements',
+    ],
+    ES: [
+      'RITE regulation updates for thermal installations — review compliance',
+      'Comunidad Autónoma license renewal period — check expiry dates',
+      'Energy efficiency certificate requirements updated for new builds',
+      'Water scarcity regulations — promote water-saving fixtures to clients',
+      'Seguro de Responsabilidad Civil renewal — compare provider rates',
+    ],
+    IT: [
+      'DM 37/08 compliance audit season — prepare documentation',
+      'Superbonus 110% deadline approaching — inform eligible customers',
+      'DURC validity check — ensure contributions are current',
+      'Camera di Commercio annual fee due this quarter',
+      'New ENEA requirements for energy-related installations',
+    ],
+    UK: [
+      'Unvented hot water certificate renewal due — book assessment',
+      'Building Regulation Part G updates for water efficiency',
+      'Water Supply Regulations compliance check recommended',
+      'Gas Safe Register annual renewal — prepare documentation',
+      'WRAS product approval list updated — check specified materials',
+    ],
+  },
+  electrical: {
+    NL: [
+      'NEN 1010 standard update — review latest amendments',
+      'Inspection certification renewal window opening soon',
+      'Solar panel installation demand rising — consider expanding services',
+      'EV charger installation certification increasingly required',
+      'Smart home integration skills in high demand this quarter',
+    ],
+    DE: [
+      'VDE standard update effective April 2026 — review compliance',
+      'Elektrofachkraft re-certification due — schedule training',
+      'Photovoltaik installation boom — ensure mounting certifications current',
+      'E-Mobilität Wallbox demand increasing — get ADAC-certified',
+      'Handwerkskammer Meisterbrief continuing education credits due',
+    ],
+    FR: [
+      'Consuel certification process updated this quarter',
+      'Habilitation Electrique renewal — schedule refresher training',
+      'Linky smart meter installations creating service opportunities',
+      'RGE qualification increasingly required for renovation subsidies',
+      'IRVE certification for EV charging installations in demand',
+    ],
+    ES: [
+      'REBT regulation update — review low-voltage installation requirements',
+      'Certificado Instalador Electricista renewal period approaching',
+      'Self-consumption solar installations booming — get certified',
+      'Smart metering creating new maintenance contract opportunities',
+      'Industrial electrical safety audit season — prepare documentation',
+    ],
+    IT: [
+      'CEI standard updates — review latest normative changes',
+      'DM 37/08 Lettera A compliance documentation review recommended',
+      'Superbonus driving electrical renovation demand',
+      'EV charging point installation certification increasingly required',
+      'Prosumer solar installations growing — expand PV competencies',
+    ],
+    UK: [
+      'Part P Building Regulations amendment — review changes',
+      'NICEIC/ELECSA annual assessment approaching — prepare portfolio',
+      '18th Edition Wiring Regulations Amendment 2 in effect',
+      'EV chargepoint installation demand rising — OZEV grant still available',
+      'Solar PV and battery storage MCS certification in high demand',
+    ],
+  },
+  gas: {
+    NL: [
+      'F-gassen certification renewal — check STEK registration',
+      'Scios Scope 8 audit season — prepare documentation',
+      'Heat pump transition subsidies available — expand service offerings',
+      'Annual boiler maintenance season approaching — schedule capacity',
+      'New hydrogen-ready boiler standards under development',
+    ],
+    DE: [
+      'DVGW certification renewal window opens next month',
+      'GEG (Gebäudeenergiegesetz) requirements affecting gas installations',
+      'Heat pump priority in new builds — diversify certifications',
+      'Annual Schornsteinfeger coordination — schedule inspections',
+      'TRGI update — review gas installation technical rules',
+    ],
+    FR: [
+      'Qualigaz certification renewal period approaching',
+      'RGE PG qualification increasingly required for subsidized work',
+      'MaPrimeRénov pushing heat pump transitions — get QualiPAC certified',
+      'Annual gas safety inspection season — optimize scheduling',
+      'New RE2020 affecting gas installation in new construction',
+    ],
+    ES: [
+      'Gas installation category A/B/C license renewal — check dates',
+      'Annual gas inspection obligations — coordinate with distributors',
+      'Natural gas to heat pump transition subsidies available',
+      'RITE thermal installation regulations updated',
+      'Comunidad Autónoma gas installer card renewal period',
+    ],
+    IT: [
+      'DM 37/08 gas installation compliance review recommended',
+      'Annual boiler maintenance obligations — plan customer outreach',
+      'Superbonus for condensing boiler replacements still available',
+      'CIG (Comitato Italiano Gas) technical standards updated',
+      'UNI 7129 gas installation standard — review latest revision',
+    ],
+    UK: [
+      'Gas Safe Register annual renewal — prepare CPD evidence',
+      'ACS reassessment due — book with approved assessment centre',
+      'Boiler Plus legislation — ensure compliance on all installations',
+      'Heat pump competency framework — consider diversification training',
+      'Smart meter gas module installations creating opportunities',
+    ],
+  },
+  painting: {
+    NL: [
+      'VOC regulations tightening — switch to compliant products',
+      'Exterior painting season starting — schedule capacity',
+      'Lead paint regulations for pre-1960 buildings — ensure compliance',
+      'Sustainability certifications gaining client interest',
+      'New RAL color standards available — update your system',
+    ],
+    DE: [
+      'TRGS 610 hazardous substance handling — refresh training',
+      'Malermeister continuing education credits due this year',
+      'VOC emission limits updated for interior coatings',
+      'Heritage building restoration projects increasing — get certified',
+      'BG Bau safety requirements updated for scaffolding work',
+    ],
+    FR: [
+      'Diagnostic plomb (lead) requirements for pre-1949 buildings',
+      'Qualibat certification for painting — review renewal dates',
+      'REP (Extended Producer Responsibility) for paint packaging active',
+      'MaPrimeRénov includes exterior insulation-painting combos',
+      'New NF standards for paint performance — update specifications',
+    ],
+    ES: [
+      'Prevención de Riesgos Laborales training renewal — schedule update',
+      'Lead paint assessment requirements for historic buildings',
+      'VOC regulations aligning with EU standards — check product compliance',
+      'Summer exterior painting season — prepare scheduling capacity',
+      'Sustainability certification demand growing among commercial clients',
+    ],
+    IT: [
+      'CAM (Environmental Minimum Criteria) affecting public tender paint specs',
+      'Albo Artigiani annual renewal — prepare documentation',
+      'Lead paint regulations for pre-1992 buildings — ensure compliance',
+      'Restoration and conservation certifications in high demand',
+      'Safety training (RSPP) renewal period — schedule update',
+    ],
+    UK: [
+      'CSCS card renewal — ensure on-site competency card is valid',
+      'COSHH assessment requirements for paint products — review annually',
+      'Heritage painting qualifications increasingly requested by clients',
+      'Lead paint risk assessment mandatory for pre-1960 properties',
+      'PAS 6000 for paint application standards — review compliance',
+    ],
+  },
+  carpentry: {
+    NL: [
+      'FSC/PEFC wood sourcing requirements tightening for tenders',
+      'Bouwbesluit updates affecting structural timber work',
+      'Fire safety requirements for timber-frame construction updated',
+      'Timber frame construction demand rising — expand capacity',
+      'CE marking for structural timber products — verify supplier compliance',
+    ],
+    DE: [
+      'Zimmermeister continuing education — schedule credits',
+      'DIN 68800 wood protection standard updated — review changes',
+      'KfW energy efficiency subsidies for timber renovation',
+      'Holzbau (timber construction) boom — get structural certification',
+      'BG Bau fall protection requirements for roof carpentry updated',
+    ],
+    FR: [
+      'DTU 31.2 timber frame construction standard — review updates',
+      'RE2020 favoring timber construction — position for growth',
+      'Qualibat charpente qualification — check renewal date',
+      'Wood treatment product regulations updated — verify compliance',
+      'MaPrimeRénov for timber-frame insulation creating demand',
+    ],
+    ES: [
+      'CTE (Código Técnico de Edificación) timber section updates',
+      'Fire resistance requirements for timber in multi-story buildings',
+      'Sustainable forestry certification gaining importance in tenders',
+      'Prevención de Riesgos Laborales training renewal for woodworking',
+      'AITIM (timber association) training programs — expand skills',
+    ],
+    IT: [
+      'NTC 2018 seismic requirements for timber structures',
+      'CAM sustainable wood sourcing for public projects — get certified',
+      'Superbonus for timber-frame energy upgrades still available',
+      'CLT (Cross Laminated Timber) skills increasingly demanded',
+      'Safety training for woodworking machinery — schedule renewal',
+    ],
+    UK: [
+      'CSCS card renewal — maintain site competency',
+      'BS 5268 / Eurocode 5 structural timber — review standard changes',
+      'Fire safety requirements updated for timber-frame buildings',
+      'Modern Methods of Construction (MMC) timber skills in demand',
+      'Heritage carpentry qualifications increasingly valued by clients',
+    ],
+  },
+};
+
+function getTradeContextTip(trade: string, country: string): string | undefined {
+  const tradeLower = trade.toLowerCase();
+  const tips = TRADE_TIPS[tradeLower]?.[country] ?? TRADE_TIPS[tradeLower]?.['NL'];
+  if (!tips || tips.length === 0) return undefined;
+  // Rotate daily based on day-of-year
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / MS_PER_DAY);
+  return tips[dayOfYear % tips.length];
+}
+
+// ---------------------------------------------------------------------------
 // Morning Briefing
 // ---------------------------------------------------------------------------
 
@@ -254,6 +494,7 @@ export async function generateMorningBriefing(context: {
   jobs: any[];
   certs?: any[];
   country?: string;
+  trade?: string;
 }): Promise<MorningBriefing> {
   const invoiceFindings = auditInvoices(context.invoices);
   const quoteFindings = auditQuotes(context.quotes);
@@ -290,6 +531,79 @@ export async function generateMorningBriefing(context: {
     expiringCerts: [],
   });
 
+  // ── Build personalSummary ──
+  const totalChecked = context.invoices.length + context.quotes.length + context.jobs.length + (context.certs ?? []).length;
+  const criticalCount = allFindings.filter(f => f.severity === 'critical').length;
+  const tradeName = context.trade || 'contractor';
+  let personalSummary: string;
+  if (criticalCount > 0) {
+    const topCritical = allFindings.find(f => f.severity === 'critical');
+    const amountMatch = topCritical?.description?.match(/€[\d.,]+/);
+    const amountStr = amountMatch ? ` (${amountMatch[0]})` : '';
+    personalSummary = `Checked ${context.invoices.length} invoices, ${context.quotes.length} quotes, ${context.jobs.length} jobs. Found ${criticalCount} critical${amountStr} and ${allFindings.length - criticalCount} other findings.`;
+  } else if (allFindings.length > 0) {
+    personalSummary = `Checked ${totalChecked} items. ${allFindings.length} findings — nothing critical. Your ${tradeName} business is running smoothly.`;
+  } else {
+    personalSummary = `All clear — ${totalChecked} items checked, no issues found.`;
+  }
+
+  // ── Build proactiveAlerts (forward-looking) ──
+  const proactiveAlerts: string[] = [];
+  const now2 = new Date();
+
+  // Invoices approaching due date (within 3 days)
+  for (const inv of context.invoices) {
+    if (inv.status !== 'sent') continue;
+    const dueDate = inv.dueDate ? new Date(inv.dueDate) : null;
+    if (!dueDate) continue;
+    const daysUntilDue = Math.ceil((dueDate.getTime() - now2.getTime()) / MS_PER_DAY);
+    if (daysUntilDue > 0 && daysUntilDue <= 3) {
+      proactiveAlerts.push(`Invoice ${inv.id} (€${(inv.amount ?? 0).toLocaleString(undefined)}) due in ${daysUntilDue} day${daysUntilDue > 1 ? 's' : ''}`);
+    }
+  }
+
+  // Jobs starting in next 2 days without materials ordered
+  for (const job of context.jobs) {
+    if (job.status !== 'scheduled' && job.status !== 'ingepland') continue;
+    const startDate = new Date(job.scheduledDate || job.startDate || '');
+    if (isNaN(startDate.getTime())) continue;
+    const daysUntilStart = Math.ceil((startDate.getTime() - now2.getTime()) / MS_PER_DAY);
+    if (daysUntilStart > 0 && daysUntilStart <= 2) {
+      const hasMaterials = (job.materials ?? []).length > 0;
+      const materialsOrdered = job.materialsOrdered ?? false;
+      if (hasMaterials && !materialsOrdered) {
+        proactiveAlerts.push(`"${job.title}" starts in ${daysUntilStart} day${daysUntilStart > 1 ? 's' : ''} — materials not yet ordered`);
+      }
+    }
+  }
+
+  // Certs expiring within 14 days
+  for (const cert of (context.certs ?? [])) {
+    if (!cert?.expiryDate) continue;
+    const expiry = new Date(cert.expiryDate).getTime();
+    if (isNaN(expiry)) continue;
+    const daysLeft = Math.ceil((expiry - now2.getTime()) / MS_PER_DAY);
+    if (daysLeft > 0 && daysLeft <= 14) {
+      proactiveAlerts.push(`${cert.name || 'Certificate'} expires in ${daysLeft} days`);
+    }
+  }
+
+  // Quotes expiring within 7 days
+  for (const q of context.quotes) {
+    if (q.status !== 'sent') continue;
+    const validUntil = q.validUntil ? new Date(q.validUntil).getTime() : 0;
+    if (!validUntil) continue;
+    const daysLeft = Math.ceil((validUntil - now2.getTime()) / MS_PER_DAY);
+    if (daysLeft > 0 && daysLeft <= 7) {
+      proactiveAlerts.push(`Quote for ${q.customer || q.id} (€${(q.amount ?? 0).toLocaleString(undefined)}) expires in ${daysLeft} days`);
+    }
+  }
+
+  // ── Build tradeContext — seasonal awareness from tradeContext service ──
+  const seasonalTip = getSeasonalContext(tradeName, context.country ?? 'NL');
+  const legacyTip = getTradeContextTip(tradeName, context.country ?? 'NL');
+  const tradeContext = seasonalTip || legacyTip;
+
   const briefing: MorningBriefing = {
     date: new Date().toISOString().split('T')[0],
     auditsRun: 4, // invoices, quotes, jobs, certs
@@ -302,6 +616,9 @@ export async function generateMorningBriefing(context: {
     findings: allFindings.slice(0, 10), // Top 10 findings
     actionsQueued,
     generatedAt: new Date().toISOString(),
+    personalSummary,
+    tradeContext,
+    proactiveAlerts: proactiveAlerts.slice(0, 5),
   };
 
   await AsyncStorage.setItem(BRIEFING_KEY, JSON.stringify(briefing));

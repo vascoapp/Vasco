@@ -829,7 +829,17 @@
     "paymentReminder": "Betaalherinnering",
     "invoicesOverdue": "{{count}} facturen achterstallig",
     "tapToViewReminder": "Tik om herinnering te bekijken",
-    "editMessage": "Bewerk het bericht..."
+    "editMessage": "Bewerk het bericht...",
+    "snooze": "Herinner later",
+    "snoozeWhen": "Wanneer wil je herinnerd worden?",
+    "snooze1h": "1 uur",
+    "snoozeTomorrow": "Morgen",
+    "snooze3d": "3 dagen",
+    "didItWork": "Snelle feedback",
+    "didCustomerRespond": "Heeft de klant gereageerd?",
+    "yesResponded": "Ja",
+    "notYet": "Nog niet",
+    "noResponse": "Nee"
   },
   "quotes": {
     "newQuote": "Nieuwe offerte",

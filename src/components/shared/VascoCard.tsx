@@ -2,11 +2,11 @@
 // VASCO CARD — Unified AI card (replaces 4 separate AI sections)
 // =============================================================================
 // One card. One section. Everything AI in one place.
-// Collapsed: 1-2 line summary. Expanded: briefing + queue + insight + automations.
+// Collapsed: smart summary with top priority. Expanded: briefing + queue + insight.
 // =============================================================================
 
 import { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, TextInput, Share, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TextInput, Share, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +15,7 @@ import { TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { hapticSuccess, hapticError } from '../../utils/haptics';
 import type { MorningBriefing } from '../../intelligence/backgroundJobScheduler';
 import type { QueueItem } from '../../services/aiActionQueueService';
+import { snoozeQueueItem, recordOutcome } from '../../services/aiActionQueueService';
 import type { ScoredInsight } from '../../intelligence/generators/types';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -29,6 +30,32 @@ interface VascoCardProps {
   onApproveQueueItem: (id: string) => void;
   onRejectQueueItem: (id: string) => void;
   onInsightAction?: (insight: ScoredInsight) => void;
+}
+
+// ---------------------------------------------------------------------------
+// Confidence badge helper
+// ---------------------------------------------------------------------------
+
+function ConfidenceBadge({ confidence }: { confidence: number }) {
+  const pct = Math.round(confidence * 100);
+  let dotColor: string;
+  let label: string;
+  if (confidence >= 0.8) {
+    dotColor = SemanticColors.feedbackSuccess;
+    label = 'High confidence';
+  } else if (confidence >= 0.6) {
+    dotColor = Palette.hermesOrange;
+    label = 'Medium';
+  } else {
+    dotColor = SemanticColors.textTertiary;
+    label = 'Learning';
+  }
+  return (
+    <View style={s.confidenceBadge} accessibilityLabel={`${label}: ${pct}%`}>
+      <View style={[s.confidenceDot, { backgroundColor: dotColor }]} />
+      <Text style={[s.confidenceText, { color: dotColor }]}>{pct}%</Text>
+    </View>
+  );
 }
 
 export function VascoCard({
@@ -50,7 +77,33 @@ export function VascoCard({
   const queueCount = queueItems.length;
   const hasContent = findingsCount > 0 || queueCount > 0 || topInsight || automationsCount > 0;
 
-  if (!hasContent) return null;
+  if (!hasContent && !briefing) return null;
+
+  // ── Smart collapsed summary: show top priority item ──
+  const criticalFindings = briefing?.findings.filter(f => f.severity === 'critical') ?? [];
+  let collapsedSummary: string;
+  if (criticalFindings.length > 0) {
+    const topCritical = criticalFindings[0];
+    const amountMatch = topCritical.description?.match(/€[\d.,]+/);
+    const amountStr = amountMatch ? `${amountMatch[0]} ` : '';
+    const totalActions = queueCount + findingsCount;
+    collapsedSummary = `⚠ ${amountStr}${topCritical.title.slice(0, 40)} — ${totalActions} actions ready`;
+  } else if (queueCount > 0) {
+    const topItem = queueItems[0];
+    const moreCount = queueCount - 1;
+    collapsedSummary = moreCount > 0
+      ? `${topItem.title.slice(0, 35)} — ${moreCount} more`
+      : topItem.title;
+  } else if (findingsCount > 0) {
+    collapsedSummary = t('vasco.findingsCount', { defaultValue: '{{count}} findings', count: findingsCount });
+  } else {
+    const checkedTime = briefing?.generatedAt
+      ? new Date(briefing.generatedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+      : '';
+    collapsedSummary = checkedTime
+      ? t('vasco.allClearAt', { defaultValue: 'All clear — checked at {{time}}', time: checkedTime })
+      : t('vasco.allGood', 'All clear');
+  }
 
   return (
     <Pressable
@@ -68,11 +121,7 @@ export function VascoCard({
         <View style={s.flex1}>
           <Text style={s.title}>Vasco</Text>
           <Text style={s.summary} numberOfLines={1}>
-            {queueCount > 0
-              ? t('vasco.actionsReady', { defaultValue: '{{count}} actions ready', count: queueCount })
-              : findingsCount > 0
-                ? t('vasco.findingsCount', { defaultValue: '{{count}} findings', count: findingsCount })
-                : t('vasco.allGood', 'Alles op orde')}
+            {collapsedSummary}
           </Text>
         </View>
         {/* Expo Router requires 'as any' for dynamic routes — tracked in expo-router#123 */}
@@ -85,6 +134,26 @@ export function VascoCard({
       {/* Expanded content */}
       {expanded && (
         <View style={s.content}>
+          {/* Personal summary + proactive alerts from morning briefing */}
+          {briefing?.personalSummary && (
+            <View style={s.section}>
+              <Text style={s.personalSummary}>{briefing.personalSummary}</Text>
+              {(briefing.proactiveAlerts ?? []).length > 0 && (
+                <View style={s.alertsContainer}>
+                  {briefing.proactiveAlerts.slice(0, 3).map((alert, idx) => (
+                    <View key={idx} style={s.alertRow}>
+                      <Ionicons name="arrow-forward-circle-outline" size={13} color={Palette.hermesOrange} />
+                      <Text style={s.alertText}>{alert}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+              {briefing.tradeContext && (
+                <Text style={s.tradeContext}>{briefing.tradeContext}</Text>
+              )}
+            </View>
+          )}
+
           {/* Morning briefing findings — each is actionable (EVE pattern) */}
           {briefing && findingsCount > 0 && (
             <View style={s.section}>
@@ -126,12 +195,13 @@ export function VascoCard({
                   item={item}
                   onApprove={() => { hapticSuccess(); onApproveQueueItem(item.id); }}
                   onReject={() => { hapticError(); onRejectQueueItem(item.id); }}
+                  onSnooze={(hours: number) => { snoozeQueueItem(item.id, hours); }}
                 />
               ))}
             </View>
           )}
 
-          {/* Top insight with action */}
+          {/* Top insight with action + confidence badge */}
           {topInsight && (
             <View style={s.section}>
               <Text style={s.sectionLabel}>{t('vasco.recommendation', 'Aanbeveling')}</Text>
@@ -144,7 +214,10 @@ export function VascoCard({
               >
                 <Ionicons name={(topInsight.icon as IconName) || 'bulb'} size={16} color={Palette.hermesOrange} />
                 <View style={s.flex1}>
-                  <Text style={s.insightTitle} numberOfLines={1}>{topInsight.title}</Text>
+                  <View style={s.insightTitleRow}>
+                    <Text style={[s.insightTitle, s.flex1]} numberOfLines={1}>{topInsight.title}</Text>
+                    <ConfidenceBadge confidence={topInsight.confidence} />
+                  </View>
                   <Text style={s.insightDesc} numberOfLines={2}>{topInsight.message}</Text>
                 </View>
                 {(topInsight as any).action && (
@@ -186,10 +259,11 @@ function getQueueIcon(type: string): IconName {
   }
 }
 
-function EmbeddedApproval({ item, onApprove, onReject }: {
+function EmbeddedApproval({ item, onApprove, onReject, onSnooze }: {
   item: QueueItem;
   onApprove: () => void;
   onReject: () => void;
+  onSnooze: (hours: number) => void;
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
@@ -207,6 +281,19 @@ function EmbeddedApproval({ item, onApprove, onReject }: {
     'draft_invoice', 'batch_invoices', 'invoice_regenerate', 'draft_reminder',
   ].includes(item.type);
 
+  const handleSnooze = () => {
+    Alert.alert(
+      t('vasco.snooze', 'Remind later'),
+      t('vasco.snoozeWhen', 'When should we remind you?'),
+      [
+        { text: t('vasco.snooze1h', '1 hour'), onPress: () => onSnooze(1) },
+        { text: t('vasco.snoozeTomorrow', 'Tomorrow'), onPress: () => onSnooze(24) },
+        { text: t('vasco.snooze3d', '3 days'), onPress: () => onSnooze(72) },
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+      ]
+    );
+  };
+
   const handleApprove = async () => {
     if (approving) return; // Prevent double-tap
     setApproving(true);
@@ -216,6 +303,19 @@ function EmbeddedApproval({ item, onApprove, onReject }: {
         const text = editText || template;
         try {
           await Share.share({ message: text, title: item.title });
+          // Show outcome feedback after sharing
+          const itemId = item.id;
+          setTimeout(() => {
+            Alert.alert(
+              t('vasco.didItWork', 'Quick feedback'),
+              t('vasco.didCustomerRespond', 'Did the customer respond?'),
+              [
+                { text: t('vasco.yesResponded', 'Yes'), onPress: () => recordOutcome(itemId, 'positive') },
+                { text: t('vasco.notYet', 'Not yet'), style: 'cancel' },
+                { text: t('vasco.noResponse', 'No'), onPress: () => recordOutcome(itemId, 'negative') },
+              ]
+            );
+          }, 2000);
         } catch {}
       }
       onApprove();
@@ -223,6 +323,9 @@ function EmbeddedApproval({ item, onApprove, onReject }: {
       setApproving(false);
     }
   };
+
+  // "Why now?" reasoning from preparedData
+  const reasoning = item.preparedData?.reasoning as string | undefined;
 
   return (
     <View style={s.embeddedCard}>
@@ -237,6 +340,19 @@ function EmbeddedApproval({ item, onApprove, onReject }: {
           <Text style={s.queueDesc} numberOfLines={1}>{item.description}</Text>
         </View>
       </View>
+
+      {/* Customer intelligence context line */}
+      {item.preparedData?.customerContext && (
+        <View style={s.customerContextRow}>
+          <Ionicons name="person-outline" size={11} color={SemanticColors.textTertiary} />
+          <Text style={s.customerContext}>{item.preparedData.customerContext}</Text>
+        </View>
+      )}
+
+      {/* "Why now?" reasoning line */}
+      {reasoning && (
+        <Text style={s.reasoningText} numberOfLines={2}>{reasoning}</Text>
+      )}
 
       {/* Editable preview for shareable items (reminders, follow-ups, progress notes, etc.) */}
       {editing && isShareable && (
@@ -275,6 +391,9 @@ function EmbeddedApproval({ item, onApprove, onReject }: {
           )}
           <Text style={s.approveBtnText}>{item.actionLabel}</Text>
         </Pressable>
+        <Pressable style={s.snoozeBtn} onPress={handleSnooze} accessibilityRole="button" accessibilityLabel={t('vasco.snooze', 'Remind later')}>
+          <Ionicons name="time-outline" size={14} color={SemanticColors.textTertiary} />
+        </Pressable>
         <Pressable style={s.rejectBtn} onPress={onReject} accessibilityRole="button" accessibilityLabel={t('a11y.rejectAction', 'Reject action')}>
           <Ionicons name="close" size={14} color={SemanticColors.textTertiary} />
         </Pressable>
@@ -297,13 +416,13 @@ const s = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    padding: 14,
+    gap: GRID.sm + 2,
+    padding: GRID.md - 2,
   },
   iconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: GRID.xl,
+    height: GRID.xl,
+    borderRadius: GRID.md,
     backgroundColor: Palette.hermesOrange + '12',
     alignItems: 'center',
     justifyContent: 'center',
@@ -320,15 +439,15 @@ const s = StyleSheet.create({
     marginTop: 1,
   },
   content: {
-    paddingHorizontal: 14,
-    paddingBottom: 14,
-    gap: 12,
+    paddingHorizontal: GRID.md - 2,
+    paddingBottom: GRID.md - 2,
+    gap: GRID.md - 4,
     borderTopWidth: 1,
     borderTopColor: SemanticColors.borderDefault,
   },
   section: {
-    gap: 6,
-    paddingTop: 10,
+    gap: GRID.sm - 2,
+    paddingTop: GRID.sm + 2,
   },
   sectionLabel: {
     fontSize: TYPE.tinySize,
@@ -337,11 +456,40 @@ const s = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
+  // Personal summary + proactive alerts
+  personalSummary: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textPrimary,
+    lineHeight: TYPE.captionSize + 5,
+  },
+  alertsContainer: {
+    gap: GRID.xs - 1,
+    marginTop: GRID.xs,
+  },
+  alertRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.sm - 2,
+  },
+  alertText: {
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.captionFamily,
+    color: Palette.hermesOrange,
+    flex: 1,
+  },
+  tradeContext: {
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.tinyFamily,
+    color: SemanticColors.textTertiary,
+    fontStyle: 'italic',
+    marginTop: GRID.xs,
+  },
   // Findings
   findingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: GRID.sm,
   },
   findingText: {
     fontSize: TYPE.captionSize,
@@ -357,46 +505,53 @@ const s = StyleSheet.create({
   embeddedCard: {
     backgroundColor: SemanticColors.surfaceSecondary,
     borderRadius: RADIUS.md,
-    padding: 10,
-    gap: 6,
+    padding: GRID.sm + 2,
+    gap: GRID.sm - 2,
   },
   embeddedHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: GRID.sm,
+  },
+  reasoningText: {
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textTertiary,
+    fontStyle: 'italic',
+    paddingLeft: GRID.lg,
   },
   embeddedAmount: {
     fontSize: TYPE.sectionSize,
     fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
-    paddingLeft: 24,
+    paddingLeft: GRID.lg,
   },
   embeddedImpact: {
     fontSize: TYPE.tinySize,
     fontFamily: TYPE.tinyFamily,
     color: SemanticColors.feedbackSuccess,
-    paddingLeft: 24,
+    paddingLeft: GRID.lg,
   },
   embeddedActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingLeft: 24,
+    gap: GRID.sm - 2,
+    paddingLeft: GRID.lg,
   },
   editInput: {
     backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: RADIUS.sm,
-    padding: 8,
+    padding: GRID.sm,
     fontSize: TYPE.captionSize,
     fontFamily: TYPE.captionFamily,
     color: SemanticColors.textPrimary,
     minHeight: 60,
-    marginLeft: 24,
+    marginLeft: GRID.lg,
   },
   editBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: RADIUS.full,
+    height: RADIUS.full,
+    borderRadius: RADIUS.full / 2,
     backgroundColor: Palette.hermesOrange + '15',
     alignItems: 'center',
     justifyContent: 'center',
@@ -405,7 +560,7 @@ const s = StyleSheet.create({
   queueRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: GRID.sm,
   },
   queueTitle: {
     fontSize: TYPE.captionSize,
@@ -417,14 +572,27 @@ const s = StyleSheet.create({
     fontFamily: TYPE.captionFamily,
     color: SemanticColors.textSecondary,
   },
+  customerContextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.xs,
+    paddingLeft: GRID.lg,
+  },
+  customerContext: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    fontStyle: 'italic',
+    color: SemanticColors.textTertiary,
+    flex: 1,
+  },
   approveBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: GRID.xs,
     backgroundColor: Palette.hermesOrange,
     borderRadius: RADIUS.sm,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: GRID.sm + 2,
+    paddingVertical: GRID.sm - 3,
     flex: 1,
     justifyContent: 'center',
   },
@@ -433,10 +601,18 @@ const s = StyleSheet.create({
     fontFamily: TYPE.titleFamily,
     color: Palette.white,
   },
+  snoozeBtn: {
+    width: RADIUS.full,
+    height: RADIUS.full,
+    borderRadius: RADIUS.full / 2,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   rejectBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: RADIUS.full,
+    height: RADIUS.full,
+    borderRadius: RADIUS.full / 2,
     backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -445,7 +621,12 @@ const s = StyleSheet.create({
   insightRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 10,
+    gap: GRID.sm + 2,
+  },
+  insightTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.sm - 2,
   },
   insightTitle: {
     fontSize: TYPE.captionSize,
@@ -461,13 +642,32 @@ const s = StyleSheet.create({
   insightAction: {
     backgroundColor: Palette.hermesOrange + '15',
     borderRadius: RADIUS.sm,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: GRID.sm,
+    paddingVertical: GRID.xs,
   },
   insightActionText: {
     fontSize: TYPE.tinySize,
     fontFamily: TYPE.tinyFamily,
     color: Palette.hermesOrange,
+  },
+  // Confidence badge
+  confidenceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.xs - 1,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: RADIUS.full,
+    paddingHorizontal: GRID.sm - 2,
+    paddingVertical: 2,
+  },
+  confidenceDot: {
+    width: GRID.sm - 2,
+    height: GRID.sm - 2,
+    borderRadius: (GRID.sm - 2) / 2,
+  },
+  confidenceText: {
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.tinyFamily,
   },
   disabled: {
     opacity: 0.6,
