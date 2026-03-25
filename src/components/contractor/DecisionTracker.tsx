@@ -26,6 +26,7 @@ import {
   DECISION_TEMPLATES,
   getTrackerStats,
 } from '../../data/mockDecisions';
+import { useAuth } from '../../context/AuthContext';
 
 const TRACKER_KEY = '@vasco_decision_trackers';
 function usePersistedTrackers(): CustomerDecisionTracker[] {
@@ -821,8 +822,62 @@ interface TemplatePickerProps {
   onClose?: () => void;
 }
 
+const TRADE_MAP: Record<string, string[]> = {
+  plumbing: ['plumber', 'bathroom_fitter', 'kitchen_fitter'],
+  electrical: ['electrician'],
+  gas: ['plumber', 'general_contractor'],
+  painting: ['painter'],
+  carpentry: ['carpenter', 'kitchen_fitter'],
+  general: ['general_contractor', 'bathroom_fitter', 'kitchen_fitter', 'painter', 'electrician', 'plumber', 'carpenter'],
+};
+
+function renderTemplateCard(template: DecisionTemplate, onSelect: (t: DecisionTemplate) => void) {
+  return (
+    <Pressable
+      key={template.id}
+      style={styles.templateCard}
+      onPress={() => onSelect(template)}
+    >
+      <View style={styles.templateHeader}>
+        <Text style={styles.templateName}>{template.name}</Text>
+        <View style={styles.templateMeta}>
+          <Text style={styles.templateDecisions}>
+            {template.estimatedTotalDecisions} decisions
+          </Text>
+        </View>
+      </View>
+      <Text style={styles.templateDescription}>{template.description}</Text>
+      <View style={styles.templateStats}>
+        <View style={styles.templateStat}>
+          <Ionicons name="list" size={14} color={SemanticColors.textTertiary} />
+          <Text style={styles.templateStatText}>
+            {template.categories.length} categories
+          </Text>
+        </View>
+        <View style={styles.templateStat}>
+          <Ionicons name="time" size={14} color={SemanticColors.textTertiary} />
+          <Text style={styles.templateStatText}>
+            ~{template.avgDaysToComplete} days avg
+          </Text>
+        </View>
+        <View style={styles.templateStat}>
+          <Ionicons name="people" size={14} color={SemanticColors.textTertiary} />
+          <Text style={styles.templateStatText}>
+            Used {template.usageCount}x
+          </Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
 export function TemplatePicker({ onSelect, onClose }: TemplatePickerProps) {
-  const templates = DECISION_TEMPLATES;
+  const { user } = useAuth();
+  const contractorTrade = user?.trade ?? 'general';
+  const matchingTradeIds = TRADE_MAP[contractorTrade] ?? TRADE_MAP.general;
+
+  const myTemplates = DECISION_TEMPLATES.filter(t => matchingTradeIds.includes(t.trade));
+  const otherTemplates = DECISION_TEMPLATES.filter(t => !matchingTradeIds.includes(t.trade));
 
   return (
     <View style={styles.container}>
@@ -837,43 +892,14 @@ export function TemplatePicker({ onSelect, onClose }: TemplatePickerProps) {
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainerDetail}>
-        {templates.map((template) => (
-          <Pressable
-            key={template.id}
-            style={styles.templateCard}
-            onPress={() => onSelect(template)}
-          >
-            <View style={styles.templateHeader}>
-              <Text style={styles.templateName}>{template.name}</Text>
-              <View style={styles.templateMeta}>
-                <Text style={styles.templateDecisions}>
-                  {template.estimatedTotalDecisions} decisions
-                </Text>
-              </View>
-            </View>
-            <Text style={styles.templateDescription}>{template.description}</Text>
-            <View style={styles.templateStats}>
-              <View style={styles.templateStat}>
-                <Ionicons name="list" size={14} color={SemanticColors.textTertiary} />
-                <Text style={styles.templateStatText}>
-                  {template.categories.length} categories
-                </Text>
-              </View>
-              <View style={styles.templateStat}>
-                <Ionicons name="time" size={14} color={SemanticColors.textTertiary} />
-                <Text style={styles.templateStatText}>
-                  ~{template.avgDaysToComplete} days avg
-                </Text>
-              </View>
-              <View style={styles.templateStat}>
-                <Ionicons name="people" size={14} color={SemanticColors.textTertiary} />
-                <Text style={styles.templateStatText}>
-                  Used {template.usageCount}x
-                </Text>
-              </View>
-            </View>
-          </Pressable>
-        ))}
+        {myTemplates.map((template) => renderTemplateCard(template, onSelect))}
+
+        {otherTemplates.length > 0 && (
+          <>
+            <Text style={styles.sectionLabel}>Other trades</Text>
+            {otherTemplates.map((template) => renderTemplateCard(template, onSelect))}
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -1606,6 +1632,15 @@ const styles = StyleSheet.create({
   emptyStateText: {
     color: SemanticColors.textTertiary,
     fontSize: 14,
+  },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: SemanticColors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   templateCard: {
     backgroundColor: SemanticColors.surfacePrimary,
