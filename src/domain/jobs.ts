@@ -43,6 +43,8 @@ export type Job = {
   invoiceId?: string;
   quotedAmount?: number;
   agreedAmount?: number;
+  actualHours?: number;
+  actualCost?: number;
   // Work details
   trade?: string;
   priority: JobPriority;

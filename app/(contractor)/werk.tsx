@@ -113,7 +113,7 @@ export default function WerkScreen() {
             { icon: 'calendar-outline' as IconName, label: t('jobs.calendar', 'Kalender'), route: '/contractor/drag-schedule' },
             { icon: 'time-outline' as IconName, label: t('jobs.hours', 'Uren'), route: '/contractor/timesheet' },
             ...(user?.isAannemer ? [{ icon: 'folder-open-outline' as IconName, label: t('jobs.projects', 'Projecten'), route: '/contractor/projects' }] : []),
-            { icon: 'people-outline' as IconName, label: t('jobs.customers', 'Klanten'), route: '/contractor/customer-crm' },
+            { icon: 'people-outline' as IconName, label: t('jobs.customers', 'Klanten'), route: '/(contractor)/bedrijf' },
           ]).map(btn => (
             <Pressable
               key={btn.route}

@@ -275,7 +275,6 @@ export default function TodayScreen() {
 
   // Job Lifecycle Pipeline (P1)
   const { counts: lifecycleCounts } = useJobLifecyclePipeline();
-  const pipelineCount = lifecycleCounts.lead + lifecycleCounts.offerte + lifecycleCounts.geaccepteerd;
 
   // Vasco AI Guidance (critical/high only)
   const allGuidance = useVascoGuidance('contractor', 'today');
@@ -340,12 +339,7 @@ export default function TodayScreen() {
   const outstanding = cashFlowSummary.pendingIncome;
 
   // Greeting
-  const greeting = useMemo(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) return t('dashboard.goodMorning', 'Goedemorgen');
-    if (hour < 18) return t('dashboard.goodAfternoon', 'Goedemiddag');
-    return t('dashboard.goodEvening', 'Goedenavond');
-  }, [t]);
+  const greeting = 'Vasco';
 
   const formattedDate = new Date().toLocaleDateString(undefined, {
     weekday: 'long',
@@ -394,19 +388,19 @@ export default function TodayScreen() {
           <Text style={styles.date}>{formattedDate}</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 8, flexShrink: 0 }}>
-          <Pressable style={styles.profileButton} onPress={() => router.push('/contractor/search' as any)} accessibilityRole="button" accessibilityLabel={t('a11y.search', 'Search')}>
-            <Ionicons name="search" size={20} color={SemanticColors.textPrimary} />
+          <Pressable style={styles.headerIcon} onPress={() => router.push('/contractor/search' as any)} accessibilityRole="button" accessibilityLabel={t('a11y.search', 'Search')}>
+            <Ionicons name="search" size={16} color={SemanticColors.textSecondary} />
           </Pressable>
-          <Pressable style={styles.profileButton} onPress={() => router.push('/contractor/notifications' as any)} accessibilityRole="button" accessibilityLabel={t('a11y.notifications', 'Notifications')}>
-            <Ionicons name="notifications-outline" size={20} color={SemanticColors.textPrimary} />
+          <Pressable style={styles.headerIcon} onPress={() => router.push('/contractor/notifications' as any)} accessibilityRole="button" accessibilityLabel={t('a11y.notifications', 'Notifications')}>
+            <Ionicons name="notifications-outline" size={16} color={SemanticColors.textSecondary} />
             {unreadCount > 0 && (
               <View style={styles.notifBadge}>
                 <Text style={styles.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
               </View>
             )}
           </Pressable>
-          <Pressable style={styles.profileButton} onPress={() => router.push('/contractor/profile' as any)} accessibilityRole="button" accessibilityLabel={t('a11y.profile', 'Profile')}>
-            <Ionicons name="person" size={22} color={Palette.hermesOrange} />
+          <Pressable style={styles.headerIcon} onPress={() => router.push('/contractor/profile' as any)} accessibilityRole="button" accessibilityLabel={t('a11y.profile', 'Profile')}>
+            <Ionicons name="person-circle-outline" size={16} color={SemanticColors.textSecondary} />
           </Pressable>
         </View>
       </View>
@@ -914,24 +908,7 @@ export default function TodayScreen() {
           </Pressable>
         )}
 
-        {/* First job banner for new users */}
-        {pipelineCount === 0 && todayJobs.length === 0 && (
-          <FadeIn delay={200} duration={500}>
-            <Pressable
-              style={({ pressed }) => [styles.firstJobBanner, pressed && { transform: [{ scale: 0.98 }] }]}
-              onPress={() => router.push('/contractor/pipeline' as any)}
-            >
-              <View style={styles.firstJobIcon}>
-                <Ionicons name="rocket" size={24} color={Palette.white} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.firstJobTitle}>{t('jobs.newJob', 'Eerste klus aanmaken')}</Text>
-                <Text style={styles.firstJobDesc}>{t('dashboard.startPlanning', 'Begin met het plannen van je werk')}</Text>
-              </View>
-              <Ionicons name="arrow-forward" size={20} color={Palette.hermesOrange} />
-            </Pressable>
-          </FadeIn>
-        )}
+        {/* Empty state handled by VascoCard + schedule section */}
 
         {/* Action Required — now inside VascoCard above */}
 
@@ -1026,6 +1003,14 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
+    backgroundColor: SemanticColors.surfacePrimary,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  headerIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: SemanticColors.surfacePrimary,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,

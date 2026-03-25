@@ -180,10 +180,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   const [invoices, setInvoices] = useState<Invoice[]>(isSupabaseConfigured ? [] : initialInvoices);
   const [jobs, setJobs] = useState<Job[]>(isSupabaseConfigured ? [] : [
     { id: 'j-seed-1', customerId: 'cust-004', title: 'Lekkage inspectie — Fam. Bakker', description: null, status: 'lead', trade: 'plumbing', priority: 'normal', quotedAmount: 180, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 1).toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'j-seed-2', customerId: 'cust-001', title: 'CV-ketel onderhoud — Fam. de Vries', description: null, status: 'scheduled', trade: 'plumbing', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], estimatedDuration: 3, quotedAmount: 450, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 3).toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'j-seed-3', customerId: 'cust-002', title: 'Badkamer renovatie — Fam. Jansen', description: null, status: 'in-progress', trade: 'plumbing', priority: 'normal', estimatedDuration: 24, quotedAmount: 4200, agreedAmount: 4200, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 7).toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'j-seed-4', customerId: 'cust-003', title: 'Lekkage reparatie — Bakkerij Smit', description: null, status: 'completed', trade: 'plumbing', priority: 'normal', estimatedDuration: 2, quotedAmount: 280, agreedAmount: 280, completedAt: new Date(Date.now() - MS_PER_DAY * 12).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 14).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 12).toISOString() },
-    { id: 'j-seed-5', customerId: 'cust-005', title: 'Vloerverwarming check — Hotel NH', description: null, status: 'invoiced', trade: 'plumbing', priority: 'normal', estimatedDuration: 2, quotedAmount: 350, agreedAmount: 350, completedAt: new Date(Date.now() - MS_PER_DAY * 20).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 25).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 20).toISOString() },
+    { id: 'j-seed-2', customerId: 'cust-001', title: 'CV-ketel onderhoud — Fam. de Vries', description: null, status: 'scheduled', trade: 'plumbing', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], scheduledStartTime: '09:00', scheduledEndTime: '12:00', estimatedDuration: 3, quotedAmount: 450, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 3).toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'j-seed-3', customerId: 'cust-002', title: 'Badkamer renovatie — Fam. Jansen', description: null, status: 'in-progress', trade: 'plumbing', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], scheduledStartTime: '13:30', scheduledEndTime: '17:00', estimatedDuration: 24, quotedAmount: 4200, agreedAmount: 4200, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 7).toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'j-seed-4', customerId: 'cust-003', title: 'Lekkage reparatie — Bakkerij Smit', description: null, status: 'completed', trade: 'plumbing', priority: 'normal', estimatedDuration: 2, quotedAmount: 280, agreedAmount: 280, actualHours: 2.5, actualCost: 85, completedAt: new Date(Date.now() - MS_PER_DAY * 12).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 14).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 12).toISOString() },
+    { id: 'j-seed-5', customerId: 'cust-005', title: 'Vloerverwarming check — Hotel NH', description: null, status: 'invoiced', trade: 'plumbing', priority: 'normal', estimatedDuration: 2, quotedAmount: 350, agreedAmount: 350, invoiceId: 'inv-seed-1', completedAt: new Date(Date.now() - MS_PER_DAY * 20).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 25).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 20).toISOString() },
   ]);
   const [extractedDocs, setExtractedDocs] = useState<ExtractedDocument[]>([]);
   const [lineItems, setLineItems] = useState<Record<string, QuoteLineItem[]>>(
@@ -198,7 +198,16 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   ]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [jobMaterialsMap, setJobMaterialsMap] = useState<Record<string, JobMaterial[]>>({});
+  const [jobMaterialsMap, setJobMaterialsMap] = useState<Record<string, JobMaterial[]>>(isSupabaseConfigured ? {} : {
+    'j-seed-2': [
+      { id: 'jm-s2-1', jobId: 'j-seed-2', materialId: 'mat-cvfilter', quantity: 2, unit: 'stuk', unitPrice: 8.50, totalPrice: 17, status: 'planned', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 'jm-s2-2', jobId: 'j-seed-2', materialId: 'mat-expansievat', quantity: 1, unit: 'stuk', unitPrice: 65, totalPrice: 65, status: 'planned', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    ],
+    'j-seed-3': [
+      { id: 'jm-s3-1', jobId: 'j-seed-3', materialId: 'mat-koperbuis', quantity: 6, unit: 'meter', unitPrice: 12.50, totalPrice: 75, status: 'delivered', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 'jm-s3-2', jobId: 'j-seed-3', materialId: 'mat-thermostaat', quantity: 3, unit: 'stuk', unitPrice: 42, totalPrice: 126, status: 'ordered', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    ],
+  });
   const [priceObsMap, setPriceObsMap] = useState<Record<string, PriceObservation[]>>({});
   const [moneybirdConnected, setMoneybirdConnected] = useState(false);
   const [lastMoneybirdExport, setLastMoneybirdExport] = useState<Record<string, string>>({});
