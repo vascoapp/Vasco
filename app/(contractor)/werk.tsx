@@ -91,6 +91,11 @@ export default function WerkScreen() {
   const leadJobs = jobs.filter((j: any) => ['lead', 'quoted', 'accepted'].includes(j.status));
   const todayJobs = todaySchedule.jobs;
 
+  // KPI counts
+  const activeCount = activeJobs.length;
+  const scheduledToday = jobs.filter((j: any) => j.scheduledDate === today || j.date === today).length;
+  const leadCount = leadJobs.length;
+
   return (
     <View style={s.container}>
       {/* Header */}
@@ -107,6 +112,15 @@ export default function WerkScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />}
       >
+        {/* KPI strip */}
+        <View style={s.kpiStrip}>
+          <View style={s.kpi}><Text style={s.kpiValue}>{activeCount}</Text><Text style={s.kpiLabel}>{t('dashboard.active', 'Active')}</Text></View>
+          <View style={s.kpiDivider} />
+          <View style={s.kpi}><Text style={s.kpiValue}>{scheduledToday}</Text><Text style={s.kpiLabel}>{t('dashboard.today', 'Today')}</Text></View>
+          <View style={s.kpiDivider} />
+          <View style={s.kpi}><Text style={s.kpiValue}>{leadCount}</Text><Text style={s.kpiLabel}>{t('dashboard.leads', 'Leads')}</Text></View>
+        </View>
+
         {/* Action strip — horizontal scroll */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.actionStrip}>
           {([
@@ -363,11 +377,28 @@ const s = StyleSheet.create({
     backgroundColor: PAGE_BG,
   },
   headerTitle: { fontSize: TYPE.displaySize, fontFamily: TYPE.displayFamily, color: SemanticColors.textPrimary, letterSpacing: TYPE.displayTracking },
-  searchBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: SemanticColors.surfacePrimary, alignItems: 'center', justifyContent: 'center' },
+  searchBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: SemanticColors.surfacePrimary, alignItems: 'center', justifyContent: 'center' },
 
   // Scroll
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: SafeArea.side, gap: GRID.lg },
+
+  // KPI strip
+  kpiStrip: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md,
+  },
+  kpi: { flex: 1, alignItems: 'center' },
+  kpiValue: {
+    fontSize: 22, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary,
+    marginTop: GRID.xs,
+  },
+  kpiLabel: {
+    fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: SemanticColors.textSecondary,
+  },
+  kpiDivider: {
+    width: StyleSheet.hairlineWidth, height: 32, backgroundColor: SemanticColors.borderDefault,
+  },
 
   // Action strip
   actionStrip: { gap: GRID.sm, paddingRight: GRID.lg },
@@ -385,30 +416,30 @@ const s = StyleSheet.create({
   todayList: { gap: GRID.sm },
   todayCard: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: 14,
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md,
   },
-  todayLeft: { width: 48, alignItems: 'center' },
-  todayTime: { fontSize: TYPE.titleSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  todayLeft: { width: 44, alignItems: 'center' },
+  todayTime: { fontSize: TYPE.bodySize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
   todayEnd: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textTertiary },
-  todayDivider: { width: 1, height: 32, backgroundColor: SemanticColors.borderDefault, marginHorizontal: 12 },
+  todayDivider: { width: 1, height: 28, backgroundColor: SemanticColors.borderDefault, marginHorizontal: GRID.sm },
   todayContent: { flex: 1 },
   todayTitle: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
   todayMeta: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
-  durationPill: { backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.sm, paddingHorizontal: 8, paddingVertical: 3 },
-  durationText: { fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: SemanticColors.textSecondary },
+  durationPill: { backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.sm, paddingHorizontal: GRID.sm, paddingVertical: 2 },
+  durationText: { fontSize: TYPE.tinySize, fontFamily: TYPE.labelFamily, color: SemanticColors.textSecondary },
 
   // Pipeline card
   pipelineCard: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md, gap: GRID.md - 4 },
   pipelineRow: { flexDirection: 'row', alignItems: 'center' },
   pipelineStat: { flex: 1, alignItems: 'center' },
-  pipelineValue: { fontSize: 24, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  pipelineValue: { fontSize: 22, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
   pipelineLabel: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textSecondary, marginTop: 2 },
   pipelineDivider: { width: 1, height: 28, backgroundColor: SemanticColors.borderDefault },
 
   // Job cards — clean vertical list
   jobCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden' },
   jobAccent: { width: 4, alignSelf: 'stretch' },
-  jobContent: { flex: 1, paddingVertical: 14, paddingHorizontal: 14 },
+  jobContent: { flex: 1, paddingVertical: GRID.md, paddingHorizontal: GRID.md },
   jobTitle: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
   jobMeta: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
 

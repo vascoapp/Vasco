@@ -1,6 +1,6 @@
 // Decision Tracker - Help contractors guide customers through project decisions
 // Reduces delays, improves customer experience, builds repeat business
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Alert,
   Linking,
@@ -12,8 +12,9 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors } from '../../theme/colors';
-import { Spacing } from '../../theme/spacing';
+import { useTranslation } from 'react-i18next';
+import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, GRID, RADIUS } from '../../theme/tabStyles';
 import type {
   CustomerDecisionTracker,
   CustomerDecisionCategory,
@@ -52,6 +53,84 @@ function usePersistedTrackers(): CustomerDecisionTracker[] {
 type IconName = keyof typeof Ionicons.glyphMap;
 
 // ============================================
+// PRIORITY BADGE
+// ============================================
+
+function PriorityBadge({ priority }: { priority: string }) {
+  const { t } = useTranslation();
+  const config = {
+    critical: { bg: SemanticColors.feedbackErrorBg, color: SemanticColors.feedbackError, label: t('dt.critical') },
+    important: { bg: Palette.hermesOrange + '18', color: Palette.hermesOrange, label: t('dt.important') },
+    optional: { bg: SemanticColors.surfaceSecondary, color: SemanticColors.textTertiary, label: t('dt.optional') },
+  }[priority] ?? { bg: SemanticColors.surfaceSecondary, color: SemanticColors.textTertiary, label: priority };
+
+  return (
+    <View style={[styles.priorityBadge, { backgroundColor: config.bg }]}>
+      <Text style={[styles.priorityBadgeText, { color: config.color }]}>{config.label}</Text>
+    </View>
+  );
+}
+
+// ============================================
+// PROGRESS RING (SVG-free, using bordered View)
+// ============================================
+
+function ProgressRing({ percent, size = 88 }: { percent: number; size?: number }) {
+  const { t } = useTranslation();
+  const ringWidth = 4;
+  const color = percent >= 75
+    ? SemanticColors.feedbackSuccess
+    : percent >= 40
+      ? Palette.hermesOrange
+      : SemanticColors.feedbackError;
+
+  return (
+    <View style={{
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: color + '12',
+      borderWidth: ringWidth,
+      borderColor: color + '25',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
+    }}>
+      {/* Foreground arc approximated with a thick colored border segment */}
+      <View style={{
+        position: 'absolute',
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        borderWidth: ringWidth,
+        borderColor: 'transparent',
+        borderTopColor: color,
+        borderRightColor: percent > 25 ? color : 'transparent',
+        borderBottomColor: percent > 50 ? color : 'transparent',
+        borderLeftColor: percent > 75 ? color : 'transparent',
+        transform: [{ rotate: '-45deg' }],
+      }} />
+      <Text style={{
+        fontSize: TYPE.sectionSize,
+        fontFamily: TYPE.sectionFamily,
+        color,
+        letterSpacing: TYPE.sectionTracking,
+      }}>
+        {percent}%
+      </Text>
+      <Text style={{
+        fontSize: TYPE.tinySize,
+        fontFamily: TYPE.tinyFamily,
+        color: SemanticColors.textSecondary,
+        marginTop: -2,
+      }}>
+        {t('dt.complete')}
+      </Text>
+    </View>
+  );
+}
+
+// ============================================
 // MAIN DECISION TRACKER LIST
 // ============================================
 
@@ -64,6 +143,7 @@ export function DecisionTrackerList({
   onSelectTracker,
   onCreateNew,
 }: DecisionTrackerListProps) {
+  const { t } = useTranslation();
   const trackers = usePersistedTrackers();
   const [filter, setFilter] = useState<'all' | 'overdue' | 'pending'>('all');
 
@@ -83,43 +163,46 @@ export function DecisionTrackerList({
         <Pressable
           style={[styles.statCard, filter === 'all' && styles.statCardActive]}
           onPress={() => setFilter('all')}
+          accessibilityLabel={t('dt.active')}
         >
-          <Ionicons name="people" size={24} color={SemanticColors.actionPrimary} />
+          <Ionicons name="people" size={24} color={Palette.hermesOrange} />
           <Text style={styles.statValue}>{trackers.length}</Text>
-          <Text style={styles.statLabel}>Actief</Text>
+          <Text style={styles.statLabel}>{t('dt.active')}</Text>
         </Pressable>
         <Pressable
           style={[styles.statCard, filter === 'overdue' && styles.statCardActive]}
           onPress={() => setFilter(filter === 'overdue' ? 'all' : 'overdue')}
+          accessibilityLabel={t('dt.overdue')}
         >
           <Ionicons name="alert-circle" size={24} color={SemanticColors.feedbackError} />
           <Text style={[styles.statValue, { color: SemanticColors.feedbackError }]}>
             {totalOverdue}
           </Text>
-          <Text style={styles.statLabel}>Verlopen</Text>
+          <Text style={styles.statLabel}>{t('dt.overdue')}</Text>
         </Pressable>
         <Pressable
           style={[styles.statCard, filter === 'pending' && styles.statCardActive]}
           onPress={() => setFilter(filter === 'pending' ? 'all' : 'pending')}
+          accessibilityLabel={t('dt.waiting')}
         >
           <Ionicons name="time" size={24} color={SemanticColors.feedbackWarning} />
           <Text style={[styles.statValue, { color: SemanticColors.feedbackWarning }]}>
             {totalPending}
           </Text>
-          <Text style={styles.statLabel}>Wachtend</Text>
+          <Text style={styles.statLabel}>{t('dt.waiting')}</Text>
         </Pressable>
       </View>
 
       {/* Add New Button */}
-      <Pressable style={styles.addNewButton} onPress={onCreateNew}>
-        <Ionicons name="add-circle" size={20} color={SemanticColors.actionPrimary} />
-        <Text style={styles.addNewText}>Nieuwe keuzelijst</Text>
+      <Pressable style={styles.addNewButton} onPress={onCreateNew} accessibilityLabel={t('dt.newChecklist')}>
+        <Ionicons name="add-circle" size={20} color={Palette.hermesOrange} />
+        <Text style={styles.addNewText}>{t('dt.newChecklist')}</Text>
       </Pressable>
 
       {/* Active Trackers List */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>
-          {filter === 'overdue' ? 'Verlopen keuzes' : filter === 'pending' ? 'Wachtende keuzes' : 'Actieve trackers'}
+          {filter === 'overdue' ? t('dt.overdueChoices') : filter === 'pending' ? t('dt.waitingChoices') : t('dt.activeTrackers')}
         </Text>
         {filteredTrackers.map((tracker) => (
           <TrackerCard
@@ -143,6 +226,7 @@ interface TrackerCardProps {
 }
 
 function TrackerCard({ tracker, onPress }: TrackerCardProps) {
+  const { t } = useTranslation();
   const stats = getTrackerStats(tracker);
   const progressPercent = stats.completionPercent;
 
@@ -186,19 +270,19 @@ function TrackerCard({ tracker, onPress }: TrackerCardProps) {
       <View style={styles.trackerStats}>
         <View style={styles.trackerStat}>
           <Ionicons name="checkmark-circle" size={16} color={SemanticColors.feedbackSuccess} />
-          <Text style={styles.trackerStatText}>{stats.decided} decided</Text>
+          <Text style={styles.trackerStatText}>{stats.decided} {t('dt.decided').toLowerCase()}</Text>
         </View>
         {stats.overdue > 0 && (
           <View style={styles.trackerStat}>
             <Ionicons name="alert-circle" size={16} color={SemanticColors.feedbackError} />
             <Text style={[styles.trackerStatText, { color: SemanticColors.feedbackError }]}>
-              {stats.overdue} overdue
+              {stats.overdue} {t('dt.overdue').toLowerCase()}
             </Text>
           </View>
         )}
         <View style={styles.trackerStat}>
           <Ionicons name="time" size={16} color={SemanticColors.textTertiary} />
-          <Text style={styles.trackerStatText}>{stats.upcoming} upcoming</Text>
+          <Text style={styles.trackerStatText}>{stats.upcoming} {t('dt.upcoming').toLowerCase()}</Text>
         </View>
       </View>
 
@@ -206,7 +290,7 @@ function TrackerCard({ tracker, onPress }: TrackerCardProps) {
       {stats.overdue > 0 && (
         <View style={styles.actionHint}>
           <Ionicons name="notifications" size={14} color={SemanticColors.feedbackWarning} />
-          <Text style={styles.actionHintText}>Send reminder for overdue decisions</Text>
+          <Text style={styles.actionHintText}>{t('dt.sendReminderOverdue')}</Text>
           <Ionicons name="chevron-forward" size={14} color={SemanticColors.feedbackWarning} />
         </View>
       )}
@@ -233,26 +317,35 @@ export function DecisionTrackerDetail({
   onRecordDecision,
   onShareWithCustomer,
 }: DecisionTrackerDetailProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'overview' | 'overdue' | 'pending' | 'completed'>('overview');
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
   const stats = getTrackerStats(tracker);
 
-  const overdueItems = tracker.categories.flatMap(c =>
-    c.items.filter(i => i.isOverdue && i.status === 'pending')
-  );
-  const pendingItems = tracker.categories.flatMap(c =>
-    c.items.filter(i => !i.isOverdue && i.status === 'pending')
-  );
-  const completedItems = tracker.categories.flatMap(c =>
-    c.items.filter(i => i.status === 'decided')
-  );
+  const overdueItems = useMemo(() =>
+    tracker.categories.flatMap(c =>
+      c.items.filter(i => i.isOverdue && i.status === 'pending')
+    ), [tracker]);
+  const pendingItems = useMemo(() =>
+    tracker.categories.flatMap(c =>
+      c.items.filter(i => !i.isOverdue && i.status === 'pending')
+    ), [tracker]);
+  const completedItems = useMemo(() =>
+    tracker.categories.flatMap(c =>
+      c.items.filter(i => i.status === 'decided')
+    ), [tracker]);
+
+  // Group items by category for sectioned display
+  const groupedOverdue = useMemo(() => groupByCategory(tracker, 'overdue'), [tracker]);
+  const groupedPending = useMemo(() => groupByCategory(tracker, 'pending'), [tracker]);
+  const groupedCompleted = useMemo(() => groupByCategory(tracker, 'completed'), [tracker]);
 
   const handleSendReminder = (channel: 'whatsapp' | 'sms' | 'email') => {
     const itemsToRemind = selectedItems.length > 0 ? selectedItems : overdueItems.map(i => i.id);
 
     if (itemsToRemind.length === 0) {
-      Alert.alert('No Items', 'Select items or have overdue items to send reminders.');
+      Alert.alert(t('dt.noItems'), t('dt.selectItemsHint'));
       return;
     }
 
@@ -274,7 +367,7 @@ export function DecisionTrackerDetail({
         Alert.alert('Error', 'Could not open SMS');
       });
     } else if (channel === 'email' && tracker.customerEmail) {
-      const subject = `Decisions needed for your ${tracker.templateName}`;
+      const subject = t('dt.decisionsNeeded', { template: tracker.templateName });
       const url = `mailto:${tracker.customerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
       Linking.openURL(url).catch(() => {
         Alert.alert('Error', 'Could not open email');
@@ -294,25 +387,25 @@ export function DecisionTrackerDetail({
   };
 
   const tabs: { id: typeof activeTab; label: string; badge?: number }[] = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'overdue', label: 'Overdue', badge: overdueItems.length },
-    { id: 'pending', label: 'Pending', badge: pendingItems.length },
-    { id: 'completed', label: 'Done', badge: completedItems.length },
+    { id: 'overview', label: t('dt.overview') },
+    { id: 'overdue', label: t('dt.overdue'), badge: overdueItems.length },
+    { id: 'pending', label: t('dt.pending'), badge: pendingItems.length },
+    { id: 'completed', label: t('dt.done'), badge: completedItems.length },
   ];
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.detailHeader}>
-        <Pressable onPress={onClose} style={styles.backButton}>
+        <Pressable onPress={onClose} style={styles.backButton} accessibilityLabel={t('common.back')}>
           <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={styles.headerContent}>
           <Text style={styles.detailTitle}>{tracker.customerName}</Text>
           <Text style={styles.detailSubtitle}>{tracker.templateName}</Text>
         </View>
-        <Pressable style={styles.shareButton} onPress={onShareWithCustomer}>
-          <Ionicons name="share-outline" size={20} color={SemanticColors.actionPrimary} />
+        <Pressable style={styles.shareButton} onPress={onShareWithCustomer} accessibilityLabel={t('common.share')}>
+          <Ionicons name="share-outline" size={20} color={Palette.hermesOrange} />
         </Pressable>
         <View style={styles.progressBadge}>
           <Text style={styles.progressBadgeText}>{stats.completionPercent}%</Text>
@@ -324,6 +417,7 @@ export function DecisionTrackerDetail({
         <Pressable
           style={[styles.reminderBtn, styles.whatsappBtn]}
           onPress={() => handleSendReminder('whatsapp')}
+          accessibilityLabel="WhatsApp"
         >
           <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
           <Text style={[styles.reminderBtnText, { color: '#25D366' }]}>WhatsApp</Text>
@@ -331,6 +425,7 @@ export function DecisionTrackerDetail({
         <Pressable
           style={styles.reminderBtn}
           onPress={() => handleSendReminder('sms')}
+          accessibilityLabel="SMS"
         >
           <Ionicons name="chatbubble" size={18} color={SemanticColors.feedbackInfo} />
           <Text style={[styles.reminderBtnText, { color: SemanticColors.feedbackInfo }]}>SMS</Text>
@@ -338,6 +433,7 @@ export function DecisionTrackerDetail({
         <Pressable
           style={styles.reminderBtn}
           onPress={() => handleSendReminder('email')}
+          accessibilityLabel="Email"
         >
           <Ionicons name="mail" size={18} color={SemanticColors.textSecondary} />
           <Text style={styles.reminderBtnText}>Email</Text>
@@ -373,22 +469,24 @@ export function DecisionTrackerDetail({
           <OverviewTab tracker={tracker} stats={stats} />
         )}
         {activeTab === 'overdue' && (
-          <DecisionItemsList
-            items={overdueItems}
+          <SectionedDecisionItems
+            grouped={groupedOverdue}
             selectedItems={selectedItems}
             onToggleSelect={toggleItemSelection}
             onRecordDecision={(itemId, value) => onRecordDecision?.(tracker.id, itemId, value)}
-            emptyMessage="No overdue decisions"
+            emptyMessage={t('dt.noOverdue')}
+            emptyIcon="checkmark-circle"
             isOverdue
           />
         )}
         {activeTab === 'pending' && (
-          <DecisionItemsList
-            items={pendingItems}
+          <SectionedDecisionItems
+            grouped={groupedPending}
             selectedItems={selectedItems}
             onToggleSelect={toggleItemSelection}
             onRecordDecision={(itemId, value) => onRecordDecision?.(tracker.id, itemId, value)}
-            emptyMessage="No pending decisions"
+            emptyMessage={t('dt.noPending')}
+            emptyIcon="time"
           />
         )}
         {activeTab === 'completed' && (
@@ -399,13 +497,14 @@ export function DecisionTrackerDetail({
       {/* Selection Footer */}
       {selectedItems.length > 0 && (
         <View style={styles.selectionFooter}>
-          <Text style={styles.selectionText}>{selectedItems.length} selected</Text>
+          <Text style={styles.selectionText}>{t('dt.selected', { count: selectedItems.length })}</Text>
           <Pressable
             style={styles.sendSelectedBtn}
             onPress={() => handleSendReminder(tracker.preferredChannel)}
+            accessibilityLabel={t('dt.sendReminder')}
           >
             <Ionicons name="send" size={16} color="#fff" />
-            <Text style={styles.sendSelectedText}>Send Reminder</Text>
+            <Text style={styles.sendSelectedText}>{t('dt.sendReminder')}</Text>
           </Pressable>
         </View>
       )}
@@ -424,32 +523,30 @@ function OverviewTab({
   tracker: CustomerDecisionTracker;
   stats: ReturnType<typeof getTrackerStats>;
 }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.tabContent}>
-      {/* Progress Summary */}
+      {/* Progress Summary with Ring */}
       <View style={styles.overviewCard}>
         <View style={styles.overviewProgress}>
-          <View style={styles.progressCircle}>
-            <Text style={styles.progressCircleText}>{stats.completionPercent}%</Text>
-            <Text style={styles.progressCircleLabel}>Complete</Text>
-          </View>
+          <ProgressRing percent={stats.completionPercent} />
         </View>
         <View style={styles.overviewStats}>
           <View style={styles.overviewStatRow}>
             <Ionicons name="checkmark-circle" size={20} color={SemanticColors.feedbackSuccess} />
-            <Text style={styles.overviewStatLabel}>Decided</Text>
+            <Text style={styles.overviewStatLabel}>{t('dt.decided')}</Text>
             <Text style={styles.overviewStatValue}>{stats.decided}</Text>
           </View>
           <View style={styles.overviewStatRow}>
             <Ionicons name="alert-circle" size={20} color={SemanticColors.feedbackError} />
-            <Text style={styles.overviewStatLabel}>Overdue</Text>
+            <Text style={styles.overviewStatLabel}>{t('dt.overdue')}</Text>
             <Text style={[styles.overviewStatValue, { color: SemanticColors.feedbackError }]}>
               {stats.overdue}
             </Text>
           </View>
           <View style={styles.overviewStatRow}>
             <Ionicons name="time" size={20} color={SemanticColors.feedbackWarning} />
-            <Text style={styles.overviewStatLabel}>Upcoming</Text>
+            <Text style={styles.overviewStatLabel}>{t('dt.upcoming')}</Text>
             <Text style={styles.overviewStatValue}>{stats.upcoming}</Text>
           </View>
         </View>
@@ -457,7 +554,7 @@ function OverviewTab({
 
       {/* Categories Progress */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Progress by Category</Text>
+        <Text style={styles.cardTitle}>{t('dt.progressByCategory')}</Text>
         {tracker.categories.map((category) => (
           <CategoryProgress key={category.id} category={category} />
         ))}
@@ -465,7 +562,7 @@ function OverviewTab({
 
       {/* Customer Contact */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Customer Contact</Text>
+        <Text style={styles.cardTitle}>{t('dt.customerContact')}</Text>
         <View style={styles.contactRow}>
           <Ionicons name="person" size={16} color={SemanticColors.textSecondary} />
           <Text style={styles.contactText}>{tracker.customerName}</Text>
@@ -495,14 +592,14 @@ function OverviewTab({
         <View style={styles.contactRow}>
           <Ionicons name="notifications" size={16} color={SemanticColors.textSecondary} />
           <Text style={styles.contactText}>
-            Reminders: {tracker.reminderFrequency.replace('_', ' ')}
+            {t('dt.reminders')}: {tracker.reminderFrequency.replace('_', ' ')}
           </Text>
         </View>
       </View>
 
       {/* Timeline */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Project Timeline</Text>
+        <Text style={styles.cardTitle}>{t('dt.projectTimeline')}</Text>
         <View style={styles.timeline}>
           {tracker.phases.map((phase, index) => (
             <View key={phase.phase} style={styles.timelineItem}>
@@ -536,6 +633,11 @@ function OverviewTab({
 
 function CategoryProgress({ category }: { category: CustomerDecisionCategory }) {
   const progressPercent = Math.round((category.completedCount / category.totalCount) * 100);
+  const barColor = category.isOverdue
+    ? SemanticColors.feedbackError
+    : progressPercent === 100
+      ? SemanticColors.feedbackSuccess
+      : Palette.hermesOrange;
 
   return (
     <View style={styles.categoryProgress}>
@@ -548,47 +650,69 @@ function CategoryProgress({ category }: { category: CustomerDecisionCategory }) 
           {category.isOverdue && (
             <View style={styles.overdueTag}>
               <Ionicons name="alert-circle" size={12} color={SemanticColors.feedbackError} />
-              <Text style={styles.overdueTagText}>Overdue</Text>
+              <Text style={styles.overdueTagText}>{useTranslation().t('dt.overdue')}</Text>
             </View>
           )}
         </View>
       </View>
       <View style={styles.categoryBar}>
-        <View style={[styles.categoryBarFill, { width: `${progressPercent}%` }]} />
+        <View style={[styles.categoryBarFill, { width: `${progressPercent}%`, backgroundColor: barColor }]} />
       </View>
     </View>
   );
 }
 
 // ============================================
-// DECISION ITEMS LIST
+// GROUP ITEMS BY CATEGORY (for sectioned display)
 // ============================================
 
-interface DecisionItemsListProps {
-  items: CustomerDecisionItem[];
+type GroupedItems = { categoryName: string; items: CustomerDecisionItem[] }[];
+
+function groupByCategory(
+  tracker: CustomerDecisionTracker,
+  type: 'overdue' | 'pending' | 'completed',
+): GroupedItems {
+  const result: GroupedItems = [];
+  for (const cat of tracker.categories) {
+    const items = cat.items.filter(i => {
+      if (type === 'overdue') return i.isOverdue && i.status === 'pending';
+      if (type === 'pending') return !i.isOverdue && i.status === 'pending';
+      return i.status === 'decided';
+    });
+    if (items.length > 0) {
+      result.push({ categoryName: cat.name, items });
+    }
+  }
+  return result;
+}
+
+// ============================================
+// SECTIONED DECISION ITEMS (grouped by category)
+// ============================================
+
+interface SectionedDecisionItemsProps {
+  grouped: GroupedItems;
   selectedItems: string[];
   onToggleSelect: (itemId: string) => void;
   onRecordDecision: (itemId: string, value: string | number | boolean) => void;
   emptyMessage: string;
+  emptyIcon: IconName;
   isOverdue?: boolean;
 }
 
-function DecisionItemsList({
-  items,
+function SectionedDecisionItems({
+  grouped,
   selectedItems,
   onToggleSelect,
   onRecordDecision,
   emptyMessage,
+  emptyIcon,
   isOverdue,
-}: DecisionItemsListProps) {
-  if (items.length === 0) {
+}: SectionedDecisionItemsProps) {
+  if (grouped.length === 0) {
     return (
       <View style={styles.emptyState}>
-        <Ionicons
-          name={isOverdue ? 'checkmark-circle' : 'time'}
-          size={48}
-          color={SemanticColors.textTertiary}
-        />
+        <Ionicons name={emptyIcon} size={48} color={SemanticColors.textTertiary} />
         <Text style={styles.emptyStateText}>{emptyMessage}</Text>
       </View>
     );
@@ -596,15 +720,20 @@ function DecisionItemsList({
 
   return (
     <View style={styles.tabContent}>
-      {items.map((item) => (
-        <DecisionItemCard
-          key={item.id}
-          item={item}
-          isSelected={selectedItems.includes(item.id)}
-          onToggleSelect={() => onToggleSelect(item.id)}
-          onRecordDecision={(value) => onRecordDecision(item.id, value)}
-          isOverdue={isOverdue}
-        />
+      {grouped.map((section) => (
+        <View key={section.categoryName}>
+          <Text style={styles.categorySectionHeader}>{section.categoryName}</Text>
+          {section.items.map((item) => (
+            <DecisionItemCard
+              key={item.id}
+              item={item}
+              isSelected={selectedItems.includes(item.id)}
+              onToggleSelect={() => onToggleSelect(item.id)}
+              onRecordDecision={(value) => onRecordDecision(item.id, value)}
+              isOverdue={isOverdue}
+            />
+          ))}
+        </View>
       ))}
     </View>
   );
@@ -629,21 +758,16 @@ function DecisionItemCard({
   onRecordDecision,
   isOverdue,
 }: DecisionItemCardProps) {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [inputValue, setInputValue] = useState('');
 
-  const getPriorityColor = () => {
-    switch (item.priority) {
-      case 'critical': return SemanticColors.feedbackError;
-      case 'important': return SemanticColors.feedbackWarning;
-      default: return SemanticColors.textTertiary;
-    }
-  };
-
   const dueDate = new Date(item.dueDate);
+  const now = new Date();
   const daysOverdue = isOverdue
     ? Math.floor((Date.now() - dueDate.getTime()) / (1000 * 60 * 60 * 24))
     : 0;
+  const isDueSoon = !isOverdue && dueDate.getTime() - now.getTime() < 3 * 24 * 60 * 60 * 1000 && dueDate > now;
 
   const handleSubmitValue = () => {
     if (inputValue.trim()) {
@@ -660,23 +784,40 @@ function DecisionItemCard({
           <Ionicons
             name={isSelected ? 'checkbox' : 'square-outline'}
             size={22}
-            color={isSelected ? SemanticColors.actionPrimary : SemanticColors.textTertiary}
+            color={isSelected ? Palette.hermesOrange : SemanticColors.textTertiary}
           />
         </Pressable>
         <View style={styles.itemInfo}>
           <View style={styles.itemTitleRow}>
             <Text style={styles.itemName}>{item.name}</Text>
-            <View style={[styles.priorityDot, { backgroundColor: getPriorityColor() }]} />
+            <PriorityBadge priority={item.priority} />
           </View>
           <Text style={styles.itemDescription} numberOfLines={isExpanded ? undefined : 1}>
             {item.description}
           </Text>
+          {/* Due date with color coding */}
+          <View style={styles.itemDueRow}>
+            <Ionicons
+              name="calendar-outline"
+              size={12}
+              color={isOverdue ? SemanticColors.feedbackError : isDueSoon ? SemanticColors.feedbackWarning : SemanticColors.textTertiary}
+            />
+            <Text style={[
+              styles.itemDueText,
+              isOverdue && { color: SemanticColors.feedbackError, fontFamily: TYPE.labelFamily },
+              isDueSoon && { color: SemanticColors.feedbackWarning },
+            ]}>
+              {t('dt.due', { date: dueDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) })}
+            </Text>
+          </View>
           {isOverdue && (
             <View style={styles.overdueInfo}>
               <Ionicons name="alert-circle" size={12} color={SemanticColors.feedbackError} />
-              <Text style={styles.overdueText}>{daysOverdue} days overdue</Text>
+              <Text style={styles.overdueText}>{t('dt.daysOverdue', { count: daysOverdue })}</Text>
               {item.remindersSent > 0 && (
-                <Text style={styles.reminderCount}>• {item.remindersSent} reminders sent</Text>
+                <Text style={styles.reminderCount}>
+                  {t('dt.remindersSent', { count: item.remindersSent })}
+                </Text>
               )}
             </View>
           )}
@@ -693,7 +834,7 @@ function DecisionItemCard({
           {/* Input based on type */}
           {item.inputType === 'select' && item.options && (
             <View style={styles.optionsContainer}>
-              <Text style={styles.optionsLabel}>Options:</Text>
+              <Text style={styles.optionsLabel}>{t('dt.options')}:</Text>
               {item.options.map((option) => (
                 <Pressable
                   key={option.value}
@@ -709,7 +850,7 @@ function DecisionItemCard({
                       styles.optionPrice,
                       { color: option.priceImpact > 0 ? SemanticColors.feedbackError : SemanticColors.feedbackSuccess },
                     ]}>
-                      {option.priceImpact > 0 ? '+' : ''}€{option.priceImpact}
+                      {option.priceImpact > 0 ? '+' : ''}{'\u20AC'}{option.priceImpact}
                     </Text>
                   )}
                 </Pressable>
@@ -724,14 +865,14 @@ function DecisionItemCard({
                 onPress={() => onRecordDecision(true)}
               >
                 <Ionicons name="checkmark" size={20} color={SemanticColors.feedbackSuccess} />
-                <Text style={[styles.booleanText, { color: SemanticColors.feedbackSuccess }]}>Yes</Text>
+                <Text style={[styles.booleanText, { color: SemanticColors.feedbackSuccess }]}>{t('common.yes')}</Text>
               </Pressable>
               <Pressable
                 style={[styles.booleanBtn, styles.booleanNo]}
                 onPress={() => onRecordDecision(false)}
               >
                 <Ionicons name="close" size={20} color={SemanticColors.feedbackError} />
-                <Text style={[styles.booleanText, { color: SemanticColors.feedbackError }]}>No</Text>
+                <Text style={[styles.booleanText, { color: SemanticColors.feedbackError }]}>{t('common.no')}</Text>
               </Pressable>
             </View>
           )}
@@ -740,7 +881,7 @@ function DecisionItemCard({
             <View style={styles.textInputContainer}>
               <TextInput
                 style={styles.textInput}
-                placeholder={`Enter ${item.name.toLowerCase()}...`}
+                placeholder={t('dt.enter', { name: item.name.toLowerCase() })}
                 placeholderTextColor={SemanticColors.textTertiary}
                 value={inputValue}
                 onChangeText={setInputValue}
@@ -754,18 +895,10 @@ function DecisionItemCard({
 
           {item.inputType === 'photo' && (
             <Pressable style={styles.photoBtn}>
-              <Ionicons name="camera" size={24} color={SemanticColors.actionPrimary} />
-              <Text style={styles.photoBtnText}>Request Photo</Text>
+              <Ionicons name="camera" size={24} color={Palette.hermesOrange} />
+              <Text style={styles.photoBtnText}>{t('dt.requestPhoto')}</Text>
             </Pressable>
           )}
-
-          {/* Due date info */}
-          <View style={styles.dueInfo}>
-            <Ionicons name="calendar" size={14} color={SemanticColors.textTertiary} />
-            <Text style={styles.dueText}>
-              Due: {dueDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
-            </Text>
-          </View>
         </View>
       )}
     </View>
@@ -777,11 +910,12 @@ function DecisionItemCard({
 // ============================================
 
 function CompletedItemsList({ items }: { items: CustomerDecisionItem[] }) {
+  const { t } = useTranslation();
   if (items.length === 0) {
     return (
       <View style={styles.emptyState}>
         <Ionicons name="hourglass" size={48} color={SemanticColors.textTertiary} />
-        <Text style={styles.emptyStateText}>No decisions completed yet</Text>
+        <Text style={styles.emptyStateText}>{t('dt.noCompleted')}</Text>
       </View>
     );
   }
@@ -794,7 +928,7 @@ function CompletedItemsList({ items }: { items: CustomerDecisionItem[] }) {
           <View style={styles.completedInfo}>
             <Text style={styles.completedName}>{item.name}</Text>
             <Text style={styles.completedValue}>
-              {typeof item.value === 'boolean' ? (item.value ? 'Yes' : 'No') : String(item.value)}
+              {typeof item.value === 'boolean' ? (item.value ? t('common.yes') : t('common.no')) : String(item.value)}
             </Text>
             {item.decidedAt && (
               <Text style={styles.completedDate}>
@@ -831,10 +965,10 @@ const TRADE_MAP: Record<string, string[]> = {
   general: ['general_contractor', 'bathroom_fitter', 'kitchen_fitter', 'painter', 'electrician', 'plumber', 'carpenter'],
 };
 
-function renderTemplateCard(template: DecisionTemplate, onSelect: (t: DecisionTemplate) => void) {
+function TemplateCard({ template, onSelect }: { template: DecisionTemplate; onSelect: (t: DecisionTemplate) => void }) {
+  const { t } = useTranslation();
   return (
     <Pressable
-      key={template.id}
       style={styles.templateCard}
       onPress={() => onSelect(template)}
     >
@@ -842,7 +976,7 @@ function renderTemplateCard(template: DecisionTemplate, onSelect: (t: DecisionTe
         <Text style={styles.templateName}>{template.name}</Text>
         <View style={styles.templateMeta}>
           <Text style={styles.templateDecisions}>
-            {template.estimatedTotalDecisions} decisions
+            {t('dt.decisions', { count: template.estimatedTotalDecisions })}
           </Text>
         </View>
       </View>
@@ -851,19 +985,19 @@ function renderTemplateCard(template: DecisionTemplate, onSelect: (t: DecisionTe
         <View style={styles.templateStat}>
           <Ionicons name="list" size={14} color={SemanticColors.textTertiary} />
           <Text style={styles.templateStatText}>
-            {template.categories.length} categories
+            {t('dt.categories', { count: template.categories.length })}
           </Text>
         </View>
         <View style={styles.templateStat}>
           <Ionicons name="time" size={14} color={SemanticColors.textTertiary} />
           <Text style={styles.templateStatText}>
-            ~{template.avgDaysToComplete} days avg
+            {t('dt.avgDays', { count: template.avgDaysToComplete })}
           </Text>
         </View>
         <View style={styles.templateStat}>
           <Ionicons name="people" size={14} color={SemanticColors.textTertiary} />
           <Text style={styles.templateStatText}>
-            Used {template.usageCount}x
+            {t('dt.usedCount', { count: template.usageCount })}
           </Text>
         </View>
       </View>
@@ -872,6 +1006,7 @@ function renderTemplateCard(template: DecisionTemplate, onSelect: (t: DecisionTe
 }
 
 export function TemplatePicker({ onSelect, onClose }: TemplatePickerProps) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const contractorTrade = user?.trade ?? 'general';
   const matchingTradeIds = TRADE_MAP[contractorTrade] ?? TRADE_MAP.general;
@@ -882,22 +1017,26 @@ export function TemplatePicker({ onSelect, onClose }: TemplatePickerProps) {
   return (
     <View style={styles.container}>
       <View style={styles.detailHeader}>
-        <Pressable onPress={onClose} style={styles.backButton}>
+        <Pressable onPress={onClose} style={styles.backButton} accessibilityLabel={t('common.close')}>
           <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={styles.headerContent}>
-          <Text style={styles.detailTitle}>Choose Template</Text>
-          <Text style={styles.detailSubtitle}>Select a decision template for this project</Text>
+          <Text style={styles.detailTitle}>{t('dt.chooseTemplate')}</Text>
+          <Text style={styles.detailSubtitle}>{t('dt.selectTemplate')}</Text>
         </View>
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainerDetail}>
-        {myTemplates.map((template) => renderTemplateCard(template, onSelect))}
+        {myTemplates.map((template) => (
+          <TemplateCard key={template.id} template={template} onSelect={onSelect} />
+        ))}
 
         {otherTemplates.length > 0 && (
           <>
-            <Text style={styles.sectionLabel}>Other trades</Text>
-            {otherTemplates.map((template) => renderTemplateCard(template, onSelect))}
+            <Text style={styles.sectionLabel}>{t('dt.otherTrades')}</Text>
+            {otherTemplates.map((template) => (
+              <TemplateCard key={template.id} template={template} onSelect={onSelect} />
+            ))}
           </>
         )}
       </ScrollView>
@@ -916,10 +1055,7 @@ function generateReminderMessage(customerName: string, items: string[]): string 
     return `Hi ${firstName}, we still need your decision on: ${items[0]}. This will help us keep your project on schedule. Can you let us know today? Thanks!`;
   }
 
-  const itemsList = items.slice(0, 3).join(', ');
-  const moreCount = items.length > 3 ? ` and ${items.length - 3} more` : '';
-
-  return `Hi ${firstName}, we're waiting on a few decisions to keep your project on track:\n\n• ${items.slice(0, 5).join('\n• ')}${items.length > 5 ? `\n• ...and ${items.length - 5} more` : ''}\n\nPlease let us know when you can. Thanks!`;
+  return `Hi ${firstName}, we're waiting on a few decisions to keep your project on track:\n\n\u2022 ${items.slice(0, 5).join('\n\u2022 ')}${items.length > 5 ? `\n\u2022 ...and ${items.length - 5} more` : ''}\n\nPlease let us know when you can. Thanks!`;
 }
 
 // ============================================
@@ -929,93 +1065,82 @@ function generateReminderMessage(customerName: string, items: string[]): string 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.surfaceBackground,
+    backgroundColor: PAGE_BG,
   },
   contentContainer: {
-    padding: Spacing.md,
+    padding: GRID.md,
     paddingBottom: 100,
   },
   contentContainerDetail: {
-    padding: Spacing.md,
+    padding: GRID.md,
     paddingBottom: 120,
-  },
-  summaryHeader: {
-    marginBottom: Spacing.md,
-  },
-  summaryTitle: {
-    color: SemanticColors.textPrimary,
-    fontSize: 24,
-    fontWeight: '700',
-  },
-  summarySubtitle: {
-    color: SemanticColors.textSecondary,
-    fontSize: 14,
-    marginTop: 4,
   },
   statsRow: {
     flexDirection: 'row',
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
+    gap: GRID.sm,
+    marginBottom: GRID.md,
   },
   statCard: {
     flex: 1,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
-    padding: Spacing.md,
+    backgroundColor: '#fff',
+    borderRadius: RADIUS.lg,
+    padding: GRID.md,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
   statCardActive: {
-    borderColor: SemanticColors.actionPrimary,
+    borderColor: Palette.hermesOrange,
     borderWidth: 2,
   },
   statValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 24,
-    fontWeight: '700',
-    marginTop: 4,
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.sectionFamily,
+    marginTop: GRID.xs,
   },
   statLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.tinyFamily,
     marginTop: 2,
   },
   addNewButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    padding: Spacing.md,
-    backgroundColor: SemanticColors.actionPrimary + '15',
-    borderRadius: 12,
+    gap: GRID.sm,
+    padding: GRID.md,
+    backgroundColor: Palette.hermesOrange + '12',
+    borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: SemanticColors.actionPrimary + '30',
+    borderColor: Palette.hermesOrange + '30',
     borderStyle: 'dashed',
-    marginBottom: Spacing.lg,
+    marginBottom: GRID.lg,
   },
   addNewText: {
-    color: SemanticColors.actionPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    color: Palette.hermesOrange,
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.titleFamily,
   },
   section: {
-    gap: Spacing.sm,
+    gap: GRID.sm,
   },
   sectionTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
     textTransform: 'uppercase',
-    marginBottom: 4,
+    letterSpacing: 0.5,
+    marginBottom: GRID.xs,
   },
   trackerCard: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
-    padding: Spacing.md,
+    backgroundColor: '#fff',
+    borderRadius: RADIUS.lg,
+    padding: GRID.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
-    gap: Spacing.sm,
+    gap: GRID.sm,
   },
   trackerHeader: {
     flexDirection: 'row',
@@ -1025,38 +1150,39 @@ const styles = StyleSheet.create({
   trackerCustomer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: GRID.sm,
     flex: 1,
   },
   customerAvatar: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: SemanticColors.actionPrimary + '20',
+    borderRadius: RADIUS.full,
+    backgroundColor: Palette.hermesOrange + '18',
     alignItems: 'center',
     justifyContent: 'center',
   },
   customerInitials: {
-    color: SemanticColors.actionPrimary,
-    fontSize: 14,
-    fontWeight: '700',
+    color: Palette.hermesOrange,
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.sectionFamily,
   },
   customerInfo: {
     flex: 1,
   },
   customerName: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   projectType: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.captionFamily,
   },
   channelBadge: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: RADIUS.md,
     backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1064,7 +1190,7 @@ const styles = StyleSheet.create({
   progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: GRID.sm,
   },
   progressBar: {
     flex: 1,
@@ -1075,61 +1201,63 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: SemanticColors.actionPrimary,
+    backgroundColor: Palette.hermesOrange,
     borderRadius: 3,
   },
   progressText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
     minWidth: 36,
     textAlign: 'right',
   },
   trackerStats: {
     flexDirection: 'row',
-    gap: Spacing.md,
+    gap: GRID.md,
   },
   trackerStat: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: GRID.xs,
   },
   trackerStatText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.captionFamily,
   },
   actionHint: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     backgroundColor: SemanticColors.feedbackWarningBg,
-    padding: Spacing.sm,
-    borderRadius: 8,
-    marginTop: 4,
+    padding: GRID.sm,
+    borderRadius: RADIUS.sm,
+    marginTop: GRID.xs,
   },
   actionHintText: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.captionFamily,
     flex: 1,
   },
   detailHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.md,
-    paddingTop: Spacing.xl,
-    backgroundColor: SemanticColors.surfacePrimary,
+    padding: GRID.md,
+    paddingTop: GRID.xl,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.borderDefault,
-    gap: Spacing.sm,
+    gap: GRID.sm,
   },
   backButton: {
-    padding: Spacing.xs,
+    padding: GRID.xs,
   },
   shareButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: SemanticColors.actionPrimary + '15',
+    backgroundColor: Palette.hermesOrange + '12',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1138,29 +1266,31 @@ const styles = StyleSheet.create({
   },
   detailTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
+    letterSpacing: TYPE.sectionTracking,
   },
   detailSubtitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
   },
   progressBadge: {
-    backgroundColor: SemanticColors.actionPrimary,
+    backgroundColor: Palette.hermesOrange,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   progressBadgeText: {
     color: '#fff',
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.sectionFamily,
   },
   quickActions: {
     flexDirection: 'row',
-    padding: Spacing.sm,
-    gap: Spacing.xs,
-    backgroundColor: SemanticColors.surfacePrimary,
+    padding: GRID.sm,
+    gap: GRID.xs,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.borderDefault,
   },
@@ -1171,7 +1301,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   whatsappBtn: {
@@ -1179,12 +1309,12 @@ const styles = StyleSheet.create({
   },
   reminderBtnText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.surfacePrimary,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.borderDefault,
   },
@@ -1194,23 +1324,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 12,
+    paddingVertical: GRID.md - 4,
   },
   tabActive: {
     borderBottomWidth: 2,
-    borderBottomColor: SemanticColors.actionPrimary,
+    borderBottomColor: Palette.hermesOrange,
   },
   tabText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
   },
   tabTextActive: {
-    color: SemanticColors.actionPrimary,
-    fontWeight: '600',
+    color: Palette.hermesOrange,
+    fontFamily: TYPE.titleFamily,
   },
   tabBadge: {
-    backgroundColor: SemanticColors.actionPrimary,
+    backgroundColor: Palette.hermesOrange,
     borderRadius: 10,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -1219,83 +1349,65 @@ const styles = StyleSheet.create({
   },
   tabBadgeText: {
     color: '#fff',
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.sectionFamily,
   },
   content: {
     flex: 1,
   },
   tabContent: {
-    gap: Spacing.sm,
+    gap: GRID.sm,
   },
   card: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
-    padding: Spacing.md,
+    backgroundColor: '#fff',
+    borderRadius: RADIUS.lg,
+    padding: GRID.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
-    gap: Spacing.sm,
+    gap: GRID.sm,
   },
   cardTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 4,
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.titleFamily,
+    marginBottom: GRID.xs,
   },
   overviewCard: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
-    padding: Spacing.md,
+    backgroundColor: '#fff',
+    borderRadius: RADIUS.lg,
+    padding: GRID.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     flexDirection: 'row',
-    gap: Spacing.lg,
+    gap: GRID.lg,
   },
   overviewProgress: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  progressCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: SemanticColors.actionPrimary + '15',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: SemanticColors.actionPrimary,
-  },
-  progressCircleText: {
-    color: SemanticColors.actionPrimary,
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  progressCircleLabel: {
-    color: SemanticColors.textSecondary,
-    fontSize: 10,
-  },
   overviewStats: {
     flex: 1,
     justifyContent: 'center',
-    gap: Spacing.sm,
+    gap: GRID.sm,
   },
   overviewStatRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: GRID.sm,
   },
   overviewStatLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
     flex: 1,
   },
   overviewStatValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
   },
   categoryProgress: {
-    paddingVertical: 8,
+    paddingVertical: GRID.sm,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.borderMuted,
   },
@@ -1307,31 +1419,32 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
   },
   categoryStats: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: GRID.sm,
   },
   categoryCount: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.captionFamily,
   },
   overdueTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: GRID.xs,
     backgroundColor: SemanticColors.feedbackErrorBg,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: GRID.xs,
   },
   overdueTagText: {
     color: SemanticColors.feedbackError,
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.labelFamily,
   },
   categoryBar: {
     height: 4,
@@ -1347,20 +1460,21 @@ const styles = StyleSheet.create({
   contactRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: GRID.sm,
     paddingVertical: 6,
   },
   contactText: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.bodyFamily,
   },
   timeline: {
-    paddingLeft: 8,
+    paddingLeft: GRID.sm,
   },
   timelineItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 16,
+    marginBottom: GRID.md,
     position: 'relative',
   },
   timelineDot: {
@@ -1368,8 +1482,8 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     backgroundColor: SemanticColors.borderDefault,
-    marginRight: 12,
-    marginTop: 4,
+    marginRight: GRID.md - 4,
+    marginTop: GRID.xs,
   },
   timelineDotActive: {
     backgroundColor: SemanticColors.feedbackSuccess,
@@ -1387,16 +1501,40 @@ const styles = StyleSheet.create({
   },
   timelinePhase: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
   },
   timelineDate: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.captionFamily,
+  },
+  // Category section headers in item lists
+  categorySectionHeader: {
+    color: SemanticColors.textSecondary,
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: GRID.md,
+    marginBottom: GRID.sm,
+    paddingHorizontal: GRID.xs,
+  },
+  // Priority badge
+  priorityBadge: {
+    paddingHorizontal: GRID.sm,
+    paddingVertical: 2,
+    borderRadius: GRID.xs,
+  },
+  priorityBadgeText: {
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.labelFamily,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
   itemCard: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    backgroundColor: '#fff',
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     overflow: 'hidden',
@@ -1409,55 +1547,63 @@ const styles = StyleSheet.create({
   itemHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    padding: Spacing.md,
-    gap: Spacing.sm,
+    padding: GRID.md,
+    gap: GRID.sm,
   },
   checkbox: {
     padding: 2,
   },
   itemInfo: {
     flex: 1,
-    gap: 4,
+    gap: GRID.xs,
   },
   itemTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: GRID.sm,
   },
   itemName: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.titleFamily,
     flex: 1,
-  },
-  priorityDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
   },
   itemDescription: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.captionFamily,
+  },
+  itemDueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.xs,
+    marginTop: 2,
+  },
+  itemDueText: {
+    color: SemanticColors.textTertiary,
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.captionFamily,
   },
   overdueInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginTop: 4,
+    gap: GRID.xs,
+    marginTop: GRID.xs,
   },
   overdueText: {
     color: SemanticColors.feedbackError,
-    fontSize: 11,
-    fontWeight: '500',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.labelFamily,
   },
   reminderCount: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.captionFamily,
   },
   itemExpanded: {
-    padding: Spacing.md,
+    padding: GRID.md,
     paddingTop: 0,
-    gap: Spacing.sm,
+    gap: GRID.sm,
     borderTopWidth: 1,
     borderTopColor: SemanticColors.borderMuted,
   },
@@ -1466,34 +1612,36 @@ const styles = StyleSheet.create({
   },
   optionsLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
-    marginBottom: 4,
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.labelFamily,
+    marginBottom: GRID.xs,
   },
   optionBtn: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    padding: Spacing.sm,
-    borderRadius: 8,
+    padding: GRID.sm,
+    borderRadius: RADIUS.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: GRID.sm,
   },
   optionLabel: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
     flex: 1,
   },
   optionDesc: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.captionFamily,
   },
   optionPrice: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   booleanContainer: {
     flexDirection: 'row',
-    gap: Spacing.sm,
+    gap: GRID.sm,
   },
   booleanBtn: {
     flex: 1,
@@ -1501,8 +1649,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: GRID.md - 4,
+    borderRadius: RADIUS.sm,
   },
   booleanYes: {
     backgroundColor: SemanticColors.feedbackSuccessBg,
@@ -1511,27 +1659,28 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackErrorBg,
   },
   booleanText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.titleFamily,
   },
   textInputContainer: {
     flexDirection: 'row',
-    gap: Spacing.sm,
+    gap: GRID.sm,
   },
   textInput: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: GRID.md - 4,
     paddingVertical: 10,
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.bodyFamily,
   },
   submitBtn: {
-    backgroundColor: SemanticColors.actionPrimary,
+    backgroundColor: Palette.hermesOrange,
     width: 44,
     height: 44,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1539,38 +1688,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    padding: Spacing.md,
-    backgroundColor: SemanticColors.actionPrimary + '15',
-    borderRadius: 8,
+    gap: GRID.sm,
+    padding: GRID.md,
+    backgroundColor: Palette.hermesOrange + '12',
+    borderRadius: RADIUS.sm,
     borderWidth: 1,
-    borderColor: SemanticColors.actionPrimary + '30',
+    borderColor: Palette.hermesOrange + '30',
     borderStyle: 'dashed',
   },
   photoBtnText: {
-    color: SemanticColors.actionPrimary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  dueInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: SemanticColors.borderMuted,
-  },
-  dueText: {
-    color: SemanticColors.textTertiary,
-    fontSize: 12,
+    color: Palette.hermesOrange,
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.titleFamily,
   },
   completedItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: Spacing.sm,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
-    padding: Spacing.md,
+    gap: GRID.sm,
+    backgroundColor: '#fff',
+    borderRadius: RADIUS.md,
+    padding: GRID.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
@@ -1580,17 +1717,18 @@ const styles = StyleSheet.create({
   },
   completedName: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.labelFamily,
   },
   completedValue: {
     color: SemanticColors.feedbackSuccess,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
   completedDate: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.captionFamily,
   },
   selectionFooter: {
     position: 'absolute',
@@ -1600,56 +1738,58 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: Spacing.md,
-    backgroundColor: SemanticColors.surfacePrimary,
+    padding: GRID.md,
+    backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: SemanticColors.borderDefault,
   },
   selectionText: {
     color: SemanticColors.textSecondary,
-    fontSize: 14,
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.bodyFamily,
   },
   sendSelectedBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: SemanticColors.actionPrimary,
-    paddingHorizontal: 16,
+    backgroundColor: Palette.hermesOrange,
+    paddingHorizontal: GRID.md,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   sendSelectedText: {
     color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.titleFamily,
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: Spacing.xl,
-    gap: Spacing.sm,
+    padding: GRID.xl,
+    gap: GRID.sm,
   },
   emptyStateText: {
     color: SemanticColors.textTertiary,
-    fontSize: 14,
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.bodyFamily,
   },
   sectionLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.sm,
+    marginTop: GRID.md,
+    marginBottom: GRID.sm,
   },
   templateCard: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
-    padding: Spacing.md,
+    backgroundColor: '#fff',
+    borderRadius: RADIUS.lg,
+    padding: GRID.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
-    marginBottom: Spacing.sm,
-    gap: 8,
+    marginBottom: GRID.sm,
+    gap: GRID.sm,
   },
   templateHeader: {
     flexDirection: 'row',
@@ -1658,37 +1798,39 @@ const styles = StyleSheet.create({
   },
   templateName: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     flex: 1,
   },
   templateMeta: {
-    backgroundColor: SemanticColors.actionPrimary + '15',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: Palette.hermesOrange + '12',
+    paddingHorizontal: GRID.sm,
+    paddingVertical: GRID.xs,
     borderRadius: 6,
   },
   templateDecisions: {
-    color: SemanticColors.actionPrimary,
-    fontSize: 11,
-    fontWeight: '600',
+    color: Palette.hermesOrange,
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.labelFamily,
   },
   templateDescription: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
   },
   templateStats: {
     flexDirection: 'row',
-    gap: Spacing.md,
-    marginTop: 4,
+    gap: GRID.md,
+    marginTop: GRID.xs,
   },
   templateStat: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: GRID.xs,
   },
   templateStatText: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.captionFamily,
   },
 });

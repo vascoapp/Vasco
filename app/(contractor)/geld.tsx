@@ -6,7 +6,7 @@
 // =============================================================================
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Share, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Share, Platform, Alert, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -27,6 +27,8 @@ export default function GeldScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
+  const [invoiceFilter, setInvoiceFilter] = useState('');
+  const [quoteFilter, setQuoteFilter] = useState('');
   const { invoices, quotes, markInvoiceSent, removeInvoice, removeQuote } = useAppState();
   const cashFlow = useCashFlow();
 
@@ -159,9 +161,21 @@ export default function GeldScreen() {
               <Text style={s.sectionTitle}>{t('invoices.invoices', 'Facturen')}</Text>
               <Text style={s.sectionCount}>{invoices.length}</Text>
             </View>
+            <View style={s.filterRow}>
+              <View style={s.filterInput}>
+                <Ionicons name="search" size={14} color={SemanticColors.textTertiary} />
+                <TextInput
+                  style={s.filterText}
+                  placeholder={t('money.filterByName', 'Search...')}
+                  placeholderTextColor={SemanticColors.textTertiary}
+                  value={invoiceFilter}
+                  onChangeText={setInvoiceFilter}
+                />
+              </View>
+            </View>
             {invoices.length > 0 ? (
               <View style={s.docList}>
-                {documents.filter(d => d.type === 'factuur').map((doc) => (
+                {documents.filter(d => d.type === 'factuur' && (!invoiceFilter || d.name.toLowerCase().includes(invoiceFilter.toLowerCase()))).map((doc) => (
                   <Pressable
                     key={doc.id}
                     style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9 }]}
@@ -222,9 +236,22 @@ export default function GeldScreen() {
               <Text style={s.newQuoteBtnText}>{t('quotes.newQuote', 'Nieuwe offerte')}</Text>
             </Pressable>
 
+            <View style={s.filterRow}>
+              <View style={s.filterInput}>
+                <Ionicons name="search" size={14} color={SemanticColors.textTertiary} />
+                <TextInput
+                  style={s.filterText}
+                  placeholder={t('money.filterByName', 'Search...')}
+                  placeholderTextColor={SemanticColors.textTertiary}
+                  value={quoteFilter}
+                  onChangeText={setQuoteFilter}
+                />
+              </View>
+            </View>
+
             {quotes.length > 0 ? (
               <View style={s.docList}>
-                {documents.filter(d => d.type === 'offerte').map((doc) => (
+                {documents.filter(d => d.type === 'offerte' && (!quoteFilter || d.name.toLowerCase().includes(quoteFilter.toLowerCase()))).map((doc) => (
                   <Pressable
                     key={doc.id}
                     style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9 }]}
@@ -410,6 +437,11 @@ const s = StyleSheet.create({
     fontFamily: TYPE.titleFamily,
     color: Palette.white,
   },
+
+  // Filter
+  filterRow: { marginBottom: GRID.sm },
+  filterInput: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: GRID.xs, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md, paddingHorizontal: GRID.sm, paddingVertical: GRID.sm },
+  filterText: { flex: 1, fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary, padding: 0 },
 
   // Document list
   docList: {

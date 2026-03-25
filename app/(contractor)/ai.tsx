@@ -283,98 +283,109 @@ export default function VascoScreen() {
           </View>
         </FadeIn>
 
-        {/* Action queue — every item is one tap */}
-        {proactiveActions.map((action, idx) => (
-          <FadeIn key={action.id} delay={40 + idx * 30}>
-            <View style={[s.actionCard, action.priority === 'high' && s.actionCardHigh]}>
-              {/* Header */}
-              <View style={s.actionHeader}>
-                <View style={[s.actionIconCircle, { backgroundColor: action.iconColor + '12' }]}>
-                  <Ionicons name={action.icon} size={18} color={action.iconColor} />
+        {/* ── Proactive Actions section card ── */}
+        <FadeIn delay={40}>
+          <View style={s.sectionCard}>
+            <View style={s.sectionCardHeader}>
+              <Ionicons name="flash-outline" size={16} color={Palette.hermesOrange} />
+              <Text style={s.sectionCardTitle}>{t('ai.proactiveActions', 'Proactive actions')}</Text>
+              {proactiveActions.length > 0 && (
+                <View style={s.sectionBadge}>
+                  <Text style={s.sectionBadgeText}>{proactiveActions.length}</Text>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.actionTitle} numberOfLines={2}>{action.title}</Text>
-                  <Text style={s.actionReason} numberOfLines={2}>{action.reason}</Text>
-                </View>
-              </View>
-
-              {/* Editable preview for share actions */}
-              {editingId === action.id && action.shareText && (
-                <TextInput
-                  style={s.editInput}
-                  value={editText || action.shareText}
-                  onChangeText={setEditText}
-                  multiline
-                  placeholder={t('ai.editMessage')}
-                  placeholderTextColor={SemanticColors.textTertiary}
-                />
               )}
+            </View>
 
-              {/* Action buttons */}
-              <View style={s.actionButtons}>
-                {action.actionType === 'share' && action.shareText && (
-                  <Pressable
-                    style={s.editBtn}
-                    onPress={() => {
-                      if (editingId === action.id) {
-                        setEditingId(null);
-                      } else {
-                        setEditingId(action.id);
-                        setEditText(action.shareText || '');
-                      }
-                    }}
-                  >
-                    <Ionicons name={editingId === action.id ? 'checkmark' : 'create-outline'} size={14} color={Palette.hermesOrange} />
-                  </Pressable>
+            {proactiveActions.map((action, idx) => (
+              <View key={action.id} style={[s.actionCard, action.priority === 'high' && s.actionCardHigh, idx > 0 && { marginTop: GRID.sm }]}>
+                {/* Header */}
+                <View style={s.actionHeader}>
+                  <View style={[s.actionIconCircle, { backgroundColor: action.iconColor + '12' }]}>
+                    <Ionicons name={action.icon} size={18} color={action.iconColor} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.actionTitle} numberOfLines={2}>{action.title}</Text>
+                    <Text style={s.actionReason} numberOfLines={2}>{action.reason}</Text>
+                  </View>
+                </View>
+
+                {/* Editable preview for share actions */}
+                {editingId === action.id && action.shareText && (
+                  <TextInput
+                    style={s.editInput}
+                    value={editText || action.shareText}
+                    onChangeText={setEditText}
+                    multiline
+                    placeholder={t('ai.editMessage')}
+                    placeholderTextColor={SemanticColors.textTertiary}
+                  />
                 )}
-                <Pressable
-                  style={({ pressed }) => [s.approveBtn, pressed && { opacity: 0.85 }]}
-                  onPress={() => handleAction(action)}
-                >
-                  <Ionicons name={action.actionType === 'share' ? 'send' : action.actionType === 'navigate' ? 'arrow-forward' : 'checkmark'} size={14} color={Palette.white} />
-                  <Text style={s.approveBtnText}>{action.actionLabel}</Text>
-                </Pressable>
-                <Pressable
-                  style={s.dismissBtn}
-                  onPress={() => handleDismiss(action.id)}
-                >
-                  <Text style={s.dismissBtnText}>{t('ai.later')}</Text>
-                </Pressable>
+
+                {/* Action buttons */}
+                <View style={s.actionButtons}>
+                  {action.actionType === 'share' && action.shareText && (
+                    <Pressable
+                      style={s.editBtn}
+                      onPress={() => {
+                        if (editingId === action.id) {
+                          setEditingId(null);
+                        } else {
+                          setEditingId(action.id);
+                          setEditText(action.shareText || '');
+                        }
+                      }}
+                    >
+                      <Ionicons name={editingId === action.id ? 'checkmark' : 'create-outline'} size={14} color={Palette.hermesOrange} />
+                    </Pressable>
+                  )}
+                  <Pressable
+                    style={({ pressed }) => [s.approveBtn, pressed && { opacity: 0.85 }]}
+                    onPress={() => handleAction(action)}
+                  >
+                    <Ionicons name={action.actionType === 'share' ? 'send' : action.actionType === 'navigate' ? 'arrow-forward' : 'checkmark'} size={14} color={Palette.white} />
+                    <Text style={s.approveBtnText}>{action.actionLabel}</Text>
+                  </Pressable>
+                  <Pressable
+                    style={s.dismissBtn}
+                    onPress={() => handleDismiss(action.id)}
+                  >
+                    <Text style={s.dismissBtnText}>{t('ai.later')}</Text>
+                  </Pressable>
+                </View>
               </View>
-            </View>
-          </FadeIn>
-        ))}
+            ))}
 
-        {/* Completed count */}
-        {actioned.size > 0 && (
-          <FadeIn delay={60}>
-            <View style={s.doneRow}>
-              <Ionicons name="checkmark-circle" size={16} color={SemanticColors.feedbackSuccess} />
-              <Text style={s.doneText}>{t('ai.actionsCompleted', { count: actioned.size })}</Text>
-            </View>
-          </FadeIn>
-        )}
+            {/* Completed count */}
+            {actioned.size > 0 && (
+              <View style={[s.doneRow, { marginTop: GRID.sm }]}>
+                <Ionicons name="checkmark-circle" size={16} color={SemanticColors.feedbackSuccess} />
+                <Text style={s.doneText}>{t('ai.actionsCompleted', { count: actioned.size })}</Text>
+              </View>
+            )}
 
-        {/* Empty state */}
-        {proactiveActions.length === 0 && actioned.size === 0 && (
-          <FadeIn delay={60}>
-            <View style={s.emptyCard}>
-              <Ionicons name="sparkles-outline" size={36} color={SemanticColors.textTertiary} />
-              <Text style={s.emptyTitle}>{t('ai.nothingToDo')}</Text>
-              <Text style={s.emptyDesc}>{t('ai.monitoringDesc')}</Text>
-            </View>
-          </FadeIn>
-        )}
+            {/* Empty state */}
+            {proactiveActions.length === 0 && actioned.size === 0 && (
+              <View style={s.emptyCard}>
+                <Ionicons name="sparkles-outline" size={36} color={SemanticColors.textTertiary} />
+                <Text style={s.emptyTitle}>{t('ai.nothingToDo')}</Text>
+                <Text style={s.emptyDesc}>{t('ai.monitoringDesc')}</Text>
+              </View>
+            )}
+          </View>
+        </FadeIn>
 
-        {/* Recommendations — Vasco suggests improvements */}
+        {/* ── AI Insights section card ── */}
         {recommendations.length > 0 && (
           <FadeIn delay={80}>
-            <View style={s.section}>
-              <Text style={s.sectionTitle}>{t('ai.recommendations')}</Text>
-              {recommendations.map((rec: any) => (
+            <View style={s.sectionCard}>
+              <View style={s.sectionCardHeader}>
+                <Ionicons name="bulb-outline" size={16} color={Palette.hermesOrange} />
+                <Text style={s.sectionCardTitle}>{t('ai.aiInsights', 'AI Insights')}</Text>
+              </View>
+              {recommendations.map((rec: any, idx: number) => (
                 <Pressable
                   key={rec.id}
-                  style={({ pressed }) => [s.recCard, pressed && { opacity: 0.85 }]}
+                  style={({ pressed }) => [s.recCard, pressed && { opacity: 0.85 }, idx > 0 && { marginTop: GRID.sm }]}
                   onPress={() => rec.actionRoute ? router.push(rec.actionRoute as any) : null}
                 >
                   <Ionicons name={(rec.icon as IconName) || 'bulb-outline'} size={18} color={Palette.hermesOrange} />
@@ -389,13 +400,16 @@ export default function VascoScreen() {
           </FadeIn>
         )}
 
-        {/* Automations — preview what each does, toggle inline */}
+        {/* ── Automations section card ── */}
         <FadeIn delay={120}>
-          <View style={s.section}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={s.sectionTitle}>{t('ai.automations')}</Text>
+          <View style={s.sectionCard}>
+            <View style={s.sectionCardHeader}>
+              <Ionicons name="cog-outline" size={16} color={Palette.hermesOrange} />
+              <Text style={s.sectionCardTitle}>{t('ai.automations')}</Text>
               {timeSaved.weeklyHoursSaved > 0 && (
-                <Text style={s.timeSaved}>{t('ai.hoursSavedPerWeek', { hours: timeSaved.weeklyHoursSaved.toFixed(1) })}</Text>
+                <View style={s.sectionBadgeSaved}>
+                  <Text style={s.sectionBadgeSavedText}>{t('ai.hoursSavedPerWeek', { hours: timeSaved.weeklyHoursSaved.toFixed(1) })}</Text>
+                </View>
               )}
             </View>
             <View style={s.autoList}>
@@ -449,17 +463,23 @@ export default function VascoScreen() {
           </View>
         </FadeIn>
 
-        {/* Quick links — very bottom */}
+        {/* ── Quick Access section card ── */}
         <FadeIn delay={160}>
-          <View style={s.linksRow}>
-            <Pressable style={s.linkChip} onPress={() => router.push('/(contractor)/certificaten' as any)}>
-              <Ionicons name="shield-checkmark-outline" size={14} color={SemanticColors.textSecondary} />
-              <Text style={s.linkChipText}>{t('ai.certificates')}</Text>
-            </Pressable>
-            <Pressable style={s.linkChip} onPress={() => router.push('/(contractor)/besparen' as any)}>
-              <Ionicons name="wallet-outline" size={14} color={SemanticColors.textSecondary} />
-              <Text style={s.linkChipText}>{t('ai.savings')}</Text>
-            </Pressable>
+          <View style={s.sectionCard}>
+            <View style={s.sectionCardHeader}>
+              <Ionicons name="grid-outline" size={16} color={Palette.hermesOrange} />
+              <Text style={s.sectionCardTitle}>{t('ai.quickAccess', 'Quick access')}</Text>
+            </View>
+            <View style={s.linksRow}>
+              <Pressable style={s.linkChip} onPress={() => router.push('/(contractor)/certificaten' as any)}>
+                <Ionicons name="shield-checkmark-outline" size={14} color={SemanticColors.textSecondary} />
+                <Text style={s.linkChipText}>{t('ai.certificates')}</Text>
+              </Pressable>
+              <Pressable style={s.linkChip} onPress={() => router.push('/(contractor)/besparen' as any)}>
+                <Ionicons name="wallet-outline" size={14} color={SemanticColors.textSecondary} />
+                <Text style={s.linkChipText}>{t('ai.savings')}</Text>
+              </Pressable>
+            </View>
           </View>
         </FadeIn>
 
@@ -533,7 +553,7 @@ const s = StyleSheet.create({
 
   // Action card
   actionCard: {
-    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: 14, gap: 10,
+    backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.md, padding: 14, gap: 10,
   },
   actionCardHigh: {
     borderLeftWidth: 3, borderLeftColor: SemanticColors.feedbackError,
@@ -580,14 +600,39 @@ const s = StyleSheet.create({
   emptyTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
   emptyDesc: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, textAlign: 'center', paddingHorizontal: 24 },
 
-  // Section
+  // Section card wrappers
+  sectionCard: {
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md,
+  },
+  sectionCardHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.sm, marginBottom: GRID.sm,
+  },
+  sectionCardTitle: {
+    fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary, flex: 1,
+  },
+  sectionBadge: {
+    backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.full, minWidth: 22, height: 22,
+    alignItems: 'center', justifyContent: 'center', paddingHorizontal: GRID.xs + 2,
+  },
+  sectionBadgeText: {
+    fontSize: TYPE.tinySize, fontFamily: TYPE.titleFamily, color: Palette.white,
+  },
+  sectionBadgeSaved: {
+    backgroundColor: SemanticColors.feedbackSuccess + '18', borderRadius: RADIUS.full,
+    paddingHorizontal: GRID.sm, paddingVertical: 2,
+  },
+  sectionBadgeSavedText: {
+    fontSize: TYPE.tinySize, fontFamily: TYPE.captionFamily, color: SemanticColors.feedbackSuccess,
+  },
+
+  // Section (legacy)
   section: { gap: GRID.sm },
   sectionTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, letterSpacing: TYPE.sectionTracking },
 
   // Recommendations
   recCard: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: 14,
+    backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.md, padding: 14,
     borderLeftWidth: 3, borderLeftColor: Palette.hermesOrange,
   },
   recTitle: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
@@ -614,10 +659,10 @@ const s = StyleSheet.create({
   manageLinkText: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange },
 
   // Quick links at bottom
-  linksRow: { flexDirection: 'row', gap: 8, justifyContent: 'center' },
+  linksRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   linkChip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md,
+    backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.md,
     paddingHorizontal: 12, paddingVertical: 8,
   },
   linkChipText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },

@@ -72,6 +72,7 @@ export function VascoCard({
 }: VascoCardProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true); // EVE pattern: show value first
+  const [showAllAlerts, setShowAllAlerts] = useState(false);
   const router = useRouter();
 
   const findingsCount = briefing?.findings.length ?? 0;
@@ -149,12 +150,18 @@ export function VascoCard({
               <Text style={s.personalSummary}>{briefing.personalSummary}</Text>
               {(briefing.proactiveAlerts ?? []).length > 0 && (
                 <View style={s.alertsContainer}>
-                  {briefing.proactiveAlerts.slice(0, 3).map((alert, idx) => (
+                  {(showAllAlerts ? briefing.proactiveAlerts : briefing.proactiveAlerts.slice(0, 2)).map((alert, idx) => (
                     <View key={idx} style={s.alertRow}>
                       <Ionicons name="arrow-forward-circle-outline" size={13} color={Palette.hermesOrange} />
                       <Text style={s.alertText}>{alert}</Text>
                     </View>
                   ))}
+                  {briefing.proactiveAlerts.length > 2 && !showAllAlerts && (
+                    <Pressable onPress={() => setShowAllAlerts(true)} style={s.showMoreBtn}>
+                      <Text style={s.showMoreText}>{t('vasco.showMore', 'Show {{count}} more', { count: briefing.proactiveAlerts.length - 2 })}</Text>
+                      <Ionicons name="chevron-down" size={12} color={Palette.hermesOrange} />
+                    </Pressable>
+                  )}
                 </View>
               )}
               {briefing.tradeContext && (
@@ -389,7 +396,22 @@ function EmbeddedApproval({ item, onApprove, onReject, onSnooze }: {
       <View style={s.embeddedActions}>
         {isShareable && (
           <Pressable style={s.editBtn} onPress={() => setEditing(!editing)} accessibilityRole="button" accessibilityLabel={t('a11y.editMessage', 'Edit message')}>
-            <Ionicons name={editing ? 'checkmark' : 'create-outline'} size={14} color={Palette.hermesOrange} />
+            <Text style={s.editBtnText}>{editing ? t('vasco.done', 'Done') : t('vasco.edit', 'Edit')}</Text>
+          </Pressable>
+        )}
+        {isShareable && item.preparedData?.customerPhone && (
+          <Pressable
+            style={s.whatsappBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Send via WhatsApp"
+            onPress={async () => {
+              const { sendWhatsApp } = await import('../../services/whatsappService');
+              await sendWhatsApp(item.preparedData!.customerPhone as string, editText || (item.preparedData?.template as string) || item.description);
+              hapticSuccess();
+              onApprove();
+            }}
+          >
+            <Ionicons name="logo-whatsapp" size={14} color="#25D366" />
           </Pressable>
         )}
         <Pressable style={[s.approveBtn, approving && s.disabled]} onPress={handleApprove} disabled={approving} accessibilityRole="button" accessibilityLabel={t('a11y.approveAction', 'Approve action')}>
@@ -492,6 +514,18 @@ const s = StyleSheet.create({
     color: Palette.hermesOrange,
     flex: 1,
   },
+  showMoreBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: GRID.xs,
+    paddingTop: GRID.xs,
+  },
+  showMoreText: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.hermesOrange,
+  },
   tradeContext: {
     fontSize: TYPE.tinySize,
     fontFamily: TYPE.tinyFamily,
@@ -563,10 +597,23 @@ const s = StyleSheet.create({
     marginLeft: GRID.lg,
   },
   editBtn: {
+    backgroundColor: Palette.hermesOrange + '12',
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: GRID.sm,
+    paddingVertical: GRID.xs,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editBtnText: {
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.hermesOrange,
+  },
+  whatsappBtn: {
     width: RADIUS.full,
     height: RADIUS.full,
     borderRadius: RADIUS.full / 2,
-    backgroundColor: Palette.hermesOrange + '15',
+    backgroundColor: '#25D36612',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -605,8 +652,8 @@ const s = StyleSheet.create({
     gap: GRID.xs,
     backgroundColor: Palette.hermesOrange,
     borderRadius: RADIUS.sm,
-    paddingHorizontal: GRID.sm + 2,
-    paddingVertical: GRID.sm - 3,
+    paddingHorizontal: GRID.sm,
+    paddingVertical: GRID.xs,
     flex: 1,
     justifyContent: 'center',
   },
