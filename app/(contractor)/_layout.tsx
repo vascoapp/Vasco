@@ -45,6 +45,13 @@ const CONTRACTOR_TABS: TabConfig[] = [
     iconFocused: 'wallet',
   },
   {
+    name: 'bedrijf',
+    i18nKey: 'tabs.customers',
+    fallbackTitle: 'Klanten',
+    icon: 'people-outline',
+    iconFocused: 'people',
+  },
+  {
     name: 'ai',
     i18nKey: 'tabs.ai',
     fallbackTitle: 'Vasco',
@@ -59,7 +66,6 @@ const HIDDEN_TABS = [
   'besparen',
   'decisions',
   'facturen',
-  'bedrijf',
 ];
 
 export default function ContractorLayout() {

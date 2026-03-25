@@ -384,7 +384,7 @@ export default function TodayScreen() {
       {/* Header — flex constrained so greeting doesn't bleed into buttons */}
       <View style={styles.header}>
         <View style={{ flex: 1, marginRight: 12 }}>
-          <Text style={styles.greeting} numberOfLines={1}>{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</Text>
+          <Text style={styles.greeting} numberOfLines={1}>{greeting}</Text>
           <Text style={styles.date}>{formattedDate}</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 8, flexShrink: 0 }}>

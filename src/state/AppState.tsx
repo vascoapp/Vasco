@@ -289,24 +289,33 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   }, [refreshData]);
 
   // Hydrate from AsyncStorage when offline (no Supabase)
-  // Only override seed data if AsyncStorage has non-empty arrays
+  // Seed version: bump this to force fresh seed data after code updates
+  const SEED_VERSION = '2026-03-25';
   const hydrated = useRef(false);
   useEffect(() => {
     if (!isSupabaseConfigured && !hydrated.current) {
       hydrated.current = true;
-      const loadIfNonEmpty = (key: string, setter: (v: any) => void) => {
-        AsyncStorage.getItem(key).then(raw => {
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed) && parsed.length > 0) setter(parsed);
-          }
-        }).catch(() => {});
-      };
-      loadIfNonEmpty('@vasco_jobs', setJobs);
-      loadIfNonEmpty('@vasco_invoices', setInvoices);
-      loadIfNonEmpty('@vasco_quotes', setQuotes);
-      loadIfNonEmpty('@vasco_customers', setCustomers);
-      loadIfNonEmpty('@vasco_projects', setProjects);
+      // Check if seed version changed — if so, don't load stale data
+      AsyncStorage.getItem('@vasco_seed_version').then(storedVersion => {
+        if (storedVersion === SEED_VERSION) {
+          // Same version: load persisted data (overrides seeds only if non-empty)
+          const loadIfNonEmpty = (key: string, setter: (v: any) => void) => {
+            AsyncStorage.getItem(key).then(raw => {
+              if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed) && parsed.length > 0) setter(parsed);
+              }
+            }).catch(() => {});
+          };
+          loadIfNonEmpty('@vasco_jobs', setJobs);
+          loadIfNonEmpty('@vasco_invoices', setInvoices);
+          loadIfNonEmpty('@vasco_quotes', setQuotes);
+          loadIfNonEmpty('@vasco_customers', setCustomers);
+          loadIfNonEmpty('@vasco_projects', setProjects);
+        }
+        // Save current version (fresh seeds will be persisted on next change)
+        AsyncStorage.setItem('@vasco_seed_version', SEED_VERSION).catch(() => {});
+      }).catch(() => {});
     }
   }, []);
 
