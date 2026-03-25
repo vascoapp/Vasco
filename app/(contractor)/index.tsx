@@ -68,6 +68,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
 import { getAcceptanceStatus } from '../../src/services/customerQuoteAcceptanceService';
 import { getProgress, getNextStep, isFullyOnboarded } from '../../src/services/onboardingTrackerService';
+import { formatAmount } from '../../src/utils/formatAmount';
 import { getWeatherForecast } from '../../src/services/weatherService';
 
 // ============================================
@@ -912,20 +913,20 @@ export default function TodayScreen() {
 
         {/* Action Required — now inside VascoCard above */}
 
-        {/* Today's Schedule - Time Grouped */}
+        {/* Today's Schedule + Active Jobs */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionLabelRow}>
               <View style={styles.sectionDot} />
               <Text style={styles.sectionTitle}>{t('dashboard.schedule', 'Planning')}</Text>
             </View>
-            <Text style={styles.sectionCount}>{t('dashboard.appointmentCount', { count: todayJobs.length, defaultValue: `${todayJobs.length} afspraken` })}</Text>
+            <Text style={styles.sectionCount}>{todayJobs.length > 0 ? t('dashboard.appointmentCount', { count: todayJobs.length, defaultValue: `${todayJobs.length} afspraken` }) : `${jobs.length} ${t('tabs.jobs', 'jobs')}`}</Text>
           </View>
-          {todayJobs.length === 0 ? (
+          {todayJobs.length === 0 && jobs.length === 0 ? (
             <View style={styles.emptyJobs}>
               <Ionicons name="calendar-outline" size={32} color={SemanticColors.textDisabled} />
-              <Text style={styles.emptyJobsText}>{t('dashboard.noJobsToday', 'Geen afspraken vandaag')}</Text>
-              <Text style={styles.emptyJobsSubtext}>{t('dashboard.enjoyFreeDay', 'Geniet van je vrije dag!')}</Text>
+              <Text style={styles.emptyJobsText}>{t('dashboard.noJobsToday', 'No jobs today')}</Text>
+              <Text style={styles.emptyJobsSubtext}>{t('dashboard.enjoyFreeDay', 'Enjoy your free day!')}</Text>
             </View>
           ) : (
             <View style={styles.jobsList}>
@@ -959,6 +960,30 @@ export default function TodayScreen() {
                   </View>
                 ))
               }
+            </View>
+          )}
+
+          {/* Fallback: show active jobs when scheduler returns empty */}
+          {todayJobs.length === 0 && jobs.length > 0 && (
+            <View style={styles.activeJobsList}>
+              <Text style={styles.activeJobsLabel}>{t('dashboard.activeJobs', 'Active jobs')}</Text>
+              {jobs.filter(j => !['completed', 'gereed', 'invoiced', 'paid', 'cancelled'].includes(j.status)).slice(0, 5).map(job => {
+                const cust = customers.find(c => c.id === job.customerId);
+                return (
+                  <Pressable
+                    key={job.id}
+                    style={({ pressed }) => [styles.activeJobRow, pressed && { opacity: 0.8 }]}
+                    onPress={() => router.push(`/contractor/job/${job.id}` as any)}
+                  >
+                    <View style={[styles.activeJobDot, job.status === 'in-progress' && { backgroundColor: SemanticColors.feedbackSuccess }, job.status === 'scheduled' && { backgroundColor: Palette.hermesOrange }, job.status === 'lead' && { backgroundColor: SemanticColors.textTertiary }]} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.activeJobTitle} numberOfLines={1}>{job.title}</Text>
+                      <Text style={styles.activeJobMeta}>{cust?.name || ''} · {job.status}{job.scheduledDate ? ` · ${job.scheduledDate}` : ''}</Text>
+                    </View>
+                    {job.quotedAmount ? <Text style={styles.activeJobAmount}>{formatAmount(job.quotedAmount)}</Text> : null}
+                  </Pressable>
+                );
+              })}
             </View>
           )}
         </View>
@@ -1398,6 +1423,18 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_400Regular',
     color: SemanticColors.textTertiary,
   },
+
+  // Active jobs fallback (when scheduler is empty but jobs exist)
+  activeJobsList: { gap: GRID.xs, marginTop: GRID.sm },
+  activeJobsLabel: { fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: SemanticColors.textTertiary, textTransform: 'uppercase' as const, letterSpacing: 0.5, marginBottom: GRID.xs },
+  activeJobRow: {
+    flexDirection: 'row' as const, alignItems: 'center' as const, gap: GRID.sm,
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md, padding: GRID.md,
+  },
+  activeJobDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: SemanticColors.textTertiary },
+  activeJobTitle: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  activeJobMeta: { fontSize: TYPE.tinySize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary, marginTop: 1 },
+  activeJobAmount: { fontSize: TYPE.captionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
 
   // Timer Strip
   timerStrip: {
