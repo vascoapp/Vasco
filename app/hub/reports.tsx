@@ -57,7 +57,7 @@ const REPORT_CATEGORIES: ReportCategory[] = [
     title: 'Schedule Performance',
     description: 'Planning prestatie (SPI/CPI)',
     icon: 'time',
-    color: Palette.burntSienna,
+    color: Palette.hermesOrange,
   },
   {
     id: 'compliance-report',

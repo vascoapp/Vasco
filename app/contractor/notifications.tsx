@@ -27,7 +27,7 @@ const TYPE_CONFIG: Record<NotificationType, { icon: IconName; color: string }> =
   overdue_invoice: { icon: 'alert-circle-outline', color: SemanticColors.feedbackError },
   team_assignment: { icon: 'people-outline', color: SemanticColors.feedbackInfo },
   approval_request: { icon: 'shield-checkmark-outline', color: Palette.hermesOrange },
-  permit_update: { icon: 'document-text-outline', color: Palette.terracotta },
+  permit_update: { icon: 'document-text-outline', color: Palette.hermesOrange },
   delivery_update: { icon: 'cube-outline', color: '#10B981' },
   credential_expiry: { icon: 'ribbon-outline', color: SemanticColors.feedbackWarning },
   general: { icon: 'notifications-outline', color: SemanticColors.textSecondary },

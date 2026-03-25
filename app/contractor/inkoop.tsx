@@ -94,7 +94,7 @@ export default function InkoopScreen() {
     switch (priority) {
       case 'critical': return SemanticColors.feedbackError;
       case 'high': return Palette.hermesOrange;
-      case 'medium': return Palette.burntSienna;
+      case 'medium': return Palette.hermesOrange;
       default: return SemanticColors.textTertiary;
     }
   };
@@ -307,13 +307,13 @@ export default function InkoopScreen() {
           <View style={styles.card}>
             <View style={styles.breakdownBar}>
               <View style={{ flex: 45, backgroundColor: Palette.hermesOrange }} />
-              <View style={{ flex: 25, backgroundColor: Palette.burntSienna }} />
+              <View style={{ flex: 25, backgroundColor: Palette.hermesOrange + 'CC' }} />
               <View style={{ flex: 20, backgroundColor: Palette.pastelOrange }} />
               <View style={{ flex: 10, backgroundColor: '#DDD' }} />
             </View>
             {([
               { label: 'Materialen', amount: '€1.840', pct: '45%', color: Palette.hermesOrange },
-              { label: 'Leveranciers', amount: '€1.020', pct: '25%', color: Palette.burntSienna },
+              { label: 'Leveranciers', amount: '€1.020', pct: '25%', color: Palette.hermesOrange + 'CC' },
               { label: 'Efficiëntie', amount: '€820', pct: '20%', color: Palette.pastelOrange },
               { label: 'Overig', amount: '€410', pct: '10%', color: '#CCC' },
             ] as const).map(r => (

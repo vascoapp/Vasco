@@ -262,14 +262,14 @@ export default function JobDetailPage() {
             </View>
             <View style={styles.heroDetailItem}>
               <View style={styles.heroDetailIcon}>
-                <Ionicons name="location" size={14} color={Palette.burntSienna} />
+                <Ionicons name="location" size={14} color={Palette.hermesOrange} />
               </View>
               <Text style={styles.heroDetailText} numberOfLines={2}>{job.address}</Text>
             </View>
             {job.travelTime && (
               <View style={styles.heroDetailItem}>
                 <View style={styles.heroDetailIcon}>
-                  <Ionicons name="car" size={14} color={Palette.terracotta} />
+                  <Ionicons name="car" size={14} color={Palette.hermesOrange} />
                 </View>
                 <Text style={styles.heroDetailText}>{job.travelTime} {t('jobs.minTravelTime', 'min travel')}</Text>
               </View>

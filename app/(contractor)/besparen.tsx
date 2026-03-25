@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { SafeArea } from '../../src/theme/spacing';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
@@ -47,6 +48,7 @@ interface SavingAction {
 }
 
 export default function BesparenScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const [actioned, setActioned] = useState<Set<string>>(new Set());
@@ -116,7 +118,7 @@ export default function BesparenScreen() {
         title: result.material.name,
         reason: result.recommendation,
         saving: result.bestOption.savings,
-        actionLabel: 'Bestellen',
+        actionLabel: t('savings.order', 'Bestellen'),
         type: 'procurement',
       });
     }
@@ -130,7 +132,7 @@ export default function BesparenScreen() {
       title: tip.title,
       reason: tip.description,
       saving: tip.potentialSaving,
-      actionLabel: tip.actionLabel || 'Activeer',
+      actionLabel: tip.actionLabel || t('savings.activate', 'Activeer'),
       type: 'tip',
     });
   });
@@ -146,7 +148,7 @@ export default function BesparenScreen() {
         title: item.name,
         reason: `${Math.round((savingAmount / previousPrice) * 100)}% goedkoper bij ${item.supplierId}`,
         saving: savingAmount,
-        actionLabel: 'Bestel nu',
+        actionLabel: t('savings.orderNow', 'Bestel nu'),
         type: 'price-alert',
       });
     }
@@ -171,12 +173,12 @@ export default function BesparenScreen() {
     } else if (action.type === 'tip') {
       // Confirm activation of the tip
       Alert.alert(
-        'Besparing activeren',
-        `Wil je "${action.title}" activeren? Verwachte besparing: €${action.saving.toLocaleString(undefined)}.`,
+        t('savings.activateSaving', 'Besparing activeren'),
+        t('savings.activateConfirm', { defaultValue: 'Wil je "{{title}}" activeren? Verwachte besparing: €{{amount}}.', title: action.title, amount: action.saving.toLocaleString(undefined) }),
         [
-          { text: 'Annuleren', style: 'cancel' },
+          { text: t('common.cancel', 'Annuleren'), style: 'cancel' },
           {
-            text: 'Activeer',
+            text: t('savings.activate', 'Activeer'),
             onPress: () => {
               setActioned(prev => new Set(prev).add(action.id));
             },
@@ -195,8 +197,8 @@ export default function BesparenScreen() {
 
   const handleShare = async () => {
     const lines = visibleActions.map(a => `• ${a.title}: €${a.saving.toLocaleString(undefined)} — ${a.reason}`);
-    const message = `Bespaarkansen gevonden door Vasco:\n\n${lines.join('\n')}\n\nTotaal potentieel: €${totalPotential.toLocaleString(undefined)}`;
-    await Share.share({ message, title: 'Bespaarkansen' });
+    const message = `${t('savings.foundByVasco', 'Bespaarkansen gevonden door Vasco')}:\n\n${lines.join('\n')}\n\n${t('savings.totalPotential', 'Totaal potentieel')}: €${totalPotential.toLocaleString(undefined)}`;
+    await Share.share({ message, title: t('savings.savingsOpportunities', 'Bespaarkansen') });
   };
 
   const onRefresh = useCallback(() => {
@@ -211,7 +213,7 @@ export default function BesparenScreen() {
         <Pressable onPress={() => router.back()} hitSlop={12} style={s.backBtn}>
           <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
-        <Text style={s.headerTitle}>Besparen</Text>
+        <Text style={s.headerTitle}>{t('savings.title', 'Besparen')}</Text>
         {visibleActions.length > 0 ? (
           <Pressable onPress={handleShare} hitSlop={12} style={s.backBtn}>
             <Ionicons name="share-outline" size={20} color={SemanticColors.textPrimary} />
@@ -236,17 +238,17 @@ export default function BesparenScreen() {
             <View style={{ flex: 1 }}>
               <Text style={s.summaryTitle}>
                 {visibleActions.length > 0
-                  ? `Vasco vond ${visibleActions.length} bespaarkansen`
-                  : 'Geen bespaarkansen gevonden'}
+                  ? t('savings.foundCount', { defaultValue: 'Vasco vond {{count}} bespaarkansen', count: visibleActions.length })
+                  : t('savings.noneFound', 'Geen bespaarkansen gevonden')}
               </Text>
               {totalPotential > 0 && (
                 <Text style={s.summaryAmount}>
-                  Tot €{totalPotential.toLocaleString(undefined, { maximumFractionDigits: 0 })} potentieel
+                  {t('savings.upToPotential', { defaultValue: 'Tot €{{amount}} potentieel', amount: totalPotential.toLocaleString(undefined, { maximumFractionDigits: 0 }) })}
                 </Text>
               )}
               {savings.totalSavedThisMonth > 0 && (
                 <Text style={s.summarySaved}>
-                  €{savings.totalSavedThisMonth.toLocaleString(undefined, { maximumFractionDigits: 0 })} al bespaard deze maand
+                  {t('savings.savedThisMonth', { defaultValue: '€{{amount}} al bespaard deze maand', amount: savings.totalSavedThisMonth.toLocaleString(undefined, { maximumFractionDigits: 0 }) })}
                 </Text>
               )}
             </View>
@@ -281,7 +283,7 @@ export default function BesparenScreen() {
                   style={({ pressed }) => [s.skipBtn, pressed && { opacity: 0.85 }]}
                   onPress={() => handleDismiss(action)}
                 >
-                  <Text style={s.skipBtnText}>Later</Text>
+                  <Text style={s.skipBtnText}>{t('common.later', 'Later')}</Text>
                 </Pressable>
               </View>
             </View>
@@ -294,7 +296,7 @@ export default function BesparenScreen() {
             <View style={s.doneCard}>
               <Ionicons name="checkmark-circle" size={18} color={SemanticColors.feedbackSuccess} />
               <Text style={s.doneText}>
-                {actioned.size} {actioned.size === 1 ? 'actie' : 'acties'} ingepland
+                {t('savings.actionsScheduled', { defaultValue: '{{count}} acties ingepland', count: actioned.size })}
               </Text>
             </View>
           </FadeIn>
@@ -305,8 +307,8 @@ export default function BesparenScreen() {
           <FadeIn delay={100}>
             <View style={s.emptyCard}>
               <Ionicons name="sparkles-outline" size={32} color={SemanticColors.textTertiary} />
-              <Text style={s.emptyTitle}>Alles op orde</Text>
-              <Text style={s.emptyDesc}>Vasco scant continu je uitgaven en marktprijzen. Zodra er iets te besparen valt, zie je het hier.</Text>
+              <Text style={s.emptyTitle}>{t('savings.allGood', 'Alles op orde')}</Text>
+              <Text style={s.emptyDesc}>{t('savings.allGoodDesc', 'Vasco scant continu je uitgaven en marktprijzen. Zodra er iets te besparen valt, zie je het hier.')}</Text>
             </View>
           </FadeIn>
         )}
@@ -316,28 +318,28 @@ export default function BesparenScreen() {
           <View style={s.moatCard}>
             <View style={s.moatHeader}>
               <Ionicons name="server-outline" size={16} color={SemanticColors.textTertiary} />
-              <Text style={s.moatTitle}>Prijsintelligentie</Text>
+              <Text style={s.moatTitle}>{t('savings.priceIntelligence', 'Prijsintelligentie')}</Text>
             </View>
             <View style={s.moatGrid}>
               <View style={s.moatStat}>
                 <Ionicons name="scan-outline" size={16} color={Palette.hermesOrange} />
                 <Text style={s.moatStatValue}>{moatStats.scans}</Text>
-                <Text style={s.moatStatLabel}>facturen gescand</Text>
+                <Text style={s.moatStatLabel}>{t('savings.invoicesScanned', 'facturen gescand')}</Text>
               </View>
               <View style={s.moatStat}>
                 <Ionicons name="cube-outline" size={16} color={Palette.hermesOrange} />
                 <Text style={s.moatStatValue}>{moatStats.materials}</Text>
-                <Text style={s.moatStatLabel}>materialen getrackt</Text>
+                <Text style={s.moatStatLabel}>{t('savings.materialsTracked', 'materialen getrackt')}</Text>
               </View>
               <View style={s.moatStat}>
                 <Ionicons name="storefront-outline" size={16} color={Palette.hermesOrange} />
                 <Text style={s.moatStatValue}>{moatStats.suppliers}</Text>
-                <Text style={s.moatStatLabel}>leveranciers vergeleken</Text>
+                <Text style={s.moatStatLabel}>{t('savings.suppliersCompared', 'leveranciers vergeleken')}</Text>
               </View>
             </View>
             {moatStats.scans === 0 && (
               <Text style={s.moatHint}>
-                Scan je eerste leveranciersfactuur om prijsintelligentie te starten
+                {t('savings.scanFirstInvoice', 'Scan je eerste leveranciersfactuur om prijsintelligentie te starten')}
               </Text>
             )}
           </View>

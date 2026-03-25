@@ -135,7 +135,7 @@ export default function ProfileScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color="#1A1A1A" />
+          <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('profile.title', 'Profile')}</Text>
         <View style={{ width: 40 }} />
@@ -198,7 +198,7 @@ export default function ProfileScreen() {
                   {item.id === 'language'
                     ? <Text style={styles.rowValue}>{currentLang.flag} {currentLang.label}</Text>
                     : item.value && <Text style={styles.rowValue}>{item.value}</Text>}
-                  <Ionicons name="chevron-forward" size={16} color="#CCC" />
+                  <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
                 </Pressable>
               ))}
             </View>
@@ -224,7 +224,7 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 140 }} />
       </ScrollView>
     </View>
   );
@@ -236,51 +236,51 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: SafeArea.side,
     paddingTop: SafeArea.top,
-    paddingBottom: 12,
+    paddingBottom: GRID.sm + 4,
   },
-  backBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 18, fontFamily: 'Manrope_700Bold', color: '#1A1A1A' },
+  backBtn: { width: 40, height: 40, borderRadius: RADIUS.full, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 16, gap: 20 },
+  scrollContent: { paddingHorizontal: SafeArea.side, gap: GRID.lg - 4 },
   avatarSection: { alignItems: 'center', paddingVertical: Spacing.lg },
   avatar: {
-    width: 72, height: 72, borderRadius: 24,
+    width: 72, height: 72, borderRadius: RADIUS.lg + 8,
     backgroundColor: Palette.hermesOrange, alignItems: 'center', justifyContent: 'center',
   },
-  avatarText: { fontSize: 24, fontFamily: 'Manrope_800ExtraBold', color: '#fff' },
-  nameText: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: '#1A1A1A', marginTop: 12 },
-  roleText: { fontSize: 13, color: '#999', marginTop: 4 },
-  section: { gap: 8 },
-  sectionTitle: { fontSize: 12, fontFamily: 'Manrope_700Bold', color: '#999', letterSpacing: 0.8, paddingHorizontal: 4 },
+  avatarText: { fontSize: TYPE.displaySize - 4, fontFamily: TYPE.displayFamily, color: Palette.white },
+  nameText: { fontSize: TYPE.sectionSize + 2, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, marginTop: GRID.sm + 4 },
+  roleText: { fontSize: TYPE.captionSize, color: SemanticColors.textTertiary, marginTop: GRID.xs },
+  section: { gap: GRID.sm },
+  sectionTitle: { fontSize: TYPE.labelSize, fontFamily: 'Manrope_700Bold', color: SemanticColors.textTertiary, letterSpacing: 0.8, paddingHorizontal: GRID.xs },
   card: {
-    backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden',
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden',
   },
-  row: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 },
-  rowBorder: { borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
+  row: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: GRID.sm + 4 },
+  rowBorder: { borderBottomWidth: 1, borderBottomColor: SemanticColors.borderDefault },
   rowIcon: {
-    width: 32, height: 32, borderRadius: 12,
+    width: 32, height: 32, borderRadius: RADIUS.md,
     backgroundColor: Palette.hermesOrange + '0C', alignItems: 'center', justifyContent: 'center',
   },
-  rowLabel: { flex: 1, fontSize: 14, fontFamily: 'Inter_500Medium', color: '#1A1A1A' },
-  rowValue: { fontSize: 13, color: '#999', marginRight: 4 },
+  rowLabel: { flex: 1, fontSize: 14, fontFamily: 'Inter_500Medium', color: SemanticColors.textPrimary },
+  rowValue: { fontSize: TYPE.captionSize, color: SemanticColors.textTertiary, marginRight: GRID.xs },
   scoreHeader: {
     flexDirection: 'row', alignItems: 'center', padding: 14, gap: 10,
-    borderBottomWidth: 1, borderBottomColor: '#F5F5F5',
+    borderBottomWidth: 1, borderBottomColor: SemanticColors.borderDefault,
   },
-  scoreTitle: { flex: 1, fontSize: 14, fontFamily: 'Inter_600SemiBold', color: '#1A1A1A' },
+  scoreTitle: { flex: 1, fontSize: 14, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
   scoreValue: { fontSize: TYPE.titleSize, fontFamily: 'Manrope_700Bold', color: Palette.hermesOrange },
   scoreBreakdown: { paddingHorizontal: 14, paddingVertical: 10, gap: 8 },
   scoreRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   scoreLabel: { fontSize: TYPE.captionSize, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
   scoreMetric: { fontSize: TYPE.captionSize, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
   logoutButton: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    paddingVertical: 14, backgroundColor: SemanticColors.feedbackErrorBg, borderRadius: 12,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: GRID.sm,
+    paddingVertical: 14, backgroundColor: SemanticColors.feedbackErrorBg, borderRadius: RADIUS.md,
   },
   logoutText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: SemanticColors.feedbackError },
-  versionText: { fontSize: 12, color: '#CCC', textAlign: 'center', marginTop: 8 },
+  versionText: { fontSize: TYPE.labelSize, color: SemanticColors.textTertiary, textAlign: 'center', marginTop: GRID.sm },
   retentionNotice: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -290,8 +290,8 @@ const styles = StyleSheet.create({
   },
   retentionText: {
     flex: 1,
-    fontSize: 11,
-    fontFamily: 'Inter_400Regular',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.tinyFamily,
     color: SemanticColors.textTertiary,
     lineHeight: 16,
   },

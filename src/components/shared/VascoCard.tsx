@@ -17,6 +17,7 @@ import type { MorningBriefing } from '../../intelligence/backgroundJobScheduler'
 import type { QueueItem } from '../../services/aiActionQueueService';
 import { snoozeQueueItem, recordOutcome } from '../../services/aiActionQueueService';
 import type { ScoredInsight } from '../../intelligence/generators/types';
+import { formatAmount } from '../../utils/formatAmount';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -81,13 +82,16 @@ export function VascoCard({
 
   // ── Smart collapsed summary: show top priority item ──
   const criticalFindings = briefing?.findings.filter(f => f.severity === 'critical') ?? [];
+  const hasCritical = criticalFindings.length > 0;
   let collapsedSummary: string;
-  if (criticalFindings.length > 0) {
+  if (hasCritical) {
     const topCritical = criticalFindings[0];
-    const amountMatch = topCritical.description?.match(/€[\d.,]+/);
-    const amountStr = amountMatch ? `${amountMatch[0]} ` : '';
+    const numericMatch = topCritical.description?.match(/€\s*([\d.,]+)/);
+    const amountStr = numericMatch
+      ? `${formatAmount(parseFloat(numericMatch[1].replace(/\./g, '').replace(',', '.')))} `
+      : '';
     const totalActions = queueCount + findingsCount;
-    collapsedSummary = `⚠ ${amountStr}${topCritical.title.slice(0, 40)} — ${totalActions} actions ready`;
+    collapsedSummary = `${amountStr}${topCritical.title.slice(0, 40)} — ${totalActions} actions ready`;
   } else if (queueCount > 0) {
     const topItem = queueItems[0];
     const moreCount = queueCount - 1;
@@ -120,9 +124,14 @@ export function VascoCard({
         </View>
         <View style={s.flex1}>
           <Text style={s.title}>Vasco</Text>
-          <Text style={s.summary} numberOfLines={1}>
-            {collapsedSummary}
-          </Text>
+          <View style={s.summaryRow}>
+            {hasCritical && (
+              <Ionicons name="alert-circle" size={14} color={SemanticColors.feedbackError} />
+            )}
+            <Text style={[s.summary, s.flex1]} numberOfLines={1}>
+              {collapsedSummary}
+            </Text>
+          </View>
         </View>
         {/* Expo Router requires 'as any' for dynamic routes — tracked in expo-router#123 */}
         <Pressable onPress={() => router.push('/contractor/automations' as any)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('a11y.automationSettings', 'Automation settings')}>
@@ -368,7 +377,7 @@ function EmbeddedApproval({ item, onApprove, onReject, onSnooze }: {
 
       {/* Amount display for all invoice-type items */}
       {isInvoiceType && (item.preparedData?.amount || item.preparedData?.totalRevenue || item.preparedData?.newTotal) && (
-        <Text style={s.embeddedAmount}>€{Number(item.preparedData.newTotal || item.preparedData.totalRevenue || item.preparedData.amount).toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+        <Text style={s.embeddedAmount}>{formatAmount(Number(item.preparedData.newTotal || item.preparedData.totalRevenue || item.preparedData.amount))}</Text>
       )}
 
       {/* Impact line */}
@@ -432,11 +441,16 @@ const s = StyleSheet.create({
     fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.xs,
+    marginTop: 1,
+  },
   summary: {
     fontSize: TYPE.captionSize,
     fontFamily: TYPE.captionFamily,
     color: SemanticColors.textSecondary,
-    marginTop: 1,
   },
   content: {
     paddingHorizontal: GRID.md - 2,

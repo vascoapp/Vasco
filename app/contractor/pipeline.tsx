@@ -32,7 +32,7 @@ interface ColumnConfig {
 }
 
 const getColumns = (t: (key: string, defaultValue: string) => string): ColumnConfig[] => [
-  { status: 'lead', label: t('pipeline.leads', 'Leads'), color: Palette.terracotta, icon: 'person-add-outline', nextStatus: 'quoted', nextLabel: t('pipeline.createQuote', 'Offerte maken') },
+  { status: 'lead', label: t('pipeline.leads', 'Leads'), color: Palette.hermesOrange, icon: 'person-add-outline', nextStatus: 'quoted', nextLabel: t('pipeline.createQuote', 'Offerte maken') },
   { status: 'quoted', label: t('pipeline.quotes', 'Offertes'), color: SemanticColors.feedbackInfo, icon: 'document-text-outline', nextStatus: 'accepted', nextLabel: t('pipeline.accept', 'Accepteren') },
   { status: 'accepted', label: t('pipeline.accepted', 'Geaccepteerd'), color: '#10B981', icon: 'checkmark-circle-outline', nextStatus: 'scheduled', nextLabel: t('pipeline.schedule', 'Inplannen') },
   { status: 'scheduled', label: t('pipeline.scheduled', 'Ingepland'), color: SemanticColors.feedbackWarning, icon: 'calendar-outline', nextStatus: 'in-progress', nextLabel: t('pipeline.start', 'Starten') },

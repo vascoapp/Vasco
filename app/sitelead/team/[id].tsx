@@ -16,7 +16,7 @@ import { hapticSuccess } from '../../../src/utils/haptics';
 
 // Site Lead palette (references Palette where possible)
 const SL_COLORS = {
-  terracotta: Palette.terracotta,
+  terracotta: Palette.hermesOrange,
   charcoal: SemanticColors.textPrimary,
   sand: SemanticColors.surfaceBackground,
   sandDark: SemanticColors.surfaceSecondary,
@@ -101,7 +101,7 @@ const MEMBER_STATUS: Record<
   { label: string; color: string; bgColor: string }
 > = {
   beschikbaar: { label: 'Beschikbaar', color: SemanticColors.feedbackSuccess, bgColor: SemanticColors.feedbackSuccessBg },
-  bezig: { label: 'Bezig', color: Palette.terracotta, bgColor: Palette.terracotta + '12' },
+  bezig: { label: 'Bezig', color: Palette.hermesOrange, bgColor: Palette.hermesOrange + '12' },
   pauze: { label: 'Pauze', color: SemanticColors.textSecondary, bgColor: SemanticColors.surfaceSecondary },
   ziek: { label: 'Ziek', color: SemanticColors.feedbackError, bgColor: SemanticColors.feedbackErrorBg },
 };

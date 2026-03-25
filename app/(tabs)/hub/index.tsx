@@ -55,7 +55,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     subtitle: 'AI Material Savings',
     icon: 'trending-down',
     route: '/contractor/purchasing',
-    color: Palette.terracotta,
+    color: Palette.hermesOrange,
     badge: 'Save 15%',
   },
 ];

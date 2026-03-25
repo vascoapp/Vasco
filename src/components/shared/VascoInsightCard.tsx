@@ -322,7 +322,7 @@ export function VascoInsightCard({
             <Text style={styles.title} numberOfLines={1}>{insight.title}</Text>
             {insight.priority === 'critical' && (
               <View style={styles.criticalBadge}>
-                <Text style={styles.criticalBadgeText}>URGENT</Text>
+                <Text style={styles.criticalBadgeText}>{t('insights.urgent', 'URGENT')}</Text>
               </View>
             )}
           </View>
@@ -435,7 +435,7 @@ export function VascoInsightCard({
           {onSnooze && expanded && (
             <Pressable style={styles.snoozeButton} onPress={handleSnooze}>
               <Ionicons name="time-outline" size={14} color={SemanticColors.textSecondary} />
-              <Text style={styles.snoozeText}>Later</Text>
+              <Text style={styles.snoozeText}>{t('common.later', 'Later')}</Text>
             </Pressable>
           )}
           <View style={{ flex: 1 }} />

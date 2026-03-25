@@ -23,10 +23,11 @@ import { useAuth } from '../../src/context/AuthContext';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-const ACTION_ICONS: Record<string, { icon: IconName; color: string; label: string }> = {
-  buy_now: { icon: 'cart', color: SemanticColors.feedbackSuccess, label: 'Nu kopen' },
-  wait: { icon: 'time', color: Palette.hermesOrange, label: 'Wachten' },
-  switch_supplier: { icon: 'swap-horizontal', color: Palette.terracotta, label: 'Wissel leverancier' },
+// Action labels resolved via t() inside component — keys stored here
+const ACTION_ICONS_BASE: Record<string, { icon: IconName; color: string; key: string; fallback: string }> = {
+  buy_now: { icon: 'cart', color: SemanticColors.feedbackSuccess, key: 'market.buyNow', fallback: 'Nu kopen' },
+  wait: { icon: 'time', color: Palette.hermesOrange, key: 'market.wait', fallback: 'Wachten' },
+  switch_supplier: { icon: 'swap-horizontal', color: Palette.hermesOrange, key: 'market.switchSupplier', fallback: 'Wissel leverancier' },
 };
 
 const TREND_ICONS: Record<string, { icon: IconName; color: string }> = {
@@ -41,6 +42,15 @@ export default function MarketPricesScreen() {
   const { user } = useAuth();
   const trade = user?.trade ?? 'general';
   const country = user?.country ?? 'NL';
+
+  // Resolve action labels with i18n
+  const ACTION_ICONS = useMemo(() => {
+    const resolved: Record<string, { icon: IconName; color: string; label: string }> = {};
+    for (const [k, v] of Object.entries(ACTION_ICONS_BASE)) {
+      resolved[k] = { icon: v.icon, color: v.color, label: t(v.key, v.fallback) };
+    }
+    return resolved;
+  }, [t]);
 
   const { benchmarks, loading: benchLoading } = useCohortBenchmarks(trade, country);
   const { data: index, loading: indexLoading } = usePriceIndex(country);
@@ -70,8 +80,8 @@ export default function MarketPricesScreen() {
           <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text style={styles.headerTitle}>Marktprijzen</Text>
-          <Text style={styles.headerSub}>{benchmarks?.contractorsInCohort ?? 0} aannemers in jouw regio</Text>
+          <Text style={styles.headerTitle}>{t('market.title', 'Marktprijzen')}</Text>
+          <Text style={styles.headerSub}>{t('market.contractorsInRegion', { defaultValue: '{{count}} aannemers in jouw regio', count: benchmarks?.contractorsInCohort ?? 0 })}</Text>
         </View>
       </View>
 
@@ -86,11 +96,11 @@ export default function MarketPricesScreen() {
           <FadeIn delay={0}>
             <View style={styles.card}>
               <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>Bouwkostenindex</Text>
+                <Text style={styles.cardTitle}>{t('market.constructionCostIndex', 'Bouwkostenindex')}</Text>
                 <View style={[styles.trendBadge, { backgroundColor: TREND_ICONS[index.overallIndex.trend].color + '15' }]}>
                   <Ionicons name={TREND_ICONS[index.overallIndex.trend].icon} size={14} color={TREND_ICONS[index.overallIndex.trend].color} />
                   <Text style={[styles.trendText, { color: TREND_ICONS[index.overallIndex.trend].color }]}>
-                    {index.overallIndex.changePercent12m > 0 ? '+' : ''}{index.overallIndex.changePercent12m.toFixed(1)}% /jaar
+                    {index.overallIndex.changePercent12m > 0 ? '+' : ''}{index.overallIndex.changePercent12m.toFixed(1)}% /{t('market.year', 'jaar')}
                   </Text>
                 </View>
               </View>
@@ -115,10 +125,10 @@ export default function MarketPricesScreen() {
         )}
 
         {/* Price Recommendations */}
-        {recommendations.length > 0 && (
-          <FadeIn delay={100}>
-            <Text style={styles.sectionTitle}>Inkoopadvies</Text>
-            {recommendations.slice(0, 5).map((rec, i) => {
+        <FadeIn delay={100}>
+          <Text style={styles.sectionTitle}>{t('market.purchaseAdvice', 'Inkoopadvies')}</Text>
+          {recommendations.length > 0 ? (
+            recommendations.slice(0, 5).map((rec, i) => {
               const action = ACTION_ICONS[rec.action];
               const trend = TREND_ICONS[rec.trend];
               return (
@@ -143,20 +153,26 @@ export default function MarketPricesScreen() {
                       <Text style={[styles.actionBadgeText, { color: action.color }]}>{action.label}</Text>
                     </View>
                     <Ionicons name={trend.icon} size={14} color={trend.color} />
-                    <Text style={styles.recAvg}>Gem: €{rec.avgPrice.toFixed(2)}</Text>
-                    <Text style={styles.recLowest}>Laagst: €{rec.lowestPrice.toFixed(2)} ({rec.lowestSupplier})</Text>
+                    <Text style={styles.recAvg}>{t('market.avg', 'Gem')}: €{rec.avgPrice.toFixed(2)}</Text>
+                    <Text style={styles.recLowest}>{t('market.lowest', 'Laagst')}: €{rec.lowestPrice.toFixed(2)} ({rec.lowestSupplier})</Text>
                   </View>
                 </View>
               );
-            })}
-          </FadeIn>
-        )}
+            })
+          ) : (
+            <View style={styles.sectionEmpty}>
+              <Ionicons name="receipt-outline" size={48} color={SemanticColors.textTertiary} />
+              <Text style={styles.sectionEmptyTitle}>{t('market.noRecommendations', 'Geen aanbevelingen')}</Text>
+              <Text style={styles.sectionEmptyDesc}>{t('market.noRecommendationsDesc', 'Scan leveranciersfacturen om gepersonaliseerde prijsaanbevelingen te krijgen')}</Text>
+            </View>
+          )}
+        </FadeIn>
 
         {/* Material Benchmarks */}
-        {topBenchmarks.length > 0 && (
-          <FadeIn delay={200}>
-            <Text style={styles.sectionTitle}>Materiaalprijzen ({topBenchmarks.length})</Text>
-            {topBenchmarks.map((bm, i) => (
+        <FadeIn delay={200}>
+          <Text style={styles.sectionTitle}>{t('market.materialPrices', 'Materiaalprijzen')}{topBenchmarks.length > 0 ? ` (${topBenchmarks.length})` : ''}</Text>
+          {topBenchmarks.length > 0 ? (
+            topBenchmarks.map((bm, i) => (
               <View key={i} style={styles.bmCard}>
                 <View style={styles.bmHeader}>
                   <Text style={styles.bmName} numberOfLines={1}>{bm.materialName}</Text>
@@ -169,39 +185,45 @@ export default function MarketPricesScreen() {
                   </View>
                   <View style={[styles.bmPrice, styles.bmPriceHighlight]}>
                     <Text style={[styles.bmPriceValue, { color: Palette.hermesOrange }]}>€{bm.medianPrice.toFixed(2)}</Text>
-                    <Text style={styles.bmPriceLabel}>Mediaan</Text>
+                    <Text style={styles.bmPriceLabel}>{t('market.median', 'Mediaan')}</Text>
                   </View>
                   <View style={styles.bmPrice}>
                     <Text style={styles.bmPriceValue}>€{bm.p75.toFixed(2)}</Text>
                     <Text style={styles.bmPriceLabel}>P75</Text>
                   </View>
                 </View>
-                <Text style={styles.bmMeta}>{bm.sampleSize} datapunten · {bm.category}</Text>
+                <Text style={styles.bmMeta}>{bm.sampleSize} {t('market.dataPoints', 'datapunten')} · {bm.category}</Text>
               </View>
-            ))}
-          </FadeIn>
-        )}
+            ))
+          ) : (
+            <View style={styles.sectionEmpty}>
+              <Ionicons name="analytics-outline" size={48} color={SemanticColors.textTertiary} />
+              <Text style={styles.sectionEmptyTitle}>{t('market.noBenchmarks', 'Meer data nodig')}</Text>
+              <Text style={styles.sectionEmptyDesc}>{t('market.noBenchmarksDesc', 'Meer data nodig voor benchmarks')}</Text>
+            </View>
+          )}
+        </FadeIn>
 
         {/* Trade Benchmarks */}
         {benchmarks?.tradeBenchmarks && benchmarks.tradeBenchmarks.length > 0 && (
           <FadeIn delay={300}>
-            <Text style={styles.sectionTitle}>Marktgemiddelden</Text>
+            <Text style={styles.sectionTitle}>{t('market.marketAverages', 'Marktgemiddelden')}</Text>
             {benchmarks.tradeBenchmarks.map((tb, i) => (
               <View key={i} style={styles.card}>
                 <View style={styles.tradeRow}>
                   <View style={styles.tradeStat}>
                     <Text style={styles.tradeValue}>€{tb.avgHourlyRate}</Text>
-                    <Text style={styles.tradeLabel}>Uurtarief</Text>
+                    <Text style={styles.tradeLabel}>{t('market.hourlyRate', 'Uurtarief')}</Text>
                   </View>
                   <View style={styles.tradeDivider} />
                   <View style={styles.tradeStat}>
                     <Text style={styles.tradeValue}>{tb.avgJobMargin}%</Text>
-                    <Text style={styles.tradeLabel}>Marge</Text>
+                    <Text style={styles.tradeLabel}>{t('market.margin', 'Marge')}</Text>
                   </View>
                   <View style={styles.tradeDivider} />
                   <View style={styles.tradeStat}>
                     <Text style={styles.tradeValue}>{Math.round(tb.avgQuoteAcceptanceRate * 100)}%</Text>
-                    <Text style={styles.tradeLabel}>Acceptatie</Text>
+                    <Text style={styles.tradeLabel}>{t('market.acceptance', 'Acceptatie')}</Text>
                   </View>
                   <View style={styles.tradeDivider} />
                   <View style={styles.tradeStat}>
@@ -219,8 +241,8 @@ export default function MarketPricesScreen() {
           <FadeIn delay={0}>
             <View style={styles.empty}>
               <Ionicons name="analytics-outline" size={48} color={SemanticColors.textTertiary} />
-              <Text style={styles.emptyTitle}>Nog geen marktdata</Text>
-              <Text style={styles.emptyDesc}>Scan leveranciersfacturen of maak offertes aan om prijsinzichten te krijgen</Text>
+              <Text style={styles.emptyTitle}>{t('market.noDataYet', 'Nog geen marktdata')}</Text>
+              <Text style={styles.emptyDesc}>{t('market.noDataDesc', 'Scan leveranciersfacturen of maak offertes aan om prijsinzichten te krijgen')}</Text>
             </View>
           </FadeIn>
         )}
@@ -279,6 +301,10 @@ const styles = StyleSheet.create({
   tradeValue: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
   tradeLabel: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textSecondary, marginTop: 2 },
   tradeDivider: { width: 1, height: 28, backgroundColor: SemanticColors.borderDefault },
+  // Section empty states
+  sectionEmpty: { alignItems: 'center', paddingVertical: 32, gap: 8 },
+  sectionEmptyTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textSecondary },
+  sectionEmptyDesc: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textTertiary, textAlign: 'center', paddingHorizontal: 20 },
   // Empty
   empty: { alignItems: 'center', paddingVertical: 60, gap: 12 },
   emptyTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },

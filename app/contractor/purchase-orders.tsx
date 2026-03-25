@@ -9,7 +9,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl } 
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
-import { PAGE_BG } from '../../src/theme/tabStyles';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { usePurchaseOrders, usePOStats, type PurchaseOrder, type POStatus } from '../../src/services/purchaseOrderService';
 import { useAppState } from '../../src/state/AppState';
@@ -223,7 +223,7 @@ export default function PurchaseOrdersScreen() {
             </View>
           );
         })}
-        <View style={{ height: 100 }} />
+        <View style={{ height: 140 }} />
       </ScrollView>
 
       {/* FAB — new purchase order */}
@@ -276,12 +276,12 @@ export default function PurchaseOrdersScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: SemanticColors.surfaceBackground },
   aiBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
+    flexDirection: 'row', alignItems: 'center', gap: GRID.sm + 4,
     marginHorizontal: SafeArea.side, marginBottom: Spacing.sm,
-    backgroundColor: Palette.hermesOrange + '08', borderRadius: 16, padding: 14,
+    backgroundColor: Palette.hermesOrange + '08', borderRadius: RADIUS.lg, padding: 14,
   },
-  aiBannerTitle: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
-  aiBannerSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
+  aiBannerTitle: { fontSize: TYPE.captionSize + 1, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
+  aiBannerSub: { fontSize: TYPE.labelSize, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -294,23 +294,23 @@ const styles = StyleSheet.create({
   searchMaterialsBtn: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.full,
     backgroundColor: Palette.hermesOrange + '10',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
-  headerTitle: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
-  headerSubtitle: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 2 },
+  headerTitle: { fontSize: TYPE.displaySize - 4, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  headerSubtitle: { fontSize: TYPE.captionSize + 1, color: SemanticColors.textSecondary, marginTop: 2 },
   statsBar: {
     flexDirection: 'row',
     marginHorizontal: SafeArea.side,
     backgroundColor: Palette.hermesOrange + '08',
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     marginBottom: Spacing.md,
   },
   statItem: { flex: 1, alignItems: 'center' },
-  statValue: { fontSize: 16, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  statValue: { fontSize: TYPE.titleSize, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
   statLabel: { fontSize: 10, color: SemanticColors.textSecondary, marginTop: 2, letterSpacing: 0.3 },
   statDivider: { width: 1, backgroundColor: SemanticColors.borderDefault, marginHorizontal: Spacing.xs },
   scrollView: { flex: 1, paddingHorizontal: SafeArea.side },
@@ -322,24 +322,24 @@ const styles = StyleSheet.create({
     paddingLeft: 0,
     gap: Spacing.sm,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     overflow: 'hidden',
     marginBottom: 6,
   },
   orderAccent: { width: 3, alignSelf: 'stretch' },
   orderInfo: { flex: 1 },
-  orderNumber: { fontSize: 14, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
-  orderSupplier: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 1 },
-  orderJob: { fontSize: 11, color: SemanticColors.textTertiary, marginTop: 1 },
+  orderNumber: { fontSize: TYPE.captionSize + 1, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  orderSupplier: { fontSize: TYPE.labelSize, color: SemanticColors.textSecondary, marginTop: 1 },
+  orderJob: { fontSize: TYPE.tinySize, color: SemanticColors.textTertiary, marginTop: 1 },
   orderRight: { alignItems: 'flex-end' },
-  orderAmount: { fontSize: 14, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
-  orderStatus: { fontSize: 11, fontFamily: 'Manrope_500Medium', marginTop: 1 },
+  orderAmount: { fontSize: TYPE.captionSize + 1, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  orderStatus: { fontSize: TYPE.tinySize, fontFamily: 'Manrope_500Medium', marginTop: 1 },
   expandedContent: {
     backgroundColor: SemanticColors.surfacePrimary,
     marginTop: -6,
     marginBottom: 6,
-    borderBottomLeftRadius: 12,
-    borderBottomRightRadius: 12,
+    borderBottomLeftRadius: RADIUS.md,
+    borderBottomRightRadius: RADIUS.md,
     padding: Spacing.sm,
     paddingTop: Spacing.xs,
     gap: 4,
@@ -351,32 +351,32 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.borderDefault,
   },
-  lineDesc: { flex: 1, fontSize: 12, color: SemanticColors.textPrimary },
-  lineQty: { fontSize: 12, color: SemanticColors.textSecondary, marginHorizontal: Spacing.sm },
-  lineTotal: { fontSize: 12, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textPrimary },
+  lineDesc: { flex: 1, fontSize: TYPE.labelSize, color: SemanticColors.textPrimary },
+  lineQty: { fontSize: TYPE.labelSize, color: SemanticColors.textSecondary, marginHorizontal: Spacing.sm },
+  lineTotal: { fontSize: TYPE.labelSize, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textPrimary },
   totalsRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
-  totalsLabel: { fontSize: 12, color: SemanticColors.textSecondary },
-  totalsValue: { fontSize: 12, color: SemanticColors.textPrimary },
-  totalsFinal: { borderTopWidth: 1, borderTopColor: SemanticColors.borderDefault, paddingTop: 4, marginTop: 2 },
-  totalsFinalLabel: { fontSize: 13, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
-  totalsFinalValue: { fontSize: 13, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
-  deliveryRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  deliveryText: { fontSize: 12, color: SemanticColors.textSecondary },
+  totalsLabel: { fontSize: TYPE.labelSize, color: SemanticColors.textSecondary },
+  totalsValue: { fontSize: TYPE.labelSize, color: SemanticColors.textPrimary },
+  totalsFinal: { borderTopWidth: 1, borderTopColor: SemanticColors.borderDefault, paddingTop: GRID.xs, marginTop: 2 },
+  totalsFinalLabel: { fontSize: TYPE.captionSize, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  totalsFinalValue: { fontSize: TYPE.captionSize, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  deliveryRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: GRID.xs },
+  deliveryText: { fontSize: TYPE.labelSize, color: SemanticColors.textSecondary },
   actionButton: {
     alignItems: 'center',
     backgroundColor: Palette.hermesOrange + '10',
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     marginTop: 4,
   },
-  actionButtonText: { fontSize: 13, fontFamily: 'Manrope_600SemiBold', color: Palette.hermesOrange },
+  actionButtonText: { fontSize: TYPE.captionSize, fontFamily: 'Manrope_600SemiBold', color: Palette.hermesOrange },
   fab: {
     position: 'absolute' as const,
     right: SafeArea.side,
     bottom: 110,
     width: 56,
     height: 56,
-    borderRadius: 28,
+    borderRadius: RADIUS.full,
     backgroundColor: Palette.hermesOrange,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
