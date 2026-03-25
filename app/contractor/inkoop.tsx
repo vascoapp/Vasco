@@ -6,16 +6,19 @@
 // Vasco tips behind the scenes (not shown in UI).
 // =============================================================================
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Modal, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
+import { File as ExpoFile } from 'expo-file-system';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useSavingsAggregation, useSavingsTimeline } from '../../src/services/savingsAggregatorService';
 import { useInventory, useReorderSuggestions } from '../../src/services/reorderService';
 import { ReceiptScanner } from '../../src/components/contractor/ReceiptScanner';
 import { feedPricingMoat, type ScannedInvoice } from '../../src/services/invoiceScanService';
+import { parseDateanormV4, parseDateanormV5, importDatanormToMoat } from '../../src/integrations/datanorm';
 
 export default function InkoopScreen() {
   const router = useRouter();
@@ -24,7 +27,68 @@ export default function InkoopScreen() {
   const { inventory, lowStockCount } = useInventory();
   const { suggestions, criticalCount, markOrdered, statistics } = useReorderSuggestions();
   const [showReceiptScanner, setShowReceiptScanner] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+
+  // -------------------------------------------------------
+  // DATANORM file import
+  // -------------------------------------------------------
+  const handleDatanormImport = useCallback(async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['text/plain', 'application/octet-stream'],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled || !result.assets?.[0]) return;
+
+      const asset = result.assets[0];
+      setIsImporting(true);
+
+      const file = new ExpoFile(asset.uri);
+      const text = await file.text();
+
+      if (!text || text.trim().length < 10) {
+        Alert.alert('Import mislukt', 'Het bestand bevat geen geldige data.');
+        setIsImporting(false);
+        return;
+      }
+
+      // Auto-detect v4 vs v5: v5 files start with a V (version) record
+      const firstLine = text.split(/\r?\n/)[0] ?? '';
+      const isV5 = firstLine.trim().toUpperCase().startsWith('V;');
+      const articles = isV5 ? parseDateanormV5(text) : parseDateanormV4(text);
+
+      if (articles.length === 0) {
+        Alert.alert('Geen artikelen', 'Er konden geen artikelen uit het bestand worden gelezen. Controleer of het een geldig DATANORM-bestand is.');
+        setIsImporting(false);
+        return;
+      }
+
+      // Derive supplier name from filename (e.g. "richter_frenzel_2026.dat" → "Richter Frenzel")
+      const rawName = (asset.name ?? 'supplier')
+        .replace(/\.(txt|dat|csv|datanorm)$/i, '')
+        .replace(/[_\-]+/g, ' ')
+        .replace(/\d{4,}/g, '')
+        .trim();
+      const supplierName = rawName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') || 'DATANORM Supplier';
+      const supplierId = supplierName.toLowerCase().replace(/\s+/g, '_');
+
+      const { imported, skipped } = await importDatanormToMoat(articles, supplierId, {
+        supplierName,
+        trade: 'general',
+      });
+
+      Alert.alert(
+        'Import geslaagd',
+        `${imported} materialen geimporteerd van ${supplierName}.${skipped > 0 ? `\n${skipped} overgeslagen (duplicaten of ongeldige prijs).` : ''}`,
+      );
+    } catch {
+      Alert.alert('Import mislukt', 'Er ging iets mis bij het lezen van het bestand.');
+    } finally {
+      setIsImporting(false);
+    }
+  }, []);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -68,7 +132,11 @@ export default function InkoopScreen() {
           </Pressable>
           <Pressable style={styles.quickChip} onPress={() => {
             if (criticalCount > 0) {
-              scrollRef.current?.scrollTo({ y: 200, animated: true });
+              // Route to material search with the first critical item as query
+              const firstCritical = suggestions.find(s => s.priority === 'critical');
+              router.push(firstCritical
+                ? `/contractor/material-search?q=${encodeURIComponent(firstCritical.materialName)}` as any
+                : '/contractor/material-search' as any);
             } else {
               Alert.alert('Voorraad op orde', 'Er zijn geen herbestellingen nodig.');
             }
@@ -87,6 +155,18 @@ export default function InkoopScreen() {
           <Pressable style={styles.quickChip} onPress={() => router.push('/contractor/market-prices' as any)}>
             <Ionicons name="bar-chart" size={16} color={Palette.hermesOrange} />
             <Text style={styles.quickChipText}>Benchmarking</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.quickChip, isImporting && { opacity: 0.5 }]}
+            onPress={handleDatanormImport}
+            disabled={isImporting}
+          >
+            <Ionicons name="cloud-upload" size={16} color={Palette.hermesOrange} />
+            <Text style={styles.quickChipText}>{isImporting ? 'Importeren...' : 'DATANORM'}</Text>
+          </Pressable>
+          <Pressable style={styles.quickChip} onPress={() => router.push('/contractor/material-search' as any)}>
+            <Ionicons name="search" size={16} color={Palette.hermesOrange} />
+            <Text style={styles.quickChipText}>Zoek materiaal</Text>
           </Pressable>
         </ScrollView>
 

@@ -272,50 +272,163 @@ const TRADE_BASELINES: Record<string, Record<string, Omit<TradeBenchmark, 'trade
   },
 };
 
-// Material baselines per trade — common items with market averages for first-scan comparison
-const MATERIAL_BASELINES: Record<string, { name: string; avgPrice: number; unit: string; cheaperSupplier: string }[]> = {
-  plumbing: [
-    { name: 'koperen buis 15mm 3m', avgPrice: 11.20, unit: 'stuk', cheaperSupplier: 'Wildkamp' },
-    { name: 'knelkoppeling 15mm', avgPrice: 4.10, unit: 'stuk', cheaperSupplier: 'Breman' },
-    { name: 'thermostaatkraan set', avgPrice: 79.00, unit: 'stuk', cheaperSupplier: 'Sanitairwinkel' },
-    { name: 'pvc buis 40mm 3m', avgPrice: 6.80, unit: 'stuk', cheaperSupplier: 'Wildkamp' },
-    { name: 'cv ketel hr', avgPrice: 1250.00, unit: 'stuk', cheaperSupplier: 'CV Totaal' },
-    { name: 'radiator 600x1200', avgPrice: 145.00, unit: 'stuk', cheaperSupplier: 'Radson Direct' },
-  ],
-  electrical: [
-    { name: 'nym-j 3x2.5mm kabel', avgPrice: 1.20, unit: 'meter', cheaperSupplier: 'Rexel' },
-    { name: 'schakelaar enkel', avgPrice: 8.50, unit: 'stuk', cheaperSupplier: 'Elektro Breijer' },
-    { name: 'wandcontactdoos', avgPrice: 6.20, unit: 'stuk', cheaperSupplier: 'Rexel' },
-    { name: 'groepenkast 12 groepen', avgPrice: 185.00, unit: 'stuk', cheaperSupplier: 'Solar' },
-    { name: 'led downlight', avgPrice: 14.50, unit: 'stuk', cheaperSupplier: 'Ledvion' },
-  ],
-  gas: [
-    { name: 'gasleiding staal 22mm', avgPrice: 9.80, unit: 'meter', cheaperSupplier: 'Breman' },
-    { name: 'gaskraan 22mm', avgPrice: 18.50, unit: 'stuk', cheaperSupplier: 'Wildkamp' },
-    { name: 'rookgasafvoer 80/125', avgPrice: 32.00, unit: 'stuk', cheaperSupplier: 'CV Totaal' },
-    { name: 'gasmelder', avgPrice: 24.00, unit: 'stuk', cheaperSupplier: 'Dyka' },
-  ],
-  carpentry: [
-    { name: 'multiplex 18mm', avgPrice: 42.00, unit: 'plaat', cheaperSupplier: 'Houthandel' },
-    { name: 'vurenhout 44x69mm', avgPrice: 3.80, unit: 'meter', cheaperSupplier: 'Pontmeyer' },
-    { name: 'schroeven 5x50mm 200st', avgPrice: 12.50, unit: 'doos', cheaperSupplier: 'Screwfix' },
-    { name: 'houtlijm d3 750ml', avgPrice: 8.90, unit: 'stuk', cheaperSupplier: 'Pontmeyer' },
-    { name: 'binnendeur stompe', avgPrice: 68.00, unit: 'stuk', cheaperSupplier: 'Skantrae' },
-  ],
-  painting: [
-    { name: 'muurverf wit 10l', avgPrice: 42.00, unit: 'emmer', cheaperSupplier: 'Verfgroothandel' },
-    { name: 'lakverf hoogglans 750ml', avgPrice: 18.50, unit: 'blik', cheaperSupplier: 'Verfgroothandel' },
-    { name: 'schuurpapier k120 vel', avgPrice: 1.80, unit: 'stuk', cheaperSupplier: 'Screwfix' },
-    { name: 'afplaktape 50mm', avgPrice: 4.20, unit: 'rol', cheaperSupplier: 'Verfgroothandel' },
-    { name: 'grondverf wit 2.5l', avgPrice: 22.00, unit: 'blik', cheaperSupplier: 'Sigma' },
-  ],
-  general: [
-    { name: 'cement 25kg', avgPrice: 5.80, unit: 'zak', cheaperSupplier: 'BigMat' },
-    { name: 'gipsplaat 12.5mm', avgPrice: 8.50, unit: 'plaat', cheaperSupplier: 'Bouwmaat' },
-    { name: 'isolatie 100mm', avgPrice: 12.00, unit: 'm2', cheaperSupplier: 'Isover Direct' },
-    { name: 'kit siliconen 310ml', avgPrice: 5.50, unit: 'stuk', cheaperSupplier: 'Bouwmaat' },
-  ],
+// ---------------------------------------------------------------------------
+// Per-country price multipliers and cheapest suppliers
+// ---------------------------------------------------------------------------
+// DE is typically 10-15% cheaper than NL for materials. UK prices in GBP
+// (but stored as EUR equivalent at ~1.16 GBP/EUR for baseline comparison).
+
+type CountryCode = 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK';
+
+const COUNTRY_PRICE_FACTORS: Record<CountryCode, number> = {
+  NL: 1.00,
+  DE: 0.88,  // 12% cheaper than NL
+  FR: 0.95,
+  ES: 0.82,
+  IT: 0.90,
+  UK: 1.05,  // GBP equivalent, slightly higher
 };
+
+const COUNTRY_SUPPLIERS: Record<CountryCode, Record<string, string>> = {
+  NL: {
+    plumbing: 'Wildkamp', electrical: 'Rexel', gas: 'Breman',
+    carpentry: 'Pontmeyer', painting: 'Verfgroothandel', general: 'Bouwmaat',
+  },
+  DE: {
+    plumbing: 'Richter+Frenzel', electrical: 'Sonepar', gas: 'Buderus',
+    carpentry: 'Holz-Richter', painting: 'Brillux', general: 'Bauhaus',
+  },
+  FR: {
+    plumbing: 'Cedeo', electrical: 'Rexel FR', gas: 'Chappée',
+    carpentry: 'Gedimat', painting: 'Zolpan', general: 'Point.P',
+  },
+  ES: {
+    plumbing: 'Saltoki', electrical: 'Sonepar ES', gas: 'Roca',
+    carpentry: 'Maderas Medina', painting: 'Pinturas Blatem', general: 'BigMat ES',
+  },
+  IT: {
+    plumbing: 'Comet', electrical: 'Sonepar IT', gas: 'Riello',
+    carpentry: 'Legnami Trento', painting: 'Boero', general: 'Leroy Merlin IT',
+  },
+  UK: {
+    plumbing: 'Wolseley', electrical: 'Edmundson', gas: 'Plumb Center',
+    carpentry: 'Jewson', painting: 'Dulux Trade', general: 'Travis Perkins',
+  },
+};
+
+interface MaterialBaseline {
+  name: string;
+  avgPrice: number; // NL base price in EUR
+  unit: string;
+  cheaperSupplier: string; // default (NL) supplier
+  trade: string;
+}
+
+// Master material list with NL base prices. Per-country prices derived via COUNTRY_PRICE_FACTORS.
+const MATERIAL_MASTER: MaterialBaseline[] = [
+  // ---- PLUMBING (20 items) ----
+  { name: 'copper pipe 15mm', avgPrice: 3.80, unit: 'meter', cheaperSupplier: 'Wildkamp', trade: 'plumbing' },
+  { name: 'copper pipe 22mm', avgPrice: 5.40, unit: 'meter', cheaperSupplier: 'Wildkamp', trade: 'plumbing' },
+  { name: 'pvc pipe 40mm', avgPrice: 2.30, unit: 'meter', cheaperSupplier: 'Wildkamp', trade: 'plumbing' },
+  { name: 'pvc pipe 110mm', avgPrice: 4.80, unit: 'meter', cheaperSupplier: 'Dyka', trade: 'plumbing' },
+  { name: 'solder fittings 15mm', avgPrice: 1.90, unit: 'stuk', cheaperSupplier: 'Breman', trade: 'plumbing' },
+  { name: 'push-fit fittings 15mm', avgPrice: 4.10, unit: 'stuk', cheaperSupplier: 'Breman', trade: 'plumbing' },
+  { name: 'ball valve 15mm', avgPrice: 8.50, unit: 'stuk', cheaperSupplier: 'Wildkamp', trade: 'plumbing' },
+  { name: 'ball valve 22mm', avgPrice: 12.80, unit: 'stuk', cheaperSupplier: 'Wildkamp', trade: 'plumbing' },
+  { name: 'thermostatic radiator valve', avgPrice: 22.00, unit: 'stuk', cheaperSupplier: 'Sanitairwinkel', trade: 'plumbing' },
+  { name: 'radiator type 22 600x1200', avgPrice: 145.00, unit: 'stuk', cheaperSupplier: 'Radson Direct', trade: 'plumbing' },
+  { name: 'combi boiler', avgPrice: 1250.00, unit: 'stuk', cheaperSupplier: 'CV Totaal', trade: 'plumbing' },
+  { name: 'expansion vessel 8l', avgPrice: 32.00, unit: 'stuk', cheaperSupplier: 'CV Totaal', trade: 'plumbing' },
+  { name: 'circulation pump', avgPrice: 165.00, unit: 'stuk', cheaperSupplier: 'CV Totaal', trade: 'plumbing' },
+  { name: 'water heater 80l', avgPrice: 320.00, unit: 'stuk', cheaperSupplier: 'Sanitairwinkel', trade: 'plumbing' },
+  { name: 'drain trap', avgPrice: 6.50, unit: 'stuk', cheaperSupplier: 'Wildkamp', trade: 'plumbing' },
+  { name: 'toilet fill valve', avgPrice: 14.00, unit: 'stuk', cheaperSupplier: 'Sanitairwinkel', trade: 'plumbing' },
+  { name: 'shower mixer', avgPrice: 85.00, unit: 'stuk', cheaperSupplier: 'Sanitairwinkel', trade: 'plumbing' },
+  { name: 'water meter', avgPrice: 42.00, unit: 'stuk', cheaperSupplier: 'Wildkamp', trade: 'plumbing' },
+  { name: 'pipe insulation 22mm', avgPrice: 2.80, unit: 'meter', cheaperSupplier: 'Isover Direct', trade: 'plumbing' },
+  { name: 'flux paste 100g', avgPrice: 4.50, unit: 'stuk', cheaperSupplier: 'Breman', trade: 'plumbing' },
+
+  // ---- ELECTRICAL (15 items) ----
+  { name: 'nym cable 3x1.5', avgPrice: 0.85, unit: 'meter', cheaperSupplier: 'Rexel', trade: 'electrical' },
+  { name: 'nym cable 3x2.5', avgPrice: 1.20, unit: 'meter', cheaperSupplier: 'Rexel', trade: 'electrical' },
+  { name: 'junction box', avgPrice: 2.40, unit: 'stuk', cheaperSupplier: 'Rexel', trade: 'electrical' },
+  { name: 'consumer unit 12-way', avgPrice: 185.00, unit: 'stuk', cheaperSupplier: 'Solar', trade: 'electrical' },
+  { name: 'mcb 16a', avgPrice: 6.80, unit: 'stuk', cheaperSupplier: 'Rexel', trade: 'electrical' },
+  { name: 'mcb 32a', avgPrice: 8.50, unit: 'stuk', cheaperSupplier: 'Rexel', trade: 'electrical' },
+  { name: 'rcd 30ma', avgPrice: 28.00, unit: 'stuk', cheaperSupplier: 'Solar', trade: 'electrical' },
+  { name: 'socket outlet', avgPrice: 6.20, unit: 'stuk', cheaperSupplier: 'Rexel', trade: 'electrical' },
+  { name: 'light switch', avgPrice: 8.50, unit: 'stuk', cheaperSupplier: 'Elektro Breijer', trade: 'electrical' },
+  { name: 'led downlight', avgPrice: 14.50, unit: 'stuk', cheaperSupplier: 'Ledvion', trade: 'electrical' },
+  { name: 'led panel 60x60', avgPrice: 32.00, unit: 'stuk', cheaperSupplier: 'Ledvion', trade: 'electrical' },
+  { name: 'cable tray 2m', avgPrice: 18.00, unit: 'stuk', cheaperSupplier: 'Rexel', trade: 'electrical' },
+  { name: 'conduit 20mm', avgPrice: 1.20, unit: 'meter', cheaperSupplier: 'Rexel', trade: 'electrical' },
+  { name: 'earth rod', avgPrice: 22.00, unit: 'stuk', cheaperSupplier: 'Solar', trade: 'electrical' },
+  { name: 'smoke detector', avgPrice: 18.00, unit: 'stuk', cheaperSupplier: 'Rexel', trade: 'electrical' },
+
+  // ---- GAS / HVAC (12 items) ----
+  { name: 'gas pipe 22mm', avgPrice: 9.80, unit: 'meter', cheaperSupplier: 'Breman', trade: 'gas' },
+  { name: 'gas valve', avgPrice: 18.50, unit: 'stuk', cheaperSupplier: 'Wildkamp', trade: 'gas' },
+  { name: 'flue pipe 80/125', avgPrice: 32.00, unit: 'stuk', cheaperSupplier: 'CV Totaal', trade: 'gas' },
+  { name: 'condensing boiler', avgPrice: 1450.00, unit: 'stuk', cheaperSupplier: 'CV Totaal', trade: 'gas' },
+  { name: 'heat pump air-water', avgPrice: 4200.00, unit: 'stuk', cheaperSupplier: 'Daikin Direct', trade: 'gas' },
+  { name: 'smart thermostat', avgPrice: 185.00, unit: 'stuk', cheaperSupplier: 'CV Totaal', trade: 'gas' },
+  { name: 'zone valve', avgPrice: 45.00, unit: 'stuk', cheaperSupplier: 'Breman', trade: 'gas' },
+  { name: 'gas meter', avgPrice: 85.00, unit: 'stuk', cheaperSupplier: 'Wildkamp', trade: 'gas' },
+  { name: 'co detector', avgPrice: 24.00, unit: 'stuk', cheaperSupplier: 'Dyka', trade: 'gas' },
+  { name: 'expansion vessel 18l', avgPrice: 48.00, unit: 'stuk', cheaperSupplier: 'CV Totaal', trade: 'gas' },
+  { name: 'air vent valve', avgPrice: 8.50, unit: 'stuk', cheaperSupplier: 'Breman', trade: 'gas' },
+  { name: 'pressure gauge', avgPrice: 12.00, unit: 'stuk', cheaperSupplier: 'Breman', trade: 'gas' },
+
+  // ---- PAINTING (10 items) ----
+  { name: 'wall paint 10l', avgPrice: 42.00, unit: 'emmer', cheaperSupplier: 'Verfgroothandel', trade: 'painting' },
+  { name: 'ceiling paint 10l', avgPrice: 38.00, unit: 'emmer', cheaperSupplier: 'Verfgroothandel', trade: 'painting' },
+  { name: 'exterior paint 10l', avgPrice: 65.00, unit: 'emmer', cheaperSupplier: 'Sigma', trade: 'painting' },
+  { name: 'wood lacquer 2.5l', avgPrice: 28.00, unit: 'blik', cheaperSupplier: 'Verfgroothandel', trade: 'painting' },
+  { name: 'primer 10l', avgPrice: 35.00, unit: 'emmer', cheaperSupplier: 'Sigma', trade: 'painting' },
+  { name: 'sandpaper p120 pack', avgPrice: 8.50, unit: 'pak', cheaperSupplier: 'Screwfix', trade: 'painting' },
+  { name: 'masking tape 50mm', avgPrice: 4.20, unit: 'rol', cheaperSupplier: 'Verfgroothandel', trade: 'painting' },
+  { name: 'filler paste 5kg', avgPrice: 14.00, unit: 'emmer', cheaperSupplier: 'Verfgroothandel', trade: 'painting' },
+  { name: 'roller set 25cm', avgPrice: 12.00, unit: 'set', cheaperSupplier: 'Verfgroothandel', trade: 'painting' },
+  { name: 'brush set 3pc', avgPrice: 15.00, unit: 'set', cheaperSupplier: 'Verfgroothandel', trade: 'painting' },
+
+  // ---- CARPENTRY (12 items) ----
+  { name: 'softwood timber 47x100mm', avgPrice: 4.80, unit: 'meter', cheaperSupplier: 'Pontmeyer', trade: 'carpentry' },
+  { name: 'plywood 18mm sheet', avgPrice: 42.00, unit: 'plaat', cheaperSupplier: 'Houthandel', trade: 'carpentry' },
+  { name: 'mdf 18mm sheet', avgPrice: 28.00, unit: 'plaat', cheaperSupplier: 'Pontmeyer', trade: 'carpentry' },
+  { name: 'osb 18mm sheet', avgPrice: 22.00, unit: 'plaat', cheaperSupplier: 'Houthandel', trade: 'carpentry' },
+  { name: 'wood screws 50mm box', avgPrice: 12.50, unit: 'doos', cheaperSupplier: 'Screwfix', trade: 'carpentry' },
+  { name: 'wood glue 750ml', avgPrice: 8.90, unit: 'stuk', cheaperSupplier: 'Pontmeyer', trade: 'carpentry' },
+  { name: 'door blank 826x2040', avgPrice: 68.00, unit: 'stuk', cheaperSupplier: 'Skantrae', trade: 'carpentry' },
+  { name: 'skirting board 100mm', avgPrice: 3.20, unit: 'meter', cheaperSupplier: 'Pontmeyer', trade: 'carpentry' },
+  { name: 'architrave 69mm', avgPrice: 2.40, unit: 'meter', cheaperSupplier: 'Pontmeyer', trade: 'carpentry' },
+  { name: 'hinges pair', avgPrice: 6.50, unit: 'paar', cheaperSupplier: 'Screwfix', trade: 'carpentry' },
+  { name: 'door handle set', avgPrice: 18.00, unit: 'set', cheaperSupplier: 'Screwfix', trade: 'carpentry' },
+  { name: 'insulation 100mm', avgPrice: 12.00, unit: 'm2', cheaperSupplier: 'Isover Direct', trade: 'carpentry' },
+
+  // ---- GENERAL (10 items) ----
+  { name: 'cement 25kg', avgPrice: 5.80, unit: 'zak', cheaperSupplier: 'BigMat', trade: 'general' },
+  { name: 'sand m3', avgPrice: 32.00, unit: 'm3', cheaperSupplier: 'BigMat', trade: 'general' },
+  { name: 'plasterboard 2400x1200', avgPrice: 8.50, unit: 'plaat', cheaperSupplier: 'Bouwmaat', trade: 'general' },
+  { name: 'joint compound 25kg', avgPrice: 18.00, unit: 'zak', cheaperSupplier: 'Bouwmaat', trade: 'general' },
+  { name: 'silicone sealant 300ml', avgPrice: 5.50, unit: 'stuk', cheaperSupplier: 'Bouwmaat', trade: 'general' },
+  { name: 'expanding foam 750ml', avgPrice: 7.80, unit: 'stuk', cheaperSupplier: 'Bouwmaat', trade: 'general' },
+  { name: 'damp proof membrane', avgPrice: 3.20, unit: 'm2', cheaperSupplier: 'BigMat', trade: 'general' },
+  { name: 'breeze block', avgPrice: 1.80, unit: 'stuk', cheaperSupplier: 'BigMat', trade: 'general' },
+  { name: 'steel lintel 1200mm', avgPrice: 28.00, unit: 'stuk', cheaperSupplier: 'Bouwmaat', trade: 'general' },
+  { name: 'aggregate m3', avgPrice: 38.00, unit: 'm3', cheaperSupplier: 'BigMat', trade: 'general' },
+];
+
+// Build the legacy MATERIAL_BASELINES lookup from MATERIAL_MASTER (backwards compatible)
+const MATERIAL_BASELINES: Record<string, { name: string; avgPrice: number; unit: string; cheaperSupplier: string }[]> = {};
+for (const item of MATERIAL_MASTER) {
+  if (!MATERIAL_BASELINES[item.trade]) MATERIAL_BASELINES[item.trade] = [];
+  MATERIAL_BASELINES[item.trade].push({
+    name: item.name,
+    avgPrice: item.avgPrice,
+    unit: item.unit,
+    cheaperSupplier: item.cheaperSupplier,
+  });
+}
 
 /**
  * Get pre-populated trade baselines for all 6 trades × 6 countries.
@@ -342,11 +455,50 @@ export function getTradeBaselines(trade?: string, country?: string): TradeBenchm
 }
 
 /**
- * Get material baselines for a specific trade.
+ * Get material baselines for a specific trade (NL base prices).
  * Used by invoiceScanService for first-scan price comparisons.
  */
 export function getMaterialBaselines(trade: string = 'general'): typeof MATERIAL_BASELINES[string] {
   return MATERIAL_BASELINES[trade] ?? MATERIAL_BASELINES['general'];
+}
+
+/**
+ * Get material baselines adjusted for a specific country.
+ * DE prices are ~12% lower than NL, ES ~18% lower, UK ~5% higher, etc.
+ * Returns the cheapest local supplier per country.
+ */
+export function getMaterialBaselinesForCountry(
+  trade: string = 'general',
+  country: CountryCode = 'NL',
+): { name: string; avgPrice: number; unit: string; cheaperSupplier: string }[] {
+  const baseTrade = MATERIAL_BASELINES[trade] ?? MATERIAL_BASELINES['general'];
+  const factor = COUNTRY_PRICE_FACTORS[country] ?? 1.0;
+  const suppliers = COUNTRY_SUPPLIERS[country] ?? COUNTRY_SUPPLIERS['NL'];
+  const tradeSupplier = suppliers[trade] ?? suppliers['general'];
+
+  return baseTrade.map(item => ({
+    name: item.name,
+    avgPrice: Math.round(item.avgPrice * factor * 100) / 100,
+    unit: item.unit,
+    cheaperSupplier: country === 'NL' ? item.cheaperSupplier : tradeSupplier,
+  }));
+}
+
+/**
+ * Get ALL material baselines across all trades for a country.
+ * Useful for comprehensive price comparison and AI recommendations.
+ */
+export function getAllMaterialBaselines(country: CountryCode = 'NL'): { name: string; avgPrice: number; unit: string; cheaperSupplier: string; trade: string }[] {
+  const factor = COUNTRY_PRICE_FACTORS[country] ?? 1.0;
+  const suppliers = COUNTRY_SUPPLIERS[country] ?? COUNTRY_SUPPLIERS['NL'];
+
+  return MATERIAL_MASTER.map(item => ({
+    name: item.name,
+    avgPrice: Math.round(item.avgPrice * factor * 100) / 100,
+    unit: item.unit,
+    cheaperSupplier: country === 'NL' ? item.cheaperSupplier : (suppliers[item.trade] ?? suppliers['general']),
+    trade: item.trade,
+  }));
 }
 
 // ---------------------------------------------------------------------------

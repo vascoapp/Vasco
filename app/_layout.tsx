@@ -16,8 +16,10 @@ import {
   Manrope_800ExtraBold,
   useFonts,
 } from '@expo-google-fonts/manrope';
+import { ActivityIndicator, Alert, Linking, View } from 'react-native';
 import { AppStateProvider } from '../src/state/AppState';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
+import { checkForUpdate } from '../src/services/versionCheckService';
 import ErrorBoundary from '../src/components/shared/ErrorBoundary';
 import { startAutoSync, stopAutoSync } from '../src/intelligence/cloudSync';
 import { startEventFlushing, stopEventFlushing } from '../src/intelligence/dataCollector';
@@ -32,6 +34,22 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
 
+  // Check for app updates on mount
+  useEffect(() => {
+    checkForUpdate().then(result => {
+      if (result.forceUpdate) {
+        Alert.alert('Update Required', 'Please update Vasco to continue.', [
+          { text: 'Update', onPress: () => Linking.openURL(result.updateUrl) }
+        ]);
+      } else if (result.updateAvailable) {
+        Alert.alert('Update Available', 'A new version of Vasco is available.', [
+          { text: 'Later' },
+          { text: 'Update', onPress: () => Linking.openURL(result.updateUrl) }
+        ]);
+      }
+    }).catch(() => {});
+  }, []);
+
   // Start cloud sync when authenticated
   useEffect(() => {
     if (isAuthenticated && user?.id) {
@@ -39,7 +57,7 @@ function RootLayoutNav() {
       startEventFlushing(user.id);
       registerForPushNotifications().catch(() => {});
       // Start EVE-style background job scheduler (audits + morning briefing)
-      startBackgroundJobScheduler(() => ({ invoices: [], quotes: [], jobs: [] })); // AppState not accessible here; will be populated on Vandaag mount
+      startBackgroundJobScheduler(() => ({ invoices: [], quotes: [], jobs: [], country: user.country })); // AppState not accessible here; will be populated on Vandaag mount
       return () => { stopAutoSync(); stopEventFlushing(); stopBackgroundJobScheduler(); };
     }
   }, [isAuthenticated, user?.id]);
@@ -74,6 +92,7 @@ function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="login" />
+      <Stack.Screen name="forgot-password" />
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="(contractor)" />
       <Stack.Screen name="(tabs)" />
@@ -87,6 +106,7 @@ function RootLayoutNav() {
       <Stack.Screen name="(modals)/mollie" options={{ presentation: 'modal' }} />
       <Stack.Screen name="(modals)/moneybird" options={{ presentation: 'modal' }} />
       <Stack.Screen name="(modals)/moneybird-auth" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="(modals)/xero-auth" options={{ presentation: 'modal' }} />
       <Stack.Screen name="(modals)/business-settings" options={{ presentation: 'modal' }} />
       <Stack.Screen name="(modals)/customers" options={{ presentation: 'modal' }} />
     </Stack>
@@ -107,7 +127,11 @@ export default function RootLayout() {
   });
 
   if (!fontsLoaded) {
-    return null;
+    return (
+      <View style={{ flex: 1, backgroundColor: '#F2F2F7', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color="#E35205" />
+      </View>
+    );
   }
 
   return (

@@ -13,7 +13,9 @@ import { useAppState } from '../../src/state/AppState';
 import { Ionicons } from '@expo/vector-icons';
 import { generateQuotePdf, type QuotePdfData } from '../../src/services/quotePdfService';
 import { shareQuoteWithAcceptanceLink } from '../../src/services/customerQuoteAcceptanceService';
+import { isDemoMode } from '../../src/context/AuthContext';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
+import { getVATRate } from '../../src/constants/taxRates';
 
 export default function QuoteDetailScreen() {
   const { t } = useTranslation();
@@ -145,14 +147,16 @@ export default function QuoteDetailScreen() {
           <PrimaryButton label={t('quotes.sharePdf', 'Share quote as PDF')} onPress={async () => {
             const items = lineItems[quote.id] ?? [];
             const subtotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
-            const vatAmount = Math.round(subtotal * 0.21 * 100) / 100;
+            const vatRate = getVATRate(businessProfile.country ?? 'NL');
+            const vatPct = Math.round(vatRate * 100);
+            const vatAmount = Math.round(subtotal * vatRate * 100) / 100;
             const pdfData: QuotePdfData = {
               quoteNumber: quote.id,
               customerName: quote.customer ?? t('jobs.client', 'Client'),
               jobTitle: quote.job ?? t('jobs.typeJob', 'Job'),
               issueDate: new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }),
               validUntil: new Date(Date.now() + 30 * MS_PER_DAY).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }),
-              lineItems: items.map(i => ({ description: i.description, quantity: i.quantity, unitPrice: i.unitPrice, vatRate: 21 })),
+              lineItems: items.map(i => ({ description: i.description, quantity: i.quantity, unitPrice: i.unitPrice, vatRate: vatPct })),
               subtotal,
               vatAmount,
               total: subtotal + vatAmount,
@@ -166,17 +170,27 @@ export default function QuoteDetailScreen() {
             <Pressable
               style={[styles.acceptButton, { backgroundColor: Palette.hermesOrange }]}
               onPress={async () => {
-                await shareQuoteWithAcceptanceLink({
-                  id: quote.id,
-                  customer: quote.customer,
-                  customerName: quote.customer,
-                  amount: quote.amount,
-                  job: quote.job,
-                });
+                try {
+                  const url = await shareQuoteWithAcceptanceLink({
+                    id: quote.id,
+                    customer: quote.customer,
+                    customerName: quote.customer,
+                    amount: quote.amount,
+                    job: quote.job,
+                  });
+                  if (isDemoMode) {
+                    Alert.alert(
+                      t('quotes.demoMode', 'Demo mode'),
+                      t('quotes.demoApprovalLink', 'In demo mode, approval links are local only. The link has been shared via your device share sheet.'),
+                    );
+                  }
+                } catch {
+                  Alert.alert(t('common.error', 'Error'), t('quotes.approvalLinkFailed', 'Could not create approval link.'));
+                }
               }}
             >
               <Ionicons name="link" size={18} color="#fff" />
-              <Text style={styles.acceptButtonText}>Share approval link</Text>
+              <Text style={styles.acceptButtonText}>{t('quotes.shareApprovalLink', 'Share approval link')}</Text>
             </Pressable>
           )}
 

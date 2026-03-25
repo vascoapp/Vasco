@@ -34,7 +34,9 @@ import { hapticSuccess } from '../../src/utils/haptics';
 import { Share } from 'react-native';
 import { invoiceAutomationService } from '../../src/services/invoiceAutomationService';
 import { generateInvoicePdf, buildInvoiceShareText } from '../../src/services/invoicePdfService';
-import { createPaymentLink } from '../../src/integrations/mollie';
+import { createPaymentLink as createMolliePaymentLink } from '../../src/integrations/mollie';
+import { createPaymentLink as createStripePaymentLink } from '../../src/integrations/stripe';
+import { useAuth } from '../../src/context/AuthContext';
 import { useSavingsAggregation } from '../../src/services/savingsAggregatorService';
 import { calculateLatePaymentInterest } from '../../src/services/dutchComplianceService';
 import { useLaborCosts } from '../../src/services/laborCostService';
@@ -104,6 +106,15 @@ function DSOHint({ customerId, amount }: { customerId: string; amount?: number }
 function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoice[]; expandedId: string | null; onToggleExpand: (id: string) => void }) {
   const { t } = useTranslation();
   const { businessProfile } = useAppState();
+  const { user } = useAuth();
+
+  // Determine payment provider based on country (UK → Stripe, all others → Mollie)
+  const createPaymentLink = useCallback(async (request: { invoiceId: string; amount: number; description: string }) => {
+    if (user?.country === 'UK') {
+      return createStripePaymentLink({ ...request, currency: 'GBP' });
+    }
+    return createMolliePaymentLink(request);
+  }, [user?.country]);
   const getStatusConfig = (status: Invoice['status']) => {
     switch (status) {
       case 'paid':
@@ -239,7 +250,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                       hapticSuccess();
                       Alert.alert(
                         t('invoices.paymentLinkCreated', 'Payment link created'),
-                        `${t('invoices.paymentLinkReady', 'Mollie payment link is ready to share')}:\n${link.url}`,
+                        `${t('invoices.paymentLinkReady', 'Payment link is ready to share')}:\n${link.url}`,
                       );
                       await Share.share({ message: `${t('invoices.paymentLink', 'Betaallink')}: €${invoice.amount.toLocaleString()}\n${link.url}`, title: t('invoices.paymentLink', 'Betaallink') });
                     } else {

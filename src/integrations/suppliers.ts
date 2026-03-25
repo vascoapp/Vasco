@@ -11,6 +11,8 @@
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getMaterialBaselinesForCountry, getAllMaterialBaselines } from '../services/cohortBenchmarkService';
+import { getScanHistory } from '../services/invoiceScanService';
 
 const STORAGE_KEY = '@vasco_suppliers';
 
@@ -545,50 +547,71 @@ export function getSuppliersForTrade(trade: string, country?: string): SupplierI
 // Price comparison across connected suppliers
 // ---------------------------------------------------------------------------
 
-export async function comparePrices(articleNumber: string): Promise<PriceCheck | null> {
-  // Search all mock catalogs for matching article numbers or name keywords
-  const allItems = Object.values(MOCK_CATALOGS).flat();
-  const query = articleNumber.toLowerCase();
+export async function comparePrices(query: string, country?: string): Promise<PriceCheck | null> {
+  const q = query.toLowerCase().trim();
+  const countries: Array<'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK'> = ['NL', 'DE', 'FR', 'ES', 'IT', 'UK'];
+  const targetCountries = country ? [country as 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK'] : countries;
 
-  const matches = allItems.filter(
-    item => item.articleNumber.toLowerCase() === query
-      || item.articleNumber.toLowerCase().includes(query)
-      || item.name.toLowerCase().includes(query)
-  );
+  // Build cross-country price list from real material baselines
+  const prices: { supplierId: SupplierId; supplierName: string; price: number; inStock: boolean }[] = [];
+  let matchedName = '';
 
-  if (matches.length === 0) return null;
-
-  // Build prices from actual catalog data (consistent, deterministic)
-  const allSuppliers = [...DUTCH_SUPPLIERS, ...GERMAN_SUPPLIERS, ...FRENCH_SUPPLIERS, ...SPANISH_SUPPLIERS, ...ITALIAN_SUPPLIERS, ...UK_SUPPLIERS];
-  const prices = matches.map(item => {
-    const supplier = allSuppliers.find(s => s.id === item.supplierId);
-    return {
-      supplierId: item.supplierId,
-      supplierName: supplier?.name ?? item.supplierId,
-      price: item.priceExclVat,
-      inStock: item.inStock,
-    };
-  });
-
-  // Deduplicate by supplier (keep cheapest per supplier)
-  const bySupplier = new Map<SupplierId, typeof prices[0]>();
-  for (const p of prices) {
-    const existing = bySupplier.get(p.supplierId);
-    if (!existing || p.price < existing.price) {
-      bySupplier.set(p.supplierId, p);
+  for (const c of targetCountries) {
+    const baselines = getAllMaterialBaselines(c);
+    for (const mat of baselines) {
+      if (mat.name.toLowerCase().includes(q) || q.includes(mat.name.toLowerCase())) {
+        if (!matchedName) matchedName = mat.name;
+        // Map supplier name to the nearest known SupplierId
+        const suppliersList = getSuppliersForTrade(mat.trade, c);
+        const bestMatch = suppliersList[0];
+        prices.push({
+          supplierId: bestMatch?.id ?? 'custom',
+          supplierName: `${mat.cheaperSupplier} (${c})`,
+          price: mat.avgPrice,
+          inStock: true,
+        });
+      }
     }
   }
-  const dedupedPrices = Array.from(bySupplier.values());
 
-  dedupedPrices.sort((a, b) => a.price - b.price);
+  // Also overlay scanned real prices from invoice history
+  try {
+    const scans = await getScanHistory();
+    for (const scan of scans) {
+      for (const item of scan.lineItems) {
+        if (item.description.toLowerCase().includes(q) || q.includes(item.description.toLowerCase())) {
+          if (!matchedName) matchedName = item.description;
+          prices.push({
+            supplierId: 'custom',
+            supplierName: `${scan.supplierName} (scanned)`,
+            price: item.unitPrice,
+            inStock: true,
+          });
+        }
+      }
+    }
+  } catch {}
+
+  if (prices.length === 0) return null;
+
+  // Deduplicate by supplier name (keep cheapest per supplier)
+  const byName = new Map<string, typeof prices[0]>();
+  for (const p of prices) {
+    const existing = byName.get(p.supplierName);
+    if (!existing || p.price < existing.price) {
+      byName.set(p.supplierName, p);
+    }
+  }
+  const dedupedPrices = Array.from(byName.values()).sort((a, b) => a.price - b.price);
+
   const cheapest = dedupedPrices[0].supplierId;
   const savings = dedupedPrices.length > 1
     ? dedupedPrices[dedupedPrices.length - 1].price - dedupedPrices[0].price
     : 0;
 
   return {
-    articleNumber,
-    name: matches[0].name,
+    articleNumber: query,
+    name: matchedName,
     prices: dedupedPrices,
     cheapest,
     savings: Math.round(savings * 100) / 100,
@@ -596,50 +619,87 @@ export async function comparePrices(articleNumber: string): Promise<PriceCheck |
 }
 
 // ---------------------------------------------------------------------------
-// Catalog search (mock — real implementation needs supplier API keys)
+// Catalog search — backed by 79 real material baselines + scan history
 // ---------------------------------------------------------------------------
 
-// Mock catalog items per trade for demo mode
-const MOCK_CATALOGS: Record<string, CatalogItem[]> = {
-  plumbing: [
-    { supplierId: 'technische_unie', articleNumber: 'TU-10234', name: 'Koperen buis 15mm 3m', category: 'buizen', priceExclVat: 12.50, vatRate: 21, unit: 'stuk', inStock: true, brand: 'Viega' },
-    { supplierId: 'technische_unie', articleNumber: 'TU-10567', name: 'Knelkoppeling 15mm', category: 'fittingen', priceExclVat: 4.80, vatRate: 21, unit: 'stuk', inStock: true, brand: 'VSH' },
-    { supplierId: 'brouwer', articleNumber: 'BR-2045', name: 'Thermostaatkraan set', category: 'kranen', priceExclVat: 89.00, vatRate: 21, unit: 'stuk', inStock: true, brand: 'Grohe' },
-    { supplierId: 'solar_nederland', articleNumber: 'SN-8812', name: 'CV-ketel Nefit 24kW', category: 'verwarming', priceExclVat: 1250.00, vatRate: 21, unit: 'stuk', inStock: false, leadTimeDays: 5, brand: 'Nefit' },
-  ],
-  electrical: [
-    { supplierId: 'rexel', articleNumber: 'RX-5501', name: 'YMvK 3x2.5mm² 100m', category: 'kabels', priceExclVat: 85.00, vatRate: 21, unit: 'rol', inStock: true, brand: 'Draka' },
-    { supplierId: 'rexel', articleNumber: 'RX-5523', name: 'Aardlekschakelaar 30mA 2P', category: 'beveiliging', priceExclVat: 34.50, vatRate: 21, unit: 'stuk', inStock: true, brand: 'Hager' },
-    { supplierId: 'technische_unie', articleNumber: 'TU-30112', name: 'Inbouwdoos 50mm', category: 'dozen', priceExclVat: 0.65, vatRate: 21, unit: 'stuk', inStock: true, brand: 'Attema' },
-    { supplierId: 'sonepar', articleNumber: 'SP-7789', name: 'LED paneel 60x60 40W', category: 'verlichting', priceExclVat: 28.00, vatRate: 21, unit: 'stuk', inStock: true, brand: 'Philips' },
-  ],
-  painting: [
-    { supplierId: 'hornbach', articleNumber: 'HB-P100', name: 'Sigma S2U Nova satin 2.5L', category: 'verf', priceExclVat: 42.00, vatRate: 21, unit: 'stuk', inStock: true, brand: 'Sigma' },
-    { supplierId: 'hornbach', articleNumber: 'HB-P112', name: 'Sikkens Rubbol BL Satura 1L', category: 'verf', priceExclVat: 38.50, vatRate: 21, unit: 'stuk', inStock: true, brand: 'Sikkens' },
-    { supplierId: 'hornbach', articleNumber: 'HB-P200', name: 'Schuurpapier K120 5m rol', category: 'schuurmateriaal', priceExclVat: 8.90, vatRate: 21, unit: 'rol', inStock: true },
-  ],
-  carpentry: [
-    { supplierId: 'hornbach', articleNumber: 'HB-H300', name: 'Vuren balk 50x100 3m', category: 'hout', priceExclVat: 14.50, vatRate: 21, unit: 'stuk', inStock: true },
-    { supplierId: 'hornbach', articleNumber: 'HB-H310', name: 'MDF plaat 18mm 244x122', category: 'plaatmateriaal', priceExclVat: 32.00, vatRate: 21, unit: 'stuk', inStock: true },
-  ],
-  gas: [
-    { supplierId: 'technische_unie', articleNumber: 'TU-40100', name: 'Gasslang RVS 100cm', category: 'gasleiding', priceExclVat: 18.50, vatRate: 21, unit: 'stuk', inStock: true },
-    { supplierId: 'solar_nederland', articleNumber: 'SN-9001', name: 'Intergas HRE 36/30 CW5', category: 'ketels', priceExclVat: 1450.00, vatRate: 21, unit: 'stuk', inStock: false, leadTimeDays: 7, brand: 'Intergas' },
-  ],
-};
+/**
+ * Search the material catalog using real baseline data from cohortBenchmarkService.
+ * Overlays scanned invoice prices when available for price accuracy.
+ *
+ * @param query - Search term (fuzzy matches on material name)
+ * @param trade - Optional trade filter (plumbing, electrical, gas, painting, carpentry, general)
+ * @param country - Optional country code (NL, DE, FR, ES, IT, UK) for localized pricing
+ */
+export async function searchCatalog(
+  query: string,
+  trade?: string,
+  country?: string,
+): Promise<CatalogItem[]> {
+  const q = query.toLowerCase().trim();
+  if (!q) return [];
 
-export async function searchCatalog(query: string, trade?: string): Promise<CatalogItem[]> {
-  // In production: search across connected supplier catalogs via API
-  // For now: filter mock catalog by query string
-  const q = query.toLowerCase();
-  const items = trade && MOCK_CATALOGS[trade]
-    ? MOCK_CATALOGS[trade]
-    : Object.values(MOCK_CATALOGS).flat();
+  const countryCode = (country as 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK') || 'NL';
 
-  return items.filter(
-    item => item.name.toLowerCase().includes(q)
-      || item.category.toLowerCase().includes(q)
-      || item.articleNumber.toLowerCase().includes(q)
-      || (item.brand?.toLowerCase().includes(q) ?? false)
-  );
+  // 1. Load baselines — either trade-specific or all trades
+  const baselines = trade
+    ? getMaterialBaselinesForCountry(trade, countryCode).map(b => ({ ...b, trade }))
+    : getAllMaterialBaselines(countryCode);
+
+  // 2. Fuzzy filter: match on name tokens
+  const queryTokens = q.split(/\s+/);
+  const scored = baselines
+    .map(mat => {
+      const nameLower = mat.name.toLowerCase();
+      let score = 0;
+      for (const token of queryTokens) {
+        if (nameLower.includes(token)) score += 2;
+        else if (nameLower.split(/\s+/).some(w => w.startsWith(token))) score += 1;
+      }
+      return { mat, score };
+    })
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  // 3. Build scan price overlay for more accurate pricing
+  const scanPrices = new Map<string, { price: number; supplier: string }>();
+  try {
+    const scans = await getScanHistory();
+    for (const scan of scans) {
+      for (const item of scan.lineItems) {
+        const key = item.description.toLowerCase().trim();
+        const existing = scanPrices.get(key);
+        // Keep the most recent (last) scanned price
+        scanPrices.set(key, { price: item.unitPrice, supplier: scan.supplierName });
+      }
+    }
+  } catch {}
+
+  // 4. Map to CatalogItem format with real data
+  const allSuppliers = getSuppliersForTrade(trade || 'general', countryCode);
+  const defaultSupplier = allSuppliers[0];
+
+  const results: CatalogItem[] = scored.map(({ mat }, idx) => {
+    const scannedData = scanPrices.get(mat.name.toLowerCase());
+    const price = scannedData?.price ?? mat.avgPrice;
+    const supplierName = scannedData?.supplier ?? mat.cheaperSupplier;
+
+    // Try to find matching supplier ID
+    const matchedSupplier = allSuppliers.find(
+      s => s.name.toLowerCase().includes(supplierName.toLowerCase().split(' ')[0])
+    );
+
+    return {
+      supplierId: matchedSupplier?.id ?? defaultSupplier?.id ?? 'custom',
+      articleNumber: `MAT-${String(idx + 1).padStart(4, '0')}`,
+      name: mat.name,
+      description: scannedData ? `Real price from ${scannedData.supplier}` : `Market avg (${countryCode})`,
+      category: (mat as any).trade || trade || 'general',
+      priceExclVat: Math.round(price * 100) / 100,
+      vatRate: countryCode === 'UK' ? 20 : 21,
+      unit: mat.unit,
+      inStock: true,
+    };
+  });
+
+  return results;
 }

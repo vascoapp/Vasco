@@ -83,8 +83,8 @@ export async function createAcceptanceLink(quote: {
     await AsyncStorage.setItem(ACCEPTANCE_KEY, JSON.stringify(filtered));
   } catch {}
 
-  // Deep link / web URL
-  const url = `${APPROVAL_BASE_URL}/accept/${token}`;
+  // Deep link for demo/local, web URL for production
+  const url = __DEV__ ? `vasco://accept/${token}` : `${APPROVAL_BASE_URL}/accept/${token}`;
   return { token, url, link };
 }
 

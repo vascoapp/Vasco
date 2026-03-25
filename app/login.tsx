@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -44,10 +45,13 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState(0);
   const { login, isLoading } = useAuth();
   const router = useRouter();
 
   const handleLogin = async () => {
+    if (Date.now() < lockoutUntil) return;
     setError('');
     if (!email.trim()) {
       setError(t('common.required', 'Vul je e-mailadres in'));
@@ -55,8 +59,17 @@ export default function LoginScreen() {
     }
     const success = await login(email, password);
     if (success) {
+      setFailedAttempts(0);
       router.replace(getRouteForEmail(email));
     } else {
+      const attempts = failedAttempts + 1;
+      setFailedAttempts(attempts);
+      if (attempts >= 5) {
+        setLockoutUntil(Date.now() + 30000);
+        setError(t('auth.tooManyAttempts', 'Too many attempts. Try again in 30 seconds.'));
+        setTimeout(() => { setLockoutUntil(0); setFailedAttempts(0); }, 30000);
+        return;
+      }
       setError(t('common.error', 'Ongeldige gegevens'));
     }
   };
@@ -109,7 +122,7 @@ export default function LoginScreen() {
                 <View style={styles.guyShadow} />
               </View>
               <Text style={styles.brand}>Vasco</Text>
-              <Text style={styles.tagline}>Gebouwd voor de bouw</Text>
+              <Text style={styles.tagline}>{t('auth.tagline', 'Built for the trades')}</Text>
             </View>
           </FadeIn>
 
@@ -118,7 +131,7 @@ export default function LoginScreen() {
             <View style={styles.form}>
               <TextInput
                 style={styles.input}
-                placeholder="E-mailadres"
+                placeholder={t('auth.emailPlaceholder', 'Email address')}
                 placeholderTextColor={SemanticColors.textTertiary}
                 value={email}
                 onChangeText={setEmail}
@@ -128,7 +141,7 @@ export default function LoginScreen() {
               />
               <TextInput
                 style={styles.input}
-                placeholder="Wachtwoord"
+                placeholder={t('auth.passwordPlaceholder', 'Password')}
                 placeholderTextColor={SemanticColors.textTertiary}
                 value={password}
                 onChangeText={setPassword}
@@ -144,12 +157,19 @@ export default function LoginScreen() {
               )}
 
               <GradientButton
-                label="Inloggen"
+                label={t('auth.login', 'Inloggen')}
                 onPress={handleLogin}
                 loading={isLoading}
-                disabled={isLoading}
+                disabled={isLoading || Date.now() < lockoutUntil}
                 icon="arrow-forward"
               />
+
+              <Pressable
+                style={styles.forgotBtn}
+                onPress={() => router.push('/forgot-password' as any)}
+              >
+                <Text style={styles.forgotBtnText}>{t('auth.forgotPassword', 'Forgot password?')}</Text>
+              </Pressable>
             </View>
           </FadeIn>
 
@@ -203,21 +223,34 @@ export default function LoginScreen() {
                   }}
                 >
                   <Ionicons name="rocket-outline" size={18} color={Palette.hermesOrange} />
-                  <Text style={styles.onboardingBtnText}>Test onboarding</Text>
+                  <Text style={styles.onboardingBtnText}>{t('auth.testOnboarding', 'Test onboarding')}</Text>
                 </Pressable>
 
                 {/* Reset demo data */}
                 <Pressable
                   style={({ pressed }) => [styles.resetBtn, pressed && { opacity: 0.85 }]}
-                  onPress={async () => {
-                    const keys = await AsyncStorage.getAllKeys();
-                    const vascoKeys = keys.filter((k: string) => k.startsWith('@vasco_'));
-                    if (vascoKeys.length > 0) await AsyncStorage.multiRemove(vascoKeys);
-                    alert(`${vascoKeys.length} items gewist. Log opnieuw in voor verse data.`);
+                  onPress={() => {
+                    Alert.alert(
+                      t('auth.resetDemoData', 'Reset demo data'),
+                      t('auth.resetConfirm', 'This will clear all local data. You will need to log in again for fresh demo data.'),
+                      [
+                        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+                        {
+                          text: t('auth.reset', 'Reset'),
+                          style: 'destructive',
+                          onPress: async () => {
+                            const keys = await AsyncStorage.getAllKeys();
+                            const vascoKeys = keys.filter((k: string) => k.startsWith('@vasco_'));
+                            if (vascoKeys.length > 0) await AsyncStorage.multiRemove(vascoKeys);
+                            Alert.alert(t('auth.dataReset', '{{count}} items cleared. Log in again for fresh data.', { count: vascoKeys.length }));
+                          },
+                        },
+                      ],
+                    );
                   }}
                 >
                   <Ionicons name="refresh-outline" size={16} color={SemanticColors.textTertiary} />
-                  <Text style={styles.resetBtnText}>Reset demo data</Text>
+                  <Text style={styles.resetBtnText}>{t('auth.resetDemoData', 'Reset demo data')}</Text>
                 </Pressable>
               </View>
             </FadeIn>
@@ -403,6 +436,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_500Medium',
     flex: 1,
   },
+  forgotBtn: { alignSelf: 'center', paddingVertical: 8 },
+  forgotBtnText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: Palette.hermesOrange },
   // Demo
   demoSection: {
     gap: 16,

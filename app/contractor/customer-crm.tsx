@@ -19,6 +19,7 @@ import { SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
+import { isValidEmail, isValidPhone, sanitizeInput } from '../../src/utils/validation';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -65,7 +66,20 @@ export default function CustomerPhonebookScreen() {
 
   const handleAdd = async () => {
     if (!newName.trim()) return;
-    await addCustomer(newName.trim(), newEmail.trim() || undefined, newPhone.trim() || undefined);
+    const cleanName = sanitizeInput(newName);
+    const cleanEmail = sanitizeInput(newEmail);
+    const cleanPhone = sanitizeInput(newPhone);
+
+    if (cleanEmail && !isValidEmail(cleanEmail)) {
+      Alert.alert(t('common.error', 'Error'), t('validation.invalidEmail', 'Please enter a valid email address'));
+      return;
+    }
+    if (cleanPhone && !isValidPhone(cleanPhone)) {
+      Alert.alert(t('common.error', 'Error'), t('validation.invalidPhone', 'Please enter a valid phone number'));
+      return;
+    }
+
+    await addCustomer(cleanName, cleanEmail || undefined, cleanPhone || undefined);
     hapticSuccess();
     setNewName('');
     setNewPhone('');
@@ -80,7 +94,7 @@ export default function CustomerPhonebookScreen() {
         <Pressable onPress={() => router.back()} hitSlop={12} style={s.backBtn}>
           <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
-        <Text style={s.headerTitle}>Klanten</Text>
+        <Text style={s.headerTitle}>{t('contractor.customers.title', 'Customers')}</Text>
         <Pressable onPress={() => setShowAdd(true)} style={s.addBtn}>
           <Ionicons name="add" size={22} color={Palette.white} />
         </Pressable>
@@ -91,7 +105,7 @@ export default function CustomerPhonebookScreen() {
         <Ionicons name="search" size={18} color={SemanticColors.textTertiary} />
         <TextInput
           style={s.searchInput}
-          placeholder="Zoek op naam, telefoon of e-mail..."
+          placeholder={t('contractor.customers.searchPlaceholder', 'Search by name, phone or email...')}
           placeholderTextColor={SemanticColors.textTertiary}
           value={search}
           onChangeText={setSearch}
@@ -125,7 +139,7 @@ export default function CustomerPhonebookScreen() {
                   <Text style={s.contactName} numberOfLines={1}>{contact.name}</Text>
                   <Text style={s.contactMeta} numberOfLines={1}>
                     {[
-                      contact.jobCount > 0 ? `${contact.jobCount} klussen` : null,
+                      contact.jobCount > 0 ? `${contact.jobCount} ${t('contractor.customers.jobs', 'jobs')}` : null,
                       contact.phone,
                     ].filter(Boolean).join(' · ')}
                   </Text>
@@ -184,10 +198,10 @@ export default function CustomerPhonebookScreen() {
         {contacts.length === 0 && (
           <View style={s.empty}>
             <Ionicons name="people-outline" size={40} color={SemanticColors.textTertiary} />
-            <Text style={s.emptyTitle}>Nog geen klanten</Text>
-            <Text style={s.emptyDesc}>Voeg je eerste klant toe</Text>
+            <Text style={s.emptyTitle}>{t('contractor.customers.emptyTitle', 'No customers yet')}</Text>
+            <Text style={s.emptyDesc}>{t('contractor.customers.emptyDesc', 'Add your first customer')}</Text>
             <Pressable style={s.emptyBtn} onPress={() => setShowAdd(true)}>
-              <Text style={s.emptyBtnText}>Klant toevoegen</Text>
+              <Text style={s.emptyBtnText}>{t('contractor.customers.addCustomer', 'Add customer')}</Text>
             </Pressable>
           </View>
         )}
@@ -195,8 +209,8 @@ export default function CustomerPhonebookScreen() {
         {filtered.length === 0 && contacts.length > 0 && (
           <View style={s.empty}>
             <Ionicons name="search-outline" size={32} color={SemanticColors.textTertiary} />
-            <Text style={s.emptyTitle}>Geen resultaten</Text>
-            <Text style={s.emptyDesc}>Probeer een andere zoekterm</Text>
+            <Text style={s.emptyTitle}>{t('contractor.customers.noResults', 'No results')}</Text>
+            <Text style={s.emptyDesc}>{t('contractor.customers.tryDifferentSearch', 'Try a different search term')}</Text>
           </View>
         )}
 
@@ -209,11 +223,11 @@ export default function CustomerPhonebookScreen() {
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ justifyContent: 'flex-end' }}>
             <Pressable style={s.sheet} onPress={() => {}}>
               <View style={s.handle} />
-              <Text style={s.sheetTitle}>Nieuwe klant</Text>
+              <Text style={s.sheetTitle}>{t('contractor.customers.newCustomer', 'New customer')}</Text>
 
               <TextInput
                 style={s.input}
-                placeholder="Naam *"
+                placeholder={t('contractor.customers.namePlaceholder', 'Name *')}
                 placeholderTextColor={SemanticColors.textTertiary}
                 value={newName}
                 onChangeText={setNewName}
@@ -221,7 +235,7 @@ export default function CustomerPhonebookScreen() {
               />
               <TextInput
                 style={s.input}
-                placeholder="Telefoon"
+                placeholder={t('contractor.customers.phonePlaceholder', 'Phone')}
                 placeholderTextColor={SemanticColors.textTertiary}
                 value={newPhone}
                 onChangeText={setNewPhone}
@@ -229,7 +243,7 @@ export default function CustomerPhonebookScreen() {
               />
               <TextInput
                 style={s.input}
-                placeholder="E-mail"
+                placeholder={t('contractor.customers.emailPlaceholder', 'Email')}
                 placeholderTextColor={SemanticColors.textTertiary}
                 value={newEmail}
                 onChangeText={setNewEmail}
@@ -242,7 +256,7 @@ export default function CustomerPhonebookScreen() {
                 onPress={handleAdd}
                 disabled={!newName.trim()}
               >
-                <Text style={s.submitBtnText}>Toevoegen</Text>
+                <Text style={s.submitBtnText}>{t('common.add', 'Add')}</Text>
               </Pressable>
             </Pressable>
           </KeyboardAvoidingView>

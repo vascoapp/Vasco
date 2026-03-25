@@ -81,6 +81,11 @@ export default function NewQuoteScreen() {
       Alert.alert('No line items', 'Add at least one line item with a description.');
       return;
     }
+    const itemTotal = validItems.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
+    if (itemTotal <= 0) {
+      Alert.alert('Invalid amount', 'Quote total must be greater than zero. Check your line item prices.');
+      return;
+    }
 
     setSaving(true);
     try {

@@ -7,8 +7,10 @@
 
 import { useState, useCallback } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,6 +20,9 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { File as ExpoFile } from 'expo-file-system';
+import * as DocumentPicker from 'expo-document-picker';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import {
@@ -26,6 +31,10 @@ import {
   ExtractedLineItem,
   ExtractionResult,
 } from '../../ingestion/invoiceExtractor';
+import {
+  scanInvoicePhoto,
+  type ScannedInvoice,
+} from '../../services/invoiceScanService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -42,8 +51,179 @@ export function ReceiptScanner({ onComplete, onClose }: ReceiptScannerProps) {
   const { t } = useTranslation();
   const [mode, setMode] = useState<'capture' | 'review' | 'result'>('capture');
   const [rawText, setRawText] = useState('');
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [extractionResult, setExtractionResult] = useState<ExtractionResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // -------------------------------------------------------
+  // Convert ScannedInvoice (from Claude Vision) → ExtractionResult
+  // -------------------------------------------------------
+  const scannedToResult = (scanned: ScannedInvoice, uri: string): ExtractionResult => ({
+    success: true,
+    invoice: {
+      id: scanned.id,
+      documentType: scanned.documentType === 'delivery_note' ? 'unknown' : scanned.documentType,
+      documentNumber: scanned.documentNumber,
+      documentDate: scanned.documentDate,
+      supplierName: scanned.supplierName,
+      supplierId: scanned.supplierName.toLowerCase().replace(/\s+/g, '_'),
+      subtotal: scanned.subtotal,
+      vatAmount: scanned.vatAmount,
+      total: scanned.total,
+      currency: 'EUR',
+      lineItems: scanned.lineItems.map((li, idx) => ({
+        id: `item_${idx}`,
+        description: li.description,
+        quantity: li.quantity,
+        unit: li.unit,
+        unitPrice: li.unitPrice,
+        totalPrice: li.totalPrice,
+        confidence: li.confidence / 100,
+        productName: li.description,
+        brand: li.brand,
+        sku: li.articleNumber,
+        category: li.category,
+      })),
+      rawText: '',
+      extractionConfidence: scanned.confidence / 100,
+      extractedAt: scanned.scannedAt,
+      sourceUri: uri,
+    },
+    errors: [],
+    warnings: scanned.confidence < 70 ? [t('receipt.lowConfidence', 'Low confidence - please verify extracted data')] : [],
+    priceObservationsCreated: scanned.lineItems.length,
+    materialsResolved: scanned.lineItems.filter(li => li.brand || li.articleNumber).length,
+  });
+
+  // -------------------------------------------------------
+  // Take photo with camera
+  // -------------------------------------------------------
+  const handleTakePhoto = useCallback(async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(t('common.error', 'Error'), t('receipt.cameraPermission', 'Camera permission is required to scan receipts.'));
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      quality: 0.8,
+      base64: true,
+      allowsEditing: false,
+    });
+
+    if (result.canceled || !result.assets?.[0]) return;
+
+    const asset = result.assets[0];
+    setPhotoUri(asset.uri);
+    setIsProcessing(true);
+
+    try {
+      // Use base64 from ImagePicker directly (set base64: true above)
+      const base64 = asset.base64;
+      if (!base64) {
+        Alert.alert(t('common.error', 'Error'), t('receipt.processingFailed', 'Could not process the receipt. Please try again.'));
+        setIsProcessing(false);
+        return;
+      }
+
+      const scanned = await scanInvoicePhoto(base64);
+      if (scanned) {
+        const extractResult = scannedToResult(scanned, asset.uri);
+        setExtractionResult(extractResult);
+        setMode('review');
+      } else {
+        // Rate limited or failed — fall back to manual entry prompt
+        Alert.alert(
+          t('receipt.scanFailed', 'Scan not available'),
+          t('receipt.scanFailedDesc', 'Could not process the photo. You can enter the receipt content manually below.'),
+        );
+      }
+    } catch {
+      Alert.alert(t('common.error', 'Error'), t('receipt.processingFailed', 'Could not process the receipt. Please try again.'));
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [t]);
+
+  // -------------------------------------------------------
+  // Pick PDF / image from gallery
+  // -------------------------------------------------------
+  const handlePickDocument = useCallback(async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'image/*'],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled || !result.assets?.[0]) return;
+
+      const asset = result.assets[0];
+      const isPdf = asset.mimeType?.includes('pdf') || asset.name?.endsWith('.pdf');
+
+      setIsProcessing(true);
+
+      if (isPdf) {
+        // PDF: binary PDFs can't be text-extracted client-side easily
+        // Read as text — if it's a text-based PDF export, regex extraction works
+        try {
+          const file = new ExpoFile(asset.uri);
+          const text = await file.text();
+          // PDF binary won't parse as text — inform user to use photo instead
+          if (!text || text.length < 20 || text.includes('%PDF')) {
+            Alert.alert(
+              t('receipt.pdfNotSupported', 'PDF text extraction'),
+              t('receipt.pdfNotSupportedDesc', 'Take a photo of the document instead for best results, or paste the content manually.'),
+            );
+            setIsProcessing(false);
+            return;
+          }
+          const extractResult = await invoiceExtractor.extractFromText(text, asset.uri);
+          setExtractionResult(extractResult);
+          setMode('review');
+        } catch {
+          Alert.alert(
+            t('receipt.pdfNotSupported', 'PDF text extraction'),
+            t('receipt.pdfNotSupportedDesc', 'Take a photo of the document instead for best results, or paste the content manually.'),
+          );
+        }
+      } else {
+        // Image file — read as base64 via File.arrayBuffer and send to Claude Vision
+        setPhotoUri(asset.uri);
+        try {
+          const file = new ExpoFile(asset.uri);
+          const buffer = await file.arrayBuffer();
+          // Convert ArrayBuffer to base64
+          const bytes = new Uint8Array(buffer);
+          let binary = '';
+          for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          const base64 = btoa(binary);
+
+          const scanned = await scanInvoicePhoto(base64);
+          if (scanned) {
+            const extractResult = scannedToResult(scanned, asset.uri);
+            setExtractionResult(extractResult);
+            setMode('review');
+          } else {
+            Alert.alert(
+              t('receipt.scanFailed', 'Scan not available'),
+              t('receipt.scanFailedDesc', 'Could not process the image. You can enter the receipt content manually below.'),
+            );
+          }
+        } catch {
+          Alert.alert(
+            t('receipt.scanFailed', 'Scan not available'),
+            t('receipt.scanFailedDesc', 'Could not process the image. You can enter the receipt content manually below.'),
+          );
+        }
+      }
+    } catch {
+      Alert.alert(t('common.error', 'Error'), t('receipt.processingFailed', 'Could not process the receipt. Please try again.'));
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [t]);
 
   const handleExtract = useCallback(async () => {
     if (!rawText.trim()) {
@@ -97,7 +277,10 @@ export function ReceiptScanner({ onComplete, onClose }: ReceiptScannerProps) {
           rawText={rawText}
           onTextChange={setRawText}
           onExtract={handleExtract}
+          onTakePhoto={handleTakePhoto}
+          onPickDocument={handlePickDocument}
           isProcessing={isProcessing}
+          photoUri={photoUri}
         />
       )}
 
@@ -129,10 +312,15 @@ interface CaptureModeProps {
   rawText: string;
   onTextChange: (text: string) => void;
   onExtract: () => void;
+  onTakePhoto: () => void;
+  onPickDocument: () => void;
   isProcessing: boolean;
+  photoUri: string | null;
 }
 
-function CaptureMode({ rawText, onTextChange, onExtract, isProcessing }: CaptureModeProps) {
+function CaptureMode({ rawText, onTextChange, onExtract, onTakePhoto, onPickDocument, isProcessing, photoUri }: CaptureModeProps) {
+  const { t } = useTranslation();
+
   const handleDemoText = () => {
     // Insert demo invoice text for testing
     onTextChange(`HORNBACH - Factuur
@@ -152,24 +340,49 @@ BTW 21%:                                  €37,78
 Totaal:                                   €217,70`);
   };
 
+  if (isProcessing) {
+    return (
+      <View style={styles.processingContainer}>
+        <ActivityIndicator size="large" color={Palette.hermesOrange} />
+        <Text style={styles.processingText}>
+          {t('receipt.analyzing', 'Analyzing receipt with AI...')}
+        </Text>
+        <Text style={styles.processingHint}>
+          {t('receipt.analyzingHint', 'This takes a few seconds')}
+        </Text>
+        {photoUri && (
+          <Image source={{ uri: photoUri }} style={styles.processingPreview} resizeMode="contain" />
+        )}
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
       {/* Capture Options */}
       <View style={styles.captureOptions}>
-        <Pressable style={styles.captureOption}>
+        <Pressable style={styles.captureOption} onPress={onTakePhoto}>
           <View style={[styles.captureOptionIcon, { backgroundColor: Palette.hermesOrange + '15' }]}>
             <Ionicons name="camera" size={32} color={Palette.hermesOrange} />
           </View>
-          <Text style={styles.captureOptionLabel}>Foto maken</Text>
-          <Text style={styles.captureOptionHint}>Maak een foto van de bon</Text>
+          <Text style={styles.captureOptionLabel}>
+            {t('receipt.takePhoto', 'Foto maken')}
+          </Text>
+          <Text style={styles.captureOptionHint}>
+            {t('receipt.takePhotoHint', 'Maak een foto van de bon')}
+          </Text>
         </Pressable>
 
-        <Pressable style={styles.captureOption}>
+        <Pressable style={styles.captureOption} onPress={onPickDocument}>
           <View style={[styles.captureOptionIcon, { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
             <Ionicons name="document" size={32} color={SemanticColors.feedbackInfo} />
           </View>
-          <Text style={styles.captureOptionLabel}>PDF uploaden</Text>
-          <Text style={styles.captureOptionHint}>Selecteer een PDF factuur</Text>
+          <Text style={styles.captureOptionLabel}>
+            {t('receipt.uploadDocument', 'PDF uploaden')}
+          </Text>
+          <Text style={styles.captureOptionHint}>
+            {t('receipt.uploadDocumentHint', 'Selecteer een PDF factuur')}
+          </Text>
         </Pressable>
       </View>
 
@@ -869,5 +1082,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: SemanticColors.textSecondary,
+  },
+
+  // Processing state
+  processingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.xl,
+    gap: 12,
+  },
+  processingText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+    marginTop: 8,
+  },
+  processingHint: {
+    fontSize: 13,
+    color: SemanticColors.textTertiary,
+  },
+  processingPreview: {
+    width: 200,
+    height: 200,
+    borderRadius: 12,
+    marginTop: 16,
+    opacity: 0.6,
   },
 });

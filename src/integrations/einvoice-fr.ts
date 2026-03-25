@@ -283,6 +283,23 @@ function buildVatBreakdown(items: FacturXLineItem[], currency: string): string {
       </ram:ApplicableTradeTax>`).join('\n');
 }
 
+// ---------------------------------------------------------------------------
+// VAT rate helper
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the standard TVA rate for France.
+ * For construction: 20% standard, 10% for renovation of dwellings >2 years,
+ * 5.5% for energy efficiency improvements.
+ */
+export function getVATRateForCountry(): number {
+  return TVA_RATES.NORMAL; // 20%
+}
+
+// ---------------------------------------------------------------------------
+// XML helpers
+// ---------------------------------------------------------------------------
+
 function escapeXml(str: string): string {
   return str
     .replace(/&/g, '&amp;')

@@ -12,7 +12,7 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { TYPE, RADIUS, GRID } from '../../theme/tabStyles';
-import { hapticSuccess } from '../../utils/haptics';
+import { hapticSuccess, hapticError } from '../../utils/haptics';
 import type { MorningBriefing } from '../../intelligence/backgroundJobScheduler';
 import type { QueueItem } from '../../services/aiActionQueueService';
 import type { ScoredInsight } from '../../intelligence/generators/types';
@@ -56,6 +56,9 @@ export function VascoCard({
     <Pressable
       style={({ pressed }) => [s.card, pressed && !expanded && { opacity: 0.9 }]}
       onPress={() => setExpanded(!expanded)}
+      accessibilityRole="button"
+      accessibilityLabel={t('a11y.vascoCard', 'Vasco AI card')}
+      accessibilityHint={expanded ? t('a11y.tapToCollapse', 'Tap to collapse') : t('a11y.tapToExpand', 'Tap to expand')}
     >
       {/* Header — always visible */}
       <View style={s.header}>
@@ -73,7 +76,7 @@ export function VascoCard({
           </Text>
         </View>
         {/* Expo Router requires 'as any' for dynamic routes — tracked in expo-router#123 */}
-        <Pressable onPress={() => router.push('/contractor/automations' as any)} hitSlop={8} accessibilityLabel={t('a11y.automationSettings', 'Automation settings')}>
+        <Pressable onPress={() => router.push('/contractor/automations' as any)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('a11y.automationSettings', 'Automation settings')}>
           <Ionicons name="settings-outline" size={16} color={SemanticColors.textTertiary} />
         </Pressable>
         <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={SemanticColors.textTertiary} />
@@ -90,10 +93,13 @@ export function VascoCard({
                 <Pressable
                   key={f.id}
                   style={s.findingRow}
+                  accessibilityRole="button"
+                  accessibilityLabel={f.title}
+                  accessibilityHint={t('a11y.opensDetails', 'Opens details')}
                   onPress={() => {
                     if (f.entityType === 'invoice') router.push(`/invoices/${f.entityId}` as any);
                     else if (f.entityType === 'quote') router.push(`/quotes/${f.entityId}` as any);
-                    else if (f.entityType === 'job') router.push(`/quotes/${f.entityId}` as any);
+                    else if (f.entityType === 'job') router.push(`/contractor/job/${f.entityId}` as any);
                   }}
                 >
                   <Ionicons
@@ -119,7 +125,7 @@ export function VascoCard({
                   key={item.id}
                   item={item}
                   onApprove={() => { hapticSuccess(); onApproveQueueItem(item.id); }}
-                  onReject={() => onRejectQueueItem(item.id)}
+                  onReject={() => { hapticError(); onRejectQueueItem(item.id); }}
                 />
               ))}
             </View>
@@ -132,6 +138,9 @@ export function VascoCard({
               <Pressable
                 style={s.insightRow}
                 onPress={() => onInsightAction?.(topInsight)}
+                accessibilityRole="button"
+                accessibilityLabel={topInsight.title}
+                accessibilityHint={t('a11y.opensRecommendation', 'Opens recommendation details')}
               >
                 <Ionicons name={(topInsight.icon as IconName) || 'bulb'} size={16} color={Palette.hermesOrange} />
                 <View style={s.flex1}>
@@ -169,6 +178,7 @@ function getQueueIcon(type: string): IconName {
     case 'safety_checklist': return 'checkbox-outline';
     case 'supplier_comparison': case 'price_alert': return 'pricetag-outline';
     case 'tax_prep': return 'calculator-outline';
+    case 'decision_reminder': return 'help-circle-outline';
     case 'maintenance_due': return 'build-outline';
     case 'accounting_export': return 'cloud-upload-outline';
     case 'einvoice_submit': return 'document-attach-outline';
@@ -189,7 +199,7 @@ function EmbeddedApproval({ item, onApprove, onReject }: {
   // Types that share a message to the customer (editable before sending)
   const isShareable = [
     'draft_reminder', 'draft_followup', 'progress_note', 'quote_expiry',
-    'satisfaction_survey', 'job_handover',
+    'satisfaction_survey', 'job_handover', 'decision_reminder', 'reorder_materials',
   ].includes(item.type);
 
   // Types that display an amount
@@ -253,11 +263,11 @@ function EmbeddedApproval({ item, onApprove, onReject }: {
       {/* Action buttons */}
       <View style={s.embeddedActions}>
         {isShareable && (
-          <Pressable style={s.editBtn} onPress={() => setEditing(!editing)}>
+          <Pressable style={s.editBtn} onPress={() => setEditing(!editing)} accessibilityRole="button" accessibilityLabel={t('a11y.editMessage', 'Edit message')}>
             <Ionicons name={editing ? 'checkmark' : 'create-outline'} size={14} color={Palette.hermesOrange} />
           </Pressable>
         )}
-        <Pressable style={[s.approveBtn, approving && s.disabled]} onPress={handleApprove} disabled={approving} accessibilityLabel={t('a11y.approveAction', 'Approve action')}>
+        <Pressable style={[s.approveBtn, approving && s.disabled]} onPress={handleApprove} disabled={approving} accessibilityRole="button" accessibilityLabel={t('a11y.approveAction', 'Approve action')}>
           {approving ? (
             <ActivityIndicator size="small" color={Palette.white} />
           ) : (
@@ -265,7 +275,7 @@ function EmbeddedApproval({ item, onApprove, onReject }: {
           )}
           <Text style={s.approveBtnText}>{item.actionLabel}</Text>
         </Pressable>
-        <Pressable style={s.rejectBtn} onPress={onReject} accessibilityLabel={t('a11y.rejectAction', 'Reject action')}>
+        <Pressable style={s.rejectBtn} onPress={onReject} accessibilityRole="button" accessibilityLabel={t('a11y.rejectAction', 'Reject action')}>
           <Ionicons name="close" size={14} color={SemanticColors.textTertiary} />
         </Pressable>
       </View>

@@ -19,6 +19,8 @@ export function GradientButton({ label, onPress, icon, loading, disabled, size =
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
       style={({ pressed }) => [
         styles.wrapper,
         size === 'md' && styles.wrapperMd,

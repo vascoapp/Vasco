@@ -6,10 +6,11 @@
 // Popular with Spanish autónomos and PYMEs in construction
 // =============================================================================
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getSecureItem, setSecureItem, deleteSecureItem, migrateToSecure } from '../lib/secureStorage';
 import { MS_PER_DAY } from '../utils/timeConstants';
 
-const STORAGE_KEY = '@vasco_holded';
+const STORAGE_KEY = 'vasco_holded';
+const LEGACY_KEY = '@vasco_holded';
 const API_BASE = 'https://api.holded.com/api';
 
 // ---------------------------------------------------------------------------
@@ -114,7 +115,8 @@ export function getIrpfRate(ratePercent: number): number {
 
 async function getConfig(): Promise<HoldedConfig | null> {
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    await migrateToSecure(LEGACY_KEY, STORAGE_KEY);
+    const raw = await getSecureItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -122,11 +124,11 @@ async function getConfig(): Promise<HoldedConfig | null> {
 }
 
 export async function saveHoldedConfig(config: HoldedConfig): Promise<void> {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+  await setSecureItem(STORAGE_KEY, JSON.stringify(config));
 }
 
 export async function clearHoldedConfig(): Promise<void> {
-  await AsyncStorage.removeItem(STORAGE_KEY);
+  await deleteSecureItem(STORAGE_KEY);
 }
 
 export async function isConnected(): Promise<boolean> {

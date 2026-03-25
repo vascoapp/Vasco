@@ -27,6 +27,16 @@ export default function TieredQuoteScreen() {
           unitPrice: item.unitPrice || item.price || 0,
         }));
 
+        if (lineItems.length === 0) {
+          Alert.alert(t('tieredQuote.error'), t('tieredQuote.noItems'));
+          return;
+        }
+        const tierTotal = lineItems.reduce((sum: number, li: any) => sum + li.unitPrice * li.quantity, 0);
+        if (tierTotal <= 0) {
+          Alert.alert(t('tieredQuote.error'), t('tieredQuote.zeroAmount', 'Quote total must be greater than zero.'));
+          return;
+        }
+
         try {
           const quoteId = await addQuote(
             t('tieredQuote.customer'),

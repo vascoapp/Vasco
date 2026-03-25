@@ -77,6 +77,8 @@ import {
 // Data / mocks
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { logWarn } from '../utils/errorHandler';
+import { trackEvent } from '../services/eventTrackingService';
+import { markStepComplete } from '../services/onboardingTrackerService';
 import { businessProfile as initialBusinessProfile } from '../data/mockBusiness';
 import { invoices as initialInvoices, quotes as initialQuotes } from '../data/mockDocuments';
 import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
@@ -136,6 +138,7 @@ type AppState = {
   addInvoice: (sourceQuoteId: string) => Promise<string>;
   removeQuote: (id: string) => void;
   removeInvoice: (id: string) => void;
+  updateInvoice: (id: string, updates: Partial<Invoice>) => void;
   updateBusinessProfile: (updates: Partial<BusinessProfile>) => Promise<void>;
   connectMoneybird: () => void;
   exportInvoice: (invoiceId: string) => Promise<void>;
@@ -394,6 +397,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             logWarn('AppState', `addCustomer persist failed: ${err}`);
           }
         }
+        markStepComplete('first_customer_added').catch(() => {});
         return tempId;
       },
       // ═════════════════════════════════════════════════════════════════════
@@ -454,6 +458,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         if (customerId) {
           addRelation({ fromId: customerId, fromType: 'customer', toId: tempId, toType: 'job', relationType: 'owns', metadata: {} }).catch(() => {});
         }
+        trackEvent('job_created', { jobId: tempId }).catch(() => {});
+        markStepComplete('first_job_created').catch(() => {});
         return tempId;
       },
       updateJobStatus: (id, status) => {
@@ -552,6 +558,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             });
           }).catch(() => {});
         }
+        if (status === 'completed') {
+          trackEvent('job_completed', { jobId: id }).catch(() => {});
+        }
         return { warnings: collectedWarnings };
       },
       removeJob: (id) => {
@@ -572,6 +581,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           dbUpdateJob(id, updates as Record<string, unknown>).catch((err) =>
             logWarn('AppState', `updateJob persist failed: ${err}`),
           );
+        }
+        if (updates.status === 'completed') {
+          trackEvent('job_completed', { jobId: id }).catch(() => {});
         }
       },
 
@@ -610,6 +622,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           );
         }
         scheduleQuoteFollowUp({ quoteId: id, customerName: 'Klant', daysAfterSent: 3 }).catch(() => {});
+        trackEvent('quote_sent', { quoteId: id }).catch(() => {});
+        markStepComplete('first_quote_sent').catch(() => {});
       },
       markInvoiceSent: (id) => {
         const invoice = invoices.find((inv) => inv.id === id);
@@ -632,6 +646,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           amount: invoice?.amount ?? 0,
           dueDate: sentDue.toISOString(),
         }).catch(() => {});
+        trackEvent('invoice_sent', { invoiceId: id }).catch(() => {});
+        markStepComplete('first_invoice_sent').catch(() => {});
       },
       markInvoicePaid: (id) => {
         const paidInv = invoices.find((i) => i.id === id);
@@ -728,6 +744,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           }).catch(() => {});
         }
 
+        trackEvent('quote_created', { quoteId: docNumber }).catch(() => {});
         return docNumber;
       },
 
@@ -794,6 +811,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           dueDate: dueDate.toISOString(),
         }).catch(() => {});
 
+        trackEvent('invoice_created', { invoiceId: docNumber }).catch(() => {});
         return docNumber;
       },
 
@@ -812,6 +830,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             logWarn('AppState', `removeInvoice persist failed: ${err}`)
           );
         }
+      },
+      updateInvoice: (id, updates) => {
+        setInvoices((prev) =>
+          prev.map((inv) => inv.id === id ? { ...inv, ...updates } : inv)
+        );
       },
       updateBusinessProfile: async (updates) => {
         setBusinessProfile((prev) => ({
@@ -1108,6 +1131,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           updateDocument(id, dbUpdates).catch((err) =>
             logWarn('AppState', `updateQuote persist failed: ${err}`),
           );
+        }
+        // Track quote sent
+        if (updates.status === 'sent') {
+          trackEvent('quote_sent', { quoteId: id }).catch(() => {});
+          markStepComplete('first_quote_sent').catch(() => {});
         }
         // Auto-create job when quote is accepted (EVE pattern: quote → job)
         // Delegates to convertQuoteToJob which handles job creation, AI events, and persistence

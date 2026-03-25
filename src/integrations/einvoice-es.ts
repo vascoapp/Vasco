@@ -330,6 +330,19 @@ function buildTaxWithholdings(items: FacturaeLineItem[]): string {
         </Tax>`).join('\n');
 }
 
+// ---------------------------------------------------------------------------
+// VAT rate helper
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the standard IVA rate for Spain.
+ * Construction: 21% general, 10% for renovation of dwellings.
+ * IRPF withholding: 15% standard, 7% for new autónomos (first 3 years).
+ */
+export function getVATRateForCountry(): number {
+  return IVA_RATES.GENERAL; // 21%
+}
+
 function simpleHash(input: string): string {
   // Simple string hash for demo/mock — production would use crypto.subtle.digest('SHA-256', ...)
   let hash = 0;

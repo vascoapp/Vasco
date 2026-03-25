@@ -88,6 +88,13 @@ export default function PurchaseOrdersScreen() {
             {stats.pendingOrders} {t('purchaseOrders.pending', 'openstaand')} · €{stats.pendingValue.toLocaleString(undefined)}
           </Text>
         </View>
+        <Pressable
+          onPress={() => router.push('/contractor/material-search' as any)}
+          style={styles.searchMaterialsBtn}
+          accessibilityLabel={t('purchaseOrders.searchMaterials', 'Search materials')}
+        >
+          <Ionicons name="search" size={18} color={Palette.hermesOrange} />
+        </Pressable>
       </View>
 
       {/* Stats Bar */}
@@ -284,6 +291,14 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
   },
   backButton: { padding: 4 },
+  searchMaterialsBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Palette.hermesOrange + '10',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
   headerTitle: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
   headerSubtitle: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 2 },
   statsBar: {

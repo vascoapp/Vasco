@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { startAutoSync, stopAutoSync } from '../intelligence/cloudSync';
+import { trackEvent, initSession, setUserContext, clearUserContext, flushEvents } from '../services/eventTrackingService';
 import type { Session } from '@supabase/supabase-js';
 
 // ============================================
@@ -286,6 +288,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.role]);
 
+  // Restore persisted user profile (country, trade, language) on login
+  useEffect(() => {
+    if (!user) return;
+    AsyncStorage.getItem('@vasco_user_profile').then((raw) => {
+      if (!raw) return;
+      try {
+        const profile = JSON.parse(raw);
+        if (profile && typeof profile === 'object') {
+          setUser((prev) => prev ? { ...prev, ...profile } : null);
+        }
+      } catch {}
+    }).catch(() => {});
+    // Only run once when user first becomes non-null
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [!!user]);
+
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
 
@@ -296,9 +314,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (mockUser) {
       // If Supabase is configured, try real auth first
       if (isSupabaseConfigured) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error, data: authData } = await supabase.auth.signInWithPassword({ email, password });
         if (!error) {
           setIsLoading(false);
+          if (authData?.user) {
+            const supaRole = (authData.user.user_metadata?.role === 'site-lead' ? 'sitelead' : 'contractor') as 'contractor' | 'aannemer' | 'sitelead';
+            initSession({ userId: authData.user.id, role: supaRole, country: (authData.user.user_metadata?.country as string) ?? 'NL' }).catch(() => {});
+            setUserContext({ userId: authData.user.id, role: supaRole, country: (authData.user.user_metadata?.country as string) ?? 'NL' });
+            trackEvent('login').catch(() => {});
+          }
           return true;
         }
         // Supabase auth failed — fall back to demo user
@@ -309,13 +333,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       // Start AI cloud sync
       startAutoSync(normalizedEmail, mockUser.role ?? 'contractor', mockUser.trade, mockUser.country);
+      // Analytics tracking
+      const analyticsRole = mockUser.role === 'site-lead' ? 'sitelead' as const : (mockUser.role === 'contractor' ? 'contractor' as const : 'contractor' as const);
+      initSession({ userId: mockUser.id, role: analyticsRole, country: mockUser.country ?? 'NL' }).catch(() => {});
+      setUserContext({ userId: mockUser.id, role: analyticsRole, country: mockUser.country ?? 'NL' });
+      trackEvent('login').catch(() => {});
       return true;
     }
 
     // --- Real Supabase auth for non-demo accounts ---
     if (isSupabaseConfigured) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error, data: realAuthData } = await supabase.auth.signInWithPassword({ email, password });
       setIsLoading(false);
+      if (!error && realAuthData?.user) {
+        const realRole = (realAuthData.user.user_metadata?.role === 'site-lead' ? 'sitelead' : 'contractor') as 'contractor' | 'aannemer' | 'sitelead';
+        initSession({ userId: realAuthData.user.id, role: realRole, country: (realAuthData.user.user_metadata?.country as string) ?? 'NL' }).catch(() => {});
+        setUserContext({ userId: realAuthData.user.id, role: realRole, country: (realAuthData.user.user_metadata?.country as string) ?? 'NL' });
+        trackEvent('login').catch(() => {});
+      }
       return !error;
     }
 
@@ -335,6 +370,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    trackEvent('logout').catch(() => {});
+    await flushEvents().catch(() => {});
+    clearUserContext();
     stopAutoSync();
     if (isSupabaseConfigured) {
       await supabase.auth.signOut();
@@ -344,7 +382,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateUser = useCallback((updates: Partial<User>) => {
-    setUser((prev) => (prev ? { ...prev, ...updates } : null));
+    setUser((prev) => {
+      if (!prev) return null;
+      const merged = { ...prev, ...updates };
+      // Persist user profile updates to AsyncStorage
+      AsyncStorage.setItem('@vasco_user_profile', JSON.stringify({
+        trade: merged.trade,
+        country: merged.country,
+        language: merged.language,
+        onboardingComplete: merged.onboardingComplete,
+      })).catch(() => {});
+      return merged;
+    });
   }, []);
 
   const roleConfig = user ? ROLE_CONFIGS[user.role] : null;

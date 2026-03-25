@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import * as WebBrowser from 'expo-web-browser';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
@@ -19,21 +20,23 @@ import {
   saveAccountingConfig,
 } from '../../src/integrations/accounting';
 
-// These would come from env vars in production
+// Client ID is public (safe for client-side). Secret stays server-side only.
 const CLIENT_ID = process.env.EXPO_PUBLIC_MONEYBIRD_CLIENT_ID ?? '';
-const CLIENT_SECRET = process.env.EXPO_PUBLIC_MONEYBIRD_CLIENT_SECRET ?? '';
+// OAuth token exchange MUST happen via Supabase Edge Function — never embed client_secret in app
+const TOKEN_EXCHANGE_URL = process.env.EXPO_PUBLIC_MONEYBIRD_TOKEN_URL ?? '';
 const REDIRECT_URI = 'vasco://moneybird/callback';
 
 export default function MoneybirdAuthScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(false);
 
   const handleConnect = async () => {
-    if (!CLIENT_ID) {
+    if (!CLIENT_ID || !TOKEN_EXCHANGE_URL) {
       Alert.alert(
-        'Configuratie nodig',
-        'Moneybird API credentials zijn nog niet geconfigureerd. Neem contact op met support.',
+        t('moneybird.configNeededTitle', 'Configuration needed'),
+        t('moneybird.configNeededMsg', 'Moneybird API credentials are not yet configured. Please contact support.'),
       );
       return;
     }
@@ -50,7 +53,7 @@ export default function MoneybirdAuthScreen() {
         const code = url.searchParams.get('code');
 
         if (code) {
-          const config = await exchangeCodeForToken(code, CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
+          const config = await exchangeCodeForToken(code, CLIENT_ID, '', REDIRECT_URI, TOKEN_EXCHANGE_URL);
           if (config) {
             await saveAccountingConfig({
               provider: 'moneybird',
@@ -60,12 +63,12 @@ export default function MoneybirdAuthScreen() {
             setConnected(true);
             hapticSuccess();
           } else {
-            Alert.alert('Fout', 'Token uitwisseling mislukt');
+            Alert.alert(t('common.error', 'Error'), t('moneybird.tokenExchangeFailed', 'Token exchange failed'));
           }
         }
       }
     } catch {
-      Alert.alert('Fout', 'Verbinding mislukt');
+      Alert.alert(t('common.error', 'Error'), t('moneybird.connectionFailed', 'Connection failed'));
     } finally {
       setConnecting(false);
     }
@@ -84,18 +87,18 @@ export default function MoneybirdAuthScreen() {
           <Ionicons name="cloud-outline" size={40} color={Palette.hermesOrange} />
         </View>
 
-        <Text style={styles.title}>Moneybird koppelen</Text>
+        <Text style={styles.title}>{t('moneybird.title', 'Connect Moneybird')}</Text>
         <Text style={styles.subtitle}>
-          Synchroniseer facturen, contacten en betalingen automatisch met je boekhouding
+          {t('moneybird.subtitle', 'Automatically sync invoices, contacts and payments with your accounting')}
         </Text>
 
         <View style={styles.features}>
           {[
-            'Facturen automatisch exporteren',
-            'Betalingen synchroniseren',
-            'Contacten importeren',
-            'BTW-aangifte voorbereiden',
-            'Peppol e-facturen versturen',
+            t('moneybird.featureExportInvoices', 'Automatically export invoices'),
+            t('moneybird.featureSyncPayments', 'Sync payments'),
+            t('moneybird.featureImportContacts', 'Import contacts'),
+            t('moneybird.featurePrepareTax', 'Prepare VAT returns'),
+            t('moneybird.featurePeppol', 'Send Peppol e-invoices'),
           ].map((feature) => (
             <View key={feature} style={styles.featureRow}>
               <Ionicons name="checkmark-circle" size={18} color={SemanticColors.feedbackSuccess} />
@@ -110,21 +113,21 @@ export default function MoneybirdAuthScreen() {
           disabled={connecting}
         >
           {connecting ? (
-            <Text style={styles.connectBtnText}>Verbinden...</Text>
+            <Text style={styles.connectBtnText}>{t('moneybird.connecting', 'Connecting...')}</Text>
           ) : connected ? (
             <>
               <Ionicons name="checkmark-circle" size={20} color={SemanticColors.feedbackSuccess} />
               <Text style={[styles.connectBtnText, { color: SemanticColors.feedbackSuccess }]}>
-                Verbonden met Moneybird
+                {t('moneybird.connected', 'Connected to Moneybird')}
               </Text>
             </>
           ) : (
-            <Text style={styles.connectBtnText}>Koppel Moneybird</Text>
+            <Text style={styles.connectBtnText}>{t('moneybird.connect', 'Connect Moneybird')}</Text>
           )}
         </Pressable>
 
         <Text style={styles.privacyText}>
-          Vasco heeft alleen toegang tot facturen en contacten. Je gegevens worden versleuteld opgeslagen.
+          {t('moneybird.privacyNote', 'Vasco only accesses invoices and contacts. Your data is stored encrypted.')}
         </Text>
       </View>
     </View>

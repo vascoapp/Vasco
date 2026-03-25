@@ -5,9 +5,10 @@
 // Docs: https://developers.lexoffice.io/docs/
 // =============================================================================
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getSecureItem, setSecureItem, deleteSecureItem, migrateToSecure } from '../lib/secureStorage';
 
-const STORAGE_KEY = '@vasco_lexoffice';
+const STORAGE_KEY = 'vasco_lexoffice';
+const LEGACY_KEY = '@vasco_lexoffice';
 const API_BASE = 'https://api.lexoffice.io/v1';
 
 // ---------------------------------------------------------------------------
@@ -55,17 +56,18 @@ export interface LexofficeLineItem {
 
 async function getConfig(): Promise<LexofficeConfig | null> {
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    await migrateToSecure(LEGACY_KEY, STORAGE_KEY);
+    const raw = await getSecureItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch { return null; }
 }
 
 export async function saveLexofficeConfig(config: LexofficeConfig): Promise<void> {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+  await setSecureItem(STORAGE_KEY, JSON.stringify(config));
 }
 
 export async function clearLexofficeConfig(): Promise<void> {
-  await AsyncStorage.removeItem(STORAGE_KEY);
+  await deleteSecureItem(STORAGE_KEY);
 }
 
 export async function isConnected(): Promise<boolean> {

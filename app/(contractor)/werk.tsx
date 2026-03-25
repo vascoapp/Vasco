@@ -96,7 +96,7 @@ export default function WerkScreen() {
       {/* Header */}
       <View style={s.header}>
         <Text style={s.headerTitle}>{t('tabs.jobs', 'Werk')}</Text>
-        <Pressable style={s.searchBtn} onPress={() => router.push('/contractor/search' as any)}>
+        <Pressable style={s.searchBtn} onPress={() => router.push('/contractor/search' as any)} accessibilityRole="button" accessibilityLabel={t('a11y.search', 'Search')}>
           <Ionicons name="search" size={20} color={SemanticColors.textPrimary} />
         </Pressable>
       </View>
@@ -119,6 +119,8 @@ export default function WerkScreen() {
               key={btn.route}
               style={({ pressed }) => [s.actionBtn, pressed && { opacity: 0.85 }]}
               onPress={() => router.push(btn.route as any)}
+              accessibilityRole="button"
+              accessibilityLabel={btn.label}
             >
               <Ionicons name={btn.icon} size={20} color={Palette.hermesOrange} />
               <Text style={s.actionBtnText}>{btn.label}</Text>
@@ -175,6 +177,9 @@ export default function WerkScreen() {
                     key={entry.id || i}
                     style={({ pressed }) => [s.todayCard, pressed && { opacity: 0.85 }]}
                     onPress={() => router.push(`/contractor/job/${entry.id}` as any)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${timeStr} ${entry.title || entry.jobTitle || t('jobs.job', 'Job')}`}
+                    accessibilityHint={t('a11y.opensJobDetails', 'Opens job details')}
                   >
                     <View style={s.todayLeft}>
                       <Text style={s.todayTime}>{timeStr}</Text>
@@ -227,7 +232,9 @@ export default function WerkScreen() {
                 style={({ pressed }) => [s.jobCard, pressed && { opacity: 0.85 }]}
                 onPress={() => router.push(`/contractor/job/${job.id}` as any)}
                 onLongPress={() => handleDeleteJob(job.id, job.title || job.description || '')}
+                accessibilityRole="button"
                 accessibilityLabel={`${t('a11y.jobCard', 'Job')}: ${job.title || job.description || ''}`}
+                accessibilityHint={t('a11y.opensJobDetails', 'Opens job details')}
               >
                 <View style={[s.jobAccent, { backgroundColor: Palette.hermesOrange }]} />
                 <View style={s.jobContent}>
@@ -252,6 +259,9 @@ export default function WerkScreen() {
                 style={({ pressed }) => [s.jobCard, pressed && { opacity: 0.85 }]}
                 onPress={() => router.push(`/contractor/job/${job.id}` as any)}
                 onLongPress={() => handleDeleteJob(job.id, job.title || job.description || '')}
+                accessibilityRole="button"
+                accessibilityLabel={`${t('a11y.jobCard', 'Job')}: ${job.title || job.description || ''}`}
+                accessibilityHint={t('a11y.opensJobDetails', 'Opens job details')}
               >
                 <View style={[s.jobAccent, { backgroundColor: SemanticColors.textTertiary }]} />
                 <View style={s.jobContent}>
@@ -328,6 +338,7 @@ export default function WerkScreen() {
       <Pressable
         style={({ pressed }) => [s.fab, pressed && { opacity: 0.9, transform: [{ scale: 0.96 }] }]}
         onPress={() => { hapticSuccess(); router.push('/contractor/tiered-quote' as any); }}
+        accessibilityRole="button"
         accessibilityLabel={t('a11y.newQuote', 'New quote')}
       >
         <Ionicons name="add" size={28} color={Palette.white} />

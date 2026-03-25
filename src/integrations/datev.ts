@@ -87,6 +87,47 @@ export function getDATEVAuthUrl(clientId: string, redirectUri: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Token refresh
+// ---------------------------------------------------------------------------
+
+async function refreshAccessToken(config: DATEVConfig): Promise<DATEVConfig | null> {
+  try {
+    const res = await fetch('https://login.datev.de/openid/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        grant_type: 'refresh_token',
+        refresh_token: config.refreshToken,
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+
+    const newConfig: DATEVConfig = {
+      ...config,
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token ?? config.refreshToken,
+      expiresAt: Date.now() + (data.expires_in ?? 7200) * 1000,
+    };
+    await saveDATEVConfig(newConfig);
+    return newConfig;
+  } catch {
+    return null;
+  }
+}
+
+/** Ensure the stored token is valid; auto-refreshes if expiring within 5 min. */
+export async function ensureValidToken(): Promise<DATEVConfig | null> {
+  const config = await getConfig();
+  if (!config) return null;
+
+  if (Date.now() > config.expiresAt - 300_000) {
+    return refreshAccessToken(config);
+  }
+  return config;
+}
+
+// ---------------------------------------------------------------------------
 // DATEV CSV Export (Buchungsstapel format)
 // ---------------------------------------------------------------------------
 

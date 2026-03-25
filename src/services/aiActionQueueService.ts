@@ -565,6 +565,56 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     if (id) added++;
   }
 
+  // ─── WIRED: Decision reminder — pending customer decisions > 3 days ───
+  try {
+    const trackersRaw = await AsyncStorage.getItem('@vasco_decision_trackers');
+    const trackers: any[] = trackersRaw ? JSON.parse(trackersRaw) : [];
+    for (const tracker of trackers) {
+      if (!tracker || tracker.status !== 'active' || !Array.isArray(tracker.categories)) continue;
+      for (const cat of tracker.categories) {
+        if (!Array.isArray(cat.items)) continue;
+        const pendingItems = cat.items.filter((item: any) => item.status === 'pending');
+        // Check if any pending item is overdue (category dueDate passed by 3+ days, or tracker created 3+ days ago)
+        const dueDate = new Date(cat.dueDate || tracker.createdAt || '').getTime();
+        if (!dueDate || (now - dueDate) < 3 * dayMs) continue;
+        const daysOverdue = Math.ceil((now - dueDate) / dayMs);
+        if (pendingItems.length === 0) continue;
+        const pendingNames = pendingItems.slice(0, 3).map((item: any) => item.name || '').filter(Boolean).join(', ');
+        const customerName = tracker.customerName || '';
+        const jobTitle = tracker.templateName || '';
+        const message = t('automation.decisionReminderMsg', {
+          defaultValue: 'Hi {{customer}}, we need your decisions on {{items}} for {{job}} to keep the project on schedule. Could you let us know?',
+          customer: customerName,
+          items: pendingNames,
+          job: jobTitle,
+        });
+        const id = await addToQueue({
+          type: 'decision_reminder',
+          title: t('automation.decisionReminder', { defaultValue: 'Decision needed: {{customer}}', customer: customerName }),
+          description: `${pendingItems.length} ${t('automation.pendingDecisions', 'pending decisions')} · ${daysOverdue} ${t('automation.daysOverdue', 'days overdue')}`,
+          preparedData: {
+            trackerId: tracker.id,
+            jobId: tracker.jobId,
+            customerId: tracker.customerId,
+            customerName,
+            categoryName: cat.name,
+            pendingItems: pendingNames,
+            template: message,
+          },
+          actionLabel: t('common.send', 'Verstuur'),
+          estimatedImpact: t('automation.preventsDelay', 'Prevents delay'),
+          expiresAt: new Date(now + 3 * dayMs).toISOString(),
+          sourceGeneratorId: `automation_decision_${tracker.id}_${cat.id}`,
+        });
+        if (id) added++;
+        if (added > 25) break;
+      }
+      if (added > 25) break;
+    }
+  } catch {
+    // Decision tracking is best-effort — never block queue population
+  }
+
   // ─── WIRED: Draft quote from repeat customer ───
   // If a customer had a completed job but no active quote, suggest a repeat quote
   const completedCustomerIds = new Set(
@@ -749,6 +799,49 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     // Price intelligence is best-effort — never block queue population
   }
 
+  // ─── Permit renewal for expired/expiring permits ───
+  const certs = (context as any).certs ?? [];
+  for (const cert of certs) {
+    if (!cert || !cert.expiryDate) continue;
+    const expiry = new Date(cert.expiryDate).getTime();
+    if (isNaN(expiry)) continue;
+    const daysLeft = Math.ceil((expiry - now) / dayMs);
+    if (daysLeft > 30 || daysLeft < -365) continue; // Only within 30 days of expiry or up to 1 year expired
+    const id = await addToQueue({
+      type: 'permit_renewal',
+      title: daysLeft < 0
+        ? t('automation.permitExpired', { defaultValue: '{{name}} expired {{days}} days ago', name: cert.name || cert.type || 'Permit', days: Math.abs(daysLeft) })
+        : t('automation.permitExpiring', { defaultValue: '{{name}} expires in {{days}} days', name: cert.name || cert.type || 'Permit', days: daysLeft }),
+      description: cert.issuedBy || cert.authority || '',
+      preparedData: { certId: cert.id, certName: cert.name, expiryDate: cert.expiryDate, renewalUrl: cert.renewalUrl, daysLeft },
+      actionLabel: daysLeft < 0 ? t('automation.renewNow', 'Renew now') : t('automation.planRenewal', 'Plan renewal'),
+      estimatedImpact: t('automation.staysCompliant', 'Stays compliant'),
+      expiresAt: new Date(now + 14 * dayMs).toISOString(),
+      sourceGeneratorId: `automation_permit_renewal_${cert.id || cert.name}`,
+    });
+    if (id) added++;
+    if (added > 30) break;
+  }
+
+  // ─── Safety checklist for site lead jobs ───
+  const siteLeadJobs = (context.allJobs ?? []).filter((j: any) => {
+    const created = new Date(j.createdAt || '').getTime();
+    return created && (now - created) < 2 * dayMs && j.siteId && j.status !== 'completed';
+  });
+  for (const job of siteLeadJobs.slice(0, 2)) {
+    const id = await addToQueue({
+      type: 'safety_checklist',
+      title: t('automation.safetyChecklist', { defaultValue: 'Safety checklist: {{title}}', title: job.title || '' }),
+      description: t('automation.safetyChecklistDesc', 'Review safety requirements before starting work'),
+      preparedData: { jobId: job.id, siteId: job.siteId, trade: job.trade },
+      actionLabel: t('automation.reviewSafety', 'Review'),
+      estimatedImpact: t('automation.safetyCompliance', 'Safety compliance'),
+      expiresAt: new Date(now + 3 * dayMs).toISOString(),
+      sourceGeneratorId: `automation_safety_${job.id}`,
+    });
+    if (id) added++;
+  }
+
   return added;
 }
 
@@ -757,31 +850,169 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
 // ---------------------------------------------------------------------------
 
 function getRequiredPermits(trade: string, country: string): { name: string; authority: string; url: string }[] {
-  const permits: Record<string, Record<string, { name: string; authority: string; url: string }[]>> = {
+  // Common permits required for ALL trades in each country
+  const commonPermits: Record<string, { name: string; authority: string; url: string }[]> = {
+    NL: [
+      { name: 'KvK Registration', authority: 'Kamer van Koophandel', url: 'https://www.kvk.nl' },
+      { name: 'AVB Aansprakelijkheidsverzekering', authority: 'Verbond van Verzekeraars', url: 'https://www.verzekeraars.nl' },
+    ],
+    DE: [
+      { name: 'Handwerksrolle Registration', authority: 'Handwerkskammer', url: 'https://www.handwerkskammer.de' },
+      { name: 'Betriebshaftpflichtversicherung', authority: 'GDV', url: 'https://www.gdv.de' },
+      { name: 'BG Bau Membership', authority: 'Berufsgenossenschaft der Bauwirtschaft', url: 'https://www.bgbau.de' },
+    ],
+    FR: [
+      { name: 'SIRET/SIREN Registration', authority: 'INSEE', url: 'https://www.insee.fr' },
+      { name: 'Chambre des Métiers Registration', authority: 'Chambre de Métiers et de l\'Artisanat', url: 'https://www.artisanat.fr' },
+      { name: 'Assurance Décennale', authority: 'FFSA', url: 'https://www.ffa-assurance.fr' },
+    ],
+    ES: [
+      { name: 'NIF/CIF Registration', authority: 'Agencia Tributaria', url: 'https://www.agenciatributaria.es' },
+      { name: 'RETA Registration', authority: 'Seguridad Social', url: 'https://www.seg-social.es' },
+      { name: 'Seguro de Responsabilidad Civil', authority: 'DGSFP', url: 'https://www.dgsfp.mineco.es' },
+    ],
+    IT: [
+      { name: 'Partita IVA', authority: 'Agenzia delle Entrate', url: 'https://www.agenziaentrate.gov.it' },
+      { name: 'DURC (Regolarità Contributiva)', authority: 'INPS/INAIL', url: 'https://www.inps.it' },
+      { name: 'Iscrizione Albo Artigiani', authority: 'Camera di Commercio', url: 'https://www.camcom.gov.it' },
+    ],
+    UK: [
+      { name: 'Companies House Registration (Ltd) or HMRC Self-Employment', authority: 'HMRC / Companies House', url: 'https://www.gov.uk/set-up-business' },
+      { name: 'Public Liability Insurance', authority: 'FCA', url: 'https://www.fca.org.uk' },
+    ],
+  };
+
+  // Trade-specific permits per country (on top of common permits)
+  const tradePermits: Record<string, Record<string, { name: string; authority: string; url: string }[]>> = {
     plumbing: {
-      NL: [{ name: 'KvK Registration', authority: 'Kamer van Koophandel', url: 'https://kvk.nl' }],
-      DE: [{ name: 'Handwerksrolle', authority: 'Handwerkskammer', url: 'https://hwk.de' }, { name: 'Meisterbrief', authority: 'HWK', url: 'https://hwk.de' }],
-      FR: [{ name: 'Qualification RGE', authority: 'Qualibat', url: 'https://qualibat.com' }],
-      ES: [{ name: 'Licencia de Actividad', authority: 'Ayuntamiento', url: '' }],
-      IT: [{ name: 'DURC', authority: 'INPS/INAIL', url: 'https://inps.it' }],
-      UK: [{ name: 'Gas Safe Registration', authority: 'Gas Safe Register', url: 'https://gassaferegister.co.uk' }],
+      NL: [
+        { name: 'KIWA Certification', authority: 'Kiwa Nederland', url: 'https://www.kiwa.com/nl' },
+        { name: 'Scios Scope 8 (Gas Work)', authority: 'Scios Certificatie', url: 'https://www.scios.nl' },
+      ],
+      DE: [
+        { name: 'Meisterbrief (Anlage A)', authority: 'Handwerkskammer', url: 'https://www.handwerkskammer.de' },
+        { name: 'DVGW Certification', authority: 'Deutscher Verein des Gas- und Wasserfaches', url: 'https://www.dvgw.de' },
+      ],
+      FR: [
+        { name: 'Qualification RGE (Energy Work)', authority: 'Qualibat', url: 'https://www.qualibat.com' },
+      ],
+      ES: [
+        { name: 'Licencia de Actividad', authority: 'Ayuntamiento', url: 'https://administracion.gob.es' },
+        { name: 'Carné de Instalador', authority: 'Comunidad Autónoma', url: 'https://administracion.gob.es' },
+      ],
+      IT: [
+        { name: 'DM 37/08 (Lettera A) — Impianti Idraulici', authority: 'Camera di Commercio', url: 'https://www.camcom.gov.it' },
+      ],
+      UK: [
+        { name: 'City & Guilds Plumbing Qualification', authority: 'City & Guilds', url: 'https://www.cityandguilds.com' },
+        { name: 'Unvented Hot Water Certificate', authority: 'City & Guilds / BPEC', url: 'https://www.bpec.org.uk' },
+      ],
     },
     electrical: {
-      NL: [{ name: 'NEN 1010 Certificate', authority: 'NEN', url: 'https://nen.nl' }],
-      DE: [{ name: 'Elektrofachkraft', authority: 'Handwerkskammer', url: 'https://hwk.de' }],
-      FR: [{ name: 'Consuel Certificate', authority: 'Consuel', url: 'https://consuel.com' }],
-      ES: [{ name: 'REBT Authorization', authority: 'Ministerio', url: '' }],
-      IT: [{ name: 'DM 37/08 Declaration', authority: 'Camera di Commercio', url: '' }],
-      UK: [{ name: 'Part P Competent Person', authority: 'NICEIC/ELECSA', url: 'https://niceic.com' }],
+      NL: [
+        { name: 'NEN 1010 Certification', authority: 'NEN (Nederlands Normalisatie-instituut)', url: 'https://www.nen.nl' },
+      ],
+      DE: [
+        { name: 'Meisterbrief (Anlage A)', authority: 'Handwerkskammer', url: 'https://www.handwerkskammer.de' },
+        { name: 'Elektrofachkraft Certification', authority: 'VDE', url: 'https://www.vde.com' },
+      ],
+      FR: [
+        { name: 'Consuel Certification', authority: 'Consuel', url: 'https://www.consuel.com' },
+        { name: 'Habilitation Electrique', authority: 'INRS', url: 'https://www.inrs.fr' },
+      ],
+      ES: [
+        { name: 'REBT Certification', authority: 'Ministerio de Industria', url: 'https://industria.gob.es' },
+        { name: 'Certificado Instalador Electricista', authority: 'Comunidad Autónoma', url: 'https://administracion.gob.es' },
+      ],
+      IT: [
+        { name: 'DM 37/08 (Lettera A) — Impianti Elettrici', authority: 'Camera di Commercio', url: 'https://www.camcom.gov.it' },
+        { name: 'CEI Certification', authority: 'Comitato Elettrotecnico Italiano', url: 'https://www.ceinorme.it' },
+      ],
+      UK: [
+        { name: 'Part P (Building Regulations) Competent Person', authority: 'DCLG', url: 'https://www.gov.uk/building-regulations-competent-person-schemes' },
+        { name: 'NICEIC or ELECSA Registration', authority: 'NICEIC / ELECSA', url: 'https://www.niceic.com' },
+      ],
     },
     gas: {
-      NL: [{ name: 'SCIOS Scope 8', authority: 'SCIOS', url: 'https://scios.nl' }],
-      DE: [{ name: 'DVGW Certificate', authority: 'DVGW', url: 'https://dvgw.de' }],
-      FR: [{ name: 'PG Qualification', authority: 'Qualigaz', url: 'https://qualigaz.com' }],
-      UK: [{ name: 'Gas Safe Registration', authority: 'Gas Safe Register', url: 'https://gassaferegister.co.uk' }],
+      NL: [
+        { name: 'Scios Scope 8', authority: 'Scios Certificatie', url: 'https://www.scios.nl' },
+        { name: 'F-gassen Certificering', authority: 'STEK / Rijksoverheid', url: 'https://www.rijksoverheid.nl' },
+      ],
+      DE: [
+        { name: 'Meisterbrief (Anlage A)', authority: 'Handwerkskammer', url: 'https://www.handwerkskammer.de' },
+        { name: 'DVGW Certification', authority: 'Deutscher Verein des Gas- und Wasserfaches', url: 'https://www.dvgw.de' },
+      ],
+      FR: [
+        { name: 'Qualigaz Certification', authority: 'Qualigaz', url: 'https://www.qualigaz.com' },
+        { name: 'PG Certification (Professionnel du Gaz)', authority: 'PG / Qualigaz', url: 'https://www.qualigaz.com' },
+      ],
+      ES: [
+        { name: 'Certificado Instalador Gas (Tipo A/B)', authority: 'Ministerio de Industria', url: 'https://industria.gob.es' },
+      ],
+      IT: [
+        { name: 'DM 37/08 (Lettera C) — Impianti Gas', authority: 'Camera di Commercio', url: 'https://www.camcom.gov.it' },
+        { name: 'Certificato Prevenzione Incendi', authority: 'Vigili del Fuoco', url: 'https://www.vigilfuoco.it' },
+      ],
+      UK: [
+        { name: 'Gas Safe Register (MANDATORY)', authority: 'Gas Safe Register', url: 'https://www.gassaferegister.co.uk' },
+      ],
+    },
+    painting: {
+      NL: [
+        { name: 'VCA-VOL Safety Certificate', authority: 'SSVV', url: 'https://www.vca.nl' },
+      ],
+      DE: [
+        { name: 'Meisterbrief (Anlage A)', authority: 'Handwerkskammer', url: 'https://www.handwerkskammer.de' },
+      ],
+      FR: [
+        { name: 'Qualification Qualibat', authority: 'Qualibat', url: 'https://www.qualibat.com' },
+      ],
+      ES: [
+        { name: 'Licencia de Actividad', authority: 'Ayuntamiento', url: 'https://administracion.gob.es' },
+      ],
+      IT: [
+        { name: 'Attestazione SOA (Public Works)', authority: 'Organismi di Attestazione', url: 'https://www.anticorruzione.it' },
+      ],
+      UK: [
+        { name: 'CSCS Card (Construction Skills)', authority: 'CSCS', url: 'https://www.cscs.uk.com' },
+      ],
+    },
+    carpentry: {
+      NL: [
+        { name: 'VCA-VOL Safety Certificate', authority: 'SSVV', url: 'https://www.vca.nl' },
+      ],
+      DE: [
+        { name: 'Meisterbrief (Anlage A)', authority: 'Handwerkskammer', url: 'https://www.handwerkskammer.de' },
+      ],
+      FR: [
+        { name: 'Qualification Qualibat', authority: 'Qualibat', url: 'https://www.qualibat.com' },
+      ],
+      ES: [
+        { name: 'Licencia de Actividad', authority: 'Ayuntamiento', url: 'https://administracion.gob.es' },
+      ],
+      IT: [
+        { name: 'Attestazione SOA (Public Works)', authority: 'Organismi di Attestazione', url: 'https://www.anticorruzione.it' },
+      ],
+      UK: [
+        { name: 'CSCS Card (Construction Skills)', authority: 'CSCS', url: 'https://www.cscs.uk.com' },
+        { name: 'NVQ Level 2+ in Carpentry', authority: 'City & Guilds', url: 'https://www.cityandguilds.com' },
+      ],
+    },
+    general: {
+      NL: [],
+      DE: [
+        { name: 'Gewerbeanmeldung', authority: 'Gewerbeamt', url: 'https://www.gewerbeanmeldung.de' },
+      ],
+      FR: [],
+      ES: [],
+      IT: [],
+      UK: [],
     },
   };
-  return permits[trade]?.[country] ?? permits['plumbing']?.[country] ?? [];
+
+  const common = commonPermits[country] ?? [];
+  const specific = tradePermits[trade]?.[country] ?? tradePermits['general']?.[country] ?? [];
+  return [...common, ...specific];
 }
 
 // ---------------------------------------------------------------------------

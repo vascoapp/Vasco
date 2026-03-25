@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Screen } from '../../src/components/Screen';
 import { useAppState } from '../../src/state/AppState';
 import { SemanticColors } from '../../src/theme/colors';
@@ -11,6 +12,7 @@ import { Typography } from '../../src/theme/typography';
 type Tab = 'quotes' | 'invoices';
 
 export default function WorkScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { quotes, invoices, priceRisks } = useAppState();
   const [activeTab, setActiveTab] = useState<Tab>('quotes');
@@ -38,12 +40,12 @@ export default function WorkScreen() {
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.sectionLabel}>Your pipeline</Text>
-            <Text style={Typography.title}>Work</Text>
+            <Text style={styles.sectionLabel}>{t('tabs.work.yourPipeline', 'Your pipeline')}</Text>
+            <Text style={Typography.title}>{t('tabs.work.work', 'Work')}</Text>
           </View>
           <View style={styles.statsBadge}>
             <Text style={styles.statsText}>
-              {formatCurrency(totalOutstanding)} outstanding
+              {formatCurrency(totalOutstanding)} {t('tabs.work.outstanding', 'outstanding')}
             </Text>
           </View>
         </View>
@@ -52,18 +54,18 @@ export default function WorkScreen() {
         <View style={styles.summaryRow}>
           <View style={styles.summaryCard}>
             <Text style={styles.summaryValue}>{draftQuotes.length}</Text>
-            <Text style={styles.summaryLabel}>Draft quotes</Text>
+            <Text style={styles.summaryLabel}>{t('tabs.work.draftQuotes', 'Draft quotes')}</Text>
           </View>
           <View style={styles.summaryCard}>
             <Text style={styles.summaryValue}>{sentInvoices.length}</Text>
-            <Text style={styles.summaryLabel}>Awaiting payment</Text>
+            <Text style={styles.summaryLabel}>{t('tabs.work.awaitingPayment', 'Awaiting payment')}</Text>
           </View>
           <View style={[styles.summaryCard, overdueInvoices.length > 0 && styles.summaryCardDanger]}>
             <Text style={[styles.summaryValue, overdueInvoices.length > 0 && styles.summaryValueDanger]}>
               {overdueInvoices.length}
             </Text>
             <Text style={[styles.summaryLabel, overdueInvoices.length > 0 && styles.summaryLabelDanger]}>
-              Overdue
+              {t('tabs.work.overdue', 'Overdue')}
             </Text>
           </View>
         </View>
@@ -76,10 +78,10 @@ export default function WorkScreen() {
             </View>
             <View style={styles.alertContent}>
               <Text style={styles.alertTitle}>
-                {formatCurrency(totalOverdue)} overdue
+                {formatCurrency(totalOverdue)} {t('tabs.work.overdue', 'overdue')}
               </Text>
               <Text style={styles.alertSubtitle}>
-                {overdueInvoices.length} invoice{overdueInvoices.length > 1 ? 's' : ''} need attention
+                {t('tabs.work.invoicesNeedAttention', '{{count}} invoice(s) need attention', { count: overdueInvoices.length })}
               </Text>
             </View>
             <Pressable
@@ -88,7 +90,7 @@ export default function WorkScreen() {
                 setActiveTab('invoices');
               }}
             >
-              <Text style={styles.alertActionText}>View</Text>
+              <Text style={styles.alertActionText}>{t('common.view', 'View')}</Text>
             </Pressable>
           </View>
         )}
@@ -100,7 +102,7 @@ export default function WorkScreen() {
             onPress={() => setActiveTab('quotes')}
           >
             <Text style={[styles.tabText, activeTab === 'quotes' && styles.tabTextActive]}>
-              Quotes ({quotes.length})
+              {t('tabs.work.quotesCount', 'Quotes ({{count}})', { count: quotes.length })}
             </Text>
           </Pressable>
           <Pressable
@@ -108,7 +110,7 @@ export default function WorkScreen() {
             onPress={() => setActiveTab('invoices')}
           >
             <Text style={[styles.tabText, activeTab === 'invoices' && styles.tabTextActive]}>
-              Invoices ({invoices.length})
+              {t('tabs.work.invoicesCount', 'Invoices ({{count}})', { count: invoices.length })}
             </Text>
           </Pressable>
         </View>
@@ -118,7 +120,7 @@ export default function WorkScreen() {
           <View style={styles.list}>
             {draftQuotes.length > 0 && (
               <>
-                <Text style={styles.listHeader}>Drafts</Text>
+                <Text style={styles.listHeader}>{t('tabs.work.drafts', 'Drafts')}</Text>
                 {draftQuotes.map((quote) => {
                   const risk = getQuoteRisk(quote.id);
                   return (
@@ -152,7 +154,7 @@ export default function WorkScreen() {
 
             {sentQuotes.length > 0 && (
               <>
-                <Text style={styles.listHeader}>Sent</Text>
+                <Text style={styles.listHeader}>{t('tabs.work.sent', 'Sent')}</Text>
                 {sentQuotes.map((quote) => (
                   <Pressable
                     key={quote.id}
@@ -178,7 +180,7 @@ export default function WorkScreen() {
               style={styles.createButton}
               onPress={() => router.push('/quotes/new')}
             >
-              <Text style={styles.createButtonText}>+ New Quote</Text>
+              <Text style={styles.createButtonText}>+ {t('tabs.work.newQuote', 'New Quote')}</Text>
             </Pressable>
           </View>
         )}
@@ -188,7 +190,7 @@ export default function WorkScreen() {
           <View style={styles.list}>
             {overdueInvoices.length > 0 && (
               <>
-                <Text style={[styles.listHeader, styles.listHeaderDanger]}>Overdue</Text>
+                <Text style={[styles.listHeader, styles.listHeaderDanger]}>{t('tabs.work.overdue', 'Overdue')}</Text>
                 {overdueInvoices.map((invoice) => (
                   <Pressable
                     key={invoice.id}
@@ -204,7 +206,7 @@ export default function WorkScreen() {
                       <View>
                         <Text style={styles.itemTitle}>{invoice.customer}</Text>
                         <Text style={[styles.itemSubtitle, styles.itemSubtitleDanger]}>
-                          {Math.abs(invoice.dueInDays)} days overdue
+                          {t('tabs.work.daysOverdue', '{{days}} days overdue', { days: Math.abs(invoice.dueInDays) })}
                         </Text>
                       </View>
                     </View>
@@ -220,7 +222,7 @@ export default function WorkScreen() {
 
             {sentInvoices.length > 0 && (
               <>
-                <Text style={styles.listHeader}>Awaiting Payment</Text>
+                <Text style={styles.listHeader}>{t('tabs.work.awaitingPayment', 'Awaiting Payment')}</Text>
                 {sentInvoices.map((invoice) => (
                   <Pressable
                     key={invoice.id}
@@ -232,7 +234,7 @@ export default function WorkScreen() {
                       <View>
                         <Text style={styles.itemTitle}>{invoice.customer}</Text>
                         <Text style={styles.itemSubtitle}>
-                          Due in {invoice.dueInDays} days
+                          {t('tabs.work.dueInDays', 'Due in {{days}} days', { days: invoice.dueInDays })}
                         </Text>
                       </View>
                     </View>
@@ -246,7 +248,7 @@ export default function WorkScreen() {
 
             {paidInvoices.length > 0 && (
               <>
-                <Text style={styles.listHeader}>Paid</Text>
+                <Text style={styles.listHeader}>{t('tabs.work.paid', 'Paid')}</Text>
                 {paidInvoices.map((invoice) => (
                   <Pressable
                     key={invoice.id}
@@ -257,7 +259,7 @@ export default function WorkScreen() {
                       <View style={[styles.statusDot, styles.statusPaid]} />
                       <View>
                         <Text style={styles.itemTitle}>{invoice.customer}</Text>
-                        <Text style={styles.itemSubtitle}>Paid</Text>
+                        <Text style={styles.itemSubtitle}>{t('tabs.work.paid', 'Paid')}</Text>
                       </View>
                     </View>
                     <View style={styles.itemRight}>
@@ -274,7 +276,7 @@ export default function WorkScreen() {
               style={styles.createButton}
               onPress={() => router.push('/invoices/new')}
             >
-              <Text style={styles.createButtonText}>+ Create Invoice</Text>
+              <Text style={styles.createButtonText}>+ {t('tabs.work.createInvoice', 'Create Invoice')}</Text>
             </Pressable>
           </View>
         )}

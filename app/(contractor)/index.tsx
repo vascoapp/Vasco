@@ -23,7 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
-import { PAGE_BG } from '../../src/theme/tabStyles';
+import { PAGE_BG, TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
 import { useNotifications } from '../../src/services/notificationService';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { LoadingSkeleton } from '../../src/components/shared/LoadingSkeleton';
@@ -43,6 +43,13 @@ import { useCashFlow } from '../../src/services/cashFlowService';
 // AI services
 import { useSavingsAggregation } from '../../src/services/savingsAggregatorService';
 import { useAutomations, runAllAutomations, getAutomationConfig } from '../../src/services/automationService';
+import { shouldSync, syncAccountingData } from '../../src/services/accountingSyncService';
+import { getAccountingConfig, exportInvoice as exportInvoiceToAccounting } from '../../src/integrations/accounting';
+import type { UnifiedInvoice } from '../../src/integrations/accounting';
+import { generateXRechnungXML } from '../../src/integrations/einvoice';
+import { generateFacturXXml } from '../../src/integrations/einvoice-fr';
+import { generateFacturaeXml } from '../../src/integrations/einvoice-es';
+import { generateFatturaPAXml } from '../../src/integrations/einvoice-it';
 import type { AutomationContext } from '../../src/services/automationService';
 
 // Vasco Guidance + Learning
@@ -60,6 +67,8 @@ import { getCohortBenchmark } from '../../src/intelligence/cloudSync';
 import { useAuth } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
 import { getAcceptanceStatus } from '../../src/services/customerQuoteAcceptanceService';
+import { getProgress, getNextStep, isFullyOnboarded } from '../../src/services/onboardingTrackerService';
+import { getWeatherForecast } from '../../src/services/weatherService';
 
 // ============================================
 // TYPES
@@ -82,7 +91,7 @@ interface JobItem {
 
 function JobCard({ job, onPress, onClockIn }: { job: JobItem; onPress: () => void; onClockIn?: () => void }) {
   return (
-    <Pressable style={({ pressed }) => [styles.jobCard, pressed && { opacity: 0.95 }]} onPress={onPress}>
+    <Pressable style={({ pressed }) => [styles.jobCard, pressed && { opacity: 0.95 }]} onPress={onPress} accessibilityRole="button" accessibilityLabel={`${job.title}, ${job.customer}, ${job.time}`} accessibilityHint="Opens job details">
       <View style={[styles.jobAccent, {
         backgroundColor: job.status === 'active' ? Palette.hermesOrange
           : job.status === 'completed' ? SemanticColors.feedbackSuccess
@@ -122,6 +131,8 @@ function JobCard({ job, onPress, onClockIn }: { job: JobItem; onPress: () => voi
               style={({ pressed }) => [styles.clockInBtn, pressed && { opacity: 0.85 }]}
               onPress={(e) => { e.stopPropagation?.(); onClockIn(); }}
               hitSlop={4}
+              accessibilityRole="button"
+              accessibilityLabel="Start clock for this job"
             >
               <Ionicons name="play" size={12} color={Palette.white} />
               <Text style={styles.clockInBtnText}>Start</Text>
@@ -147,9 +158,11 @@ export default function TodayScreen() {
   const [showAutomations, setShowAutomations] = useState(false);
   const { notifications } = useNotifications();
   const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
-  const { jobs, invoices, quotes, customers, isLoading, addInvoiceFromJob, convertQuoteToJob } = useAppState();
+  const { jobs, invoices, quotes, customers, isLoading, addInvoiceFromJob, convertQuoteToJob, updateInvoice } = useAppState();
   const [actionStats, setActionStats] = useState<{ total: number; successful: number; positiveOutcomes: number } | null>(null);
   useEffect(() => { getActionStats().then(setActionStats).catch(() => {}); }, []);
+  // Fetch weather on app open (populates module-level cache for weatherScheduleGenerator)
+  useEffect(() => { getWeatherForecast(user?.country || 'NL').catch(() => {}); }, []);
   const aiQueue = useAIQueue();
   const [briefing, setBriefing] = useState<MorningBriefing | null>(null);
   // Generate morning briefing + populate AI queue
@@ -194,6 +207,13 @@ export default function TodayScreen() {
     }).catch(() => {});
   }, []);
 
+  // Sync accounting data if connected and due (>1 hour since last sync)
+  useEffect(() => {
+    shouldSync().then(due => {
+      if (due) syncAccountingData(invoices).catch(() => {});
+    }).catch(() => {});
+  }, []);
+
   // Unified clock-in timer — shared with Timesheet + Job Detail
   const timer = useClockIn();
   const clockedInJobId = timer.jobId;
@@ -229,6 +249,21 @@ export default function TodayScreen() {
   // AI services
   const savings = useSavingsAggregation();
   const { user } = useAuth();
+
+  // Onboarding progress
+  const [onboardingDone, setOnboardingDone] = useState(true);
+  const [nextStep, setNextStep] = useState<{ step: string; action: string; route: string } | null>(null);
+  const [onboardingProgress, setOnboardingProgress] = useState(0);
+
+  useEffect(() => {
+    isFullyOnboarded().then(done => {
+      setOnboardingDone(done);
+      if (!done) {
+        getProgress().then(p => setOnboardingProgress(p.percentage));
+        getNextStep().then(s => setNextStep(s));
+      }
+    });
+  }, []);
 
   // Cohort benchmark (async, non-blocking)
   const [dsoBenchmark, setDsoBenchmark] = useState<{ median: number } | null>(null);
@@ -359,10 +394,10 @@ export default function TodayScreen() {
           <Text style={styles.date}>{formattedDate}</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 8, flexShrink: 0 }}>
-          <Pressable style={styles.profileButton} onPress={() => router.push('/contractor/search' as any)} accessibilityLabel="Zoeken">
+          <Pressable style={styles.profileButton} onPress={() => router.push('/contractor/search' as any)} accessibilityRole="button" accessibilityLabel={t('a11y.search', 'Search')}>
             <Ionicons name="search" size={20} color={SemanticColors.textPrimary} />
           </Pressable>
-          <Pressable style={styles.profileButton} onPress={() => router.push('/contractor/notifications' as any)} accessibilityLabel="Meldingen">
+          <Pressable style={styles.profileButton} onPress={() => router.push('/contractor/notifications' as any)} accessibilityRole="button" accessibilityLabel={t('a11y.notifications', 'Notifications')}>
             <Ionicons name="notifications-outline" size={20} color={SemanticColors.textPrimary} />
             {unreadCount > 0 && (
               <View style={styles.notifBadge}>
@@ -370,7 +405,7 @@ export default function TodayScreen() {
               </View>
             )}
           </Pressable>
-          <Pressable style={styles.profileButton} onPress={() => router.push('/contractor/profile' as any)} accessibilityLabel="Profiel">
+          <Pressable style={styles.profileButton} onPress={() => router.push('/contractor/profile' as any)} accessibilityRole="button" accessibilityLabel={t('a11y.profile', 'Profile')}>
             <Ionicons name="person" size={22} color={Palette.hermesOrange} />
           </Pressable>
         </View>
@@ -381,6 +416,7 @@ export default function TodayScreen() {
         <Pressable
           style={styles.timerStrip}
           onPress={() => router.push(`/contractor/job/${clockedInJobId}` as any)}
+          accessibilityRole="button"
           accessibilityLabel={t('a11y.clockInTimer', 'Clock-in timer, tap to view job')}
         >
           <View style={styles.timerPulse} />
@@ -393,6 +429,8 @@ export default function TodayScreen() {
               hapticSuccess();
               timer.clockOut();
             }}
+            accessibilityRole="button"
+            accessibilityLabel={t('a11y.stopTimer', 'Stop timer')}
           >
             <Ionicons name="stop" size={14} color={Palette.white} />
             <Text style={styles.timerStopText}>Stop</Text>
@@ -518,26 +556,101 @@ export default function TodayScreen() {
                   }
                   break;
 
-                // Material ordering — shareable order message
+                // Material ordering — create PO + share with supplier
                 case 'reorder_materials': {
-                  const materialList = item.preparedData?.materialList || '';
-                  const totalCost = item.preparedData?.totalCost ?? 0;
-                  const orderMsg = `${t('vasco.materialOrder', 'Material Order')}\n\n${materialList}\n\n${t('vasco.total', 'Total')}: €${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+                  const materials = item.preparedData?.materials || [];
+                  const jobTitle = item.preparedData?.jobTitle || item.title || '';
+                  const supplierName = item.preparedData?.supplierName || t('vasco.supplier', 'Supplier');
+                  const supplierId = item.preparedData?.supplierId || 'custom';
+
+                  // Build line items from preparedData
+                  const lineItems: Array<{ name: string; quantity: number; unitPrice: number; unit: string }> = [];
+                  let totalCost = 0;
+
+                  if (materials.length > 0) {
+                    for (const mat of materials) {
+                      const qty = mat.quantity ?? 1;
+                      const price = mat.unitPrice ?? mat.price ?? 0;
+                      lineItems.push({
+                        name: mat.name || mat.description || 'Material',
+                        quantity: qty,
+                        unitPrice: price,
+                        unit: mat.unit || 'stuk',
+                      });
+                      totalCost += qty * price;
+                    }
+                  } else {
+                    // Fallback: parse from materialList string
+                    totalCost = item.preparedData?.totalCost ?? 0;
+                  }
+
+                  // Build shareable order message
+                  const materialLines = lineItems.length > 0
+                    ? lineItems.map(li => `- ${li.quantity}x ${li.name} (€${li.unitPrice.toFixed(2)}/${li.unit})`).join('\n')
+                    : (item.preparedData?.materialList || '');
+                  const orderMsg = `${t('vasco.materialOrder', 'Material Order')}${jobTitle ? ` — ${jobTitle}` : ''}\n\n${materialLines}\n\n${t('vasco.total', 'Total')}: €${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}\n\n${t('vasco.confirmAvailability', 'Please confirm availability.')}`;
+
                   Alert.alert(
                     item.title || t('vasco.orderMaterials', 'Order materials'),
                     orderMsg,
                     [
                       {
-                        text: t('vasco.sendToSupplier', 'Send to supplier'),
+                        text: t('vasco.createPOAndSend', 'Create PO & send'),
                         onPress: async () => {
                           try {
-                            await Share.share({ message: orderMsg, title: t('vasco.materialOrder', 'Material Order') });
+                            // Create PO via purchaseOrderService
+                            const { purchaseOrderService } = await import('../../src/services/purchaseOrderService');
+                            const poItems = lineItems.map(li => ({
+                              description: li.name,
+                              quantity: li.quantity,
+                              unit: li.unit,
+                              unitPrice: li.unitPrice,
+                              jobId: item.preparedData?.jobId,
+                            }));
+                            const po = purchaseOrderService.createOrder(
+                              supplierId,
+                              supplierName,
+                              poItems,
+                              item.preparedData?.jobId,
+                              jobTitle,
+                              `Auto-created from EVE queue item ${item.id}`,
+                            );
+
+                            // Share with supplier via WhatsApp/email
+                            await Share.share({
+                              message: orderMsg,
+                              title: `${t('vasco.materialOrder', 'Material Order')} ${po.poNumber}`,
+                            });
+
+                            // Mark queue item as approved
                             aiQueue.approve(id);
                             hapticSuccess();
-                          } catch {}
+
+                            Alert.alert(
+                              t('vasco.poCreated', 'PO created'),
+                              t('vasco.poCreatedDesc', {
+                                defaultValue: '{{poNumber}} (€{{total}}) created and shared with {{supplier}}.',
+                                poNumber: po.poNumber,
+                                total: po.total.toFixed(2),
+                                supplier: supplierName,
+                              }),
+                            );
+                          } catch (e: any) {
+                            Alert.alert(t('common.error', 'Error'), e?.message || t('vasco.actionFailed', 'Action failed'));
+                          }
                         },
                       },
                       { text: t('vasco.viewPO', 'View PO screen'), onPress: () => router.push('/contractor/purchase-orders' as any) },
+                      {
+                        text: t('vasco.browseCatalog', 'Browse catalog'),
+                        onPress: () => {
+                          const firstMat = materials[0]?.name || materials[0]?.description || '';
+                          router.push(firstMat
+                            ? `/contractor/material-search?q=${encodeURIComponent(firstMat)}` as any
+                            : '/contractor/material-search' as any);
+                        },
+                      },
+                      { text: t('common.cancel', 'Cancel'), style: 'cancel' },
                     ],
                   );
                   return; // Don't auto-approve — user picks action
@@ -550,17 +663,34 @@ export default function TodayScreen() {
                   router.push('/contractor/market-prices' as any);
                   break;
 
-                // Tax prep — generate and share period-end summary
+                // Tax prep — generate period-end summary + CSV export
                 case 'tax_prep': {
                   const pkg = generatePeriodEndPackage({
                     invoices, jobs, quotes,
                     country: user?.country || 'NL',
                     quarter: item.preparedData?.quarter,
                   });
-                  const exportText = formatPeriodEndForExport(pkg);
-                  try {
-                    await Share.share({ message: exportText, title: `${pkg.quarter} Finance Summary` });
-                  } catch {}
+                  // Determine quarter month names for display
+                  const quarterNum = parseInt((pkg.quarter || '').replace(/Q(\d).*/, '$1'), 10) || 1;
+                  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                  const startMonthIdx = (quarterNum - 1) * 3;
+                  const periodLabel = `${pkg.quarter}: ${monthNames[startMonthIdx]}-${monthNames[startMonthIdx + 2]}`;
+                  // Export CSV data via dataExportService
+                  const { exportAllData: doExport } = await import('../../src/services/dataExportService');
+                  const result = await doExport('csv', { userId: user?.id, email: user?.email });
+                  if (result.success) {
+                    Alert.alert(
+                      t('automation.taxExportSuccess', { defaultValue: '{{period}} export complete', period: periodLabel }),
+                      t('automation.taxExportDetail', {
+                        defaultValue: '{{count}} invoices · €{{total}} total revenue exported for your accountant.',
+                        count: pkg.revenue.invoiceCount,
+                        total: pkg.revenue.totalInvoiced.toLocaleString(undefined, { maximumFractionDigits: 0 }),
+                      }),
+                    );
+                  } else {
+                    Alert.alert(t('common.error', 'Error'), result.error || t('vasco.actionFailed', 'Export failed'));
+                    return; // Don't approve on failure
+                  }
                   break;
                 }
 
@@ -579,25 +709,174 @@ export default function TodayScreen() {
                   router.push('/contractor/tiered-quote' as any);
                   break;
 
-                // Accounting export — generate CSV summary and share
+                // Accounting export — try accounting provider API, fallback to CSV share
                 case 'accounting_export': {
                   const exportIds = item.preparedData?.invoiceIds || [];
                   const exportInvoices = invoices.filter((inv: any) => exportIds.includes(inv.id));
-                  const csvLines = ['Invoice ID,Customer,Amount,Status,Date'];
-                  for (const inv of exportInvoices) {
-                    csvLines.push(`${inv.id},${inv.customer || ''},${inv.amount || 0},${inv.status},${inv.createdAt || ''}`);
+                  if (exportInvoices.length === 0) break;
+
+                  const acctConfig = await getAccountingConfig();
+                  if (acctConfig.connected && acctConfig.provider !== 'none') {
+                    // Connected — export via accounting provider API
+                    let exported = 0;
+                    const errors: string[] = [];
+                    for (const inv of exportInvoices) {
+                      const unified: UnifiedInvoice = {
+                        reference: inv.reference || inv.id,
+                        invoiceDate: inv.createdAt || new Date().toISOString(),
+                        dueDate: inv.dueDate || new Date(Date.now() + 14 * 86400000).toISOString(),
+                        lineItems: [{ description: inv.job || 'Services', quantity: 1, unitPrice: inv.amount || 0, vatRate: 21, totalExclVat: inv.amount || 0 }],
+                        currency: 'EUR',
+                        status: inv.status as any,
+                        totalExclVat: inv.amount || 0,
+                        totalInclVat: (inv.amount || 0) * 1.21,
+                      };
+                      const result = await exportInvoiceToAccounting(unified);
+                      if (result.success) {
+                        exported++;
+                        updateInvoice(inv.id, { exportedAt: new Date().toISOString() });
+                      } else {
+                        errors.push(`${inv.customer || inv.id}: ${result.error || 'failed'}`);
+                      }
+                    }
+                    if (errors.length > 0) {
+                      Alert.alert(
+                        t('vasco.exportPartial', 'Export partially completed'),
+                        `${exported} ${t('vasco.exported', 'exported')}, ${errors.length} ${t('vasco.failed', 'failed')}:\n${errors.join('\n')}`,
+                      );
+                    } else {
+                      Alert.alert(
+                        t('vasco.exportComplete', 'Export complete'),
+                        t('vasco.exportedCount', { defaultValue: '{{count}} invoices exported to {{provider}}', count: exported, provider: acctConfig.provider }),
+                      );
+                    }
+                  } else {
+                    // Not connected — fallback to CSV share
+                    const csvLines = ['Invoice ID,Customer,Amount,Status,Date'];
+                    for (const inv of exportInvoices) {
+                      csvLines.push(`${inv.id},${inv.customer || ''},${inv.amount || 0},${inv.status},${inv.createdAt || ''}`);
+                    }
+                    const csvText = csvLines.join('\n');
+                    try {
+                      await Share.share({ message: csvText, title: t('automation.accountingExport', { defaultValue: 'Accounting Export' }) });
+                    } catch {}
+                    // Mark as exported even for CSV share
+                    for (const inv of exportInvoices) {
+                      updateInvoice(inv.id, { exportedAt: new Date().toISOString() });
+                    }
                   }
-                  const csvText = csvLines.join('\n');
-                  try {
-                    await Share.share({ message: csvText, title: t('automation.accountingExport', { defaultValue: 'Accounting Export' }) });
-                  } catch {}
                   break;
                 }
 
-                // E-invoice submission — navigate to invoices with format context
-                case 'einvoice_submit':
-                  router.push('/(contractor)/facturen' as any);
+                // E-invoice submission — generate XML per country format and share
+                case 'einvoice_submit': {
+                  const einvFormat = item.preparedData?.format as string;
+                  const einvInvoiceId = item.preparedData?.invoiceId as string;
+                  const einvCountry = item.preparedData?.country as string;
+                  const einvInvoice = invoices.find((inv: any) => inv.id === einvInvoiceId);
+                  if (!einvInvoice) {
+                    Alert.alert(t('common.error', 'Error'), t('vasco.invoiceNotFound', 'Invoice not found'));
+                    return;
+                  }
+
+                  let xmlContent = '';
+                  let xmlTitle = '';
+
+                  try {
+                    if (einvFormat === 'XRechnung' || einvCountry === 'DE') {
+                      xmlContent = generateXRechnungXML({
+                        sellerName: user?.name || 'Contractor',
+                        sellerAddress: '',
+                        sellerVatId: '',
+                        buyerName: einvInvoice.customer || '',
+                        buyerAddress: '',
+                        invoiceNumber: einvInvoice.reference || einvInvoice.id,
+                        invoiceDate: einvInvoice.createdAt || new Date().toISOString().split('T')[0],
+                        dueDate: einvInvoice.dueDate || new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+                        currency: 'EUR',
+                        lineItems: [{ description: einvInvoice.job || 'Services', quantity: 1, unitCode: 'C62', unitPrice: einvInvoice.amount || 0, vatRate: 19, vatAmount: (einvInvoice.amount || 0) * 0.19, lineTotal: einvInvoice.amount || 0 }],
+                        totalNet: einvInvoice.amount || 0,
+                        totalVat: (einvInvoice.amount || 0) * 0.19,
+                        totalGross: (einvInvoice.amount || 0) * 1.19,
+                      });
+                      xmlTitle = `XRechnung_${einvInvoice.reference || einvInvoice.id}.xml`;
+                    } else if (einvFormat === 'Factur-X' || einvFormat === 'FacturX' || einvCountry === 'FR') {
+                      xmlContent = generateFacturXXml({
+                        sellerName: user?.name || 'Contractor',
+                        sellerAddress: '',
+                        sellerCity: '',
+                        sellerPostalCode: '',
+                        sellerCountry: 'FR',
+                        sellerVatId: '',
+                        sellerSiret: '',
+                        buyerName: einvInvoice.customer || '',
+                        buyerAddress: '',
+                        buyerCity: '',
+                        buyerPostalCode: '',
+                        buyerCountry: 'FR',
+                        invoiceNumber: einvInvoice.reference || einvInvoice.id,
+                        invoiceDate: einvInvoice.createdAt || new Date().toISOString().split('T')[0],
+                        dueDate: einvInvoice.dueDate || new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+                        currency: 'EUR',
+                        lineItems: [{ description: einvInvoice.job || 'Services', quantity: 1, unitCode: 'C62', unitPrice: einvInvoice.amount || 0, vatRate: 20, vatCategoryCode: 'S', vatAmount: (einvInvoice.amount || 0) * 0.20, lineTotal: einvInvoice.amount || 0 }],
+                        totalNet: einvInvoice.amount || 0,
+                        totalVat: (einvInvoice.amount || 0) * 0.20,
+                        totalGross: (einvInvoice.amount || 0) * 1.20,
+                      });
+                      xmlTitle = `FacturX_${einvInvoice.reference || einvInvoice.id}.xml`;
+                    } else if (einvFormat === 'Facturae' || einvCountry === 'ES') {
+                      xmlContent = generateFacturaeXml({
+                        sellerName: user?.name || 'Contractor',
+                        sellerNif: '',
+                        sellerAddress: '',
+                        sellerCity: '',
+                        sellerPostalCode: '',
+                        sellerProvince: '',
+                        sellerCountry: 'ESP',
+                        sellerPersonType: 'F',
+                        sellerRegimeFiscal: '01',
+                        buyerName: einvInvoice.customer || '',
+                        buyerNif: '',
+                        buyerAddress: '',
+                        buyerCity: '',
+                        buyerPostalCode: '',
+                        buyerProvince: '',
+                        buyerCountry: 'ESP',
+                        buyerPersonType: 'F',
+                        invoiceNumber: einvInvoice.reference || einvInvoice.id,
+                        invoiceDate: einvInvoice.createdAt || new Date().toISOString().split('T')[0],
+                        dueDate: einvInvoice.dueDate || new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+                        currency: 'EUR',
+                        lineItems: [{ description: einvInvoice.job || 'Services', quantity: 1, unitPrice: einvInvoice.amount || 0, lineTotal: einvInvoice.amount || 0, ivaRate: 21, ivaAmount: (einvInvoice.amount || 0) * 0.21 }],
+                        totalNet: einvInvoice.amount || 0,
+                        totalVat: (einvInvoice.amount || 0) * 0.21,
+                        totalIrpf: 0,
+                        totalGross: (einvInvoice.amount || 0) * 1.21,
+                      });
+                      xmlTitle = `Facturae_${einvInvoice.reference || einvInvoice.id}.xml`;
+                    } else if (einvFormat === 'FatturaPA' || einvCountry === 'IT') {
+                      // Italy: navigate to FatturaInCloud (SDI submission handled by provider)
+                      Alert.alert(
+                        t('vasco.fatturaPa', 'FatturaPA (SDI)'),
+                        t('vasco.fatturaPaDesc', 'Italian e-invoices must be submitted via SDI. Open your Fatture in Cloud account to submit.'),
+                        [
+                          { text: t('vasco.openProvider', 'Open provider'), onPress: () => Linking.openURL('https://secure.fattureincloud.it/').catch(() => {}) },
+                          { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+                        ],
+                      );
+                      return; // Don't auto-approve
+                    }
+
+                    if (xmlContent) {
+                      await Share.share({ message: xmlContent, title: xmlTitle });
+                      updateInvoice(einvInvoiceId, { einvoiceSubmitted: new Date().toISOString() });
+                    }
+                  } catch (xmlErr: any) {
+                    Alert.alert(t('common.error', 'Error'), xmlErr.message || t('vasco.einvoiceFailed', 'Could not generate e-invoice'));
+                    return; // Don't approve on error
+                  }
                   break;
+                }
 
                 // Shareable types (progress_note, draft_reminder, draft_followup,
                 // quote_expiry, satisfaction_survey, decision_reminder) are handled
@@ -617,6 +896,23 @@ export default function TodayScreen() {
             onInsightAction={handleGuidanceAction}
           />
         </FadeIn>
+
+        {/* Onboarding progress nudge */}
+        {!onboardingDone && nextStep && (
+          <Pressable
+            style={{ backgroundColor: Palette.hermesOrange + '08', borderRadius: RADIUS.lg, padding: GRID.md, marginHorizontal: SafeArea.side, marginBottom: GRID.md, flexDirection: 'row', alignItems: 'center', gap: GRID.sm }}
+            onPress={() => router.push(nextStep.route as any)}
+          >
+            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: Palette.hermesOrange + '15', alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 14, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange }}>{onboardingProgress}%</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary }}>{t('onboarding.setupProgress', 'Complete your setup')}</Text>
+              <Text style={{ fontSize: TYPE.tinySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary }}>{nextStep.action}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+          </Pressable>
+        )}
 
         {/* First job banner for new users */}
         {pipelineCount === 0 && todayJobs.length === 0 && (

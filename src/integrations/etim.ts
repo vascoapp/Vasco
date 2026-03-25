@@ -7,10 +7,12 @@
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getSecureItem, setSecureItem } from '../lib/secureStorage';
 
 const API_BASE = 'https://etimapi.etim-international.com';
 const CACHE_KEY = '@vasco_etim_cache';
 const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+const TOKEN_SECURE_KEY = 'vasco_etim_token';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -68,8 +70,25 @@ let accessToken: string | null = null;
 let tokenExpiry = 0;
 
 async function getAccessToken(config: EtimConfig): Promise<string> {
+  // 1. In-memory cache (fastest)
   if (accessToken && Date.now() < tokenExpiry) return accessToken;
 
+  // 2. Try loading from SecureStore (survives app restart)
+  try {
+    const stored = await getSecureItem(TOKEN_SECURE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored) as { token: string; expiry: number };
+      if (parsed.token && Date.now() < parsed.expiry) {
+        accessToken = parsed.token;
+        tokenExpiry = parsed.expiry;
+        return accessToken;
+      }
+    }
+  } catch {
+    // SecureStore read failed — fall through to fresh auth
+  }
+
+  // 3. Fetch fresh token from API
   const response = await fetch(`${API_BASE}/oauth/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -85,6 +104,17 @@ async function getAccessToken(config: EtimConfig): Promise<string> {
   const data = await response.json();
   accessToken = data.access_token;
   tokenExpiry = Date.now() + (data.expires_in - 60) * 1000; // refresh 60s early
+
+  // Persist to SecureStore for next app launch
+  try {
+    await setSecureItem(TOKEN_SECURE_KEY, JSON.stringify({
+      token: accessToken,
+      expiry: tokenExpiry,
+    }));
+  } catch {
+    // SecureStore write failure is non-critical — in-memory cache still works
+  }
+
   return accessToken!;
 }
 

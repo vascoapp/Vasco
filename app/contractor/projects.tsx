@@ -18,17 +18,18 @@ import type { Project, ProjectStatus } from '../../src/types/project';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-const STATUS_CONFIG: Record<ProjectStatus, { label: string; color: string; icon: IconName }> = {
-  planning: { label: 'Planning', color: SemanticColors.textTertiary, icon: 'document-text-outline' },
-  active: { label: 'Actief', color: Palette.hermesOrange, icon: 'hammer-outline' },
-  on_hold: { label: 'Gepauzeerd', color: SemanticColors.feedbackWarning, icon: 'pause-circle-outline' },
-  completed: { label: 'Afgerond', color: SemanticColors.feedbackSuccess, icon: 'checkmark-circle-outline' },
-  cancelled: { label: 'Geannuleerd', color: SemanticColors.feedbackError, icon: 'close-circle-outline' },
-};
+const getStatusConfig = (t: (key: string, fallback: string) => string): Record<ProjectStatus, { label: string; color: string; icon: IconName }> => ({
+  planning: { label: t('contractor.projects.statusPlanning', 'Planning'), color: SemanticColors.textTertiary, icon: 'document-text-outline' },
+  active: { label: t('contractor.projects.statusActive', 'Active'), color: Palette.hermesOrange, icon: 'hammer-outline' },
+  on_hold: { label: t('contractor.projects.statusOnHold', 'On hold'), color: SemanticColors.feedbackWarning, icon: 'pause-circle-outline' },
+  completed: { label: t('contractor.projects.statusCompleted', 'Completed'), color: SemanticColors.feedbackSuccess, icon: 'checkmark-circle-outline' },
+  cancelled: { label: t('contractor.projects.statusCancelled', 'Cancelled'), color: SemanticColors.feedbackError, icon: 'close-circle-outline' },
+});
 
 export default function ProjectsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const STATUS_CONFIG = useMemo(() => getStatusConfig(t), [t]);
   const { projects, addProject, jobs, customers, getProjectPnL } = useAppState();
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -83,7 +84,7 @@ export default function ProjectsScreen() {
             <View style={{ flex: 1 }}>
               <Text style={styles.projectTitle} numberOfLines={1}>{project.title}</Text>
               <Text style={styles.projectCustomer} numberOfLines={1}>
-                {customer?.name ?? project.customerName ?? 'Geen klant'}
+                {customer?.name ?? project.customerName ?? t('contractor.projects.noCustomer', 'No customer')}
               </Text>
             </View>
             <View style={[styles.statusBadge, { backgroundColor: cfg.color + '15' }]}>
@@ -95,19 +96,19 @@ export default function ProjectsScreen() {
           <View style={styles.metricsRow}>
             <View style={styles.metric}>
               <Text style={styles.metricValue}>{jobCount}</Text>
-              <Text style={styles.metricLabel}>Klussen</Text>
+              <Text style={styles.metricLabel}>{t('contractor.projects.jobs', 'Jobs')}</Text>
             </View>
             <View style={styles.metricDivider} />
             <View style={styles.metric}>
               <Text style={styles.metricValue}>€{(pnl.revenue || project.totalBudget).toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
-              <Text style={styles.metricLabel}>Budget</Text>
+              <Text style={styles.metricLabel}>{t('contractor.projects.budget', 'Budget')}</Text>
             </View>
             <View style={styles.metricDivider} />
             <View style={styles.metric}>
               <Text style={[styles.metricValue, { color: pnl.grossMargin >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
                 {pnl.grossMargin}%
               </Text>
-              <Text style={styles.metricLabel}>Marge</Text>
+              <Text style={styles.metricLabel}>{t('contractor.projects.margin', 'Margin')}</Text>
             </View>
           </View>
         </View>
@@ -121,7 +122,7 @@ export default function ProjectsScreen() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
-        <Text style={styles.headerTitle}>Projecten</Text>
+        <Text style={styles.headerTitle}>{t('contractor.projects.title', 'Projects')}</Text>
         <Pressable onPress={() => setShowCreate(true)} hitSlop={8}>
           <Ionicons name="add-circle" size={28} color={Palette.hermesOrange} />
         </Pressable>
@@ -137,10 +138,10 @@ export default function ProjectsScreen() {
           <FadeIn delay={0}>
             <View style={styles.empty}>
               <Ionicons name="folder-open-outline" size={48} color={SemanticColors.textTertiary} />
-              <Text style={styles.emptyTitle}>Geen projecten</Text>
-              <Text style={styles.emptyDesc}>Maak een project aan om meerdere klussen te groeperen</Text>
+              <Text style={styles.emptyTitle}>{t('contractor.projects.emptyTitle', 'No projects')}</Text>
+              <Text style={styles.emptyDesc}>{t('contractor.projects.emptyDesc', 'Create a project to group multiple jobs')}</Text>
               <Pressable style={styles.emptyBtn} onPress={() => setShowCreate(true)}>
-                <Text style={styles.emptyBtnText}>Nieuw project</Text>
+                <Text style={styles.emptyBtnText}>{t('contractor.projects.newProject', 'New project')}</Text>
               </Pressable>
             </View>
           </FadeIn>
@@ -148,13 +149,13 @@ export default function ProjectsScreen() {
           <>
             {activeProjects.length > 0 && (
               <FadeIn delay={0}>
-                <Text style={styles.sectionTitle}>Actief ({activeProjects.length})</Text>
+                <Text style={styles.sectionTitle}>{t('contractor.projects.statusActive', 'Active')} ({activeProjects.length})</Text>
                 {activeProjects.map(renderProject)}
               </FadeIn>
             )}
             {completedProjects.length > 0 && (
               <FadeIn delay={100}>
-                <Text style={styles.sectionTitle}>Afgerond ({completedProjects.length})</Text>
+                <Text style={styles.sectionTitle}>{t('contractor.projects.statusCompleted', 'Completed')} ({completedProjects.length})</Text>
                 {completedProjects.map(renderProject)}
               </FadeIn>
             )}
@@ -167,25 +168,25 @@ export default function ProjectsScreen() {
       <Modal visible={showCreate} transparent animationType="slide">
         <Pressable style={styles.modalOverlay} onPress={() => setShowCreate(false)}>
           <Pressable style={styles.modalContent} onPress={() => {}}>
-            <Text style={styles.modalTitle}>Nieuw project</Text>
+            <Text style={styles.modalTitle}>{t('contractor.projects.newProject', 'New project')}</Text>
             <View style={styles.form}>
               <TextInput
                 style={styles.input}
-                placeholder="Projectnaam (bijv. Badkamer renovatie)"
+                placeholder={t('contractor.projects.projectNamePlaceholder', 'Project name (e.g. Bathroom renovation)')}
                 placeholderTextColor={SemanticColors.textTertiary}
                 value={newTitle}
                 onChangeText={setNewTitle}
               />
               <TextInput
                 style={styles.input}
-                placeholder="Klantnaam (optioneel)"
+                placeholder={t('contractor.projects.customerNamePlaceholder', 'Customer name (optional)')}
                 placeholderTextColor={SemanticColors.textTertiary}
                 value={newCustomer}
                 onChangeText={setNewCustomer}
               />
               <TextInput
                 style={styles.input}
-                placeholder="Budget €"
+                placeholder={t('contractor.projects.budgetPlaceholder', 'Budget €')}
                 placeholderTextColor={SemanticColors.textTertiary}
                 value={newBudget}
                 onChangeText={setNewBudget}
@@ -196,7 +197,7 @@ export default function ProjectsScreen() {
                 onPress={handleCreate}
                 disabled={!newTitle.trim()}
               >
-                <Text style={styles.createBtnText}>Project aanmaken</Text>
+                <Text style={styles.createBtnText}>{t('contractor.projects.createProject', 'Create project')}</Text>
               </Pressable>
             </View>
           </Pressable>

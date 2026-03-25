@@ -1,6 +1,7 @@
 import { Link, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Swipeable } from 'react-native-gesture-handler';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
 import { Screen } from '../../src/components/Screen';
@@ -15,6 +16,7 @@ const formatCurrency = (amount: number) =>
   `€${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
 export default function InvoicesScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { invoices, removeInvoice, isLoading, refreshData } = useAppState();
   const [refreshing, setRefreshing] = useState(false);
@@ -34,14 +36,14 @@ export default function InvoicesScreen() {
       >
         <View style={styles.header}>
           <View>
-            <Text style={styles.sectionLabel}>Invoices</Text>
-            <Text style={Typography.title}>Outstanding</Text>
+            <Text style={styles.sectionLabel}>{t('tabs.invoices.invoices', 'Invoices')}</Text>
+            <Text style={Typography.title}>{t('tabs.invoices.outstanding', 'Outstanding')}</Text>
           </View>
           <View style={styles.headerActions}>
             <Pressable style={styles.refreshButton} onPress={onRefresh}>
-              <Text style={styles.refreshText}>Refresh</Text>
+              <Text style={styles.refreshText}>{t('tabs.invoices.refresh', 'Refresh')}</Text>
             </Pressable>
-            <PrimaryButton label="Create invoice" onPress={() => router.push('/invoices/new')} />
+            <PrimaryButton label={t('tabs.invoices.createInvoice', 'Create invoice')} onPress={() => router.push('/invoices/new')} />
           </View>
         </View>
 
@@ -55,7 +57,7 @@ export default function InvoicesScreen() {
               key={invoice.id}
               renderRightActions={() => (
                 <Pressable style={styles.swipeAction} onPress={() => removeInvoice(invoice.id)}>
-                  <Text style={styles.swipeActionText}>Delete</Text>
+                  <Text style={styles.swipeActionText}>{t('common.delete', 'Delete')}</Text>
                 </Pressable>
               )}
             >
@@ -73,7 +75,7 @@ export default function InvoicesScreen() {
                   </Pressable>
                 </Link>
                 <Pressable style={styles.deleteButton} onPress={() => removeInvoice(invoice.id)}>
-                  <Text style={styles.deleteText}>Delete</Text>
+                  <Text style={styles.deleteText}>{t('common.delete', 'Delete')}</Text>
                 </Pressable>
               </View>
             </Swipeable>

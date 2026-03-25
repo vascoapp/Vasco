@@ -66,7 +66,7 @@ export default function ContractorLayout() {
   const { t } = useTranslation();
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
     <OfflineBanner />
     <Tabs
       screenOptions={{
@@ -102,7 +102,7 @@ export default function ContractorLayout() {
         <Tabs.Screen key={name} name={name} options={{ href: null }} />
       ))}
     </Tabs>
-    </>
+    </View>
   );
 }
 

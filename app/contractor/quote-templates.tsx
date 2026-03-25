@@ -9,6 +9,8 @@ import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useQuoteTemplates, TEMPLATE_CATEGORIES, type QuoteTemplate, type QuoteTemplateItem, type TemplateCategory } from '../../src/services/quoteTemplateService';
+import { useAppState } from '../../src/state/AppState';
+import { getVATRate } from '../../src/constants/taxRates';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 
@@ -17,6 +19,8 @@ type IconName = keyof typeof Ionicons.glyphMap;
 export default function QuoteTemplatesScreen() {
   const router = useRouter();
   const { templates, save, use, remove } = useQuoteTemplates();
+  const { businessProfile } = useAppState();
+  const vatPct = Math.round(getVATRate(businessProfile.country ?? 'NL') * 100);
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -32,7 +36,7 @@ export default function QuoteTemplatesScreen() {
       quantity: 1,
       unit: 'stuk',
       unitPrice: parseFloat(newItemPrice) || 0,
-      vatRate: 21,
+      vatRate: vatPct,
       type: 'labour',
     };
     save(newName.trim(), newCategory, [item]);

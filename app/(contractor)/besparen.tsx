@@ -27,7 +27,8 @@ import { hapticSuccess } from '../../src/utils/haptics';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { useProcurementAgent, type MaterialNeed } from '../../src/services/procurementAgentService';
 import { useAppState } from '../../src/state/AppState';
-import { searchCatalog, type CatalogItem } from '../../src/integrations/suppliers';
+import { searchCatalog, type CatalogItem, getSupplierConfigs } from '../../src/integrations/suppliers';
+import { getScanHistory } from '../../src/services/invoiceScanService';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -52,14 +53,29 @@ export default function BesparenScreen() {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
 
+  // Data sources stats
+  const [moatStats, setMoatStats] = useState({ scans: 0, materials: 0, suppliers: 0 });
+
   useEffect(() => { recordScreenVisit('savings'); }, []);
 
-  // Load catalog for price alerts
+  // Load catalog for price alerts + moat stats
   useEffect(() => {
     (async () => {
       let items = await searchCatalog('verf');
       if (items.length < 2) items = await searchCatalog('');
       setCatalogItems(items.slice(0, 3));
+
+      // Load moat stats
+      const [scanHistory, supplierConfigs] = await Promise.all([
+        getScanHistory(),
+        getSupplierConfigs(),
+      ]);
+      const totalMaterials = scanHistory.reduce((sum, s) => sum + s.lineItems.length, 0);
+      setMoatStats({
+        scans: scanHistory.length,
+        materials: totalMaterials,
+        suppliers: supplierConfigs.length,
+      });
     })();
   }, []);
 
@@ -147,8 +163,8 @@ export default function BesparenScreen() {
     hapticSuccess();
 
     if (action.type === 'procurement' || action.type === 'price-alert') {
-      // Navigate to purchase orders for ordering actions
-      router.push('/contractor/purchase-orders');
+      // Navigate to material search for ordering actions
+      router.push('/contractor/material-search' as any);
     } else if (action.type === 'margin') {
       // Navigate to market prices for supplier comparison
       router.push('/contractor/market-prices');
@@ -294,6 +310,38 @@ export default function BesparenScreen() {
             </View>
           </FadeIn>
         )}
+
+        {/* Data sources — makes the pricing moat visible */}
+        <FadeIn delay={200}>
+          <View style={s.moatCard}>
+            <View style={s.moatHeader}>
+              <Ionicons name="server-outline" size={16} color={SemanticColors.textTertiary} />
+              <Text style={s.moatTitle}>Prijsintelligentie</Text>
+            </View>
+            <View style={s.moatGrid}>
+              <View style={s.moatStat}>
+                <Ionicons name="scan-outline" size={16} color={Palette.hermesOrange} />
+                <Text style={s.moatStatValue}>{moatStats.scans}</Text>
+                <Text style={s.moatStatLabel}>facturen gescand</Text>
+              </View>
+              <View style={s.moatStat}>
+                <Ionicons name="cube-outline" size={16} color={Palette.hermesOrange} />
+                <Text style={s.moatStatValue}>{moatStats.materials}</Text>
+                <Text style={s.moatStatLabel}>materialen getrackt</Text>
+              </View>
+              <View style={s.moatStat}>
+                <Ionicons name="storefront-outline" size={16} color={Palette.hermesOrange} />
+                <Text style={s.moatStatValue}>{moatStats.suppliers}</Text>
+                <Text style={s.moatStatLabel}>leveranciers vergeleken</Text>
+              </View>
+            </View>
+            {moatStats.scans === 0 && (
+              <Text style={s.moatHint}>
+                Scan je eerste leveranciersfactuur om prijsintelligentie te starten
+              </Text>
+            )}
+          </View>
+        </FadeIn>
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -479,5 +527,52 @@ const s = StyleSheet.create({
     color: SemanticColors.textSecondary,
     textAlign: 'center',
     paddingHorizontal: 32,
+  },
+
+  // Moat / data sources
+  moatCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
+    padding: 14,
+    gap: 10,
+  },
+  moatHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  moatTitle: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textTertiary,
+    letterSpacing: 0.3,
+  },
+  moatGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  moatStat: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
+  moatStatValue: {
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
+    marginTop: 2,
+  },
+  moatStatLabel: {
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.tinyFamily,
+    color: SemanticColors.textTertiary,
+    textAlign: 'center',
+  },
+  moatHint: {
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.tinyFamily,
+    color: Palette.hermesOrange,
+    textAlign: 'center',
+    paddingTop: 4,
   },
 });

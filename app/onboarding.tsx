@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import {
+  Alert,
   View,
   Text,
   StyleSheet,
@@ -167,43 +168,56 @@ export default function OnboardingScreen() {
   };
 
   const handleComplete = async () => {
-    const onboardingData = {
-      country,
-      language,
-      trades: selectedTrades,
-      businessType,
-      registrationFields: regFields,
-      certifications: selectedCerts,
-      postcode,
-      serviceRadius: radius,
-      completedAt: new Date().toISOString(),
-    };
-    await AsyncStorage.setItem('@vasco_onboarding', JSON.stringify(onboardingData));
-    updateUser({
-      trade: selectedTrades[0],
-      country: country ?? undefined,
-      language,
-      onboardingComplete: true,
-    });
-    i18n.changeLanguage(language);
+    try {
+      const onboardingData = {
+        country,
+        language,
+        trades: selectedTrades,
+        businessType,
+        registrationFields: regFields,
+        certifications: selectedCerts,
+        postcode,
+        serviceRadius: radius,
+        completedAt: new Date().toISOString(),
+      };
+      await AsyncStorage.setItem('@vasco_onboarding', JSON.stringify(onboardingData));
 
-    // Seed data for new users — so screens aren't empty
-    const tradeLabel = selectedTrades[0] ?? 'general';
-    const seedJobTitle = tradeLabel === 'plumbing'
-      ? t('onboarding.seedJobPlumbing', 'Boiler maintenance')
-      : tradeLabel === 'electrical'
-        ? t('onboarding.seedJobElectrical', 'Fuse box replacement')
-        : t('onboarding.seedJobGeneral', 'Example job');
-    const seedJobs = [
-      { id: `j-seed-1`, title: seedJobTitle, customerId: null, description: t('onboarding.seedJobDescription', 'Example job — delete or edit this'), status: 'lead' as const, trade: tradeLabel, priority: 'normal' as const, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    ];
-    const seedCustomers = [
-      { id: 'c-seed-1', name: t('onboarding.seedCustomer', 'Example customer'), email: '', phone: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    ];
-    await AsyncStorage.setItem('@vasco_jobs', JSON.stringify(seedJobs)).catch(() => {});
-    await AsyncStorage.setItem('@vasco_customers', JSON.stringify(seedCustomers)).catch(() => {});
+      // Persist user profile to AsyncStorage so it survives app restart
+      const userUpdates = {
+        trade: selectedTrades[0],
+        country: country ?? undefined,
+        language,
+        onboardingComplete: true,
+      };
+      updateUser(userUpdates);
+      await AsyncStorage.setItem('@vasco_user_profile', JSON.stringify(userUpdates)).catch(() => {});
 
-    router.replace('/(contractor)');
+      i18n.changeLanguage(language);
+
+      // Seed data for new users — so screens aren't empty
+      const tradeLabel = selectedTrades[0] ?? 'general';
+      const seedJobTitle = tradeLabel === 'plumbing'
+        ? t('onboarding.seedJobPlumbing', 'Boiler maintenance')
+        : tradeLabel === 'electrical'
+          ? t('onboarding.seedJobElectrical', 'Fuse box replacement')
+          : t('onboarding.seedJobGeneral', 'Example job');
+      const seedJobs = [
+        { id: `j-seed-1`, title: seedJobTitle, customerId: null, description: t('onboarding.seedJobDescription', 'Example job — delete or edit this'), status: 'lead' as const, trade: tradeLabel, priority: 'normal' as const, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      ];
+      const seedCustomers = [
+        { id: 'c-seed-1', name: t('onboarding.seedCustomer', 'Example customer'), email: '', phone: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      ];
+      await AsyncStorage.setItem('@vasco_jobs', JSON.stringify(seedJobs)).catch(() => {});
+      await AsyncStorage.setItem('@vasco_customers', JSON.stringify(seedCustomers)).catch(() => {});
+
+      router.replace('/(contractor)');
+    } catch (err) {
+      if (__DEV__) console.error('Onboarding completion failed:', err);
+      Alert.alert(
+        t('common.error', 'Error'),
+        t('onboarding.completionError', 'Something went wrong. Please try again.'),
+      );
+    }
   };
 
   const renderStepIndicator = () => (

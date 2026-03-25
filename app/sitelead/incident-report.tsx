@@ -82,8 +82,8 @@ export default function IncidentReportScreen() {
 
   const typeLabels: Record<IncidentType, string> = {
     'Incident': t('sitelead.incidentTypeIncident', 'Incident'),
-    'Bijna-ongeluk': t('sitelead.incidentTypeNearMiss', 'Bijna-ongeluk'),
-    'Observatie': t('sitelead.incidentTypeObservation', 'Observatie'),
+    'Bijna-ongeluk': t('sitelead.incidentTypeNearMiss', 'Near miss'),
+    'Observatie': t('sitelead.incidentTypeObservation', 'Observation'),
   };
 
   const renderTypeChip = (type: IncidentType) => (
@@ -107,10 +107,10 @@ export default function IncidentReportScreen() {
   );
 
   const severityLabels: Record<Severity, string> = {
-    'Laag': t('sitelead.incidentSeverityLow', 'Laag'),
-    'Middel': t('sitelead.incidentSeverityMedium', 'Middel'),
-    'Hoog': t('sitelead.incidentSeverityHigh', 'Hoog'),
-    'Kritiek': t('sitelead.incidentSeverityCritical', 'Kritiek'),
+    'Laag': t('sitelead.incidentSeverityLow', 'Low'),
+    'Middel': t('sitelead.incidentSeverityMedium', 'Medium'),
+    'Hoog': t('sitelead.incidentSeverityHigh', 'High'),
+    'Kritiek': t('sitelead.incidentSeverityCritical', 'Critical'),
   };
 
   const renderSeverityChip = (sev: Severity) => (
@@ -140,7 +140,7 @@ export default function IncidentReportScreen() {
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
-        <Text style={styles.headerTitle}>{t('sitelead.incidentReport', 'Incident Melden')}</Text>
+        <Text style={styles.headerTitle}>{t('sitelead.incidentReport', 'Report Incident')}</Text>
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
@@ -157,10 +157,10 @@ export default function IncidentReportScreen() {
 
         {/* Location */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>{t('sitelead.incidentLocation', 'Locatie')}</Text>
+          <Text style={styles.sectionLabel}>{t('sitelead.incidentLocation', 'Location')}</Text>
           <TextInput
             style={styles.input}
-            placeholder={t('sitelead.incidentLocationPlaceholder', 'Bijv. Bouwplaats Amsterdam-Zuid, 2e verdieping')}
+            placeholder={t('sitelead.incidentLocationPlaceholder', 'E.g. Construction site South, 2nd floor')}
             placeholderTextColor={SemanticColors.textSecondary}
             value={location}
             onChangeText={setLocation}
@@ -169,10 +169,10 @@ export default function IncidentReportScreen() {
 
         {/* Description */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>{t('sitelead.incidentDescription', 'Beschrijving')}</Text>
+          <Text style={styles.sectionLabel}>{t('sitelead.incidentDescription', 'Description')}</Text>
           <TextInput
             style={[styles.input, styles.textArea]}
-            placeholder={t('sitelead.incidentDescriptionPlaceholder', 'Beschrijf wat er is gebeurd...')}
+            placeholder={t('sitelead.incidentDescriptionPlaceholder', 'Describe what happened...')}
             placeholderTextColor={SemanticColors.textSecondary}
             value={description}
             onChangeText={setDescription}
@@ -184,10 +184,10 @@ export default function IncidentReportScreen() {
 
         {/* People Involved */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>{t('sitelead.incidentPeopleInvolved', 'Betrokken personen')}</Text>
+          <Text style={styles.sectionLabel}>{t('sitelead.incidentPeopleInvolved', 'People involved')}</Text>
           <TextInput
             style={styles.input}
-            placeholder={t('sitelead.incidentPeoplePlaceholder', 'Namen van betrokkenen')}
+            placeholder={t('sitelead.incidentPeoplePlaceholder', 'Names of people involved')}
             placeholderTextColor={SemanticColors.textSecondary}
             value={people}
             onChangeText={setPeople}
@@ -196,7 +196,7 @@ export default function IncidentReportScreen() {
 
         {/* Severity */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>{t('sitelead.incidentSeverity', 'Ernst')}</Text>
+          <Text style={styles.sectionLabel}>{t('sitelead.incidentSeverity', 'Severity')}</Text>
           <View style={styles.chipRow}>
             {(['Laag', 'Middel', 'Hoog', 'Kritiek'] as Severity[]).map(renderSeverityChip)}
           </View>
@@ -204,10 +204,10 @@ export default function IncidentReportScreen() {
 
         {/* Photo Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>{t('sitelead.incidentPhotos', "Foto's")}</Text>
+          <Text style={styles.sectionLabel}>{t('sitelead.incidentPhotos', 'Photos')}</Text>
           <Pressable style={styles.photoButton} onPress={() => showPhotoPicker((photo) => setPhotos(prev => [...prev, photo]))}>
             <Ionicons name="camera-outline" size={24} color={Palette.hermesOrange} />
-            <Text style={styles.photoButtonText}>{t('sitelead.incidentAddPhoto', 'Foto toevoegen')}</Text>
+            <Text style={styles.photoButtonText}>{t('sitelead.incidentAddPhoto', 'Add photo')}</Text>
           </Pressable>
           {photos.length > 0 && (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
@@ -228,12 +228,12 @@ export default function IncidentReportScreen() {
 
         {/* Submit Button */}
         <Pressable style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>{t('sitelead.incidentSubmit', 'Incident Melden')}</Text>
+          <Text style={styles.submitButtonText}>{t('sitelead.incidentSubmit', 'Report Incident')}</Text>
         </Pressable>
         </FadeIn>
       </ScrollView>
       <Toast
-        message={t('sitelead.incidentSubmitted', 'Incident Gemeld') + ' — ' + t('sitelead.incidentSubmittedDesc', 'Het incident is succesvol geregistreerd.')}
+        message={t('sitelead.incidentSubmitted', 'Incident Reported') + ' — ' + t('sitelead.incidentSubmittedDesc', 'The incident has been successfully recorded.')}
         visible={showToast}
         onHide={() => { setShowToast(false); router.back(); }}
         type="success"

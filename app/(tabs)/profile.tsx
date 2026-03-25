@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../src/components/Screen';
 import { useAppState } from '../../src/state/AppState';
@@ -10,6 +11,7 @@ import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
 
 export default function ProfileScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { moneybirdConnected, mollieConnected, businessProfile, customers } = useAppState();
   const { user, roleConfig, logout } = useAuth();
@@ -19,19 +21,76 @@ export default function ProfileScreen() {
     router.replace('/login');
   };
 
-  const integrations = [
-    {
-      name: 'Moneybird',
-      description: 'Accounting & invoices',
-      connected: moneybirdConnected,
-      route: '/(modals)/moneybird',
-    },
-    {
+  // Country-appropriate integrations
+  const country = user?.country ?? 'NL';
+
+  const getPaymentIntegration = () => {
+    if (country === 'UK') {
+      return {
+        name: 'Stripe',
+        description: t('tabs.profile.paymentProcessing', 'Payment processing'),
+        connected: false, // Stripe connection state managed via stripe config
+        route: '/(modals)/mollie' as const, // TODO: create dedicated Stripe modal
+      };
+    }
+    return {
       name: 'Mollie',
-      description: 'Payment processing',
+      description: t('tabs.profile.paymentProcessing', 'Payment processing'),
       connected: mollieConnected,
-      route: '/(modals)/mollie',
-    },
+      route: '/(modals)/mollie' as const,
+    };
+  };
+
+  const getAccountingIntegration = () => {
+    switch (country) {
+      case 'UK':
+        return {
+          name: 'Xero',
+          description: t('tabs.profile.accountingInvoices', 'Accounting & invoices'),
+          connected: false, // Xero connection state managed via accounting config
+          route: '/(modals)/xero-auth' as const,
+        };
+      case 'DE':
+        return {
+          name: 'Lexoffice',
+          description: t('tabs.profile.accountingInvoices', 'Accounting & invoices'),
+          connected: false,
+          route: '/(modals)/moneybird-auth' as const, // Reuse auth pattern
+        };
+      case 'FR':
+        return {
+          name: 'Pennylane',
+          description: t('tabs.profile.accountingInvoices', 'Accounting & invoices'),
+          connected: false,
+          route: '/(modals)/moneybird-auth' as const,
+        };
+      case 'ES':
+        return {
+          name: 'Holded',
+          description: t('tabs.profile.accountingInvoices', 'Accounting & invoices'),
+          connected: false,
+          route: '/(modals)/moneybird-auth' as const,
+        };
+      case 'IT':
+        return {
+          name: 'Fatture in Cloud',
+          description: t('tabs.profile.accountingInvoices', 'Accounting & invoices'),
+          connected: false,
+          route: '/(modals)/moneybird-auth' as const,
+        };
+      default: // NL
+        return {
+          name: 'Moneybird',
+          description: t('tabs.profile.accountingInvoices', 'Accounting & invoices'),
+          connected: moneybirdConnected,
+          route: '/(modals)/moneybird-auth' as const,
+        };
+    }
+  };
+
+  const integrations = [
+    getAccountingIntegration(),
+    getPaymentIntegration(),
   ];
 
   const primaryColor = roleConfig?.primaryColor || SemanticColors.actionPrimary;
@@ -74,27 +133,27 @@ export default function ProfileScreen() {
 
         {/* Account Details */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>Account details</Text>
+          <Text style={styles.sectionLabel}>{t('tabs.profile.accountDetails', 'Account details')}</Text>
         </View>
 
         <View style={styles.card}>
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Company</Text>
+            <Text style={styles.fieldLabel}>{t('tabs.profile.company', 'Company')}</Text>
             <Text style={styles.fieldValue}>{user?.company}</Text>
           </View>
           <View style={[styles.field, styles.fieldBorder]}>
-            <Text style={styles.fieldLabel}>Projects</Text>
-            <Text style={styles.fieldValue}>{user?.projects.length} active</Text>
+            <Text style={styles.fieldLabel}>{t('tabs.profile.projects', 'Projects')}</Text>
+            <Text style={styles.fieldValue}>{user?.projects.length} {t('tabs.profile.active', 'active')}</Text>
           </View>
           <View style={[styles.field, styles.fieldBorder]}>
-            <Text style={styles.fieldLabel}>User ID</Text>
+            <Text style={styles.fieldLabel}>{t('tabs.profile.userId', 'User ID')}</Text>
             <Text style={[styles.fieldValue, styles.fieldValueMuted]}>{user?.id}</Text>
           </View>
         </View>
 
         {/* Business Settings */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>Business settings</Text>
+          <Text style={styles.sectionLabel}>{t('tabs.profile.businessSettings', 'Business settings')}</Text>
         </View>
 
         <View style={styles.card}>
@@ -105,9 +164,9 @@ export default function ProfileScreen() {
             <View style={styles.menuItemLeft}>
               <Ionicons name="business-outline" size={20} color={SemanticColors.textPrimary} />
               <View>
-                <Text style={styles.menuItemText}>Bedrijfsgegevens</Text>
+                <Text style={styles.menuItemText}>{t('tabs.profile.businessDetails', 'Business details')}</Text>
                 <Text style={{ color: SemanticColors.textSecondary, fontSize: 12 }}>
-                  {businessProfile.completenessPercent}% compleet
+                  {businessProfile.completenessPercent}% {t('tabs.profile.complete', 'complete')}
                 </Text>
               </View>
             </View>
@@ -120,9 +179,9 @@ export default function ProfileScreen() {
             <View style={styles.menuItemLeft}>
               <Ionicons name="people-outline" size={20} color={SemanticColors.textPrimary} />
               <View>
-                <Text style={styles.menuItemText}>Klanten</Text>
+                <Text style={styles.menuItemText}>{t('tabs.profile.customers', 'Customers')}</Text>
                 <Text style={{ color: SemanticColors.textSecondary, fontSize: 12 }}>
-                  {customers.length} klanten
+                  {customers.length} {t('tabs.profile.customersCount', 'customers')}
                 </Text>
               </View>
             </View>
@@ -132,7 +191,7 @@ export default function ProfileScreen() {
 
         {/* Integrations */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>Integrations</Text>
+          <Text style={styles.sectionLabel}>{t('tabs.profile.integrations', 'Integrations')}</Text>
         </View>
 
         <View style={styles.integrationList}>
@@ -158,7 +217,7 @@ export default function ProfileScreen() {
                   styles.integrationStatusText,
                   integration.connected && styles.integrationStatusTextActive,
                 ]}>
-                  {integration.connected ? 'Connected' : 'Connect'}
+                  {integration.connected ? t('tabs.profile.connected', 'Connected') : t('tabs.profile.connect', 'Connect')}
                 </Text>
               </View>
             </Pressable>
@@ -167,7 +226,7 @@ export default function ProfileScreen() {
 
         {/* Certificaten & Documenten (for contractors) */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>Documenten</Text>
+          <Text style={styles.sectionLabel}>{t('tabs.profile.documents', 'Documents')}</Text>
         </View>
 
         <View style={styles.card}>
@@ -177,7 +236,7 @@ export default function ProfileScreen() {
           >
             <View style={styles.menuItemLeft}>
               <Ionicons name="ribbon-outline" size={20} color={SemanticColors.textPrimary} />
-              <Text style={styles.menuItemText}>Certificaten en documenten</Text>
+              <Text style={styles.menuItemText}>{t('tabs.profile.certificatesAndDocuments', 'Certificates and documents')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
           </Pressable>
@@ -185,28 +244,28 @@ export default function ProfileScreen() {
 
         {/* Settings */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>Settings</Text>
+          <Text style={styles.sectionLabel}>{t('tabs.profile.settings', 'Settings')}</Text>
         </View>
 
         <View style={styles.card}>
           <Pressable style={styles.menuItem}>
             <View style={styles.menuItemLeft}>
               <Ionicons name="notifications-outline" size={20} color={SemanticColors.textPrimary} />
-              <Text style={styles.menuItemText}>Notifications</Text>
+              <Text style={styles.menuItemText}>{t('tabs.profile.notifications', 'Notifications')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
           </Pressable>
           <Pressable style={[styles.menuItem, styles.menuItemBorder]}>
             <View style={styles.menuItemLeft}>
               <Ionicons name="shield-outline" size={20} color={SemanticColors.textPrimary} />
-              <Text style={styles.menuItemText}>Privacy settings</Text>
+              <Text style={styles.menuItemText}>{t('tabs.profile.privacySettings', 'Privacy settings')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
           </Pressable>
           <Pressable style={[styles.menuItem, styles.menuItemBorder]}>
             <View style={styles.menuItemLeft}>
               <Ionicons name="help-circle-outline" size={20} color={SemanticColors.textPrimary} />
-              <Text style={styles.menuItemText}>Help & Support</Text>
+              <Text style={styles.menuItemText}>{t('tabs.profile.helpSupport', 'Help & Support')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
           </Pressable>
@@ -218,7 +277,7 @@ export default function ProfileScreen() {
           onPress={handleLogout}
         >
           <Ionicons name="log-out-outline" size={20} color={SemanticColors.feedbackError} />
-          <Text style={styles.logoutButtonText}>Sign Out</Text>
+          <Text style={styles.logoutButtonText}>{t('tabs.profile.signOut', 'Sign Out')}</Text>
         </Pressable>
 
         {/* Version Info */}

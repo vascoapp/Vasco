@@ -346,22 +346,45 @@ export async function exportInvoice(invoice: UnifiedInvoice): Promise<{ success:
     return { success: false, error: 'Geen boekhouding gekoppeld' };
   }
 
-  // Provider-specific export — Moneybird is primary, others TBD
+  // Provider-specific export
+  const lineItemsPayload = invoice.lineItems.map(li => ({
+    description: li.description,
+    price: li.unitPrice,
+    quantity: li.quantity,
+    vatRate: li.vatRate,
+  }));
+
   switch (config.provider) {
     case 'moneybird': {
       const mb = await import('./moneybird');
       const result = await mb.createInvoice({
         contactId: invoice.contactExternalId ?? '',
         reference: invoice.reference,
-        lineItems: invoice.lineItems.map(li => ({
-          description: li.description,
-          price: li.unitPrice,
-          quantity: li.quantity,
-          vatRate: li.vatRate,
-        })),
+        lineItems: lineItemsPayload,
         dueDate: invoice.dueDate,
       });
       return { success: result.success, externalId: result.moneybirdId, error: result.error };
+    }
+    case 'xero': {
+      const xero = await import('./xero');
+      const result = await xero.createInvoice({
+        contactId: invoice.contactExternalId ?? '',
+        reference: invoice.reference,
+        lineItems: lineItemsPayload,
+        dueDate: invoice.dueDate,
+      });
+      return { success: result.success, externalId: result.xeroId, error: result.error };
+    }
+    case 'quickbooks': {
+      const qb = await import('./quickbooks');
+      const result = await qb.createInvoice({
+        customerId: invoice.contactExternalId ?? '',
+        reference: invoice.reference,
+        lineItems: lineItemsPayload,
+        dueDate: invoice.dueDate,
+        currency: invoice.currency,
+      });
+      return { success: result.success, externalId: result.quickbooksId, error: result.error };
     }
     default:
       return { success: false, error: `${config.provider} export niet beschikbaar` };
@@ -376,6 +399,14 @@ export async function syncPaymentStatus(): Promise<{ paidInvoiceIds: string[] }>
     case 'moneybird': {
       const mb = await import('./moneybird');
       return mb.syncPayments();
+    }
+    case 'xero': {
+      const xero = await import('./xero');
+      return xero.syncPaymentStatus();
+    }
+    case 'quickbooks': {
+      const qb = await import('./quickbooks');
+      return qb.syncPaymentStatus();
     }
     default:
       return { paidInvoiceIds: [] };

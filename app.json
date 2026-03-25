@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "VascoApp",
+    "name": "Vasco",
     "slug": "VascoApp",
     "scheme": "vasco",
     "version": "1.0.0",
@@ -15,15 +15,24 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.VascoApp"
+      "bundleIdentifier": "com.vasco.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Vasco uses the camera to scan invoices and take job photos",
+        "NSPhotoLibraryUsageDescription": "Vasco uses your photo library to attach photos to jobs and invoices"
+      }
     },
     "android": {
+      "package": "com.vasco.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -31,7 +40,13 @@
     "plugins": [
       "expo-router",
       "expo-localization",
-      "expo-web-browser"
-    ]
+      "expo-web-browser",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": ""
+      }
+    }
   }
 }

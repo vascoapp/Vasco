@@ -34,4 +34,6 @@ export type Invoice = {
   createdAt?: string;
   reference?: string;
   customerName?: string;
+  exportedAt?: string;
+  einvoiceSubmitted?: string;
 };

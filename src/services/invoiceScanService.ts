@@ -177,8 +177,8 @@ async function saveScanHistory(invoice: ScannedInvoice): Promise<void> {
     const raw = await AsyncStorage.getItem(SCAN_HISTORY_KEY);
     const history: ScannedInvoice[] = raw ? JSON.parse(raw) : [];
     history.unshift(invoice);
-    // Keep last 50 scans
-    const trimmed = history.slice(0, 50);
+    // Keep last 200 scans — old scans still have pricing value for the moat
+    const trimmed = history.slice(0, 200);
     await AsyncStorage.setItem(SCAN_HISTORY_KEY, JSON.stringify(trimmed));
   } catch {}
 }

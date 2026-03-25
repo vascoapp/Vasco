@@ -253,6 +253,7 @@ export async function generateMorningBriefing(context: {
   quotes: any[];
   jobs: any[];
   certs?: any[];
+  country?: string;
 }): Promise<MorningBriefing> {
   const invoiceFindings = auditInvoices(context.invoices);
   const quoteFindings = auditQuotes(context.quotes);
@@ -264,7 +265,7 @@ export async function generateMorningBriefing(context: {
     jobs: context.jobs,
     invoices: context.invoices,
     quotes: context.quotes,
-    country: 'NL', // TODO: pass from user context
+    country: context.country ?? 'NL',
   });
   const validatorFindings: AuditFinding[] = validatorWarnings.map(w => ({
     id: `validator-${w.code}`,
@@ -328,7 +329,7 @@ export async function getMorningBriefing(): Promise<MorningBriefing | null> {
 let schedulerTimer: ReturnType<typeof setInterval> | null = null;
 
 export function startBackgroundJobScheduler(
-  getContext: () => { invoices: any[]; quotes: any[]; jobs: any[]; customers?: any[] },
+  getContext: () => { invoices: any[]; quotes: any[]; jobs: any[]; customers?: any[]; country?: string },
 ): void {
   if (schedulerTimer) return;
 

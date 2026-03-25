@@ -120,17 +120,17 @@ export default function GeldScreen() {
         {/* KPIs — the 3 numbers that matter */}
         <FadeIn delay={0}>
           <View style={s.kpiCard}>
-            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)}>
+            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)} accessibilityRole="button" accessibilityLabel={`${t('money.outstanding', 'Uitstaand')}: \u20AC${outstandingTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}>
               <Text style={s.kpiLabel}>{t('money.outstanding', 'Uitstaand')}</Text>
               <Text style={s.kpiValue}>{'\u20AC'}{outstandingTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
             </Pressable>
             <View style={s.kpiDivider} />
-            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)}>
+            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)} accessibilityRole="button" accessibilityLabel={`${t('money.overdue', 'Achterstallig')}: ${overdueCount}`}>
               <Text style={s.kpiLabel}>{t('money.overdue', 'Achterstallig')}</Text>
               <Text style={[s.kpiValue, overdueCount > 0 && { color: SemanticColors.feedbackError }]}>{overdueCount}</Text>
             </Pressable>
             <View style={s.kpiDivider} />
-            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)}>
+            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)} accessibilityRole="button" accessibilityLabel={`${t('money.received', 'Ontvangen')}: \u20AC${paidTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}>
               <Text style={s.kpiLabel}>{t('money.received', 'Ontvangen')}</Text>
               <Text style={[s.kpiValue, { color: SemanticColors.feedbackSuccess }]}>{'\u20AC'}{paidTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
             </Pressable>
@@ -161,6 +161,8 @@ export default function GeldScreen() {
             <Pressable
               style={({ pressed }) => [s.newQuoteBtn, pressed && { opacity: 0.9 }]}
               onPress={() => router.push('/contractor/tiered-quote' as any)}
+              accessibilityRole="button"
+              accessibilityLabel={t('quotes.newQuote', 'Nieuwe offerte')}
             >
               <Ionicons name="add-circle-outline" size={18} color={Palette.white} />
               <Text style={s.newQuoteBtnText}>{t('quotes.newQuote', 'Nieuwe offerte')}</Text>
@@ -175,6 +177,9 @@ export default function GeldScreen() {
                     style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9 }]}
                     onPress={() => router.push(doc.route as any)}
                     onLongPress={() => handleDeleteDocument(doc.id, doc.type, doc.name)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${doc.type === 'factuur' ? t('invoices.invoice', 'Factuur') : t('quotes.quote', 'Offerte')}: ${doc.name}, \u20AC${doc.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}, ${doc.status}`}
+                    accessibilityHint={t('a11y.opensDetails', 'Opens details')}
                   >
                     <View style={[s.docDot, { backgroundColor: getStatusColor(doc.status) }]} />
                     <View style={{ flex: 1 }}>
@@ -198,8 +203,13 @@ export default function GeldScreen() {
                           e.stopPropagation?.();
                           hapticSuccess();
                           markInvoiceSent(doc.id);
+                          Alert.alert(
+                            t('invoices.markedAsSent', 'Invoice marked as sent'),
+                            t('invoices.markedAsSentDesc', 'Share the PDF with your customer via the share button on the invoice detail screen.'),
+                          );
                         }}
                         hitSlop={6}
+                        accessibilityRole="button"
                         accessibilityLabel={t('a11y.sendInvoice', 'Send invoice')}
                       >
                         <Ionicons name="send" size={14} color={Palette.white} />
@@ -262,6 +272,7 @@ export default function GeldScreen() {
       <Pressable
         style={({ pressed }) => [s.fab, pressed && { opacity: 0.9, transform: [{ scale: 0.96 }] }]}
         onPress={() => { hapticSuccess(); router.push('/contractor/tiered-quote' as any); }}
+        accessibilityRole="button"
         accessibilityLabel={t('a11y.newQuote', 'New quote')}
       >
         <Ionicons name="add" size={28} color={Palette.white} />

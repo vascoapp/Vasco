@@ -1,6 +1,10 @@
 import * as ImagePicker from 'expo-image-picker';
 import { Alert, Platform } from 'react-native';
 
+const MAX_DIMENSION = 1920;
+const UPLOAD_QUALITY = 0.7;
+const MAX_FILE_SIZE_MB = 15;
+
 export interface PhotoResult {
   uri: string;
   width: number;
@@ -24,19 +28,27 @@ async function requestPermission(type: 'camera' | 'library'): Promise<boolean> {
   return true;
 }
 
+function validateAsset(asset: ImagePicker.ImagePickerAsset): PhotoResult | null {
+  if (asset.fileSize && asset.fileSize > MAX_FILE_SIZE_MB * 1024 * 1024) {
+    Alert.alert('File too large', `Photo must be under ${MAX_FILE_SIZE_MB}MB. Please choose a smaller image.`);
+    return null;
+  }
+  return { uri: asset.uri, width: asset.width, height: asset.height };
+}
+
 export async function takePhoto(): Promise<PhotoResult | null> {
   const ok = await requestPermission('camera');
   if (!ok) return null;
 
   const result = await ImagePicker.launchCameraAsync({
     mediaTypes: ['images'],
-    quality: 0.8,
-    allowsEditing: false,
+    quality: UPLOAD_QUALITY,
+    allowsEditing: true,
+    exif: false,
   });
 
   if (result.canceled || !result.assets?.[0]) return null;
-  const asset = result.assets[0];
-  return { uri: asset.uri, width: asset.width, height: asset.height };
+  return validateAsset(result.assets[0]);
 }
 
 export async function pickFromGallery(): Promise<PhotoResult | null> {
@@ -45,13 +57,13 @@ export async function pickFromGallery(): Promise<PhotoResult | null> {
 
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
-    quality: 0.8,
-    allowsEditing: false,
+    quality: UPLOAD_QUALITY,
+    allowsEditing: true,
+    exif: false,
   });
 
   if (result.canceled || !result.assets?.[0]) return null;
-  const asset = result.assets[0];
-  return { uri: asset.uri, width: asset.width, height: asset.height };
+  return validateAsset(result.assets[0]);
 }
 
 export function showPhotoPicker(onPhoto: (photo: PhotoResult) => void) {

@@ -22,6 +22,7 @@ import { PROVIDERS, type AccountingProvider } from '../../src/integrations/accou
 import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
+import { isValidEmail, isValidPhone, isValidKvKNumber, isValidVATNumber, isValidIBAN, sanitizeInput } from '../../src/utils/validation';
 
 type FieldDef = {
   label: string;
@@ -102,16 +103,43 @@ export default function BusinessSettingsScreen() {
   }, [country, businessName, kvkNumber, vatNumber, registrationNumber, address, email, phone, t]);
 
   const handleSave = useCallback(async () => {
+    // Sanitize all inputs
+    const cleanEmail = sanitizeInput(email);
+    const cleanPhone = sanitizeInput(phone);
+    const cleanKvk = sanitizeInput(kvkNumber);
+    const cleanVat = sanitizeInput(vatNumber);
+
+    // Validate email if provided
+    if (cleanEmail && !isValidEmail(cleanEmail)) {
+      Alert.alert(t('common.error', 'Error'), t('validation.invalidEmail', 'Please enter a valid email address'));
+      return;
+    }
+    // Validate phone if provided
+    if (cleanPhone && !isValidPhone(cleanPhone)) {
+      Alert.alert(t('common.error', 'Error'), t('validation.invalidPhone', 'Please enter a valid phone number'));
+      return;
+    }
+    // Validate KvK number if provided (NL only)
+    if (cleanKvk && country === 'NL' && !isValidKvKNumber(cleanKvk)) {
+      Alert.alert(t('common.error', 'Error'), t('validation.invalidKvK', 'KvK number must be 8 digits'));
+      return;
+    }
+    // Validate VAT number if provided
+    if (cleanVat && !isValidVATNumber(cleanVat)) {
+      Alert.alert(t('common.error', 'Error'), t('validation.invalidVAT', 'Please enter a valid VAT number (e.g. NL123456789B01)'));
+      return;
+    }
+
     setSaving(true);
     try {
       await updateBusinessProfile({
-        businessName: businessName.trim(),
-        kvkNumber: kvkNumber.trim(),
-        vatNumber: vatNumber.trim(),
-        registrationNumber: registrationNumber.trim(),
-        address: address.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
+        businessName: sanitizeInput(businessName).trim(),
+        kvkNumber: cleanKvk.trim(),
+        vatNumber: cleanVat.trim(),
+        registrationNumber: sanitizeInput(registrationNumber).trim(),
+        address: sanitizeInput(address).trim(),
+        email: cleanEmail.trim(),
+        phone: cleanPhone.trim(),
         country,
       });
       router.back();

@@ -7,7 +7,7 @@
 // =============================================================================
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Share, Platform, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Share, Platform, TextInput, Linking, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
@@ -23,6 +23,8 @@ import { useAIQueue } from '../../src/services/aiActionQueueService';
 import { useVascoGuidance } from '../../src/services/vascoGuidanceService';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { useAutomations, type AutomationContext } from '../../src/services/automationService';
+import { exportAllData } from '../../src/services/dataExportService';
+import { requestAccountDeletion } from '../../src/services/accountDeletionService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -45,7 +47,7 @@ interface ProactiveAction {
 export default function VascoScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { jobs, invoices, quotes, customers } = useAppState();
   const aiQueue = useAIQueue();
   const [refreshing, setRefreshing] = useState(false);
@@ -209,6 +211,36 @@ export default function VascoScreen() {
 
   const handleDismiss = (id: string) => {
     setActioned(prev => new Set(prev).add(id));
+  };
+
+  const handleExportData = async () => {
+    const result = await exportAllData('json', { userId: user?.id, email: user?.email });
+    if (result.success) {
+      Alert.alert(t('profile.exportData'), t('profile.exportSuccess', { count: result.keyCount }));
+    } else {
+      Alert.alert(t('profile.exportData'), t('profile.exportFailed'));
+    }
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      t('profile.deleteAccountConfirm'),
+      t('profile.deleteAccountMessage'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('profile.deleteAccount'),
+          style: 'destructive',
+          onPress: async () => {
+            if (user?.id) {
+              await requestAccountDeletion(user.id);
+            }
+            Alert.alert(t('profile.accountDeleted'));
+            await logout();
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -416,6 +448,44 @@ export default function VascoScreen() {
           </View>
         </FadeIn>
 
+        {/* GDPR & Support links */}
+        <FadeIn delay={180}>
+          <View style={s.gdprList}>
+            <Pressable
+              style={s.gdprRow}
+              onPress={() => Linking.openURL('mailto:support@vasco.app?subject=Vasco Feedback')}
+            >
+              <Ionicons name="chatbox-ellipses-outline" size={18} color={SemanticColors.textSecondary} />
+              <Text style={s.gdprRowText}>{t('profile.sendFeedback')}</Text>
+              <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+            </Pressable>
+            <Pressable
+              style={s.gdprRow}
+              onPress={() => router.push('/contractor/legal' as any)}
+            >
+              <Ionicons name="document-text-outline" size={18} color={SemanticColors.textSecondary} />
+              <Text style={s.gdprRowText}>{t('profile.legal')}</Text>
+              <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+            </Pressable>
+            <Pressable
+              style={s.gdprRow}
+              onPress={handleExportData}
+            >
+              <Ionicons name="download-outline" size={18} color={SemanticColors.textSecondary} />
+              <Text style={s.gdprRowText}>{t('profile.exportData')}</Text>
+              <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+            </Pressable>
+            <Pressable
+              style={[s.gdprRow, { borderBottomWidth: 0 }]}
+              onPress={handleDeleteAccount}
+            >
+              <Ionicons name="trash-outline" size={18} color={SemanticColors.feedbackError} />
+              <Text style={[s.gdprRowText, { color: SemanticColors.feedbackError }]}>{t('profile.deleteAccount')}</Text>
+              <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+            </Pressable>
+          </View>
+        </FadeIn>
+
         <View style={{ height: 100 }} />
       </ScrollView>
     </View>
@@ -534,4 +604,12 @@ const s = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 8,
   },
   linkChipText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
+
+  // GDPR & Support
+  gdprList: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden' },
+  gdprRow: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.sm, padding: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: SemanticColors.borderDefault,
+  },
+  gdprRowText: { flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.captionFamily, color: SemanticColors.textPrimary },
 });

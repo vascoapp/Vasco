@@ -5,9 +5,10 @@
 // Docs: https://api.sevdesk.de/
 // =============================================================================
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getSecureItem, setSecureItem, deleteSecureItem, migrateToSecure } from '../lib/secureStorage';
 
-const STORAGE_KEY = '@vasco_sevdesk';
+const STORAGE_KEY = 'vasco_sevdesk';
+const LEGACY_KEY = '@vasco_sevdesk';
 const API_BASE = 'https://my.sevdesk.de/api/v1';
 
 // ---------------------------------------------------------------------------
@@ -47,13 +48,14 @@ export interface SevDeskPosition {
 
 async function getConfig(): Promise<SevDeskConfig | null> {
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    await migrateToSecure(LEGACY_KEY, STORAGE_KEY);
+    const raw = await getSecureItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch { return null; }
 }
 
 export async function saveSevDeskConfig(config: SevDeskConfig): Promise<void> {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+  await setSecureItem(STORAGE_KEY, JSON.stringify(config));
 }
 
 export async function isConnected(): Promise<boolean> {

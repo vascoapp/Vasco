@@ -6,9 +6,11 @@
 // Primary payment method for Dutch contractors
 // =============================================================================
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getSecureItem, setSecureItem, deleteSecureItem, migrateToSecure } from '../lib/secureStorage';
+import { fetchWithRetry } from '../utils/retry';
 
-const STORAGE_KEY = '@vasco_mollie';
+const STORAGE_KEY = 'vasco_mollie';
+const LEGACY_KEY = '@vasco_mollie'; // Old AsyncStorage key for migration
 const API_BASE = 'https://api.mollie.com/v2';
 
 // ---------------------------------------------------------------------------
@@ -69,9 +71,12 @@ export interface MolliePaymentRequest {
 // Config persistence
 // ---------------------------------------------------------------------------
 
+let migrated = false;
 async function getConfig(): Promise<MollieConfig | null> {
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    // One-time migration from AsyncStorage to SecureStore
+    if (!migrated) { migrated = true; await migrateToSecure(LEGACY_KEY, STORAGE_KEY); }
+    const raw = await getSecureItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -79,11 +84,11 @@ async function getConfig(): Promise<MollieConfig | null> {
 }
 
 export async function saveMollieConfig(config: MollieConfig): Promise<void> {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+  await setSecureItem(STORAGE_KEY, JSON.stringify(config));
 }
 
 export async function clearMollieConfig(): Promise<void> {
-  await AsyncStorage.removeItem(STORAGE_KEY);
+  await deleteSecureItem(STORAGE_KEY);
 }
 
 export async function isConnected(): Promise<boolean> {
@@ -103,7 +108,7 @@ async function apiCall<T>(path: string, options?: RequestInit): Promise<T | null
   const timeout = setTimeout(() => controller.abort(), 10000);
 
   try {
-    const res = await fetch(`${API_BASE}/${path}`, {
+    const res = await fetchWithRetry(`${API_BASE}/${path}`, {
       ...options,
       signal: controller.signal,
       headers: {

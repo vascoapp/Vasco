@@ -8,7 +8,10 @@
 // Record types: A (article), B (description), P (price/EAN)
 // =============================================================================
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { emitMaterialPurchased } from '../intelligence/dataCollector';
+
+const IMPORTED_KEY = '@vasco_datanorm_imported';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -261,6 +264,23 @@ export function parseDateanormV5(text: string): DatanormArticle[] {
  * Each article is emitted as a material_purchased event so the intelligence
  * engine can track supplier prices.
  */
+async function loadImportedArticles(): Promise<Set<string>> {
+  try {
+    const raw = await AsyncStorage.getItem(IMPORTED_KEY);
+    return raw ? new Set(JSON.parse(raw) as string[]) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+async function saveImportedArticles(set: Set<string>): Promise<void> {
+  try {
+    await AsyncStorage.setItem(IMPORTED_KEY, JSON.stringify([...set]));
+  } catch {
+    // Non-critical — worst case we re-import duplicates next time
+  }
+}
+
 export async function importDatanormToMoat(
   articles: DatanormArticle[],
   supplierId: string,
@@ -274,11 +294,21 @@ export async function importDatanormToMoat(
   const supplierName = options?.supplierName ?? supplierId;
   const trade = options?.trade ?? 'general';
 
+  // Load previously imported article numbers for deduplication
+  const alreadyImported = await loadImportedArticles();
+
   let imported = 0;
   let skipped = 0;
 
   for (const article of articles) {
     if (!article.articleNumber || article.unitPrice <= 0) {
+      skipped++;
+      continue;
+    }
+
+    // Deduplicate: skip articles already imported from any supplier
+    const dedupeKey = `${supplierId}:${article.articleNumber}`;
+    if (alreadyImported.has(dedupeKey)) {
       skipped++;
       continue;
     }
@@ -295,11 +325,15 @@ export async function importDatanormToMoat(
         unit: article.unit,
         trade,
       });
+      alreadyImported.add(dedupeKey);
       imported++;
     } catch {
       skipped++;
     }
   }
+
+  // Persist updated set
+  await saveImportedArticles(alreadyImported);
 
   return { imported, skipped };
 }

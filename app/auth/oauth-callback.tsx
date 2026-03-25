@@ -8,14 +8,15 @@
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { exchangeCodeForToken } from '../../src/integrations/moneybird';
 import { saveAccountingConfig } from '../../src/integrations/accounting';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 
-// TODO: move these to environment config / secure storage
-const MONEYBIRD_CLIENT_ID = '';
-const MONEYBIRD_CLIENT_SECRET = '';
+// Client ID is public. Secret stays server-side via edge function.
+const MONEYBIRD_CLIENT_ID = process.env.EXPO_PUBLIC_MONEYBIRD_CLIENT_ID ?? '';
+const TOKEN_EXCHANGE_URL = process.env.EXPO_PUBLIC_MONEYBIRD_TOKEN_URL ?? '';
 const REDIRECT_URI = 'vasco://auth/oauth-callback';
 
 type Status = 'loading' | 'success' | 'error';
@@ -23,13 +24,14 @@ type Status = 'loading' | 'success' | 'error';
 export default function OAuthCallbackScreen() {
   const { code } = useLocalSearchParams<{ code: string }>();
   const router = useRouter();
+  const { t } = useTranslation();
   const [status, setStatus] = useState<Status>('loading');
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (!code) {
       setStatus('error');
-      setErrorMsg('Geen autorisatiecode ontvangen.');
+      setErrorMsg(t('moneybird.noAuthCode', 'No authorization code received.'));
       return;
     }
 
@@ -40,15 +42,16 @@ export default function OAuthCallbackScreen() {
         const config = await exchangeCodeForToken(
           code,
           MONEYBIRD_CLIENT_ID,
-          MONEYBIRD_CLIENT_SECRET,
+          '',
           REDIRECT_URI,
+          TOKEN_EXCHANGE_URL,
         );
 
         if (cancelled) return;
 
         if (!config) {
           setStatus('error');
-          setErrorMsg('Token uitwisseling mislukt. Probeer opnieuw.');
+          setErrorMsg(t('moneybird.tokenExchangeFailedRetry', 'Token exchange failed. Please try again.'));
           return;
         }
 
@@ -68,7 +71,7 @@ export default function OAuthCallbackScreen() {
       } catch {
         if (!cancelled) {
           setStatus('error');
-          setErrorMsg('Er ging iets mis bij het verbinden.');
+          setErrorMsg(t('moneybird.somethingWentWrong', 'Something went wrong while connecting.'));
         }
       }
     })();
@@ -83,8 +86,8 @@ export default function OAuthCallbackScreen() {
       {status === 'loading' && (
         <>
           <ActivityIndicator size="large" color={Palette.hermesOrange} />
-          <Text style={styles.title}>Verbinden met Moneybird...</Text>
-          <Text style={styles.subtitle}>Even geduld, we verwerken de autorisatie.</Text>
+          <Text style={styles.title}>{t('moneybird.connectingToMoneybird', 'Connecting to Moneybird...')}</Text>
+          <Text style={styles.subtitle}>{t('moneybird.pleaseWait', 'Please wait while we process the authorization.')}</Text>
         </>
       )}
 
@@ -93,8 +96,8 @@ export default function OAuthCallbackScreen() {
           <View style={styles.iconCircle}>
             <Ionicons name="checkmark" size={36} color="#fff" />
           </View>
-          <Text style={styles.title}>Verbonden!</Text>
-          <Text style={styles.subtitle}>Moneybird is succesvol gekoppeld.</Text>
+          <Text style={styles.title}>{t('moneybird.connectedSuccess', 'Connected!')}</Text>
+          <Text style={styles.subtitle}>{t('moneybird.successfullyLinked', 'Moneybird has been successfully linked.')}</Text>
         </>
       )}
 
@@ -103,7 +106,7 @@ export default function OAuthCallbackScreen() {
           <View style={[styles.iconCircle, { backgroundColor: SemanticColors.feedbackError }]}>
             <Ionicons name="close" size={36} color="#fff" />
           </View>
-          <Text style={styles.title}>Verbinding mislukt</Text>
+          <Text style={styles.title}>{t('moneybird.connectionFailedTitle', 'Connection failed')}</Text>
           <Text style={styles.subtitle}>{errorMsg}</Text>
         </>
       )}

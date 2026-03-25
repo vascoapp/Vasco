@@ -1,6 +1,7 @@
 import { Link, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Swipeable } from 'react-native-gesture-handler';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
 import { Screen } from '../../src/components/Screen';
@@ -17,6 +18,7 @@ const formatCurrency = (amount: number) =>
   `€${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
 export default function QuotesScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { quotes, removeQuote, isLoading, refreshData } = useAppState();
   const [refreshing, setRefreshing] = useState(false);
@@ -39,14 +41,14 @@ export default function QuotesScreen() {
       >
         <View style={styles.header}>
           <View>
-            <Text style={styles.sectionLabel}>Quotes</Text>
-            <Text style={Typography.title}>Drafts</Text>
+            <Text style={styles.sectionLabel}>{t('tabs.quotes.quotes', 'Quotes')}</Text>
+            <Text style={Typography.title}>{t('tabs.quotes.drafts', 'Drafts')}</Text>
           </View>
           <View style={styles.headerActions}>
             <Pressable style={styles.refreshButton} onPress={onRefresh}>
-              <Text style={styles.refreshText}>Refresh</Text>
+              <Text style={styles.refreshText}>{t('tabs.quotes.refresh', 'Refresh')}</Text>
             </Pressable>
-            <PrimaryButton label="New quote" onPress={() => router.push('/quotes/new')} />
+            <PrimaryButton label={t('tabs.quotes.newQuote', 'New quote')} onPress={() => router.push('/quotes/new')} />
           </View>
         </View>
 
@@ -69,7 +71,7 @@ export default function QuotesScreen() {
               key={draft.id}
               renderRightActions={() => (
                 <Pressable style={styles.swipeAction} onPress={() => removeQuote(draft.id)}>
-                  <Text style={styles.swipeActionText}>Delete</Text>
+                  <Text style={styles.swipeActionText}>{t('common.delete', 'Delete')}</Text>
                 </Pressable>
               )}
             >
@@ -84,7 +86,7 @@ export default function QuotesScreen() {
                   </Pressable>
                 </Link>
                 <Pressable style={styles.deleteButton} onPress={() => removeQuote(draft.id)}>
-                  <Text style={styles.deleteText}>Delete</Text>
+                  <Text style={styles.deleteText}>{t('common.delete', 'Delete')}</Text>
                 </Pressable>
               </View>
             </Swipeable>

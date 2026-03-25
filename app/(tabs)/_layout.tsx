@@ -1,7 +1,9 @@
 import { Tabs } from 'expo-router';
+import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../src/theme/colors';
 import { useAuth, type UserRole } from '../../src/context/AuthContext';
+import { OfflineBanner } from '../../src/components/shared/OfflineBanner';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -65,6 +67,8 @@ export default function TabsLayout() {
   const primaryColor = roleConfig?.primaryColor || SemanticColors.actionPrimary;
 
   return (
+    <View style={{ flex: 1 }}>
+    <OfflineBanner />
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -138,5 +142,6 @@ export default function TabsLayout() {
       <Tabs.Screen name="quotes" options={{ href: null }} />
       <Tabs.Screen name="invoices" options={{ href: null }} />
     </Tabs>
+    </View>
   );
 }

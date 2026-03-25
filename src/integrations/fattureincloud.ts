@@ -6,9 +6,10 @@
 // #1 e-invoicing platform in Italy, mandatory SDI integration
 // =============================================================================
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getSecureItem, setSecureItem, deleteSecureItem, migrateToSecure } from '../lib/secureStorage';
 
-const STORAGE_KEY = '@vasco_fattureincloud';
+const STORAGE_KEY = 'vasco_fattureincloud';
+const LEGACY_KEY = '@vasco_fattureincloud';
 const API_BASE = 'https://api-v2.fattureincloud.it';
 
 // ---------------------------------------------------------------------------
@@ -146,7 +147,8 @@ export const MARCA_DA_BOLLO_AMOUNT = 2.0;
 
 async function getConfig(): Promise<FattureInCloudConfig | null> {
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    await migrateToSecure(LEGACY_KEY, STORAGE_KEY);
+    const raw = await getSecureItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -154,11 +156,11 @@ async function getConfig(): Promise<FattureInCloudConfig | null> {
 }
 
 async function saveConfig(config: FattureInCloudConfig): Promise<void> {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+  await setSecureItem(STORAGE_KEY, JSON.stringify(config));
 }
 
 export async function clearFattureInCloudConfig(): Promise<void> {
-  await AsyncStorage.removeItem(STORAGE_KEY);
+  await deleteSecureItem(STORAGE_KEY);
 }
 
 export async function isConnected(): Promise<boolean> {
@@ -179,15 +181,18 @@ export async function exchangeCodeForToken(
   clientId: string,
   clientSecret: string,
   redirectUri: string,
+  tokenExchangeUrl?: string,
 ): Promise<FattureInCloudConfig | null> {
   try {
-    const res = await fetch('https://api-v2.fattureincloud.it/oauth/token', {
+    // Prefer server-side token exchange (edge function) to keep client_secret off the client
+    const endpoint = tokenExchangeUrl || 'https://api-v2.fattureincloud.it/oauth/token';
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         grant_type: 'authorization_code',
         client_id: clientId,
-        client_secret: clientSecret,
+        ...(clientSecret ? { client_secret: clientSecret } : {}),
         code,
         redirect_uri: redirectUri,
       }),
@@ -216,12 +221,49 @@ export async function exchangeCodeForToken(
 }
 
 // ---------------------------------------------------------------------------
+// Token refresh
+// ---------------------------------------------------------------------------
+
+async function refreshAccessToken(config: FattureInCloudConfig): Promise<FattureInCloudConfig | null> {
+  try {
+    const res = await fetch('https://api-v2.fattureincloud.it/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        grant_type: 'refresh_token',
+        refresh_token: config.refreshToken,
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+
+    const newConfig: FattureInCloudConfig = {
+      ...config,
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token ?? config.refreshToken,
+      expiresAt: Date.now() + (data.expires_in ?? 7200) * 1000,
+    };
+    await saveConfig(newConfig);
+    return newConfig;
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // API helpers
 // ---------------------------------------------------------------------------
 
 async function apiCall<T>(path: string, options?: RequestInit): Promise<T | null> {
-  const config = await getConfig();
+  let config = await getConfig();
   if (!config) return null;
+
+  // Auto-refresh if token expires within 5 minutes
+  if (Date.now() > config.expiresAt - 300_000) {
+    const refreshed = await refreshAccessToken(config);
+    if (!refreshed) return null;
+    config = refreshed;
+  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);

@@ -87,7 +87,7 @@ export default function CustomerPortalScreen() {
         totalDecisions: data.totalDecisions,
         completedDecisions: data.completedDecisions,
         overdueDecisions: data.overdueDecisions,
-      }).catch((err) => console.error('Failed to sync portal access:', err));
+      }).catch((err) => { if (__DEV__) console.error('Failed to sync portal access:', err); });
     } else {
       setError('Project niet gevonden. Controleer de code en probeer opnieuw.');
     }
@@ -112,7 +112,7 @@ export default function CustomerPortalScreen() {
     }
 
     if (!decidedItem) {
-      console.error('Could not find item for submission:', submission.itemId);
+      if (__DEV__) console.error('Could not find item for submission:', submission.itemId);
       return;
     }
 
@@ -142,7 +142,7 @@ export default function CustomerPortalScreen() {
         }
       );
     } catch (err) {
-      console.error('Failed to process decision intelligence:', err);
+      if (__DEV__) console.error('Failed to process decision intelligence:', err);
     }
 
     // Persist decision via sync service (local + Supabase when configured)
@@ -159,7 +159,7 @@ export default function CustomerPortalScreen() {
         submittedAt: submission.submittedAt,
       });
     } catch (err) {
-      console.error('Failed to sync decision:', err);
+      if (__DEV__) console.error('Failed to sync decision:', err);
     }
 
     // Update local state to reflect the decision

@@ -2,7 +2,7 @@
 // GLOBAL SEARCH — Search across jobs, quotes, invoices, customers
 // =============================================================================
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +12,7 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { FadeIn } from '../../src/components/shared/FadeIn';
+import { trackEvent } from '../../src/services/eventTrackingService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type ResultType = 'job' | 'quote' | 'invoice' | 'customer';
@@ -110,6 +111,18 @@ export default function SearchScreen() {
 
     return r.slice(0, 20);
   }, [query, jobs, quotes, invoices, customers]);
+
+  // Track search events (debounced — fires 500ms after user stops typing)
+  const trackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (query.trim().length >= 2) {
+      if (trackTimerRef.current) clearTimeout(trackTimerRef.current);
+      trackTimerRef.current = setTimeout(() => {
+        trackEvent('search_performed', { query: 'has_query', resultCount: results.length });
+      }, 500);
+    }
+    return () => { if (trackTimerRef.current) clearTimeout(trackTimerRef.current); };
+  }, [query, results.length]);
 
   const grouped = useMemo(() => {
     const groups: Record<ResultType, SearchResult[]> = { job: [], quote: [], invoice: [], customer: [] };

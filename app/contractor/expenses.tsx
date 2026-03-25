@@ -10,6 +10,8 @@ import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useExpenses, useExpenseStats, EXPENSE_CATEGORIES, type ExpenseCategory } from '../../src/services/expenseService';
+import { useAppState } from '../../src/state/AppState';
+import { getVATRate } from '../../src/constants/taxRates';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { EmptyState } from '../../src/components/shared/EmptyState';
@@ -20,6 +22,9 @@ export default function ExpensesScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const { expenses, remove, add } = useExpenses();
+  const { businessProfile } = useAppState();
+  const vatRate = getVATRate(businessProfile.country ?? 'NL');
+  const vatPct = Math.round(vatRate * 100);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newDesc, setNewDesc] = useState('');
   const [newAmount, setNewAmount] = useState('');
@@ -36,8 +41,8 @@ export default function ExpensesScreen() {
       date: new Date(),
       deductible: true,
       deductionPercentage: catDef?.deductionDefault ?? 100,
-      vatRate: 21,
-      vatAmount: amt * 0.21,
+      vatRate: vatPct,
+      vatAmount: amt * vatRate,
     });
     hapticSuccess();
     setNewDesc('');
@@ -56,7 +61,7 @@ export default function ExpensesScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Terug">
+        <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
@@ -66,7 +71,7 @@ export default function ExpensesScreen() {
         <Pressable
           style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.85 }]}
           onPress={() => setShowAddForm(true)}
-          accessibilityLabel="Nieuwe uitgave"
+          accessibilityLabel={t('expenses.newExpense', 'New expense')}
         >
           <Ionicons name="add" size={22} color={Palette.white} />
         </Pressable>
@@ -75,7 +80,7 @@ export default function ExpensesScreen() {
       {/* Add Expense Modal */}
       <Modal visible={showAddForm} transparent animationType="slide">
         <View style={styles.modalOverlay}>
-          <Pressable style={styles.modalDismiss} onPress={() => setShowAddForm(false)} accessibilityLabel="Sluiten" />
+          <Pressable style={styles.modalDismiss} onPress={() => setShowAddForm(false)} accessibilityLabel={t('common.close', 'Close')} />
           <View style={styles.modalSheet}>
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>{t('expenses.newExpense', 'Nieuwe uitgave')}</Text>
