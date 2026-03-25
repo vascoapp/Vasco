@@ -132,11 +132,28 @@ export async function shareJobAsCalendarEvent(job: Job): Promise<void> {
 
 export async function shareAllScheduledJobs(jobs: Job[]): Promise<void> {
   const scheduled = jobs.filter(j => ['scheduled', 'in-progress'].includes(j.status));
-  if (scheduled.length === 0) return;
+  if (scheduled.length === 0) {
+    const { Alert } = require('react-native');
+    Alert.alert('No scheduled jobs', 'Schedule some jobs first to export your calendar.');
+    return;
+  }
 
   const ics = generateIcsCalendar(scheduled);
-  await Share.share({
-    message: ics,
-    title: 'Vasco Planning Export',
-  });
+  try {
+    await Share.share({
+      message: ics,
+      title: 'Vasco Planning Export',
+    });
+  } catch {
+    // Web fallback: copy to clipboard
+    const { Platform, Alert } = require('react-native');
+    if (Platform.OS === 'web') {
+      try {
+        await navigator.clipboard.writeText(ics);
+        Alert.alert('Copied', 'Calendar data copied to clipboard. Paste into a .ics file to import.');
+      } catch {
+        Alert.alert('Export', ics.substring(0, 500) + '...');
+      }
+    }
+  }
 }

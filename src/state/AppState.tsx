@@ -289,66 +289,68 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   }, [refreshData]);
 
   // Hydrate from AsyncStorage when offline (no Supabase)
-  // Seed version: bump this to force fresh seed data after code updates
-  const SEED_VERSION = '2026-03-25-v2';
+  // persistReady uses state (not ref) to trigger re-render and guard persist effects
+  const SEED_VERSION = '2026-03-25-v4';
+  const [persistReady, setPersistReady] = useState(false);
   const hydrated = useRef(false);
   useEffect(() => {
     if (!isSupabaseConfigured && !hydrated.current) {
       hydrated.current = true;
-      // Check if seed version changed — if so, don't load stale data
-      AsyncStorage.getItem('@vasco_seed_version').then(storedVersion => {
-        if (storedVersion === SEED_VERSION) {
-          // Same version: load persisted data (overrides seeds only if non-empty)
-          const loadIfNonEmpty = (key: string, setter: (v: any) => void) => {
-            AsyncStorage.getItem(key).then(raw => {
+      (async () => {
+        try {
+          const storedVersion = await AsyncStorage.getItem('@vasco_seed_version');
+          if (storedVersion !== SEED_VERSION) {
+            // New seed version — wipe ALL stale data, use fresh seeds from useState
+            await AsyncStorage.multiRemove([
+              '@vasco_jobs', '@vasco_invoices', '@vasco_quotes',
+              '@vasco_customers', '@vasco_projects', '@vasco_decision_trackers',
+            ]);
+            await AsyncStorage.setItem('@vasco_seed_version', SEED_VERSION);
+          } else {
+            // Same version — load persisted user data (only if non-empty)
+            const pairs: [string, (v: any) => void][] = [
+              ['@vasco_jobs', setJobs], ['@vasco_invoices', setInvoices],
+              ['@vasco_quotes', setQuotes], ['@vasco_customers', setCustomers],
+              ['@vasco_projects', setProjects],
+            ];
+            for (const [key, setter] of pairs) {
+              const raw = await AsyncStorage.getItem(key);
               if (raw) {
                 const parsed = JSON.parse(raw);
                 if (Array.isArray(parsed) && parsed.length > 0) setter(parsed);
               }
-            }).catch(() => {});
-          };
-          loadIfNonEmpty('@vasco_jobs', setJobs);
-          loadIfNonEmpty('@vasco_invoices', setInvoices);
-          loadIfNonEmpty('@vasco_quotes', setQuotes);
-          loadIfNonEmpty('@vasco_customers', setCustomers);
-          loadIfNonEmpty('@vasco_projects', setProjects);
-        }
-        // New version: clear stale caches so seed data is visible
-        if (storedVersion !== SEED_VERSION) {
-          AsyncStorage.multiRemove([
-            '@vasco_jobs', '@vasco_invoices', '@vasco_quotes',
-            '@vasco_customers', '@vasco_projects', '@vasco_decision_trackers',
-          ]).catch(() => {});
-        }
-        // Save current version
-        AsyncStorage.setItem('@vasco_seed_version', SEED_VERSION).catch(() => {});
-      }).catch(() => {});
+            }
+          }
+        } catch {}
+        // NOW allow persistence — uses setState so persist effects re-evaluate
+        setPersistReady(true);
+      })();
     }
   }, []);
 
-  // Persist to AsyncStorage on changes (fire-and-forget)
+  // Persist to AsyncStorage — ONLY after hydration completes (persistReady=true)
   useEffect(() => {
-    if (!isSupabaseConfigured && hydrated.current) {
+    if (!isSupabaseConfigured && persistReady) {
       AsyncStorage.setItem('@vasco_jobs', JSON.stringify(jobs)).catch(() => {});
     }
-  }, [jobs]);
+  }, [jobs, persistReady]);
   useEffect(() => {
-    if (!isSupabaseConfigured && hydrated.current) {
+    if (!isSupabaseConfigured && persistReady) {
       AsyncStorage.setItem('@vasco_invoices', JSON.stringify(invoices)).catch(() => {});
     }
-  }, [invoices]);
+  }, [invoices, persistReady]);
   useEffect(() => {
-    if (!isSupabaseConfigured && hydrated.current) {
+    if (!isSupabaseConfigured && persistReady) {
       AsyncStorage.setItem('@vasco_quotes', JSON.stringify(quotes)).catch(() => {});
     }
-  }, [quotes]);
+  }, [quotes, persistReady]);
   useEffect(() => {
-    if (!isSupabaseConfigured && hydrated.current) {
+    if (!isSupabaseConfigured && persistReady) {
       AsyncStorage.setItem('@vasco_customers', JSON.stringify(customers)).catch(() => {});
     }
   }, [customers]);
   useEffect(() => {
-    if (!isSupabaseConfigured && hydrated.current) {
+    if (!isSupabaseConfigured && persistReady) {
       AsyncStorage.setItem('@vasco_projects', JSON.stringify(projects)).catch(() => {});
     }
   }, [projects]);

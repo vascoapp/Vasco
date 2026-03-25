@@ -21,6 +21,7 @@ import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
+import { PAGE_BG, TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
 
 // Services
@@ -672,7 +673,7 @@ export default function CertificatenScreen() {
           </View>
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 140 }} />
       </ScrollView>
 
       {/* Item Detail Modal */}
@@ -761,7 +762,7 @@ export default function CertificatenScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.surfaceBackground,
+    backgroundColor: PAGE_BG,
   },
   tabBar: {
     backgroundColor: SemanticColors.surfacePrimary,
@@ -769,9 +770,9 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   tabScroll: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    gap: Spacing.sm,
+    paddingHorizontal: GRID.md,
+    paddingVertical: GRID.sm,
+    gap: GRID.sm,
   },
   tabButton: {
     flexDirection: 'row',
@@ -779,15 +780,15 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 20,
+    borderRadius: RADIUS.full,
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   tabButtonActive: {
     backgroundColor: Palette.hermesOrange,
   },
   tabButtonText: {
-    fontSize: 13,
-    fontFamily: 'Manrope_600SemiBold',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textSecondary,
   },
   tabButtonTextActive: {
@@ -807,7 +808,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -816,8 +817,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scoreCardTitle: {
-    fontSize: 16,
-    fontFamily: 'Manrope_700Bold',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     marginBottom: Spacing.md,
   },
@@ -832,7 +833,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 20,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
   },
   statLabel: {
     fontSize: 10,
@@ -851,8 +852,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scoreValue: {
-    fontSize: 28,
-    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: TYPE.displaySize,
+    fontFamily: TYPE.displayFamily,
   },
   scoreLabel: {
     fontSize: 10,
@@ -864,7 +865,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.feedbackErrorBg,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     gap: Spacing.sm,
   },
@@ -880,12 +881,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   blockedTitle: {
-    fontSize: 14,
-    fontFamily: 'Manrope_600SemiBold',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.feedbackError,
   },
   blockedSubtitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.feedbackError,
     opacity: 0.8,
   },
@@ -896,8 +897,8 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackError,
   },
   blockedActionText: {
-    fontSize: 12,
-    fontFamily: 'Manrope_600SemiBold',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
     color: '#fff',
   },
 
@@ -906,8 +907,8 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontFamily: 'Manrope_700Bold',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     marginBottom: Spacing.xs,
   },
@@ -917,18 +918,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.md,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     gap: Spacing.sm,
   },
   alertContent: {
     flex: 1,
   },
   alertTitle: {
-    fontSize: 13,
-    fontFamily: 'Manrope_600SemiBold',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
   },
   alertDays: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     marginTop: 2,
   },
 
@@ -939,8 +940,8 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
   },
   timelineTitle: {
-    fontSize: 14,
-    fontFamily: 'Manrope_700Bold',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     marginBottom: Spacing.md,
   },
@@ -964,11 +965,11 @@ const styles = StyleSheet.create({
   },
   timelineItemName: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
   },
   timelineItemDate: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
 
@@ -980,12 +981,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   listTitle: {
-    fontSize: 16,
-    fontFamily: 'Manrope_700Bold',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   listCount: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textTertiary,
   },
 
@@ -1012,12 +1013,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemName: {
-    fontSize: 15,
-    fontFamily: 'Manrope_600SemiBold',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
   },
   itemIssuer: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1042,7 +1043,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   itemExpiryText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   renewButton: {
@@ -1055,8 +1056,8 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange + '15',
   },
   renewButtonText: {
-    fontSize: 12,
-    fontFamily: 'Manrope_600SemiBold',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
     color: Palette.hermesOrange,
   },
 
@@ -1067,19 +1068,19 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   emptyStateText: {
-    fontSize: 14,
+    fontSize: TYPE.captionSize + 1,
     color: SemanticColors.textTertiary,
   },
   emptyStateButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: Palette.hermesOrange,
     marginTop: Spacing.sm,
   },
   emptyStateButtonText: {
-    fontSize: 14,
-    fontFamily: 'Manrope_600SemiBold',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.labelFamily,
     color: '#fff',
   },
 
@@ -1104,18 +1105,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   verificationLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
     letterSpacing: 0.5,
   },
   verificationValue: {
-    fontSize: 14,
-    fontFamily: 'Manrope_600SemiBold',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
     marginTop: 1,
   },
   verificationMeta: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1129,8 +1130,8 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange + '15',
   },
   verifyButtonText: {
-    fontSize: 12,
-    fontFamily: 'Manrope_600SemiBold',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
     color: Palette.hermesOrange,
   },
 
@@ -1141,20 +1142,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.sm,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderStyle: 'dashed',
   },
   addButtonText: {
-    fontSize: 14,
-    fontFamily: 'Manrope_600SemiBold',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.labelFamily,
     color: Palette.hermesOrange,
   },
 
   // Modal
   modalContainer: {
     flex: 1,
-    backgroundColor: SemanticColors.surfaceBackground,
+    backgroundColor: PAGE_BG,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1166,8 +1167,8 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   modalTitle: {
-    fontSize: 18,
-    fontFamily: 'Manrope_700Bold',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     flex: 1,
     marginRight: Spacing.md,
@@ -1180,18 +1181,18 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   modalLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     marginBottom: 4,
     letterSpacing: 0.5,
   },
   modalValue: {
-    fontSize: 16,
-    fontFamily: 'Manrope_600SemiBold',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
   },
   modalSubvalue: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1201,12 +1202,12 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignSelf: 'flex-start',
   },
   statusTextLarge: {
-    fontSize: 14,
-    fontFamily: 'Manrope_600SemiBold',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.labelFamily,
   },
   modalActions: {
     gap: Spacing.sm,
@@ -1219,15 +1220,15 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingVertical: 14,
     paddingHorizontal: Spacing.lg,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   modalButtonPrimary: {
     backgroundColor: Palette.hermesOrange,
   },
   modalButtonText: {
-    fontSize: 15,
-    fontFamily: 'Manrope_600SemiBold',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.labelFamily,
     color: Palette.hermesOrange,
   },
   portalsSection: {
@@ -1235,8 +1236,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   portalsSectionTitle: {
-    fontSize: 15,
-    fontFamily: 'Manrope_700Bold',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     letterSpacing: -0.2,
     paddingHorizontal: 4,
@@ -1259,19 +1260,19 @@ const styles = StyleSheet.create({
   portalIcon: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     backgroundColor: Palette.hermesOrange + '0A',
     alignItems: 'center',
     justifyContent: 'center',
   },
   portalName: {
-    fontSize: 14,
-    fontFamily: 'Inter_500Medium',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
   },
   portalDesc: {
-    fontSize: 12,
-    fontFamily: 'Inter_400Regular',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.bodyFamily,
     color: SemanticColors.textSecondary,
     marginTop: 1,
   },

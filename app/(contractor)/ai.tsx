@@ -410,8 +410,19 @@ export default function VascoScreen() {
                   style={s.autoRow}
                   onPress={() => {
                     hapticSuccess();
-                    if (auto.key === 'autoInvoiceEnabled') {
-                      updateConfig({ autoInvoiceEnabled: !auto.enabled });
+                    switch (auto.key) {
+                      case 'autoInvoiceEnabled':
+                        updateConfig({ autoInvoiceEnabled: !auto.enabled });
+                        break;
+                      case 'autoReminder':
+                        updateConfig({ autoReminderDays: auto.enabled ? 0 : 7 });
+                        break;
+                      case 'autoFollowup':
+                        updateConfig({ autoFollowupDays: auto.enabled ? 0 : 3 });
+                        break;
+                      case 'certExpiry':
+                        updateConfig({ certExpiryWarningDays: auto.enabled ? 0 : 30 });
+                        break;
                     }
                   }}
                 >
@@ -431,6 +442,10 @@ export default function VascoScreen() {
                 {t('ai.actionsExecutedThisWeek', { count: automationResults.filter(r => r.actionTaken).length })}
               </Text>
             )}
+            <Pressable style={s.manageLink} onPress={() => router.push('/contractor/automations' as any)}>
+              <Text style={s.manageLinkText}>{t('ai.manageAutomations', 'Manage all automations')}</Text>
+              <Ionicons name="chevron-forward" size={14} color={Palette.hermesOrange} />
+            </Pressable>
           </View>
         </FadeIn>
 
@@ -595,6 +610,8 @@ const s = StyleSheet.create({
   autoToggleDot: { width: 18, height: 18, borderRadius: 9, backgroundColor: Palette.white },
   autoToggleDotOn: { alignSelf: 'flex-end' as const },
   autoResultCount: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary, textAlign: 'center' },
+  manageLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: GRID.xs, paddingVertical: GRID.sm },
+  manageLinkText: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange },
 
   // Quick links at bottom
   linksRow: { flexDirection: 'row', gap: 8, justifyContent: 'center' },
