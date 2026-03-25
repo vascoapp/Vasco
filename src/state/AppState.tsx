@@ -174,11 +174,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   const aiUserId = 'current-user'; // placeholder until AuthContext is accessible here
   const [isLoading, setIsLoading] = useState(isSupabaseConfigured);
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile>(
-    isSupabaseConfigured ? { isComplete: false, completenessPercent: 0 } : initialBusinessProfile,
+    useSeedData ? initialBusinessProfile : { isComplete: false, completenessPercent: 0 },
   );
-  const [quotes, setQuotes] = useState<Quote[]>(isSupabaseConfigured ? [] : initialQuotes);
-  const [invoices, setInvoices] = useState<Invoice[]>(isSupabaseConfigured ? [] : initialInvoices);
-  const [jobs, setJobs] = useState<Job[]>(isSupabaseConfigured ? [] : [
+  // Always seed demo data — Supabase project is paused so real data won't load
+  // When Supabase is live with real data, these seeds will be overridden by refreshData()
+  const useSeedData = true; // TODO: set to `!isSupabaseConfigured` once Supabase is live with data
+  const [quotes, setQuotes] = useState<Quote[]>(useSeedData ? initialQuotes : []);
+  const [invoices, setInvoices] = useState<Invoice[]>(useSeedData ? initialInvoices : []);
+  const [jobs, setJobs] = useState<Job[]>(useSeedData ? [
     { id: 'j-seed-1', customerId: 'cust-004', title: 'Lekkage inspectie — Fam. Bakker', description: null, status: 'lead', trade: 'plumbing', priority: 'normal', quotedAmount: 180, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 1).toISOString(), updatedAt: new Date().toISOString() },
     { id: 'j-seed-2', customerId: 'cust-001', title: 'CV-ketel onderhoud — Fam. de Vries', description: null, status: 'scheduled', trade: 'plumbing', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], scheduledStartTime: '09:00', scheduledEndTime: '12:00', estimatedDuration: 3, quotedAmount: 450, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 3).toISOString(), updatedAt: new Date().toISOString() },
     { id: 'j-seed-3', customerId: 'cust-002', title: 'Badkamer renovatie — Fam. Jansen', description: null, status: 'in-progress', trade: 'plumbing', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], scheduledStartTime: '13:30', scheduledEndTime: '17:00', estimatedDuration: 24, quotedAmount: 4200, agreedAmount: 4200, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 7).toISOString(), updatedAt: new Date().toISOString() },
@@ -187,9 +190,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   ]);
   const [extractedDocs, setExtractedDocs] = useState<ExtractedDocument[]>([]);
   const [lineItems, setLineItems] = useState<Record<string, QuoteLineItem[]>>(
-    isSupabaseConfigured ? {} : initialLineItems,
+    useSeedData ? initialLineItems : {},
   );
-  const [customers, setCustomers] = useState<Customer[]>(isSupabaseConfigured ? [] : [
+  const [customers, setCustomers] = useState<Customer[]>(useSeedData ? [
     { id: 'cust-001', name: 'Fam. de Vries', email: 'devries@gmail.com', phone: '+31 6 12345678', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
     { id: 'cust-002', name: 'Fam. Jansen', email: 'jansen@hotmail.com', phone: '+31 6 87654321', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
     { id: 'cust-003', name: 'Bakkerij Smit', email: 'info@bakkerijsmit.nl', phone: '+31 20 1234567', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
@@ -198,7 +201,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   ]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [jobMaterialsMap, setJobMaterialsMap] = useState<Record<string, JobMaterial[]>>(isSupabaseConfigured ? {} : {
+  const [jobMaterialsMap, setJobMaterialsMap] = useState<Record<string, JobMaterial[]>>(useSeedData ? {
     'j-seed-2': [
       { id: 'jm-s2-1', jobId: 'j-seed-2', materialId: 'mat-cvfilter', quantity: 2, unit: 'stuk', unitPrice: 8.50, totalPrice: 17, status: 'planned', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
       { id: 'jm-s2-2', jobId: 'j-seed-2', materialId: 'mat-expansievat', quantity: 1, unit: 'stuk', unitPrice: 65, totalPrice: 65, status: 'planned', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
@@ -232,7 +235,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       createdAt: new Date(Date.now() - MS_PER_DAY * 3).toISOString(), updatedAt: new Date().toISOString(),
     },
   ];
-  const [projects, setProjects] = useState<Project[]>(isSupabaseConfigured ? [] : SEED_PROJECTS);
+  const [projects, setProjects] = useState<Project[]>(useSeedData ? SEED_PROJECTS : []);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // SECTION: Data Hydration (refreshData, AsyncStorage persistence)
@@ -294,7 +297,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   const [persistReady, setPersistReady] = useState(false);
   const hydrated = useRef(false);
   useEffect(() => {
-    if (!isSupabaseConfigured && !hydrated.current) {
+    if (useSeedData && !hydrated.current) {
       hydrated.current = true;
       (async () => {
         try {
@@ -330,27 +333,27 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
   // Persist to AsyncStorage — ONLY after hydration completes (persistReady=true)
   useEffect(() => {
-    if (!isSupabaseConfigured && persistReady) {
+    if (useSeedData && persistReady) {
       AsyncStorage.setItem('@vasco_jobs', JSON.stringify(jobs)).catch(() => {});
     }
   }, [jobs, persistReady]);
   useEffect(() => {
-    if (!isSupabaseConfigured && persistReady) {
+    if (useSeedData && persistReady) {
       AsyncStorage.setItem('@vasco_invoices', JSON.stringify(invoices)).catch(() => {});
     }
   }, [invoices, persistReady]);
   useEffect(() => {
-    if (!isSupabaseConfigured && persistReady) {
+    if (useSeedData && persistReady) {
       AsyncStorage.setItem('@vasco_quotes', JSON.stringify(quotes)).catch(() => {});
     }
   }, [quotes, persistReady]);
   useEffect(() => {
-    if (!isSupabaseConfigured && persistReady) {
+    if (useSeedData && persistReady) {
       AsyncStorage.setItem('@vasco_customers', JSON.stringify(customers)).catch(() => {});
     }
   }, [customers]);
   useEffect(() => {
-    if (!isSupabaseConfigured && persistReady) {
+    if (useSeedData && persistReady) {
       AsyncStorage.setItem('@vasco_projects', JSON.stringify(projects)).catch(() => {});
     }
   }, [projects]);
