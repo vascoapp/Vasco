@@ -1,7 +1,11 @@
 // =============================================================================
-// NOTIFICATIONS — Meldingen centrum
+// NOTIFICATIONS — Pro-grade notification center
 // =============================================================================
-import { useState, useCallback } from 'react';
+// Grouped by time (Today / Earlier / This week), rich cards with actions,
+// priority badges, swipe-to-read feel, settings tab.
+// =============================================================================
+
+import { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Switch, RefreshControl } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
@@ -18,164 +22,221 @@ import {
 } from '../../src/services/notificationService';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
+import { MS_PER_DAY, MS_PER_HOUR } from '../../src/utils/timeConstants';
 
 type IconName = keyof typeof Ionicons.glyphMap;
-type TabType = 'inbox' | 'instellingen';
+type TabType = 'inbox' | 'settings';
 
-const TYPE_CONFIG: Record<NotificationType, { icon: IconName; color: string }> = {
-  schedule_change: { icon: 'calendar-outline', color: SemanticColors.feedbackWarning },
-  overdue_invoice: { icon: 'alert-circle-outline', color: SemanticColors.feedbackError },
-  team_assignment: { icon: 'people-outline', color: SemanticColors.feedbackInfo },
-  approval_request: { icon: 'shield-checkmark-outline', color: Palette.hermesOrange },
-  permit_update: { icon: 'document-text-outline', color: Palette.hermesOrange },
-  delivery_update: { icon: 'cube-outline', color: SemanticColors.feedbackSuccess },
-  credential_expiry: { icon: 'ribbon-outline', color: SemanticColors.feedbackWarning },
-  general: { icon: 'notifications-outline', color: SemanticColors.textSecondary },
+const TYPE_CONFIG: Record<NotificationType, { icon: IconName; color: string; label: string }> = {
+  schedule_change: { icon: 'calendar', color: SemanticColors.feedbackWarning, label: 'Schedule' },
+  overdue_invoice: { icon: 'alert-circle', color: SemanticColors.feedbackError, label: 'Payment' },
+  team_assignment: { icon: 'people', color: SemanticColors.feedbackInfo, label: 'Team' },
+  approval_request: { icon: 'shield-checkmark', color: Palette.hermesOrange, label: 'Approval' },
+  permit_update: { icon: 'document-text', color: Palette.hermesOrange, label: 'Permit' },
+  delivery_update: { icon: 'cube', color: SemanticColors.feedbackSuccess, label: 'Delivery' },
+  credential_expiry: { icon: 'ribbon', color: SemanticColors.feedbackWarning, label: 'Cert' },
+  general: { icon: 'notifications', color: SemanticColors.textSecondary, label: 'General' },
 };
-
-const getPriorityConfig = (t: (key: string, defaultValue: string) => string): Record<string, { label: string; color: string }> => ({
-  urgent: { label: t('notifications.priorityUrgent', 'Urgent'), color: SemanticColors.feedbackError },
-  high: { label: t('notifications.priorityHigh', 'Hoog'), color: SemanticColors.feedbackWarning },
-  medium: { label: t('notifications.priorityMedium', 'Normaal'), color: SemanticColors.feedbackInfo },
-  low: { label: t('notifications.priorityLow', 'Laag'), color: SemanticColors.textTertiary },
-});
 
 export default function NotificationsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const PRIORITY_CONFIG = getPriorityConfig(t);
   const [activeTab, setActiveTab] = useState<TabType>('inbox');
   const { notifications, markRead, markAllRead } = useNotifications();
   const stats = useUnreadCount();
   const { preferences, toggle } = useNotificationPreferences();
   const [refreshing, setRefreshing] = useState(false);
-  const onRefresh = useCallback(() => { setRefreshing(true); setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600); }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
+  }, []);
+
+  // Group notifications by time
+  const grouped = useMemo(() => {
+    const now = Date.now();
+    const today: AppNotification[] = [];
+    const earlier: AppNotification[] = [];
+    const thisWeek: AppNotification[] = [];
+    const older: AppNotification[] = [];
+
+    for (const n of notifications) {
+      const age = now - n.createdAt.getTime();
+      if (age < 12 * MS_PER_HOUR) today.push(n);
+      else if (age < MS_PER_DAY) earlier.push(n);
+      else if (age < 7 * MS_PER_DAY) thisWeek.push(n);
+      else older.push(n);
+    }
+
+    const groups: { label: string; items: AppNotification[] }[] = [];
+    if (today.length) groups.push({ label: t('notifications.today', 'Today'), items: today });
+    if (earlier.length) groups.push({ label: t('notifications.earlier', 'Earlier'), items: earlier });
+    if (thisWeek.length) groups.push({ label: t('notifications.thisWeek', 'This week'), items: thisWeek });
+    if (older.length) groups.push({ label: t('notifications.older', 'Older'), items: older });
+    return groups;
+  }, [notifications, t]);
 
   const formatTimeAgo = (date: Date) => {
     const mins = Math.floor((Date.now() - date.getTime()) / 60000);
-    if (mins < 60) return t('notifications.minutesAgo', '{{count}}m ago', { count: mins });
+    if (mins < 1) return t('notifications.justNow', 'Just now');
+    if (mins < 60) return t('notifications.minutesAgo', '{{count}}m', { count: mins });
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return t('notifications.hoursAgo', '{{count}}h ago', { count: hours });
+    if (hours < 24) return t('notifications.hoursAgo', '{{count}}h', { count: hours });
     const days = Math.floor(hours / 24);
-    return t('notifications.daysAgo', '{{count}}d ago', { count: days });
+    return t('notifications.daysAgo', '{{count}}d', { count: days });
   };
 
-  const handleNotificationPress = (notif: AppNotification) => {
-    if (!notif.read) {
-      markRead(notif.id);
-      hapticSuccess();
-    }
-    if (notif.actionRoute) {
-      router.push(notif.actionRoute as any);
-    }
+  const handlePress = (notif: AppNotification) => {
+    if (!notif.read) { markRead(notif.id); hapticSuccess(); }
+    if (notif.actionRoute) router.push(notif.actionRoute as any);
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+    <View style={s.container}>
+      {/* Header */}
+      <View style={s.header}>
+        <Pressable onPress={() => router.back()} hitSlop={8} style={s.backBtn}>
+          <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>{t('notifications.title', 'Meldingen')}</Text>
-          <Text style={styles.headerSubtitle}>
-            {stats.unread > 0 ? t('notifications.unreadCount', `${stats.unread} ongelezen`) : t('notifications.noNew', 'Geen nieuwe meldingen')}
-          </Text>
+          <Text style={s.headerTitle}>{t('notifications.title', 'Notifications')}</Text>
         </View>
         {stats.unread > 0 && (
-          <Pressable
-            style={styles.markAllButton}
-            onPress={() => { markAllRead(); hapticSuccess(); }}
-          >
-            <Ionicons name="checkmark-done" size={20} color={Palette.hermesOrange} />
+          <Pressable style={s.markAllBtn} onPress={() => { markAllRead(); hapticSuccess(); }}>
+            <Ionicons name="checkmark-done" size={18} color={Palette.hermesOrange} />
           </Pressable>
         )}
       </View>
 
-      {/* Tabs */}
-      <FadeIn delay={0} duration={400}>
-        <View style={styles.tabBar}>
-          <Pressable style={[styles.tab, activeTab === 'inbox' && styles.tabActive]} onPress={() => setActiveTab('inbox')}>
-            <Text style={[styles.tabText, activeTab === 'inbox' && styles.tabTextActive]}>
-              {t('notifications.inbox', 'Inbox')}{stats.unread > 0 ? ` (${stats.unread})` : ''}
-            </Text>
-          </Pressable>
-          <Pressable style={[styles.tab, activeTab === 'instellingen' && styles.tabActive]} onPress={() => setActiveTab('instellingen')}>
-            <Text style={[styles.tabText, activeTab === 'instellingen' && styles.tabTextActive]}>{t('notifications.settings', 'Instellingen')}</Text>
-          </Pressable>
+      {/* Unread summary strip */}
+      {stats.unread > 0 && (
+        <View style={s.unreadStrip}>
+          <View style={s.unreadDot} />
+          <Text style={s.unreadText}>{stats.unread} {t('notifications.unread', 'unread')}</Text>
+          {stats.urgent > 0 && (
+            <View style={s.urgentPill}>
+              <Text style={s.urgentText}>{stats.urgent} {t('notifications.urgent', 'urgent')}</Text>
+            </View>
+          )}
         </View>
-      </FadeIn>
+      )}
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />}>
+      {/* Tabs */}
+      <View style={s.tabBar}>
+        <Pressable style={[s.tab, activeTab === 'inbox' && s.tabActive]} onPress={() => setActiveTab('inbox')}>
+          <Ionicons name="mail-outline" size={14} color={activeTab === 'inbox' ? '#fff' : SemanticColors.textTertiary} />
+          <Text style={[s.tabText, activeTab === 'inbox' && s.tabTextActive]}>{t('notifications.inbox', 'Inbox')}</Text>
+        </Pressable>
+        <Pressable style={[s.tab, activeTab === 'settings' && s.tabActive]} onPress={() => setActiveTab('settings')}>
+          <Ionicons name="settings-outline" size={14} color={activeTab === 'settings' ? '#fff' : SemanticColors.textTertiary} />
+          <Text style={[s.tabText, activeTab === 'settings' && s.tabTextActive]}>{t('notifications.settings', 'Settings')}</Text>
+        </Pressable>
+      </View>
+
+      <ScrollView
+        style={s.scroll}
+        contentContainerStyle={s.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />}
+      >
         {activeTab === 'inbox' ? (
-          <View style={{ gap: GRID.xs }}>
+          <>
             {notifications.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Ionicons name="notifications-off-outline" size={40} color={SemanticColors.textTertiary} />
-                <Text style={styles.emptyText}>{t('notifications.noNotifications', 'Geen meldingen')}</Text>
+              <View style={s.empty}>
+                <Ionicons name="notifications-off-outline" size={48} color={SemanticColors.textTertiary} />
+                <Text style={s.emptyTitle}>{t('notifications.allCaughtUp', 'All caught up')}</Text>
+                <Text style={s.emptyDesc}>{t('notifications.noNewDesc', 'No new notifications. We\'ll let you know when something needs your attention.')}</Text>
               </View>
             ) : (
-              notifications.map(notif => {
-                const typeConf = TYPE_CONFIG[notif.type];
-                const prioConf = PRIORITY_CONFIG[notif.priority];
-                return (
-                  <Pressable
-                    key={notif.id}
-                    style={[styles.notifCard, !notif.read && styles.notifCardUnread]}
-                    onPress={() => handleNotificationPress(notif)}
-                  >
-                    <View style={[styles.notifIcon, { backgroundColor: typeConf.color + '15' }]}>
-                      <Ionicons name={typeConf.icon} size={18} color={typeConf.color} />
+              grouped.map((group, gi) => (
+                <FadeIn key={group.label} delay={gi * 50} duration={300}>
+                  <View style={s.group}>
+                    <Text style={s.groupLabel}>{group.label}</Text>
+                    <View style={s.groupCards}>
+                      {group.items.map((notif) => {
+                        const conf = TYPE_CONFIG[notif.type];
+                        return (
+                          <Pressable
+                            key={notif.id}
+                            style={({ pressed }) => [s.card, !notif.read && s.cardUnread, pressed && { opacity: 0.9 }]}
+                            onPress={() => handlePress(notif)}
+                          >
+                            {/* Left accent */}
+                            {!notif.read && <View style={[s.cardAccent, { backgroundColor: conf.color }]} />}
+
+                            {/* Icon */}
+                            <View style={[s.iconWrap, { backgroundColor: conf.color + '12' }]}>
+                              <Ionicons name={conf.icon} size={18} color={conf.color} />
+                            </View>
+
+                            {/* Content */}
+                            <View style={s.content}>
+                              <View style={s.titleRow}>
+                                <Text style={[s.title, !notif.read && s.titleUnread]} numberOfLines={1}>{notif.title}</Text>
+                                <Text style={s.time}>{formatTimeAgo(notif.createdAt)}</Text>
+                              </View>
+                              <Text style={s.body} numberOfLines={2}>{notif.body}</Text>
+                              <View style={s.footer}>
+                                <View style={[s.typePill, { backgroundColor: conf.color + '10' }]}>
+                                  <Text style={[s.typeText, { color: conf.color }]}>{conf.label}</Text>
+                                </View>
+                                {notif.priority === 'urgent' && (
+                                  <View style={s.urgentBadge}>
+                                    <Ionicons name="alert-circle" size={10} color={SemanticColors.feedbackError} />
+                                    <Text style={s.urgentBadgeText}>{t('notifications.urgent', 'Urgent')}</Text>
+                                  </View>
+                                )}
+                                {notif.priority === 'high' && (
+                                  <View style={[s.urgentBadge, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
+                                    <Text style={[s.urgentBadgeText, { color: SemanticColors.feedbackWarning }]}>{t('notifications.high', 'High')}</Text>
+                                  </View>
+                                )}
+                                {notif.actionRoute && (
+                                  <Pressable style={s.viewBtn} onPress={() => handlePress(notif)}>
+                                    <Text style={s.viewBtnText}>{t('common.view', 'View')}</Text>
+                                    <Ionicons name="chevron-forward" size={12} color={Palette.hermesOrange} />
+                                  </Pressable>
+                                )}
+                              </View>
+                            </View>
+                          </Pressable>
+                        );
+                      })}
                     </View>
-                    <View style={styles.notifContent}>
-                      <View style={styles.notifTitleRow}>
-                        <Text style={[styles.notifTitle, !notif.read && styles.notifTitleUnread]} numberOfLines={1}>
-                          {notif.title}
-                        </Text>
-                        {!notif.read && <View style={styles.unreadDot} />}
-                      </View>
-                      <Text style={styles.notifBody} numberOfLines={2}>{notif.body}</Text>
-                      <View style={styles.notifMeta}>
-                        <Text style={styles.notifTime}>{formatTimeAgo(notif.createdAt)}</Text>
-                        {notif.priority === 'urgent' && (
-                          <View style={[styles.prioBadge, { backgroundColor: prioConf.color + '20' }]}>
-                            <Text style={[styles.prioText, { color: prioConf.color }]}>{prioConf.label}</Text>
-                          </View>
-                        )}
-                        {notif.actionRoute && (
-                          <View style={styles.actionBadge}>
-                            <Text style={styles.actionText}>{t('notifications.view', 'Bekijk →')}</Text>
-                          </View>
-                        )}
-                      </View>
-                    </View>
-                  </Pressable>
-                );
-              })
-            )}
-          </View>
-        ) : (
-          /* Preferences */
-          <View style={{ gap: GRID.xs }}>
-            <Text style={styles.settingsTitle}>{t('notifications.preferences', 'Meldingsvoorkeuren')}</Text>
-            {preferences.map(pref => (
-              <View key={pref.type} style={styles.prefRow}>
-                <View style={styles.prefInfo}>
-                  <Text style={styles.prefLabel}>{pref.label}</Text>
-                </View>
-                <View style={styles.prefToggles}>
-                  <View style={styles.toggleCol}>
-                    <Text style={styles.toggleLabel}>{t('notifications.on', 'Aan')}</Text>
-                    <Switch
-                      value={pref.enabled}
-                      onValueChange={() => toggle(pref.type, 'enabled')}
-                      trackColor={{ true: Palette.hermesOrange }}
-                    />
                   </View>
-                </View>
+                </FadeIn>
+              ))
+            )}
+          </>
+        ) : (
+          /* Settings tab */
+          <FadeIn delay={0} duration={300}>
+            <View style={s.settingsSection}>
+              <Text style={s.settingsTitle}>{t('notifications.preferences', 'Notification preferences')}</Text>
+              <Text style={s.settingsDesc}>{t('notifications.preferencesDesc', 'Choose which notifications you want to receive')}</Text>
+              <View style={s.prefList}>
+                {preferences.map(pref => {
+                  const conf = TYPE_CONFIG[pref.type];
+                  return (
+                    <View key={pref.type} style={s.prefRow}>
+                      <View style={[s.prefIcon, { backgroundColor: conf.color + '12' }]}>
+                        <Ionicons name={conf.icon} size={16} color={conf.color} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={s.prefLabel}>{pref.label}</Text>
+                      </View>
+                      <Switch
+                        value={pref.enabled}
+                        onValueChange={() => toggle(pref.type, 'enabled')}
+                        trackColor={{ true: Palette.hermesOrange, false: SemanticColors.borderDefault }}
+                        thumbColor={pref.enabled ? '#fff' : '#f4f4f4'}
+                      />
+                    </View>
+                  );
+                })}
               </View>
-            ))}
-          </View>
+            </View>
+          </FadeIn>
         )}
         <View style={{ height: 140 }} />
       </ScrollView>
@@ -183,41 +244,78 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: PAGE_BG },
-  header: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, paddingHorizontal: SafeArea.side, paddingTop: SafeArea.top, paddingBottom: GRID.sm },
-  backButton: { padding: GRID.xs },
+
+  // Header
+  header: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.sm,
+    paddingHorizontal: SafeArea.side, paddingTop: SafeArea.top, paddingBottom: GRID.xs,
+  },
+  backBtn: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: TYPE.displaySize, fontFamily: TYPE.displayFamily, letterSpacing: TYPE.displayTracking, color: SemanticColors.textPrimary },
-  headerSubtitle: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: GRID.xs / 2 },
-  markAllButton: { width: GRID.xxl, height: GRID.xxl, borderRadius: RADIUS.lg, backgroundColor: Palette.hermesOrange + '0A', alignItems: 'center', justifyContent: 'center' },
-  tabBar: { flexDirection: 'row', paddingHorizontal: GRID.lg, gap: GRID.sm, paddingBottom: GRID.sm },
-  tab: { flex: 1, paddingVertical: GRID.sm, borderRadius: RADIUS.md, backgroundColor: SemanticColors.surfacePrimary, alignItems: 'center' },
+  markAllBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: Palette.hermesOrange + '0A', alignItems: 'center', justifyContent: 'center' },
+
+  // Unread strip
+  unreadStrip: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.sm,
+    paddingHorizontal: SafeArea.side, paddingBottom: GRID.sm,
+  },
+  unreadDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Palette.hermesOrange },
+  unreadText: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textSecondary },
+  urgentPill: { backgroundColor: SemanticColors.feedbackError + '15', paddingHorizontal: GRID.sm, paddingVertical: 2, borderRadius: RADIUS.sm },
+  urgentText: { fontSize: TYPE.tinySize, fontFamily: TYPE.titleFamily, color: SemanticColors.feedbackError },
+
+  // Tabs
+  tabBar: { flexDirection: 'row', paddingHorizontal: SafeArea.side, gap: GRID.sm, paddingBottom: GRID.sm },
+  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: GRID.xs, paddingVertical: GRID.sm, borderRadius: RADIUS.md, backgroundColor: SemanticColors.surfacePrimary },
   tabActive: { backgroundColor: Palette.hermesOrange },
-  tabText: { fontSize: TYPE.captionSize, fontFamily: TYPE.labelFamily, color: SemanticColors.textTertiary },
-  tabTextActive: { color: Palette.white },
-  scrollView: { flex: 1, paddingHorizontal: SafeArea.side },
-  emptyState: { alignItems: 'center', paddingVertical: GRID.xl, gap: GRID.sm },
-  emptyText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
-  notifCard: { flexDirection: 'row', gap: GRID.sm, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md },
-  notifCardUnread: { borderLeftWidth: 3, borderLeftColor: Palette.hermesOrange },
-  notifIcon: { width: 36, height: 36, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' },
-  notifContent: { flex: 1, gap: GRID.xs / 2 },
-  notifTitleRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm },
-  notifTitle: { flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.captionFamily, color: SemanticColors.textPrimary },
-  notifTitleUnread: { fontFamily: TYPE.sectionFamily },
-  unreadDot: { width: GRID.sm, height: GRID.sm, borderRadius: GRID.xs, backgroundColor: Palette.hermesOrange },
-  notifBody: { fontSize: TYPE.labelSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, lineHeight: TYPE.labelSize * 1.4 },
-  notifMeta: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, marginTop: GRID.xs },
-  notifTime: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textTertiary },
-  prioBadge: { paddingHorizontal: GRID.sm, paddingVertical: GRID.xs / 2, borderRadius: RADIUS.sm },
-  prioText: { fontSize: TYPE.tinySize, fontFamily: TYPE.labelFamily },
-  actionBadge: { marginLeft: 'auto' },
-  actionText: { fontSize: TYPE.tinySize, fontFamily: TYPE.labelFamily, color: Palette.hermesOrange },
-  settingsTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, marginBottom: GRID.sm },
-  prefRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md, gap: GRID.sm },
-  prefInfo: { flex: 1 },
+  tabText: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textTertiary },
+  tabTextActive: { color: '#fff' },
+
+  // Scroll
+  scroll: { flex: 1 },
+  scrollContent: { paddingHorizontal: SafeArea.side, gap: GRID.lg },
+
+  // Empty
+  empty: { alignItems: 'center', paddingVertical: GRID.xl * 2, gap: GRID.sm },
+  emptyTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textSecondary },
+  emptyDesc: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary, textAlign: 'center', paddingHorizontal: GRID.xl },
+
+  // Groups
+  group: { gap: GRID.sm },
+  groupLabel: { fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: SemanticColors.textTertiary, textTransform: 'uppercase', letterSpacing: 0.5 },
+  groupCards: { gap: GRID.xs },
+
+  // Card
+  card: {
+    flexDirection: 'row', gap: GRID.sm,
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg,
+    padding: GRID.md, overflow: 'hidden',
+  },
+  cardUnread: { backgroundColor: '#fff' },
+  cardAccent: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, borderTopLeftRadius: RADIUS.lg, borderBottomLeftRadius: RADIUS.lg },
+  iconWrap: { width: 40, height: 40, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' },
+  content: { flex: 1, gap: GRID.xs },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: GRID.sm },
+  title: { flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary },
+  titleUnread: { fontFamily: TYPE.titleFamily },
+  time: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textTertiary },
+  body: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, lineHeight: TYPE.captionSize * 1.5 },
+  footer: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, marginTop: GRID.xs },
+  typePill: { paddingHorizontal: GRID.sm, paddingVertical: 2, borderRadius: RADIUS.sm },
+  typeText: { fontSize: TYPE.tinySize, fontFamily: TYPE.labelFamily },
+  urgentBadge: { flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: SemanticColors.feedbackError + '12', paddingHorizontal: GRID.sm, paddingVertical: 2, borderRadius: RADIUS.sm },
+  urgentBadgeText: { fontSize: TYPE.tinySize, fontFamily: TYPE.labelFamily, color: SemanticColors.feedbackError },
+  viewBtn: { flexDirection: 'row', alignItems: 'center', gap: 2, marginLeft: 'auto' },
+  viewBtnText: { fontSize: TYPE.tinySize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange },
+
+  // Settings
+  settingsSection: { gap: GRID.md },
+  settingsTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  settingsDesc: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
+  prefList: { gap: GRID.xs },
+  prefRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md },
+  prefIcon: { width: 36, height: 36, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' },
   prefLabel: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
-  prefToggles: { flexDirection: 'row', gap: GRID.md },
-  toggleCol: { alignItems: 'center', gap: GRID.xs / 2 },
-  toggleLabel: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textTertiary },
 });
