@@ -21,8 +21,9 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { Palette } from '../../../src/theme/colors';
+import { Palette, SemanticColors } from '../../../src/theme/colors';
 import { SafeArea } from '../../../src/theme/spacing';
+import { PAGE_BG, TYPE, GRID, RADIUS } from '../../../src/theme/tabStyles';
 import { hapticSuccess } from '../../../src/utils/haptics';
 import { useClockIn } from '../../../src/services/clockInService';
 import { smartSchedulerService, LIFECYCLE_ORDER, LIFECYCLE_LABELS, LIFECYCLE_COLORS, LIFECYCLE_NEXT_ACTION, useJobLifecyclePipeline } from '../../../src/services/smartSchedulerService';
@@ -64,46 +65,12 @@ interface MaterialPrediction {
   supplier: string;
 }
 
-const MOCK_CONTACTS: Record<string, ClientContact> = {
-  'cust_t1': { name: 'Familie Smit', phone: '+31 6 12345678', email: 'smit@email.nl' },
-  'cust_t2': { name: 'M. van der Berg', phone: '+31 6 87654321', email: 'mvdberg@email.nl' },
-  'cust_t3': { name: 'Bakkerij Jansen', phone: '+31 6 11223344', email: 'info@jansen.nl' },
-  'cust_1': { name: 'Familie de Vries', phone: '+31 6 99887766', email: 'devries@email.nl' },
-  'cust_2': { name: 'Bakkerij Jansen', phone: '+31 6 11223344', email: 'info@jansen.nl' },
-  'cust_3': { name: 'Peter van den Berg', phone: '+31 6 55443322', email: 'peter@vdberg.nl' },
-  'cust_4': { name: 'Sandra Bakker', phone: '+31 6 66778899', email: 'sandra@bakker.nl' },
-};
+// Contacts now sourced from AppState customers
 
-// TODO: Replace with real upsell suggestions from ontology service
-const MOCK_UPSELLS: Record<string, UpsellItem[]> = {
-  'job_today_1': [
-    { id: 'u1', title: 'Thermostaat upgrade', description: 'Slimme thermostaat bij CV-onderhoud', potentialRevenue: 285, confidence: 78, icon: 'thermometer' },
-    { id: 'u2', title: 'Onderhoudscontract', description: 'Jaarlijks onderhoud aanbieden', potentialRevenue: 120, confidence: 85, icon: 'shield-checkmark' },
-  ],
-  'job_today_2': [
-    { id: 'u3', title: 'Waterdicht maken', description: 'Preventief afdichten na lekkagereparatie', potentialRevenue: 450, confidence: 72, icon: 'water' },
-  ],
-  'job_today_3': [
-    { id: 'u4', title: 'Inductiekookplaat', description: 'Elektrische aansluiting voor inductie', potentialRevenue: 380, confidence: 65, icon: 'flash' },
-    { id: 'u5', title: 'LED verlichting', description: 'Keukenverlichting vervangen', potentialRevenue: 220, confidence: 70, icon: 'bulb' },
-  ],
-};
+// Upsells: empty until ontology service provides real suggestions
+const EMPTY_UPSELLS: UpsellItem[] = [];
 
-const MOCK_MATERIALS: Record<string, MaterialPrediction[]> = {
-  'job_today_1': [
-    { id: 'm1', name: 'CV-filter 3/4"', quantity: '2 stuks', inStock: true, reorderNeeded: false, estimatedCost: 12.50, supplier: 'Breman' },
-    { id: 'm2', name: 'O-ringen set', quantity: '1 set', inStock: true, reorderNeeded: false, estimatedCost: 8.90, supplier: 'Bouwmaat' },
-    { id: 'm3', name: 'Expansievat 8L', quantity: '1 stuk', inStock: false, reorderNeeded: true, estimatedCost: 45.00, supplier: 'Technische Unie' },
-  ],
-  'job_today_2': [
-    { id: 'm4', name: 'PVC buis 40mm', quantity: '2m', inStock: true, reorderNeeded: false, estimatedCost: 6.80, supplier: 'Bouwmaat' },
-    { id: 'm5', name: 'Siliconenkit sanitair', quantity: '1 tube', inStock: true, reorderNeeded: true, estimatedCost: 9.50, supplier: 'Bouwmaat' },
-    { id: 'm6', name: 'Manchet 40/50', quantity: '2 stuks', inStock: false, reorderNeeded: true, estimatedCost: 4.20, supplier: 'Technische Unie' },
-  ],
-  'job_today_3': [
-    { id: 'm7', name: 'Meetinstrument', quantity: '1 stuk', inStock: true, reorderNeeded: false, estimatedCost: 0, supplier: '-' },
-  ],
-};
+// Materials now sourced from AppState jobMaterials
 
 // ============================================
 // MAIN SCREEN
@@ -130,11 +97,9 @@ export default function JobDetailPage() {
     }, 800);
   }, []);
 
-  const { addInvoiceFromJob, jobs, invoices, quotes } = useAppState();
+  const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap } = useAppState();
   const { advance, recordHours } = useJobLifecyclePipeline();
   const costVariance = useJobCostVariance(id || '');
-  // Try scheduler first, fall back to AppState for seed/demo data
-  const customers = (useAppState() as any).customers ?? [];
   const job = useMemo(() => {
     const fromScheduler = smartSchedulerService.getJob(id || '');
     if (fromScheduler) return fromScheduler;
@@ -174,7 +139,7 @@ export default function JobDetailPage() {
     if (appJob.scheduledDate) events.push({ icon: 'calendar-outline', label: 'Scheduled', date: appJob.scheduledDate, color: '#8B5CF6' });
     if (appJob.status === 'in-progress' || appJob.status === 'completed' || appJob.status === 'invoiced' || appJob.status === 'paid')
       events.push({ icon: 'play-circle-outline', label: 'Work started', date: appJob.updatedAt || appJob.createdAt, color: '#E35205' });
-    if (appJob.completedAt) events.push({ icon: 'checkmark-circle-outline', label: 'Completed', date: appJob.completedAt, color: '#16A34A' });
+    if (appJob.completedAt) events.push({ icon: 'checkmark-circle-outline', label: 'Completed', date: appJob.completedAt, color: SemanticColors.feedbackSuccess });
     if (appJob.invoiceId) {
       const inv = invoices.find((i: any) => i.id === appJob.invoiceId || i.job === appJob.title);
       if (inv) events.push({ icon: 'receipt-outline', label: `Invoiced €${(inv.amount || 0).toLocaleString()}`, date: inv.lastUpdated || inv.dueDate || '', color: '#0EA5E9' });
@@ -191,22 +156,35 @@ export default function JobDetailPage() {
       <View style={styles.container}>
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={22} color="#1A1A1A" />
+            <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>{t('jobs.notFound', 'Job not found')}</Text>
           <View style={{ width: 40 }} />
         </View>
         <View style={styles.emptyState}>
-          <Ionicons name="alert-circle-outline" size={48} color="#CCC" />
+          <Ionicons name="alert-circle-outline" size={48} color={SemanticColors.textDisabled} />
           <Text style={styles.emptyText}>{t('jobs.notFoundDesc', 'This job could not be found')}</Text>
         </View>
       </View>
     );
   }
 
-  const contact = MOCK_CONTACTS[job.customerId] || { name: job.customerName, phone: '+31 6 00000000', email: 'info@klant.nl' };
-  const upsells = MOCK_UPSELLS[job.id] || [];
-  const materials = MOCK_MATERIALS[job.id] || [];
+  const appJob = jobs.find((j: any) => j.id === id);
+  const cust = customers.find((c: any) => c.id === (appJob?.customerId || job.customerId));
+  const contact = cust
+    ? { name: cust.name, phone: cust.phone || '', email: cust.email || '' }
+    : { name: job.customerName || '', phone: '', email: '' };
+  const upsells = EMPTY_UPSELLS;
+  const rawJobMaterials = jobMaterialsMap[id || ''] || [];
+  const materials: MaterialPrediction[] = rawJobMaterials.map((jm: any) => ({
+    id: jm.id,
+    name: jm.materialId,
+    quantity: `${jm.quantity} ${jm.unit}`,
+    inStock: jm.status !== 'planned',
+    reorderNeeded: jm.status === 'planned',
+    estimatedCost: jm.totalPrice || (jm.unitPrice ? jm.unitPrice * jm.quantity : 0),
+    supplier: jm.supplierId || 'Supplier',
+  }));
   const reorderItems = materials.filter(m => m.reorderNeeded);
 
   const startTime = new Date(job.startTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
@@ -222,9 +200,9 @@ export default function JobDetailPage() {
   };
   const getStatusColor = () => {
     switch (job.status) {
-      case 'in_progress': return '#16A34A';
+      case 'in_progress': return SemanticColors.feedbackSuccess;
       case 'completed': return '#3B82F6';
-      case 'cancelled': return '#DC2626';
+      case 'cancelled': return SemanticColors.feedbackError;
       default: return Palette.hermesOrange;
     }
   };
@@ -243,11 +221,11 @@ export default function JobDetailPage() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color="#1A1A1A" />
+          <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>{job.projectName}</Text>
         <Pressable style={styles.moreBtn}>
-          <Ionicons name="ellipsis-horizontal" size={20} color="#777" />
+          <Ionicons name="ellipsis-horizontal" size={20} color={SemanticColors.textTertiary} />
         </Pressable>
       </View>
 
@@ -311,7 +289,7 @@ export default function JobDetailPage() {
               const dotColor = isActive
                 ? LIFECYCLE_COLORS[step]
                 : isDone
-                ? '#16A34A'
+                ? SemanticColors.feedbackSuccess
                 : '#E0E0E0';
               return (
                 <View key={step} style={styles.pipelineStep}>
@@ -323,7 +301,7 @@ export default function JobDetailPage() {
                     {isDone && <Ionicons name="checkmark" size={8} color="#fff" />}
                   </View>
                   {idx < LIFECYCLE_ORDER.length - 1 && (
-                    <View style={[styles.pipelineLine, isDone && { backgroundColor: '#16A34A' }]} />
+                    <View style={[styles.pipelineLine, isDone && { backgroundColor: SemanticColors.feedbackSuccess }]} />
                   )}
                 </View>
               );
@@ -381,8 +359,8 @@ export default function JobDetailPage() {
                 style={styles.contactAction}
                 onPress={() => Linking.openURL(`tel:${contact.phone}`)}
               >
-                <View style={[styles.contactActionIcon, { backgroundColor: '#16A34A14' }]}>
-                  <Ionicons name="call" size={16} color="#16A34A" />
+                <View style={[styles.contactActionIcon, { backgroundColor: SemanticColors.feedbackSuccess + '14' }]}>
+                  <Ionicons name="call" size={16} color={SemanticColors.feedbackSuccess} />
                 </View>
                 <Text style={styles.contactActionLabel}>{t('jobs.call', 'Call')}</Text>
               </Pressable>
@@ -447,7 +425,7 @@ export default function JobDetailPage() {
             <TextInput
               style={styles.notesInput}
               placeholder={t('jobs.notesPlaceholder', 'Type your notes here...')}
-              placeholderTextColor="#CCC"
+              placeholderTextColor={SemanticColors.textDisabled}
               multiline
               value={notes || job.notes || ''}
               onChangeText={setNotes}
@@ -474,7 +452,7 @@ export default function JobDetailPage() {
               {materials.map((mat, idx) => (
                 <View key={mat.id} style={[styles.materialRow, idx < materials.length - 1 && styles.materialBorder]}>
                   <View style={[styles.materialIndicator, {
-                    backgroundColor: mat.inStock ? '#16A34A' : '#DC2626',
+                    backgroundColor: mat.inStock ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError,
                   }]} />
                   <View style={styles.materialInfo}>
                     <Text style={styles.materialName}>{mat.name}</Text>
@@ -492,7 +470,7 @@ export default function JobDetailPage() {
                       <Text style={styles.reorderBtnText}>{t('jobs.order', 'Order')}</Text>
                     </Pressable>
                   ) : mat.reorderNeeded && orderedMaterials.has(mat.id) ? (
-                    <View style={[styles.reorderBtn, { backgroundColor: '#16A34A' }]}>
+                    <View style={[styles.reorderBtn, { backgroundColor: SemanticColors.feedbackSuccess }]}>
                       <Ionicons name="checkmark" size={13} color="#fff" />
                       <Text style={styles.reorderBtnText}>{t('jobs.ordered', 'Ordered')}</Text>
                     </View>
@@ -543,7 +521,7 @@ export default function JobDetailPage() {
                   <Text style={styles.costColHeader}>{t('jobs.variance', 'Variance')}</Text>
                   <Text style={[
                     styles.costColValue,
-                    { color: costVariance.marginDelta <= 0 ? '#16A34A' : '#DC2626' }
+                    { color: costVariance.marginDelta <= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }
                   ]}>
                     {costVariance.marginDelta > 0 ? '+' : ''}{'\u20AC'}{costVariance.marginDelta.toLocaleString(undefined)}
                   </Text>
@@ -556,13 +534,13 @@ export default function JobDetailPage() {
                     styles.marginBarFill,
                     {
                       width: `${Math.min(100, Math.max(0, 100 - Math.abs(costVariance.marginPercent)))}%`,
-                      backgroundColor: costVariance.marginDelta <= 0 ? '#16A34A' : costVariance.marginPercent > 10 ? '#DC2626' : '#F59E0B',
+                      backgroundColor: costVariance.marginDelta <= 0 ? SemanticColors.feedbackSuccess : costVariance.marginPercent > 10 ? SemanticColors.feedbackError : '#F59E0B',
                     }
                   ]} />
                 </View>
                 <Text style={[
                   styles.marginBarLabel,
-                  { color: costVariance.marginDelta <= 0 ? '#16A34A' : '#DC2626' }
+                  { color: costVariance.marginDelta <= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }
                 ]}>
                   {costVariance.marginDelta <= 0 ? t('jobs.underBudget', 'Under budget') : `${costVariance.marginPercent.toFixed(0)}% ${t('jobs.over', 'over')}`}
                 </Text>
@@ -649,7 +627,7 @@ export default function JobDetailPage() {
         <View style={styles.actionsRow}>
           {!jobCompleted && (
             <Pressable
-              style={[styles.actionPrimary, clockedIn && { backgroundColor: '#DC2626' }]}
+              style={[styles.actionPrimary, clockedIn && { backgroundColor: SemanticColors.feedbackError }]}
               onPress={async () => {
                 hapticSuccess();
                 if (clockedIn) {
@@ -695,13 +673,13 @@ export default function JobDetailPage() {
                 ]);
               }}
             >
-              <Ionicons name="checkmark-circle" size={18} color="#16A34A" />
+              <Ionicons name="checkmark-circle" size={18} color={SemanticColors.feedbackSuccess} />
               <Text style={styles.actionSecondaryText}>{t('jobs.done', 'Done')}</Text>
             </Pressable>
           ) : (
-            <View style={[styles.actionSecondary, { backgroundColor: '#16A34A14' }]}>
-              <Ionicons name="checkmark-done" size={18} color="#16A34A" />
-              <Text style={[styles.actionSecondaryText, { color: '#16A34A' }]}>{t('jobs.statusCompleted', 'Completed')}</Text>
+            <View style={[styles.actionSecondary, { backgroundColor: SemanticColors.feedbackSuccess + '14' }]}>
+              <Ionicons name="checkmark-done" size={18} color={SemanticColors.feedbackSuccess} />
+              <Text style={[styles.actionSecondaryText, { color: SemanticColors.feedbackSuccess }]}>{t('jobs.statusCompleted', 'Completed')}</Text>
             </View>
           )}
         </View>
@@ -732,7 +710,7 @@ export default function JobDetailPage() {
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>{t('jobs.evidencePhotos', 'Evidence photos')}</Text>
             {photoCount > 0 && (
-              <Text style={{ fontSize: 13, color: '#16A34A', fontWeight: '600', marginBottom: 4 }}>
+              <Text style={{ fontSize: TYPE.captionSize, color: SemanticColors.feedbackSuccess, fontFamily: TYPE.titleFamily, marginBottom: GRID.xs }}>
                 {t('jobs.photosCaptured', { defaultValue: '{{count}} photos captured', count: photoCount })}
               </Text>
             )}
@@ -740,10 +718,10 @@ export default function JobDetailPage() {
               {Array.from({ length: Math.min(photoCount, 6) }).map((_, idx) => (
                 <View key={idx} style={styles.galleryItem}>
                   <View style={[styles.galleryThumb, { backgroundColor: idx < Math.ceil(photoCount / 2) ? '#E8E4DF' : '#D4EDDA' }]}>
-                    <Ionicons name="image" size={24} color={idx < Math.ceil(photoCount / 2) ? '#999' : '#16A34A'} />
+                    <Ionicons name="image" size={24} color={idx < Math.ceil(photoCount / 2) ? SemanticColors.textTertiary : SemanticColors.feedbackSuccess} />
                   </View>
-                  <View style={[styles.galleryLabel, { backgroundColor: idx < Math.ceil(photoCount / 2) ? '#F5F5F5' : '#16A34A14' }]}>
-                    <Text style={[styles.galleryLabelText, { color: idx < Math.ceil(photoCount / 2) ? '#777' : '#16A34A' }]}>
+                  <View style={[styles.galleryLabel, { backgroundColor: idx < Math.ceil(photoCount / 2) ? '#F5F5F5' : SemanticColors.feedbackSuccess + '14' }]}>
+                    <Text style={[styles.galleryLabelText, { color: idx < Math.ceil(photoCount / 2) ? SemanticColors.textTertiary : SemanticColors.feedbackSuccess }]}>
                       {idx < Math.ceil(photoCount / 2) ? t('jobs.before', 'Before') : t('jobs.after', 'After')}
                     </Text>
                   </View>
@@ -778,7 +756,7 @@ export default function JobDetailPage() {
           </View>
         )}
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 140 }} />
       </ScrollView>
     </View>
   );
@@ -791,15 +769,15 @@ export default function JobDetailPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: GRID.md,
     paddingTop: SafeArea.top,
-    paddingBottom: 12,
+    paddingBottom: GRID.md - 4,
   },
   backBtn: {
     width: 40,
@@ -809,9 +787,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1A1A1A',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
     flex: 1,
     textAlign: 'center',
   },
@@ -825,36 +803,37 @@ const styles = StyleSheet.create({
   headerAccent: {
     height: 3,
     backgroundColor: Palette.hermesOrange,
-    marginHorizontal: 16,
+    marginHorizontal: GRID.md,
     borderRadius: 2,
   },
   scrollView: { flex: 1 },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingHorizontal: GRID.md,
+    paddingTop: GRID.md,
     gap: 20,
   },
   emptyState: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: GRID.md - 4,
   },
   emptyText: {
-    fontSize: 15,
-    color: '#999',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.bodyFamily,
+    color: SemanticColors.textTertiary,
   },
 
   // Hero card
   heroCard: {
-    backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 18,
-    gap: 12,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg + 2,
+    padding: RADIUS.lg + 2,
+    gap: GRID.md - 4,
   },
   heroTop: {
     flexDirection: 'row',
-    gap: 8,
+    gap: GRID.sm,
   },
   statusBadge: {
     flexDirection: 'row',
@@ -862,7 +841,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   statusDot: {
     width: 6,
@@ -870,25 +849,25 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   statusText: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.sectionFamily,
     letterSpacing: 0.3,
   },
   typeBadge: {
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: '#F5F5F5',
   },
   typeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#777',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textTertiary,
   },
   heroTitle: {
     fontSize: 22,
-    fontWeight: '800',
-    color: '#1A1A1A',
+    fontFamily: TYPE.displayFamily,
+    color: SemanticColors.textPrimary,
     letterSpacing: -0.3,
   },
   heroDetails: {
@@ -902,47 +881,48 @@ const styles = StyleSheet.create({
   heroDetailIcon: {
     width: 28,
     height: 28,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: Palette.hermesOrange + '0A',
     alignItems: 'center',
     justifyContent: 'center',
   },
   heroDetailText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.bodyFamily,
     color: '#555',
   },
   durationChip: {
     backgroundColor: Palette.pastelOrange + '30',
-    paddingHorizontal: 8,
+    paddingHorizontal: GRID.sm,
     paddingVertical: 3,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   durationText: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.sectionFamily,
     color: Palette.hermesOrange,
   },
 
   // Section
-  section: { gap: 8 },
+  section: { gap: GRID.sm },
   sectionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   sectionLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#999',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textTertiary,
     letterSpacing: 0.8,
   },
 
   // Card
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
+    padding: GRID.md,
   },
 
   // Contact
@@ -955,30 +935,31 @@ const styles = StyleSheet.create({
   contactAvatar: {
     width: 48,
     height: 48,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     backgroundColor: Palette.hermesOrange,
     alignItems: 'center',
     justifyContent: 'center',
   },
   contactAvatarText: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.surfacePrimary,
   },
   contactInfo: { flex: 1 },
   contactName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1A1A1A',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
   },
   contactDetail: {
-    fontSize: 13,
-    color: '#999',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textTertiary,
     marginTop: 2,
   },
   contactActions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: GRID.sm,
   },
   contactAction: {
     flex: 1,
@@ -986,26 +967,26 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 10,
     backgroundColor: '#FAFAFA',
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   contactActionIcon: {
     width: 32,
     height: 32,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   contactActionLabel: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     color: '#555',
   },
 
   // Route
   routeCard: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
     overflow: 'hidden',
   },
   routeAccent: {
@@ -1016,32 +997,33 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    padding: 16,
+    gap: GRID.md - 4,
+    padding: GRID.md,
   },
   routeIconWrap: {
     width: 44,
     height: 44,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     backgroundColor: Palette.hermesOrange + '0C',
     alignItems: 'center',
     justifyContent: 'center',
   },
   routeAddress: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1A1A1A',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
     lineHeight: 20,
   },
   routeEta: {
-    fontSize: 12,
-    color: '#999',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textTertiary,
     marginTop: 3,
   },
   routeOpenBtn: {
     width: 36,
     height: 36,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: Palette.hermesOrange + '0C',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1049,8 +1031,9 @@ const styles = StyleSheet.create({
 
   // Notes
   notesInput: {
-    fontSize: 14,
-    color: '#1A1A1A',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.bodyFamily,
+    color: SemanticColors.textPrimary,
     minHeight: 80,
     textAlignVertical: 'top',
     lineHeight: 20,
@@ -1060,7 +1043,7 @@ const styles = StyleSheet.create({
   materialRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: GRID.md - 4,
     paddingVertical: 10,
   },
   materialBorder: {
@@ -1074,19 +1057,20 @@ const styles = StyleSheet.create({
   },
   materialInfo: { flex: 1 },
   materialName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1A1A1A',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
   },
   materialDetail: {
-    fontSize: 12,
-    color: '#999',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textTertiary,
     marginTop: 2,
   },
   materialCost: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#777',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textTertiary,
     fontVariant: ['tabular-nums'] as any,
   },
   reorderBadge: {
@@ -1094,9 +1078,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
     backgroundColor: Palette.hermesOrange + '10',
-    paddingHorizontal: 8,
+    paddingHorizontal: GRID.sm,
     paddingVertical: 3,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   reorderDot: {
     width: 6,
@@ -1105,30 +1089,30 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange,
   },
   reorderBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.hermesOrange,
   },
   reorderBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: GRID.xs,
     backgroundColor: Palette.hermesOrange,
-    paddingHorizontal: 12,
+    paddingHorizontal: GRID.md - 4,
     paddingVertical: 7,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   reorderBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.surfacePrimary,
   },
 
   // Vasco guidance
   vascoGuidance: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
     overflow: 'hidden',
   },
   vascoGuidanceAccent: {
@@ -1137,7 +1121,7 @@ const styles = StyleSheet.create({
   },
   vascoGuidanceContent: {
     flex: 1,
-    padding: 12,
+    padding: GRID.md - 4,
     gap: 6,
   },
   vascoGuidanceHeader: {
@@ -1146,54 +1130,56 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   vascoGuidanceTitle: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.sectionFamily,
     color: Palette.hermesOrange,
     letterSpacing: 0.3,
   },
   vascoGuidanceText: {
-    fontSize: 13,
-    color: '#777',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textTertiary,
     lineHeight: 18,
   },
 
   // Upsell
   upsellBadge: {
     backgroundColor: Palette.pastelOrange + '30',
-    paddingHorizontal: 8,
+    paddingHorizontal: GRID.sm,
     paddingVertical: 3,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   upsellBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.sectionFamily,
     color: Palette.hermesOrange,
   },
   upsellCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    gap: GRID.md - 4,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
     padding: 14,
   },
   upsellIconWrap: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: Palette.hermesOrange + '0C',
     alignItems: 'center',
     justifyContent: 'center',
   },
   upsellInfo: { flex: 1 },
   upsellTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1A1A1A',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
   },
   upsellDesc: {
-    fontSize: 12,
-    color: '#999',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textTertiary,
     marginTop: 2,
   },
   upsellRight: {
@@ -1201,8 +1187,8 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   upsellAmount: {
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.displayFamily,
     color: Palette.hermesOrange,
     fontVariant: ['tabular-nums'] as any,
   },
@@ -1220,8 +1206,8 @@ const styles = StyleSheet.create({
   },
   upsellConfidence: {
     fontSize: 10,
-    color: '#BBB',
-    fontWeight: '600',
+    color: SemanticColors.textDisabled,
+    fontFamily: TYPE.titleFamily,
   },
 
   // Pipeline Stepper
@@ -1229,7 +1215,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 8,
+    paddingTop: GRID.sm,
   },
   pipelineStep: {
     flexDirection: 'row',
@@ -1238,26 +1224,26 @@ const styles = StyleSheet.create({
   pipelineDot: {
     width: 12,
     height: 12,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   pipelineDotActive: {
     width: 16,
     height: 16,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: SemanticColors.surfacePrimary,
   },
   pipelineLine: {
-    width: 16,
+    width: GRID.md,
     height: 2,
     backgroundColor: '#E0E0E0',
     marginHorizontal: 2,
   },
   pipelineLabel: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.sectionFamily,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
@@ -1267,42 +1253,42 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: GRID.sm,
     backgroundColor: Palette.hermesOrange,
-    borderRadius: 12,
-    paddingVertical: 12,
+    borderRadius: RADIUS.md,
+    paddingVertical: GRID.md - 4,
   },
   nextStepText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.surfacePrimary,
   },
 
   // Cost Variance (P2)
   costGrid: {
     flexDirection: 'row',
-    gap: 8,
+    gap: GRID.sm,
   },
   costCol: {
     flex: 1,
     alignItems: 'center',
-    gap: 4,
+    gap: GRID.xs,
   },
   costColHeader: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#999',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textTertiary,
     letterSpacing: 0.3,
   },
   costColValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1A1A1A',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
     fontVariant: ['tabular-nums'] as any,
   },
   marginBarContainer: {
-    marginTop: 12,
-    gap: 4,
+    marginTop: GRID.md - 4,
+    gap: GRID.xs,
   },
   marginBarBg: {
     height: 6,
@@ -1315,8 +1301,8 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   marginBarLabel: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     textAlign: 'right',
   },
 
@@ -1330,28 +1316,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: GRID.sm,
     paddingVertical: 15,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     backgroundColor: Palette.hermesOrange,
   },
   actionPrimaryText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.surfacePrimary,
   },
   actionSecondary: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: GRID.xs,
     paddingVertical: 14,
-    borderRadius: 16,
-    backgroundColor: '#fff',
+    borderRadius: RADIUS.lg,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   actionSecondaryText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     color: '#555',
   },
 
@@ -1360,15 +1346,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    gap: 8,
+    gap: GRID.sm,
     paddingVertical: 15,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     backgroundColor: '#8B5CF6',
   },
   factureerButtonText: {
-    fontSize: 15,
-    fontWeight: '700' as const,
-    color: '#fff',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.surfacePrimary,
   },
 
   // Photo Gallery
@@ -1384,7 +1370,7 @@ const styles = StyleSheet.create({
   },
   galleryThumb: {
     flex: 1,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -1394,34 +1380,34 @@ const styles = StyleSheet.create({
     left: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: GRID.xs,
   },
   galleryLabelText: {
     fontSize: 10,
-    fontWeight: '700' as const,
+    fontFamily: TYPE.sectionFamily,
     letterSpacing: 0.3,
   },
   galleryAddItem: {
     width: '30%' as any,
     aspectRatio: 1,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 2,
     borderColor: Palette.hermesOrange + '30',
     borderStyle: 'dashed' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    gap: 4,
+    gap: GRID.xs,
   },
   galleryAddText: {
     fontSize: 10,
-    fontWeight: '600' as const,
+    fontFamily: TYPE.titleFamily,
     color: Palette.hermesOrange,
     textAlign: 'center' as const,
   },
 
   // Audit Trail / Timeline
   timelineContainer: {
-    paddingLeft: 4,
+    paddingLeft: GRID.xs,
     gap: 0,
   },
   timelineRow: {
@@ -1448,16 +1434,17 @@ const styles = StyleSheet.create({
   timelineContent: {
     flex: 1,
     paddingLeft: 10,
-    paddingBottom: 12,
+    paddingBottom: GRID.md - 4,
   },
   timelineLabel: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: '#1A1A1A',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
   },
   timelineDate: {
-    fontSize: 11,
-    color: '#999',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textTertiary,
     marginTop: 1,
   },
 });
