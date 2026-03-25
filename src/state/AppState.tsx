@@ -78,6 +78,7 @@ import {
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { logWarn } from '../utils/errorHandler';
 import { trackEvent } from '../services/eventTrackingService';
+import { fireNotification } from '../services/notificationService';
 import { markStepComplete } from '../services/onboardingTrackerService';
 import { businessProfile as initialBusinessProfile } from '../data/mockBusiness';
 import { invoices as initialInvoices, quotes as initialQuotes } from '../data/mockDocuments';
@@ -598,6 +599,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }
         if (status === 'completed') {
           trackEvent('job_completed', { jobId: id }).catch(() => {});
+          const completedJob = jobs.find(j => j.id === id);
+          fireNotification('schedule_change', 'medium', 'Job completed', `"${completedJob?.title || id}" marked as completed. Create invoice next.`, `/contractor/job/${id}`);
         }
         return { warnings: collectedWarnings };
       },
@@ -662,6 +665,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         scheduleQuoteFollowUp({ quoteId: id, customerName: 'Klant', daysAfterSent: 3 }).catch(() => {});
         trackEvent('quote_sent', { quoteId: id }).catch(() => {});
         markStepComplete('first_quote_sent').catch(() => {});
+        const sentQuote = quotes.find(q => q.id === id);
+        fireNotification('approval_request', 'medium', 'Quote sent', `Quote for ${sentQuote?.customer || id} sent. Follow-up scheduled in 3 days.`, `/(contractor)/facturen`);
       },
       markInvoiceSent: (id) => {
         const invoice = invoices.find((inv) => inv.id === id);
@@ -686,6 +691,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }).catch(() => {});
         trackEvent('invoice_sent', { invoiceId: id }).catch(() => {});
         markStepComplete('first_invoice_sent').catch(() => {});
+        fireNotification('overdue_invoice', 'medium', 'Invoice sent', `Invoice marked as sent. Share the PDF with your customer.`, `/(contractor)/facturen`);
       },
       markInvoicePaid: (id) => {
         const paidInv = invoices.find((i) => i.id === id);

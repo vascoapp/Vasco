@@ -60,43 +60,43 @@ const mockNotifications: AppNotification[] = [
   {
     id: 'n-1', type: 'approval_request', priority: 'high',
     title: 'Offerte wacht op goedkeuring',
-    body: 'Q-2026-0055 voor Bakkerij Jansen (€3.800) wacht op uw goedkeuring.',
-    read: false, actionRoute: '/(contractor)/facturen', actionLabel: 'Bekijk',
+    body: 'Offerte q-seed-3 voor Badkamer renovatie — Fam. Jansen (€4.850) wacht op uw goedkeuring.',
+    read: false, actionRoute: '/contractor/quotes/q-seed-3', actionLabel: 'Bekijk',
     createdAt: new Date(now.getTime() - MS_PER_HOUR * 2),
   },
   {
     id: 'n-2', type: 'overdue_invoice', priority: 'urgent',
-    title: '2 facturen verlopen',
-    body: '€344,85 openstaand bij Bakkerij Jansen — 5 dagen verlopen.',
-    read: false, actionRoute: '/(contractor)/facturen',
+    title: 'Factuur verlopen',
+    body: 'Factuur inv-seed-1 voor Hotel NH — €2.450 is 5 dagen verlopen.',
+    read: false, actionRoute: '/contractor/invoices/inv-seed-1',
     createdAt: new Date(now.getTime() - MS_PER_HOUR * 6),
   },
   {
     id: 'n-3', type: 'schedule_change', priority: 'medium',
     title: 'Planning gewijzigd',
-    body: 'Warmtepomp installatie is verplaatst naar morgen 08:00.',
-    read: false,
+    body: 'Lekkage inspectie — Fam. Bakker (job-004) is verplaatst naar morgen 08:00.',
+    read: false, actionRoute: '/contractor/job/job-004',
     createdAt: new Date(now.getTime() - MS_PER_HOUR * 12),
   },
   {
     id: 'n-4', type: 'delivery_update', priority: 'medium',
     title: 'Levering bevestigd',
-    body: 'PO-2026-0042 van Technische Unie wordt morgen geleverd.',
-    read: true, actionRoute: '/contractor/purchase-orders',
+    body: 'Materialen voor CV-ketel onderhoud (job-002) worden morgen geleverd door Technische Unie.',
+    read: true, actionRoute: '/contractor/job/job-002',
     createdAt: new Date(now.getTime() - MS_PER_DAY),
   },
   {
     id: 'n-5', type: 'team_assignment', priority: 'low',
     title: 'Jan de Vries toegewezen',
-    body: 'Onderaannemer Jan de Vries is toegewezen aan Warmtepomp installatie.',
-    read: true,
+    body: 'Onderaannemer Jan de Vries is toegewezen aan Badkamer renovatie — Fam. Jansen (job-003).',
+    read: true, actionRoute: '/contractor/job/job-003',
     createdAt: new Date(now.getTime() - MS_PER_DAY * 2),
   },
   {
     id: 'n-6', type: 'credential_expiry', priority: 'high',
     title: 'Certificaat verloopt binnenkort',
-    body: 'KOMO Keurmerk van Pieter Bakker verloopt op 10 apr 2026.',
-    read: true,
+    body: 'KOMO Keurmerk verloopt op 10 apr 2026. Vernieuw op tijd om boetes te voorkomen.',
+    read: true, actionRoute: '/contractor/certificaten',
     createdAt: new Date(now.getTime() - MS_PER_DAY * 3),
   },
 ];
@@ -208,6 +208,17 @@ export function useUnreadCount() {
     return notificationService.subscribe(() => setStats(notificationService.getStats()));
   }, []);
   return stats;
+}
+
+/** Fire a notification from anywhere in the app */
+export function fireNotification(
+  type: NotificationType,
+  priority: 'urgent' | 'high' | 'medium' | 'low',
+  title: string,
+  body: string,
+  actionRoute?: string,
+): void {
+  notificationService.addNotification(type, priority, title, body, actionRoute);
 }
 
 export function useNotificationPreferences() {

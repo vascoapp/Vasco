@@ -7,8 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
-import { PAGE_BG } from '../../src/theme/tabStyles';
-import { Spacing, SafeArea } from '../../src/theme/spacing';
+import { PAGE_BG, TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
+import { SafeArea } from '../../src/theme/spacing';
 import {
   useNotifications,
   useUnreadCount,
@@ -28,7 +28,7 @@ const TYPE_CONFIG: Record<NotificationType, { icon: IconName; color: string }> =
   team_assignment: { icon: 'people-outline', color: SemanticColors.feedbackInfo },
   approval_request: { icon: 'shield-checkmark-outline', color: Palette.hermesOrange },
   permit_update: { icon: 'document-text-outline', color: Palette.hermesOrange },
-  delivery_update: { icon: 'cube-outline', color: '#10B981' },
+  delivery_update: { icon: 'cube-outline', color: SemanticColors.feedbackSuccess },
   credential_expiry: { icon: 'ribbon-outline', color: SemanticColors.feedbackWarning },
   general: { icon: 'notifications-outline', color: SemanticColors.textSecondary },
 };
@@ -108,7 +108,7 @@ export default function NotificationsScreen() {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />}>
         {activeTab === 'inbox' ? (
-          <View style={{ gap: 4 }}>
+          <View style={{ gap: GRID.xs }}>
             {notifications.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="notifications-off-outline" size={40} color={SemanticColors.textTertiary} />
@@ -156,7 +156,7 @@ export default function NotificationsScreen() {
           </View>
         ) : (
           /* Preferences */
-          <View style={{ gap: 4 }}>
+          <View style={{ gap: GRID.xs }}>
             <Text style={styles.settingsTitle}>{t('notifications.preferences', 'Meldingsvoorkeuren')}</Text>
             {preferences.map(pref => (
               <View key={pref.type} style={styles.prefRow}>
@@ -177,7 +177,7 @@ export default function NotificationsScreen() {
             ))}
           </View>
         )}
-        <View style={{ height: 40 }} />
+        <View style={{ height: 140 }} />
       </ScrollView>
     </View>
   );
@@ -185,39 +185,39 @@ export default function NotificationsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PAGE_BG },
-  header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingHorizontal: SafeArea.side, paddingTop: SafeArea.top, paddingBottom: Spacing.sm },
-  backButton: { padding: 4 },
-  headerTitle: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
-  headerSubtitle: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 2 },
-  markAllButton: { width: 40, height: 40, borderRadius: 16, backgroundColor: Palette.hermesOrange + '0A', alignItems: 'center', justifyContent: 'center' },
-  tabBar: { flexDirection: 'row', paddingHorizontal: Spacing.lg, gap: 6, paddingBottom: Spacing.sm },
-  tab: { flex: 1, paddingVertical: 8, borderRadius: 12, backgroundColor: SemanticColors.surfacePrimary, alignItems: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, paddingHorizontal: SafeArea.side, paddingTop: SafeArea.top, paddingBottom: GRID.sm },
+  backButton: { padding: GRID.xs },
+  headerTitle: { fontSize: TYPE.displaySize, fontFamily: TYPE.displayFamily, letterSpacing: TYPE.displayTracking, color: SemanticColors.textPrimary },
+  headerSubtitle: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: GRID.xs / 2 },
+  markAllButton: { width: GRID.xxl, height: GRID.xxl, borderRadius: RADIUS.lg, backgroundColor: Palette.hermesOrange + '0A', alignItems: 'center', justifyContent: 'center' },
+  tabBar: { flexDirection: 'row', paddingHorizontal: GRID.lg, gap: GRID.sm, paddingBottom: GRID.sm },
+  tab: { flex: 1, paddingVertical: GRID.sm, borderRadius: RADIUS.md, backgroundColor: SemanticColors.surfacePrimary, alignItems: 'center' },
   tabActive: { backgroundColor: Palette.hermesOrange },
-  tabText: { fontSize: 13, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textTertiary },
+  tabText: { fontSize: TYPE.captionSize, fontFamily: TYPE.labelFamily, color: SemanticColors.textTertiary },
   tabTextActive: { color: Palette.white },
   scrollView: { flex: 1, paddingHorizontal: SafeArea.side },
-  emptyState: { alignItems: 'center', paddingVertical: Spacing.xl, gap: Spacing.sm },
-  emptyText: { fontSize: 14, color: SemanticColors.textTertiary },
-  notifCard: { flexDirection: 'row', gap: Spacing.sm, backgroundColor: SemanticColors.surfacePrimary, borderRadius: 12, padding: Spacing.sm },
+  emptyState: { alignItems: 'center', paddingVertical: GRID.xl, gap: GRID.sm },
+  emptyText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
+  notifCard: { flexDirection: 'row', gap: GRID.sm, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md },
   notifCardUnread: { borderLeftWidth: 3, borderLeftColor: Palette.hermesOrange },
-  notifIcon: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  notifContent: { flex: 1, gap: 2 },
-  notifTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  notifTitle: { flex: 1, fontSize: 14, fontFamily: 'Manrope_500Medium', color: SemanticColors.textPrimary },
-  notifTitleUnread: { fontFamily: 'Manrope_700Bold' },
-  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Palette.hermesOrange },
-  notifBody: { fontSize: 12, color: SemanticColors.textSecondary, lineHeight: 16 },
-  notifMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  notifTime: { fontSize: 11, color: SemanticColors.textTertiary },
-  prioBadge: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 },
-  prioText: { fontSize: 10, fontFamily: 'Manrope_700Bold' },
+  notifIcon: { width: 36, height: 36, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' },
+  notifContent: { flex: 1, gap: GRID.xs / 2 },
+  notifTitleRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm },
+  notifTitle: { flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.captionFamily, color: SemanticColors.textPrimary },
+  notifTitleUnread: { fontFamily: TYPE.sectionFamily },
+  unreadDot: { width: GRID.sm, height: GRID.sm, borderRadius: GRID.xs, backgroundColor: Palette.hermesOrange },
+  notifBody: { fontSize: TYPE.labelSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, lineHeight: TYPE.labelSize * 1.4 },
+  notifMeta: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, marginTop: GRID.xs },
+  notifTime: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textTertiary },
+  prioBadge: { paddingHorizontal: GRID.sm, paddingVertical: GRID.xs / 2, borderRadius: RADIUS.sm },
+  prioText: { fontSize: TYPE.tinySize, fontFamily: TYPE.labelFamily },
   actionBadge: { marginLeft: 'auto' },
-  actionText: { fontSize: 11, fontFamily: 'Manrope_600SemiBold', color: Palette.hermesOrange },
-  settingsTitle: { fontSize: 16, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, marginBottom: Spacing.sm },
-  prefRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: SemanticColors.surfacePrimary, borderRadius: 12, padding: Spacing.sm, gap: Spacing.sm },
+  actionText: { fontSize: TYPE.tinySize, fontFamily: TYPE.labelFamily, color: Palette.hermesOrange },
+  settingsTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, marginBottom: GRID.sm },
+  prefRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md, gap: GRID.sm },
   prefInfo: { flex: 1 },
-  prefLabel: { fontSize: 14, fontFamily: 'Manrope_500Medium', color: SemanticColors.textPrimary },
-  prefToggles: { flexDirection: 'row', gap: Spacing.md },
-  toggleCol: { alignItems: 'center', gap: 2 },
-  toggleLabel: { fontSize: 10, color: SemanticColors.textTertiary },
+  prefLabel: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  prefToggles: { flexDirection: 'row', gap: GRID.md },
+  toggleCol: { alignItems: 'center', gap: GRID.xs / 2 },
+  toggleLabel: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textTertiary },
 });

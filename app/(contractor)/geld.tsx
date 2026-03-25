@@ -152,61 +152,39 @@ export default function GeldScreen() {
           />
         </FadeIn>
 
-        {/* Facturen & Offertes — full list, above cashflow */}
+        {/* Facturen — separate section */}
         <FadeIn delay={80}>
           <View style={s.section}>
-            <Text style={s.sectionTitle}>{t('money.invoicesAndQuotes', 'Facturen & Offertes')}</Text>
-
-            {/* New quote CTA */}
-            <Pressable
-              style={({ pressed }) => [s.newQuoteBtn, pressed && { opacity: 0.9 }]}
-              onPress={() => router.push('/contractor/tiered-quote' as any)}
-              accessibilityRole="button"
-              accessibilityLabel={t('quotes.newQuote', 'Nieuwe offerte')}
-            >
-              <Ionicons name="add-circle-outline" size={18} color={Palette.white} />
-              <Text style={s.newQuoteBtnText}>{t('quotes.newQuote', 'Nieuwe offerte')}</Text>
-            </Pressable>
-
-            {/* Full document list — all invoices + quotes */}
-            {documents.length > 0 ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={s.sectionTitle}>{t('invoices.invoices', 'Facturen')}</Text>
+              <Text style={s.sectionCount}>{invoices.length}</Text>
+            </View>
+            {invoices.length > 0 ? (
               <View style={s.docList}>
-                {documents.map((doc) => (
+                {documents.filter(d => d.type === 'factuur').map((doc) => (
                   <Pressable
                     key={doc.id}
                     style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9 }]}
                     onPress={() => router.push(doc.route as any)}
                     onLongPress={() => handleDeleteDocument(doc.id, doc.type, doc.name)}
                     accessibilityRole="button"
-                    accessibilityLabel={`${doc.type === 'factuur' ? t('invoices.invoice', 'Factuur') : t('quotes.quote', 'Offerte')}: ${doc.name}, \u20AC${doc.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}, ${doc.status}`}
+                    accessibilityLabel={`${t('invoices.invoice', 'Factuur')}: ${doc.name}, \u20AC${doc.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}, ${doc.status}`}
                     accessibilityHint={t('a11y.opensDetails', 'Opens details')}
                   >
                     <View style={[s.docDot, { backgroundColor: getStatusColor(doc.status) }]} />
                     <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={s.docName} numberOfLines={1}>{doc.name}</Text>
-                        <View style={[s.docTypeBadge, doc.type === 'offerte' && { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
-                          <Text style={[s.docTypeText, doc.type === 'offerte' && { color: SemanticColors.feedbackInfo }]}>
-                            {doc.type === 'factuur' ? t('invoices.invoice', 'Factuur') : t('quotes.quote', 'Offerte')}
-                          </Text>
-                        </View>
-                      </View>
-                      <Text style={s.docDesc} numberOfLines={1}>{doc.description}</Text>
+                      <Text style={s.docName} numberOfLines={1}>{doc.name}</Text>
+                      <Text style={s.docDesc} numberOfLines={1}>{doc.description} · {doc.status}</Text>
                     </View>
-                    <Text style={s.docAmount}>
-                      {'\u20AC'}{doc.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    </Text>
-                    {doc.type === 'factuur' && doc.status === 'draft' && (
+                    <Text style={s.docAmount}>{'\u20AC'}{doc.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+                    {doc.status === 'draft' && (
                       <Pressable
                         style={s.sendBtn}
                         onPress={(e) => {
                           e.stopPropagation?.();
                           hapticSuccess();
                           markInvoiceSent(doc.id);
-                          Alert.alert(
-                            t('invoices.markedAsSent', 'Invoice marked as sent'),
-                            t('invoices.markedAsSentDesc', 'Share the PDF with your customer via the share button on the invoice detail screen.'),
-                          );
+                          Alert.alert(t('invoices.markedAsSent', 'Invoice marked as sent'), t('invoices.markedAsSentDesc', 'Share the PDF with your customer via the share button on the invoice detail screen.'));
                         }}
                         hitSlop={6}
                         accessibilityRole="button"
@@ -220,7 +198,54 @@ export default function GeldScreen() {
               </View>
             ) : (
               <View style={s.emptyCard}>
-                <Text style={s.emptyText}>{t('money.noDocuments', 'Nog geen documenten')}</Text>
+                <Text style={s.emptyText}>{t('money.noInvoices', 'No invoices yet')}</Text>
+              </View>
+            )}
+          </View>
+        </FadeIn>
+
+        {/* Offertes — separate section */}
+        <FadeIn delay={100}>
+          <View style={s.section}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={s.sectionTitle}>{t('quotes.quotes', 'Offertes')}</Text>
+              <Text style={s.sectionCount}>{quotes.length}</Text>
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [s.newQuoteBtn, pressed && { opacity: 0.9 }]}
+              onPress={() => router.push('/contractor/tiered-quote' as any)}
+              accessibilityRole="button"
+              accessibilityLabel={t('quotes.newQuote', 'Nieuwe offerte')}
+            >
+              <Ionicons name="add-circle-outline" size={18} color={Palette.white} />
+              <Text style={s.newQuoteBtnText}>{t('quotes.newQuote', 'Nieuwe offerte')}</Text>
+            </Pressable>
+
+            {quotes.length > 0 ? (
+              <View style={s.docList}>
+                {documents.filter(d => d.type === 'offerte').map((doc) => (
+                  <Pressable
+                    key={doc.id}
+                    style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9 }]}
+                    onPress={() => router.push(doc.route as any)}
+                    onLongPress={() => handleDeleteDocument(doc.id, doc.type, doc.name)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${t('quotes.quote', 'Offerte')}: ${doc.name}, \u20AC${doc.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}, ${doc.status}`}
+                    accessibilityHint={t('a11y.opensDetails', 'Opens details')}
+                  >
+                    <View style={[s.docDot, { backgroundColor: getStatusColor(doc.status) }]} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.docName} numberOfLines={1}>{doc.name}</Text>
+                      <Text style={s.docDesc} numberOfLines={1}>{doc.description} · {doc.status}</Text>
+                    </View>
+                    <Text style={s.docAmount}>{'\u20AC'}{doc.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : (
+              <View style={s.emptyCard}>
+                <Text style={s.emptyText}>{t('money.noQuotes', 'No quotes yet')}</Text>
               </View>
             )}
           </View>
@@ -353,6 +378,16 @@ const s = StyleSheet.create({
     fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     letterSpacing: TYPE.sectionTracking,
+  },
+  sectionCount: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textTertiary,
+    backgroundColor: SemanticColors.surfacePrimary,
+    paddingHorizontal: GRID.sm,
+    paddingVertical: 2,
+    borderRadius: RADIUS.sm,
+    overflow: 'hidden' as const,
   },
   seeAll: {
     fontSize: TYPE.captionSize,
