@@ -290,7 +290,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
   // Hydrate from AsyncStorage when offline (no Supabase)
   // Seed version: bump this to force fresh seed data after code updates
-  const SEED_VERSION = '2026-03-25';
+  const SEED_VERSION = '2026-03-25-v2';
   const hydrated = useRef(false);
   useEffect(() => {
     if (!isSupabaseConfigured && !hydrated.current) {
@@ -313,7 +313,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           loadIfNonEmpty('@vasco_customers', setCustomers);
           loadIfNonEmpty('@vasco_projects', setProjects);
         }
-        // Save current version (fresh seeds will be persisted on next change)
+        // New version: clear stale caches so seed data is visible
+        if (storedVersion !== SEED_VERSION) {
+          AsyncStorage.multiRemove([
+            '@vasco_jobs', '@vasco_invoices', '@vasco_quotes',
+            '@vasco_customers', '@vasco_projects', '@vasco_decision_trackers',
+          ]).catch(() => {});
+        }
+        // Save current version
         AsyncStorage.setItem('@vasco_seed_version', SEED_VERSION).catch(() => {});
       }).catch(() => {});
     }

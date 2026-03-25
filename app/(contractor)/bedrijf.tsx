@@ -1,23 +1,23 @@
 // =============================================================================
-// KLANTEN — Customer & Decision Tracker Hub
+// KLANTEN — Customer Hub with Decision Trackers
 // =============================================================================
-// Core value: customer makes decisions → contractor plans + purchases → no delays
-// Active trackers are FRONT AND CENTER — zero friction to see status
+// 5th tab. Vertical layout: KPIs → Decision trackers → Customer list
+// No horizontal scrolling — everything stacks vertically for reliability.
 // =============================================================================
 
 import { useCallback, useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, TextInput, Modal, KeyboardAvoidingView, Platform, Share } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, TextInput, Modal, KeyboardAvoidingView, Platform, Share, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../src/theme/colors';
-import { Spacing, SafeArea } from '../../src/theme/spacing';
-import { PAGE_BG } from '../../src/theme/tabStyles';
+import { SafeArea } from '../../src/theme/spacing';
+import { PAGE_BG, TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
 import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { FadeIn } from '../../src/components/shared/FadeIn';
-import { formatCurrency } from '../../src/i18n/formatting';
+import { formatAmount } from '../../src/utils/formatAmount';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TRACKER_STORAGE_KEY = '@vasco_decision_trackers';
@@ -33,9 +33,9 @@ interface TrackerData {
 }
 
 const SEED_TRACKERS: TrackerData[] = [
-  { id: 'tr-1', customerName: 'Familie de Vries', project: 'Badkamer renovatie', totalDecisions: 15, decided: 9, overdue: 2, lastActivity: '2 uur geleden' },
-  { id: 'tr-2', customerName: 'Bakkerij Jansen', project: 'Elektra kantoor', totalDecisions: 8, decided: 3, overdue: 0, lastActivity: '1 dag geleden' },
-  { id: 'tr-3', customerName: 'Van Dam Advocaten', project: 'Schilderwerk', totalDecisions: 6, decided: 6, overdue: 0, lastActivity: '3 dagen geleden' },
+  { id: 'tr-1', customerName: 'Fam. de Vries', project: 'Badkamer renovatie', totalDecisions: 15, decided: 9, overdue: 2, lastActivity: '2h ago' },
+  { id: 'tr-2', customerName: 'Bakkerij Jansen', project: 'Elektra kantoor', totalDecisions: 8, decided: 3, overdue: 0, lastActivity: '1d ago' },
+  { id: 'tr-3', customerName: 'Van Dam Advocaten', project: 'Schilderwerk', totalDecisions: 6, decided: 6, overdue: 0, lastActivity: '3d ago' },
 ];
 
 export default function BedrijfScreen() {
@@ -46,7 +46,7 @@ export default function BedrijfScreen() {
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newPhone, setNewPhone] = useState('');
-  const { customers, invoices, quotes, addCustomer } = useAppState();
+  const { customers, invoices, jobs, addCustomer } = useAppState();
 
   useEffect(() => { recordScreenVisit('klanten'); }, []);
 
@@ -63,14 +63,13 @@ export default function BedrijfScreen() {
     setShowAddModal(false);
   }, [newName, newEmail, newPhone, addCustomer]);
 
-  // Live tracker state so we can update lastActivity after sharing
+  // Decision trackers
   const [trackers, setTrackers] = useState<TrackerData[]>([]);
-
-  // Load trackers from AsyncStorage, seed if empty
   useEffect(() => {
     AsyncStorage.getItem(TRACKER_STORAGE_KEY).then(raw => {
       if (raw) {
-        setTrackers(JSON.parse(raw));
+        const parsed = JSON.parse(raw);
+        setTrackers(Array.isArray(parsed) && parsed.length > 0 ? parsed : SEED_TRACKERS);
       } else {
         setTrackers(SEED_TRACKERS);
         AsyncStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify(SEED_TRACKERS)).catch(() => {});
@@ -78,214 +77,208 @@ export default function BedrijfScreen() {
     }).catch(() => setTrackers(SEED_TRACKERS));
   }, []);
 
-  // Persist on change
   useEffect(() => {
-    if (trackers.length > 0) {
-      AsyncStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify(trackers)).catch(() => {});
-    }
+    if (trackers.length > 0) AsyncStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify(trackers)).catch(() => {});
   }, [trackers]);
 
-  const handleSendReminder = useCallback(async (trackerId: string, customerName: string) => {
+  const handleSendReminder = useCallback(async (trackerId: string) => {
     try {
-      await Share.share({
-        message: t('customers.reminderMessage'),
-        title: t('customers.reminderTitle'),
-      });
-      // Update lastActivity to "Nu" after sharing
-      setTrackers(prev =>
-        prev.map(tr => tr.id === trackerId ? { ...tr, lastActivity: 'Nu' } : tr)
-      );
+      await Share.share({ message: t('customers.reminderMessage', 'Hi, could you review the pending decisions for your project? This helps us stay on schedule.') });
+      setTrackers(prev => prev.map(tr => tr.id === trackerId ? { ...tr, lastActivity: 'Just now' } : tr));
       hapticSuccess();
-    } catch (_) {
-      // User cancelled the share sheet — no action needed
-    }
-  }, []);
+    } catch { /* cancelled */ }
+  }, [t]);
 
-  // Task 3: Customer lifetime value — total paid invoices per customer
-  const customerRevenueLookup = useMemo(() => {
+  // Customer stats
+  const customerRevenue = useMemo(() => {
     const map: Record<string, number> = {};
     invoices.forEach((inv: any) => {
-      if (inv.status === 'paid' && inv.customer) {
-        map[inv.customer] = (map[inv.customer] || 0) + (inv.amount || 0);
-      }
+      if (inv.status === 'paid' && inv.customerId) map[inv.customerId] = (map[inv.customerId] || 0) + (inv.amount || 0);
     });
     return map;
   }, [invoices]);
 
-  // Active trackers with pending decisions
+  const customerJobs = useMemo(() => {
+    const map: Record<string, number> = {};
+    jobs.forEach((j: any) => {
+      if (j.customerId) map[j.customerId] = (map[j.customerId] || 0) + 1;
+    });
+    return map;
+  }, [jobs]);
+
+  const totalRevenue = useMemo(() => Object.values(customerRevenue).reduce((s, v) => s + v, 0), [customerRevenue]);
   const activeTrackers = trackers.filter(tr => tr.decided < tr.totalDecisions);
   const completedTrackers = trackers.filter(tr => tr.decided >= tr.totalDecisions);
   const totalOverdue = trackers.reduce((s, tr) => s + tr.overdue, 0);
 
-  // Recent customers for the bottom section
-  const recentCustomers = useMemo(() => customers.slice(0, 4), [customers]);
-
   return (
-    <View style={styles.container}>
+    <View style={s.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('tabs.customers', 'Klanten')}</Text>
-        <Pressable
-          style={({ pressed }) => [styles.addButton, pressed && { opacity: 0.7 }]}
-          onPress={() => setShowAddModal(true)}
-        >
-          <Ionicons name="person-add" size={16} color="#fff" />
+      <View style={s.header}>
+        <View>
+          <Text style={s.headerTitle}>{t('tabs.customers', 'Klanten')}</Text>
+          <Text style={s.headerSub}>{customers.length} {t('customers.contacts', 'contacts')} · {formatAmount(totalRevenue)}</Text>
+        </View>
+        <Pressable style={({ pressed }) => [s.addBtn, pressed && { opacity: 0.8 }]} onPress={() => setShowAddModal(true)}>
+          <Ionicons name="person-add" size={15} color="#fff" />
         </Pressable>
       </View>
 
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        style={s.scroll}
+        contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />}
       >
-        {/* ============================================================ */}
-        {/* ACTIVE TRACKERS — the core of this screen, zero clicks away */}
-        {/* ============================================================ */}
-
-        {totalOverdue > 0 && (
-          <FadeIn delay={0} duration={300}>
-            <View style={styles.urgentBanner}>
-              <Ionicons name="alert-circle" size={18} color={SemanticColors.feedbackError} />
-              <Text style={styles.urgentText}>
-                {t('customers.decisionsOverdue', { count: totalOverdue })}
-              </Text>
+        {/* KPI strip */}
+        <FadeIn delay={0} duration={300}>
+          <View style={s.kpiStrip}>
+            <View style={s.kpi}>
+              <Text style={s.kpiValue}>{customers.length}</Text>
+              <Text style={s.kpiLabel}>{t('customers.contacts', 'Contacts')}</Text>
             </View>
-          </FadeIn>
-        )}
+            <View style={s.kpiDivider} />
+            <View style={s.kpi}>
+              <Text style={s.kpiValue}>{activeTrackers.length}</Text>
+              <Text style={s.kpiLabel}>{t('customers.activeDecisions', 'Active decisions')}</Text>
+            </View>
+            <View style={s.kpiDivider} />
+            <View style={s.kpi}>
+              <Text style={[s.kpiValue, totalOverdue > 0 && { color: SemanticColors.feedbackError }]}>{totalOverdue}</Text>
+              <Text style={s.kpiLabel}>{t('customers.overdue', 'Overdue')}</Text>
+            </View>
+          </View>
+        </FadeIn>
 
-        <FadeIn delay={50} duration={400}>
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('customers.activeTrackers')}</Text>
+        {/* Decision Trackers — vertical cards */}
+        <FadeIn delay={100} duration={400}>
+          <View style={s.section}>
+            <View style={s.sectionRow}>
+              <Text style={s.sectionTitle}>{t('customers.decisions', 'Decisions')}</Text>
               <Pressable onPress={() => router.push('/(contractor)/decisions' as any)}>
-                <Text style={styles.seeAll}>{t('customers.new')}</Text>
+                <Text style={s.sectionLink}>{t('customers.manage', 'Manage')}</Text>
               </Pressable>
             </View>
 
-            {activeTrackers.length === 0 ? (
-              <Pressable
-                style={styles.emptyTrackerCard}
-                onPress={() => router.push('/(contractor)/decisions' as any)}
-              >
-                <Ionicons name="git-compare-outline" size={28} color={Palette.hermesOrange} />
-                <Text style={styles.emptyTitle}>{t('customers.noActiveTrackers')}</Text>
-                <Text style={styles.emptyDesc}>{t('customers.startTrackerDesc')}</Text>
+            {activeTrackers.length === 0 && completedTrackers.length === 0 ? (
+              <Pressable style={s.emptyCard} onPress={() => router.push('/(contractor)/decisions' as any)}>
+                <Ionicons name="chatbubbles-outline" size={32} color={Palette.hermesOrange} />
+                <Text style={s.emptyTitle}>{t('customers.noTrackers', 'No decision trackers yet')}</Text>
+                <Text style={s.emptyDesc}>{t('customers.noTrackersDesc', 'Create a tracker so customers can make choices about materials, finishes, and timing — keeping your project on schedule.')}</Text>
               </Pressable>
             ) : (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                snapToInterval={280 + 10}
-                decelerationRate="fast"
-                contentContainerStyle={{ gap: 10, paddingRight: 20 }}
-              >
-                {activeTrackers.map((tracker) => {
-                  const progress = Math.round((tracker.decided / tracker.totalDecisions) * 100);
+              <View style={s.trackerList}>
+                {activeTrackers.map(tracker => {
+                  const pct = Math.round((tracker.decided / tracker.totalDecisions) * 100);
                   return (
                     <Pressable
                       key={tracker.id}
-                      style={({ pressed }) => [styles.trackerCard, { width: 280 }, pressed && { opacity: 0.9 }]}
+                      style={({ pressed }) => [s.trackerCard, pressed && { opacity: 0.95 }]}
                       onPress={() => router.push('/(contractor)/decisions' as any)}
                     >
-                      {/* Progress bar */}
-                      <View style={styles.progressBar}>
-                        <View style={[styles.progressFill, { width: `${progress}%` }]} />
-                      </View>
-
-                      <View style={styles.trackerRow}>
+                      <View style={s.trackerHeader}>
+                        <View style={s.trackerAvatar}>
+                          <Text style={s.trackerAvatarText}>{tracker.customerName.charAt(0)}</Text>
+                        </View>
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.trackerCustomer}>{tracker.customerName}</Text>
-                          <Text style={styles.trackerProject}>{tracker.project}</Text>
-                          {(customerRevenueLookup[tracker.customerName] || 0) > 0 && (
-                            <Text style={styles.trackerRevenue}>{formatCurrency(customerRevenueLookup[tracker.customerName])} {t('customers.revenue')}</Text>
-                          )}
+                          <Text style={s.trackerName}>{tracker.customerName}</Text>
+                          <Text style={s.trackerProject}>{tracker.project}</Text>
                         </View>
-                        <View style={styles.trackerStats}>
-                          <Text style={styles.trackerProgress}>{tracker.decided}/{tracker.totalDecisions}</Text>
-                          {tracker.overdue > 0 && (
-                            <View style={styles.overdueBadge}>
-                              <Text style={styles.overdueBadgeText}>{tracker.overdue} {t('customers.overdue')}</Text>
-                            </View>
-                          )}
+                        <View style={s.trackerCount}>
+                          <Text style={s.trackerCountText}>{tracker.decided}/{tracker.totalDecisions}</Text>
                         </View>
                       </View>
 
-                      <View style={styles.trackerActions}>
-                        <Pressable
-                          style={styles.trackerAction}
-                          onPress={() => handleSendReminder(tracker.id, tracker.customerName)}
-                        >
-                          <Ionicons name="notifications-outline" size={14} color={Palette.hermesOrange} />
-                          <Text style={styles.trackerActionText}>{t('customers.reminder')}</Text>
+                      {/* Progress bar */}
+                      <View style={s.progressTrack}>
+                        <View style={[s.progressFill, { width: `${pct}%` }]} />
+                      </View>
+
+                      <View style={s.trackerFooter}>
+                        {tracker.overdue > 0 ? (
+                          <View style={s.overduePill}>
+                            <Ionicons name="alert-circle" size={12} color={SemanticColors.feedbackError} />
+                            <Text style={s.overdueText}>{tracker.overdue} {t('customers.overdueItems', 'overdue')}</Text>
+                          </View>
+                        ) : (
+                          <Text style={s.trackerTime}>{tracker.lastActivity}</Text>
+                        )}
+                        <Pressable style={s.reminderBtn} onPress={() => handleSendReminder(tracker.id)}>
+                          <Ionicons name="paper-plane-outline" size={13} color={Palette.hermesOrange} />
+                          <Text style={s.reminderText}>{t('customers.nudge', 'Nudge')}</Text>
                         </Pressable>
-                        <Text style={styles.trackerTime}>{tracker.lastActivity}</Text>
                       </View>
                     </Pressable>
                   );
                 })}
-              </ScrollView>
-            )}
 
-            {/* Completed trackers — collapsed */}
-            {completedTrackers.length > 0 && (
-              <View style={styles.completedRow}>
-                <Ionicons name="checkmark-circle" size={16} color={SemanticColors.feedbackSuccess} />
-                <Text style={styles.completedText}>{t('customers.trackersCompleted', { count: completedTrackers.length })}</Text>
+                {completedTrackers.length > 0 && (
+                  <View style={s.completedRow}>
+                    <Ionicons name="checkmark-circle" size={15} color={SemanticColors.feedbackSuccess} />
+                    <Text style={s.completedText}>{completedTrackers.length} {t('customers.completed', 'completed')}</Text>
+                  </View>
+                )}
               </View>
             )}
           </View>
         </FadeIn>
 
-        {/* ============================================================ */}
-        {/* KLANTEN — compact customer list below trackers               */}
-        {/* ============================================================ */}
-
-        <FadeIn delay={150} duration={400}>
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('customers.customersCount', { count: customers.length })}</Text>
+        {/* Customer List */}
+        <FadeIn delay={200} duration={400}>
+          <View style={s.section}>
+            <View style={s.sectionRow}>
+              <Text style={s.sectionTitle}>{t('customers.allContacts', 'All contacts')}</Text>
               <Pressable onPress={() => router.push('/contractor/customer-crm' as any)}>
-                <Text style={styles.seeAll}>{t('customers.viewAll')}</Text>
+                <Text style={s.sectionLink}>{t('common.viewAll', 'View all')}</Text>
               </Pressable>
             </View>
 
-            <View style={styles.customerList}>
-              {recentCustomers.map((customer) => (
-                <Pressable
-                  key={customer.id}
-                  style={({ pressed }) => [styles.customerRow, pressed && { backgroundColor: PAGE_BG }]}
-                  onPress={() => router.push('/contractor/customer-crm' as any)}
-                >
-                  <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>{customer.name.charAt(0).toUpperCase()}</Text>
-                  </View>
-                  <Text style={styles.customerName} numberOfLines={1}>{customer.name}</Text>
-                  <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
-                </Pressable>
-              ))}
-              {customers.length === 0 && (
-                <Text style={styles.noCustomers}>{t('customers.noCustomers')}</Text>
+            <View style={s.customerCard}>
+              {customers.length === 0 ? (
+                <View style={s.noCustomers}>
+                  <Ionicons name="people-outline" size={28} color={SemanticColors.textTertiary} />
+                  <Text style={s.noCustomersText}>{t('customers.emptyTitle', 'No customers yet')}</Text>
+                </View>
+              ) : (
+                customers.slice(0, 6).map((customer, idx) => (
+                  <Pressable
+                    key={customer.id}
+                    style={({ pressed }) => [s.customerRow, idx < Math.min(customers.length, 6) - 1 && s.customerBorder, pressed && { backgroundColor: PAGE_BG }]}
+                    onPress={() => router.push('/contractor/customer-crm' as any)}
+                  >
+                    <View style={s.customerAvatar}>
+                      <Text style={s.customerAvatarText}>{customer.name.charAt(0).toUpperCase()}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.customerName} numberOfLines={1}>{customer.name}</Text>
+                      <Text style={s.customerMeta}>
+                        {customerJobs[customer.id] || 0} {t('customers.jobsLabel', 'jobs')}
+                        {(customerRevenue[customer.id] || 0) > 0 && ` · ${formatAmount(customerRevenue[customer.id])}`}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
+                  </Pressable>
+                ))
               )}
             </View>
           </View>
         </FadeIn>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 140 }} />
       </ScrollView>
 
       {/* Add Customer Modal */}
       <Modal visible={showAddModal} transparent animationType="slide">
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
-          <Pressable style={styles.modalOverlay} onPress={() => setShowAddModal(false)}>
-            <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
-              <View style={styles.modalHandle} />
-              <Text style={styles.modalTitle}>{t('customers.newCustomer')}</Text>
-              <TextInput style={styles.modalInput} value={newName} onChangeText={setNewName} placeholder={t('customers.name')} placeholderTextColor={SemanticColors.textTertiary} autoFocus />
-              <TextInput style={styles.modalInput} value={newEmail} onChangeText={setNewEmail} placeholder={t('customers.emailPlaceholder')} placeholderTextColor={SemanticColors.textTertiary} keyboardType="email-address" autoCapitalize="none" />
-              <TextInput style={styles.modalInput} value={newPhone} onChangeText={setNewPhone} placeholder={t('customers.phonePlaceholder')} placeholderTextColor={SemanticColors.textTertiary} keyboardType="phone-pad" />
-              <Pressable style={[styles.modalSubmit, !newName.trim() && { opacity: 0.5 }]} onPress={handleAddCustomer} disabled={!newName.trim()}>
-                <Text style={styles.modalSubmitText}>{t('customers.addBtn')}</Text>
+          <Pressable style={s.modalOverlay} onPress={() => setShowAddModal(false)}>
+            <Pressable style={s.modalSheet} onPress={(e) => e.stopPropagation()}>
+              <View style={s.modalHandle} />
+              <Text style={s.modalTitle}>{t('customers.newCustomer', 'New customer')}</Text>
+              <TextInput style={s.modalInput} value={newName} onChangeText={setNewName} placeholder={t('customers.namePlaceholder', 'Customer name')} placeholderTextColor={SemanticColors.textTertiary} autoFocus />
+              <TextInput style={s.modalInput} value={newEmail} onChangeText={setNewEmail} placeholder={t('customers.emailPlaceholder', 'Email')} placeholderTextColor={SemanticColors.textTertiary} keyboardType="email-address" autoCapitalize="none" />
+              <TextInput style={s.modalInput} value={newPhone} onChangeText={setNewPhone} placeholder={t('customers.phonePlaceholder', 'Phone')} placeholderTextColor={SemanticColors.textTertiary} keyboardType="phone-pad" />
+              <Pressable style={[s.modalSubmit, !newName.trim() && { opacity: 0.5 }]} onPress={handleAddCustomer} disabled={!newName.trim()}>
+                <Text style={s.modalSubmitText}>{t('customers.addBtn', 'Add customer')}</Text>
               </Pressable>
             </Pressable>
           </Pressable>
@@ -295,81 +288,94 @@ export default function BedrijfScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: PAGE_BG },
+
+  // Header
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingTop: SafeArea.top, paddingHorizontal: SafeArea.side, paddingBottom: Spacing.sm,
+    paddingTop: SafeArea.top, paddingHorizontal: SafeArea.side, paddingBottom: GRID.sm,
     backgroundColor: PAGE_BG,
   },
-  headerTitle: { fontSize: 28, fontFamily: 'Manrope_800ExtraBold', color: SemanticColors.textPrimary, letterSpacing: -0.8 },
-  addButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: Palette.hermesOrange, alignItems: 'center', justifyContent: 'center' },
-  scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: SafeArea.side, paddingTop: Spacing.sm, paddingBottom: 120 },
+  headerTitle: { fontSize: TYPE.displaySize, fontFamily: TYPE.displayFamily, color: SemanticColors.textPrimary, letterSpacing: TYPE.displayTracking },
+  headerSub: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
+  addBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: Palette.hermesOrange, alignItems: 'center', justifyContent: 'center' },
 
-  // Urgent banner
-  urgentBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: SemanticColors.feedbackError + '10', borderRadius: 16, padding: 14,
-    marginBottom: 16,
+  // Scroll
+  scroll: { flex: 1 },
+  scrollContent: { paddingHorizontal: SafeArea.side, paddingTop: GRID.sm, gap: GRID.lg },
+
+  // KPI strip
+  kpiStrip: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md,
   },
-  urgentText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: SemanticColors.feedbackError, flex: 1 },
+  kpi: { flex: 1, alignItems: 'center' },
+  kpiValue: { fontSize: 22, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  kpiLabel: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textSecondary, marginTop: 2 },
+  kpiDivider: { width: 1, height: 28, backgroundColor: SemanticColors.borderDefault },
 
-  // Sections
-  section: { marginBottom: 24 },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  sectionTitle: { fontSize: 18, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, letterSpacing: -0.3 },
-  seeAll: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
+  // Section
+  section: { gap: GRID.sm },
+  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sectionTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, letterSpacing: TYPE.sectionTracking },
+  sectionLink: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange },
 
-  // Tracker cards — the CORE of this screen
+  // Tracker list — VERTICAL (no horizontal scroll)
+  trackerList: { gap: GRID.sm },
   trackerCard: {
-    backgroundColor: SemanticColors.surfacePrimary, borderRadius: 16, padding: 16,
-    overflow: 'hidden',
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md,
+    gap: GRID.sm,
   },
-  progressBar: { height: 4, backgroundColor: SemanticColors.borderDefault, borderRadius: 2, marginBottom: 12 },
+  trackerHeader: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm },
+  trackerAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: Palette.hermesOrange + '12', alignItems: 'center', justifyContent: 'center' },
+  trackerAvatarText: { fontSize: TYPE.titleSize, fontFamily: TYPE.sectionFamily, color: Palette.hermesOrange },
+  trackerName: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  trackerProject: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
+  trackerCount: { backgroundColor: PAGE_BG, borderRadius: RADIUS.sm, paddingHorizontal: GRID.sm, paddingVertical: GRID.xs },
+  trackerCountText: { fontSize: TYPE.titleSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+
+  // Progress
+  progressTrack: { height: 4, backgroundColor: SemanticColors.borderDefault, borderRadius: 2 },
   progressFill: { height: 4, backgroundColor: Palette.hermesOrange, borderRadius: 2 },
-  trackerRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 },
-  trackerCustomer: { fontSize: 16, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
-  trackerProject: { fontSize: 13, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary, marginTop: 2 },
-  trackerRevenue: { fontSize: 12, fontFamily: 'Inter_400Regular', color: SemanticColors.textTertiary, marginTop: 2 },
-  trackerStats: { alignItems: 'flex-end', gap: 4 },
-  trackerProgress: { fontSize: 17, fontFamily: 'Manrope_800ExtraBold', color: SemanticColors.textPrimary },
-  overdueBadge: { backgroundColor: SemanticColors.feedbackError + '15', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
-  overdueBadgeText: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: SemanticColors.feedbackError },
-  trackerActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: SemanticColors.borderDefault },
-  trackerAction: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  trackerActionText: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
-  trackerTime: { fontSize: 12, fontFamily: 'Inter_500Medium', color: SemanticColors.textTertiary },
 
-  // Completed row
-  completedRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8 },
-  completedText: { fontSize: 14, fontFamily: 'Inter_500Medium', color: SemanticColors.textSecondary },
+  // Tracker footer
+  trackerFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  trackerTime: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
+  overduePill: { flexDirection: 'row', alignItems: 'center', gap: GRID.xs, backgroundColor: SemanticColors.feedbackError + '10', paddingHorizontal: GRID.sm, paddingVertical: GRID.xs, borderRadius: RADIUS.sm },
+  overdueText: { fontSize: TYPE.tinySize, fontFamily: TYPE.titleFamily, color: SemanticColors.feedbackError },
+  reminderBtn: { flexDirection: 'row', alignItems: 'center', gap: GRID.xs },
+  reminderText: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange },
 
-  // Empty tracker
-  emptyTrackerCard: {
-    backgroundColor: SemanticColors.surfacePrimary, borderRadius: 16, padding: 24,
-    alignItems: 'center', gap: 8,
+  // Completed
+  completedRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, paddingVertical: GRID.xs },
+  completedText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
+
+  // Empty
+  emptyCard: {
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.lg,
+    alignItems: 'center', gap: GRID.sm,
   },
-  emptyTitle: { fontSize: 16, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary, textAlign: 'center' },
-  emptyDesc: { fontSize: 13, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary, textAlign: 'center', lineHeight: 20 },
+  emptyTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary, textAlign: 'center' },
+  emptyDesc: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary, textAlign: 'center', lineHeight: 22 },
 
-  // Customer list — compact
-  customerList: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: 16, overflow: 'hidden' },
-  customerRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: SemanticColors.borderDefault,
-  },
-  avatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: Palette.hermesOrange + '12', alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: Palette.hermesOrange },
-  customerName: { flex: 1, fontSize: 16, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
-  noCustomers: { padding: 16, fontSize: 14, fontFamily: 'Inter_500Medium', color: SemanticColors.textTertiary, textAlign: 'center' },
+  // Customer list
+  customerCard: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden' },
+  customerRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, padding: GRID.md },
+  customerBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: SemanticColors.borderDefault },
+  customerAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: Palette.hermesOrange + '10', alignItems: 'center', justifyContent: 'center' },
+  customerAvatarText: { fontSize: TYPE.captionSize, fontFamily: TYPE.sectionFamily, color: Palette.hermesOrange },
+  customerName: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  customerMeta: { fontSize: TYPE.tinySize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary, marginTop: 1 },
+  noCustomers: { padding: GRID.lg, alignItems: 'center', gap: GRID.sm },
+  noCustomersText: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textTertiary },
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: SemanticColors.surfacePrimary, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, gap: 12 },
-  modalHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: SemanticColors.borderDefault, alignSelf: 'center', marginBottom: 8 },
-  modalTitle: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, letterSpacing: -0.3 },
-  modalInput: { backgroundColor: PAGE_BG, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, fontFamily: 'Inter_400Regular', color: SemanticColors.textPrimary },
-  modalSubmit: { backgroundColor: Palette.hermesOrange, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  modalSubmitText: { fontSize: 16, fontFamily: 'Inter_600SemiBold', color: '#fff' },
+  modalSheet: { backgroundColor: SemanticColors.surfacePrimary, borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl, padding: GRID.lg, paddingBottom: 40, gap: GRID.sm },
+  modalHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: SemanticColors.borderDefault, alignSelf: 'center', marginBottom: GRID.sm },
+  modalTitle: { fontSize: TYPE.sectionSize + 2, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  modalInput: { backgroundColor: PAGE_BG, borderRadius: RADIUS.md, paddingHorizontal: GRID.md, paddingVertical: GRID.sm + 4, fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary },
+  modalSubmit: { backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.md, paddingVertical: GRID.md, alignItems: 'center' },
+  modalSubmitText: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: '#fff' },
 });
