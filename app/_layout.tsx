@@ -1,6 +1,6 @@
 import '../src/i18n/i18n';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   Inter_400Regular,
@@ -16,7 +16,7 @@ import {
   Manrope_800ExtraBold,
   useFonts,
 } from '@expo-google-fonts/manrope';
-import { ActivityIndicator, Alert, Linking, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Platform, View } from 'react-native';
 import { AppStateProvider } from '../src/state/AppState';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { checkForUpdate } from '../src/services/versionCheckService';
@@ -62,7 +62,17 @@ function RootLayoutNav() {
     }
   }, [isAuthenticated, user?.id]);
 
+  // Track if the navigator has mounted — navigation before mount crashes Expo Router
+  const navigationReady = useRef(false);
   useEffect(() => {
+    // Small delay to ensure Stack is mounted before navigating
+    const timer = setTimeout(() => { navigationReady.current = true; }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!navigationReady.current) return;
+
     const inAuthGroup = segments[0] === 'login';
     const inCustomerPortal = segments[0] === 'customer';
     const inOnboarding = segments[0] === 'onboarding';
@@ -127,10 +137,19 @@ export default function RootLayout() {
   });
 
   if (!fontsLoaded) {
+    // Must still render the navigator tree — Expo Router requires it on first render
+    // Show a loading overlay on top
     return (
-      <View style={{ flex: 1, backgroundColor: '#F2F2F7', alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" color="#E35205" />
-      </View>
+      <AuthProvider>
+        <AppStateProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <RootLayoutNav />
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#F2F2F7', alignItems: 'center', justifyContent: 'center' }}>
+              <ActivityIndicator size="large" color="#E35205" />
+            </View>
+          </GestureHandlerRootView>
+        </AppStateProvider>
+      </AuthProvider>
     );
   }
 

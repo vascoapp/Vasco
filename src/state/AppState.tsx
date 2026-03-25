@@ -170,47 +170,55 @@ const AppStateContext = createContext<AppState | null>(null);
 // SECTION: Provider & State Initialization (seeds, defaults)
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// Always seed demo data — Supabase project is paused so real data won't load
+// When Supabase is live with real data, set to false
+const useSeedData = true;
+
+// Seed jobs — defined outside component to avoid Babel parse issues with inline ternaries
+const SEED_JOBS: Job[] = [
+  { id: 'j-seed-1', customerId: 'cust-004', title: 'Lekkage inspectie — Fam. Bakker', description: null, status: 'lead', trade: 'plumbing', priority: 'normal', quotedAmount: 180, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 1).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-seed-2', customerId: 'cust-001', title: 'CV-ketel onderhoud — Fam. de Vries', description: null, status: 'scheduled', trade: 'plumbing', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], scheduledStartTime: '09:00', scheduledEndTime: '12:00', estimatedDuration: 3, quotedAmount: 450, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 3).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-seed-3', customerId: 'cust-002', title: 'Badkamer renovatie — Fam. Jansen', description: null, status: 'in-progress', trade: 'plumbing', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], scheduledStartTime: '13:30', scheduledEndTime: '17:00', estimatedDuration: 24, quotedAmount: 4200, agreedAmount: 4200, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 7).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-seed-4', customerId: 'cust-003', title: 'Lekkage reparatie — Bakkerij Smit', description: null, status: 'completed', trade: 'plumbing', priority: 'normal', estimatedDuration: 2, quotedAmount: 280, agreedAmount: 280, actualHours: 2.5, actualCost: 85, completedAt: new Date(Date.now() - MS_PER_DAY * 12).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 14).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 12).toISOString() },
+  { id: 'j-seed-5', customerId: 'cust-005', title: 'Vloerverwarming check — Hotel NH', description: null, status: 'invoiced', trade: 'plumbing', priority: 'normal', estimatedDuration: 2, quotedAmount: 350, agreedAmount: 350, invoiceId: 'inv-seed-1', completedAt: new Date(Date.now() - MS_PER_DAY * 20).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 25).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 20).toISOString() },
+];
+
+const SEED_CUSTOMERS: Customer[] = [
+  { id: 'cust-001', name: 'Fam. de Vries', email: 'devries@gmail.com', phone: '+31 6 12345678' },
+  { id: 'cust-002', name: 'Fam. Jansen', email: 'jansen@hotmail.com', phone: '+31 6 87654321' },
+  { id: 'cust-003', name: 'Bakkerij Smit', email: 'info@bakkerijsmit.nl', phone: '+31 20 1234567' },
+  { id: 'cust-004', name: 'Fam. Bakker', email: 'bakker@gmail.com', phone: '+31 6 55512345' },
+  { id: 'cust-005', name: 'Hotel NH', email: 'facilitair@nh-hotels.nl', phone: '+31 20 5551234' },
+];
+
+const SEED_JOB_MATERIALS: Record<string, JobMaterial[]> = {
+  'j-seed-2': [
+    { id: 'jm-s2-1', jobId: 'j-seed-2', materialId: 'mat-cvfilter', quantity: 2, unit: 'stuk', unitPrice: 8.50, totalPrice: 17, status: 'planned', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'jm-s2-2', jobId: 'j-seed-2', materialId: 'mat-expansievat', quantity: 1, unit: 'stuk', unitPrice: 65, totalPrice: 65, status: 'planned', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+  ],
+  'j-seed-3': [
+    { id: 'jm-s3-1', jobId: 'j-seed-3', materialId: 'mat-koperbuis', quantity: 6, unit: 'meter', unitPrice: 12.50, totalPrice: 75, status: 'delivered', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'jm-s3-2', jobId: 'j-seed-3', materialId: 'mat-thermostaat', quantity: 3, unit: 'stuk', unitPrice: 42, totalPrice: 126, status: 'ordered', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+  ],
+};
+
 export function AppStateProvider({ children }: PropsWithChildren) {
   const aiUserId = 'current-user'; // placeholder until AuthContext is accessible here
   const [isLoading, setIsLoading] = useState(isSupabaseConfigured);
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile>(
     useSeedData ? initialBusinessProfile : { isComplete: false, completenessPercent: 0 },
   );
-  // Always seed demo data — Supabase project is paused so real data won't load
-  // When Supabase is live with real data, these seeds will be overridden by refreshData()
-  const useSeedData = true; // TODO: set to `!isSupabaseConfigured` once Supabase is live with data
   const [quotes, setQuotes] = useState<Quote[]>(useSeedData ? initialQuotes : []);
   const [invoices, setInvoices] = useState<Invoice[]>(useSeedData ? initialInvoices : []);
-  const [jobs, setJobs] = useState<Job[]>(useSeedData ? [
-    { id: 'j-seed-1', customerId: 'cust-004', title: 'Lekkage inspectie — Fam. Bakker', description: null, status: 'lead', trade: 'plumbing', priority: 'normal', quotedAmount: 180, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 1).toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'j-seed-2', customerId: 'cust-001', title: 'CV-ketel onderhoud — Fam. de Vries', description: null, status: 'scheduled', trade: 'plumbing', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], scheduledStartTime: '09:00', scheduledEndTime: '12:00', estimatedDuration: 3, quotedAmount: 450, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 3).toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'j-seed-3', customerId: 'cust-002', title: 'Badkamer renovatie — Fam. Jansen', description: null, status: 'in-progress', trade: 'plumbing', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], scheduledStartTime: '13:30', scheduledEndTime: '17:00', estimatedDuration: 24, quotedAmount: 4200, agreedAmount: 4200, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 7).toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'j-seed-4', customerId: 'cust-003', title: 'Lekkage reparatie — Bakkerij Smit', description: null, status: 'completed', trade: 'plumbing', priority: 'normal', estimatedDuration: 2, quotedAmount: 280, agreedAmount: 280, actualHours: 2.5, actualCost: 85, completedAt: new Date(Date.now() - MS_PER_DAY * 12).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 14).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 12).toISOString() },
-    { id: 'j-seed-5', customerId: 'cust-005', title: 'Vloerverwarming check — Hotel NH', description: null, status: 'invoiced', trade: 'plumbing', priority: 'normal', estimatedDuration: 2, quotedAmount: 350, agreedAmount: 350, invoiceId: 'inv-seed-1', completedAt: new Date(Date.now() - MS_PER_DAY * 20).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 25).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 20).toISOString() },
-  ]);
+  const [jobs, setJobs] = useState(useSeedData ? SEED_JOBS : [] as Job[]);
   const [extractedDocs, setExtractedDocs] = useState<ExtractedDocument[]>([]);
   const [lineItems, setLineItems] = useState<Record<string, QuoteLineItem[]>>(
     useSeedData ? initialLineItems : {},
   );
-  const [customers, setCustomers] = useState<Customer[]>(useSeedData ? [
-    { id: 'cust-001', name: 'Fam. de Vries', email: 'devries@gmail.com', phone: '+31 6 12345678', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'cust-002', name: 'Fam. Jansen', email: 'jansen@hotmail.com', phone: '+31 6 87654321', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'cust-003', name: 'Bakkerij Smit', email: 'info@bakkerijsmit.nl', phone: '+31 20 1234567', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'cust-004', name: 'Fam. Bakker', email: 'bakker@gmail.com', phone: '+31 6 55512345', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'cust-005', name: 'Hotel NH', email: 'facilitair@nh-hotels.nl', phone: '+31 20 5551234', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-  ]);
+  const [customers, setCustomers] = useState(useSeedData ? SEED_CUSTOMERS : [] as Customer[]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [jobMaterialsMap, setJobMaterialsMap] = useState<Record<string, JobMaterial[]>>(useSeedData ? {
-    'j-seed-2': [
-      { id: 'jm-s2-1', jobId: 'j-seed-2', materialId: 'mat-cvfilter', quantity: 2, unit: 'stuk', unitPrice: 8.50, totalPrice: 17, status: 'planned', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-      { id: 'jm-s2-2', jobId: 'j-seed-2', materialId: 'mat-expansievat', quantity: 1, unit: 'stuk', unitPrice: 65, totalPrice: 65, status: 'planned', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    ],
-    'j-seed-3': [
-      { id: 'jm-s3-1', jobId: 'j-seed-3', materialId: 'mat-koperbuis', quantity: 6, unit: 'meter', unitPrice: 12.50, totalPrice: 75, status: 'delivered', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-      { id: 'jm-s3-2', jobId: 'j-seed-3', materialId: 'mat-thermostaat', quantity: 3, unit: 'stuk', unitPrice: 42, totalPrice: 126, status: 'ordered', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    ],
-  });
+  const [jobMaterialsMap, setJobMaterialsMap] = useState(useSeedData ? SEED_JOB_MATERIALS : {} as Record<string, JobMaterial[]>);
   const [priceObsMap, setPriceObsMap] = useState<Record<string, PriceObservation[]>>({});
   const [moneybirdConnected, setMoneybirdConnected] = useState(false);
   const [lastMoneybirdExport, setLastMoneybirdExport] = useState<Record<string, string>>({});

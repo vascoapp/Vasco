@@ -130,10 +130,36 @@ export default function JobDetailPage() {
     }, 800);
   }, []);
 
-  const job = useMemo(() => smartSchedulerService.getJob(id || ''), [id]);
+  const { addInvoiceFromJob, jobs, invoices, quotes } = useAppState();
   const { advance, recordHours } = useJobLifecyclePipeline();
   const costVariance = useJobCostVariance(id || '');
-  const { addInvoiceFromJob, jobs, invoices, quotes } = useAppState();
+  // Try scheduler first, fall back to AppState for seed/demo data
+  const customers = (useAppState() as any).customers ?? [];
+  const job = useMemo(() => {
+    const fromScheduler = smartSchedulerService.getJob(id || '');
+    if (fromScheduler) return fromScheduler;
+    // Fallback: build a ScheduledJob-compatible object from AppState
+    const appJob = jobs.find((j: any) => j.id === id);
+    if (!appJob) return null;
+    const cust = customers.find((c: any) => c.id === appJob.customerId);
+    return {
+      id: appJob.id,
+      projectName: appJob.title,
+      customerName: cust?.name || '',
+      customerId: appJob.customerId,
+      address: appJob.address?.street || '',
+      type: appJob.trade || 'general',
+      startTime: appJob.scheduledDate ? `${appJob.scheduledDate}T${appJob.scheduledStartTime || '09:00'}` : new Date().toISOString(),
+      endTime: appJob.scheduledDate ? `${appJob.scheduledDate}T${appJob.scheduledEndTime || '17:00'}` : new Date().toISOString(),
+      duration: appJob.estimatedDuration || 2,
+      travelTime: 15,
+      status: appJob.status === 'in-progress' ? 'in_progress' as const : appJob.status === 'completed' ? 'completed' as const : 'confirmed' as const,
+      priority: appJob.priority || 'normal',
+      notes: '',
+      lifecycleStatus: appJob.status as any,
+      quotedAmount: appJob.quotedAmount || 0,
+    } as any;
+  }, [id, jobs, customers]);
 
   // Build audit trail from real data
   const auditTrail = useMemo(() => {
@@ -303,13 +329,13 @@ export default function JobDetailPage() {
               );
             })}
           </View>
-          <Text style={[styles.pipelineLabel, { color: LIFECYCLE_COLORS[job.lifecycleStatus] }]}>
-            {LIFECYCLE_LABELS[job.lifecycleStatus]}
+          <Text style={[styles.pipelineLabel, { color: LIFECYCLE_COLORS[job.lifecycleStatus as JobLifecycleStatus] }]}>
+            {LIFECYCLE_LABELS[job.lifecycleStatus as JobLifecycleStatus]}
           </Text>
         </View>
 
         {/* Volgende stap action */}
-        {LIFECYCLE_NEXT_ACTION[job.lifecycleStatus] && (
+        {LIFECYCLE_NEXT_ACTION[job.lifecycleStatus as JobLifecycleStatus] && (
           <Pressable
             style={styles.nextStepButton}
             onPress={() => {
@@ -329,7 +355,7 @@ export default function JobDetailPage() {
             }}
           >
             <Ionicons name="arrow-forward-circle" size={18} color="#fff" />
-            <Text style={styles.nextStepText}>{LIFECYCLE_NEXT_ACTION[job.lifecycleStatus]}</Text>
+            <Text style={styles.nextStepText}>{LIFECYCLE_NEXT_ACTION[job.lifecycleStatus as JobLifecycleStatus]}</Text>
           </Pressable>
         )}
 
