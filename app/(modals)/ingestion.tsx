@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
+import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../src/components/Screen';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
 import { SemanticColors, Palette } from '../../src/theme/colors';
@@ -367,10 +368,13 @@ export default function IngestionModal() {
           </View>
         )}
 
-        {/* Status message */}
+        {/* Status message — failed extraction empty state */}
         {statusMessage !== '' && !result?.success && (
-          <View style={styles.statusBar}>
-            <Text style={[Typography.muted, { color: SemanticColors.feedbackError }]}>{statusMessage}</Text>
+          <View style={[styles.card, { alignItems: 'center', gap: Spacing.sm }]}>
+            <Ionicons name="alert-circle-outline" size={36} color={SemanticColors.feedbackError} />
+            <Text style={[Typography.subtitle, { textAlign: 'center' }]}>Extraction failed</Text>
+            <Text style={[Typography.muted, { color: SemanticColors.feedbackError, textAlign: 'center' }]}>{statusMessage}</Text>
+            <PrimaryButton label="Try again" onPress={handleClear} />
           </View>
         )}
 

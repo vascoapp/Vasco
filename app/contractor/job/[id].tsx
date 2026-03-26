@@ -223,7 +223,7 @@ export default function JobDetailPage() {
         <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
-        <Text style={styles.headerTitle} numberOfLines={1}>{job.projectName}</Text>
+        <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">{job.projectName}</Text>
         <Pressable style={styles.moreBtn} accessibilityRole="button" accessibilityLabel="More options">
           <Ionicons name="ellipsis-horizontal" size={20} color={SemanticColors.textTertiary} />
         </Pressable>
@@ -590,7 +590,7 @@ export default function JobDetailPage() {
                 </View>
                 <View style={styles.upsellInfo}>
                   <Text style={styles.upsellTitle}>{item.title}</Text>
-                  <Text style={styles.upsellDesc} numberOfLines={1}>{item.description}</Text>
+                  <Text style={styles.upsellDesc} numberOfLines={1} ellipsizeMode="tail">{item.description}</Text>
                 </View>
                 <View style={styles.upsellRight}>
                   <Text style={styles.upsellAmount}>€{item.potentialRevenue}</Text>

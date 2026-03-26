@@ -68,6 +68,7 @@ export default function NewQuoteScreen() {
   }, []);
 
   const handleSave = useCallback(async () => {
+    if (saving) return;
     if (!customer.trim()) {
       Alert.alert('Missing customer', 'Enter a customer name.');
       return;

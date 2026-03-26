@@ -254,29 +254,36 @@ export default function BedrijfScreen() {
                 <View style={s.noCustomers}>
                   <Ionicons name="people-outline" size={28} color={SemanticColors.textTertiary} />
                   <Text style={s.noCustomersText}>{t('customers.emptyTitle', 'No customers yet')}</Text>
+                  <Pressable style={({ pressed }) => [s.emptyAddBtn, pressed && { opacity: 0.8 }]} onPress={() => setShowAddModal(true)} accessibilityRole="button" accessibilityLabel={t('customers.newCustomer', 'Add new customer')}>
+                    <Text style={s.emptyAddBtnText}>{t('customers.newCustomer', 'New customer')}</Text>
+                  </Pressable>
                 </View>
               ) : (
-                customers.slice(0, 6).map((customer, idx) => (
-                  <Pressable
-                    key={customer.id}
-                    style={({ pressed }) => [s.customerRow, idx < Math.min(customers.length, 6) - 1 && s.customerBorder, pressed && { backgroundColor: PAGE_BG }]}
-                    onPress={() => router.push('/contractor/customer-crm' as any)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${customer.name}, ${customerJobs[customer.id] || 0} jobs`}
-                  >
-                    <View style={s.customerAvatar}>
-                      <Text style={s.customerAvatarText}>{customer.name.charAt(0).toUpperCase()}</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={s.customerName} numberOfLines={1}>{customer.name}</Text>
-                      <Text style={s.customerMeta}>
-                        {customerJobs[customer.id] || 0} {t('customers.jobsLabel', 'jobs')}
-                        {(customerRevenue[customer.id] || 0) > 0 && ` · ${formatAmount(customerRevenue[customer.id])}`}
-                      </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
-                  </Pressable>
-                ))
+                <FlatList
+                  data={customers.slice(0, 6)}
+                  keyExtractor={(item) => item.id}
+                  scrollEnabled={false}
+                  renderItem={({ item: customer, index: idx }) => (
+                    <Pressable
+                      style={({ pressed }) => [s.customerRow, idx < Math.min(customers.length, 6) - 1 && s.customerBorder, pressed && { backgroundColor: PAGE_BG }]}
+                      onPress={() => router.push('/contractor/customer-crm' as any)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${customer.name}, ${customerJobs[customer.id] || 0} jobs`}
+                    >
+                      <View style={s.customerAvatar}>
+                        <Text style={s.customerAvatarText}>{customer.name.charAt(0).toUpperCase()}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={s.customerName} numberOfLines={1} ellipsizeMode="tail">{customer.name}</Text>
+                        <Text style={s.customerMeta}>
+                          {customerJobs[customer.id] || 0} {t('customers.jobsLabel', 'jobs')}
+                          {(customerRevenue[customer.id] || 0) > 0 && ` · ${formatAmount(customerRevenue[customer.id])}`}
+                        </Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
+                    </Pressable>
+                  )}
+                />
               )}
             </View>
           </View>
@@ -387,6 +394,8 @@ const s = StyleSheet.create({
   customerMeta: { fontSize: TYPE.tinySize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary, marginTop: 1 },
   noCustomers: { padding: GRID.lg, alignItems: 'center', gap: GRID.sm },
   noCustomersText: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textTertiary },
+  emptyAddBtn: { backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.md, paddingHorizontal: GRID.lg, paddingVertical: GRID.sm + 2, marginTop: GRID.xs },
+  emptyAddBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: '#fff' },
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },

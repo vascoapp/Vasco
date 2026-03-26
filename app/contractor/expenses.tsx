@@ -1,7 +1,7 @@
 // =============================================================================
 // EXPENSES — Uitgaven beheer
 // =============================================================================
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl, Modal, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -52,7 +52,8 @@ export default function ExpensesScreen() {
   const stats = useExpenseStats();
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategory | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const onRefresh = useCallback(() => { setRefreshing(true); setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600); }, []);
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onRefresh = useCallback(() => { setRefreshing(true); if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current); refreshTimerRef.current = setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600); }, []);
 
   const filtered = selectedCategory ? expenses.filter(e => e.category === selectedCategory) : expenses;
 

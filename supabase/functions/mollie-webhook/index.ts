@@ -15,10 +15,41 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// ---------------------------------------------------------------------------
+// Rate limiting — in-memory sliding window (100 calls per 60 seconds)
+// ---------------------------------------------------------------------------
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 100;
+const requestTimestamps: number[] = [];
+
+function isRateLimited(): boolean {
+  const now = Date.now();
+  // Remove timestamps outside the window
+  while (requestTimestamps.length > 0 && requestTimestamps[0] < now - RATE_LIMIT_WINDOW_MS) {
+    requestTimestamps.shift();
+  }
+  if (requestTimestamps.length >= RATE_LIMIT_MAX) {
+    return true;
+  }
+  requestTimestamps.push(now);
+  return false;
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
+  }
+
+  // -------------------------------------------------------------------------
+  // 0. Rate limiting — reject if more than 100 calls per minute
+  // -------------------------------------------------------------------------
+  if (isRateLimited()) {
+    console.error('Rate limit exceeded for mollie-webhook');
+    return new Response(JSON.stringify({ received: false, error: 'Rate limit exceeded' }), {
+      status: 429,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' },
+    });
   }
 
   try {
@@ -74,6 +105,18 @@ Deno.serve(async (req) => {
     }
 
     const payment = await mollieRes.json();
+
+    // -------------------------------------------------------------------------
+    // 2b. Verify fetched payment ID matches posted ID (prevents forged webhooks)
+    // -------------------------------------------------------------------------
+    if (payment.id !== paymentId) {
+      console.error(`Payment ID mismatch: posted=${paymentId}, fetched=${payment.id}`);
+      return new Response(JSON.stringify({ received: true, error: 'Payment ID mismatch' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const invoiceId = payment.metadata?.invoiceId;
 
     console.log(`Payment ${paymentId}: status=${payment.status}, invoiceId=${invoiceId}`);

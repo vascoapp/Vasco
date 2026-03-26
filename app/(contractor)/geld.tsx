@@ -5,7 +5,7 @@
 // No dashboards, no bleed between sections. Vasco is the financial brain.
 // =============================================================================
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Share, Platform, Alert, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,6 +30,7 @@ export default function GeldScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [invoiceFilter, setInvoiceFilter] = useState('');
   const [quoteFilter, setQuoteFilter] = useState('');
+  const [sendingInvoiceId, setSendingInvoiceId] = useState<string | null>(null);
   const { invoices, quotes, markInvoiceSent, removeInvoice, removeQuote, isLoading } = useAppState();
   const cashFlow = useCashFlow();
 
@@ -57,9 +58,11 @@ export default function GeldScreen() {
 
   useEffect(() => { recordScreenVisit('geld'); }, []);
 
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
+    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    refreshTimerRef.current = setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
   }, []);
 
   // Invoice stats
@@ -199,18 +202,25 @@ export default function GeldScreen() {
                   >
                     <View style={[s.docDot, { backgroundColor: getStatusColor(doc.status) }]} />
                     <View style={{ flex: 1 }}>
-                      <Text style={s.docName} numberOfLines={1}>{doc.name}</Text>
-                      <Text style={s.docDesc} numberOfLines={1}>{doc.description} · {doc.status}</Text>
+                      <Text style={s.docName} numberOfLines={1} ellipsizeMode="tail">{doc.name}</Text>
+                      <Text style={s.docDesc} numberOfLines={1} ellipsizeMode="tail">{doc.description} · {doc.status}</Text>
                     </View>
                     <Text style={s.docAmount}>{'\u20AC'}{doc.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
                     {doc.status === 'draft' && (
                       <Pressable
-                        style={s.sendBtn}
+                        style={[s.sendBtn, sendingInvoiceId === doc.id && { opacity: 0.5 }]}
+                        disabled={sendingInvoiceId === doc.id}
                         onPress={(e) => {
                           e.stopPropagation?.();
-                          hapticSuccess();
-                          markInvoiceSent(doc.id);
-                          Alert.alert(t('invoices.markedAsSent', 'Invoice marked as sent'), t('invoices.markedAsSentDesc', 'Share the PDF with your customer via the share button on the invoice detail screen.'));
+                          if (sendingInvoiceId) return;
+                          setSendingInvoiceId(doc.id);
+                          try {
+                            hapticSuccess();
+                            markInvoiceSent(doc.id);
+                            Alert.alert(t('invoices.markedAsSent', 'Invoice marked as sent'), t('invoices.markedAsSentDesc', 'Share the PDF with your customer via the share button on the invoice detail screen.'));
+                          } finally {
+                            setSendingInvoiceId(null);
+                          }
                         }}
                         hitSlop={6}
                         accessibilityRole="button"
@@ -275,8 +285,8 @@ export default function GeldScreen() {
                   >
                     <View style={[s.docDot, { backgroundColor: getStatusColor(doc.status) }]} />
                     <View style={{ flex: 1 }}>
-                      <Text style={s.docName} numberOfLines={1}>{doc.name}</Text>
-                      <Text style={s.docDesc} numberOfLines={1}>{doc.description} · {doc.status}</Text>
+                      <Text style={s.docName} numberOfLines={1} ellipsizeMode="tail">{doc.name}</Text>
+                      <Text style={s.docDesc} numberOfLines={1} ellipsizeMode="tail">{doc.description} · {doc.status}</Text>
                     </View>
                     <Text style={s.docAmount}>{'\u20AC'}{doc.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
                   </Pressable>

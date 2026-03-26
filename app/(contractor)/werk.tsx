@@ -4,7 +4,7 @@
 // Clean vertical structure: Header → Action strip → Today's schedule → Jobs list
 // =============================================================================
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -52,9 +52,11 @@ export default function WerkScreen() {
 
   useEffect(() => { recordScreenVisit('werk'); }, []);
 
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
+    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    refreshTimerRef.current = setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
   }, []);
 
   const handleCreateJob = async () => {
@@ -169,7 +171,7 @@ export default function WerkScreen() {
               >
                 <View style={[s.jobAccent, { backgroundColor: project.status === 'active' ? Palette.hermesOrange : SemanticColors.textTertiary }]} />
                 <View style={s.jobContent}>
-                  <Text style={s.jobTitle} numberOfLines={1}>{project.title}</Text>
+                  <Text style={s.jobTitle} numberOfLines={1} ellipsizeMode="tail">{project.title}</Text>
                   <Text style={s.jobMeta}>{project.jobIds.length} {t('jobs.jobsCount', 'klussen')} · €{project.totalBudget.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
@@ -216,11 +218,11 @@ export default function WerkScreen() {
                     </View>
                     <View style={s.todayDivider} />
                     <View style={s.todayContent}>
-                      <Text style={s.todayTitle} numberOfLines={1}>
+                      <Text style={s.todayTitle} numberOfLines={1} ellipsizeMode="tail">
                         {entry.title || entry.jobTitle || entry.projectName || t('jobs.job', 'Job')}
                       </Text>
                       {(entry.customerName || entry.address) && (
-                        <Text style={s.todayMeta} numberOfLines={1}>
+                        <Text style={s.todayMeta} numberOfLines={1} ellipsizeMode="tail">
                           {[entry.customerName, entry.address].filter(Boolean).join(' · ')}
                         </Text>
                       )}
@@ -267,8 +269,8 @@ export default function WerkScreen() {
               >
                 <View style={[s.jobAccent, { backgroundColor: Palette.hermesOrange }]} />
                 <View style={s.jobContent}>
-                  <Text style={s.jobTitle} numberOfLines={1}>{job.title || job.description}</Text>
-                  <Text style={s.jobMeta} numberOfLines={1}>
+                  <Text style={s.jobTitle} numberOfLines={1} ellipsizeMode="tail">{job.title || job.description}</Text>
+                  <Text style={s.jobMeta} numberOfLines={1} ellipsizeMode="tail">
                     {[job.trade, job.customerId, job.status].filter(Boolean).join(' · ')}
                   </Text>
                 </View>
@@ -294,8 +296,8 @@ export default function WerkScreen() {
               >
                 <View style={[s.jobAccent, { backgroundColor: SemanticColors.textTertiary }]} />
                 <View style={s.jobContent}>
-                  <Text style={s.jobTitle} numberOfLines={1}>{job.title || job.description}</Text>
-                  <Text style={s.jobMeta} numberOfLines={1}>
+                  <Text style={s.jobTitle} numberOfLines={1} ellipsizeMode="tail">{job.title || job.description}</Text>
+                  <Text style={s.jobMeta} numberOfLines={1} ellipsizeMode="tail">
                     {job.quotedAmount ? `€${job.quotedAmount.toLocaleString(undefined)}` : ''} · {job.status}
                   </Text>
                 </View>
@@ -337,6 +339,7 @@ export default function WerkScreen() {
                 placeholderTextColor={SemanticColors.textTertiary}
                 value={newJobTitle}
                 onChangeText={setNewJobTitle}
+                maxLength={120}
                 autoFocus
                 returnKeyType="done"
                 onSubmitEditing={handleCreateJob}

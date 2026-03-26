@@ -14,11 +14,14 @@ import { hapticSuccess } from '../../src/utils/haptics';
 import {
   getXeroAuthUrl,
   exchangeCodeForToken,
+  verifyXeroOAuthState,
   isConnected,
 } from '../../src/integrations/xero';
 import {
   saveAccountingConfig,
 } from '../../src/integrations/accounting';
+import { logWarn } from '../../src/utils/errorHandler';
+import { consentService } from '../../src/services/consentService';
 import { ENV } from '../../src/config/env';
 
 // Client ID is public (safe for client-side). Secret stays server-side only.
@@ -42,16 +45,53 @@ export default function XeroAuthScreen() {
       return;
     }
 
+    // Check consent before connecting
+    const hasConsent = await consentService.getConsent('xero');
+    if (!hasConsent) {
+      Alert.alert(
+        'Consent required',
+        'Vasco will share invoice and contact data with Xero for accounting sync. Do you agree to proceed?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Agree & Connect',
+            onPress: async () => {
+              await consentService.setConsent('xero', true);
+              await consentService.setConsent('dataProcessing', true);
+              performXeroConnect();
+            },
+          },
+        ],
+      );
+      return;
+    }
+
+    performXeroConnect();
+  };
+
+  const performXeroConnect = async () => {
     setConnecting(true);
 
     try {
-      const authUrl = getXeroAuthUrl(CLIENT_ID, REDIRECT_URI);
+      const authUrl = await getXeroAuthUrl(CLIENT_ID, REDIRECT_URI);
       const result = await WebBrowser.openAuthSessionAsync(authUrl, REDIRECT_URI);
 
       if (result.type === 'success' && result.url) {
-        // Extract code from callback URL
+        // Extract code and state from callback URL
         const url = new URL(result.url);
         const code = url.searchParams.get('code');
+        const returnedState = url.searchParams.get('state');
+
+        // Verify OAuth state to prevent CSRF
+        if (returnedState) {
+          const stateValid = await verifyXeroOAuthState(returnedState);
+          if (!stateValid) {
+            logWarn('XeroAuth', 'OAuth state mismatch — possible CSRF attack');
+            Alert.alert(t('common.error', 'Error'), t('xero.stateMismatch', 'Security validation failed. Please try again.'));
+            setConnecting(false);
+            return;
+          }
+        }
 
         if (code) {
           const config = await exchangeCodeForToken(code, CLIENT_ID, '', REDIRECT_URI, TOKEN_EXCHANGE_URL);

@@ -200,6 +200,7 @@ export default function BusinessSettingsScreen() {
                   placeholderTextColor={SemanticColors.textSecondary}
                   keyboardType={field.keyboardType}
                   multiline={field.multiline}
+                  maxLength={field.multiline ? 500 : 100}
                   autoCapitalize={field.keyboardType === 'email-address' ? 'none' : 'sentences'}
                 />
               </View>

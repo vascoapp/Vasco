@@ -10,8 +10,9 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import { exchangeCodeForToken } from '../../src/integrations/moneybird';
+import { exchangeCodeForToken, verifyOAuthState } from '../../src/integrations/moneybird';
 import { saveAccountingConfig } from '../../src/integrations/accounting';
+import { logWarn } from '../../src/utils/errorHandler';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { ENV } from '../../src/config/env';
 
@@ -23,7 +24,7 @@ const REDIRECT_URI = 'vasco://auth/oauth-callback';
 type Status = 'loading' | 'success' | 'error';
 
 export default function OAuthCallbackScreen() {
-  const { code } = useLocalSearchParams<{ code: string }>();
+  const { code, state } = useLocalSearchParams<{ code: string; state?: string }>();
   const router = useRouter();
   const { t } = useTranslation();
   const [status, setStatus] = useState<Status>('loading');
@@ -40,6 +41,19 @@ export default function OAuthCallbackScreen() {
 
     (async () => {
       try {
+        // Verify OAuth state parameter to prevent CSRF attacks
+        if (state) {
+          const stateValid = await verifyOAuthState(state);
+          if (!stateValid) {
+            logWarn('OAuthCallback', 'OAuth state mismatch — possible CSRF attack');
+            if (!cancelled) {
+              setStatus('error');
+              setErrorMsg(t('moneybird.stateMismatch', 'Security validation failed. Please try again.'));
+            }
+            return;
+          }
+        }
+
         const config = await exchangeCodeForToken(
           code,
           MONEYBIRD_CLIENT_ID,

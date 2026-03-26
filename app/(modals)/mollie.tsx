@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StyleSheet, Text, TextInput, View, Pressable, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../src/components/Screen';
@@ -9,6 +9,7 @@ import { saveMollieConfig, isConnected as checkMollieConnected, listPayments } f
 import { hapticSuccess } from '../../src/utils/haptics';
 import { useAuth } from '../../src/context/AuthContext';
 import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../../src/config/paymentMethods';
+import { consentService } from '../../src/services/consentService';
 
 export default function MollieConnectModal() {
   const { connectMollie, mollieConnected } = useAppState();
@@ -25,6 +26,32 @@ export default function MollieConnectModal() {
       Alert.alert('Ongeldige sleutel', 'Mollie API keys beginnen met "live_" of "test_"');
       return;
     }
+
+    // Check consent before connecting
+    const hasConsent = await consentService.getConsent('mollie');
+    if (!hasConsent) {
+      Alert.alert(
+        'Toestemming vereist',
+        'Vasco verwerkt betalingsgegevens via Mollie. Door te verbinden ga je akkoord met het delen van factuurgegevens met Mollie voor betalingsverwerking.',
+        [
+          { text: 'Annuleren', style: 'cancel' },
+          {
+            text: 'Akkoord & Verbinden',
+            onPress: async () => {
+              await consentService.setConsent('mollie', true);
+              await consentService.setConsent('dataProcessing', true);
+              performConnection();
+            },
+          },
+        ],
+      );
+      return;
+    }
+
+    performConnection();
+  };
+
+  const performConnection = async () => {
 
     setTesting(true);
     setTestResult(null);

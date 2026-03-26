@@ -8,10 +8,13 @@
 
 import { getSecureItem, setSecureItem, deleteSecureItem, migrateToSecure } from '../lib/secureStorage';
 import { fetchWithRetry } from '../utils/retry';
+import * as Crypto from 'expo-crypto';
 
 const STORAGE_KEY = 'vasco_xero';
 const LEGACY_KEY = '@vasco_xero';
 const API_BASE = 'https://api.xero.com/api.xro/2.0';
+const PKCE_VERIFIER_KEY = 'vasco_xero_pkce_verifier';
+const OAUTH_STATE_KEY = 'vasco_xero_oauth_state';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -116,12 +119,64 @@ export async function isConnected(): Promise<boolean> {
 }
 
 // ---------------------------------------------------------------------------
+// PKCE helpers
+// ---------------------------------------------------------------------------
+
+function base64UrlEncode(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+async function generateCodeVerifier(): Promise<string> {
+  const randomBytes = await Crypto.getRandomBytesAsync(32);
+  return base64UrlEncode(randomBytes.buffer as ArrayBuffer);
+}
+
+async function generateCodeChallenge(verifier: string): Promise<string> {
+  const digest = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    verifier,
+    { encoding: Crypto.CryptoEncoding.BASE64 },
+  );
+  return digest.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function generateRandomState(): string {
+  const array = new Uint8Array(16);
+  globalThis.crypto.getRandomValues(array);
+  return base64UrlEncode(array.buffer as ArrayBuffer);
+}
+
+// ---------------------------------------------------------------------------
 // OAuth2 helpers
 // ---------------------------------------------------------------------------
 
-export function getXeroAuthUrl(clientId: string, redirectUri: string): string {
+export async function getXeroAuthUrl(clientId: string, redirectUri: string): Promise<string> {
   const scope = 'openid profile email accounting.transactions accounting.contacts offline_access';
-  return `https://login.xero.com/identity/connect/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}`;
+
+  // Generate PKCE code_verifier and code_challenge
+  const codeVerifier = await generateCodeVerifier();
+  const codeChallenge = await generateCodeChallenge(codeVerifier);
+  const state = generateRandomState();
+
+  // Store verifier and state in SecureStore for the token exchange step
+  await setSecureItem(PKCE_VERIFIER_KEY, codeVerifier);
+  await setSecureItem(OAUTH_STATE_KEY, state);
+
+  return `https://login.xero.com/identity/connect/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&code_challenge=${codeChallenge}&code_challenge_method=S256&state=${state}`;
+}
+
+export async function verifyXeroOAuthState(returnedState: string): Promise<boolean> {
+  const storedState = await getSecureItem(OAUTH_STATE_KEY);
+  if (!storedState || storedState !== returnedState) {
+    return false;
+  }
+  await deleteSecureItem(OAUTH_STATE_KEY);
+  return true;
 }
 
 export async function exchangeCodeForToken(
@@ -132,6 +187,9 @@ export async function exchangeCodeForToken(
   tokenExchangeUrl?: string,
 ): Promise<XeroConfig | null> {
   try {
+    // Retrieve PKCE code_verifier from SecureStore
+    const codeVerifier = await getSecureItem(PKCE_VERIFIER_KEY);
+
     // Prefer server-side token exchange (edge function) to keep client_secret off the client
     const endpoint = tokenExchangeUrl || 'https://identity.xero.com/connect/token';
     const res = await fetchWithRetry(endpoint, {
@@ -143,8 +201,14 @@ export async function exchangeCodeForToken(
         ...(clientSecret ? { client_secret: clientSecret } : {}),
         code,
         redirect_uri: redirectUri,
+        ...(codeVerifier ? { code_verifier: codeVerifier } : {}),
       }).toString(),
     });
+
+    // Clean up stored PKCE verifier after use
+    if (codeVerifier) {
+      await deleteSecureItem(PKCE_VERIFIER_KEY);
+    }
     if (!res.ok) return null;
     const data = await res.json();
 

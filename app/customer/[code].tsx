@@ -10,6 +10,7 @@ import { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SemanticColors } from '../../src/theme/colors';
 import {
   CustomerDecisionPortal,
@@ -24,12 +25,42 @@ import {
   submitDecision as syncSubmitDecision,
   logActivity as syncLogActivity,
 } from '../../src/services/decisionSyncService';
+import { logWarn } from '../../src/utils/errorHandler';
 import type {
   CustomerPortalData,
   CustomerDecisionSubmission,
   CustomerPortalActivity,
 } from '../../src/types/customerPortal';
 import type { CustomerDecisionItem } from '../../src/types/decisions';
+
+// ---------------------------------------------------------------------------
+// Access code validation + rate limiting
+// ---------------------------------------------------------------------------
+const ACCESS_CODE_REGEX = /^[a-zA-Z0-9_-]{4,64}$/;
+const ACCESS_RATE_LIMIT_KEY = '@vasco_customer_access_rate';
+const ACCESS_RATE_LIMIT_MAX = 5;
+const ACCESS_RATE_LIMIT_WINDOW_MS = 60_000;
+
+function isValidAccessCodeFormat(code: string): boolean {
+  return ACCESS_CODE_REGEX.test(code);
+}
+
+async function isAccessRateLimited(): Promise<boolean> {
+  try {
+    const raw = await AsyncStorage.getItem(ACCESS_RATE_LIMIT_KEY);
+    const timestamps: number[] = raw ? JSON.parse(raw) : [];
+    const now = Date.now();
+    const recent = timestamps.filter((t) => t > now - ACCESS_RATE_LIMIT_WINDOW_MS);
+    if (recent.length >= ACCESS_RATE_LIMIT_MAX) {
+      return true;
+    }
+    recent.push(now);
+    await AsyncStorage.setItem(ACCESS_RATE_LIMIT_KEY, JSON.stringify(recent));
+    return false;
+  } catch {
+    return false;
+  }
+}
 
 export default function CustomerPortalScreen() {
   const { code } = useLocalSearchParams<{ code: string }>();
@@ -58,6 +89,23 @@ export default function CustomerPortalScreen() {
   const handleAccessCode = async (accessCode: string) => {
     setIsLoading(true);
     setError(undefined);
+
+    // Validate format
+    if (!isValidAccessCodeFormat(accessCode)) {
+      logWarn('CustomerPortal', `Invalid access code format: ${accessCode.slice(0, 5)}...`);
+      setError('Code ongeldig of verlopen. Vraag uw aannemer om een nieuwe code.');
+      setIsLoading(false);
+      return;
+    }
+
+    // Rate limiting
+    const limited = await isAccessRateLimited();
+    if (limited) {
+      logWarn('CustomerPortal', 'Rate limit exceeded for access code validation');
+      setError('Te veel pogingen. Probeer het over een minuut opnieuw.');
+      setIsLoading(false);
+      return;
+    }
 
     // Simulate API call delay
     await new Promise((resolve) => setTimeout(resolve, 500));

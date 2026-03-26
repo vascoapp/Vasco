@@ -3,7 +3,71 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { startAutoSync, stopAutoSync } from '../intelligence/cloudSync';
 import { trackEvent, initSession, setUserContext, clearUserContext, flushEvents } from '../services/eventTrackingService';
+import { DEMO_MODE } from '../config/demo';
+import { logWarn } from '../utils/errorHandler';
 import type { Session } from '@supabase/supabase-js';
+
+// ---------------------------------------------------------------------------
+// Account lockout — 5 failed attempts, stored in AsyncStorage
+// ---------------------------------------------------------------------------
+const LOCKOUT_KEY = '@vasco_auth_lockout';
+const LOCKOUT_MAX_ATTEMPTS = 5;
+const LOCKOUT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+interface LockoutData {
+  attempts: number;
+  firstAttemptAt: number;
+}
+
+async function checkAndRecordFailedAttempt(email: string): Promise<boolean> {
+  try {
+    const key = `${LOCKOUT_KEY}_${email.toLowerCase().trim()}`;
+    const raw = await AsyncStorage.getItem(key);
+    const data: LockoutData = raw ? JSON.parse(raw) : { attempts: 0, firstAttemptAt: Date.now() };
+    const now = Date.now();
+
+    // Reset window if expired
+    if (now - data.firstAttemptAt > LOCKOUT_WINDOW_MS) {
+      data.attempts = 0;
+      data.firstAttemptAt = now;
+    }
+
+    // Already locked out?
+    if (data.attempts >= LOCKOUT_MAX_ATTEMPTS) {
+      return true; // locked out
+    }
+
+    data.attempts += 1;
+    await AsyncStorage.setItem(key, JSON.stringify(data));
+    return data.attempts >= LOCKOUT_MAX_ATTEMPTS;
+  } catch {
+    return false;
+  }
+}
+
+async function clearLockout(email: string): Promise<void> {
+  try {
+    const key = `${LOCKOUT_KEY}_${email.toLowerCase().trim()}`;
+    await AsyncStorage.removeItem(key);
+  } catch {}
+}
+
+async function isLockedOut(email: string): Promise<boolean> {
+  try {
+    const key = `${LOCKOUT_KEY}_${email.toLowerCase().trim()}`;
+    const raw = await AsyncStorage.getItem(key);
+    if (!raw) return false;
+    const data: LockoutData = JSON.parse(raw);
+    const now = Date.now();
+    if (now - data.firstAttemptAt > LOCKOUT_WINDOW_MS) return false;
+    return data.attempts >= LOCKOUT_MAX_ATTEMPTS;
+  } catch {
+    return false;
+  }
+}
+
+// Demo mode password — required even for demo accounts
+const DEMO_PASSWORD = 'vasco-demo-2026';
 
 // ============================================
 // ROLE TYPES
@@ -307,15 +371,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
 
-    // --- Check for demo account first (works in all modes) ---
     const normalizedEmail = email.toLowerCase().trim();
+
+    // --- Account lockout check ---
+    const locked = await isLockedOut(normalizedEmail);
+    if (locked) {
+      logWarn('Auth', `Login blocked — account locked out: ${normalizedEmail}`);
+      setIsLoading(false);
+      return false;
+    }
+
+    // --- Check for demo account ---
     const mockUser = MOCK_USERS[normalizedEmail];
 
     if (mockUser) {
+      // Only allow demo accounts when DEMO_MODE is enabled
+      if (!DEMO_MODE) {
+        logWarn('Auth', `Demo login rejected — DEMO_MODE is disabled: ${normalizedEmail}`);
+        await checkAndRecordFailedAttempt(normalizedEmail);
+        setIsLoading(false);
+        return false;
+      }
+
       // If Supabase is configured, try real auth first
       if (isSupabaseConfigured) {
         const { error, data: authData } = await supabase.auth.signInWithPassword({ email, password });
         if (!error) {
+          await clearLockout(normalizedEmail);
           setIsLoading(false);
           if (authData?.user) {
             const supaRole = (authData.user.user_metadata?.role === 'site-lead' ? 'sitelead' : 'contractor') as 'contractor' | 'aannemer' | 'sitelead';
@@ -325,10 +407,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           return true;
         }
-        // Supabase auth failed — fall back to demo user
-      } else {
+        // Supabase auth failed — fall through to demo password check
+      }
+
+      // Require correct demo password
+      if (password !== DEMO_PASSWORD) {
+        logWarn('Auth', `Demo login failed — wrong password: ${normalizedEmail}`);
+        await checkAndRecordFailedAttempt(normalizedEmail);
+        setIsLoading(false);
+        return false;
+      }
+
+      // Simulate delay for non-Supabase mode
+      if (!isSupabaseConfigured) {
         await new Promise((resolve) => setTimeout(resolve, 800));
       }
+
+      await clearLockout(normalizedEmail);
       setUser(mockUser);
       setIsLoading(false);
       // Start AI cloud sync
@@ -346,14 +441,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error, data: realAuthData } = await supabase.auth.signInWithPassword({ email, password });
       setIsLoading(false);
       if (!error && realAuthData?.user) {
+        await clearLockout(normalizedEmail);
         const realRole = (realAuthData.user.user_metadata?.role === 'site-lead' ? 'sitelead' : 'contractor') as 'contractor' | 'aannemer' | 'sitelead';
         initSession({ userId: realAuthData.user.id, role: realRole, country: (realAuthData.user.user_metadata?.country as string) ?? 'NL' }).catch(() => {});
         setUserContext({ userId: realAuthData.user.id, role: realRole, country: (realAuthData.user.user_metadata?.country as string) ?? 'NL' });
         trackEvent('login').catch(() => {});
+      } else if (error) {
+        await checkAndRecordFailedAttempt(normalizedEmail);
       }
       return !error;
     }
 
+    await checkAndRecordFailedAttempt(normalizedEmail);
     setIsLoading(false);
     return false;
   }, []);

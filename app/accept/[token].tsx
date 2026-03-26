@@ -1,9 +1,40 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { processAcceptance } from '../../src/services/customerQuoteAcceptanceService';
 import { useAppState } from '../../src/state/AppState';
+import { logWarn } from '../../src/utils/errorHandler';
 import { Palette } from '../../src/theme/colors';
+
+// ---------------------------------------------------------------------------
+// Token validation + rate limiting
+// ---------------------------------------------------------------------------
+const TOKEN_REGEX = /^[a-zA-Z0-9_-]{8,128}$/;
+const RATE_LIMIT_KEY = '@vasco_accept_rate';
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+
+function isValidTokenFormat(token: string): boolean {
+  return TOKEN_REGEX.test(token);
+}
+
+async function isRateLimited(): Promise<boolean> {
+  try {
+    const raw = await AsyncStorage.getItem(RATE_LIMIT_KEY);
+    const timestamps: number[] = raw ? JSON.parse(raw) : [];
+    const now = Date.now();
+    const recent = timestamps.filter((t) => t > now - RATE_LIMIT_WINDOW_MS);
+    if (recent.length >= RATE_LIMIT_MAX) {
+      return true;
+    }
+    recent.push(now);
+    await AsyncStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(recent));
+    return false;
+  } catch {
+    return false;
+  }
+}
 
 export default function AcceptQuoteScreen() {
   const { token } = useLocalSearchParams<{ token: string }>();
@@ -15,7 +46,28 @@ export default function AcceptQuoteScreen() {
   useEffect(() => {
     if (!token) { setStatus('error'); setMessage('Invalid link'); return; }
 
-    processAcceptance(token).then(async (result) => {
+    // Validate token format
+    if (!isValidTokenFormat(token)) {
+      logWarn('AcceptQuote', `Invalid token format: ${token.slice(0, 10)}...`);
+      setStatus('error');
+      setMessage('Invalid approval link.');
+      return;
+    }
+
+    // Check rate limiting
+    isRateLimited().then((limited) => {
+      if (limited) {
+        logWarn('AcceptQuote', 'Rate limit exceeded for token validation');
+        setStatus('error');
+        setMessage('Too many attempts. Please try again in a minute.');
+        return;
+      }
+
+      processAcceptanceFlow();
+    });
+
+    function processAcceptanceFlow() {
+    processAcceptance(token!).then(async (result) => {
       if (result.success && result.link) {
         try {
           updateQuote(result.link.quoteId, { status: 'accepted' });
@@ -35,6 +87,7 @@ export default function AcceptQuoteScreen() {
       setStatus('error');
       setMessage('Something went wrong. Please try again.');
     });
+    } // end processAcceptanceFlow
   }, [token]);
 
   return (

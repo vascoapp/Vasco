@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import {
   Alert,
   View,
@@ -21,6 +21,7 @@ import { getDefaultLanguage } from '../src/i18n/formatting';
 import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../src/config/paymentMethods';
 import { FadeIn } from '../src/components/shared/FadeIn';
 import { GradientButton } from '../src/components/shared/GradientButton';
+import { hapticSuccess } from '../src/utils/haptics';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -134,6 +135,7 @@ export default function OnboardingScreen() {
   const [language, setLanguage] = useState<Language>(
     (i18n.language as Language) || 'en'
   );
+  const [submitting, setSubmitting] = useState(false);
 
   const toggleTrade = (trade: string) => {
     setSelectedTrades((prev) =>
@@ -158,6 +160,7 @@ export default function OnboardingScreen() {
 
   const handleNext = () => {
     if (step < TOTAL_STEPS) {
+      hapticSuccess();
       setStep(step + 1);
     }
   };
@@ -169,6 +172,8 @@ export default function OnboardingScreen() {
   };
 
   const handleComplete = async () => {
+    if (submitting) return;
+    setSubmitting(true);
     try {
       const onboardingData = {
         country,
@@ -218,6 +223,8 @@ export default function OnboardingScreen() {
         t('common.error', 'Error'),
         t('onboarding.completionError', 'Something went wrong. Please try again.'),
       );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -536,7 +543,7 @@ export default function OnboardingScreen() {
       {step > 1 && (
         <View style={styles.footer}>
           {step === TOTAL_STEPS ? (
-            <GradientButton label={t('onboarding.startUsing')} onPress={handleComplete} />
+            <GradientButton label={t('onboarding.startUsing')} onPress={handleComplete} disabled={submitting} />
           ) : (
             <Pressable
               style={({ pressed }) => [

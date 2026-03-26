@@ -5,7 +5,7 @@
 // create purchase orders grouped by supplier, and share with suppliers.
 // =============================================================================
 
-import { useState, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -90,6 +90,13 @@ export default function MaterialSearchScreen() {
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
   // Compare state — keyed by articleNumber
   const [expandedCompare, setExpandedCompare] = useState<string | null>(null);
   const [compareData, setCompareData] = useState<Record<string, PriceCheck>>({});
@@ -155,10 +162,14 @@ export default function MaterialSearchScreen() {
       }
     } catch {
       setResults([]);
+      Alert.alert(
+        t('common.error', 'Error'),
+        t('materialSearch.searchError', 'Could not search materials. Please check your connection and try again.'),
+      );
     } finally {
       setSearching(false);
     }
-  }, [country]);
+  }, [country, t]);
 
   const handleQueryChange = useCallback((text: string) => {
     setQuery(text);
@@ -532,6 +543,7 @@ export default function MaterialSearchScreen() {
             placeholderTextColor={SemanticColors.textTertiary}
             value={query}
             onChangeText={handleQueryChange}
+            maxLength={100}
             autoFocus
             returnKeyType="search"
           />

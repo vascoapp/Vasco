@@ -45,7 +45,7 @@ export default function MoneybirdAuthScreen() {
     setConnecting(true);
 
     try {
-      const authUrl = getMoneybirdAuthUrl(CLIENT_ID, REDIRECT_URI);
+      const authUrl = await getMoneybirdAuthUrl(CLIENT_ID, REDIRECT_URI);
       const result = await WebBrowser.openAuthSessionAsync(authUrl, REDIRECT_URI);
 
       if (result.type === 'success' && result.url) {

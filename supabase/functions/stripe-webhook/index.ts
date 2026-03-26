@@ -16,6 +16,67 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
 };
 
+// ---------------------------------------------------------------------------
+// Stripe signature verification helpers
+// ---------------------------------------------------------------------------
+
+const SIGNATURE_TOLERANCE_SECONDS = 300; // 5 minutes
+
+async function verifyStripeSignature(
+  payload: string,
+  signatureHeader: string,
+  secret: string,
+): Promise<boolean> {
+  try {
+    // Parse the signature header: t=timestamp,v1=signature[,v1=signature...]
+    const parts = signatureHeader.split(',');
+    const timestampPart = parts.find((p) => p.startsWith('t='));
+    const signatureParts = parts.filter((p) => p.startsWith('v1='));
+
+    if (!timestampPart || signatureParts.length === 0) {
+      console.error('Stripe signature header missing t= or v1= components');
+      return false;
+    }
+
+    const timestamp = parseInt(timestampPart.slice(2), 10);
+    if (isNaN(timestamp)) {
+      console.error('Stripe signature has invalid timestamp');
+      return false;
+    }
+
+    // Check timestamp tolerance to prevent replay attacks
+    const now = Math.floor(Date.now() / 1000);
+    if (Math.abs(now - timestamp) > SIGNATURE_TOLERANCE_SECONDS) {
+      console.error(`Stripe signature timestamp too old: diff=${now - timestamp}s`);
+      return false;
+    }
+
+    // Compute expected signature: HMAC-SHA256(timestamp + "." + payload)
+    const signedPayload = `${timestamp}.${payload}`;
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign'],
+    );
+    const signatureBuffer = await crypto.subtle.sign('HMAC', key, encoder.encode(signedPayload));
+    const expectedSig = Array.from(new Uint8Array(signatureBuffer))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    // Compare against all provided v1 signatures (Stripe may send multiple during key rotation)
+    return signatureParts.some((part) => {
+      const sig = part.slice(3); // strip "v1="
+      return sig === expectedSig;
+    });
+  } catch (err) {
+    console.error('Stripe signature verification error:', String(err));
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -24,9 +85,38 @@ Deno.serve(async (req) => {
 
   try {
     // -------------------------------------------------------------------------
-    // 1. Parse the webhook body — Stripe sends JSON events
+    // 1. Verify webhook signature and parse the body
     // -------------------------------------------------------------------------
-    const event = await req.json();
+    const rawBody = await req.text();
+
+    const stripeWebhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+    if (!stripeWebhookSecret) {
+      console.error('STRIPE_WEBHOOK_SECRET not configured');
+      return new Response(JSON.stringify({ received: false, error: 'Server misconfigured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const signatureHeader = req.headers.get('stripe-signature');
+    if (!signatureHeader) {
+      console.error('Missing stripe-signature header');
+      return new Response(JSON.stringify({ received: false, error: 'Missing signature' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const isValid = await verifyStripeSignature(rawBody, signatureHeader, stripeWebhookSecret);
+    if (!isValid) {
+      console.error('Invalid Stripe webhook signature');
+      return new Response(JSON.stringify({ received: false, error: 'Invalid signature' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const event = JSON.parse(rawBody);
 
     if (!event || !event.type || !event.data?.object) {
       console.error('Invalid Stripe event payload');

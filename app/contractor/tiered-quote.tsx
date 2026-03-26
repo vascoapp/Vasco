@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { useRouter } from 'expo-router';
 import { Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -9,10 +10,13 @@ export default function TieredQuoteScreen() {
   const router = useRouter();
   const { addQuote } = useAppState();
   const { t } = useTranslation();
+  const sendingRef = useRef(false);
 
   return (
     <TieredQuoteBuilder
       onSend={async (quote) => {
+        if (sendingRef.current) return;
+        sendingRef.current = true;
         // Extract line items from the "Better" tier (middle option) as default
         const tier = quote.tiers?.[1] ?? quote.tiers?.[0];
         if (!tier) {
@@ -50,6 +54,8 @@ export default function TieredQuoteScreen() {
           ]);
         } catch (err) {
           Alert.alert(t('tieredQuote.error'), t('tieredQuote.couldNotSave'));
+        } finally {
+          sendingRef.current = false;
         }
       }}
       onClose={() => router.back()}
