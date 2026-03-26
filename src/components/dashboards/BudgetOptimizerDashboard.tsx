@@ -33,6 +33,7 @@ import { MOCK_BUDGET_WORKBOOK } from '../../data/mockBudgetWorkbook';
 import { extractBudgetWorkbook } from '../../ingestion/budgetExtractor';
 import { exportBudgetPdf } from '../../services/budgetPdfService';
 import { useAppState } from '../../state/AppState';
+import { formatCurrency } from '../../i18n/formatting';
 import type { EnrichedBudgetLine } from '../../services/budgetEnrichmentService';
 import type {
   BudgetExtractionResult,
@@ -61,17 +62,15 @@ const MOCK_PROJECTS = [
 
 // ── Number formatting ───────────────────────────────────────────────────────
 
-const fmt = (n: number) =>
-  `€${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+const fmt = (n: number) => formatCurrency(n);
 
-const fmtDec = (n: number) =>
-  `€${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const fmtDec = (n: number) => formatCurrency(n);
 
 const fmtPct = (n: number) => `${n.toFixed(1)}%`;
 
 const fmtCompact = (n: number) => {
-  if (n >= 1_000_000) return `€${(n / 1_000_000).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M`;
-  if (n >= 1_000) return `€${(n / 1_000).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}K`;
+  if (n >= 1_000_000) return `${formatCurrency(n / 1_000_000).replace(/,00$|\.00$/, '')}M`;
+  if (n >= 1_000) return `${formatCurrency(n / 1_000).replace(/,00$|\.00$/, '')}K`;
   return fmt(n);
 };
 
@@ -564,14 +563,14 @@ export default function BudgetOptimizerDashboard({
                     style={styles.catInlineInsight}
                     onPress={() => Alert.alert(
                       `TCO: ${tcoMatch.category}`,
-                      `${tcoMatch.customerPitch}\n\nAanbeveling: ${tcoMatch.recommendation.name} (${tcoMatch.recommendation.brand})\nTCO/jaar: €${tcoMatch.recommendation.tcoPerYear} vs €${tcoMatch.materials[0].tcoPerYear} (budget)\n\nBesparing: €${tcoMatch.savingsVsBudget}/jaar`,
+                      `${tcoMatch.customerPitch}\n\nAanbeveling: ${tcoMatch.recommendation.name} (${tcoMatch.recommendation.brand})\nTCO/jaar: ${formatCurrency(tcoMatch.recommendation.tcoPerYear)} vs ${formatCurrency(tcoMatch.materials[0].tcoPerYear)} (budget)\n\nBesparing: ${formatCurrency(tcoMatch.savingsVsBudget)}/jaar`,
                     )}
                   >
                     <Ionicons name="calculator" size={13} color={SemanticColors.feedbackInfo} />
                     <Text style={styles.catInlineInsightText} numberOfLines={1}>
                       TCO: {tcoMatch.recommendation.brand} {tcoMatch.recommendation.name}
                     </Text>
-                    <Text style={styles.catInlineInsightSaving}>-€{tcoMatch.savingsVsBudget}/jr</Text>
+                    <Text style={styles.catInlineInsightSaving}>-{formatCurrency(tcoMatch.savingsVsBudget)}/jr</Text>
                   </Pressable>
                 )}
                 {/* Supplier wins inline */}
@@ -581,7 +580,7 @@ export default function BudgetOptimizerDashboard({
                     style={styles.catInlineInsight}
                     onPress={() => Alert.alert(
                       `${win.supplier} — Actie`,
-                      `${win.action}\n\nGeschatte besparing: €${win.saving}/jaar`,
+                      `${win.action}\n\nGeschatte besparing: ${formatCurrency(win.saving)}/jaar`,
                       [
                         { text: 'Later' },
                         { text: t('budget.contactSupplier', 'Contact supplier'), onPress: () => Alert.alert(t('budget.reminderSet', 'Reminder set'), t('budget.reminderMessage', 'We will remind you to contact {{supplier}}.', { supplier: win.supplier })) },
@@ -592,7 +591,7 @@ export default function BudgetOptimizerDashboard({
                     <Text style={styles.catInlineInsightText} numberOfLines={1}>
                       {win.supplier}: {win.action}
                     </Text>
-                    <Text style={styles.catInlineInsightSaving}>€{win.saving}/jr</Text>
+                    <Text style={styles.catInlineInsightSaving}>{formatCurrency(win.saving)}/jr</Text>
                   </Pressable>
                 ))}
                 {catOpts.length === 0 && !tcoMatch && matchedSupplierWins.length === 0 && (
@@ -625,7 +624,7 @@ export default function BudgetOptimizerDashboard({
                 style={styles.catInlineInsightStandalone}
                 onPress={() => Alert.alert(
                   `${win.supplier} — Actie`,
-                  `${win.action}\n\nGeschatte besparing: €${win.saving}/jaar`,
+                  `${win.action}\n\nGeschatte besparing: ${formatCurrency(win.saving)}/jaar`,
                 )}
               >
                 <Ionicons name="business" size={14} color="#7C3AED" />
@@ -633,7 +632,7 @@ export default function BudgetOptimizerDashboard({
                   <Text style={styles.catInlineStandaloneTitle}>{win.supplier}</Text>
                   <Text style={styles.catInlineStandaloneSub}>{win.action}</Text>
                 </View>
-                <Text style={styles.catInlineInsightSaving}>€{win.saving}/jr</Text>
+                <Text style={styles.catInlineInsightSaving}>{formatCurrency(win.saving)}/jr</Text>
               </Pressable>
             ));
           })()}
@@ -656,7 +655,7 @@ export default function BudgetOptimizerDashboard({
                 style={styles.catInlineInsightStandalone}
                 onPress={() => Alert.alert(
                   `TCO: ${comp.category}`,
-                  `${comp.customerPitch}\n\nAanbeveling: ${comp.recommendation.name} (${comp.recommendation.brand})\nBesparing: €${comp.savingsVsBudget}/jaar`,
+                  `${comp.customerPitch}\n\nAanbeveling: ${comp.recommendation.name} (${comp.recommendation.brand})\nBesparing: ${formatCurrency(comp.savingsVsBudget)}/jaar`,
                 )}
               >
                 <Ionicons name="calculator" size={14} color={SemanticColors.feedbackInfo} />
@@ -664,7 +663,7 @@ export default function BudgetOptimizerDashboard({
                   <Text style={styles.catInlineStandaloneTitle}>{comp.category}</Text>
                   <Text style={styles.catInlineStandaloneSub}>{comp.recommendation.brand} {comp.recommendation.name} — beste TCO</Text>
                 </View>
-                <Text style={styles.catInlineInsightSaving}>-€{comp.savingsVsBudget}/jr</Text>
+                <Text style={styles.catInlineInsightSaving}>-{formatCurrency(comp.savingsVsBudget)}/jr</Text>
               </Pressable>
             ));
           })()}
@@ -1106,15 +1105,15 @@ export default function BudgetOptimizerDashboard({
                     </View>
                     <View style={styles.modalRow}>
                       <Text style={styles.modalLabel}>TCO/jaar (aanbevolen)</Text>
-                      <Text style={[styles.modalValue, { color: SemanticColors.feedbackSuccess }]}>€{tcoMatch.recommendation.tcoPerYear}</Text>
+                      <Text style={[styles.modalValue, { color: SemanticColors.feedbackSuccess }]}>{formatCurrency(tcoMatch.recommendation.tcoPerYear)}</Text>
                     </View>
                     <View style={styles.modalRow}>
                       <Text style={styles.modalLabel}>TCO/jaar (budget)</Text>
-                      <Text style={styles.modalValue}>€{tcoMatch.materials[0].tcoPerYear}</Text>
+                      <Text style={styles.modalValue}>{formatCurrency(tcoMatch.materials[0].tcoPerYear)}</Text>
                     </View>
                     <View style={styles.modalRow}>
                       <Text style={styles.modalLabel}>Jaarlijkse besparing</Text>
-                      <Text style={[styles.modalValue, { color: SemanticColors.feedbackSuccess, fontWeight: '700' }]}>€{tcoMatch.savingsVsBudget}/jr</Text>
+                      <Text style={[styles.modalValue, { color: SemanticColors.feedbackSuccess, fontWeight: '700' }]}>{formatCurrency(tcoMatch.savingsVsBudget)}/jr</Text>
                     </View>
                   </View>
                 );

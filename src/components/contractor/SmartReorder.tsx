@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
+import { formatCurrency } from '../../i18n/formatting';
 import {
   useInventory,
   useReorderSuggestions,
@@ -78,7 +79,7 @@ export function SmartReorder() {
         <View style={styles.headerStatDivider} />
         <View style={styles.headerStat}>
           <Ionicons name="wallet" size={24} color={SemanticColors.actionPrimary} />
-          <Text style={styles.headerStatValue}>€{statistics.totalSavings}</Text>
+          <Text style={styles.headerStatValue}>{formatCurrency(statistics.totalSavings)}</Text>
           <Text style={styles.headerStatLabel}>Bespaard</Text>
         </View>
         <View style={styles.headerStatDivider} />
@@ -346,7 +347,7 @@ function SuggestionCard({
           <Text style={styles.quantityLabel}>Bestel:</Text>
           <Text style={styles.quantityValue}>{suggestion.suggestedQuantity}x</Text>
           <Text style={styles.costValue}>
-            €{suggestion.estimatedCost.toFixed(2)}
+            {formatCurrency(suggestion.estimatedCost)}
           </Text>
         </View>
 
@@ -356,7 +357,7 @@ function SuggestionCard({
             <Text style={styles.savingsText}>
               {suggestion.bulkDiscount
                 ? `${suggestion.bulkDiscount.discountPercent}% korting`
-                : `€${suggestion.priceOptimization?.savings.toFixed(2)} besparing`}
+                : `${formatCurrency(suggestion.priceOptimization?.savings ?? 0)} besparing`}
             </Text>
           </View>
         )}
@@ -581,7 +582,7 @@ function BundlesTab({
             </View>
             <View style={styles.bundleSavings}>
               <Text style={styles.bundleSavingsValue}>-{bundle.savingsPercent}%</Text>
-              <Text style={styles.bundleSavingsAmount}>€{bundle.savings.toFixed(2)}</Text>
+              <Text style={styles.bundleSavingsAmount}>{formatCurrency(bundle.savings)}</Text>
             </View>
           </View>
 
@@ -607,7 +608,7 @@ function BundlesTab({
             <View style={styles.bundleTotal}>
               <Text style={styles.bundleTotalLabel}>Totaal</Text>
               <Text style={styles.bundleTotalValue}>
-                €{bundle.totalValue.toFixed(2)}
+                {formatCurrency(bundle.totalValue)}
               </Text>
             </View>
             <View style={styles.bundleValid}>
@@ -692,7 +693,7 @@ function SuggestionDetailModal({
               <View style={styles.orderDetail}>
                 <Text style={styles.orderDetailLabel}>Geschatte kosten</Text>
                 <Text style={styles.orderDetailValue}>
-                  €{suggestion.estimatedCost.toFixed(2)}
+                  {formatCurrency(suggestion.estimatedCost)}
                 </Text>
               </View>
               <View style={styles.orderDetail}>
@@ -712,8 +713,7 @@ function SuggestionDetailModal({
                 <Text style={styles.savingsTitle}>Bulkkorting beschikbaar!</Text>
                 <Text style={styles.savingsDescription}>
                   Bestel {suggestion.bulkDiscount.quantity}x en bespaar{' '}
-                  {suggestion.bulkDiscount.discountPercent}% (€
-                  {suggestion.bulkDiscount.savings.toFixed(2)})
+                  {suggestion.bulkDiscount.discountPercent}% ({formatCurrency(suggestion.bulkDiscount.savings)})
                 </Text>
               </View>
             </View>
@@ -726,9 +726,7 @@ function SuggestionDetailModal({
               <View style={styles.savingsContent}>
                 <Text style={styles.savingsTitle}>Betere prijs gevonden!</Text>
                 <Text style={styles.savingsDescription}>
-                  {suggestion.priceOptimization.betterSupplier} biedt €
-                  {suggestion.priceOptimization.betterPrice.toFixed(2)} ipv €
-                  {suggestion.priceOptimization.currentPrice.toFixed(2)}
+                  {suggestion.priceOptimization.betterSupplier} biedt {formatCurrency(suggestion.priceOptimization.betterPrice)} ipv {formatCurrency(suggestion.priceOptimization.currentPrice)}
                 </Text>
               </View>
             </View>
@@ -811,7 +809,7 @@ function BundleDetailModal({
                   <Text style={styles.bundleDetailItemQty}>{item.quantity}x</Text>
                 </View>
                 <Text style={styles.bundleDetailItemPrice}>
-                  €{(item.price * item.quantity).toFixed(2)}
+                  {formatCurrency(item.price * item.quantity)}
                 </Text>
               </View>
             ))}
@@ -822,7 +820,7 @@ function BundleDetailModal({
             <View style={styles.bundleDetailTotalRow}>
               <Text style={styles.bundleDetailTotalLabel}>Subtotaal</Text>
               <Text style={styles.bundleDetailTotalValue}>
-                €{(bundle.totalValue + bundle.savings).toFixed(2)}
+                {formatCurrency(bundle.totalValue + bundle.savings)}
               </Text>
             </View>
             <View style={styles.bundleDetailTotalRow}>
@@ -830,13 +828,13 @@ function BundleDetailModal({
                 Bundelkorting
               </Text>
               <Text style={[styles.bundleDetailTotalValue, { color: SemanticColors.feedbackSuccess }]}>
-                -€{bundle.savings.toFixed(2)}
+                -{formatCurrency(bundle.savings)}
               </Text>
             </View>
             <View style={styles.bundleDetailDivider} />
             <View style={styles.bundleDetailTotalRow}>
               <Text style={styles.bundleDetailFinalLabel}>Totaal</Text>
-              <Text style={styles.bundleDetailFinalValue}>€{bundle.totalValue.toFixed(2)}</Text>
+              <Text style={styles.bundleDetailFinalValue}>{formatCurrency(bundle.totalValue)}</Text>
             </View>
           </View>
 

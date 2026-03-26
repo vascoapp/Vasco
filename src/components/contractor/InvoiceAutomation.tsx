@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { formatCurrency } from '../../i18n/formatting';
 import {
   useAutoInvoices,
   usePaymentReminders,
@@ -89,7 +90,7 @@ const InvoiceCard: React.FC<{
           <Text style={styles.customerName}>{invoice.customerName}</Text>
         </View>
         <View style={styles.invoiceAmountSection}>
-          <Text style={styles.invoiceAmount}>€{invoice.total.toFixed(2)}</Text>
+          <Text style={styles.invoiceAmount}>{formatCurrency(invoice.total)}</Text>
           <StatusBadge status={invoice.status} />
         </View>
       </View>
@@ -131,20 +132,20 @@ const InvoiceCard: React.FC<{
                   {item.description}
                 </Text>
                 <Text style={styles.lineItemQty}>{item.quantity}x</Text>
-                <Text style={styles.lineItemPrice}>€{item.total.toFixed(2)}</Text>
+                <Text style={styles.lineItemPrice}>{formatCurrency(item.total)}</Text>
               </View>
             ))}
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Subtotaal</Text>
-              <Text style={styles.totalValue}>€{invoice.subtotal.toFixed(2)}</Text>
+              <Text style={styles.totalValue}>{formatCurrency(invoice.subtotal)}</Text>
             </View>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>BTW</Text>
-              <Text style={styles.totalValue}>€{invoice.vatAmount.toFixed(2)}</Text>
+              <Text style={styles.totalValue}>{formatCurrency(invoice.vatAmount)}</Text>
             </View>
             <View style={[styles.totalRow, styles.grandTotal]}>
               <Text style={styles.grandTotalLabel}>Totaal</Text>
-              <Text style={styles.grandTotalValue}>€{invoice.total.toFixed(2)}</Text>
+              <Text style={styles.grandTotalValue}>{formatCurrency(invoice.total)}</Text>
             </View>
           </View>
 
@@ -229,7 +230,7 @@ const ReminderCard: React.FC<{
         <Text style={styles.reminderInvoiceNumber}>{reminder.invoiceNumber}</Text>
         <Text style={styles.reminderCustomer}>{reminder.customerName}</Text>
       </View>
-      <Text style={styles.reminderAmount}>€{reminder.amount.toFixed(2)}</Text>
+      <Text style={styles.reminderAmount}>{formatCurrency(reminder.amount)}</Text>
     </View>
 
     <View style={styles.reminderDetails}>
@@ -297,7 +298,7 @@ export const InvoiceAutomation: React.FC = () => {
     };
     Alert.alert(
       `Factuur ${invoice.invoiceNumber}`,
-      `Klant: ${invoice.customerName}\nBedrag: \u20AC${invoice.total.toFixed(2)}\nStatus: ${statusLabels[invoice.status] || invoice.status}`,
+      `Klant: ${invoice.customerName}\nBedrag: ${formatCurrency(invoice.total)}\nStatus: ${statusLabels[invoice.status] || invoice.status}`,
     );
   };
 
@@ -327,19 +328,19 @@ export const InvoiceAutomation: React.FC = () => {
           <StatCard
             icon="document-text-outline"
             label="Openstaand"
-            value={`€${stats.outstanding.toLocaleString()}`}
+            value={formatCurrency(stats.outstanding)}
             color={Palette.blue500}
           />
           <StatCard
             icon="alert-circle-outline"
             label="Te Laat"
-            value={`€${stats.overdueAmount.toLocaleString()}`}
+            value={formatCurrency(stats.overdueAmount)}
             color={Palette.red500}
           />
           <StatCard
             icon="checkmark-circle-outline"
             label="Betaald"
-            value={`€${stats.totalPaid.toLocaleString()}`}
+            value={formatCurrency(stats.totalPaid)}
             color={Palette.green500}
           />
         </View>

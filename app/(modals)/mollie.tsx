@@ -7,12 +7,18 @@ import { Spacing } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { saveMollieConfig, isConnected as checkMollieConnected, listPayments } from '../../src/integrations/mollie';
 import { hapticSuccess } from '../../src/utils/haptics';
+import { useAuth } from '../../src/context/AuthContext';
+import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../../src/config/paymentMethods';
 
 export default function MollieConnectModal() {
   const { connectMollie, mollieConnected } = useAppState();
+  const { user } = useAuth();
   const [apiKey, setApiKey] = useState('');
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
+
+  // Country-specific payment methods
+  const paymentMethods = getPaymentDisplayForCountry(user?.country);
 
   const handleTest = async () => {
     if (!apiKey.startsWith('live_') && !apiKey.startsWith('test_')) {
@@ -37,15 +43,6 @@ export default function MollieConnectModal() {
       setTesting(false);
     }
   };
-
-  const paymentMethods = [
-    { name: 'iDEAL', icon: 'card-outline' },
-    { name: 'Bancontact', icon: 'card-outline' },
-    { name: 'Credit Card', icon: 'card-outline' },
-    { name: 'SEPA', icon: 'swap-horizontal-outline' },
-    { name: 'Klarna', icon: 'pricetag-outline' },
-    { name: 'Apple Pay', icon: 'logo-apple' },
-  ];
 
   return (
     <Screen backgroundColor={SemanticColors.surfacePrimary}>
@@ -104,13 +101,30 @@ export default function MollieConnectModal() {
         <View style={styles.methodsSection}>
           <Text style={styles.label}>Betaalmethoden</Text>
           <View style={styles.methodsGrid}>
-            {paymentMethods.map((m) => (
-              <View key={m.name} style={styles.methodChip}>
-                <Ionicons name={m.icon as any} size={14} color={mollieConnected ? Palette.hermesOrange : SemanticColors.textTertiary} />
-                <Text style={[styles.methodText, mollieConnected && { color: SemanticColors.textPrimary }]}>{m.name}</Text>
-              </View>
-            ))}
+            {paymentMethods.map((m) => {
+              const brandColor = getPaymentBrandColor(m.name);
+              const isActive = mollieConnected;
+              return (
+                <View
+                  key={m.name}
+                  style={[
+                    styles.methodChip,
+                    isActive && { borderColor: brandColor + '25', borderWidth: 1 },
+                  ]}
+                  accessibilityLabel={`${m.name} payment method${isActive ? ', active' : ''}`}
+                >
+                  <View style={[styles.methodDot, { backgroundColor: isActive ? brandColor : SemanticColors.textTertiary }]} />
+                  <Text style={[styles.methodText, isActive && { color: SemanticColors.textPrimary }]}>{m.name}</Text>
+                </View>
+              );
+            })}
           </View>
+          {mollieConnected && (
+            <View style={styles.securityFooter}>
+              <Ionicons name="shield-checkmark" size={14} color={SemanticColors.feedbackSuccess} />
+              <Text style={styles.securityFooterText}>All payments are PCI DSS compliant via Mollie</Text>
+            </View>
+          )}
         </View>
       </View>
     </Screen>
@@ -137,12 +151,23 @@ const styles = StyleSheet.create({
   connectedBtn: { backgroundColor: SemanticColors.feedbackSuccess + '15' },
   connectBtnText: { fontSize: 16, fontFamily: 'Inter_600SemiBold', color: '#fff' },
   errorText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: SemanticColors.feedbackError, textAlign: 'center' },
-  methodsSection: { gap: 8 },
+  methodsSection: { gap: 10 },
   methodsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   methodChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: SemanticColors.surfaceBackground, borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 6,
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: SemanticColors.surfaceBackground, borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 8,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
   },
-  methodText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: SemanticColors.textTertiary },
+  methodDot: {
+    width: 8, height: 8, borderRadius: 4,
+  },
+  methodText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: SemanticColors.textTertiary },
+  securityFooter: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingTop: 8,
+  },
+  securityFooterText: {
+    fontSize: 11, fontFamily: 'Inter_400Regular', color: SemanticColors.textTertiary,
+  },
 });

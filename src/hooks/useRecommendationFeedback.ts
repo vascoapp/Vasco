@@ -8,6 +8,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { pricingAgent } from '../intelligence/pricingAgent';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { logWarn } from '../utils/errorHandler';
 import type { Recommendation } from '../components/contractor/RecommendationFeedback';
 
 // ============================================
@@ -119,7 +120,7 @@ export function useRecommendationFeedback(options: UseRecommendationFeedbackOpti
 
       setRecommendations(recs);
     } catch (err) {
-      console.error('[useRecommendationFeedback] Fetch failed:', err);
+      logWarn('useRecommendationFeedback', `Fetch failed: ${err}`);
       setError('Kon aanbevelingen niet laden');
     } finally {
       setLoading(false);
@@ -164,7 +165,7 @@ export function useRecommendationFeedback(options: UseRecommendationFeedbackOpti
           type: rec?.type,
         });
       } catch (err) {
-        console.error('[useRecommendationFeedback] Accept failed:', err);
+        logWarn('useRecommendationFeedback', `Accept failed: ${err}`);
       }
     },
     [recommendations]
@@ -200,7 +201,7 @@ export function useRecommendationFeedback(options: UseRecommendationFeedbackOpti
           type: rec?.type,
         });
       } catch (err) {
-        console.error('[useRecommendationFeedback] Reject failed:', err);
+        logWarn('useRecommendationFeedback', `Reject failed: ${err}`);
       }
     },
     [recommendations]
@@ -222,7 +223,7 @@ export function useRecommendationFeedback(options: UseRecommendationFeedbackOpti
           recommendationId: id,
         });
       } catch (err) {
-        console.error('[useRecommendationFeedback] Dismiss failed:', err);
+        logWarn('useRecommendationFeedback', `Dismiss failed: ${err}`);
       }
     },
     []

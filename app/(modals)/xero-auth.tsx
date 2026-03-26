@@ -19,11 +19,12 @@ import {
 import {
   saveAccountingConfig,
 } from '../../src/integrations/accounting';
+import { ENV } from '../../src/config/env';
 
 // Client ID is public (safe for client-side). Secret stays server-side only.
-const CLIENT_ID = process.env.EXPO_PUBLIC_XERO_CLIENT_ID ?? '';
+const CLIENT_ID = ENV.XERO_CLIENT_ID;
 // OAuth token exchange MUST happen via Supabase Edge Function — never embed client_secret in app
-const TOKEN_EXCHANGE_URL = process.env.EXPO_PUBLIC_XERO_TOKEN_URL ?? '';
+const TOKEN_EXCHANGE_URL = ENV.XERO_TOKEN_URL;
 const REDIRECT_URI = 'vasco://xero/callback';
 
 export default function XeroAuthScreen() {

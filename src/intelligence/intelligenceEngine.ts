@@ -31,6 +31,7 @@ import {
   insertPrediction as dbInsertPrediction,
   insertTrainingExample as dbInsertTrainingExample,
 } from '../lib/intelligenceDataProvider';
+import { logWarn, logInfo } from '../utils/errorHandler';
 import { MS_PER_DAY } from '../utils/timeConstants';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -267,7 +268,7 @@ async function saveFeedbackWeights(weights: FeedbackWeights): Promise<void> {
         syncTasks.push(saveFeedbackObservations('payment_timing_segment', key, obs));
       }
       Promise.all(syncTasks).catch((err) =>
-        console.warn('[Intelligence] Feedback sync failed:', err)
+        logWarn('Intelligence', `Feedback sync failed: ${err}`)
       );
     }
   } catch {
@@ -380,10 +381,10 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
         context: fullEvent.context as unknown as Record<string, unknown>,
         payload: fullEvent.payload,
         entities: fullEvent.entities,
-      }).catch((err) => console.warn('[Intelligence] Event persist failed:', err));
+      }).catch((err) => logWarn('Intelligence', `Event persist failed: ${err}`));
     }
 
-    if (__DEV__) console.log('[Intelligence] Event tracked:', fullEvent.eventType);
+    logInfo('Intelligence', `Event tracked: ${fullEvent.eventType}`);
 
     // Process feedback loops
     await this.processFeedbackLoops(fullEvent);
@@ -450,7 +451,7 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
         stats: { totalInteractions: 0, lastInteraction: now },
         confidence: 1.0,
         sources: ['entity-resolution'],
-      }).catch((err) => console.warn('[Intelligence] Entity persist failed:', err));
+      }).catch((err) => logWarn('Intelligence', `Entity persist failed: ${err}`));
     }
 
     return {
@@ -686,7 +687,7 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
     if (isSupabaseConfigured && outcome) {
       await dbUpdateEventOutcome(eventId, outcome as unknown as Record<string, unknown>);
     }
-    if (__DEV__) console.log('[Intelligence] Outcome recorded for event:', eventId, outcome);
+    logInfo('Intelligence', `Outcome recorded for event: ${eventId}`);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1151,7 +1152,7 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
 
     if (updated) {
       await saveFeedbackWeights(weights);
-      if (__DEV__) console.log('[Intelligence] Feedback weights updated for:', event.eventType);
+      logInfo('Intelligence', `Feedback weights updated for: ${event.eventType}`);
     }
   }
 

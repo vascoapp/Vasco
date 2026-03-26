@@ -87,16 +87,17 @@ const COO_COLOR = Palette.hermesOrange;
 
 function formatCompact(value: number | undefined | null, currency: string = 'GBP'): string {
   if (value === undefined || value === null) return '—';
-  const symbol = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
   const absValue = Math.abs(value);
+  const sign = value < 0 ? '-' : '';
+  const cur = currency as 'GBP' | 'EUR';
 
   if (absValue >= 1_000_000) {
-    return `${symbol}${(value / 1_000_000).toFixed(1)}M`;
+    return `${sign}${formatCurrency(absValue / 1_000_000, cur)}M`;
   }
   if (absValue >= 1_000) {
-    return `${symbol}${(value / 1_000).toFixed(0)}K`;
+    return `${sign}${formatCurrency(absValue / 1_000, cur)}K`;
   }
-  return `${symbol}${value.toFixed(0)}`;
+  return formatCurrency(value, cur);
 }
 
 function varianceColor(val: number): string {
@@ -233,7 +234,6 @@ export function COODashboard({ initialTab = 'financials', showTabBar = true }: C
   }, [deliveryMetrics]);
 
   const fmt = (amount: number) => formatCompact(amount, currency);
-  const sym = currency === 'GBP' ? '£' : '€';
 
   const handleDismissGuidance = useCallback((id: string) => {
     setDismissedGuidance(prev => new Set(prev).add(id));
@@ -584,8 +584,8 @@ export function COODashboard({ initialTab = 'financials', showTabBar = true }: C
                     status: efficiencyKPIs.opExRatio <= 30 ? 'green' : efficiencyKPIs.opExRatio <= 35 ? 'amber' : 'red',
                   },
                   {
-                    label: `MAINT ${sym}/SQFT`,
-                    value: `${sym}${efficiencyKPIs.maintenanceCostPerSqft.toFixed(2)}`,
+                    label: 'MAINT COST/SQFT',
+                    value: formatCurrency(efficiencyKPIs.maintenanceCostPerSqft, currency as 'GBP' | 'EUR'),
                     status: efficiencyKPIs.maintenanceCostPerSqft <= 4.5 ? 'green' : 'amber',
                   },
                   {
@@ -1058,11 +1058,11 @@ export function COODashboard({ initialTab = 'financials', showTabBar = true }: C
                 </View>
                 <View style={styles.elasticStatItem}>
                   <Text style={styles.elasticStatLabel}>Flex Rev/sqft</Text>
-                  <Text style={styles.elasticStatValue}>{sym}{emergingKPIs.flexRevenuePerSqft}</Text>
+                  <Text style={styles.elasticStatValue}>{formatCurrency(emergingKPIs.flexRevenuePerSqft, currency as 'GBP' | 'EUR')}</Text>
                 </View>
                 <View style={styles.elasticStatItem}>
                   <Text style={styles.elasticStatLabel}>Core Rev/sqft</Text>
-                  <Text style={styles.elasticStatValue}>{sym}{emergingKPIs.coreRevenuePerSqft}</Text>
+                  <Text style={styles.elasticStatValue}>{formatCurrency(emergingKPIs.coreRevenuePerSqft, currency as 'GBP' | 'EUR')}</Text>
                 </View>
               </View>
             </View>

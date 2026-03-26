@@ -17,8 +17,9 @@ import {
   getSuppliers as dbGetSuppliers,
   getSupplierById as dbGetSupplierById,
 } from '../lib/intelligenceDataProvider';
+import { ENV } from '../config/env';
 
-const API_BASE = process.env.EXPO_PUBLIC_VASCO_API_URL ?? '';
+const API_BASE = ENV.VASCO_API_URL;
 
 // ============================================
 // TYPES

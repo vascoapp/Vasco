@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View, Alert } from 'react-nati
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 
 // Job type categories with typical materials
 type JobCategory = 'painting' | 'plumbing' | 'electrical' | 'carpentry' | 'tiling' | 'general';
@@ -122,7 +123,7 @@ export function JobMaterialsSuggestion({
   const suggestedMaterials = JOB_MATERIALS[jobCategory] || JOB_MATERIALS.general;
   const pastJobs = MOCK_PAST_JOBS[jobCategory] || [];
 
-  const formatCurrency = (amount: number) => `€${amount.toFixed(2)}`;
+  // formatCurrency imported from ../../i18n/formatting
 
   // Sort by frequency (most commonly used first)
   const sortedMaterials = useMemo(() =>

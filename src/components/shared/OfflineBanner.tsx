@@ -1,48 +1,42 @@
 // =============================================================================
-// OFFLINE BANNER — Shows when device is offline or in demo mode
+// OFFLINE BANNER — Shows connectivity status, queue size, and sync progress
 // =============================================================================
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
 import { isSupabaseConfigured } from '../../lib/supabase';
-
-/** Lightweight network check — no external dependency needed */
-function useNetworkStatus() {
-  const [isConnected, setIsConnected] = useState(true);
-
-  useEffect(() => {
-    // Use fetch to a known endpoint as a connectivity check
-    let mounted = true;
-    const check = async () => {
-      try {
-        // Use a lightweight HEAD request — Google's generate_204 is standard for connectivity checks
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 5000);
-        await fetch('https://clients3.google.com/generate_204', {
-          method: 'HEAD',
-          signal: controller.signal,
-        });
-        clearTimeout(timeout);
-        if (mounted) setIsConnected(true);
-      } catch {
-        if (mounted) setIsConnected(false);
-      }
-    };
-
-    check();
-    const interval = setInterval(check, 30000); // Check every 30s
-    return () => { mounted = false; clearInterval(interval); };
-  }, []);
-
-  return isConnected;
-}
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 
 export function OfflineBanner() {
   const { t } = useTranslation();
-  const isConnected = useNetworkStatus();
+  const { isOnline, syncStatus, queueSize } = useNetworkStatus();
+  const spinAnim = useRef(new Animated.Value(0)).current;
+
+  // Spin animation for sync icon
+  useEffect(() => {
+    if (syncStatus === 'syncing') {
+      const loop = Animated.loop(
+        Animated.timing(spinAnim, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+      );
+      loop.start();
+      return () => loop.stop();
+    } else {
+      spinAnim.setValue(0);
+    }
+  }, [syncStatus, spinAnim]);
+
+  const spin = spinAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
   // Demo mode banner
   if (!isSupabaseConfigured) {
@@ -54,12 +48,53 @@ export function OfflineBanner() {
     );
   }
 
-  // Network offline banner
-  if (!isConnected) {
+  // Syncing state — processing queued actions
+  if (syncStatus === 'syncing') {
+    return (
+      <View style={[styles.banner, styles.syncingBanner]}>
+        <Animated.View style={{ transform: [{ rotate: spin }] }}>
+          <Ionicons name="sync-outline" size={13} color="#fff" />
+        </Animated.View>
+        <Text style={[styles.text, styles.syncingText]}>
+          {t('common.syncing', 'Syncing {{count}} changes...', { count: queueSize })}
+        </Text>
+      </View>
+    );
+  }
+
+  // Just finished syncing — brief confirmation
+  if (syncStatus === 'synced') {
+    return (
+      <View style={[styles.banner, styles.syncedBanner]}>
+        <Ionicons name="checkmark-circle-outline" size={13} color={SemanticColors.feedbackSuccess} />
+        <Text style={[styles.text, styles.syncedText]}>
+          {t('common.allSynced', 'All changes synced')}
+        </Text>
+      </View>
+    );
+  }
+
+  // Sync error — some actions failed
+  if (syncStatus === 'error') {
+    return (
+      <View style={[styles.banner, styles.offlineBanner]}>
+        <Ionicons name="alert-circle-outline" size={13} color="#fff" />
+        <Text style={[styles.text, styles.offlineText]}>
+          {t('common.syncError', 'Sync error — {{count}} pending', { count: queueSize })}
+        </Text>
+      </View>
+    );
+  }
+
+  // Network offline banner with queue count
+  if (!isOnline) {
+    const message = queueSize > 0
+      ? t('common.offlineQueued', 'Offline — {{count}} changes queued', { count: queueSize })
+      : t('common.offline', 'No connection — changes saved locally');
     return (
       <View style={[styles.banner, styles.offlineBanner]}>
         <Ionicons name="wifi-outline" size={13} color="#fff" />
-        <Text style={[styles.text, styles.offlineText]}>{t('common.offline', 'No connection — changes saved locally')}</Text>
+        <Text style={[styles.text, styles.offlineText]}>{message}</Text>
       </View>
     );
   }
@@ -79,6 +114,12 @@ const styles = StyleSheet.create({
   offlineBanner: {
     backgroundColor: SemanticColors.feedbackError,
   },
+  syncingBanner: {
+    backgroundColor: '#3478F6', // iOS blue — neutral "working" color
+  },
+  syncedBanner: {
+    backgroundColor: '#E8F5E9', // Light green confirmation bg
+  },
   text: {
     fontSize: 11,
     fontFamily: 'Inter_500Medium',
@@ -86,5 +127,11 @@ const styles = StyleSheet.create({
   },
   offlineText: {
     color: '#fff',
+  },
+  syncingText: {
+    color: '#fff',
+  },
+  syncedText: {
+    color: SemanticColors.feedbackSuccess,
   },
 });

@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import type { Job, JobStatus } from '../../domain/jobs';
 import { JOB_STATUS_CONFIG } from '../../data/mockContractor';
 import { useAppState } from '../../state/AppState';
@@ -261,7 +262,7 @@ export function JobsList({ onSelectJob, onNewJob, onNewQuote }: JobsListProps) {
                     <View style={styles.jobCardFooter}>
                       {(job.agreedAmount ?? job.quotedAmount) ? (
                         <Text style={styles.jobCardAmount}>
-                          {`€${(job.agreedAmount ?? job.quotedAmount!).toLocaleString(undefined)}`}
+                          {formatCurrency(job.agreedAmount ?? job.quotedAmount!)}
                         </Text>
                       ) : (
                         <Text style={styles.jobCardNoAmount}>

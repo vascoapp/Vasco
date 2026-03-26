@@ -16,7 +16,9 @@ import { useState, useRef } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { formatCurrency } from '../../i18n/formatting';
 import { Spacing } from '../../theme/spacing';
 import { PAGE_BG } from '../../theme/tabStyles';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
@@ -82,6 +84,7 @@ const MOCK_RESULT: AIAnalysisResult = {
 // ---------------------------------------------------------------------------
 
 export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoProps) {
+  const { t } = useTranslation();
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -89,13 +92,13 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
   const [items, setItems] = useState<DetectedItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const formatCurrency = (amount: number) => `€${amount.toFixed(2)}`;
+  // formatCurrency imported from ../../i18n/formatting
 
   // Take photo via camera or pick from gallery
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Camera toegang nodig', 'Geef Vasco toegang tot je camera om foto\'s te maken.');
+      Alert.alert(t('photos.cameraAccess', 'Camera access required'), t('photos.cameraPermission', 'Give Vasco access to your camera to take photos.'));
       return;
     }
 
@@ -143,7 +146,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
     const now = Date.now();
     if (now - lastAnalysisTime < RATE_LIMIT_MS) {
       const waitSec = Math.ceil((RATE_LIMIT_MS - (now - lastAnalysisTime)) / 1000);
-      Alert.alert('Even wachten', `Je kunt over ${waitSec} seconden opnieuw scannen.`);
+      Alert.alert(t('aiQuote.pleaseWait', 'Please wait'), t('aiQuote.rateLimitMessage', 'You can scan again in {{seconds}} seconds.', { seconds: waitSec }));
       return;
     }
     lastAnalysisTime = now;

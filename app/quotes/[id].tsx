@@ -59,7 +59,7 @@ export default function QuoteDetailScreen() {
             <Text style={Typography.muted}>{quote.status} · {quote.job}</Text>
           </View>
           {(quote.status === 'draft' || quote.status === 'sent') && (
-            <Pressable onPress={() => {
+            <Pressable accessibilityRole="button" accessibilityLabel={editing ? t('common.done', 'Done editing') : t('common.edit', 'Edit quote')} onPress={() => {
               if (quote.status === 'sent' && !editing) {
                 Alert.alert(
                   t('quotes.editSentQuote', 'Edit sent quote?'),
@@ -169,6 +169,8 @@ export default function QuoteDetailScreen() {
           {quote.status === 'sent' && (
             <Pressable
               style={[styles.acceptButton, { backgroundColor: Palette.hermesOrange }]}
+              accessibilityRole="button"
+              accessibilityLabel={t('quotes.shareApprovalLink', 'Share approval link')}
               onPress={async () => {
                 try {
                   const url = await shareQuoteWithAcceptanceLink({
@@ -197,6 +199,8 @@ export default function QuoteDetailScreen() {
           {/* Accept & Convert to Job */}
           <Pressable
             style={styles.acceptButton}
+            accessibilityRole="button"
+            accessibilityLabel={t('quotes.acceptAndCreateJob', 'Accept and create job')}
             onPress={() => {
               Alert.alert(
                 t('quotes.acceptQuote', 'Accept quote'),
@@ -225,7 +229,7 @@ export default function QuoteDetailScreen() {
           </Pressable>
 
           <Link href={`/quotes/${id}/invoice`} asChild>
-            <Pressable style={styles.secondaryButton}>
+            <Pressable style={styles.secondaryButton} accessibilityRole="button" accessibilityLabel={t('quotes.createInvoice', 'Create invoice')}>
               <Text style={styles.secondaryText}>{t('quotes.createInvoice', 'Create invoice')}</Text>
             </Pressable>
           </Link>

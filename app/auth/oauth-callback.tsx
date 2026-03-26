@@ -13,10 +13,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { exchangeCodeForToken } from '../../src/integrations/moneybird';
 import { saveAccountingConfig } from '../../src/integrations/accounting';
 import { SemanticColors, Palette } from '../../src/theme/colors';
+import { ENV } from '../../src/config/env';
 
 // Client ID is public. Secret stays server-side via edge function.
-const MONEYBIRD_CLIENT_ID = process.env.EXPO_PUBLIC_MONEYBIRD_CLIENT_ID ?? '';
-const TOKEN_EXCHANGE_URL = process.env.EXPO_PUBLIC_MONEYBIRD_TOKEN_URL ?? '';
+const MONEYBIRD_CLIENT_ID = ENV.MONEYBIRD_CLIENT_ID;
+const TOKEN_EXCHANGE_URL = ENV.MONEYBIRD_TOKEN_URL;
 const REDIRECT_URI = 'vasco://auth/oauth-callback';
 
 type Status = 'loading' | 'success' | 'error';

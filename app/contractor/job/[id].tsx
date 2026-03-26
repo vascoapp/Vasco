@@ -155,7 +155,7 @@ export default function JobDetailPage() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
             <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>{t('jobs.notFound', 'Job not found')}</Text>
@@ -220,11 +220,11 @@ export default function JobDetailPage() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>{job.projectName}</Text>
-        <Pressable style={styles.moreBtn}>
+        <Pressable style={styles.moreBtn} accessibilityRole="button" accessibilityLabel="More options">
           <Ionicons name="ellipsis-horizontal" size={20} color={SemanticColors.textTertiary} />
         </Pressable>
       </View>
@@ -316,6 +316,8 @@ export default function JobDetailPage() {
         {LIFECYCLE_NEXT_ACTION[job.lifecycleStatus as JobLifecycleStatus] && (
           <Pressable
             style={styles.nextStepButton}
+            accessibilityRole="button"
+            accessibilityLabel={LIFECYCLE_NEXT_ACTION[job.lifecycleStatus as JobLifecycleStatus] || 'Advance status'}
             onPress={() => {
               Alert.alert(
                 t('jobs.updateStatus', 'Update status'),
@@ -358,6 +360,8 @@ export default function JobDetailPage() {
               <Pressable
                 style={styles.contactAction}
                 onPress={() => Linking.openURL(`tel:${contact.phone}`)}
+                accessibilityRole="button"
+                accessibilityLabel={`${t('jobs.call', 'Call')} ${contact.name}`}
               >
                 <View style={[styles.contactActionIcon, { backgroundColor: SemanticColors.feedbackSuccess + '14' }]}>
                   <Ionicons name="call" size={16} color={SemanticColors.feedbackSuccess} />
@@ -367,6 +371,8 @@ export default function JobDetailPage() {
               <Pressable
                 style={styles.contactAction}
                 onPress={() => Linking.openURL(`https://wa.me/${contact.phone.replace(/\s+/g, '').replace('+', '')}`)}
+                accessibilityRole="button"
+                accessibilityLabel={`WhatsApp ${contact.name}`}
               >
                 <View style={[styles.contactActionIcon, { backgroundColor: '#25D36614' }]}>
                   <Ionicons name="logo-whatsapp" size={16} color="#25D366" />
@@ -376,6 +382,8 @@ export default function JobDetailPage() {
               <Pressable
                 style={styles.contactAction}
                 onPress={() => Linking.openURL(`mailto:${contact.email}`)}
+                accessibilityRole="button"
+                accessibilityLabel={`${t('jobs.email', 'Email')} ${contact.name}`}
               >
                 <View style={[styles.contactActionIcon, { backgroundColor: Palette.hermesOrange + '14' }]}>
                   <Ionicons name="mail" size={16} color={Palette.hermesOrange} />
@@ -397,6 +405,8 @@ export default function JobDetailPage() {
               const address = encodeURIComponent(job.address);
               Linking.openURL(`https://maps.apple.com/?daddr=${address}`);
             }}
+            accessibilityRole="button"
+            accessibilityLabel={`Navigate to ${job.address}`}
           >
             <View style={styles.routeAccent} />
             <View style={styles.routeContent}>
@@ -461,6 +471,8 @@ export default function JobDetailPage() {
                   {mat.reorderNeeded && !orderedMaterials.has(mat.id) ? (
                     <Pressable
                       style={styles.reorderBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Order ${mat.name}`}
                       onPress={() => {
                         setOrderedMaterials(prev => new Set(prev).add(mat.id));
                         Alert.alert(t('jobs.ordered', 'Ordered'), t('jobs.orderedDesc', { defaultValue: '{{name}} has been ordered from {{supplier}}.', name: mat.name, supplier: mat.supplier }));
@@ -628,6 +640,8 @@ export default function JobDetailPage() {
           {!jobCompleted && (
             <Pressable
               style={[styles.actionPrimary, clockedIn && { backgroundColor: SemanticColors.feedbackError }]}
+              accessibilityRole="button"
+              accessibilityLabel={clockedIn ? t('jobs.clockOut', 'Clock out') : t('jobs.clockIn', 'Clock in')}
               onPress={async () => {
                 hapticSuccess();
                 if (clockedIn) {
@@ -646,6 +660,8 @@ export default function JobDetailPage() {
           )}
           <Pressable
             style={styles.actionSecondary}
+            accessibilityRole="button"
+            accessibilityLabel={`${t('jobs.photo', 'Take photo')}${photoCount > 0 ? `, ${photoCount} photos taken` : ''}`}
             onPress={() => {
               hapticSuccess();
               LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -662,6 +678,8 @@ export default function JobDetailPage() {
           {!jobCompleted ? (
             <Pressable
               style={styles.actionSecondary}
+              accessibilityRole="button"
+              accessibilityLabel={t('jobs.done', 'Mark job as done')}
               onPress={() => {
                 Alert.alert(t('jobs.completeJob', 'Complete job'), t('jobs.completeJobConfirm', 'Are you sure you want to complete this job?'), [
                   { text: t('common.cancel', 'Cancel'), style: 'cancel' },
@@ -690,6 +708,8 @@ export default function JobDetailPage() {
         {job.lifecycleStatus === 'gereed' && (
           <Pressable
             style={styles.factureerButton}
+            accessibilityRole="button"
+            accessibilityLabel={t('jobs.invoiceThisJob', 'Invoice this job')}
             onPress={async () => {
               hapticSuccess();
               try {

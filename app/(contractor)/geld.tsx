@@ -20,6 +20,7 @@ import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { Sparkline } from '../../src/components/shared/Sparkline';
 import { VascoCard } from '../../src/components/shared/VascoCard';
+import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { useAIQueue } from '../../src/services/aiActionQueueService';
 import { useVascoGuidance } from '../../src/services/vascoGuidanceService';
 
@@ -29,7 +30,7 @@ export default function GeldScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [invoiceFilter, setInvoiceFilter] = useState('');
   const [quoteFilter, setQuoteFilter] = useState('');
-  const { invoices, quotes, markInvoiceSent, removeInvoice, removeQuote } = useAppState();
+  const { invoices, quotes, markInvoiceSent, removeInvoice, removeQuote, isLoading } = useAppState();
   const cashFlow = useCashFlow();
 
   const aiQueue = useAIQueue();
@@ -106,6 +107,17 @@ export default function GeldScreen() {
     const sorted = Object.entries(months).sort(([a], [b]) => a.localeCompare(b));
     return sorted.slice(-6).map(([, v]) => v);
   }, [invoices]);
+
+  if (isLoading) {
+    return (
+      <View style={s.container}>
+        <View style={s.header}>
+          <Text style={s.headerTitle}>{t('tabs.money', 'Geld')}</Text>
+        </View>
+        <SkeletonList count={3} showAction lines={3} />
+      </View>
+    );
+  }
 
   return (
     <View style={s.container}>

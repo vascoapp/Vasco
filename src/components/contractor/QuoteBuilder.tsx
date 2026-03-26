@@ -12,7 +12,9 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { SemanticColors } from '../../theme/colors';
+import { formatCurrency } from '../../i18n/formatting';
 import { Spacing } from '../../theme/spacing';
 import type { Quote, QuoteLineItem, Customer } from '../../types/contractor';
 
@@ -42,6 +44,7 @@ export function QuoteBuilder({
   onSend,
   onClose,
 }: QuoteBuilderProps) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState(existingQuote?.title || '');
   const [description, setDescription] = useState(existingQuote?.description || '');
   const [lineItems, setLineItems] = useState<QuoteLineItem[]>(existingQuote?.lineItems || []);
@@ -58,7 +61,7 @@ export function QuoteBuilder({
   const vatAmount = subtotal * (vatRate / 100);
   const total = subtotal + vatAmount;
 
-  const formatCurrency = (amount: number) => `€${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+  // formatCurrency imported from ../../i18n/formatting
 
   const generateReference = () => {
     const year = new Date().getFullYear();
@@ -90,9 +93,9 @@ export function QuoteBuilder({
   };
 
   const removeLineItem = (id: string) => {
-    Alert.alert('Remove Item', 'Are you sure you want to remove this item?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Remove', style: 'destructive', onPress: () => setLineItems(lineItems.filter((i) => i.id !== id)) },
+    Alert.alert(t('quote.removeItem', 'Remove Item'), t('quote.removeItemConfirm', 'Are you sure you want to remove this item?'), [
+      { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+      { text: t('common.remove', 'Remove'), style: 'destructive', onPress: () => setLineItems(lineItems.filter((i) => i.id !== id)) },
     ]);
   };
 
@@ -117,21 +120,21 @@ export function QuoteBuilder({
 
   const handleSend = () => {
     if (!title.trim()) {
-      Alert.alert('Missing Title', 'Please enter a title for the quote.');
+      Alert.alert(t('quote.missingTitle', 'Missing Title'), t('quote.missingTitleMessage', 'Please enter a title for the quote.'));
       return;
     }
     if (lineItems.length === 0) {
-      Alert.alert('No Items', 'Please add at least one line item.');
+      Alert.alert(t('quote.noItems', 'No Items'), t('quote.noItemsMessage', 'Please add at least one line item.'));
       return;
     }
 
     Alert.alert(
-      'Send Quote',
-      `Send this quote (${formatCurrency(total)}) to ${customer?.name || 'customer'}?`,
+      t('quote.sendQuote', 'Send Quote'),
+      t('quote.sendQuoteConfirm', 'Send this quote ({{total}}) to {{customer}}?', { total: formatCurrency(total), customer: customer?.name || t('quote.customer', 'customer') }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
         {
-          text: 'Send',
+          text: t('common.send', 'Send'),
           onPress: () => {
             const quote: Partial<Quote> = {
               reference: existingQuote?.reference || generateReference(),
@@ -412,6 +415,7 @@ function AddLineItemModal({
   onAdd: (item: Omit<QuoteLineItem, 'id' | 'total'>) => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const [type, setType] = useState<LineItemType>('labour');
   const [description, setDescription] = useState('');
   const [quantity, setQuantity] = useState('1');
@@ -420,11 +424,11 @@ function AddLineItemModal({
 
   const handleAdd = () => {
     if (!description.trim()) {
-      Alert.alert('Missing Description', 'Please enter a description.');
+      Alert.alert(t('quote.missingDescription', 'Missing Description'), t('quote.missingDescriptionMessage', 'Please enter a description.'));
       return;
     }
     if (!unitPrice) {
-      Alert.alert('Missing Price', 'Please enter a unit price.');
+      Alert.alert(t('quote.missingPrice', 'Missing Price'), t('quote.missingPriceMessage', 'Please enter a unit price.'));
       return;
     }
 
@@ -527,7 +531,7 @@ function AddLineItemModal({
         {description && unitPrice && (
           <View style={styles.previewBox}>
             <Text style={styles.previewText}>
-              {quantity} {unit} × €{unitPrice} = €{((parseFloat(quantity) || 1) * (parseFloat(unitPrice) || 0)).toFixed(2)}
+              {quantity} {unit} x {formatCurrency(parseFloat(unitPrice) || 0)} = {formatCurrency((parseFloat(quantity) || 1) * (parseFloat(unitPrice) || 0))}
             </Text>
           </View>
         )}

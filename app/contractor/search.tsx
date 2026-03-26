@@ -133,7 +133,7 @@ export default function SearchScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8}>
+        <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={styles.searchBox}>
@@ -148,7 +148,7 @@ export default function SearchScreen() {
             returnKeyType="search"
           />
           {query.length > 0 && (
-            <Pressable onPress={() => setQuery('')} hitSlop={8}>
+            <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityRole="button" accessibilityLabel="Clear search">
               <Ionicons name="close-circle" size={18} color={SemanticColors.textTertiary} />
             </Pressable>
           )}
@@ -179,6 +179,8 @@ export default function SearchScreen() {
                     key={item.id}
                     style={({ pressed }) => [styles.resultCard, pressed && { opacity: 0.85 }]}
                     onPress={() => router.push(item.route as any)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${item.type}: ${item.title}, ${item.subtitle}`}
                   >
                     <View style={[styles.resultIcon, { backgroundColor: item.color + '15' }]}>
                       <Ionicons name={item.icon} size={16} color={item.color} />

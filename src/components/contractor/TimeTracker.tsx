@@ -2,8 +2,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import type { Job, TimeEntry } from '../../types/contractor';
 import { MOCK_JOBS } from '../../data/mockContractor';
 import { intelligence } from '../../intelligence/intelligenceEngine';
@@ -31,6 +33,7 @@ export function TimeTracker({
   onClockOut,
   onClose,
 }: TimeTrackerProps) {
+  const { t } = useTranslation();
   const [selectedJobId, setSelectedJobId] = useState<string | undefined>(activeEntry?.jobId);
   const [notes, setNotes] = useState('');
   const [breakMinutes, setBreakMinutes] = useState(0);
@@ -64,7 +67,7 @@ export function TimeTracker({
 
   const handleClockIn = () => {
     if (!selectedJobId) {
-      Alert.alert('Select Job', 'Please select a job to track time against.');
+      Alert.alert(t('timeTracker.selectJob', 'Select Job'), t('timeTracker.selectJobMessage', 'Please select a job to track time against.'));
       return;
     }
 
@@ -119,23 +122,23 @@ export function TimeTracker({
     };
 
     Alert.alert(
-      'Clock Out',
-      'Did you take any breaks?',
+      t('timeTracker.clockOut', 'Clock Out'),
+      t('timeTracker.breakQuestion', 'Did you take any breaks?'),
       [
         {
-          text: 'No Break',
+          text: t('timeTracker.noBreak', 'No Break'),
           onPress: () => trackClockOut(0),
         },
         {
-          text: '15 min',
+          text: t('timeTracker.fifteenMin', '15 min'),
           onPress: () => trackClockOut(15),
         },
         {
-          text: '30 min',
+          text: t('timeTracker.thirtyMin', '30 min'),
           onPress: () => trackClockOut(30),
         },
         {
-          text: '1 hour',
+          text: t('timeTracker.oneHour', '1 hour'),
           onPress: () => trackClockOut(60),
         },
       ]
@@ -233,9 +236,9 @@ export function TimeTracker({
           <View style={styles.earningsCard}>
             <Text style={styles.earningsLabel}>Estimated Earnings</Text>
             <Text style={styles.earningsValue}>
-              €{(((elapsedSeconds / 3600) - (breakMinutes / 60)) * 55).toFixed(2)}
+              {formatCurrency(((elapsedSeconds / 3600) - (breakMinutes / 60)) * 55)}
             </Text>
-            <Text style={styles.earningsRate}>@ €55/hour</Text>
+            <Text style={styles.earningsRate}>@ {formatCurrency(55)}/hour</Text>
           </View>
         </View>
       ) : (

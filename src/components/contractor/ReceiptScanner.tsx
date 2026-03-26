@@ -25,6 +25,7 @@ import { File as ExpoFile } from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import {
   invoiceExtractor,
   ExtractedInvoice,
@@ -529,21 +530,21 @@ function ReviewMode({ invoice, result, onConfirm, onScanAgain }: ReviewModeProps
         {invoice.subtotal && (
           <View style={styles.reviewRow}>
             <Text style={styles.reviewLabel}>Subtotaal</Text>
-            <Text style={styles.reviewValue}>€{invoice.subtotal.toFixed(2)}</Text>
+            <Text style={styles.reviewValue}>{formatCurrency(invoice.subtotal)}</Text>
           </View>
         )}
 
         {invoice.vatAmount && (
           <View style={styles.reviewRow}>
             <Text style={styles.reviewLabel}>BTW ({invoice.vatRate || 21}%)</Text>
-            <Text style={styles.reviewValue}>€{invoice.vatAmount.toFixed(2)}</Text>
+            <Text style={styles.reviewValue}>{formatCurrency(invoice.vatAmount)}</Text>
           </View>
         )}
 
         {invoice.total && (
           <View style={[styles.reviewRow, styles.reviewRowTotal]}>
             <Text style={styles.reviewLabelTotal}>Totaal</Text>
-            <Text style={styles.reviewValueTotal}>€{invoice.total.toFixed(2)}</Text>
+            <Text style={styles.reviewValueTotal}>{formatCurrency(invoice.total)}</Text>
           </View>
         )}
       </View>
@@ -602,7 +603,7 @@ function LineItemRow({ item, index }: { item: ExtractedLineItem; index: number }
               {item.quantity} {item.unit}
             </Text>
             <Text style={styles.lineItemUnitPrice}>
-              × €{item.unitPrice.toFixed(2)}
+              x {formatCurrency(item.unitPrice)}
             </Text>
             {item.category && (
               <View style={styles.categoryBadge}>
@@ -611,7 +612,7 @@ function LineItemRow({ item, index }: { item: ExtractedLineItem; index: number }
             )}
           </View>
         </View>
-        <Text style={styles.lineItemTotal}>€{item.totalPrice.toFixed(2)}</Text>
+        <Text style={styles.lineItemTotal}>{formatCurrency(item.totalPrice)}</Text>
       </View>
       <View style={[styles.confidenceBar, { backgroundColor: confidenceColor + '30' }]}>
         <View

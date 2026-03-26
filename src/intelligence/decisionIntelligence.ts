@@ -7,6 +7,7 @@
 
 import { pricingApi, PriceObservation } from '../api/pricingApi';
 import { trackUserAction } from './intelligenceEngine';
+import { logWarn, logInfo } from '../utils/errorHandler';
 import type {
   CustomerDecisionSubmission,
   DecisionIntelligenceData,
@@ -63,7 +64,7 @@ class DecisionIntelligenceService {
   // -----------------------------------------
 
   start(): void {
-    if (__DEV__) console.log('[DecisionIntelligence] Starting...');
+    logInfo('DecisionIntelligence', 'Starting...');
 
     // Flush buffered activities periodically
     this.flushInterval = setInterval(() => {
@@ -77,7 +78,7 @@ class DecisionIntelligenceService {
       this.flushInterval = null;
     }
     this.flushActivityBuffer();
-    if (__DEV__) console.log('[DecisionIntelligence] Stopped');
+    logInfo('DecisionIntelligence', 'Stopped');
   }
 
   // -----------------------------------------
@@ -99,7 +100,7 @@ class DecisionIntelligenceService {
       propertyType?: 'apartment' | 'house' | 'commercial';
     }
   ): Promise<void> {
-    if (__DEV__) console.log('[DecisionIntelligence] Processing decision:', item.name);
+    logInfo('DecisionIntelligence', `Processing decision: ${item.name}`);
 
     // 1. Extract intelligence data
     const intelligenceData = this.extractIntelligenceData(submission, item, context);
@@ -178,7 +179,7 @@ class DecisionIntelligenceService {
     const extraction = this.extractProductDetails(linkedProduct, item);
 
     if (!extraction) {
-      if (__DEV__) console.log('[DecisionIntelligence] Could not extract product details');
+      logInfo('DecisionIntelligence', 'Could not extract product details');
       return;
     }
 
@@ -199,9 +200,9 @@ class DecisionIntelligenceService {
 
       try {
         await pricingApi.recordPriceObservation(observation);
-        if (__DEV__) console.log('[DecisionIntelligence] Price observation recorded:', extraction.name);
+        logInfo('DecisionIntelligence', `Price observation recorded: ${extraction.name}`);
       } catch (error) {
-        console.error('[DecisionIntelligence] Failed to record price:', error);
+        logWarn('DecisionIntelligence', `Failed to record price: ${error}`);
       }
     }
 
@@ -470,7 +471,7 @@ class DecisionIntelligenceService {
     this.activityBuffer = [];
 
     // In production, batch send to backend
-    if (__DEV__) console.log(`[DecisionIntelligence] Flushing ${activities.length} activities`);
+    logInfo('DecisionIntelligence', `Flushing ${activities.length} activities`);
 
     for (const activity of activities) {
       trackUserAction(`portal_${activity.action}`, {

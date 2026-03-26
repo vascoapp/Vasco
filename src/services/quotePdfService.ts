@@ -6,6 +6,7 @@
 
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import { DEMO_MODE } from '../config/demo';
 
 const fmt = (n: number) =>
   n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -68,6 +69,7 @@ function buildQuoteHtml(
     .notes { margin-top: 24px; padding: 16px; background: #FFF5F0; border-radius: 8px; border-left: 3px solid #E35205; }
     .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee; font-size: 10px; color: #999; display: flex; justify-content: space-between; }
     .validity { margin-top: 16px; padding: 12px 16px; background: #E35205; color: white; border-radius: 8px; text-align: center; font-weight: 600; }
+    .demo-watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg); font-size: 100px; font-weight: 900; color: rgba(227, 82, 5, 0.07); pointer-events: none; z-index: 0; letter-spacing: 20px; }
   </style>
 </head>
 <body>
@@ -143,6 +145,7 @@ function buildQuoteHtml(
     <div>${businessName} · ${businessAddress}</div>
     <div>Gegenereerd met Vasco</div>
   </div>
+  ${DEMO_MODE ? '<div class="demo-watermark">DEMO</div>' : ''}
 </body>
 </html>`;
 }

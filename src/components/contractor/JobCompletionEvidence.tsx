@@ -5,6 +5,7 @@ import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 
 // Types
 interface CompletionItem {
@@ -87,7 +88,7 @@ export function JobCompletionEvidence({ job, onGenerateInvoice, onClose }: JobCo
   const [photos, setPhotos] = useState<{ uri: string; caption: string; timestamp: string }[]>([]);
   const [customerApproved, setCustomerApproved] = useState(false);
 
-  const formatCurrency = (amount: number) => `€${amount.toFixed(2)}`;
+  // formatCurrency imported from ../../i18n/formatting
 
   // Calculate completion stats
   const stats = useMemo(() => {

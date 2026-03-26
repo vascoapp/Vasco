@@ -6,6 +6,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabase';
+import { logWarn } from '../utils/errorHandler';
 
 // Intelligence tables are not in the Database type (will be auto-generated later).
 // Use an untyped accessor to avoid `never` resolution on .from().
@@ -36,7 +37,7 @@ export async function insertEvent(event: {
     .insert({ ...event, user_id: userId } as any)
     .select('id')
     .single();
-  if (error) { console.warn('[IntelDP] insertEvent:', error.message); return null; }
+  if (error) { logWarn('IntelDP', `insertEvent: ${error.message}`); return null; }
   return data?.id ?? null;
 }
 
@@ -48,7 +49,7 @@ export async function updateEventOutcome(
   const { error } = await from('data_events')
     .update({ outcome })
     .eq('id', eventId);
-  if (error) console.warn('[IntelDP] updateEventOutcome:', error.message);
+  if (error) logWarn('IntelDP', `updateEventOutcome: ${error.message}`);
 }
 
 export async function queryEvents(
@@ -63,7 +64,7 @@ export async function queryEvents(
   if (options?.since) q = q.gte('created_at', options.since);
   if (options?.limit) q = q.limit(options.limit);
   const { data, error } = await q;
-  if (error) { console.warn('[IntelDP] queryEvents:', error.message); return []; }
+  if (error) { logWarn('IntelDP', `queryEvents: ${error.message}`); return []; }
   return data ?? [];
 }
 
@@ -105,7 +106,7 @@ export async function upsertEntity(entity: {
     .insert({ ...entity, user_id: userId } as any)
     .select('id')
     .single();
-  if (error) { console.warn('[IntelDP] upsertEntity:', error.message); return null; }
+  if (error) { logWarn('IntelDP', `upsertEntity: ${error.message}`); return null; }
   return data?.id ?? null;
 }
 
@@ -115,7 +116,7 @@ export async function findEntitiesByType(entityType: string): Promise<any[]> {
     .select('*')
     .eq('entity_type', entityType)
     .order('name');
-  if (error) { console.warn('[IntelDP] findEntities:', error.message); return []; }
+  if (error) { logWarn('IntelDP', `findEntities: ${error.message}`); return []; }
   return data ?? [];
 }
 
@@ -125,7 +126,7 @@ export async function getEntityById(id: string): Promise<any | null> {
     .select('*')
     .eq('id', id)
     .maybeSingle();
-  if (error) { console.warn('[IntelDP] getEntity:', error.message); return null; }
+  if (error) { logWarn('IntelDP', `getEntity: ${error.message}`); return null; }
   return data;
 }
 
@@ -141,7 +142,7 @@ export async function loadFeedbackObservations(
     .eq('feedback_type', feedbackType)
     .eq('segment_key', segmentKey)
     .maybeSingle();
-  if (error) { console.warn('[IntelDP] loadFeedback:', error.message); return []; }
+  if (error) { logWarn('IntelDP', `loadFeedback: ${error.message}`); return []; }
   return (data?.observations as any[]) ?? [];
 }
 
@@ -162,7 +163,7 @@ export async function saveFeedbackObservations(
       } as any,
       { onConflict: 'user_id,feedback_type,segment_key' },
     );
-  if (error) console.warn('[IntelDP] saveFeedback:', error.message);
+  if (error) logWarn('IntelDP', `saveFeedback: ${error.message}`);
 }
 
 export async function loadAllFeedbackWeights(): Promise<
@@ -171,7 +172,7 @@ export async function loadAllFeedbackWeights(): Promise<
   if (!isSupabaseConfigured) return [];
   const { data, error } = await from('feedback_weights')
     .select('feedback_type, segment_key, observations');
-  if (error) { console.warn('[IntelDP] loadAllFeedback:', error.message); return []; }
+  if (error) { logWarn('IntelDP', `loadAllFeedback: ${error.message}`); return []; }
   return (data ?? []) as any[];
 }
 
@@ -188,7 +189,7 @@ export async function insertCalibrationEntry(entry: {
     .insert({ ...entry, user_id: userId, predicted_at: new Date().toISOString() } as any)
     .select('id')
     .single();
-  if (error) { console.warn('[IntelDP] insertCalibration:', error.message); return null; }
+  if (error) { logWarn('IntelDP', `insertCalibration: ${error.message}`); return null; }
   return data?.id ?? null;
 }
 
@@ -222,7 +223,7 @@ export async function getCalibrationEntriesByGenerator(
     q = q.gte('predicted_at', since);
   }
   const { data, error } = await q;
-  if (error) { console.warn('[IntelDP] getCalibration:', error.message); return []; }
+  if (error) { logWarn('IntelDP', `getCalibration: ${error.message}`); return []; }
   return data ?? [];
 }
 
@@ -265,7 +266,7 @@ export async function insertTrainingExample(example: {
     .insert({ ...example, user_id: userId } as any)
     .select('id')
     .single();
-  if (error) { console.warn('[IntelDP] insertTraining:', error.message); return null; }
+  if (error) { logWarn('IntelDP', `insertTraining: ${error.message}`); return null; }
   return data?.id ?? null;
 }
 
@@ -279,7 +280,7 @@ export async function getTrainingExamples(
     .eq('model_type', modelType)
     .order('created_at', { ascending: false })
     .limit(limit);
-  if (error) { console.warn('[IntelDP] getTraining:', error.message); return []; }
+  if (error) { logWarn('IntelDP', `getTraining: ${error.message}`); return []; }
   return data ?? [];
 }
 
@@ -299,7 +300,7 @@ export async function insertPrediction(prediction: {
     .insert({ ...prediction, user_id: userId } as any)
     .select('id')
     .single();
-  if (error) { console.warn('[IntelDP] insertPrediction:', error.message); return null; }
+  if (error) { logWarn('IntelDP', `insertPrediction: ${error.message}`); return null; }
   return data?.id ?? null;
 }
 
@@ -330,7 +331,7 @@ export async function insertPriceObservation(obs: {
     .insert({ ...obs, user_id: userId } as any)
     .select('id')
     .single();
-  if (error) { console.warn('[IntelDP] insertPriceObs:', error.message); return null; }
+  if (error) { logWarn('IntelDP', `insertPriceObs: ${error.message}`); return null; }
   return data?.id ?? null;
 }
 
@@ -343,7 +344,7 @@ export async function bulkInsertPriceObservations(
   const { data, error } = await from('price_observations')
     .insert(rows as any)
     .select('id');
-  if (error) { console.warn('[IntelDP] bulkPriceObs:', error.message); return 0; }
+  if (error) { logWarn('IntelDP', `bulkPriceObs: ${error.message}`); return 0; }
   return data?.length ?? 0;
 }
 
@@ -360,7 +361,7 @@ export async function getPriceHistory(
   if (options?.startDate) q = q.gte('observed_at', options.startDate);
   if (options?.limit) q = q.limit(options.limit);
   const { data, error } = await q;
-  if (error) { console.warn('[IntelDP] getPriceHistory:', error.message); return []; }
+  if (error) { logWarn('IntelDP', `getPriceHistory: ${error.message}`); return []; }
   return data ?? [];
 }
 
@@ -370,7 +371,7 @@ export async function getPriceReference(materialId: string): Promise<any | null>
     .select('*')
     .eq('material_id', materialId)
     .maybeSingle();
-  if (error) { console.warn('[IntelDP] getPriceRef:', error.message); return null; }
+  if (error) { logWarn('IntelDP', `getPriceRef: ${error.message}`); return null; }
   return data;
 }
 
@@ -409,7 +410,7 @@ export async function upsertMaterial(material: {
     .insert({ ...material, user_id: userId } as any)
     .select('id')
     .single();
-  if (error) { console.warn('[IntelDP] upsertMaterial:', error.message); return null; }
+  if (error) { logWarn('IntelDP', `upsertMaterial: ${error.message}`); return null; }
   return data?.id ?? null;
 }
 
@@ -425,7 +426,7 @@ export async function searchMaterials(
   if (options?.category) q = q.eq('category', options.category);
   if (options?.limit) q = q.limit(options.limit);
   const { data, error } = await q;
-  if (error) { console.warn('[IntelDP] searchMaterials:', error.message); return []; }
+  if (error) { logWarn('IntelDP', `searchMaterials: ${error.message}`); return []; }
   return data ?? [];
 }
 
@@ -473,7 +474,7 @@ export async function upsertSupplier(supplier: {
     .insert({ ...supplier, user_id: userId } as any)
     .select('id')
     .single();
-  if (error) { console.warn('[IntelDP] upsertSupplier:', error.message); return null; }
+  if (error) { logWarn('IntelDP', `upsertSupplier: ${error.message}`); return null; }
   return data?.id ?? null;
 }
 
@@ -482,7 +483,7 @@ export async function getSuppliers(): Promise<any[]> {
   const { data, error } = await from('suppliers')
     .select('*')
     .order('name');
-  if (error) { console.warn('[IntelDP] getSuppliers:', error.message); return []; }
+  if (error) { logWarn('IntelDP', `getSuppliers: ${error.message}`); return []; }
   return data ?? [];
 }
 
@@ -492,7 +493,7 @@ export async function getSupplierById(id: string): Promise<any | null> {
     .select('*')
     .eq('id', id)
     .maybeSingle();
-  if (error) { console.warn('[IntelDP] getSupplier:', error.message); return null; }
+  if (error) { logWarn('IntelDP', `getSupplier: ${error.message}`); return null; }
   return data;
 }
 
@@ -520,7 +521,7 @@ export async function saveExtractedDocument(doc: {
     .insert({ ...doc, user_id: userId } as any)
     .select('id')
     .single();
-  if (error) { console.warn('[IntelDP] saveExtractedDoc:', error.message); return null; }
+  if (error) { logWarn('IntelDP', `saveExtractedDoc: ${error.message}`); return null; }
   return data?.id ?? null;
 }
 
@@ -543,7 +544,7 @@ export async function saveExtractedLineItems(
   const { data, error } = await from('extracted_line_items')
     .insert(rows as any)
     .select('id');
-  if (error) { console.warn('[IntelDP] saveExtractedItems:', error.message); return 0; }
+  if (error) { logWarn('IntelDP', `saveExtractedItems: ${error.message}`); return 0; }
   return data?.length ?? 0;
 }
 
@@ -556,7 +557,7 @@ export async function listExtractedDocuments(
     .order('created_at', { ascending: false });
   if (status) q = q.eq('status', status);
   const { data, error } = await q;
-  if (error) { console.warn('[IntelDP] listExtractedDocs:', error.message); return []; }
+  if (error) { logWarn('IntelDP', `listExtractedDocs: ${error.message}`); return []; }
   return data ?? [];
 }
 
@@ -566,11 +567,11 @@ export async function getExtractedDocument(id: string): Promise<{ doc: any; item
     .select('*')
     .eq('id', id)
     .maybeSingle();
-  if (docErr || !doc) { console.warn('[IntelDP] getExtractedDoc:', docErr?.message); return null; }
+  if (docErr || !doc) { logWarn('IntelDP', `getExtractedDoc: ${docErr?.message}`); return null; }
   const { data: items, error: itemsErr } = await from('extracted_line_items')
     .select('*')
     .eq('document_id', id)
     .order('created_at');
-  if (itemsErr) { console.warn('[IntelDP] getExtractedItems:', itemsErr.message); }
+  if (itemsErr) { logWarn('IntelDP', `getExtractedItems: ${itemsErr.message}`); }
   return { doc, items: items ?? [] };
 }

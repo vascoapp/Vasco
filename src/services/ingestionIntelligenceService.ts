@@ -15,6 +15,7 @@ import {
   queryEvents,
   getPriceHistory,
 } from '../lib/intelligenceDataProvider';
+import { logWarn } from '../utils/errorHandler';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -141,7 +142,7 @@ export function useIngestionStats(): {
         recentEvents,
       });
     } catch (e) {
-      console.warn('[IngestionIntelligence] load error:', e);
+      logWarn('IngestionIntelligence', `load error: ${e}`);
     } finally {
       setLoading(false);
     }
@@ -198,7 +199,7 @@ export function useMaterialCatalog(
         })),
       );
     } catch (e) {
-      console.warn('[IngestionIntelligence] catalog error:', e);
+      logWarn('IngestionIntelligence', `catalog error: ${e}`);
     } finally {
       setLoading(false);
     }
@@ -250,7 +251,7 @@ export function useMaterialPriceHistory(
         );
       })
       .catch((e) => {
-        if (!cancelled) console.warn('[IngestionIntelligence] price history error:', e);
+        if (!cancelled) logWarn('IngestionIntelligence', `price history error: ${e}`);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

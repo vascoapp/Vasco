@@ -28,20 +28,19 @@ import {
   mockDeliveryMetrics,
 } from '../../data/mockProjects';
 import { formatPercent } from '../../modules/countryModules';
+import { formatCurrency } from '../../i18n/formatting';
 
 /** Compact number formatting: 1.2M, 48K, 285K etc. */
-function fmtCompact(amount: number, currency: 'GBP' | 'EUR' = 'GBP'): string {
-  const symbol = currency === 'GBP' ? '£' : '€';
+function fmtCompact(amount: number, _currency: 'GBP' | 'EUR' = 'GBP'): string {
   const abs = Math.abs(amount);
+  const sign = amount < 0 ? '-' : '';
   if (abs >= 1_000_000) {
-    const v = amount / 1_000_000;
-    return `${symbol}${v % 1 === 0 ? v.toFixed(0) : v.toFixed(1)}M`;
+    return `${sign}${formatCurrency(abs / 1_000_000).replace(/,00$|\.00$/, '')}M`;
   }
   if (abs >= 1_000) {
-    const v = amount / 1_000;
-    return `${symbol}${v % 1 === 0 ? v.toFixed(0) : v.toFixed(0)}K`;
+    return `${sign}${formatCurrency(abs / 1_000).replace(/,00$|\.00$/, '')}K`;
   }
-  return `${symbol}${amount.toLocaleString('en-GB', { maximumFractionDigits: 0 })}`;
+  return formatCurrency(amount);
 }
 import { useScheduleFragilityStats } from '../../services/scheduleFragilityService';
 import { useSupplierReliabilityStats } from '../../services/supplierReliabilityService';
@@ -1000,7 +999,7 @@ export function DirectorDashboard({ initialTab = 'portfolio', showTabBar = true 
             </View>
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Budget Optimalisatie</Text>
-              <Text style={styles.actionSubtitle}>€125K potentieel</Text>
+              <Text style={styles.actionSubtitle}>{fmtCompact(125000)} potentieel</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
           </Pressable>

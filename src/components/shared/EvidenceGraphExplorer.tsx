@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { formatCurrency } from '../../i18n/formatting';
 import { Spacing } from '../../theme/spacing';
 import type { NodeType, EdgeType } from '../../types/evidence-graph';
 
@@ -302,7 +303,7 @@ export function EvidenceGraphExplorer() {
       <View style={styles.jobInfoCard}>
         <Text style={styles.jobInfoTitle}>{chain.jobTitle}</Text>
         <Text style={styles.jobInfoCustomer}>{chain.customer}</Text>
-        <Text style={styles.jobInfoValue}>€{chain.totalValue.toLocaleString(undefined)}</Text>
+        <Text style={styles.jobInfoValue}>{formatCurrency(chain.totalValue)}</Text>
       </View>
 
       {/* Score */}

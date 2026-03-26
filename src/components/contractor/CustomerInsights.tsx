@@ -17,6 +17,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { formatCurrency } from '../../i18n/formatting';
 import {
   useCustomerProfiles,
   useCustomerSegments,
@@ -135,7 +136,7 @@ const CustomerCard: React.FC<{
 
       <View style={styles.customerStats}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>€{customer.lifetimeValue.toLocaleString()}</Text>
+          <Text style={styles.statValue}>{formatCurrency(customer.lifetimeValue)}</Text>
           <Text style={styles.statLabel}>LTV</Text>
         </View>
         <View style={styles.statDivider} />
@@ -221,7 +222,7 @@ const SegmentCard: React.FC<{ segment: CustomerSegment }> = ({ segment }) => (
 
     <View style={styles.segmentStats}>
       <View style={styles.segmentStatItem}>
-        <Text style={styles.segmentStatValue}>€{segment.avgLifetimeValue.toLocaleString()}</Text>
+        <Text style={styles.segmentStatValue}>{formatCurrency(segment.avgLifetimeValue)}</Text>
         <Text style={styles.segmentStatLabel}>Gem. LTV</Text>
       </View>
       <View style={styles.segmentStatItem}>
@@ -301,7 +302,7 @@ const ChurnCard: React.FC<{
       <View style={styles.churnValue}>
         <Ionicons name="cash-outline" size={16} color={SemanticColors.textSecondary} />
         <Text style={styles.churnValueText}>
-          €{prediction.lifetimeValue.toLocaleString()} lifetime value
+          {formatCurrency(prediction.lifetimeValue)} lifetime value
         </Text>
       </View>
 

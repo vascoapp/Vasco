@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { formatCurrency } from '../../i18n/formatting';
 import {
   usePricingEngine,
   PricingSuggestion,
@@ -245,13 +246,13 @@ export function SmartPricing() {
 
             <View style={styles.marketRateRow}>
               <View style={styles.marketRateMain}>
-                <Text style={styles.marketRateValue}>€{rate.avgHourlyRate}</Text>
+                <Text style={styles.marketRateValue}>{formatCurrency(rate.avgHourlyRate)}</Text>
                 <Text style={styles.marketRateUnit}>/uur gem.</Text>
               </View>
               <View style={styles.marketRateRange}>
                 <Text style={styles.marketRangeLabel}>Bereik</Text>
                 <Text style={styles.marketRangeValue}>
-                  €{rate.rateRange.min.toFixed(0)} - €{rate.rateRange.max.toFixed(0)}
+                  {formatCurrency(rate.rateRange.min)} - {formatCurrency(rate.rateRange.max)}
                 </Text>
               </View>
             </View>
@@ -340,12 +341,12 @@ export function SmartPricing() {
         <View style={styles.competitorPricing}>
           <View style={styles.competitorAvg}>
             <Text style={styles.competitorAvgLabel}>Gem. tarief</Text>
-            <Text style={styles.competitorAvgValue}>€{comp.avgPrice}/uur</Text>
+            <Text style={styles.competitorAvgValue}>{formatCurrency(comp.avgPrice)}/uur</Text>
           </View>
           <View style={styles.competitorRange}>
             <Text style={styles.competitorRangeLabel}>Bereik</Text>
             <Text style={styles.competitorRangeValue}>
-              €{comp.priceRange.min} - €{comp.priceRange.max}
+              {formatCurrency(comp.priceRange.min)} - {formatCurrency(comp.priceRange.max)}
             </Text>
           </View>
         </View>

@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { formatCurrency } from '../../i18n/formatting';
 import {
   useLicenses,
   useCertifications,
@@ -345,14 +346,14 @@ export function ComplianceCenter() {
       <View style={styles.insuranceSummary}>
         <Text style={styles.insuranceSummaryTitle}>Totale Dekking</Text>
         <Text style={styles.insuranceSummaryValue}>
-          €{policies.reduce((sum, p) => sum + p.coverage, 0).toLocaleString(undefined)}
+          {formatCurrency(policies.reduce((sum, p) => sum + p.coverage, 0))}
         </Text>
         <Text style={styles.insuranceSummaryPremium}>
-          Maandpremie: €{policies.reduce((sum, p) => {
+          Maandpremie: {formatCurrency(policies.reduce((sum, p) => {
             if (p.premiumFrequency === 'monthly') return sum + p.premium;
             if (p.premiumFrequency === 'quarterly') return sum + p.premium / 3;
             return sum + p.premium / 12;
-          }, 0).toFixed(2)}
+          }, 0))}
         </Text>
       </View>
 
@@ -381,19 +382,19 @@ export function ComplianceCenter() {
             <View style={styles.insuranceDetailItem}>
               <Text style={styles.insuranceDetailLabel}>Dekking</Text>
               <Text style={styles.insuranceDetailValue}>
-                €{policy.coverage.toLocaleString(undefined)}
+                {formatCurrency(policy.coverage)}
               </Text>
             </View>
             <View style={styles.insuranceDetailItem}>
               <Text style={styles.insuranceDetailLabel}>Eigen risico</Text>
               <Text style={styles.insuranceDetailValue}>
-                €{policy.deductible.toLocaleString(undefined)}
+                {formatCurrency(policy.deductible)}
               </Text>
             </View>
             <View style={styles.insuranceDetailItem}>
               <Text style={styles.insuranceDetailLabel}>Premie</Text>
               <Text style={styles.insuranceDetailValue}>
-                €{policy.premium}/{policy.premiumFrequency === 'monthly' ? 'mnd' : policy.premiumFrequency === 'quarterly' ? 'kw' : 'jr'}
+                {formatCurrency(policy.premium)}/{policy.premiumFrequency === 'monthly' ? 'mnd' : policy.premiumFrequency === 'quarterly' ? 'kw' : 'jr'}
               </Text>
             </View>
           </View>
@@ -714,7 +715,7 @@ export function ComplianceCenter() {
               {selectedLicense.renewalCost && (
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Verlengingskosten</Text>
-                  <Text style={styles.detailValue}>€{selectedLicense.renewalCost}</Text>
+                  <Text style={styles.detailValue}>{formatCurrency(selectedLicense.renewalCost)}</Text>
                 </View>
               )}
               <View style={styles.detailRow}>

@@ -180,14 +180,14 @@ export default function DragScheduleScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>{t('schedule.daySchedule', 'Dagplanning')}</Text>
           <Text style={styles.headerSubtitle}>{today}</Text>
         </View>
-        <Pressable onPress={handleExportCalendar} style={styles.exportButton}>
+        <Pressable onPress={handleExportCalendar} style={styles.exportButton} accessibilityRole="button" accessibilityLabel={t('schedule.export', 'Export to calendar')}>
           <Ionicons name="calendar-outline" size={18} color={Palette.hermesOrange} />
           <Text style={styles.exportButtonText}>{t('schedule.export', 'Exporteer')}</Text>
         </Pressable>
@@ -217,6 +217,8 @@ export default function DragScheduleScreen() {
                 {/* Tap to pick time slot */}
                 <Pressable
                   style={styles.poolAssignBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t('schedule.schedule', 'Schedule')} ${job.title}`}
                   onPress={() => {
                     const slots = HOURS.filter(h => h + job.estimatedHours <= 19).slice(0, 5);
                     Alert.alert(t('schedule.chooseSlot', 'Tijdslot kiezen'), `${t('schedule.whenSchedule', 'Wanneer wil je')} "${job.title}" ${t('schedule.schedule', 'inplannen')}?`, [
@@ -252,6 +254,9 @@ export default function DragScheduleScreen() {
                     }]}
                     onLongPress={() => handleRemoveFromSchedule(job.jobId)}
                     onPress={() => Alert.alert(job.title, `${job.customerName}\n${job.startHour}:00 – ${job.startHour + job.duration}:00\n${t('schedule.longPressToRemove', 'Houd ingedrukt om te verwijderen')}`)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${job.title}, ${job.customerName}, ${job.startHour}:00 to ${job.startHour + job.duration}:00`}
+                    accessibilityHint="Tap for details, long press to remove"
                   >
                     <View style={styles.blockHeader}>
                       <Text style={[styles.blockTitle, { color: job.color }]} numberOfLines={1}>{job.title}</Text>

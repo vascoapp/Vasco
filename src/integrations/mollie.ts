@@ -186,6 +186,7 @@ export async function createPaymentLink(req: {
   amount: number;
   description: string;
   expiresAt?: string;
+  method?: string[]; // Country-specific Mollie methods (e.g. ['ideal', 'creditcard', 'paypal'])
 }): Promise<{ url: string; id: string } | null> {
   const connected = await isConnected();
   if (!connected) {
@@ -198,6 +199,7 @@ export async function createPaymentLink(req: {
       amount: { currency: 'EUR', value: req.amount.toFixed(2) },
       description: req.description,
       expiresAt: req.expiresAt,
+      ...(req.method ? { method: req.method } : {}),
     }),
   });
 

@@ -6,7 +6,7 @@
 // =============================================================================
 
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Linking } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -232,6 +232,19 @@ export default function CustomerViewScreen() {
           </View>
         )}
 
+        {/* Customer Payment Preference (shown when customer selected a payment method) */}
+        {decisions['payment_method'] && (
+          <View style={s.paymentPrefCard}>
+            <View style={s.paymentPrefHeader}>
+              <Ionicons name="card" size={18} color={Palette.hermesOrange} />
+              <Text style={s.paymentPrefTitle}>Betaalvoorkeur klant</Text>
+            </View>
+            <Text style={s.paymentPrefValue}>
+              Klant heeft voorkeur voor: {decisions['payment_method']}
+            </Text>
+          </View>
+        )}
+
         {/* Details */}
         <View style={s.detailsCard}>
           <View style={s.detailRow}>
@@ -333,6 +346,12 @@ const s = StyleSheet.create({
   optionChipSelected: { borderColor: Palette.hermesOrange, backgroundColor: Palette.hermesOrange + '08' },
   optionText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textPrimary },
   optionTextSelected: { color: Palette.hermesOrange, fontFamily: TYPE.titleFamily },
+
+  // Payment Preference
+  paymentPrefCard: { backgroundColor: Palette.hermesOrange + '08', borderRadius: RADIUS.lg, padding: 14, gap: 8, borderWidth: 1.5, borderColor: Palette.hermesOrange + '30' },
+  paymentPrefHeader: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 8 },
+  paymentPrefTitle: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange },
+  paymentPrefValue: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
 
   // Details
   detailsCard: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: 14, gap: 8 },

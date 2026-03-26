@@ -13,6 +13,7 @@ import { IntelligenceDashboard } from './IntelligenceDashboard';
 import { HoursSavedCard } from '../contractor/HoursSavedCard';
 import { Palette } from '../../theme/colors';
 import { SemanticColors } from '../../theme/colors';
+import { formatCurrency } from '../../i18n/formatting';
 import { Spacing } from '../../theme/spacing';
 import { JOB_STATUS_CONFIG } from '../../data/mockContractor';
 import { useAppState } from '../../state/AppState';
@@ -105,9 +106,7 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
     .filter((po) => po.isSale)
     .slice(0, 3);
 
-  const formatCurrency = (amount: number) => {
-    return `€${amount.toLocaleString(undefined)}`;
-  };
+  // formatCurrency imported from ../../i18n/formatting
 
   // =============================================================================
   // RENDER TAB CONTENT
@@ -278,11 +277,11 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
                   <View style={styles.saleAlertPrices}>
                     {po.regularPrice && (
                       <Text style={styles.saleAlertOldPrice}>
-                        €{po.regularPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        {formatCurrency(po.regularPrice)}
                       </Text>
                     )}
                     <Text style={styles.saleAlertNewPrice}>
-                      €{po.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      {formatCurrency(po.price)}
                     </Text>
                   </View>
                 </View>
@@ -718,7 +717,7 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
             <Text style={styles.intelligenceCardSubtitle}>AI-powered insights & recommendations</Text>
             <View style={styles.intelligenceCardStats}>
               <View style={styles.intelligenceCardStat}>
-                <Text style={styles.intelligenceCardStatValue}>€4.280</Text>
+                <Text style={styles.intelligenceCardStatValue}>{formatCurrency(4280)}</Text>
                 <Text style={styles.intelligenceCardStatLabel}>saved</Text>
               </View>
               <View style={styles.intelligenceCardStat}>

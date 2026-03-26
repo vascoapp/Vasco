@@ -17,6 +17,7 @@ import { MS_PER_DAY } from '../../src/utils/timeConstants';
 import { useTranslation } from 'react-i18next';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
+import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { useAuth } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
 import { useAIQueue } from '../../src/services/aiActionQueueService';
@@ -48,7 +49,7 @@ export default function VascoScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { jobs, invoices, quotes, customers } = useAppState();
+  const { jobs, invoices, quotes, customers, isLoading } = useAppState();
   const aiQueue = useAIQueue();
   const [refreshing, setRefreshing] = useState(false);
   const [actioned, setActioned] = useState<Set<string>>(new Set());
@@ -242,6 +243,17 @@ export default function VascoScreen() {
       ],
     );
   };
+
+  if (isLoading) {
+    return (
+      <View style={s.container}>
+        <View style={s.header}>
+          <Text style={s.headerTitle}>Vasco</Text>
+        </View>
+        <SkeletonList count={3} showAction lines={2} />
+      </View>
+    );
+  }
 
   return (
     <View style={s.container}>
@@ -489,6 +501,8 @@ export default function VascoScreen() {
             <Pressable
               style={s.gdprRow}
               onPress={() => Linking.openURL('mailto:support@vasco.app?subject=Vasco Feedback')}
+              accessibilityRole="button"
+              accessibilityLabel={t('profile.sendFeedback', 'Send feedback')}
             >
               <Ionicons name="chatbox-ellipses-outline" size={18} color={SemanticColors.textSecondary} />
               <Text style={s.gdprRowText}>{t('profile.sendFeedback')}</Text>
@@ -497,6 +511,8 @@ export default function VascoScreen() {
             <Pressable
               style={s.gdprRow}
               onPress={() => router.push('/contractor/legal' as any)}
+              accessibilityRole="button"
+              accessibilityLabel={t('profile.legal', 'Legal information')}
             >
               <Ionicons name="document-text-outline" size={18} color={SemanticColors.textSecondary} />
               <Text style={s.gdprRowText}>{t('profile.legal')}</Text>
@@ -505,6 +521,8 @@ export default function VascoScreen() {
             <Pressable
               style={s.gdprRow}
               onPress={handleExportData}
+              accessibilityRole="button"
+              accessibilityLabel={t('profile.exportData', 'Export my data')}
             >
               <Ionicons name="download-outline" size={18} color={SemanticColors.textSecondary} />
               <Text style={s.gdprRowText}>{t('profile.exportData')}</Text>
@@ -513,6 +531,8 @@ export default function VascoScreen() {
             <Pressable
               style={[s.gdprRow, { borderBottomWidth: 0 }]}
               onPress={handleDeleteAccount}
+              accessibilityRole="button"
+              accessibilityLabel={t('profile.deleteAccount', 'Delete account')}
             >
               <Ionicons name="trash-outline" size={18} color={SemanticColors.feedbackError} />
               <Text style={[s.gdprRowText, { color: SemanticColors.feedbackError }]}>{t('profile.deleteAccount')}</Text>

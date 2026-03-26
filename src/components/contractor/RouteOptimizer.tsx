@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { formatCurrency } from '../../i18n/formatting';
 import {
   useTodaysRoutes,
   useRouteStats,
@@ -227,7 +228,7 @@ const RouteCard: React.FC<{
         <View style={styles.savingItem}>
           <Ionicons name="cash-outline" size={16} color={Palette.green500} />
           <Text style={styles.savingText}>
-            €{route.savings.fuelSaved.toFixed(2)} bespaard
+            {formatCurrency(route.savings.fuelSaved)} bespaard
           </Text>
         </View>
       </View>
@@ -376,7 +377,7 @@ export const RouteOptimizer: React.FC = () => {
               <StatCard
                 icon="cash-outline"
                 label="Brandstof Bespaard"
-                value={`€${stats.totalSavingsThisMonth}`}
+                value={formatCurrency(stats.totalSavingsThisMonth)}
                 subtext="deze maand"
                 color={Palette.green500}
               />

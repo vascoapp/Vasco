@@ -3,7 +3,7 @@
  * into every intelligence subsystem: material catalog, supplier profiles,
  * entity graph, training examples, price observations, events, and calibration.
  *
- * All stages are fire-and-forget (non-blocking, console.warn on error).
+ * All stages are fire-and-forget (non-blocking, logWarn on error).
  * All no-op when Supabase is not configured.
  */
 
@@ -20,6 +20,7 @@ import {
   resolveCalibrationEntry,
 } from '../lib/intelligenceDataProvider';
 import type { ExtractedInvoice } from './invoiceExtractor';
+import { logWarn } from '../utils/errorHandler';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -75,7 +76,7 @@ export async function processExtraction(
       }
     }
   } catch (e) {
-    console.warn('[IntBridge] Stage 1 (materials):', e);
+    logWarn('IntBridge', `Stage 1 (materials): ${e}`);
   }
 
   // ── Stage 2: Supplier enrichment ───────────────────────
@@ -86,7 +87,7 @@ export async function processExtraction(
       if (supplierId) stats.suppliersUpdated++;
     }
   } catch (e) {
-    console.warn('[IntBridge] Stage 2 (supplier):', e);
+    logWarn('IntBridge', `Stage 2 (supplier): ${e}`);
   }
 
   // ── Stage 3: Entity graph ─────────────────────────────
@@ -120,7 +121,7 @@ export async function processExtraction(
       if (eid) stats.entitiesCreated++;
     }
   } catch (e) {
-    console.warn('[IntBridge] Stage 3 (entities):', e);
+    logWarn('IntBridge', `Stage 3 (entities): ${e}`);
   }
 
   // ── Stage 4: Training examples ─────────────────────────
@@ -177,7 +178,7 @@ export async function processExtraction(
       if (qpId) stats.trainingExamplesCreated++;
     }
   } catch (e) {
-    console.warn('[IntBridge] Stage 4 (training):', e);
+    logWarn('IntBridge', `Stage 4 (training): ${e}`);
   }
 
   // ── Stage 5: Price observations ────────────────────────
@@ -200,7 +201,7 @@ export async function processExtraction(
       stats.priceObservationsCreated = await bulkInsertPriceObservations(observations);
     }
   } catch (e) {
-    console.warn('[IntBridge] Stage 5 (prices):', e);
+    logWarn('IntBridge', `Stage 5 (prices): ${e}`);
   }
 
   // ── Stage 6: Event tracking ────────────────────────────
@@ -229,7 +230,7 @@ export async function processExtraction(
       entities,
     });
   } catch (e) {
-    console.warn('[IntBridge] Stage 6 (event):', e);
+    logWarn('IntBridge', `Stage 6 (event): ${e}`);
   }
 
   // ── Stage 7: Calibration resolution ────────────────────
@@ -270,7 +271,7 @@ export async function processExtraction(
       }
     }
   } catch (e) {
-    console.warn('[IntBridge] Stage 7 (calibration):', e);
+    logWarn('IntBridge', `Stage 7 (calibration): ${e}`);
   }
 
   return stats;

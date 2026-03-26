@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import type { PricebookItem, PricebookVariant } from '../../types/contractor-features';
 import { MOCK_PRICEBOOK } from '../../data/mockPricebook';
 
@@ -29,7 +30,7 @@ export function Pricebook({ onSelectItem, onClose, mode = 'browse' }: PricebookP
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
 
-  const formatCurrency = (amount: number) => `€${amount.toFixed(2)}`;
+  // formatCurrency imported from ../../i18n/formatting
 
   // Filter items
   const filteredItems = MOCK_PRICEBOOK.filter((item) => {

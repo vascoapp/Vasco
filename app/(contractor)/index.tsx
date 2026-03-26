@@ -26,7 +26,7 @@ import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { PAGE_BG, TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
 import { useNotifications } from '../../src/services/notificationService';
 import { FadeIn } from '../../src/components/shared/FadeIn';
-import { LoadingSkeleton } from '../../src/components/shared/LoadingSkeleton';
+import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { getActionStats } from '../../src/intelligence/actionExecutor';
 import { useAIQueue, populateQueue } from '../../src/services/aiActionQueueService';
 import { evaluateTriggers } from '../../src/services/workflowPackService';
@@ -373,8 +373,8 @@ export default function TodayScreen() {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <View style={{ paddingTop: 80, paddingHorizontal: 20 }}>
-          <LoadingSkeleton variant="full-screen" />
+        <View style={{ paddingTop: SafeArea.top + GRID.lg }}>
+          <SkeletonList count={4} showAvatar lines={2} />
         </View>
       </View>
     );
@@ -897,6 +897,8 @@ export default function TodayScreen() {
           <Pressable
             style={styles.onboardingCard}
             onPress={() => router.push(nextStep.route as any)}
+            accessibilityRole="button"
+            accessibilityLabel={`${t('onboarding.setupProgress', 'Complete your setup')}: ${nextStep.action}`}
           >
             <View style={styles.onboardingCircle}>
               <Text style={styles.onboardingPercent}>{onboardingProgress}%</Text>
@@ -974,6 +976,9 @@ export default function TodayScreen() {
                     key={job.id}
                     style={({ pressed }) => [styles.activeJobRow, pressed && { opacity: 0.8 }]}
                     onPress={() => router.push(`/contractor/job/${job.id}` as any)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${job.title}, ${cust?.name || ''}, ${job.status}`}
+                    accessibilityHint="Opens job details"
                   >
                     <View style={[styles.activeJobDot, job.status === 'in-progress' && { backgroundColor: SemanticColors.feedbackSuccess }, job.status === 'scheduled' && { backgroundColor: Palette.hermesOrange }, job.status === 'lead' && { backgroundColor: SemanticColors.textTertiary }]} />
                     <View style={{ flex: 1 }}>

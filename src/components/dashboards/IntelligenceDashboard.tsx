@@ -18,6 +18,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import { RecommendationFeedbackList } from '../contractor/RecommendationFeedback';
 import { useRecommendationFeedback } from '../../hooks/useRecommendationFeedback';
 
@@ -139,8 +140,6 @@ export function IntelligenceDashboard({ onClose }: IntelligenceDashboardProps) {
     setRefreshing(false);
   }, [refreshRecommendations]);
 
-  const formatCurrency = (amount: number) => `€${amount.toLocaleString(undefined)}`;
-
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -230,9 +229,9 @@ function OverviewTab({ stats, peerComparisons }: { stats: IntelligenceStats; pee
         </View>
         <View style={styles.heroContent}>
           <Text style={styles.heroLabel}>Totaal Bespaard</Text>
-          <Text style={styles.heroValue}>€{stats.totalSavingsAllTime.toLocaleString(undefined)}</Text>
+          <Text style={styles.heroValue}>{formatCurrency(stats.totalSavingsAllTime)}</Text>
           <Text style={styles.heroSubtext}>
-            €{stats.savingsThisMonth} deze maand · {stats.priceAlertsActedOn} deals gepakt
+            {formatCurrency(stats.savingsThisMonth)} deze maand · {stats.priceAlertsActedOn} deals gepakt
           </Text>
         </View>
       </View>
@@ -303,7 +302,7 @@ function OverviewTab({ stats, peerComparisons }: { stats: IntelligenceStats; pee
                 <View style={styles.peerComparison}>
                   <View style={styles.peerYou}>
                     <Text style={[styles.peerValue, isWinning && styles.peerValueWinning]}>
-                      {comparison.yourValue}{comparison.unit === '€' ? '' : comparison.unit}
+                      {comparison.unit === '€' ? formatCurrency(comparison.yourValue) : `${comparison.yourValue}${comparison.unit}`}
                     </Text>
                     <Text style={styles.peerLabel}>Jij</Text>
                   </View>
@@ -316,7 +315,7 @@ function OverviewTab({ stats, peerComparisons }: { stats: IntelligenceStats; pee
                   </View>
                   <View style={styles.peerAvg}>
                     <Text style={styles.peerAvgValue}>
-                      {comparison.peerAverage}{comparison.unit === '€' ? '' : comparison.unit}
+                      {comparison.unit === '€' ? formatCurrency(comparison.peerAverage) : `${comparison.peerAverage}${comparison.unit}`}
                     </Text>
                     <Text style={styles.peerLabel}>Gem.</Text>
                   </View>
@@ -344,7 +343,7 @@ function OverviewTab({ stats, peerComparisons }: { stats: IntelligenceStats; pee
           </View>
           <View style={styles.recStatDivider} />
           <View style={styles.recStatItem}>
-            <Text style={styles.recStatValue}>€{Math.round(stats.totalSavingsAllTime / stats.recommendationsAccepted)}</Text>
+            <Text style={styles.recStatValue}>{formatCurrency(Math.round(stats.totalSavingsAllTime / stats.recommendationsAccepted))}</Text>
             <Text style={styles.recStatLabel}>Per tip</Text>
           </View>
         </View>
@@ -455,7 +454,7 @@ function SavingsTab({ stats }: { stats: IntelligenceStats }) {
       {/* Total Savings Hero */}
       <View style={styles.savingsHero}>
         <Text style={styles.savingsHeroLabel}>Totaal Bespaard</Text>
-        <Text style={styles.savingsHeroValue}>€{stats.totalSavingsAllTime.toLocaleString(undefined)}</Text>
+        <Text style={styles.savingsHeroValue}>{formatCurrency(stats.totalSavingsAllTime)}</Text>
         <View style={styles.savingsHeroStats}>
           <View style={styles.savingsHeroStat}>
             <Text style={styles.savingsHeroStatValue}>{stats.priceAlertsActedOn}</Text>
@@ -463,7 +462,7 @@ function SavingsTab({ stats }: { stats: IntelligenceStats }) {
           </View>
           <View style={styles.savingsHeroStatDivider} />
           <View style={styles.savingsHeroStat}>
-            <Text style={styles.savingsHeroStatValue}>€{Math.round(stats.totalSavingsAllTime / stats.priceAlertsActedOn)}</Text>
+            <Text style={styles.savingsHeroStatValue}>{formatCurrency(Math.round(stats.totalSavingsAllTime / stats.priceAlertsActedOn))}</Text>
             <Text style={styles.savingsHeroStatLabel}>Per deal</Text>
           </View>
         </View>
@@ -485,7 +484,7 @@ function SavingsTab({ stats }: { stats: IntelligenceStats }) {
                 ]}
               />
               <Text style={styles.chartBarLabel}>{item.month}</Text>
-              <Text style={styles.chartBarValue}>€{item.amount}</Text>
+              <Text style={styles.chartBarValue}>{formatCurrency(item.amount)}</Text>
             </View>
           ))}
         </View>
@@ -516,7 +515,7 @@ function SavingsTab({ stats }: { stats: IntelligenceStats }) {
                   />
                 </View>
               </View>
-              <Text style={styles.categoryAmount}>€{cat.amount}</Text>
+              <Text style={styles.categoryAmount}>{formatCurrency(cat.amount)}</Text>
             </View>
           ))}
         </View>

@@ -17,6 +17,7 @@ import { useDaySchedule } from '../../src/services/smartSchedulerService';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { FadeIn } from '../../src/components/shared/FadeIn';
+import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { useAuth } from '../../src/context/AuthContext';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -42,7 +43,7 @@ export default function WerkScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
-  const { jobs, addJob, removeJob, customers, projects } = useAppState();
+  const { jobs, addJob, removeJob, customers, projects, isLoading } = useAppState();
   const [showNewJob, setShowNewJob] = useState(false);
   const [newJobTitle, setNewJobTitle] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'status'>('date');
@@ -95,6 +96,17 @@ export default function WerkScreen() {
   const activeCount = activeJobs.length;
   const scheduledToday = jobs.filter((j: any) => j.scheduledDate === today || j.date === today).length;
   const leadCount = leadJobs.length;
+
+  if (isLoading) {
+    return (
+      <View style={s.container}>
+        <View style={s.header}>
+          <Text style={s.headerTitle}>{t('tabs.jobs', 'Werk')}</Text>
+        </View>
+        <SkeletonList count={4} lines={2} />
+      </View>
+    );
+  }
 
   return (
     <View style={s.container}>
@@ -151,6 +163,9 @@ export default function WerkScreen() {
                 key={project.id}
                 style={({ pressed }) => [s.jobCard, pressed && { opacity: 0.85 }]}
                 onPress={() => router.push(`/contractor/projects/${project.id}` as any)}
+                accessibilityRole="button"
+                accessibilityLabel={`${t('jobs.projects', 'Project')}: ${project.title}`}
+                accessibilityHint="View project details"
               >
                 <View style={[s.jobAccent, { backgroundColor: project.status === 'active' ? Palette.hermesOrange : SemanticColors.textTertiary }]} />
                 <View style={s.jobContent}>
@@ -234,7 +249,7 @@ export default function WerkScreen() {
           <FadeIn delay={100}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={s.sectionTitle}>{t('jobs.active', 'Actief')}</Text>
-              <Pressable onPress={() => setSortBy(prev => prev === 'date' ? 'status' : 'date')} hitSlop={8}>
+              <Pressable onPress={() => setSortBy(prev => prev === 'date' ? 'status' : 'date')} hitSlop={8} accessibilityRole="button" accessibilityLabel={sortBy === 'date' ? t('jobs.byDate', 'Sort by date') : t('jobs.byStatus', 'Sort by status')}>
                 <Text style={{ fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: Palette.hermesOrange }}>
                   {sortBy === 'date' ? t('jobs.byDate', 'Op datum') : t('jobs.byStatus', 'Op status')}
                 </Text>
@@ -299,7 +314,7 @@ export default function WerkScreen() {
               <Ionicons name="briefcase-outline" size={48} color={SemanticColors.textTertiary} />
               <Text style={s.emptyFullTitle}>{t('jobs.noJobs', 'Nog geen klussen')}</Text>
               <Text style={s.emptyFullDesc}>{t('jobs.noJobsDesc', 'Maak je eerste klus aan')}</Text>
-              <Pressable style={s.emptyBtn} onPress={() => router.push('/contractor/tiered-quote' as any)}>
+              <Pressable style={s.emptyBtn} onPress={() => router.push('/contractor/tiered-quote' as any)} accessibilityRole="button" accessibilityLabel={t('jobs.newJob', 'Create new job')}>
                 <Text style={s.emptyBtnText}>{t('jobs.newJob', 'Nieuwe klus')}</Text>
               </Pressable>
             </View>
@@ -330,7 +345,7 @@ export default function WerkScreen() {
                 <View style={s.suggestionsRow}>
                   <Ionicons name="flash-outline" size={13} color={SemanticColors.textTertiary} />
                   {suggestions.map((sg: string, i: number) => (
-                    <Pressable key={i} style={s.suggestionChip} onPress={() => setNewJobTitle(sg)}>
+                    <Pressable key={i} style={s.suggestionChip} onPress={() => setNewJobTitle(sg)} accessibilityRole="button" accessibilityLabel={`Use suggestion: ${sg}`}>
                       <Text style={s.suggestionText} numberOfLines={1}>{sg}</Text>
                     </Pressable>
                   ))}
@@ -340,6 +355,8 @@ export default function WerkScreen() {
                 style={[s.modalSubmit, !newJobTitle.trim() && { opacity: 0.5 }]}
                 onPress={handleCreateJob}
                 disabled={!newJobTitle.trim()}
+                accessibilityRole="button"
+                accessibilityLabel={t('pipeline.create', 'Create job')}
               >
                 <Text style={s.modalSubmitText}>{t('pipeline.create', 'Aanmaken')}</Text>
               </Pressable>

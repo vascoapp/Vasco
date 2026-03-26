@@ -23,6 +23,7 @@ import {
   DEFAULT_AUDITOR_CONFIG,
 } from '../types/auditor';
 import { reasoningEngine } from './reasoningEngine';
+import { logWarn } from '../utils/errorHandler';
 
 // ============================================
 // HELPER FUNCTIONS
@@ -79,7 +80,7 @@ class AuditorService {
    */
   async runFullAudit(role: UserRole): Promise<AuditFinding[]> {
     if (this.runningAudits.has(role)) {
-      console.warn(`Audit for role ${role} is already running`);
+      logWarn('Auditor', `Audit for role ${role} is already running`);
       return [];
     }
 

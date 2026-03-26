@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Palette, SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import { useAppState } from '../../state/AppState';
 import type { Material } from '../../domain/materials';
 
@@ -119,7 +120,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
     setSelectedMaterial(null);
   };
 
-  const formatCurrency = (n: number) => `€${n.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+  // formatCurrency imported from ../../i18n/formatting
 
   const renderMaterialItem = ({ item }: { item: Material }) => (
     <Pressable style={s.materialRow} onPress={() => handleSelectMaterial(item)}>

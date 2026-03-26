@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { formatCurrency } from '../../i18n/formatting';
 import { Spacing } from '../../theme/spacing';
 import { trackUserAction } from '../../intelligence/intelligenceEngine';
 
@@ -353,16 +354,16 @@ function MaterialPriceCard({
       <View style={styles.priceComparisonRow}>
         <View style={styles.bestPrice}>
           <Text style={styles.priceLabel}>Beste prijs</Text>
-          <Text style={styles.bestPriceValue}>€{lowestPrice.toFixed(2)}</Text>
+          <Text style={styles.bestPriceValue}>{formatCurrency(lowestPrice)}</Text>
           <Text style={styles.bestPriceSupplier}>{bestDeal.supplierName}</Text>
         </View>
         {yourLastPaid && (
           <View style={styles.yourPrice}>
             <Text style={styles.priceLabel}>Jij betaalde</Text>
-            <Text style={styles.yourPriceValue}>€{yourLastPaid.toFixed(2)}</Text>
+            <Text style={styles.yourPriceValue}>{formatCurrency(yourLastPaid)}</Text>
             {savings > 0 && (
               <View style={styles.savingsBadge}>
-                <Text style={styles.savingsText}>Bespaar €{savings.toFixed(2)}</Text>
+                <Text style={styles.savingsText}>Bespaar {formatCurrency(savings)}</Text>
               </View>
             )}
           </View>
@@ -441,19 +442,19 @@ function MaterialDetailPanel({
           <View style={styles.priceSummaryItem}>
             <Text style={styles.priceSummaryLabel}>Laagste</Text>
             <Text style={[styles.priceSummaryValue, { color: SemanticColors.feedbackSuccess }]}>
-              €{lowestPrice.toFixed(2)}
+              {formatCurrency(lowestPrice)}
             </Text>
           </View>
           <View style={styles.priceSummaryDivider} />
           <View style={styles.priceSummaryItem}>
             <Text style={styles.priceSummaryLabel}>Gemiddeld</Text>
-            <Text style={styles.priceSummaryValue}>€{averagePrice.toFixed(2)}</Text>
+            <Text style={styles.priceSummaryValue}>{formatCurrency(averagePrice)}</Text>
           </View>
           <View style={styles.priceSummaryDivider} />
           <View style={styles.priceSummaryItem}>
             <Text style={styles.priceSummaryLabel}>Hoogste</Text>
             <Text style={[styles.priceSummaryValue, { color: SemanticColors.feedbackError }]}>
-              €{highestPrice.toFixed(2)}
+              {formatCurrency(highestPrice)}
             </Text>
           </View>
         </View>
@@ -536,10 +537,10 @@ function MaterialDetailPanel({
                     price.price === lowestPrice && styles.supplierPriceBest,
                   ]}
                 >
-                  €{price.price.toFixed(2)}
+                  {formatCurrency(price.price)}
                 </Text>
                 {price.originalPrice && (
-                  <Text style={styles.originalPrice}>€{price.originalPrice.toFixed(2)}</Text>
+                  <Text style={styles.originalPrice}>{formatCurrency(price.originalPrice)}</Text>
                 )}
                 <Text style={styles.lastUpdated}>{price.lastUpdated}</Text>
               </View>

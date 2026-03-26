@@ -7,6 +7,7 @@
 
 import { pricingApi, PriceObservation, PricingRecommendation, PriceReference } from '../api/pricingApi';
 import { intelligence, trackUserAction } from './intelligenceEngine';
+import { logWarn, logInfo } from '../utils/errorHandler';
 
 // ============================================
 // AGENT CONFIGURATION
@@ -63,7 +64,7 @@ class PricingAgent {
    * Start the pricing agent - call on app startup
    */
   start(): void {
-    if (__DEV__) console.log('[PricingAgent] Starting...');
+    logInfo('PricingAgent', 'Starting...');
 
     // Initial sync
     this.syncRecommendations();
@@ -84,7 +85,7 @@ class PricingAgent {
       clearInterval(this.syncInterval);
       this.syncInterval = null;
     }
-    if (__DEV__) console.log('[PricingAgent] Stopped');
+    logInfo('PricingAgent', 'Stopped');
   }
 
   // -----------------------------------------
@@ -118,7 +119,7 @@ class PricingAgent {
 
       return result.reference!;
     } catch (error) {
-      console.error('[PricingAgent] Failed to record price:', error);
+      logWarn('PricingAgent', `Failed to record price: ${error}`);
       throw error;
     }
   }
@@ -142,7 +143,7 @@ class PricingAgent {
 
       return result;
     } catch (error) {
-      console.error('[PricingAgent] Bulk import failed:', error);
+      logWarn('PricingAgent', `Bulk import failed: ${error}`);
       throw error;
     }
   }
@@ -165,7 +166,7 @@ class PricingAgent {
 
       return result;
     } catch (error) {
-      console.error('[PricingAgent] Document extraction failed:', error);
+      logWarn('PricingAgent', `Document extraction failed: ${error}`);
       throw error;
     }
   }
@@ -191,7 +192,7 @@ class PricingAgent {
       this.cachedRecommendations = recommendations;
       return recommendations;
     } catch (error) {
-      console.error('[PricingAgent] Failed to get recommendations:', error);
+      logWarn('PricingAgent', `Failed to get recommendations: ${error}`);
       return this.cachedRecommendations; // Return cached on error
     }
   }
@@ -210,7 +211,7 @@ class PricingAgent {
     try {
       return await pricingApi.getMaterialRecommendation(materialId, quantity);
     } catch (error) {
-      console.error('[PricingAgent] Failed to get material recommendation:', error);
+      logWarn('PricingAgent', `Failed to get material recommendation: ${error}`);
       return null;
     }
   }
@@ -248,7 +249,7 @@ class PricingAgent {
         r => r.id !== recommendationId
       );
     } catch (error) {
-      console.error('[PricingAgent] Failed to record action:', error);
+      logWarn('PricingAgent', `Failed to record action: ${error}`);
     }
   }
 
@@ -274,7 +275,7 @@ class PricingAgent {
 
       return comparison;
     } catch (error) {
-      console.error('[PricingAgent] Failed to compare prices:', error);
+      logWarn('PricingAgent', `Failed to compare prices: ${error}`);
       throw error;
     }
   }
@@ -286,7 +287,7 @@ class PricingAgent {
     try {
       return await pricingApi.getPriceReference(materialId);
     } catch (error) {
-      console.error('[PricingAgent] Failed to get price reference:', error);
+      logWarn('PricingAgent', `Failed to get price reference: ${error}`);
       return null;
     }
   }
@@ -313,7 +314,7 @@ class PricingAgent {
 
       return results;
     } catch (error) {
-      console.error('[PricingAgent] Material search failed:', error);
+      logWarn('PricingAgent', `Material search failed: ${error}`);
       return [];
     }
   }
@@ -325,7 +326,7 @@ class PricingAgent {
     try {
       return await pricingApi.resolveMaterial(name, context);
     } catch (error) {
-      console.error('[PricingAgent] Material resolution failed:', error);
+      logWarn('PricingAgent', `Material resolution failed: ${error}`);
       return null;
     }
   }
@@ -336,9 +337,9 @@ class PricingAgent {
   async teachMaterialAlias(materialId: string, alias: string): Promise<void> {
     try {
       await pricingApi.addMaterialAlias(materialId, alias);
-      if (__DEV__) console.log('[PricingAgent] Learned new alias:', alias, '->', materialId);
+      logInfo('PricingAgent', `Learned new alias: ${alias} -> ${materialId}`);
     } catch (error) {
-      console.error('[PricingAgent] Failed to add alias:', error);
+      logWarn('PricingAgent', `Failed to add alias: ${error}`);
     }
   }
 
@@ -365,7 +366,7 @@ class PricingAgent {
 
       return result;
     } catch (error) {
-      console.error('[PricingAgent] Supplier sync failed:', error);
+      logWarn('PricingAgent', `Supplier sync failed: ${error}`);
       throw error;
     }
   }
@@ -412,10 +413,10 @@ class PricingAgent {
   async retrain(fullRetrain = false): Promise<{ status: string; modelsUpdated: number; accuracy: number }> {
     try {
       const result = await pricingApi.trainAgent({ fullRetrain });
-      if (__DEV__) console.log('[PricingAgent] Training complete:', result);
+      logInfo('PricingAgent', `Training complete: ${JSON.stringify(result)}`);
       return result;
     } catch (error) {
-      console.error('[PricingAgent] Training failed:', error);
+      logWarn('PricingAgent', `Training failed: ${error}`);
       throw error;
     }
   }
@@ -426,7 +427,7 @@ class PricingAgent {
 
   private async syncRecommendations(): Promise<void> {
     try {
-      if (__DEV__) console.log('[PricingAgent] Syncing recommendations...');
+      logInfo('PricingAgent', 'Syncing recommendations...');
       const recommendations = await pricingApi.getRecommendations({
         minSavings: this.config.minSavingsToAlert,
       });
@@ -441,9 +442,9 @@ class PricingAgent {
         }
       }
 
-      if (__DEV__) console.log(`[PricingAgent] Synced ${recommendations.length} recommendations`);
+      logInfo('PricingAgent', `Synced ${recommendations.length} recommendations`);
     } catch (error) {
-      console.error('[PricingAgent] Sync failed:', error);
+      logWarn('PricingAgent', `Sync failed: ${error}`);
     }
   }
 
@@ -465,7 +466,7 @@ class PricingAgent {
     if (!this.config.enablePushNotifications) return;
 
     // In a real implementation, this would trigger push notifications
-    if (__DEV__) console.log('[PricingAgent] New opportunities:', recommendations.map(r => r.materialName));
+    logInfo('PricingAgent', `New opportunities: ${recommendations.map(r => r.materialName).join(', ')}`);
 
     // For now, we'll emit an event that the UI can subscribe to
     // This could be implemented with EventEmitter, Zustand, or similar

@@ -7,6 +7,7 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import type { AutoInvoice } from './invoiceAutomationService';
+import { DEMO_MODE } from '../config/demo';
 
 // ── Number formatting (Dutch) ──────────────────────────────
 
@@ -98,6 +99,7 @@ function buildInvoiceHtml(
     .payment-info .detail { font-size: 13px; color: #1a1a1a; margin-top: 4px; }
     .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; text-align: center; font-size: 11px; color: #999; }
     .accent { color: #E35205; }
+    .demo-watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg); font-size: 100px; font-weight: 900; color: rgba(227, 82, 5, 0.07); pointer-events: none; z-index: 0; letter-spacing: 20px; }
   </style>
 </head>
 <body>
@@ -188,6 +190,7 @@ function buildInvoiceHtml(
   <div class="footer">
     Gegenereerd met <span class="accent">Vasco</span> \u2014 AI-platform voor de installatiebranche
   </div>
+  ${DEMO_MODE ? '<div class="demo-watermark">DEMO</div>' : ''}
 </body>
 </html>`;
 }

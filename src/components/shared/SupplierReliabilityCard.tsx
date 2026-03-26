@@ -9,6 +9,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import type { SupplierPerformance, SupplierRanking } from '../../types/supplier-reliability';
 
 // Accept both SupplierPerformance and SupplierRanking types
@@ -88,8 +89,7 @@ export function SupplierReliabilityCard({
     }
   };
 
-  const formatCurrency = (amount: number, currency: string) =>
-    `${currency === 'EUR' ? '€' : '£'}${amount.toLocaleString()}`;
+  // formatCurrency imported from ../../i18n/formatting
 
   if (compact) {
     return (
@@ -187,7 +187,7 @@ export function SupplierReliabilityCard({
           </View>
           <View style={styles.metricItem}>
             <Text style={styles.metricValue}>
-              {formatCurrency(supplier.totalSpend, supplier.currency)}
+              {formatCurrency(supplier.totalSpend)}
             </Text>
             <Text style={styles.metricLabel}>Spend</Text>
           </View>
@@ -203,7 +203,7 @@ export function SupplierReliabilityCard({
           </View>
           <View style={styles.metricItem}>
             <Text style={styles.metricValue}>
-              {formatCurrency(supplier.totalSpend, supplier.currency)}
+              {formatCurrency(supplier.totalSpend)}
             </Text>
             <Text style={styles.metricLabel}>Spend</Text>
           </View>

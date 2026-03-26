@@ -22,6 +22,7 @@ import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import type { CustomerDecisionTracker } from '../../types/decisions';
 import { generateAccessCode } from '../../data/mockCustomerPortal';
+import { logInfo } from '../../utils/errorHandler';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -106,7 +107,7 @@ ${tracker.customerName ? 'Uw aannemer' : ''}`;
         title: 'Deel keuzeformulier',
       });
     } catch (error) {
-      if (__DEV__) console.log('Share error:', error);
+      logInfo('ShareDecisionTracker', `Share error: ${error}`);
     }
   };
 

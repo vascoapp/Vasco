@@ -9,6 +9,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Palette, SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import { useHoursSavedDisplay, useROIDashboard } from '../../services';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -163,7 +164,7 @@ export function HoursSavedWidget({ onPress }: { onPress?: () => void }) {
       </View>
       <View style={styles.widgetValueBadge}>
         <Text style={styles.widgetValueText}>
-          €{dashboard.moneyValueThisMonth.toLocaleString(undefined)}
+          {formatCurrency(dashboard.moneyValueThisMonth)}
         </Text>
       </View>
     </Pressable>

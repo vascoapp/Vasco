@@ -22,6 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { hapticSuccess } from '../../utils/haptics';
 import { Spacing, SafeArea } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import {
   mockProjects,
   mockAppraisals,
@@ -47,6 +48,7 @@ import { ScenarioComparisonCard } from '../shared/ScenarioComparisonCard';
 
 // AI Savings
 import { useSavingsAggregation } from '../../services/savingsAggregatorService';
+import { logInfo } from '../../utils/errorHandler';
 
 // Savings tab: Budget Optimizer + Supplier Negotiation + TCO data
 import BudgetOptimizerDashboard from './BudgetOptimizerDashboard';
@@ -265,20 +267,20 @@ const MOCK_SCENARIOS = [
 // HELPERS
 // =============================================================================
 
-function formatCompact(value: number, currency: string = 'GBP'): string {
-  const symbol = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
+function formatCompact(value: number, _currency: string = 'GBP'): string {
   const absValue = Math.abs(value);
+  const sign = value < 0 ? '-' : '';
 
   if (absValue >= 1_000_000_000) {
-    return `${symbol}${(value / 1_000_000_000).toFixed(1)}B`;
+    return `${sign}${formatCurrency(absValue / 1_000_000_000).replace(/,00$|\.00$/, '')}B`;
   }
   if (absValue >= 1_000_000) {
-    return `${symbol}${(value / 1_000_000).toFixed(1)}M`;
+    return `${sign}${formatCurrency(absValue / 1_000_000).replace(/,00$|\.00$/, '')}M`;
   }
   if (absValue >= 1_000) {
-    return `${symbol}${(value / 1_000).toFixed(0)}K`;
+    return `${sign}${formatCurrency(absValue / 1_000).replace(/,00$|\.00$/, '')}K`;
   }
-  return `${symbol}${value.toFixed(0)}`;
+  return formatCurrency(value);
 }
 
 // =============================================================================
@@ -623,7 +625,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
 
   const handleConfirmApproval = useCallback(() => {
     // In reality, would call approval API
-    if (__DEV__) console.log('Approved:', selectedApproval?.id);
+    logInfo('CFODashboard', `Approved: ${selectedApproval?.id}`);
     setConfirmModalVisible(false);
     setSelectedApproval(null);
   }, [selectedApproval]);

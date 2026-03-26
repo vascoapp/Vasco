@@ -7,6 +7,7 @@
 
 import { pricingApi, PriceObservation } from '../api/pricingApi';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { logWarn } from '../utils/errorHandler';
 
 // ============================================
 // TYPES
@@ -617,7 +618,7 @@ class InvoiceExtractorService {
         // In production, would also count resolved materials
         materialsResolved = Math.floor(result.imported * 0.8); // Estimate
       } catch (error) {
-        console.error('Failed to import prices:', error);
+        logWarn('InvoiceExtractor', `Failed to import prices: ${error}`);
       }
     }
 

@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { deleteSecureItem } from '../lib/secureStorage';
+import { logWarn } from '../utils/errorHandler';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -70,7 +71,7 @@ export async function clearAllLocalData(): Promise<{ cleared: number }> {
     }
   } catch (error) {
     // Log but continue — we want to clear as much as possible
-    console.warn('[AccountDeletion] AsyncStorage clear error:', error);
+    logWarn('AccountDeletion', `AsyncStorage clear error: ${error}`);
   }
 
   // 2. Clear all SecureStore keys (API tokens, credentials)
@@ -139,13 +140,13 @@ async function requestServerDeletion(userId: string): Promise<boolean> {
 
     if (error) {
       // Table may not exist yet — fall back to edge function
-      console.warn('[AccountDeletion] Table insert failed, trying edge function:', error.message);
+      logWarn('AccountDeletion', `Table insert failed, trying edge function: ${error.message}`);
       return await requestDeletionViaEdgeFunction(userId);
     }
 
     return true;
   } catch (error) {
-    console.warn('[AccountDeletion] Server deletion request failed:', error);
+    logWarn('AccountDeletion', `Server deletion request failed: ${error}`);
     return false;
   }
 }
@@ -162,7 +163,7 @@ async function requestDeletionViaEdgeFunction(userId: string): Promise<boolean> 
     });
 
     if (error) {
-      console.warn('[AccountDeletion] Edge function failed:', error.message);
+      logWarn('AccountDeletion', `Edge function failed: ${error.message}`);
       return false;
     }
 

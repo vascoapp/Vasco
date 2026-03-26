@@ -19,6 +19,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import {
   usePriceAlerts,
   useTriggeredAlerts,
@@ -57,7 +58,7 @@ export function PriceAlerts({ onClose }: PriceAlertsProps) {
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Prijsalerts</Text>
           <Text style={styles.headerSubtitle}>
-            €{statistics.totalSavings} bespaard · {statistics.actedOnRate}% actie genomen
+            {formatCurrency(statistics.totalSavings)} bespaard · {statistics.actedOnRate}% actie genomen
           </Text>
         </View>
         <Pressable style={styles.addButton} onPress={() => setShowCreateModal(true)}>
@@ -73,7 +74,7 @@ export function PriceAlerts({ onClose }: PriceAlertsProps) {
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statValue, { color: SemanticColors.feedbackSuccess }]}>
-            €{statistics.totalSavings}
+            {formatCurrency(statistics.totalSavings)}
           </Text>
           <Text style={styles.statLabel}>Bespaard</Text>
         </View>
@@ -238,19 +239,19 @@ function TriggeredAlertCard({
       <View style={styles.alertPriceRow}>
         <View style={styles.alertPriceInfo}>
           <Text style={styles.alertPriceLabel}>Nu</Text>
-          <Text style={styles.alertCurrentPrice}>€{alert.currentPrice?.toFixed(2)}</Text>
+          <Text style={styles.alertCurrentPrice}>{alert.currentPrice != null ? formatCurrency(alert.currentPrice) : ''}</Text>
         </View>
         {alert.previousPrice && (
           <View style={styles.alertPriceInfo}>
             <Text style={styles.alertPriceLabel}>Was</Text>
-            <Text style={styles.alertPreviousPrice}>€{alert.previousPrice.toFixed(2)}</Text>
+            <Text style={styles.alertPreviousPrice}>{formatCurrency(alert.previousPrice)}</Text>
           </View>
         )}
         {alert.savingsAmount && (
           <View style={styles.alertSavings}>
             <Ionicons name="arrow-down" size={14} color={SemanticColors.feedbackSuccess} />
             <Text style={styles.alertSavingsText}>
-              €{alert.savingsAmount.toFixed(2)} ({alert.savingsPercent}%)
+              {formatCurrency(alert.savingsAmount)} ({alert.savingsPercent}%)
             </Text>
           </View>
         )}
@@ -353,7 +354,7 @@ function ActiveAlertsTab({
                 <Text style={styles.activeAlertName}>{alert.materialName}</Text>
                 <Text style={styles.activeAlertCondition}>
                   {alert.type === 'price_drop' && `Alert bij ${alert.condition.dropPercent}% daling`}
-                  {alert.type === 'price_target' && `Alert bij €${alert.condition.targetPrice}`}
+                  {alert.type === 'price_target' && `Alert bij ${formatCurrency(alert.condition.targetPrice ?? 0)}`}
                   {alert.type === 'competitor_match' && `Alert als goedkoper dan ${alert.condition.beatSupplier}`}
                   {alert.type === 'bulk_opportunity' && `Alert bij ${alert.condition.bulkDiscount}% bulk korting`}
                 </Text>
@@ -380,7 +381,7 @@ function ActiveAlertsTab({
                 <View style={styles.suggestedSavings}>
                   <Ionicons name="trending-down" size={12} color={SemanticColors.feedbackSuccess} />
                   <Text style={styles.suggestedSavingsText}>
-                    ~€{suggestion.potentialSavings} potentiële besparing
+                    ~{formatCurrency(suggestion.potentialSavings)} potentiële besparing
                   </Text>
                 </View>
               </View>

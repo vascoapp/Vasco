@@ -17,6 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -353,7 +354,7 @@ function TrendingProductCard({ product, rank }: { product: TrendingProduct; rank
             <Text style={styles.trendingStatLabel}>score</Text>
           </View>
           <View style={styles.trendingStat}>
-            <Text style={styles.trendingStatValue}>€{product.avgPrice}</Text>
+            <Text style={styles.trendingStatValue}>{formatCurrency(product.avgPrice)}</Text>
             <Text style={styles.trendingStatLabel}>gem. prijs</Text>
           </View>
         </View>
@@ -385,7 +386,7 @@ function PriceTrendCard({ trend }: { trend: PriceTrend }) {
     <View style={styles.priceTrendCard}>
       <View style={styles.priceTrendInfo}>
         <Text style={styles.priceTrendCategory}>{trend.category}</Text>
-        <Text style={styles.priceTrendPrice}>€{trend.currentAvg.toFixed(2)}</Text>
+        <Text style={styles.priceTrendPrice}>{formatCurrency(trend.currentAvg)}</Text>
       </View>
       <View style={[styles.priceTrendBadge, { backgroundColor: getTrendColor() + '15' }]}>
         <Ionicons name={getTrendIcon()} size={14} color={getTrendColor()} />
@@ -546,7 +547,7 @@ function OpportunityCard({ opportunity }: { opportunity: MarketOpportunity }) {
           <View style={styles.opportunityValue}>
             <Ionicons name="trending-up" size={12} color={SemanticColors.feedbackSuccess} />
             <Text style={styles.opportunityValueText}>
-              ~€{opportunity.potentialValue} potentieel
+              ~{formatCurrency(opportunity.potentialValue)} potentieel
             </Text>
           </View>
           <View style={styles.confidenceBadge}>

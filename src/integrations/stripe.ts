@@ -223,7 +223,7 @@ export async function createPaymentLink(request: StripePaymentRequest): Promise<
         ...(request.customerEmail ? { customerEmail: request.customerEmail } : {}),
         ...(request.metadata ?? {}),
       },
-      payment_method_types: request.paymentMethods ?? ['card'],
+      payment_method_types: request.paymentMethods ?? SUPPORTED_METHODS.UK,
     },
   });
 
@@ -258,7 +258,7 @@ export async function createPayment(req: StripePaymentRequest): Promise<StripePa
     currency,
     description: req.description,
     'metadata[invoiceId]': req.invoiceId,
-    payment_method_types: req.paymentMethods ?? ['card'],
+    payment_method_types: req.paymentMethods ?? SUPPORTED_METHODS.UK,
   };
 
   if (req.customerEmail) {
@@ -318,12 +318,14 @@ export const SUPPORTED_CURRENCIES: StripeCurrency[] = ['GBP', 'EUR', 'USD'];
 
 export async function createStripePayment(
   invoiceId: string,
-  amount: number
+  amount: number,
+  country: string = 'UK'
 ): Promise<StripePaymentResult> {
   return createPayment({
     invoiceId,
     amount,
     description: `Invoice ${invoiceId}`,
     currency: 'GBP',
+    paymentMethods: SUPPORTED_METHODS[country] ?? SUPPORTED_METHODS.UK,
   });
 }

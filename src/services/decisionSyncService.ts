@@ -8,6 +8,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState, useCallback } from 'react';
+import { logWarn } from '../utils/errorHandler';
 
 const LOCAL_KEY = '@vasco_decision_submissions';
 
@@ -60,7 +61,7 @@ export async function submitDecision(submission: DecisionSubmission): Promise<bo
     }, { onConflict: 'tracker_id,item_id,submitted_by' });
 
     if (error) {
-      console.warn('[decisionSync] Submit failed:', error.message);
+      logWarn('decisionSync', `Submit failed: ${error.message}`);
       return false;
     }
 

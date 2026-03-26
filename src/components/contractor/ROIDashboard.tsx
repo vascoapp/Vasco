@@ -10,6 +10,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Palette, SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import {
   useROIMetrics,
   useROIDashboard,
@@ -96,7 +97,7 @@ export function ROIDashboard({ onClose }: ROIDashboardProps) {
             />
             <HeroMetric
               icon="cash"
-              value={`€${dashboard.effectiveHourlyRate}`}
+              value={formatCurrency(dashboard.effectiveHourlyRate)}
               label="Effective Rate"
               trend={dashboard.effectiveHourlyRateTrend}
               benchmark={55}
@@ -130,7 +131,7 @@ export function ROIDashboard({ onClose }: ROIDashboardProps) {
                   <View key={index} style={styles.roiBreakdownItem}>
                     <Text style={styles.roiBreakdownLabel}>{item.category}</Text>
                     <Text style={styles.roiBreakdownValue}>
-                      €{item.value.toLocaleString(undefined)}
+                      {formatCurrency(item.value)}
                     </Text>
                   </View>
                 ))}
@@ -138,7 +139,7 @@ export function ROIDashboard({ onClose }: ROIDashboardProps) {
               <View style={styles.roiTotal}>
                 <Text style={styles.roiTotalLabel}>Total Value Generated</Text>
                 <Text style={styles.roiTotalValue}>
-                  €{automationROI.totalValue.toLocaleString(undefined)}
+                  {formatCurrency(automationROI.totalValue)}
                 </Text>
               </View>
             </View>
@@ -530,7 +531,7 @@ function TierItem({
       <Text style={styles.tierName}>{tier}</Text>
       <Text style={styles.tierRate}>{rate}%</Text>
       <Text style={styles.tierCount}>{count} quotes</Text>
-      <Text style={styles.tierRevenue}>€{(revenue / 1000).toFixed(1)}k</Text>
+      <Text style={styles.tierRevenue}>{formatCurrency(revenue)}</Text>
     </View>
   );
 }

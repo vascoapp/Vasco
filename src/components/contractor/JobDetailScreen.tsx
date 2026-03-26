@@ -4,6 +4,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { Ionicons } from '@expo/vector-icons';
 import { Palette, SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import type { Job, JobPhoto, TimeEntry, MaterialUsage } from '../../types/contractor';
 import type { Customer } from '../../domain/customers';
 import type { JobMaterial, JobMaterialStatus } from '../../domain/materials';
@@ -72,7 +73,7 @@ export function JobDetailScreen({
   // Typed job materials from AppState
   const typedJobMaterials = jobMaterialsMap[job.id] ?? [];
 
-  const formatCurrency = (amount: number) => `€${amount.toLocaleString(undefined)}`;
+  // formatCurrency imported from ../../i18n/formatting
   const formatDate = (date: string) => new Date(date).toLocaleDateString(undefined, {
     weekday: 'short',
     day: 'numeric',

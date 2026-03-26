@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { formatCurrency } from '../../i18n/formatting';
 import {
   useProjectPlanner,
   ProjectPrediction,
@@ -191,7 +192,7 @@ export function ProjectPlanner() {
     <View key={material.materialId} style={styles.materialCard}>
       <View style={styles.materialHeader}>
         <Text style={styles.materialName}>{material.materialName}</Text>
-        <Text style={styles.materialCost}>€{material.estimatedCost}</Text>
+        <Text style={styles.materialCost}>{formatCurrency(material.estimatedCost)}</Text>
       </View>
 
       <View style={styles.materialDetails}>
@@ -229,7 +230,7 @@ export function ProjectPlanner() {
           <View style={styles.materialsSummary}>
             <Text style={styles.summaryTitle}>Geschatte totaalkosten</Text>
             <Text style={styles.summaryValue}>
-              €{materials.reduce((sum, m) => sum + m.estimatedCost, 0)}
+              {formatCurrency(materials.reduce((sum, m) => sum + m.estimatedCost, 0))}
             </Text>
             <Text style={styles.summaryNote}>
               Gebaseerd op {selectedProjectType} ({selectedScope})

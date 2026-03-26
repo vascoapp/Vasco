@@ -157,7 +157,7 @@ export function VascoCard({
                     </View>
                   ))}
                   {briefing.proactiveAlerts.length > 2 && !showAllAlerts && (
-                    <Pressable onPress={() => setShowAllAlerts(true)} style={s.showMoreBtn}>
+                    <Pressable onPress={() => setShowAllAlerts(true)} style={s.showMoreBtn} accessibilityRole="button" accessibilityLabel={t('vasco.showMore', 'Show more alerts', { count: briefing.proactiveAlerts.length - 2 })}>
                       <Text style={s.showMoreText}>{t('vasco.showMore', 'Show {{count}} more', { count: briefing.proactiveAlerts.length - 2 })}</Text>
                       <Ionicons name="chevron-down" size={12} color={Palette.hermesOrange} />
                     </Pressable>

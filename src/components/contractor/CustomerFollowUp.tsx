@@ -18,7 +18,9 @@ import {
   Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { SemanticColors } from '../../theme/colors';
+import { formatCurrency } from '../../i18n/formatting';
 import {
   useFollowUps,
   useFollowUpTemplates,
@@ -34,6 +36,7 @@ import {
 // ============================================
 
 export function CustomerFollowUp() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'due' | 'scheduled' | 'completed'>('due');
   const [selectedFollowUp, setSelectedFollowUp] = useState<FollowUp | null>(null);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -98,7 +101,7 @@ export function CustomerFollowUp() {
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={[styles.statValue, { color: SemanticColors.feedbackSuccess }]}>
-            €{statistics.savedDealValue.toLocaleString(undefined)}
+            {formatCurrency(statistics.savedDealValue)}
           </Text>
           <Text style={styles.statLabel}>Deals gered</Text>
         </View>
@@ -214,13 +217,13 @@ export function CustomerFollowUp() {
                 onPress={() => setSelectedFollowUp(followUp)}
                 onQuickComplete={() => {
                   Alert.alert(
-                    'Follow-up afronden',
-                    'Wat was het resultaat?',
+                    t('followUp.completeFollowUp', 'Complete follow-up'),
+                    t('followUp.whatWasResult', 'What was the result?'),
                     [
-                      { text: 'Reactie ontvangen', onPress: () => completeFollowUp(followUp.id, 'responded') },
-                      { text: 'Deal gewonnen', onPress: () => completeFollowUp(followUp.id, 'converted') },
-                      { text: 'Geen reactie', onPress: () => completeFollowUp(followUp.id, 'no_response') },
-                      { text: 'Annuleren', style: 'cancel' },
+                      { text: t('followUp.responseReceived', 'Response received'), onPress: () => completeFollowUp(followUp.id, 'responded') },
+                      { text: t('followUp.dealWon', 'Deal won'), onPress: () => completeFollowUp(followUp.id, 'converted') },
+                      { text: t('followUp.noResponse', 'No response'), onPress: () => completeFollowUp(followUp.id, 'no_response') },
+                      { text: t('common.cancel', 'Cancel'), style: 'cancel' },
                     ]
                   );
                 }}
@@ -472,6 +475,7 @@ function FollowUpDetailModal({
   onCancel: (reason?: string) => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const [message, setMessage] = useState(followUp.suggestedMessage);
   const [showOutcomeOptions, setShowOutcomeOptions] = useState(false);
 
@@ -481,13 +485,13 @@ function FollowUpDetailModal({
     const email = customer?.email ?? '';
 
     Alert.alert(
-      'Contact opnemen',
-      'Kies een manier om contact op te nemen:',
+      t('followUp.contact', 'Contact'),
+      t('followUp.chooseContactMethod', 'Choose a way to get in touch:'),
       [
         { text: 'WhatsApp', onPress: () => Linking.openURL(`https://wa.me/${phone}`) },
-        { text: 'E-mail', onPress: () => Linking.openURL(`mailto:${email}`) },
-        { text: 'Bellen', onPress: () => Linking.openURL(`tel:${phone}`) },
-        { text: 'Annuleren', style: 'cancel' },
+        { text: t('followUp.email', 'Email'), onPress: () => Linking.openURL(`mailto:${email}`) },
+        { text: t('followUp.call', 'Call'), onPress: () => Linking.openURL(`tel:${phone}`) },
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
       ]
     );
   };
@@ -590,11 +594,11 @@ function FollowUpDetailModal({
               <Pressable
                 style={styles.snoozeButton}
                 onPress={() => {
-                  Alert.alert('Uitstellen', 'Hoelang uitstellen?', [
-                    { text: '1 dag', onPress: () => onSnooze(1) },
-                    { text: '3 dagen', onPress: () => onSnooze(3) },
-                    { text: '1 week', onPress: () => onSnooze(7) },
-                    { text: 'Annuleren', style: 'cancel' },
+                  Alert.alert(t('followUp.snooze', 'Snooze'), t('followUp.snoozeHowLong', 'How long to snooze?'), [
+                    { text: t('followUp.oneDay', '1 day'), onPress: () => onSnooze(1) },
+                    { text: t('followUp.threeDays', '3 days'), onPress: () => onSnooze(3) },
+                    { text: t('followUp.oneWeek', '1 week'), onPress: () => onSnooze(7) },
+                    { text: t('common.cancel', 'Cancel'), style: 'cancel' },
                   ]);
                 }}
               >
@@ -604,11 +608,11 @@ function FollowUpDetailModal({
                 style={styles.cancelButton}
                 onPress={() => {
                   Alert.alert(
-                    'Annuleren',
-                    'Weet je zeker dat je deze follow-up wilt annuleren?',
+                    t('common.cancel', 'Cancel'),
+                    t('followUp.confirmCancel', 'Are you sure you want to cancel this follow-up?'),
                     [
-                      { text: 'Ja, annuleren', style: 'destructive', onPress: () => onCancel() },
-                      { text: 'Nee', style: 'cancel' },
+                      { text: t('followUp.yesCancel', 'Yes, cancel'), style: 'destructive', onPress: () => onCancel() },
+                      { text: t('common.no', 'No'), style: 'cancel' },
                     ]
                   );
                 }}
@@ -691,6 +695,7 @@ function ScheduleFollowUpModal({
   }) => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const customers = useCustomers();
   const templates = useFollowUpTemplates();
 
@@ -710,7 +715,7 @@ function ScheduleFollowUpModal({
 
   const handleSchedule = () => {
     if (!selectedCustomer) {
-      Alert.alert('Selecteer een klant');
+      Alert.alert(t('followUp.selectCustomer', 'Select a customer'));
       return;
     }
     onSchedule({
@@ -846,8 +851,7 @@ function ScheduleFollowUpModal({
                 </Text>
               )}
               <Text style={styles.insightText}>
-                {selectedCustomer.totalProjects} projecten • €
-                {selectedCustomer.totalRevenue.toLocaleString(undefined)}
+                {selectedCustomer.totalProjects} projecten • {formatCurrency(selectedCustomer.totalRevenue)}
               </Text>
             </View>
           )}

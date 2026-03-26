@@ -39,6 +39,7 @@ import { buildPriceRiskSignals } from '../logic/priceRisk';
 import { ingestPdfStub } from '../ingestion/ingestionStub';
 import { rowToExtractedDocument } from '../ingestion/extractionBridge';
 import { isSupabaseConfigured } from '../lib/supabase';
+import { USE_SEED_DATA } from '../config/demo';
 import {
   loadQuotes,
   loadInvoices,
@@ -171,9 +172,8 @@ const AppStateContext = createContext<AppState | null>(null);
 // SECTION: Provider & State Initialization (seeds, defaults)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// Always seed demo data — Supabase project is paused so real data won't load
-// When Supabase is live with real data, set to false
-const useSeedData = true;
+// Seed data flag — controlled by src/config/demo.ts (true in __DEV__ or when EXPO_PUBLIC_DEMO_MODE=true)
+const useSeedData = USE_SEED_DATA;
 
 // Seed jobs — defined outside component to avoid Babel parse issues with inline ternaries
 const SEED_JOBS: Job[] = [
@@ -509,11 +509,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         if (job) {
           const validation = validateJobStatusChange(job.status, status, job);
           if (!validation.valid) {
-            console.error('[Validator] Job status change invalid:', validation.errors.map(e => e.message).join(', '));
+            logWarn('Validator', 'Job status change invalid: ' + validation.errors.map(e => e.message).join(', '));
             collectedWarnings.push(...validation.errors.map(e => e.message));
           }
           if (validation.warnings.length > 0) {
-            console.error('[Validator] Job status warnings:', validation.warnings.map(w => w.message).join(', '));
+            logWarn('Validator', 'Job status warnings: ' + validation.warnings.map(w => w.message).join(', '));
             collectedWarnings.push(...validation.warnings.map(w => w.message));
           }
         }
@@ -725,7 +725,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           quotes,
         );
         if (!validation.valid) {
-          console.error('[Validator] Quote validation failed:', validation.errors.map(e => e.message).join(', '));
+          logWarn('Validator', 'Quote validation failed: ' + validation.errors.map(e => e.message).join(', '));
           // Still allow creation — contractors may have valid reasons for zero-amount quotes
         }
 

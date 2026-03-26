@@ -14,7 +14,9 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { formatCurrency } from '../../i18n/formatting';
 import {
   useWarranties,
   useWarrantyClaims,
@@ -212,7 +214,7 @@ const ClaimCard: React.FC<{
       {claim.estimatedCost > 0 && (
         <View style={styles.claimValue}>
           <Text style={styles.claimValueLabel}>Geschatte waarde</Text>
-          <Text style={styles.claimValueAmount}>€{claim.estimatedCost}</Text>
+          <Text style={styles.claimValueAmount}>{formatCurrency(claim.estimatedCost)}</Text>
         </View>
       )}
     </Pressable>
@@ -239,6 +241,7 @@ const StatCard: React.FC<{
 // =============================================================================
 
 export const WarrantyManager: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>('active');
   const { warranties, loading } = useWarranties();
   const { claims } = useWarrantyClaims();
@@ -252,34 +255,34 @@ export const WarrantyManager: React.FC = () => {
       ((warranty.warrantyEnd ?? new Date()).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
     );
     const expiryInfo = daysLeft > 0
-      ? `Verloopt over ${daysLeft} dagen`
-      : `${Math.abs(daysLeft)} dagen verlopen`;
+      ? t('warranty.expiresInDays', 'Expires in {{days}} days', { days: daysLeft })
+      : t('warranty.expiredDaysAgo', '{{days}} days expired', { days: Math.abs(daysLeft) });
 
     Alert.alert(
       warranty.equipmentName,
       [
-        `Klant: ${warranty.customerName}`,
-        `Merk/Model: ${warranty.brand} ${warranty.model}`,
-        warranty.serialNumber ? `Serienummer: ${warranty.serialNumber}` : null,
-        `Installatie: ${warranty.installDate.toLocaleDateString(undefined)}`,
-        `Garantie: ${warranty.warrantyStart.toLocaleDateString(undefined)} - ${warranty.warrantyEnd.toLocaleDateString(undefined)}`,
+        `${t('warranty.customer', 'Customer')}: ${warranty.customerName}`,
+        `${t('warranty.brandModel', 'Brand/Model')}: ${warranty.brand} ${warranty.model}`,
+        warranty.serialNumber ? `${t('warranty.serialNumber', 'Serial number')}: ${warranty.serialNumber}` : null,
+        `${t('warranty.installation', 'Installation')}: ${warranty.installDate.toLocaleDateString(undefined)}`,
+        `${t('warranty.warranty', 'Warranty')}: ${warranty.warrantyStart.toLocaleDateString(undefined)} - ${warranty.warrantyEnd.toLocaleDateString(undefined)}`,
         expiryInfo,
-        warranty.coverage.length > 0 ? `\nDekking: ${warranty.coverage.join(', ')}` : null,
+        warranty.coverage.length > 0 ? `\n${t('warranty.coverage', 'Coverage')}: ${warranty.coverage.join(', ')}` : null,
       ].filter(Boolean).join('\n'),
-      [{ text: 'Sluiten', style: 'cancel' }],
+      [{ text: t('common.close', 'Close'), style: 'cancel' }],
     );
   };
 
   const handleFileClaim = (warranty: Warranty) => {
     Alert.alert(
-      'Claim Indienen',
-      `Wilt u een garantieclaim indienen voor ${warranty.equipmentName} (${warranty.brand} ${warranty.model}) van klant ${warranty.customerName}?`,
+      t('warranty.fileClaim', 'File Claim'),
+      t('warranty.fileClaimPrompt', 'Do you want to file a warranty claim for {{equipment}} ({{brand}} {{model}}) of customer {{customer}}?', { equipment: warranty.equipmentName, brand: warranty.brand, model: warranty.model, customer: warranty.customerName }),
       [
-        { text: 'Annuleren', style: 'cancel' },
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
         {
-          text: 'Claim Indienen',
+          text: t('warranty.fileClaim', 'File Claim'),
           onPress: () => {
-            Alert.alert('Claim Aangemaakt', `Er is een garantieclaim aangemaakt voor ${warranty.equipmentName}.`);
+            Alert.alert(t('warranty.claimCreated', 'Claim Created'), t('warranty.claimCreatedMessage', 'A warranty claim has been created for {{equipment}}.', { equipment: warranty.equipmentName }));
           },
         },
       ],
@@ -288,10 +291,10 @@ export const WarrantyManager: React.FC = () => {
 
   const handleViewClaimDetails = (claim: WarrantyClaim) => {
     const statusLabels: Record<string, string> = {
-      pending: 'In behandeling',
-      approved: 'Goedgekeurd',
-      rejected: 'Afgewezen',
-      completed: 'Afgehandeld',
+      pending: t('warranty.statusPending', 'Pending'),
+      approved: t('warranty.statusApproved', 'Approved'),
+      rejected: t('warranty.statusRejected', 'Rejected'),
+      completed: t('warranty.statusCompleted', 'Completed'),
     };
     const daysSinceFiled = Math.floor(
       (Date.now() - claim.claimDate.getTime()) / (1000 * 60 * 60 * 24)
@@ -300,13 +303,13 @@ export const WarrantyManager: React.FC = () => {
     Alert.alert(
       claim.claimNumber || `Claim ${claim.id}`,
       [
-        `Product: ${claim.equipmentName}`,
-        `Status: ${statusLabels[claim.status] || claim.status}`,
-        `Probleem: ${claim.issueDescription}`,
-        `Ingediend: ${claim.claimDate.toLocaleDateString(undefined)} (${daysSinceFiled} dagen geleden)`,
-        claim.estimatedCost ? `Geschatte waarde: \u20AC${claim.estimatedCost}` : null,
+        `${t('warranty.product', 'Product')}: ${claim.equipmentName}`,
+        `${t('auditor.status', 'Status')}: ${statusLabels[claim.status] || claim.status}`,
+        `${t('warranty.issue', 'Issue')}: ${claim.issueDescription}`,
+        `${t('warranty.filed', 'Filed')}: ${claim.claimDate.toLocaleDateString(undefined)} (${t('warranty.daysAgo', '{{days}} days ago', { days: daysSinceFiled })})`,
+        claim.estimatedCost ? `${t('warranty.estimatedValue', 'Estimated value')}: \u20AC${claim.estimatedCost}` : null,
       ].filter(Boolean).join('\n'),
-      [{ text: 'Sluiten', style: 'cancel' }],
+      [{ text: t('common.close', 'Close'), style: 'cancel' }],
     );
   };
 

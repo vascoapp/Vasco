@@ -109,7 +109,7 @@ export default function CustomerDetailScreen() {
           <FadeIn delay={100}>
             <Text style={s.sectionTitle}>Klussen ({customerJobs.length})</Text>
             {customerJobs.map((job: any) => (
-              <Pressable key={job.id} style={s.card} onPress={() => router.push(`/quotes/${job.id}` as any)}>
+              <Pressable key={job.id} style={s.card} onPress={() => router.push(`/contractor/job/${job.id}` as any)}>
                 <View style={[s.accent, { backgroundColor: job.status === 'completed' ? SemanticColors.feedbackSuccess : Palette.hermesOrange }]} />
                 <View style={s.cardContent}>
                   <Text style={s.cardTitle} numberOfLines={1}>{job.title}</Text>

@@ -163,7 +163,7 @@ function AlertCard({ alert, onPress }: { alert: any; onPress?: () => void }) {
   const config = severityConfig[alert.severity as keyof typeof severityConfig] || severityConfig.low;
 
   return (
-    <Pressable style={[styles.alertCard, { backgroundColor: config.bg }]} onPress={onPress}>
+    <Pressable style={[styles.alertCard, { backgroundColor: config.bg }]} onPress={onPress} accessibilityRole="button" accessibilityLabel={`${alert.severity} alert: ${alert.title}`}>
       <Ionicons name={config.icon} size={20} color={config.color} />
       <View style={styles.alertContent}>
         <Text style={[styles.alertTitle, { color: config.color }]} numberOfLines={1}>{alert.title}</Text>
@@ -189,7 +189,7 @@ function StatCard({ icon, value, label, color, onPress }: {
   onPress?: () => void;
 }) {
   return (
-    <Pressable style={styles.statCard} onPress={onPress}>
+    <Pressable style={styles.statCard} onPress={onPress} accessibilityRole="button" accessibilityLabel={`${label}: ${value}`}>
       <Ionicons name={icon} size={22} color={color} />
       <Text style={[styles.statValue, { color }]}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
@@ -208,6 +208,9 @@ function TabButton({ id, label, icon, isActive, onPress }: {
     <Pressable
       style={[styles.tabButton, isActive && styles.tabButtonActive]}
       onPress={onPress}
+      accessibilityRole="tab"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: isActive }}
     >
       <Ionicons
         name={icon}
@@ -235,7 +238,7 @@ function ItemCard({ item, onPress }: { item: ComplianceItem; onPress?: () => voi
   };
 
   return (
-    <Pressable style={styles.itemCard} onPress={onPress}>
+    <Pressable style={styles.itemCard} onPress={onPress} accessibilityRole="button" accessibilityLabel={`${item.name}, ${status.label}, ${item.issuer}`}>
       <View style={styles.itemHeader}>
         <View style={[styles.itemIcon, { backgroundColor: Palette.hermesOrange + '15' }]}>
           <Ionicons name={getTypeIcon()} size={22} color={Palette.hermesOrange} />
@@ -265,7 +268,7 @@ function ItemCard({ item, onPress }: { item: ComplianceItem; onPress?: () => voi
         </View>
 
         {(item.status === 'expired' || item.status === 'expiring_soon' || item.status === 'cancelled') && (
-          <Pressable style={styles.renewButton} onPress={() => Alert.alert(t('compliance.renew', 'Renew'), t('common.comingSoon', 'Coming soon'))}>
+          <Pressable style={styles.renewButton} onPress={() => Alert.alert(t('compliance.renew', 'Renew'), t('common.comingSoon', 'Coming soon'))} accessibilityRole="button" accessibilityLabel={`${t('compliance.renew', 'Renew')} ${item.name}`}>
             <Ionicons name="refresh" size={14} color={Palette.hermesOrange} />
             <Text style={styles.renewButtonText}>{t('compliance.renew', 'Vernieuw')}</Text>
           </Pressable>
@@ -315,7 +318,7 @@ function BlockedWorkBanner({ blockedCount }: { blockedCount: number }) {
         <Text style={styles.blockedTitle} numberOfLines={1}>{blockedCount} {t('compliance.workBlocked', 'type{{s}} werk geblokkeerd', { s: blockedCount > 1 ? 's' : '' })}</Text>
         <Text style={styles.blockedSubtitle} numberOfLines={1}>{t('compliance.missingCertificates', 'Door ontbrekende certificaten')}</Text>
       </View>
-      <Pressable style={styles.blockedAction}>
+      <Pressable style={styles.blockedAction} accessibilityRole="button" accessibilityLabel={t('compliance.view', 'View blocked work')}>
         <Text style={styles.blockedActionText} numberOfLines={1}>{t('compliance.view', 'Bekijk')}</Text>
       </Pressable>
     </View>

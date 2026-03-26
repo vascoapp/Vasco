@@ -22,6 +22,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import type {
   CustomerPortalData,
   CustomerPortalCategory,
@@ -29,6 +30,8 @@ import type {
   CustomerDecisionSubmission,
 } from '../../types/customerPortal';
 import type { DecisionOption } from '../../types/decisions';
+import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../../config/paymentMethods';
+import type { Country } from '../../context/AuthContext';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -206,6 +209,35 @@ export function CustomerDecisionPortal({
         ))}
       </View>
 
+      {/* Payment Section — informational badges + Pay now button */}
+      {portalData.paymentLink && portalData.paymentStatus !== 'paid' && (
+        <PaymentSection
+          portalData={portalData}
+          accentColor={accentColor}
+          onActivityLog={onActivityLog}
+        />
+      )}
+
+      {/* Payment Success State */}
+      {portalData.paymentStatus === 'paid' && (
+        <View style={styles.paymentSuccessCard}>
+          <View style={styles.paymentSuccessIconWrap}>
+            <Ionicons name="checkmark-circle" size={48} color={SemanticColors.feedbackSuccess} />
+          </View>
+          <Text style={styles.paymentSuccessTitle}>Betaling ontvangen</Text>
+          <Text style={styles.paymentSuccessSubtext}>
+            Bedankt! Uw betaling is succesvol verwerkt.
+          </Text>
+          <View style={styles.paymentSuccessDivider} />
+          <View style={styles.paymentSuccessDetail}>
+            <Text style={styles.paymentSuccessDetailLabel}>Bedrag</Text>
+            <Text style={styles.paymentSuccessDetailValue}>
+              {formatCurrency(portalData.quoteAmount ?? 0, (portalData.contractorCountry ?? 'NL') as Country)}
+            </Text>
+          </View>
+        </View>
+      )}
+
       {/* Help Footer */}
       <View style={styles.helpFooter}>
         <Ionicons name="help-circle-outline" size={20} color={SemanticColors.textTertiary} />
@@ -216,6 +248,168 @@ export function CustomerDecisionPortal({
 
       <View style={{ height: 40 }} />
     </ScrollView>
+  );
+}
+
+// ============================================
+// PAYMENT SECTION
+// ============================================
+
+interface PaymentSectionProps {
+  portalData: CustomerPortalData;
+  accentColor: string;
+  onActivityLog?: (action: string, metadata?: Record<string, unknown>) => void;
+}
+
+function PaymentSection({ portalData, accentColor, onActivityLog }: PaymentSectionProps) {
+  const isPartial = portalData.paymentStatus === 'partial';
+  const allDecisionsComplete =
+    portalData.completedDecisions >= portalData.totalDecisions;
+
+  const fmtAmount = (n: number) =>
+    formatCurrency(n, (portalData.contractorCountry ?? 'NL') as Country);
+
+  const payAmount = portalData.depositAmount ?? portalData.quoteAmount ?? 0;
+  const totalLabel = portalData.quoteAmount ? fmtAmount(portalData.quoteAmount) : '';
+  const depositLabel = portalData.depositAmount ? fmtAmount(portalData.depositAmount) : '';
+  const paidLabel = portalData.paidAmount ? fmtAmount(portalData.paidAmount) : '';
+  const hasDeposit =
+    portalData.depositAmount != null &&
+    portalData.depositAmount !== portalData.quoteAmount;
+
+  const handlePayNow = () => {
+    if (portalData.paymentLink) {
+      onActivityLog?.('payment_started', {
+        amount: payAmount,
+        method: 'payment_link',
+      });
+      Linking.openURL(portalData.paymentLink);
+    }
+  };
+
+  return (
+    <View style={styles.paymentSection}>
+      {/* Header */}
+      <View style={styles.paymentSectionHeader}>
+        <View style={[styles.paymentIconWrap, { backgroundColor: accentColor + '15' }]}>
+          <Ionicons name="card-outline" size={24} color={accentColor} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.paymentSectionTitle}>Betaling</Text>
+          {isPartial && paidLabel && (
+            <Text style={styles.paymentSubtext}>{paidLabel} van {totalLabel} betaald</Text>
+          )}
+        </View>
+        <View
+          style={[
+            styles.paymentBadge,
+            {
+              backgroundColor: isPartial
+                ? SemanticColors.feedbackWarning + '18'
+                : SemanticColors.feedbackError + '12',
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.paymentBadgeText,
+              {
+                color: isPartial
+                  ? SemanticColors.feedbackWarning
+                  : SemanticColors.feedbackError,
+              },
+            ]}
+          >
+            {isPartial ? 'Deels betaald' : 'Openstaand'}
+          </Text>
+        </View>
+      </View>
+
+      {/* Amount breakdown */}
+      <View style={styles.paymentAmounts}>
+        <View style={styles.paymentAmountRow}>
+          <Text style={styles.paymentAmountLabel}>Offertebedrag</Text>
+          <Text style={styles.paymentAmountValue}>{totalLabel}</Text>
+        </View>
+        {hasDeposit && (
+          <View style={styles.paymentAmountRow}>
+            <Text style={styles.paymentAmountLabel}>Aanbetaling</Text>
+            <Text style={[styles.paymentAmountValue, { color: accentColor }]}>
+              {depositLabel}
+            </Text>
+          </View>
+        )}
+        {isPartial && portalData.paidAmount != null && portalData.paidAmount > 0 && (
+          <View style={styles.paymentAmountRow}>
+            <Text style={styles.paymentAmountLabel}>Reeds betaald</Text>
+            <Text style={[styles.paymentAmountValue, { color: SemanticColors.feedbackSuccess }]}>
+              {paidLabel}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* All decisions complete banner */}
+      {allDecisionsComplete && (
+        <View style={styles.paymentReadyBanner}>
+          <Ionicons name="checkmark-circle" size={18} color={SemanticColors.feedbackSuccess} />
+          <Text style={styles.paymentReadyText}>
+            Al uw keuzes zijn opgeslagen. U kunt nu betalen.
+          </Text>
+        </View>
+      )}
+
+      {/* Pay Now button */}
+      {portalData.paymentLink && (
+        <Pressable
+          style={[styles.payNowButton, { backgroundColor: accentColor }]}
+          onPress={handlePayNow}
+          accessibilityLabel={hasDeposit ? `Pay deposit ${depositLabel}` : `Pay now ${totalLabel}`}
+          accessibilityRole="button"
+        >
+          <Ionicons name="lock-closed" size={18} color="#fff" />
+          <Text style={styles.payNowButtonText}>
+            {hasDeposit
+              ? `Aanbetaling doen — ${depositLabel}`
+              : `Nu betalen — ${totalLabel}`}
+          </Text>
+        </Pressable>
+      )}
+
+      {/* Available payment methods — branded horizontal scroll */}
+      {portalData.paymentMethods && portalData.paymentMethods.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.paymentMethodsScroll}
+        >
+          {portalData.paymentMethods.map((method, i) => {
+            const brandColor = getPaymentBrandColor(method.name);
+            return (
+              <View
+                key={i}
+                style={[
+                  styles.paymentMethodChip,
+                  { borderColor: brandColor + '30' },
+                ]}
+                accessibilityLabel={`${method.name} payment method`}
+              >
+                <View style={[styles.paymentMethodDot, { backgroundColor: brandColor }]} />
+                <Text style={styles.paymentMethodText}>{method.name}</Text>
+              </View>
+            );
+          })}
+        </ScrollView>
+      )}
+
+      {/* Security badge */}
+      <View style={styles.securityBadge}>
+        <Ionicons name="shield-checkmark" size={14} color={SemanticColors.feedbackSuccess} />
+        <Text style={styles.securityBadgeText}>
+          Secure payment via {portalData.contractorCountry === 'UK' ? 'Stripe' : 'Mollie'}
+        </Text>
+      </View>
+    </View>
   );
 }
 
@@ -363,6 +557,7 @@ function CategoryDetailView({
                   onActivityLog?.('decision_made', { itemId: item.id, value });
                 }}
                 accentColor={accentColor}
+                contractorCountry={portalData.contractorCountry}
               />
             ))}
           </View>
@@ -398,6 +593,7 @@ interface DecisionItemCardProps {
     linkedProduct?: CustomerDecisionSubmission['linkedProduct']
   ) => void;
   accentColor: string;
+  contractorCountry?: string;
 }
 
 function DecisionItemCard({
@@ -406,6 +602,7 @@ function DecisionItemCard({
   onToggle,
   onSubmit,
   accentColor,
+  contractorCountry,
 }: DecisionItemCardProps) {
   const [textValue, setTextValue] = useState('');
   const [notes, setNotes] = useState('');
@@ -581,6 +778,8 @@ function DecisionItemCard({
             </View>
           )}
 
+          {/* payment_method input type removed — payment handled via PaymentSection */}
+
           {/* Add Notes Toggle */}
           <Pressable
             style={styles.addNotesToggle}
@@ -611,6 +810,9 @@ function DecisionItemCard({
     </View>
   );
 }
+
+// ============================================
+// (PaymentSection defined above — single implementation)
 
 // ============================================
 // OPTION BUTTON
@@ -646,7 +848,7 @@ function OptionButton({ option, onSelect, accentColor }: OptionButtonProps) {
               },
             ]}
           >
-            {option.priceImpact > 0 ? '+' : ''}€{option.priceImpact}
+            {option.priceImpact > 0 ? '+' : ''}{formatCurrency(Math.abs(option.priceImpact))}
           </Text>
         )}
       </View>
@@ -1296,6 +1498,26 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
 
+  // Payment Method
+  paymentMethodGrid: {
+    gap: Spacing.sm,
+  },
+  paymentMethodCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 10,
+    padding: Spacing.md,
+    borderWidth: 1.5,
+    borderColor: SemanticColors.borderDefault,
+  },
+  paymentMethodLabel: {
+    flex: 1,
+    fontSize: 15,
+    color: SemanticColors.textPrimary,
+  },
+
   // Notes
   addNotesToggle: {
     flexDirection: 'row',
@@ -1429,5 +1651,170 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: SemanticColors.textTertiary,
     textAlign: 'center',
+  },
+
+  // Payment Section
+  paymentSection: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 16,
+    padding: Spacing.lg,
+    gap: Spacing.md,
+  },
+  paymentSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  paymentIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paymentSectionTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: SemanticColors.textPrimary,
+  },
+  paymentSubtext: {
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+    marginTop: 2,
+  },
+  paymentBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  paymentBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  paymentAmounts: {
+    backgroundColor: SemanticColors.surfaceBackground,
+    borderRadius: 12,
+    padding: 14,
+    gap: 8,
+  },
+  paymentAmountRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  paymentAmountLabel: {
+    fontSize: 14,
+    color: SemanticColors.textSecondary,
+  },
+  paymentAmountValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: SemanticColors.textPrimary,
+  },
+  paymentReadyBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: SemanticColors.feedbackSuccessBg,
+    borderRadius: 10,
+    padding: 12,
+  },
+  paymentReadyText: {
+    fontSize: 13,
+    color: SemanticColors.feedbackSuccess,
+    flex: 1,
+    fontWeight: '500',
+  },
+  payNowButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 12,
+    paddingVertical: 16,
+  },
+  payNowButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  paymentMethodsScroll: {
+    gap: 8,
+    paddingVertical: 2,
+  },
+  paymentMethodChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+  },
+  paymentMethodDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  paymentMethodText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: SemanticColors.textPrimary,
+  },
+  securityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 6,
+  },
+  securityBadgeText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: SemanticColors.textTertiary,
+  },
+  paymentSuccessCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 16,
+    padding: Spacing.lg,
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 2,
+    borderColor: SemanticColors.feedbackSuccess + '30',
+  },
+  paymentSuccessIconWrap: {
+    marginBottom: 4,
+  },
+  paymentSuccessTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: SemanticColors.feedbackSuccess,
+  },
+  paymentSuccessSubtext: {
+    fontSize: 14,
+    color: SemanticColors.textSecondary,
+    textAlign: 'center',
+  },
+  paymentSuccessDivider: {
+    height: 1,
+    backgroundColor: SemanticColors.borderDefault,
+    alignSelf: 'stretch',
+    marginVertical: 4,
+  },
+  paymentSuccessDetail: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignSelf: 'stretch',
+    paddingHorizontal: 8,
+  },
+  paymentSuccessDetailLabel: {
+    fontSize: 14,
+    color: SemanticColors.textSecondary,
+  },
+  paymentSuccessDetailValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: SemanticColors.feedbackSuccess,
   },
 });

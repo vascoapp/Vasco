@@ -201,6 +201,7 @@ export const DECISION_TEMPLATES: DecisionTemplate[] = [
           },
         ],
       },
+      // Payment is handled via PaymentSection in the portal — not a decision type
     ],
   },
 

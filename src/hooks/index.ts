@@ -10,3 +10,6 @@ export {
   useProductRecommendationFeedback,
   useAllRecommendations,
 } from './useRecommendationFeedback';
+
+export { useNetworkStatus } from './useNetworkStatus';
+export type { NetworkStatus } from './useNetworkStatus';

@@ -10,6 +10,7 @@ import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
+import { formatCurrency } from '../../i18n/formatting';
 import { Spacing, SafeArea } from '../../theme/spacing';
 import type { Customer } from '../../types/contractor';
 import type { TieredQuote, QuoteTier, PricebookItem } from '../../types/contractor-features';
@@ -149,7 +150,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
     })) as unknown as PricebookItem[];
   }, [trade]);
 
-  const fmt = (n: number) => `€${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  const fmt = (n: number) => formatCurrency(n);
 
   const calculateTiers = (): QuoteTier[] => {
     return (['good', 'better', 'best'] as const).map(tierKey => {

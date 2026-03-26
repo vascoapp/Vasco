@@ -17,8 +17,10 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import type { EvidencePack, HandoverPackage, ChecklistCategory, EvidenceItem } from '../../types/contractor';
 import {
   evidencePackService,
@@ -71,6 +73,7 @@ export function HandoverPackBuilder({
   onComplete,
   onClose,
 }: HandoverPackBuilderProps) {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState<WizardStep>('photos');
   const [evidencePackId, setEvidencePackId] = useState<string | null>(null);
   const [handoverPackageId, setHandoverPackageId] = useState<string | null>(null);
@@ -83,8 +86,6 @@ export function HandoverPackBuilder({
   const { pack, validation, compliance, updateChecklist, addPhoto } = useEvidencePack(evidencePackId || undefined);
   const { package: handoverPkg, generatePDF, createPortalLink, recordSignOff, send } = useHandoverPackage(handoverPackageId || undefined);
 
-  const formatCurrency = (amount: number) =>
-    `${job.currency === 'EUR' ? '€' : '£'}${amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}`;
 
   const currentStepIndex = WIZARD_STEPS.findIndex(s => s.id === currentStep);
 
@@ -104,7 +105,7 @@ export function HandoverPackBuilder({
       );
       setEvidencePackId(newPack.id);
     } catch (error) {
-      Alert.alert('Error', 'Failed to initialize evidence pack');
+      Alert.alert(t('common.error', 'Error'), t('handover.initFailed', 'Failed to initialize evidence pack'));
     } finally {
       setIsLoading(false);
     }
@@ -170,7 +171,7 @@ export function HandoverPackBuilder({
       verified: false,
     };
     addPhoto(mockPhoto);
-    Alert.alert('Photo Added', 'Photo has been added to the evidence pack');
+    Alert.alert(t('handover.photoAdded', 'Photo Added'), t('handover.photoAddedMessage', 'Photo has been added to the evidence pack'));
   };
 
   // ----------------------------------------
@@ -197,7 +198,7 @@ export function HandoverPackBuilder({
       );
       setHandoverPackageId(newPackage.id);
     } catch (error) {
-      Alert.alert('Error', 'Failed to create handover package');
+      Alert.alert(t('common.error', 'Error'), t('handover.createFailed', 'Failed to create handover package'));
     } finally {
       setIsLoading(false);
     }
@@ -512,7 +513,7 @@ export function HandoverPackBuilder({
           onPress={() => {
             // In real app, this would open a signature capture
             setCustomerSignature('mock-signature-uri');
-            Alert.alert('Signature Captured', 'Customer signature has been recorded');
+            Alert.alert(t('handover.signatureCaptured', 'Signature Captured'), t('handover.signatureRecorded', 'Customer signature has been recorded'));
           }}
         >
           {customerSignature ? (

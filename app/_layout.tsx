@@ -21,6 +21,7 @@ import { AppStateProvider } from '../src/state/AppState';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { checkForUpdate } from '../src/services/versionCheckService';
 import ErrorBoundary from '../src/components/shared/ErrorBoundary';
+import { DemoBanner } from '../src/components/shared/DemoBanner';
 import { startAutoSync, stopAutoSync } from '../src/intelligence/cloudSync';
 import { startEventFlushing, stopEventFlushing } from '../src/intelligence/dataCollector';
 import { registerForPushNotifications } from '../src/services/pushNotificationService';
@@ -158,6 +159,7 @@ export default function RootLayout() {
       <AppStateProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <ErrorBoundary>
+            <DemoBanner />
             <RootLayoutNav />
           </ErrorBoundary>
         </GestureHandlerRootView>

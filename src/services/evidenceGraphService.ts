@@ -16,6 +16,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { logWarn, logInfo } from '../utils/errorHandler';
 import {
   NodeType,
   EdgeType,
@@ -955,7 +956,7 @@ class EvidenceGraphService {
       if (sub.watchedNodeIds && data.nodeId && !sub.watchedNodeIds.includes(data.nodeId as string)) continue;
 
       // In production, send notification via appropriate channel
-      if (__DEV__) console.log(`Notification to ${sub.userId}:`, event);
+      logInfo('EvidenceGraph', `Notification to ${sub.userId}`);
     }
   }
 
@@ -1132,7 +1133,7 @@ export function useGraphEvents(nodeId?: string) {
       const result = await evidenceGraphService.getEvents({ nodeId, limit: 50 });
       setEvents(result);
     } catch (err) {
-      console.error('Failed to fetch events:', err);
+      logWarn('EvidenceGraph', `Failed to fetch events: ${err}`);
     } finally {
       setLoading(false);
     }

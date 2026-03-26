@@ -13,4 +13,5 @@ export type BusinessProfile = {
   businessType?: string;
   certifications?: string[];
   serviceAreaRadius?: number;
+  enabledPaymentMethods?: string[];
 };

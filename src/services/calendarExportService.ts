@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { Share } from 'react-native';
+import i18n from '../i18n/i18n';
 import type { Job } from '../domain/jobs';
 
 // =============================================================================
@@ -134,7 +135,7 @@ export async function shareAllScheduledJobs(jobs: Job[]): Promise<void> {
   const scheduled = jobs.filter(j => ['scheduled', 'in-progress'].includes(j.status));
   if (scheduled.length === 0) {
     const { Alert } = require('react-native');
-    Alert.alert('No scheduled jobs', 'Schedule some jobs first to export your calendar.');
+    Alert.alert(i18n.t('calendar.noScheduledJobs', 'No scheduled jobs'), i18n.t('calendar.scheduleFirst', 'Schedule some jobs first to export your calendar.'));
     return;
   }
 
@@ -150,9 +151,9 @@ export async function shareAllScheduledJobs(jobs: Job[]): Promise<void> {
     if (Platform.OS === 'web') {
       try {
         await navigator.clipboard.writeText(ics);
-        Alert.alert('Copied', 'Calendar data copied to clipboard. Paste into a .ics file to import.');
+        Alert.alert(i18n.t('calendar.copied', 'Copied'), i18n.t('calendar.copiedMessage', 'Calendar data copied to clipboard. Paste into a .ics file to import.'));
       } catch {
-        Alert.alert('Export', ics.substring(0, 500) + '...');
+        Alert.alert(i18n.t('calendar.export', 'Export'), ics.substring(0, 500) + '...');
       }
     }
   }

@@ -3,7 +3,8 @@ import { Invoice, Quote } from '../domain/documents';
 export const quotes: Quote[] = [
   {
     id: 'q-seed-1',
-    customer: 'cust-004',
+    customer: 'Fam. Bakker',
+    customerId: 'cust-004',
     job: 'Lekkage inspectie — Fam. Bakker',
     amount: 180,
     status: 'sent',
@@ -12,7 +13,8 @@ export const quotes: Quote[] = [
   },
   {
     id: 'q-seed-2',
-    customer: 'cust-001',
+    customer: 'Fam. de Vries',
+    customerId: 'cust-001',
     job: 'CV-ketel onderhoud — Fam. de Vries',
     amount: 450,
     status: 'accepted',
@@ -21,7 +23,8 @@ export const quotes: Quote[] = [
   },
   {
     id: 'q-seed-3',
-    customer: 'cust-002',
+    customer: 'Fam. Jansen',
+    customerId: 'cust-002',
     job: 'Badkamer renovatie — Fam. Jansen',
     amount: 4200,
     status: 'accepted',

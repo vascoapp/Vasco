@@ -36,7 +36,9 @@ import { invoiceAutomationService } from '../../src/services/invoiceAutomationSe
 import { generateInvoicePdf, buildInvoiceShareText } from '../../src/services/invoicePdfService';
 import { createPaymentLink as createMolliePaymentLink } from '../../src/integrations/mollie';
 import { createPaymentLink as createStripePaymentLink } from '../../src/integrations/stripe';
+import { SUPPORTED_METHODS } from '../../src/integrations/stripe';
 import { useAuth } from '../../src/context/AuthContext';
+import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
 import { useSavingsAggregation } from '../../src/services/savingsAggregatorService';
 import { calculateLatePaymentInterest } from '../../src/services/dutchComplianceService';
 import { useLaborCosts } from '../../src/services/laborCostService';
@@ -49,6 +51,7 @@ import { useQuoteApprovals, useApprovalStats } from '../../src/services/quoteApp
 import type { DunningSequence as DunningSeqType } from '../../src/services/collectionsAgentService';
 import { predictCustomerDSO } from '../../src/intelligence/predictions';
 import { Toast } from '../../src/components/shared/Toast';
+import { getCustomerPaymentPreference } from '../../src/services/customerPaymentPreferenceService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -109,12 +112,40 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
   const { user } = useAuth();
 
   // Determine payment provider based on country (UK → Stripe, all others → Mollie)
-  const createPaymentLink = useCallback(async (request: { invoiceId: string; amount: number; description: string }) => {
-    if (user?.country === 'UK') {
-      return createStripePaymentLink({ ...request, currency: 'GBP' });
+  // Respect contractor's enabled payment methods from business settings
+  // When a customer has a payment preference (from decision tracker), prioritize that method
+  const createPaymentLink = useCallback(async (request: { invoiceId: string; amount: number; description: string; customerPreferredMethod?: string }) => {
+    const country = user?.country ?? 'NL';
+    const enabledMethods = businessProfile?.enabledPaymentMethods;
+    const preferredMethod = request.customerPreferredMethod;
+
+    if (country === 'UK') {
+      const allMethods = SUPPORTED_METHODS[country] ?? SUPPORTED_METHODS.UK;
+      let paymentMethods = enabledMethods
+        ? allMethods.filter((m: string) => enabledMethods.includes(m))
+        : allMethods;
+      // Pre-select customer preferred method by putting it first
+      if (preferredMethod) {
+        const preferred = paymentMethods.find((m: string) => m.toLowerCase() === preferredMethod.toLowerCase());
+        if (preferred) {
+          paymentMethods = [preferred, ...paymentMethods.filter((m: string) => m !== preferred)];
+        }
+      }
+      return createStripePaymentLink({ ...request, currency: 'GBP', paymentMethods });
     }
-    return createMolliePaymentLink(request);
-  }, [user?.country]);
+    const countryMethods = getMollieMethodsForCountry(country).methods;
+    let methods = enabledMethods
+      ? countryMethods.filter(m => enabledMethods.includes(m))
+      : countryMethods;
+    // Pre-select customer preferred method by putting it first
+    if (preferredMethod) {
+      const preferred = methods.find(m => m.toLowerCase() === preferredMethod.toLowerCase());
+      if (preferred) {
+        methods = [preferred, ...methods.filter(m => m !== preferred)];
+      }
+    }
+    return createMolliePaymentLink({ ...request, method: methods });
+  }, [user?.country, businessProfile?.enabledPaymentMethods]);
   const getStatusConfig = (status: Invoice['status']) => {
     switch (status) {
       case 'paid':

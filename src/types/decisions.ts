@@ -109,7 +109,8 @@ export type DecisionInputType =
   | 'photo'
   | 'color'
   | 'boolean'
-  | 'date';
+  | 'date'
+  | 'payment_method'; // Customer payment preference selector
 
 export interface DecisionOption {
   value: string;

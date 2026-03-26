@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
+import { formatCurrency } from '../../i18n/formatting';
 import {
   useQuoteOptimizer,
   useRegionalBenchmarks,
@@ -252,13 +253,13 @@ function OverviewTab({
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Totale waarde</Text>
           <Text style={styles.summaryValue}>
-            €{analysis.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {formatCurrency(analysis.totalValue)}
           </Text>
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Geschatte marge</Text>
           <Text style={styles.summaryValue}>
-            €{analysis.estimatedMargin.toFixed(2)} ({analysis.marginPercent}%)
+            {formatCurrency(analysis.estimatedMargin)} ({analysis.marginPercent}%)
           </Text>
         </View>
         <View style={styles.divider} />
@@ -271,7 +272,7 @@ function OverviewTab({
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Potentiële extra marge</Text>
           <Text style={[styles.summaryValue, { color: SemanticColors.feedbackSuccess }]}>
-            +€{analysis.summary.potentialMarginGain.toFixed(2)}
+            +{formatCurrency(analysis.summary.potentialMarginGain)}
           </Text>
         </View>
       </View>
@@ -292,7 +293,7 @@ function OverviewTab({
           </View>
           <View style={styles.historyStat}>
             <Text style={[styles.historyStatValue, { color: SemanticColors.feedbackSuccess }]}>
-              €{statistics.totalSavingsGenerated.toLocaleString(undefined)}
+              {formatCurrency(statistics.totalSavingsGenerated)}
             </Text>
             <Text style={styles.historyStatLabel}>Extra marge gegenereerd</Text>
           </View>
@@ -395,7 +396,7 @@ function OptimizeTab({
                         { color: opt.impact.difference > 0 ? SemanticColors.feedbackError : SemanticColors.feedbackSuccess },
                       ]}
                     >
-                      {opt.impact.difference > 0 ? '+' : ''}€{opt.impact.difference.toFixed(2)}
+                      {opt.impact.difference > 0 ? '+' : ''}{formatCurrency(Math.abs(opt.impact.difference))}
                     </Text>
                   )}
                 </View>
@@ -522,12 +523,12 @@ function UpsellTab({
           <View style={styles.upsellFooter}>
             <View style={styles.upsellStat}>
               <Text style={styles.upsellStatLabel}>Extra omzet</Text>
-              <Text style={styles.upsellStatValue}>+€{upsell.priceIncrease.toFixed(2)}</Text>
+              <Text style={styles.upsellStatValue}>+{formatCurrency(upsell.priceIncrease)}</Text>
             </View>
             <View style={styles.upsellStat}>
               <Text style={styles.upsellStatLabel}>Extra marge</Text>
               <Text style={[styles.upsellStatValue, { color: SemanticColors.feedbackSuccess }]}>
-                +€{upsell.marginIncrease.toFixed(2)}
+                +{formatCurrency(upsell.marginIncrease)}
               </Text>
             </View>
           </View>
@@ -623,18 +624,18 @@ function MarketTab({ marketData }: { marketData: MarketPriceData[] }) {
               />
             </View>
             <View style={styles.priceLabels}>
-              <Text style={styles.priceLabel}>€{data.regionLowPrice.toFixed(2)}</Text>
+              <Text style={styles.priceLabel}>{formatCurrency(data.regionLowPrice)}</Text>
               <Text style={[styles.priceLabel, { color: getPricePositionColor(data.percentile) }]}>
                 Jouw prijs: percentiel {data.percentile}
               </Text>
-              <Text style={styles.priceLabel}>€{data.regionHighPrice.toFixed(2)}</Text>
+              <Text style={styles.priceLabel}>{formatCurrency(data.regionHighPrice)}</Text>
             </View>
           </View>
 
           <View style={styles.marketStats}>
             <View style={styles.marketStat}>
               <Text style={styles.marketStatLabel}>Gemiddeld</Text>
-              <Text style={styles.marketStatValue}>€{data.regionAvgPrice.toFixed(2)}</Text>
+              <Text style={styles.marketStatValue}>{formatCurrency(data.regionAvgPrice)}</Text>
             </View>
             <View style={styles.marketStat}>
               <Text style={styles.marketStatLabel}>Categorie</Text>
@@ -696,14 +697,14 @@ function OptimizationDetailModal({
               <View style={styles.impactItem}>
                 <Text style={styles.impactLabel}>Huidige waarde</Text>
                 <Text style={styles.impactValue}>
-                  €{optimization.impact.currentValue.toFixed(2)}
+                  {formatCurrency(optimization.impact.currentValue)}
                 </Text>
               </View>
               <Ionicons name="arrow-forward" size={20} color={SemanticColors.textSecondary} />
               <View style={styles.impactItem}>
                 <Text style={styles.impactLabel}>Voorgesteld</Text>
                 <Text style={[styles.impactValue, { color: SemanticColors.actionPrimary }]}>
-                  €{optimization.impact.suggestedValue.toFixed(2)}
+                  {formatCurrency(optimization.impact.suggestedValue)}
                 </Text>
               </View>
             </View>
@@ -720,8 +721,7 @@ function OptimizationDetailModal({
                   },
                 ]}
               >
-                {optimization.impact.difference > 0 ? '+' : ''}€
-                {optimization.impact.difference.toFixed(2)} (
+                {optimization.impact.difference > 0 ? '+' : ''}{formatCurrency(Math.abs(optimization.impact.difference))} (
                 {optimization.impact.differencePercent > 0 ? '+' : ''}
                 {optimization.impact.differencePercent.toFixed(1)}%)
               </Text>
@@ -794,13 +794,13 @@ function UpsellDetailModal({
           <View style={styles.upsellModalStats}>
             <View style={styles.upsellModalStat}>
               <Text style={styles.upsellModalStatValue}>
-                +€{upsell.priceIncrease.toFixed(2)}
+                +{formatCurrency(upsell.priceIncrease)}
               </Text>
               <Text style={styles.upsellModalStatLabel}>Extra omzet</Text>
             </View>
             <View style={styles.upsellModalStat}>
               <Text style={[styles.upsellModalStatValue, { color: SemanticColors.feedbackSuccess }]}>
-                +€{upsell.marginIncrease.toFixed(2)}
+                +{formatCurrency(upsell.marginIncrease)}
               </Text>
               <Text style={styles.upsellModalStatLabel}>Extra marge</Text>
             </View>

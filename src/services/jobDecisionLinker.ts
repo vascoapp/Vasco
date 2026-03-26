@@ -7,6 +7,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { logWarn, logInfo } from '../utils/errorHandler';
 import type {
   DecisionTemplate,
   CustomerDecisionTracker,
@@ -684,9 +685,7 @@ class JobDecisionLinker {
         autoLinked: true,
       });
 
-      if (__DEV__) console.log(
-        `[JobDecisionLinker] Created tracker for job "${job.title}" using template "${match.template.name}" (${Math.round(match.confidence * 100)}% confidence)`
-      );
+      logInfo('JobDecisionLinker', `Created tracker for job "${job.title}" using template "${match.template.name}" (${Math.round(match.confidence * 100)}% confidence)`);
 
       return {
         success: true,
@@ -694,7 +693,7 @@ class JobDecisionLinker {
         match,
       };
     } catch (error) {
-      console.error('[JobDecisionLinker] Failed to link job:', error);
+      logWarn('JobDecisionLinker', `Failed to link job: ${error}`);
       return {
         success: false,
         error: String(error),

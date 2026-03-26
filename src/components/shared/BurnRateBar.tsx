@@ -6,6 +6,7 @@ import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import { hapticWarning, hapticError } from '../../utils/haptics';
 import type { ZoneBudget } from '../../services/resourceHeatmapService';
 
@@ -49,7 +50,7 @@ function ZoneBurnBar({ zone }: { zone: ZoneBudget }) {
         <View style={styles.zoneStats}>
           <Text style={[styles.zonePercent, { color: barColor }]}>{zone.budgetPercent}%</Text>
           <Text style={styles.zoneBudget}>
-            €{zone.budgetSpent.toLocaleString(undefined)} / €{zone.budgetTotal.toLocaleString(undefined)}
+            {formatCurrency(zone.budgetSpent)} / {formatCurrency(zone.budgetTotal)}
           </Text>
         </View>
       </View>
@@ -79,7 +80,7 @@ export function BurnRateBar({ zones, totalBudget, totalSpent, overallPercent }: 
         <View>
           <Text style={styles.summaryLabel}>Totaal verbruik</Text>
           <Text style={styles.summaryValue}>
-            €{totalSpent.toLocaleString(undefined)} / €{totalBudget.toLocaleString(undefined)}
+            {formatCurrency(totalSpent)} / {formatCurrency(totalBudget)}
           </Text>
         </View>
         <View style={[styles.overallBadge, { backgroundColor: getBarColor(overallPercent) + '20' }]}>

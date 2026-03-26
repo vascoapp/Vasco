@@ -6,6 +6,10 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { createPaymentLink as createMolliePaymentLink } from '../integrations/mollie';
+import { createPaymentLink as createStripePaymentLink } from '../integrations/stripe';
+import { getPaymentDisplayForCountry } from '../config/paymentMethods';
+import type { Country } from '../context/AuthContext';
 
 // ============================================
 // TYPES
@@ -403,6 +407,67 @@ class CustomerPortalService {
   private notifyListeners(): void {
     this.listeners.forEach((listener) => listener());
   }
+}
+
+// ============================================
+// PAYMENT LINK GENERATION
+// ============================================
+
+export interface PortalPaymentRequest {
+  trackerId: string;
+  amount: number;
+  description: string;
+  country: Country;
+  customerEmail?: string;
+}
+
+export interface PortalPaymentResult {
+  paymentLink: string;
+  paymentId: string;
+  paymentMethods: { name: string; icon: string }[];
+}
+
+/**
+ * Generate a payment link for a customer portal / decision tracker.
+ * Uses Mollie for EUR countries, Stripe for UK.
+ */
+export async function generatePortalPaymentLink(
+  req: PortalPaymentRequest
+): Promise<PortalPaymentResult | null> {
+  const paymentMethods = getPaymentDisplayForCountry(req.country);
+
+  if (req.country === 'UK') {
+    const result = await createStripePaymentLink({
+      invoiceId: req.trackerId,
+      amount: req.amount,
+      description: req.description,
+      currency: 'GBP',
+      customerEmail: req.customerEmail,
+      metadata: { type: 'decision_portal', trackerId: req.trackerId },
+    });
+    if (result) {
+      return {
+        paymentLink: result.url,
+        paymentId: result.id,
+        paymentMethods,
+      };
+    }
+  } else {
+    const result = await createMolliePaymentLink({
+      invoiceId: req.trackerId,
+      amount: req.amount,
+      description: req.description,
+    });
+    if (result) {
+      return {
+        paymentLink: result.url,
+        paymentId: result.id,
+        paymentMethods,
+      };
+    }
+  }
+
+  return null;
 }
 
 // ============================================

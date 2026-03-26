@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase';
+import { logWarn } from '../utils/errorHandler';
 import type { DocumentRow, LineItemRow, BusinessSettingsRow, CustomerRow, MaterialCatalogRow, SupplierRow, JobMaterialRow, PriceObservationRow } from './database.types';
 import { quotes as mockQuotes, invoices as mockInvoices } from '../data/mockDocuments';
 import { quoteLineItems as mockLineItems } from '../data/mockLineItems';
@@ -318,7 +319,7 @@ export async function loadLineItems(): Promise<Record<string, QuoteLineItem[]>> 
     .order('position', { ascending: true });
 
   if (error) {
-    console.warn('[dataProvider] loadLineItems failed:', error);
+    logWarn('dataProvider', `loadLineItems failed: ${error}`);
     return {};
   }
 
@@ -527,7 +528,7 @@ export async function createPriceObservation(
     .single();
 
   if (error) {
-    console.warn('[dataProvider] createPriceObservation failed:', error);
+    logWarn('dataProvider', `createPriceObservation failed: ${error}`);
     return null;
   }
   return data as PriceObservationRow;
@@ -564,7 +565,7 @@ export async function createPriceObservationsBatch(
     .insert(rows as any);
 
   if (error) {
-    console.warn('[dataProvider] createPriceObservationsBatch failed:', error);
+    logWarn('dataProvider', `createPriceObservationsBatch failed: ${error}`);
     return 0;
   }
   return count ?? observations.length;
@@ -579,7 +580,7 @@ export async function loadPriceObservations(): Promise<Record<string, PriceObser
     .order('observed_at', { ascending: false });
 
   if (error) {
-    console.warn('[dataProvider] loadPriceObservations failed:', error);
+    logWarn('dataProvider', `loadPriceObservations failed: ${error}`);
     return {};
   }
 
@@ -615,7 +616,7 @@ export async function loadPriceHistoryByMaterialSupplier(): Promise<
     .order('observed_at', { ascending: true });
 
   if (error) {
-    console.warn('[dataProvider] loadPriceHistoryByMaterialSupplier failed:', error);
+    logWarn('dataProvider', `loadPriceHistoryByMaterialSupplier failed: ${error}`);
     return {};
   }
 

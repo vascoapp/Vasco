@@ -16,20 +16,12 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuth, ROLE_CONFIGS, type UserRole, isDemoMode } from '../src/context/AuthContext';
+import { useAuth, ROLE_CONFIGS, type UserRole } from '../src/context/AuthContext';
+import { DEMO_MODE, DEMO_ACCOUNTS } from '../src/config/demo';
 import { SemanticColors, Palette } from '../src/theme/colors';
 import { SafeArea, Spacing } from '../src/theme/spacing';
 import { FadeIn } from '../src/components/shared/FadeIn';
 import { GradientButton } from '../src/components/shared/GradientButton';
-
-const DEMO_ACCOUNTS: { email: string; role: UserRole; name: string; icon: keyof typeof Ionicons.glyphMap; isAannemer?: boolean }[] = [
-  { email: 'contractor@vasco.dev', role: 'contractor', name: 'Jan van der Berg', icon: 'hammer-outline' },
-  { email: 'aannemer@vasco.dev', role: 'contractor', name: 'Pieter van Dijk', icon: 'business-outline', isAannemer: true },
-  { email: 'site@vasco.dev', role: 'site-lead', name: 'Mike Thompson', icon: 'construct-outline' },
-  { email: 'cfo@vasco.dev', role: 'cfo', name: 'Sarah Chen', icon: 'cash-outline' },
-  { email: 'coo@vasco.dev', role: 'coo', name: 'James Morrison', icon: 'speedometer-outline' },
-  { email: 'director@vasco.dev', role: 'director', name: 'Alexandra Wright', icon: 'grid-outline' },
-];
 
 const ENTERPRISE_ROLES: UserRole[] = ['cfo', 'coo', 'site-lead', 'director'];
 
@@ -174,7 +166,7 @@ export default function LoginScreen() {
           </FadeIn>
 
           {/* Demo Accounts */}
-          {isDemoMode && (
+          {DEMO_MODE && (
             <FadeIn delay={400} duration={500}>
               <View style={styles.demoSection}>
                 <View style={styles.dividerRow}>
@@ -193,7 +185,7 @@ export default function LoginScreen() {
                           onPress={() => handleDemoLogin(account.email)}
                         >
                           <View style={[styles.demoIcon, { backgroundColor: config.primaryColor + '15' }]}>
-                            <Ionicons name={account.icon} size={18} color={config.primaryColor} />
+                            <Ionicons name={account.icon as keyof typeof Ionicons.glyphMap} size={18} color={config.primaryColor} />
                           </View>
                           <View style={styles.demoInfo}>
                             <Text style={styles.demoName}>{account.name}</Text>

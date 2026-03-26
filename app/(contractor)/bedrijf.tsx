@@ -17,6 +17,7 @@ import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { FadeIn } from '../../src/components/shared/FadeIn';
+import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { formatAmount } from '../../src/utils/formatAmount';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -46,7 +47,7 @@ export default function BedrijfScreen() {
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newPhone, setNewPhone] = useState('');
-  const { customers, invoices, jobs, addCustomer } = useAppState();
+  const { customers, invoices, jobs, addCustomer, isLoading } = useAppState();
 
   useEffect(() => { recordScreenVisit('klanten'); }, []);
 
@@ -111,6 +112,19 @@ export default function BedrijfScreen() {
   const completedTrackers = trackers.filter(tr => tr.decided >= tr.totalDecisions);
   const totalOverdue = trackers.reduce((s, tr) => s + tr.overdue, 0);
 
+  if (isLoading) {
+    return (
+      <View style={s.container}>
+        <View style={s.header}>
+          <View>
+            <Text style={s.headerTitle}>{t('tabs.customers', 'Klanten')}</Text>
+          </View>
+        </View>
+        <SkeletonList count={4} showAvatar lines={2} />
+      </View>
+    );
+  }
+
   return (
     <View style={s.container}>
       {/* Header */}
@@ -119,7 +133,7 @@ export default function BedrijfScreen() {
           <Text style={s.headerTitle}>{t('tabs.customers', 'Klanten')}</Text>
           <Text style={s.headerSub}>{customers.length} {t('customers.contacts', 'contacts')} · {formatAmount(totalRevenue)}</Text>
         </View>
-        <Pressable style={({ pressed }) => [s.addBtn, pressed && { opacity: 0.8 }]} onPress={() => setShowAddModal(true)}>
+        <Pressable style={({ pressed }) => [s.addBtn, pressed && { opacity: 0.8 }]} onPress={() => setShowAddModal(true)} accessibilityRole="button" accessibilityLabel={t('customers.newCustomer', 'Add new customer')}>
           <Ionicons name="person-add" size={15} color="#fff" />
         </Pressable>
       </View>
@@ -155,13 +169,13 @@ export default function BedrijfScreen() {
           <View style={s.section}>
             <View style={s.sectionRow}>
               <Text style={s.sectionTitle}>{t('customers.decisions', 'Decisions')}</Text>
-              <Pressable onPress={() => router.push('/(contractor)/decisions' as any)}>
+              <Pressable onPress={() => router.push('/(contractor)/decisions' as any)} accessibilityRole="button" accessibilityLabel={t('customers.manage', 'Manage decisions')}>
                 <Text style={s.sectionLink}>{t('customers.manage', 'Manage')}</Text>
               </Pressable>
             </View>
 
             {activeTrackers.length === 0 && completedTrackers.length === 0 ? (
-              <Pressable style={s.emptyCard} onPress={() => router.push('/(contractor)/decisions' as any)}>
+              <Pressable style={s.emptyCard} onPress={() => router.push('/(contractor)/decisions' as any)} accessibilityRole="button" accessibilityLabel={t('customers.noTrackers', 'Create decision tracker')}>
                 <Ionicons name="chatbubbles-outline" size={32} color={Palette.hermesOrange} />
                 <Text style={s.emptyTitle}>{t('customers.noTrackers', 'No decision trackers yet')}</Text>
                 <Text style={s.emptyDesc}>{t('customers.noTrackersDesc', 'Create a tracker so customers can make choices about materials, finishes, and timing — keeping your project on schedule.')}</Text>
@@ -175,6 +189,8 @@ export default function BedrijfScreen() {
                       key={tracker.id}
                       style={({ pressed }) => [s.trackerCard, pressed && { opacity: 0.95 }]}
                       onPress={() => router.push('/(contractor)/decisions' as any)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${tracker.customerName}, ${tracker.project}, ${tracker.decided} of ${tracker.totalDecisions} decisions`}
                     >
                       <View style={s.trackerHeader}>
                         <View style={s.trackerAvatar}>
@@ -203,7 +219,7 @@ export default function BedrijfScreen() {
                         ) : (
                           <Text style={s.trackerTime}>{tracker.lastActivity}</Text>
                         )}
-                        <Pressable style={s.reminderBtn} onPress={() => handleSendReminder(tracker.id)}>
+                        <Pressable style={s.reminderBtn} onPress={() => handleSendReminder(tracker.id)} accessibilityRole="button" accessibilityLabel={`Send reminder to ${tracker.customerName}`}>
                           <Ionicons name="paper-plane-outline" size={13} color={Palette.hermesOrange} />
                           <Text style={s.reminderText}>{t('customers.nudge', 'Nudge')}</Text>
                         </Pressable>
@@ -228,7 +244,7 @@ export default function BedrijfScreen() {
           <View style={s.section}>
             <View style={s.sectionRow}>
               <Text style={s.sectionTitle}>{t('customers.allContacts', 'All contacts')}</Text>
-              <Pressable onPress={() => router.push('/contractor/customer-crm' as any)}>
+              <Pressable onPress={() => router.push('/contractor/customer-crm' as any)} accessibilityRole="button" accessibilityLabel={t('common.viewAll', 'View all customers')}>
                 <Text style={s.sectionLink}>{t('common.viewAll', 'View all')}</Text>
               </Pressable>
             </View>
@@ -245,6 +261,8 @@ export default function BedrijfScreen() {
                     key={customer.id}
                     style={({ pressed }) => [s.customerRow, idx < Math.min(customers.length, 6) - 1 && s.customerBorder, pressed && { backgroundColor: PAGE_BG }]}
                     onPress={() => router.push('/contractor/customer-crm' as any)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${customer.name}, ${customerJobs[customer.id] || 0} jobs`}
                   >
                     <View style={s.customerAvatar}>
                       <Text style={s.customerAvatarText}>{customer.name.charAt(0).toUpperCase()}</Text>
@@ -277,7 +295,7 @@ export default function BedrijfScreen() {
               <TextInput style={s.modalInput} value={newName} onChangeText={setNewName} placeholder={t('customers.namePlaceholder', 'Customer name')} placeholderTextColor={SemanticColors.textTertiary} autoFocus />
               <TextInput style={s.modalInput} value={newEmail} onChangeText={setNewEmail} placeholder={t('customers.emailPlaceholder', 'Email')} placeholderTextColor={SemanticColors.textTertiary} keyboardType="email-address" autoCapitalize="none" />
               <TextInput style={s.modalInput} value={newPhone} onChangeText={setNewPhone} placeholder={t('customers.phonePlaceholder', 'Phone')} placeholderTextColor={SemanticColors.textTertiary} keyboardType="phone-pad" />
-              <Pressable style={[s.modalSubmit, !newName.trim() && { opacity: 0.5 }]} onPress={handleAddCustomer} disabled={!newName.trim()}>
+              <Pressable style={[s.modalSubmit, !newName.trim() && { opacity: 0.5 }]} onPress={handleAddCustomer} disabled={!newName.trim()} accessibilityRole="button" accessibilityLabel={t('customers.addBtn', 'Add customer')}>
                 <Text style={s.modalSubmitText}>{t('customers.addBtn', 'Add customer')}</Text>
               </Pressable>
             </Pressable>

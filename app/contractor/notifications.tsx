@@ -95,14 +95,14 @@ export default function NotificationsScreen() {
     <View style={s.container}>
       {/* Header */}
       <View style={s.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8} style={s.backBtn}>
+        <Pressable onPress={() => router.back()} hitSlop={8} style={s.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={s.headerTitle}>{t('notifications.title', 'Notifications')}</Text>
         </View>
         {stats.unread > 0 && (
-          <Pressable style={s.markAllBtn} onPress={() => { markAllRead(); hapticSuccess(); }}>
+          <Pressable style={s.markAllBtn} onPress={() => { markAllRead(); hapticSuccess(); }} accessibilityRole="button" accessibilityLabel={t('notifications.markAllRead', 'Mark all as read')}>
             <Ionicons name="checkmark-done" size={18} color={Palette.hermesOrange} />
           </Pressable>
         )}
@@ -123,11 +123,11 @@ export default function NotificationsScreen() {
 
       {/* Tabs */}
       <View style={s.tabBar}>
-        <Pressable style={[s.tab, activeTab === 'inbox' && s.tabActive]} onPress={() => setActiveTab('inbox')}>
+        <Pressable style={[s.tab, activeTab === 'inbox' && s.tabActive]} onPress={() => setActiveTab('inbox')} accessibilityRole="tab" accessibilityLabel={t('notifications.inbox', 'Inbox')} accessibilityState={{ selected: activeTab === 'inbox' }}>
           <Ionicons name="mail-outline" size={14} color={activeTab === 'inbox' ? '#fff' : SemanticColors.textTertiary} />
           <Text style={[s.tabText, activeTab === 'inbox' && s.tabTextActive]}>{t('notifications.inbox', 'Inbox')}</Text>
         </Pressable>
-        <Pressable style={[s.tab, activeTab === 'settings' && s.tabActive]} onPress={() => setActiveTab('settings')}>
+        <Pressable style={[s.tab, activeTab === 'settings' && s.tabActive]} onPress={() => setActiveTab('settings')} accessibilityRole="tab" accessibilityLabel={t('notifications.settings', 'Settings')} accessibilityState={{ selected: activeTab === 'settings' }}>
           <Ionicons name="settings-outline" size={14} color={activeTab === 'settings' ? '#fff' : SemanticColors.textTertiary} />
           <Text style={[s.tabText, activeTab === 'settings' && s.tabTextActive]}>{t('notifications.settings', 'Settings')}</Text>
         </Pressable>
@@ -160,6 +160,8 @@ export default function NotificationsScreen() {
                             key={notif.id}
                             style={({ pressed }) => [s.card, !notif.read && s.cardUnread, pressed && { opacity: 0.9 }]}
                             onPress={() => handlePress(notif)}
+                            accessibilityRole="button"
+                            accessibilityLabel={`${notif.title}, ${notif.body}${!notif.read ? ', unread' : ''}`}
                           >
                             {/* Left accent */}
                             {!notif.read && <View style={[s.cardAccent, { backgroundColor: conf.color }]} />}
@@ -192,7 +194,7 @@ export default function NotificationsScreen() {
                                   </View>
                                 )}
                                 {notif.actionRoute && (
-                                  <Pressable style={s.viewBtn} onPress={() => handlePress(notif)}>
+                                  <Pressable style={s.viewBtn} onPress={() => handlePress(notif)} accessibilityRole="button" accessibilityLabel={`${t('common.view', 'View')} ${notif.title}`}>
                                     <Text style={s.viewBtnText}>{t('common.view', 'View')}</Text>
                                     <Ionicons name="chevron-forward" size={12} color={Palette.hermesOrange} />
                                   </Pressable>

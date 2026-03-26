@@ -10,6 +10,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ContractorLearningProfile } from './learningStorage';
+import { logWarn } from '../utils/errorHandler';
 
 const SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 const LAST_SYNC_KEY = '@vasco_last_cloud_sync';
@@ -53,7 +54,7 @@ export async function syncProfileToCloud(
     await AsyncStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
     return true;
   } catch (e) {
-    console.warn('[cloudSync] Profile sync error:', e);
+    logWarn('cloudSync', `Profile sync error: ${e}`);
     return false;
   }
 }

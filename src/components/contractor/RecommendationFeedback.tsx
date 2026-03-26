@@ -19,6 +19,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import { pricingAgent } from '../../intelligence/pricingAgent';
 import { trackUserAction } from '../../intelligence/intelligenceEngine';
 
@@ -210,7 +211,7 @@ export function RecommendationFeedbackCard({
           <View style={styles.savingsRow}>
             <Ionicons name="trending-down" size={16} color={SemanticColors.feedbackSuccess} />
             <Text style={styles.savingsText}>
-              Bespaar €{recommendation.potentialSavings.toFixed(2)}
+              Bespaar {formatCurrency(recommendation.potentialSavings)}
             </Text>
           </View>
         )}

@@ -51,9 +51,24 @@ export const MOCK_CUSTOMER_PORTAL: CustomerPortalData = {
   currentPhase: 'planning',
 
   // Summary
-  totalDecisions: 15,
+  totalDecisions: 11,
   completedDecisions: 9,
   overdueDecisions: 2,
+
+  // Payment — Mollie/Stripe handles method selection on their hosted checkout
+  paymentLink: 'https://checkout.mollie.com/example-session-id',
+  paymentStatus: 'pending',
+  quoteAmount: 8500,
+  depositAmount: 4250,
+  paidAmount: 0,
+  paymentMethods: [
+    { name: 'iDEAL', icon: 'card-outline' },
+    { name: 'PayPal', icon: 'logo-paypal' },
+    { name: 'Credit Card', icon: 'card-outline' },
+    { name: 'Klarna', icon: 'pricetag-outline' },
+    { name: 'Apple Pay', icon: 'logo-apple' },
+  ],
+  contractorCountry: 'NL',
 
   // Branding
   accentColor: '#E85D04',
@@ -301,6 +316,7 @@ export const MOCK_CUSTOMER_PORTAL: CustomerPortalData = {
         },
       ],
     },
+    // Payment is handled via PaymentSection — not a decision category
   ],
 };
 

@@ -61,14 +61,14 @@ const mockNotifications: AppNotification[] = [
     id: 'n-1', type: 'approval_request', priority: 'high',
     title: 'Offerte wacht op goedkeuring',
     body: 'Offerte q-seed-3 voor Badkamer renovatie — Fam. Jansen (€4.850) wacht op uw goedkeuring.',
-    read: false, actionRoute: '/contractor/quotes/q-seed-3', actionLabel: 'Bekijk',
+    read: false, actionRoute: '/quotes/q-seed-3', actionLabel: 'Bekijk',
     createdAt: new Date(now.getTime() - MS_PER_HOUR * 2),
   },
   {
     id: 'n-2', type: 'overdue_invoice', priority: 'urgent',
     title: 'Factuur verlopen',
     body: 'Factuur inv-seed-1 voor Hotel NH — €2.450 is 5 dagen verlopen.',
-    read: false, actionRoute: '/contractor/invoices/inv-seed-1',
+    read: false, actionRoute: '/invoices/inv-seed-1',
     createdAt: new Date(now.getTime() - MS_PER_HOUR * 6),
   },
   {
@@ -96,7 +96,7 @@ const mockNotifications: AppNotification[] = [
     id: 'n-6', type: 'credential_expiry', priority: 'high',
     title: 'Certificaat verloopt binnenkort',
     body: 'KOMO Keurmerk verloopt op 10 apr 2026. Vernieuw op tijd om boetes te voorkomen.',
-    read: true, actionRoute: '/contractor/certificaten',
+    read: true, actionRoute: '/(contractor)/certificaten',
     createdAt: new Date(now.getTime() - MS_PER_DAY * 3),
   },
 ];

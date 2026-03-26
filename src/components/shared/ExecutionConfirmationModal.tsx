@@ -19,6 +19,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import type { ActionInstance, ActionRiskLevel } from '../../modules/agentActions';
 import {
   getConfirmationRequirements,
@@ -62,8 +63,7 @@ export function ExecutionConfirmationModal({
   // Get confirmation requirements for this action
   const requirements = action ? getConfirmationRequirements(action) : null;
 
-  const formatCurrency = (amount: number, currency: string = 'GBP') =>
-    `${currency === 'EUR' ? '€' : '£'}${amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}`;
+  // formatCurrency imported from ../../i18n/formatting
 
   const getRiskLevelColor = (level: ActionRiskLevel) => {
     switch (level) {
@@ -209,7 +209,7 @@ export function ExecutionConfirmationModal({
             <View style={styles.amountBox}>
               <Text style={styles.amountLabel}>Amount</Text>
               <Text style={styles.amountValue}>
-                {formatCurrency(action.amount, action.currency)}
+                {formatCurrency(action.amount)}
               </Text>
             </View>
           )}
@@ -238,8 +238,7 @@ export function ExecutionConfirmationModal({
                 <Ionicons name="cash" size={16} color={SemanticColors.textSecondary} />
                 <Text style={styles.impactText}>
                   Financial: {formatCurrency(
-                    requirements.impactSummary.financial.amount,
-                    requirements.impactSummary.financial.currency
+                    requirements.impactSummary.financial.amount
                   )}
                 </Text>
               </View>
@@ -378,7 +377,7 @@ export function ExecutionConfirmationModal({
           <>
             <Text style={styles.finalSummaryLabel}>Amount:</Text>
             <Text style={styles.finalSummaryValue}>
-              {formatCurrency(action.amount, action.currency)}
+              {formatCurrency(action.amount)}
             </Text>
           </>
         )}

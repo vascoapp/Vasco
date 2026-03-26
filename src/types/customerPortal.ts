@@ -69,6 +69,15 @@ export interface CustomerPortalData {
   completedDecisions: number;
   overdueDecisions: number;
 
+  // Payment
+  paymentLink?: string; // URL to Mollie/Stripe hosted checkout
+  paymentStatus?: 'pending' | 'paid' | 'partial';
+  quoteAmount?: number; // Total quote amount
+  depositAmount?: number; // Deposit amount (if partial payment)
+  paidAmount?: number; // Amount already paid
+  paymentMethods?: { name: string; icon: string }[]; // Available methods for display
+  contractorCountry?: string; // For determining payment provider
+
   // Branding
   accentColor?: string;
 }

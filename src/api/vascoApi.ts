@@ -1,5 +1,7 @@
 // Vasco API client for connecting to the backend
-const API_BASE = process.env.EXPO_PUBLIC_VASCO_API_URL ?? '';
+import { ENV } from '../config/env';
+
+const API_BASE = ENV.VASCO_API_URL;
 
 // CFO API endpoints
 export const cfoApi = {

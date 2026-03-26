@@ -3,6 +3,7 @@
 // =============================================================================
 
 import { Linking, Alert } from 'react-native';
+import i18n from '../i18n/i18n';
 
 /** Open WhatsApp with a pre-filled message to a phone number */
 export async function sendWhatsApp(phone: string, message: string): Promise<boolean> {
@@ -24,7 +25,7 @@ export async function sendWhatsApp(phone: string, message: string): Promise<bool
     await Linking.openURL(webUrl);
     return true;
   } catch {
-    Alert.alert('WhatsApp', 'Could not open WhatsApp. Make sure it is installed.');
+    Alert.alert('WhatsApp', i18n.t('whatsapp.openFailed', 'Could not open WhatsApp. Make sure it is installed.'));
     return false;
   }
 }

@@ -19,8 +19,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import type { Scenario, ScenarioType, ImpactAnalysis, Activity } from '../../types/schedule-fragility';
 import { scheduleFragilityService } from '../../services/scheduleFragilityService';
+import { logWarn } from '../../utils/errorHandler';
 
 interface WhatIfAnalysisModalProps {
   visible: boolean;
@@ -78,8 +80,6 @@ export function WhatIfAnalysisModal({
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<ImpactAnalysis | null>(null);
 
-  const formatCurrency = (amount: number, currency: string = 'GBP') =>
-    `${currency === 'EUR' ? '€' : '£'}${amount.toLocaleString()}`;
 
   const handleSelectScenario = (template: ScenarioTemplate) => {
     setSelectedScenario(template);
@@ -131,7 +131,7 @@ export function WhatIfAnalysisModal({
       setStep('results');
       onAnalysisComplete?.(analysis);
     } catch (error) {
-      console.error('Analysis failed:', error);
+      logWarn('WhatIfAnalysis', `Analysis failed: ${error}`);
     } finally {
       setIsRunning(false);
     }
@@ -294,7 +294,7 @@ export function WhatIfAnalysisModal({
             <View style={styles.impactItem}>
               <Text style={styles.impactLabel}>Est. Cost Impact</Text>
               <Text style={[styles.impactValue, { color: SemanticColors.feedbackError }]}>
-                {formatCurrency(results.estimatedCostImpact, results.currency)}
+                {formatCurrency(results.estimatedCostImpact)}
               </Text>
             </View>
           )}

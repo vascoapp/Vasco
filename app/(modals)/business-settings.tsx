@@ -6,6 +6,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
@@ -23,6 +24,9 @@ import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
 import { isValidEmail, isValidPhone, isValidKvKNumber, isValidVATNumber, isValidIBAN, sanitizeInput } from '../../src/utils/validation';
+import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../../src/config/paymentMethods';
+import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
+import { STRIPE_METHODS_UK } from '../../src/config/paymentMethods';
 
 type FieldDef = {
   label: string;
@@ -48,6 +52,16 @@ export default function BusinessSettingsScreen() {
   const [email, setEmail] = useState(businessProfile.email ?? '');
   const [phone, setPhone] = useState(businessProfile.phone ?? '');
   const [saving, setSaving] = useState(false);
+
+  // Payment methods — get all available for the country, default all enabled
+  const allPaymentMethods = useMemo(() => {
+    if (country === 'UK') return STRIPE_METHODS_UK.map(m => String(m));
+    return getMollieMethodsForCountry(country).methods;
+  }, [country]);
+  const paymentDisplay = useMemo(() => getPaymentDisplayForCountry(country), [country]);
+  const [enabledPaymentMethods, setEnabledPaymentMethods] = useState<string[]>(
+    businessProfile.enabledPaymentMethods ?? [...allPaymentMethods]
+  );
 
   // Country-specific fields
   const fields = useMemo((): FieldDef[] => {
@@ -141,6 +155,7 @@ export default function BusinessSettingsScreen() {
         email: cleanEmail.trim(),
         phone: cleanPhone.trim(),
         country,
+        enabledPaymentMethods,
       });
       router.back();
     } catch (err) {
@@ -149,7 +164,7 @@ export default function BusinessSettingsScreen() {
     } finally {
       setSaving(false);
     }
-  }, [businessName, kvkNumber, vatNumber, registrationNumber, address, email, phone, country, updateBusinessProfile, router, t]);
+  }, [businessName, kvkNumber, vatNumber, registrationNumber, address, email, phone, country, enabledPaymentMethods, updateBusinessProfile, router, t]);
 
   const filled = fields.filter((f) => f.value.trim()).length;
   const percent = Math.round((filled / fields.length) * 100);
@@ -208,6 +223,55 @@ export default function BusinessSettingsScreen() {
                 <Ionicons name="chevron-forward" size={16} color={SemanticColors.textSecondary} />
               </Pressable>
             ))}
+          </View>
+
+          {/* Payment methods toggles */}
+          <View style={styles.card}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <Ionicons name="shield-checkmark" size={18} color={SemanticColors.feedbackSuccess} />
+              <Text style={[Typography.title, { flex: 1 }]}>{t('settings.paymentMethods', 'Payment Methods')}</Text>
+            </View>
+            <Text style={[Typography.muted, { marginBottom: 8 }]}>
+              {t('settings.paymentMethodsDesc', 'Choose which payment methods your customers can use.')}
+            </Text>
+            {allPaymentMethods.map((method, idx) => {
+              const display = paymentDisplay[idx];
+              const methodName = display?.name ?? method;
+              const brandColor = getPaymentBrandColor(methodName);
+              const isEnabled = enabledPaymentMethods.includes(method);
+              return (
+                <View
+                  key={method}
+                  style={[
+                    styles.paymentMethodRow,
+                    idx === allPaymentMethods.length - 1 && { borderBottomWidth: 0 },
+                  ]}
+                  accessibilityLabel={`${isEnabled ? 'Disable' : 'Enable'} ${methodName}`}
+                >
+                  <View style={[styles.paymentMethodIcon, { backgroundColor: (isEnabled ? brandColor : SemanticColors.textTertiary) + '12' }]}>
+                    <View style={[styles.paymentMethodDot, { backgroundColor: isEnabled ? brandColor : SemanticColors.textTertiary }]} />
+                  </View>
+                  <Text style={[Typography.body, { flex: 1, color: isEnabled ? SemanticColors.textPrimary : SemanticColors.textTertiary }]}>{methodName}</Text>
+                  <Switch
+                    value={isEnabled}
+                    onValueChange={(val) => {
+                      setEnabledPaymentMethods(prev =>
+                        val ? [...prev, method] : prev.filter(m => m !== method)
+                      );
+                    }}
+                    trackColor={{ false: SemanticColors.borderDefault, true: brandColor + '50' }}
+                    thumbColor={isEnabled ? brandColor : SemanticColors.surfacePrimary}
+                    accessibilityLabel={`Toggle ${methodName}`}
+                  />
+                </View>
+              );
+            })}
+            <View style={styles.paymentSecurityFooter}>
+              <Ionicons name="lock-closed" size={12} color={SemanticColors.textTertiary} />
+              <Text style={styles.paymentSecurityText}>
+                {country === 'UK' ? 'Powered by Stripe' : 'Powered by Mollie'} · PCI DSS compliant
+              </Text>
+            </View>
           </View>
 
           <View style={styles.actions}>
@@ -270,6 +334,38 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.borderDefault,
+  },
+  paymentMethodRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.borderDefault,
+  },
+  paymentMethodIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  paymentMethodDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  paymentSecurityFooter: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 6,
+    paddingTop: 12,
+  },
+  paymentSecurityText: {
+    fontSize: 11,
+    fontFamily: 'Inter_400Regular',
+    color: SemanticColors.textTertiary,
   },
   actions: {
     gap: Spacing.sm,

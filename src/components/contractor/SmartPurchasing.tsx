@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View, Alert } from 'react-nati
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { formatCurrency } from '../../i18n/formatting';
 import type { SmartPurchaseAlert, MaterialCatalogItem, UpcomingMaterialNeed } from '../../types/contractor-features';
 import { MOCK_PURCHASE_ALERTS, MOCK_MATERIALS, MOCK_UPCOMING_NEEDS, MOCK_SUPPLIERS } from '../../data/mockPricebook';
 import { intelligence } from '../../intelligence/intelligenceEngine';
@@ -37,7 +38,7 @@ export function SmartPurchasing({ onClose }: SmartPurchasingProps) {
     dismissRecommendation,
   } = useRecommendationFeedback({ source: 'pricing' });
 
-  const formatCurrency = (amount: number) => `€${amount.toFixed(2)}`;
+  // formatCurrency imported from ../../i18n/formatting
 
   const unreadAlerts = MOCK_PURCHASE_ALERTS.filter((a) => !a.isRead && !a.isDismissed);
   const totalSavings = MOCK_PURCHASE_ALERTS.reduce((sum, a) => sum + (a.savingsAmount || 0), 0);
@@ -77,7 +78,7 @@ export function SmartPurchasing({ onClose }: SmartPurchasingProps) {
         </View>
         <View style={styles.summaryStats}>
           <View style={styles.summaryStat}>
-            <Text style={styles.summaryStatValue}>€127</Text>
+            <Text style={styles.summaryStatValue}>{formatCurrency(127)}</Text>
             <Text style={styles.summaryStatLabel}>Saved this month</Text>
           </View>
           <View style={styles.summaryStatDivider} />

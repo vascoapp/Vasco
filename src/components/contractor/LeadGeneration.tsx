@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { formatCurrency } from '../../i18n/formatting';
 import {
   useLeads,
   useLeadStats,
@@ -129,7 +130,7 @@ const LeadCard: React.FC<{
           <View style={styles.leadDetailRow}>
             <Ionicons name="cash-outline" size={16} color={SemanticColors.textSecondary} />
             <Text style={styles.leadDetailText}>
-              €{lead.estimatedValue.toLocaleString()} geschat
+              {formatCurrency(lead.estimatedValue)} geschat
             </Text>
           </View>
         )}
@@ -372,7 +373,7 @@ export const LeadGeneration: React.FC = () => {
               <StatCard
                 icon="cash-outline"
                 label="Gem. Waarde"
-                value={`€${stats.totalLeads > 0 ? Math.round(stats.pipelineValue / stats.totalLeads).toLocaleString() : 0}`}
+                value={formatCurrency(stats.totalLeads > 0 ? Math.round(stats.pipelineValue / stats.totalLeads) : 0)}
               />
             </View>
 

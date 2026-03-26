@@ -27,6 +27,7 @@ import {
   useInvoiceVerification,
   financialAuditor,
 } from '../../services/financialAuditorService';
+import { logWarn } from '../../utils/errorHandler';
 
 const theme = {
   colors: {
@@ -78,7 +79,7 @@ export function InvoiceVerificationPanel({ projectId, onInvoiceSelect }: Props) 
       });
       setVerificationResults(prev => new Map(prev).set(invoiceId, result));
     } catch (error) {
-      console.error('Verification failed:', error);
+      logWarn('InvoiceVerification', `Verification failed: ${error}`);
     } finally {
       setVerifying(null);
     }

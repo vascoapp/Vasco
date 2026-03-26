@@ -18,6 +18,7 @@ import { useAuth, type Country, type Language } from '../src/context/AuthContext
 import { SemanticColors, Palette } from '../src/theme/colors';
 import { SafeArea, Spacing } from '../src/theme/spacing';
 import { getDefaultLanguage } from '../src/i18n/formatting';
+import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../src/config/paymentMethods';
 import { FadeIn } from '../src/components/shared/FadeIn';
 import { GradientButton } from '../src/components/shared/GradientButton';
 
@@ -275,6 +276,24 @@ export default function OnboardingScreen() {
                 </Pressable>
               ))}
             </View>
+            {country && (
+              <View style={styles.paymentPreview}>
+                <Text style={styles.paymentPreviewLabel}>
+                  {t('onboarding.availablePaymentMethods', 'Available payment methods in {{country}}:', { country: COUNTRIES.find(c => c.code === country)?.label ?? country })}
+                </Text>
+                <View style={styles.paymentBadgeRow}>
+                  {getPaymentDisplayForCountry(country).map((pm) => {
+                    const brandColor = getPaymentBrandColor(pm.name);
+                    return (
+                      <View key={pm.name} style={[styles.paymentBadge, { borderColor: brandColor + '25' }]}>
+                        <View style={[styles.paymentDot, { backgroundColor: brandColor }]} />
+                        <Text style={styles.paymentBadgeText}>{pm.name}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
           </View>
         );
 
@@ -743,6 +762,43 @@ const styles = StyleSheet.create({
   radiusChipTextSelected: {
     color: Palette.hermesOrange,
     fontFamily: 'Inter_600SemiBold',
+  },
+  paymentPreview: {
+    marginTop: 8,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: 12,
+    padding: 14,
+    gap: 10,
+  },
+  paymentPreviewLabel: {
+    fontSize: 13,
+    fontFamily: 'Inter_500Medium',
+    color: SemanticColors.textSecondary,
+  },
+  paymentBadgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  paymentBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+  },
+  paymentDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+  },
+  paymentBadgeText: {
+    fontSize: 12,
+    fontFamily: 'Inter_500Medium',
+    color: SemanticColors.textPrimary,
   },
   emptyText: {
     fontSize: 14,
