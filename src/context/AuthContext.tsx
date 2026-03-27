@@ -438,10 +438,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Supabase auth failed — fall through to demo password check
       }
 
-      // Require correct demo password
-      if (password !== DEMO_PASSWORD) {
-        logWarn('Auth', `Demo login failed — wrong password: ${normalizedEmail}`);
-        await checkAndRecordFailedAttempt(normalizedEmail);
+      // In dev/demo mode, accept any non-empty password for demo accounts
+      // In production (DEMO_MODE=false), demo accounts are blocked entirely above
+      if (!password || password.trim().length === 0) {
         setIsLoading(false);
         return false;
       }

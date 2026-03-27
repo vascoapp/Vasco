@@ -38,17 +38,14 @@ export default function ContractorLayout() {
       <Stack.Screen name="market-prices" />
       <Stack.Screen name="search" />
       <Stack.Screen name="automations" />
-      <Stack.Screen name="customer" />
       <Stack.Screen name="notifications" />
-      <Stack.Screen name="doc-requirements" />
-      <Stack.Screen name="reconciliation" />
       <Stack.Screen name="drag-schedule" />
       <Stack.Screen name="customer-view" />
-      <Stack.Screen name="schedule-optimizer" />
       <Stack.Screen name="customer-crm" />
-      <Stack.Screen name="integrations" />
       <Stack.Screen name="message-templates" />
-      {/* service-agreements, ai-quote, customer-insights, leads, planning, smart-pricing — deleted */}
+      <Stack.Screen name="reports" />
+      <Stack.Screen name="calendar-settings" />
+      <Stack.Screen name="service-agreements" />
     </Stack>
   );
 }
