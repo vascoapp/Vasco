@@ -310,6 +310,26 @@ export default function JobDetailPage() {
           <Text style={[styles.pipelineLabel, { color: LIFECYCLE_COLORS[job.lifecycleStatus as JobLifecycleStatus] }]}>
             {LIFECYCLE_LABELS[job.lifecycleStatus as JobLifecycleStatus]}
           </Text>
+
+          {/* Job completion progress */}
+          {(() => {
+            const currentIdx = LIFECYCLE_ORDER.indexOf(job.lifecycleStatus);
+            const totalSteps = LIFECYCLE_ORDER.length;
+            const progressPct = totalSteps > 1 ? Math.round((currentIdx / (totalSteps - 1)) * 100) : 0;
+            return (
+              <View style={styles.progressSection}>
+                <View style={styles.progressHeader}>
+                  <Text style={styles.progressLabel}>{t('jobs.progress', 'Progress')}</Text>
+                  <Text style={[styles.progressPct, { color: progressPct >= 100 ? SemanticColors.feedbackSuccess : Palette.hermesOrange }]}>
+                    {progressPct}%
+                  </Text>
+                </View>
+                <View style={styles.progressTrack}>
+                  <View style={[styles.progressFill, { width: `${progressPct}%`, backgroundColor: progressPct >= 100 ? SemanticColors.feedbackSuccess : Palette.hermesOrange }]} />
+                </View>
+              </View>
+            );
+          })()}
         </View>
 
         {/* Volgende stap action */}
@@ -927,6 +947,36 @@ const styles = StyleSheet.create({
     fontSize: TYPE.tinySize,
     fontFamily: TYPE.sectionFamily,
     color: Palette.hermesOrange,
+  },
+
+  // Progress
+  progressSection: {
+    gap: GRID.xs,
+    marginTop: GRID.xs,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  progressLabel: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textTertiary,
+  },
+  progressPct: {
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
+  },
+  progressTrack: {
+    height: 6,
+    backgroundColor: SemanticColors.borderDefault,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: 6,
+    borderRadius: 3,
   },
 
   // Section

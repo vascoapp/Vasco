@@ -85,7 +85,7 @@ export default function GeldScreen() {
         description: inv.job || t('invoices.invoice', 'Factuur'),
         amount: inv.total || inv.amount || 0,
         status: inv.status,
-        route: inv.jobId ? `/contractor/job/${inv.jobId}` : '/(contractor)/facturen',
+        route: `/invoices/${inv.id}`,
       })),
       ...quotes.map((q: any) => ({
         id: q.id,
@@ -94,7 +94,7 @@ export default function GeldScreen() {
         description: q.job || q.description || t('quotes.quote', 'Offerte'),
         amount: q.amount || 0,
         status: q.status,
-        route: q.jobId ? `/contractor/job/${q.jobId}` : '/(contractor)/facturen',
+        route: `/quotes/${q.id}`,
       })),
     ];
     return docs.sort((a, b) => (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3));

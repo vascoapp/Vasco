@@ -316,6 +316,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             await AsyncStorage.multiRemove([
               '@vasco_jobs', '@vasco_invoices', '@vasco_quotes',
               '@vasco_customers', '@vasco_projects', '@vasco_decision_trackers',
+              '@vasco_business_profile',
             ]);
             await AsyncStorage.setItem('@vasco_seed_version', SEED_VERSION);
           } else {
@@ -331,6 +332,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 const parsed = JSON.parse(raw);
                 if (Array.isArray(parsed) && parsed.length > 0) setter(parsed);
               }
+            }
+            // Hydrate business profile (non-array)
+            const bpRaw = await AsyncStorage.getItem('@vasco_business_profile');
+            if (bpRaw) {
+              try {
+                const bpParsed = JSON.parse(bpRaw);
+                if (bpParsed && typeof bpParsed === 'object') setBusinessProfile(prev => ({ ...prev, ...bpParsed }));
+              } catch {}
             }
           }
         } catch {}
@@ -366,6 +375,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       AsyncStorage.setItem('@vasco_projects', JSON.stringify(projects)).catch(() => {});
     }
   }, [projects]);
+  useEffect(() => {
+    if (useSeedData && persistReady) {
+      AsyncStorage.setItem('@vasco_business_profile', JSON.stringify(businessProfile)).catch(() => {});
+    }
+  }, [businessProfile, persistReady]);
 
   const recalcQuoteTotal = (quoteId: string, items: QuoteLineItem[]) => {
     const total = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);

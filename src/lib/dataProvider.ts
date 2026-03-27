@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logWarn } from '../utils/errorHandler';
 import type { DocumentRow, LineItemRow, BusinessSettingsRow, CustomerRow, MaterialCatalogRow, SupplierRow, JobMaterialRow, PriceObservationRow } from './database.types';
 import { quotes as mockQuotes, invoices as mockInvoices } from '../data/mockDocuments';
@@ -287,8 +288,19 @@ export async function deleteJob(id: string): Promise<void> {
 
 export async function nextDocumentNumber(docType: 'quote' | 'invoice'): Promise<string> {
   if (!isSupabaseConfigured) {
-    const prefix = docType === 'quote' ? 'Q' : 'I';
-    return `${prefix}${String(Math.floor(Math.random() * 9000) + 1000)}`;
+    const storageKey = `@vasco_doc_counter_${docType}`;
+    const prefix = docType === 'quote' ? 'Q' : 'INV';
+    const yearSuffix = new Date().getFullYear().toString().slice(-2);
+    try {
+      const raw = await AsyncStorage.getItem(storageKey);
+      const current = raw ? parseInt(raw, 10) : 0;
+      const next = current + 1;
+      await AsyncStorage.setItem(storageKey, String(next));
+      return `${prefix}-${yearSuffix}${String(next).padStart(4, '0')}`;
+    } catch {
+      // Fallback: use timestamp-based to avoid collisions
+      return `${prefix}-${yearSuffix}${String(Date.now()).slice(-6)}`;
+    }
   }
 
   const { data, error } = await supabase.rpc('next_document_number', { p_doc_type: docType } as any);

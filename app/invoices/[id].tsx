@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { AssistBanner } from '../../src/components/AssistBanner';
@@ -202,6 +202,113 @@ export default function InvoiceDetailScreen() {
           </View>
         </View>
 
+        {/* Payment & Activity Timeline */}
+        <View style={styles.card}>
+          <View style={styles.timelineHeader}>
+            <Ionicons name="time-outline" size={18} color={Palette.hermesOrange} />
+            <Text style={[Typography.subtitle, { flex: 1 }]}>{t('invoices.activityTimeline', 'Activity')}</Text>
+          </View>
+          <View style={styles.timelineList}>
+            {/* Created */}
+            <View style={styles.timelineRow}>
+              <View style={styles.timelineLeft}>
+                <View style={[styles.timelineDot, { backgroundColor: SemanticColors.textTertiary }]}>
+                  <Ionicons name="add-circle-outline" size={10} color="#fff" />
+                </View>
+                <View style={styles.timelineLine} />
+              </View>
+              <View style={styles.timelineContent}>
+                <Text style={styles.timelineLabel}>{t('invoices.created', 'Invoice created')}</Text>
+                <Text style={styles.timelineDate}>
+                  {invoice.lastUpdated
+                    ? new Date(invoice.lastUpdated).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+                    : t('invoices.recently', 'Recently')}
+                </Text>
+              </View>
+            </View>
+            {/* Sent */}
+            {(invoice.status === 'sent' || invoice.status === 'overdue' || invoice.status === 'paid') && (
+              <View style={styles.timelineRow}>
+                <View style={styles.timelineLeft}>
+                  <View style={[styles.timelineDot, { backgroundColor: SemanticColors.feedbackInfo }]}>
+                    <Ionicons name="send" size={10} color="#fff" />
+                  </View>
+                  <View style={styles.timelineLine} />
+                </View>
+                <View style={styles.timelineContent}>
+                  <Text style={styles.timelineLabel}>{t('invoices.sentToCustomer', 'Sent to customer')}</Text>
+                  <Text style={styles.timelineDate}>
+                    {invoice.dueDate
+                      ? new Date(new Date(invoice.dueDate).getTime() - 14 * 86400000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+                      : ''}
+                  </Text>
+                </View>
+              </View>
+            )}
+            {/* Overdue reminder */}
+            {invoice.status === 'overdue' && (
+              <View style={styles.timelineRow}>
+                <View style={styles.timelineLeft}>
+                  <View style={[styles.timelineDot, { backgroundColor: SemanticColors.feedbackError }]}>
+                    <Ionicons name="alert-circle" size={10} color="#fff" />
+                  </View>
+                  <View style={styles.timelineLine} />
+                </View>
+                <View style={styles.timelineContent}>
+                  <Text style={[styles.timelineLabel, { color: SemanticColors.feedbackError }]}>
+                    {t('invoices.overdueNotice', 'Payment overdue')}
+                  </Text>
+                  <Text style={styles.timelineDate}>
+                    {invoice.dueDate
+                      ? new Date(invoice.dueDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+                      : ''} · {Math.abs(invoice.dueInDays)} {t('invoices.daysLate', 'days late')}
+                  </Text>
+                </View>
+              </View>
+            )}
+            {/* Paid */}
+            {invoice.status === 'paid' && (
+              <View style={styles.timelineRow}>
+                <View style={styles.timelineLeft}>
+                  <View style={[styles.timelineDot, { backgroundColor: SemanticColors.feedbackSuccess }]}>
+                    <Ionicons name="checkmark" size={10} color="#fff" />
+                  </View>
+                </View>
+                <View style={styles.timelineContent}>
+                  <Text style={[styles.timelineLabel, { color: SemanticColors.feedbackSuccess }]}>
+                    {t('invoices.paymentReceived', 'Payment received')}
+                  </Text>
+                  <Text style={styles.timelineDate}>
+                    {`€${invoice.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                  </Text>
+                </View>
+              </View>
+            )}
+            {/* Due date (for unpaid) */}
+            {invoice.status !== 'paid' && (
+              <View style={styles.timelineRow}>
+                <View style={styles.timelineLeft}>
+                  <View style={[styles.timelineDot, { backgroundColor: invoice.dueInDays < 0 ? SemanticColors.feedbackError : SemanticColors.textTertiary }]}>
+                    <Ionicons name="calendar-outline" size={10} color="#fff" />
+                  </View>
+                </View>
+                <View style={styles.timelineContent}>
+                  <Text style={styles.timelineLabel}>
+                    {invoice.dueInDays >= 0
+                      ? t('invoices.dueIn', { defaultValue: 'Due in {{count}} days', count: invoice.dueInDays })
+                      : t('invoices.overdueDays', { defaultValue: '{{count}} days overdue', count: Math.abs(invoice.dueInDays) })}
+                  </Text>
+                  <Text style={styles.timelineDate}>
+                    {invoice.dueDate
+                      ? new Date(invoice.dueDate).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })
+                      : ''}
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
+        </View>
+
         <View style={styles.actions}>
           <PrimaryButton label={t('invoices.viewSharePdf', 'PDF bekijken & delen')} onPress={async () => {
             hapticSuccess();
@@ -341,5 +448,52 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Inter_400Regular',
     color: SemanticColors.textTertiary,
+  },
+  // Timeline
+  timelineHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    marginBottom: Spacing.sm,
+  },
+  timelineList: {
+    gap: 0,
+  },
+  timelineRow: {
+    flexDirection: 'row' as const,
+    gap: Spacing.sm,
+    minHeight: 40,
+  },
+  timelineLeft: {
+    alignItems: 'center' as const,
+    width: 24,
+  },
+  timelineDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  timelineLine: {
+    width: 2,
+    flex: 1,
+    backgroundColor: SemanticColors.borderDefault,
+    marginVertical: 2,
+  },
+  timelineContent: {
+    flex: 1,
+    paddingBottom: Spacing.sm,
+  },
+  timelineLabel: {
+    fontSize: 14,
+    fontFamily: 'Inter_600SemiBold',
+    color: SemanticColors.textPrimary,
+  },
+  timelineDate: {
+    fontSize: 12,
+    fontFamily: 'Inter_400Regular',
+    color: SemanticColors.textTertiary,
+    marginTop: 2,
   },
 });
