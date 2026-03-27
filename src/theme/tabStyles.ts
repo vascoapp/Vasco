@@ -21,8 +21,8 @@ import { Spacing, SafeArea } from './spacing';
 // DESIGN TOKENS (Wolt-aligned)
 // ============================================================================
 
-// Page background — Wolt uses a warm neutral gray
-export const PAGE_BG = '#F2F2F7';
+// Page background — very subtle warm gray for card contrast
+export const PAGE_BG = '#FAFAFA';
 
 // 8px grid spacing
 export const GRID = {
