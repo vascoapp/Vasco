@@ -513,6 +513,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }
         trackEvent('job_created', { jobId: tempId }).catch(() => {});
         markStepComplete('first_job_created').catch(() => {});
+        // Auto-sync to device calendar if scheduled
+        if (extra?.scheduled_date) {
+          import('../services/calendarSyncService').then(({ syncJobToCalendar, getCalendarSyncSettings }) => {
+            getCalendarSyncSettings().then((settings) => {
+              if (settings.enabled) syncJobToCalendar(newJob).catch(() => {});
+            }).catch(() => {});
+          }).catch(() => {});
+        }
         return tempId;
       },
       updateJobStatus: (id, status) => {
@@ -625,6 +633,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             logWarn('AppState', `removeJob persist failed: ${err}`),
           );
         }
+        // Remove from device calendar
+        import('../services/calendarSyncService').then(({ removeJobFromCalendar }) => {
+          removeJobFromCalendar(id).catch(() => {});
+        }).catch(() => {});
       },
       updateJob: (id, updates) => {
         setJobs((prev) =>
@@ -639,6 +651,17 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }
         if (updates.status === 'completed') {
           trackEvent('job_completed', { jobId: id }).catch(() => {});
+        }
+        // Auto-sync to device calendar when scheduledDate changes
+        if (updates.scheduledDate) {
+          import('../services/calendarSyncService').then(({ syncJobToCalendar, getCalendarSyncSettings }) => {
+            getCalendarSyncSettings().then((settings) => {
+              if (settings.enabled) {
+                const updated = jobs.find(j => j.id === id);
+                if (updated) syncJobToCalendar({ ...updated, ...updates } as Job).catch(() => {});
+              }
+            }).catch(() => {});
+          }).catch(() => {});
         }
       },
 

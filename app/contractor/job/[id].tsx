@@ -30,6 +30,10 @@ import { smartSchedulerService, LIFECYCLE_ORDER, LIFECYCLE_LABELS, LIFECYCLE_COL
 import type { JobLifecycleStatus } from '../../../src/services/smartSchedulerService';
 import { useJobCostVariance } from '../../../src/services/jobCostTrackingService';
 import { useAppState } from '../../../src/state/AppState';
+import { PhotoGallery, type PhotoItem } from '../../../src/components/contractor/PhotoGallery';
+import { showPhotoPicker } from '../../../src/utils/photoPicker';
+import JobComments from '../../../src/components/contractor/JobComments';
+import { addActivityEntry } from '../../../src/services/jobCommentsService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -84,6 +88,7 @@ export default function JobDetailPage() {
   const timer = useClockIn();
   const clockedIn = timer.active && timer.jobId === id;
   const [photoCount, setPhotoCount] = useState(0);
+  const [jobPhotos, setJobPhotos] = useState<PhotoItem[]>([]);
   const [jobCompleted, setJobCompleted] = useState(false);
   const [orderedMaterials, setOrderedMaterials] = useState<Set<string>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
@@ -588,6 +593,28 @@ export default function JobDetailPage() {
         )}
 
         {/* ============================================ */}
+        {/* 5c. PHOTO GALLERY                            */}
+        {/* ============================================ */}
+        <View style={styles.section}>
+          <PhotoGallery
+            photos={jobPhotos}
+            jobTitle={job.projectName}
+            onAddPhoto={() => {
+              showPhotoPicker((photo) => {
+                const newPhoto: PhotoItem = {
+                  uri: photo.uri,
+                  date: new Date().toISOString(),
+                  label: jobPhotos.length === 0 ? 'before' : jobCompleted ? 'after' : 'progress',
+                };
+                setJobPhotos(prev => [...prev, newPhoto]);
+                setPhotoCount(prev => prev + 1);
+                hapticSuccess();
+              });
+            }}
+          />
+        </View>
+
+        {/* ============================================ */}
         {/* 6. UPSELL OPPORTUNITIES                     */}
         {/* ============================================ */}
         {upsells.length > 0 && (
@@ -660,6 +687,16 @@ export default function JobDetailPage() {
         )}
 
         {/* ============================================ */}
+        {/* 7c. ACTIVITY & COMMENTS                     */}
+        {/* ============================================ */}
+        {id && (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>{t('jobs.activity', 'Activity')}</Text>
+            <JobComments jobId={id} />
+          </View>
+        )}
+
+        {/* ============================================ */}
         {/* 8. QUICK ACTIONS                            */}
         {/* ============================================ */}
         <View style={styles.actionsRow}>
@@ -673,9 +710,11 @@ export default function JobDetailPage() {
                 if (clockedIn) {
                   const { hours } = await timer.clockOut();
                   recordHours(job.id, Math.round(hours * 10) / 10);
+                  addActivityEntry(id || '', 'timer_stopped', `Clocked out (${Math.round(hours * 10) / 10}h)`).catch(() => {});
                   Alert.alert(t('jobs.clockedOut', 'Clocked out'), t('jobs.clockedOutDesc', 'You have been clocked out. Hours saved.'));
                 } else {
                   await timer.clockIn(job.id, job.projectName || job.customerName || '');
+                  addActivityEntry(id || '', 'timer_started', 'Clocked in').catch(() => {});
                   Alert.alert(t('jobs.clockedIn', 'Clocked in'), t('jobs.clockedInDesc', 'You are now clocked in on this job.'));
                 }
               }}

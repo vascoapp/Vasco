@@ -73,7 +73,7 @@ const DEMO_PASSWORD = 'vasco-demo-2026';
 // ROLE TYPES
 // ============================================
 
-export type UserRole = 'cfo' | 'coo' | 'site-lead' | 'director' | 'contractor';
+export type UserRole = 'cfo' | 'coo' | 'site-lead' | 'director' | 'contractor' | 'worker';
 
 export type Country = 'UK' | 'NL' | 'DE' | 'FR' | 'ES' | 'IT';
 export type Language = 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
@@ -156,6 +156,18 @@ const MOCK_USERS: Record<string, User> = {
     trade: 'general',
     onboardingComplete: true,
     isAannemer: true,
+  },
+  'worker@vasco.dev': {
+    id: 'user-worker-001',
+    email: 'worker@vasco.dev',
+    name: 'Bas de Groot',
+    role: 'worker',
+    company: 'VDB Painters',
+    projects: [],
+    country: 'NL',
+    language: 'nl',
+    trade: 'painting',
+    onboardingComplete: true,
   },
 };
 
@@ -275,6 +287,22 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
       { id: 'jobs', label: 'Jobs', icon: 'briefcase-outline' },
       { id: 'schedule', label: 'Schedule', icon: 'calendar-outline' },
       { id: 'profile', label: 'Profile', icon: 'person-circle-outline' },
+    ],
+  },
+  worker: {
+    label: 'Worker',
+    title: 'My Work',
+    description: 'View schedule, clock in/out, and submit timesheets',
+    primaryColor: '#E35205', // Hermes Orange for Worker (per theme)
+    features: [
+      'My Schedule',
+      'Clock In/Out',
+      'Timesheets',
+      'Job Details',
+    ],
+    tabs: [
+      { id: 'schedule', label: 'Schedule', icon: 'calendar-outline' },
+      { id: 'timesheets', label: 'Hours', icon: 'timer-outline' },
     ],
   },
 };
@@ -555,6 +583,8 @@ export function canApproveAction(role: UserRole, actionType: string, amount?: nu
       return ['daily-report', 'safety', 'blocker', 'issue'].some((t) => actionType.includes(t));
     case 'contractor':
       return ['invoice', 'quote', 'job'].some((t) => actionType.includes(t));
+    case 'worker':
+      return ['clock', 'timesheet'].some((t) => actionType.includes(t));
     default:
       return false;
   }

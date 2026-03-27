@@ -69,6 +69,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
 import { getAcceptanceStatus } from '../../src/services/customerQuoteAcceptanceService';
 import { getProgress, getNextStep, isFullyOnboarded } from '../../src/services/onboardingTrackerService';
+import { getTemplateForAction, resolveTemplate, type TemplateContext } from '../../src/services/messageTemplateService';
 import { formatAmount } from '../../src/utils/formatAmount';
 import { getWeatherForecast } from '../../src/services/weatherService';
 
@@ -905,8 +906,28 @@ export default function TodayScreen() {
                   break;
                 }
 
-                // Shareable types (progress_note, draft_reminder, draft_followup,
-                // quote_expiry, satisfaction_survey, decision_reminder) are handled
+                // draft_reminder / draft_followup — resolve message via template system
+                case 'draft_reminder':
+                case 'draft_followup': {
+                  const tpl = await getTemplateForAction(item.type as 'draft_reminder' | 'draft_followup');
+                  if (tpl) {
+                    const tplCtx: TemplateContext = {
+                      customer: item.preparedData?.customerName || item.title,
+                      amount: item.preparedData?.amount ? `\u20AC${Number(item.preparedData.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '',
+                      jobTitle: item.preparedData?.jobTitle || '',
+                      invoiceId: item.preparedData?.invoiceId || '',
+                      daysOverdue: item.preparedData?.daysOverdue,
+                      contractorName: user?.name || 'Contractor',
+                      date: new Date().toLocaleDateString(),
+                    };
+                    const resolved = resolveTemplate(tpl, tplCtx);
+                    await Share.share({ message: resolved, title: tpl.title });
+                  }
+                  break;
+                }
+
+                // Other shareable types (progress_note, quote_expiry,
+                // satisfaction_survey, decision_reminder) are handled
                 // by VascoCard's EmbeddedApproval Share flow — no extra handler needed
               }
               } catch (err: any) {

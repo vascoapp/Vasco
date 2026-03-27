@@ -47,6 +47,7 @@ export default function ContractorLayout() {
       <Stack.Screen name="schedule-optimizer" />
       <Stack.Screen name="customer-crm" />
       <Stack.Screen name="integrations" />
+      <Stack.Screen name="message-templates" />
       {/* service-agreements, ai-quote, customer-insights, leads, planning, smart-pricing — deleted */}
     </Stack>
   );

@@ -1,8 +1,8 @@
 // =============================================================================
-// NOTIFICATIONS — Pro-grade notification center
+// NOTIFICATIONS — Pro-grade notification center with grouping
 // =============================================================================
-// Grouped by time (Today / Earlier / This week), rich cards with actions,
-// priority badges, swipe-to-read feel, settings tab.
+// Grouped by type (expandable), time sections, rich cards with actions,
+// priority badges, quiet hours, settings tab.
 // =============================================================================
 
 import { useState, useCallback, useMemo } from 'react';
@@ -20,6 +20,12 @@ import {
   type AppNotification,
   type NotificationType,
 } from '../../src/services/notificationService';
+import {
+  useGroupedNotifications,
+  useQuietHours,
+  getActionsForType,
+  type GroupedNotification,
+} from '../../src/services/pushNotificationService';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { MS_PER_DAY, MS_PER_HOUR } from '../../src/utils/timeConstants';
@@ -45,36 +51,14 @@ export default function NotificationsScreen() {
   const { notifications, markRead, markAllRead } = useNotifications();
   const stats = useUnreadCount();
   const { preferences, toggle } = useNotificationPreferences();
+  const { groups, toggleGroup } = useGroupedNotifications(notifications);
+  const { config: quietHoursConfig, toggle: toggleQuietHours } = useQuietHours();
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
   }, []);
-
-  // Group notifications by time
-  const grouped = useMemo(() => {
-    const now = Date.now();
-    const today: AppNotification[] = [];
-    const earlier: AppNotification[] = [];
-    const thisWeek: AppNotification[] = [];
-    const older: AppNotification[] = [];
-
-    for (const n of notifications) {
-      const age = now - n.createdAt.getTime();
-      if (age < 12 * MS_PER_HOUR) today.push(n);
-      else if (age < MS_PER_DAY) earlier.push(n);
-      else if (age < 7 * MS_PER_DAY) thisWeek.push(n);
-      else older.push(n);
-    }
-
-    const groups: { label: string; items: AppNotification[] }[] = [];
-    if (today.length) groups.push({ label: t('notifications.today', 'Today'), items: today });
-    if (earlier.length) groups.push({ label: t('notifications.earlier', 'Earlier'), items: earlier });
-    if (thisWeek.length) groups.push({ label: t('notifications.thisWeek', 'This week'), items: thisWeek });
-    if (older.length) groups.push({ label: t('notifications.older', 'Older'), items: older });
-    return groups;
-  }, [notifications, t]);
 
   const formatTimeAgo = (date: Date) => {
     const mins = Math.floor((Date.now() - date.getTime()) / 60000);
@@ -91,6 +75,135 @@ export default function NotificationsScreen() {
     if (notif.actionRoute) router.push(notif.actionRoute as any);
   };
 
+  const handleMarkAllRead = () => {
+    markAllRead();
+    hapticSuccess();
+  };
+
+  const renderNotificationCard = (notif: AppNotification) => {
+    const conf = TYPE_CONFIG[notif.type];
+    return (
+      <Pressable
+        key={notif.id}
+        style={({ pressed }) => [s.card, !notif.read && s.cardUnread, pressed && { opacity: 0.9 }]}
+        onPress={() => handlePress(notif)}
+        accessibilityRole="button"
+        accessibilityLabel={`${notif.title}, ${notif.body}${!notif.read ? ', unread' : ''}`}
+      >
+        {!notif.read && <View style={[s.cardAccent, { backgroundColor: conf.color }]} />}
+        <View style={[s.iconWrap, { backgroundColor: conf.color + '12' }]}>
+          <Ionicons name={conf.icon} size={18} color={conf.color} />
+        </View>
+        <View style={s.content}>
+          <View style={s.titleRow}>
+            <Text style={[s.title, !notif.read && s.titleUnread]} numberOfLines={1}>{notif.title}</Text>
+            <Text style={s.time}>{formatTimeAgo(notif.createdAt)}</Text>
+          </View>
+          <Text style={s.body} numberOfLines={2}>{notif.body}</Text>
+          <View style={s.footer}>
+            <View style={[s.typePill, { backgroundColor: conf.color + '10' }]}>
+              <Text style={[s.typeText, { color: conf.color }]}>{conf.label}</Text>
+            </View>
+            {notif.priority === 'urgent' && (
+              <View style={s.urgentBadge}>
+                <Ionicons name="alert-circle" size={10} color={SemanticColors.feedbackError} />
+                <Text style={s.urgentBadgeText}>{t('notifications.urgent', 'Urgent')}</Text>
+              </View>
+            )}
+            {notif.priority === 'high' && (
+              <View style={[s.urgentBadge, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
+                <Text style={[s.urgentBadgeText, { color: SemanticColors.feedbackWarning }]}>{t('notifications.high', 'High')}</Text>
+              </View>
+            )}
+            {notif.actionRoute && (
+              <Pressable style={s.viewBtn} onPress={() => handlePress(notif)} accessibilityRole="button" accessibilityLabel={`${t('common.view', 'View')} ${notif.title}`}>
+                <Text style={s.viewBtnText}>{t('common.view', 'View')}</Text>
+                <Ionicons name="chevron-forward" size={12} color={Palette.hermesOrange} />
+              </Pressable>
+            )}
+          </View>
+        </View>
+      </Pressable>
+    );
+  };
+
+  const renderGroupedCard = (group: GroupedNotification) => {
+    const conf = TYPE_CONFIG[group.type];
+    const unreadCount = group.notifications.filter(n => !n.read).length;
+
+    // Single notification — render normally
+    if (group.count === 1) {
+      return (
+        <FadeIn key={group.notifications[0].id} delay={0} duration={300}>
+          {renderNotificationCard(group.notifications[0])}
+        </FadeIn>
+      );
+    }
+
+    // Grouped notification — expandable
+    return (
+      <FadeIn key={`group-${group.type}`} delay={0} duration={300}>
+        <View style={s.groupedCard}>
+          <Pressable
+            style={({ pressed }) => [s.groupedHeader, pressed && { opacity: 0.9 }]}
+            onPress={() => toggleGroup(group.type)}
+            accessibilityRole="button"
+            accessibilityLabel={`${group.groupTitle}, ${unreadCount} unread. ${group.isExpanded ? 'Collapse' : 'Expand'}`}
+          >
+            <View style={[s.iconWrap, { backgroundColor: conf.color + '12' }]}>
+              <Ionicons name={conf.icon} size={18} color={conf.color} />
+            </View>
+            <View style={s.groupedHeaderContent}>
+              <View style={s.titleRow}>
+                <Text style={s.groupedTitle}>{group.groupTitle}</Text>
+                <Ionicons
+                  name={group.isExpanded ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color={SemanticColors.textTertiary}
+                />
+              </View>
+              <View style={s.groupedMeta}>
+                {unreadCount > 0 && (
+                  <View style={[s.typePill, { backgroundColor: conf.color + '10' }]}>
+                    <Text style={[s.typeText, { color: conf.color }]}>
+                      {unreadCount} {t('notifications.unread', 'unread')}
+                    </Text>
+                  </View>
+                )}
+                <Text style={s.time}>{formatTimeAgo(group.latestAt)}</Text>
+              </View>
+            </View>
+          </Pressable>
+
+          {/* Action buttons for grouped notifications */}
+          {!group.isExpanded && (
+            <View style={s.groupActions}>
+              {getActionsForType(group.type).map(action => (
+                <Pressable
+                  key={action.route}
+                  style={s.groupActionBtn}
+                  onPress={() => router.push(action.route as any)}
+                  accessibilityRole="button"
+                  accessibilityLabel={action.label}
+                >
+                  <Ionicons name={action.icon as IconName} size={14} color={Palette.hermesOrange} />
+                  <Text style={s.groupActionText}>{action.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+
+          {/* Expanded: show all notifications in the group */}
+          {group.isExpanded && (
+            <View style={s.groupedItems}>
+              {group.notifications.map(notif => renderNotificationCard(notif))}
+            </View>
+          )}
+        </View>
+      </FadeIn>
+    );
+  };
+
   return (
     <View style={s.container}>
       {/* Header */}
@@ -102,7 +215,7 @@ export default function NotificationsScreen() {
           <Text style={s.headerTitle}>{t('notifications.title', 'Notifications')}</Text>
         </View>
         {stats.unread > 0 && (
-          <Pressable style={s.markAllBtn} onPress={() => { markAllRead(); hapticSuccess(); }} accessibilityRole="button" accessibilityLabel={t('notifications.markAllRead', 'Mark all as read')}>
+          <Pressable style={s.markAllBtn} onPress={handleMarkAllRead} accessibilityRole="button" accessibilityLabel={t('notifications.markAllRead', 'Mark all as read')}>
             <Ionicons name="checkmark-done" size={18} color={Palette.hermesOrange} />
           </Pressable>
         )}
@@ -115,7 +228,7 @@ export default function NotificationsScreen() {
           <Text style={s.unreadText}>{stats.unread} {t('notifications.unread', 'unread')}</Text>
           {stats.urgent > 0 && (
             <View style={s.urgentPill}>
-              <Text style={s.urgentText}>{stats.urgent} {t('notifications.urgent', 'urgent')}</Text>
+              <Text style={s.urgentTextSmall}>{stats.urgent} {t('notifications.urgent', 'urgent')}</Text>
             </View>
           )}
         </View>
@@ -123,11 +236,11 @@ export default function NotificationsScreen() {
 
       {/* Tabs */}
       <View style={s.tabBar}>
-        <Pressable style={[s.tab, activeTab === 'inbox' && s.tabActive]} onPress={() => setActiveTab('inbox')} accessibilityRole="tab" accessibilityLabel={t('notifications.inbox', 'Inbox')} accessibilityState={{ selected: activeTab === 'inbox' }}>
+        <Pressable style={[s.tab, activeTab === 'inbox' && s.tabActive]} onPress={() => setActiveTab('inbox')} accessibilityRole="tab" accessibilityState={{ selected: activeTab === 'inbox' }}>
           <Ionicons name="mail-outline" size={14} color={activeTab === 'inbox' ? '#fff' : SemanticColors.textTertiary} />
           <Text style={[s.tabText, activeTab === 'inbox' && s.tabTextActive]}>{t('notifications.inbox', 'Inbox')}</Text>
         </Pressable>
-        <Pressable style={[s.tab, activeTab === 'settings' && s.tabActive]} onPress={() => setActiveTab('settings')} accessibilityRole="tab" accessibilityLabel={t('notifications.settings', 'Settings')} accessibilityState={{ selected: activeTab === 'settings' }}>
+        <Pressable style={[s.tab, activeTab === 'settings' && s.tabActive]} onPress={() => setActiveTab('settings')} accessibilityRole="tab" accessibilityState={{ selected: activeTab === 'settings' }}>
           <Ionicons name="settings-outline" size={14} color={activeTab === 'settings' ? '#fff' : SemanticColors.textTertiary} />
           <Text style={[s.tabText, activeTab === 'settings' && s.tabTextActive]}>{t('notifications.settings', 'Settings')}</Text>
         </Pressable>
@@ -148,66 +261,9 @@ export default function NotificationsScreen() {
                 <Text style={s.emptyDesc}>{t('notifications.noNewDesc', 'No new notifications. We\'ll let you know when something needs your attention.')}</Text>
               </View>
             ) : (
-              grouped.map((group, gi) => (
-                <FadeIn key={group.label} delay={gi * 50} duration={300}>
-                  <View style={s.group}>
-                    <Text style={s.groupLabel}>{group.label}</Text>
-                    <View style={s.groupCards}>
-                      {group.items.map((notif) => {
-                        const conf = TYPE_CONFIG[notif.type];
-                        return (
-                          <Pressable
-                            key={notif.id}
-                            style={({ pressed }) => [s.card, !notif.read && s.cardUnread, pressed && { opacity: 0.9 }]}
-                            onPress={() => handlePress(notif)}
-                            accessibilityRole="button"
-                            accessibilityLabel={`${notif.title}, ${notif.body}${!notif.read ? ', unread' : ''}`}
-                          >
-                            {/* Left accent */}
-                            {!notif.read && <View style={[s.cardAccent, { backgroundColor: conf.color }]} />}
-
-                            {/* Icon */}
-                            <View style={[s.iconWrap, { backgroundColor: conf.color + '12' }]}>
-                              <Ionicons name={conf.icon} size={18} color={conf.color} />
-                            </View>
-
-                            {/* Content */}
-                            <View style={s.content}>
-                              <View style={s.titleRow}>
-                                <Text style={[s.title, !notif.read && s.titleUnread]} numberOfLines={1}>{notif.title}</Text>
-                                <Text style={s.time}>{formatTimeAgo(notif.createdAt)}</Text>
-                              </View>
-                              <Text style={s.body} numberOfLines={2}>{notif.body}</Text>
-                              <View style={s.footer}>
-                                <View style={[s.typePill, { backgroundColor: conf.color + '10' }]}>
-                                  <Text style={[s.typeText, { color: conf.color }]}>{conf.label}</Text>
-                                </View>
-                                {notif.priority === 'urgent' && (
-                                  <View style={s.urgentBadge}>
-                                    <Ionicons name="alert-circle" size={10} color={SemanticColors.feedbackError} />
-                                    <Text style={s.urgentBadgeText}>{t('notifications.urgent', 'Urgent')}</Text>
-                                  </View>
-                                )}
-                                {notif.priority === 'high' && (
-                                  <View style={[s.urgentBadge, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
-                                    <Text style={[s.urgentBadgeText, { color: SemanticColors.feedbackWarning }]}>{t('notifications.high', 'High')}</Text>
-                                  </View>
-                                )}
-                                {notif.actionRoute && (
-                                  <Pressable style={s.viewBtn} onPress={() => handlePress(notif)} accessibilityRole="button" accessibilityLabel={`${t('common.view', 'View')} ${notif.title}`}>
-                                    <Text style={s.viewBtnText}>{t('common.view', 'View')}</Text>
-                                    <Ionicons name="chevron-forward" size={12} color={Palette.hermesOrange} />
-                                  </Pressable>
-                                )}
-                              </View>
-                            </View>
-                          </Pressable>
-                        );
-                      })}
-                    </View>
-                  </View>
-                </FadeIn>
-              ))
+              <View style={s.groupList}>
+                {groups.map(group => renderGroupedCard(group))}
+              </View>
             )}
           </>
         ) : (
@@ -216,6 +272,32 @@ export default function NotificationsScreen() {
             <View style={s.settingsSection}>
               <Text style={s.settingsTitle}>{t('notifications.preferences', 'Notification preferences')}</Text>
               <Text style={s.settingsDesc}>{t('notifications.preferencesDesc', 'Choose which notifications you want to receive')}</Text>
+
+              {/* Quiet hours */}
+              <View style={s.quietHoursCard}>
+                <View style={s.quietHoursHeader}>
+                  <View style={[s.prefIcon, { backgroundColor: Palette.hermesOrange + '12' }]}>
+                    <Ionicons name="moon" size={16} color={Palette.hermesOrange} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.prefLabel}>{t('notifications.quietHours', 'Quiet hours')}</Text>
+                    <Text style={s.quietHoursTime}>
+                      {String(quietHoursConfig.startHour).padStart(2, '0')}:{String(quietHoursConfig.startMinute).padStart(2, '0')} - {String(quietHoursConfig.endHour).padStart(2, '0')}:{String(quietHoursConfig.endMinute).padStart(2, '0')}
+                    </Text>
+                  </View>
+                  <Switch
+                    value={quietHoursConfig.enabled}
+                    onValueChange={toggleQuietHours}
+                    trackColor={{ true: Palette.hermesOrange, false: SemanticColors.borderDefault }}
+                    thumbColor={quietHoursConfig.enabled ? '#fff' : '#f4f4f4'}
+                  />
+                </View>
+                <Text style={s.quietHoursDesc}>
+                  {t('notifications.quietHoursDesc', 'Push notifications are silenced during quiet hours.')}
+                </Text>
+              </View>
+
+              {/* Notification type preferences */}
               <View style={s.prefList}>
                 {preferences.map(pref => {
                   const conf = TYPE_CONFIG[pref.type];
@@ -266,7 +348,7 @@ const s = StyleSheet.create({
   unreadDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Palette.hermesOrange },
   unreadText: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textSecondary },
   urgentPill: { backgroundColor: SemanticColors.feedbackError + '15', paddingHorizontal: GRID.sm, paddingVertical: 2, borderRadius: RADIUS.sm },
-  urgentText: { fontSize: TYPE.tinySize, fontFamily: TYPE.titleFamily, color: SemanticColors.feedbackError },
+  urgentTextSmall: { fontSize: TYPE.tinySize, fontFamily: TYPE.titleFamily, color: SemanticColors.feedbackError },
 
   // Tabs
   tabBar: { flexDirection: 'row', paddingHorizontal: SafeArea.side, gap: GRID.sm, paddingBottom: GRID.sm },
@@ -279,15 +361,13 @@ const s = StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: SafeArea.side, gap: GRID.lg },
 
+  // Group list
+  groupList: { gap: GRID.sm },
+
   // Empty
   empty: { alignItems: 'center', paddingVertical: GRID.xl * 2, gap: GRID.sm },
   emptyTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textSecondary },
   emptyDesc: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary, textAlign: 'center', paddingHorizontal: GRID.xl },
-
-  // Groups
-  group: { gap: GRID.sm },
-  groupLabel: { fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: SemanticColors.textTertiary, textTransform: 'uppercase', letterSpacing: 0.5 },
-  groupCards: { gap: GRID.xs },
 
   // Card
   card: {
@@ -312,10 +392,44 @@ const s = StyleSheet.create({
   viewBtn: { flexDirection: 'row', alignItems: 'center', gap: 2, marginLeft: 'auto' },
   viewBtnText: { fontSize: TYPE.tinySize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange },
 
+  // Grouped card
+  groupedCard: {
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg,
+    overflow: 'hidden',
+  },
+  groupedHeader: {
+    flexDirection: 'row', gap: GRID.sm,
+    padding: GRID.md, alignItems: 'center',
+  },
+  groupedHeaderContent: { flex: 1, gap: GRID.xs },
+  groupedTitle: { flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  groupedMeta: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm },
+  groupActions: {
+    flexDirection: 'row', gap: GRID.sm,
+    paddingHorizontal: GRID.md, paddingBottom: GRID.md,
+  },
+  groupActionBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.xs,
+    backgroundColor: Palette.hermesOrange + '0A', borderRadius: RADIUS.md,
+    paddingHorizontal: GRID.sm, paddingVertical: GRID.xs,
+  },
+  groupActionText: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange },
+  groupedItems: { gap: 1, paddingTop: 1, backgroundColor: PAGE_BG },
+
   // Settings
   settingsSection: { gap: GRID.md },
   settingsTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
   settingsDesc: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
+
+  // Quiet hours
+  quietHoursCard: {
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg,
+    padding: GRID.md, gap: GRID.sm,
+  },
+  quietHoursHeader: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm },
+  quietHoursTime: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
+  quietHoursDesc: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
+
   prefList: { gap: GRID.xs },
   prefRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md },
   prefIcon: { width: 36, height: 36, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' },

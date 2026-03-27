@@ -22,6 +22,7 @@ import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../src/config
 import { FadeIn } from '../src/components/shared/FadeIn';
 import { GradientButton } from '../src/components/shared/GradientButton';
 import { hapticSuccess } from '../src/utils/haptics';
+import { GRID, RADIUS, TYPE } from '../src/theme/tabStyles';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -136,6 +137,37 @@ export default function OnboardingScreen() {
     (i18n.language as Language) || 'en'
   );
   const [submitting, setSubmitting] = useState(false);
+
+  const handleDemoMode = useCallback(async () => {
+    try {
+      hapticSuccess();
+      // Mark onboarding complete with demo defaults
+      const onboardingData = {
+        country: 'NL' as Country,
+        language: 'en' as Language,
+        trades: ['plumbing'],
+        businessType: 'eenmanszaak',
+        registrationFields: {},
+        certifications: [],
+        postcode: '1012 AB',
+        serviceRadius: 25,
+        completedAt: new Date().toISOString(),
+        demoMode: true,
+      };
+      await AsyncStorage.setItem('@vasco_onboarding', JSON.stringify(onboardingData));
+      const userUpdates = {
+        trade: 'plumbing',
+        country: 'NL' as Country | undefined,
+        language: 'en' as Language,
+        onboardingComplete: true,
+      };
+      updateUser(userUpdates);
+      await AsyncStorage.setItem('@vasco_user_profile', JSON.stringify(userUpdates)).catch(() => {});
+      router.replace('/(contractor)');
+    } catch (err) {
+      if (__DEV__) console.error('Demo mode failed:', err);
+    }
+  }, [router, updateUser]);
 
   const toggleTrade = (trade: string) => {
     setSelectedTrades((prev) =>
@@ -254,11 +286,52 @@ export default function OnboardingScreen() {
             </View>
             <Text style={styles.welcomeTitle}>{t('onboarding.welcome')}</Text>
             <Text style={styles.welcomeSubtitle}>{t('onboarding.subtitle')}</Text>
+
+            {/* Value proposition cards */}
+            <View style={styles.valuePropsContainer}>
+              <View style={styles.valuePropCard}>
+                <View style={[styles.valuePropIcon, { backgroundColor: Palette.hermesOrange + '12' }]}>
+                  <Ionicons name="sparkles" size={20} color={Palette.hermesOrange} />
+                </View>
+                <View style={styles.valuePropContent}>
+                  <Text style={styles.valuePropTitle}>{t('onboarding.valueProp1Title', 'AI that works for you')}</Text>
+                  <Text style={styles.valuePropSubtitle}>{t('onboarding.valueProp1Desc', 'Vasco prepares quotes, reminders, and invoices automatically')}</Text>
+                </View>
+              </View>
+              <View style={styles.valuePropCard}>
+                <View style={[styles.valuePropIcon, { backgroundColor: SemanticColors.feedbackSuccessBg }]}>
+                  <Ionicons name="cash" size={20} color={SemanticColors.feedbackSuccess} />
+                </View>
+                <View style={styles.valuePropContent}>
+                  <Text style={styles.valuePropTitle}>{t('onboarding.valueProp2Title', 'Get paid faster')}</Text>
+                  <Text style={styles.valuePropSubtitle}>{t('onboarding.valueProp2Desc', 'Payment links, automated reminders, overdue tracking')}</Text>
+                </View>
+              </View>
+              <View style={styles.valuePropCard}>
+                <View style={[styles.valuePropIcon, { backgroundColor: SemanticColors.feedbackInfoBg }]}>
+                  <Ionicons name="shield-checkmark" size={20} color={SemanticColors.feedbackInfo} />
+                </View>
+                <View style={styles.valuePropContent}>
+                  <Text style={styles.valuePropTitle}>{t('onboarding.valueProp3Title', 'Stay compliant')}</Text>
+                  <Text style={styles.valuePropSubtitle}>{t('onboarding.valueProp3Desc', 'Permits, certificates, EU regulations — all tracked')}</Text>
+                </View>
+              </View>
+            </View>
+
             <Pressable
               style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
               onPress={handleNext}
             >
               <Text style={styles.primaryButtonText}>{t('onboarding.getStarted')}</Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [styles.demoButton, pressed && styles.pressed]}
+              onPress={handleDemoMode}
+              accessibilityRole="button"
+              accessibilityLabel={t('onboarding.tryDemo', 'Try with Demo Data')}
+            >
+              <Ionicons name="play-circle-outline" size={18} color={Palette.hermesOrange} />
+              <Text style={styles.demoButtonText}>{t('onboarding.tryDemo', 'Try with Demo Data')}</Text>
             </Pressable>
           </View>
         );
@@ -621,8 +694,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 16,
-    paddingBottom: 80,
+    gap: GRID.md,
+    paddingBottom: GRID.xl,
   },
   logoContainer: {
     width: 80,
@@ -899,6 +972,60 @@ const styles = StyleSheet.create({
   },
   langFlag: {
     fontSize: 22,
+  },
+  // Value proposition cards
+  valuePropsContainer: {
+    width: '100%',
+    gap: GRID.sm,
+    marginTop: GRID.md,
+    marginBottom: GRID.md,
+  },
+  valuePropCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.sm,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
+    padding: GRID.md,
+  },
+  valuePropIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  valuePropContent: {
+    flex: 1,
+    gap: 2,
+  },
+  valuePropTitle: {
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
+  },
+  valuePropSubtitle: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textSecondary,
+  },
+  // Demo button
+  demoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: GRID.sm,
+    paddingVertical: GRID.md,
+    paddingHorizontal: GRID.xl,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: Palette.hermesOrange,
+    backgroundColor: Palette.hermesOrange + '08',
+  },
+  demoButtonText: {
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.hermesOrange,
   },
   footer: {
     paddingHorizontal: SafeArea.side,

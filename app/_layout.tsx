@@ -30,6 +30,12 @@ import { startBackgroundJobScheduler, stopBackgroundJobScheduler } from '../src/
 // Enterprise roles use the (tabs) layout
 const ENTERPRISE_ROLES = ['cfo', 'coo', 'site-lead', 'director'];
 
+// Worker role check — workers get redirected to worker/ screens
+function isWorkerRole(user: { role: string; isAannemer?: boolean } | null): boolean {
+  // Workers are identified by a 'worker' role (future) or explicit flag
+  return user?.role === ('worker' as any);
+}
+
 function RootLayoutNav() {
   const { isAuthenticated, user } = useAuth();
   const segments = useSegments();
@@ -90,7 +96,9 @@ function RootLayoutNav() {
       // Route based on user role
       const isEnterprise = user?.role && ENTERPRISE_ROLES.includes(user.role);
 
-      if (isEnterprise) {
+      if (isWorkerRole(user)) {
+        router.replace('/worker/my-schedule' as any);
+      } else if (isEnterprise) {
         router.replace('/(tabs)');
       } else if (user?.onboardingComplete === false) {
         router.replace('/onboarding');
@@ -110,6 +118,7 @@ function RootLayoutNav() {
       <Stack.Screen name="contractor" />
       <Stack.Screen name="sitelead" />
       <Stack.Screen name="customer/[code]" />
+      <Stack.Screen name="worker" />
       <Stack.Screen name="hub" />
       <Stack.Screen name="(modals)/ingestion" options={{ presentation: 'modal' }} />
       <Stack.Screen name="(modals)/insights" options={{ presentation: 'modal' }} />

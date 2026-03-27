@@ -55,6 +55,14 @@ export type Job = {
   notes: never[];
   timeEntries: never[];
   materials: never[];
+  // Recurring
+  recurringPattern?: {
+    frequency: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly';
+    nextDate: string;
+    endDate?: string;
+    autoInvoice: boolean;
+    templateJobId: string;
+  };
   // Timestamps
   completedAt?: string;
   createdAt: string;
