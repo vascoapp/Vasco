@@ -197,15 +197,15 @@ export function CustomerFollowUp() {
             />
             <Text style={styles.emptyTitle}>
               {activeTab === 'due'
-                ? 'Alles bijgewerkt!'
+                ? t('followUp.allCaughtUp', 'All caught up!')
                 : activeTab === 'scheduled'
-                ? 'Geen geplande follow-ups'
-                : 'Nog geen afgeronde follow-ups'}
+                ? t('followUp.noScheduledFollowUps', 'No follow-ups scheduled')
+                : t('followUp.noCompletedFollowUps', 'No completed follow-ups yet')}
             </Text>
             <Text style={styles.emptyText}>
               {activeTab === 'due'
-                ? 'Er zijn geen openstaande follow-ups.'
-                : 'Plan een nieuwe follow-up om te beginnen.'}
+                ? t('followUp.noOpenFollowUps', 'No open follow-ups.')
+                : t('followUp.scheduleNewFollowUp', 'Schedule a new follow-up to get started.')}
             </Text>
           </View>
         ) : (
@@ -366,7 +366,7 @@ function FollowUpCard({
   };
 
   return (
-    <Pressable style={styles.followUpCard} onPress={onPress}>
+    <Pressable style={({ pressed }) => [styles.followUpCard, pressed && { opacity: 0.7 }]} onPress={onPress}>
       <View style={styles.followUpHeader}>
         <View style={[styles.typeIcon, { backgroundColor: getStatusColor(followUp.status) + '20' }]}>
           <Ionicons

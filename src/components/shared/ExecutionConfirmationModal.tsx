@@ -17,7 +17,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import type { ActionInstance, ActionRiskLevel } from '../../modules/agentActions';
@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   stepNumberActive: {
-    color: '#fff',
+    color: Palette.white,
   },
   stepLabel: {
     color: SemanticColors.textTertiary,
@@ -867,7 +867,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   confirmButtonText: {
-    color: '#fff',
+    color: Palette.white,
     fontSize: 15,
     fontWeight: '600',
   },

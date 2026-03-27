@@ -7,7 +7,7 @@
 
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import type { CriticalPath, CriticalPathActivity } from '../../types/schedule-fragility';
 
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   positionText: {
-    color: '#fff',
+    color: Palette.white,
     fontSize: 12,
     fontWeight: '700',
   },

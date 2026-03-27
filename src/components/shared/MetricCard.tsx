@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
+import { TYPE } from '../../theme/tabStyles';
 
 export type TrendDirection = 'up' | 'down' | 'neutral';
 
@@ -96,7 +97,7 @@ const styles = StyleSheet.create({
   },
   value: {
     fontSize: 22,
-    fontWeight: '700',
+    fontFamily: TYPE.sectionFamily,
   },
   valueLarge: {
     fontSize: 28,
@@ -117,7 +118,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   trendValue: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
 });

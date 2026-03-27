@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import type { DriftAlert, DriftSeverity } from '../../types/supplier-reliability';
 
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   severityText: {
-    color: '#fff',
+    color: Palette.white,
     fontSize: 10,
     fontWeight: '600',
   },

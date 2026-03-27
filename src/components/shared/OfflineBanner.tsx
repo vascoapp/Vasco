@@ -6,7 +6,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 
@@ -126,10 +126,10 @@ const styles = StyleSheet.create({
     color: SemanticColors.feedbackWarning,
   },
   offlineText: {
-    color: '#fff',
+    color: Palette.white,
   },
   syncingText: {
-    color: '#fff',
+    color: Palette.white,
   },
   syncedText: {
     color: SemanticColors.feedbackSuccess,

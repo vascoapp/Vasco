@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
+import { TYPE } from '../../theme/tabStyles';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -28,7 +29,7 @@ export function HubNavigationCard({
 
   return (
     <Pressable
-      style={[styles.card, { borderColor: roleColor + '30' }]}
+      style={({ pressed }) => [styles.card, { borderColor: roleColor + '30' }, pressed && { opacity: 0.7 }]}
       onPress={() => router.push(route as any)}
     >
       <View style={[styles.iconContainer, { backgroundColor: roleColor + '15' }]}>
@@ -67,8 +68,8 @@ const styles = StyleSheet.create({
   },
   title: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
   statContainer: {
     marginTop: Spacing.xs,
@@ -77,8 +78,8 @@ const styles = StyleSheet.create({
     borderTopColor: SemanticColors.borderDefault,
   },
   statValue: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
   },
   statLabel: {
     color: SemanticColors.textSecondary,

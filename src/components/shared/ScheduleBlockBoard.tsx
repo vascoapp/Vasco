@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
   workerAvatarText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: Palette.white,
   },
   workerOptionName: {
     fontSize: 14,

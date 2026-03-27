@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { SemanticColors } from '../theme/colors';
+import { SemanticColors, Palette } from '../theme/colors';
 import { Radius } from '../theme/radius';
 import { Shadows } from '../theme/shadows';
 import { Spacing } from '../theme/spacing';
@@ -7,17 +7,24 @@ import { Spacing } from '../theme/spacing';
 type PrimaryButtonProps = {
   label: string;
   onPress?: () => void;
+  disabled?: boolean;
 };
 
-export function PrimaryButton({ label, onPress }: PrimaryButtonProps) {
+export function PrimaryButton({ label, onPress, disabled }: PrimaryButtonProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+      disabled={disabled}
+      style={({ pressed }) => [
+        styles.button,
+        disabled && styles.disabled,
+        pressed && !disabled && styles.pressed,
+      ]}
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={{ disabled }}
     >
-      <Text style={styles.label} numberOfLines={1}>{label}</Text>
+      <Text style={[styles.label, disabled && styles.labelDisabled]} numberOfLines={1}>{label}</Text>
     </Pressable>
   );
 }
@@ -36,10 +43,17 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.85,
   },
+  disabled: {
+    backgroundColor: SemanticColors.textDisabled,
+    opacity: 0.6,
+  },
   label: {
-    color: '#0B0C0F',
+    color: SemanticColors.textPrimary,
     fontWeight: '700',
     fontSize: 16,
     letterSpacing: 0.2,
+  },
+  labelDisabled: {
+    color: SemanticColors.textTertiary,
   },
 });

@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { View, Text, Pressable, StyleSheet, Share, Platform } from 'react-native';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
 import { logWarn } from '../../utils/errorHandler';
 
 interface ErrorBoundaryProps {
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 15,
     fontFamily: 'Inter_500Medium',
-    color: '#FFFFFF',
+    color: Palette.white,
   },
   copyButton: {
     paddingHorizontal: 24,

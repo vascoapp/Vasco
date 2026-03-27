@@ -38,18 +38,19 @@ interface VascoCardProps {
 // ---------------------------------------------------------------------------
 
 function ConfidenceBadge({ confidence }: { confidence: number }) {
+  const { t } = useTranslation();
   const pct = Math.round(confidence * 100);
   let dotColor: string;
   let label: string;
   if (confidence >= 0.8) {
     dotColor = SemanticColors.feedbackSuccess;
-    label = 'High confidence';
+    label = t('ai.highConfidence', 'High confidence');
   } else if (confidence >= 0.6) {
     dotColor = Palette.hermesOrange;
-    label = 'Medium';
+    label = t('ai.mediumConfidence', 'Medium');
   } else {
     dotColor = SemanticColors.textTertiary;
-    label = 'Learning';
+    label = t('ai.learning', 'Learning');
   }
   return (
     <View style={s.confidenceBadge} accessibilityLabel={`${label}: ${pct}%`}>

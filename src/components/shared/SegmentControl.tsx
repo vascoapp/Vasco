@@ -23,7 +23,7 @@ export function SegmentControl({ segments, selected, onSelect, accentColor }: Se
         return (
           <Pressable
             key={seg.key}
-            style={[styles.tab, active && styles.tabActive]}
+            style={({ pressed }) => [styles.tab, active && styles.tabActive, pressed && { opacity: 0.7 }]}
             onPress={() => onSelect(seg.key)}
           >
             <Text style={[styles.label, active && [styles.labelActive, { color: accent }]]}>

@@ -30,7 +30,7 @@ function getCellColor(utilization: number, status: HeatmapCell['status']): strin
 }
 
 function getCellTextColor(utilization: number): string {
-  if (utilization >= 70) return '#FFFFFF';
+  if (utilization >= 70) return Palette.white;
   return SemanticColors.textSecondary;
 }
 
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   initialsText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: Palette.white,
   },
   cell: {
     width: CELL_SIZE,

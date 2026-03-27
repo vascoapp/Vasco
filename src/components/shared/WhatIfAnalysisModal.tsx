@@ -17,7 +17,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import type { Scenario, ScenarioType, ImpactAnalysis, Activity } from '../../types/schedule-fragility';
@@ -748,7 +748,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary,
   },
   primaryButtonText: {
-    color: '#fff',
+    color: Palette.white,
     fontSize: 15,
     fontWeight: '600',
   },

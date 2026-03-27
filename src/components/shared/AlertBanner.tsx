@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   item: {
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
+    borderBottomColor: SemanticColors.borderMuted,
   },
   itemTitle: {
     color: SemanticColors.textPrimary,

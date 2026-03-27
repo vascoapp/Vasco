@@ -7,7 +7,7 @@
 
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import type { SupplierPerformance, SupplierRanking } from '../../types/supplier-reliability';
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   gradeTextLarge: {
-    color: '#fff',
+    color: Palette.white,
     fontSize: 18,
     fontWeight: '700',
   },
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   alertBadgeText: {
-    color: '#fff',
+    color: Palette.white,
     fontSize: 9,
     fontWeight: '600',
   },
