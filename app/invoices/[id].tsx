@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { AssistBanner } from '../../src/components/AssistBanner';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
 import { Screen } from '../../src/components/Screen';
@@ -23,6 +24,7 @@ import {
 type IconName = keyof typeof Ionicons.glyphMap;
 
 export default function InvoiceDetailScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const {
@@ -56,7 +58,7 @@ export default function InvoiceDetailScreen() {
     return (
       <Screen>
         <View style={styles.container}>
-          <Text style={Typography.title}>Invoice not found</Text>
+          <Text style={Typography.title}>{t('invoices.notFound', 'Invoice not found')}</Text>
         </View>
       </Screen>
     );
@@ -87,45 +89,57 @@ export default function InvoiceDetailScreen() {
   const handleMarkPaid = () => {
     markInvoicePaid(invoice.id);
     hapticSuccess();
+    Alert.alert(
+      t('invoices.paidTitle', 'Payment received!'),
+      t('invoices.paidDesc', { defaultValue: '{{amount}} from {{customer}} marked as paid. Great work!', amount: formattedTotal, customer: invoice.customer }),
+      [
+        { text: t('invoices.viewAll', 'View all invoices'), onPress: () => router.push('/(contractor)/geld' as any) },
+        { text: t('common.close', 'Close') },
+      ],
+    );
   };
 
   const handleMarkSent = () => {
     markInvoiceSent(invoice.id);
     hapticSuccess();
+    Alert.alert(
+      t('invoices.reminderSent', 'Reminder sent'),
+      t('invoices.reminderSentDesc', 'Vasco will track this and remind you again if needed.'),
+    );
   };
 
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <Text style={Typography.title}>Invoice {invoice.id}</Text>
+          <Text style={Typography.title}>{t('invoices.invoice', 'Invoice')} {invoice.id}</Text>
           <Text style={Typography.muted}>
-            {invoice.status} · {invoice.dueInDays >= 0 ? `Due in ${invoice.dueInDays} days` : `${Math.abs(invoice.dueInDays)} days overdue`}
+            {invoice.status} · {invoice.dueInDays >= 0 ? t('invoices.dueIn', { defaultValue: 'Due in {{count}} days', count: invoice.dueInDays }) : t('invoices.overdueDays', { defaultValue: '{{count}} days overdue', count: Math.abs(invoice.dueInDays) })}
           </Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={Typography.subtitle}>Customer</Text>
+          <Text style={Typography.subtitle}>{t('jobs.client', 'Customer')}</Text>
           <Text style={Typography.body}>{invoice.customer}</Text>
           <Text style={Typography.muted}>{invoice.job}</Text>
         </View>
 
         <AssistBanner
-          title="Recommended next step"
-          description="Send a reminder now to reduce late payment risk."
-          actionLabel="Send reminder"
+          title={t('invoices.recommendedNext', 'Recommended next step')}
+          description={t('invoices.sendReminderHint', 'Send a reminder now to reduce late payment risk.')}
+          actionLabel={t('invoices.sendReminder', 'Send reminder')}
           meta={formattedTotal}
         />
 
         <View style={styles.card}>
-          <Text style={Typography.subtitle}>Total</Text>
+          <Text style={Typography.subtitle}>{t('quotes.total', 'Total')}</Text>
           <Text style={Typography.title}>{formattedTotal}</Text>
-          <Text style={Typography.muted}>Invoice timing is optimal for this job.</Text>
+          <Text style={Typography.muted}>{t('invoices.timingOptimal', 'Invoice timing is optimal for this job.')}</Text>
           {lastExport ? (
-            <Text style={styles.exportedText}>Exported to Moneybird just now</Text>
+            <Text style={styles.exportedText}>{t('invoices.exportedMoneybird', 'Exported to Moneybird just now')}</Text>
           ) : null}
           {lastPayment ? (
-            <Text style={styles.paymentText}>Mollie payment link created</Text>
+            <Text style={styles.paymentText}>{t('invoices.mollieCreated', 'Mollie payment link created')}</Text>
           ) : null}
         </View>
 
@@ -133,7 +147,7 @@ export default function InvoiceDetailScreen() {
         <View style={styles.card}>
           <View style={styles.paymentHeader}>
             <Ionicons name="shield-checkmark" size={18} color={SemanticColors.feedbackSuccess} />
-            <Text style={[Typography.subtitle, { flex: 1 }]}>Offered payment methods</Text>
+            <Text style={[Typography.subtitle, { flex: 1 }]}>{t('invoices.offeredPaymentMethods', 'Offered payment methods')}</Text>
           </View>
           <View style={styles.paymentMethodList}>
             {paymentMethods.map((pm) => {
@@ -165,7 +179,7 @@ export default function InvoiceDetailScreen() {
                   {isPreferred && (
                     <View style={[styles.preferredBadge, { backgroundColor: brandColor + '15' }]}>
                       <Ionicons name="heart" size={10} color={brandColor} />
-                      <Text style={[styles.preferredBadgeText, { color: brandColor }]}>Preferred</Text>
+                      <Text style={[styles.preferredBadgeText, { color: brandColor }]}>{t('invoices.preferred', 'Preferred')}</Text>
                     </View>
                   )}
                 </View>
@@ -176,7 +190,7 @@ export default function InvoiceDetailScreen() {
             <View style={styles.preferenceNote}>
               <Ionicons name="heart" size={14} color={Palette.hermesOrange} />
               <Text style={styles.preferenceNoteText}>
-                Customer prefers: {getPaymentMethodLabel(customerPreference)}
+                {t('invoices.customerPrefers', { defaultValue: 'Customer prefers: {{method}}', method: getPaymentMethodLabel(customerPreference) })}
               </Text>
             </View>
           )}
@@ -189,7 +203,7 @@ export default function InvoiceDetailScreen() {
         </View>
 
         <View style={styles.actions}>
-          <PrimaryButton label="PDF bekijken & delen" onPress={async () => {
+          <PrimaryButton label={t('invoices.viewSharePdf', 'PDF bekijken & delen')} onPress={async () => {
             hapticSuccess();
             const autoInv = invoiceAutomationService.getInvoice(invoice.id);
             if (autoInv) {
@@ -197,7 +211,7 @@ export default function InvoiceDetailScreen() {
             }
           }} />
           <PrimaryButton
-            label={mollieConnected ? 'Create iDEAL link' : 'Connect Mollie'}
+            label={mollieConnected ? t('invoices.createIdealLink', 'Create iDEAL link') : t('invoices.connectMollie', 'Connect Mollie')}
             onPress={() =>
               mollieConnected
                 ? handleCreatePayment()
@@ -205,13 +219,13 @@ export default function InvoiceDetailScreen() {
             }
           />
           <PrimaryButton
-            label="Export to Moneybird"
+            label={t('invoices.exportMoneybird', 'Export to Moneybird')}
             onPress={() =>
               moneybirdConnected ? handleExportMoneybird() : router.push('/(modals)/moneybird')
             }
           />
-          <PrimaryButton label="Send reminder" onPress={handleMarkSent} />
-          <PrimaryButton label="Mark paid" onPress={handleMarkPaid} />
+          <PrimaryButton label={t('invoices.sendReminder', 'Send reminder')} onPress={handleMarkSent} />
+          <PrimaryButton label={t('invoices.markPaid', 'Mark paid')} onPress={handleMarkPaid} />
         </View>
       </ScrollView>
     </Screen>

@@ -1,6 +1,7 @@
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { hapticSuccess } from '../../src/utils/haptics';
 import { useTranslation } from 'react-i18next';
 import { AssistBanner } from '../../src/components/AssistBanner';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
@@ -213,7 +214,16 @@ export default function QuoteDetailScreen() {
                       try {
                         const jobId = await convertQuoteToJob(quote.id);
                         if (jobId) {
-                          Alert.alert(t('quotes.jobCreated', 'Job created'), t('quotes.jobCreatedDesc', 'The quote has been accepted and a job has been created.'));
+                          hapticSuccess();
+                          Alert.alert(
+                            t('quotes.jobCreated', 'Job created'),
+                            t('quotes.jobCreatedDesc', 'The quote has been accepted and a job has been created.'),
+                            [
+                              { text: t('quotes.viewJob', 'View job'), onPress: () => router.replace(`/contractor/job/${jobId}` as any) },
+                              { text: t('quotes.createInvoice', 'Create invoice'), onPress: () => router.push(`/quotes/${quote.id}/invoice` as any) },
+                              { text: t('common.close', 'Close') },
+                            ],
+                          );
                         }
                       } catch (err: any) {
                         Alert.alert(t('common.error', 'Error'), err?.message || t('quotes.conversionFailed', 'Could not convert quote to job.'));

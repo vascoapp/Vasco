@@ -56,7 +56,7 @@ export default function SearchScreen() {
           subtitle: `${job.status} · ${job.trade ?? ''}`,
           icon: 'hammer',
           color: Palette.hermesOrange,
-          route: `/quotes/${job.id}`,
+          route: `/contractor/job/${job.id}`,
         });
       }
     }
