@@ -39,12 +39,25 @@ function getLastNMonthLabels(n: number): string[] {
   return labels;
 }
 
+/** Compact currency: €12.5K, €1.2M, €850 */
+function compactCurrency(amount: number): string {
+  if (Math.abs(amount) >= 1_000_000) return `\u20AC${(amount / 1_000_000).toFixed(1)}M`;
+  if (Math.abs(amount) >= 1_000) return `\u20AC${(amount / 1_000).toFixed(1)}K`;
+  return `\u20AC${Math.round(amount)}`;
+}
+
+type SortMode = 'value-desc' | 'date-desc' | 'status';
+
 export default function GeldScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const [invoiceFilter, setInvoiceFilter] = useState('');
   const [quoteFilter, setQuoteFilter] = useState('');
+  const [invoiceStatusFilter, setInvoiceStatusFilter] = useState<string>('all');
+  const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>('all');
+  const [invoiceSort, setInvoiceSort] = useState<SortMode>('date-desc');
+  const [quoteSort, setQuoteSort] = useState<SortMode>('date-desc');
   const [sendingInvoiceId, setSendingInvoiceId] = useState<string | null>(null);
   const { invoices, quotes, markInvoiceSent, removeInvoice, removeQuote, isLoading } = useAppState();
   const cashFlow = useCashFlow();
@@ -192,30 +205,27 @@ export default function GeldScreen() {
         <FadeIn delay={0}>
           <View style={s.kpiCard}>
             <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)} accessibilityRole="button" accessibilityLabel={`${t('money.received', 'Ontvangen')}: ${formatCurrency(paidTotal)}`}>
+              <Ionicons name="wallet" size={16} color={SemanticColors.feedbackSuccess} style={{ marginBottom: GRID.xs }} />
               <Text style={s.kpiLabel}>{t('money.revenue', 'Omzet')}</Text>
               <View style={s.kpiValueRow}>
-                <Text style={[s.kpiValue, { color: SemanticColors.feedbackSuccess }]}>{formatCurrency(paidTotal)}</Text>
+                <Text style={[s.kpiValue, { color: SemanticColors.feedbackSuccess }]}>{compactCurrency(paidTotal)}</Text>
                 <Ionicons name={revenueTrend.icon} size={14} color={revenueTrend.color} />
               </View>
               <View style={[s.kpiAccentLine, { backgroundColor: SemanticColors.feedbackSuccess }]} />
             </Pressable>
             <View style={s.kpiDivider} />
             <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)} accessibilityRole="button" accessibilityLabel={`${t('money.outstanding', 'Uitstaand')}: ${formatCurrency(outstandingTotal)}`}>
+              <Ionicons name="hourglass" size={16} color={Palette.hermesOrange} style={{ marginBottom: GRID.xs }} />
               <Text style={s.kpiLabel}>{t('money.outstanding', 'Uitstaand')}</Text>
-              <Text style={s.kpiValue}>{formatCurrency(outstandingTotal)}</Text>
+              <Text style={s.kpiValue}>{compactCurrency(outstandingTotal)}</Text>
               <View style={[s.kpiAccentLine, { backgroundColor: Palette.hermesOrange }]} />
             </Pressable>
             <View style={s.kpiDivider} />
             <Pressable style={s.kpiItem} accessibilityRole="button" accessibilityLabel={`${t('money.pipeline', 'Pipeline')}: ${formatCurrency(fin.quotePipeline)}`}>
+              <Ionicons name="analytics" size={16} color={SemanticColors.feedbackInfo} style={{ marginBottom: GRID.xs }} />
               <Text style={s.kpiLabel}>{t('money.pipeline', 'Pipeline')}</Text>
-              <Text style={s.kpiValue}>{formatCurrency(fin.quotePipeline)}</Text>
+              <Text style={s.kpiValue}>{compactCurrency(fin.quotePipeline)}</Text>
               <View style={[s.kpiAccentLine, { backgroundColor: SemanticColors.feedbackInfo }]} />
-            </Pressable>
-            <View style={s.kpiDivider} />
-            <Pressable style={s.kpiItem} accessibilityRole="button" accessibilityLabel={`${t('money.winRate', 'Win rate')}: ${fin.quoteWinRate}%`}>
-              <Text style={s.kpiLabel}>{t('money.winRate', 'Win rate')}</Text>
-              <Text style={[s.kpiValue, fin.quoteWinRate < 50 && fin.quoteWinRate > 0 && { color: SemanticColors.feedbackWarning }]}>{fin.quoteWinRate > 0 ? `${fin.quoteWinRate}%` : '—'}</Text>
-              <View style={[s.kpiAccentLine, { backgroundColor: fin.quoteWinRate < 50 && fin.quoteWinRate > 0 ? SemanticColors.feedbackWarning : SemanticColors.feedbackSuccess }]} />
             </Pressable>
           </View>
           {/* Collection rate badge */}
@@ -261,9 +271,27 @@ export default function GeldScreen() {
                 />
               </View>
             </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipRow}>
+              {(['all', 'overdue', 'sent', 'paid', 'draft'] as const).map(status => (
+                <Pressable key={status} style={[s.filterChip, invoiceStatusFilter === status && s.filterChipActive]} onPress={() => setInvoiceStatusFilter(status)}>
+                  <Text style={[s.filterChipText, invoiceStatusFilter === status && s.filterChipTextActive]}>
+                    {status === 'all' ? t('common.all', 'All') : status === 'overdue' ? t('money.overdue', 'Overdue') : status === 'sent' ? t('invoices.sent', 'Sent') : status === 'paid' ? t('invoices.paid', 'Paid') : t('invoices.draft', 'Draft')}
+                  </Text>
+                </Pressable>
+              ))}
+              <View style={s.chipDivider} />
+              {(['value-desc', 'date-desc'] as const).map(sort => (
+                <Pressable key={sort} style={[s.filterChip, invoiceSort === sort && s.filterChipActive]} onPress={() => setInvoiceSort(sort)}>
+                  <Ionicons name={sort === 'value-desc' ? 'trending-down' : 'time'} size={12} color={invoiceSort === sort ? Palette.white : SemanticColors.textSecondary} />
+                  <Text style={[s.filterChipText, invoiceSort === sort && s.filterChipTextActive]}>
+                    {sort === 'value-desc' ? t('money.byValue', 'Value') : t('money.byDate', 'Date')}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
             {invoices.length > 0 ? (
               <View style={s.docList}>
-                {documents.filter(d => d.type === 'factuur' && (!invoiceFilter || d.name.toLowerCase().includes(invoiceFilter.toLowerCase()))).map((doc) => (
+                {documents.filter(d => d.type === 'factuur' && (!invoiceFilter || d.name.toLowerCase().includes(invoiceFilter.toLowerCase())) && (invoiceStatusFilter === 'all' || d.status === invoiceStatusFilter)).sort((a, b) => invoiceSort === 'value-desc' ? b.amount - a.amount : 0).map((doc) => (
                   <Pressable
                     key={doc.id}
                     style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
@@ -343,10 +371,28 @@ export default function GeldScreen() {
                 />
               </View>
             </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipRow}>
+              {(['all', 'sent', 'accepted', 'draft'] as const).map(status => (
+                <Pressable key={status} style={[s.filterChip, quoteStatusFilter === status && s.filterChipActive]} onPress={() => setQuoteStatusFilter(status)}>
+                  <Text style={[s.filterChipText, quoteStatusFilter === status && s.filterChipTextActive]}>
+                    {status === 'all' ? t('common.all', 'All') : status === 'sent' ? t('quotes.sent', 'Sent') : status === 'accepted' ? t('quotes.accepted', 'Accepted') : t('quotes.draft', 'Draft')}
+                  </Text>
+                </Pressable>
+              ))}
+              <View style={s.chipDivider} />
+              {(['value-desc', 'date-desc'] as const).map(sort => (
+                <Pressable key={sort} style={[s.filterChip, quoteSort === sort && s.filterChipActive]} onPress={() => setQuoteSort(sort)}>
+                  <Ionicons name={sort === 'value-desc' ? 'trending-down' : 'time'} size={12} color={quoteSort === sort ? Palette.white : SemanticColors.textSecondary} />
+                  <Text style={[s.filterChipText, quoteSort === sort && s.filterChipTextActive]}>
+                    {sort === 'value-desc' ? t('money.byValue', 'Value') : t('money.byDate', 'Date')}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
 
             {quotes.length > 0 ? (
               <View style={s.docList}>
-                {documents.filter(d => d.type === 'offerte' && (!quoteFilter || d.name.toLowerCase().includes(quoteFilter.toLowerCase()))).map((doc) => (
+                {documents.filter(d => d.type === 'offerte' && (!quoteFilter || d.name.toLowerCase().includes(quoteFilter.toLowerCase())) && (quoteStatusFilter === 'all' || d.status === quoteStatusFilter)).sort((a, b) => quoteSort === 'value-desc' ? b.amount - a.amount : 0).map((doc) => (
                   <Pressable
                     key={doc.id}
                     style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
@@ -1004,6 +1050,41 @@ const s = StyleSheet.create({
     fontFamily: TYPE.captionFamily,
     color: SemanticColors.textSecondary,
     flex: 1,
+  },
+
+  // Filter chips
+  chipRow: {
+    flexDirection: 'row',
+    gap: GRID.sm,
+    paddingBottom: GRID.sm,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.xs,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.full,
+    paddingHorizontal: GRID.md - 4,
+    paddingVertical: GRID.sm - 2,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  filterChipActive: {
+    backgroundColor: Palette.hermesOrange,
+    borderColor: Palette.hermesOrange,
+  },
+  filterChipText: {
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textSecondary,
+  },
+  filterChipTextActive: {
+    color: Palette.white,
+  },
+  chipDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: SemanticColors.borderDefault,
   },
 
   // FAB

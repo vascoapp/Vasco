@@ -169,6 +169,18 @@ const MOCK_USERS: Record<string, User> = {
     trade: 'painting',
     onboardingComplete: true,
   },
+  'new@vasco.dev': {
+    id: 'user-new-001',
+    email: 'new@vasco.dev',
+    name: 'New User',
+    role: 'contractor',
+    company: '',
+    projects: [],
+    country: 'NL',
+    language: 'en',
+    trade: 'plumbing',
+    onboardingComplete: false,
+  },
 };
 
 // ============================================

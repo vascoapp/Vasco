@@ -945,68 +945,6 @@ export default function TodayScreen() {
           />
         </FadeIn>
 
-        {/* Onboarding progress nudge */}
-        {!onboardingDone && nextStep && (
-          <Pressable
-            style={styles.onboardingCard}
-            onPress={() => router.push(nextStep.route as any)}
-            accessibilityRole="button"
-            accessibilityLabel={`${t('onboarding.setupProgress', 'Complete your setup')}: ${nextStep.action}`}
-          >
-            <View style={styles.onboardingCircle}>
-              <Text style={styles.onboardingPercent}>{onboardingProgress}%</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.onboardingTitle}>{t('onboarding.setupProgress', 'Complete your setup')}</Text>
-              <Text style={styles.onboardingDesc}>{nextStep.action}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
-          </Pressable>
-        )}
-
-        {/* Welcome card for first-time users */}
-        {showWelcome && (
-          <FadeIn delay={100}>
-            <View style={styles.welcomeCard}>
-              <View style={styles.welcomeIconRow}>
-                <View style={styles.welcomeIcon}>
-                  <Ionicons name="sparkles" size={20} color={Palette.hermesOrange} />
-                </View>
-                <Pressable
-                  onPress={() => {
-                    setShowWelcome(false);
-                    AsyncStorage.setItem('@vasco_welcome_dismissed', 'true').catch(() => {});
-                  }}
-                  hitSlop={8}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('common.close', 'Close')}
-                >
-                  <Ionicons name="close" size={18} color={SemanticColors.textTertiary} />
-                </Pressable>
-              </View>
-              <Text style={styles.welcomeTitle}>{t('dashboard.welcomeTitle', 'Welcome to Vasco!')}</Text>
-              <Text style={styles.welcomeDesc}>{t('dashboard.welcomeDesc', 'Your AI-powered business assistant is ready. Here are some things to try:')}</Text>
-              <View style={styles.welcomeSteps}>
-                <Pressable style={styles.welcomeStep} onPress={() => router.push('/contractor/tiered-quote' as any)}>
-                  <View style={[styles.welcomeStepDot, { backgroundColor: Palette.hermesOrange }]} />
-                  <Text style={styles.welcomeStepText}>{t('dashboard.welcomeStep1', 'Create your first quote')}</Text>
-                  <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
-                </Pressable>
-                <Pressable style={styles.welcomeStep} onPress={() => router.push('/(contractor)/klanten' as any)}>
-                  <View style={[styles.welcomeStepDot, { backgroundColor: SemanticColors.feedbackSuccess }]} />
-                  <Text style={styles.welcomeStepText}>{t('dashboard.welcomeStep2', 'Add a customer')}</Text>
-                  <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
-                </Pressable>
-                <Pressable style={styles.welcomeStep} onPress={() => router.push('/contractor/drag-schedule' as any)}>
-                  <View style={[styles.welcomeStepDot, { backgroundColor: SemanticColors.feedbackInfo }]} />
-                  <Text style={styles.welcomeStepText}>{t('dashboard.welcomeStep3', 'Plan your schedule')}</Text>
-                  <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
-                </Pressable>
-              </View>
-            </View>
-          </FadeIn>
-        )}
-
         {/* Action Required — now inside VascoCard above */}
 
         {/* Today's Schedule + Active Jobs */}

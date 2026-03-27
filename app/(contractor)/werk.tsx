@@ -128,11 +128,23 @@ export default function WerkScreen() {
       >
         {/* KPI strip */}
         <View style={s.kpiStrip}>
-          <View style={s.kpi}><Text style={s.kpiValue}>{activeCount}</Text><Text style={s.kpiLabel}>{t('dashboard.active', 'Active')}</Text></View>
+          <View style={s.kpi}>
+            <Ionicons name="briefcase" size={16} color={Palette.hermesOrange} style={{ marginBottom: GRID.xs }} />
+            <Text style={s.kpiValue}>{activeCount}</Text>
+            <Text style={s.kpiLabel}>{t('dashboard.active', 'Active')}</Text>
+          </View>
           <View style={s.kpiDivider} />
-          <View style={s.kpi}><Text style={s.kpiValue}>{scheduledToday}</Text><Text style={s.kpiLabel}>{t('dashboard.today', 'Today')}</Text></View>
+          <View style={s.kpi}>
+            <Ionicons name="calendar" size={16} color={SemanticColors.feedbackInfo} style={{ marginBottom: GRID.xs }} />
+            <Text style={s.kpiValue}>{scheduledToday}</Text>
+            <Text style={s.kpiLabel}>{t('dashboard.today', 'Today')}</Text>
+          </View>
           <View style={s.kpiDivider} />
-          <View style={s.kpi}><Text style={s.kpiValue}>{leadCount}</Text><Text style={s.kpiLabel}>{t('dashboard.leads', 'Leads')}</Text></View>
+          <View style={s.kpi}>
+            <Ionicons name="people" size={16} color={SemanticColors.feedbackSuccess} style={{ marginBottom: GRID.xs }} />
+            <Text style={s.kpiValue}>{leadCount}</Text>
+            <Text style={s.kpiLabel}>{t('dashboard.leads', 'Leads')}</Text>
+          </View>
         </View>
 
         {/* Action strip — horizontal scroll */}
@@ -155,30 +167,6 @@ export default function WerkScreen() {
             </Pressable>
           ))}
         </ScrollView>
-
-        {/* Active Projects (aannemer only) */}
-        {user?.isAannemer && projects.length > 0 && (
-          <FadeIn delay={0}>
-            <Text style={s.sectionTitle}>{t('jobs.projects', 'Projecten')}</Text>
-            {projects.filter(p => p.status === 'active' || p.status === 'planning').slice(0, 3).map(project => (
-              <Pressable
-                key={project.id}
-                style={({ pressed }) => [s.jobCard, pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }]}
-                onPress={() => router.push(`/contractor/projects/${project.id}` as any)}
-                accessibilityRole="button"
-                accessibilityLabel={`${t('jobs.projects', 'Project')}: ${project.title}`}
-                accessibilityHint="View project details"
-              >
-                <View style={[s.jobAccent, { backgroundColor: project.status === 'active' ? Palette.hermesOrange : SemanticColors.textTertiary }]} />
-                <View style={s.jobContent}>
-                  <Text style={s.jobTitle} numberOfLines={1} ellipsizeMode="tail">{project.title}</Text>
-                  <Text style={s.jobMeta}>{project.jobIds.length} {t('jobs.jobsCount', 'klussen')} · €{project.totalBudget.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
-              </Pressable>
-            ))}
-          </FadeIn>
-        )}
 
         {/* Today's Schedule */}
         <FadeIn delay={0}>
@@ -323,6 +311,30 @@ export default function WerkScreen() {
                   <Text style={s.jobMeta} numberOfLines={1} ellipsizeMode="tail">
                     {[job.trade, job.customerId, job.status].filter(Boolean).join(' · ')}
                   </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+              </Pressable>
+            ))}
+          </FadeIn>
+        )}
+
+        {/* Active Projects (aannemer only) */}
+        {user?.isAannemer && projects.length > 0 && (
+          <FadeIn delay={100}>
+            <Text style={s.sectionTitle}>{t('jobs.projects', 'Projecten')}</Text>
+            {projects.filter(p => p.status === 'active' || p.status === 'planning').slice(0, 3).map(project => (
+              <Pressable
+                key={project.id}
+                style={({ pressed }) => [s.jobCard, pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }]}
+                onPress={() => router.push(`/contractor/projects/${project.id}` as any)}
+                accessibilityRole="button"
+                accessibilityLabel={`${t('jobs.projects', 'Project')}: ${project.title}`}
+                accessibilityHint="View project details"
+              >
+                <View style={[s.jobAccent, { backgroundColor: project.status === 'active' ? Palette.hermesOrange : SemanticColors.textTertiary }]} />
+                <View style={s.jobContent}>
+                  <Text style={s.jobTitle} numberOfLines={1} ellipsizeMode="tail">{project.title}</Text>
+                  <Text style={s.jobMeta}>{project.jobIds.length} {t('jobs.jobsCount', 'klussen')} · €{project.totalBudget.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
               </Pressable>

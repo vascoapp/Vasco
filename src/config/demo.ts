@@ -30,6 +30,7 @@ export const DEMO_ACCOUNTS: DemoAccount[] = DEMO_MODE
       { email: 'cfo@vasco.dev', role: 'cfo', name: 'Sarah Chen', icon: 'cash-outline' },
       { email: 'coo@vasco.dev', role: 'coo', name: 'James Morrison', icon: 'speedometer-outline' },
       { email: 'director@vasco.dev', role: 'director', name: 'Alexandra Wright', icon: 'grid-outline' },
+      { email: 'new@vasco.dev', role: 'contractor', name: 'New User (Onboarding)', icon: 'person-add-outline' },
     ]
   : [];
 

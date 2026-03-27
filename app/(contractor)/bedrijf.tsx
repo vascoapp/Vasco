@@ -148,16 +148,19 @@ export default function BedrijfScreen() {
         <FadeIn delay={0} duration={300}>
           <View style={s.kpiStrip}>
             <View style={s.kpi}>
+              <Ionicons name="people" size={16} color={Palette.hermesOrange} style={{ marginBottom: GRID.xs }} />
               <Text style={s.kpiValue}>{customers.length}</Text>
               <Text style={s.kpiLabel}>{t('customers.contacts', 'Contacts')}</Text>
             </View>
             <View style={s.kpiDivider} />
             <View style={s.kpi}>
+              <Ionicons name="chatbubbles" size={16} color={SemanticColors.feedbackInfo} style={{ marginBottom: GRID.xs }} />
               <Text style={s.kpiValue}>{activeTrackers.length}</Text>
               <Text style={s.kpiLabel}>{t('customers.activeDecisions', 'Active decisions')}</Text>
             </View>
             <View style={s.kpiDivider} />
             <View style={s.kpi}>
+              <Ionicons name="alert-circle" size={16} color={totalOverdue > 0 ? SemanticColors.feedbackError : SemanticColors.textTertiary} style={{ marginBottom: GRID.xs }} />
               <Text style={[s.kpiValue, totalOverdue > 0 && { color: SemanticColors.feedbackError }]}>{totalOverdue}</Text>
               <Text style={s.kpiLabel}>{t('customers.overdue', 'Overdue')}</Text>
             </View>

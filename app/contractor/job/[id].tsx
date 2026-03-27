@@ -237,6 +237,41 @@ export default function JobDetailPage() {
       {/* Status-colored accent line */}
       <View style={[styles.headerAccent, { backgroundColor: getStatusColor() }]} />
 
+      {/* Timer — prominent at top */}
+      <View style={styles.timerSection}>
+        <View style={styles.timerCard}>
+          <View style={styles.timerLeft}>
+            <Ionicons name="time" size={20} color={clockedIn ? Palette.hermesOrange : SemanticColors.textTertiary} />
+            <View>
+              <Text style={styles.timerLabel}>{clockedIn ? t('jobs.clockedInLabel', 'Clocked in') : t('jobs.timerLabel', 'Timer')}</Text>
+              <Text style={[styles.timerDisplay, clockedIn && { color: Palette.hermesOrange }]}>
+                {clockedIn ? timer.timerDisplay : '00:00:00'}
+              </Text>
+            </View>
+          </View>
+          <Pressable
+            style={[styles.timerBtn, clockedIn && styles.timerBtnStop]}
+            accessibilityRole="button"
+            accessibilityLabel={clockedIn ? t('jobs.clockOut', 'Clock out') : t('jobs.clockIn', 'Clock in')}
+            onPress={async () => {
+              hapticSuccess();
+              if (clockedIn) {
+                const { hours } = await timer.clockOut();
+                recordHours(job.id, Math.round(hours * 10) / 10);
+                addActivityEntry(id || '', 'timer_stopped', `Clocked out (${Math.round(hours * 10) / 10}h)`).catch(() => {});
+                Alert.alert(t('jobs.clockedOut', 'Clocked out'), t('jobs.clockedOutDesc', 'You have been clocked out. Hours saved.'));
+              } else {
+                await timer.clockIn(job.id, job.projectName || job.customerName || '');
+                addActivityEntry(id || '', 'timer_started', 'Clocked in').catch(() => {});
+              }
+            }}
+          >
+            <Ionicons name={clockedIn ? 'stop' : 'play'} size={18} color={Palette.white} />
+            <Text style={styles.timerBtnText}>{clockedIn ? t('jobs.stop', 'Stop') : t('jobs.start', 'Start')}</Text>
+          </Pressable>
+        </View>
+      </View>
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -859,7 +894,7 @@ export default function JobDetailPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SemanticColors.surfacePrimary,
+    backgroundColor: PAGE_BG,
   },
   header: {
     flexDirection: 'row',
@@ -896,11 +931,60 @@ const styles = StyleSheet.create({
     marginHorizontal: GRID.md,
     borderRadius: 2,
   },
+  // Timer section — prominent at top
+  timerSection: {
+    paddingHorizontal: GRID.md,
+    paddingTop: GRID.md,
+  },
+  timerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
+    padding: GRID.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  timerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.sm + 4,
+  },
+  timerLabel: {
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textSecondary,
+  },
+  timerDisplay: {
+    fontSize: 28,
+    fontFamily: TYPE.displayFamily,
+    color: SemanticColors.textPrimary,
+    letterSpacing: -1,
+  },
+  timerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.xs,
+    backgroundColor: Palette.hermesOrange,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: GRID.md,
+    paddingVertical: GRID.sm + 2,
+  },
+  timerBtnStop: {
+    backgroundColor: SemanticColors.feedbackError,
+  },
+  timerBtnText: {
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.white,
+  },
+
   scrollView: { flex: 1 },
   scrollContent: {
     paddingHorizontal: GRID.md,
     paddingTop: GRID.md,
-    gap: 20,
+    gap: GRID.lg,
   },
   emptyState: {
     flex: 1,
@@ -920,6 +1004,8 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.lg + 2,
     padding: RADIUS.lg + 2,
     gap: GRID.md - 4,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
   },
   heroTop: {
     flexDirection: 'row',
@@ -948,7 +1034,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: RADIUS.sm,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: PAGE_BG,
   },
   typeText: {
     fontSize: TYPE.labelSize,
@@ -992,7 +1078,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: TYPE.captionSize + 1,
     fontFamily: TYPE.bodyFamily,
-    color: '#555',
+    color: SemanticColors.textPrimary,
   },
   durationChip: {
     backgroundColor: Palette.pastelOrange + '30',
@@ -1044,10 +1130,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   sectionLabel: {
-    fontSize: TYPE.captionSize,
+    fontSize: TYPE.sectionSize,
     fontFamily: TYPE.sectionFamily,
-    color: SemanticColors.textTertiary,
-    letterSpacing: 0.8,
+    color: SemanticColors.textPrimary,
+    letterSpacing: TYPE.sectionTracking,
   },
 
   // Card
@@ -1055,6 +1141,8 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: RADIUS.lg,
     padding: GRID.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
   },
 
   // Contact

@@ -26,6 +26,8 @@ const getStatusConfig = (t: (key: string, fallback: string) => string): Record<P
   cancelled: { label: t('contractor.projects.statusCancelled', 'Cancelled'), color: SemanticColors.feedbackError, icon: 'close-circle-outline' },
 });
 
+type FilterStatus = 'all' | 'active' | 'completed';
+
 export default function ProjectsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -36,6 +38,7 @@ export default function ProjectsScreen() {
   const [newCustomer, setNewCustomer] = useState('');
   const [newBudget, setNewBudget] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -71,6 +74,12 @@ export default function ProjectsScreen() {
     const pnl = getProjectPnL(project.id);
     const jobCount = project.jobIds.length;
     const customer = customers.find(c => c.id === project.customerId);
+    // Calculate progress based on completed jobs
+    const completedJobCount = project.jobIds.filter(jid => {
+      const j = jobs.find((job: any) => job.id === jid);
+      return j && ['completed', 'invoiced', 'paid', 'gereed', 'gefactureerd', 'betaald'].includes(j.status);
+    }).length;
+    const progressPct = jobCount > 0 ? Math.round((completedJobCount / jobCount) * 100) : 0;
 
     return (
       <Pressable
@@ -93,6 +102,17 @@ export default function ProjectsScreen() {
             </View>
           </View>
 
+          {/* Progress bar */}
+          <View style={styles.progressSection}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressLabel}>{t('jobs.progress', 'Progress')}</Text>
+              <Text style={[styles.progressPct, { color: progressPct >= 100 ? SemanticColors.feedbackSuccess : Palette.hermesOrange }]}>{progressPct}%</Text>
+            </View>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${progressPct}%` as any, backgroundColor: progressPct >= 100 ? SemanticColors.feedbackSuccess : Palette.hermesOrange }]} />
+            </View>
+          </View>
+
           <View style={styles.metricsRow}>
             <View style={styles.metric}>
               <Text style={styles.metricValue}>{jobCount}</Text>
@@ -100,7 +120,7 @@ export default function ProjectsScreen() {
             </View>
             <View style={styles.metricDivider} />
             <View style={styles.metric}>
-              <Text style={styles.metricValue}>€{(pnl.revenue || project.totalBudget).toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+              <Text style={styles.metricValue}>{'\u20AC'}{(pnl.revenue || project.totalBudget).toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
               <Text style={styles.metricLabel}>{t('contractor.projects.budget', 'Budget')}</Text>
             </View>
             <View style={styles.metricDivider} />
@@ -134,6 +154,27 @@ export default function ProjectsScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />}
       >
+        {/* Status filter chips */}
+        {projects.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+            {([
+              { key: 'all' as FilterStatus, label: t('common.all', 'All'), count: projects.length },
+              { key: 'active' as FilterStatus, label: t('contractor.projects.statusActive', 'Active'), count: activeProjects.length },
+              { key: 'completed' as FilterStatus, label: t('contractor.projects.statusCompleted', 'Completed'), count: completedProjects.length },
+            ]).map(chip => (
+              <Pressable
+                key={chip.key}
+                style={[styles.filterChip, statusFilter === chip.key && styles.filterChipActive]}
+                onPress={() => setStatusFilter(chip.key)}
+              >
+                <Text style={[styles.filterChipText, statusFilter === chip.key && styles.filterChipTextActive]}>
+                  {chip.label} ({chip.count})
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        )}
+
         {projects.length === 0 ? (
           <FadeIn delay={0}>
             <View style={styles.empty}>
@@ -147,13 +188,13 @@ export default function ProjectsScreen() {
           </FadeIn>
         ) : (
           <>
-            {activeProjects.length > 0 && (
+            {(statusFilter === 'all' || statusFilter === 'active') && activeProjects.length > 0 && (
               <FadeIn delay={0}>
                 <Text style={styles.sectionTitle}>{t('contractor.projects.statusActive', 'Active')} ({activeProjects.length})</Text>
                 {activeProjects.map(renderProject)}
               </FadeIn>
             )}
-            {completedProjects.length > 0 && (
+            {(statusFilter === 'all' || statusFilter === 'completed') && completedProjects.length > 0 && (
               <FadeIn delay={100}>
                 <Text style={styles.sectionTitle}>{t('contractor.projects.statusCompleted', 'Completed')} ({completedProjects.length})</Text>
                 {completedProjects.map(renderProject)}
@@ -215,11 +256,11 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: TYPE.displaySize, fontFamily: TYPE.displayFamily, color: SemanticColors.textPrimary, letterSpacing: TYPE.displayTracking },
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: SafeArea.side, gap: GRID.sm },
+  scrollContent: { paddingHorizontal: SafeArea.side, gap: GRID.sm, paddingBottom: 100 },
   sectionTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, letterSpacing: TYPE.sectionTracking, marginTop: GRID.md, marginBottom: GRID.xs },
-  projectCard: { flexDirection: 'row', backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden' },
+  projectCard: { flexDirection: 'row', backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden', borderWidth: 1, borderColor: SemanticColors.borderDefault, marginBottom: GRID.sm },
   statusBar: { width: 4 },
-  cardContent: { flex: 1, padding: 14, gap: 10 },
+  cardContent: { flex: 1, padding: GRID.md, gap: GRID.sm },
   cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   projectTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
   projectCustomer: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
@@ -242,4 +283,35 @@ const styles = StyleSheet.create({
   input: { backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.md, paddingHorizontal: 14, paddingVertical: 12, fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary },
   createBtn: { backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.md, paddingVertical: 14, alignItems: 'center' },
   createBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: Palette.white },
+
+  // Filter chips
+  filterRow: { flexDirection: 'row', gap: GRID.sm, paddingBottom: GRID.sm },
+  filterChip: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.full,
+    paddingHorizontal: GRID.md,
+    paddingVertical: GRID.sm,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  filterChipActive: {
+    backgroundColor: Palette.hermesOrange,
+    borderColor: Palette.hermesOrange,
+  },
+  filterChipText: {
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textSecondary,
+  },
+  filterChipTextActive: {
+    color: Palette.white,
+  },
+
+  // Progress
+  progressSection: { gap: GRID.xs },
+  progressHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  progressLabel: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
+  progressPct: { fontSize: TYPE.captionSize, fontFamily: TYPE.sectionFamily },
+  progressTrack: { height: 4, backgroundColor: SemanticColors.borderDefault, borderRadius: 2, overflow: 'hidden' },
+  progressFill: { height: 4, borderRadius: 2 },
 });
