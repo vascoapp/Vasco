@@ -93,7 +93,7 @@ interface JobItem {
 
 function JobCard({ job, onPress, onClockIn }: { job: JobItem; onPress: () => void; onClockIn?: () => void }) {
   return (
-    <Pressable style={({ pressed }) => [styles.jobCard, pressed && { opacity: 0.95 }]} onPress={onPress} accessibilityRole="button" accessibilityLabel={`${job.title}, ${job.customer}, ${job.time}`} accessibilityHint="Opens job details">
+    <Pressable style={({ pressed }) => [styles.jobCard, pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] }]} onPress={onPress} accessibilityRole="button" accessibilityLabel={`${job.title}, ${job.customer}, ${job.time}`} accessibilityHint="Opens job details">
       <View style={[styles.jobAccent, {
         backgroundColor: job.status === 'active' ? Palette.hermesOrange
           : job.status === 'completed' ? SemanticColors.feedbackSuccess
@@ -347,13 +347,19 @@ export default function TodayScreen() {
   // KPI data
   const outstanding = cashFlowSummary.pendingIncome;
 
-  // Greeting
-  const greeting = 'Vasco';
+  // Dynamic greeting based on time of day
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return t('greeting.morning', 'Good morning');
+    if (hour < 18) return t('greeting.afternoon', 'Good afternoon');
+    return t('greeting.evening', 'Good evening');
+  }, [t]);
 
   const formattedDate = new Date().toLocaleDateString(undefined, {
     weekday: 'long',
     day: 'numeric',
-    month: 'long'
+    month: 'long',
+    year: 'numeric',
   });
 
   const handleDismissGuidance = useCallback((id: string) => {

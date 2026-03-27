@@ -142,17 +142,38 @@ export default function QuoteDetailScreen() {
 
         <View style={styles.card}>
           <Text style={Typography.subtitle}>{t('quotes.lineItems', 'Line items')}</Text>
-          {quoteLineItems.map((item) => (
-            <View key={item.id} style={styles.row}>
-              <Text style={Typography.body}>{item.description}</Text>
+          {quoteLineItems.map((item, idx) => (
+            <View key={item.id} style={[styles.lineItemRow, idx % 2 === 1 && styles.lineItemAlt]}>
+              <View style={{ flex: 1 }}>
+                <Text style={Typography.body}>{item.description}</Text>
+                <Text style={styles.lineItemMeta}>{item.quantity}x {formatCurrency(item.unitPrice)}</Text>
+              </View>
               <Text style={Typography.body}>
                 {formatCurrency(item.unitPrice * item.quantity)}
               </Text>
             </View>
           ))}
-          <View style={styles.row}>
-            <Text style={Typography.subtitle}>{t('quotes.total', 'Total')}</Text>
-            <Text style={Typography.subtitle}>{formattedTotal}</Text>
+          {/* Subtotal / VAT / Total */}
+          <View style={styles.totalSection}>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>{t('quotes.subtotal', 'Subtotal')}</Text>
+              <Text style={styles.totalValue}>{formatCurrency(quoteLineItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0))}</Text>
+            </View>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>{t('quotes.vat', 'VAT')} ({Math.round(getVATRate(businessProfile.country ?? 'NL') * 100)}%)</Text>
+              <Text style={styles.totalValue}>{formatCurrency(Math.round(quoteLineItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0) * getVATRate(businessProfile.country ?? 'NL')))}</Text>
+            </View>
+            <View style={[styles.totalRow, styles.grandTotalRow]}>
+              <Text style={styles.grandTotalLabel}>{t('quotes.total', 'Total')}</Text>
+              <Text style={styles.grandTotalValue}>{formattedTotal}</Text>
+            </View>
+          </View>
+          {/* Valid until */}
+          <View style={styles.validUntilRow}>
+            <Ionicons name="calendar-outline" size={14} color={SemanticColors.textTertiary} />
+            <Text style={styles.validUntilText}>
+              {t('quotes.validUntil', 'Valid until')}: {new Date(Date.now() + 30 * MS_PER_DAY).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}
+            </Text>
           </View>
         </View>
 
@@ -283,6 +304,75 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: SemanticColors.borderDefault,
     paddingVertical: Spacing.xs,
+  },
+  lineItemRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: Radius.sm,
+  },
+  lineItemAlt: {
+    backgroundColor: SemanticColors.surfaceSecondary,
+  },
+  lineItemMeta: {
+    fontSize: 12,
+    fontFamily: 'Inter_400Regular',
+    color: SemanticColors.textTertiary,
+    marginTop: 2,
+  },
+  totalSection: {
+    borderTopWidth: 1,
+    borderTopColor: SemanticColors.borderDefault,
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  totalLabel: {
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
+    color: SemanticColors.textSecondary,
+  },
+  totalValue: {
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
+    color: SemanticColors.textPrimary,
+  },
+  grandTotalRow: {
+    borderTopWidth: 1,
+    borderTopColor: SemanticColors.borderDefault,
+    paddingTop: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  grandTotalLabel: {
+    fontSize: 16,
+    fontFamily: 'Manrope_700Bold',
+    color: SemanticColors.textPrimary,
+  },
+  grandTotalValue: {
+    fontSize: 18,
+    fontFamily: 'Manrope_700Bold',
+    color: SemanticColors.textPrimary,
+  },
+  validUntilRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: SemanticColors.borderDefault,
+  },
+  validUntilText: {
+    fontSize: 13,
+    fontFamily: 'Inter_400Regular',
+    color: SemanticColors.textTertiary,
   },
   actions: {
     gap: Spacing.sm,

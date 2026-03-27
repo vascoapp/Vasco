@@ -16,6 +16,7 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { useAppState } from '../../src/state/AppState';
 import { useCashFlow } from '../../src/services/cashFlowService';
 import { useFinancialAnalysis } from '../../src/services/financialAnalysisService';
+import { formatCurrency } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { FadeIn } from '../../src/components/shared/FadeIn';
@@ -72,6 +73,26 @@ export default function GeldScreen() {
   const overdueCount = fin.overdueCount;
   const paidTotal = fin.totalRevenue;
 
+  // Trend indicators — compare current vs previous month
+  const trendArrow = useCallback((current: number, previous: number): { icon: 'trending-up' | 'trending-down' | 'remove'; color: string } => {
+    if (previous === 0 || current === previous) return { icon: 'remove', color: SemanticColors.textTertiary };
+    return current > previous
+      ? { icon: 'trending-up', color: SemanticColors.feedbackSuccess }
+      : { icon: 'trending-down', color: SemanticColors.feedbackError };
+  }, []);
+  const revenueTrend = useMemo(() => {
+    const prev = fin.monthlyInflows.length >= 2 ? fin.monthlyInflows[fin.monthlyInflows.length - 2] : 0;
+    return trendArrow(paidTotal, prev);
+  }, [paidTotal, fin.monthlyInflows, trendArrow]);
+
+  // Collection rate — % of invoices paid on time (not overdue)
+  const collectionRate = useMemo(() => {
+    const total = invoices.length;
+    if (total === 0) return 0;
+    const paidOnTime = invoices.filter((i: any) => i.status === 'paid').length;
+    return Math.round((paidOnTime / total) * 100);
+  }, [invoices]);
+
   // All documents: invoices + quotes, sorted by status priority (overdue first)
   const documents = useMemo(() => {
     const statusOrder: Record<string, number> = { overdue: 0, sent: 1, draft: 2, accepted: 3, paid: 4 };
@@ -127,19 +148,22 @@ export default function GeldScreen() {
         {/* KPIs — the 4 numbers that matter */}
         <FadeIn delay={0}>
           <View style={s.kpiCard}>
-            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)} accessibilityRole="button" accessibilityLabel={`${t('money.received', 'Ontvangen')}: \u20AC${paidTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}>
+            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)} accessibilityRole="button" accessibilityLabel={`${t('money.received', 'Ontvangen')}: ${formatCurrency(paidTotal)}`}>
               <Text style={s.kpiLabel}>{t('money.revenue', 'Omzet')}</Text>
-              <Text style={[s.kpiValue, { color: SemanticColors.feedbackSuccess }]}>{'\u20AC'}{paidTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+              <View style={s.kpiValueRow}>
+                <Text style={[s.kpiValue, { color: SemanticColors.feedbackSuccess }]}>{formatCurrency(paidTotal)}</Text>
+                <Ionicons name={revenueTrend.icon} size={14} color={revenueTrend.color} />
+              </View>
             </Pressable>
             <View style={s.kpiDivider} />
-            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)} accessibilityRole="button" accessibilityLabel={`${t('money.outstanding', 'Uitstaand')}: \u20AC${outstandingTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}>
+            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)} accessibilityRole="button" accessibilityLabel={`${t('money.outstanding', 'Uitstaand')}: ${formatCurrency(outstandingTotal)}`}>
               <Text style={s.kpiLabel}>{t('money.outstanding', 'Uitstaand')}</Text>
-              <Text style={s.kpiValue}>{'\u20AC'}{outstandingTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+              <Text style={s.kpiValue}>{formatCurrency(outstandingTotal)}</Text>
             </Pressable>
             <View style={s.kpiDivider} />
-            <Pressable style={s.kpiItem} accessibilityRole="button" accessibilityLabel={`${t('money.pipeline', 'Pipeline')}: \u20AC${fin.quotePipeline.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}>
+            <Pressable style={s.kpiItem} accessibilityRole="button" accessibilityLabel={`${t('money.pipeline', 'Pipeline')}: ${formatCurrency(fin.quotePipeline)}`}>
               <Text style={s.kpiLabel}>{t('money.pipeline', 'Pipeline')}</Text>
-              <Text style={s.kpiValue}>{'\u20AC'}{fin.quotePipeline.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+              <Text style={s.kpiValue}>{formatCurrency(fin.quotePipeline)}</Text>
             </Pressable>
             <View style={s.kpiDivider} />
             <Pressable style={s.kpiItem} accessibilityRole="button" accessibilityLabel={`${t('money.winRate', 'Win rate')}: ${fin.quoteWinRate}%`}>
@@ -147,6 +171,13 @@ export default function GeldScreen() {
               <Text style={[s.kpiValue, fin.quoteWinRate < 50 && fin.quoteWinRate > 0 && { color: SemanticColors.feedbackWarning }]}>{fin.quoteWinRate > 0 ? `${fin.quoteWinRate}%` : '—'}</Text>
             </Pressable>
           </View>
+          {/* Collection rate badge */}
+          {invoices.length > 0 && (
+            <View style={s.collectionBadge}>
+              <Ionicons name="checkmark-circle" size={14} color={collectionRate >= 80 ? SemanticColors.feedbackSuccess : collectionRate >= 50 ? SemanticColors.feedbackWarning : SemanticColors.feedbackError} />
+              <Text style={s.collectionText}>{t('money.collectionRate', 'Collection rate')}: <Text style={{ fontFamily: TYPE.sectionFamily, color: collectionRate >= 80 ? SemanticColors.feedbackSuccess : collectionRate >= 50 ? SemanticColors.feedbackWarning : SemanticColors.feedbackError }}>{collectionRate}%</Text></Text>
+            </View>
+          )}
         </FadeIn>
 
         {/* Vasco — financial AI (overdue reminders, payment predictions, expense tips) */}
@@ -188,11 +219,11 @@ export default function GeldScreen() {
                 {documents.filter(d => d.type === 'factuur' && (!invoiceFilter || d.name.toLowerCase().includes(invoiceFilter.toLowerCase()))).map((doc) => (
                   <Pressable
                     key={doc.id}
-                    style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9 }]}
+                    style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
                     onPress={() => router.push(doc.route as any)}
                     onLongPress={() => handleDeleteDocument(doc.id, doc.type, doc.name)}
                     accessibilityRole="button"
-                    accessibilityLabel={`${t('invoices.invoice', 'Factuur')}: ${doc.name}, \u20AC${doc.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}, ${doc.status}`}
+                    accessibilityLabel={`${t('invoices.invoice', 'Factuur')}: ${doc.name}, ${formatCurrency(doc.amount)}, ${doc.status}`}
                     accessibilityHint={t('a11y.opensDetails', 'Opens details')}
                   >
                     <View style={[s.docDot, { backgroundColor: getStatusColor(doc.status) }]} />
@@ -200,7 +231,7 @@ export default function GeldScreen() {
                       <Text style={s.docName} numberOfLines={1} ellipsizeMode="tail">{doc.name}</Text>
                       <Text style={s.docDesc} numberOfLines={1} ellipsizeMode="tail">{doc.description} · {doc.status}</Text>
                     </View>
-                    <Text style={s.docAmount}>{'\u20AC'}{doc.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+                    <Text style={s.docAmount}>{formatCurrency(doc.amount)}</Text>
                     {doc.status === 'draft' && (
                       <Pressable
                         style={[s.sendBtn, sendingInvoiceId === doc.id && { opacity: 0.5 }]}
@@ -244,7 +275,7 @@ export default function GeldScreen() {
             </View>
 
             <Pressable
-              style={({ pressed }) => [s.newQuoteBtn, pressed && { opacity: 0.9 }]}
+              style={({ pressed }) => [s.newQuoteBtn, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
               onPress={() => router.push('/contractor/tiered-quote' as any)}
               accessibilityRole="button"
               accessibilityLabel={t('quotes.newQuote', 'Nieuwe offerte')}
@@ -271,11 +302,11 @@ export default function GeldScreen() {
                 {documents.filter(d => d.type === 'offerte' && (!quoteFilter || d.name.toLowerCase().includes(quoteFilter.toLowerCase()))).map((doc) => (
                   <Pressable
                     key={doc.id}
-                    style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9 }]}
+                    style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
                     onPress={() => router.push(doc.route as any)}
                     onLongPress={() => handleDeleteDocument(doc.id, doc.type, doc.name)}
                     accessibilityRole="button"
-                    accessibilityLabel={`${t('quotes.quote', 'Offerte')}: ${doc.name}, \u20AC${doc.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}, ${doc.status}`}
+                    accessibilityLabel={`${t('quotes.quote', 'Offerte')}: ${doc.name}, ${formatCurrency(doc.amount)}, ${doc.status}`}
                     accessibilityHint={t('a11y.opensDetails', 'Opens details')}
                   >
                     <View style={[s.docDot, { backgroundColor: getStatusColor(doc.status) }]} />
@@ -283,7 +314,7 @@ export default function GeldScreen() {
                       <Text style={s.docName} numberOfLines={1} ellipsizeMode="tail">{doc.name}</Text>
                       <Text style={s.docDesc} numberOfLines={1} ellipsizeMode="tail">{doc.description} · {doc.status}</Text>
                     </View>
-                    <Text style={s.docAmount}>{'\u20AC'}{doc.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+                    <Text style={s.docAmount}>{formatCurrency(doc.amount)}</Text>
                   </Pressable>
                 ))}
               </View>
@@ -303,21 +334,21 @@ export default function GeldScreen() {
               <View style={s.cfRow}>
                 <View style={s.cfItem}>
                   <Text style={[s.cfValue, { color: SemanticColors.feedbackSuccess }]}>
-                    {'\u20AC'}{paidTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    {formatCurrency(paidTotal)}
                   </Text>
                   <Text style={s.cfLabel}>{t('money.revenue', 'Omzet')}</Text>
                 </View>
                 <View style={s.cfDivider} />
                 <View style={s.cfItem}>
                   <Text style={s.cfValue}>
-                    {'\u20AC'}{fin.totalExpenses.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    {formatCurrency(fin.totalExpenses)}
                   </Text>
                   <Text style={s.cfLabel}>{t('money.costs', 'Kosten')}</Text>
                 </View>
                 <View style={s.cfDivider} />
                 <View style={s.cfItem}>
                   <Text style={[s.cfValue, { color: fin.netIncome >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
-                    {'\u20AC'}{fin.netIncome.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    {formatCurrency(fin.netIncome)}
                   </Text>
                   <Text style={s.cfLabel}>{t('money.profit', 'Winst')}</Text>
                 </View>
@@ -326,15 +357,16 @@ export default function GeldScreen() {
                 <View style={[s.marginFill, { width: `${Math.min(Math.max(fin.profitMargin, 0), 100)}%` }]} />
               </View>
               {sparkData.length >= 2 && (
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Sparkline data={sparkData} width={120} height={28} color={SemanticColors.feedbackSuccess} />
+                <View style={s.sparklineContainer}>
+                  <Text style={s.sparklineLabel}>{t('money.last6Months', 'Last 6 months')}</Text>
+                  <Sparkline data={sparkData} width={200} height={44} color={SemanticColors.feedbackSuccess} />
                 </View>
               )}
               {/* Projected next month */}
               <View style={s.projRow}>
                 <Text style={s.projLabel}>{t('money.projected', 'Prognose volgende maand')}</Text>
                 <Text style={[s.projValue, { color: fin.projectedCashflow >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
-                  {'\u20AC'}{fin.projectedCashflow.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {formatCurrency(fin.projectedCashflow)}
                 </Text>
               </View>
               {/* DSO */}
@@ -356,13 +388,13 @@ export default function GeldScreen() {
             <View style={s.section}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Text style={s.sectionTitle}>{t('money.overdue', 'Achterstallig')}</Text>
-                <Text style={[s.sectionCount, { color: SemanticColors.feedbackError }]}>{'\u20AC'}{fin.overdueAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+                <Text style={[s.sectionCount, { color: SemanticColors.feedbackError }]}>{formatCurrency(fin.overdueAmount)}</Text>
               </View>
               <View style={s.docList}>
                 {fin.overdueDetails.map((od) => (
                   <Pressable
                     key={od.invoiceId}
-                    style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9 }]}
+                    style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
                     onPress={() => router.push(`/invoices/${od.invoiceId}` as any)}
                     accessibilityRole="button"
                   >
@@ -371,7 +403,7 @@ export default function GeldScreen() {
                       <Text style={s.docName} numberOfLines={1}>{od.customer}</Text>
                       <Text style={s.docDesc}>{od.daysOverdue} {t('common.daysOverdue', 'dagen achterstallig')}</Text>
                     </View>
-                    <Text style={[s.docAmount, { color: SemanticColors.feedbackError }]}>{'\u20AC'}{od.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+                    <Text style={[s.docAmount, { color: SemanticColors.feedbackError }]}>{formatCurrency(od.amount)}</Text>
                   </Pressable>
                 ))}
               </View>
@@ -392,7 +424,7 @@ export default function GeldScreen() {
                       <Text style={s.docName} numberOfLines={1}>{cust.customer}</Text>
                       <Text style={s.docDesc}>{cust.invoiceCount} {t('invoices.invoices', 'facturen')} · {cust.percentage}%</Text>
                     </View>
-                    <Text style={s.docAmount}>{'\u20AC'}{cust.revenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+                    <Text style={s.docAmount}>{formatCurrency(cust.revenue)}</Text>
                   </View>
                 ))}
               </View>
@@ -464,6 +496,11 @@ const s = StyleSheet.create({
     padding: GRID.md,
   },
   kpiItem: { flex: 1, alignItems: 'center' },
+  kpiValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   kpiLabel: {
     fontSize: TYPE.labelSize,
     fontFamily: TYPE.labelFamily,
@@ -480,6 +517,38 @@ const s = StyleSheet.create({
     width: StyleSheet.hairlineWidth,
     height: 32,
     backgroundColor: SemanticColors.borderDefault,
+  },
+
+  // Collection rate badge
+  collectionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.xs,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: GRID.md,
+    paddingVertical: GRID.sm + 2,
+    marginTop: GRID.sm,
+  },
+  collectionText: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textSecondary,
+  },
+
+  // Sparkline
+  sparklineContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: GRID.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: SemanticColors.borderDefault,
+  },
+  sparklineLabel: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textTertiary,
   },
 
   // Sections

@@ -145,7 +145,7 @@ export default function WerkScreen() {
           ]).map(btn => (
             <Pressable
               key={btn.route}
-              style={({ pressed }) => [s.actionBtn, pressed && { opacity: 0.85 }]}
+              style={({ pressed }) => [s.actionBtn, pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }]}
               onPress={() => router.push(btn.route as any)}
               accessibilityRole="button"
               accessibilityLabel={btn.label}
@@ -163,7 +163,7 @@ export default function WerkScreen() {
             {projects.filter(p => p.status === 'active' || p.status === 'planning').slice(0, 3).map(project => (
               <Pressable
                 key={project.id}
-                style={({ pressed }) => [s.jobCard, pressed && { opacity: 0.85 }]}
+                style={({ pressed }) => [s.jobCard, pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }]}
                 onPress={() => router.push(`/contractor/projects/${project.id}` as any)}
                 accessibilityRole="button"
                 accessibilityLabel={`${t('jobs.projects', 'Project')}: ${project.title}`}
@@ -185,61 +185,111 @@ export default function WerkScreen() {
           <Text style={s.sectionTitle}>
             {t('dashboard.today', 'Vandaag')} · {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
           </Text>
-          {todayJobs.length > 0 ? (
-            <View style={s.todayList}>
-              {todayJobs.map((entry: any, i: number) => {
-                const startDate = parseTime(entry.startTime);
-                const endDate = parseTime(entry.endTime);
-                const timeStr = startDate
-                  ? startDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-                  : '09:00';
-                const endStr = endDate
-                  ? endDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-                  : '';
-                const durationMins = entry.duration
-                  || (endDate && startDate
-                    ? Math.round((endDate.getTime() - startDate.getTime()) / 60000)
-                    : 0);
-                const durationStr = durationMins > 0
-                  ? `${Math.floor(durationMins / 60)}u${durationMins % 60 > 0 ? durationMins % 60 : ''}`
-                  : '';
-                return (
-                  <Pressable
-                    key={entry.id || i}
-                    style={({ pressed }) => [s.todayCard, pressed && { opacity: 0.85 }]}
-                    onPress={() => router.push(`/contractor/job/${entry.id}` as any)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${timeStr} ${entry.title || entry.jobTitle || t('jobs.job', 'Job')}`}
-                    accessibilityHint={t('a11y.opensJobDetails', 'Opens job details')}
-                  >
-                    <View style={s.todayLeft}>
-                      <Text style={s.todayTime}>{timeStr}</Text>
-                      {endStr ? <Text style={s.todayEnd}>{endStr}</Text> : null}
-                    </View>
-                    <View style={s.todayDivider} />
-                    <View style={s.todayContent}>
-                      <Text style={s.todayTitle} numberOfLines={1} ellipsizeMode="tail">
-                        {entry.title || entry.jobTitle || entry.projectName || t('jobs.job', 'Job')}
-                      </Text>
-                      {(entry.customerName || entry.address) && (
-                        <Text style={s.todayMeta} numberOfLines={1} ellipsizeMode="tail">
-                          {[entry.customerName, entry.address].filter(Boolean).join(' · ')}
-                        </Text>
-                      )}
-                    </View>
-                    {durationStr ? (
-                      <View style={s.durationPill}>
-                        <Text style={s.durationText}>{durationStr}</Text>
+          {todayJobs.length > 0 ? (() => {
+            // Split into morning/afternoon for visual grouping
+            const parsedJobs = todayJobs.map((entry: any, i: number) => {
+              const startDate = parseTime(entry.startTime);
+              const endDate = parseTime(entry.endTime);
+              const timeStr = startDate
+                ? startDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+                : '09:00';
+              const endStr = endDate
+                ? endDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+                : '';
+              const durationMins = entry.duration
+                || (endDate && startDate
+                  ? Math.round((endDate.getTime() - startDate.getTime()) / 60000)
+                  : 0);
+              const durationStr = durationMins > 0
+                ? `${Math.floor(durationMins / 60)}u${durationMins % 60 > 0 ? durationMins % 60 : ''}`
+                : '';
+              const hour = startDate ? startDate.getHours() : 9;
+              return { entry, i, timeStr, endStr, durationStr, hour, isMorning: hour < 12 };
+            });
+
+            const morningJobs = parsedJobs.filter(j => j.isMorning);
+            const afternoonJobs = parsedJobs.filter(j => !j.isMorning);
+            const hasBothSections = morningJobs.length > 0 && afternoonJobs.length > 0;
+
+            const renderJob = (item: typeof parsedJobs[0]) => (
+              <Pressable
+                key={item.entry.id || item.i}
+                style={({ pressed }) => [s.todayCard, pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }]}
+                onPress={() => router.push(`/contractor/job/${item.entry.id}` as any)}
+                accessibilityRole="button"
+                accessibilityLabel={`${item.timeStr} ${item.entry.title || item.entry.jobTitle || t('jobs.job', 'Job')}`}
+                accessibilityHint={t('a11y.opensJobDetails', 'Opens job details')}
+              >
+                <View style={s.todayLeft}>
+                  <Text style={s.todayTime}>{item.timeStr}</Text>
+                  {item.endStr ? <Text style={s.todayEnd}>{item.endStr}</Text> : null}
+                </View>
+                <View style={s.todayDivider} />
+                <View style={s.todayContent}>
+                  <View style={s.timeBlockRow}>
+                    <Text style={s.timeBlockRange}>{item.timeStr}{item.endStr ? ` – ${item.endStr}` : ''}</Text>
+                  </View>
+                  <Text style={s.todayTitle} numberOfLines={1} ellipsizeMode="tail">
+                    {item.entry.title || item.entry.jobTitle || item.entry.projectName || t('jobs.job', 'Job')}
+                  </Text>
+                  {(item.entry.customerName || item.entry.address) && (
+                    <Text style={s.todayMeta} numberOfLines={1} ellipsizeMode="tail">
+                      {[item.entry.customerName, item.entry.address].filter(Boolean).join(' · ')}
+                    </Text>
+                  )}
+                </View>
+                {item.durationStr ? (
+                  <View style={s.durationPill}>
+                    <Text style={s.durationText}>{item.durationStr}</Text>
+                  </View>
+                ) : null}
+              </Pressable>
+            );
+
+            return (
+              <View style={s.todayList}>
+                {morningJobs.length > 0 && (
+                  <>
+                    {hasBothSections && (
+                      <View style={s.daypartRow}>
+                        <Ionicons name="sunny-outline" size={14} color={SemanticColors.textTertiary} />
+                        <Text style={s.daypartLabel}>{t('schedule.morning', 'Morning')}</Text>
+                        <View style={s.daypartLine} />
                       </View>
-                    ) : null}
-                  </Pressable>
-                );
-              })}
-            </View>
-          ) : (
-            <View style={s.emptyCard}>
-              <Ionicons name="calendar-outline" size={24} color={SemanticColors.textTertiary} />
-              <Text style={s.emptyText}>{t('dashboard.noJobsToday', 'Geen klussen vandaag')}</Text>
+                    )}
+                    {morningJobs.map(renderJob)}
+                  </>
+                )}
+                {afternoonJobs.length > 0 && (
+                  <>
+                    {hasBothSections && (
+                      <View style={s.daypartRow}>
+                        <Ionicons name="partly-sunny-outline" size={14} color={SemanticColors.textTertiary} />
+                        <Text style={s.daypartLabel}>{t('schedule.afternoon', 'Afternoon')}</Text>
+                        <View style={s.daypartLine} />
+                      </View>
+                    )}
+                    {afternoonJobs.map(renderJob)}
+                  </>
+                )}
+              </View>
+            );
+          })() : (
+            <View style={s.emptyToday}>
+              <View style={s.emptyTodayIcon}>
+                <Ionicons name="sunny-outline" size={32} color={Palette.hermesOrange} />
+              </View>
+              <Text style={s.emptyTodayTitle}>{t('dashboard.noJobsToday', 'No jobs today')}</Text>
+              <Text style={s.emptyTodayDesc}>{t('dashboard.noJobsTodayDesc', 'Your schedule is clear. Time to catch up or plan ahead.')}</Text>
+              <Pressable
+                style={({ pressed }) => [s.emptyTodayBtn, pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }]}
+                onPress={() => router.push('/contractor/drag-schedule' as any)}
+                accessibilityRole="button"
+                accessibilityLabel={t('jobs.planSchedule', 'Plan schedule')}
+              >
+                <Ionicons name="calendar-outline" size={16} color={Palette.hermesOrange} />
+                <Text style={s.emptyTodayBtnText}>{t('jobs.planSchedule', 'Plan your week')}</Text>
+              </Pressable>
             </View>
           )}
         </FadeIn>
@@ -260,7 +310,7 @@ export default function WerkScreen() {
             {activeJobs.map((job: any) => (
               <Pressable
                 key={job.id}
-                style={({ pressed }) => [s.jobCard, pressed && { opacity: 0.85 }]}
+                style={({ pressed }) => [s.jobCard, pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }]}
                 onPress={() => router.push(`/contractor/job/${job.id}` as any)}
                 onLongPress={() => handleDeleteJob(job.id, job.title || job.description || '')}
                 accessibilityRole="button"
@@ -287,7 +337,7 @@ export default function WerkScreen() {
             {leadJobs.slice(0, 5).map((job: any) => (
               <Pressable
                 key={job.id}
-                style={({ pressed }) => [s.jobCard, pressed && { opacity: 0.85 }]}
+                style={({ pressed }) => [s.jobCard, pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }]}
                 onPress={() => router.push(`/contractor/job/${job.id}` as any)}
                 onLongPress={() => handleDeleteJob(job.id, job.title || job.description || '')}
                 accessibilityRole="button"
@@ -463,9 +513,62 @@ const s = StyleSheet.create({
   jobTitle: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
   jobMeta: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
 
+  // Time block row
+  timeBlockRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.xs, marginBottom: 2 },
+  timeBlockRange: { fontSize: TYPE.tinySize, fontFamily: TYPE.labelFamily, color: Palette.hermesOrange, letterSpacing: 0.2 },
+
+  // Day part dividers
+  daypartRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, paddingVertical: GRID.xs },
+  daypartLabel: { fontSize: TYPE.tinySize, fontFamily: TYPE.labelFamily, color: SemanticColors.textTertiary, textTransform: 'uppercase' as const, letterSpacing: 0.5 },
+  daypartLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: SemanticColors.borderDefault },
+
   // Empty states
   emptyCard: { flexDirection: 'row', alignItems: 'center', gap: GRID.md - 4, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md },
   emptyText: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textTertiary },
+  emptyToday: {
+    alignItems: 'center',
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
+    paddingVertical: GRID.xl,
+    paddingHorizontal: GRID.lg,
+    gap: GRID.sm,
+  },
+  emptyTodayIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Palette.hermesOrange + '0A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: GRID.xs,
+  },
+  emptyTodayTitle: {
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
+  },
+  emptyTodayDesc: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  emptyTodayBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.xs,
+    backgroundColor: Palette.hermesOrange + '10',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: GRID.md,
+    paddingVertical: GRID.sm + 2,
+    marginTop: GRID.xs,
+  },
+  emptyTodayBtnText: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.hermesOrange,
+  },
   emptyFull: { alignItems: 'center', paddingVertical: 60, gap: 12 },
   emptyFullTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
   emptyFullDesc: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary },

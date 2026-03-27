@@ -229,8 +229,8 @@ export default function JobDetailPage() {
         </Pressable>
       </View>
 
-      {/* Orange accent line */}
-      <View style={styles.headerAccent} />
+      {/* Status-colored accent line */}
+      <View style={[styles.headerAccent, { backgroundColor: getStatusColor() }]} />
 
       <ScrollView
         style={styles.scrollView}
@@ -243,9 +243,9 @@ export default function JobDetailPage() {
         {/* ============================================ */}
         {/* 1. JOB STATUS HERO                          */}
         {/* ============================================ */}
-        <View style={styles.heroCard}>
+        <View style={[styles.heroCard, { borderTopWidth: 3, borderTopColor: getStatusColor() }]}>
           <View style={styles.heroTop}>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor() + '14' }]}>
+            <View style={[styles.statusBadge, { backgroundColor: getStatusColor() + '18' }]}>
               <View style={[styles.statusDot, { backgroundColor: getStatusColor() }]} />
               <Text style={[styles.statusText, { color: getStatusColor() }]}>{getStatusLabel()}</Text>
             </View>
@@ -254,6 +254,12 @@ export default function JobDetailPage() {
             </View>
           </View>
           <Text style={styles.heroTitle}>{job.projectName}</Text>
+          {contact.name ? (
+            <View style={styles.heroCustomerRow}>
+              <Ionicons name="person" size={14} color={SemanticColors.textSecondary} />
+              <Text style={styles.heroCustomerName}>{contact.name}</Text>
+            </View>
+          ) : null}
           <View style={styles.heroDetails}>
             <View style={styles.heroDetailItem}>
               <View style={styles.heroDetailIcon}>
@@ -884,19 +890,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: RADIUS.sm,
   },
   statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   statusText: {
-    fontSize: TYPE.labelSize,
+    fontSize: TYPE.captionSize,
     fontFamily: TYPE.sectionFamily,
     letterSpacing: 0.3,
+    textTransform: 'uppercase' as const,
   },
   typeBadge: {
     paddingHorizontal: 10,
@@ -914,6 +921,17 @@ const styles = StyleSheet.create({
     fontFamily: TYPE.displayFamily,
     color: SemanticColors.textPrimary,
     letterSpacing: -0.3,
+  },
+  heroCustomerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: -2,
+  },
+  heroCustomerName: {
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textSecondary,
   },
   heroDetails: {
     gap: 10,
