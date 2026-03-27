@@ -13,6 +13,7 @@ import { SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { trackEvent } from '../../src/services/eventTrackingService';
+import { hapticSuccess } from '../../src/utils/haptics';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type ResultType = 'job' | 'quote' | 'invoice' | 'customer';
@@ -104,7 +105,7 @@ export default function SearchScreen() {
           subtitle: [cust.email, cust.phone].filter(Boolean).join(' · '),
           icon: 'person',
           color: Palette.hermesOrange,
-          route: `/contractor/customer-crm`,
+          route: `/contractor/customer/${cust.id}`,
         });
       }
     }
@@ -178,7 +179,7 @@ export default function SearchScreen() {
                   <Pressable
                     key={item.id}
                     style={({ pressed }) => [styles.resultCard, pressed && { opacity: 0.85 }]}
-                    onPress={() => router.push(item.route as any)}
+                    onPress={() => { hapticSuccess(); router.push(item.route as any); }}
                     accessibilityRole="button"
                     accessibilityLabel={`${item.type}: ${item.title}, ${item.subtitle}`}
                   >

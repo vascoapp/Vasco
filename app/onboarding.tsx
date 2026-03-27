@@ -216,6 +216,7 @@ export default function OnboardingScreen() {
       await AsyncStorage.setItem('@vasco_jobs', JSON.stringify(seedJobs)).catch(() => {});
       await AsyncStorage.setItem('@vasco_customers', JSON.stringify(seedCustomers)).catch(() => {});
 
+      hapticSuccess();
       router.replace('/(contractor)');
     } catch (err) {
       if (__DEV__) console.error('Onboarding completion failed:', err);

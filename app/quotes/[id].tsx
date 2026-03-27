@@ -92,7 +92,19 @@ export default function QuoteDetailScreen() {
           meta={t('quotes.savesTime', 'Saves time')}
           onPress={() => {
             markQuoteSent(quote.id);
-            Alert.alert(t('quotes.quoteSent', 'Quote sent!'), t('quotes.quoteSentDesc', 'Vasco will remind you in 3 days to follow up.'));
+            hapticSuccess();
+            Alert.alert(
+              t('quotes.quoteSent', 'Quote sent!'),
+              t('quotes.quoteSentDesc', 'Vasco will remind you in 3 days to follow up.'),
+              [
+                { text: t('quotes.shareApprovalLink', 'Share approval link'), onPress: async () => {
+                  try {
+                    await shareQuoteWithAcceptanceLink({ id: quote.id, customer: quote.customer, customerName: quote.customer, amount: quote.amount, job: quote.job });
+                  } catch {}
+                }},
+                { text: t('common.close', 'Close') },
+              ],
+            );
           }}
         />
 

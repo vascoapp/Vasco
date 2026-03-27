@@ -64,6 +64,7 @@ import { hapticSuccess, hapticWarning } from '../../src/utils/haptics';
 import { useClockIn } from '../../src/services/clockInService';
 import { MS_PER_DAY, MS_PER_HOUR } from '../../src/utils/timeConstants';
 import { getCohortBenchmark } from '../../src/intelligence/cloudSync';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
 import { getAcceptanceStatus } from '../../src/services/customerQuoteAcceptanceService';
@@ -159,7 +160,7 @@ export default function TodayScreen() {
   const [showAutomations, setShowAutomations] = useState(false);
   const { notifications } = useNotifications();
   const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
-  const { jobs, invoices, quotes, customers, isLoading, addInvoiceFromJob, convertQuoteToJob, updateInvoice } = useAppState();
+  const { jobs, invoices, quotes, customers, isLoading, addInvoiceFromJob, convertQuoteToJob, updateInvoice, updateJob } = useAppState();
   const [actionStats, setActionStats] = useState<{ total: number; successful: number; positiveOutcomes: number } | null>(null);
   useEffect(() => { getActionStats().then(setActionStats).catch(() => {}); }, []);
   // Fetch weather on app open (populates module-level cache for weatherScheduleGenerator)
@@ -255,6 +256,7 @@ export default function TodayScreen() {
   const [onboardingDone, setOnboardingDone] = useState(true);
   const [nextStep, setNextStep] = useState<{ step: string; action: string; route: string } | null>(null);
   const [onboardingProgress, setOnboardingProgress] = useState(0);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     isFullyOnboarded().then(done => {
@@ -264,6 +266,12 @@ export default function TodayScreen() {
         getNextStep().then(s => setNextStep(s));
       }
     });
+    // Show welcome card for fresh users (just completed onboarding, few jobs)
+    AsyncStorage.getItem('@vasco_welcome_dismissed').then(val => {
+      if (!val && jobs.length <= 1) {
+        setShowWelcome(true);
+      }
+    }).catch(() => {});
   }, []);
 
   // Cohort benchmark (async, non-blocking)
@@ -419,10 +427,28 @@ export default function TodayScreen() {
           <Text style={styles.timerClock}>{timerDisplay}</Text>
           <Pressable
             style={styles.timerStopBtn}
-            onPress={(e) => {
+            onPress={async (e) => {
               e.stopPropagation?.();
               hapticSuccess();
-              timer.clockOut();
+              const { hours, state: prevState } = await timer.clockOut();
+              // Persist time entry to the job so hours aren't lost
+              if (prevState.jobId && hours > 0) {
+                const job = jobs.find((j: any) => j.id === prevState.jobId);
+                if (job) {
+                  const existingEntries = (job as any).timeEntries ?? [];
+                  const now = new Date();
+                  const outTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                  updateJob(prevState.jobId, {
+                    timeEntries: [...existingEntries, {
+                      id: `te-${Date.now()}`,
+                      date: now.toISOString().slice(0, 10),
+                      hours: Math.round(hours * 10) / 10,
+                      clockIn: prevState.startTimeFormatted,
+                      clockOut: outTime,
+                    }] as any,
+                  });
+                }
+              }
             }}
             accessibilityRole="button"
             accessibilityLabel={t('a11y.stopTimer', 'Stop timer')}
@@ -911,7 +937,48 @@ export default function TodayScreen() {
           </Pressable>
         )}
 
-        {/* Empty state handled by VascoCard + schedule section */}
+        {/* Welcome card for first-time users */}
+        {showWelcome && (
+          <FadeIn delay={100}>
+            <View style={styles.welcomeCard}>
+              <View style={styles.welcomeIconRow}>
+                <View style={styles.welcomeIcon}>
+                  <Ionicons name="sparkles" size={20} color={Palette.hermesOrange} />
+                </View>
+                <Pressable
+                  onPress={() => {
+                    setShowWelcome(false);
+                    AsyncStorage.setItem('@vasco_welcome_dismissed', 'true').catch(() => {});
+                  }}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('common.close', 'Close')}
+                >
+                  <Ionicons name="close" size={18} color={SemanticColors.textTertiary} />
+                </Pressable>
+              </View>
+              <Text style={styles.welcomeTitle}>{t('dashboard.welcomeTitle', 'Welcome to Vasco!')}</Text>
+              <Text style={styles.welcomeDesc}>{t('dashboard.welcomeDesc', 'Your AI-powered business assistant is ready. Here are some things to try:')}</Text>
+              <View style={styles.welcomeSteps}>
+                <Pressable style={styles.welcomeStep} onPress={() => router.push('/contractor/tiered-quote' as any)}>
+                  <View style={[styles.welcomeStepDot, { backgroundColor: Palette.hermesOrange }]} />
+                  <Text style={styles.welcomeStepText}>{t('dashboard.welcomeStep1', 'Create your first quote')}</Text>
+                  <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
+                </Pressable>
+                <Pressable style={styles.welcomeStep} onPress={() => router.push('/(contractor)/klanten' as any)}>
+                  <View style={[styles.welcomeStepDot, { backgroundColor: SemanticColors.feedbackSuccess }]} />
+                  <Text style={styles.welcomeStepText}>{t('dashboard.welcomeStep2', 'Add a customer')}</Text>
+                  <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
+                </Pressable>
+                <Pressable style={styles.welcomeStep} onPress={() => router.push('/contractor/drag-schedule' as any)}>
+                  <View style={[styles.welcomeStepDot, { backgroundColor: SemanticColors.feedbackInfo }]} />
+                  <Text style={styles.welcomeStepText}>{t('dashboard.welcomeStep3', 'Plan your schedule')}</Text>
+                  <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
+                </Pressable>
+              </View>
+            </View>
+          </FadeIn>
+        )}
 
         {/* Action Required — now inside VascoCard above */}
 
@@ -1568,6 +1635,64 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_500Medium',
     color: SemanticColors.textTertiary,
     textAlign: 'center' as const,
+  },
+
+  // Welcome card
+  welcomeCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
+    padding: GRID.md,
+    gap: GRID.sm,
+    borderLeftWidth: 3,
+    borderLeftColor: Palette.hermesOrange,
+  },
+  welcomeIconRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+  },
+  welcomeIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: RADIUS.md,
+    backgroundColor: Palette.hermesOrange + '12',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  welcomeTitle: {
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
+  },
+  welcomeDesc: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textSecondary,
+    lineHeight: TYPE.captionSize * 1.5,
+  },
+  welcomeSteps: {
+    gap: GRID.xs,
+    marginTop: GRID.xs,
+  },
+  welcomeStep: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: GRID.sm,
+    paddingVertical: GRID.sm,
+    paddingHorizontal: GRID.sm,
+    backgroundColor: SemanticColors.surfaceBackground,
+    borderRadius: RADIUS.md,
+  },
+  welcomeStepDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  welcomeStepText: {
+    flex: 1,
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
   },
 
 });

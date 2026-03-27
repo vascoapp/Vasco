@@ -22,6 +22,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { hapticSuccess } from '../../utils/haptics';
 import { formatCurrency } from '../../i18n/formatting';
 import type {
   CustomerPortalData,
@@ -553,8 +554,18 @@ function CategoryDetailView({
                     linkedProduct,
                     submittedAt: new Date().toISOString(),
                   });
+                  hapticSuccess();
                   onExpandItem(null);
                   onActivityLog?.('decision_made', { itemId: item.id, value });
+
+                  // Show confirmation toast
+                  const remaining = pendingItems.length - 1;
+                  Alert.alert(
+                    'Keuze opgeslagen',
+                    remaining > 0
+                      ? `Nog ${remaining} keuze${remaining > 1 ? 's' : ''} te maken.`
+                      : 'Alle keuzes zijn gemaakt! Uw aannemer wordt op de hoogte gesteld.',
+                  );
                 }}
                 accentColor={accentColor}
                 contractorCountry={portalData.contractorCountry}

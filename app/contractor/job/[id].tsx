@@ -683,9 +683,14 @@ export default function JobDetailPage() {
               onPress={() => {
                 Alert.alert(t('jobs.completeJob', 'Complete job'), t('jobs.completeJobConfirm', 'Are you sure you want to complete this job?'), [
                   { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-                  { text: t('jobs.complete', 'Complete'), onPress: () => {
+                  { text: t('jobs.complete', 'Complete'), onPress: async () => {
                     hapticSuccess();
-                    if (clockedIn) timer.clockOut();
+                    if (clockedIn) {
+                      const { hours } = await timer.clockOut();
+                      if (hours > 0) {
+                        recordHours(job.id, Math.round(hours * 10) / 10);
+                      }
+                    }
                     setJobCompleted(true);
                   }},
                 ]);

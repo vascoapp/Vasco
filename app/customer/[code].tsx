@@ -26,6 +26,7 @@ import {
   logActivity as syncLogActivity,
 } from '../../src/services/decisionSyncService';
 import { logWarn } from '../../src/utils/errorHandler';
+import { hapticSuccess } from '../../src/utils/haptics';
 import type {
   CustomerPortalData,
   CustomerDecisionSubmission,
@@ -119,6 +120,7 @@ export default function CustomerPortalScreen() {
     const data = getPortalByAccessCode(accessCode);
     if (data) {
       setPortalData(data);
+      hapticSuccess();
       sessionStartRef.current = Date.now();
 
       // Track portal access for intelligence
