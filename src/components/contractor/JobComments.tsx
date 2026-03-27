@@ -134,17 +134,11 @@ export default function JobComments({ jobId }: JobCommentsProps) {
           <Text style={s.emptySubtext}>{t('jobs.noActivityDesc', 'Comments and activity will appear here')}</Text>
         </View>
       ) : (
-        <FlatList
-          ref={flatListRef}
-          data={feed}
-          renderItem={renderItem}
-          keyExtractor={(item) =>
-            item.kind === 'comment' ? item.data.id : item.data.id
-          }
-          contentContainerStyle={s.feedContent}
-          showsVerticalScrollIndicator={false}
-          style={s.feedList}
-        />
+        <View style={[s.feedContent, s.feedList]}>
+          {feed.map((item, index) => (
+            <View key={item.data.id + index}>{renderItem({ item, index } as any)}</View>
+          ))}
+        </View>
       )}
 
       {/* Comment input */}

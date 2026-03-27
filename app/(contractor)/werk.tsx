@@ -132,7 +132,7 @@ export default function WerkScreen() {
       >
         {/* KPI strip */}
         <View style={s.kpiStrip}>
-          <Pressable style={s.kpi} onPress={() => activeRef.current?.measureLayout(findNodeHandle(scrollRef.current) as any, (_x, y) => scrollRef.current?.scrollTo({ y, animated: true }), () => {})} accessibilityRole="button" accessibilityLabel={`${activeCount} ${t('dashboard.active', 'Active')}`}>
+          <Pressable style={s.kpi} onPress={() => scrollRef.current?.scrollTo({ y: 400, animated: true })} accessibilityRole="button" accessibilityLabel={`${activeCount} ${t('dashboard.active', 'Active')}`}>
             <Ionicons name="briefcase" size={16} color={Palette.hermesOrange} style={{ marginBottom: GRID.xs }} />
             <Text style={s.kpiValue}>{activeCount}</Text>
             <Text style={s.kpiLabel}>{t('dashboard.active', 'Active')}</Text>
@@ -144,7 +144,7 @@ export default function WerkScreen() {
             <Text style={s.kpiLabel}>{t('dashboard.today', 'Today')}</Text>
           </Pressable>
           <View style={s.kpiDivider} />
-          <Pressable style={s.kpi} onPress={() => leadsRef.current?.measureLayout(findNodeHandle(scrollRef.current) as any, (_x, y) => scrollRef.current?.scrollTo({ y, animated: true }), () => {})} accessibilityRole="button" accessibilityLabel={`${leadCount} ${t('dashboard.leads', 'Leads')}`}>
+          <Pressable style={s.kpi} onPress={() => scrollRef.current?.scrollTo({ y: 800, animated: true })} accessibilityRole="button" accessibilityLabel={`${leadCount} ${t('dashboard.leads', 'Leads')}`}>
             <Ionicons name="people" size={16} color={SemanticColors.feedbackSuccess} style={{ marginBottom: GRID.xs }} />
             <Text style={s.kpiValue}>{leadCount}</Text>
             <Text style={s.kpiLabel}>{t('dashboard.leads', 'Leads')}</Text>

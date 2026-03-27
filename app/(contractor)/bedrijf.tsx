@@ -151,19 +151,19 @@ export default function BedrijfScreen() {
         {/* KPI strip */}
         <FadeIn delay={0} duration={300}>
           <View style={s.kpiStrip}>
-            <Pressable style={s.kpi} onPress={() => customerListRef.current?.measureLayout(findNodeHandle(scrollRef.current) as any, (_x, y) => scrollRef.current?.scrollTo({ y, animated: true }), () => {})} accessibilityRole="button" accessibilityLabel={`${customers.length} ${t('customers.contacts', 'Contacts')}`}>
+            <Pressable style={s.kpi} onPress={() => scrollRef.current?.scrollTo({ y: 500, animated: true })} accessibilityRole="button" accessibilityLabel={`${customers.length} ${t('customers.contacts', 'Contacts')}`}>
               <Ionicons name="people" size={16} color={Palette.hermesOrange} style={{ marginBottom: GRID.xs }} />
               <Text style={s.kpiValue}>{customers.length}</Text>
               <Text style={s.kpiLabel}>{t('customers.contacts', 'Contacts')}</Text>
             </Pressable>
             <View style={s.kpiDivider} />
-            <Pressable style={s.kpi} onPress={() => decisionsRef.current?.measureLayout(findNodeHandle(scrollRef.current) as any, (_x, y) => scrollRef.current?.scrollTo({ y, animated: true }), () => {})} accessibilityRole="button" accessibilityLabel={`${activeTrackers.length} ${t('customers.activeDecisions', 'Active decisions')}`}>
+            <Pressable style={s.kpi} onPress={() => scrollRef.current?.scrollTo({ y: 200, animated: true })} accessibilityRole="button" accessibilityLabel={`${activeTrackers.length} ${t('customers.activeDecisions', 'Active decisions')}`}>
               <Ionicons name="chatbubbles" size={16} color={SemanticColors.feedbackInfo} style={{ marginBottom: GRID.xs }} />
               <Text style={s.kpiValue}>{activeTrackers.length}</Text>
               <Text style={s.kpiLabel}>{t('customers.activeDecisions', 'Active decisions')}</Text>
             </Pressable>
             <View style={s.kpiDivider} />
-            <Pressable style={s.kpi} onPress={() => customerListRef.current?.measureLayout(findNodeHandle(scrollRef.current) as any, (_x, y) => scrollRef.current?.scrollTo({ y, animated: true }), () => {})} accessibilityRole="button" accessibilityLabel={`${totalOverdue} ${t('customers.overdue', 'Overdue')}`}>
+            <Pressable style={s.kpi} onPress={() => scrollRef.current?.scrollTo({ y: 500, animated: true })} accessibilityRole="button" accessibilityLabel={`${totalOverdue} ${t('customers.overdue', 'Overdue')}`}>
               <Ionicons name="alert-circle" size={16} color={totalOverdue > 0 ? SemanticColors.feedbackError : SemanticColors.textTertiary} style={{ marginBottom: GRID.xs }} />
               <Text style={[s.kpiValue, totalOverdue > 0 && { color: SemanticColors.feedbackError }]}>{totalOverdue}</Text>
               <Text style={s.kpiLabel}>{t('customers.overdue', 'Overdue')}</Text>
