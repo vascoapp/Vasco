@@ -22,6 +22,7 @@ import { useSupplierPriceInsight } from './supplierPriceGenerator';
 import { useDailyPlanningInsight } from './dailyPlanningGenerator';
 import { useCrossServiceInsight } from './crossServiceGenerator';
 import { useCashGapInsight } from './cashGapGenerator';
+import { useCashflowInsight } from './cashflowInsightGenerator';
 import { useCapacityInsight } from './capacityGenerator';
 import { useGoalProgressInsight } from './goalProgressGenerator';
 import { useProfitabilityInsight } from './profitabilityGenerator';
@@ -151,6 +152,7 @@ const GENERATOR_REGISTRY: GeneratorRegistration[] = [
   { id: 'daily-planning', screens: ['today', 'schedule', 'dispatch'], roles: ['contractor', 'sitelead'] },
   { id: 'cross-service', screens: ['invoices', 'savings', 'decisions', 'financials'], roles: ['contractor', 'cfo'] },
   { id: 'cash-gap', screens: ['today', 'invoices', 'cashflow'], roles: ['contractor', 'cfo'] },
+  { id: 'cashflow-insight', screens: ['geld', 'today', 'cashflow', 'invoices'], roles: ['contractor'] },
   { id: 'capacity', screens: ['today', 'decisions', 'dispatch', 'efficiency'], roles: ['contractor', 'sitelead', 'coo'] },
   { id: 'goal-progress', screens: ['today', 'savings'], roles: ['contractor'] },
   { id: 'profitability', screens: ['overview', 'financials', 'portfolio'], roles: ['contractor', 'cfo', 'director'] },
@@ -217,6 +219,7 @@ export function useAllGenerators(ctx: GeneratorContext, dataCounts?: DataCounts)
   const dailyPlanning = useDailyPlanningInsight(ctx);
   const crossService = useCrossServiceInsight(ctx);
   const cashGap = useCashGapInsight(ctx);
+  const cashflowInsight = useCashflowInsight(ctx);
   const capacity = useCapacityInsight(ctx);
   const goalProgress = useGoalProgressInsight(ctx);
   const profitability = useProfitabilityInsight(ctx);
@@ -285,6 +288,7 @@ export function useAllGenerators(ctx: GeneratorContext, dataCounts?: DataCounts)
       { id: 'daily-planning', insight: dailyPlanning },
       { id: 'cross-service', insight: crossService },
       { id: 'cash-gap', insight: cashGap },
+      { id: 'cashflow-insight', insight: cashflowInsight },
       { id: 'capacity', insight: capacity },
       { id: 'goal-progress', insight: goalProgress },
       { id: 'profitability', insight: profitability },
@@ -337,7 +341,7 @@ export function useAllGenerators(ctx: GeneratorContext, dataCounts?: DataCounts)
   }, [
     overdueInvoice, savingsOpp, marginDrift, complianceAlert, laborEff,
     estimationCal, dsoTrend, certExpiry, supplierPrice, weather,
-    dailyPlanning, crossService, cashGap, capacity, goalProgress,
+    dailyPlanning, crossService, cashGap, cashflowInsight, capacity, goalProgress,
     profitability, financialAudit, marginRootCause, customerLifecycle,
     cascadingDelay, estimationVarianceType, supplierPriceAnomaly, staticTip,
     quoteBenchmark, materialSuggestion, customerPaymentHistory,

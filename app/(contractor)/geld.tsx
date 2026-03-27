@@ -15,6 +15,7 @@ import { SafeArea } from '../../src/theme/spacing';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { useAppState } from '../../src/state/AppState';
 import { useCashFlow } from '../../src/services/cashFlowService';
+import { useFinancialAnalysis } from '../../src/services/financialAnalysisService';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { FadeIn } from '../../src/components/shared/FadeIn';
@@ -33,6 +34,7 @@ export default function GeldScreen() {
   const [sendingInvoiceId, setSendingInvoiceId] = useState<string | null>(null);
   const { invoices, quotes, markInvoiceSent, removeInvoice, removeQuote, isLoading } = useAppState();
   const cashFlow = useCashFlow();
+  const fin = useFinancialAnalysis();
 
   const aiQueue = useAIQueue();
   const allGuidance = useVascoGuidance('contractor', 'geld');
@@ -65,14 +67,10 @@ export default function GeldScreen() {
     refreshTimerRef.current = setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
   }, []);
 
-  // Invoice stats
-  const outstandingTotal = invoices
-    .filter((inv: any) => inv.status !== 'paid')
-    .reduce((sum: number, inv: any) => sum + (inv.total || inv.amount || 0), 0);
-  const overdueCount = invoices.filter((inv: any) => inv.status === 'overdue').length;
-  const paidTotal = invoices
-    .filter((inv: any) => inv.status === 'paid')
-    .reduce((sum: number, inv: any) => sum + (inv.total || inv.amount || 0), 0);
+  // Financial analysis — real numbers from the analysis engine
+  const outstandingTotal = fin.totalOutstanding;
+  const overdueCount = fin.overdueCount;
+  const paidTotal = fin.totalRevenue;
 
   // All documents: invoices + quotes, sorted by status priority (overdue first)
   const documents = useMemo(() => {
@@ -100,16 +98,8 @@ export default function GeldScreen() {
     return docs.sort((a, b) => (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3));
   }, [invoices, quotes]);
 
-  // Sparkline from paid invoices
-  const sparkData = useMemo(() => {
-    const months: Record<string, number> = {};
-    invoices.filter((i: any) => i.status === 'paid').forEach((inv: any) => {
-      const month = (inv.lastUpdated || inv.dueDate || '2026-01').slice(0, 7);
-      months[month] = (months[month] || 0) + (inv.amount || 0);
-    });
-    const sorted = Object.entries(months).sort(([a], [b]) => a.localeCompare(b));
-    return sorted.slice(-6).map(([, v]) => v);
-  }, [invoices]);
+  // Sparkline from financial analysis engine (last 6 months inflows)
+  const sparkData = useMemo(() => fin.monthlyInflows, [fin.monthlyInflows]);
 
   if (isLoading) {
     return (
@@ -134,22 +124,27 @@ export default function GeldScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />}
       >
-        {/* KPIs — the 3 numbers that matter */}
+        {/* KPIs — the 4 numbers that matter */}
         <FadeIn delay={0}>
           <View style={s.kpiCard}>
+            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)} accessibilityRole="button" accessibilityLabel={`${t('money.received', 'Ontvangen')}: \u20AC${paidTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}>
+              <Text style={s.kpiLabel}>{t('money.revenue', 'Omzet')}</Text>
+              <Text style={[s.kpiValue, { color: SemanticColors.feedbackSuccess }]}>{'\u20AC'}{paidTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+            </Pressable>
+            <View style={s.kpiDivider} />
             <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)} accessibilityRole="button" accessibilityLabel={`${t('money.outstanding', 'Uitstaand')}: \u20AC${outstandingTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}>
               <Text style={s.kpiLabel}>{t('money.outstanding', 'Uitstaand')}</Text>
               <Text style={s.kpiValue}>{'\u20AC'}{outstandingTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
             </Pressable>
             <View style={s.kpiDivider} />
-            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)} accessibilityRole="button" accessibilityLabel={`${t('money.overdue', 'Achterstallig')}: ${overdueCount}`}>
-              <Text style={s.kpiLabel}>{t('money.overdue', 'Achterstallig')}</Text>
-              <Text style={[s.kpiValue, overdueCount > 0 && { color: SemanticColors.feedbackError }]}>{overdueCount}</Text>
+            <Pressable style={s.kpiItem} accessibilityRole="button" accessibilityLabel={`${t('money.pipeline', 'Pipeline')}: \u20AC${fin.quotePipeline.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}>
+              <Text style={s.kpiLabel}>{t('money.pipeline', 'Pipeline')}</Text>
+              <Text style={s.kpiValue}>{'\u20AC'}{fin.quotePipeline.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
             </Pressable>
             <View style={s.kpiDivider} />
-            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)} accessibilityRole="button" accessibilityLabel={`${t('money.received', 'Ontvangen')}: \u20AC${paidTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}>
-              <Text style={s.kpiLabel}>{t('money.received', 'Ontvangen')}</Text>
-              <Text style={[s.kpiValue, { color: SemanticColors.feedbackSuccess }]}>{'\u20AC'}{paidTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+            <Pressable style={s.kpiItem} accessibilityRole="button" accessibilityLabel={`${t('money.winRate', 'Win rate')}: ${fin.quoteWinRate}%`}>
+              <Text style={s.kpiLabel}>{t('money.winRate', 'Win rate')}</Text>
+              <Text style={[s.kpiValue, fin.quoteWinRate < 50 && fin.quoteWinRate > 0 && { color: SemanticColors.feedbackWarning }]}>{fin.quoteWinRate > 0 ? `${fin.quoteWinRate}%` : '—'}</Text>
             </Pressable>
           </View>
         </FadeIn>
@@ -300,7 +295,7 @@ export default function GeldScreen() {
           </View>
         </FadeIn>
 
-        {/* Cashflow — below documents */}
+        {/* Cashflow — real analysis */}
         <FadeIn delay={120}>
           <View style={s.section}>
             <Text style={s.sectionTitle}>{t('money.cashflow', 'Cashflow')}</Text>
@@ -315,29 +310,101 @@ export default function GeldScreen() {
                 <View style={s.cfDivider} />
                 <View style={s.cfItem}>
                   <Text style={s.cfValue}>
-                    {'\u20AC'}{(cashFlow?.summary?.pendingExpenses ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    {'\u20AC'}{fin.totalExpenses.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </Text>
                   <Text style={s.cfLabel}>{t('money.costs', 'Kosten')}</Text>
                 </View>
                 <View style={s.cfDivider} />
                 <View style={s.cfItem}>
-                  <Text style={[s.cfValue, { color: (paidTotal - (cashFlow?.summary?.pendingExpenses ?? 0)) >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
-                    {'\u20AC'}{(paidTotal - (cashFlow?.summary?.pendingExpenses ?? 0)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  <Text style={[s.cfValue, { color: fin.netIncome >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
+                    {'\u20AC'}{fin.netIncome.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </Text>
                   <Text style={s.cfLabel}>{t('money.profit', 'Winst')}</Text>
                 </View>
               </View>
               <View style={s.marginBar}>
-                <View style={[s.marginFill, { width: `${Math.min(Math.max(paidTotal > 0 ? ((paidTotal - (cashFlow?.summary?.pendingExpenses ?? 0)) / paidTotal * 100) : 0, 0), 100)}%` }]} />
+                <View style={[s.marginFill, { width: `${Math.min(Math.max(fin.profitMargin, 0), 100)}%` }]} />
               </View>
               {sparkData.length >= 2 && (
                 <View style={{ alignItems: 'flex-end' }}>
                   <Sparkline data={sparkData} width={120} height={28} color={SemanticColors.feedbackSuccess} />
                 </View>
               )}
+              {/* Projected next month */}
+              <View style={s.projRow}>
+                <Text style={s.projLabel}>{t('money.projected', 'Prognose volgende maand')}</Text>
+                <Text style={[s.projValue, { color: fin.projectedCashflow >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
+                  {'\u20AC'}{fin.projectedCashflow.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </Text>
+              </View>
+              {/* DSO */}
+              {fin.avgDaysToPayment > 0 && (
+                <View style={s.projRow}>
+                  <Text style={s.projLabel}>{t('money.dso', 'Gem. betaaltermijn')}</Text>
+                  <Text style={[s.projValue, fin.avgDaysToPayment > 30 && { color: SemanticColors.feedbackWarning }]}>
+                    {fin.avgDaysToPayment} {t('common.days', 'dagen')}
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
         </FadeIn>
+
+        {/* Overdue invoices detail */}
+        {fin.overdueDetails.length > 0 && (
+          <FadeIn delay={140}>
+            <View style={s.section}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={s.sectionTitle}>{t('money.overdue', 'Achterstallig')}</Text>
+                <Text style={[s.sectionCount, { color: SemanticColors.feedbackError }]}>{'\u20AC'}{fin.overdueAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+              </View>
+              <View style={s.docList}>
+                {fin.overdueDetails.map((od) => (
+                  <Pressable
+                    key={od.invoiceId}
+                    style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9 }]}
+                    onPress={() => router.push(`/invoices/${od.invoiceId}` as any)}
+                    accessibilityRole="button"
+                  >
+                    <View style={[s.docDot, { backgroundColor: SemanticColors.feedbackError }]} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.docName} numberOfLines={1}>{od.customer}</Text>
+                      <Text style={s.docDesc}>{od.daysOverdue} {t('common.daysOverdue', 'dagen achterstallig')}</Text>
+                    </View>
+                    <Text style={[s.docAmount, { color: SemanticColors.feedbackError }]}>{'\u20AC'}{od.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          </FadeIn>
+        )}
+
+        {/* Top customers by revenue */}
+        {fin.topCustomers.length > 0 && (
+          <FadeIn delay={160}>
+            <View style={s.section}>
+              <Text style={s.sectionTitle}>{t('money.topCustomers', 'Top klanten')}</Text>
+              <View style={s.docList}>
+                {fin.topCustomers.map((cust) => (
+                  <View key={cust.customer} style={s.docRow}>
+                    <View style={[s.docDot, { backgroundColor: cust.percentage > 50 ? SemanticColors.feedbackWarning : SemanticColors.feedbackSuccess }]} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.docName} numberOfLines={1}>{cust.customer}</Text>
+                      <Text style={s.docDesc}>{cust.invoiceCount} {t('invoices.invoices', 'facturen')} · {cust.percentage}%</Text>
+                    </View>
+                    <Text style={s.docAmount}>{'\u20AC'}{cust.revenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+                  </View>
+                ))}
+              </View>
+              {fin.concentrationRisk && (
+                <View style={s.riskBanner}>
+                  <Ionicons name="warning" size={14} color={SemanticColors.feedbackWarning} />
+                  <Text style={s.riskText}>{t('money.concentrationRisk', 'High concentration: diversify your client base')}</Text>
+                </View>
+              )}
+            </View>
+          </FadeIn>
+        )}
 
         <View style={{ height: 140 }} />
       </ScrollView>
@@ -568,6 +635,43 @@ const s = StyleSheet.create({
     height: 6,
     backgroundColor: SemanticColors.feedbackSuccess,
     borderRadius: 3,
+  },
+
+  // Projection rows
+  projRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: GRID.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: SemanticColors.borderDefault,
+  },
+  projLabel: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textSecondary,
+  },
+  projValue: {
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
+  },
+
+  // Risk banner
+  riskBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.xs,
+    backgroundColor: SemanticColors.feedbackWarning + '15',
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: GRID.sm,
+    paddingVertical: GRID.sm,
+  },
+  riskText: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textSecondary,
+    flex: 1,
   },
 
   // FAB

@@ -81,6 +81,8 @@ export type MetricKey =
   | 'quoteMedian'
   | 'customerOverdueRate'
   | 'jobMargin'
+  | 'revenue'
+  | 'win_rate'
   // Site lead metrics
   | 'workforceUtilization'
   | 'incidentRate'

@@ -182,6 +182,19 @@ const TRANSLATIONS: Record<string, TranslationMap> = {
   // ===== CUSTOMER LIFECYCLE =====
   customer_at_risk_title: { nl: 'Klant dreigt af te haken: {{name}}', en: 'Customer at risk: {{name}}', de: 'Kunde gefährdet: {{name}}', fr: 'Client à risque : {{name}}', es: 'Cliente en riesgo: {{name}}', it: 'Cliente a rischio: {{name}}' },
   customer_opportunity_title: { nl: 'Upsell-kans: {{name}}', en: 'Upsell opportunity: {{name}}', de: 'Upsell-Möglichkeit: {{name}}', fr: 'Opportunité de vente additionnelle : {{name}}', es: 'Oportunidad de venta adicional: {{name}}', it: 'Opportunità di upsell: {{name}}' },
+
+  // ===== FINANCIAL ANALYSIS (cashflow insight generator) =====
+  source_financial_analysis: { nl: 'Financiële analyse', en: 'Financial Analysis', de: 'Finanzanalyse', fr: 'Analyse financière', es: 'Análisis financiero', it: 'Analisi finanziaria' },
+  fin_revenue_growth_title: { nl: 'Omzet steeg {{pct}}% deze maand', en: 'Revenue grew {{pct}}% this month', de: 'Umsatz stieg {{pct}}% diesen Monat', fr: 'Le chiffre d\'affaires a augmenté de {{pct}}% ce mois', es: 'Los ingresos crecieron {{pct}}% este mes', it: 'Il fatturato è cresciuto del {{pct}}% questo mese' },
+  fin_revenue_decline_title: { nl: 'Omzet daalde {{pct}}% deze maand', en: 'Revenue declined {{pct}}% this month', de: 'Umsatz sank {{pct}}% diesen Monat', fr: 'Le chiffre d\'affaires a baissé de {{pct}}% ce mois', es: 'Los ingresos cayeron {{pct}}% este mes', it: 'Il fatturato è diminuito del {{pct}}% questo mese' },
+  fin_overdue_title: { nl: '{{count}} facturen achterstallig: €{{amount}}', en: '{{count}} invoices overdue: €{{amount}}', de: '{{count}} Rechnungen überfällig: €{{amount}}', fr: '{{count}} factures en retard : €{{amount}}', es: '{{count}} facturas vencidas: €{{amount}}', it: '{{count}} fatture scadute: €{{amount}}' },
+  fin_concentration_title: { nl: 'Klantrisico: {{pct}}% omzet van {{name}}', en: 'Client risk: {{pct}}% revenue from {{name}}', de: 'Kundenrisiko: {{pct}}% Umsatz von {{name}}', fr: 'Risque client : {{pct}}% du CA de {{name}}', es: 'Riesgo de cliente: {{pct}}% ingresos de {{name}}', it: 'Rischio cliente: {{pct}}% fatturato da {{name}}' },
+  fin_cashflow_negative_title: { nl: 'Negatieve cashflow verwacht volgende maand', en: 'Negative cashflow expected next month', de: 'Negativer Cashflow nächsten Monat erwartet', fr: 'Flux de trésorerie négatif attendu le mois prochain', es: 'Flujo de caja negativo esperado el próximo mes', it: 'Flusso di cassa negativo previsto il prossimo mese' },
+  fin_winrate_drop_title: { nl: 'Offerte-succesratio gedaald naar {{pct}}%', en: 'Quote win rate dropped to {{pct}}%', de: 'Angebotsgewinnrate auf {{pct}}% gefallen', fr: 'Taux de réussite des devis tombé à {{pct}}%', es: 'Tasa de éxito de presupuestos cayó a {{pct}}%', it: 'Tasso di successo preventivi sceso al {{pct}}%' },
+  fin_dso_high_title: { nl: 'Gemiddelde betaaltermijn: {{days}} dagen', en: 'Average payment time: {{days}} days', de: 'Durchschnittliche Zahlungsfrist: {{days}} Tage', fr: 'Délai de paiement moyen : {{days}} jours', es: 'Plazo medio de pago: {{days}} días', it: 'Tempo medio di pagamento: {{days}} giorni' },
+  fin_action_send_invoices: { nl: 'Openstaande facturen versturen', en: 'Send pending invoices', de: 'Ausstehende Rechnungen senden', fr: 'Envoyer les factures en attente', es: 'Enviar facturas pendientes', it: 'Inviare fatture in sospeso' },
+  fin_action_review_pricing: { nl: 'Prijzen herzien', en: 'Review pricing', de: 'Preise überprüfen', fr: 'Réviser les prix', es: 'Revisar precios', it: 'Rivedere i prezzi' },
+  fin_action_diversify: { nl: 'Klantenbase diversifiëren', en: 'Diversify client base', de: 'Kundenbasis diversifizieren', fr: 'Diversifier la clientèle', es: 'Diversificar la cartera de clientes', it: 'Diversificare la base clienti' },
 };
 
 // ---------------------------------------------------------------------------

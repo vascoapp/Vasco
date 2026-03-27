@@ -1,0 +1,329 @@
+// =============================================================================
+// FINANCIAL ANALYSIS SERVICE
+// =============================================================================
+// Real financial engine: revenue, outstanding, pipeline, cashflow, trends.
+// Consumes AppState invoices + quotes, produces FinancialSummary.
+// =============================================================================
+
+import { useMemo } from 'react';
+import { useAppState } from '../state/AppState';
+import type { Invoice, Quote } from '../domain/documents';
+import { MS_PER_DAY } from '../utils/timeConstants';
+
+// =============================================================================
+// TYPES
+// =============================================================================
+
+export interface MonthlyBucket {
+  month: string;       // YYYY-MM
+  label: string;       // "Jan", "Feb" etc.
+  revenue: number;     // paid invoices
+  invoiced: number;    // all invoices created
+  expenses: number;    // estimated expenses (30% of revenue heuristic until real data)
+}
+
+export interface CustomerConcentration {
+  customer: string;
+  customerId?: string;
+  revenue: number;
+  percentage: number;  // 0-100
+  invoiceCount: number;
+}
+
+export interface OverdueDetail {
+  invoiceId: string;
+  customer: string;
+  amount: number;
+  daysOverdue: number;
+  dueDate: string;
+}
+
+export interface FinancialSummary {
+  // Revenue
+  totalRevenue: number;
+  monthlyRevenue: MonthlyBucket[];
+  avgMonthlyRevenue: number;
+  revenueGrowth: number;          // % change last 2 months with data
+
+  // Outstanding
+  totalOutstanding: number;
+  overdueAmount: number;
+  overdueCount: number;
+  overdueDetails: OverdueDetail[];
+  avgDaysToPayment: number;       // DSO
+
+  // Pipeline
+  quotePipeline: number;          // sent + draft quotes
+  quoteWinRate: number;           // accepted / (accepted + rejected + expired) %
+  avgQuoteValue: number;
+
+  // Profit (estimated)
+  totalExpenses: number;
+  netIncome: number;
+  profitMargin: number;           // 0-100
+
+  // Cash Flow
+  monthlyInflows: number[];       // last 6 months payments received
+  monthlyOutflows: number[];      // last 6 months expenses (estimated)
+  netCashflow: number[];          // inflows - outflows
+  projectedCashflow: number;      // next month estimate
+
+  // Trends
+  bestMonth: { month: string; amount: number } | null;
+  worstMonth: { month: string; amount: number } | null;
+  seasonalPattern: string;
+
+  // Customer concentration
+  topCustomers: CustomerConcentration[];
+  concentrationRisk: boolean;     // true if top customer > 50%
+}
+
+// =============================================================================
+// HELPERS
+// =============================================================================
+
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function getMonthKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function getMonthLabel(key: string): string {
+  const m = parseInt(key.split('-')[1], 10);
+  return MONTH_LABELS[m - 1] || key;
+}
+
+function parseDate(dateStr?: string): Date | null {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function daysBetween(a: Date, b: Date): number {
+  return Math.round((b.getTime() - a.getTime()) / MS_PER_DAY);
+}
+
+/** Build an array of the last N month keys ending at `now` */
+function lastNMonths(n: number, now: Date): string[] {
+  const keys: string[] = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    keys.push(getMonthKey(d));
+  }
+  return keys;
+}
+
+// =============================================================================
+// CORE ANALYSIS
+// =============================================================================
+
+export function analyzeFinancials(
+  invoices: Invoice[],
+  quotes: Quote[],
+  now: Date = new Date(),
+): FinancialSummary {
+  // ---- Revenue from paid invoices ----
+  const paidInvoices = invoices.filter(i => i.status === 'paid');
+  const totalRevenue = paidInvoices.reduce((s, i) => s + (i.total || i.amount || 0), 0);
+
+  // ---- Monthly buckets (last 12 months) ----
+  const last12 = lastNMonths(12, now);
+  const monthMap: Record<string, MonthlyBucket> = {};
+  for (const mk of last12) {
+    monthMap[mk] = { month: mk, label: getMonthLabel(mk), revenue: 0, invoiced: 0, expenses: 0 };
+  }
+
+  for (const inv of invoices) {
+    const created = parseDate(inv.createdAt) || parseDate(inv.sentAt);
+    if (created) {
+      const mk = getMonthKey(created);
+      if (monthMap[mk]) {
+        monthMap[mk].invoiced += (inv.total || inv.amount || 0);
+      }
+    }
+    if (inv.status === 'paid') {
+      const paid = parseDate(inv.paidAt) || parseDate(inv.lastUpdated);
+      if (paid) {
+        const mk = getMonthKey(paid);
+        if (monthMap[mk]) {
+          monthMap[mk].revenue += (inv.total || inv.amount || 0);
+        }
+      }
+    }
+  }
+
+  const monthlyRevenue = last12.map(mk => monthMap[mk]);
+
+  // Fill estimated expenses (30% of invoiced as heuristic — materials + fuel)
+  for (const bucket of monthlyRevenue) {
+    bucket.expenses = Math.round(bucket.invoiced * 0.3);
+  }
+
+  // Average monthly revenue (only months with data)
+  const monthsWithRevenue = monthlyRevenue.filter(m => m.revenue > 0);
+  const avgMonthlyRevenue = monthsWithRevenue.length > 0
+    ? monthsWithRevenue.reduce((s, m) => s + m.revenue, 0) / monthsWithRevenue.length
+    : 0;
+
+  // Revenue growth (compare last 2 months with data)
+  let revenueGrowth = 0;
+  if (monthsWithRevenue.length >= 2) {
+    const curr = monthsWithRevenue[monthsWithRevenue.length - 1].revenue;
+    const prev = monthsWithRevenue[monthsWithRevenue.length - 2].revenue;
+    revenueGrowth = prev > 0 ? ((curr - prev) / prev) * 100 : 0;
+  }
+
+  // ---- Outstanding ----
+  const unpaidInvoices = invoices.filter(i => i.status !== 'paid' && i.status !== 'draft');
+  const totalOutstanding = unpaidInvoices.reduce((s, i) => s + (i.total || i.amount || 0), 0);
+
+  const overdueInvoices = invoices.filter(i => i.status === 'overdue');
+  const overdueAmount = overdueInvoices.reduce((s, i) => s + (i.total || i.amount || 0), 0);
+  const overdueCount = overdueInvoices.length;
+
+  const overdueDetails: OverdueDetail[] = overdueInvoices.map(inv => {
+    const due = parseDate(inv.dueDate);
+    const daysOverdue = due ? Math.max(0, daysBetween(due, now)) : Math.abs(inv.dueInDays || 0);
+    return {
+      invoiceId: inv.id,
+      customer: inv.customerName || inv.customer,
+      amount: inv.total || inv.amount || 0,
+      daysOverdue,
+      dueDate: inv.dueDate || '',
+    };
+  }).sort((a, b) => b.daysOverdue - a.daysOverdue);
+
+  // ---- DSO (Days Sales Outstanding) ----
+  let totalDaysToPayment = 0;
+  let dsoCount = 0;
+  for (const inv of paidInvoices) {
+    const sent = parseDate(inv.sentAt) || parseDate(inv.createdAt);
+    const paid = parseDate(inv.paidAt);
+    if (sent && paid) {
+      totalDaysToPayment += Math.max(0, daysBetween(sent, paid));
+      dsoCount++;
+    }
+  }
+  const avgDaysToPayment = dsoCount > 0 ? Math.round(totalDaysToPayment / dsoCount) : 0;
+
+  // ---- Pipeline ----
+  const activeQuotes = quotes.filter(q => q.status === 'sent' || q.status === 'draft');
+  const quotePipeline = activeQuotes.reduce((s, q) => s + (q.amount || 0), 0);
+
+  const decidedQuotes = quotes.filter(q =>
+    q.status === 'accepted' || q.status === 'rejected' || q.status === 'expired'
+  );
+  const acceptedQuotes = quotes.filter(q => q.status === 'accepted');
+  const quoteWinRate = decidedQuotes.length > 0
+    ? Math.round((acceptedQuotes.length / decidedQuotes.length) * 100)
+    : 0;
+
+  const avgQuoteValue = quotes.length > 0
+    ? Math.round(quotes.reduce((s, q) => s + (q.amount || 0), 0) / quotes.length)
+    : 0;
+
+  // ---- Profit (estimated) ----
+  const totalExpenses = monthlyRevenue.reduce((s, m) => s + m.expenses, 0);
+  const netIncome = totalRevenue - totalExpenses;
+  const profitMargin = totalRevenue > 0 ? Math.round((netIncome / totalRevenue) * 100) : 0;
+
+  // ---- Cash flow arrays (last 6 months) ----
+  const last6 = last12.slice(-6);
+  const monthlyInflows = last6.map(mk => monthMap[mk]?.revenue || 0);
+  const monthlyOutflows = last6.map(mk => monthMap[mk]?.expenses || 0);
+  const netCashflow = monthlyInflows.map((inflow, i) => inflow - monthlyOutflows[i]);
+
+  // Projected cashflow = trailing 3-month average net + outstanding pipeline probability
+  const recentNet = netCashflow.slice(-3);
+  const avgRecentNet = recentNet.length > 0
+    ? recentNet.reduce((s, v) => s + v, 0) / recentNet.length
+    : 0;
+  const pipelineConversion = quotePipeline * (quoteWinRate / 100) * 0.3; // 30% likely next month
+  const projectedCashflow = Math.round(avgRecentNet + pipelineConversion);
+
+  // ---- Best / worst month ----
+  let bestMonth: { month: string; amount: number } | null = null;
+  let worstMonth: { month: string; amount: number } | null = null;
+  for (const bucket of monthsWithRevenue) {
+    if (!bestMonth || bucket.revenue > bestMonth.amount) {
+      bestMonth = { month: bucket.label, amount: bucket.revenue };
+    }
+    if (!worstMonth || bucket.revenue < worstMonth.amount) {
+      worstMonth = { month: bucket.label, amount: bucket.revenue };
+    }
+  }
+
+  // Seasonal pattern description
+  const q1 = monthlyRevenue.slice(0, 3).reduce((s, m) => s + m.revenue, 0);
+  const q2 = monthlyRevenue.slice(3, 6).reduce((s, m) => s + m.revenue, 0);
+  const q3 = monthlyRevenue.slice(6, 9).reduce((s, m) => s + m.revenue, 0);
+  const q4 = monthlyRevenue.slice(9, 12).reduce((s, m) => s + m.revenue, 0);
+  const quarters = [
+    { label: 'Q1', total: q1 },
+    { label: 'Q2', total: q2 },
+    { label: 'Q3', total: q3 },
+    { label: 'Q4', total: q4 },
+  ].sort((a, b) => b.total - a.total);
+  const peakQs = quarters.filter(q => q.total > 0).slice(0, 2).map(q => q.label).join('-');
+  const dipQs = quarters.filter(q => q.total >= 0).slice(-1).map(q => q.label).join('');
+  const seasonalPattern = peakQs && dipQs
+    ? `${peakQs} peak, ${dipQs} dip`
+    : 'Not enough data';
+
+  // ---- Customer concentration ----
+  const customerRevMap: Record<string, { revenue: number; count: number; customerId?: string }> = {};
+  for (const inv of paidInvoices) {
+    const name = inv.customerName || inv.customer;
+    if (!customerRevMap[name]) customerRevMap[name] = { revenue: 0, count: 0, customerId: inv.customerId };
+    customerRevMap[name].revenue += (inv.total || inv.amount || 0);
+    customerRevMap[name].count++;
+  }
+  const topCustomers: CustomerConcentration[] = Object.entries(customerRevMap)
+    .map(([customer, data]) => ({
+      customer,
+      customerId: data.customerId,
+      revenue: data.revenue,
+      percentage: totalRevenue > 0 ? Math.round((data.revenue / totalRevenue) * 100) : 0,
+      invoiceCount: data.count,
+    }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
+
+  const concentrationRisk = topCustomers.length > 0 && topCustomers[0].percentage > 50;
+
+  return {
+    totalRevenue,
+    monthlyRevenue,
+    avgMonthlyRevenue,
+    revenueGrowth,
+    totalOutstanding,
+    overdueAmount,
+    overdueCount,
+    overdueDetails,
+    avgDaysToPayment,
+    quotePipeline,
+    quoteWinRate,
+    avgQuoteValue,
+    totalExpenses,
+    netIncome,
+    profitMargin,
+    monthlyInflows,
+    monthlyOutflows,
+    netCashflow,
+    projectedCashflow,
+    bestMonth,
+    worstMonth,
+    seasonalPattern,
+    topCustomers,
+    concentrationRisk,
+  };
+}
+
+// =============================================================================
+// REACT HOOK
+// =============================================================================
+
+export function useFinancialAnalysis(): FinancialSummary {
+  const { invoices, quotes } = useAppState();
+  return useMemo(() => analyzeFinancials(invoices, quotes), [invoices, quotes]);
+}
