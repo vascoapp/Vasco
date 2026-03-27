@@ -328,7 +328,7 @@ const s = StyleSheet.create({
 
   // Scroll
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: SafeArea.side, paddingTop: GRID.sm, gap: GRID.lg },
+  scrollContent: { paddingHorizontal: SafeArea.side, paddingTop: GRID.sm, paddingBottom: 100, gap: GRID.lg },
 
   // KPI strip
   kpiStrip: {

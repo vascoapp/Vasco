@@ -55,6 +55,14 @@ export default function QuoteDetailScreen() {
     <Screen>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
+          <Pressable
+            onPress={() => router.back()}
+            style={styles.backBtn}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
+          >
+            <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
+          </Pressable>
           <View style={{ flex: 1 }}>
             <Text style={Typography.title}>{t('quotes.quote', 'Quote')} {quote.id}</Text>
             <Text style={Typography.muted}>{quote.status} · {quote.job}</Text>
@@ -288,7 +296,17 @@ const styles = StyleSheet.create({
     gap: Spacing.lg,
   },
   header: {
-    gap: Spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   card: {
     backgroundColor: SemanticColors.surfacePrimary,

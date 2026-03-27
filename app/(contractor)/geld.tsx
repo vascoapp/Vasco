@@ -9,6 +9,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Share, Platform, Alert, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { SafeArea } from '../../src/theme/spacing';
@@ -25,6 +26,18 @@ import { VascoCard } from '../../src/components/shared/VascoCard';
 import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { useAIQueue } from '../../src/services/aiActionQueueService';
 import { useVascoGuidance } from '../../src/services/vascoGuidanceService';
+
+// Month label helper for sparkline axis
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function getLastNMonthLabels(n: number): string[] {
+  const now = new Date();
+  const labels: string[] = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    labels.push(MONTH_LABELS[d.getMonth()]);
+  }
+  return labels;
+}
 
 export default function GeldScreen() {
   const { t } = useTranslation();
@@ -121,6 +134,36 @@ export default function GeldScreen() {
 
   // Sparkline from financial analysis engine (last 6 months inflows)
   const sparkData = useMemo(() => fin.monthlyInflows, [fin.monthlyInflows]);
+  const sparkMonthLabels = useMemo(() => getLastNMonthLabels(sparkData.length || 6), [sparkData.length]);
+  const sparkMin = useMemo(() => sparkData.length ? Math.min(...sparkData) : 0, [sparkData]);
+  const sparkMax = useMemo(() => sparkData.length ? Math.max(...sparkData) : 0, [sparkData]);
+
+  // Overdue details sorted by most overdue first
+  const sortedOverdue = useMemo(() =>
+    [...fin.overdueDetails].sort((a, b) => b.daysOverdue - a.daysOverdue),
+    [fin.overdueDetails]
+  );
+
+  // Top customers: compute max revenue for bar chart
+  const maxCustomerRevenue = useMemo(() => {
+    if (fin.topCustomers.length === 0) return 0;
+    return Math.max(...fin.topCustomers.map(c => c.revenue));
+  }, [fin.topCustomers]);
+  const totalCustomerRevenue = useMemo(() => {
+    return fin.topCustomers.reduce((sum, c) => sum + c.revenue, 0);
+  }, [fin.topCustomers]);
+
+  // Profit margin percentage
+  const marginPercent = useMemo(() => {
+    return paidTotal > 0 ? Math.round((fin.netIncome / paidTotal) * 100) : 0;
+  }, [fin.netIncome, paidTotal]);
+
+  // DSO status
+  const dsoStatus = useMemo((): { color: string; dotColor: string } => {
+    if (fin.avgDaysToPayment <= 21) return { color: SemanticColors.feedbackSuccess, dotColor: SemanticColors.feedbackSuccess };
+    if (fin.avgDaysToPayment <= 30) return { color: Palette.hermesOrange, dotColor: Palette.hermesOrange };
+    return { color: SemanticColors.feedbackError, dotColor: SemanticColors.feedbackError };
+  }, [fin.avgDaysToPayment]);
 
   if (isLoading) {
     return (
@@ -154,21 +197,25 @@ export default function GeldScreen() {
                 <Text style={[s.kpiValue, { color: SemanticColors.feedbackSuccess }]}>{formatCurrency(paidTotal)}</Text>
                 <Ionicons name={revenueTrend.icon} size={14} color={revenueTrend.color} />
               </View>
+              <View style={[s.kpiAccentLine, { backgroundColor: SemanticColors.feedbackSuccess }]} />
             </Pressable>
             <View style={s.kpiDivider} />
             <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)} accessibilityRole="button" accessibilityLabel={`${t('money.outstanding', 'Uitstaand')}: ${formatCurrency(outstandingTotal)}`}>
               <Text style={s.kpiLabel}>{t('money.outstanding', 'Uitstaand')}</Text>
               <Text style={s.kpiValue}>{formatCurrency(outstandingTotal)}</Text>
+              <View style={[s.kpiAccentLine, { backgroundColor: Palette.hermesOrange }]} />
             </Pressable>
             <View style={s.kpiDivider} />
             <Pressable style={s.kpiItem} accessibilityRole="button" accessibilityLabel={`${t('money.pipeline', 'Pipeline')}: ${formatCurrency(fin.quotePipeline)}`}>
               <Text style={s.kpiLabel}>{t('money.pipeline', 'Pipeline')}</Text>
               <Text style={s.kpiValue}>{formatCurrency(fin.quotePipeline)}</Text>
+              <View style={[s.kpiAccentLine, { backgroundColor: SemanticColors.feedbackInfo }]} />
             </Pressable>
             <View style={s.kpiDivider} />
             <Pressable style={s.kpiItem} accessibilityRole="button" accessibilityLabel={`${t('money.winRate', 'Win rate')}: ${fin.quoteWinRate}%`}>
               <Text style={s.kpiLabel}>{t('money.winRate', 'Win rate')}</Text>
               <Text style={[s.kpiValue, fin.quoteWinRate < 50 && fin.quoteWinRate > 0 && { color: SemanticColors.feedbackWarning }]}>{fin.quoteWinRate > 0 ? `${fin.quoteWinRate}%` : '—'}</Text>
+              <View style={[s.kpiAccentLine, { backgroundColor: fin.quoteWinRate < 50 && fin.quoteWinRate > 0 ? SemanticColors.feedbackWarning : SemanticColors.feedbackSuccess }]} />
             </Pressable>
           </View>
           {/* Collection rate badge */}
@@ -331,49 +378,96 @@ export default function GeldScreen() {
           <View style={s.section}>
             <Text style={s.sectionTitle}>{t('money.cashflow', 'Cashflow')}</Text>
             <View style={s.cfCard}>
+              {/* Revenue / Costs / Profit row */}
               <View style={s.cfRow}>
                 <View style={s.cfItem}>
-                  <Text style={[s.cfValue, { color: SemanticColors.feedbackSuccess }]}>
+                  <Text style={[s.cfValueDisplay, { color: SemanticColors.feedbackSuccess }]}>
                     {formatCurrency(paidTotal)}
                   </Text>
                   <Text style={s.cfLabel}>{t('money.revenue', 'Omzet')}</Text>
                 </View>
                 <View style={s.cfDivider} />
                 <View style={s.cfItem}>
-                  <Text style={s.cfValue}>
+                  <Text style={s.cfValueDisplay}>
                     {formatCurrency(fin.totalExpenses)}
                   </Text>
                   <Text style={s.cfLabel}>{t('money.costs', 'Kosten')}</Text>
                 </View>
                 <View style={s.cfDivider} />
                 <View style={s.cfItem}>
-                  <Text style={[s.cfValue, { color: fin.netIncome >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
-                    {formatCurrency(fin.netIncome)}
-                  </Text>
+                  <View style={s.profitRow}>
+                    <Text style={[s.cfValueDisplay, { color: fin.netIncome >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
+                      {formatCurrency(fin.netIncome)}
+                    </Text>
+                    {paidTotal > 0 && (
+                      <View style={[s.marginPill, { backgroundColor: marginPercent >= 0 ? SemanticColors.feedbackSuccessBg : SemanticColors.feedbackErrorBg }]}>
+                        <Text style={[s.marginPillText, { color: marginPercent >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
+                          {marginPercent}%
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                   <Text style={s.cfLabel}>{t('money.profit', 'Winst')}</Text>
                 </View>
               </View>
+
+              {/* Margin bar with gradient */}
               <View style={s.marginBar}>
-                <View style={[s.marginFill, { width: `${Math.min(Math.max(fin.profitMargin, 0), 100)}%` }]} />
+                <LinearGradient
+                  colors={[Palette.hermesOrange, SemanticColors.feedbackSuccess]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[s.marginFill, { width: `${Math.min(Math.max(fin.profitMargin, 0), 100)}%` as any }]}
+                />
               </View>
+
+              {/* Sparkline with axis labels */}
               {sparkData.length >= 2 && (
-                <View style={s.sparklineContainer}>
-                  <Text style={s.sparklineLabel}>{t('money.last6Months', 'Last 6 months')}</Text>
-                  <Sparkline data={sparkData} width={200} height={44} color={SemanticColors.feedbackSuccess} />
+                <View style={s.sparkSection}>
+                  <View style={s.sparklineContainer}>
+                    {/* Y-axis labels */}
+                    <View style={s.sparkYAxis}>
+                      <Text style={s.sparkAxisLabel}>{formatCurrency(sparkMax)}</Text>
+                      <Text style={s.sparkAxisLabel}>{formatCurrency(sparkMin)}</Text>
+                    </View>
+                    <View style={s.sparkChartArea}>
+                      <Sparkline data={sparkData} width={220} height={48} color={SemanticColors.feedbackSuccess} />
+                    </View>
+                  </View>
+                  {/* X-axis month labels */}
+                  <View style={s.sparkXAxis}>
+                    {sparkMonthLabels.map((label, idx) => (
+                      <Text key={idx} style={s.sparkAxisLabel}>{label}</Text>
+                    ))}
+                  </View>
                 </View>
               )}
-              {/* Projected next month */}
-              <View style={s.projRow}>
-                <Text style={s.projLabel}>{t('money.projected', 'Prognose volgende maand')}</Text>
-                <Text style={[s.projValue, { color: fin.projectedCashflow >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
+
+              {/* Projected next month — prominent card */}
+              <View style={s.projCard}>
+                <View style={s.projCardLeft}>
+                  <View style={[s.projIconWrap, { backgroundColor: fin.projectedCashflow >= 0 ? SemanticColors.feedbackSuccessBg : SemanticColors.feedbackErrorBg }]}>
+                    <Ionicons
+                      name={fin.projectedCashflow >= 0 ? 'trending-up' : 'trending-down'}
+                      size={18}
+                      color={fin.projectedCashflow >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError}
+                    />
+                  </View>
+                  <Text style={s.projCardLabel}>{t('money.projected', 'Prognose volgende maand')}</Text>
+                </View>
+                <Text style={[s.projCardValue, { color: fin.projectedCashflow >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
                   {formatCurrency(fin.projectedCashflow)}
                 </Text>
               </View>
-              {/* DSO */}
+
+              {/* DSO with status dot */}
               {fin.avgDaysToPayment > 0 && (
-                <View style={s.projRow}>
-                  <Text style={s.projLabel}>{t('money.dso', 'Gem. betaaltermijn')}</Text>
-                  <Text style={[s.projValue, fin.avgDaysToPayment > 30 && { color: SemanticColors.feedbackWarning }]}>
+                <View style={s.dsoRow}>
+                  <View style={s.dsoLeft}>
+                    <View style={[s.dsoDot, { backgroundColor: dsoStatus.dotColor }]} />
+                    <Text style={s.projLabel}>{t('money.dso', 'Gem. betaaltermijn')}</Text>
+                  </View>
+                  <Text style={[s.projValue, { color: dsoStatus.color }]}>
                     {fin.avgDaysToPayment} {t('common.days', 'dagen')}
                   </Text>
                 </View>
@@ -382,8 +476,8 @@ export default function GeldScreen() {
           </View>
         </FadeIn>
 
-        {/* Overdue invoices detail */}
-        {fin.overdueDetails.length > 0 && (
+        {/* Overdue invoices detail — urgency */}
+        {sortedOverdue.length > 0 && (
           <FadeIn delay={140}>
             <View style={s.section}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -391,17 +485,21 @@ export default function GeldScreen() {
                 <Text style={[s.sectionCount, { color: SemanticColors.feedbackError }]}>{formatCurrency(fin.overdueAmount)}</Text>
               </View>
               <View style={s.docList}>
-                {fin.overdueDetails.map((od) => (
+                {sortedOverdue.map((od) => (
                   <Pressable
                     key={od.invoiceId}
-                    style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+                    style={({ pressed }) => [s.overdueRow, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
                     onPress={() => router.push(`/invoices/${od.invoiceId}` as any)}
                     accessibilityRole="button"
                   >
-                    <View style={[s.docDot, { backgroundColor: SemanticColors.feedbackError }]} />
                     <View style={{ flex: 1 }}>
                       <Text style={s.docName} numberOfLines={1}>{od.customer}</Text>
-                      <Text style={s.docDesc}>{od.daysOverdue} {t('common.daysOverdue', 'dagen achterstallig')}</Text>
+                      <View style={s.overdueMetaRow}>
+                        <View style={s.overduePill}>
+                          <Text style={s.overduePillText}>{od.daysOverdue}d</Text>
+                        </View>
+                        <Text style={s.docDesc}>{t('common.daysOverdue', 'dagen achterstallig')}</Text>
+                      </View>
                     </View>
                     <Text style={[s.docAmount, { color: SemanticColors.feedbackError }]}>{formatCurrency(od.amount)}</Text>
                   </Pressable>
@@ -411,29 +509,42 @@ export default function GeldScreen() {
           </FadeIn>
         )}
 
-        {/* Top customers by revenue */}
+        {/* Top customers by revenue — with mini bar chart */}
         {fin.topCustomers.length > 0 && (
           <FadeIn delay={160}>
             <View style={s.section}>
               <Text style={s.sectionTitle}>{t('money.topCustomers', 'Top klanten')}</Text>
-              <View style={s.docList}>
-                {fin.topCustomers.map((cust) => (
-                  <View key={cust.customer} style={s.docRow}>
-                    <View style={[s.docDot, { backgroundColor: cust.percentage > 50 ? SemanticColors.feedbackWarning : SemanticColors.feedbackSuccess }]} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={s.docName} numberOfLines={1}>{cust.customer}</Text>
-                      <Text style={s.docDesc}>{cust.invoiceCount} {t('invoices.invoices', 'facturen')} · {cust.percentage}%</Text>
-                    </View>
-                    <Text style={s.docAmount}>{formatCurrency(cust.revenue)}</Text>
-                  </View>
-                ))}
-              </View>
               {fin.concentrationRisk && (
                 <View style={s.riskBanner}>
                   <Ionicons name="warning" size={14} color={SemanticColors.feedbackWarning} />
                   <Text style={s.riskText}>{t('money.concentrationRisk', 'High concentration: diversify your client base')}</Text>
                 </View>
               )}
+              <View style={s.docList}>
+                {fin.topCustomers.map((cust) => {
+                  const barWidth = totalCustomerRevenue > 0 ? Math.max((cust.revenue / totalCustomerRevenue) * 100, 4) : 0;
+                  return (
+                    <View key={cust.customer} style={s.customerRow}>
+                      <View style={{ flex: 1 }}>
+                        <View style={s.customerHeader}>
+                          <Text style={s.docName} numberOfLines={1}>{cust.customer}</Text>
+                          <Text style={s.docAmount}>{formatCurrency(cust.revenue)}</Text>
+                        </View>
+                        <View style={s.customerBarTrack}>
+                          <View style={[
+                            s.customerBarFill,
+                            {
+                              width: `${barWidth}%` as any,
+                              backgroundColor: cust.percentage > 50 ? SemanticColors.feedbackWarning : Palette.hermesOrange,
+                            },
+                          ]} />
+                        </View>
+                        <Text style={s.customerMeta}>{cust.invoiceCount} {t('invoices.invoices', 'facturen')} · {cust.percentage}%</Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
             </View>
           </FadeIn>
         )}
@@ -485,9 +596,9 @@ const s = StyleSheet.create({
   },
 
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: SafeArea.side, gap: GRID.lg },
+  scrollContent: { paddingHorizontal: SafeArea.side, paddingBottom: 100, gap: GRID.lg },
 
-  // KPIs
+  // KPIs — premium
   kpiCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -504,7 +615,7 @@ const s = StyleSheet.create({
   kpiLabel: {
     fontSize: TYPE.labelSize,
     fontFamily: TYPE.labelFamily,
-    color: SemanticColors.textSecondary,
+    color: SemanticColors.textTertiary,
   },
   kpiValue: {
     fontSize: 24,
@@ -512,6 +623,12 @@ const s = StyleSheet.create({
     color: SemanticColors.textPrimary,
     letterSpacing: -0.5,
     marginTop: GRID.xs,
+  },
+  kpiAccentLine: {
+    width: 24,
+    height: 2,
+    borderRadius: 1,
+    marginTop: GRID.sm,
   },
   kpiDivider: {
     width: StyleSheet.hairlineWidth,
@@ -534,21 +651,6 @@ const s = StyleSheet.create({
     fontSize: TYPE.captionSize,
     fontFamily: TYPE.captionFamily,
     color: SemanticColors.textSecondary,
-  },
-
-  // Sparkline
-  sparklineContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: GRID.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: SemanticColors.borderDefault,
-  },
-  sparklineLabel: {
-    fontSize: TYPE.captionSize,
-    fontFamily: TYPE.captionFamily,
-    color: SemanticColors.textTertiary,
   },
 
   // Sections
@@ -665,12 +767,12 @@ const s = StyleSheet.create({
     color: SemanticColors.textTertiary,
   },
 
-  // Cashflow card
+  // Cashflow card — dashboard quality
   cfCard: {
     backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: RADIUS.lg,
     padding: GRID.md,
-    gap: GRID.md - 2,
+    gap: GRID.md,
   },
   cfRow: {
     flexDirection: 'row',
@@ -680,19 +782,33 @@ const s = StyleSheet.create({
   cfLabel: {
     fontSize: TYPE.labelSize,
     fontFamily: TYPE.labelFamily,
-    color: SemanticColors.textSecondary,
+    color: SemanticColors.textTertiary,
     marginTop: 2,
   },
-  cfValue: {
-    fontSize: TYPE.sectionSize,
-    fontFamily: TYPE.sectionFamily,
+  cfValueDisplay: {
+    fontSize: 20,
+    fontFamily: TYPE.displayFamily,
     color: SemanticColors.textPrimary,
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
   },
   cfDivider: {
     width: StyleSheet.hairlineWidth,
-    height: 32,
+    height: 36,
     backgroundColor: SemanticColors.borderDefault,
+  },
+  profitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.xs,
+  },
+  marginPill: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.sm,
+  },
+  marginPillText: {
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.labelFamily,
   },
   marginBar: {
     height: 6,
@@ -702,11 +818,100 @@ const s = StyleSheet.create({
   },
   marginFill: {
     height: 6,
-    backgroundColor: SemanticColors.feedbackSuccess,
     borderRadius: 3,
   },
 
-  // Projection rows
+  // Sparkline with axes
+  sparkSection: {
+    paddingTop: GRID.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: SemanticColors.borderDefault,
+  },
+  sparklineContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.sm,
+  },
+  sparkYAxis: {
+    justifyContent: 'space-between',
+    height: 48,
+    alignItems: 'flex-end',
+  },
+  sparkAxisLabel: {
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textTertiary,
+  },
+  sparkChartArea: {
+    flex: 1,
+  },
+  sparkXAxis: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: GRID.xs,
+    paddingLeft: 50, // offset for Y-axis labels
+  },
+  sparklineLabel: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textTertiary,
+  },
+
+  // Projected cashflow — prominent card
+  projCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: PAGE_BG,
+    borderRadius: RADIUS.md,
+    padding: GRID.md,
+  },
+  projCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.sm,
+    flex: 1,
+  },
+  projIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: RADIUS.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  projCardLabel: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textSecondary,
+    flex: 1,
+  },
+  projCardValue: {
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
+    letterSpacing: -0.3,
+  },
+
+  // DSO row
+  dsoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: GRID.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: SemanticColors.borderDefault,
+  },
+  dsoLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.sm,
+  },
+  dsoDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+
+  // Projection rows (kept for DSO label)
   projRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -726,12 +931,70 @@ const s = StyleSheet.create({
     color: SemanticColors.textPrimary,
   },
 
+  // Overdue rows — red accent
+  overdueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: SemanticColors.borderDefault,
+    borderLeftWidth: 2,
+    borderLeftColor: SemanticColors.feedbackError,
+  },
+  overdueMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.xs,
+    marginTop: 2,
+  },
+  overduePill: {
+    backgroundColor: SemanticColors.feedbackErrorBg,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: RADIUS.sm,
+  },
+  overduePillText: {
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.feedbackError,
+  },
+
+  // Customer rows with bar chart
+  customerRow: {
+    padding: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: SemanticColors.borderDefault,
+  },
+  customerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: GRID.xs,
+  },
+  customerBarTrack: {
+    height: 4,
+    backgroundColor: SemanticColors.borderDefault,
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginBottom: GRID.xs,
+  },
+  customerBarFill: {
+    height: 4,
+    borderRadius: 2,
+  },
+  customerMeta: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textSecondary,
+  },
+
   // Risk banner
   riskBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: GRID.xs,
-    backgroundColor: SemanticColors.feedbackWarning + '15',
+    backgroundColor: SemanticColors.feedbackWarningBg,
     borderRadius: RADIUS.sm,
     paddingHorizontal: GRID.sm,
     paddingVertical: GRID.sm,

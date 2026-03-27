@@ -559,7 +559,7 @@ const s = StyleSheet.create({
   settingsBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: SemanticColors.surfacePrimary, alignItems: 'center', justifyContent: 'center' },
 
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: SafeArea.side, gap: GRID.md },
+  scrollContent: { paddingHorizontal: SafeArea.side, paddingBottom: 100, gap: GRID.md },
 
   // Status card
   statusCard: {

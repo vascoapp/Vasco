@@ -112,10 +112,20 @@ export default function InvoiceDetailScreen() {
     <Screen>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <Text style={Typography.title}>{t('invoices.invoice', 'Invoice')} {invoice.id}</Text>
+          <Pressable
+            onPress={() => router.back()}
+            style={styles.backBtn}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
+          >
+            <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
+          </Pressable>
+          <View style={{ flex: 1 }}>
+            <Text style={Typography.title}>{t('invoices.invoice', 'Invoice')} {invoice.id}</Text>
           <Text style={Typography.muted}>
             {invoice.status} · {invoice.dueInDays >= 0 ? t('invoices.dueIn', { defaultValue: 'Due in {{count}} days', count: invoice.dueInDays }) : t('invoices.overdueDays', { defaultValue: '{{count}} days overdue', count: Math.abs(invoice.dueInDays) })}
           </Text>
+          </View>
         </View>
 
         <View style={styles.card}>
@@ -345,7 +355,17 @@ const styles = StyleSheet.create({
     gap: Spacing.lg,
   },
   header: {
-    gap: Spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   card: {
     backgroundColor: SemanticColors.surfacePrimary,

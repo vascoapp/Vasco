@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     paddingTop: SafeArea.top,
     paddingBottom: GRID.sm + 4,
   },
-  backBtn: { width: 40, height: 40, borderRadius: RADIUS.full, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: SafeArea.side, gap: GRID.lg - 4 },

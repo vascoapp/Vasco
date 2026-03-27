@@ -1142,6 +1142,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: SafeArea.content,
     paddingVertical: Spacing.lg,
+    paddingBottom: 100,
     gap: GRID.lg,
   },
 

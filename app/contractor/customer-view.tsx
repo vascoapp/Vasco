@@ -307,7 +307,7 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: GRID.sm,
     paddingTop: SafeArea.top, paddingHorizontal: SafeArea.side, paddingBottom: GRID.sm,
   },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: SemanticColors.surfacePrimary, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: SemanticColors.surfacePrimary, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
   headerSub: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: Palette.hermesOrange, marginTop: 1 },
 
