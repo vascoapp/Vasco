@@ -5,7 +5,7 @@
 // =============================================================================
 
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform, Alert, findNodeHandle } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -52,6 +52,9 @@ export default function WerkScreen() {
 
   useEffect(() => { recordScreenVisit('werk'); }, []);
 
+  const scrollRef = useRef<ScrollView>(null);
+  const activeRef = useRef<View>(null);
+  const leadsRef = useRef<View>(null);
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -121,6 +124,7 @@ export default function WerkScreen() {
       </View>
 
       <ScrollView
+        ref={scrollRef}
         style={s.scroll}
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -128,23 +132,23 @@ export default function WerkScreen() {
       >
         {/* KPI strip */}
         <View style={s.kpiStrip}>
-          <View style={s.kpi}>
+          <Pressable style={s.kpi} onPress={() => activeRef.current?.measureLayout(findNodeHandle(scrollRef.current) as any, (_x, y) => scrollRef.current?.scrollTo({ y, animated: true }), () => {})} accessibilityRole="button" accessibilityLabel={`${activeCount} ${t('dashboard.active', 'Active')}`}>
             <Ionicons name="briefcase" size={16} color={Palette.hermesOrange} style={{ marginBottom: GRID.xs }} />
             <Text style={s.kpiValue}>{activeCount}</Text>
             <Text style={s.kpiLabel}>{t('dashboard.active', 'Active')}</Text>
-          </View>
+          </Pressable>
           <View style={s.kpiDivider} />
-          <View style={s.kpi}>
+          <Pressable style={s.kpi} onPress={() => scrollRef.current?.scrollTo({ y: 0, animated: true })} accessibilityRole="button" accessibilityLabel={`${scheduledToday} ${t('dashboard.today', 'Today')}`}>
             <Ionicons name="calendar" size={16} color={SemanticColors.feedbackInfo} style={{ marginBottom: GRID.xs }} />
             <Text style={s.kpiValue}>{scheduledToday}</Text>
             <Text style={s.kpiLabel}>{t('dashboard.today', 'Today')}</Text>
-          </View>
+          </Pressable>
           <View style={s.kpiDivider} />
-          <View style={s.kpi}>
+          <Pressable style={s.kpi} onPress={() => leadsRef.current?.measureLayout(findNodeHandle(scrollRef.current) as any, (_x, y) => scrollRef.current?.scrollTo({ y, animated: true }), () => {})} accessibilityRole="button" accessibilityLabel={`${leadCount} ${t('dashboard.leads', 'Leads')}`}>
             <Ionicons name="people" size={16} color={SemanticColors.feedbackSuccess} style={{ marginBottom: GRID.xs }} />
             <Text style={s.kpiValue}>{leadCount}</Text>
             <Text style={s.kpiLabel}>{t('dashboard.leads', 'Leads')}</Text>
-          </View>
+          </Pressable>
         </View>
 
         {/* Action strip — horizontal scroll */}
@@ -287,7 +291,7 @@ export default function WerkScreen() {
         {/* Active Jobs */}
         {activeJobs.length > 0 && (
           <FadeIn delay={100}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View ref={activeRef} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={s.sectionTitle}>{t('jobs.active', 'Actief')}</Text>
               <Pressable onPress={() => setSortBy(prev => prev === 'date' ? 'status' : 'date')} hitSlop={8} accessibilityRole="button" accessibilityLabel={sortBy === 'date' ? t('jobs.byDate', 'Sort by date') : t('jobs.byStatus', 'Sort by status')}>
                 <Text style={{ fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: Palette.hermesOrange }}>
@@ -345,6 +349,7 @@ export default function WerkScreen() {
         {/* Leads / Quotes */}
         {leadJobs.length > 0 && (
           <FadeIn delay={150}>
+            <View ref={leadsRef} />
             <Text style={s.sectionTitle}>{t('jobs.leadsAndQuotes', 'Leads & Offertes')}</Text>
             {leadJobs.slice(0, 5).map((job: any) => (
               <Pressable
@@ -469,6 +474,7 @@ const s = StyleSheet.create({
   kpiStrip: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
   },
   kpi: { flex: 1, alignItems: 'center' },
   kpiValue: {
@@ -499,6 +505,7 @@ const s = StyleSheet.create({
   todayCard: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
   },
   todayLeft: { width: 44, alignItems: 'center' },
   todayTime: { fontSize: TYPE.bodySize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
@@ -519,7 +526,7 @@ const s = StyleSheet.create({
   pipelineDivider: { width: 1, height: 28, backgroundColor: SemanticColors.borderDefault },
 
   // Job cards — clean vertical list
-  jobCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden' },
+  jobCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden', borderWidth: 1, borderColor: SemanticColors.borderDefault },
   jobAccent: { width: 4, alignSelf: 'stretch' },
   jobContent: { flex: 1, paddingVertical: GRID.md, paddingHorizontal: GRID.md },
   jobTitle: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
@@ -544,6 +551,8 @@ const s = StyleSheet.create({
     paddingVertical: GRID.xl,
     paddingHorizontal: GRID.lg,
     gap: GRID.sm,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
   },
   emptyTodayIcon: {
     width: 64,

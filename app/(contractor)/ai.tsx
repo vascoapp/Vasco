@@ -124,7 +124,7 @@ export default function VascoScreen() {
       });
     });
 
-    // 3. Sent quotes without follow-up → nudge customer
+    // 3. Sent quotes without follow-up → remind customer
     const sentQuotes = quotes.filter((q: any) => q.status === 'sent');
     sentQuotes.forEach((q: any) => {
       const customerName = q.customer || t('ai.customer');

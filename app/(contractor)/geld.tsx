@@ -6,7 +6,7 @@
 // =============================================================================
 
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Share, Platform, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Share, Platform, Alert, TextInput, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -59,6 +59,8 @@ export default function GeldScreen() {
   const [invoiceSort, setInvoiceSort] = useState<SortMode>('date-desc');
   const [quoteSort, setQuoteSort] = useState<SortMode>('date-desc');
   const [sendingInvoiceId, setSendingInvoiceId] = useState<string | null>(null);
+  const [showInvoiceFilterModal, setShowInvoiceFilterModal] = useState(false);
+  const [showQuoteFilterModal, setShowQuoteFilterModal] = useState(false);
   const { invoices, quotes, markInvoiceSent, removeInvoice, removeQuote, isLoading } = useAppState();
   const cashFlow = useCashFlow();
   const fin = useFinancialAnalysis();
@@ -257,38 +259,13 @@ export default function GeldScreen() {
           <View style={s.section}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={s.sectionTitle}>{t('invoices.invoices', 'Facturen')}</Text>
-              <Text style={s.sectionCount}>{invoices.length}</Text>
-            </View>
-            <View style={s.filterRow}>
-              <View style={s.filterInput}>
-                <Ionicons name="search" size={14} color={SemanticColors.textTertiary} />
-                <TextInput
-                  style={s.filterText}
-                  placeholder={t('money.filterByName', 'Search...')}
-                  placeholderTextColor={SemanticColors.textTertiary}
-                  value={invoiceFilter}
-                  onChangeText={setInvoiceFilter}
-                />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: GRID.sm }}>
+                <Text style={s.sectionCount}>{invoices.length}</Text>
+                <Pressable onPress={() => setShowInvoiceFilterModal(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('money.filter', 'Filter')}>
+                  <Ionicons name="options-outline" size={20} color={invoiceStatusFilter !== 'all' ? Palette.hermesOrange : SemanticColors.textSecondary} />
+                </Pressable>
               </View>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipRow}>
-              {(['all', 'overdue', 'sent', 'paid', 'draft'] as const).map(status => (
-                <Pressable key={status} style={[s.filterChip, invoiceStatusFilter === status && s.filterChipActive]} onPress={() => setInvoiceStatusFilter(status)}>
-                  <Text style={[s.filterChipText, invoiceStatusFilter === status && s.filterChipTextActive]}>
-                    {status === 'all' ? t('common.all', 'All') : status === 'overdue' ? t('money.overdue', 'Overdue') : status === 'sent' ? t('invoices.sent', 'Sent') : status === 'paid' ? t('invoices.paid', 'Paid') : t('invoices.draft', 'Draft')}
-                  </Text>
-                </Pressable>
-              ))}
-              <View style={s.chipDivider} />
-              {(['value-desc', 'date-desc'] as const).map(sort => (
-                <Pressable key={sort} style={[s.filterChip, invoiceSort === sort && s.filterChipActive]} onPress={() => setInvoiceSort(sort)}>
-                  <Ionicons name={sort === 'value-desc' ? 'trending-down' : 'time'} size={12} color={invoiceSort === sort ? Palette.white : SemanticColors.textSecondary} />
-                  <Text style={[s.filterChipText, invoiceSort === sort && s.filterChipTextActive]}>
-                    {sort === 'value-desc' ? t('money.byValue', 'Value') : t('money.byDate', 'Date')}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
             {invoices.length > 0 ? (
               <View style={s.docList}>
                 {documents.filter(d => d.type === 'factuur' && (!invoiceFilter || d.name.toLowerCase().includes(invoiceFilter.toLowerCase())) && (invoiceStatusFilter === 'all' || d.status === invoiceStatusFilter)).sort((a, b) => invoiceSort === 'value-desc' ? b.amount - a.amount : 0).map((doc) => (
@@ -346,7 +323,12 @@ export default function GeldScreen() {
           <View style={s.section}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={s.sectionTitle}>{t('quotes.quotes', 'Offertes')}</Text>
-              <Text style={s.sectionCount}>{quotes.length}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: GRID.sm }}>
+                <Text style={s.sectionCount}>{quotes.length}</Text>
+                <Pressable onPress={() => setShowQuoteFilterModal(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('money.filter', 'Filter')}>
+                  <Ionicons name="options-outline" size={20} color={quoteStatusFilter !== 'all' ? Palette.hermesOrange : SemanticColors.textSecondary} />
+                </Pressable>
+              </View>
             </View>
 
             <Pressable
@@ -358,37 +340,6 @@ export default function GeldScreen() {
               <Ionicons name="add-circle-outline" size={18} color={Palette.white} />
               <Text style={s.newQuoteBtnText}>{t('quotes.newQuote', 'Nieuwe offerte')}</Text>
             </Pressable>
-
-            <View style={s.filterRow}>
-              <View style={s.filterInput}>
-                <Ionicons name="search" size={14} color={SemanticColors.textTertiary} />
-                <TextInput
-                  style={s.filterText}
-                  placeholder={t('money.filterByName', 'Search...')}
-                  placeholderTextColor={SemanticColors.textTertiary}
-                  value={quoteFilter}
-                  onChangeText={setQuoteFilter}
-                />
-              </View>
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipRow}>
-              {(['all', 'sent', 'accepted', 'draft'] as const).map(status => (
-                <Pressable key={status} style={[s.filterChip, quoteStatusFilter === status && s.filterChipActive]} onPress={() => setQuoteStatusFilter(status)}>
-                  <Text style={[s.filterChipText, quoteStatusFilter === status && s.filterChipTextActive]}>
-                    {status === 'all' ? t('common.all', 'All') : status === 'sent' ? t('quotes.sent', 'Sent') : status === 'accepted' ? t('quotes.accepted', 'Accepted') : t('quotes.draft', 'Draft')}
-                  </Text>
-                </Pressable>
-              ))}
-              <View style={s.chipDivider} />
-              {(['value-desc', 'date-desc'] as const).map(sort => (
-                <Pressable key={sort} style={[s.filterChip, quoteSort === sort && s.filterChipActive]} onPress={() => setQuoteSort(sort)}>
-                  <Ionicons name={sort === 'value-desc' ? 'trending-down' : 'time'} size={12} color={quoteSort === sort ? Palette.white : SemanticColors.textSecondary} />
-                  <Text style={[s.filterChipText, quoteSort === sort && s.filterChipTextActive]}>
-                    {sort === 'value-desc' ? t('money.byValue', 'Value') : t('money.byDate', 'Date')}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
 
             {quotes.length > 0 ? (
               <View style={s.docList}>
@@ -526,10 +477,7 @@ export default function GeldScreen() {
         {sortedOverdue.length > 0 && (
           <FadeIn delay={140}>
             <View style={s.section}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text style={s.sectionTitle}>{t('money.overdue', 'Achterstallig')}</Text>
-                <Text style={[s.sectionCount, { color: SemanticColors.feedbackError }]}>{formatCurrency(fin.overdueAmount)}</Text>
-              </View>
+              <Text style={s.sectionTitle}>{t('money.overdue', 'Achterstallig')}</Text>
               <View style={s.docList}>
                 {sortedOverdue.map((od) => (
                   <Pressable
@@ -548,8 +496,25 @@ export default function GeldScreen() {
                       </View>
                     </View>
                     <Text style={[s.docAmount, { color: SemanticColors.feedbackError }]}>{formatCurrency(od.amount)}</Text>
+                    <Pressable
+                      style={s.inlineRemindBtn}
+                      onPress={(e) => {
+                        e.stopPropagation?.();
+                        Share.share({ message: t('money.reminderMessage', { defaultValue: 'Hi, this is a friendly reminder that invoice for {{customer}} ({{amount}}) is {{days}} days overdue. Could you arrange payment?', customer: od.customer, amount: formatCurrency(od.amount), days: od.daysOverdue }) });
+                      }}
+                      hitSlop={6}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('money.sendReminder', 'Send reminder')}
+                    >
+                      <Text style={s.inlineRemindText}>{t('money.remind', 'Remind')}</Text>
+                    </Pressable>
                   </Pressable>
                 ))}
+                {/* Total outstanding at bottom */}
+                <View style={s.overdueTotalRow}>
+                  <Text style={s.overdueTotalLabel}>{t('money.totalOutstanding', 'Total outstanding')}</Text>
+                  <Text style={s.overdueTotalAmount}>{formatCurrency(fin.overdueAmount)}</Text>
+                </View>
               </View>
             </View>
           </FadeIn>
@@ -597,6 +562,60 @@ export default function GeldScreen() {
 
         <View style={{ height: 140 }} />
       </ScrollView>
+
+      {/* Invoice Filter Modal */}
+      <Modal visible={showInvoiceFilterModal} transparent animationType="fade">
+        <Pressable style={s.filterModalOverlay} onPress={() => setShowInvoiceFilterModal(false)}>
+          <View style={s.filterModalSheet}>
+            <Text style={s.filterModalTitle}>{t('money.filterInvoices', 'Filter invoices')}</Text>
+            {(['all', 'overdue', 'sent', 'paid', 'draft'] as const).map(status => (
+              <Pressable key={status} style={[s.filterModalRow, invoiceStatusFilter === status && s.filterModalRowActive]} onPress={() => { setInvoiceStatusFilter(status); setShowInvoiceFilterModal(false); }}>
+                <Text style={[s.filterModalRowText, invoiceStatusFilter === status && s.filterModalRowTextActive]}>
+                  {status === 'all' ? t('common.all', 'All') : status === 'overdue' ? t('money.overdue', 'Overdue') : status === 'sent' ? t('invoices.sent', 'Sent') : status === 'paid' ? t('invoices.paid', 'Paid') : t('invoices.draft', 'Draft')}
+                </Text>
+                {invoiceStatusFilter === status && <Ionicons name="checkmark" size={18} color={Palette.hermesOrange} />}
+              </Pressable>
+            ))}
+            <View style={s.filterModalDivider} />
+            <Text style={s.filterModalSubtitle}>{t('money.sortBy', 'Sort by')}</Text>
+            {(['value-desc', 'date-desc'] as const).map(sort => (
+              <Pressable key={sort} style={[s.filterModalRow, invoiceSort === sort && s.filterModalRowActive]} onPress={() => { setInvoiceSort(sort); setShowInvoiceFilterModal(false); }}>
+                <Text style={[s.filterModalRowText, invoiceSort === sort && s.filterModalRowTextActive]}>
+                  {sort === 'value-desc' ? t('money.byValue', 'Value') : t('money.byDate', 'Date')}
+                </Text>
+                {invoiceSort === sort && <Ionicons name="checkmark" size={18} color={Palette.hermesOrange} />}
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
+
+      {/* Quote Filter Modal */}
+      <Modal visible={showQuoteFilterModal} transparent animationType="fade">
+        <Pressable style={s.filterModalOverlay} onPress={() => setShowQuoteFilterModal(false)}>
+          <View style={s.filterModalSheet}>
+            <Text style={s.filterModalTitle}>{t('money.filterQuotes', 'Filter quotes')}</Text>
+            {(['all', 'sent', 'accepted', 'draft'] as const).map(status => (
+              <Pressable key={status} style={[s.filterModalRow, quoteStatusFilter === status && s.filterModalRowActive]} onPress={() => { setQuoteStatusFilter(status); setShowQuoteFilterModal(false); }}>
+                <Text style={[s.filterModalRowText, quoteStatusFilter === status && s.filterModalRowTextActive]}>
+                  {status === 'all' ? t('common.all', 'All') : status === 'sent' ? t('quotes.sent', 'Sent') : status === 'accepted' ? t('quotes.accepted', 'Accepted') : t('quotes.draft', 'Draft')}
+                </Text>
+                {quoteStatusFilter === status && <Ionicons name="checkmark" size={18} color={Palette.hermesOrange} />}
+              </Pressable>
+            ))}
+            <View style={s.filterModalDivider} />
+            <Text style={s.filterModalSubtitle}>{t('money.sortBy', 'Sort by')}</Text>
+            {(['value-desc', 'date-desc'] as const).map(sort => (
+              <Pressable key={sort} style={[s.filterModalRow, quoteSort === sort && s.filterModalRowActive]} onPress={() => { setQuoteSort(sort); setShowQuoteFilterModal(false); }}>
+                <Text style={[s.filterModalRowText, quoteSort === sort && s.filterModalRowTextActive]}>
+                  {sort === 'value-desc' ? t('money.byValue', 'Value') : t('money.byDate', 'Date')}
+                </Text>
+                {quoteSort === sort && <Ionicons name="checkmark" size={18} color={Palette.hermesOrange} />}
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
 
       {/* FAB — new quote */}
       <Pressable
@@ -651,6 +670,8 @@ const s = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: RADIUS.lg,
     padding: GRID.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
   },
   kpiItem: { flex: 1, alignItems: 'center' },
   kpiValueRow: {
@@ -692,6 +713,8 @@ const s = StyleSheet.create({
     paddingHorizontal: GRID.md,
     paddingVertical: GRID.sm + 2,
     marginTop: GRID.sm,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
   },
   collectionText: {
     fontSize: TYPE.captionSize,
@@ -754,6 +777,8 @@ const s = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
   },
   docRow: {
     flexDirection: 'row',
@@ -819,6 +844,8 @@ const s = StyleSheet.create({
     borderRadius: RADIUS.lg,
     padding: GRID.md,
     gap: GRID.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
   },
   cfRow: {
     flexDirection: 'row',
@@ -1085,6 +1112,90 @@ const s = StyleSheet.create({
     width: 1,
     height: 20,
     backgroundColor: SemanticColors.borderDefault,
+  },
+
+  // Inline remind button for overdue
+  inlineRemindBtn: {
+    marginLeft: GRID.sm,
+  },
+  inlineRemindText: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.hermesOrange,
+  },
+  overdueTotalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+    backgroundColor: SemanticColors.feedbackErrorBg,
+    borderBottomLeftRadius: RADIUS.lg,
+    borderBottomRightRadius: RADIUS.lg,
+  },
+  overdueTotalLabel: {
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
+  },
+  overdueTotalAmount: {
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.feedbackError,
+    letterSpacing: TYPE.sectionTracking,
+  },
+
+  // Filter modal
+  filterModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterModalSheet: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
+    padding: GRID.lg,
+    width: '80%',
+    maxWidth: 320,
+  },
+  filterModalTitle: {
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
+    marginBottom: GRID.md,
+  },
+  filterModalSubtitle: {
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textTertiary,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+    marginBottom: GRID.sm,
+  },
+  filterModalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: GRID.sm + 2,
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: GRID.sm,
+  },
+  filterModalRowActive: {
+    backgroundColor: Palette.hermesOrange + '0A',
+  },
+  filterModalRowText: {
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.bodyFamily,
+    color: SemanticColors.textPrimary,
+  },
+  filterModalRowTextActive: {
+    fontFamily: TYPE.titleFamily,
+    color: Palette.hermesOrange,
+  },
+  filterModalDivider: {
+    height: 1,
+    backgroundColor: SemanticColors.borderDefault,
+    marginVertical: GRID.sm,
   },
 
   // FAB

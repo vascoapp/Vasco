@@ -383,7 +383,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       description: `€${(q.amount ?? 0).toLocaleString(undefined)} · ${expiryDate}`,
       preparedData: {
         quoteId: q.id, customerId: q.customerId, template: message,
-        reasoning: `Quote expires on ${expiryDate}. A gentle nudge before expiry converts 30% more quotes.`,
+        reasoning: `Quote expires on ${expiryDate}. A gentle reminder before expiry converts 30% more quotes.`,
       },
       actionLabel: t('common.send', 'Verstuur'),
       estimatedImpact: t('automation.recoverRevenue', 'Recover revenue'),

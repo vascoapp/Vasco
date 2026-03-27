@@ -5,8 +5,8 @@
 // No horizontal scrolling — everything stacks vertically for reliability.
 // =============================================================================
 
-import { useCallback, useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, TextInput, Modal, KeyboardAvoidingView, Platform, Share, FlatList } from 'react-native';
+import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, TextInput, Modal, KeyboardAvoidingView, Platform, Share, FlatList, findNodeHandle } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -51,6 +51,9 @@ export default function BedrijfScreen() {
 
   useEffect(() => { recordScreenVisit('klanten'); }, []);
 
+  const scrollRef = useRef<ScrollView>(null);
+  const customerListRef = useRef<View>(null);
+  const decisionsRef = useRef<View>(null);
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
@@ -139,6 +142,7 @@ export default function BedrijfScreen() {
       </View>
 
       <ScrollView
+        ref={scrollRef}
         style={s.scroll}
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -147,29 +151,29 @@ export default function BedrijfScreen() {
         {/* KPI strip */}
         <FadeIn delay={0} duration={300}>
           <View style={s.kpiStrip}>
-            <View style={s.kpi}>
+            <Pressable style={s.kpi} onPress={() => customerListRef.current?.measureLayout(findNodeHandle(scrollRef.current) as any, (_x, y) => scrollRef.current?.scrollTo({ y, animated: true }), () => {})} accessibilityRole="button" accessibilityLabel={`${customers.length} ${t('customers.contacts', 'Contacts')}`}>
               <Ionicons name="people" size={16} color={Palette.hermesOrange} style={{ marginBottom: GRID.xs }} />
               <Text style={s.kpiValue}>{customers.length}</Text>
               <Text style={s.kpiLabel}>{t('customers.contacts', 'Contacts')}</Text>
-            </View>
+            </Pressable>
             <View style={s.kpiDivider} />
-            <View style={s.kpi}>
+            <Pressable style={s.kpi} onPress={() => decisionsRef.current?.measureLayout(findNodeHandle(scrollRef.current) as any, (_x, y) => scrollRef.current?.scrollTo({ y, animated: true }), () => {})} accessibilityRole="button" accessibilityLabel={`${activeTrackers.length} ${t('customers.activeDecisions', 'Active decisions')}`}>
               <Ionicons name="chatbubbles" size={16} color={SemanticColors.feedbackInfo} style={{ marginBottom: GRID.xs }} />
               <Text style={s.kpiValue}>{activeTrackers.length}</Text>
               <Text style={s.kpiLabel}>{t('customers.activeDecisions', 'Active decisions')}</Text>
-            </View>
+            </Pressable>
             <View style={s.kpiDivider} />
-            <View style={s.kpi}>
+            <Pressable style={s.kpi} onPress={() => customerListRef.current?.measureLayout(findNodeHandle(scrollRef.current) as any, (_x, y) => scrollRef.current?.scrollTo({ y, animated: true }), () => {})} accessibilityRole="button" accessibilityLabel={`${totalOverdue} ${t('customers.overdue', 'Overdue')}`}>
               <Ionicons name="alert-circle" size={16} color={totalOverdue > 0 ? SemanticColors.feedbackError : SemanticColors.textTertiary} style={{ marginBottom: GRID.xs }} />
               <Text style={[s.kpiValue, totalOverdue > 0 && { color: SemanticColors.feedbackError }]}>{totalOverdue}</Text>
               <Text style={s.kpiLabel}>{t('customers.overdue', 'Overdue')}</Text>
-            </View>
+            </Pressable>
           </View>
         </FadeIn>
 
         {/* Decision Trackers — vertical cards */}
         <FadeIn delay={100} duration={400}>
-          <View style={s.section}>
+          <View ref={decisionsRef} style={s.section}>
             <View style={s.sectionRow}>
               <Text style={s.sectionTitle}>{t('customers.decisions', 'Decisions')}</Text>
               <Pressable onPress={() => router.push('/(contractor)/decisions' as any)} accessibilityRole="button" accessibilityLabel={t('customers.manage', 'Manage decisions')}>
@@ -224,7 +228,7 @@ export default function BedrijfScreen() {
                         )}
                         <Pressable style={s.reminderBtn} onPress={() => handleSendReminder(tracker.id)} accessibilityRole="button" accessibilityLabel={`Send reminder to ${tracker.customerName}`}>
                           <Ionicons name="paper-plane-outline" size={13} color={Palette.hermesOrange} />
-                          <Text style={s.reminderText}>{t('customers.nudge', 'Nudge')}</Text>
+                          <Text style={s.reminderText}>{t('customers.remind', 'Remind')}</Text>
                         </Pressable>
                       </View>
                     </Pressable>
@@ -244,7 +248,7 @@ export default function BedrijfScreen() {
 
         {/* Customer List */}
         <FadeIn delay={200} duration={400}>
-          <View style={s.section}>
+          <View ref={customerListRef} style={s.section}>
             <View style={s.sectionRow}>
               <Text style={s.sectionTitle}>{t('customers.allContacts', 'All contacts')}</Text>
               <Pressable onPress={() => router.push('/contractor/customer-crm' as any)} accessibilityRole="button" accessibilityLabel={t('common.viewAll', 'View all customers')}>
@@ -337,6 +341,7 @@ const s = StyleSheet.create({
   kpiStrip: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
   },
   kpi: { flex: 1, alignItems: 'center' },
   kpiValue: { fontSize: 22, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
@@ -353,7 +358,7 @@ const s = StyleSheet.create({
   trackerList: { gap: GRID.sm },
   trackerCard: {
     backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md,
-    gap: GRID.sm,
+    gap: GRID.sm, borderWidth: 1, borderColor: SemanticColors.borderDefault,
   },
   trackerHeader: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm },
   trackerAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: Palette.hermesOrange + '12', alignItems: 'center', justifyContent: 'center' },
@@ -382,13 +387,13 @@ const s = StyleSheet.create({
   // Empty
   emptyCard: {
     backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.lg,
-    alignItems: 'center', gap: GRID.sm,
+    alignItems: 'center', gap: GRID.sm, borderWidth: 1, borderColor: SemanticColors.borderDefault,
   },
   emptyTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary, textAlign: 'center' },
   emptyDesc: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary, textAlign: 'center', lineHeight: 22 },
 
   // Customer list
-  customerCard: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden' },
+  customerCard: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden', borderWidth: 1, borderColor: SemanticColors.borderDefault },
   customerRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, padding: GRID.md },
   customerBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: SemanticColors.borderDefault },
   customerAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: Palette.hermesOrange + '10', alignItems: 'center', justifyContent: 'center' },

@@ -1111,12 +1111,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 14,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
+    borderRadius: RADIUS.lg,
+    padding: GRID.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
     elevation: 1,
   },
   invoiceCtaIcon: {
@@ -1133,11 +1131,13 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     gap: 12,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: RADIUS.lg,
+    padding: GRID.md,
     borderLeftWidth: 3,
     borderLeftColor: Palette.hermesOrange,
-    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    marginBottom: GRID.lg,
   },
   timeSavedIcon: {
     width: 36, height: 36, borderRadius: 10,
@@ -1162,9 +1162,11 @@ const styles = StyleSheet.create({
   },
   automationList: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.lg,
     marginTop: 4,
     overflow: 'hidden' as const,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
   },
   automationItem: {
     flexDirection: 'row' as const,
@@ -1234,7 +1236,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden' as const,
   },
 
-  // Onboarding progress nudge
+  // Onboarding progress reminder
   onboardingCard: {
     backgroundColor: Palette.hermesOrange + '08',
     borderRadius: RADIUS.lg,

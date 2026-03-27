@@ -642,12 +642,12 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceBackground,
+    paddingTop: SafeArea.top,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: SafeArea.top,
     paddingHorizontal: SafeArea.side,
     paddingBottom: 8,
   },

@@ -74,6 +74,7 @@ export function VascoCard({
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true); // EVE pattern: show value first
   const [showAllAlerts, setShowAllAlerts] = useState(false);
+  const [showAllFindings, setShowAllFindings] = useState(false);
   const router = useRouter();
 
   const findingsCount = briefing?.findings.length ?? 0;
@@ -175,7 +176,7 @@ export function VascoCard({
           {briefing && findingsCount > 0 && (
             <View style={s.section}>
               <Text style={s.sectionLabel}>{t('vasco.checkedOvernight', 'Vannacht gecontroleerd')}</Text>
-              {briefing.findings.slice(0, 3).map(f => (
+              {briefing.findings.slice(0, showAllFindings ? findingsCount : 2).map(f => (
                 <Pressable
                   key={f.id}
                   style={s.findingRow}
@@ -199,6 +200,18 @@ export function VascoCard({
                   )}
                 </Pressable>
               ))}
+              {findingsCount > 2 && !showAllFindings && (
+                <Pressable onPress={() => setShowAllFindings(true)} style={s.showMoreBtn} accessibilityRole="button" accessibilityLabel={t('vasco.seeMore', 'See more')}>
+                  <Text style={s.showMoreText}>{t('vasco.seeMore', { defaultValue: 'See {{count}} more', count: findingsCount - 2 })}</Text>
+                  <Ionicons name="chevron-down" size={12} color={Palette.hermesOrange} />
+                </Pressable>
+              )}
+              {showAllFindings && findingsCount > 2 && (
+                <Pressable onPress={() => setShowAllFindings(false)} style={s.showMoreBtn} accessibilityRole="button" accessibilityLabel={t('vasco.showLess', 'Show less')}>
+                  <Text style={s.showMoreText}>{t('vasco.showLess', 'Show less')}</Text>
+                  <Ionicons name="chevron-up" size={12} color={Palette.hermesOrange} />
+                </Pressable>
+              )}
             </View>
           )}
 
@@ -206,7 +219,7 @@ export function VascoCard({
           {queueCount > 0 && (
             <View style={s.section}>
               <Text style={s.sectionLabel}>{t('vasco.readyForApproval', 'Klaar voor goedkeuring')}</Text>
-              {queueItems.slice(0, 3).map(item => (
+              {queueItems.slice(0, showAllFindings ? queueCount : 2).map(item => (
                 <EmbeddedApproval
                   key={item.id}
                   item={item}
@@ -444,6 +457,8 @@ const s = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: Palette.hermesOrange,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
   },
   header: {
     flexDirection: 'row',

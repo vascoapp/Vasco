@@ -1042,10 +1042,10 @@ const styles = StyleSheet.create({
     color: SemanticColors.textTertiary,
   },
   heroTitle: {
-    fontSize: 22,
-    fontFamily: TYPE.displayFamily,
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
-    letterSpacing: -0.3,
+    letterSpacing: TYPE.sectionTracking,
   },
   heroCustomerRow: {
     flexDirection: 'row',

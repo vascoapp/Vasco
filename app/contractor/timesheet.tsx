@@ -184,10 +184,10 @@ export default function TimesheetScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+        <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+          <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
-        <View>
+        <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>{t('timesheet.title', 'Urenregistratie')}</Text>
           <Text style={styles.headerSubtitle}>
             {todayHours.toFixed(1)}u {t('timesheet.today', 'vandaag')} · {weekHours.toFixed(1)}u {t('timesheet.thisWeek', 'deze week')}
@@ -305,14 +305,15 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    justifyContent: 'space-between',
     paddingHorizontal: SafeArea.side,
     paddingTop: SafeArea.top,
     paddingBottom: Spacing.sm,
   },
-  backButton: { padding: 4 },
-  headerTitle: { fontSize: TYPE.displaySize, fontFamily: TYPE.displayFamily, color: SemanticColors.textPrimary, letterSpacing: TYPE.displayTracking },
-  headerSubtitle: { fontSize: TYPE.bodySize, fontFamily: 'Inter_500Medium', color: SemanticColors.textSecondary, marginTop: 2 },
+  backButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  headerCenter: { flex: 1, marginLeft: GRID.sm },
+  headerTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, letterSpacing: TYPE.sectionTracking },
+  headerSubtitle: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
   clockSection: { paddingHorizontal: SafeArea.side, paddingBottom: Spacing.md },
   clockButton: {
     flexDirection: 'row',
@@ -329,7 +330,7 @@ const styles = StyleSheet.create({
   tabBar: { flexDirection: 'row', paddingHorizontal: Spacing.lg, gap: 6, paddingBottom: Spacing.sm },
   tab: { flex: 1, paddingVertical: GRID.sm, borderRadius: RADIUS.md, backgroundColor: SemanticColors.surfacePrimary, alignItems: 'center' },
   tabActive: { backgroundColor: Palette.hermesOrange },
-  tabText: { fontSize: TYPE.captionSize, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textTertiary },
+  tabText: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textTertiary },
   tabTextActive: { color: Palette.white },
   summaryBar: {
     flexDirection: 'row',
@@ -351,7 +352,9 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
-    marginBottom: 6,
+    marginBottom: GRID.sm,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
   },
   entryAccent: { width: 3 },
   entryContent: { flex: 1, padding: Spacing.sm, gap: 4 },
