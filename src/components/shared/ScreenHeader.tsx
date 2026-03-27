@@ -82,25 +82,25 @@ const styles = StyleSheet.create({
     height: 44,
   },
   backButton: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 18,
+    borderRadius: 22,
   },
   rightButton: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 18,
+    borderRadius: 22,
     position: 'relative',
   },
   pressed: {
     opacity: 0.7,
   },
   spacer: {
-    width: 36,
+    width: 44,
   },
   title: {
     flex: 1,

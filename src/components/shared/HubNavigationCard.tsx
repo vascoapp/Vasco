@@ -58,8 +58,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   iconContainer: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
     borderRadius: Radius.sm,
     justifyContent: 'center',
     alignItems: 'center',

@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
+import { TYPE } from '../../theme/tabStyles';
 
 type DashboardHeaderProps = {
   greeting: string;
@@ -43,7 +44,7 @@ const styles = StyleSheet.create({
   title: {
     color: SemanticColors.textPrimary,
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: TYPE.sectionFamily,
   },
   badge: {
     paddingHorizontal: 12,
@@ -51,7 +52,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
   },
   badgeText: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.sectionFamily,
   },
 });

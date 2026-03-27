@@ -32,19 +32,9 @@ const variantStyles = StyleSheet.create({
   },
   default: {
     backgroundColor: SemanticColors.surfacePrimary,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
   },
   elevated: {
     backgroundColor: SemanticColors.surfacePrimary,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
   },
   outlined: {
     backgroundColor: SemanticColors.surfacePrimary,
@@ -53,11 +43,6 @@ const variantStyles = StyleSheet.create({
   },
   hero: {
     backgroundColor: SemanticColors.surfacePrimary,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 6,
     borderRadius: 18,
   },
 });

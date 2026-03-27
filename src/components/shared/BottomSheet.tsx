@@ -9,6 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { SafeArea } from '../../theme/spacing';
 
@@ -32,6 +33,7 @@ interface BottomSheetProps {
 }
 
 export function BottomSheet({ visible, onClose, title, actions }: BottomSheetProps) {
+  const { t } = useTranslation();
   const translateY = useRef(new Animated.Value(300)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -90,7 +92,7 @@ export function BottomSheet({ visible, onClose, title, actions }: BottomSheetPro
           style={({ pressed }) => [styles.cancelBtn, pressed && { opacity: 0.8 }]}
           onPress={onClose}
         >
-          <Text style={styles.cancelText}>Annuleren</Text>
+          <Text style={styles.cancelText}>{t('common.cancel', 'Cancel')}</Text>
         </Pressable>
       </Animated.View>
     </Modal>

@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
+import { TYPE, GRID } from '../../theme/tabStyles';
 
 type ActionCardProps = {
   label: string;
@@ -46,7 +47,7 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: GRID.sm,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },

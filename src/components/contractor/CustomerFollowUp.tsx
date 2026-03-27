@@ -56,18 +56,18 @@ export function CustomerFollowUp() {
   const tabs = [
     {
       key: 'due' as const,
-      label: 'Te doen',
+      label: t('followUp.due', 'Due'),
       icon: 'alert-circle-outline' as const,
       badge: dueCount > 0 ? dueCount : undefined,
     },
     {
       key: 'scheduled' as const,
-      label: 'Gepland',
+      label: t('followUp.scheduled', 'Scheduled'),
       icon: 'calendar-outline' as const,
     },
     {
       key: 'completed' as const,
-      label: 'Afgerond',
+      label: t('followUp.completed', 'Completed'),
       icon: 'checkmark-circle-outline' as const,
     },
   ];

@@ -16,6 +16,7 @@ import {
   FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { formatCurrency } from '../../i18n/formatting';
 import { Spacing } from '../../theme/spacing';
@@ -171,7 +172,7 @@ const MOCK_MATERIALS: MaterialPrice[] = [
   },
 ];
 
-const CATEGORIES = ['Alles', 'Verf', 'Sanitair', 'Tegels', 'Gereedschap', 'Elektra'];
+const CATEGORY_KEYS = ['all', 'paint', 'sanitary', 'tiles', 'tools', 'electrical'] as const;
 
 // ============================================
 // COMPONENTS
@@ -182,9 +183,28 @@ interface PriceComparisonProps {
 }
 
 export function PriceComparison({ onClose }: PriceComparisonProps) {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Alles');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedMaterial, setSelectedMaterial] = useState<MaterialPrice | null>(null);
+
+  const CATEGORY_LABELS: Record<string, string> = {
+    all: t('prices.allCategories', 'All'),
+    paint: t('prices.paint', 'Paint'),
+    sanitary: t('prices.sanitary', 'Sanitary'),
+    tiles: t('prices.tiles', 'Tiles'),
+    tools: t('prices.tools', 'Tools'),
+    electrical: t('prices.electrical', 'Electrical'),
+  };
+
+  // Map category display names to keys for filtering
+  const CATEGORY_TO_KEY: Record<string, string> = {
+    'Verf': 'paint',
+    'Sanitair': 'sanitary',
+    'Tegels': 'tiles',
+    'Gereedschap': 'tools',
+    'Elektra': 'electrical',
+  };
 
   const filteredMaterials = MOCK_MATERIALS.filter((m) => {
     const matchesSearch =
@@ -193,7 +213,7 @@ export function PriceComparison({ onClose }: PriceComparisonProps) {
       m.material.brand?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory =
-      selectedCategory === 'Alles' || m.material.category === selectedCategory;
+      selectedCategory === 'all' || CATEGORY_TO_KEY[m.material.category] === selectedCategory;
 
     return matchesSearch && matchesCategory;
   });
@@ -218,8 +238,8 @@ export function PriceComparison({ onClose }: PriceComparisonProps) {
           </Pressable>
         )}
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Prijsvergelijking</Text>
-          <Text style={styles.headerSubtitle}>Vergelijk prijzen bij {5} leveranciers</Text>
+          <Text style={styles.headerTitle}>{t('prices.title', 'Price comparison')}</Text>
+          <Text style={styles.headerSubtitle}>{t('prices.subtitle', 'Compare prices at {{count}} suppliers', { count: 5 })}</Text>
         </View>
       </View>
 
@@ -231,7 +251,7 @@ export function PriceComparison({ onClose }: PriceComparisonProps) {
             style={styles.searchInput}
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Zoek materiaal..."
+            placeholder={t('prices.searchPlaceholder', 'Search material...')}
             placeholderTextColor={SemanticColors.textTertiary}
           />
           {searchQuery !== '' && (
@@ -249,22 +269,22 @@ export function PriceComparison({ onClose }: PriceComparisonProps) {
         style={styles.categoriesContainer}
         contentContainerStyle={styles.categoriesContent}
       >
-        {CATEGORIES.map((category) => (
+        {CATEGORY_KEYS.map((key) => (
           <Pressable
-            key={category}
+            key={key}
             style={[
               styles.categoryChip,
-              selectedCategory === category && styles.categoryChipActive,
+              selectedCategory === key && styles.categoryChipActive,
             ]}
-            onPress={() => setSelectedCategory(category)}
+            onPress={() => setSelectedCategory(key)}
           >
             <Text
               style={[
                 styles.categoryChipText,
-                selectedCategory === category && styles.categoryChipTextActive,
+                selectedCategory === key && styles.categoryChipTextActive,
               ]}
             >
-              {category}
+              {CATEGORY_LABELS[key]}
             </Text>
           </Pressable>
         ))}
@@ -285,8 +305,8 @@ export function PriceComparison({ onClose }: PriceComparisonProps) {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Ionicons name="search-outline" size={48} color={SemanticColors.textTertiary} />
-            <Text style={styles.emptyTitle}>Geen materialen gevonden</Text>
-            <Text style={styles.emptyText}>Probeer een andere zoekopdracht</Text>
+            <Text style={styles.emptyTitle}>{t('prices.noResults', 'No materials found')}</Text>
+            <Text style={styles.emptyText}>{t('prices.tryAnother', 'Try a different search')}</Text>
           </View>
         }
       />
@@ -313,6 +333,7 @@ function MaterialPriceCard({
   materialPrice: MaterialPrice;
   onPress: () => void;
 }) {
+  const { t } = useTranslation();
   const { material, prices, lowestPrice, averagePrice, yourLastPaid, trend, trendPercent } = materialPrice;
   const bestDeal = prices.reduce((best, p) => (p.price < best.price ? p : best), prices[0]);
   const savings = yourLastPaid ? yourLastPaid - lowestPrice : averagePrice - lowestPrice;
@@ -353,17 +374,17 @@ function MaterialPriceCard({
       {/* Price Comparison */}
       <View style={styles.priceComparisonRow}>
         <View style={styles.bestPrice}>
-          <Text style={styles.priceLabel}>Beste prijs</Text>
+          <Text style={styles.priceLabel}>{t('prices.bestPrice', 'Best price')}</Text>
           <Text style={styles.bestPriceValue}>{formatCurrency(lowestPrice)}</Text>
           <Text style={styles.bestPriceSupplier}>{bestDeal.supplierName}</Text>
         </View>
         {yourLastPaid && (
           <View style={styles.yourPrice}>
-            <Text style={styles.priceLabel}>Jij betaalde</Text>
+            <Text style={styles.priceLabel}>{t('prices.youPaid', 'You paid')}</Text>
             <Text style={styles.yourPriceValue}>{formatCurrency(yourLastPaid)}</Text>
             {savings > 0 && (
               <View style={styles.savingsBadge}>
-                <Text style={styles.savingsText}>Bespaar {formatCurrency(savings)}</Text>
+                <Text style={styles.savingsText}>{t('prices.save', 'Save {{amount}}', { amount: formatCurrency(savings) })}</Text>
               </View>
             )}
           </View>
@@ -383,7 +404,7 @@ function MaterialPriceCard({
             />
           </View>
         ))}
-        <Text style={styles.supplierCount}>{prices.length} leveranciers</Text>
+        <Text style={styles.supplierCount}>{t('prices.supplierCount', '{{count}} suppliers', { count: prices.length })}</Text>
         <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
       </View>
     </Pressable>
@@ -401,6 +422,7 @@ function MaterialDetailPanel({
   materialPrice: MaterialPrice;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const { material, prices, priceHistory, lowestPrice, highestPrice, averagePrice } = materialPrice;
 
   const getStockColor = (level?: 'high' | 'medium' | 'low') => {
@@ -410,9 +432,9 @@ function MaterialDetailPanel({
   };
 
   const getStockLabel = (level?: 'high' | 'medium' | 'low') => {
-    if (level === 'high') return 'Ruim op voorraad';
-    if (level === 'medium') return 'Beperkt';
-    return 'Bijna op';
+    if (level === 'high') return t('prices.stockHigh', 'In stock');
+    if (level === 'medium') return t('prices.stockMedium', 'Limited');
+    return t('prices.stockLow', 'Almost out');
   };
 
   // Calculate chart dimensions
@@ -440,19 +462,19 @@ function MaterialDetailPanel({
         {/* Price Summary */}
         <View style={styles.priceSummary}>
           <View style={styles.priceSummaryItem}>
-            <Text style={styles.priceSummaryLabel}>Laagste</Text>
+            <Text style={styles.priceSummaryLabel}>{t('prices.lowest', 'Lowest')}</Text>
             <Text style={[styles.priceSummaryValue, { color: SemanticColors.feedbackSuccess }]}>
               {formatCurrency(lowestPrice)}
             </Text>
           </View>
           <View style={styles.priceSummaryDivider} />
           <View style={styles.priceSummaryItem}>
-            <Text style={styles.priceSummaryLabel}>Gemiddeld</Text>
+            <Text style={styles.priceSummaryLabel}>{t('prices.average', 'Average')}</Text>
             <Text style={styles.priceSummaryValue}>{formatCurrency(averagePrice)}</Text>
           </View>
           <View style={styles.priceSummaryDivider} />
           <View style={styles.priceSummaryItem}>
-            <Text style={styles.priceSummaryLabel}>Hoogste</Text>
+            <Text style={styles.priceSummaryLabel}>{t('prices.highest', 'Highest')}</Text>
             <Text style={[styles.priceSummaryValue, { color: SemanticColors.feedbackError }]}>
               {formatCurrency(highestPrice)}
             </Text>
@@ -461,7 +483,7 @@ function MaterialDetailPanel({
 
         {/* Price History Chart */}
         <View style={styles.chartSection}>
-          <Text style={styles.sectionTitle}>Prijsverloop (30 dagen)</Text>
+          <Text style={styles.sectionTitle}>{t('prices.priceHistory', 'Price history (30 days)')}</Text>
           <View style={styles.miniChart}>
             <View style={styles.chartLine}>
               {priceHistory.map((point, index) => {
@@ -486,7 +508,7 @@ function MaterialDetailPanel({
 
         {/* Supplier List */}
         <View style={styles.supplierSection}>
-          <Text style={styles.sectionTitle}>Prijzen per leverancier</Text>
+          <Text style={styles.sectionTitle}>{t('prices.pricesPerSupplier', 'Prices per supplier')}</Text>
           {prices.map((price, index) => (
             <View
               key={index}
@@ -500,7 +522,7 @@ function MaterialDetailPanel({
                   <Text style={styles.supplierRowName}>{price.supplierName}</Text>
                   {price.isYourSupplier && (
                     <View style={styles.yourSupplierBadge}>
-                      <Text style={styles.yourSupplierText}>Jouw leverancier</Text>
+                      <Text style={styles.yourSupplierText}>{t('prices.yourSupplier', 'Your supplier')}</Text>
                     </View>
                   )}
                 </View>
@@ -516,12 +538,12 @@ function MaterialDetailPanel({
                     <View style={styles.stockBadge}>
                       <View style={[styles.stockDot, { backgroundColor: SemanticColors.feedbackError }]} />
                       <Text style={[styles.stockText, { color: SemanticColors.feedbackError }]}>
-                        Niet op voorraad
+                        {t('prices.outOfStock', 'Out of stock')}
                       </Text>
                     </View>
                   )}
                   <Text style={styles.deliveryText}>
-                    {price.deliveryDays === 1 ? 'Morgen' : `${price.deliveryDays} dagen`}
+                    {price.deliveryDays === 1 ? t('prices.tomorrow', 'Tomorrow') : t('prices.deliveryDays', '{{count}} days', { count: price.deliveryDays })}
                   </Text>
                 </View>
               </View>
@@ -552,11 +574,11 @@ function MaterialDetailPanel({
         <View style={styles.actionButtons}>
           <Pressable style={styles.secondaryButton}>
             <Ionicons name="notifications-outline" size={18} color={Palette.hermesOrange} />
-            <Text style={styles.secondaryButtonText}>Prijsalert instellen</Text>
+            <Text style={styles.secondaryButtonText}>{t('prices.setPriceAlert', 'Set price alert')}</Text>
           </Pressable>
           <Pressable style={styles.primaryButton}>
             <Ionicons name="cart-outline" size={18} color="#fff" />
-            <Text style={styles.primaryButtonText}>Koop bij {prices[0].supplierName}</Text>
+            <Text style={styles.primaryButtonText}>{t('prices.buyFrom', 'Buy from {{supplier}}', { supplier: prices[0].supplierName })}</Text>
           </Pressable>
         </View>
 

@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
+import { TYPE, GRID } from '../../theme/tabStyles';
 
 export type AlertSeverity = 'critical' | 'warning' | 'info';
 
@@ -96,22 +97,16 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     padding: Spacing.sm,
     borderWidth: 1,
-    gap: 8,
-    // Shadow for depth
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    gap: GRID.sm,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: GRID.sm,
   },
   title: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.sectionFamily,
     flex: 1,
   },
   list: {
@@ -135,11 +130,11 @@ const styles = StyleSheet.create({
   seeAll: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 4,
-    gap: 4,
+    paddingTop: GRID.xs,
+    gap: GRID.xs,
   },
   seeAllText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
 });
