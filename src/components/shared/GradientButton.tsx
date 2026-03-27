@@ -1,7 +1,7 @@
 import { Pressable, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { Palette } from '../../theme/colors';
+import { Palette, SemanticColors } from '../../theme/colors';
 
 interface GradientButtonProps {
   label: string;
@@ -15,21 +15,26 @@ interface GradientButtonProps {
 export function GradientButton({ label, onPress, icon, loading, disabled, size = 'lg' }: GradientButtonProps) {
   const isDisabled = disabled || loading;
 
+  const gradientColors: [string, string] = isDisabled
+    ? [SemanticColors.textDisabled, SemanticColors.textTertiary]
+    : [Palette.hermesOrange, Palette.terracotta];
+
   return (
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={{ disabled: isDisabled }}
       style={({ pressed }) => [
         styles.wrapper,
         size === 'md' && styles.wrapperMd,
-        isDisabled && { opacity: 0.5 },
-        pressed && { transform: [{ scale: 0.97 }] },
+        isDisabled && styles.wrapperDisabled,
+        pressed && !isDisabled && { transform: [{ scale: 0.97 }] },
       ]}
     >
       <LinearGradient
-        colors={[Palette.hermesOrange, Palette.terracotta]}
+        colors={gradientColors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.gradient, size === 'md' && styles.gradientMd]}
@@ -58,6 +63,11 @@ const styles = StyleSheet.create({
   },
   wrapperMd: {
     borderRadius: 10,
+  },
+  wrapperDisabled: {
+    opacity: 0.6,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   gradient: {
     borderRadius: 14,

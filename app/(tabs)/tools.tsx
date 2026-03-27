@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, View, Text, Pressable } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, Pressable, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../src/theme/colors';
@@ -103,6 +103,7 @@ export default function ToolsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={Typography.title}>Tools</Text>
         <Text style={styles.subtitle}>Quick access to contractor tools</Text>

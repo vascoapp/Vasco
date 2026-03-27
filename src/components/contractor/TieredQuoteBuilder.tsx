@@ -358,7 +358,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
             <Text style={s.headerSub}>{TRADE_LABELS[trade] ?? 'Diensten'}</Text>
           </View>
         </View>
-        <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent}>
+        <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} keyboardShouldPersistTaps="handled">
           {tradePricebook.map(item => {
             const isSelected = selectedServices.some(sv => sv.item.id === item.id);
             return (
@@ -389,7 +389,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
           </View>
         </View>
 
-        <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent}>
+        <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} keyboardShouldPersistTaps="handled">
           {/* AI Draft — describe scope → get line items */}
           <View style={s.aiDraftSection}>
             <View style={s.aiDraftInputRow}>
@@ -536,7 +536,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
         </View>
       </View>
 
-      <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent}>
+      <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} keyboardShouldPersistTaps="handled">
         {/* Vasco insights — inline in preview (not cluttering build step) */}
         <View style={s.vascoCard}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>

@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import type { Job, TimeEntry } from '../../types/contractor';
@@ -228,7 +228,7 @@ export function TimeTracker({
 
           {/* Clock Out Button */}
           <Pressable style={styles.clockOutButton} onPress={handleClockOut}>
-            <Ionicons name="stop-circle" size={28} color="#fff" />
+            <Ionicons name="stop-circle" size={28} color={Palette.white} />
             <Text style={styles.clockOutButtonText}>Clock Out</Text>
           </Pressable>
 
@@ -308,7 +308,7 @@ export function TimeTracker({
             onPress={handleClockIn}
             disabled={!selectedJobId}
           >
-            <Ionicons name="play-circle" size={28} color="#fff" />
+            <Ionicons name="play-circle" size={28} color={Palette.white} />
             <Text style={styles.clockInButtonText}>Clock In</Text>
           </Pressable>
 
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   clockOutButtonText: {
-    color: '#fff',
+    color: Palette.white,
     fontSize: 18,
     fontWeight: '700',
   },
@@ -622,7 +622,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.textDisabled,
   },
   clockInButtonText: {
-    color: '#fff',
+    color: Palette.white,
     fontSize: 18,
     fontWeight: '700',
   },

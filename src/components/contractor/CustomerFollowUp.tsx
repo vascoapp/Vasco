@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
 import { formatCurrency } from '../../i18n/formatting';
 import {
   useFollowUps,
@@ -238,7 +238,7 @@ export function CustomerFollowUp() {
         style={styles.fab}
         onPress={() => setShowScheduleModal(true)}
       >
-        <Ionicons name="add" size={28} color="#FFFFFF" />
+        <Ionicons name="add" size={28} color={Palette.white} />
       </Pressable>
 
       {/* Follow-up Detail Modal */}

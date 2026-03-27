@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import type { Job, JobStatus } from '../../domain/jobs';
@@ -109,7 +109,7 @@ export function JobsList({ onSelectJob, onNewJob, onNewQuote }: JobsListProps) {
             <Ionicons name="document-text" size={20} color={SemanticColors.textPrimary} />
           </Pressable>
           <Pressable style={styles.addButton} onPress={onNewJob}>
-            <Ionicons name="add" size={22} color="#fff" />
+            <Ionicons name="add" size={22} color={Palette.white} />
           </Pressable>
         </View>
       </View>
@@ -305,7 +305,7 @@ export function JobsList({ onSelectJob, onNewJob, onNewQuote }: JobsListProps) {
             </Text>
             {!searchQuery && (
               <Pressable style={styles.emptyStateButton} onPress={onNewJob}>
-                <Ionicons name="add" size={20} color="#fff" />
+                <Ionicons name="add" size={20} color={Palette.white} />
                 <Text style={styles.emptyStateButtonText}>New Job</Text>
               </Pressable>
             )}
@@ -315,7 +315,7 @@ export function JobsList({ onSelectJob, onNewJob, onNewQuote }: JobsListProps) {
 
       {/* FAB */}
       <Pressable style={styles.fab} onPress={onNewJob}>
-        <Ionicons name="add" size={28} color="#fff" />
+        <Ionicons name="add" size={28} color={Palette.white} />
       </Pressable>
     </View>
   );
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   filterBadgeTextActive: {
-    color: '#fff',
+    color: Palette.white,
   },
   list: {
     flex: 1,
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   emptyStateButtonText: {
-    color: '#fff',
+    color: Palette.white,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: Palette.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

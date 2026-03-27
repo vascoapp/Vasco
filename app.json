@@ -16,6 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.vasco.app",
+      "scheme": "vasco",
       "infoPlist": {
         "NSCameraUsageDescription": "Vasco uses the camera to scan invoices and take job photos",
         "NSPhotoLibraryUsageDescription": "Vasco uses your photo library to attach photos to jobs and invoices"
@@ -23,6 +24,7 @@
     },
     "android": {
       "package": "com.vasco.app",
+      "scheme": "vasco",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
