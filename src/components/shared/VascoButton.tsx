@@ -1,7 +1,7 @@
 import { Pressable, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
-
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
@@ -16,9 +16,9 @@ interface VascoButtonProps {
 }
 
 const SIZE_CONFIG: Record<ButtonSize, { height: number; fontSize: number; iconSize: number; px: number; radius: number }> = {
-  sm: { height: 34, fontSize: 13, iconSize: 16, px: 12, radius: 8 },
-  md: { height: 44, fontSize: 15, iconSize: 18, px: 16, radius: 10 },
-  lg: { height: 52, fontSize: 17, iconSize: 20, px: 20, radius: 12 },
+  sm: { height: 34, fontSize: TYPE.captionSize, iconSize: 16, px: 12, radius: 8 },
+  md: { height: 44, fontSize: TYPE.bodySize, iconSize: 18, px: 16, radius: 10 },
+  lg: { height: 52, fontSize: TYPE.titleSize + 1, iconSize: 20, px: 20, radius: 12 },
 };
 
 export function VascoButton({

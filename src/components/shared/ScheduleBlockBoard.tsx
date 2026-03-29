@@ -6,6 +6,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, Modal, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { hapticSuccess } from '../../utils/haptics';
 import type { ScheduleBlock } from '../../services/resourceHeatmapService';
@@ -204,7 +205,7 @@ export function ScheduleBlockBoard({ blocks, unassigned, workers, onReassign }: 
 const styles = StyleSheet.create({
   container: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.sm,
     borderWidth: 1,
     borderColor: SemanticColors.borderMuted,
@@ -212,7 +213,7 @@ const styles = StyleSheet.create({
   },
   unassignedSection: {
     backgroundColor: SemanticColors.feedbackErrorBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: Spacing.xs,
     borderWidth: 1,
     borderColor: SemanticColors.feedbackErrorBorder,
@@ -224,8 +225,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   unassignedTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.feedbackError,
   },
   unassignedScroll: {
@@ -240,12 +241,12 @@ const styles = StyleSheet.create({
     width: 70,
   },
   workerName: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   workerTrade: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
   },
   blockScroll: {
@@ -254,7 +255,7 @@ const styles = StyleSheet.create({
   },
   blockCard: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 8,
     borderLeftWidth: 3,
     minWidth: 130,
@@ -272,8 +273,8 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   blockTitle: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     flex: 1,
   },
@@ -283,28 +284,28 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   blockTime: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
   },
   blockZone: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   blockWorker: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: Palette.hermesOrange,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   emptySlot: {
     backgroundColor: SemanticColors.surfaceTertiary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 12,
     alignItems: 'center',
     minWidth: 100,
   },
   emptyText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
     fontStyle: 'italic',
   },
@@ -327,29 +328,29 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   modalJobInfo: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: Spacing.xs,
     marginBottom: Spacing.sm,
   },
   modalJobTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   modalJobMeta: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
   modalSubtitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
     marginBottom: 8,
   },
@@ -370,25 +371,25 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   workerAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: Palette.hermesOrange,
     justifyContent: 'center',
     alignItems: 'center',
   },
   workerAvatarText: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.sectionFamily,
     color: Palette.white,
   },
   workerOptionName: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   workerOptionTrade: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
   },
 });

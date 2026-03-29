@@ -13,9 +13,9 @@ import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { hapticSuccess } from '../../src/utils/haptics';
+import { useTranslation } from 'react-i18next';
 import { Toast } from '../../src/components/shared/Toast';
 import { useInspections } from '../../src/services/siteLeadDataService';
-import { useTranslation } from 'react-i18next';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 
 interface ChecklistItem {
@@ -187,7 +187,7 @@ export default function InspectionScreen() {
           >
             <Ionicons name={showAddItem ? 'close' : 'add-circle-outline'} size={22} color={Palette.hermesOrange} />
             <Text style={styles.addItemButtonText}>
-              {showAddItem ? 'Annuleren' : 'Punt toevoegen'}
+              {showAddItem ? t('common.cancel', 'Cancel') : t('inspection.addItem', 'Add item')}
             </Text>
           </Pressable>
         </View>

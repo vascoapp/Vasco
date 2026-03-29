@@ -2,12 +2,13 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import type { PricebookItem, PricebookVariant } from '../../types/contractor-features';
 import { MOCK_PRICEBOOK } from '../../data/mockPricebook';
-
+import { useTranslation } from 'react-i18next';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 interface PricebookProps {
@@ -288,12 +289,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   headerSubtitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   addButton: {
     width: 36,
@@ -310,7 +311,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.md,
     marginVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     gap: Spacing.sm,
@@ -319,7 +320,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     color: SemanticColors.textPrimary,
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
   },
   categoryFilters: {
     paddingHorizontal: Spacing.md,
@@ -333,7 +334,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
@@ -343,8 +344,8 @@ const styles = StyleSheet.create({
   },
   categoryPillText: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
   },
   categoryPillTextActive: {
     color: SemanticColors.actionPrimary,
@@ -359,7 +360,7 @@ const styles = StyleSheet.create({
   },
   itemCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     overflow: 'hidden',
@@ -373,7 +374,7 @@ const styles = StyleSheet.create({
   itemIcon: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -382,24 +383,24 @@ const styles = StyleSheet.create({
   },
   itemName: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   itemDescription: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   itemPricing: {
     alignItems: 'flex-end',
   },
   itemPrice: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
   },
   itemUnit: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   itemExpanded: {
     padding: Spacing.md,
@@ -418,21 +419,21 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     textTransform: 'uppercase',
   },
   statValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   variantsSection: {
     gap: Spacing.sm,
   },
   variantsTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     textTransform: 'uppercase',
   },
   variantsGrid: {
@@ -442,7 +443,7 @@ const styles = StyleSheet.create({
   variantCard: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.sm,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -464,30 +465,30 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 11,
   },
   recommendedBadgeText: {
-    color: '#fff',
-    fontSize: 8,
-    fontWeight: '700',
+    color: Palette.white,
+    fontSize: TYPE.tinySize - 3,
+    fontFamily: TYPE.sectionFamily,
   },
   variantTier: {
     color: SemanticColors.textTertiary,
-    fontSize: 9,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 2,
+    fontFamily: TYPE.titleFamily,
     textTransform: 'uppercase',
     marginTop: 8,
   },
   variantName: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   variantPrice: {
     color: SemanticColors.actionPrimary,
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.sectionFamily,
   },
   variantUnit: {
     color: SemanticColors.textTertiary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '400',
   },
   variantFeatures: {
@@ -501,7 +502,7 @@ const styles = StyleSheet.create({
   },
   featureText: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     flex: 1,
   },
   selectButton: {
@@ -519,11 +520,11 @@ const styles = StyleSheet.create({
   },
   selectButtonText: {
     color: SemanticColors.textPrimary,
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   selectButtonTextRecommended: {
-    color: '#fff',
+    color: Palette.white,
   },
   addToQuoteButton: {
     flexDirection: 'row',
@@ -532,12 +533,12 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 12,
     backgroundColor: SemanticColors.actionPrimary + '15',
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   addToQuoteText: {
     color: SemanticColors.actionPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   emptyState: {
     alignItems: 'center',
@@ -546,6 +547,6 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     color: SemanticColors.textTertiary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
 });

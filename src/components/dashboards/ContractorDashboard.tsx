@@ -13,6 +13,7 @@ import { IntelligenceDashboard } from './IntelligenceDashboard';
 import { HoursSavedCard } from '../contractor/HoursSavedCard';
 import { Palette } from '../../theme/colors';
 import { SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { formatCurrency } from '../../i18n/formatting';
 import { Spacing } from '../../theme/spacing';
 import { JOB_STATUS_CONFIG } from '../../data/mockContractor';
@@ -904,12 +905,12 @@ const styles = StyleSheet.create({
   },
   greeting: {
     color: SemanticColors.textSecondary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     marginBottom: 4,
   },
   businessName: {
     color: SemanticColors.textPrimary,
-    fontSize: 22,
+    fontSize: TYPE.displaySize - 6,
     fontWeight: '700',
   },
   tradeBadge: {
@@ -919,11 +920,11 @@ const styles = StyleSheet.create({
     backgroundColor: CONTRACTOR_COLOR + '15',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   tradeBadgeText: {
     color: CONTRACTOR_COLOR,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
 
@@ -939,7 +940,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfaceSecondary,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
   },
   statusPillActive: {
     backgroundColor: CONTRACTOR_COLOR + '15',
@@ -948,7 +949,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackWarningBg,
   },
   statusPillText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '500',
     color: SemanticColors.textSecondary,
   },
@@ -975,7 +976,7 @@ const styles = StyleSheet.create({
     borderBottomColor: CONTRACTOR_COLOR,
   },
   tabLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '500',
     color: SemanticColors.textTertiary,
   },
@@ -988,7 +989,7 @@ const styles = StyleSheet.create({
   statsBanner: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -998,12 +999,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statsBannerValue: {
-    fontSize: 22,
+    fontSize: TYPE.displaySize - 6,
     fontWeight: '700',
     color: SemanticColors.textPrimary,
   },
   statsBannerLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -1023,7 +1024,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: '45%',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -1032,18 +1033,18 @@ const styles = StyleSheet.create({
   statIcon: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   statValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
   },
   statLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
 
   // Hero Savings Card
@@ -1051,7 +1052,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.feedbackSuccessBg,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.feedbackSuccess + '30',
@@ -1069,16 +1070,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   heroSavingsValue: {
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontWeight: '700',
     color: SemanticColors.feedbackSuccess,
   },
   heroSavingsLabel: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   heroSavingsSubtext: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -1089,10 +1090,10 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   heroSavingsButtonText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
     color: CONTRACTOR_COLOR,
   },
@@ -1102,7 +1103,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.feedbackWarningBg,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.feedbackWarning + '30',
@@ -1115,7 +1116,7 @@ const styles = StyleSheet.create({
   decisionsAlertIcon: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1123,12 +1124,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   decisionsAlertTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
   decisionsAlertSubtitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1137,7 +1138,7 @@ const styles = StyleSheet.create({
   intelligenceWidget: {
     flexDirection: 'row',
     backgroundColor: Palette.pastelOrange + '20',
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: Palette.hermesOrange + '30',
@@ -1146,7 +1147,7 @@ const styles = StyleSheet.create({
   intelligenceIcon: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: Palette.hermesOrange + '20',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1161,12 +1162,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   intelligenceTitle: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
   intelligenceSubtitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   intelligenceTip: {
@@ -1176,7 +1177,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   intelligenceTipText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '500',
     color: Palette.hermesOrange,
   },
@@ -1192,7 +1193,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '600',
   },
   seeAllButton: {
@@ -1202,7 +1203,7 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     color: CONTRACTOR_COLOR,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
   },
 
@@ -1214,7 +1215,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -1236,12 +1237,12 @@ const styles = StyleSheet.create({
   },
   scheduleTimeText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '500',
   },
   scheduleTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
   },
   scheduleLocation: {
@@ -1251,11 +1252,11 @@ const styles = StyleSheet.create({
   },
   scheduleLocationText: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   emptyState: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.xl,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1265,7 +1266,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: SemanticColors.textTertiary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
 
   // Quick Actions
@@ -1282,13 +1283,13 @@ const styles = StyleSheet.create({
   quickActionIcon: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   quickActionText: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '500',
   },
 
@@ -1298,7 +1299,7 @@ const styles = StyleSheet.create({
   },
   jobCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -1315,12 +1316,12 @@ const styles = StyleSheet.create({
   },
   jobTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
   },
   jobCustomer: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   jobStatus: {
     flexDirection: 'row',
@@ -1328,10 +1329,10 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
   },
   jobStatusText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   jobFooter: {
@@ -1346,11 +1347,11 @@ const styles = StyleSheet.create({
   },
   jobDetailText: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   jobAmount: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
   },
 
@@ -1362,7 +1363,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.feedbackSuccessBg,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.feedbackSuccess + '20',
@@ -1380,12 +1381,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   completeJobTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
   completeJobCustomer: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   completeJobAction: {
@@ -1393,7 +1394,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   completeJobAmount: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
     color: SemanticColors.feedbackSuccess,
   },
@@ -1404,12 +1405,12 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackSuccess,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
   },
   completeButtonText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
-    color: '#fff',
+    color: Palette.white,
   },
   completeHint: {
     flexDirection: 'row',
@@ -1418,10 +1419,10 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackSuccessBg,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
   },
   completeHintText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '500',
     color: SemanticColors.feedbackSuccess,
   },
@@ -1434,7 +1435,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.feedbackInfoBg,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.feedbackInfo + '20',
@@ -1452,12 +1453,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   handoverJobTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
   handoverJobCustomer: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   handoverJobAction: {
@@ -1471,12 +1472,12 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackInfo,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
   },
   handoverButtonText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
-    color: '#fff',
+    color: Palette.white,
   },
   handoverHint: {
     flexDirection: 'row',
@@ -1485,10 +1486,10 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackInfoBg,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
   },
   handoverHintText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '500',
     color: SemanticColors.feedbackInfo,
   },
@@ -1499,7 +1500,7 @@ const styles = StyleSheet.create({
   },
   quoteCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -1512,21 +1513,21 @@ const styles = StyleSheet.create({
   },
   quoteRef: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '500',
   },
   quoteStatus: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
   },
   quoteStatusText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '600',
   },
   quoteTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
   },
   quoteFooter: {
@@ -1536,11 +1537,11 @@ const styles = StyleSheet.create({
   },
   quoteExpiry: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   quoteAmount: {
     color: CONTRACTOR_COLOR,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
   },
 
@@ -1552,11 +1553,11 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackErrorBg,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
   },
   overdueAlertText: {
     color: SemanticColors.feedbackError,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   invoicesList: {
@@ -1564,7 +1565,7 @@ const styles = StyleSheet.create({
   },
   invoiceCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -1577,16 +1578,16 @@ const styles = StyleSheet.create({
   },
   invoiceNumber: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
   },
   invoiceStatus: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
   },
   invoiceStatusText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '600',
   },
   invoiceFooter: {
@@ -1596,11 +1597,11 @@ const styles = StyleSheet.create({
   },
   invoiceDue: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   invoiceAmount: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '700',
   },
 
@@ -1614,7 +1615,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: '45%',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -1623,12 +1624,12 @@ const styles = StyleSheet.create({
   },
   performanceValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 20,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
   },
   performanceLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   ratingRow: {
     flexDirection: 'row',
@@ -1645,7 +1646,7 @@ const styles = StyleSheet.create({
   toolCard: {
     width: '48%',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -1654,18 +1655,18 @@ const styles = StyleSheet.create({
   toolIcon: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   toolTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
   },
   toolDesc: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
 
   // Intelligence Card
@@ -1673,7 +1674,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Palette.pastelOrange + '20',
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: Palette.hermesOrange + '30',
@@ -1682,7 +1683,7 @@ const styles = StyleSheet.create({
   intelligenceCardIcon: {
     width: 56,
     height: 56,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     backgroundColor: Palette.hermesOrange + '20',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1692,12 +1693,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   intelligenceCardTitle: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
   intelligenceCardSubtitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   intelligenceCardStats: {
@@ -1709,12 +1710,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   intelligenceCardStatValue: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
     color: Palette.hermesOrange,
   },
   intelligenceCardStatLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
   },
 
@@ -1723,7 +1724,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.feedbackSuccessBg,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.feedbackSuccess + '30',
@@ -1732,7 +1733,7 @@ const styles = StyleSheet.create({
   roiCardIcon: {
     width: 56,
     height: 56,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     backgroundColor: SemanticColors.feedbackSuccess + '20',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1742,12 +1743,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   roiCardTitle: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
   roiCardSubtitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   roiCardHighlight: {
@@ -1757,19 +1758,19 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   roiCardHighlightValue: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
     color: SemanticColors.feedbackSuccess,
   },
   roiCardHighlightLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
 
   // Actions List
   actionsList: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     overflow: 'hidden',
@@ -1785,7 +1786,7 @@ const styles = StyleSheet.create({
   actionIcon: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1793,12 +1794,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   actionTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
   actionSubtitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -1825,7 +1826,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalTitle: {
-    fontSize: 17,
+    fontSize: TYPE.titleSize + 1,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
@@ -1842,7 +1843,7 @@ const styles = StyleSheet.create({
   materialStatsStrip: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -1852,12 +1853,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   materialStatValue: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '700',
     color: SemanticColors.textPrimary,
   },
   materialStatLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -1868,7 +1869,7 @@ const styles = StyleSheet.create({
   },
   saleAlertsCard: {
     backgroundColor: SemanticColors.feedbackSuccessBg,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.feedbackSuccess + '20',
@@ -1881,7 +1882,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   saleAlertsTitle: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
     color: SemanticColors.feedbackSuccess,
   },
@@ -1893,7 +1894,7 @@ const styles = StyleSheet.create({
   },
   saleAlertName: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
     fontWeight: '500',
   },
@@ -1903,12 +1904,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   saleAlertOldPrice: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     textDecorationLine: 'line-through',
   },
   saleAlertNewPrice: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
     color: SemanticColors.feedbackSuccess,
   },

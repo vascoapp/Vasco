@@ -5,6 +5,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import { hapticWarning, hapticError } from '../../utils/haptics';
@@ -101,7 +102,7 @@ export function BurnRateBar({ zones, totalBudget, totalSpent, overallPercent }: 
 const styles = StyleSheet.create({
   container: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.sm,
     borderWidth: 1,
     borderColor: SemanticColors.borderMuted,
@@ -116,23 +117,23 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderMuted,
   },
   summaryLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     marginBottom: 2,
   },
   summaryValue: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   overallBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   overallText: {
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.displayFamily,
   },
   zoneRow: {
     gap: 4,
@@ -143,8 +144,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   zoneName: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   zoneStats: {
@@ -153,11 +154,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   zonePercent: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   zoneBudget: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
   barTrack: {
@@ -182,13 +183,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statusBadge: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   hoursText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
   },
 });

@@ -22,8 +22,8 @@ import {
   useLeadStats,
   Lead,
 } from '../../services/leadGenerationService';
-
-// =============================================================================
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
+import { useTranslation } from 'react-i18next';// =============================================================================
 // TYPES
 // =============================================================================
 
@@ -259,6 +259,7 @@ const FunnelStage: React.FC<{
 // =============================================================================
 
 export const LeadGeneration: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>('leads');
   const [searchQuery, setSearchQuery] = useState('');
   const { leads, loading, updateStatus } = useLeads();
@@ -307,7 +308,7 @@ export const LeadGeneration: React.FC = () => {
 
             {loading ? (
               <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Laden...</Text>
+                <Text style={styles.loadingText}>{t('common.loading', 'Loading...')}</Text>
               </View>
             ) : (
               filteredLeads.map(lead => (
@@ -334,7 +335,7 @@ export const LeadGeneration: React.FC = () => {
             {hotLeads.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="leaf-outline" size={48} color={SemanticColors.textSecondary} />
-                <Text style={styles.emptyText}>Geen hot leads op dit moment</Text>
+                <Text style={styles.emptyText}>{t('leads.noHotLeads', 'No hot leads right now')}</Text>
               </View>
             ) : (
               hotLeads.map(lead => (
@@ -474,8 +475,8 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   addButton: {
@@ -508,8 +509,8 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary + '15',
   },
   tabText: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textSecondary,
   },
   tabTextActive: {
@@ -535,7 +536,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     paddingHorizontal: 8,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     color: SemanticColors.textPrimary,
   },
   loadingContainer: {
@@ -544,7 +545,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: SemanticColors.textSecondary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
   },
   leadCard: {
     backgroundColor: SemanticColors.surfacePrimary,
@@ -569,8 +570,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   leadName: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   scoreBadge: {
@@ -582,8 +583,8 @@ const styles = StyleSheet.create({
   },
   scoreText: {
     color: Palette.white,
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.sectionFamily,
   },
   leadMeta: {
     flexDirection: 'row',
@@ -592,7 +593,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   leadMetaText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   leadMetaDot: {
@@ -605,8 +606,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   stageBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   leadDetails: {
     gap: 6,
@@ -617,7 +618,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   leadDetailText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   expandedContent: {
@@ -636,7 +637,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   contactText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   notesSection: {
@@ -646,13 +647,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   notesLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
     marginBottom: 4,
   },
   notesText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   leadActions: {
@@ -671,8 +672,8 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     color: Palette.white,
-    fontWeight: '600',
-    fontSize: 14,
+    fontFamily: TYPE.titleFamily,
+    fontSize: TYPE.bodySize - 1,
   },
   secondaryButton: {
     backgroundColor: SemanticColors.actionPrimary + '15',
@@ -686,13 +687,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   hotLeadsTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     marginTop: 8,
   },
   hotLeadsSubtitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
@@ -702,7 +703,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     marginTop: 12,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     color: SemanticColors.textSecondary,
   },
   statsGrid: {
@@ -742,16 +743,16 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   trendText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   statValue: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   statLabel: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -759,8 +760,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 16,
   },
@@ -781,12 +782,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   funnelLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   funnelCount: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   funnelBarContainer: {
@@ -827,11 +828,11 @@ const styles = StyleSheet.create({
   },
   sourceName: {
     flex: 1,
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     color: SemanticColors.textPrimary,
   },
   sourceCount: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
 });

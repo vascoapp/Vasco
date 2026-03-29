@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { intelligence, type Recommendation } from '../../intelligence/intelligenceEngine';
 
@@ -359,7 +360,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
@@ -367,12 +368,12 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   headerBadgeText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '700',
-    color: '#fff',
+    color: Palette.white,
   },
 
   cardList: {
@@ -380,7 +381,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -392,7 +393,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -406,7 +407,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   cardTitle: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
     flex: 1,
@@ -414,15 +415,15 @@ const styles = StyleSheet.create({
   urgencyBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     marginLeft: 8,
   },
   urgencyText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '600',
   },
   cardDescription: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     lineHeight: 18,
   },
@@ -452,14 +453,14 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   confidenceText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
   reasoningSection: {
     marginBottom: Spacing.sm,
   },
   reasoningTitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
     color: SemanticColors.textSecondary,
     marginBottom: Spacing.xs,
@@ -479,12 +480,12 @@ const styles = StyleSheet.create({
   },
   reasoningText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     lineHeight: 16,
   },
   dataPoints: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
     fontStyle: 'italic',
   },
@@ -506,12 +507,12 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   actionButtonText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
-    color: '#fff',
+    color: Palette.white,
   },
 
   // Learning indicator
@@ -523,7 +524,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   learningText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
 });

@@ -17,6 +17,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { formatCurrency } from '../../i18n/formatting';
 import {
   useCustomerProfiles,
@@ -461,12 +462,12 @@ export const CustomerInsights: React.FC = () => {
 
             {loading ? (
               <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Laden...</Text>
+                <Text style={styles.loadingText}>{t('common.loading', 'Loading...')}</Text>
               </View>
             ) : filteredCustomers.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="people-outline" size={48} color={SemanticColors.textSecondary} />
-                <Text style={styles.emptyText}>Geen klanten gevonden</Text>
+                <Text style={styles.emptyText}>{t('customers.noCustomersFound', 'No customers found')}</Text>
               </View>
             ) : (
               filteredCustomers.map(customer => (
@@ -484,7 +485,7 @@ export const CustomerInsights: React.FC = () => {
         return (
           <View style={styles.tabContent}>
             <View style={styles.segmentsHeader}>
-              <Text style={styles.segmentsTitle}>Klantsegmenten</Text>
+              <Text style={styles.segmentsTitle}>{t('customers.segments', 'Customer segments')}</Text>
               <Text style={styles.segmentsSubtitle}>
                 {segments.length} segmenten • {stats.totalCustomers} klanten
               </Text>
@@ -532,7 +533,7 @@ export const CustomerInsights: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Klant Inzichten</Text>
+        <Text style={styles.title}>{t('customers.insights', 'Customer insights')}</Text>
         <Pressable style={styles.filterButton}>
           <Ionicons name="filter-outline" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
@@ -587,14 +588,14 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   filterButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     backgroundColor: SemanticColors.surfaceBackground,
     justifyContent: 'center',
     alignItems: 'center',
@@ -613,7 +614,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.surfaceBackground,
     gap: 6,
   },
@@ -621,8 +622,8 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary + '15',
   },
   tabText: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textSecondary,
   },
   tabTextActive: {
@@ -638,7 +639,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     paddingHorizontal: 12,
     marginBottom: 16,
     borderWidth: 1,
@@ -648,7 +649,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     paddingHorizontal: 8,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     color: SemanticColors.textPrimary,
   },
   statsRow: {
@@ -659,7 +660,7 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 12,
     alignItems: 'center',
     borderWidth: 1,
@@ -674,12 +675,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   statCardValue: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   statCardLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -689,7 +690,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: SemanticColors.textSecondary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
   },
   emptyState: {
     alignItems: 'center',
@@ -697,18 +698,18 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     marginTop: 12,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     color: SemanticColors.textPrimary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   emptySubtext: {
     marginTop: 4,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   customerCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -729,20 +730,20 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   customerName: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize + 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   customerTypeBadge: {
     backgroundColor: SemanticColors.actionPrimary + '20',
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   customerTypeText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.actionPrimary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   customerMeta: {
     flexDirection: 'row',
@@ -756,23 +757,23 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   ratingText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginLeft: 4,
   },
   riskBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   riskText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   customerStats: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfaceBackground,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 12,
     marginBottom: 12,
   },
@@ -781,12 +782,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -804,12 +805,12 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary + '15',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   tagText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.actionPrimary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   expandedContent: {
     marginTop: 16,
@@ -827,15 +828,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   contactText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   equipmentSection: {
     marginBottom: 12,
   },
   sectionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
@@ -846,7 +847,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   equipmentText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   customerActions: {
@@ -860,13 +861,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: SemanticColors.actionPrimary + '15',
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     gap: 6,
   },
   actionButtonText: {
     color: SemanticColors.actionPrimary,
-    fontWeight: '600',
-    fontSize: 14,
+    fontFamily: TYPE.titleFamily,
+    fontSize: TYPE.bodySize - 1,
   },
   primaryButton: {
     backgroundColor: SemanticColors.actionPrimary,
@@ -878,18 +879,18 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   segmentsTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   segmentsSubtitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
   segmentCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -902,23 +903,23 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   segmentName: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize + 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   segmentCount: {
     backgroundColor: SemanticColors.actionPrimary,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   segmentCountText: {
     color: Palette.white,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
   segmentDescription: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginBottom: 12,
   },
@@ -931,20 +932,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   segmentStatValue: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   segmentStatLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   criteriaSection: {
     marginBottom: 12,
   },
   criteriaLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 6,
   },
@@ -959,11 +960,11 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfaceBackground,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     gap: 4,
   },
   criteriaText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   recommendationsSection: {
@@ -973,8 +974,8 @@ const styles = StyleSheet.create({
     borderTopColor: SemanticColors.borderDefault,
   },
   recommendationsLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
@@ -985,14 +986,14 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   recommendationText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
   },
   churnHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Palette.orange50,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -1003,18 +1004,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   churnHeaderTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.orange700,
   },
   churnHeaderSubtitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: Palette.orange600,
     marginTop: 2,
   },
   churnCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -1024,12 +1025,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   churnCustomerName: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize + 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   churnLastContact: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1045,12 +1046,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   riskPercentage: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
   },
   riskLabel: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     marginTop: 4,
   },
   churnValue: {
@@ -1061,15 +1062,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   churnValueText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   factorsSection: {
     marginBottom: 12,
   },
   factorsLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 6,
   },
@@ -1080,15 +1081,15 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   factorText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   suggestedActionsSection: {
     marginBottom: 16,
   },
   suggestedActionsLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 6,
   },
@@ -1099,7 +1100,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   actionItemText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
   },
   takeActionButton: {
@@ -1108,13 +1109,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     gap: 8,
   },
   takeActionButtonText: {
     color: Palette.white,
-    fontWeight: '600',
-    fontSize: 15,
+    fontFamily: TYPE.titleFamily,
+    fontSize: TYPE.bodySize,
   },
 });
 

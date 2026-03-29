@@ -7,8 +7,8 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
-
-type IconName = keyof typeof Ionicons.glyphMap;
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
+import { useTranslation } from 'react-i18next';type IconName = keyof typeof Ionicons.glyphMap;
 
 export interface KPIItem {
   icon: IconName;
@@ -79,11 +79,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     alignItems: 'center',
     gap: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
   },
   iconCircle: {
     width: 36,
@@ -93,12 +88,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   kpiValue: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Manrope_800ExtraBold',
     fontVariant: ['tabular-nums'] as any,
   },
   kpiLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: 'Manrope_500Medium',
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',

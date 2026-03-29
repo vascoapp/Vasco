@@ -4,6 +4,7 @@
 
 import { View, Text, StyleSheet } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
+import { TYPE } from '../../theme/tabStyles';
 
 export interface BarDataPoint {
   label: string;
@@ -144,7 +145,7 @@ const styles = StyleSheet.create({
   bar: {},
   barValue: {
     fontSize: 9,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textTertiary,
     textAlign: 'center',
     marginBottom: 2,

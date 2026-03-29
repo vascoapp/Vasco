@@ -5,6 +5,7 @@
 // =============================================================================
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -21,7 +22,7 @@ import {
   OptimizedRoute,
   RouteJob,
 } from '../../services/routeOptimizerService';
-
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -270,6 +271,7 @@ const StatCard: React.FC<{
 // =============================================================================
 
 export const RouteOptimizer: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>('today');
   const { routes, loading, updateJobStatus } = useTodaysRoutes();
   const stats = useRouteStats();
@@ -447,9 +449,9 @@ export const RouteOptimizer: React.FC = () => {
 
       <View style={styles.tabs}>
         {[
-          { key: 'today', label: 'Vandaag', icon: 'today-outline' },
-          { key: 'map', label: 'Kaart', icon: 'map-outline' },
-          { key: 'stats', label: 'Statistieken', icon: 'stats-chart-outline' },
+          { key: 'today', label: t('common.today', 'Today'), icon: 'today-outline' },
+          { key: 'map', label: t('routes.map', 'Map'), icon: 'map-outline' },
+          { key: 'stats', label: t('routes.statistics', 'Statistics'), icon: 'stats-chart-outline' },
         ].map(tab => (
           <Pressable
             key={tab.key}
@@ -494,8 +496,8 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   optimizeButton: {
@@ -509,8 +511,8 @@ const styles = StyleSheet.create({
   },
   optimizeButtonText: {
     color: Palette.white,
-    fontWeight: '600',
-    fontSize: 14,
+    fontFamily: TYPE.titleFamily,
+    fontSize: TYPE.bodySize - 1,
   },
   tabs: {
     flexDirection: 'row',
@@ -534,8 +536,8 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary + '15',
   },
   tabText: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textSecondary,
   },
   tabTextActive: {
@@ -561,12 +563,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   summaryValue: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   summaryLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -581,7 +583,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: SemanticColors.textSecondary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
   },
   emptyState: {
     alignItems: 'center',
@@ -589,7 +591,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     marginTop: 12,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     color: SemanticColors.textSecondary,
     marginBottom: 16,
   },
@@ -604,8 +606,8 @@ const styles = StyleSheet.create({
   },
   createRouteButtonText: {
     color: Palette.white,
-    fontWeight: '600',
-    fontSize: 14,
+    fontFamily: TYPE.titleFamily,
+    fontSize: TYPE.bodySize - 1,
   },
   routeCard: {
     backgroundColor: SemanticColors.surfacePrimary,
@@ -625,12 +627,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   routeAssignee: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   routeTimeRange: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -638,8 +640,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   routeProgressText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 4,
   },
@@ -671,9 +673,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   savingText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: Palette.green600,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   jobsList: {
     gap: 0,
@@ -719,24 +721,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   jobTimeText: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   jobDuration: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   jobInfo: {
     flex: 1,
   },
   jobCustomer: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   jobAddress: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -746,8 +748,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   priorityText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   jobMeta: {
     flexDirection: 'row',
@@ -758,7 +760,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   jobTypeText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     textTransform: 'capitalize',
   },
@@ -776,7 +778,7 @@ const styles = StyleSheet.create({
   },
   notesText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
   },
   jobActions: {
@@ -795,8 +797,8 @@ const styles = StyleSheet.create({
   },
   navigateButtonText: {
     color: SemanticColors.actionPrimary,
-    fontWeight: '600',
-    fontSize: 14,
+    fontFamily: TYPE.titleFamily,
+    fontSize: TYPE.bodySize - 1,
   },
   statusButton: {
     flex: 1,
@@ -810,8 +812,8 @@ const styles = StyleSheet.create({
   },
   statusButtonText: {
     color: Palette.white,
-    fontWeight: '600',
-    fontSize: 14,
+    fontFamily: TYPE.titleFamily,
+    fontSize: TYPE.bodySize - 1,
   },
   mapPlaceholder: {
     backgroundColor: SemanticColors.surfacePrimary,
@@ -823,13 +825,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   mapPlaceholderText: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginTop: 12,
   },
   mapPlaceholderSubtext: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 4,
     textAlign: 'center',
@@ -842,8 +844,8 @@ const styles = StyleSheet.create({
     borderColor: SemanticColors.borderDefault,
   },
   legendTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
@@ -863,7 +865,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   legendLabel: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   statsGrid: {
@@ -890,25 +892,25 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   statValue: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
   statSubtext: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   optimizationSection: {
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
@@ -929,13 +931,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   optimizationLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginBottom: 4,
   },
   optimizationValue: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   savingsHighlight: {
@@ -948,9 +950,9 @@ const styles = StyleSheet.create({
   },
   savingsHighlightText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: "#15803d",
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   tipsSection: {
     marginBottom: 24,
@@ -976,7 +978,7 @@ const styles = StyleSheet.create({
   },
   tipText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
 });

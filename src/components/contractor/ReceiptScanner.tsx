@@ -24,6 +24,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { File as ExpoFile } from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import {
@@ -696,8 +697,8 @@ const styles = StyleSheet.create({
     padding: Spacing.xs,
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize + 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   content: {
@@ -716,7 +717,7 @@ const styles = StyleSheet.create({
   captureOption: {
     flex: 1,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.lg,
     alignItems: 'center',
     borderWidth: 1,
@@ -725,18 +726,18 @@ const styles = StyleSheet.create({
   captureOptionIcon: {
     width: 64,
     height: 64,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.sm,
   },
   captureOptionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   captureOptionHint: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     marginTop: 4,
     textAlign: 'center',
@@ -755,7 +756,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.borderDefault,
   },
   dividerText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
   },
 
@@ -770,20 +771,20 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   manualEntryLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   demoLink: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: Palette.hermesOrange,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   textArea: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
     minHeight: 200,
     borderWidth: 1,
@@ -797,7 +798,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     backgroundColor: Palette.hermesOrange,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     marginBottom: Spacing.md,
   },
@@ -805,9 +806,9 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   extractButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.white,
   },
 
   // Info Box
@@ -817,11 +818,11 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     backgroundColor: SemanticColors.feedbackInfoBg,
     padding: Spacing.md,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   infoText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     lineHeight: 18,
   },
@@ -829,7 +830,7 @@ const styles = StyleSheet.create({
   // Review Mode
   confidenceCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     marginBottom: Spacing.md,
     borderWidth: 1,
@@ -841,27 +842,27 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   confidenceText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   confidenceHint: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.feedbackWarning,
     marginTop: 4,
     marginLeft: 32,
   },
   reviewCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     marginBottom: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
   reviewCardTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
     marginBottom: Spacing.sm,
   },
@@ -877,22 +878,22 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   reviewLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   reviewValue: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
   },
   reviewLabelTotal: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   reviewValueTotal: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
     color: Palette.hermesOrange,
   },
 
@@ -910,23 +911,23 @@ const styles = StyleSheet.create({
   lineItemNumber: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   lineItemNumberText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
   },
   lineItemContent: {
     flex: 1,
   },
   lineItemDescription: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   lineItemDetails: {
     flexDirection: 'row',
@@ -935,11 +936,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   lineItemQty: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   lineItemUnitPrice: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
   },
   categoryBadge: {
@@ -949,13 +950,13 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   categoryBadgeText: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: Palette.hermesOrange,
   },
   lineItemTotal: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   confidenceBar: {
@@ -976,14 +977,14 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     backgroundColor: SemanticColors.feedbackWarningBg,
     padding: Spacing.md,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     marginBottom: Spacing.md,
   },
   warningsList: {
     flex: 1,
   },
   warningText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.feedbackWarning,
   },
 
@@ -997,12 +998,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: Spacing.md,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   secondaryButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   primaryButton: {
@@ -1012,13 +1013,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     padding: Spacing.md,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: Palette.hermesOrange,
   },
   primaryButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.white,
   },
 
   // Result Mode
@@ -1032,13 +1033,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   resultTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   resultSubtitle: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     color: SemanticColors.textSecondary,
     textAlign: 'center',
     marginBottom: Spacing.xl,
@@ -1046,7 +1047,7 @@ const styles = StyleSheet.create({
   resultStats: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.lg,
     marginBottom: Spacing.xl,
     borderWidth: 1,
@@ -1057,12 +1058,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   resultStatValue: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize,
+    fontFamily: TYPE.sectionFamily,
     color: Palette.hermesOrange,
   },
   resultStatLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
@@ -1080,8 +1081,8 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
   },
   textButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
   },
 
@@ -1094,19 +1095,19 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   processingText: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize + 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginTop: 8,
   },
   processingHint: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textTertiary,
   },
   processingPreview: {
     width: 200,
     height: 200,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     marginTop: 16,
     opacity: 0.6,
   },

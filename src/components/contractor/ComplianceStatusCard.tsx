@@ -8,10 +8,11 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { useComplianceDashboard } from '../../services';
 import type { ComplianceAlert, ComplianceDeadline } from '../../types/dutch-compliance';
-
+import { useTranslation } from 'react-i18next';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 const STATUS_CONFIG = {
@@ -349,7 +350,7 @@ export function ComplianceWidget({ onPress }: { onPress?: () => void }) {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -362,7 +363,7 @@ const styles = StyleSheet.create({
   loadingPlaceholder: {
     height: 100,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   // Header
   header: {
@@ -378,30 +379,30 @@ const styles = StyleSheet.create({
   statusIcon: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   statusLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
   scoreContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
   },
   scoreValue: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   scoreMax: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textTertiary,
   },
   // Status Grid
@@ -417,26 +418,26 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   statusItemContent: {
     flex: 1,
   },
   statusItemLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   statusItemDetail: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   // Alerts Section
   alertsSection: {
     gap: Spacing.xs,
   },
   alertsTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: Spacing.xs,
   },
@@ -445,19 +446,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.xs,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
   },
   alertContent: {
     flex: 1,
   },
   alertTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   alertMessage: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   alertAction: {
@@ -466,11 +467,11 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   alertActionText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   moreAlerts: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.actionPrimary,
     textAlign: 'center',
     marginTop: Spacing.xs,
@@ -483,8 +484,8 @@ const styles = StyleSheet.create({
     borderTopColor: SemanticColors.borderDefault,
   },
   deadlinesTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: Spacing.xs,
   },
@@ -505,12 +506,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   deadlineTitle: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
   },
   deadlineDate: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   // Compact styles
   compactHeader: {
@@ -522,25 +523,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   compactTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   compactStatus: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   scoreCircle: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   scoreText: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   alertBadge: {
@@ -555,8 +556,8 @@ const styles = StyleSheet.create({
     marginLeft: 52,
   },
   alertBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.feedbackWarning,
   },
   // Widget styles
@@ -564,7 +565,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -573,7 +574,7 @@ const styles = StyleSheet.create({
   widgetIcon: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -581,23 +582,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   widgetTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   widgetStatus: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   widgetBadge: {
     backgroundColor: SemanticColors.feedbackErrorBg,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   widgetBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackError,
   },
 });

@@ -7,6 +7,7 @@ import { Spacing } from '../../src/theme/spacing';
 import { InlineInsight, VascoInsightCard } from '../../src/components/shared/VascoInsightCard';
 import { useVascoGuidance, useInlineInsight } from '../../src/services/vascoGuidanceService';
 import { useAuth } from '../../src/context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import {
   useJobToPaymentWorkflows,
   useWorkflowStats,
@@ -60,6 +61,7 @@ function getPriorityColor(priority: string): string {
 
 export default function ApprovalsScreen() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [approvals, setApprovals] = useState(MOCK_APPROVALS);
   const cfoInsights = useVascoGuidance('cfo', 'cfo-approvals');
   const inlineTip = useInlineInsight('cfo', 'cfo-approvals', 'overview');
@@ -70,14 +72,14 @@ export default function ApprovalsScreen() {
 
   const handleApprove = useCallback((id: string) => {
     Alert.alert('Goedkeuren', 'Weet je zeker dat je dit wilt goedkeuren?', [
-      { text: 'Annuleren', style: 'cancel' },
+      { text: t('common.cancel', 'Cancel'), style: 'cancel' },
       { text: 'Goedkeuren', onPress: () => setApprovals(prev => prev.filter(a => a.id !== id)) },
     ]);
   }, []);
 
   const handleReject = useCallback((id: string) => {
     Alert.alert('Afwijzen', 'Weet je zeker dat je dit wilt afwijzen?', [
-      { text: 'Annuleren', style: 'cancel' },
+      { text: t('common.cancel', 'Cancel'), style: 'cancel' },
       { text: 'Afwijzen', style: 'destructive', onPress: () => setApprovals(prev => prev.filter(a => a.id !== id)) },
     ]);
   }, []);

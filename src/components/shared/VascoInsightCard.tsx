@@ -19,6 +19,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { recordInteraction, recordInsightOutcome } from '../../intelligence/learningStorage';
 import type { ScoredInsight, ReasoningChain } from '../../intelligence/generators/types';
@@ -451,7 +452,7 @@ export function VascoInsightCard({
               <Ionicons name={(insight as any).action ? 'flash' : 'chevron-forward'} size={14} color={Palette.hermesOrange} />
               <Text style={styles.primaryActionText} numberOfLines={1}>{(insight as any).action?.label ?? insight.actionLabel}</Text>
               {(insight as any).action?.estimatedImpact && (
-                <Text style={{ fontSize: 10, color: SemanticColors.feedbackSuccess, fontFamily: 'Inter_400Regular' }} numberOfLines={1}>
+                <Text style={{ fontSize: TYPE.tinySize - 1, color: SemanticColors.feedbackSuccess, fontFamily: 'Inter_400Regular' }} numberOfLines={1}>
                   {(insight as any).action.estimatedImpact}
                 </Text>
               )}
@@ -600,7 +601,7 @@ const styles = StyleSheet.create({
   // Card
   card: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderLeftWidth: 4,
     gap: 8,
@@ -622,9 +623,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actedOnText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.feedbackSuccess,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
     flex: 1,
   },
   outcomeFeedback: {
@@ -633,7 +634,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   outcomeLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
   outcomeButton: {
@@ -647,9 +648,9 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -662,8 +663,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     flex: 1,
   },
@@ -674,8 +675,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   criticalBadgeText: {
-    fontSize: 9,
-    fontWeight: '700',
+    fontSize: TYPE.tinySize - 2,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackError,
     letterSpacing: 0.5,
   },
@@ -686,18 +687,18 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   source: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: Palette.hermesOrange,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   timestamp: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
 
   // Message
   message: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     lineHeight: 18,
   },
@@ -709,10 +710,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: SemanticColors.surfaceSecondary,
     padding: Spacing.sm,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   metricLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
   },
   metricValueRow: {
@@ -721,8 +722,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   metricValue: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
 
@@ -735,7 +736,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.borderMuted,
   },
   detailText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     lineHeight: 18,
   },
@@ -757,18 +758,18 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   snoozeText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   secondaryAction: {
     paddingVertical: 6,
     paddingHorizontal: 10,
   },
   secondaryActionText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   primaryAction: {
     flexDirection: 'row',
@@ -778,8 +779,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   primaryActionText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.hermesOrange,
   },
 
@@ -795,7 +796,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     paddingHorizontal: Spacing.md,
     borderLeftWidth: 3,
@@ -813,12 +814,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   compactTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   compactMessage: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
   compactDismiss: {
@@ -841,14 +842,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   listTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
   listCount: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
   },
   listCards: {
@@ -862,8 +863,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   showMoreText: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
     color: Palette.hermesOrange,
   },
 
@@ -878,13 +879,13 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   reasoningToggleText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textTertiary,
   },
   reasoningCard: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     gap: 8,
     borderWidth: 1,
@@ -896,8 +897,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   reasoningEvidence: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
     flex: 1,
   },
@@ -916,21 +917,21 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   confidenceText: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   reasoningRow: {
     gap: 2,
   },
   reasoningLabel: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
   reasoningValue: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     lineHeight: 16,
   },
@@ -941,21 +942,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     backgroundColor: Palette.hermesOrange + '10',
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 10,
     paddingHorizontal: 12,
   },
   inlineIconContainer: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: Palette.hermesOrange + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },
   inlineMessage: {
     flex: 1,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     lineHeight: 16,
   },
@@ -964,8 +965,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   inlineActionText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.hermesOrange,
   },
 });

@@ -19,6 +19,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import type { CustomerDecisionTracker } from '../../types/decisions';
 import { generateAccessCode } from '../../data/mockCustomerPortal';
@@ -254,8 +255,8 @@ const styles = StyleSheet.create({
     padding: Spacing.xs,
   },
   title: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize + 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   customerCard: {
@@ -276,20 +277,20 @@ const styles = StyleSheet.create({
     marginRight: Spacing.md,
   },
   customerInitials: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: Palette.hermesOrange,
   },
   customerInfo: {
     flex: 1,
   },
   customerName: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize + 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   projectName: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -297,8 +298,8 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   sectionLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -309,14 +310,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
   codeText: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     letterSpacing: 4,
   },
@@ -327,14 +328,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     backgroundColor: SemanticColors.actionPrimary + '10',
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   copyText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
   codeHelp: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     marginTop: Spacing.sm,
   },
@@ -347,14 +348,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
   linkText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   shareSection: {
@@ -372,14 +373,14 @@ const styles = StyleSheet.create({
   shareOptionIcon: {
     width: 56,
     height: 56,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   shareOptionLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   infoFooter: {
     flexDirection: 'row',
@@ -391,7 +392,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textTertiary,
     lineHeight: 18,
   },

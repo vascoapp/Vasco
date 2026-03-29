@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import {
   useScheduler,
   useDaySchedule,
@@ -27,10 +28,11 @@ import {
 } from '../../services/smartSchedulerService';
 import { predictDuration, type DurationPrediction } from '../../intelligence/predictions';
 import { useAuth } from '../../context/AuthContext';
-
+import { useTranslation } from 'react-i18next';
 type ViewType = 'day' | 'week' | 'list';
 
 export function SmartScheduler() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [viewType, setViewType] = useState<ViewType>('week');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -319,7 +321,7 @@ export function SmartScheduler() {
         {daySchedule.jobs.length === 0 ? (
           <View style={styles.emptyDayView}>
             <Ionicons name="calendar-outline" size={48} color={SemanticColors.textSecondary} />
-            <Text style={styles.emptyTitle}>Geen afspraken</Text>
+            <Text style={styles.emptyTitle}>{t('scheduler.noAppointments', 'No appointments')}</Text>
             <Text style={styles.emptyText}>Deze dag is nog vrij</Text>
           </View>
         ) : (
@@ -491,7 +493,7 @@ export function SmartScheduler() {
                   }}
                 >
                   <Ionicons name="close-circle-outline" size={18} color={Palette.red500} />
-                  <Text style={styles.cancelText}>Annuleren</Text>
+                  <Text style={styles.cancelText}>{t('common.cancel', 'Cancel')}</Text>
                 </Pressable>
               </View>
             </View>
@@ -567,16 +569,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     gap: 6,
   },
   viewButtonActive: {
     backgroundColor: Palette.blue500 + '15',
   },
   viewButtonText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   viewButtonTextActive: {
     color: Palette.blue500,
@@ -593,9 +595,9 @@ const styles = StyleSheet.create({
   },
   conflictText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: Palette.red500,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   optimizationBanner: {
     flexDirection: 'row',
@@ -607,9 +609,9 @@ const styles = StyleSheet.create({
   },
   optimizationText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: Palette.green500,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   weatherAlert: {
     flexDirection: 'row',
@@ -620,7 +622,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   weatherAlertText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: Palette.orange500,
   },
 
@@ -633,7 +635,7 @@ const styles = StyleSheet.create({
     width: 120,
     marginHorizontal: 4,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -651,17 +653,17 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.blue500,
   },
   dayOfWeek: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     textTransform: 'uppercase',
   },
   dayNumber: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   dayTextToday: {
-    color: '#fff',
+    color: Palette.white,
   },
   dayWeather: {
     marginTop: 4,
@@ -677,11 +679,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emptyDayText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   moreJobs: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: Palette.blue500,
     textAlign: 'center',
     marginTop: 4,
@@ -705,7 +707,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   utilizationText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textSecondary,
     width: 28,
     textAlign: 'right',
@@ -715,7 +717,7 @@ const styles = StyleSheet.create({
   jobCard: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     marginBottom: 8,
     overflow: 'hidden',
     borderWidth: 1,
@@ -738,9 +740,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   jobTime: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   priorityDot: {
     width: 6,
@@ -748,12 +750,12 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   jobTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   jobCustomer: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -764,7 +766,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   jobAddress: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     flex: 1,
   },
@@ -787,8 +789,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dayViewDate: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize + 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   dayViewWeather: {
@@ -798,11 +800,11 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   dayViewTemp: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   notSuitableText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: Palette.orange500,
   },
   dayStats: {
@@ -817,12 +819,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dayStatValue: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   dayStatLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -835,13 +837,13 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginTop: 12,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
@@ -855,8 +857,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   dateGroupTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
     marginBottom: 8,
     textTransform: 'uppercase',
@@ -873,11 +875,6 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.blue500,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
   },
 
   // Modal
@@ -896,8 +893,8 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
   },
   modalTitle: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize + 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   modalContent: {
@@ -910,7 +907,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -920,7 +917,7 @@ const styles = StyleSheet.create({
   optimizationIcon: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: RADIUS.full,
     backgroundColor: Palette.green500 + '15',
     alignItems: 'center',
     justifyContent: 'center',
@@ -929,12 +926,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   optimizationTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   optimizationDesc: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -945,20 +942,20 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   optimizationSavingText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: Palette.green500,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   applyButton: {
     backgroundColor: Palette.green500,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   applyButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.white,
   },
 
   // Job Detail
@@ -979,18 +976,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   jobDetailTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   jobDetailCustomer: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
   jobDetailSection: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -1008,11 +1005,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   jobDetailLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   jobDetailValue: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     color: SemanticColors.textPrimary,
     marginTop: 2,
   },
@@ -1025,13 +1022,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: Palette.green500,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     gap: 8,
   },
   startJobText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.white,
   },
   jobActionRow: {
     flexDirection: 'row',
@@ -1044,14 +1041,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: Palette.blue500,
     gap: 6,
   },
   rescheduleText: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.blue500,
   },
   cancelButton: {
@@ -1061,14 +1058,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: Palette.red500,
     gap: 6,
   },
   cancelText: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.red500,
   },
 });

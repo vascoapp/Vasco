@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Palette, SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import {
@@ -20,7 +21,7 @@ import {
 } from '../../services';
 import { HoursSavedCard } from './HoursSavedCard';
 import type { ROIInsight, ROIGoal } from '../../types/roi-metrics';
-
+import { useTranslation } from 'react-i18next';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 type TimePeriod = 'week' | 'month' | 'quarter';
@@ -547,7 +548,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   // Header
@@ -568,8 +569,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize + 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   headerRight: {
@@ -585,7 +586,7 @@ const styles = StyleSheet.create({
   periodButton: {
     flex: 1,
     paddingVertical: Spacing.sm,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     backgroundColor: SemanticColors.surfaceSecondary,
   },
@@ -593,12 +594,12 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary,
   },
   periodText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
   },
   periodTextActive: {
-    color: '#fff',
+    color: Palette.white,
   },
   // Content
   content: {
@@ -615,8 +616,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   addGoalButton: {
@@ -625,8 +626,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   addGoalText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.actionPrimary,
   },
   // Hero Section
@@ -640,7 +641,7 @@ const styles = StyleSheet.create({
   heroMetric: {
     flex: 1,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     alignItems: 'center',
     gap: 4,
@@ -650,19 +651,19 @@ const styles = StyleSheet.create({
   heroMetricIcon: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.actionPrimary + '15',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
   },
   heroMetricValue: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 6,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   heroMetricLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     textAlign: 'center',
   },
@@ -672,18 +673,18 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   heroMetricTrendText: {
-    fontSize: 10,
-    fontWeight: '500',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.labelFamily,
   },
   heroMetricBenchmark: {
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
   // ROI Card
   roiCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -697,7 +698,7 @@ const styles = StyleSheet.create({
   roiIcon: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: SemanticColors.feedbackSuccessBg,
     alignItems: 'center',
     justifyContent: 'center',
@@ -706,12 +707,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   roiMultiple: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackSuccess,
   },
   roiLabel: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   roiBreakdown: {
@@ -723,12 +724,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   roiBreakdownLabel: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   roiBreakdownValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   roiTotal: {
@@ -740,19 +741,19 @@ const styles = StyleSheet.create({
     borderTopColor: SemanticColors.borderDefault,
   },
   roiTotalLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   roiTotalValue: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackSuccess,
   },
   // Benchmarks
   benchmarkList: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -767,8 +768,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   benchmarkMetric: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   benchmarkBadge: {
@@ -780,8 +781,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   benchmarkBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   benchmarkBar: {
     height: 8,
@@ -812,12 +813,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   benchmarkYourValue: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.actionPrimary,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   benchmarkAvgValue: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
   // Goals
@@ -826,7 +827,7 @@ const styles = StyleSheet.create({
   },
   goalCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -838,18 +839,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   goalMetric: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   goalStatus: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
   },
   goalStatusText: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   goalProgress: {
     flexDirection: 'row',
@@ -868,8 +869,8 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   goalProgressText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     minWidth: 36,
     textAlign: 'right',
@@ -879,11 +880,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   goalCurrent: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   goalTarget: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   // Insights
@@ -894,7 +895,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -912,12 +913,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   insightTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   insightDescription: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     lineHeight: 16,
   },
@@ -925,8 +926,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   insightImpactValue: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   insightAction: {
     width: 32,
@@ -943,19 +944,19 @@ const styles = StyleSheet.create({
   metricTile: {
     width: '31%',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.sm,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
   metricTileValue: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   metricTileLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textSecondary,
     textAlign: 'center',
     marginTop: 2,
@@ -966,7 +967,7 @@ const styles = StyleSheet.create({
   // Tier Card
   tierCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -987,22 +988,22 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   tierName: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   tierRate: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   tierCount: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   tierRevenue: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.feedbackSuccess,
   },
   tierInsight: {
@@ -1010,12 +1011,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 6,
     backgroundColor: Palette.hermesOrange + '10',
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
   },
   tierInsightText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     lineHeight: 16,
   },

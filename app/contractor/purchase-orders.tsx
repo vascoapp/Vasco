@@ -21,13 +21,13 @@ import { useProcurementAgent, type MaterialNeed } from '../../src/services/procu
 type IconName = keyof typeof Ionicons.glyphMap;
 
 const STATUS_CONFIG: Record<POStatus, { labelKey: string; fallback: string; color: string; icon: IconName }> = {
-  draft: { labelKey: 'purchaseOrders.draft', fallback: 'Concept', color: SemanticColors.textTertiary, icon: 'document-outline' },
-  submitted: { labelKey: 'purchaseOrders.submitted', fallback: 'Verstuurd', color: SemanticColors.feedbackInfo, icon: 'paper-plane-outline' },
-  confirmed: { labelKey: 'purchaseOrders.confirmed', fallback: 'Bevestigd', color: Palette.hermesOrange, icon: 'checkmark-circle-outline' },
-  shipped: { labelKey: 'purchaseOrders.shipped', fallback: 'Onderweg', color: '#a855f7', icon: 'car-outline' },
-  delivered: { labelKey: 'purchaseOrders.delivered', fallback: 'Geleverd', color: SemanticColors.feedbackSuccess, icon: 'cube-outline' },
-  invoiced: { labelKey: 'purchaseOrders.invoiced', fallback: 'Gefactureerd', color: SemanticColors.feedbackInfo, icon: 'receipt-outline' },
-  cancelled: { labelKey: 'purchaseOrders.cancelled', fallback: 'Geannuleerd', color: SemanticColors.feedbackError, icon: 'close-circle-outline' },
+  draft: { labelKey: 'purchaseOrders.draft', fallback: 'Draft', color: SemanticColors.textTertiary, icon: 'document-outline' },
+  submitted: { labelKey: 'purchaseOrders.submitted', fallback: 'Submitted', color: SemanticColors.feedbackInfo, icon: 'paper-plane-outline' },
+  confirmed: { labelKey: 'purchaseOrders.confirmed', fallback: 'Confirmed', color: Palette.hermesOrange, icon: 'checkmark-circle-outline' },
+  shipped: { labelKey: 'purchaseOrders.shipped', fallback: 'Shipped', color: '#a855f7', icon: 'car-outline' },
+  delivered: { labelKey: 'purchaseOrders.delivered', fallback: 'Delivered', color: SemanticColors.feedbackSuccess, icon: 'cube-outline' },
+  invoiced: { labelKey: 'purchaseOrders.invoiced', fallback: 'Invoiced', color: SemanticColors.feedbackInfo, icon: 'receipt-outline' },
+  cancelled: { labelKey: 'purchaseOrders.cancelled', fallback: 'Cancelled', color: SemanticColors.feedbackError, icon: 'close-circle-outline' },
 };
 
 export default function PurchaseOrdersScreen() {

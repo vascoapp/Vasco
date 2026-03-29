@@ -15,7 +15,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { formatCurrency } from '../../i18n/formatting';
+import { useTranslation } from 'react-i18next';
 import {
   useLicenses,
   useCertifications,
@@ -35,6 +37,7 @@ import type { TradeCompliance } from '../../domain/complianceKnowledge';
 type TabType = 'overview' | 'licenses' | 'certifications' | 'insurance' | 'regulatory' | 'requirements';
 
 export function ComplianceCenter() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [selectedLicense, setSelectedLicense] = useState<License | null>(null);
   const [showLicenseModal, setShowLicenseModal] = useState(false);
@@ -57,11 +60,11 @@ export function ComplianceCenter() {
     : undefined;
 
   const tabs: { id: TabType; label: string; icon: string }[] = [
-    { id: 'overview', label: 'Overzicht', icon: 'shield-checkmark' },
-    { id: 'licenses', label: 'Licenties', icon: 'document-text' },
-    { id: 'certifications', label: 'Certificaten', icon: 'ribbon' },
-    { id: 'insurance', label: 'Verzekering', icon: 'umbrella' },
-    { id: 'regulatory', label: 'Regelgeving', icon: 'newspaper' },
+    { id: 'overview', label: t('compliance.overview', 'Overview'), icon: 'shield-checkmark' },
+    { id: 'licenses', label: t('compliance.licenses', 'Licenses'), icon: 'document-text' },
+    { id: 'certifications', label: t('compliance.certifications', 'Certifications'), icon: 'ribbon' },
+    { id: 'insurance', label: t('compliance.insurance', 'Insurance'), icon: 'umbrella' },
+    { id: 'regulatory', label: t('compliance.regulatory', 'Regulatory'), icon: 'newspaper' },
     { id: 'requirements', label: 'Vakvereisten', icon: 'construct' },
   ];
 
@@ -74,10 +77,10 @@ export function ComplianceCenter() {
       <Text style={styles.scoreTitle}>Compliance Score</Text>
       <Text style={styles.scoreSubtitle}>
         {stats.complianceScore >= 90
-          ? 'Uitstekend'
+          ? t('compliance.excellent', 'Excellent')
           : stats.complianceScore >= 70
-          ? 'Goed'
-          : 'Aandacht nodig'}
+          ? t('compliance.good', 'Good')
+          : t('compliance.needsAttention', 'Needs attention')}
       </Text>
     </View>
   );
@@ -180,7 +183,7 @@ export function ComplianceCenter() {
       {expiryCalendar.length === 0 && (
         <View style={styles.emptyCalendar}>
           <Ionicons name="checkmark-circle" size={32} color={SemanticColors.feedbackSuccess} />
-          <Text style={styles.emptyCalendarText}>Geen verlopen in de komende 6 maanden</Text>
+          <Text style={styles.emptyCalendarText}>{t('compliance.noExpirations', 'No expirations in the next 6 months')}</Text>
         </View>
       )}
 
@@ -898,13 +901,13 @@ export function ComplianceCenter() {
 
 function getStatusName(status: string): string {
   const names: Record<string, string> = {
-    valid: 'Geldig',
-    active: 'Actief',
-    expiring_soon: 'Verloopt',
-    expired: 'Verlopen',
-    pending_renewal: 'In verlenging',
-    suspended: 'Opgeschort',
-    cancelled: 'Geannuleerd',
+    valid: 'Valid',
+    active: 'Active',
+    expiring_soon: 'Expiring',
+    expired: 'Expired',
+    pending_renewal: 'Pending renewal',
+    suspended: 'Suspended',
+    cancelled: 'Cancelled',
   };
   return names[status] || status;
 }
@@ -973,10 +976,10 @@ function getCategoryUpdateColor(category: string): string {
 
 function getCategoryUpdateName(category: string): string {
   const names: Record<string, string> = {
-    legislation: 'Wetgeving',
-    standard: 'Norm',
-    guideline: 'Richtlijn',
-    industry_news: 'Nieuws',
+    legislation: 'Legislation',
+    standard: 'Standard',
+    guideline: 'Guideline',
+    industry_news: 'Industry news',
   };
   return names[category] || category;
 }
@@ -1037,12 +1040,12 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
@@ -1056,7 +1059,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
     marginRight: 8,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.surfacePrimary,
     gap: 6,
   },
@@ -1064,9 +1067,9 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary + '15',
   },
   tabLabel: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   activeTabLabel: {
     color: SemanticColors.actionPrimary,
@@ -1090,23 +1093,23 @@ const styles = StyleSheet.create({
   },
   scoreValue: {
     fontSize: 36,
-    fontWeight: '700',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.actionPrimary,
   },
   scoreLabel: {
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.actionPrimary,
     marginLeft: 2,
   },
   scoreTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginTop: 12,
   },
   scoreSubtitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
@@ -1115,7 +1118,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
     backgroundColor: SemanticColors.feedbackWarning + '15',
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     marginBottom: 16,
     gap: 12,
   },
@@ -1126,24 +1129,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   alertsTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   alertsUrgent: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.feedbackError,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   alertsButton: {
     paddingHorizontal: 14,
     paddingVertical: 6,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   alertsButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.actionPrimary,
   },
   statsGrid: {
@@ -1155,26 +1158,26 @@ const styles = StyleSheet.create({
   statCard: {
     width: '47%',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: 16,
     alignItems: 'center',
   },
   statCardValue: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     marginTop: 8,
   },
   statCardLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
   statCardWarning: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.feedbackWarning,
     marginTop: 4,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -1184,14 +1187,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   calendarItem: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 14,
     marginBottom: 10,
   },
@@ -1204,12 +1207,12 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   calendarDay: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 6,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   calendarMonth: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     textTransform: 'uppercase',
   },
@@ -1223,24 +1226,24 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   calendarItemText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   emptyCalendar: {
     alignItems: 'center',
     padding: 24,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   emptyCalendarText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 8,
   },
   alertCard: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     marginBottom: 10,
     overflow: 'hidden',
   },
@@ -1252,17 +1255,17 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   alertTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   alertDescription: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
   alertDue: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.feedbackWarning,
     marginTop: 6,
   },
@@ -1272,7 +1275,7 @@ const styles = StyleSheet.create({
   },
   licenseCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 16,
     marginBottom: 12,
   },
@@ -1285,23 +1288,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   licenseName: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   licenseNumber: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
   licenseStatus: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   licenseStatusText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   licenseDetails: {
     flexDirection: 'row',
@@ -1314,7 +1317,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   licenseDetailText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   requiredFor: {
@@ -1324,11 +1327,11 @@ const styles = StyleSheet.create({
     borderTopColor: SemanticColors.borderDefault,
   },
   requiredForLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   requiredForText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
     marginTop: 2,
   },
@@ -1338,7 +1341,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 16,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: SemanticColors.actionPrimary + '40',
     borderStyle: 'dashed',
@@ -1346,13 +1349,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   addButtonText: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     color: SemanticColors.actionPrimary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   certCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: 14,
     marginBottom: 10,
   },
@@ -1363,7 +1366,7 @@ const styles = StyleSheet.create({
   certIcon: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: RADIUS.full,
     backgroundColor: SemanticColors.actionPrimary + '15',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1371,41 +1374,41 @@ const styles = StyleSheet.create({
   certAvatar: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
   certAvatarText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   certInfo: {
     flex: 1,
     marginLeft: 12,
   },
   certName: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   certHolder: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
   certIssuer: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
   certStatus: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   certStatusText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   certFooter: {
     flexDirection: 'row',
@@ -1416,38 +1419,38 @@ const styles = StyleSheet.create({
     borderTopColor: SemanticColors.borderDefault,
   },
   certExpiry: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   certIssuerSmall: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   insuranceSummary: {
     backgroundColor: SemanticColors.actionPrimary + '10',
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 20,
     alignItems: 'center',
     marginBottom: 16,
   },
   insuranceSummaryTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   insuranceSummaryValue: {
-    fontSize: 32,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize + 4,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.actionPrimary,
     marginTop: 4,
   },
   insuranceSummaryPremium: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
     marginTop: 8,
   },
   insuranceCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 16,
     marginBottom: 12,
   },
@@ -1458,7 +1461,7 @@ const styles = StyleSheet.create({
   insuranceIcon: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1467,23 +1470,23 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   insuranceName: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   insuranceProvider: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
   insuranceStatus: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   insuranceStatusText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   insuranceDetails: {
     flexDirection: 'row',
@@ -1497,12 +1500,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   insuranceDetailLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   insuranceDetailValue: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginTop: 2,
   },
@@ -1513,7 +1516,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   insuranceExpiry: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   autoRenewBadge: {
@@ -1522,9 +1525,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   autoRenewText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.feedbackSuccess,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   regulatoryFilters: {
     flexDirection: 'row',
@@ -1535,23 +1538,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
   },
   filterChipActive: {
     backgroundColor: SemanticColors.actionPrimary,
   },
   filterChipText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   filterChipTextActive: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: Palette.white,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   updateCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 12,
   },
@@ -1568,24 +1571,24 @@ const styles = StyleSheet.create({
   updateCategory: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   updateCategoryText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   updateDate: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   updateTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 6,
   },
   updateSummary: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     lineHeight: 20,
   },
@@ -1596,7 +1599,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   updateSource: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   updateActions: {
@@ -1611,12 +1614,12 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackWarning + '15',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   actionRequiredText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.feedbackWarning,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   modalContainer: {
     flex: 1,
@@ -1631,8 +1634,8 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   modalTitle: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize + 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   modalContent: {
@@ -1646,31 +1649,31 @@ const styles = StyleSheet.create({
   licenseProfileIcon: {
     width: 80,
     height: 80,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
   },
   licenseProfileName: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 6,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     textAlign: 'center',
   },
   licenseProfileNumber: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
   detailSection: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 16,
   },
   detailSectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
@@ -1682,12 +1685,12 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   detailValue: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
   },
   requiredForItem: {
@@ -1697,7 +1700,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   requiredForItemText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   modalActions: {
@@ -1709,12 +1712,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     gap: 8,
   },
   primaryActionText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.white,
   },
   secondaryAction: {
@@ -1723,17 +1726,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: SemanticColors.actionPrimary + '15',
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     gap: 8,
   },
   secondaryActionText: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.actionPrimary,
   },
   updateModalTitle: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 6,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
@@ -1744,7 +1747,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   updateMetaText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   effectiveDate: {
@@ -1754,17 +1757,17 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary + '15',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     marginBottom: 16,
     alignSelf: 'flex-start',
   },
   effectiveDateText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.actionPrimary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   updateFullSummary: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     color: SemanticColors.textPrimary,
     lineHeight: 24,
     marginBottom: 20,
@@ -1773,8 +1776,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   affectedAreasTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 10,
   },
@@ -1787,15 +1790,15 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
   },
   affectedAreaTagText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
   },
   actionRequiredSection: {
     backgroundColor: SemanticColors.feedbackWarning + '15',
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: 16,
     borderWidth: 1,
     borderColor: SemanticColors.feedbackWarning + '40',
@@ -1807,18 +1810,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   actionRequiredTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.feedbackWarning,
   },
   actionRequiredDescription: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
     lineHeight: 22,
   },
   actionDeadline: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.feedbackError,
     marginTop: 10,
   },
@@ -1830,20 +1833,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     marginRight: 8,
   },
   tradeChipActive: {
     backgroundColor: SemanticColors.actionPrimary,
   },
   tradeChipText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   tradeChipTextActive: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: Palette.white,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   emptyTrade: {
     alignItems: 'center',
@@ -1851,28 +1854,28 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emptyTradeTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   emptyTradeSubtitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
   },
   reqCount: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     overflow: 'hidden',
   },
   reqCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: 14,
     marginBottom: 10,
   },
@@ -1885,19 +1888,19 @@ const styles = StyleSheet.create({
   reqLevelBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   reqLevelText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   reqTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   reqDescription: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     lineHeight: 20,
     marginTop: 8,
@@ -1909,17 +1912,17 @@ const styles = StyleSheet.create({
     marginTop: 8,
     backgroundColor: SemanticColors.feedbackInfo + '10',
     padding: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   reqNotesText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.feedbackInfo,
     lineHeight: 18,
   },
   evidenceCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 14,
     marginBottom: 8,
   },
@@ -1930,12 +1933,12 @@ const styles = StyleSheet.create({
   },
   evidenceLabel: {
     flex: 1,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
   },
   evidenceDesc: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 6,
     marginLeft: 28,
@@ -1947,8 +1950,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   requiredBadgeText: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.feedbackError,
   },
   checklistRow: {
@@ -1956,19 +1959,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     paddingVertical: 12,
     paddingHorizontal: 14,
     marginBottom: 6,
   },
   checklistLabel: {
     flex: 1,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   registryCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: 14,
     marginBottom: 10,
   },
@@ -1979,12 +1982,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   registryLabel: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   registryDesc: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     lineHeight: 18,
     marginBottom: 8,
@@ -1995,7 +1998,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   registryField: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     backgroundColor: SemanticColors.surfaceBackground,
     paddingHorizontal: 8,

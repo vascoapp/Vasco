@@ -6,10 +6,11 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Alert, TextInput, Refres
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
-import { PAGE_BG } from '../../src/theme/tabStyles';
+import { PAGE_BG, TYPE } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useQuoteTemplates, TEMPLATE_CATEGORIES, type QuoteTemplate, type QuoteTemplateItem, type TemplateCategory } from '../../src/services/quoteTemplateService';
 import { useAppState } from '../../src/state/AppState';
+import { useTranslation } from 'react-i18next';
 import { getVATRate } from '../../src/constants/taxRates';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
@@ -18,6 +19,7 @@ type IconName = keyof typeof Ionicons.glyphMap;
 
 export default function QuoteTemplatesScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { templates, save, use, remove } = useQuoteTemplates();
   const { businessProfile } = useAppState();
   const vatPct = Math.round(getVATRate(businessProfile.country ?? 'NL') * 100);
@@ -67,8 +69,8 @@ export default function QuoteTemplatesScreen() {
 
   const handleDelete = (template: QuoteTemplate) => {
     Alert.alert('Sjabloon verwijderen', `"${template.name}" verwijderen?`, [
-      { text: 'Annuleren', style: 'cancel' },
-      { text: 'Verwijderen', style: 'destructive', onPress: () => remove(template.id) },
+      { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+      { text: t('common.delete', 'Delete'), style: 'destructive', onPress: () => remove(template.id) },
     ]);
   };
 
@@ -107,7 +109,7 @@ export default function QuoteTemplatesScreen() {
             <Ionicons
               name={cat.icon as IconName}
               size={14}
-              color={selectedCategory === cat.id ? '#fff' : SemanticColors.textSecondary}
+              color={selectedCategory === cat.id ? Palette.white : SemanticColors.textSecondary}
             />
             <Text style={[styles.categoryText, selectedCategory === cat.id && styles.categoryTextActive]}>
               {cat.label}
@@ -163,7 +165,7 @@ export default function QuoteTemplatesScreen() {
             style={[styles.createBtn, (!newName.trim() || !newItemDesc.trim() || !newItemPrice.trim()) && { opacity: 0.5 }]}
             onPress={handleCreate}
           >
-            <Ionicons name="add-circle-outline" size={18} color="#fff" />
+            <Ionicons name="add-circle-outline" size={18} color={Palette.white} />
             <Text style={styles.createBtnText}>Toevoegen</Text>
           </Pressable>
         </View>
@@ -234,7 +236,7 @@ export default function QuoteTemplatesScreen() {
 
                     <View style={styles.expandedActions}>
                       <Pressable style={styles.useButton} onPress={() => handleUseTemplate(template)}>
-                        <Ionicons name="copy-outline" size={16} color="#fff" />
+                        <Ionicons name="copy-outline" size={16} color={Palette.white} />
                         <Text style={styles.useButtonText}>Gebruik sjabloon</Text>
                       </Pressable>
                       <Pressable style={styles.deleteButton} onPress={() => handleDelete(template)}>
@@ -258,21 +260,21 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PAGE_BG },
   header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingHorizontal: SafeArea.side, paddingTop: SafeArea.top, paddingBottom: Spacing.sm },
   backButton: { padding: 4 },
-  headerTitle: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  headerTitle: { fontSize: 24, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
   headerSubtitle: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 2 },
   categoryBar: { maxHeight: 40, marginBottom: Spacing.sm },
   categoryBarContent: { paddingHorizontal: SafeArea.side, gap: 6 },
   categoryChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: SemanticColors.surfacePrimary, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   categoryChipActive: { backgroundColor: Palette.hermesOrange },
-  categoryText: { fontSize: 12, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textSecondary },
-  categoryTextActive: { color: '#fff' },
+  categoryText: { fontSize: 12, fontFamily: TYPE.sectionFamily, color: SemanticColors.textSecondary },
+  categoryTextActive: { color: Palette.white },
   scrollView: { flex: 1, paddingHorizontal: SafeArea.side },
   emptyState: { alignItems: 'center', paddingVertical: Spacing.xl, gap: Spacing.sm },
   emptyText: { fontSize: 14, color: SemanticColors.textTertiary },
   templateCard: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, backgroundColor: SemanticColors.surfacePrimary, borderRadius: 16, padding: Spacing.sm, marginBottom: 6 },
   templateIcon: { width: 44, height: 44, borderRadius: 16, backgroundColor: Palette.hermesOrange + '12', alignItems: 'center', justifyContent: 'center' },
   templateInfo: { flex: 1 },
-  templateName: { fontSize: 15, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textPrimary },
+  templateName: { fontSize: 15, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
   templateMeta: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 2 },
   usageBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
   usageText: { fontSize: 11, color: SemanticColors.textTertiary },
@@ -281,13 +283,13 @@ const styles = StyleSheet.create({
   itemRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 3, borderBottomWidth: 1, borderBottomColor: SemanticColors.borderDefault },
   itemDesc: { flex: 1, fontSize: 12, color: SemanticColors.textPrimary },
   itemQty: { fontSize: 12, color: SemanticColors.textSecondary, marginHorizontal: Spacing.sm },
-  itemPrice: { fontSize: 12, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textPrimary },
+  itemPrice: { fontSize: 12, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
   expandedMeta: { gap: 4, marginTop: 4 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   metaText: { fontSize: 12, color: SemanticColors.textSecondary },
   expandedActions: { flexDirection: 'row', gap: 8, marginTop: 6 },
   useButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: Palette.hermesOrange, borderRadius: 8, paddingVertical: 10 },
-  useButtonText: { fontSize: 14, fontFamily: 'Manrope_600SemiBold', color: '#fff' },
+  useButtonText: { fontSize: 14, fontFamily: TYPE.sectionFamily, color: Palette.white },
   deleteButton: { width: 40, height: 40, borderRadius: 8, backgroundColor: SemanticColors.feedbackError + '10', alignItems: 'center', justifyContent: 'center' },
   addBtn: { padding: 4 },
   createCard: {
@@ -295,11 +297,11 @@ const styles = StyleSheet.create({
     gap: 10, marginHorizontal: SafeArea.side, marginBottom: Spacing.sm,
     borderWidth: 1, borderColor: Palette.hermesOrange + '30',
   },
-  createTitle: { fontSize: 16, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
-  inputLabel: { fontSize: 12, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textSecondary, marginTop: 2 },
+  createTitle: { fontSize: 16, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  inputLabel: { fontSize: 12, fontFamily: TYPE.sectionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
   input: {
     backgroundColor: SemanticColors.surfaceBackground, borderRadius: 8, paddingHorizontal: 12,
-    paddingVertical: 10, fontSize: 14, fontFamily: 'Inter_400Regular', color: SemanticColors.textPrimary,
+    paddingVertical: 10, fontSize: 14, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary,
     borderWidth: 1, borderColor: SemanticColors.borderDefault,
   },
   catChipRow: { flexDirection: 'row', gap: 6 },
@@ -308,11 +310,11 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfaceBackground, borderWidth: 1, borderColor: SemanticColors.borderDefault,
   },
   catChipActive: { backgroundColor: Palette.hermesOrange, borderColor: Palette.hermesOrange },
-  catChipText: { fontSize: 12, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textSecondary },
-  catChipTextActive: { color: '#fff' },
+  catChipText: { fontSize: 12, fontFamily: TYPE.sectionFamily, color: SemanticColors.textSecondary },
+  catChipTextActive: { color: Palette.white },
   createBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     backgroundColor: Palette.hermesOrange, borderRadius: 12, paddingVertical: 12, marginTop: 2,
   },
-  createBtnText: { fontSize: 15, fontFamily: 'Manrope_600SemiBold', color: '#fff' },
+  createBtnText: { fontSize: 15, fontFamily: TYPE.sectionFamily, color: Palette.white },
 });

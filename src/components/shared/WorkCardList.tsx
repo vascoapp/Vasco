@@ -5,7 +5,7 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
-
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 export interface WorkCard {
   id: string;
   time: string;
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: 12,
     borderWidth: 1,
     borderColor: SemanticColors.borderMuted,
@@ -133,8 +133,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   timeText: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     fontVariant: ['tabular-nums'],
   },
@@ -143,13 +143,13 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   jobType: {
-    fontSize: 10,
-    fontWeight: '500',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.labelFamily,
   },
   rightCol: {
     alignItems: 'flex-end',
@@ -162,11 +162,11 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange + '12',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   workerChipText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     maxWidth: 80,
   },
   unassignedChip: {
@@ -176,11 +176,11 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackWarningBg,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   unassignedChipText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.feedbackWarning,
   },
   statusRow: {
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   statusText: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
 });

@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import type { DriftAlert, DriftSeverity } from '../../types/supplier-reliability';
 
@@ -178,7 +179,7 @@ export function SupplierAlertChip({ alert, onPress }: SupplierAlertChipProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     padding: Spacing.md,
     gap: Spacing.sm,
@@ -197,8 +198,8 @@ const styles = StyleSheet.create({
   },
   supplierName: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   severityBadge: {
     paddingHorizontal: 6,
@@ -207,12 +208,12 @@ const styles = StyleSheet.create({
   },
   severityText: {
     color: Palette.white,
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   message: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     lineHeight: 18,
   },
   metricsRow: {
@@ -223,20 +224,20 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   metricValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   metricChange: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   recommendation: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontStyle: 'italic',
   },
   actions: {
@@ -257,8 +258,8 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     color: SemanticColors.actionPrimary,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
   },
   dismissButton: {
     padding: 4,
@@ -270,13 +271,13 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     maxWidth: '100%',
   },
   chipText: {
-    fontSize: 11,
-    fontWeight: '500',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.labelFamily,
     flex: 1,
   },
 });

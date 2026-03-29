@@ -4,6 +4,7 @@
 
 import { View, Text, StyleSheet } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
+import { TYPE } from '../../theme/tabStyles';
 
 export interface AgingBucket {
   label: string;
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
   },
   legendAmount: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     fontVariant: ['tabular-nums'],
   },

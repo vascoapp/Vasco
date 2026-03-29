@@ -16,6 +16,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { formatCurrency } from '../../i18n/formatting';
 import {
   useWarranties,
@@ -497,14 +498,14 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   searchButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     backgroundColor: SemanticColors.surfaceBackground,
     justifyContent: 'center',
     alignItems: 'center',
@@ -523,7 +524,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.surfaceBackground,
     gap: 6,
   },
@@ -531,8 +532,8 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary + '15',
   },
   tabText: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textSecondary,
   },
   tabTextActive: {
@@ -552,7 +553,7 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 14,
     alignItems: 'center',
     borderWidth: 1,
@@ -561,18 +562,18 @@ const styles = StyleSheet.create({
   statIconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
   },
   statValue: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
     textAlign: 'center',
@@ -583,7 +584,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: SemanticColors.textSecondary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
   },
   emptyState: {
     alignItems: 'center',
@@ -591,12 +592,12 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     marginTop: 12,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     color: SemanticColors.textSecondary,
   },
   warrantyCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -612,23 +613,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   warrantyProduct: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize + 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   warrantyBrand: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
   statusBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   statusText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   warrantyDetails: {
     gap: 6,
@@ -639,7 +640,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   warrantyDetailText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   expandedContent: {
@@ -651,7 +652,7 @@ const styles = StyleSheet.create({
   warrantyDates: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfaceBackground,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 12,
     marginBottom: 12,
   },
@@ -665,13 +666,13 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
   dateLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     marginBottom: 4,
   },
   dateValue: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   serialSection: {
@@ -680,16 +681,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     backgroundColor: SemanticColors.surfaceBackground,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     marginBottom: 12,
   },
   serialLabel: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   serialValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
     fontFamily: 'monospace',
   },
@@ -697,8 +697,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   coverageTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
@@ -709,7 +709,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   coverageText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   warrantyActions: {
@@ -723,13 +723,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: SemanticColors.actionPrimary + '15',
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     gap: 6,
   },
   actionButtonText: {
     color: SemanticColors.actionPrimary,
-    fontWeight: '600',
-    fontSize: 14,
+    fontFamily: TYPE.titleFamily,
+    fontSize: TYPE.bodySize - 1,
   },
   primaryButton: {
     backgroundColor: SemanticColors.actionPrimary,
@@ -741,7 +741,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Palette.orange50,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -752,12 +752,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   alertTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.orange700,
   },
   alertText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: Palette.orange600,
     marginTop: 2,
   },
@@ -768,8 +768,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   claimsTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   newClaimButton: {
@@ -778,18 +778,18 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     gap: 4,
   },
   newClaimButtonText: {
     color: Palette.white,
-    fontWeight: '600',
-    fontSize: 14,
+    fontFamily: TYPE.titleFamily,
+    fontSize: TYPE.bodySize - 1,
   },
   claimsStats: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -800,12 +800,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   claimStatValue: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   claimStatLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -816,7 +816,7 @@ const styles = StyleSheet.create({
   },
   claimCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -832,14 +832,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   claimNumber: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
     color: SemanticColors.actionPrimary,
     fontFamily: 'monospace',
   },
   claimProduct: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginTop: 4,
   },
@@ -853,7 +852,7 @@ const styles = StyleSheet.create({
   },
   claimDetailText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   claimValue: {
@@ -866,12 +865,12 @@ const styles = StyleSheet.create({
     borderTopColor: SemanticColors.borderDefault,
   },
   claimValueLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   claimValueAmount: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
 });

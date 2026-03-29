@@ -1,20 +1,131 @@
 /**
- * Invoice PDF Service — generates a branded Dutch PDF invoice
- * and shares it via the system share sheet.
- * Uses expo-print + expo-sharing (same pattern as budgetPdfService).
+ * Invoice PDF Service — pro-grade multilingual invoice template
+ * Generates branded PDF invoices with country-specific compliance fields.
+ * Uses expo-print + expo-sharing.
+ *
+ * Design: Stripe/Linear-inspired — clean minimal, generous whitespace,
+ * strong typographic hierarchy, Hermes Orange accent.
  */
 
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import type { AutoInvoice } from './invoiceAutomationService';
 import { DEMO_MODE } from '../config/demo';
+import type { Country } from '../context/AuthContext';
 
-// ── Number formatting (Dutch) ──────────────────────────────
+// ── Number formatting ────────────────────────────────────
 
-const fmt = (n: number) =>
-  n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = (n: number, locale?: string) =>
+  n.toLocaleString(locale || 'en', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-// ── HTML Template ──────────────────────────────────────────
+const getCurrencySymbol = (country?: Country): string =>
+  country === 'UK' ? '£' : '€';
+
+// ── Multilingual labels ──────────────────────────────────
+
+interface DocLabels {
+  title: string;
+  invoiceNumber: string;
+  from: string;
+  to: string;
+  issueDate: string;
+  dueDate: string;
+  description: string;
+  quantity: string;
+  unitPrice: string;
+  vat: string;
+  amount: string;
+  subtotal: string;
+  vatAmount: string;
+  total: string;
+  paymentInfo: string;
+  paymentInstruction: string;
+  paymentReference: string;
+  payOnline: string;
+  poweredBy: string;
+  status: Record<string, string>;
+  bankDetails: string;
+}
+
+const LABELS: Record<string, DocLabels> = {
+  en: {
+    title: 'Invoice', invoiceNumber: 'Invoice No.', from: 'From', to: 'Bill To',
+    issueDate: 'Issue Date', dueDate: 'Due Date',
+    description: 'Description', quantity: 'Qty', unitPrice: 'Price', vat: 'VAT', amount: 'Amount',
+    subtotal: 'Subtotal', vatAmount: 'VAT', total: 'Total Due',
+    paymentInfo: 'Payment Information', paymentInstruction: 'Please pay within the due date.',
+    paymentReference: 'Reference', payOnline: 'Pay Online', poweredBy: 'Powered by Vasco',
+    status: { draft: 'DRAFT', sent: 'SENT', paid: 'PAID', overdue: 'OVERDUE' },
+    bankDetails: 'Bank Details',
+  },
+  nl: {
+    title: 'Factuur', invoiceNumber: 'Factuurnr.', from: 'Van', to: 'Aan',
+    issueDate: 'Factuurdatum', dueDate: 'Vervaldatum',
+    description: 'Omschrijving', quantity: 'Aantal', unitPrice: 'Prijs', vat: 'BTW', amount: 'Bedrag',
+    subtotal: 'Subtotaal', vatAmount: 'BTW', total: 'Totaal',
+    paymentInfo: 'Betalingsinformatie', paymentInstruction: 'Gelieve binnen de vervaldatum te betalen.',
+    paymentReference: 'Referentie', payOnline: 'Betaal Online', poweredBy: 'Mogelijk gemaakt door Vasco',
+    status: { draft: 'CONCEPT', sent: 'VERZONDEN', paid: 'BETAALD', overdue: 'VERLOPEN' },
+    bankDetails: 'Bankgegevens',
+  },
+  de: {
+    title: 'Rechnung', invoiceNumber: 'Rechnungsnr.', from: 'Von', to: 'An',
+    issueDate: 'Rechnungsdatum', dueDate: 'Falligkeitsdatum',
+    description: 'Beschreibung', quantity: 'Menge', unitPrice: 'Preis', vat: 'USt', amount: 'Betrag',
+    subtotal: 'Zwischensumme', vatAmount: 'USt', total: 'Gesamtbetrag',
+    paymentInfo: 'Zahlungsinformationen', paymentInstruction: 'Bitte zahlen Sie bis zum Falligkeitsdatum.',
+    paymentReference: 'Referenz', payOnline: 'Online Bezahlen', poweredBy: 'Betrieben von Vasco',
+    status: { draft: 'ENTWURF', sent: 'GESENDET', paid: 'BEZAHLT', overdue: 'UBERFÄLLIG' },
+    bankDetails: 'Bankverbindung',
+  },
+  fr: {
+    title: 'Facture', invoiceNumber: 'Facture n°', from: 'De', to: 'A',
+    issueDate: 'Date de facture', dueDate: 'Date d\'echeance',
+    description: 'Description', quantity: 'Qte', unitPrice: 'Prix', vat: 'TVA', amount: 'Montant',
+    subtotal: 'Sous-total', vatAmount: 'TVA', total: 'Total TTC',
+    paymentInfo: 'Informations de paiement', paymentInstruction: 'Merci de regler avant la date d\'echeance.',
+    paymentReference: 'Reference', payOnline: 'Payer en Ligne', poweredBy: 'Propulse par Vasco',
+    status: { draft: 'BROUILLON', sent: 'ENVOYEE', paid: 'PAYEE', overdue: 'EN RETARD' },
+    bankDetails: 'Coordonnees bancaires',
+  },
+  es: {
+    title: 'Factura', invoiceNumber: 'Factura n°', from: 'De', to: 'Para',
+    issueDate: 'Fecha de factura', dueDate: 'Fecha de vencimiento',
+    description: 'Descripcion', quantity: 'Cant.', unitPrice: 'Precio', vat: 'IVA', amount: 'Importe',
+    subtotal: 'Subtotal', vatAmount: 'IVA', total: 'Total',
+    paymentInfo: 'Informacion de pago', paymentInstruction: 'Por favor pague antes de la fecha de vencimiento.',
+    paymentReference: 'Referencia', payOnline: 'Pagar en Linea', poweredBy: 'Desarrollado por Vasco',
+    status: { draft: 'BORRADOR', sent: 'ENVIADA', paid: 'PAGADA', overdue: 'VENCIDA' },
+    bankDetails: 'Datos bancarios',
+  },
+  it: {
+    title: 'Fattura', invoiceNumber: 'Fattura n°', from: 'Da', to: 'A',
+    issueDate: 'Data fattura', dueDate: 'Data di scadenza',
+    description: 'Descrizione', quantity: 'Qta', unitPrice: 'Prezzo', vat: 'IVA', amount: 'Importo',
+    subtotal: 'Subtotale', vatAmount: 'IVA', total: 'Totale',
+    paymentInfo: 'Informazioni di pagamento', paymentInstruction: 'Si prega di pagare entro la data di scadenza.',
+    paymentReference: 'Riferimento', payOnline: 'Paga Online', poweredBy: 'Offerto da Vasco',
+    status: { draft: 'BOZZA', sent: 'INVIATA', paid: 'PAGATA', overdue: 'SCADUTA' },
+    bankDetails: 'Coordinate bancarie',
+  },
+};
+
+function getLabels(lang?: string): DocLabels {
+  return LABELS[lang || 'en'] || LABELS.en;
+}
+
+// ── Status colors ────────────────────────────────────────
+
+function statusColor(status: string): string {
+  switch (status) {
+    case 'paid': return '#10B981';
+    case 'overdue': return '#EF4444';
+    case 'sent': return '#3B82F6';
+    default: return '#9CA3AF';
+  }
+}
+
+// ── HTML Template ────────────────────────────────────────
 
 function buildInvoiceHtml(
   invoice: AutoInvoice,
@@ -23,174 +134,241 @@ function buildInvoiceHtml(
   kvkNumber: string,
   vatNumber: string,
   paymentUrl?: string,
+  language?: string,
+  country?: Country,
+  iban?: string,
+  showPoweredBy?: boolean,
+  insuranceRef?: string,
 ): string {
-  const issueDate = invoice.issueDate.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-  const dueDate = invoice.dueDate.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const L = getLabels(language);
+  const curr = getCurrencySymbol(country);
+  const locale = language || 'en';
 
-  const lineItemRows = invoice.lineItems
-    .map(
-      (item) => `
+  const issueDate = invoice.issueDate.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
+  const dueDate = invoice.dueDate.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const lineItemRows = invoice.lineItems.map(item => `
     <tr>
-      <td>${item.description}</td>
-      <td style="text-align:center">${item.quantity}</td>
-      <td style="text-align:right">\u20AC${fmt(item.unitPrice)}</td>
-      <td style="text-align:center">${item.vatRate}%</td>
-      <td style="text-align:right">\u20AC${fmt(item.quantity * item.unitPrice)}</td>
-    </tr>`,
-    )
+      <td class="item-desc">${item.description}</td>
+      <td class="item-num">${item.quantity}</td>
+      <td class="item-num">${curr}${fmt(item.unitPrice, locale)}</td>
+      <td class="item-num">${item.vatRate}%</td>
+      <td class="item-num item-total">${curr}${fmt(item.quantity * item.unitPrice, locale)}</td>
+    </tr>`).join('\n');
+
+  const statusLabel = L.status[invoice.status] || L.status.draft;
+  const sColor = statusColor(invoice.status);
+
+  // VAT breakdown by rate
+  const vatByRate = new Map<number, number>();
+  invoice.lineItems.forEach(li => {
+    const vatAmt = li.quantity * li.unitPrice * li.vatRate / 100;
+    vatByRate.set(li.vatRate, (vatByRate.get(li.vatRate) ?? 0) + vatAmt);
+  });
+  const vatRows = Array.from(vatByRate.entries())
+    .sort((a, b) => a[0] - b[0])
+    .map(([rate, amount]) => `<div class="summary-row"><span>${L.vatAmount} ${rate}%</span><span>${curr}${fmt(amount, locale)}</span></div>`)
     .join('\n');
 
-  const statusLabel = (() => {
-    switch (invoice.status) {
-      case 'paid': return 'BETAALD';
-      case 'overdue': return 'VERLOPEN';
-      case 'sent': return 'VERZONDEN';
-      default: return 'CONCEPT';
-    }
-  })();
-
-  const statusColor = (() => {
-    switch (invoice.status) {
-      case 'paid': return '#34C759';
-      case 'overdue': return '#FF3B30';
-      case 'sent': return '#007AFF';
-      default: return '#999';
-    }
-  })();
-
   return `<!DOCTYPE html>
-<html lang="nl">
+<html lang="${language || 'en'}">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a1a; padding: 40px; font-size: 13px; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; border-bottom: 3px solid #E35205; padding-bottom: 20px; }
-    .header h1 { font-size: 28px; font-weight: 700; color: #1a1a1a; }
-    .header .invoice-number { font-size: 16px; color: #E35205; font-weight: 600; margin-top: 4px; }
-    .header .status { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #fff; background: ${statusColor}; }
-    .addresses { display: flex; justify-content: space-between; margin-bottom: 32px; gap: 40px; }
-    .address-block { flex: 1; }
-    .address-block .label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #999; margin-bottom: 6px; }
-    .address-block .name { font-size: 15px; font-weight: 600; color: #1a1a1a; }
-    .address-block .detail { font-size: 13px; color: #666; margin-top: 2px; }
-    .dates { display: flex; gap: 32px; margin-bottom: 32px; }
-    .date-item .label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #999; }
-    .date-item .value { font-size: 14px; font-weight: 600; margin-top: 2px; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-    th { background: #f5f5f3; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #666; text-align: left; padding: 10px 12px; }
-    td { padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 13px; }
-    tr:last-child td { border-bottom: none; }
-    .totals { display: flex; justify-content: flex-end; margin-bottom: 32px; }
-    .totals-table { width: 280px; }
-    .totals-table .row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
-    .totals-table .row.total { border-top: 2px solid #1a1a1a; padding-top: 10px; margin-top: 4px; font-size: 18px; font-weight: 700; }
-    .payment-info { background: #f8f8f6; border-radius: 8px; padding: 20px; margin-bottom: 24px; }
-    .payment-info h3 { font-size: 13px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; }
-    .payment-info .detail { font-size: 13px; color: #1a1a1a; margin-top: 4px; }
-    .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; text-align: center; font-size: 11px; color: #999; }
-    .accent { color: #E35205; }
-    .demo-watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg); font-size: 100px; font-weight: 900; color: rgba(227, 82, 5, 0.07); pointer-events: none; z-index: 0; letter-spacing: 20px; }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+  @page { margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: #111827; background: #fff; padding: 48px 52px; font-size: 13px; line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  .doc-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding-bottom: 28px; border-bottom: 2px solid #111827; margin-bottom: 32px;
+  }
+  .brand-block {}
+  .brand-mark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; background: #E35205; border-radius: 10px;
+    color: #fff; font-size: 20px; font-weight: 800; margin-bottom: 8px;
+  }
+  .brand-name { font-size: 16px; font-weight: 700; color: #111827; }
+  .brand-address { font-size: 11px; color: #6B7280; margin-top: 2px; }
+  .doc-title-block { text-align: right; }
+  .doc-title { font-size: 32px; font-weight: 800; color: #111827; letter-spacing: -0.5px; text-transform: uppercase; }
+  .doc-number { font-size: 14px; font-weight: 600; color: #E35205; margin-top: 4px; }
+  .doc-status {
+    display: inline-block; margin-top: 8px; padding: 3px 14px; border-radius: 4px;
+    font-size: 10px; font-weight: 800; letter-spacing: 1px; color: #fff; background: ${sColor};
+  }
+
+  /* ── Addresses ── */
+  .addresses { display: flex; gap: 48px; margin-bottom: 28px; }
+  .addr-block { flex: 1; }
+  .addr-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #9CA3AF; margin-bottom: 6px; }
+  .addr-name { font-size: 15px; font-weight: 700; color: #111827; }
+  .addr-detail { font-size: 12px; color: #6B7280; margin-top: 1px; }
+
+  /* ── Date strip ── */
+  .date-strip {
+    display: flex; gap: 40px; margin-bottom: 28px; padding: 14px 20px;
+    background: #F9FAFB; border-radius: 8px;
+  }
+  .date-item {}
+  .date-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #9CA3AF; }
+  .date-value { font-size: 13px; font-weight: 600; color: #111827; margin-top: 2px; }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 28px; }
+  th {
+    text-align: left; padding: 10px 12px; font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px; color: #9CA3AF;
+    border-bottom: 2px solid #E5E7EB;
+  }
+  th.num { text-align: right; }
+  td { padding: 12px; border-bottom: 1px solid #F3F4F6; font-size: 13px; }
+  .item-desc { color: #111827; font-weight: 500; }
+  .item-num { text-align: right; color: #374151; font-variant-numeric: tabular-nums; }
+  .item-total { font-weight: 600; color: #111827; }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── Summary ── */
+  .summary { display: flex; justify-content: flex-end; margin-bottom: 32px; }
+  .summary-table { width: 260px; }
+  .summary-row {
+    display: flex; justify-content: space-between; padding: 5px 0;
+    font-size: 13px; color: #374151;
+  }
+  .summary-total {
+    display: flex; justify-content: space-between; padding: 12px 0 0;
+    margin-top: 6px; border-top: 2px solid #111827;
+    font-size: 20px; font-weight: 800; color: #111827;
+  }
+
+  /* ── Payment ── */
+  .payment-box {
+    background: #F9FAFB; border-radius: 10px; padding: 20px 24px; margin-bottom: 24px;
+  }
+  .payment-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #9CA3AF; margin-bottom: 10px; }
+  .payment-detail { font-size: 13px; color: #374151; margin-top: 4px; }
+  .payment-detail strong { color: #111827; }
+  .pay-btn {
+    display: inline-block; margin-top: 16px; padding: 12px 36px;
+    background: #E35205; color: #fff; border-radius: 8px;
+    text-decoration: none; font-weight: 700; font-size: 14px; letter-spacing: 0.3px;
+  }
+
+  /* ── Footer ── */
+  .doc-footer {
+    margin-top: 40px; padding-top: 16px; border-top: 1px solid #E5E7EB;
+    display: flex; justify-content: space-between; font-size: 10px; color: #9CA3AF;
+  }
+  .doc-footer a { color: #E35205; text-decoration: none; font-weight: 600; }
+
+  /* ── Insurance (FR) ── */
+  .insurance-ref { font-size: 11px; color: #6B7280; margin-top: 4px; }
+
+  .demo-watermark {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg);
+    font-size: 100px; font-weight: 900; color: rgba(227, 82, 5, 0.06);
+    pointer-events: none; z-index: 0; letter-spacing: 20px;
+  }
+</style>
 </head>
 <body>
-  <div class="header">
-    <div>
-      <h1>Factuur</h1>
-      <div class="invoice-number">${invoice.invoiceNumber}</div>
-    </div>
-    <div style="text-align:right">
-      <span class="status">${statusLabel}</span>
-    </div>
-  </div>
 
-  <div class="addresses">
-    <div class="address-block">
-      <div class="label">Van</div>
-      <div class="name">${businessName || 'Uw Bedrijf'}</div>
-      <div class="detail">${businessAddress || ''}</div>
-      ${kvkNumber ? `<div class="detail">KvK: ${kvkNumber}</div>` : ''}
-      ${vatNumber ? `<div class="detail">BTW: ${vatNumber}</div>` : ''}
-    </div>
-    <div class="address-block">
-      <div class="label">Aan</div>
-      <div class="name">${invoice.customerName}</div>
-      <div class="detail">${invoice.customerAddress}</div>
-      ${invoice.customerEmail ? `<div class="detail">${invoice.customerEmail}</div>` : ''}
-    </div>
+<!-- Header -->
+<div class="doc-header">
+  <div class="brand-block">
+    <div class="brand-mark">V</div>
+    <div class="brand-name">${businessName || 'Your Business'}</div>
+    <div class="brand-address">${businessAddress || ''}</div>
+    ${kvkNumber ? `<div class="brand-address">${country === 'DE' ? 'HRB' : country === 'FR' ? 'SIRET' : country === 'ES' ? 'NIF' : country === 'IT' ? 'P.IVA' : 'KvK'}: ${kvkNumber}</div>` : ''}
+    ${vatNumber ? `<div class="brand-address">${L.vat}: ${vatNumber}</div>` : ''}
+    ${insuranceRef ? `<div class="insurance-ref">${insuranceRef}</div>` : ''}
   </div>
-
-  <div class="dates">
-    <div class="date-item">
-      <div class="label">Factuurdatum</div>
-      <div class="value">${issueDate}</div>
-    </div>
-    <div class="date-item">
-      <div class="label">Vervaldatum</div>
-      <div class="value">${dueDate}</div>
-    </div>
+  <div class="doc-title-block">
+    <div class="doc-title">${L.title}</div>
+    <div class="doc-number">${invoice.invoiceNumber}</div>
+    <div class="doc-status">${statusLabel}</div>
   </div>
+</div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Omschrijving</th>
-        <th style="text-align:center">Aantal</th>
-        <th style="text-align:right">Prijs</th>
-        <th style="text-align:center">BTW</th>
-        <th style="text-align:right">Bedrag</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${lineItemRows}
-    </tbody>
-  </table>
-
-  <div class="totals">
-    <div class="totals-table">
-      <div class="row">
-        <span>Subtotaal</span>
-        <span>\u20AC${fmt(invoice.subtotal)}</span>
-      </div>
-      ${(() => {
-        // Group VAT by rate
-        const vatByRate = new Map<number, number>();
-        invoice.lineItems.forEach(li => {
-          const vatAmt = li.quantity * li.unitPrice * li.vatRate / 100;
-          vatByRate.set(li.vatRate, (vatByRate.get(li.vatRate) ?? 0) + vatAmt);
-        });
-        return Array.from(vatByRate.entries())
-          .sort((a, b) => a[0] - b[0])
-          .map(([rate, amount]) => `<div class="row"><span>BTW ${rate}%</span><span>\\u20AC${fmt(amount)}</span></div>`)
-          .join('\\n');
-      })()}
-      <div class="row total">
-        <span>Totaal</span>
-        <span>\u20AC${fmt(invoice.total)}</span>
-      </div>
-    </div>
+<!-- Addresses -->
+<div class="addresses">
+  <div class="addr-block">
+    <div class="addr-label">${L.from}</div>
+    <div class="addr-name">${businessName || ''}</div>
+    <div class="addr-detail">${businessAddress || ''}</div>
   </div>
-
-  <div class="payment-info">
-    <h3>Betalingsinformatie</h3>
-    <div class="detail">Gelieve het bedrag van <strong>\u20AC${fmt(invoice.total)}</strong> over te maken binnen 14 dagen.</div>
-    <div class="detail">Vermeld het factuurnummer <strong>${invoice.invoiceNumber}</strong> bij uw betaling.</div>
-    ${paymentUrl ? `<div style="margin-top:16px;text-align:center"><a href="${paymentUrl}" style="display:inline-block;background:#E35205;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;">Betaal direct online</a></div>` : ''}
+  <div class="addr-block">
+    <div class="addr-label">${L.to}</div>
+    <div class="addr-name">${invoice.customerName}</div>
+    <div class="addr-detail">${invoice.customerAddress}</div>
+    ${invoice.customerEmail ? `<div class="addr-detail">${invoice.customerEmail}</div>` : ''}
   </div>
+</div>
 
-  <div class="footer">
-    Gegenereerd met <span class="accent">Vasco</span> \u2014 AI-platform voor de installatiebranche
+<!-- Date strip -->
+<div class="date-strip">
+  <div class="date-item">
+    <div class="date-label">${L.issueDate}</div>
+    <div class="date-value">${issueDate}</div>
   </div>
-  ${DEMO_MODE ? '<div class="demo-watermark">DEMO</div>' : ''}
+  <div class="date-item">
+    <div class="date-label">${L.dueDate}</div>
+    <div class="date-value">${dueDate}</div>
+  </div>
+  <div class="date-item">
+    <div class="date-label">${L.paymentReference}</div>
+    <div class="date-value">${invoice.invoiceNumber}</div>
+  </div>
+</div>
+
+<!-- Line items -->
+<table>
+  <thead>
+    <tr>
+      <th>${L.description}</th>
+      <th class="num">${L.quantity}</th>
+      <th class="num">${L.unitPrice}</th>
+      <th class="num">${L.vat}</th>
+      <th class="num">${L.amount}</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${lineItemRows}
+  </tbody>
+</table>
+
+<!-- Summary -->
+<div class="summary">
+  <div class="summary-table">
+    <div class="summary-row"><span>${L.subtotal}</span><span>${curr}${fmt(invoice.subtotal, locale)}</span></div>
+    ${vatRows}
+    <div class="summary-total"><span>${L.total}</span><span>${curr}${fmt(invoice.total, locale)}</span></div>
+  </div>
+</div>
+
+<!-- Payment -->
+<div class="payment-box">
+  <div class="payment-title">${L.paymentInfo}</div>
+  <div class="payment-detail">${L.paymentInstruction}</div>
+  <div class="payment-detail"><strong>${L.total}: ${curr}${fmt(invoice.total, locale)}</strong></div>
+  <div class="payment-detail">${L.paymentReference}: <strong>${invoice.invoiceNumber}</strong></div>
+  ${iban ? `<div class="payment-detail" style="margin-top:8px"><span style="color:#9CA3AF">${L.bankDetails}:</span> ${iban}</div>` : ''}
+  ${paymentUrl ? `<div style="text-align:center;margin-top:16px"><a href="${paymentUrl}" class="pay-btn">${L.payOnline}</a></div>` : ''}
+</div>
+
+<!-- Footer -->
+<div class="doc-footer">
+  <div>${businessName}${businessAddress ? ' · ' + businessAddress : ''}</div>
+  <div>${showPoweredBy !== false ? `<a href="https://vasco.eu">${L.poweredBy}</a>` : ''}</div>
+</div>
+
+${DEMO_MODE ? '<div class="demo-watermark">DEMO</div>' : ''}
 </body>
 </html>`;
 }
@@ -199,32 +377,22 @@ function buildInvoiceHtml(
 
 export function buildInvoiceShareText(invoice: AutoInvoice, businessName?: string, paymentUrl?: string): string {
   const lines = invoice.lineItems.map(li =>
-    `• ${li.description}: ${li.quantity}× €${fmt(li.unitPrice)} = €${fmt(li.quantity * li.unitPrice)}`,
+    `• ${li.description}: ${li.quantity}x €${fmt(li.unitPrice)} = €${fmt(li.quantity * li.unitPrice)}`,
   ).join('\n');
 
   const parts = [
-    `Factuur ${invoice.invoiceNumber}`,
-    `Van: ${businessName || 'Uw bedrijf'}`,
-    `Aan: ${invoice.customerName}`,
-    ``,
-    lines,
-    ``,
-    `Subtotaal: €${fmt(invoice.subtotal)}`,
-    `BTW: €${fmt(invoice.vatAmount)}`,
-    `Totaal: €${fmt(invoice.total)}`,
-    ``,
-    `Vervaldatum: ${invoice.dueDate.toLocaleDateString(undefined)}`,
-    `Vermeld "${invoice.invoiceNumber}" bij betaling.`,
+    `${invoice.invoiceNumber}`,
+    `From: ${businessName || 'Your business'}`,
+    `To: ${invoice.customerName}`,
+    ``, lines, ``,
+    `Subtotal: €${fmt(invoice.subtotal)}`,
+    `VAT: €${fmt(invoice.vatAmount)}`,
+    `Total: €${fmt(invoice.total)}`,
+    ``, `Due: ${invoice.dueDate.toLocaleDateString()}`,
   ];
 
-  if (paymentUrl) {
-    parts.push(``, `Betaal direct: ${paymentUrl}`);
-  }
-
-  // Customer portal link — primes the portal feature
-  if (invoice.customerId) {
-    parts.push(``, `Track your project: https://app.vasco.dev/customer/${invoice.customerId}`);
-  }
+  if (paymentUrl) parts.push(``, `Pay online: ${paymentUrl}`);
+  if (invoice.customerId) parts.push(``, `Track your project: https://app.vasco.eu/customer/${invoice.customerId}`);
 
   return parts.join('\n');
 }
@@ -236,8 +404,15 @@ export async function generateInvoicePdf(
     address?: string;
     kvkNumber?: string;
     vatNumber?: string;
+    iban?: string;
+    insuranceRef?: string;
+    country?: Country;
+    language?: string;
   },
   paymentUrl?: string,
+  options?: {
+    showPoweredBy?: boolean; // true for Gratis tier
+  },
 ): Promise<void> {
   const html = buildInvoiceHtml(
     invoice,
@@ -246,6 +421,11 @@ export async function generateInvoicePdf(
     businessProfile?.kvkNumber ?? '',
     businessProfile?.vatNumber ?? '',
     paymentUrl,
+    businessProfile?.language,
+    businessProfile?.country,
+    businessProfile?.iban,
+    options?.showPoweredBy,
+    businessProfile?.insuranceRef,
   );
 
   const { uri } = await Print.printToFileAsync({ html, base64: false });
@@ -253,7 +433,7 @@ export async function generateInvoicePdf(
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(uri, {
       mimeType: 'application/pdf',
-      dialogTitle: `Factuur ${invoice.invoiceNumber}`,
+      dialogTitle: `${invoice.invoiceNumber}`,
       UTI: 'com.adobe.pdf',
     });
   }

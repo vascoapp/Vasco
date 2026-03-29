@@ -25,6 +25,8 @@ const DEFAULT_THRESHOLDS: Record<MetricKey, number> = {
   quoteMedian: 0,            // not used for alerting
   customerOverdueRate: 0.3,  // alert if >30% overdue rate
   jobMargin: 0.15,           // alert if margin <15%
+  revenue: 0,                // not used for alerting (informational)
+  win_rate: 0.3,             // alert if quote win rate <30%
   // Site lead metrics
   workforceUtilization: 70,  // alert if below 70%
   incidentRate: 3,           // alert if >3 per week
@@ -203,6 +205,8 @@ const SEASONAL_MULTIPLIERS: Record<MetricKey, number[]> = {
   quoteMedian:           [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
   customerOverdueRate:   [1.10, 1.05, 1.0, 0.95, 0.90, 0.90, 0.95, 1.0, 1.0, 1.05, 1.10, 1.15],
   jobMargin:             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+  revenue:               [0.85, 0.90, 0.95, 1.05, 1.10, 1.10, 1.05, 1.0, 1.0, 1.05, 0.95, 0.85],
+  win_rate:              [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
   // Site lead metrics — no strong seasonal pattern
   workforceUtilization:  [0.90, 0.95, 1.0, 1.05, 1.05, 1.05, 1.0, 1.0, 1.0, 1.0, 0.95, 0.90],
   incidentRate:          [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],

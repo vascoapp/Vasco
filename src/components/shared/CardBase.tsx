@@ -1,6 +1,7 @@
 import { View, StyleSheet, type ViewStyle } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { RADIUS } from '../../theme/tabStyles';
 
 type CardVariant = 'flat' | 'default' | 'elevated' | 'outlined' | 'hero';
 
@@ -21,7 +22,7 @@ export function CardBase({ variant = 'default', children, style, padding }: Card
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: 14,
+    borderRadius: RADIUS.lg,
     padding: Spacing.sm,
   },
 });
@@ -43,6 +44,6 @@ const variantStyles = StyleSheet.create({
   },
   hero: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 18,
+    borderRadius: RADIUS.xl,
   },
 });

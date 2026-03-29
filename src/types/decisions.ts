@@ -44,6 +44,12 @@ export type Trade =
   | 'kitchen_fitter'
   | 'bathroom_fitter'
   | 'flooring'
+  | 'roofing'
+  | 'solar'
+  | 'insulation'
+  | 'landscaping'
+  | 'glazing'
+  | 'plastering'
   | 'other';
 
 /**
@@ -94,7 +100,7 @@ export interface DecisionItem {
   unit?: string; // For number inputs
 
   // Importance
-  priority: 'critical' | 'important' | 'optional';
+  priority: 'critical' | 'important' | 'nice_to_have' | 'optional';
   impactIfDelayed: string; // What happens if this decision is late
 
   // Dependencies
@@ -191,7 +197,7 @@ export interface CustomerDecisionItem {
   description: string;
   inputType: DecisionInputType;
   options?: DecisionOption[];
-  priority: 'critical' | 'important' | 'optional';
+  priority: 'critical' | 'important' | 'nice_to_have' | 'optional';
 
   // Customer's response
   status: 'pending' | 'decided' | 'skipped';

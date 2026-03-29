@@ -15,6 +15,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG } from '../../theme/tabStyles';
+import { TYPE, RADIUS } from '../../theme/tabStyles';
+import { useTranslation } from 'react-i18next';
 import {
   useCashFlow,
   usePaymentReminders,
@@ -28,6 +31,7 @@ import {
 type TabType = 'overview' | 'invoices' | 'forecast' | 'expenses';
 
 export function CashFlowDashboard() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -51,7 +55,7 @@ export function CashFlowDashboard() {
   const getStatusStyle = (status: Invoice['status']) => {
     switch (status) {
       case 'paid': return { color: Palette.green500, bg: Palette.green500 + '20', label: 'Betaald' };
-      case 'sent': return { color: Palette.hermesOrange, bg: Palette.hermesOrange + '20', label: 'Verstuurd' };
+      case 'sent': return { color: Palette.hermesOrange, bg: Palette.hermesOrange + '20', label: t('common.sent', 'Sent') };
       case 'viewed': return { color: Palette.hermesOrange, bg: Palette.hermesOrange + '20', label: 'Bekeken' };
       case 'overdue': return { color: Palette.red500, bg: Palette.red500 + '20', label: 'Verlopen' };
       case 'draft': return { color: Palette.gray500, bg: Palette.gray500 + '20', label: 'Concept' };
@@ -548,11 +552,11 @@ export function CashFlowDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: PAGE_BG,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#F2F2F7',
+    backgroundColor: PAGE_BG,
     paddingHorizontal: 16,
     paddingVertical: 8,
     gap: 8,
@@ -563,7 +567,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     gap: 6,
     backgroundColor: SemanticColors.surfacePrimary,
   },
@@ -571,7 +575,7 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange + '12',
   },
   tabText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     fontFamily: 'Inter_600SemiBold',
   },
@@ -585,7 +589,7 @@ const styles = StyleSheet.create({
 
   // Section Title
   sectionTitle: {
-    fontSize: 20,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Manrope_800ExtraBold',
     color: SemanticColors.textPrimary,
     letterSpacing: -0.5,
@@ -596,7 +600,7 @@ const styles = StyleSheet.create({
   healthCard: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 16,
     marginBottom: 16,
   },
@@ -605,7 +609,7 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   healthTitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginBottom: 8,
   },
@@ -618,7 +622,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   healthScore: {
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontFamily: 'Manrope_800ExtraBold',
   },
   healthRight: {
@@ -628,11 +632,11 @@ const styles = StyleSheet.create({
   },
   healthStat: {},
   healthStatLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   healthStatValue: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
@@ -646,7 +650,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: 12,
     borderLeftWidth: 4,
     gap: 10,
@@ -655,12 +659,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   alertTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   alertDescription: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -674,19 +678,19 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 8,
   },
   statValue: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
     marginTop: 4,
@@ -695,7 +699,7 @@ const styles = StyleSheet.create({
   // Aging
   agingCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -709,16 +713,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   agingLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     marginBottom: 4,
   },
   agingValue: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Inter_600SemiBold',
   },
   agingCount: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -731,7 +735,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
@@ -741,17 +745,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   reminderCustomer: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Inter_500Medium',
     color: SemanticColors.textPrimary,
   },
   reminderAmount: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
     marginTop: 2,
   },
   reminderDays: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: Palette.red500,
     marginTop: 2,
   },
@@ -761,11 +765,11 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange + '15',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     gap: 4,
   },
   reminderButtonText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontFamily: 'Inter_600SemiBold',
     color: Palette.hermesOrange,
   },
@@ -778,7 +782,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 16,
     marginBottom: 8,
     borderWidth: 1,
@@ -788,7 +792,7 @@ const styles = StyleSheet.create({
   financingIcon: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: RADIUS.full,
     backgroundColor: Palette.hermesOrange + '15',
     alignItems: 'center',
     justifyContent: 'center',
@@ -797,17 +801,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   financingTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   financingDesc: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
   financingAmount: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: Palette.hermesOrange,
     fontFamily: 'Inter_500Medium',
     marginTop: 4,
@@ -818,7 +822,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 16,
     marginBottom: 8,
     borderWidth: 1,
@@ -834,21 +838,21 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   invoiceCustomer: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   statusText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'Inter_600SemiBold',
   },
   invoiceProject: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginBottom: 4,
   },
@@ -857,15 +861,15 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   invoiceDate: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   invoiceReminders: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: Palette.orange500,
   },
   invoiceAmount: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
@@ -873,7 +877,7 @@ const styles = StyleSheet.create({
   // Forecast
   forecastCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -900,12 +904,12 @@ const styles = StyleSheet.create({
     minHeight: 4,
   },
   forecastBarLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
   forecastBarValue: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: 'Inter_600SemiBold',
   },
   forecastLegend: {
@@ -925,14 +929,14 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   legendText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
 
   // Seasonal
   seasonalCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -947,13 +951,13 @@ const styles = StyleSheet.create({
     width: '23%',
     alignItems: 'center',
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   seasonalItemCurrent: {
     backgroundColor: Palette.hermesOrange + '15',
   },
   seasonalMonth: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Inter_500Medium',
     color: SemanticColors.textPrimary,
     marginBottom: 4,
@@ -961,17 +965,17 @@ const styles = StyleSheet.create({
   seasonalIndicator: {
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   seasonalTrend: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: 'Inter_600SemiBold',
   },
 
   // Forecast Details
   forecastDetails: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 16,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -985,7 +989,7 @@ const styles = StyleSheet.create({
   },
   forecastDetailPeriod: {
     width: 60,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontFamily: 'Inter_500Medium',
     color: SemanticColors.textPrimary,
   },
@@ -1001,45 +1005,45 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   forecastDetailValue: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textPrimary,
   },
   forecastDetailNet: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontFamily: 'Inter_600SemiBold',
   },
   confidenceBadge: {
     backgroundColor: SemanticColors.surfaceBackground,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   confidenceText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textSecondary,
   },
 
   // Expenses
   expenseSummary: {
     backgroundColor: Palette.red500,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 20,
     marginBottom: 16,
     alignItems: 'center',
   },
   expenseSummaryLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: 'rgba(255,255,255,0.8)',
   },
   expenseSummaryValue: {
-    fontSize: 32,
+    fontSize: TYPE.displaySize + 4,
     fontFamily: 'Manrope_800ExtraBold',
-    color: '#fff',
+    color: Palette.white,
     marginTop: 4,
   },
   categoryBreakdown: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -1062,7 +1066,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   categoryName: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
     marginBottom: 4,
   },
@@ -1076,13 +1080,13 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   categoryAmount: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   recentExpenses: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -1099,7 +1103,7 @@ const styles = StyleSheet.create({
   expenseIcon: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1107,16 +1111,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   expenseDescription: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   expenseDate: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
   expenseAmount: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
@@ -1125,7 +1129,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Palette.hermesOrange + '15',
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 16,
     borderWidth: 1,
     borderColor: Palette.hermesOrange,
@@ -1133,7 +1137,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   addExpenseText: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontFamily: 'Inter_600SemiBold',
     color: Palette.hermesOrange,
   },
@@ -1154,7 +1158,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
   },
   modalTitle: {
-    fontSize: 17,
+    fontSize: TYPE.titleSize + 1,
     fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
@@ -1180,12 +1184,12 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   invoiceDetailLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginBottom: 4,
   },
   invoiceDetailValue: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     color: SemanticColors.textPrimary,
   },
   invoiceActions: {
@@ -1198,13 +1202,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: Palette.green500,
     paddingVertical: 16,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     gap: 8,
   },
   markPaidText: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontFamily: 'Inter_600SemiBold',
-    color: '#fff',
+    color: Palette.white,
   },
   sendReminderButton: {
     flexDirection: 'row',
@@ -1212,13 +1216,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
     paddingVertical: 16,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
     borderColor: Palette.hermesOrange,
     gap: 8,
   },
   sendReminderText: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontFamily: 'Inter_600SemiBold',
     color: Palette.hermesOrange,
   },

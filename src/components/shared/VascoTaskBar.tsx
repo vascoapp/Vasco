@@ -7,6 +7,7 @@ import { View, Text, TextInput, StyleSheet, Pressable, Keyboard } from 'react-na
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { TYPE, RADIUS } from '../../theme/tabStyles';
 import { hapticSuccess } from '../../utils/haptics';
 import { useTaskParser } from '../../services/vascoTaskParserService';
 import type { ParsedTask } from '../../services/vascoTaskParserService';
@@ -102,7 +103,7 @@ export function VascoTaskBar({ onSubmit, placeholder = 'Bijv. "Inspectie ketel o
 const styles = StyleSheet.create({
   container: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderMuted,
     padding: Spacing.xs,
@@ -140,11 +141,11 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfaceSecondary,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   chipText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
   },
   chipConfidence: {

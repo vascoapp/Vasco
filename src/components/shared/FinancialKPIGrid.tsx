@@ -5,7 +5,7 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
-
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 export interface KPITile {
   label: string;
   value: string;
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   },
   tile: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: RADIUS.md,
     padding: 12,
     borderWidth: 1,
     borderColor: SemanticColors.borderMuted,
@@ -131,8 +131,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   label: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -143,8 +143,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   value: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     fontVariant: ['tabular-nums'],
   },
@@ -154,12 +154,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   varianceText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     fontVariant: ['tabular-nums'],
   },
   budget: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
     fontVariant: ['tabular-nums'],
   },

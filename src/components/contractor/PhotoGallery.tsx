@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontSize: TYPE.labelSize,
     fontFamily: TYPE.sectionFamily,
-    color: '#fff',
+    color: Palette.white,
   },
 
   // Filter row
@@ -361,9 +361,9 @@ const styles = StyleSheet.create({
     borderRadius: GRID.xs,
   },
   dateOverlayText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: TYPE.labelFamily,
-    color: '#fff',
+    color: Palette.white,
   },
   labelBadge: {
     position: 'absolute',
@@ -374,12 +374,12 @@ const styles = StyleSheet.create({
     borderRadius: GRID.xs,
   },
   labelBadgeText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: TYPE.sectionFamily,
     letterSpacing: 0.3,
   },
   labelBefore: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: SemanticColors.surfaceSecondary,
   },
   labelBeforeText: {
     color: SemanticColors.textTertiary,
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     gap: GRID.xs,
   },
   addPhotoText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: TYPE.titleFamily,
     color: Palette.hermesOrange,
   },
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: TYPE.titleSize,
     fontFamily: TYPE.sectionFamily,
-    color: '#fff',
+    color: Palette.white,
     flex: 1,
   },
   modalLabelBadge: {

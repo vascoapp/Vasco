@@ -12,6 +12,7 @@ import { getScanHistory, getFirstScanInsights } from './invoiceScanService';
 import { getTradeBaselines } from './cohortBenchmarkService';
 import { getCustomerIntelligence } from '../intelligence/tradeContext';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { loadOnboardingPreferences, type OnboardingPreferences, wantsPaymentFocus, wantsQuotingHelp, wantsComplianceFocus, wantsAutomationFocus, wantsGrowthFocus } from './onboardingPreferencesService';
 
 const QUEUE_KEY = '@vasco_ai_queue';
 
@@ -86,10 +87,45 @@ export async function getQueue(): Promise<QueueItem[]> {
     if (pruned.length < items.length) {
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(pruned)).catch(() => {});
     }
+    // Prioritize queue items based on onboarding preferences
+    const prefs = await loadOnboardingPreferences().catch(() => null);
+    if (prefs && prefs.goals.length > 0) {
+      return prioritizeQueue(pending, prefs);
+    }
     return pending;
   } catch {
     return [];
   }
+}
+
+/** Reorder queue items so items matching user's onboarding goals appear first */
+function prioritizeQueue(items: QueueItem[], prefs: OnboardingPreferences): QueueItem[] {
+  const getScore = (item: QueueItem): number => {
+    let score = 0;
+    // Payment-related items
+    if (wantsPaymentFocus(prefs) && ['draft_invoice', 'draft_reminder', 'batch_invoices', 'invoice_regenerate'].includes(item.type)) {
+      score += 10;
+    }
+    // Quoting-related items
+    if (wantsQuotingHelp(prefs) && ['draft_quote', 'draft_followup', 'quote_expiry'].includes(item.type)) {
+      score += 10;
+    }
+    // Compliance-related items
+    if (wantsComplianceFocus(prefs) && ['cert_renewal', 'permit_check', 'permit_renewal', 'safety_checklist', 'einvoice_submit'].includes(item.type)) {
+      score += 10;
+    }
+    // Automation/admin reduction
+    if (wantsAutomationFocus(prefs) && ['batch_invoices', 'accounting_export', 'tax_prep', 'reorder_materials'].includes(item.type)) {
+      score += 10;
+    }
+    // Growth-related items
+    if (wantsGrowthFocus(prefs) && ['schedule_suggestion', 'maintenance_due', 'satisfaction_survey'].includes(item.type)) {
+      score += 10;
+    }
+    return score;
+  };
+
+  return [...items].sort((a, b) => getScore(b) - getScore(a));
 }
 
 export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'createdAt'>): Promise<string> {
@@ -223,6 +259,7 @@ interface PopulateQueueContext {
   customers?: Array<{ id: string; name?: string }>;
   certs?: Array<{ id?: string; name?: string; expiryDate?: string }>;
   country?: string;
+  trade?: string;
 }
 
 export async function populateQueue(context: PopulateQueueContext): Promise<number> {
@@ -942,6 +979,91 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       estimatedImpact: t('automation.safetyCompliance', 'Safety compliance'),
       expiresAt: new Date(now + 3 * dayMs).toISOString(),
       sourceGeneratorId: `automation_safety_${job.id}`,
+    });
+    if (id) added++;
+  }
+
+  // ─── TRADE-SPECIFIC AI SUGGESTIONS ───────────────────────────────────────
+  // Load user's trade from onboarding preferences to generate relevant suggestions
+  const userPrefs = await loadOnboardingPreferences().catch(() => null);
+  const userTrade = userPrefs?.trades?.[0] ?? '';
+
+  // Solar: grid connection + subsidy reminders
+  if (userTrade === 'solar') {
+    const id = await addToQueue({
+      type: 'permit_check',
+      title: t('automation.solarGridApp', { defaultValue: 'Grid connection application' }),
+      description: t('automation.solarGridAppDesc', { defaultValue: 'Check if grid operator notification is needed for this installation' }),
+      preparedData: { trade: 'solar', checkType: 'grid_connection' },
+      actionLabel: t('automation.check', 'Check'),
+      estimatedImpact: t('automation.complianceRequired', 'Required for commissioning'),
+      expiresAt: new Date(now + 14 * dayMs).toISOString(),
+      sourceGeneratorId: 'trade_solar_grid',
+    });
+    if (id) added++;
+  }
+
+  // Roofing: weather check before roof work
+  if (userTrade === 'roofing') {
+    const id = await addToQueue({
+      type: 'schedule_suggestion',
+      title: t('automation.roofWeatherCheck', { defaultValue: 'Weather check for upcoming roof work' }),
+      description: t('automation.roofWeatherCheckDesc', { defaultValue: 'Rain or high winds forecast — review schedule for outdoor roof work' }),
+      preparedData: { trade: 'roofing', checkType: 'weather' },
+      actionLabel: t('automation.reviewSchedule', 'Review schedule'),
+      estimatedImpact: t('automation.avoidDelay', 'Avoid weather delays'),
+      expiresAt: new Date(now + 2 * dayMs).toISOString(),
+      sourceGeneratorId: 'trade_roofing_weather',
+    });
+    if (id) added++;
+  }
+
+  // Insulation: subsidy deadline tracking (ISDE in NL, RGE in FR, KfW in DE)
+  if (userTrade === 'insulation') {
+    const subsidyName = context.country === 'NL' ? 'ISDE' : context.country === 'FR' ? 'MaPrimeRénov' : context.country === 'DE' ? 'KfW/BEG' : 'Energy subsidy';
+    const id = await addToQueue({
+      type: 'permit_check',
+      title: t('automation.subsidyDeadline', { defaultValue: '{{subsidy}} subsidy deadline approaching', subsidy: subsidyName }),
+      description: t('automation.subsidyDeadlineDesc', { defaultValue: 'Remind customers about energy renovation subsidies — drives conversions' }),
+      preparedData: { trade: 'insulation', checkType: 'subsidy', subsidyProgram: subsidyName, country: context.country },
+      actionLabel: t('automation.viewDetails', 'View details'),
+      estimatedImpact: t('automation.customerConversion', 'Customer conversion'),
+      expiresAt: new Date(now + 30 * dayMs).toISOString(),
+      sourceGeneratorId: 'trade_insulation_subsidy',
+    });
+    if (id) added++;
+  }
+
+  // Landscaping: seasonal planting window
+  if (userTrade === 'landscaping') {
+    const month = new Date().getMonth(); // 0-11
+    const isPlantingSeason = month >= 2 && month <= 4 || month >= 8 && month <= 10;
+    if (isPlantingSeason) {
+      const id = await addToQueue({
+        type: 'schedule_suggestion',
+        title: t('automation.plantingSeason', { defaultValue: 'Planting season — schedule garden projects' }),
+        description: t('automation.plantingSeasonDesc', { defaultValue: 'Optimal planting window open — reach out to pending quotes for garden work' }),
+        preparedData: { trade: 'landscaping', checkType: 'seasonal' },
+        actionLabel: t('automation.followUpQuotes', 'Follow up quotes'),
+        estimatedImpact: t('automation.seasonalRevenue', 'Seasonal revenue boost'),
+        expiresAt: new Date(now + 14 * dayMs).toISOString(),
+        sourceGeneratorId: 'trade_landscaping_season',
+      });
+      if (id) added++;
+    }
+  }
+
+  // Glazing: energy label improvement suggestion
+  if (userTrade === 'glazing') {
+    const id = await addToQueue({
+      type: 'draft_quote',
+      title: t('automation.energyLabelUpgrade', { defaultValue: 'HR++ upgrade campaign' }),
+      description: t('automation.energyLabelUpgradeDesc', { defaultValue: 'Customers with single glazing may qualify for energy subsidies — send upgrade offers' }),
+      preparedData: { trade: 'glazing', checkType: 'energy_upgrade' },
+      actionLabel: t('automation.createCampaign', 'Create campaign'),
+      estimatedImpact: t('automation.leadGeneration', 'Lead generation'),
+      expiresAt: new Date(now + 30 * dayMs).toISOString(),
+      sourceGeneratorId: 'trade_glazing_energy',
     });
     if (id) added++;
   }

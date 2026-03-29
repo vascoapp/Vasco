@@ -12,8 +12,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
-import { PAGE_BG } from '../../theme/tabStyles';
 import type { Worker, DispatchJob } from '../../types/sitelead';
 import { MOCK_WORKERS, MOCK_DISPATCH_JOBS } from '../../data/mockSiteLead';
 import { useTranslation } from 'react-i18next';
@@ -391,12 +391,12 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   title: {
-    fontSize: 28,
+    fontSize: TYPE.displaySize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   },
   viewToggle: {
     padding: 8,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   viewToggleActive: {
@@ -432,15 +432,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   statValue: {
-    fontSize: 20,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   statLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
     marginBottom: Spacing.sm,
@@ -472,10 +472,10 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackErrorBg,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   alertBadgeText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.feedbackError,
   },
@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
   workerCard: {
     width: 160,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     marginRight: Spacing.sm,
   },
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   workerInitials: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.actionPrimary,
   },
@@ -520,18 +520,18 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   workerName: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   workerTrade: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   statusIndicator: {
     width: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -545,7 +545,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   currentJobText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     flex: 1,
   },
@@ -560,11 +560,11 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   workerStatText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   workerRate: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
     marginLeft: 'auto',
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
   // Job Card
   jobCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     marginBottom: Spacing.sm,
     borderWidth: 1,
@@ -588,12 +588,12 @@ const styles = StyleSheet.create({
     minWidth: 50,
   },
   jobTime: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   jobDuration: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -608,7 +608,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   jobTitle: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
     flex: 1,
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   priorityText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: 'Inter_600SemiBold',
   },
   jobLocationRow: {
@@ -628,7 +628,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   jobAddress: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     flex: 1,
   },
@@ -638,7 +638,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   jobCustomer: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   jobFooter: {
@@ -659,11 +659,11 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   statusText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'Inter_600SemiBold',
   },
   jobValue: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
     marginLeft: 'auto',
@@ -678,7 +678,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   assignButtonText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.actionPrimary,
   },
@@ -692,10 +692,10 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackInfoBg,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   assignedWorkerText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'Inter_500Medium',
     color: SemanticColors.feedbackInfo,
   },
@@ -711,11 +711,6 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
 });
 

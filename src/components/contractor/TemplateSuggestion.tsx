@@ -8,10 +8,11 @@
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { useTemplateSuggestion } from '../../services/jobDecisionLinker';
 import type { DecisionTemplate } from '../../types/decisions';
-
+import { useTranslation } from 'react-i18next';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 interface TemplateSuggestionProps {
@@ -205,7 +206,7 @@ export function LinkedTemplateBadge({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -223,7 +224,7 @@ const styles = StyleSheet.create({
   icon: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -235,12 +236,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   headerConfidence: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
   templateInfo: {
@@ -249,12 +250,12 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   templateIcon: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: Palette.pastelOrange + '30',
     alignItems: 'center',
     justifyContent: 'center',
@@ -264,17 +265,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   templateName: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   templateStats: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
   templateUsage: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   reasonText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.feedbackSuccess,
   },
   valueProposition: {
@@ -302,11 +303,11 @@ const styles = StyleSheet.create({
     gap: 6,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   valueText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     lineHeight: 16,
   },
@@ -318,12 +319,12 @@ const styles = StyleSheet.create({
   declineButton: {
     paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   declineButtonText: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textSecondary,
   },
   customizeButton: {
@@ -332,13 +333,13 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: Palette.hermesOrange,
   },
   customizeButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.hermesOrange,
   },
   acceptButton: {
@@ -348,13 +349,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 4,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: Palette.hermesOrange,
   },
   acceptButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.white,
   },
 
   // Compact styles
@@ -364,20 +365,20 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     padding: Spacing.sm,
     backgroundColor: Palette.pastelOrange + '20',
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   compactText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: Palette.hermesOrange,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
 
   // Linked badge styles
   linkedBadge: {
     padding: Spacing.sm,
     backgroundColor: SemanticColors.feedbackSuccessBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     gap: 6,
   },
   linkedHeader: {
@@ -386,8 +387,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   linkedTitle: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.feedbackSuccess,
   },
   linkedProgress: {
@@ -408,9 +409,9 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   linkedProgressText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.feedbackSuccess,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
     minWidth: 40,
     textAlign: 'right',
   },

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { Typography } from '../../theme/typography';
 import {
@@ -368,7 +369,7 @@ const styles = StyleSheet.create({
   },
   summaryBanner: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -384,12 +385,12 @@ const styles = StyleSheet.create({
   },
   summaryValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 28,
+    fontSize: TYPE.displaySize,
     fontWeight: '700',
   },
   summaryLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     marginTop: 4,
   },
   summaryDivider: {
@@ -399,18 +400,18 @@ const styles = StyleSheet.create({
   },
   exposureCard: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     gap: 4,
   },
   exposureLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   exposureValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
     marginBottom: 8,
   },
@@ -418,13 +419,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.xs,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 4,
   },
   tab: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
   },
   tabActive: {
@@ -432,7 +433,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
   tabTextActive: {
@@ -443,7 +444,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -456,7 +457,7 @@ const styles = StyleSheet.create({
   ratingCard: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     alignItems: 'center',
     gap: 4,
@@ -468,12 +469,12 @@ const styles = StyleSheet.create({
   },
   ratingValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 20,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
   },
   ratingLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
   },
   riskRow: {
     flexDirection: 'row',
@@ -498,38 +499,38 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   riskRatingText: {
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     fontWeight: '700',
   },
   trendIndicator: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
   },
   riskTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
   },
   riskMeta: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   riskScore: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   riskScoreValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
   },
   alertCard: {
     backgroundColor: SemanticColors.feedbackError + '15',
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.feedbackError + '30',
@@ -537,7 +538,7 @@ const styles = StyleSheet.create({
   },
   alertTitle: {
     color: SemanticColors.feedbackError,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
   },
   alertRow: {
@@ -550,7 +551,7 @@ const styles = StyleSheet.create({
   },
   trendWarning: {
     color: SemanticColors.feedbackError,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '700',
   },
   alertInfo: {
@@ -558,16 +559,16 @@ const styles = StyleSheet.create({
   },
   alertRiskTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
   },
   alertRiskMeta: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   warningCard: {
     backgroundColor: SemanticColors.feedbackWarning + '15',
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.feedbackWarning + '30',
@@ -575,7 +576,7 @@ const styles = StyleSheet.create({
   },
   warningTitle: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
   },
   warningRow: {
@@ -586,16 +587,16 @@ const styles = StyleSheet.create({
   },
   warningRisk: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
   warningMitigation: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   warningDue: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '600',
   },
   categoryGrid: {
@@ -605,7 +606,7 @@ const styles = StyleSheet.create({
   },
   categoryItem: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     paddingVertical: 8,
     paddingHorizontal: 12,
     alignItems: 'center',
@@ -613,12 +614,12 @@ const styles = StyleSheet.create({
   },
   categoryCount: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '700',
   },
   categoryLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     marginTop: 2,
   },
   reviewRow: {
@@ -631,12 +632,12 @@ const styles = StyleSheet.create({
   },
   reviewDate: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
   registerCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -649,7 +650,7 @@ const styles = StyleSheet.create({
   },
   statusBadge: {
     color: SemanticColors.textTertiary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '600',
     textTransform: 'uppercase',
   },
@@ -658,12 +659,12 @@ const styles = StyleSheet.create({
   },
   registerTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontWeight: '700',
   },
   registerDescription: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   registerMeta: {
     flexDirection: 'row',
@@ -675,7 +676,7 @@ const styles = StyleSheet.create({
   },
   registerMetaItem: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   riskDetails: {
     marginTop: Spacing.md,
@@ -689,48 +690,48 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
   detailValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   mitigationItem: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     marginTop: 4,
   },
   mitigationDesc: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   mitigationMeta: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     marginTop: 4,
   },
   indicatorItem: {
     color: SemanticColors.textPrimary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     paddingLeft: 8,
   },
   generateButton: {
     backgroundColor: SemanticColors.actionPrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     paddingVertical: 14,
     alignItems: 'center',
   },
   generateButtonText: {
     color: '#0B0C0F',
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
   },
   reportCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -741,7 +742,7 @@ const styles = StyleSheet.create({
   },
   reportText: {
     color: SemanticColors.textPrimary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'monospace',
     lineHeight: 18,
   },

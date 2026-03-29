@@ -4,6 +4,7 @@ import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-nativ
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import type { Job, TimeEntry } from '../../types/contractor';
@@ -401,8 +402,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   activeView: {
     flex: 1,
@@ -423,17 +424,17 @@ const styles = StyleSheet.create({
   timerDisplay: {
     color: SemanticColors.textPrimary,
     fontSize: 56,
-    fontWeight: '700',
+    fontFamily: TYPE.sectionFamily,
     fontVariant: ['tabular-nums'],
   },
   timerLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     marginTop: 8,
   },
   activeJobCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -446,12 +447,12 @@ const styles = StyleSheet.create({
   },
   activeJobTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
   },
   activeJobLocation: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     marginLeft: 26,
   },
   sessionInfo: {
@@ -464,15 +465,15 @@ const styles = StyleSheet.create({
   },
   sessionText: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   breakSection: {
     gap: Spacing.sm,
   },
   breakLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
   },
   breakOptions: {
     flexDirection: 'row',
@@ -482,7 +483,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -493,8 +494,8 @@ const styles = StyleSheet.create({
   },
   breakOptionText: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
   },
   breakOptionTextActive: {
     color: SemanticColors.actionPrimary,
@@ -506,31 +507,31 @@ const styles = StyleSheet.create({
     gap: 12,
     backgroundColor: SemanticColors.feedbackError,
     paddingVertical: 18,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
   },
   clockOutButtonText: {
     color: Palette.white,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   earningsCard: {
     backgroundColor: SemanticColors.actionPrimary + '15',
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     alignItems: 'center',
   },
   earningsLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   earningsValue: {
     color: SemanticColors.actionPrimary,
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize,
+    fontFamily: TYPE.sectionFamily,
   },
   earningsRate: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   clockInView: {
     flex: 1,
@@ -552,15 +553,15 @@ const styles = StyleSheet.create({
   },
   illustrationText: {
     color: SemanticColors.textSecondary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
   },
   section: {
     gap: Spacing.sm,
   },
   sectionTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   jobList: {
     gap: Spacing.xs,
@@ -569,7 +570,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -583,12 +584,12 @@ const styles = StyleSheet.create({
   },
   jobOptionTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   jobOptionLocation: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   noJobs: {
     padding: Spacing.lg,
@@ -596,16 +597,16 @@ const styles = StyleSheet.create({
   },
   noJobsText: {
     color: SemanticColors.textTertiary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   notesInput: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     minHeight: 80,
     textAlignVertical: 'top',
   },
@@ -616,15 +617,15 @@ const styles = StyleSheet.create({
     gap: 12,
     backgroundColor: SemanticColors.feedbackSuccess,
     paddingVertical: 18,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
   },
   clockInButtonDisabled: {
     backgroundColor: SemanticColors.textDisabled,
   },
   clockInButtonText: {
     color: Palette.white,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   infoRow: {
     flexDirection: 'row',
@@ -634,14 +635,14 @@ const styles = StyleSheet.create({
   },
   infoText: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   // Widget styles
   widgetActive: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.feedbackSuccessBg,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.feedbackSuccessBorder,
@@ -658,20 +659,20 @@ const styles = StyleSheet.create({
   },
   widgetLabel: {
     color: SemanticColors.feedbackSuccess,
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   widgetTime: {
     color: SemanticColors.textPrimary,
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     fontVariant: ['tabular-nums'],
   },
   widgetInactive: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -679,11 +680,11 @@ const styles = StyleSheet.create({
   },
   widgetLabelInactive: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   widgetSubtext: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
 });

@@ -8,6 +8,7 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import type { CriticalPath, CriticalPathActivity } from '../../types/schedule-fragility';
 
@@ -273,7 +274,7 @@ function ActivityNode({ activity, isHighlighted, isFirst, isLast }: ActivityNode
 const styles = StyleSheet.create({
   container: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -291,8 +292,8 @@ const styles = StyleSheet.create({
   },
   title: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
   },
   headerStats: {
     flexDirection: 'row',
@@ -303,12 +304,12 @@ const styles = StyleSheet.create({
   },
   statValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
   },
   statLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
   },
   dateRange: {
     flexDirection: 'row',
@@ -317,7 +318,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   dateItem: {
     flexDirection: 'row',
@@ -326,12 +327,12 @@ const styles = StyleSheet.create({
   },
   dateLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   dateValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   pathContainer: {
     gap: 0,
@@ -341,7 +342,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     borderWidth: 2,
     borderColor: SemanticColors.feedbackError,
     gap: Spacing.sm,
@@ -360,15 +361,15 @@ const styles = StyleSheet.create({
   positionBadge: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: SemanticColors.feedbackError,
     alignItems: 'center',
     justifyContent: 'center',
   },
   positionText: {
     color: Palette.white,
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.sectionFamily,
   },
   activityDetails: {
     flex: 1,
@@ -376,8 +377,8 @@ const styles = StyleSheet.create({
   },
   activityName: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
   },
   activityMeta: {
     flexDirection: 'row',
@@ -391,7 +392,7 @@ const styles = StyleSheet.create({
   },
   activityMetaText: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   progressContainer: {
     flexDirection: 'row',
@@ -411,8 +412,8 @@ const styles = StyleSheet.create({
   },
   progressText: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
     minWidth: 30,
     textAlign: 'right',
   },
@@ -428,12 +429,12 @@ const styles = StyleSheet.create({
   },
   floatValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.sectionFamily,
   },
   floatLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 8,
+    fontSize: TYPE.tinySize - 3,
   },
   connector: {
     alignItems: 'center',
@@ -452,8 +453,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   bottleneckItem: {
     flexDirection: 'row',
@@ -471,17 +472,17 @@ const styles = StyleSheet.create({
   },
   bottleneckName: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
   },
   bottleneckReason: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   nearCriticalSection: {
     padding: Spacing.sm,
     backgroundColor: SemanticColors.feedbackWarningBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   nearCriticalHeader: {
     flexDirection: 'row',
@@ -490,18 +491,18 @@ const styles = StyleSheet.create({
   },
   nearCriticalTitle: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   nearCriticalSubtext: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     marginTop: 2,
   },
   // Compact styles
   compactContainer: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -514,13 +515,13 @@ const styles = StyleSheet.create({
   },
   compactTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     flex: 1,
   },
   compactDuration: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   compactPath: {
     flexDirection: 'row',
@@ -544,8 +545,8 @@ const styles = StyleSheet.create({
   },
   compactActivityName: {
     color: SemanticColors.textPrimary,
-    fontSize: 10,
-    fontWeight: '500',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.labelFamily,
   },
   compactProgressBar: {
     height: 2,

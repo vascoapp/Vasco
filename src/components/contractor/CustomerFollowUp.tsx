@@ -20,6 +20,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { formatCurrency } from '../../i18n/formatting';
 import {
   useFollowUps,
@@ -301,6 +302,7 @@ function FollowUpCard({
   onPress: () => void;
   onQuickComplete: () => void;
 }) {
+  const { t } = useTranslation();
   const getTypeIcon = (type: FollowUp['type']): keyof typeof Ionicons.glyphMap => {
     switch (type) {
       case 'quote_reminder':
@@ -389,15 +391,15 @@ function FollowUpCard({
           )}
           {followUp.status === 'due' && (
             <View style={[styles.statusBadge, { backgroundColor: SemanticColors.feedbackWarning + '20' }]}>
-              <Text style={[styles.statusText, { color: SemanticColors.feedbackWarning }]}>Vandaag</Text>
+              <Text style={[styles.statusText, { color: SemanticColors.feedbackWarning }]}>{t('common.today', 'Today')}</Text>
             </View>
           )}
           {followUp.status === 'scheduled' && (
             <Text style={styles.dueDate}>
               {followUp.dueInDays === 0
-                ? 'Vandaag'
+                ? t('common.today', 'Today')
                 : followUp.dueInDays === 1
-                ? 'Morgen'
+                ? t('common.tomorrow', 'Tomorrow')
                 : `${followUp.dueInDays}d`}
             </Text>
           )}
@@ -660,7 +662,7 @@ function FollowUpDetailModal({
                 onPress={() => onComplete('no_response')}
               >
                 <Ionicons name="hourglass-outline" size={24} color={SemanticColors.textSecondary} />
-                <Text style={styles.outcomeOptionText}>Geen reactie</Text>
+                <Text style={styles.outcomeOptionText}>{t('followup.noResponse', 'No response')}</Text>
               </Pressable>
               <Pressable
                 style={styles.outcomeOption}
@@ -673,7 +675,7 @@ function FollowUpDetailModal({
                 style={styles.outcomeCancel}
                 onPress={() => setShowOutcomeOptions(false)}
               >
-                <Text style={styles.outcomeCancelText}>Annuleren</Text>
+                <Text style={styles.outcomeCancelText}>{t('common.cancel', 'Cancel')}</Text>
               </Pressable>
             </View>
           </View>
@@ -807,9 +809,9 @@ function ScheduleFollowUpModal({
           <Text style={styles.fieldLabel}>Datum</Text>
           <View style={styles.dateOptions}>
             {[
-              { label: 'Morgen', days: 1 },
-              { label: 'Over 3 dagen', days: 3 },
-              { label: 'Volgende week', days: 7 },
+              { label: t('common.tomorrow', 'Tomorrow'), days: 1 },
+              { label: t('followup.in3Days', 'In 3 days'), days: 3 },
+              { label: t('followup.nextWeek', 'Next week'), days: 7 },
             ].map((option) => {
               const date = new Date(Date.now() + option.days * 24 * 60 * 60 * 1000)
                 .toISOString()
@@ -840,7 +842,7 @@ function ScheduleFollowUpModal({
           {selectedCustomer && (
             <View style={styles.customerInsights}>
               <Text style={styles.insightsTitle}>
-                <Ionicons name="information-circle" size={16} /> Klantinfo
+                <Ionicons name="information-circle" size={16} /> {t('followup.customerInfo', 'Customer info')}
               </Text>
               <Text style={styles.insightText}>
                 Voorkeur: {selectedCustomer.preferredContact}
@@ -859,7 +861,7 @@ function ScheduleFollowUpModal({
 
         <View style={styles.scheduleActions}>
           <Pressable style={styles.scheduleCancelButton} onPress={onClose}>
-            <Text style={styles.scheduleCancelText}>Annuleren</Text>
+            <Text style={styles.scheduleCancelText}>{t('common.cancel', 'Cancel')}</Text>
           </Pressable>
           <Pressable
             style={[
@@ -900,12 +902,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 6,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
@@ -923,19 +925,19 @@ const styles = StyleSheet.create({
     padding: 16,
     marginHorizontal: 16,
     marginTop: 12,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     gap: 12,
   },
   todayContent: {
     flex: 1,
   },
   todayTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   todaySubtitle: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -943,12 +945,12 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   todayButtonText: {
     color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 14,
+    fontFamily: TYPE.titleFamily,
+    fontSize: TYPE.bodySize - 1,
   },
 
   // Tab Bar
@@ -972,16 +974,16 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.actionPrimary,
   },
   tabLabel: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   tabLabelActive: {
     color: SemanticColors.actionPrimary,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   badge: {
     backgroundColor: SemanticColors.feedbackError,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     minWidth: 20,
     height: 20,
     justifyContent: 'center',
@@ -990,8 +992,8 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.sectionFamily,
   },
 
   // Content
@@ -1005,8 +1007,8 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
@@ -1014,7 +1016,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
@@ -1025,12 +1027,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   suggestionCustomer: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   suggestionReason: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1046,13 +1048,13 @@ const styles = StyleSheet.create({
     padding: 48,
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginTop: 16,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     textAlign: 'center',
     marginTop: 8,
@@ -1066,7 +1068,7 @@ const styles = StyleSheet.create({
   // Follow-up Card
   followUpCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 12,
   },
@@ -1078,7 +1080,7 @@ const styles = StyleSheet.create({
   typeIcon: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -1087,12 +1089,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   followUpCustomer: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   followUpType: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1105,15 +1107,15 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   statusText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   dueDate: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   messagePreview: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     lineHeight: 18,
     marginBottom: 12,
@@ -1131,11 +1133,11 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   factorText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   moreFactors: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.actionPrimary,
     alignSelf: 'center',
   },
@@ -1151,7 +1153,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   confidenceLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   confidenceBar: {
@@ -1167,8 +1169,8 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   confidenceValue: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     width: 32,
     textAlign: 'right',
@@ -1190,15 +1192,10 @@ const styles = StyleSheet.create({
     right: 24,
     width: 56,
     height: 56,
-    borderRadius: 28,
+    borderRadius: RADIUS.full,
     backgroundColor: SemanticColors.actionPrimary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
 
   // Modal
@@ -1222,8 +1219,8 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   modalClose: {
@@ -1250,27 +1247,27 @@ const styles = StyleSheet.create({
   customerAvatar: {
     width: 56,
     height: 56,
-    borderRadius: 28,
+    borderRadius: RADIUS.full,
     backgroundColor: SemanticColors.actionPrimary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
   },
   customerInitial: {
-    fontSize: 24,
-    fontWeight: '600',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.titleFamily,
     color: '#FFFFFF',
   },
   customerDetails: {
     flex: 1,
   },
   customerName: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   customerMeta: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
@@ -1278,13 +1275,13 @@ const styles = StyleSheet.create({
   // Insights Section
   insightsSection: {
     backgroundColor: SemanticColors.surfaceBackground,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 20,
   },
   insightsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
@@ -1298,7 +1295,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   insightText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   responsePredict: {
@@ -1307,7 +1304,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   responsePredictLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginBottom: 8,
   },
@@ -1324,8 +1321,8 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   responsePredictValue: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
 
@@ -1334,25 +1331,25 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   messageSectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   messageSubject: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 8,
     backgroundColor: SemanticColors.surfaceBackground,
     padding: 12,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   messageInput: {
     backgroundColor: SemanticColors.surfaceBackground,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
     minHeight: 150,
     lineHeight: 20,
@@ -1363,7 +1360,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sourcesTitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginBottom: 8,
   },
@@ -1379,7 +1376,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   sourceText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
 
@@ -1391,7 +1388,7 @@ const styles = StyleSheet.create({
   snoozeButton: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: RADIUS.full,
     backgroundColor: SemanticColors.surfaceBackground,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1399,7 +1396,7 @@ const styles = StyleSheet.create({
   cancelButton: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: RADIUS.full,
     backgroundColor: SemanticColors.feedbackError + '15',
     justifyContent: 'center',
     alignItems: 'center',
@@ -1410,13 +1407,13 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 20,
     paddingVertical: 14,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.actionPrimary,
   },
   contactButtonText: {
     color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 15,
+    fontFamily: TYPE.titleFamily,
+    fontSize: TYPE.bodySize,
   },
   completeButton: {
     flexDirection: 'row',
@@ -1424,13 +1421,13 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 20,
     paddingVertical: 14,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.feedbackSuccess,
   },
   completeButtonText: {
     color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 15,
+    fontFamily: TYPE.titleFamily,
+    fontSize: TYPE.bodySize,
   },
 
   // Completed Info
@@ -1444,7 +1441,7 @@ const styles = StyleSheet.create({
     borderTopColor: SemanticColors.borderDefault,
   },
   completedText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.feedbackSuccess,
   },
 
@@ -1458,14 +1455,14 @@ const styles = StyleSheet.create({
   },
   outcomeModal: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 20,
     width: '100%',
     maxWidth: 300,
   },
   outcomeTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     textAlign: 'center',
     marginBottom: 20,
@@ -1475,12 +1472,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: 16,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.surfaceBackground,
     marginBottom: 8,
   },
   outcomeOptionText: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     color: SemanticColors.textPrimary,
   },
   outcomeCancel: {
@@ -1489,7 +1486,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   outcomeCancelText: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     color: SemanticColors.textSecondary,
   },
 
@@ -1501,8 +1498,8 @@ const styles = StyleSheet.create({
     maxHeight: '85%',
   },
   fieldLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 12,
     marginTop: 8,
@@ -1514,7 +1511,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     marginRight: 12,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: SemanticColors.surfaceBackground,
     width: 100,
   },
@@ -1526,25 +1523,25 @@ const styles = StyleSheet.create({
   customerOptionAvatar: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: RADIUS.full,
     backgroundColor: SemanticColors.actionPrimary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
   },
   customerOptionInitial: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: '#FFFFFF',
   },
   customerOptionName: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     textAlign: 'center',
   },
   customerOptionNameSelected: {
     color: SemanticColors.actionPrimary,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   typeGrid: {
     flexDirection: 'row',
@@ -1555,7 +1552,7 @@ const styles = StyleSheet.create({
   typeOption: {
     width: '48%',
     backgroundColor: SemanticColors.surfaceBackground,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     alignItems: 'center',
     gap: 8,
@@ -1566,13 +1563,13 @@ const styles = StyleSheet.create({
     borderColor: SemanticColors.actionPrimary,
   },
   typeOptionLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     textAlign: 'center',
   },
   typeOptionLabelSelected: {
     color: SemanticColors.actionPrimary,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   dateOptions: {
     flexDirection: 'row',
@@ -1582,7 +1579,7 @@ const styles = StyleSheet.create({
   dateOption: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceBackground,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: 14,
     alignItems: 'center',
   },
@@ -1590,16 +1587,16 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary,
   },
   dateOptionText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   dateOptionTextSelected: {
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   customerInsights: {
     backgroundColor: SemanticColors.surfaceBackground,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 16,
   },
@@ -1613,11 +1610,11 @@ const styles = StyleSheet.create({
   scheduleCancelButton: {
     paddingHorizontal: 24,
     paddingVertical: 14,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.surfaceBackground,
   },
   scheduleCancelText: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     color: SemanticColors.textSecondary,
   },
   scheduleConfirmButton: {
@@ -1627,7 +1624,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 14,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.actionPrimary,
   },
   scheduleConfirmDisabled: {
@@ -1635,8 +1632,8 @@ const styles = StyleSheet.create({
   },
   scheduleConfirmText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
   },
 });
 

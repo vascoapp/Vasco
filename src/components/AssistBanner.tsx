@@ -4,7 +4,7 @@ import { Radius } from '../theme/radius';
 import { Shadows } from '../theme/shadows';
 import { Spacing } from '../theme/spacing';
 import { Typography } from '../theme/typography';
-
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../theme/tabStyles';
 type AssistBannerProps = {
   title: string;
   description: string;
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
   },
   meta: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Inter_500Medium',
   },
   description: {
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
   ctaText: {
     color: SemanticColors.textPrimary,
     fontWeight: '600',
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
   },
   pressed: {
     opacity: 0.9,

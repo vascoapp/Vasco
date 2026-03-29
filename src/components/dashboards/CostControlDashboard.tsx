@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import {
@@ -239,7 +240,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: SemanticColors.textSecondary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
   },
   projectSelector: {
     flexDirection: 'row',
@@ -258,12 +259,12 @@ const styles = StyleSheet.create({
   },
   projectCountry: {
     color: CFO_COLOR,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '700',
   },
   projectName: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   projectNameActive: {
@@ -276,7 +277,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
   },
   statusText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '700',
   },
   section: {
@@ -284,7 +285,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -303,11 +304,11 @@ const styles = StyleSheet.create({
   },
   costLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   costValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
     marginTop: 4,
   },
@@ -330,12 +331,12 @@ const styles = StyleSheet.create({
     borderColor: CFO_COLOR,
   },
   cpiValue: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
   },
   cpiLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
   },
   cpiInfo: {
     flex: 1,
@@ -346,10 +347,10 @@ const styles = StyleSheet.create({
   },
   cpiRowLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   cpiRowValue: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
   },
   contingencyCard: {
@@ -365,12 +366,12 @@ const styles = StyleSheet.create({
   },
   contingencyAmount: {
     color: SemanticColors.textPrimary,
-    fontSize: 20,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
   },
   contingencyPercent: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   contingencyBar: {
     height: 8,
@@ -392,11 +393,11 @@ const styles = StyleSheet.create({
   },
   contingencyLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   contingencyValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '500',
   },
   budgetLinesList: {
@@ -419,7 +420,7 @@ const styles = StyleSheet.create({
   },
   budgetLineName: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '500',
   },
   budgetLineProgress: {
@@ -438,7 +439,7 @@ const styles = StyleSheet.create({
   },
   budgetLineSpent: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   varianceBadge: {
     paddingHorizontal: 8,
@@ -453,7 +454,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackSuccess + '20',
   },
   varianceText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
 });

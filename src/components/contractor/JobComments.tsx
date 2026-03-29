@@ -220,7 +220,7 @@ const s = StyleSheet.create({
   commentAvatarText: {
     fontSize: TYPE.labelSize,
     fontFamily: TYPE.sectionFamily,
-    color: '#fff',
+    color: Palette.white,
   },
   commentBubble: {
     flex: 1,

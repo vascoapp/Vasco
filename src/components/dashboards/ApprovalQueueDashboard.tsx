@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { Typography } from '../../theme/typography';
 import {
@@ -483,7 +484,7 @@ const styles = StyleSheet.create({
   summaryCard: {
     flex: 1,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -499,7 +500,7 @@ const styles = StyleSheet.create({
   },
   summaryValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontWeight: '700',
   },
   summaryValueHighlight: {
@@ -510,7 +511,7 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     marginTop: 4,
   },
   riskSummaryRow: {
@@ -519,30 +520,30 @@ const styles = StyleSheet.create({
   },
   riskSummaryItem: {
     flex: 1,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     alignItems: 'center',
   },
   riskSummaryValue: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
   },
   riskSummaryLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     marginTop: 2,
   },
   tabRow: {
     flexDirection: 'row',
     gap: Spacing.xs,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 4,
   },
   tab: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
   },
   tabActive: {
@@ -550,7 +551,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   tabTextActive: {
@@ -561,7 +562,7 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -582,7 +583,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   categoryText: {
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     fontWeight: '700',
   },
   riskBadge: {
@@ -591,36 +592,36 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   riskText: {
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     fontWeight: '700',
   },
   statusBadge: {
     paddingVertical: 4,
     paddingHorizontal: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   statusText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '600',
     textTransform: 'uppercase',
   },
   actionTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontWeight: '600',
   },
   actionDescription: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   actionAmount: {
     color: SemanticColors.textPrimary,
-    fontSize: 20,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
   },
   expiryText: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   approvalsSection: {
@@ -628,7 +629,7 @@ const styles = StyleSheet.create({
   },
   approvalsLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   approvalsRow: {
@@ -640,7 +641,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfaceSecondary,
     paddingVertical: 4,
     paddingHorizontal: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
@@ -654,7 +655,7 @@ const styles = StyleSheet.create({
   },
   approvalText: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '600',
     textTransform: 'capitalize',
   },
@@ -675,18 +676,18 @@ const styles = StyleSheet.create({
   },
   generatedLabel: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
   generatedScroll: {
     maxHeight: 150,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
   },
   generatedText: {
     color: SemanticColors.textPrimary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'monospace',
     lineHeight: 16,
   },
@@ -695,7 +696,7 @@ const styles = StyleSheet.create({
   },
   auditLabel: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
   auditRow: {
@@ -707,18 +708,18 @@ const styles = StyleSheet.create({
   },
   auditTime: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     width: 80,
   },
   auditAction: {
     color: SemanticColors.textTertiary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '600',
     width: 60,
   },
   auditDetails: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     flex: 1,
   },
   actionButtons: {
@@ -729,7 +730,7 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
   },
   rejectButton: {
@@ -739,7 +740,7 @@ const styles = StyleSheet.create({
   },
   rejectButtonText: {
     color: SemanticColors.feedbackError,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
   },
   approveButton: {
@@ -747,7 +748,7 @@ const styles = StyleSheet.create({
   },
   approveButtonText: {
     color: '#0B0C0F',
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
   },
   executeButton: {
@@ -756,7 +757,7 @@ const styles = StyleSheet.create({
   },
   executeButtonText: {
     color: '#0B0C0F',
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
   },
   emptyState: {
@@ -770,17 +771,17 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: SemanticColors.textSecondary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   confirmationRequired: {
     backgroundColor: SemanticColors.feedbackWarning + '15',
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 8,
     marginTop: Spacing.xs,
   },
   confirmationRequiredText: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '500',
     textAlign: 'center',
   },

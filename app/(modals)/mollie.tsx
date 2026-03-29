@@ -10,10 +10,12 @@ import { hapticSuccess } from '../../src/utils/haptics';
 import { useAuth } from '../../src/context/AuthContext';
 import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../../src/config/paymentMethods';
 import { consentService } from '../../src/services/consentService';
+import { useTranslation } from 'react-i18next';
 
 export default function MollieConnectModal() {
   const { connectMollie, mollieConnected } = useAppState();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [apiKey, setApiKey] = useState('');
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
@@ -34,7 +36,7 @@ export default function MollieConnectModal() {
         'Toestemming vereist',
         'Vasco verwerkt betalingsgegevens via Mollie. Door te verbinden ga je akkoord met het delen van factuurgegevens met Mollie voor betalingsverwerking.',
         [
-          { text: 'Annuleren', style: 'cancel' },
+          { text: t('common.cancel', 'Cancel'), style: 'cancel' },
           {
             text: 'Akkoord & Verbinden',
             onPress: async () => {

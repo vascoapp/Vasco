@@ -431,6 +431,273 @@ export const DEFAULT_TEMPLATES: DecisionTemplate[] = [
       },
     ],
   },
+
+  // Kitchen Renovation Template (appliances & countertop focus)
+  {
+    id: 'template_kitchen_1b',
+    name: 'Keuken Renovatie',
+    description: 'Beslissingen voor keukenrenovatie',
+    trade: 'kitchen_fitter',
+    projectType: 'kitchen',
+    estimatedTotalDecisions: 12,
+    avgDaysToComplete: 21,
+    usageCount: 89,
+    isSystemTemplate: true,
+    createdAt: '2024-01-01',
+    categories: [
+      {
+        id: 'cat_kitchen_appliances',
+        name: 'Apparatuur',
+        description: 'Keukenapparatuur keuzes',
+        icon: 'restaurant',
+        sortOrder: 1,
+        phase: 'planning' as ProjectPhase,
+        daysBeforePhaseStart: 28,
+        items: [
+          { id: 'item_oven', name: 'Oven type', description: 'Kies uw oven', inputType: 'select' as const, priority: 'critical' as const, impactIfDelayed: 'Bestelling loopt vertraging op', options: [{ value: 'builtin', label: 'Inbouw' }, { value: 'freestanding', label: 'Vrijstaand' }, { value: 'steam_combi', label: 'Stoom-combi', priceImpact: 800 }] },
+          { id: 'item_cooktop', name: 'Kookplaat', description: 'Type kookplaat', inputType: 'select' as const, priority: 'critical' as const, impactIfDelayed: 'Aanrechtblad kan niet op maat worden gemaakt', options: [{ value: 'induction', label: 'Inductie' }, { value: 'ceramic', label: 'Keramisch' }, { value: 'gas', label: 'Gas' }] },
+          { id: 'item_dishwasher', name: 'Vaatwasser', description: 'Wel of geen vaatwasser', inputType: 'select' as const, priority: 'important' as const, impactIfDelayed: 'Standaard keukenindeling wordt gebruikt', options: [{ value: 'integrated', label: 'Ingebouwd' }, { value: 'freestanding', label: 'Vrijstaand' }, { value: 'none', label: 'Geen' }] },
+        ],
+      },
+      {
+        id: 'cat_kitchen_countertop',
+        name: 'Aanrechtblad',
+        description: 'Materiaal en kleur',
+        icon: 'layers',
+        sortOrder: 2,
+        phase: 'planning' as ProjectPhase,
+        daysBeforePhaseStart: 21,
+        items: [
+          { id: 'item_counter_material', name: 'Materiaal', description: 'Kies aanrechtmateriaal', inputType: 'select' as const, priority: 'critical' as const, impactIfDelayed: 'Keuken kan niet worden afgemonteerd', options: [{ value: 'granite', label: 'Graniet', priceImpact: 400 }, { value: 'composite', label: 'Composiet' }, { value: 'wood', label: 'Hout' }, { value: 'stainless', label: 'RVS', priceImpact: 600 }] },
+          { id: 'item_counter_color', name: 'Kleur aanrechtblad', description: 'Welke kleur?', inputType: 'text' as const, priority: 'important' as const, impactIfDelayed: 'Standaard kleur wordt besteld' },
+        ],
+      },
+    ],
+  },
+
+  // Roofing Template
+  {
+    id: 'template_roofing_1',
+    name: 'Dak Renovatie',
+    description: 'Beslissingen voor dakrenovatie',
+    trade: 'roofing',
+    projectType: 'roofing',
+    estimatedTotalDecisions: 8,
+    avgDaysToComplete: 10,
+    usageCount: 45,
+    isSystemTemplate: true,
+    createdAt: '2024-01-01',
+    categories: [
+      {
+        id: 'cat_roof_material',
+        name: 'Dakbedekking',
+        description: 'Type dakpannen of bedekking',
+        icon: 'home',
+        sortOrder: 1,
+        phase: 'planning' as ProjectPhase,
+        daysBeforePhaseStart: 14,
+        items: [
+          { id: 'item_roof_type', name: 'Dakpan type', description: 'Kies het type dakpan', inputType: 'select' as const, priority: 'critical' as const, impactIfDelayed: 'Bestelling kan niet worden geplaatst', options: [{ value: 'concrete', label: 'Betonpannen' }, { value: 'ceramic', label: 'Keramische pannen', priceImpact: 800 }, { value: 'slate', label: 'Leisteen', priceImpact: 1200 }] },
+          { id: 'item_roof_color', name: 'Kleur dakpannen', description: 'Welke kleur?', inputType: 'select' as const, priority: 'important' as const, impactIfDelayed: 'Standaard kleur wordt besteld', options: [{ value: 'anthracite', label: 'Antraciet' }, { value: 'red', label: 'Rood' }, { value: 'brown', label: 'Bruin' }] },
+          { id: 'item_insulation', name: 'Dakisolatie mee?', description: 'Isolatie gelijk meenemen?', inputType: 'select' as const, priority: 'important' as const, impactIfDelayed: 'Kan later alsnog', options: [{ value: 'yes_pir', label: 'Ja, PIR platen', priceImpact: 2000 }, { value: 'yes_wool', label: 'Ja, glaswol', priceImpact: 1200 }, { value: 'no', label: 'Nee, niet nodig' }] },
+          { id: 'item_gutter', name: 'Dakgoten', description: 'Dakgoten vervangen?', inputType: 'select' as const, priority: 'nice_to_have' as const, impactIfDelayed: 'Geen impact op planning', options: [{ value: 'zinc', label: 'Zinken goten' }, { value: 'pvc', label: 'PVC goten' }, { value: 'keep', label: 'Bestaande behouden' }] },
+        ],
+      },
+    ],
+  },
+
+  // Solar Installation Template
+  {
+    id: 'template_solar_1',
+    name: 'Zonnepanelen Installatie',
+    description: 'Beslissingen voor zonnepanelen installatie',
+    trade: 'solar',
+    projectType: 'solar',
+    estimatedTotalDecisions: 7,
+    avgDaysToComplete: 7,
+    usageCount: 67,
+    isSystemTemplate: true,
+    createdAt: '2024-01-01',
+    categories: [
+      {
+        id: 'cat_solar_panels',
+        name: 'Panelen & Omvormer',
+        description: 'Keuze panelen en omvormer',
+        icon: 'sunny',
+        sortOrder: 1,
+        phase: 'planning' as ProjectPhase,
+        daysBeforePhaseStart: 14,
+        items: [
+          { id: 'item_panel_count', name: 'Aantal panelen', description: 'Hoeveel panelen wilt u?', inputType: 'select' as const, priority: 'critical' as const, impactIfDelayed: 'Bestelling kan niet worden geplaatst', options: [{ value: '8', label: '8 panelen (~3.4 kWp)' }, { value: '12', label: '12 panelen (~5 kWp)' }, { value: '16', label: '16 panelen (~6.7 kWp)' }, { value: '20', label: '20 panelen (~8.4 kWp)' }] },
+          { id: 'item_panel_type', name: 'Paneel type', description: 'Welk type paneel?', inputType: 'select' as const, priority: 'important' as const, impactIfDelayed: 'Standaard paneel wordt besteld', options: [{ value: 'full_black', label: 'Full black (strak)', priceImpact: 100 }, { value: 'half_cut', label: 'Half-cut (efficiënt)' }, { value: 'bifacial', label: 'Bifacial (dubbelzijdig)', priceImpact: 200 }] },
+          { id: 'item_battery', name: 'Thuisbatterij', description: 'Wilt u een thuisbatterij?', inputType: 'select' as const, priority: 'important' as const, impactIfDelayed: 'Kan later worden bijgeplaatst', options: [{ value: 'no', label: 'Nee' }, { value: '5kwh', label: '5 kWh batterij', priceImpact: 2800 }, { value: '10kwh', label: '10 kWh batterij', priceImpact: 4500 }] },
+          { id: 'item_monitoring', name: 'Monitoring', description: 'Type monitoring?', inputType: 'select' as const, priority: 'nice_to_have' as const, impactIfDelayed: 'Geen impact', options: [{ value: 'app', label: 'App monitoring (standaard)' }, { value: 'display', label: 'Scherm in huis', priceImpact: 95 }] },
+        ],
+      },
+    ],
+  },
+
+  // Flooring Template
+  {
+    id: 'template_flooring_1',
+    name: 'Vloer Leggen',
+    description: 'Beslissingen voor nieuwe vloer',
+    trade: 'flooring',
+    projectType: 'flooring',
+    estimatedTotalDecisions: 6,
+    avgDaysToComplete: 7,
+    usageCount: 52,
+    isSystemTemplate: true,
+    createdAt: '2024-01-01',
+    categories: [
+      {
+        id: 'cat_floor_material',
+        name: 'Vloermateriaal',
+        description: 'Type vloer en kleur',
+        icon: 'albums',
+        sortOrder: 1,
+        phase: 'planning' as ProjectPhase,
+        daysBeforePhaseStart: 14,
+        items: [
+          { id: 'item_floor_type', name: 'Type vloer', description: 'Welk type vloer?', inputType: 'select' as const, priority: 'critical' as const, impactIfDelayed: 'Bestelling kan niet worden geplaatst', options: [{ value: 'laminate', label: 'Laminaat' }, { value: 'pvc_click', label: 'PVC click' }, { value: 'parquet', label: 'Parket', priceImpact: 800 }, { value: 'vinyl', label: 'Vinyl' }] },
+          { id: 'item_floor_color', name: 'Kleur/decor', description: 'Welke kleur of houtlook?', inputType: 'text' as const, priority: 'critical' as const, impactIfDelayed: 'Standaard decor wordt besteld' },
+          { id: 'item_underfloor', name: 'Vloerverwarming', description: 'Is er vloerverwarming aanwezig?', inputType: 'select' as const, priority: 'important' as const, impactIfDelayed: 'Verkeerde ondervloer kan worden gelegd', options: [{ value: 'yes', label: 'Ja' }, { value: 'no', label: 'Nee' }] },
+          { id: 'item_skirting', name: 'Plinten', description: 'Type plinten', inputType: 'select' as const, priority: 'nice_to_have' as const, impactIfDelayed: 'Standaard plinten worden gebruikt', options: [{ value: 'matching', label: 'Bijpassend' }, { value: 'white', label: 'Wit gelakt' }, { value: 'mdf', label: 'MDF wit' }] },
+        ],
+      },
+    ],
+  },
+
+  // Insulation Template
+  {
+    id: 'template_insulation_1',
+    name: 'Isolatie Project',
+    description: 'Beslissingen voor woningisolatie',
+    trade: 'insulation',
+    projectType: 'insulation',
+    estimatedTotalDecisions: 5,
+    avgDaysToComplete: 5,
+    usageCount: 38,
+    isSystemTemplate: true,
+    createdAt: '2024-01-01',
+    categories: [
+      {
+        id: 'cat_insulation_type',
+        name: 'Isolatietype',
+        description: 'Materiaal en Rc-waarde',
+        icon: 'thermometer',
+        sortOrder: 1,
+        phase: 'planning' as ProjectPhase,
+        daysBeforePhaseStart: 7,
+        items: [
+          { id: 'item_insulation_area', name: 'Wat isoleren?', description: 'Welk deel van de woning?', inputType: 'select' as const, priority: 'critical' as const, impactIfDelayed: 'Werk kan niet starten', options: [{ value: 'cavity', label: 'Spouwmuur' }, { value: 'roof', label: 'Dak' }, { value: 'floor', label: 'Vloer' }, { value: 'facade', label: 'Buitengevel' }] },
+          { id: 'item_rc_value', name: 'Rc-waarde doel', description: 'Welke isolatiewaarde?', inputType: 'select' as const, priority: 'important' as const, impactIfDelayed: 'Standaard Rc wordt gebruikt', options: [{ value: 'rc3.5', label: 'Rc 3.5 (minimum nieuwbouw)' }, { value: 'rc5', label: 'Rc 5.0 (energielabel A)' }, { value: 'rc6.5', label: 'Rc 6.5 (toekomstbestendig)', priceImpact: 600 }] },
+          { id: 'item_subsidy', name: 'Subsidie aanvragen?', description: 'Wilt u ISDE subsidie aanvragen?', inputType: 'select' as const, priority: 'nice_to_have' as const, impactIfDelayed: 'Subsidie kan later worden aangevraagd', options: [{ value: 'yes', label: 'Ja, graag' }, { value: 'no', label: 'Nee' }] },
+        ],
+      },
+    ],
+  },
+
+  // Landscaping Template
+  {
+    id: 'template_landscaping_1',
+    name: 'Tuin Aanleg',
+    description: 'Beslissingen voor tuinaanleg',
+    trade: 'landscaping',
+    projectType: 'garden',
+    estimatedTotalDecisions: 8,
+    avgDaysToComplete: 10,
+    usageCount: 41,
+    isSystemTemplate: true,
+    createdAt: '2024-01-01',
+    categories: [
+      {
+        id: 'cat_garden_hardscape',
+        name: 'Bestrating & Terras',
+        description: 'Verharding en terras keuzes',
+        icon: 'grid',
+        sortOrder: 1,
+        phase: 'planning' as ProjectPhase,
+        daysBeforePhaseStart: 14,
+        items: [
+          { id: 'item_paving', name: 'Bestrating type', description: 'Welk type bestrating?', inputType: 'select' as const, priority: 'critical' as const, impactIfDelayed: 'Bestelling loopt vertraging op', options: [{ value: 'concrete_tiles', label: 'Betontegels 30x30' }, { value: 'klinkers', label: 'Gebakken klinkers', priceImpact: 400 }, { value: 'natural_stone', label: 'Natuursteen', priceImpact: 1200 }] },
+          { id: 'item_fence', name: 'Erfafscheiding', description: 'Type schutting of hek', inputType: 'select' as const, priority: 'important' as const, impactIfDelayed: 'Standaard hout wordt besteld', options: [{ value: 'wood', label: 'Houten schutting' }, { value: 'composite', label: 'Composiet', priceImpact: 300 }, { value: 'metal', label: 'Metalen hek', priceImpact: 500 }, { value: 'none', label: 'Geen' }] },
+          { id: 'item_lighting', name: 'Tuinverlichting', description: 'Verlichting in de tuin?', inputType: 'select' as const, priority: 'nice_to_have' as const, impactIfDelayed: 'Kan later worden toegevoegd', options: [{ value: 'solar', label: 'Solar spots' }, { value: 'wired', label: 'Vast aangesloten', priceImpact: 400 }, { value: 'none', label: 'Geen' }] },
+        ],
+      },
+      {
+        id: 'cat_garden_softscape',
+        name: 'Beplanting & Gazon',
+        description: 'Planten en gras keuzes',
+        icon: 'leaf',
+        sortOrder: 2,
+        phase: 'installation' as ProjectPhase,
+        daysBeforePhaseStart: 7,
+        items: [
+          { id: 'item_lawn', name: 'Gazon type', description: 'Type gazon', inputType: 'select' as const, priority: 'important' as const, impactIfDelayed: 'Gazon wordt later gezaaid', options: [{ value: 'seed', label: 'Graszaad' }, { value: 'sod', label: 'Graszoden (direct groen)', priceImpact: 300 }, { value: 'artificial', label: 'Kunstgras', priceImpact: 600 }] },
+          { id: 'item_plants', name: 'Beplanting stijl', description: 'Welke stijl beplanting?', inputType: 'select' as const, priority: 'nice_to_have' as const, impactIfDelayed: 'Standaard beplantingsplan wordt gebruikt', options: [{ value: 'modern', label: 'Strak/modern' }, { value: 'cottage', label: 'Cottage/landelijk' }, { value: 'low_maintenance', label: 'Onderhoudsarm' }] },
+        ],
+      },
+    ],
+  },
+
+  // Glazing Template
+  {
+    id: 'template_glazing_1',
+    name: 'Glas Vervangen',
+    description: 'Beslissingen voor glasvervanging',
+    trade: 'glazing',
+    projectType: 'glazing',
+    estimatedTotalDecisions: 4,
+    avgDaysToComplete: 5,
+    usageCount: 28,
+    isSystemTemplate: true,
+    createdAt: '2024-01-01',
+    categories: [
+      {
+        id: 'cat_glass_type',
+        name: 'Glastype',
+        description: 'Type en kwaliteit glas',
+        icon: 'browsers',
+        sortOrder: 1,
+        phase: 'planning' as ProjectPhase,
+        daysBeforePhaseStart: 10,
+        items: [
+          { id: 'item_glass_quality', name: 'Glastype', description: 'Welk type glas?', inputType: 'select' as const, priority: 'critical' as const, impactIfDelayed: 'Glas kan niet worden besteld', options: [{ value: 'hr_plus', label: 'HR+ (standaard)' }, { value: 'hr_plusplus', label: 'HR++ (aanbevolen)' }, { value: 'triple', label: 'Triple glas', priceImpact: 800 }] },
+          { id: 'item_safety', name: 'Veiligheidsglas', description: 'Veiligheidsglas nodig?', inputType: 'select' as const, priority: 'important' as const, impactIfDelayed: 'Standaard glas wordt besteld', options: [{ value: 'no', label: 'Nee (standaard)' }, { value: 'laminated', label: 'Gelaagd (veiligheid)', priceImpact: 200 }, { value: 'tempered', label: 'Gehard', priceImpact: 150 }] },
+        ],
+      },
+    ],
+  },
+
+  // Plastering Template
+  {
+    id: 'template_plastering_1',
+    name: 'Stucwerk',
+    description: 'Beslissingen voor stucwerk',
+    trade: 'plastering',
+    projectType: 'plastering',
+    estimatedTotalDecisions: 4,
+    avgDaysToComplete: 3,
+    usageCount: 35,
+    isSystemTemplate: true,
+    createdAt: '2024-01-01',
+    categories: [
+      {
+        id: 'cat_plaster_type',
+        name: 'Type Stucwerk',
+        description: 'Afwerking en materiaal',
+        icon: 'layers',
+        sortOrder: 1,
+        phase: 'planning' as ProjectPhase,
+        daysBeforePhaseStart: 5,
+        items: [
+          { id: 'item_finish', name: 'Afwerking', description: 'Welke afwerking?', inputType: 'select' as const, priority: 'critical' as const, impactIfDelayed: 'Werk kan niet starten', options: [{ value: 'smooth', label: 'Glad stucwerk' }, { value: 'decorative', label: 'Sierpleister', priceImpact: 300 }, { value: 'rough', label: 'Schuurwerk' }] },
+          { id: 'item_color', name: 'Kleur', description: 'Welke kleur stucwerk?', inputType: 'select' as const, priority: 'important' as const, impactIfDelayed: 'Wit wordt gebruikt', options: [{ value: 'white', label: 'Wit (standaard)' }, { value: 'custom', label: 'Kleur op maat', priceImpact: 100 }] },
+        ],
+      },
+    ],
+  },
 ];
 
 // ============================================
@@ -471,6 +738,36 @@ const KEYWORD_MAPPINGS: Record<string, { trades: Trade[]; projectTypes: string[]
   // Tiling
   tegel: { trades: ['tiler'], projectTypes: ['tiling'] },
   tile: { trades: ['tiler'], projectTypes: ['tiling'] },
+
+  // Roofing
+  dak: { trades: ['roofing'], projectTypes: ['roofing'] },
+  dakpan: { trades: ['roofing'], projectTypes: ['roofing'] },
+  roof: { trades: ['roofing'], projectTypes: ['roofing'] },
+
+  // Solar
+  zonnepanel: { trades: ['solar'], projectTypes: ['solar'] },
+  solar: { trades: ['solar'], projectTypes: ['solar'] },
+  zonne: { trades: ['solar'], projectTypes: ['solar'] },
+
+  // Insulation
+  isolat: { trades: ['insulation'], projectTypes: ['insulation'] },
+  spouw: { trades: ['insulation'], projectTypes: ['insulation'] },
+
+  // Landscaping
+  tuin: { trades: ['landscaping'], projectTypes: ['garden'] },
+  garden: { trades: ['landscaping'], projectTypes: ['garden'] },
+  bestrat: { trades: ['landscaping'], projectTypes: ['garden'] },
+
+  // Glazing
+  glas: { trades: ['glazing'], projectTypes: ['glazing'] },
+  glaz: { trades: ['glazing'], projectTypes: ['glazing'] },
+  raam: { trades: ['glazing'], projectTypes: ['glazing'] },
+  window: { trades: ['glazing'], projectTypes: ['glazing'] },
+
+  // Plastering
+  stuc: { trades: ['plastering'], projectTypes: ['plastering'] },
+  plaster: { trades: ['plastering'], projectTypes: ['plastering'] },
+  pleister: { trades: ['plastering'], projectTypes: ['plastering'] },
 };
 
 /**

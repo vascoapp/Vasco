@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
-
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 interface EmptyStateProps {
   icon?: keyof typeof Ionicons.glyphMap;
   title: string;
@@ -84,14 +84,14 @@ const styles = StyleSheet.create({
     right: 8,
   },
   title: {
-    fontSize: 17,
+    fontSize: TYPE.titleSize + 1,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
     textAlign: 'center',
     marginBottom: 4,
   },
   description: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_400Regular',
     color: SemanticColors.textSecondary,
     textAlign: 'center',
@@ -105,11 +105,11 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   buttonText: {
     color: Palette.white,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_600SemiBold',
   },
 });

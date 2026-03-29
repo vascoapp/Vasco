@@ -17,9 +17,13 @@ function from(table: string) { return db.from(table); }
 // ── Helpers ──────────────────────────────────────────────────
 
 async function getUserId(): Promise<string> {
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) throw new Error('Not authenticated');
-  return data.user.id;
+  try {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) throw new Error('Not authenticated');
+    return data.user.id;
+  } catch {
+    throw new Error('Not authenticated');
+  }
 }
 
 // ── Data Events ──────────────────────────────────────────────

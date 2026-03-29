@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import {
@@ -193,7 +194,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: SemanticColors.textSecondary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
   },
   projectSelector: {
     flexDirection: 'row',
@@ -212,12 +213,12 @@ const styles = StyleSheet.create({
   },
   projectCountry: {
     color: SITE_LEAD_COLOR,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '700',
   },
   projectName: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   projectNameActive: {
@@ -238,12 +239,12 @@ const styles = StyleSheet.create({
   },
   summaryValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontWeight: '700',
   },
   summaryLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     marginTop: 4,
   },
   section: {
@@ -256,7 +257,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -265,11 +266,11 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackWarning,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   countBadgeText: {
-    color: '#fff',
-    fontSize: 11,
+    color: Palette.white,
+    fontSize: TYPE.tinySize,
     fontWeight: '700',
   },
   rfiCard: {
@@ -294,12 +295,12 @@ const styles = StyleSheet.create({
     borderColor: SITE_LEAD_COLOR,
   },
   rfiValue: {
-    fontSize: 22,
+    fontSize: TYPE.displaySize - 6,
     fontWeight: '700',
   },
   rfiLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
   },
   rfiDetails: {
     flex: 1,
@@ -311,11 +312,11 @@ const styles = StyleSheet.create({
   },
   rfiRowLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   rfiRowValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
   rfiWarning: {
@@ -328,7 +329,7 @@ const styles = StyleSheet.create({
   },
   rfiWarningText: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     flex: 1,
   },
   riskList: {
@@ -346,12 +347,12 @@ const styles = StyleSheet.create({
   riskScore: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     alignItems: 'center',
     justifyContent: 'center',
   },
   riskScoreText: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '700',
   },
   riskInfo: {
@@ -359,13 +360,13 @@ const styles = StyleSheet.create({
   },
   riskCategory: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '600',
     textTransform: 'uppercase',
   },
   riskDesc: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     marginTop: 2,
   },
   riskMeta: {
@@ -375,12 +376,12 @@ const styles = StyleSheet.create({
   },
   riskStatus: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     textTransform: 'capitalize',
   },
   riskOwner: {
     color: SITE_LEAD_COLOR,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '500',
   },
   constraintCard: {
@@ -399,12 +400,12 @@ const styles = StyleSheet.create({
   },
   constraintValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontWeight: '700',
   },
   constraintLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   constraintDivider: {
     width: 1,

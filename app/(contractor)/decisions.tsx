@@ -10,7 +10,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Palette, SemanticColors } from '../../src/theme/colors';
-import { PAGE_BG } from '../../src/theme/tabStyles';
+import { PAGE_BG, TYPE } from '../../src/theme/tabStyles';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { Spacing } from '../../src/theme/spacing';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     fontSize: 22,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: '#1A1A1A',
   },
   newBadge: {
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   },
   newBadgeText: {
     fontSize: 11,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: '#FFF',
   },
 });

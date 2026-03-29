@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { SafeArea } from '../../theme/spacing';
-
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    fontSize: 17,
+    fontSize: TYPE.titleSize + 1,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
     marginBottom: 16,
@@ -147,18 +147,18 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingVertical: 14,
     paddingHorizontal: 4,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   actionIcon: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   actionLabel: {
     flex: 1,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontFamily: 'Manrope_500Medium',
   },
   cancelBtn: {
@@ -166,10 +166,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 14,
+    borderRadius: RADIUS.lg,
   },
   cancelText: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textSecondary,
   },

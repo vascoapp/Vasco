@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../src/theme/colors';
+import { TYPE } from '../../src/theme/tabStyles';
 import { OfflineBanner } from '../../src/components/shared/OfflineBanner';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -26,7 +27,7 @@ const CONTRACTOR_TABS: TabConfig[] = [
   {
     name: 'index',
     i18nKey: 'tabs.today',
-    fallbackTitle: 'Vandaag',
+    fallbackTitle: 'Today',
     icon: 'today-outline',
     iconFocused: 'today',
   },
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 11,
-    fontFamily: 'Inter_500Medium',
+    fontFamily: TYPE.labelFamily,
     marginTop: 2,
   },
   tabItem: {

@@ -5,6 +5,7 @@
 import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import type { WorkerHeatmapRow, HeatmapCell } from '../../services/resourceHeatmapService';
 
@@ -127,7 +128,7 @@ export function UtilizationHeatmapGrid({ rows, hourLabels, onCellPress }: Props)
 const styles = StyleSheet.create({
   container: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.sm,
     borderWidth: 1,
     borderColor: SemanticColors.borderMuted,
@@ -144,9 +145,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 1,
   },
   headerText: {
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     color: SemanticColors.textTertiary,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   row: {
     flexDirection: 'row',
@@ -162,14 +163,14 @@ const styles = StyleSheet.create({
   initialsCircle: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     backgroundColor: Palette.hermesOrange,
     justifyContent: 'center',
     alignItems: 'center',
   },
   initialsText: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.sectionFamily,
     color: Palette.white,
   },
   cell: {
@@ -181,11 +182,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 1,
   },
   cellText: {
-    fontSize: 9,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 2,
+    fontFamily: TYPE.titleFamily,
   },
   breakText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   avgCell: {
     width: 40,
@@ -196,8 +197,8 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   avgText: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.sectionFamily,
   },
   legend: {
     flexDirection: 'row',
@@ -210,9 +211,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   legendLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   legendItem: {
     flexDirection: 'row',
@@ -225,7 +226,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   legendText: {
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     color: SemanticColors.textTertiary,
   },
 });

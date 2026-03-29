@@ -8,6 +8,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import type { SupplierPerformance, SupplierRanking } from '../../types/supplier-reliability';
@@ -248,7 +249,7 @@ export function SupplierReliabilityCard({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -264,25 +265,25 @@ const styles = StyleSheet.create({
   },
   supplierName: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
   },
   category: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     textTransform: 'capitalize',
   },
   gradeBadgeLarge: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   gradeTextLarge: {
     color: Palette.white,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   scoreSection: {
     flexDirection: 'row',
@@ -296,12 +297,12 @@ const styles = StyleSheet.create({
   },
   scoreValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 32,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize + 4,
+    fontFamily: TYPE.sectionFamily,
   },
   scoreLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   trendSection: {
     flexDirection: 'row',
@@ -309,8 +310,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   trendText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
   metricsGrid: {
     flexDirection: 'row',
@@ -324,18 +325,18 @@ const styles = StyleSheet.create({
   },
   metricValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   metricLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
   },
   alertsSection: {
     gap: 6,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.feedbackWarningBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   alertHeader: {
     flexDirection: 'row',
@@ -344,8 +345,8 @@ const styles = StyleSheet.create({
   },
   alertHeaderText: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   alertItem: {
     flexDirection: 'row',
@@ -359,7 +360,7 @@ const styles = StyleSheet.create({
   },
   alertMessage: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     flex: 1,
   },
   // Compact styles
@@ -369,7 +370,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: Spacing.sm,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
@@ -378,8 +379,8 @@ const styles = StyleSheet.create({
   },
   compactName: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
   },
   compactMeta: {
     flexDirection: 'row',
@@ -388,7 +389,7 @@ const styles = StyleSheet.create({
   },
   compactCategory: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     textTransform: 'capitalize',
   },
   compactRight: {
@@ -402,18 +403,18 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   gradeText: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   alertBadge: {
     backgroundColor: SemanticColors.feedbackError,
     paddingHorizontal: 5,
     paddingVertical: 1,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   alertBadgeText: {
     color: Palette.white,
-    fontSize: 9,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 2,
+    fontFamily: TYPE.titleFamily,
   },
 });

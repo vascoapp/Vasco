@@ -3,10 +3,11 @@
 import { useState, useMemo } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
-
+import { useTranslation } from 'react-i18next';
 // Types
 interface CompletionItem {
   id: string;
@@ -416,12 +417,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   headerSubtitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   jobSummary: {
     flexDirection: 'row',
@@ -437,24 +438,24 @@ const styles = StyleSheet.create({
   },
   jobCustomer: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   jobAddress: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   jobAmount: {
     alignItems: 'flex-end',
   },
   jobAmountLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
   },
   jobAmountValue: {
     color: SemanticColors.feedbackSuccess,
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   progressSection: {
     padding: Spacing.md,
@@ -468,13 +469,13 @@ const styles = StyleSheet.create({
   },
   progressTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   progressPercent: {
     color: SemanticColors.actionPrimary,
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.sectionFamily,
   },
   progressBar: {
     height: 8,
@@ -489,7 +490,7 @@ const styles = StyleSheet.create({
   },
   progressSubtext: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   content: {
     flex: 1,
@@ -501,7 +502,7 @@ const styles = StyleSheet.create({
   },
   section: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -519,12 +520,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   sectionCount: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   photoBadge: {
     backgroundColor: SemanticColors.feedbackSuccessBg,
@@ -534,8 +535,8 @@ const styles = StyleSheet.create({
   },
   photoBadgeText: {
     color: SemanticColors.feedbackSuccess,
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   photoGrid: {
     flexDirection: 'row',
@@ -545,7 +546,7 @@ const styles = StyleSheet.create({
   photoItem: {
     width: 100,
     height: 100,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -569,14 +570,14 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   photoCaptionText: {
-    color: '#fff',
-    fontSize: 9,
+    color: Palette.white,
+    fontSize: TYPE.tinySize - 2,
     textAlign: 'center',
   },
   addPhotoButton: {
     width: 100,
     height: 100,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     borderWidth: 2,
     borderColor: SemanticColors.actionPrimary,
     borderStyle: 'dashed',
@@ -587,8 +588,8 @@ const styles = StyleSheet.create({
   },
   addPhotoText: {
     color: SemanticColors.actionPrimary,
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   photoHint: {
     flexDirection: 'row',
@@ -596,11 +597,11 @@ const styles = StyleSheet.create({
     gap: 6,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.feedbackInfoBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   photoHintText: {
     color: SemanticColors.feedbackInfo,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     flex: 1,
   },
   checklistItems: {
@@ -611,7 +612,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     gap: 10,
   },
   checklistItemCompleted: {
@@ -633,7 +634,7 @@ const styles = StyleSheet.create({
   checklistLabel: {
     flex: 1,
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   checklistLabelCompleted: {
     color: SemanticColors.feedbackSuccess,
@@ -646,15 +647,15 @@ const styles = StyleSheet.create({
   },
   requiredBadgeText: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 9,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 2,
+    fontFamily: TYPE.titleFamily,
   },
   approvalCard: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.md,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     gap: 12,
   },
   approvalCardApproved: {
@@ -667,12 +668,12 @@ const styles = StyleSheet.create({
   },
   approvalTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
   },
   approvalSubtitle: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     marginTop: 2,
   },
   evidenceSummary: {
@@ -680,13 +681,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.md,
     backgroundColor: SemanticColors.feedbackSuccessBg,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     gap: Spacing.sm,
   },
   evidenceSummaryIcon: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: RADIUS.full,
     backgroundColor: SemanticColors.feedbackSuccess + '30',
     alignItems: 'center',
     justifyContent: 'center',
@@ -696,12 +697,12 @@ const styles = StyleSheet.create({
   },
   evidenceSummaryTitle: {
     color: SemanticColors.feedbackSuccess,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   evidenceSummaryText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   bottomBar: {
     flexDirection: 'row',
@@ -720,13 +721,13 @@ const styles = StyleSheet.create({
   },
   bottomInfoText: {
     color: SemanticColors.feedbackSuccess,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
   },
   bottomInfoTextWarning: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
   },
   invoiceButton: {
     flexDirection: 'row',
@@ -735,14 +736,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     backgroundColor: SemanticColors.feedbackSuccess,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   invoiceButtonDisabled: {
     backgroundColor: SemanticColors.textTertiary,
   },
   invoiceButtonText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
+    color: Palette.white,
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
 });

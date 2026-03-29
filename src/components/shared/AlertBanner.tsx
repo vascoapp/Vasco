@@ -119,12 +119,12 @@ const styles = StyleSheet.create({
   },
   itemTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
   },
   itemSubtitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     marginTop: 2,
   },
   seeAll: {

@@ -16,9 +16,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
-
+import { useTranslation } from 'react-i18next';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -587,12 +588,12 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   headerSubtitle: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   regionSelector: {
@@ -603,18 +604,18 @@ const styles = StyleSheet.create({
     marginVertical: Spacing.sm,
     padding: Spacing.md,
     backgroundColor: Palette.pastelOrange + '20',
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   regionName: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.hermesOrange,
   },
   regionStats: {
     flex: 1,
   },
   regionStatText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   tabBar: {
@@ -633,19 +634,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: Spacing.sm,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   tabActive: {
     backgroundColor: Palette.pastelOrange + '30',
   },
   tabText: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textTertiary,
   },
   tabTextActive: {
     color: Palette.hermesOrange,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   content: {
     flex: 1,
@@ -663,12 +664,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   sectionSubtitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
   },
 
@@ -679,7 +680,7 @@ const styles = StyleSheet.create({
   trendingCard: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -688,26 +689,26 @@ const styles = StyleSheet.create({
   trendingRank: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     backgroundColor: Palette.hermesOrange,
     alignItems: 'center',
     justifyContent: 'center',
   },
   trendingRankText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.sectionFamily,
+    color: Palette.white,
   },
   trendingInfo: {
     flex: 1,
   },
   trendingName: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   trendingBrand: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -720,12 +721,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   trendingStatValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   trendingStatLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
   },
   ratingBadge: {
@@ -734,8 +735,8 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   ratingText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   trendingTrend: {
@@ -743,15 +744,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   trendingTrendText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     marginTop: 2,
   },
 
   // Price Trends
   priceTrendsList: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     overflow: 'hidden',
@@ -768,12 +769,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   priceTrendCategory: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
   },
   priceTrendPrice: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   priceTrendBadge: {
@@ -782,25 +783,25 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   priceTrendChange: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
 
   // Preferences
   preferenceCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     marginBottom: Spacing.sm,
   },
   preferenceCategory: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: Spacing.md,
   },
@@ -817,7 +818,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   preferenceOptionName: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   preferenceBar: {
@@ -836,8 +837,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   preferencePercentage: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     minWidth: 36,
     textAlign: 'right',
@@ -847,7 +848,7 @@ const styles = StyleSheet.create({
   insightCard: {
     flexDirection: 'row',
     backgroundColor: Palette.pastelOrange + '20',
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     gap: Spacing.md,
     marginBottom: Spacing.sm,
@@ -856,13 +857,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   insightTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 4,
   },
   insightDescription: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     lineHeight: 18,
   },
@@ -871,7 +872,7 @@ const styles = StyleSheet.create({
   opportunityCard: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -881,7 +882,7 @@ const styles = StyleSheet.create({
   opportunityIcon: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -890,12 +891,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   opportunityTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   opportunityDescription: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     lineHeight: 18,
   },
@@ -911,8 +912,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   opportunityValueText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.feedbackSuccess,
   },
   confidenceBadge: {
@@ -922,7 +923,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   confidenceText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
 
@@ -935,7 +936,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   dataSourceText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
   aiNote: {
@@ -945,10 +946,10 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: Spacing.md,
     backgroundColor: Palette.pastelOrange + '15',
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   aiNoteText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: Palette.hermesOrange,
     flex: 1,
   },

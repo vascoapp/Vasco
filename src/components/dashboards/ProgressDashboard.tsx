@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import {
@@ -172,7 +173,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: SemanticColors.textSecondary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
   },
   projectSelector: {
     flexDirection: 'row',
@@ -191,12 +192,12 @@ const styles = StyleSheet.create({
   },
   projectCountry: {
     color: SITE_LEAD_COLOR,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '700',
   },
   projectName: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   projectNameActive: {
@@ -215,7 +216,7 @@ const styles = StyleSheet.create({
   },
   progressTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '600',
   },
   statusBadge: {
@@ -224,7 +225,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
   },
   statusText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '700',
   },
   progressCircle: {
@@ -237,7 +238,7 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     marginTop: 4,
   },
   comparisonBars: {
@@ -250,7 +251,7 @@ const styles = StyleSheet.create({
   },
   barLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     width: 50,
   },
   barTrack: {
@@ -272,7 +273,7 @@ const styles = StyleSheet.create({
   },
   barValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
     width: 40,
     textAlign: 'right',
@@ -287,10 +288,10 @@ const styles = StyleSheet.create({
   },
   varianceLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   varianceValue: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '700',
   },
   section: {
@@ -298,7 +299,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -320,12 +321,12 @@ const styles = StyleSheet.create({
   },
   activityName: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '500',
   },
   activityWbs: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     marginTop: 2,
   },
   activityProgress: {
@@ -347,7 +348,7 @@ const styles = StyleSheet.create({
   },
   activityPercent: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
     width: 35,
     textAlign: 'right',

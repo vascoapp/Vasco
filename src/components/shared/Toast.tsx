@@ -3,6 +3,7 @@ import { Text, StyleSheet, Animated, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { SafeArea } from '../../theme/spacing';
+import { RADIUS } from '../../theme/tabStyles';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -67,7 +68,7 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: RADIUS.lg,
     shadowColor: Palette.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,

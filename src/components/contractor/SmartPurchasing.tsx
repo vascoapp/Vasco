@@ -2,7 +2,8 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import type { SmartPurchaseAlert, MaterialCatalogItem, UpcomingMaterialNeed } from '../../types/contractor-features';
@@ -10,7 +11,7 @@ import { MOCK_PURCHASE_ALERTS, MOCK_MATERIALS, MOCK_UPCOMING_NEEDS, MOCK_SUPPLIE
 import { intelligence } from '../../intelligence/intelligenceEngine';
 import { RecommendationFeedbackList } from './RecommendationFeedback';
 import { useRecommendationFeedback } from '../../hooks/useRecommendationFeedback';
-
+import { useTranslation } from 'react-i18next';
 // Helper to create context for intelligence tracking
 const createTrackingContext = () => ({
   platform: 'ios' as const,
@@ -28,6 +29,7 @@ interface SmartPurchasingProps {
 }
 
 export function SmartPurchasing({ onClose }: SmartPurchasingProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'alerts' | 'upcoming' | 'prices' | 'tips'>('alerts');
 
   // Recommendation feedback hook for AI tips
@@ -126,7 +128,7 @@ export function SmartPurchasing({ onClose }: SmartPurchasingProps) {
               onAccept={acceptRecommendation}
               onReject={rejectRecommendation}
               onDismiss={dismissRecommendation}
-              emptyMessage="Geen AI tips op dit moment"
+              emptyMessage={t('purchasing.noAITips', 'No AI tips right now')}
             />
           </View>
         )}
@@ -501,12 +503,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   headerSubtitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   savingsBadge: {
     flexDirection: 'row',
@@ -515,17 +517,17 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackSuccessBg,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   savingsBadgeText: {
     color: SemanticColors.feedbackSuccess,
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.sectionFamily,
   },
   summaryCard: {
     margin: Spacing.md,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     overflow: 'hidden',
@@ -539,7 +541,7 @@ const styles = StyleSheet.create({
   summaryIcon: {
     width: 56,
     height: 56,
-    borderRadius: 28,
+    borderRadius: RADIUS.full,
     backgroundColor: SemanticColors.actionPrimary + '15',
     alignItems: 'center',
     justifyContent: 'center',
@@ -549,16 +551,16 @@ const styles = StyleSheet.create({
   },
   summaryTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   summaryValue: {
     color: SemanticColors.feedbackSuccess,
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize,
+    fontFamily: TYPE.sectionFamily,
   },
   summarySubtext: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   summaryStats: {
     flexDirection: 'row',
@@ -576,18 +578,18 @@ const styles = StyleSheet.create({
   },
   summaryStatValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   summaryStatLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
   },
   tabBar: {
     flexDirection: 'row',
     marginHorizontal: Spacing.md,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 4,
   },
   tab: {
@@ -597,23 +599,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   tabActive: {
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   tabText: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
   },
   tabTextActive: {
     color: SemanticColors.textPrimary,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   tabBadge: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     paddingHorizontal: 6,
     paddingVertical: 2,
     minWidth: 18,
@@ -624,11 +626,11 @@ const styles = StyleSheet.create({
   },
   tabBadgeText: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   tabBadgeTextActive: {
-    color: '#fff',
+    color: Palette.white,
   },
   content: {
     flex: 1,
@@ -642,7 +644,7 @@ const styles = StyleSheet.create({
   },
   alertCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -656,7 +658,7 @@ const styles = StyleSheet.create({
   alertIcon: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -665,12 +667,12 @@ const styles = StyleSheet.create({
   },
   alertTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   alertMaterial: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   savingsTag: {
     backgroundColor: SemanticColors.feedbackSuccessBg,
@@ -680,12 +682,12 @@ const styles = StyleSheet.create({
   },
   savingsTagText: {
     color: SemanticColors.feedbackSuccess,
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   alertMessage: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     lineHeight: 18,
   },
   alertSupplier: {
@@ -695,7 +697,7 @@ const styles = StyleSheet.create({
   },
   alertSupplierText: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   alertExpiry: {
     flexDirection: 'row',
@@ -704,7 +706,7 @@ const styles = StyleSheet.create({
   },
   alertExpiryText: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   alertActions: {
     flexDirection: 'row',
@@ -715,25 +717,25 @@ const styles = StyleSheet.create({
     flex: 2,
     backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
   },
   alertActionPrimaryText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
+    color: Palette.white,
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
   alertActionSecondary: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceSecondary,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
   },
   alertActionSecondaryText: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
   },
   emptyState: {
     alignItems: 'center',
@@ -742,12 +744,12 @@ const styles = StyleSheet.create({
   },
   emptyStateTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
   },
   emptyStateText: {
     color: SemanticColors.textTertiary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   infoCard: {
     flexDirection: 'row',
@@ -755,16 +757,16 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     backgroundColor: SemanticColors.feedbackInfoBg,
     padding: Spacing.md,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   infoText: {
     flex: 1,
     color: SemanticColors.feedbackInfo,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   needCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -777,8 +779,8 @@ const styles = StyleSheet.create({
   },
   needMaterial: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     flex: 1,
   },
   buyNowTag: {
@@ -791,14 +793,14 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   buyNowTagText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '700',
+    color: Palette.white,
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.sectionFamily,
   },
   needStats: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
   },
   needStat: {
@@ -807,19 +809,19 @@ const styles = StyleSheet.create({
   },
   needStatLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
   },
   needStatValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   needJobs: {
     gap: 4,
   },
   needJobsLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   needJobRow: {
     flexDirection: 'row',
@@ -828,12 +830,12 @@ const styles = StyleSheet.create({
   },
   needJobTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   needJobQty: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
   },
   needSavings: {
     flexDirection: 'row',
@@ -841,11 +843,11 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: SemanticColors.feedbackSuccessBg,
     padding: Spacing.sm,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   needSavingsText: {
     color: SemanticColors.feedbackSuccess,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     flex: 1,
   },
   needAction: {
@@ -855,16 +857,16 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   needActionText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
+    color: Palette.white,
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   priceCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -880,12 +882,12 @@ const styles = StyleSheet.create({
   },
   priceMaterial: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   priceBrand: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   priceTrend: {
     flexDirection: 'row',
@@ -893,14 +895,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   priceTrendText: {
-    fontSize: 11,
-    fontWeight: '500',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.labelFamily,
     textTransform: 'capitalize',
   },
   priceComparison: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
   },
   priceCol: {
@@ -909,20 +911,20 @@ const styles = StyleSheet.create({
   },
   priceLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
   },
   priceValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
   },
   priceValueMuted: {
     color: SemanticColors.textSecondary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
   },
   priceSupplier: {
     color: SemanticColors.textTertiary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
   },
   recommendation: {
     flexDirection: 'row',
@@ -930,14 +932,14 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: SemanticColors.feedbackInfoBg,
     padding: Spacing.sm,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   recommendationBuyNow: {
     backgroundColor: SemanticColors.feedbackSuccessBg,
   },
   recommendationText: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     flex: 1,
   },
   priceActions: {
@@ -947,11 +949,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   comparePricesBtnText: {
     color: SemanticColors.actionPrimary,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
 });

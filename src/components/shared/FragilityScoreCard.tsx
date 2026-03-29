@@ -8,6 +8,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import type { FragilityScore, FragilityLevel, FactorScore } from '../../types/schedule-fragility';
 
@@ -233,7 +234,7 @@ export function FragilityScoreCard({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -249,17 +250,17 @@ const styles = StyleSheet.create({
   },
   projectName: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
   },
   subtitle: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   fragilityIconContainer: {
     width: 44,
     height: 44,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -278,20 +279,20 @@ const styles = StyleSheet.create({
   },
   scoreValue: {
     fontSize: 36,
-    fontWeight: '700',
+    fontFamily: TYPE.sectionFamily,
   },
   scoreMax: {
     color: SemanticColors.textTertiary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   fragilityLabel: {
     paddingHorizontal: 10,
     paddingVertical: 3,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   fragilityLabelText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   statsColumn: {
     flex: 1,
@@ -304,12 +305,12 @@ const styles = StyleSheet.create({
   },
   statValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   statLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   factorsSection: {
     gap: Spacing.sm,
@@ -319,8 +320,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   factorsList: {
     gap: 10,
@@ -335,7 +336,7 @@ const styles = StyleSheet.create({
   },
   factorName: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   factorScore: {
     flexDirection: 'row',
@@ -349,8 +350,8 @@ const styles = StyleSheet.create({
   },
   factorScoreText: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   factorBar: {
     height: 4,
@@ -366,7 +367,7 @@ const styles = StyleSheet.create({
     gap: 6,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.feedbackWarningBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   alertsHeader: {
     flexDirection: 'row',
@@ -375,8 +376,8 @@ const styles = StyleSheet.create({
   },
   alertsTitle: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   alertItem: {
     flexDirection: 'row',
@@ -390,7 +391,7 @@ const styles = StyleSheet.create({
   },
   alertMessage: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     flex: 1,
   },
   recommendationsSection: {
@@ -399,11 +400,11 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.feedbackInfoBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   recommendationText: {
     color: SemanticColors.feedbackInfo,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     flex: 1,
   },
   // Compact styles
@@ -413,7 +414,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: Spacing.sm,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
@@ -422,12 +423,12 @@ const styles = StyleSheet.create({
   },
   compactTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
   },
   compactMeta: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   compactRight: {
     flexDirection: 'row',
@@ -443,7 +444,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   fragilityBadgeText: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.sectionFamily,
   },
 });

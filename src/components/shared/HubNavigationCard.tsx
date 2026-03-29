@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     marginTop: 2,
   },
   chevronContainer: {

@@ -8,10 +8,11 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Palette, SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { useActiveWorkflows, workflowAgentsService } from '../../services';
 import type { Workflow, WorkflowStep } from '../../types/workflow-agents';
-
+import { useTranslation } from 'react-i18next';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 const WORKFLOW_ICONS: Record<string, IconName> = {
@@ -305,7 +306,7 @@ export function WorkflowWidget({ onPress }: { onPress?: () => void }) {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -318,7 +319,7 @@ const styles = StyleSheet.create({
   loadingPlaceholder: {
     height: 100,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   // Empty state
   emptyState: {
@@ -327,12 +328,12 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   emptyText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
   },
   emptySubtext: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     textAlign: 'center',
   },
@@ -350,31 +351,31 @@ const styles = StyleSheet.create({
   headerIcon: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: Palette.hermesOrange + '15',
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   headerSubtitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   needsApprovalBadge: {
     backgroundColor: SemanticColors.feedbackInfoBg,
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   needsApprovalText: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackInfo,
   },
   // Workflow List
@@ -383,7 +384,7 @@ const styles = StyleSheet.create({
   },
   workflowItem: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     gap: Spacing.sm,
   },
@@ -395,7 +396,7 @@ const styles = StyleSheet.create({
   workflowIcon: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -403,12 +404,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   workflowName: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   workflowContext: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   statusBadge: {
@@ -425,8 +426,8 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   statusText: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   // Progress
   progressContainer: {
@@ -447,7 +448,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   progressText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     minWidth: 60,
     textAlign: 'right',
@@ -482,8 +483,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   moreStepsText: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
   },
   // Approval Section
@@ -501,9 +502,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   approvalLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.feedbackInfo,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   approveButton: {
     flexDirection: 'row',
@@ -515,12 +516,12 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   approveButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.white,
   },
   moreWorkflows: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.actionPrimary,
     textAlign: 'center',
   },
@@ -533,7 +534,7 @@ const styles = StyleSheet.create({
   compactIcon: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: Palette.hermesOrange + '15',
     alignItems: 'center',
     justifyContent: 'center',
@@ -542,12 +543,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   compactTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   compactCount: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   approvalBadge: {
@@ -562,8 +563,8 @@ const styles = StyleSheet.create({
     marginLeft: 52,
   },
   approvalBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.feedbackInfo,
   },
   // Widget styles
@@ -571,7 +572,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -580,7 +581,7 @@ const styles = StyleSheet.create({
   widgetIcon: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: Palette.hermesOrange + '15',
     alignItems: 'center',
     justifyContent: 'center',
@@ -589,23 +590,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   widgetValue: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   widgetLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   widgetBadge: {
     backgroundColor: SemanticColors.feedbackInfoBg,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   widgetBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackInfo,
   },
 });

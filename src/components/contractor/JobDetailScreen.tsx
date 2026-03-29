@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Palette, SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import type { Job, JobPhoto, TimeEntry, MaterialUsage } from '../../types/contractor';
@@ -15,7 +16,7 @@ import { useInlineInsight, useVascoGuidance } from '../../services/vascoGuidance
 import { AddJobMaterialModal } from './AddJobMaterialModal';
 import { getNextAction as getLoopNextAction, getStageLabel, getLoopProgress, type LoopStage } from '../../services/accountingLoopService';
 import { getAIRecommendation } from '../../intelligence/loopIntelligence';
-
+import { useTranslation } from 'react-i18next';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 interface JobDetailScreenProps {
@@ -320,7 +321,7 @@ export function JobDetailScreen({
       {/* Bottom Summary */}
       {!!(job.quotedAmount && job.agreedAmount && job.agreedAmount < job.quotedAmount * 0.85 && (job.status === 'completed' || job.status === 'invoiced')) && (
         <View style={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.xs }}>
-          <Text style={{ color: SemanticColors.feedbackWarning, fontSize: 13, lineHeight: 18 }}>
+          <Text style={{ color: SemanticColors.feedbackWarning, fontSize: TYPE.captionSize, lineHeight: 18 }}>
             <Ionicons name="alert-circle" size={13} color={SemanticColors.feedbackWarning} />{' '}
             Let op: deze klus is {Math.round((1 - job.agreedAmount / job.quotedAmount) * 100)}% onder de offerte afgesloten. Reden loggen helpt toekomstige schattingen.
           </Text>
@@ -763,7 +764,7 @@ function TypedMaterialsTab({
                       {mat?.name ?? 'Onbekend materiaal'}
                     </Text>
                     {mat?.brand && (
-                      <Text style={{ fontSize: 11, color: '#999' }}>{mat.brand}</Text>
+                      <Text style={{ fontSize: TYPE.tinySize, color: SemanticColors.textTertiary }}>{mat.brand}</Text>
                     )}
                   </View>
                   <Text style={styles.materialCost}>
@@ -779,11 +780,11 @@ function TypedMaterialsTab({
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                   <Ionicons name={statusCfg.icon as any} size={12} color={statusCfg.color} />
-                  <Text style={{ fontSize: 11, fontWeight: '600', color: statusCfg.color }}>
+                  <Text style={{ fontSize: TYPE.tinySize, fontWeight: '600', color: statusCfg.color }}>
                     {statusCfg.label}
                   </Text>
                   {jm.notes && (
-                    <Text style={{ fontSize: 11, color: '#999', marginLeft: 8 }} numberOfLines={1}>
+                    <Text style={{ fontSize: TYPE.tinySize, color: SemanticColors.textTertiary, marginLeft: 8 }} numberOfLines={1}>
                       {jm.notes}
                     </Text>
                   )}
@@ -817,10 +818,10 @@ const styles = StyleSheet.create({
   loopProgress: { height: 3, backgroundColor: SemanticColors.borderDefault, borderRadius: 1.5, overflow: 'hidden' },
   loopProgressFill: { height: 3, backgroundColor: Palette.hermesOrange, borderRadius: 1.5 },
   loopRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  loopStage: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
-  loopHint: { fontSize: 12, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
+  loopStage: { fontSize: TYPE.labelSize, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
+  loopHint: { fontSize: TYPE.labelSize, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
   loopAction: { backgroundColor: Palette.hermesOrange, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  loopActionText: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: '#fff' },
+  loopActionText: { fontSize: TYPE.labelSize, fontFamily: 'Inter_600SemiBold', color: Palette.white },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -839,12 +840,12 @@ const styles = StyleSheet.create({
   },
   jobTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   customerName: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   statusBadge: {
     flexDirection: 'row',
@@ -852,11 +853,11 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   statusText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   quickActions: {
     flexDirection: 'row',
@@ -873,7 +874,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   quickActionPrimary: {
@@ -886,13 +887,13 @@ const styles = StyleSheet.create({
   },
   quickActionText: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   quickActionTextPrimary: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
+    color: Palette.white,
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   tabBar: {
     flexDirection: 'row',
@@ -914,25 +915,25 @@ const styles = StyleSheet.create({
   },
   tabText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
   },
   tabTextActive: {
     color: SemanticColors.actionPrimary,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   tabBadge: {
     backgroundColor: SemanticColors.actionPrimary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     paddingHorizontal: 6,
     paddingVertical: 2,
     minWidth: 18,
     alignItems: 'center',
   },
   tabBadgeText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '700',
+    color: Palette.white,
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.sectionFamily,
   },
   content: {
     flex: 1,
@@ -946,7 +947,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -954,8 +955,8 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     marginBottom: 4,
   },
   detailRow: {
@@ -968,11 +969,11 @@ const styles = StyleSheet.create({
   },
   detailText: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   detailSubtext: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   noteBox: {
     flexDirection: 'row',
@@ -980,11 +981,11 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: SemanticColors.surfaceSecondary,
     padding: Spacing.sm,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   noteText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     flex: 1,
   },
   mapButton: {
@@ -994,13 +995,13 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 10,
     backgroundColor: SemanticColors.actionPrimary + '15',
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     marginTop: 4,
   },
   mapButtonText: {
     color: SemanticColors.actionPrimary,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
   customerRow: {
     flexDirection: 'row',
@@ -1010,22 +1011,22 @@ const styles = StyleSheet.create({
   customerAvatar: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: RADIUS.full,
     backgroundColor: SemanticColors.actionPrimary + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },
   customerInitials: {
     color: SemanticColors.actionPrimary,
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
   },
   customerInfo: {
     flex: 1,
   },
   customerCompany: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   contactActions: {
     flexDirection: 'row',
@@ -1040,16 +1041,16 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 10,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   contactBtnText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
   },
   descriptionText: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     lineHeight: 20,
   },
   areasContainer: {
@@ -1057,7 +1058,7 @@ const styles = StyleSheet.create({
   },
   areasLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     marginBottom: 6,
   },
   areasTags: {
@@ -1073,23 +1074,23 @@ const styles = StyleSheet.create({
   },
   areaTagText: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   specsBox: {
     backgroundColor: SemanticColors.feedbackInfoBg,
     padding: Spacing.sm,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     marginTop: Spacing.sm,
   },
   specsLabel: {
     color: SemanticColors.feedbackInfo,
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     marginBottom: 4,
   },
   specsText: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   noteItem: {
     paddingVertical: 8,
@@ -1098,11 +1099,11 @@ const styles = StyleSheet.create({
   },
   noteItemText: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   noteItemMeta: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     marginTop: 4,
   },
   photoSection: {
@@ -1110,8 +1111,8 @@ const styles = StyleSheet.create({
   },
   photoSectionTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     textTransform: 'uppercase',
   },
   photoGrid: {
@@ -1126,7 +1127,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -1134,17 +1135,17 @@ const styles = StyleSheet.create({
   },
   photoCaption: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
   },
   emptyPhotos: {
     backgroundColor: SemanticColors.surfacePrimary,
     padding: Spacing.md,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
   },
   emptyPhotosText: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   addPhotoButton: {
     flexDirection: 'row',
@@ -1153,30 +1154,30 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: Spacing.md,
     backgroundColor: SemanticColors.actionPrimary + '15',
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: SemanticColors.actionPrimary + '30',
     borderStyle: 'dashed',
   },
   addPhotoText: {
     color: SemanticColors.actionPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   timeSummaryCard: {
     backgroundColor: SemanticColors.actionPrimary + '15',
     padding: Spacing.lg,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
   },
   timeSummaryLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   timeSummaryValue: {
     color: SemanticColors.actionPrimary,
-    fontSize: 32,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize + 4,
+    fontFamily: TYPE.sectionFamily,
   },
   timeEntry: {
     paddingVertical: 10,
@@ -1191,21 +1192,21 @@ const styles = StyleSheet.create({
   },
   timeEntryDate: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   timeEntryHours: {
     color: SemanticColors.actionPrimary,
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.sectionFamily,
   },
   timeEntryTimes: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   timeEntryDesc: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontStyle: 'italic',
   },
   clockInButton: {
@@ -1215,17 +1216,17 @@ const styles = StyleSheet.create({
     gap: 10,
     backgroundColor: SemanticColors.feedbackSuccess,
     padding: Spacing.md,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   clockInButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
+    color: Palette.white,
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
   },
   materialsSummary: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -1236,12 +1237,12 @@ const styles = StyleSheet.create({
   },
   materialsSummaryLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   materialsSummaryValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   materialItem: {
     paddingVertical: 10,
@@ -1256,14 +1257,14 @@ const styles = StyleSheet.create({
   },
   materialName: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     flex: 1,
   },
   materialCost: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   materialDetails: {
     flexDirection: 'row',
@@ -1271,11 +1272,11 @@ const styles = StyleSheet.create({
   },
   materialQty: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   materialSupplier: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   materialBillable: {
     flexDirection: 'row',
@@ -1284,8 +1285,8 @@ const styles = StyleSheet.create({
   },
   materialBillableText: {
     color: SemanticColors.feedbackSuccess,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
   },
   addMaterialButton: {
     flexDirection: 'row',
@@ -1294,15 +1295,15 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: Spacing.md,
     backgroundColor: SemanticColors.actionPrimary + '15',
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: SemanticColors.actionPrimary + '30',
     borderStyle: 'dashed',
   },
   addMaterialText: {
     color: SemanticColors.actionPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   emptyState: {
     alignItems: 'center',
@@ -1312,7 +1313,7 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     color: SemanticColors.textTertiary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   bottomSummary: {
     flexDirection: 'row',
@@ -1327,13 +1328,13 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     textTransform: 'uppercase',
   },
   summaryValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
   },
   summaryDivider: {
     width: 1,

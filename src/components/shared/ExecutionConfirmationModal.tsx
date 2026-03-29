@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import type { ActionInstance, ActionRiskLevel } from '../../modules/agentActions';
@@ -475,7 +476,7 @@ export function ExecutionConfirmationModal({
                     isCompleted && styles.stepDotCompleted,
                   ]}>
                     {isCompleted ? (
-                      <Ionicons name="checkmark" size={12} color="#fff" />
+                      <Ionicons name="checkmark" size={12} color={Palette.white} />
                     ) : (
                       <Text style={[
                         styles.stepNumber,
@@ -522,12 +523,12 @@ export function ExecutionConfirmationModal({
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={Palette.white} />
               ) : (
                 <>
                   <Text style={styles.confirmButtonText}>{getConfirmButtonText()}</Text>
                   {currentStep === 'final' && (
-                    <Ionicons name="checkmark-circle" size={18} color="#fff" />
+                    <Ionicons name="checkmark-circle" size={18} color={Palette.white} />
                   )}
                 </>
               )}
@@ -567,12 +568,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   headerSubtitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   closeButton: {
     padding: Spacing.xs,
@@ -592,7 +593,7 @@ const styles = StyleSheet.create({
   stepDot: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -605,19 +606,19 @@ const styles = StyleSheet.create({
   },
   stepNumber: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   stepNumberActive: {
     color: Palette.white,
   },
   stepLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   stepLabelActive: {
     color: SemanticColors.actionPrimary,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   content: {
     padding: Spacing.md,
@@ -626,13 +627,13 @@ const styles = StyleSheet.create({
   warningHeader: {
     alignItems: 'center',
     padding: Spacing.md,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     marginBottom: Spacing.md,
     gap: 8,
   },
   warningTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   summarySection: {
     gap: 8,
@@ -640,12 +641,12 @@ const styles = StyleSheet.create({
   },
   actionTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
   },
   actionDescription: {
     color: SemanticColors.textSecondary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   amountBox: {
     flexDirection: 'row',
@@ -653,17 +654,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.sm,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     marginTop: 8,
   },
   amountLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   amountValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   warningBox: {
     flexDirection: 'row',
@@ -671,13 +672,13 @@ const styles = StyleSheet.create({
     gap: 10,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.feedbackWarningBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     marginBottom: Spacing.md,
   },
   warningText: {
     flex: 1,
     color: SemanticColors.feedbackWarning,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   reasonBox: {
     flexDirection: 'row',
@@ -685,25 +686,25 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.feedbackInfoBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     marginBottom: Spacing.md,
   },
   reasonText: {
     flex: 1,
     color: SemanticColors.feedbackInfo,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   impactSection: {
     gap: 8,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     marginBottom: Spacing.md,
   },
   impactTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
   impactRow: {
     flexDirection: 'row',
@@ -712,15 +713,15 @@ const styles = StyleSheet.create({
   },
   impactText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   securitySection: {
     gap: 8,
   },
   securityTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
   securityItems: {
     gap: 4,
@@ -732,11 +733,11 @@ const styles = StyleSheet.create({
   },
   securityItemText: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   securityItemRequired: {
     color: SemanticColors.feedbackSuccess,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   verificationSection: {
     alignItems: 'center',
@@ -749,12 +750,12 @@ const styles = StyleSheet.create({
   },
   verificationTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   verificationSubtitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     textAlign: 'center',
   },
   pinInputContainer: {
@@ -763,10 +764,10 @@ const styles = StyleSheet.create({
   },
   pinInput: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.sectionFamily,
     textAlign: 'center',
     color: SemanticColors.textPrimary,
     letterSpacing: 8,
@@ -779,11 +780,11 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.feedbackErrorBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   errorText: {
     color: SemanticColors.feedbackError,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   finalSection: {
     alignItems: 'center',
@@ -796,30 +797,30 @@ const styles = StyleSheet.create({
   },
   finalTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.sectionFamily,
   },
   finalSubtitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     textAlign: 'center',
   },
   finalSummary: {
     width: '100%',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     gap: 4,
   },
   finalSummaryLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     marginTop: 8,
   },
   finalSummaryValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
   },
   auditNotice: {
     flexDirection: 'row',
@@ -827,11 +828,11 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.feedbackInfoBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   auditNoticeText: {
     color: SemanticColors.feedbackInfo,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   footer: {
     flexDirection: 'row',
@@ -847,15 +848,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   cancelButton: {
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   cancelButtonText: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   confirmButton: {
     backgroundColor: SemanticColors.actionPrimary,
@@ -868,7 +869,7 @@ const styles = StyleSheet.create({
   },
   confirmButtonText: {
     color: Palette.white,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
 });

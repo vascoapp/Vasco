@@ -1,0 +1,509 @@
+==============================================================================
+REMOTION VIDEO PIPELINE — GENERIC BUILDOUT TEMPLATE
+==============================================================================
+Replicable template for adding programmatic video generation to ANY
+SaaS application using Remotion + Claude Code.
+
+Copy this into a new project, replace [YOUR_APP] placeholders, and
+customize the templates for your niche.
+
+Proven stack: Remotion + Claude Code + Lambda rendering
+Cost: ~€0.03/video at scale | Time: 2-5 min/video
+Companies using this: Typeframes, Revid.ai, Jupitrr, Pigment
+
+==============================================================================
+STEP 1: CREATE PROJECT STRUCTURE
+==============================================================================
+
+mkdir -p video/src/{compositions,components,data} video/scripts
+cd video
+
+# package.json
+{
+  "name": "[your-app]-video",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "npx remotion studio",
+    "build": "npx remotion render Root",
+    "generate": "npx tsx scripts/generate.ts",
+    "replicate": "npx tsx scripts/replicate.ts"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "@remotion/player": "^4.0.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@remotion/bundler": "^4.0.0",
+    "@types/react": "^18.3.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.5.0"
+  }
+}
+
+npm install
+
+==============================================================================
+STEP 2: THEME FILE (replace with your brand)
+==============================================================================
+
+// video/src/data/theme.ts
+
+export const Colors = {
+  primary: '#[YOUR_BRAND_COLOR]',     // e.g., '#E35205' for orange
+  white: '#FFFFFF',
+  black: '#0B0C0F',
+  background: '#FAFAFA',
+  surface: '#FFFFFF',
+  textPrimary: '#0B0C0F',
+  textSecondary: '#6B7280',
+  success: '#22C55E',
+  error: '#EF4444',
+  warning: '#F59E0B',
+};
+
+export const VIDEO = {
+  width: 1080,                        // TikTok vertical
+  height: 1920,
+  fps: 30,
+  durations: {
+    short: 300,                       // 10 seconds
+    medium: 480,                      // 16 seconds
+    standard: 630,                    // 21 seconds — TikTok sweet spot
+  },
+};
+
+==============================================================================
+STEP 3: NICHE DATA FILE (replace trades with your verticals)
+==============================================================================
+
+// video/src/data/niches.ts
+
+export type Niche = string;           // Your verticals/categories
+
+export interface NicheInfo {
+  id: string;
+  emoji: string;
+  labels: Record<string, string>;     // Multilingual labels
+  color: string;
+}
+
+// EXAMPLE: Construction trades
+export const NICHES: NicheInfo[] = [
+  { id: 'plumbing', emoji: '🔧', labels: { EN: 'Plumbing', NL: 'Loodgieter' }, color: '#3B82F6' },
+  // ... add your verticals
+];
+
+// EXAMPLE: Restaurant app
+// export const NICHES: NicheInfo[] = [
+//   { id: 'italian', emoji: '🍝', labels: { EN: 'Italian', NL: 'Italiaans' }, color: '#DC2626' },
+//   { id: 'sushi', emoji: '🍣', labels: { EN: 'Japanese', NL: 'Japans' }, color: '#F59E0B' },
+// ];
+
+// EXAMPLE: Fitness app
+// export const NICHES: NicheInfo[] = [
+//   { id: 'yoga', emoji: '🧘', labels: { EN: 'Yoga', NL: 'Yoga' }, color: '#8B5CF6' },
+//   { id: 'hiit', emoji: '🏋️', labels: { EN: 'HIIT', NL: 'HIIT' }, color: '#EF4444' },
+// ];
+
+==============================================================================
+STEP 4: HOOK LIBRARY (your best-performing hooks)
+==============================================================================
+
+// video/src/data/hooks.ts
+
+export interface Hook {
+  id: string;
+  format: string;                     // Template type this hook works for
+  text: Record<string, string>;       // Multilingual hook text
+  retentionRate: number;              // 0-1 performance metric
+}
+
+export const HOOKS: Hook[] = [
+  {
+    id: 'hook-1',
+    format: 'did_you_know',
+    text: {
+      EN: 'Did you know? [STAT] [AUDIENCE_INSIGHT]',
+      // ... other languages
+    },
+    retentionRate: 0.42,
+  },
+  // Top rule: Test 3-5 hooks per template. Keep winners, replace losers.
+];
+
+==============================================================================
+STEP 5: SHARED COMPONENTS (branding)
+==============================================================================
+
+// video/src/components/Branding.tsx
+
+import React from 'react';
+import { Colors } from '../data/theme';
+
+export const AppLogo: React.FC<{ size?: number }> = ({ size = 80 }) => (
+  <div style={{
+    width: size, height: size,
+    borderRadius: size * 0.25,
+    backgroundColor: Colors.primary,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  }}>
+    <span style={{
+      fontSize: size * 0.5, fontWeight: 800, color: Colors.white,
+      fontFamily: 'Inter, sans-serif',
+    }}>
+      [APP_INITIAL]
+    </span>
+  </div>
+);
+
+export const CTABanner: React.FC<{ text: string; subtext?: string }> = ({ text, subtext }) => (
+  <div style={{
+    position: 'absolute', bottom: 120, left: 40, right: 40,
+    backgroundColor: Colors.primary,
+    borderRadius: 20, padding: '24px 32px',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+  }}>
+    <span style={{ fontSize: 28, fontWeight: 700, color: Colors.white, fontFamily: 'Inter, sans-serif', textAlign: 'center' }}>
+      {text}
+    </span>
+    {subtext && (
+      <span style={{ fontSize: 18, color: 'rgba(255,255,255,0.85)', fontFamily: 'Inter, sans-serif', textAlign: 'center' }}>
+        {subtext}
+      </span>
+    )}
+  </div>
+);
+
+==============================================================================
+STEP 6: VIDEO TEMPLATES (5 universal templates)
+==============================================================================
+
+These 5 templates work for ANY B2B/B2C SaaS:
+
+TEMPLATE 1: "Did You Know" (Fact/Stat)
+────────────────────────────────────────
+Purpose: Educate + surprise → drive curiosity
+Structure: Hook (2s) → Niche icon (1s) → Stat counter (4s) → Explanation (5s) → CTA (4s)
+Works for: ANY niche with data/stats
+Example hooks:
+  - "[STAT]% of [AUDIENCE] still do [THING] manually"
+  - "The average [ROLE] wastes [X] hours/week on [TASK]"
+  - "[AUDIENCE] who use [FEATURE] save [AMOUNT]"
+
+TEMPLATE 2: "Price/Comparison Check"
+────────────────────────────────────────
+Purpose: Show savings → justify the app
+Structure: Hook (2s) → Side-by-side bars (6s) → Savings callout (4s) → CTA (4s)
+Works for: Any app that saves money (pricing, sourcing, comparison)
+Example hooks:
+  - "Are you overpaying for [THING]?"
+  - "[OPTION A] vs [OPTION B] — which saves more?"
+
+TEMPLATE 3: "Before / After"
+────────────────────────────────────────
+Purpose: Visual proof → desire
+Structure: Before photo (3s) → Swipe (1s) → After photo (3s) → Overlay (2s) → CTA (3s)
+Works for: ANY app with visual transformation (design, construction, fitness, cooking)
+Example hooks:
+  - "What [X] hours of work looks like"
+  - "From [BAD_STATE] to [GOOD_STATE]"
+
+TEMPLATE 4: "AI/App Says" (Tip)
+────────────────────────────────────────
+Purpose: Position app as smart advisor → trust
+Structure: Logo (2s) → Tip typewriter (5s) → CTA (3s)
+Works for: ANY app with AI or smart features
+Example hooks:
+  - "This one trick [BENEFIT]"
+  - "[APP_NAME] just told me something I didn't know"
+
+TEMPLATE 5: "Deadline/Alert"
+────────────────────────────────────────
+Purpose: Urgency → fear of missing out → download
+Structure: Context (2s) → Countdown (4s) → Consequence (4s) → Solution (4s) → CTA (4s)
+Works for: Compliance, deadlines, seasonal, limited offers
+Example hooks:
+  - "This [THING] expires next month. Are you ready?"
+  - "Only [X] days left to [ACTION]"
+
+==============================================================================
+STEP 7: ROOT COMPOSITION (register all templates)
+==============================================================================
+
+// video/src/Root.tsx
+
+import React from 'react';
+import { Composition } from 'remotion';
+import { VIDEO } from './data/theme';
+// Import all your templates...
+
+export const RemotionRoot: React.FC = () => (
+  <>
+    <Composition
+      id="DidYouKnow"
+      component={DidYouKnowTemplate}
+      durationInFrames={VIDEO.durations.standard}
+      fps={VIDEO.fps}
+      width={VIDEO.width}
+      height={VIDEO.height}
+      defaultProps={{ /* demo props */ }}
+    />
+    {/* Register all templates... */}
+  </>
+);
+
+==============================================================================
+STEP 8: SCRIPT GENERATOR (CLI automation)
+==============================================================================
+
+// video/scripts/generate.ts
+
+// Input: --template <name> --niche <id> --lang <code>
+// Output: JSON file with Remotion-compatible props
+//
+// The generator should:
+// 1. Pick a random fact/stat from your niche database
+// 2. Select the best-performing hook for the template type
+// 3. Translate all text to the target language
+// 4. Output a JSON file that can be passed to `npx remotion render`
+//
+// Usage:
+//   npx tsx scripts/generate.ts --template did-you-know --niche yoga --lang EN
+//   npx remotion render Root DidYouKnow out/video.mp4 --props=out/scripts/did-you-know_yoga_en.json
+
+==============================================================================
+STEP 9: MULTI-LANGUAGE REPLICATOR
+==============================================================================
+
+// video/scripts/replicate.ts
+
+// Input: --template <name> --niche <id>
+// Output: One JSON script per language (6 files for EU6, or however many you need)
+//
+// When a video performs well in one market, replicate it to all others.
+// This is the "Content Velocity" multiplier — 1 idea becomes 6+ videos.
+//
+// Usage:
+//   npx tsx scripts/replicate.ts --template all --niche plumbing
+//   # Generates: 5 templates × 6 languages = 30 script files
+
+==============================================================================
+STEP 10: ADMIN UI (optional Next.js component)
+==============================================================================
+
+// admin/src/components/VideoGenerator.tsx
+//
+// A React component with:
+// - Template picker (radio/cards)
+// - Niche selector (dropdown)
+// - Language picker (checkboxes + "replicate all" toggle)
+// - "Generate" button → creates script files → triggers render
+// - Queue view showing render status (pending/rendering/done)
+// - Cost estimator (scripts × €0.03)
+//
+// Wire to your existing admin dashboard or content pipeline.
+
+==============================================================================
+RENDERING OPTIONS
+==============================================================================
+
+LOCAL (development):
+  npx remotion studio              # Preview in browser with hot reload
+  npx remotion render Root TemplateId out/video.mp4
+  npx remotion render Root TemplateId out/video.mp4 --props=script.json
+
+LAMBDA (production, ~$0.001-0.05/video):
+  npm install @remotion/lambda
+  npx remotion lambda sites create  # Deploy site to S3
+  npx remotion lambda render <url> TemplateId
+  # See: remotion.dev/docs/lambda
+
+CLOUD RUN (GCP alternative):
+  npm install @remotion/cloudrun
+  # See: remotion.dev/docs/cloudrun
+
+==============================================================================
+TEMPLATE ANATOMY (copy-paste starter)
+==============================================================================
+
+// video/src/compositions/MyTemplate.tsx
+
+import React from 'react';
+import {
+  AbsoluteFill,
+  interpolate,
+  useCurrentFrame,
+  useVideoConfig,
+  spring,
+  Sequence,
+} from 'remotion';
+import { Colors } from '../data/theme';
+import { CTABanner } from '../components/Branding';
+
+export interface MyTemplateProps {
+  hookText: string;           // Grab attention in first 2 seconds
+  mainContent: string;        // The value — what the viewer learns
+  ctaText: string;            // Call to action
+  language: string;           // For multilingual support
+}
+
+export const MyTemplate: React.FC<MyTemplateProps> = ({
+  hookText, mainContent, ctaText,
+}) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  // Animation timeline (21 seconds = 630 frames at 30fps)
+  // Phase 1: Hook (frames 0-60, 2 seconds)
+  const hookOpacity = interpolate(
+    frame, [0, 10, fps * 2 - 10, fps * 2],
+    [0, 1, 1, 0], { extrapolateRight: 'clamp' }
+  );
+
+  // Phase 2: Main content (frames 60-420, 12 seconds)
+  const contentOpacity = interpolate(
+    frame, [fps * 2, fps * 3],
+    [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+  );
+
+  // Phase 3: CTA (frames 420-570, 5 seconds)
+  const ctaOpacity = interpolate(
+    frame, [fps * 14, fps * 15],
+    [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+  );
+
+  // Phase 4: Branding (frames 570-630, 2 seconds)
+  // (handled by VascoBranding component)
+
+  return (
+    <AbsoluteFill style={{ backgroundColor: Colors.background }}>
+      {/* HOOK — first 2 seconds, biggest text, grab attention */}
+      <Sequence from={0} durationInFrames={fps * 3}>
+        <AbsoluteFill style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 60, opacity: hookOpacity,
+        }}>
+          <span style={{
+            fontSize: 48, fontWeight: 800, color: Colors.textPrimary,
+            fontFamily: 'Inter, sans-serif', textAlign: 'center',
+            lineHeight: 1.2, letterSpacing: -1,
+          }}>
+            {hookText}
+          </span>
+        </AbsoluteFill>
+      </Sequence>
+
+      {/* MAIN CONTENT — the value the viewer gets */}
+      <Sequence from={fps * 2} durationInFrames={fps * 12}>
+        <AbsoluteFill style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 60, opacity: contentOpacity,
+        }}>
+          <span style={{
+            fontSize: 30, fontWeight: 500, color: Colors.textPrimary,
+            fontFamily: 'Inter, sans-serif', textAlign: 'center',
+            lineHeight: 1.5,
+          }}>
+            {mainContent}
+          </span>
+        </AbsoluteFill>
+      </Sequence>
+
+      {/* CTA — what the viewer should do */}
+      <Sequence from={fps * 14} durationInFrames={fps * 5}>
+        <div style={{ opacity: ctaOpacity }}>
+          <CTABanner text={ctaText} />
+        </div>
+      </Sequence>
+    </AbsoluteFill>
+  );
+};
+
+==============================================================================
+ANIMATION CHEAT SHEET
+==============================================================================
+
+FADE IN:
+  interpolate(frame, [startFrame, startFrame + 10], [0, 1], { extrapolateRight: 'clamp' })
+
+FADE OUT:
+  interpolate(frame, [endFrame - 10, endFrame], [1, 0], { extrapolateLeft: 'clamp' })
+
+SCALE BOUNCE:
+  spring({ frame: frame - startFrame, fps, config: { damping: 12 } })
+
+SLIDE UP:
+  interpolate(frame, [startFrame, startFrame + 15], [100, 0], { extrapolateRight: 'clamp' })
+
+COUNTER (animate number):
+  Math.floor(interpolate(frame, [start, end], [0, targetNumber], { extrapolateRight: 'clamp' }))
+
+TYPEWRITER:
+  text.slice(0, Math.floor(interpolate(frame, [start, end], [0, text.length])))
+
+PULSE:
+  Math.sin(frame * 0.15) * 0.1 + 1  // gentle 1.0 ± 0.1
+
+==============================================================================
+AUTOMATION RULES (wire to your content pipeline)
+==============================================================================
+
+1. HIT REPLICATION: Video gets >20K views → auto-generate 5 hook variants
+   + translate to all languages
+
+2. CONTENT VELOCITY: Pod falls below weekly target by Thursday →
+   auto-generate template videos to fill gap
+
+3. TRENDING DETECTION: New trend in your niche detected →
+   create template video referencing it
+
+4. SEASONAL: Calendar-based auto-generation (holidays, seasons, deadlines)
+
+5. DATA-DRIVEN: When your product data changes (new pricing, new feature) →
+   auto-generate announcement video
+
+==============================================================================
+COST BREAKDOWN
+==============================================================================
+
+PER VIDEO:
+  Lambda compute:  ~€0.001-0.05 (depends on complexity)
+  S3 storage:      ~€0.001
+  Total:           ~€0.03 average
+
+AT SCALE (1000 videos/month):
+  Lambda:          ~€10-20
+  Remotion license: €10 (company plan, >3 people)
+  S3:              ~€2
+  Total:           ~€32/month
+
+vs. creator/agency costs: €50-100 per video = €50K-100K/month
+Savings: 99.97%
+
+NOTE: Creators don't disappear. Use 80/20 split:
+  80% automated (stats, tips, comparisons, alerts)
+  20% human (authentic UGC, on-site, faces, stories)
+
+==============================================================================
+CHECKLIST FOR NEW APP
+==============================================================================
+
+[ ] Create video/ directory with package.json
+[ ] Install Remotion + dependencies
+[ ] Create theme.ts with YOUR brand colors
+[ ] Create niches.ts with YOUR verticals/categories
+[ ] Create hooks.ts with 3-5 hooks per template format
+[ ] Create Branding.tsx with YOUR logo + CTA
+[ ] Build 3-5 templates (start with DidYouKnow + BeforeAfter)
+[ ] Register in Root.tsx with default props
+[ ] Test: npx remotion studio
+[ ] Create generate.ts script with YOUR fact/stat database
+[ ] Create replicate.ts for multilingual markets (if applicable)
+[ ] Add AdminVideoGenerator to your dashboard (if you have one)
+[ ] Set up Lambda rendering for production
+[ ] Wire automation rules to your content pipeline
+[ ] Measure: views, retention, CTA clicks, downloads
+[ ] Iterate: replace low-performing hooks weekly

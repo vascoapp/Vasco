@@ -23,6 +23,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 
 // Financial auditor service hooks
@@ -142,7 +143,7 @@ const MOCK_COMPLIANCE: ComplianceItem[] = [
     status: 'at-risk',
     detail: '3 facturen wachten langer dan 14 dagen op goedkeuring',
     icon: 'document-text',
-    lastChecked: 'Vandaag',
+    lastChecked: 'Today',
   },
   {
     id: 'c2',
@@ -150,7 +151,7 @@ const MOCK_COMPLIANCE: ComplianceItem[] = [
     status: 'compliant',
     detail: 'Alle projecten binnen budgetmarges',
     icon: 'calculator',
-    lastChecked: 'Vandaag',
+    lastChecked: 'Today',
   },
   {
     id: 'c3',
@@ -158,7 +159,7 @@ const MOCK_COMPLIANCE: ComplianceItem[] = [
     status: 'non-compliant',
     detail: '2 leveranciers factureren boven contracttarief',
     icon: 'shield-checkmark',
-    lastChecked: 'Gisteren',
+    lastChecked: 'Yesterday',
   },
   {
     id: 'c4',
@@ -166,15 +167,15 @@ const MOCK_COMPLIANCE: ComplianceItem[] = [
     status: 'compliant',
     detail: 'BTW-boekingen correct afgestemd',
     icon: 'receipt',
-    lastChecked: 'Vandaag',
+    lastChecked: 'Today',
   },
   {
     id: 'c5',
     label: 'Dubbele betalingen',
     status: 'compliant',
-    detail: 'Geen dubbele facturen gedetecteerd',
+    detail: 'No duplicate invoices detected',
     icon: 'copy',
-    lastChecked: 'Vandaag',
+    lastChecked: 'Today',
   },
 ];
 
@@ -986,7 +987,7 @@ const localStyles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     gap: 4,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     marginVertical: 4,
     marginHorizontal: 2,
   },
@@ -994,12 +995,12 @@ const localStyles = StyleSheet.create({
     backgroundColor: CFO_COLOR,
   },
   tabBtnText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '500',
     color: SemanticColors.textSecondary,
   },
   tabBtnTextActive: {
-    color: '#fff',
+    color: Palette.white,
     fontWeight: '600',
   },
 
@@ -1022,11 +1023,11 @@ const localStyles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
   },
   healthScoreValue: {
-    fontSize: 28,
+    fontSize: TYPE.displaySize,
     fontWeight: '800',
   },
   healthScoreLabel: {
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -1038,7 +1039,7 @@ const localStyles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.sm,
     marginBottom: Spacing.sm,
     borderWidth: 1,
@@ -1048,7 +1049,7 @@ const localStyles = StyleSheet.create({
     flex: 1,
   },
   riskSummaryTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
     marginBottom: Spacing.xs,
@@ -1065,7 +1066,7 @@ const localStyles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   riskTotalText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.feedbackError,
     fontWeight: '600',
   },
@@ -1077,10 +1078,10 @@ const localStyles = StyleSheet.create({
     gap: 3,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   severityBadgeText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '600',
   },
 
@@ -1091,7 +1092,7 @@ const localStyles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   severityCountDot: {
     width: 6,
@@ -1099,11 +1100,11 @@ const localStyles = StyleSheet.create({
     borderRadius: 3,
   },
   severityCountValue: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '700',
   },
   severityCountLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '500',
   },
   severityPillRow: {
@@ -1123,7 +1124,7 @@ const localStyles = StyleSheet.create({
   metricCard: {
     flex: 1,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 12,
     alignItems: 'center',
     borderWidth: 1,
@@ -1137,12 +1138,12 @@ const localStyles = StyleSheet.create({
     marginBottom: 6,
   },
   metricValue: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
     color: SemanticColors.textPrimary,
   },
   metricLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textSecondary,
     textAlign: 'center',
     marginTop: 2,
@@ -1151,7 +1152,7 @@ const localStyles = StyleSheet.create({
   // Card
   card: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.sm,
     marginBottom: Spacing.sm,
     borderWidth: 1,
@@ -1165,12 +1166,12 @@ const localStyles = StyleSheet.create({
   },
   cardTitle: {
     flex: 1,
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
   cardLink: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: CFO_COLOR,
     fontWeight: '500',
   },
@@ -1191,7 +1192,7 @@ const localStyles = StyleSheet.create({
   },
   complianceQuickLabel: {
     flex: 1,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
 
@@ -1224,12 +1225,12 @@ const localStyles = StyleSheet.create({
   },
   findingTitle: {
     flex: 1,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
   findingDesc: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     lineHeight: 16,
   },
@@ -1240,14 +1241,14 @@ const localStyles = StyleSheet.create({
     marginTop: 4,
   },
   findingImpactText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
 
   // Finding cards (full tab)
   findingCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.sm,
     marginBottom: Spacing.xs,
     borderWidth: 1,
@@ -1264,19 +1265,19 @@ const localStyles = StyleSheet.create({
     marginBottom: 6,
   },
   findingCardCategory: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
     fontWeight: '500',
   },
   findingCardTitle: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
     marginBottom: 4,
   },
   findingCardDesc: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     lineHeight: 18,
     marginBottom: 8,
@@ -1288,7 +1289,7 @@ const localStyles = StyleSheet.create({
     marginBottom: 8,
   },
   findingCardImpactText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
   },
   findingCardAction: {
@@ -1297,12 +1298,12 @@ const localStyles = StyleSheet.create({
     gap: 6,
     backgroundColor: SemanticColors.surfaceSecondary,
     padding: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     marginBottom: 10,
   },
   findingCardActionText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: Palette.hermesOrange,
     lineHeight: 16,
   },
@@ -1317,7 +1318,7 @@ const localStyles = StyleSheet.create({
     justifyContent: 'center',
     gap: 4,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   findingBtnReview: {
     backgroundColor: SemanticColors.feedbackSuccessBg,
@@ -1329,7 +1330,7 @@ const localStyles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackInfoBg,
   },
   findingBtnText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
 
@@ -1341,7 +1342,7 @@ const localStyles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   filterTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
@@ -1356,13 +1357,13 @@ const localStyles = StyleSheet.create({
     paddingVertical: Spacing.xl,
   },
   emptyStateTitle: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
     marginTop: Spacing.sm,
   },
   emptyStateText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     textAlign: 'center',
     marginTop: 4,
@@ -1377,26 +1378,26 @@ const localStyles = StyleSheet.create({
   complianceSummaryItem: {
     flex: 1,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 12,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
   complianceSummaryValue: {
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontWeight: '700',
     color: SemanticColors.textPrimary,
     marginTop: 4,
   },
   complianceSummaryLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
   complianceCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.sm,
     marginBottom: Spacing.xs,
     borderWidth: 1,
@@ -1417,25 +1418,25 @@ const localStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   complianceLabel: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
   complianceLastCheck: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
   complianceStatusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   complianceStatusText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   complianceDetail: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     lineHeight: 18,
   },
@@ -1443,7 +1444,7 @@ const localStyles = StyleSheet.create({
   // Savings tab
   savingsHero: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.md,
     alignItems: 'center',
     marginBottom: Spacing.sm,
@@ -1451,11 +1452,11 @@ const localStyles = StyleSheet.create({
     borderColor: SemanticColors.feedbackSuccessBorder,
   },
   savingsHeroLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   savingsHeroValue: {
-    fontSize: 32,
+    fontSize: TYPE.displaySize + 4,
     fontWeight: '800',
     color: SemanticColors.feedbackSuccess,
     marginVertical: 6,
@@ -1471,14 +1472,14 @@ const localStyles = StyleSheet.create({
     gap: 6,
   },
   savingsHeroItemText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   savingsActionCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 12,
     marginBottom: Spacing.xs,
     borderWidth: 1,
@@ -1487,14 +1488,14 @@ const localStyles = StyleSheet.create({
   savingsActionRank: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     backgroundColor: SemanticColors.feedbackSuccessBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
   },
   savingsActionRankText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
     color: SemanticColors.feedbackSuccess,
   },
@@ -1502,12 +1503,12 @@ const localStyles = StyleSheet.create({
     flex: 1,
   },
   savingsActionTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
   savingsActionDesc: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1515,7 +1516,7 @@ const localStyles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   savingsActionAmountText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
     color: SemanticColors.feedbackSuccess,
   },
@@ -1523,11 +1524,11 @@ const localStyles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackSuccessBg,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
     marginTop: 4,
   },
   savingsActionBtnText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
     color: SemanticColors.feedbackSuccess,
   },
@@ -1535,7 +1536,7 @@ const localStyles = StyleSheet.create({
   // Overpayment cards
   overpaymentCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.sm,
     marginBottom: Spacing.xs,
     borderWidth: 1,
@@ -1550,12 +1551,12 @@ const localStyles = StyleSheet.create({
     marginBottom: 8,
   },
   overpaymentVendor: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
   overpaymentItem: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1563,12 +1564,12 @@ const localStyles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   overpaymentAmountPercent: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '700',
     color: SemanticColors.feedbackError,
   },
   overpaymentAmountValue: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.feedbackError,
     fontWeight: '600',
   },
@@ -1583,15 +1584,15 @@ const localStyles = StyleSheet.create({
     alignItems: 'center',
     padding: 8,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   overpaymentRateLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
   },
   overpaymentRateValue: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
     marginTop: 2,
@@ -1603,11 +1604,11 @@ const localStyles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackSuccessBg,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignSelf: 'flex-start',
   },
   recoverableBadgeText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.feedbackSuccess,
     fontWeight: '600',
   },
@@ -1620,12 +1621,12 @@ const localStyles = StyleSheet.create({
     gap: 6,
     paddingVertical: 12,
     marginTop: Spacing.xs,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: CFO_COLOR,
   },
   refreshButtonText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: CFO_COLOR,
     fontWeight: '600',
   },
@@ -1635,7 +1636,7 @@ const localStyles = StyleSheet.create({
   // =========================================================================
   compactCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.sm,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -1654,19 +1655,19 @@ const localStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   compactTitle: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
   compactSubtitle: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   compactMetricsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 10,
     marginBottom: Spacing.xs,
   },
@@ -1680,11 +1681,11 @@ const localStyles = StyleSheet.create({
     backgroundColor: SemanticColors.borderDefault,
   },
   compactMetricValue: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '700',
   },
   compactMetricLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -1703,7 +1704,7 @@ const localStyles = StyleSheet.create({
   },
   compactFindingText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
   },
   compactExpandRow: {
@@ -1715,7 +1716,7 @@ const localStyles = StyleSheet.create({
     marginTop: 4,
   },
   compactExpandText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: CFO_COLOR,
     fontWeight: '500',
   },

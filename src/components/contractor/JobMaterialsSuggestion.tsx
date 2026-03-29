@@ -2,10 +2,11 @@
 import { useState, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
-
+import { useTranslation } from 'react-i18next';
 // Job type categories with typical materials
 type JobCategory = 'painting' | 'plumbing' | 'electrical' | 'carpentry' | 'tiling' | 'general';
 
@@ -394,12 +395,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   headerSubtitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   smartBanner: {
     flexDirection: 'row',
@@ -407,13 +408,13 @@ const styles = StyleSheet.create({
     margin: Spacing.md,
     padding: Spacing.md,
     backgroundColor: SemanticColors.actionPrimary + '10',
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     gap: Spacing.sm,
   },
   smartBannerIcon: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     backgroundColor: SemanticColors.actionPrimary + '20',
     alignItems: 'center',
     justifyContent: 'center',
@@ -423,25 +424,25 @@ const styles = StyleSheet.create({
   },
   smartBannerTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   smartBannerText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   pastJobsSection: {
     marginHorizontal: Spacing.md,
     marginBottom: Spacing.md,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     gap: Spacing.sm,
   },
   pastJobsTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   pastJobRow: {
     flexDirection: 'row',
@@ -456,24 +457,24 @@ const styles = StyleSheet.create({
   },
   pastJobTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
   },
   pastJobDate: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   pastJobStats: {
     alignItems: 'flex-end',
   },
   pastJobCost: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
   pastJobCount: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   quickSelect: {
     flexDirection: 'row',
@@ -488,14 +489,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
   quickSelectText: {
     color: SemanticColors.actionPrimary,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
   },
   content: {
     flex: 1,
@@ -510,8 +511,8 @@ const styles = StyleSheet.create({
   },
   categoryTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     marginBottom: 4,
   },
   materialRow: {
@@ -519,7 +520,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.sm,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     gap: Spacing.sm,
@@ -546,12 +547,12 @@ const styles = StyleSheet.create({
   },
   materialName: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
   },
   materialQty: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   materialMeta: {
     alignItems: 'flex-end',
@@ -559,8 +560,8 @@ const styles = StyleSheet.create({
   },
   materialCost: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   frequencyBadge: {
     backgroundColor: SemanticColors.feedbackInfoBg,
@@ -570,8 +571,8 @@ const styles = StyleSheet.create({
   },
   frequencyText: {
     color: SemanticColors.feedbackInfo,
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   savingsTip: {
     flexDirection: 'row',
@@ -579,11 +580,11 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: Spacing.md,
     backgroundColor: SemanticColors.feedbackSuccessBg,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   savingsTipText: {
     color: SemanticColors.feedbackSuccess,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     flex: 1,
   },
   bottomBar: {
@@ -600,12 +601,12 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   summaryTotal: {
     color: SemanticColors.textPrimary,
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   addButton: {
     flexDirection: 'row',
@@ -614,20 +615,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     backgroundColor: SemanticColors.actionPrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   addButtonDisabled: {
     backgroundColor: SemanticColors.textTertiary,
   },
   addButtonText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
+    color: Palette.white,
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   // Compact mode styles
   compactContainer: {
     backgroundColor: SemanticColors.feedbackInfoBg,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     gap: 8,
   },
@@ -638,8 +639,8 @@ const styles = StyleSheet.create({
   },
   compactTitle: {
     color: SemanticColors.feedbackInfo,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
     flex: 1,
   },
   compactScroll: {
@@ -654,7 +655,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     maxWidth: 200,
   },
   compactChipSelected: {
@@ -664,15 +665,15 @@ const styles = StyleSheet.create({
   },
   compactChipText: {
     color: SemanticColors.textPrimary,
-    fontSize: 11,
-    fontWeight: '500',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.labelFamily,
   },
   compactChipTextSelected: {
     color: SemanticColors.actionPrimary,
   },
   compactChipPrice: {
     color: SemanticColors.textTertiary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
   },
   compactSummary: {
     flexDirection: 'row',
@@ -684,7 +685,7 @@ const styles = StyleSheet.create({
   },
   compactSummaryText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   compactAddBtn: {
     flexDirection: 'row',
@@ -693,11 +694,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     backgroundColor: SemanticColors.actionPrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   compactAddBtnText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
+    color: Palette.white,
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
 });

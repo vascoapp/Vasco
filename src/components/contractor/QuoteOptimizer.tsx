@@ -26,8 +26,8 @@ import {
   UpsellSuggestion,
   MarketPriceData,
 } from '../../services/quoteOptimizerService';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
+import { useTranslation } from 'react-i18next';const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ============================================
 // TYPES
@@ -904,13 +904,13 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   loadingText: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginTop: 16,
   },
   loadingSubtext: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 8,
     textAlign: 'center',
@@ -922,7 +922,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     color: SemanticColors.textSecondary,
     marginTop: 12,
   },
@@ -947,12 +947,12 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.actionPrimary,
   },
   tabLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   tabLabelActive: {
     color: SemanticColors.actionPrimary,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   badge: {
     backgroundColor: SemanticColors.feedbackError,
@@ -965,8 +965,8 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.sectionFamily,
   },
 
   // Content
@@ -985,13 +985,13 @@ const styles = StyleSheet.create({
     padding: 48,
   },
   emptyTabTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginTop: 16,
   },
   emptyTabText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     textAlign: 'center',
     marginTop: 8,
@@ -1020,16 +1020,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   scoreValue: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.sectionFamily,
   },
   scoreLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     textAlign: 'center',
   },
   scoreSubtext: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
@@ -1042,8 +1042,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   summaryTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
@@ -1054,12 +1054,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   summaryLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   summaryValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   divider: {
@@ -1081,12 +1081,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   historyTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   historySubtitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginBottom: 16,
   },
@@ -1098,12 +1098,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   historyStatValue: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   historyStatLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     textAlign: 'center',
     marginTop: 4,
@@ -1111,13 +1111,13 @@ const styles = StyleSheet.create({
 
   // Section
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 4,
   },
   sectionSubtitle: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginBottom: 16,
   },
@@ -1149,13 +1149,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   optTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 4,
   },
   optDescription: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     lineHeight: 18,
   },
@@ -1172,12 +1172,12 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   confidenceText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   impactText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
 
   // Upsell Card
@@ -1199,21 +1199,21 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   typeBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   acceptanceRate: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   upsellName: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 4,
   },
   upsellDescription: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginBottom: 12,
   },
@@ -1224,12 +1224,12 @@ const styles = StyleSheet.create({
   },
   upsellStat: {},
   upsellStatLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   upsellStatValue: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   upsellReason: {
@@ -1242,7 +1242,7 @@ const styles = StyleSheet.create({
   },
   upsellReasonText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     lineHeight: 18,
   },
@@ -1262,8 +1262,8 @@ const styles = StyleSheet.create({
   },
   marketName: {
     flex: 1,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginRight: 12,
   },
@@ -1273,8 +1273,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   trendText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
   priceRangeContainer: {
     marginBottom: 12,
@@ -1300,7 +1300,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   priceLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   marketStats: {
@@ -1309,12 +1309,12 @@ const styles = StyleSheet.create({
   },
   marketStat: {},
   marketStatLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   marketStatValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
 
@@ -1339,8 +1339,8 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   modalClose: {
@@ -1350,7 +1350,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   modalDescription: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     color: SemanticColors.textSecondary,
     lineHeight: 22,
     marginBottom: 20,
@@ -1359,8 +1359,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   modalSectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
@@ -1374,13 +1374,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   impactLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginBottom: 4,
   },
   impactValue: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   differenceBox: {
@@ -1392,12 +1392,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   differenceLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   differenceValue: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
   },
   sourceBadge: {
     flexDirection: 'row',
@@ -1406,7 +1406,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sourceText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   confidenceBar: {
@@ -1422,7 +1422,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   confidenceLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   modalActions: {
@@ -1449,24 +1449,24 @@ const styles = StyleSheet.create({
   },
   modalButtonPrimaryText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
   },
   modalButtonSecondaryText: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
   },
 
   // Upsell Modal
   upsellModalName: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   upsellModalDescription: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     color: SemanticColors.textSecondary,
     marginBottom: 20,
   },
@@ -1480,11 +1480,11 @@ const styles = StyleSheet.create({
   },
   upsellModalStatValue: {
     fontSize: 22,
-    fontWeight: '700',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   upsellModalStatLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
@@ -1499,13 +1499,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   reasonTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 4,
   },
   reasonText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     lineHeight: 20,
   },
@@ -1525,8 +1525,8 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   demoTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
 });

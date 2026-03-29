@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -390,14 +391,14 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: 5,
     paddingHorizontal: 10,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     backgroundColor: Palette.hermesOrange + '12',
     borderWidth: 1,
     borderColor: Palette.hermesOrange + '25',
   },
   chipText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.hermesOrange,
   },
 
@@ -408,8 +409,8 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   inlineTriggerText: {
-    fontSize: 11,
-    fontWeight: '500',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.labelFamily,
     color: Palette.hermesOrange,
     textDecorationLine: 'underline',
   },
@@ -417,7 +418,7 @@ const styles = StyleSheet.create({
   // Expanded panel
   panel: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: Palette.hermesOrange + '30',
     overflow: 'hidden',
@@ -444,8 +445,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   panelTitle: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
 
@@ -455,8 +456,8 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
   },
   conclusionText: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
     lineHeight: 19,
   },
@@ -468,8 +469,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sectionLabel: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
@@ -483,20 +484,20 @@ const styles = StyleSheet.create({
   stepNumber: {
     width: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: Palette.hermesOrange + '15',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 1,
   },
   stepNumberText: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.sectionFamily,
     color: Palette.hermesOrange,
   },
   stepText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     lineHeight: 17,
   },
@@ -522,7 +523,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   sourceText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
 
@@ -549,13 +550,13 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   confidenceValue: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.sectionFamily,
     width: 36,
     textAlign: 'right',
   },
   confidenceLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
 
@@ -576,7 +577,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   feedbackQuestion: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
   },
   feedbackButtons: {
@@ -589,12 +590,12 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: 4,
     paddingHorizontal: 8,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   feedbackButtonText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
   },
   feedbackThanks: {
     flexDirection: 'row',
@@ -604,8 +605,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   feedbackThanksText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.feedbackSuccess,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
 });

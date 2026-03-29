@@ -5,6 +5,7 @@
 // =============================================================================
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -15,6 +16,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import {
   useAnalytics,
   useBenchmarks,
@@ -441,16 +443,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     gap: 4,
   },
   activeTab: {
     backgroundColor: Palette.blue500 + '15',
   },
   tabText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   activeTabText: {
     color: Palette.blue500,
@@ -470,7 +472,7 @@ const styles = StyleSheet.create({
   kpiCard: {
     width: (SCREEN_WIDTH - 44) / 2,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -482,12 +484,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   kpiLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   kpiValue: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 6,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 4,
   },
@@ -497,30 +499,30 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     gap: 2,
   },
   kpiChangeText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   kpiSubtext: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
 
   // Satisfaction
   satisfactionCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
@@ -543,17 +545,17 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   satisfactionScore: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize,
+    fontFamily: TYPE.sectionFamily,
     color: Palette.green500,
   },
   satisfactionMax: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: Palette.green500,
     marginTop: 8,
   },
   satisfactionLabel: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   satisfactionDivider: {
@@ -565,7 +567,7 @@ const styles = StyleSheet.create({
   // Insights Preview
   insightsPreview: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -583,20 +585,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   insightPreviewTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 2,
   },
   insightPreviewDesc: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
 
   // Category Section
   categorySection: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -613,24 +615,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   categoryName: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
   },
   categoryCount: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   categoryRevenue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
 
   // Revenue Tab
   revenueSummary: {
     backgroundColor: Palette.blue500,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 20,
     marginBottom: 16,
   },
@@ -638,14 +640,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   revenueLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: 'rgba(255,255,255,0.8)',
     marginBottom: 4,
   },
   revenueTotal: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: TYPE.displaySize + 4,
+    fontFamily: TYPE.sectionFamily,
+    color: Palette.white,
   },
   revenueStats: {
     flexDirection: 'row',
@@ -653,19 +655,19 @@ const styles = StyleSheet.create({
   },
   revenueStat: {},
   revenueStatValue: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.white,
   },
   revenueStatLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: 'rgba(255,255,255,0.7)',
   },
 
   // Trend Chart
   trendSection: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -691,7 +693,7 @@ const styles = StyleSheet.create({
     minHeight: 4,
   },
   trendBarLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 6,
   },
@@ -699,7 +701,7 @@ const styles = StyleSheet.create({
   // Profit Section
   profitSection: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -713,28 +715,28 @@ const styles = StyleSheet.create({
   profitCard: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceBackground,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 12,
   },
   profitLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginBottom: 4,
   },
   profitValue: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   profitMargin: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: Palette.green500,
   },
   costBreakdown: {
     marginTop: 8,
   },
   costTitle: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginBottom: 8,
   },
@@ -764,14 +766,14 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   legendText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
 
   // Customer Revenue
   customerRevenueSection: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -790,17 +792,17 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   customerTypeName: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
   },
   customerTypeCount: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   customerTypeRevenue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
 
@@ -809,20 +811,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Palette.blue500 + '15',
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 16,
     gap: 12,
   },
   benchmarkIntroText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
     lineHeight: 20,
   },
   benchmarkCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -835,14 +837,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   benchmarkMetric: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   trendBadge: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -855,13 +857,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   benchmarkValueLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     marginBottom: 2,
   },
   benchmarkValueNumber: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   percentileBar: {
@@ -881,13 +883,13 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#fff',
+    backgroundColor: SemanticColors.surfacePrimary,
     borderWidth: 2,
     borderColor: SemanticColors.textPrimary,
     marginLeft: -5,
   },
   percentileText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     textAlign: 'center',
   },
@@ -900,17 +902,17 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   insightsCount: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   insightsHighImpact: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: Palette.red500,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   insightCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -922,7 +924,7 @@ const styles = StyleSheet.create({
   insightIconBg: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -936,22 +938,22 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   insightTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     flex: 1,
   },
   impactBadge: {
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   impactText: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   insightDescription: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     lineHeight: 18,
     marginBottom: 10,
@@ -960,14 +962,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Palette.blue500 + '10',
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 10,
     marginBottom: 12,
     gap: 8,
   },
   suggestedActionText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: Palette.blue500,
   },
   insightActions: {
@@ -978,24 +980,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Palette.blue500,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
   },
   actionButtonText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
+    color: Palette.white,
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
   dismissButton: {
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
   dismissButtonText: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
 
   // Empty State
@@ -1005,13 +1007,13 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginTop: 12,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },

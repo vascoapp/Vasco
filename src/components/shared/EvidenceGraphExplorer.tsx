@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { formatCurrency } from '../../i18n/formatting';
 import { Spacing } from '../../theme/spacing';
 import type { NodeType, EdgeType } from '../../types/evidence-graph';
@@ -373,8 +374,8 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   // Chain selector
@@ -388,7 +389,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     backgroundColor: SemanticColors.surfacePrimary,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -411,36 +412,36 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   chainTabText: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textSecondary,
     maxWidth: 140,
   },
   chainTabTextActive: {
     color: SemanticColors.textPrimary,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   // Job info
   jobInfoCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
   jobInfoTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   jobInfoCustomer: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
   jobInfoValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: Palette.hermesOrange,
     marginTop: 4,
   },
@@ -452,7 +453,7 @@ const styles = StyleSheet.create({
   scoreCard: {
     flex: 1,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     alignItems: 'center',
     gap: 4,
@@ -460,11 +461,11 @@ const styles = StyleSheet.create({
     borderColor: SemanticColors.borderDefault,
   },
   scoreValue: {
-    fontSize: 28,
-    fontWeight: '800',
+    fontSize: TYPE.displaySize,
+    fontFamily: TYPE.displayFamily,
   },
   scoreLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
   },
   // Node groups
@@ -484,21 +485,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   groupTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
   groupBadge: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     paddingHorizontal: 6,
     paddingVertical: 1,
   },
   groupBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textTertiary,
   },
   // Node card
@@ -507,16 +508,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: 12,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     marginBottom: 2,
   },
   nodeIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -524,17 +525,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   nodeLabel: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
   },
   nodeDetail: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     marginTop: 1,
   },
   nodeTimestamp: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
   // Connection
@@ -545,7 +546,7 @@ const styles = StyleSheet.create({
   // Requirements
   requirementsCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -558,8 +559,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   sectionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   requirementRow: {
@@ -568,7 +569,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   requirementText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   requirementSatisfied: {
@@ -578,7 +579,7 @@ const styles = StyleSheet.create({
   // Blockers
   blockersCard: {
     backgroundColor: SemanticColors.feedbackErrorBg,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.feedbackErrorBorder,
@@ -596,7 +597,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackError,
   },
   blockerText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
   },
 });

@@ -5,6 +5,7 @@
 // =============================================================================
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -17,6 +18,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import {
   useAssistant,
   useProactiveInsights,
@@ -398,7 +400,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     gap: 6,
   },
   viewButtonActive: {
@@ -412,25 +414,25 @@ const styles = StyleSheet.create({
     top: -6,
     right: -8,
     backgroundColor: Palette.red500,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     minWidth: 16,
     height: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   badgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.sectionFamily,
+    color: Palette.white,
   },
   viewButtonText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   viewButtonTextActive: {
     color: Palette.hermesOrange,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
 
   // Chat View
@@ -459,21 +461,21 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   welcomeTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   welcomeText: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     color: SemanticColors.textSecondary,
     textAlign: 'center',
     paddingHorizontal: 20,
     marginBottom: 24,
   },
   quickActionsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
     alignSelf: 'flex-start',
     marginBottom: 12,
@@ -487,28 +489,28 @@ const styles = StyleSheet.create({
   quickActionCard: {
     width: '31%',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
   quickActionLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textPrimary,
     textAlign: 'center',
     marginTop: 8,
   },
   capabilitiesTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
     alignSelf: 'flex-start',
     marginBottom: 12,
   },
   capabilityCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 10,
     borderWidth: 1,
@@ -516,12 +518,12 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   capabilityName: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   capabilityDesc: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
@@ -535,10 +537,10 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange + '10',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
   },
   exampleText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: Palette.hermesOrange,
     fontStyle: 'italic',
   },
@@ -555,7 +557,7 @@ const styles = StyleSheet.create({
   assistantAvatar: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     backgroundColor: Palette.hermesOrange + '20',
     alignItems: 'center',
     justifyContent: 'center',
@@ -564,7 +566,7 @@ const styles = StyleSheet.create({
   messageBubble: {
     maxWidth: '80%',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     borderTopLeftRadius: 4,
     padding: 14,
     borderWidth: 1,
@@ -577,12 +579,12 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 4,
   },
   messageText: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     color: SemanticColors.textPrimary,
     lineHeight: 22,
   },
   userMessageText: {
-    color: '#fff',
+    color: Palette.white,
   },
   messageAction: {
     flexDirection: 'row',
@@ -594,9 +596,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   messageActionText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: Palette.blue500,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
 
   // Input
@@ -612,10 +614,10 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceBackground,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     color: SemanticColors.textPrimary,
     maxHeight: 100,
     borderWidth: 1,
@@ -624,7 +626,7 @@ const styles = StyleSheet.create({
   sendButton: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: RADIUS.full,
     backgroundColor: Palette.hermesOrange,
     alignItems: 'center',
     justifyContent: 'center',
@@ -642,19 +644,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   insightsTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   insightsSubtitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
   insightCard: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -665,7 +667,7 @@ const styles = StyleSheet.create({
   insightIcon: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -679,22 +681,22 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   insightTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     flex: 1,
   },
   priorityBadge: {
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   priorityText: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   insightDescription: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     lineHeight: 20,
     marginBottom: 12,
@@ -710,9 +712,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   insightActionText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: Palette.blue500,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   dismissButton: {
     padding: 4,
@@ -727,18 +729,18 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   suggestionsTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   suggestionsSubtitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
   suggestionCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 20,
     marginBottom: 16,
     borderWidth: 1,
@@ -753,7 +755,7 @@ const styles = StyleSheet.create({
   suggestionIconContainer: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: RADIUS.full,
     backgroundColor: Palette.green500 + '15',
     alignItems: 'center',
     justifyContent: 'center',
@@ -762,25 +764,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   suggestionTitle: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize + 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   confidenceBadge: {
     backgroundColor: Palette.green500 + '20',
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     alignSelf: 'flex-start',
     marginTop: 4,
   },
   confidenceText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: Palette.green500,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   suggestionDescription: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     lineHeight: 20,
     marginBottom: 12,
@@ -789,15 +791,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Palette.green500 + '10',
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: 12,
     marginBottom: 8,
     gap: 8,
   },
   impactText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: Palette.green500,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   basedOnBox: {
     flexDirection: 'row',
@@ -806,15 +808,15 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   basedOnText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   actionSteps: {
     marginBottom: 16,
   },
   actionStepsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 10,
   },
@@ -827,19 +829,19 @@ const styles = StyleSheet.create({
   stepNumber: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: Palette.blue500 + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepNumberText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.blue500,
   },
   stepText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
     lineHeight: 20,
   },
@@ -849,13 +851,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: Palette.green500,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     gap: 8,
   },
   implementButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.white,
   },
 
   // Empty State
@@ -865,13 +867,13 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginTop: 12,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 4,
     textAlign: 'center',

@@ -27,10 +27,11 @@ import {
   ExpiringDocument,
   DocumentTemplate,
 } from '../../services/documentVaultService';
-
-type TabType = 'all' | 'expiring' | 'folders' | 'templates';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
+import { useTranslation } from 'react-i18next';type TabType = 'all' | 'expiring' | 'folders' | 'templates';
 
 export function DocumentVault() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<DocumentType | null>(null);
@@ -446,7 +447,7 @@ export function DocumentVault() {
                 </Pressable>
                 <Pressable style={[styles.docActionButton, { borderColor: Palette.red500 }]}>
                   <Ionicons name="trash-outline" size={20} color={Palette.red500} />
-                  <Text style={[styles.docActionText, { color: Palette.red500 }]}>Verwijder</Text>
+                  <Text style={[styles.docActionText, { color: Palette.red500 }]}>{t('common.delete', 'Delete')}</Text>
                 </Pressable>
               </View>
             </ScrollView>
@@ -498,14 +499,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   tabBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.sectionFamily,
+    color: Palette.white,
   },
   tabText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   activeTabText: {
     color: Palette.blue500,
@@ -530,7 +531,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     paddingHorizontal: 10,
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     color: SemanticColors.textPrimary,
   },
 
@@ -555,12 +556,12 @@ const styles = StyleSheet.create({
     borderColor: Palette.blue500,
   },
   typeChipText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
   },
   typeChipTextActive: {
-    color: '#fff',
-    fontWeight: '600',
+    color: Palette.white,
+    fontFamily: TYPE.titleFamily,
   },
 
   // Stats
@@ -578,25 +579,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
 
   // Section
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
   sectionSubtitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginBottom: 16,
   },
@@ -624,8 +625,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   documentName: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   documentMeta: {
@@ -634,11 +635,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   documentDate: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   documentSize: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   documentTags: {
@@ -654,11 +655,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   tagText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textSecondary,
   },
   moreTags: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: Palette.blue500,
   },
   documentActions: {
@@ -673,13 +674,13 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginTop: 12,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 4,
     textAlign: 'center',
@@ -697,7 +698,7 @@ const styles = StyleSheet.create({
   },
   expiringHeaderText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   expiringCard: {
@@ -723,17 +724,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   expiringName: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   expiringDays: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
     marginTop: 2,
   },
   expiringAction: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
@@ -744,9 +745,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   renewText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.white,
   },
 
   // Folders
@@ -772,12 +773,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   folderName: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   folderCount: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -795,8 +796,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   addFolderText: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.blue500,
   },
 
@@ -824,12 +825,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   templateName: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   templateDesc: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -840,7 +841,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   templateFieldsText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   useTemplateButton: {
@@ -850,9 +851,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   useTemplateText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.white,
   },
 
   // Upload Button
@@ -866,11 +867,6 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.blue500,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
   },
 
   // Modal
@@ -889,8 +885,8 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
   },
   modalTitle: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   modalContent: {
@@ -910,13 +906,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   docDetailName: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     textAlign: 'center',
   },
   docDetailSize: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
@@ -936,13 +932,13 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   docDetailLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   docDetailValue: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   docDetailTags: {
     marginBottom: 24,
@@ -972,8 +968,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   docActionText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: Palette.blue500,
   },
 });

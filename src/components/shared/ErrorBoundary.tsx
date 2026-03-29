@@ -6,7 +6,7 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet, Share, Platform } from 'react-native';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { logWarn } from '../../utils/errorHandler';
-
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 interface ErrorBoundaryProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
@@ -84,14 +84,14 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfaceBackground,
   },
   title: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Inter_500Medium',
     color: SemanticColors.textPrimary,
     marginBottom: 8,
     textAlign: 'center',
   },
   message: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Inter_500Medium',
     color: SemanticColors.textSecondary,
     marginBottom: 24,
@@ -100,23 +100,23 @@ const styles = StyleSheet.create({
   button: {
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: RADIUS.md,
     backgroundColor: SemanticColors.actionPrimary,
   },
   buttonText: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontFamily: 'Inter_500Medium',
     color: Palette.white,
   },
   copyButton: {
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: RADIUS.md,
     backgroundColor: SemanticColors.surfaceSecondary,
     marginTop: 12,
   },
   copyButtonText: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontFamily: 'Inter_500Medium',
     color: SemanticColors.textSecondary,
   },

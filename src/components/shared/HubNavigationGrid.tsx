@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
+import { TYPE } from '../../theme/tabStyles';
 
 interface HubNavigationGridProps {
   title?: string;
@@ -23,7 +24,7 @@ const styles = StyleSheet.create({
   title: {
     color: SemanticColors.textSecondary,
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: Spacing.xs,

@@ -8,12 +8,15 @@
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { populateQueue } from '../services/aiActionQueueService';
+import { populateQueue, addToQueue } from '../services/aiActionQueueService';
 import { evaluateTriggers } from '../services/workflowPackService';
 import { calibrateModels } from './mlModels';
 import { validateWorkflowState } from '../services/workflowValidatorService';
 import { getSeasonalContext } from './tradeContext';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { loadOnboardingPreferences } from '../services/onboardingPreferencesService';
+import { loadSubscription, getTierLimits } from '../services/subscriptionService';
+import i18n from '../i18n/i18n';
 
 const SCHEDULER_KEY = '@vasco_scheduler_state';
 const BRIEFING_KEY = '@vasco_morning_briefing';
@@ -699,11 +702,79 @@ export function startBackgroundJobScheduler(
         state.totalAuditsRun++;
       }
 
-      // Daily: full morning briefing + ML calibration
+      // Daily: full morning briefing + ML calibration + purchasing agent
       if (!state.lastDailyRun || state.lastDailyRun < dayAgo) {
         await generateMorningBriefing(context);
         // Calibrate ML models from accumulated prediction/actual pairs
         await calibrateModels().catch(() => {});
+
+        // Purchasing Agent — daily price drop check (Pro+ only)
+        try {
+          const sub = await loadSubscription();
+          const limits = getTierLimits(sub.tier);
+          if (limits.hasPurchasingAgent) {
+            const prefs = await loadOnboardingPreferences();
+            const trade = prefs.trades[0] ?? 'general';
+            const country = prefs.country ?? 'NL';
+            const { runScheduledPurchasingAgent } = await import('../services/purchasingAgentService');
+            const purchasingResults = await runScheduledPurchasingAgent({
+              trade,
+              country,
+              postcode: prefs.postcode || '1012',
+              upcomingJobs: context.jobs
+                .filter((j: any) => j.status === 'scheduled' || j.status === 'accepted')
+                .slice(0, 10)
+                .map((j: any) => ({ id: j.id, title: j.title, materials: j.materials })),
+            });
+
+            const t = i18n.t.bind(i18n);
+
+            // Queue price drop alerts
+            for (const drop of purchasingResults.priceDrops.slice(0, 3)) {
+              await addToQueue({
+                type: 'price_alert',
+                title: t('purchasing.priceDrop', { defaultValue: '{{material}} — {{percent}}% cheaper', material: drop.materialName, percent: drop.dropPercent }),
+                description: t('purchasing.priceDropDesc', { defaultValue: '€{{old}} → €{{new}} at {{supplier}}', old: drop.previousPrice.toFixed(2), new: drop.currentPrice.toFixed(2), supplier: drop.supplier.name }),
+                preparedData: { type: 'price_drop', ...drop, affiliateUrl: drop.affiliateUrl },
+                actionLabel: t('purchasing.orderNow', 'Order now'),
+                estimatedImpact: `€${(drop.previousPrice - drop.currentPrice).toFixed(2)} ${t('purchasing.saved', 'saved')}`,
+                expiresAt: drop.expiresAt,
+                sourceGeneratorId: `purchasing_drop_${drop.materialName}`,
+              }).catch(() => {});
+            }
+
+            // Queue bulk opportunity
+            if (purchasingResults.bulkOpportunity) {
+              const bulk = purchasingResults.bulkOpportunity;
+              await addToQueue({
+                type: 'bulk_purchase',
+                title: t('purchasing.bulkSaving', { defaultValue: 'Bulk order saves €{{amount}}', amount: bulk.savingsAmount.toFixed(0) }),
+                description: t('purchasing.bulkDesc', { defaultValue: '{{count}} materials across {{jobs}} jobs — order together at {{supplier}}', count: bulk.materials.length, jobs: bulk.materials.reduce((s: number, m: any) => s + m.jobIds.length, 0), supplier: bulk.bestSupplier.name }),
+                preparedData: { type: 'bulk_opportunity', ...bulk },
+                actionLabel: t('purchasing.createBulkOrder', 'Create bulk order'),
+                estimatedImpact: `€${bulk.savingsAmount.toFixed(0)} (${bulk.savingsPercent}%)`,
+                expiresAt: new Date(Date.now() + 7 * MS_PER_DAY).toISOString(),
+                sourceGeneratorId: 'purchasing_bulk',
+              }).catch(() => {});
+            }
+
+            // Queue seasonal advice
+            if (purchasingResults.seasonalAdvice) {
+              const advice = purchasingResults.seasonalAdvice;
+              await addToQueue({
+                type: 'price_alert',
+                title: advice.suggestedAction,
+                description: advice.advice,
+                preparedData: { type: 'seasonal_stock_up', ...advice },
+                actionLabel: t('purchasing.viewDetails', 'View details'),
+                estimatedImpact: t('purchasing.seasonalSavings', 'Pre-season pricing'),
+                expiresAt: new Date(Date.now() + 30 * MS_PER_DAY).toISOString(),
+                sourceGeneratorId: 'purchasing_seasonal',
+              }).catch(() => {});
+            }
+          }
+        } catch {}
+
         state.lastDailyRun = now.toISOString();
         state.totalAuditsRun++;
       }

@@ -1075,7 +1075,7 @@ const styles = StyleSheet.create({
   headerNotifBtn: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: RADIUS.full,
     backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1094,20 +1094,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 3,
   } as any,
   headerNotifBadgeText: {
-    fontSize: 8,
+    fontSize: TYPE.tinySize - 3,
     fontFamily: 'Manrope_700Bold',
     color: Palette.white,
   },
   headerAvatar: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     backgroundColor: Palette.hermesOrange,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerAvatarText: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontFamily: 'Manrope_700Bold',
     color: Palette.white,
   },
@@ -1130,19 +1130,19 @@ const styles = StyleSheet.create({
   gaugeCard: {
     flex: 1,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     paddingVertical: 14,
     paddingHorizontal: 10,
     alignItems: 'center',
     gap: 4,
   },
   gaugeValue: {
-    fontSize: 22,
+    fontSize: TYPE.displaySize - 6,
     fontFamily: 'Manrope_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   gaugeLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
   },
@@ -1187,7 +1187,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg,
     borderLeftWidth: 3, borderLeftColor: Palette.hermesOrange, padding: 16,
   },
-  vascoStatusIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: Palette.hermesOrange + '12', alignItems: 'center', justifyContent: 'center' },
+  vascoStatusIcon: { width: 40, height: 40, borderRadius: RADIUS.xl, backgroundColor: Palette.hermesOrange + '12', alignItems: 'center', justifyContent: 'center' },
   vascoStatusTitle: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
   vascoStatusDesc: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
 
@@ -1253,7 +1253,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     paddingHorizontal: 14,
     paddingVertical: 10,
     marginBottom: 12,
@@ -1261,7 +1261,7 @@ const styles = StyleSheet.create({
   },
   dailyReportText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontFamily: TYPE.titleFamily,
   },
 
@@ -1285,7 +1285,7 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange + '18',
     paddingHorizontal: 10,
     paddingVertical: 3,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   sectionBadgeText: {
     fontSize: TYPE.tinySize,
@@ -1299,7 +1299,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 14,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 16,
     borderWidth: 1,
     borderColor: Palette.hermesOrange + '30',
@@ -1307,18 +1307,18 @@ const styles = StyleSheet.create({
   primaryActionIcon: {
     width: 44,
     height: 44,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     backgroundColor: Palette.hermesOrange,
     alignItems: 'center',
     justifyContent: 'center',
   },
   primaryActionTitle: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   primaryActionDesc: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   aiChip: {
@@ -1328,11 +1328,11 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange + '0A',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     alignSelf: 'flex-start',
   },
   aiChipText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontFamily: TYPE.titleFamily,
     color: Palette.hermesOrange,
   },
@@ -1340,7 +1340,7 @@ const styles = StyleSheet.create({
   // Team cards
   teamCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 14,
     gap: 8,
   },
@@ -1352,26 +1352,26 @@ const styles = StyleSheet.create({
   teamIcon: {
     width: 30,
     height: 30,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   teamName: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   teamMeta: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     marginTop: 1,
   },
   teamDeviation: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Manrope_700Bold',
   },
   teamTask: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   teamBarTrack: {
@@ -1399,7 +1399,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   teamTime: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   teamBlocker: {
@@ -1409,7 +1409,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   teamBlockerText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.feedbackWarning,
     flex: 1,
   },
@@ -1426,11 +1426,11 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingVertical: 5,
     paddingHorizontal: 10,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     backgroundColor: Palette.hermesOrange + '0C',
   },
   substituteBtnText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: TYPE.titleFamily,
     color: Palette.hermesOrange,
   },
@@ -1440,11 +1440,11 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: 5,
     paddingHorizontal: 8,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.feedbackErrorBg,
   },
   escalateBtnText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: TYPE.titleFamily,
     color: SemanticColors.feedbackError,
   },
@@ -1467,10 +1467,10 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
     paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
   },
   quickPillText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
@@ -1478,12 +1478,12 @@ const styles = StyleSheet.create({
   // Cards
   card: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.md,
     gap: Spacing.md,
   },
   cardTitle: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
@@ -1491,7 +1491,7 @@ const styles = StyleSheet.create({
   // Dashboard Card (pressable overview)
   dashboardCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.md,
     gap: Spacing.md,
   },
@@ -1501,7 +1501,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dashboardCardTitle: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
@@ -1512,23 +1512,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: Spacing.md,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   safetyBannerLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   safetyBannerScore: {
-    fontSize: 22,
+    fontSize: TYPE.displaySize - 6,
     fontFamily: 'Manrope_700Bold',
     marginTop: 2,
   },
   ltirLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
   },
   ltirValue: {
-    fontSize: 28,
+    fontSize: TYPE.displaySize,
     fontFamily: 'Manrope_700Bold',
   },
 
@@ -1545,11 +1545,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   barLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   barValue: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Manrope_700Bold',
   },
   barTrack: {
@@ -1589,11 +1589,11 @@ const styles = StyleSheet.create({
   },
   defectLegendText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   defectLegendCount: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
@@ -1614,11 +1614,11 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   closureRingValue: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontFamily: 'Manrope_700Bold',
   },
   closureRingLabel: {
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     color: SemanticColors.textTertiary,
   },
   closureStat: {
@@ -1628,11 +1628,11 @@ const styles = StyleSheet.create({
   },
   closureStatLabel: {
     flex: 1,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   closureStatValue: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
@@ -1645,14 +1645,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 12,
     gap: 12,
   },
   actionIcon: {
     width: 36,
     height: 36,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1660,19 +1660,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   actionTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   actionSubtitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
 
   // Empty
   emptyText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     padding: 20,
     paddingTop: 100,
@@ -1693,24 +1693,24 @@ const pStyles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackErrorBg,
     borderWidth: 1,
     borderColor: SemanticColors.feedbackError + '30',
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 12,
   },
   blockerBannerIcon: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     backgroundColor: SemanticColors.feedbackError + '30',
     alignItems: 'center',
     justifyContent: 'center',
   },
   blockerBannerTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: TYPE.titleFamily,
     color: SemanticColors.feedbackError,
   },
   blockerBannerSub: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.feedbackError,
     marginTop: 1,
   },
@@ -1735,7 +1735,7 @@ const pStyles = StyleSheet.create({
     gap: 8,
   },
   dateHeader: {
-    fontSize: 17,
+    fontSize: TYPE.titleSize + 1,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
@@ -1746,7 +1746,7 @@ const pStyles = StyleSheet.create({
   dayDot: {
     width: 34,
     height: 28,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: SemanticColors.surfaceSecondary,
@@ -1759,7 +1759,7 @@ const pStyles = StyleSheet.create({
     borderColor: Palette.hermesOrange,
   },
   dayDotText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
   },
@@ -1772,7 +1772,7 @@ const pStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     paddingVertical: 10,
     paddingHorizontal: 4,
   },
@@ -1782,12 +1782,12 @@ const pStyles = StyleSheet.create({
     gap: 2,
   },
   summaryValue: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   summaryLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
   },
@@ -1801,7 +1801,7 @@ const pStyles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     overflow: 'hidden',
   },
   accentBar: {
@@ -1820,17 +1820,17 @@ const pStyles = StyleSheet.create({
   tradeIcon: {
     width: 34,
     height: 34,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   teamName: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   teamLead: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     marginTop: 1,
   },
@@ -1841,15 +1841,15 @@ const pStyles = StyleSheet.create({
     backgroundColor: SemanticColors.surfaceSecondary,
     paddingVertical: 4,
     paddingHorizontal: 8,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   timePillText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: TYPE.labelFamily,
     color: SemanticColors.textSecondary,
   },
   taskText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
     fontFamily: TYPE.labelFamily,
   },
@@ -1864,7 +1864,7 @@ const pStyles = StyleSheet.create({
     gap: 4,
     paddingVertical: 3,
     paddingHorizontal: 8,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   zoneTagDot: {
     width: 6,
@@ -1872,7 +1872,7 @@ const pStyles = StyleSheet.create({
     borderRadius: 3,
   },
   zoneTagText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: TYPE.titleFamily,
   },
 
@@ -1894,7 +1894,7 @@ const pStyles = StyleSheet.create({
     borderRadius: 3,
   },
   progressText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'Manrope_700Bold',
     minWidth: 32,
     textAlign: 'right',
@@ -1907,18 +1907,18 @@ const pStyles = StyleSheet.create({
     gap: 8,
     backgroundColor: SemanticColors.feedbackErrorBg,
     padding: 8,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   blockerIconCircle: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: SemanticColors.feedbackError + '30',
     alignItems: 'center',
     justifyContent: 'center',
   },
   blockerText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.feedbackError,
     fontFamily: TYPE.labelFamily,
     flex: 1,
@@ -1932,10 +1932,10 @@ const pStyles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackWarningBg,
     paddingVertical: 6,
     paddingHorizontal: 8,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   delayText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.feedbackWarning,
     fontFamily: TYPE.labelFamily,
     flex: 1,
@@ -1949,15 +1949,10 @@ const pStyles = StyleSheet.create({
     gap: 8,
     backgroundColor: Palette.hermesOrange,
     paddingVertical: 14,
-    borderRadius: 16,
-    shadowColor: Palette.hermesOrange,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 3,
+    borderRadius: RADIUS.lg,
   },
   aiButtonText: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontFamily: 'Manrope_700Bold',
     color: Palette.white,
   },

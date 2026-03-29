@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { Typography } from '../../theme/typography';
 import {
@@ -431,7 +432,7 @@ const styles = StyleSheet.create({
   summaryCard: {
     flex: 1,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -443,7 +444,7 @@ const styles = StyleSheet.create({
   },
   summaryValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '700',
   },
   summaryValueWarning: {
@@ -451,20 +452,20 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     marginTop: 4,
   },
   tabRow: {
     flexDirection: 'row',
     gap: Spacing.xs,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 4,
   },
   tab: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
   },
   tabActive: {
@@ -472,7 +473,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
   tabTextActive: {
@@ -480,7 +481,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -494,7 +495,7 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
   },
   progressBarContainer: {
@@ -516,7 +517,7 @@ const styles = StyleSheet.create({
   },
   progressText: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   paymentRow: {
@@ -538,16 +539,16 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   paymentTypeText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '700',
   },
   paymentDue: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   paymentAmount: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
   },
   categoryRow: {
@@ -564,11 +565,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   categoryIcon: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
   },
   categoryName: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '500',
   },
   categoryRight: {
@@ -577,7 +578,7 @@ const styles = StyleSheet.create({
   },
   categoryValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
   },
   categoryStatusBadge: {
@@ -586,7 +587,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   categoryStatusText: {
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     fontWeight: '600',
   },
   headsList: {
@@ -594,7 +595,7 @@ const styles = StyleSheet.create({
   },
   headCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -612,34 +613,34 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headIcon: {
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
   },
   headTitleInfo: {
     flex: 1,
   },
   headCategory: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '700',
     letterSpacing: 0.5,
   },
   headClause: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   statusBadge: {
     paddingVertical: 4,
     paddingHorizontal: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   statusText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '600',
     textTransform: 'uppercase',
   },
   headDescription: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     lineHeight: 18,
   },
   headDetails: {
@@ -649,18 +650,18 @@ const styles = StyleSheet.create({
   },
   detailItem: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 10,
     minWidth: '45%',
     flex: 1,
   },
   detailLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
   },
   detailValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
     marginTop: 2,
   },
@@ -673,12 +674,12 @@ const styles = StyleSheet.create({
   },
   triggerLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   triggerText: {
     color: SemanticColors.textPrimary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     flex: 1,
   },
   dueDateRow: {
@@ -687,12 +688,12 @@ const styles = StyleSheet.create({
   },
   dueDateLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   dueDateValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   overdue: {
     color: SemanticColors.feedbackError,
@@ -704,19 +705,19 @@ const styles = StyleSheet.create({
   },
   recipientLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   recipientText: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   cilList: {
     gap: Spacing.md,
   },
   cilCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -729,12 +730,12 @@ const styles = StyleSheet.create({
   },
   cilAuthority: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '700',
   },
   cilZone: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     marginTop: 2,
   },
   areaSection: {
@@ -742,7 +743,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '700',
   },
   areaGrid: {
@@ -752,18 +753,18 @@ const styles = StyleSheet.create({
   areaItem: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     alignItems: 'center',
   },
   areaValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '700',
   },
   areaLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     marginTop: 2,
   },
   chargeableArea: {
@@ -785,12 +786,12 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
   },
   totalValue: {
     color: SemanticColors.actionPrimary,
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
   },
   scheduleSection: {
@@ -807,12 +808,12 @@ const styles = StyleSheet.create({
   instalmentInfo: {},
   instalmentNumber: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
   },
   instalmentDue: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     marginTop: 2,
   },
   instalmentRight: {
@@ -821,7 +822,7 @@ const styles = StyleSheet.create({
   },
   instalmentAmount: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
   },
   instalmentStatus: {
@@ -830,7 +831,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   instalmentStatusText: {
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     fontWeight: '600',
     textTransform: 'uppercase',
   },
@@ -839,7 +840,7 @@ const styles = StyleSheet.create({
   },
   alertCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -857,25 +858,25 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   alertTypeText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '700',
   },
   alertDays: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   alertTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
   },
   alertDescription: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   alertAmount: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '700',
   },
   alertAction: {
@@ -887,12 +888,12 @@ const styles = StyleSheet.create({
   },
   alertActionLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   alertActionText: {
     color: SemanticColors.textPrimary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     flex: 1,
   },
   emptyState: {
@@ -906,6 +907,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: SemanticColors.textSecondary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
 });

@@ -154,7 +154,7 @@ export default function RootLayout() {
         <AppStateProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <RootLayoutNav />
-            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#F2F2F7', alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#FAFAFA', alignItems: 'center', justifyContent: 'center' }}>
               <ActivityIndicator size="large" color="#E35205" />
             </View>
           </GestureHandlerRootView>

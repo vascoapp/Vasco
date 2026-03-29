@@ -18,6 +18,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import {
   useFinancialAuditStats,
   useUnnecessarySpendAnalysis,
@@ -441,12 +442,12 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontWeight: '700',
     color: theme.colors.text,
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: theme.colors.textSecondary,
     marginTop: 2,
   },
@@ -470,7 +471,7 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.accent,
   },
   tabLabel: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: theme.colors.textSecondary,
     fontWeight: '500',
   },
@@ -490,7 +491,7 @@ const styles = StyleSheet.create({
   summaryCard: {
     flex: 1,
     backgroundColor: theme.colors.surface,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 12,
     alignItems: 'center',
     borderWidth: 1,
@@ -512,18 +513,18 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   summaryValue: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
     color: theme.colors.text,
   },
   summaryLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: theme.colors.textSecondary,
     textAlign: 'center',
     marginTop: 4,
   },
   summarySubtext: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: theme.colors.textMuted,
     marginTop: 2,
   },
@@ -537,7 +538,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontWeight: '600',
     color: theme.colors.text,
     marginBottom: 12,
@@ -546,10 +547,10 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.errorLight,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   criticalBadgeText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: theme.colors.error,
     fontWeight: '600',
   },
@@ -557,7 +558,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.surface,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
@@ -566,7 +567,7 @@ const styles = StyleSheet.create({
   alertIcon: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -584,12 +585,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   alertTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: theme.colors.text,
   },
   alertDescription: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: theme.colors.textSecondary,
     marginTop: 2,
   },
@@ -597,7 +598,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.surface,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
@@ -606,14 +607,14 @@ const styles = StyleSheet.create({
   actionRank: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     backgroundColor: theme.colors.accentLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
   actionRankText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
     color: theme.colors.accent,
   },
@@ -621,12 +622,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   actionTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: theme.colors.text,
   },
   actionDescription: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: theme.colors.textSecondary,
     marginTop: 2,
   },
@@ -634,7 +635,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   actionSavingsAmount: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
     color: theme.colors.success,
   },
@@ -646,13 +647,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   actionButtonText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
     color: theme.colors.accent,
   },
   overpaymentCard: {
     backgroundColor: theme.colors.surface,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
@@ -665,17 +666,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   overpaymentVendor: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: theme.colors.text,
   },
   overpaymentAmount: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: theme.colors.error,
   },
   overpaymentDescription: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: theme.colors.textSecondary,
     marginTop: 6,
   },
@@ -686,7 +687,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   overpaymentTotal: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: theme.colors.error,
     fontWeight: '600',
   },
@@ -694,16 +695,16 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.successLight,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   recoverableBadgeText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: theme.colors.success,
     fontWeight: '600',
   },
   heroCard: {
     backgroundColor: theme.colors.surface,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: 20,
     alignItems: 'center',
     marginBottom: 20,
@@ -714,7 +715,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.error,
   },
   heroLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: theme.colors.textSecondary,
   },
   heroValue: {
@@ -727,12 +728,12 @@ const styles = StyleSheet.create({
     color: theme.colors.error,
   },
   heroSubtext: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: theme.colors.textSecondary,
   },
   findingCard: {
     backgroundColor: theme.colors.surface,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -760,19 +761,19 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.info,
   },
   findingType: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: theme.colors.textSecondary,
     textTransform: 'uppercase',
     fontWeight: '500',
   },
   findingTitle: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '600',
     color: theme.colors.text,
     marginBottom: 4,
   },
   findingDescription: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: theme.colors.textSecondary,
     marginBottom: 12,
   },
@@ -787,18 +788,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 8,
     backgroundColor: theme.colors.surfaceAlt,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   findingNumberHighlight: {
     backgroundColor: theme.colors.successLight,
   },
   findingNumberLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: theme.colors.textMuted,
     textTransform: 'uppercase',
   },
   findingNumberValue: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: theme.colors.text,
     marginTop: 2,
@@ -812,11 +813,11 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 12,
     backgroundColor: theme.colors.accentLight,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   findingActionText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: theme.colors.accent,
   },
   rateComparison: {
@@ -829,18 +830,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 10,
     backgroundColor: theme.colors.surfaceAlt,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   rateBoxHighlight: {
     backgroundColor: theme.colors.errorLight,
   },
   rateLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: theme.colors.textMuted,
     textTransform: 'uppercase',
   },
   rateValue: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: theme.colors.text,
     marginTop: 2,
@@ -854,16 +855,16 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 10,
     backgroundColor: theme.colors.successLight,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   recoveryText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: theme.colors.success,
   },
   trendCard: {
     backgroundColor: theme.colors.surface,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 12,
     marginBottom: 8,
     borderLeftWidth: 3,
@@ -875,30 +876,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   trendVendor: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: theme.colors.text,
   },
   trendChange: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
   },
   trendChangeNegative: {
     color: theme.colors.error,
   },
   trendItem: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: theme.colors.textSecondary,
     marginTop: 4,
   },
   trendPeriod: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: theme.colors.textMuted,
     marginTop: 2,
   },
   recoveryActionCard: {
     backgroundColor: theme.colors.surface,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
@@ -910,31 +911,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   recoveryActionVendor: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: theme.colors.text,
   },
   recoveryActionAmount: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '700',
     color: theme.colors.success,
   },
   recoveryActionApproach: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: theme.colors.textSecondary,
     marginTop: 4,
   },
   initiateButton: {
     backgroundColor: theme.colors.success,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     marginTop: 12,
   },
   initiateButtonText: {
     color: theme.colors.surface,
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
 });
 

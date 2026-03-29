@@ -36,11 +36,40 @@ src/
     invoiceScanService.ts     # Photo → pricing moat pipeline
     cohortBenchmarkService.ts # Cross-contractor benchmarks
     priceIndexService.ts      # EU6 construction cost indexes
+    subscriptionService.ts    # Freemium tiers (Gratis/Contractor), feature gating, usage limits
+    paymentMarginService.ts   # Mollie fee pass-through + VascoApp margin (0.6%)
+    supplierBacklinkService.ts # 16 EU suppliers, affiliate links, commission tracking
+    complianceGatingService.ts # E-invoice format gating, 6 country compliance packs
+    eveAgentService.ts        # EVE 3-agent model: Agent (execution), Auditor (compliance), Analyst (intelligence)
+    customerCommunicationService.ts # WhatsApp Business + email + SMS automation, review requests
+    liveTrackingService.ts    # GPS tracking, "On My Way" ETA, team map, GDPR consent
+    signatureService.ts       # Digital signature capture for quotes, invoices, handover (7 contexts, 6 langs)
+    teamToolsService.ts       # Worker scorecards, van stock, change orders, punch lists, membership enrollment
   integrations/       # Accounting, payments, e-invoicing, suppliers
   components/         # React components (shared, contractor, sitelead, dashboards)
   types/              # TypeScript types (6 compliance files, project, contractor)
   i18n/               # 6 locale files + formatting
   theme/              # tabStyles.ts (LOCKED design system), colors, spacing
+admin/                # Web admin dashboard (Next.js 16 + Tailwind v4)
+  admin.config.ts     # All configuration (branding, funnel, pods, modules)
+  src/app/admin/      # AdminShell (PIN auth) + AdminTabs (sidebar routing)
+  src/components/     # 19 dashboard components (13 Admin* + 3 Vasco-specific + DeveloperHub + DemoBanner)
+    VascoOverview     # Platform overview: users, MRR, markets, trades
+    VascoKPIDashboard # Funnel, financials, revenue timeline, market table
+    DeveloperHub      # Latency, bugs, user suggestions, deploys
+    AdminUGCDashboard # UGC analytics + automations (8 rules) + micropods (5 pods)
+    AdminPodManager   # EU6 market pods with weekly targets
+    AdminContentPipeline  # 7-stage Kanban + list view, summary bar, filters
+    AdminCreatorManager   # Creator roster per language
+    AdminBriefGenerator   # Data-driven creator briefs
+    AdminCommissionTracker # Creator payout tracker
+    AdminWeeklyReport     # Auto-generated pod insights
+    AdminSwipeFile        # Competitor content inspiration
+    AdminAccountTracker   # Multi-account TikTok analytics
+    AdminBoostTracker     # Spark Ads ROI tracking
+  src/lib/            # kpi.ts, pod-planner.ts, briefs.ts, commissions.ts, weekly-report.ts
+docs/                 # Strategy documents
+  monetization-plan.md  # 4-tier freemium: Gratis/Vakman/Meester/Aannemer + competitive research
 ```
 
 ## Key Commands
@@ -48,6 +77,8 @@ src/
 npx expo start                    # Start dev server
 npx expo start --port 8083       # Start on alternate port
 npx tsc --noEmit | grep "^app/"  # Check for TS errors (app/ only)
+cd admin && npm run dev           # Start admin dashboard (localhost:3000/admin, PIN: 2026)
+cd admin && npx tsc --noEmit     # Check admin TS errors
 ```
 
 ## Architecture

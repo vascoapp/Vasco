@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import type { Scenario, ScenarioType, ImpactAnalysis, Activity } from '../../types/schedule-fragility';
@@ -221,7 +222,7 @@ export function WhatIfAnalysisModal({
                 >
                   <View style={styles.checkbox}>
                     {selectedActivityIds.includes(activity.id) && (
-                      <Ionicons name="checkmark" size={14} color="#fff" />
+                      <Ionicons name="checkmark" size={14} color={Palette.white} />
                     )}
                   </View>
                   <View style={styles.activityInfo}>
@@ -421,10 +422,10 @@ export function WhatIfAnalysisModal({
                 disabled={isRunning || (selectedScenario?.type === 'activity-delay' && selectedActivityIds.length === 0)}
               >
                 {isRunning ? (
-                  <ActivityIndicator size="small" color="#fff" />
+                  <ActivityIndicator size="small" color={Palette.white} />
                 ) : (
                   <>
-                    <Ionicons name="play" size={18} color="#fff" />
+                    <Ionicons name="play" size={18} color={Palette.white} />
                     <Text style={styles.primaryButtonText}>Run Analysis</Text>
                   </>
                 )}
@@ -432,7 +433,7 @@ export function WhatIfAnalysisModal({
             )}
             {step === 'results' && (
               <Pressable style={[styles.footerButton, styles.primaryButton]} onPress={handleReset}>
-                <Ionicons name="refresh" size={18} color="#fff" />
+                <Ionicons name="refresh" size={18} color={Palette.white} />
                 <Text style={styles.primaryButtonText}>Run Another Scenario</Text>
               </Pressable>
             )}
@@ -470,8 +471,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   closeButton: {
     padding: Spacing.xs,
@@ -481,8 +482,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     marginBottom: Spacing.sm,
   },
   scenarioGrid: {
@@ -494,7 +495,7 @@ const styles = StyleSheet.create({
     width: '48%',
     padding: Spacing.md,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     gap: 8,
@@ -502,19 +503,19 @@ const styles = StyleSheet.create({
   scenarioIconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.actionPrimary + '15',
     alignItems: 'center',
     justifyContent: 'center',
   },
   scenarioName: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   scenarioDescription: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   configHeader: {
     flexDirection: 'row',
@@ -527,16 +528,16 @@ const styles = StyleSheet.create({
   },
   configTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
   },
   configSection: {
     marginBottom: Spacing.md,
   },
   configLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
     marginBottom: 8,
   },
   inputRow: {
@@ -547,7 +548,7 @@ const styles = StyleSheet.create({
   inputButton: {
     width: 40,
     height: 40,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.surfacePrimary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -558,10 +559,10 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 44,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     paddingHorizontal: Spacing.md,
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     textAlign: 'center',
     borderWidth: 1,
@@ -576,7 +577,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     marginBottom: 6,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -600,8 +601,8 @@ const styles = StyleSheet.create({
   },
   activityName: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
   },
   activityMeta: {
     flexDirection: 'row',
@@ -610,7 +611,7 @@ const styles = StyleSheet.create({
   },
   activityMetaText: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   criticalBadge: {
     backgroundColor: SemanticColors.feedbackErrorBg,
@@ -620,8 +621,8 @@ const styles = StyleSheet.create({
   },
   criticalBadgeText: {
     color: SemanticColors.feedbackError,
-    fontSize: 9,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 2,
+    fontFamily: TYPE.titleFamily,
   },
   resultsHeader: {
     alignItems: 'center',
@@ -630,12 +631,12 @@ const styles = StyleSheet.create({
   },
   resultsTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   impactSummary: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     gap: Spacing.sm,
     marginBottom: Spacing.md,
@@ -647,12 +648,12 @@ const styles = StyleSheet.create({
   },
   impactLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   impactValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   riskBadge: {
     paddingHorizontal: 8,
@@ -660,16 +661,16 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   riskBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   section: {
     marginBottom: Spacing.md,
   },
   sectionLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     marginBottom: 8,
   },
   milestoneItem: {
@@ -678,7 +679,7 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.feedbackWarningBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     marginBottom: 6,
   },
   milestoneContent: {
@@ -686,17 +687,17 @@ const styles = StyleSheet.create({
   },
   milestoneName: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
   },
   milestoneDelay: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   mitigationItem: {
     padding: Spacing.sm,
     backgroundColor: SemanticColors.feedbackInfoBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     marginBottom: 6,
     gap: 6,
   },
@@ -707,7 +708,7 @@ const styles = StyleSheet.create({
   },
   mitigationDescription: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     flex: 1,
   },
   mitigationStats: {
@@ -719,7 +720,7 @@ const styles = StyleSheet.create({
   },
   mitigationStat: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   feasibilityBadge: {
     paddingHorizontal: 6,
@@ -727,8 +728,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   feasibilityText: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
     textTransform: 'capitalize',
   },
   footer: {
@@ -742,15 +743,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   primaryButton: {
     backgroundColor: SemanticColors.actionPrimary,
   },
   primaryButtonText: {
     color: Palette.white,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   buttonDisabled: {
     opacity: 0.6,

@@ -18,9 +18,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { formatCurrency } from '../../i18n/formatting';
 import { Spacing } from '../../theme/spacing';
-import { PAGE_BG } from '../../theme/tabStyles';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { hapticSuccess, hapticWarning } from '../../utils/haptics';
 
@@ -430,66 +430,66 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12,
   },
-  headerTitle: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, letterSpacing: -0.3 },
+  headerTitle: { fontSize: TYPE.sectionSize, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, letterSpacing: -0.3 },
   closeBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: SemanticColors.surfacePrimary, alignItems: 'center', justifyContent: 'center' },
   scrollView: { flex: 1, paddingHorizontal: 20 },
 
   // Empty state
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, gap: 16 },
   cameraCircle: { width: 96, height: 96, borderRadius: 48, backgroundColor: Palette.hermesOrange + '12', alignItems: 'center', justifyContent: 'center' },
-  emptyTitle: { fontSize: 18, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, textAlign: 'center' },
-  emptyDesc: { fontSize: 15, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary, textAlign: 'center', lineHeight: 22 },
-  primaryBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Palette.hermesOrange, borderRadius: 16, paddingVertical: 16, paddingHorizontal: 32 },
-  primaryBtnText: { fontSize: 16, fontFamily: 'Inter_600SemiBold', color: '#fff' },
+  emptyTitle: { fontSize: TYPE.sectionSize, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, textAlign: 'center' },
+  emptyDesc: { fontSize: TYPE.bodySize, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary, textAlign: 'center', lineHeight: 22 },
+  primaryBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.lg, paddingVertical: 16, paddingHorizontal: 32 },
+  primaryBtnText: { fontSize: TYPE.titleSize, fontFamily: 'Inter_600SemiBold', color: Palette.white },
   secondaryBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12 },
-  secondaryBtnText: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
+  secondaryBtnText: { fontSize: TYPE.bodySize, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
 
   // Analyzing
   analyzingState: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 20 },
   photoPreview: { width: 200, height: 150, borderRadius: 16 },
-  analyzingText: { fontSize: 16, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
-  analyzingSubtext: { fontSize: 13, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
+  analyzingText: { fontSize: TYPE.titleSize, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
+  analyzingSubtext: { fontSize: TYPE.captionSize, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
 
   // Results
-  photoResult: { width: '100%', height: 180, borderRadius: 16, marginBottom: 16 },
-  errorBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: SemanticColors.feedbackWarning + '10', borderRadius: 12, padding: 12, marginBottom: 12 },
-  errorText: { flex: 1, fontSize: 13, fontFamily: 'Inter_400Regular', color: SemanticColors.feedbackWarning },
+  photoResult: { width: '100%', height: 180, borderRadius: RADIUS.lg, marginBottom: 16 },
+  errorBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: SemanticColors.feedbackWarning + '10', borderRadius: RADIUS.md, padding: 12, marginBottom: 12 },
+  errorText: { flex: 1, fontSize: TYPE.captionSize, fontFamily: 'Inter_400Regular', color: SemanticColors.feedbackWarning },
 
-  summaryRow: { flexDirection: 'row', backgroundColor: SemanticColors.surfacePrimary, borderRadius: 16, padding: 16, marginBottom: 16 },
+  summaryRow: { flexDirection: 'row', backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: 16, marginBottom: 16 },
   summaryItem: { flex: 1, alignItems: 'center' },
-  summaryLabel: { fontSize: 12, fontFamily: 'Inter_500Medium', color: SemanticColors.textSecondary },
-  summaryValue: { fontSize: 16, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, marginTop: 4 },
+  summaryLabel: { fontSize: TYPE.labelSize, fontFamily: 'Inter_500Medium', color: SemanticColors.textSecondary },
+  summaryValue: { fontSize: TYPE.titleSize, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, marginTop: 4 },
 
-  sectionTitle: { fontSize: 16, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, marginBottom: 10 },
+  sectionTitle: { fontSize: TYPE.titleSize, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, marginBottom: 10 },
 
-  itemCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: SemanticColors.surfacePrimary, borderRadius: 16, padding: 14, marginBottom: 8 },
+  itemCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: 14, marginBottom: 8 },
   itemCardDeselected: { opacity: 0.5 },
-  itemDesc: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
-  itemCategory: { fontSize: 12, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary, marginTop: 2 },
+  itemDesc: { fontSize: TYPE.bodySize, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
+  itemCategory: { fontSize: TYPE.labelSize, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary, marginTop: 2 },
   itemRight: { alignItems: 'flex-end', gap: 4 },
   qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  qtyBtn: { width: 24, height: 24, borderRadius: 12, backgroundColor: SemanticColors.surfaceSecondary, alignItems: 'center', justifyContent: 'center' },
-  qtyText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: SemanticColors.textPrimary, minWidth: 50, textAlign: 'center' },
-  itemPrice: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  qtyBtn: { width: 24, height: 24, borderRadius: RADIUS.md, backgroundColor: SemanticColors.surfaceSecondary, alignItems: 'center', justifyContent: 'center' },
+  qtyText: { fontSize: TYPE.captionSize, fontFamily: 'Inter_500Medium', color: SemanticColors.textPrimary, minWidth: 50, textAlign: 'center' },
+  itemPrice: { fontSize: TYPE.bodySize, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
 
   notesSection: { marginTop: 16 },
   noteRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 },
-  noteText: { flex: 1, fontSize: 13, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
+  noteText: { flex: 1, fontSize: TYPE.captionSize, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
   warningsSection: { marginTop: 16 },
   warningRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 },
-  warningText: { flex: 1, fontSize: 13, fontFamily: 'Inter_400Regular', color: SemanticColors.feedbackWarning },
+  warningText: { flex: 1, fontSize: TYPE.captionSize, fontFamily: 'Inter_400Regular', color: SemanticColors.feedbackWarning },
 
-  totalCard: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: 16, padding: 16, marginTop: 16 },
+  totalCard: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: 16, marginTop: 16 },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
-  totalLabel: { fontSize: 15, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
-  totalValue: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
+  totalLabel: { fontSize: TYPE.bodySize, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
+  totalValue: { fontSize: TYPE.bodySize, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
   totalRowFinal: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: SemanticColors.borderDefault, paddingTop: 10, marginTop: 6 },
-  totalFinalLabel: { fontSize: 16, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
-  totalFinalValue: { fontSize: 18, fontFamily: 'Manrope_700Bold', color: Palette.hermesOrange },
+  totalFinalLabel: { fontSize: TYPE.titleSize, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  totalFinalValue: { fontSize: TYPE.sectionSize, fontFamily: 'Manrope_700Bold', color: Palette.hermesOrange },
 
   actions: { flexDirection: 'row', gap: 10, marginTop: 20 },
-  retakeBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: SemanticColors.surfacePrimary, borderRadius: 16, paddingVertical: 16 },
-  retakeBtnText: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
-  createBtn: { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Palette.hermesOrange, borderRadius: 16, paddingVertical: 16 },
-  createBtnText: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' },
+  retakeBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, paddingVertical: 16 },
+  retakeBtnText: { fontSize: TYPE.bodySize, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
+  createBtn: { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.lg, paddingVertical: 16 },
+  createBtnText: { fontSize: TYPE.bodySize, fontFamily: 'Inter_600SemiBold', color: Palette.white },
 });

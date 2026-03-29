@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Palette } from '../../src/theme/colors';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
+import { useTranslation } from 'react-i18next';
 import type { Material } from '../../src/domain/materials';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -187,6 +188,7 @@ function MaterialDetailPanel({ material }: { material: Material }) {
 
 export default function MaterialsHubScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { materials, isLoading } = useAppState();
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
@@ -345,7 +347,7 @@ export default function MaterialsHubScreen() {
           <View style={styles.emptyCard}>
             <Ionicons name="cube-outline" size={48} color="#CCC" />
             <Text style={styles.emptyText}>
-              {query || selectedCategory ? 'Geen resultaten' : 'Nog geen materialen'}
+              {query || selectedCategory ? t('common.noResults', 'No results') : t('materials.noMaterialsYet', 'No materials yet')}
             </Text>
             <Text style={styles.emptySubtext}>
               {query || selectedCategory

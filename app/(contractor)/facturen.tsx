@@ -20,6 +20,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
+import { PAGE_BG, GRID, RADIUS, TYPE } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { TieredQuoteBuilder } from '../../src/components/contractor/TieredQuoteBuilder';
 import { useCashFlow, type Invoice } from '../../src/services/cashFlowService';
@@ -99,7 +100,7 @@ function DSOHint({ customerId, amount }: { customerId: string; amount?: number }
   const days = mlPrediction?.predictedDays ?? dsoData?.predictedDSO ?? 21;
   const riskColor = mlPrediction?.risk === 'low' ? SemanticColors.feedbackSuccess : mlPrediction?.risk === 'high' ? SemanticColors.feedbackError : Palette.hermesOrange;
   return (
-    <Text style={{ fontSize: 11, fontFamily: 'Inter_400Regular', color: riskColor, marginTop: 2 }}>
+    <Text style={{ fontSize: 11, fontFamily: TYPE.bodyFamily, color: riskColor, marginTop: 2 }}>
       {t('invoices.expectedPayment', 'Verwachte betaling')}: ~{days} {t('invoices.days', 'dagen')}
       {mlPrediction ? ` · ${Math.round(mlPrediction.probability30d * 100)}% binnen 30d` : ''}
     </Text>
@@ -218,7 +219,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                   const daysOverdue = Math.max(1, Math.floor((Date.now() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24)));
                   const interest = calculateLatePaymentInterest(invoice.amount, daysOverdue);
                   return (
-                    <Text style={{ fontSize: 10, fontFamily: 'Inter_400Regular', color: SemanticColors.feedbackError, marginTop: 2 }}>
+                    <Text style={{ fontSize: 10, fontFamily: TYPE.bodyFamily, color: SemanticColors.feedbackError, marginTop: 2 }}>
                       {t('invoices.lateInterest', 'Interest')}: €{interest.interest.toLocaleString(undefined, { minimumFractionDigits: 2 })} ({t('invoices.commercialInterestRate', '8% commercial interest')})
                     </Text>
                   );
@@ -554,7 +555,7 @@ export default function FacturenScreen() {
                 onPress={() => router.push('/contractor/quote-templates' as any)}
               >
                 <Ionicons name="copy-outline" size={18} color={Palette.hermesOrange} />
-                <Text style={{ fontSize: 13, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textPrimary }}>Templates</Text>
+                <Text style={{ fontSize: 13, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary }}>Templates</Text>
               </Pressable>
             </View>
 
@@ -900,14 +901,14 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 24,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   headerSubtitle: {
     fontSize: 14,
     color: SemanticColors.textTertiary,
     marginTop: 2,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: TYPE.labelFamily,
   },
   addButton: {
     width: 40,
@@ -935,7 +936,7 @@ const styles = StyleSheet.create({
   },
   auditAlertAction: {
     fontSize: 13,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackError,
   },
 
@@ -958,7 +959,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 13,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textTertiary,
   },
   tabTextActive: {
@@ -998,7 +999,7 @@ const styles = StyleSheet.create({
   },
   quoteCustomer: {
     fontSize: 14,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   quoteTitle: {
@@ -1011,13 +1012,13 @@ const styles = StyleSheet.create({
   },
   quoteAmount: {
     fontSize: 14,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     fontVariant: ['tabular-nums'] as any,
   },
   quoteStatus: {
     fontSize: 11,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: TYPE.labelFamily,
     marginTop: 1,
   },
 
@@ -1045,7 +1046,7 @@ const styles = StyleSheet.create({
   },
   invoiceCustomer: {
     fontSize: 14,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   invoiceProject: {
@@ -1058,13 +1059,13 @@ const styles = StyleSheet.create({
   },
   invoiceAmount: {
     fontSize: 14,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     fontVariant: ['tabular-nums'] as any,
   },
   invoiceStatus: {
     fontSize: 11,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: TYPE.labelFamily,
     marginTop: 1,
   },
 
@@ -1087,7 +1088,7 @@ const styles = StyleSheet.create({
   },
   emptyStateButtonText: {
     fontSize: 13,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: TYPE.sectionFamily,
     color: Palette.white,
   },
 
@@ -1107,7 +1108,7 @@ const styles = StyleSheet.create({
   },
   finIntelValue: {
     fontSize: 18,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     fontVariant: ['tabular-nums'] as any,
   },
@@ -1126,7 +1127,7 @@ const styles = StyleSheet.create({
   },
   finIntelBadgeText: {
     fontSize: 10,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackSuccess,
   },
   finIntelDivider: {
@@ -1148,7 +1149,7 @@ const styles = StyleSheet.create({
   },
   dsoValue: {
     fontSize: 36,
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: TYPE.displayFamily,
     color: Palette.hermesOrange,
     letterSpacing: -1,
     fontVariant: ['tabular-nums'] as any,
@@ -1156,7 +1157,7 @@ const styles = StyleSheet.create({
   dsoLabel: {
     fontSize: 12,
     color: SemanticColors.textSecondary,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: TYPE.labelFamily,
   },
   dsoDetails: {
     flexDirection: 'row',
@@ -1173,13 +1174,13 @@ const styles = StyleSheet.create({
   },
   dsoDetailValue: {
     fontSize: 14,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     fontVariant: ['tabular-nums'] as any,
   },
   incassoSectionTitle: {
     fontSize: 13,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textSecondary,
     letterSpacing: 0.5,
     paddingHorizontal: Spacing.xs,
@@ -1197,12 +1198,12 @@ const styles = StyleSheet.create({
   },
   dunningCustomer: {
     fontSize: 15,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   dunningAmount: {
     fontSize: 15,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     fontVariant: ['tabular-nums'] as any,
   },
@@ -1218,7 +1219,7 @@ const styles = StyleSheet.create({
   },
   dunningStepText: {
     fontSize: 10,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     letterSpacing: 0.3,
   },
   dunningDays: {
@@ -1236,7 +1237,7 @@ const styles = StyleSheet.create({
   },
   dunningAutoText: {
     fontSize: 10,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackSuccess,
   },
   dunningSteps: {
@@ -1259,7 +1260,7 @@ const styles = StyleSheet.create({
   },
   dunningActionText: {
     fontSize: 13,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: TYPE.sectionFamily,
     color: Palette.hermesOrange,
   },
   cashGapCard: {
@@ -1273,7 +1274,7 @@ const styles = StyleSheet.create({
   },
   cashGapTitle: {
     fontSize: 13,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   cashGapDesc: {
@@ -1283,7 +1284,7 @@ const styles = StyleSheet.create({
   },
   cashGapAmount: {
     fontSize: 14,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     fontVariant: ['tabular-nums'] as any,
   },
 
@@ -1303,7 +1304,7 @@ const styles = StyleSheet.create({
   },
   approvalTitle: {
     fontSize: 13,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackWarning,
   },
   approvalItem: {
@@ -1314,7 +1315,7 @@ const styles = StyleSheet.create({
   },
   approvalCustomer: {
     fontSize: 14,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   approvalRef: {
@@ -1356,13 +1357,13 @@ const styles = StyleSheet.create({
   },
   nieuweOfferteCtaText: {
     fontSize: 17,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: Palette.white,
   },
   // Legacy banner styles (used by Nieuwe Factuur banner title/sub)
   nieuweOfferteBannerTitle: {
     fontSize: 16,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: Palette.white,
   },
   nieuweOfferteBannerSub: {
@@ -1404,7 +1405,7 @@ const styles = StyleSheet.create({
   },
   stickyOverdueText: {
     fontSize: 13,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackError,
     fontVariant: ['tabular-nums'] as any,
   },
@@ -1415,7 +1416,7 @@ const styles = StyleSheet.create({
   },
   stickyOverdueAction: {
     fontSize: 13,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackError,
   },
 
@@ -1439,7 +1440,7 @@ const styles = StyleSheet.create({
   },
   invoiceActionText: {
     fontSize: 11,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: TYPE.sectionFamily,
     color: Palette.hermesOrange,
   },
 
@@ -1455,7 +1456,7 @@ const styles = StyleSheet.create({
   },
   overdueBannerTitle: {
     fontSize: 16,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: Palette.white,
   },
   overdueBannerSub: {

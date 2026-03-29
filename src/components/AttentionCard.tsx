@@ -5,7 +5,7 @@ import { Shadows } from '../theme/shadows';
 import { Spacing } from '../theme/spacing';
 import { Typography } from '../theme/typography';
 import { PrimaryButton } from './PrimaryButton';
-
+import { TYPE, RADIUS } from '../theme/tabStyles';
 type AttentionCardProps = {
   title: string;
   subtitle?: string;
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   },
   meta: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Inter_500Medium',
   },
   subtitle: {

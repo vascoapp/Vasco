@@ -13,7 +13,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { formatCurrency } from '../../i18n/formatting';
 import { Spacing } from '../../theme/spacing';
 import type { Quote, QuoteLineItem, Customer } from '../../types/contractor';
@@ -574,23 +575,23 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   headerSubtitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   saveButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   saveButtonText: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   content: {
     flex: 1,
@@ -610,25 +611,25 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
   },
   inputGroup: {
     gap: 6,
   },
   inputLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
   },
   textInput: {
     backgroundColor: SemanticColors.surfacePrimary,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     color: SemanticColors.textPrimary,
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
   },
   textArea: {
     minHeight: 80,
@@ -644,16 +645,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     backgroundColor: SemanticColors.actionPrimary + '15',
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   addItemText: {
     color: SemanticColors.actionPrimary,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
   lineItemsList: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     overflow: 'hidden',
@@ -675,27 +676,27 @@ const styles = StyleSheet.create({
   lineItemIndex: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   lineItemIndexText: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   lineItemContent: {
     flex: 1,
   },
   lineItemDesc: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
   },
   lineItemMeta: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   lineItemRight: {
     flexDirection: 'row',
@@ -704,8 +705,8 @@ const styles = StyleSheet.create({
   },
   lineItemTotal: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   lineItemEditing: {
     padding: Spacing.md,
@@ -714,10 +715,10 @@ const styles = StyleSheet.create({
   },
   lineItemDescInput: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   lineItemEditRow: {
     flexDirection: 'row',
@@ -726,31 +727,31 @@ const styles = StyleSheet.create({
   },
   lineItemNumInput: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     textAlign: 'center',
   },
   lineItemX: {
     color: SemanticColors.textSecondary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   lineItemDoneBtn: {
     alignSelf: 'flex-end',
     paddingHorizontal: 16,
     paddingVertical: 8,
     backgroundColor: SemanticColors.actionPrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   lineItemDoneBtnText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
+    color: Palette.white,
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
   emptyItems: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.xl,
     alignItems: 'center',
     gap: Spacing.sm,
@@ -760,22 +761,22 @@ const styles = StyleSheet.create({
   },
   emptyItemsText: {
     color: SemanticColors.textTertiary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   emptyAddButton: {
     paddingHorizontal: 20,
     paddingVertical: 10,
     backgroundColor: SemanticColors.actionPrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   emptyAddButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
+    color: Palette.white,
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   totalsCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -788,11 +789,11 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   totalValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   vatRow: {
     flexDirection: 'row',
@@ -807,11 +808,11 @@ const styles = StyleSheet.create({
     width: 40,
     textAlign: 'center',
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   vatPercent: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   totalDivider: {
     height: 1,
@@ -820,13 +821,13 @@ const styles = StyleSheet.create({
   },
   grandTotalLabel: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
   },
   grandTotalValue: {
     color: SemanticColors.actionPrimary,
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   bottomActions: {
     flexDirection: 'row',
@@ -844,12 +845,12 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   previewButtonText: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   sendButton: {
     flex: 2,
@@ -859,12 +860,12 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     backgroundColor: SemanticColors.actionPrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   sendButtonText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '700',
+    color: Palette.white,
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.sectionFamily,
   },
   modalOverlay: {
     position: 'absolute',
@@ -890,8 +891,8 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   typeSelector: {
     flexDirection: 'row',
@@ -905,7 +906,7 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: 10,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   typeOptionActive: {
     backgroundColor: SemanticColors.actionPrimary + '20',
@@ -914,8 +915,8 @@ const styles = StyleSheet.create({
   },
   typeOptionText: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
-    fontWeight: '500',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.labelFamily,
   },
   typeOptionTextActive: {
     color: SemanticColors.actionPrimary,
@@ -935,29 +936,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   unitOptionActive: {
     backgroundColor: SemanticColors.actionPrimary,
   },
   unitOptionText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
   },
   unitOptionTextActive: {
-    color: '#fff',
+    color: Palette.white,
   },
   previewBox: {
     backgroundColor: SemanticColors.feedbackInfoBg,
     padding: Spacing.sm,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
   },
   previewText: {
     color: SemanticColors.feedbackInfo,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   modalActions: {
     flexDirection: 'row',
@@ -969,12 +970,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   modalCancelBtnText: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   modalAddBtn: {
     flex: 2,
@@ -984,11 +985,11 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 14,
     backgroundColor: SemanticColors.actionPrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   modalAddBtnText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '700',
+    color: Palette.white,
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.sectionFamily,
   },
 });

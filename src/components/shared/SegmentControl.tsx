@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { RADIUS } from '../../theme/tabStyles';
 
 interface Segment {
   key: string;
@@ -41,13 +42,13 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 3,
   },
   tab: {
     flex: 1,
     paddingVertical: 9,
-    borderRadius: 10,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     position: 'relative',
   },

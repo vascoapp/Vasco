@@ -25,7 +25,7 @@ import { searchCatalog, type CatalogItem } from '../../integrations/suppliers';
 import { AIQuoteFromPhoto } from './AIQuoteFromPhoto';
 import { useQuoteTemplates, type QuoteTemplate, TEMPLATE_CATEGORIES } from '../../services/quoteTemplateService';
 import { hapticSuccess } from '../../utils/haptics';
-
+import { useTranslation } from 'react-i18next';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 // =============================================================================
@@ -102,6 +102,7 @@ interface TieredQuoteBuilderProps {
 }
 
 export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBuilderProps) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const trade = user?.trade ?? 'general';
   const country = user?.country ?? 'NL';
@@ -272,8 +273,8 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
         setTimeout(() => {
           setAiDrafting(false);
           Alert.alert(
-            'Geen overeenkomsten',
-            `Geen diensten gevonden voor "${scopeText}". Voeg diensten handmatig toe via de prijslijst.`,
+            t('quotes.noMatches', 'No matches'),
+            t('quotes.noServicesFoundFor', 'No services found for "{{scope}}". Add services manually via the price list.', { scope: scopeText }),
             [{ text: 'OK' }],
           );
         }, 600);
@@ -425,7 +426,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
               <Text style={s.sectionTitle}>{TRADE_LABELS[trade] ?? 'Diensten'}</Text>
               <Pressable style={s.addBtn} onPress={() => setShowPricebook(true)}>
                 <Ionicons name="add" size={16} color={Palette.hermesOrange} />
-                <Text style={s.addBtnText}>Toevoegen</Text>
+                <Text style={s.addBtnText}>{t('common.add', 'Add')}</Text>
               </Pressable>
             </View>
 
@@ -600,7 +601,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
         </View>
 
         {/* Tier preview cards */}
-        <Text style={s.sectionTitle}>Klant ziet drie opties</Text>
+        <Text style={s.sectionTitle}>{t('quotes.customerSeesOptions', 'Customer sees three options')}</Text>
         <View style={s.tiersRow}>
           {tiers.map(tier => {
             const cfg = TIER_CONFIG[tier.tier];
@@ -790,12 +791,12 @@ const s = StyleSheet.create({
     backgroundColor: Palette.hermesOrange, paddingVertical: 3, alignItems: 'center',
     borderTopLeftRadius: RADIUS.md - 1, borderTopRightRadius: RADIUS.md - 1,
   },
-  recRibbonText: { fontSize: 8, fontFamily: TYPE.titleFamily, color: Palette.white, letterSpacing: 0.5 },
+  recRibbonText: { fontSize: TYPE.tinySize - 3, fontFamily: TYPE.titleFamily, color: Palette.white, letterSpacing: 0.5 },
   tierIconCircle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
   tierName: { fontSize: TYPE.captionSize, fontFamily: TYPE.sectionFamily },
   tierPrice: { fontSize: TYPE.sectionSize, fontFamily: TYPE.displayFamily, color: SemanticColors.textPrimary, marginTop: 2 },
   tierVat: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textTertiary },
-  tierFeature: { fontSize: 9, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, flex: 1 },
+  tierFeature: { fontSize: TYPE.tinySize - 2, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, flex: 1 },
 
   upsellRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: SemanticColors.feedbackSuccess + '10', borderRadius: RADIUS.md, padding: 10 },
   upsellText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.feedbackSuccess },

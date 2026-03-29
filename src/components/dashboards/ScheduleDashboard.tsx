@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import {
@@ -229,7 +230,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: SemanticColors.textSecondary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
   },
   projectSelector: {
     flexDirection: 'row',
@@ -248,12 +249,12 @@ const styles = StyleSheet.create({
   },
   projectCountry: {
     color: COO_COLOR,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '700',
   },
   projectName: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   projectNameActive: {
@@ -277,12 +278,12 @@ const styles = StyleSheet.create({
     borderColor: COO_COLOR,
   },
   spiValue: {
-    fontSize: 22,
+    fontSize: TYPE.displaySize - 6,
     fontWeight: '700',
   },
   spiLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   scheduleInfo: {
     flex: 1,
@@ -296,11 +297,11 @@ const styles = StyleSheet.create({
   },
   scheduleLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   scheduleValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
   },
   statusBadge: {
@@ -309,7 +310,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
   },
   statusText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '700',
   },
   section: {
@@ -322,7 +323,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -331,11 +332,11 @@ const styles = StyleSheet.create({
     backgroundColor: COO_COLOR,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   countBadgeText: {
-    color: '#fff',
-    fontSize: 11,
+    color: Palette.white,
+    fontSize: TYPE.tinySize,
     fontWeight: '700',
   },
   datesCard: {
@@ -353,11 +354,11 @@ const styles = StyleSheet.create({
   },
   dateLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   dateValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     marginTop: 4,
   },
@@ -377,10 +378,10 @@ const styles = StyleSheet.create({
   },
   forecastLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   forecastValue: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
   },
   activityList: {
@@ -400,12 +401,12 @@ const styles = StyleSheet.create({
   },
   activityName: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '500',
   },
   activityWbs: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   activityProgress: {
     flexDirection: 'row',
@@ -426,7 +427,7 @@ const styles = StyleSheet.create({
   },
   progressText: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
     width: 35,
     textAlign: 'right',
@@ -440,7 +441,7 @@ const styles = StyleSheet.create({
   },
   delayText: {
     color: SemanticColors.feedbackError,
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     fontWeight: '700',
   },
   summaryGrid: {
@@ -456,12 +457,12 @@ const styles = StyleSheet.create({
   },
   summaryValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 20,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
   },
   summaryLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     marginTop: 4,
   },
 });

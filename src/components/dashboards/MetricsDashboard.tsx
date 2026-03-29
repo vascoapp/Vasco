@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { Typography } from '../../theme/typography';
 import {
@@ -277,14 +278,14 @@ const styles = StyleSheet.create({
   },
   valueCard: {
     backgroundColor: SemanticColors.actionPrimary + '15',
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.actionPrimary + '30',
   },
   valueHeadline: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
     textAlign: 'center',
     marginBottom: Spacing.md,
@@ -298,25 +299,25 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: '45%',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     alignItems: 'center',
   },
   valueNumber: {
     color: SemanticColors.actionPrimary,
-    fontSize: 20,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
   },
   valueLabel: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
     marginTop: 4,
     textAlign: 'center',
   },
   valueComparison: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     marginTop: 2,
   },
   tabScroll: {
@@ -327,20 +328,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.xs,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 4,
   },
   tab: {
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   tabActive: {
     backgroundColor: SemanticColors.surfacePrimary,
   },
   tabText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
   tabTextActive: {
@@ -348,7 +349,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -365,24 +366,24 @@ const styles = StyleSheet.create({
   roiCard: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     alignItems: 'center',
   },
   roiValue: {
     color: SemanticColors.feedbackSuccess,
-    fontSize: 22,
+    fontSize: TYPE.displaySize - 6,
     fontWeight: '700',
   },
   roiLabel: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
     marginTop: 4,
   },
   roiSubtext: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     marginTop: 2,
   },
   categoryRow: {
@@ -398,12 +399,12 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
   },
   categorySubtext: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     marginTop: 2,
   },
   categoryProgress: {
@@ -434,7 +435,7 @@ const styles = StyleSheet.create({
   },
   progressPercent: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
     width: 35,
     textAlign: 'right',
@@ -452,20 +453,20 @@ const styles = StyleSheet.create({
   },
   improvementName: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '500',
   },
   improvementBadge: {
     paddingVertical: 4,
     paddingHorizontal: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   improvementPositive: {
     backgroundColor: SemanticColors.feedbackSuccess + '20',
   },
   improvementText: {
     color: SemanticColors.feedbackSuccess,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '700',
   },
   attentionRow: {
@@ -481,23 +482,23 @@ const styles = StyleSheet.create({
   },
   attentionName: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '500',
   },
   attentionSubtext: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     marginTop: 2,
   },
   gapBadge: {
     backgroundColor: SemanticColors.feedbackWarning + '20',
     paddingVertical: 4,
     paddingHorizontal: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   gapText: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
   metricsGrid: {
@@ -505,7 +506,7 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -518,7 +519,7 @@ const styles = StyleSheet.create({
   },
   metricName: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     flex: 1,
   },
@@ -534,7 +535,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackError + '20',
   },
   targetBadgeText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '600',
   },
   targetMetText: {
@@ -550,7 +551,7 @@ const styles = StyleSheet.create({
   },
   metricValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontWeight: '700',
   },
   trendBadge: {
@@ -559,12 +560,12 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   trendText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
   metricPrevious: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   targetRow: {
     flexDirection: 'row',
@@ -572,15 +573,15 @@ const styles = StyleSheet.create({
   },
   targetLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   benchmarkLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   metricDescription: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     marginTop: 4,
   },
 });

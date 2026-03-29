@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import {
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: SemanticColors.textSecondary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
   },
   projectSelector: {
     flexDirection: 'row',
@@ -162,12 +163,12 @@ const styles = StyleSheet.create({
   },
   projectCountry: {
     color: CFO_COLOR,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '700',
   },
   projectName: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   projectNameActive: {
@@ -182,7 +183,7 @@ const styles = StyleSheet.create({
   },
   phaseText: {
     color: CFO_COLOR,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
   metricsGrid: {
@@ -199,11 +200,11 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   metricValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '700',
     marginTop: 4,
   },
@@ -214,7 +215,7 @@ const styles = StyleSheet.create({
   },
   equityTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     marginBottom: Spacing.sm,
   },
@@ -227,12 +228,12 @@ const styles = StyleSheet.create({
   },
   equityValue: {
     color: CFO_COLOR,
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontWeight: '700',
   },
   equityLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     marginTop: 4,
   },
 });

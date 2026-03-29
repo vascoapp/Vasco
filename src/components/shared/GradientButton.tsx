@@ -2,6 +2,7 @@ import { Pressable, Text, StyleSheet, ActivityIndicator, View } from 'react-nati
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Palette, SemanticColors } from '../../theme/colors';
+import { RADIUS } from '../../theme/tabStyles';
 
 interface GradientButtonProps {
   label: string;
@@ -54,29 +55,22 @@ export function GradientButton({ label, onPress, icon, loading, disabled, size =
 
 const styles = StyleSheet.create({
   wrapper: {
-    borderRadius: 14,
-    shadowColor: Palette.hermesOrange,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    borderRadius: RADIUS.lg,
   },
   wrapperMd: {
-    borderRadius: 10,
+    borderRadius: RADIUS.md,
   },
   wrapperDisabled: {
     opacity: 0.6,
-    shadowOpacity: 0,
-    elevation: 0,
   },
   gradient: {
-    borderRadius: 14,
+    borderRadius: RADIUS.lg,
     paddingVertical: 17,
     alignItems: 'center',
     justifyContent: 'center',
   },
   gradientMd: {
-    borderRadius: 10,
+    borderRadius: RADIUS.md,
     paddingVertical: 12,
   },
   content: {

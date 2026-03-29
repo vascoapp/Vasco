@@ -3,8 +3,10 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
+import { useTranslation } from 'react-i18next';
 import type { Job, JobStatus } from '../../domain/jobs';
 import { JOB_STATUS_CONFIG } from '../../data/mockContractor';
 import { useAppState } from '../../state/AppState';
@@ -336,8 +338,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize,
+    fontFamily: TYPE.sectionFamily,
   },
   headerActions: {
     flexDirection: 'row',
@@ -346,7 +348,7 @@ const styles = StyleSheet.create({
   headerButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -354,7 +356,7 @@ const styles = StyleSheet.create({
   addButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     backgroundColor: SemanticColors.actionPrimary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -366,7 +368,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.md,
     marginBottom: Spacing.sm,
     paddingHorizontal: Spacing.md,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     gap: Spacing.sm,
@@ -375,7 +377,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     color: SemanticColors.textPrimary,
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
   },
   filtersContainer: {
     paddingHorizontal: Spacing.md,
@@ -389,7 +391,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
@@ -399,15 +401,15 @@ const styles = StyleSheet.create({
   },
   filterPillText: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
   },
   filterPillTextActive: {
     color: SemanticColors.actionPrimary,
   },
   filterBadge: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     paddingHorizontal: 6,
     paddingVertical: 2,
     minWidth: 20,
@@ -418,8 +420,8 @@ const styles = StyleSheet.create({
   },
   filterBadgeText: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   filterBadgeTextActive: {
     color: Palette.white,
@@ -437,14 +439,14 @@ const styles = StyleSheet.create({
   },
   groupTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   jobCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -461,12 +463,12 @@ const styles = StyleSheet.create({
   },
   jobCardTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   jobCardCustomer: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   statusBadge: {
     flexDirection: 'row',
@@ -477,8 +479,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   statusBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   jobCardDetails: {
     gap: 4,
@@ -490,7 +492,7 @@ const styles = StyleSheet.create({
   },
   jobCardDetailText: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     flex: 1,
   },
   jobCardFooter: {
@@ -503,16 +505,16 @@ const styles = StyleSheet.create({
   },
   jobCardAmount: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
   },
   jobCardQuoted: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   jobCardNoAmount: {
     color: SemanticColors.textTertiary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontStyle: 'italic',
   },
   jobCardMeta: {
@@ -527,7 +529,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   emptyState: {
     alignItems: 'center',
@@ -537,12 +539,12 @@ const styles = StyleSheet.create({
   },
   emptyStateTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
   },
   emptyStateText: {
     color: SemanticColors.textTertiary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     textAlign: 'center',
   },
   emptyStateButton: {
@@ -552,13 +554,13 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary,
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     marginTop: Spacing.md,
   },
   emptyStateButtonText: {
     color: Palette.white,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   fab: {
     position: 'absolute',
@@ -566,14 +568,9 @@ const styles = StyleSheet.create({
     bottom: 100,
     width: 56,
     height: 56,
-    borderRadius: 28,
+    borderRadius: RADIUS.full,
     backgroundColor: SemanticColors.actionPrimary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: Palette.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
 });

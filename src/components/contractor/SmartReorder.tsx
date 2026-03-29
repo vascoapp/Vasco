@@ -25,8 +25,8 @@ import {
   ReorderBundle,
   MaterialInventory,
 } from '../../services/reorderService';
-
-// ============================================
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
+import { useTranslation } from 'react-i18next';// ============================================
 // MAIN COMPONENT
 // ============================================
 
@@ -552,11 +552,12 @@ function BundlesTab({
   bundles: ReorderBundle[];
   onSelect: (bundle: ReorderBundle) => void;
 }) {
+  const { t } = useTranslation();
   if (bundles.length === 0) {
     return (
       <View style={styles.emptyState}>
         <Ionicons name="gift-outline" size={64} color={SemanticColors.textSecondary} />
-        <Text style={styles.emptyTitle}>Geen bundels beschikbaar</Text>
+        <Text style={styles.emptyTitle}>{t('reorder.noBundlesAvailable', 'No bundles available')}</Text>
         <Text style={styles.emptyText}>
           Op basis van je bestelsugesties zijn er momenteel geen relevante bundels.
         </Text>
@@ -882,13 +883,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerStatValue: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     marginTop: 4,
   },
   headerStatLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
     textAlign: 'center',
@@ -919,12 +920,12 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.actionPrimary,
   },
   tabLabel: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   tabLabelActive: {
     color: SemanticColors.actionPrimary,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   badge: {
     backgroundColor: SemanticColors.actionPrimary,
@@ -940,8 +941,8 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.sectionFamily,
   },
 
   // Content
@@ -960,13 +961,13 @@ const styles = StyleSheet.create({
     padding: 48,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginTop: 16,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     textAlign: 'center',
     marginTop: 8,
@@ -982,8 +983,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
 
@@ -1009,12 +1010,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   suggestionName: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   suggestionCategory: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1028,11 +1029,11 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   urgencyText: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.sectionFamily,
   },
   suggestionReason: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     lineHeight: 18,
     marginBottom: 12,
@@ -1049,17 +1050,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   quantityLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   quantityValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   costValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.actionPrimary,
   },
   savingsBadge: {
@@ -1072,8 +1073,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   savingsText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.feedbackSuccess,
   },
   quickOrderButton: {
@@ -1102,12 +1103,12 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary,
   },
   categoryChipText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   categoryChipTextActive: {
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   inventoryCard: {
     backgroundColor: SemanticColors.surfaceBackground,
@@ -1125,12 +1126,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   inventoryName: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   inventoryMeta: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1164,11 +1165,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   stockValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   stockOptimal: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   inventoryActions: {
@@ -1182,12 +1183,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   usageLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   usageValue: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
   },
   stockButtons: {
@@ -1205,7 +1206,7 @@ const styles = StyleSheet.create({
 
   // Bundles
   bundlesIntro: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginBottom: 16,
     lineHeight: 20,
@@ -1226,12 +1227,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bundleName: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   bundleSupplier: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1239,16 +1240,16 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   bundleSavingsValue: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackSuccess,
   },
   bundleSavingsAmount: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.feedbackSuccess,
   },
   bundleDescription: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginBottom: 12,
   },
@@ -1264,16 +1265,16 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   bundleItemName: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
     flex: 1,
   },
   bundleItemQty: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   bundleMoreItems: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.actionPrimary,
     marginTop: 4,
   },
@@ -1284,12 +1285,12 @@ const styles = StyleSheet.create({
   },
   bundleTotal: {},
   bundleTotalLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   bundleTotalValue: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   bundleValid: {
@@ -1298,7 +1299,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   bundleValidText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
 
@@ -1323,8 +1324,8 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   modalClose: {
@@ -1343,12 +1344,12 @@ const styles = StyleSheet.create({
 
   // Detail Modal
   detailName: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   detailCategory: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginBottom: 16,
   },
@@ -1360,21 +1361,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   detailLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginBottom: 4,
   },
   detailValue: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   detailSection: {
     marginBottom: 20,
   },
   detailSectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
@@ -1389,12 +1390,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   orderDetailLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   orderDetailValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   savingsBox: {
@@ -1410,12 +1411,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   savingsTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   savingsDescription: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
@@ -1423,8 +1424,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   confidenceTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
@@ -1441,12 +1442,12 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   confidenceValue: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
     marginBottom: 4,
   },
   confidenceBased: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   snoozeButton: {
@@ -1459,7 +1460,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfaceBackground,
   },
   snoozeText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   dismissButton: {
@@ -1469,7 +1470,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfaceBackground,
   },
   dismissText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   orderButton: {
@@ -1483,8 +1484,8 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary,
   },
   orderText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: '#FFFFFF',
   },
   cancelButton: {
@@ -1494,7 +1495,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfaceBackground,
   },
   cancelText: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     color: SemanticColors.textSecondary,
   },
 
@@ -1506,8 +1507,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   bundleDetailName: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     flex: 1,
   },
@@ -1518,17 +1519,17 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   bundleDetailSavingsPercent: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
     color: '#FFFFFF',
   },
   bundleDetailSupplier: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginBottom: 8,
   },
   bundleDetailDescription: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginBottom: 20,
     lineHeight: 20,
@@ -1537,8 +1538,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   bundleDetailItemsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
@@ -1555,17 +1556,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bundleDetailItemName: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   bundleDetailItemQty: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
   bundleDetailItemPrice: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   bundleDetailTotal: {
@@ -1580,11 +1581,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   bundleDetailTotalLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   bundleDetailTotalValue: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   bundleDetailDivider: {
@@ -1593,13 +1594,13 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   bundleDetailFinalLabel: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   bundleDetailFinalValue: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   bundleDetailValid: {
@@ -1612,7 +1613,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   bundleDetailValidText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
 });

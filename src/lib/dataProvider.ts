@@ -34,9 +34,19 @@ import type { JobRow } from './database.types';
 // ── Helpers ──────────────────────────────────────────────────
 
 async function getUserId(): Promise<string> {
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) throw new Error('Not authenticated');
-  return data.user.id;
+  try {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) throw new Error('Not authenticated');
+    return data.user.id;
+  } catch {
+    // Supabase unreachable or user not authenticated — use local fallback
+    const profile = await AsyncStorage.getItem('@vasco_user_profile').catch(() => null);
+    if (profile) {
+      const parsed = JSON.parse(profile);
+      if (parsed.id) return parsed.id;
+    }
+    throw new Error('Not authenticated');
+  }
 }
 
 // ── Documents ────────────────────────────────────────────────
@@ -303,9 +313,25 @@ export async function nextDocumentNumber(docType: 'quote' | 'invoice'): Promise<
     }
   }
 
-  const { data, error } = await supabase.rpc('next_document_number', { p_doc_type: docType } as any);
-  if (error) throw error;
-  return data as string;
+  try {
+    const { data, error } = await supabase.rpc('next_document_number', { p_doc_type: docType } as any);
+    if (error) throw error;
+    return data as string;
+  } catch {
+    // Supabase unreachable (paused/offline) — fallback to local counter
+    const storageKey = `@vasco_doc_counter_${docType}`;
+    const prefix = docType === 'quote' ? 'Q' : 'INV';
+    const yearSuffix = new Date().getFullYear().toString().slice(-2);
+    try {
+      const raw = await AsyncStorage.getItem(storageKey);
+      const current = raw ? parseInt(raw, 10) : 0;
+      const next = current + 1;
+      await AsyncStorage.setItem(storageKey, String(next));
+      return `${prefix}-${yearSuffix}${String(next).padStart(4, '0')}`;
+    } catch {
+      return `${prefix}-${yearSuffix}${String(Date.now()).slice(-6)}`;
+    }
+  }
 }
 
 // ── Aggregate loaders (for AppState) ─────────────────────────

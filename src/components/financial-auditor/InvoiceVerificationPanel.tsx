@@ -18,6 +18,7 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import {
   InvoiceVerification,
   InvoiceDiscrepancy,
@@ -381,12 +382,12 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   title: {
-    fontSize: 20,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
     color: theme.colors.text,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: theme.colors.textSecondary,
     marginTop: 2,
   },
@@ -396,13 +397,13 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.accent,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     gap: 6,
   },
   verifyAllButtonText: {
     color: theme.colors.surface,
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   statsRow: {
     flexDirection: 'row',
@@ -413,7 +414,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.surface,
     padding: 12,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -427,7 +428,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.success,
   },
   statValue: {
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontWeight: '700',
     color: theme.colors.text,
   },
@@ -438,7 +439,7 @@ const styles = StyleSheet.create({
     color: theme.colors.success,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: theme.colors.textSecondary,
     marginTop: 4,
   },
@@ -448,7 +449,7 @@ const styles = StyleSheet.create({
   },
   invoiceCard: {
     backgroundColor: theme.colors.surface,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -464,12 +465,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   invoiceNumber: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '600',
     color: theme.colors.text,
   },
   invoiceVendor: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: theme.colors.textSecondary,
     marginTop: 2,
   },
@@ -477,7 +478,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   invoiceAmount: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
     color: theme.colors.text,
   },
@@ -486,7 +487,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     marginTop: 6,
     gap: 4,
   },
@@ -500,17 +501,17 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.infoLight,
   },
   badgeTextSuccess: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: theme.colors.success,
     fontWeight: '500',
   },
   badgeTextWarning: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: theme.colors.warning,
     fontWeight: '500',
   },
   badgeTextInfo: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: theme.colors.info,
     fontWeight: '500',
   },
@@ -526,11 +527,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   varianceLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: theme.colors.textSecondary,
   },
   varianceValue: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: theme.colors.text,
   },
@@ -546,14 +547,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 12,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: theme.colors.accentLight,
     gap: 6,
   },
   verifyButtonText: {
     color: theme.colors.accent,
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   verifyingOverlay: {
     marginTop: 12,
@@ -579,7 +580,7 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
     color: theme.colors.text,
   },
@@ -592,7 +593,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   modalSectionTitle: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '600',
     color: theme.colors.text,
     marginBottom: 12,
@@ -606,18 +607,18 @@ const styles = StyleSheet.create({
     width: '48%',
   },
   summaryLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: theme.colors.textSecondary,
   },
   summaryValue: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '600',
     color: theme.colors.text,
     marginTop: 2,
   },
   discrepancyItem: {
     backgroundColor: theme.colors.surfaceAlt,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 12,
     marginBottom: 12,
   },
@@ -633,12 +634,12 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   discrepancyType: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: theme.colors.text,
   },
   discrepancyDescription: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: theme.colors.textSecondary,
     marginBottom: 12,
   },
@@ -658,12 +659,12 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   valueLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: theme.colors.textMuted,
     textTransform: 'uppercase',
   },
   valueAmount: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: theme.colors.text,
     marginTop: 2,
@@ -678,7 +679,7 @@ const styles = StyleSheet.create({
   },
   recommendationText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: theme.colors.accent,
   },
   actionButtons: {
@@ -692,7 +693,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     gap: 6,
   },
   actionButtonReject: {
@@ -707,17 +708,17 @@ const styles = StyleSheet.create({
   actionButtonTextReject: {
     color: theme.colors.error,
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   actionButtonTextCredit: {
     color: theme.colors.warning,
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   actionButtonTextApprove: {
     color: theme.colors.success,
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
 });
 

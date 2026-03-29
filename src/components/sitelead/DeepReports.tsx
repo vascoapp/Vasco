@@ -2,6 +2,7 @@
 // Financial, workforce, materials, safety, and schedule reporting
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -11,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { MOCK_SITE_REPORT } from '../../data/mockSiteLead';
 
@@ -126,6 +128,7 @@ interface DeepReportsProps {
 }
 
 export function DeepReports({ onClose }: DeepReportsProps) {
+  const { t } = useTranslation();
   const [report] = useState(MOCK_SITE_REPORT);
   const [period, setPeriod] = useState<'week' | 'month' | 'quarter'>('week');
 
@@ -450,7 +453,7 @@ export function DeepReports({ onClose }: DeepReportsProps) {
                 <View style={styles.milestoneInfo}>
                   <Text style={styles.milestoneName}>{milestone.name}</Text>
                   <Text style={styles.milestoneDate}>
-                    {milestone.daysUntil === 0 ? 'Vandaag' : `Over ${milestone.daysUntil} dagen`}
+                    {milestone.daysUntil === 0 ? t('common.today', 'Today') : t('common.inDays', 'In {{count}} days', { count: milestone.daysUntil })}
                   </Text>
                 </View>
               </View>
@@ -525,12 +528,12 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   title: {
-    fontSize: 28,
+    fontSize: TYPE.displaySize,
     fontWeight: '700',
     color: SemanticColors.textPrimary,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
@@ -551,14 +554,14 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: Spacing.sm,
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   periodButtonActive: {
     backgroundColor: SemanticColors.actionPrimary,
   },
   periodText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
     color: SemanticColors.textSecondary,
   },
@@ -574,7 +577,7 @@ const styles = StyleSheet.create({
   // Report Section
   reportSection: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     marginBottom: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -596,7 +599,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     flex: 1,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
     marginLeft: Spacing.sm,
@@ -617,7 +620,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.sm,
   },
   statIcon: {
@@ -632,11 +635,11 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   statValue: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
   },
   changeRow: {
@@ -646,18 +649,18 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   changeText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '600',
   },
 
   // Profit Card
   profitCard: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
   },
   profitCardTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
     marginBottom: Spacing.sm,
@@ -665,7 +668,7 @@ const styles = StyleSheet.create({
   profitBar: {
     flexDirection: 'row',
     height: 24,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     overflow: 'hidden',
     marginBottom: Spacing.sm,
   },
@@ -688,19 +691,19 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   legendText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
 
   // Utilization Card
   utilizationCard: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     marginBottom: Spacing.md,
   },
   cardTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
     marginBottom: Spacing.sm,
@@ -716,11 +719,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   progressLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   progressValue: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
@@ -737,7 +740,7 @@ const styles = StyleSheet.create({
   // Performers
   performersCard: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
   },
   performerRow: {
@@ -749,24 +752,24 @@ const styles = StyleSheet.create({
   },
   performerRank: {
     width: 30,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
     color: SemanticColors.actionPrimary,
   },
   performerName: {
     flex: 1,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   performerMetrics: {
     alignItems: 'flex-end',
   },
   performerJobs: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   performerRevenue: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: SemanticColors.feedbackSuccess,
   },
@@ -774,7 +777,7 @@ const styles = StyleSheet.create({
   // Materials
   materialsCard: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
   },
   materialRow: {
@@ -788,11 +791,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   materialName: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   materialQty: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   materialCost: {
@@ -801,7 +804,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   materialCostValue: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     color: SemanticColors.textPrimary,
   },
@@ -809,7 +812,7 @@ const styles = StyleSheet.create({
   // Safety
   safetyCard: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.lg,
     alignItems: 'center',
   },
@@ -823,12 +826,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   safetyScoreValue: {
-    fontSize: 32,
+    fontSize: TYPE.displaySize + 4,
     fontWeight: '700',
     color: SemanticColors.feedbackSuccess,
   },
   safetyScoreLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.feedbackSuccess,
   },
   safetyStats: {
@@ -839,19 +842,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   safetyStatValue: {
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontWeight: '700',
     color: SemanticColors.textPrimary,
   },
   safetyStatLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
 
   // Schedule
   scheduleCard: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
   },
   scheduleHeader: {
@@ -864,7 +867,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textPrimary,
   },
   scheduleMetricLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   criticalPathBadge: {
@@ -874,11 +877,11 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     marginBottom: Spacing.md,
   },
   criticalPathText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
     textTransform: 'capitalize',
   },
@@ -899,11 +902,11 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
   },
   milestoneName: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   milestoneDate: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
 
@@ -921,10 +924,10 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: SemanticColors.actionPrimary,
     paddingVertical: Spacing.md,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   exportButtonText: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '600',
     color: SemanticColors.textInverse,
   },

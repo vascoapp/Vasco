@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable, TextInput } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import {
@@ -223,13 +224,13 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontWeight: '600',
     marginBottom: 4,
   },
   infoText: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     lineHeight: 18,
   },
   section: {
@@ -237,7 +238,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -262,7 +263,7 @@ const styles = StyleSheet.create({
   },
   countryPillText: {
     color: SemanticColors.textSecondary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
   },
   countryPillTextActive: {
@@ -270,7 +271,7 @@ const styles = StyleSheet.create({
   },
   countryPillSubtext: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     marginTop: 2,
   },
   bundeslandRow: {
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
   },
   bundeslandText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
   bundeslandTextActive: {
@@ -301,7 +302,7 @@ const styles = StyleSheet.create({
   },
   bundeslandRate: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     marginTop: 2,
   },
   toggleRow: {
@@ -323,7 +324,7 @@ const styles = StyleSheet.create({
   },
   toggleText: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '500',
   },
   toggleTextActive: {
@@ -341,7 +342,7 @@ const styles = StyleSheet.create({
   currencyLabel: {
     paddingHorizontal: Spacing.md,
     color: CFO_COLOR,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
     borderRightWidth: 1,
     borderRightColor: SemanticColors.borderDefault,
@@ -351,7 +352,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: Spacing.sm,
     color: SemanticColors.textPrimary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
   },
   resultCard: {
     backgroundColor: SemanticColors.surfaceSecondary,
@@ -367,12 +368,12 @@ const styles = StyleSheet.create({
   },
   resultLabel: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '500',
   },
   resultValue: {
     color: CFO_COLOR,
-    fontSize: 28,
+    fontSize: TYPE.displaySize,
     fontWeight: '700',
   },
   resultDivider: {
@@ -389,11 +390,11 @@ const styles = StyleSheet.create({
   },
   resultDetailLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   resultDetailValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
   },
   breakdownSection: {
@@ -404,7 +405,7 @@ const styles = StyleSheet.create({
   },
   breakdownTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
     textTransform: 'uppercase',
     marginBottom: Spacing.xs,
@@ -416,18 +417,18 @@ const styles = StyleSheet.create({
   breakdownRange: {
     flex: 2,
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   breakdownRate: {
     flex: 1,
     color: SemanticColors.textPrimary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     textAlign: 'center',
   },
   breakdownTax: {
     flex: 1,
     color: SemanticColors.textPrimary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '500',
     textAlign: 'right',
   },
@@ -438,13 +439,13 @@ const styles = StyleSheet.create({
   },
   infoBoxTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
     marginBottom: 4,
   },
   infoBoxText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     lineHeight: 18,
   },
 });

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { SemanticColors } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Typography } from '../../theme/typography';
@@ -632,7 +633,7 @@ const styles = StyleSheet.create({
   },
   statsBanner: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -647,12 +648,12 @@ const styles = StyleSheet.create({
   },
   statValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontWeight: '700',
   },
   statLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     marginTop: 4,
   },
   statDivider: {
@@ -664,13 +665,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.xs,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 4,
   },
   tab: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
   },
   tabActive: {
@@ -678,7 +679,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
   tabTextActive: {
@@ -697,11 +698,11 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: SemanticColors.textSecondary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   documentCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -715,25 +716,25 @@ const styles = StyleSheet.create({
   docIcon: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   docIconText: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
   },
   docInfo: {
     flex: 1,
   },
   docFileName: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
   },
   docMeta: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   confidenceBadge: {
     paddingVertical: 4,
@@ -741,7 +742,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   confidenceText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '700',
   },
   statusBadge: {
@@ -750,35 +751,35 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   statusText: {
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     fontWeight: '700',
   },
   previewSection: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.md,
     gap: 4,
   },
   previewLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   previewValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontWeight: '700',
   },
   previewMeta: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   warningsSection: {
     gap: 4,
   },
   warningText: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -790,19 +791,19 @@ const styles = StyleSheet.create({
   approveButton: {
     flex: 1,
     backgroundColor: SemanticColors.feedbackSuccess,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     paddingVertical: 12,
     alignItems: 'center',
   },
   approveButtonText: {
     color: '#0B0C0F',
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '700',
   },
   reviewButton: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     paddingVertical: 12,
     alignItems: 'center',
     borderWidth: 1,
@@ -810,13 +811,13 @@ const styles = StyleSheet.create({
   },
   reviewButtonText: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
   rejectButton: {
     flex: 1,
     backgroundColor: SemanticColors.feedbackError + '20',
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     paddingVertical: 12,
     alignItems: 'center',
     borderWidth: 1,
@@ -824,22 +825,22 @@ const styles = StyleSheet.create({
   },
   rejectButtonText: {
     color: SemanticColors.feedbackError,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '600',
   },
   uploadTime: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     textAlign: 'right',
   },
   reviewInfo: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontStyle: 'italic',
   },
   bulkActionCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -847,7 +848,7 @@ const styles = StyleSheet.create({
   },
   bulkActionDesc: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   bulkActionOption: {
     flexDirection: 'row',
@@ -863,27 +864,27 @@ const styles = StyleSheet.create({
   },
   bulkActionTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
   },
   bulkActionMeta: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   bulkButton: {
     backgroundColor: SemanticColors.actionPrimary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     paddingVertical: 8,
     paddingHorizontal: 16,
   },
   bulkButtonText: {
     color: '#0B0C0F',
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontWeight: '700',
   },
   ingestionStats: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -896,18 +897,18 @@ const styles = StyleSheet.create({
   statsCell: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.md,
     alignItems: 'center',
   },
   statsCellValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
   },
   statsCellLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     marginTop: 4,
     textAlign: 'center',
   },

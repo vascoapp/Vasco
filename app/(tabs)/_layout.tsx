@@ -9,7 +9,7 @@ import { OfflineBanner } from '../../src/components/shared/OfflineBanner';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 // Role-specific tab configurations
-const getTabsForRole = (role: UserRole | undefined): {
+const getTabsForRole = (role: UserRole | undefined, t: (key: string, fallback: string) => string): {
   name: string;
   title: string;
   icon: IconName;
@@ -38,7 +38,7 @@ const getTabsForRole = (role: UserRole | undefined): {
       ];
     case 'site-lead':
       return [
-        { name: 'index', title: 'Vandaag', icon: 'today-outline', iconFocused: 'today' },
+        { name: 'index', title: t('tabs.today', 'Today'), icon: 'today-outline', iconFocused: 'today' },
         { name: 'site-schedule', title: 'Planning', icon: 'calendar-outline', iconFocused: 'calendar' },
         { name: 'site-safety', title: 'Veiligheid', icon: 'shield-checkmark-outline', iconFocused: 'shield-checkmark' },
         { name: 'site-more', title: 'Vasco', icon: 'flash-outline', iconFocused: 'flash' },
@@ -65,7 +65,7 @@ const getTabsForRole = (role: UserRole | undefined): {
 export default function TabsLayout() {
   const { user, roleConfig } = useAuth();
   const { t } = useTranslation();
-  const tabs = getTabsForRole(user?.role);
+  const tabs = getTabsForRole(user?.role, t);
   const primaryColor = roleConfig?.primaryColor || SemanticColors.actionPrimary;
 
   return (

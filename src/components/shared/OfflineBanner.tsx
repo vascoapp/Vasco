@@ -53,7 +53,7 @@ export function OfflineBanner() {
     return (
       <View style={[styles.banner, styles.syncingBanner]}>
         <Animated.View style={{ transform: [{ rotate: spin }] }}>
-          <Ionicons name="sync-outline" size={13} color="#fff" />
+          <Ionicons name="sync-outline" size={13} color={Palette.white} />
         </Animated.View>
         <Text style={[styles.text, styles.syncingText]}>
           {t('common.syncing', 'Syncing {{count}} changes...', { count: queueSize })}
@@ -78,7 +78,7 @@ export function OfflineBanner() {
   if (syncStatus === 'error') {
     return (
       <View style={[styles.banner, styles.offlineBanner]}>
-        <Ionicons name="alert-circle-outline" size={13} color="#fff" />
+        <Ionicons name="alert-circle-outline" size={13} color={Palette.white} />
         <Text style={[styles.text, styles.offlineText]}>
           {t('common.syncError', 'Sync error — {{count}} pending', { count: queueSize })}
         </Text>
@@ -93,7 +93,7 @@ export function OfflineBanner() {
       : t('common.offline', 'No connection — changes saved locally');
     return (
       <View style={[styles.banner, styles.offlineBanner]}>
-        <Ionicons name="wifi-outline" size={13} color="#fff" />
+        <Ionicons name="wifi-outline" size={13} color={Palette.white} />
         <Text style={[styles.text, styles.offlineText]}>{message}</Text>
       </View>
     );
@@ -115,10 +115,10 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackError,
   },
   syncingBanner: {
-    backgroundColor: '#3478F6', // iOS blue — neutral "working" color
+    backgroundColor: SemanticColors.feedbackInfo,
   },
   syncedBanner: {
-    backgroundColor: '#E8F5E9', // Light green confirmation bg
+    backgroundColor: SemanticColors.feedbackSuccessBg,
   },
   text: {
     fontSize: 11,

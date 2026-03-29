@@ -11,7 +11,8 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import {
   PaymentSettings,
   PaymentLink,
@@ -21,7 +22,7 @@ import { ContractorInvoice } from '../../types/contractor';
 import { MOCK_PAYMENT_SETTINGS } from '../../data/mockPricebook';
 import { MOCK_CONTRACTOR_INVOICES } from '../../data/mockContractor';
 import { intelligence } from '../../intelligence/intelligenceEngine';
-
+import { useTranslation } from 'react-i18next';
 // Helper to create context for intelligence tracking
 const createTrackingContext = () => ({
   platform: 'ios' as const,
@@ -95,7 +96,7 @@ const PAYMENT_METHOD_INFO: Record<PaymentMethodType, { name: string; icon: strin
   applepay: { name: 'Apple Pay', icon: 'logo-apple', color: '#000000' },
   googlepay: { name: 'Google Pay', icon: 'logo-google', color: '#4285F4' },
   klarna: { name: 'Klarna', icon: 'time-outline', color: '#FFB3C7' },
-  'bank-transfer': { name: 'Bank Transfer', icon: 'business-outline', color: '#666666' },
+  'bank-transfer': { name: 'Bank Transfer', icon: 'business-outline', color: SemanticColors.textSecondary },
 };
 
 // ============================================
@@ -707,12 +708,12 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize,
+    fontFamily: TYPE.sectionFamily,
     color: Colors.textPrimary,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: Colors.textSecondary,
     marginTop: 4,
   },
@@ -729,7 +730,7 @@ const styles = StyleSheet.create({
   summaryCard: {
     flex: 1,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
   },
   summaryCardOutstanding: {
@@ -741,17 +742,17 @@ const styles = StyleSheet.create({
     borderColor: Colors.error + '30',
   },
   summaryLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: Colors.textSecondary,
     marginBottom: 4,
   },
   summaryValue: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.sectionFamily,
     color: Colors.textPrimary,
   },
   summarySubtext: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: Colors.textMuted,
     marginTop: 4,
   },
@@ -776,8 +777,8 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.primary,
   },
   tabText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
     color: Colors.textSecondary,
   },
   tabTextActive: {
@@ -787,15 +788,15 @@ const styles = StyleSheet.create({
     marginLeft: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: Colors.surfaceHover,
   },
   tabBadgeActive: {
     backgroundColor: Colors.primary + '20',
   },
   tabBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     color: Colors.textSecondary,
   },
 
@@ -809,7 +810,7 @@ const styles = StyleSheet.create({
   // Invoice Cards
   invoiceCard: {
     backgroundColor: Colors.surface,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -824,12 +825,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   invoiceNumber: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: Colors.textPrimary,
   },
   invoiceCustomer: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: Colors.textSecondary,
     marginTop: 2,
   },
@@ -837,8 +838,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   invoiceAmount: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: Colors.textPrimary,
   },
   paidAmount: {
@@ -857,8 +858,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.error + '20',
   },
   dueBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   paidBadge: {
     flexDirection: 'row',
@@ -871,15 +872,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   paidBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     color: Colors.success,
   },
 
   // Payment Link Section
   paymentLinkSection: {
     backgroundColor: Colors.primary + '10',
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 12,
     marginBottom: 12,
   },
@@ -890,7 +891,7 @@ const styles = StyleSheet.create({
   },
   paymentLinkUrl: {
     flex: 1,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: Colors.primary,
     fontFamily: 'monospace',
   },
@@ -903,7 +904,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   linkStatText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: Colors.textMuted,
   },
   createLinkButton: {
@@ -913,15 +914,15 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 12,
     backgroundColor: Colors.primary + '10',
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: Colors.primary + '30',
     borderStyle: 'dashed',
     marginBottom: 12,
   },
   createLinkText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
     color: Colors.primary,
   },
 
@@ -940,7 +941,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   actionButtonText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: Colors.textSecondary,
   },
 
@@ -958,18 +959,18 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   paymentDetailLabel: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: Colors.textSecondary,
   },
   paymentDetailValue: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: Colors.textPrimary,
   },
   paymentMethodRow: {
     flexDirection: 'row',
   },
   feeText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: Colors.textMuted,
   },
 
@@ -983,14 +984,14 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   methodBadgeText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
   },
 
   // Connection Status
   connectionCard: {
     backgroundColor: Colors.surface,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -1010,7 +1011,7 @@ const styles = StyleSheet.create({
   mollieIcon: {
     width: 40,
     height: 40,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: Colors.surfaceHover,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1019,17 +1020,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#CC0066',
   },
   mollieText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
+    color: Palette.white,
   },
   connectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: Colors.textPrimary,
   },
   connectionSubtitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: Colors.textSecondary,
     marginTop: 2,
   },
@@ -1039,7 +1040,7 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
   },
   statusConnected: {
     backgroundColor: Colors.success + '20',
@@ -1048,14 +1049,14 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.warning + '20',
   },
   statusText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
   },
   enabledMethods: {
     marginBottom: 16,
   },
   enabledMethodsLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: Colors.textSecondary,
     marginBottom: 8,
   },
@@ -1072,13 +1073,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   settingLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: Colors.textMuted,
     marginBottom: 4,
   },
   settingValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: Colors.textPrimary,
   },
 
@@ -1088,13 +1089,13 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   emptyStateTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: Colors.textPrimary,
     marginTop: 16,
   },
   emptyStateText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: Colors.textSecondary,
     marginTop: 4,
   },
@@ -1102,13 +1103,13 @@ const styles = StyleSheet.create({
   // Paid Stats
   paidStats: {
     backgroundColor: Colors.surface,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginTop: 16,
   },
   paidStatsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: Colors.textSecondary,
     marginBottom: 12,
   },
@@ -1120,12 +1121,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   paidStatValue: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: Colors.textPrimary,
   },
   paidStatLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: Colors.textMuted,
     marginTop: 4,
   },
@@ -1135,8 +1136,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   settingsSectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: Colors.textSecondary,
     marginBottom: 12,
     textTransform: 'uppercase',
@@ -1148,7 +1149,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.surface,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     marginBottom: 8,
   },
   settingsRowLeft: {
@@ -1158,19 +1159,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   settingsRowTitle: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
     color: Colors.textPrimary,
   },
   settingsRowSubtitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: Colors.textMuted,
     marginTop: 2,
   },
   toggle: {
     width: 48,
     height: 28,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     backgroundColor: Colors.surfaceHover,
     padding: 2,
   },
@@ -1180,8 +1181,8 @@ const styles = StyleSheet.create({
   toggleKnob: {
     width: 24,
     height: 24,
-    borderRadius: 12,
-    backgroundColor: '#fff',
+    borderRadius: RADIUS.md,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   toggleKnobOn: {
     marginLeft: 20,
@@ -1196,7 +1197,7 @@ const styles = StyleSheet.create({
   methodCard: {
     width: '48%',
     backgroundColor: Colors.surface,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
@@ -1208,7 +1209,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.success + '50',
   },
   methodCardText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: Colors.textMuted,
     marginTop: 8,
   },
@@ -1229,11 +1230,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
 });
 

@@ -18,7 +18,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { SemanticColors } from '../../theme/colors';
+import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import type { EvidencePack, HandoverPackage, ChecklistCategory, EvidenceItem } from '../../types/contractor';
@@ -769,12 +770,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   headerSubtitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   stepIndicator: {
     flexDirection: 'row',
@@ -791,7 +792,7 @@ const styles = StyleSheet.create({
   stepDot: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -804,11 +805,11 @@ const styles = StyleSheet.create({
   },
   stepLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
   },
   stepLabelActive: {
     color: SemanticColors.actionPrimary,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   stepLabelCompleted: {
     color: SemanticColors.feedbackSuccess,
@@ -825,12 +826,12 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   stepDescription: {
     color: SemanticColors.textSecondary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   photoGrid: {
     flexDirection: 'row',
@@ -840,7 +841,7 @@ const styles = StyleSheet.create({
   photoItem: {
     width: 100,
     height: 100,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -858,14 +859,14 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   photoTypeText: {
-    color: '#fff',
-    fontSize: 8,
-    fontWeight: '600',
+    color: Palette.white,
+    fontSize: TYPE.tinySize - 3,
+    fontFamily: TYPE.titleFamily,
   },
   addPhotoButton: {
     width: 100,
     height: 100,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     borderWidth: 2,
     borderColor: SemanticColors.borderDefault,
     borderStyle: 'dashed',
@@ -875,8 +876,8 @@ const styles = StyleSheet.create({
   },
   addPhotoText: {
     color: SemanticColors.actionPrimary,
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   infoBox: {
     flexDirection: 'row',
@@ -884,11 +885,11 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.feedbackInfoBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   infoText: {
     color: SemanticColors.feedbackInfo,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     flex: 1,
   },
   progressSection: {
@@ -900,13 +901,13 @@ const styles = StyleSheet.create({
   },
   progressTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   progressPercent: {
     color: SemanticColors.feedbackSuccess,
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.sectionFamily,
   },
   progressBar: {
     height: 8,
@@ -928,15 +929,15 @@ const styles = StyleSheet.create({
   },
   categoryTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   checklistItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.sm,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     gap: 10,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -961,7 +962,7 @@ const styles = StyleSheet.create({
   checklistLabel: {
     flex: 1,
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   checklistLabelCompleted: {
     color: SemanticColors.feedbackSuccess,
@@ -974,14 +975,14 @@ const styles = StyleSheet.create({
   },
   requiredText: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 9,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 2,
+    fontFamily: TYPE.titleFamily,
   },
   section: {
     gap: Spacing.sm,
     padding: Spacing.md,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
@@ -992,8 +993,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   documentItem: {
     flexDirection: 'row',
@@ -1001,19 +1002,19 @@ const styles = StyleSheet.create({
     gap: 10,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   documentInfo: {
     flex: 1,
   },
   documentName: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
   },
   documentMeta: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   addButton: {
     flexDirection: 'row',
@@ -1024,12 +1025,12 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: SemanticColors.actionPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
   },
   certificatePreview: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -1041,8 +1042,8 @@ const styles = StyleSheet.create({
   },
   certificateTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   certificateContent: {
     alignItems: 'center',
@@ -1050,13 +1051,13 @@ const styles = StyleSheet.create({
   },
   certificateText: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     textAlign: 'center',
   },
   certificateJob: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     textAlign: 'center',
     marginVertical: 4,
   },
@@ -1072,20 +1073,20 @@ const styles = StyleSheet.create({
   },
   certificateLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   certificateValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   signatureSection: {
     gap: Spacing.md,
   },
   signatureTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   signatureBox: {
     flexDirection: 'row',
@@ -1094,7 +1095,7 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: Spacing.lg,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 2,
     borderColor: SemanticColors.borderDefault,
     borderStyle: 'dashed',
@@ -1106,7 +1107,7 @@ const styles = StyleSheet.create({
   },
   signatureText: {
     color: SemanticColors.textSecondary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   ratingSection: {
     alignItems: 'center',
@@ -1114,7 +1115,7 @@ const styles = StyleSheet.create({
   },
   ratingLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   ratingStars: {
     flexDirection: 'row',
@@ -1122,10 +1123,10 @@ const styles = StyleSheet.create({
   },
   feedbackInput: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.md,
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     minHeight: 80,
@@ -1133,7 +1134,7 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -1149,12 +1150,12 @@ const styles = StyleSheet.create({
   },
   summaryTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
   },
   summarySubtitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
   summaryStats: {
     flexDirection: 'row',
@@ -1168,20 +1169,20 @@ const styles = StyleSheet.create({
   },
   statValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
   },
   statLabel: {
     color: SemanticColors.textTertiary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   validationSection: {
     gap: Spacing.sm,
   },
   validationTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   validationSuccess: {
     flexDirection: 'row',
@@ -1189,12 +1190,12 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.feedbackSuccessBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   validationSuccessText: {
     color: SemanticColors.feedbackSuccess,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
   },
   validationWarnings: {
     gap: 4,
@@ -1205,11 +1206,11 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.feedbackErrorBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   validationItemText: {
     color: SemanticColors.feedbackError,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     flex: 1,
   },
   warningItem: {
@@ -1218,11 +1219,11 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: Spacing.sm,
     backgroundColor: SemanticColors.feedbackWarningBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   warningItemText: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     flex: 1,
   },
   complianceSection: {
@@ -1248,12 +1249,12 @@ const styles = StyleSheet.create({
   },
   complianceBadgeText: {
     color: SemanticColors.textPrimary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   complianceScore: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -1267,14 +1268,14 @@ const styles = StyleSheet.create({
     gap: 6,
     padding: Spacing.md,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
   actionButtonText: {
     color: SemanticColors.actionPrimary,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
   footer: {
     flexDirection: 'row',
@@ -1291,7 +1292,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   footerButtonSecondary: {
     backgroundColor: SemanticColors.surfaceSecondary,
@@ -1305,15 +1306,15 @@ const styles = StyleSheet.create({
   },
   footerButtonText: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   footerButtonTextDisabled: {
     color: SemanticColors.textDisabled,
   },
   footerButtonTextPrimary: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
+    color: Palette.white,
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
 });

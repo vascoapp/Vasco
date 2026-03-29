@@ -15,7 +15,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { formatCurrency } from '../../i18n/formatting';
+import { useTranslation } from 'react-i18next';
 import {
   useAutoInvoices,
   usePaymentReminders,
@@ -71,6 +73,7 @@ const InvoiceCard: React.FC<{
   onMarkPaid: () => void;
   onSendReminder: () => void;
 }> = ({ invoice, onView, onSend, onMarkPaid, onSendReminder }) => {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
   const daysOverdue = invoice.status === 'overdue' || invoice.dueDate < new Date()
@@ -183,7 +186,7 @@ const InvoiceCard: React.FC<{
               >
                 <Ionicons name="send-outline" size={18} color={Palette.white} />
                 <Text style={[styles.actionButtonText, styles.primaryButtonText]}>
-                  Versturen
+                  {t('common.send', 'Send')}
                 </Text>
               </Pressable>
             )}
@@ -223,7 +226,9 @@ const InvoiceCard: React.FC<{
 const ReminderCard: React.FC<{
   reminder: PaymentReminder;
   onSendReminder: () => void;
-}> = ({ reminder, onSendReminder }) => (
+}> = ({ reminder, onSendReminder }) => {
+  const { t } = useTranslation();
+  return (
   <View style={styles.reminderCard}>
     <View style={styles.reminderHeader}>
       <View style={styles.reminderInfo}>
@@ -244,11 +249,12 @@ const ReminderCard: React.FC<{
     <Pressable style={styles.sendReminderButton} onPress={onSendReminder}>
       <Ionicons name="notifications" size={18} color={Palette.white} />
       <Text style={styles.sendReminderText}>
-        {reminder.nextReminderType === 'collection' ? 'Start Incasso' : 'Verstuur Herinnering'}
+        {reminder.nextReminderType === 'collection' ? t('invoices.startCollection', 'Start collection') : t('invoices.sendReminder', 'Send reminder')}
       </Text>
     </Pressable>
   </View>
-);
+  );
+};
 
 const StatCard: React.FC<{
   icon: keyof typeof Ionicons.glyphMap;
@@ -270,6 +276,7 @@ const StatCard: React.FC<{
 // =============================================================================
 
 export const InvoiceAutomation: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const { invoices, loading, send, markPaid, sendReminder } = useAutoInvoices();
   const reminders = usePaymentReminders();
@@ -396,12 +403,12 @@ export const InvoiceAutomation: React.FC = () => {
         <View style={styles.invoiceList}>
           {loading ? (
             <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Laden...</Text>
+              <Text style={styles.loadingText}>{t('common.loading', 'Loading...')}</Text>
             </View>
           ) : filteredInvoices.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="document-outline" size={48} color={SemanticColors.textSecondary} />
-              <Text style={styles.emptyText}>Geen facturen gevonden</Text>
+              <Text style={styles.emptyText}>{t('invoices.noInvoicesFound', 'No invoices found')}</Text>
             </View>
           ) : (
             filteredInvoices.map(invoice => (
@@ -440,14 +447,14 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   addButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     backgroundColor: SemanticColors.actionPrimary,
     justifyContent: 'center',
     alignItems: 'center',
@@ -464,7 +471,7 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceBackground,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 12,
     alignItems: 'center',
   },
@@ -477,12 +484,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   statValue: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -499,8 +506,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   alertTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.orange700,
     flex: 1,
   },
@@ -508,16 +515,16 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.orange500,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   alertBadgeText: {
     color: Palette.white,
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.sectionFamily,
   },
   reminderCard: {
     backgroundColor: Palette.white,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 14,
     marginRight: 12,
     width: 260,
@@ -534,20 +541,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   reminderInvoiceNumber: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
     color: SemanticColors.actionPrimary,
     fontFamily: 'monospace',
   },
   reminderCustomer: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginTop: 2,
   },
   reminderAmount: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   reminderDetails: {
@@ -559,17 +565,17 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     gap: 4,
     marginBottom: 6,
   },
   overdueText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.red600,
   },
   suggestedAction: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   sendReminderButton: {
@@ -578,13 +584,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: Palette.orange500,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     gap: 6,
   },
   sendReminderText: {
     color: Palette.white,
-    fontWeight: '600',
-    fontSize: 14,
+    fontFamily: TYPE.titleFamily,
+    fontSize: TYPE.bodySize - 1,
   },
   tabs: {
     flexDirection: 'row',
@@ -600,7 +606,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     backgroundColor: SemanticColors.surfaceBackground,
     gap: 6,
   },
@@ -608,8 +614,8 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.actionPrimary + '15',
   },
   tabText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textSecondary,
   },
   tabTextActive: {
@@ -619,14 +625,14 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.borderDefault,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   tabBadgeActive: {
     backgroundColor: SemanticColors.actionPrimary,
   },
   tabBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
   },
   tabBadgeTextActive: {
@@ -644,7 +650,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: SemanticColors.textSecondary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
   },
   emptyState: {
     alignItems: 'center',
@@ -652,12 +658,12 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     marginTop: 12,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     color: SemanticColors.textSecondary,
   },
   invoiceCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -673,14 +679,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   invoiceNumber: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
     color: SemanticColors.actionPrimary,
     fontFamily: 'monospace',
   },
   customerName: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize + 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginTop: 4,
   },
@@ -688,19 +693,19 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   invoiceAmount: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 6,
   },
   statusBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   statusText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   invoiceMeta: {
     flexDirection: 'row',
@@ -718,7 +723,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   metaText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   expandedContent: {
@@ -731,8 +736,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   lineItemsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
@@ -745,17 +750,17 @@ const styles = StyleSheet.create({
   },
   lineItemDesc: {
     flex: 1,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   lineItemQty: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginHorizontal: 12,
   },
   lineItemPrice: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
     width: 80,
     textAlign: 'right',
@@ -766,11 +771,11 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   totalLabel: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   totalValue: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
   },
   grandTotal: {
@@ -780,21 +785,21 @@ const styles = StyleSheet.create({
     borderTopColor: SemanticColors.borderDefault,
   },
   grandTotalLabel: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   grandTotalValue: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize + 1,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   remindersSection: {
     marginBottom: 16,
   },
   remindersTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
@@ -806,14 +811,14 @@ const styles = StyleSheet.create({
   },
   reminderText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     textTransform: 'capitalize',
   },
   reminderOpened: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: Palette.green600,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   invoiceActions: {
     flexDirection: 'row',
@@ -826,13 +831,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: SemanticColors.actionPrimary + '15',
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     gap: 6,
   },
   actionButtonText: {
     color: SemanticColors.actionPrimary,
-    fontWeight: '600',
-    fontSize: 14,
+    fontFamily: TYPE.titleFamily,
+    fontSize: TYPE.bodySize - 1,
   },
   primaryButton: {
     backgroundColor: SemanticColors.actionPrimary,

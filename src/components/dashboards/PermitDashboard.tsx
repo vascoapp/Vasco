@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import {
@@ -239,7 +240,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: SemanticColors.textSecondary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
   },
   projectSelector: {
     flexDirection: 'row',
@@ -258,12 +259,12 @@ const styles = StyleSheet.create({
   },
   projectCountry: {
     color: COO_COLOR,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '700',
   },
   projectName: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   projectNameActive: {
@@ -282,12 +283,12 @@ const styles = StyleSheet.create({
   },
   summaryValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontWeight: '700',
   },
   summaryLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     marginTop: 4,
   },
   progressCard: {
@@ -303,12 +304,12 @@ const styles = StyleSheet.create({
   },
   progressTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
   },
   progressPercent: {
     color: COO_COLOR,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '700',
   },
   progressBar: {
@@ -332,7 +333,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -359,37 +360,37 @@ const styles = StyleSheet.create({
   },
   permitType: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
   },
   permitRef: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     marginTop: 2,
   },
   permitRight: {
     alignItems: 'flex-end',
   },
   permitStatus: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '500',
     textTransform: 'capitalize',
   },
   permitDays: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     marginTop: 2,
   },
   daysRemaining: {
     alignItems: 'center',
   },
   daysValue: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
   },
   daysLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
   },
   conditionsBadge: {
     backgroundColor: SemanticColors.feedbackWarning + '20',
@@ -401,7 +402,7 @@ const styles = StyleSheet.create({
   },
   conditionsText: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '500',
   },
   conditionsCard: {
@@ -413,11 +414,11 @@ const styles = StyleSheet.create({
   },
   conditionsCount: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 32,
+    fontSize: TYPE.displaySize + 4,
     fontWeight: '700',
   },
   conditionsLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
 });

@@ -72,6 +72,7 @@ import { getProgress, getNextStep, isFullyOnboarded } from '../../src/services/o
 import { getTemplateForAction, resolveTemplate, type TemplateContext } from '../../src/services/messageTemplateService';
 import { formatAmount } from '../../src/utils/formatAmount';
 import { getWeatherForecast } from '../../src/services/weatherService';
+import { useOnboardingPreferences, wantsPaymentFocus, wantsQuotingHelp, wantsGrowthFocus } from '../../src/services/onboardingPreferencesService';
 
 // ============================================
 // TYPES
@@ -161,35 +162,30 @@ export default function TodayScreen() {
   const [showAutomations, setShowAutomations] = useState(false);
   const { notifications } = useNotifications();
   const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
-  const { jobs, invoices, quotes, customers, isLoading, addInvoiceFromJob, convertQuoteToJob, updateInvoice, updateJob } = useAppState();
+  const { jobs, invoices, quotes, customers, isLoading, refreshData, addInvoiceFromJob, convertQuoteToJob, updateInvoice, updateJob } = useAppState();
   const [actionStats, setActionStats] = useState<{ total: number; successful: number; positiveOutcomes: number } | null>(null);
   useEffect(() => { getActionStats().then(setActionStats).catch(() => {}); }, []);
   // Fetch weather on app open (populates module-level cache for weatherScheduleGenerator)
   useEffect(() => { getWeatherForecast(user?.country || 'NL').catch(() => {}); }, []);
   const aiQueue = useAIQueue();
   const [briefing, setBriefing] = useState<MorningBriefing | null>(null);
-  // Generate morning briefing + populate AI queue
+  // Generate morning briefing + populate AI queue + evaluate triggers (single effect)
   useEffect(() => {
-    getMorningBriefing().then(b => {
-      if (b) setBriefing(b);
-      else generateMorningBriefing({ invoices, quotes, jobs }).then(setBriefing).catch(() => {});
-    }).catch(() => {});
+    (async () => {
+      try {
+        // Morning briefing (includes populateQueue internally)
+        const cached = await getMorningBriefing().catch(() => null);
+        if (cached) setBriefing(cached);
+        else {
+          const fresh = await generateMorningBriefing({ invoices, quotes, jobs }).catch(() => null);
+          if (fresh) setBriefing(fresh);
+        }
+        // Evaluate workflow triggers + refresh queue
+        await evaluateTriggers({ invoices, quotes, jobs, customers }).catch(() => {});
+        aiQueue.refresh();
+      } catch {}
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobs.length, invoices.length, quotes.length]); // Re-generate when data count changes
-  useEffect(() => {
-    try {
-      const completedJobs = jobs.filter((j: any) => j.status === 'completed');
-      const overdueInvoices = invoices.filter((i: any) => i.status === 'overdue');
-      const sentQuotes = quotes.filter((q: any) => q.status === 'sent');
-      populateQueue({
-        completedJobs, overdueInvoices, sentQuotes, expiringCerts: [],
-        allJobs: jobs, allInvoices: invoices, allQuotes: quotes, customers,
-        country: user?.country || 'NL',
-      })
-        .then(() => evaluateTriggers({ invoices, quotes, jobs, customers }))
-        .then(() => aiQueue.refresh())
-        .catch(() => {});
-    } catch {}
   }, [jobs.length, invoices.length, quotes.length]);
 
   // Build automation context from app state
@@ -252,6 +248,7 @@ export default function TodayScreen() {
   // AI services
   const savings = useSavingsAggregation();
   const { user } = useAuth();
+  const { prefs: onboardingPrefs, isSolo } = useOnboardingPreferences();
 
   // Onboarding progress
   const [onboardingDone, setOnboardingDone] = useState(true);
@@ -377,13 +374,14 @@ export default function TodayScreen() {
     }
   }, [router]);
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
+    try {
+      await refreshData();
       hapticSuccess();
-    }, 800);
-  }, []);
+    } catch {}
+    setRefreshing(false);
+  }, [refreshData]);
 
   if (isLoading) {
     return (
@@ -477,11 +475,37 @@ export default function TodayScreen() {
         {/* KPI Header */}
         <FadeIn delay={0} duration={400}>
         <ContractorDashboardHeader
-          kpis={[
-            { icon: 'calendar', value: String(todayJobs.length), label: t('dashboard.appointments', 'Afspraken'), color: Palette.hermesOrange, onPress: () => router.push('/contractor/drag-schedule' as any) },
-            { icon: 'wallet', value: <CountUp to={dailyEarnings} prefix={'\u20AC'} duration={800} style={{ fontSize: 18, fontFamily: 'Manrope_800ExtraBold', color: SemanticColors.feedbackSuccess }} />, label: t('dashboard.earned', 'Verdiend'), color: SemanticColors.feedbackSuccess, onPress: () => router.push('/(contractor)/geld' as any) },
-            { icon: 'briefcase', value: String(lifecycleCounts.ingepland + lifecycleCounts.bezig), label: t('dashboard.activeJobs', 'Actief'), color: Palette.hermesOrange, onPress: () => router.push('/(contractor)/werk' as any) },
-          ]}
+          kpis={(() => {
+            // Base KPI: always show today's schedule
+            const kpis: Array<{ icon: any; value: any; label: string; color: string; onPress: () => void }> = [
+              { icon: 'calendar' as const, value: String(todayJobs.length), label: t('dashboard.appointments', 'Afspraken'), color: Palette.hermesOrange, onPress: () => router.push('/contractor/drag-schedule' as any) },
+            ];
+
+            // Personalized 2nd KPI based on onboarding goals
+            if (wantsPaymentFocus(onboardingPrefs)) {
+              // User wants to get paid faster → show pending income
+              kpis.push({ icon: 'wallet' as const, value: <CountUp to={cashFlowSummary?.pendingIncome ?? 0} prefix={'\u20AC'} duration={800} style={{ fontSize: 18, fontFamily: TYPE.displayFamily, color: overdueCount > 0 ? SemanticColors.feedbackError : SemanticColors.feedbackSuccess }} /> as any, label: overdueCount > 0 ? `${overdueCount} ${t('dashboard.overdue', 'overdue')}` : t('dashboard.outstanding', 'Outstanding'), color: overdueCount > 0 ? SemanticColors.feedbackError : SemanticColors.feedbackSuccess, onPress: () => router.push('/(contractor)/geld' as any) });
+            } else {
+              // Default: daily earnings
+              kpis.push({ icon: 'wallet' as const, value: <CountUp to={dailyEarnings} prefix={'\u20AC'} duration={800} style={{ fontSize: 18, fontFamily: TYPE.displayFamily, color: SemanticColors.feedbackSuccess }} /> as any, label: t('dashboard.earned', 'Verdiend'), color: SemanticColors.feedbackSuccess, onPress: () => router.push('/(contractor)/geld' as any) });
+            }
+
+            // Personalized 3rd KPI
+            if (wantsQuotingHelp(onboardingPrefs)) {
+              // User wants to win more quotes → show open quotes
+              const openQuotes = quotes.filter((q: any) => q.status === 'sent' || q.status === 'draft');
+              kpis.push({ icon: 'document-text' as const, value: String(openQuotes.length), label: t('dashboard.openQuotes', 'Open quotes'), color: Palette.hermesOrange, onPress: () => router.push('/(contractor)/facturen' as any) });
+            } else if (wantsGrowthFocus(onboardingPrefs)) {
+              // User wants more jobs → show leads
+              const leads = jobs.filter((j: any) => j.status === 'lead');
+              kpis.push({ icon: 'people' as const, value: String(leads.length), label: t('dashboard.leads', 'Leads'), color: Palette.hermesOrange, onPress: () => router.push('/(contractor)/werk' as any) });
+            } else {
+              // Default: active jobs
+              kpis.push({ icon: 'briefcase' as const, value: String(lifecycleCounts.ingepland + lifecycleCounts.bezig), label: t('dashboard.activeJobs', 'Actief'), color: Palette.hermesOrange, onPress: () => router.push('/(contractor)/werk' as any) });
+            }
+
+            return kpis;
+          })()}
         />
         </FadeIn>
 
@@ -1051,13 +1075,13 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 28,
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: TYPE.displayFamily,
     color: SemanticColors.textPrimary,
     letterSpacing: -0.8,
   },
   date: {
     fontSize: 15,
-    fontFamily: 'Inter_500Medium',
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textTertiary,
     marginTop: 4,
   },
@@ -1092,7 +1116,7 @@ const styles = StyleSheet.create({
   },
   notifBadgeText: {
     fontSize: 9,
-    fontWeight: '700' as const,
+    fontFamily: TYPE.sectionFamily,
     color: Palette.white,
   },
   scrollView: {
@@ -1122,8 +1146,8 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange,
     alignItems: 'center', justifyContent: 'center',
   },
-  invoiceCtaTitle: { fontSize: 16, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
-  invoiceCtaDesc: { fontSize: 13, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
+  invoiceCtaTitle: { fontSize: 16, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  invoiceCtaDesc: { fontSize: 13, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary },
 
   // Time Saved Card
   timeSavedCard: {
@@ -1144,8 +1168,8 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange + '10',
     alignItems: 'center' as const, justifyContent: 'center' as const,
   },
-  timeSavedTitle: { fontSize: 15, fontFamily: 'Inter_500Medium', color: SemanticColors.textPrimary },
-  timeSavedDesc: { fontSize: 13, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary, marginTop: 2 },
+  timeSavedTitle: { fontSize: 15, fontFamily: TYPE.labelFamily, color: SemanticColors.textPrimary },
+  timeSavedDesc: { fontSize: 13, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary, marginTop: 2 },
   automationBadge: {
     backgroundColor: Palette.hermesOrange,
     borderRadius: 10,
@@ -1157,7 +1181,7 @@ const styles = StyleSheet.create({
   },
   automationBadgeText: {
     fontSize: 11,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: '#FFF',
   },
   automationList: {
@@ -1178,12 +1202,12 @@ const styles = StyleSheet.create({
   },
   automationItemTitle: {
     fontSize: 13,
-    fontFamily: 'Inter_500Medium',
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
   },
   automationItemDesc: {
     fontSize: 11,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: TYPE.bodyFamily,
     color: SemanticColors.textSecondary,
     marginTop: 1,
   },
@@ -1220,14 +1244,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     letterSpacing: -0.3,
     marginBottom: 4,
   },
   sectionCount: {
     fontSize: 13,
-    fontFamily: 'Inter_500Medium',
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textTertiary,
     backgroundColor: SemanticColors.surfaceSecondary,
     paddingHorizontal: 8,
@@ -1288,12 +1312,12 @@ const styles = StyleSheet.create({
   },
   firstJobTitle: {
     fontSize: 17,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   firstJobDesc: {
     fontSize: 14,
-    fontFamily: 'Inter_500Medium',
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1305,7 +1329,7 @@ const styles = StyleSheet.create({
   },
   actionSectionTitle: {
     fontSize: 18,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackError,
     letterSpacing: -0.3,
     marginBottom: 4,
@@ -1327,7 +1351,7 @@ const styles = StyleSheet.create({
   },
   actionCardTitle: {
     fontSize: 15,
-    fontWeight: '700' as const,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   actionCardDesc: {
@@ -1366,7 +1390,7 @@ const styles = StyleSheet.create({
   },
   jobTime: {
     fontSize: 14,
-    fontWeight: '700' as const,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textSecondary,
     fontVariant: ['tabular-nums'] as any,
   },
@@ -1382,7 +1406,7 @@ const styles = StyleSheet.create({
   jobDuration: {
     fontSize: 12,
     color: SemanticColors.textTertiary,
-    fontWeight: '600' as const,
+    fontFamily: TYPE.titleFamily,
   },
   jobLifecycleTag: {
     flexDirection: 'row' as const,
@@ -1400,18 +1424,18 @@ const styles = StyleSheet.create({
   },
   jobActiveText: {
     fontSize: 10,
-    fontWeight: '700' as const,
+    fontFamily: TYPE.sectionFamily,
     color: Palette.hermesOrange,
     letterSpacing: 0.5,
   },
   jobTitle: {
     fontSize: 16,
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   jobCustomer: {
     fontSize: 13,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: TYPE.bodyFamily,
     color: SemanticColors.textSecondary,
   },
   jobCardFooter: {
@@ -1438,7 +1462,7 @@ const styles = StyleSheet.create({
   },
   clockInBtnText: {
     fontSize: 12,
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: TYPE.titleFamily,
     color: Palette.white,
   },
   jobAddressText: {
@@ -1455,12 +1479,12 @@ const styles = StyleSheet.create({
   },
   emptyJobsText: {
     fontSize: 16,
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
   },
   emptyJobsSubtext: {
     fontSize: 14,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: TYPE.bodyFamily,
     color: SemanticColors.textTertiary,
   },
 
@@ -1502,12 +1526,12 @@ const styles = StyleSheet.create({
   timerJobName: {
     flex: 1,
     fontSize: 13,
-    fontWeight: '600' as const,
+    fontFamily: TYPE.titleFamily,
     color: Palette.white,
   },
   timerClock: {
     fontSize: 16,
-    fontWeight: '800' as const,
+    fontFamily: TYPE.displayFamily,
     color: Palette.white,
     fontVariant: ['tabular-nums'] as any,
     letterSpacing: 0.5,
@@ -1523,7 +1547,7 @@ const styles = StyleSheet.create({
   },
   timerStopText: {
     fontSize: 12,
-    fontWeight: '700' as const,
+    fontFamily: TYPE.sectionFamily,
     color: Palette.white,
   },
 
@@ -1539,7 +1563,7 @@ const styles = StyleSheet.create({
   },
   timeGroupTitle: {
     fontSize: 13,
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
     flex: 1,
   },
@@ -1551,7 +1575,7 @@ const styles = StyleSheet.create({
   },
   timeGroupCount: {
     fontSize: 11,
-    fontWeight: '700' as const,
+    fontFamily: TYPE.sectionFamily,
     color: Palette.hermesOrange,
     fontVariant: ['tabular-nums'] as any,
   },
@@ -1578,7 +1602,7 @@ const styles = StyleSheet.create({
   },
   countdownText: {
     fontSize: 12,
-    fontWeight: '600' as const,
+    fontFamily: TYPE.titleFamily,
     color: Palette.hermesOrange,
     fontVariant: ['tabular-nums'] as any,
   },
@@ -1596,11 +1620,11 @@ const styles = StyleSheet.create({
   },
   loopStageCount: {
     fontSize: 18,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: TYPE.sectionFamily,
   },
   loopStageLabel: {
     fontSize: 10,
-    fontFamily: 'Inter_500Medium',
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textTertiary,
     textAlign: 'center' as const,
   },

@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   icon: {
-    fontSize: 22,
+    fontSize: TYPE.displaySize - 6,
   },
   badge: {
     position: 'absolute',

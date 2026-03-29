@@ -5,7 +5,7 @@ import { Shadows } from '../theme/shadows';
 import { Spacing } from '../theme/spacing';
 import { Typography } from '../theme/typography';
 import type { AttentionTone } from '../domain/attention';
-
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../theme/tabStyles';
 type ActionTileProps = {
   title: string;
   subtitle?: string;
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   },
   iconText: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   right: {
     alignItems: 'flex-end',
@@ -132,11 +132,11 @@ const styles = StyleSheet.create({
   },
   impactText: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   why: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Inter_400Regular',
     marginTop: 2,
   },
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   },
   chevron: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Inter_600SemiBold',
   },
 });

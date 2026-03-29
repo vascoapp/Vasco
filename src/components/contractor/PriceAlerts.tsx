@@ -27,8 +27,8 @@ import {
   type PriceAlert,
   type AlertPreferences,
 } from '../../services/priceAlertService';
-
-type IconName = keyof typeof Ionicons.glyphMap;
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
+import { useTranslation } from 'react-i18next';type IconName = keyof typeof Ionicons.glyphMap;
 
 // ============================================
 // MAIN COMPONENT
@@ -39,6 +39,7 @@ interface PriceAlertsProps {
 }
 
 export function PriceAlerts({ onClose }: PriceAlertsProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'triggered' | 'active' | 'settings'>('triggered');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -158,11 +159,12 @@ function TriggeredAlertsTab({
   onSnooze: (id: string, hours: number) => void;
   onPurchase: (id: string, details?: { actualPrice?: number }) => void;
 }) {
+  const { t } = useTranslation();
   if (alerts.length === 0) {
     return (
       <View style={styles.emptyState}>
         <Ionicons name="notifications-off-outline" size={48} color={SemanticColors.textTertiary} />
-        <Text style={styles.emptyTitle}>Geen actieve alerts</Text>
+        <Text style={styles.emptyTitle}>{t('alerts.noActiveAlerts', 'No active alerts')}</Text>
         <Text style={styles.emptyText}>
           Maak alerts aan om op de hoogte te blijven van prijsdalingen
         </Text>
@@ -196,6 +198,7 @@ function TriggeredAlertCard({
   onSnooze: (hours: number) => void;
   onPurchase: () => void;
 }) {
+  const { t } = useTranslation();
   const [showActions, setShowActions] = useState(false);
 
   const getTypeConfig = (type: PriceAlert['type']) => {
@@ -310,7 +313,7 @@ function TriggeredAlertCard({
             >
               <Ionicons name="close-circle-outline" size={18} color={SemanticColors.feedbackError} />
               <Text style={[styles.actionsMenuText, { color: SemanticColors.feedbackError }]}>
-                Verwijderen
+                {t('common.delete', 'Delete')}
               </Text>
             </Pressable>
           </View>
@@ -339,6 +342,7 @@ function ActiveAlertsTab({
   }>;
   onCreateAlert: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.tabContent}>
       {/* Active Alerts */}
@@ -657,12 +661,12 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   headerSubtitle: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   addButton: {
@@ -688,12 +692,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   statValue: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -719,13 +723,13 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.pastelOrange + '30',
   },
   tabText: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textTertiary,
   },
   tabTextActive: {
     color: Palette.hermesOrange,
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   tabBadge: {
     backgroundColor: SemanticColors.surfaceSecondary,
@@ -737,12 +741,12 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange,
   },
   tabBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textSecondary,
   },
   tabBadgeTextActive: {
-    color: '#fff',
+    color: Palette.white,
   },
   content: {
     flex: 1,
@@ -782,8 +786,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   alertTypeText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
   },
   urgentBadge: {
     flexDirection: 'row',
@@ -795,17 +799,17 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   urgentText: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.feedbackError,
   },
   alertMaterial: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   alertBrand: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   alertPriceRow: {
@@ -820,16 +824,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   alertPriceLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
   },
   alertCurrentPrice: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   alertPreviousPrice: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textTertiary,
     textDecorationLine: 'line-through',
   },
@@ -841,8 +845,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   alertSavingsText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.feedbackSuccess,
   },
   alertSupplier: {
@@ -851,7 +855,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   alertSupplierText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   alertActions: {
@@ -878,9 +882,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   alertActionPrimaryText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.white,
   },
   actionsOverlay: {
     position: 'absolute',
@@ -914,7 +918,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   actionsMenuText: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     color: SemanticColors.textPrimary,
   },
 
@@ -923,14 +927,14 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   sectionSubtitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     marginTop: -4,
   },
@@ -958,12 +962,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   activeAlertName: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   activeAlertCondition: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -988,12 +992,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   suggestedName: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   suggestedReason: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1004,8 +1008,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   suggestedSavingsText: {
-    fontSize: 11,
-    fontWeight: '500',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.feedbackSuccess,
   },
   suggestedButton: {
@@ -1024,12 +1028,12 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   emptyTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   emptyText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textTertiary,
     textAlign: 'center',
     paddingHorizontal: Spacing.xl,
@@ -1045,9 +1049,9 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   createButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.white,
   },
 
   // Settings
@@ -1068,12 +1072,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   settingLabel: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
   },
   settingDescription: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -1090,12 +1094,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   thresholdPrefix: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   thresholdValue: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     paddingVertical: 8,
     paddingHorizontal: 4,
@@ -1103,7 +1107,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   quietHoursText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
 
@@ -1124,17 +1128,17 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   cancelText: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     color: SemanticColors.textSecondary,
   },
   modalTitle: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   saveText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.hermesOrange,
   },
   saveTextDisabled: {
@@ -1148,8 +1152,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   formLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
     marginBottom: Spacing.sm,
   },
@@ -1159,7 +1163,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     padding: Spacing.md,
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     color: SemanticColors.textPrimary,
   },
   typeOptions: {
@@ -1183,8 +1187,8 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.pastelOrange + '20',
   },
   typeOptionText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textSecondary,
   },
   typeOptionTextActive: {
@@ -1201,13 +1205,13 @@ const styles = StyleSheet.create({
   },
   percentValue: {
     flex: 1,
-    fontSize: 24,
-    fontWeight: '600',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     paddingVertical: Spacing.md,
   },
   percentSuffix: {
-    fontSize: 20,
+    fontSize: TYPE.sectionSize,
     color: SemanticColors.textSecondary,
   },
   priceInput: {
@@ -1220,14 +1224,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   priceCurrency: {
-    fontSize: 20,
+    fontSize: TYPE.sectionSize,
     color: SemanticColors.textSecondary,
     marginRight: 4,
   },
   priceValue: {
     flex: 1,
-    fontSize: 24,
-    fontWeight: '600',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     paddingVertical: Spacing.md,
   },

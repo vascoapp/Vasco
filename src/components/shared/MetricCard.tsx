@@ -96,20 +96,20 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
   },
   value: {
-    fontSize: 22,
+    fontSize: TYPE.displaySize - 6,
     fontFamily: TYPE.sectionFamily,
   },
   valueLarge: {
-    fontSize: 28,
+    fontSize: TYPE.displaySize,
   },
   label: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     marginTop: 4,
     textAlign: 'center',
   },
   labelLarge: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   trendContainer: {
     flexDirection: 'row',

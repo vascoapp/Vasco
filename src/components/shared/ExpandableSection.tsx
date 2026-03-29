@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
-
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -87,12 +87,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     overflow: 'hidden',
-    // Shadow for depth
-    shadowColor: Palette.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
   },
   header: {
     flexDirection: 'row',
@@ -111,12 +105,12 @@ const styles = StyleSheet.create({
   },
   title: {
     color: SemanticColors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
   },
   subtitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     marginTop: 2,
   },
   badge: {
@@ -125,8 +119,8 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
   },
   badgeText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   chevronContainer: {
     width: 24,
@@ -148,6 +142,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: SemanticColors.textSecondary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
   },
 });

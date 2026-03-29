@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import {
@@ -418,7 +419,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: SemanticColors.textSecondary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
   },
   projectSelector: {
     flexDirection: 'row',
@@ -436,12 +437,12 @@ const styles = StyleSheet.create({
     // borderColor set dynamically
   },
   projectCountry: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '700',
   },
   projectName: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   projectNameActive: {
@@ -452,7 +453,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -479,7 +480,7 @@ const styles = StyleSheet.create({
   reportTitle: {
     flex: 1,
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '500',
   },
   generatedCard: {
@@ -499,7 +500,7 @@ const styles = StyleSheet.create({
   },
   generatedTitle: {
     color: SemanticColors.textPrimary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontWeight: '600',
   },
   generatedBadge: {
@@ -508,7 +509,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
   },
   generatedBadgeText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '700',
   },
   generatedContent: {
@@ -517,7 +518,7 @@ const styles = StyleSheet.create({
   },
   generatedText: {
     color: SemanticColors.textPrimary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'monospace',
     lineHeight: 18,
   },
@@ -529,11 +530,11 @@ const styles = StyleSheet.create({
   },
   historyEmpty: {
     color: SemanticColors.textSecondary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   historyHint: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     marginTop: 4,
   },
 });

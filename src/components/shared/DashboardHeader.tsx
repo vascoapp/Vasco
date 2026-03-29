@@ -38,12 +38,12 @@ const styles = StyleSheet.create({
   },
   greeting: {
     color: SemanticColors.textSecondary,
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     marginBottom: GRID.xs,
   },
   title: {
     color: SemanticColors.textPrimary,
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontFamily: TYPE.sectionFamily,
   },
   badge: {

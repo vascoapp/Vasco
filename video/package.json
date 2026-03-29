@@ -1,0 +1,29 @@
+{
+  "name": "vasco-video",
+  "version": "1.0.0",
+  "description": "Remotion video pipeline for VascoApp TikTok content",
+  "scripts": {
+    "start": "npx remotion studio",
+    "build": "npx remotion render Root",
+    "render:did-you-know": "npx remotion render Root DidYouKnow out/did-you-know.mp4",
+    "render:price-check": "npx remotion render Root PriceCheck out/price-check.mp4",
+    "render:before-after": "npx remotion render Root BeforeAfter out/before-after.mp4",
+    "render:eve-says": "npx remotion render Root EveSays out/eve-says.mp4",
+    "render:compliance-alert": "npx remotion render Root ComplianceAlert out/compliance-alert.mp4",
+    "generate": "npx tsx scripts/generate.ts",
+    "replicate": "npx tsx scripts/replicate.ts"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "@remotion/player": "^4.0.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@remotion/bundler": "^4.0.0",
+    "@types/react": "^18.3.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.5.0"
+  }
+}

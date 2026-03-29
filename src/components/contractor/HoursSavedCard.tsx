@@ -8,10 +8,11 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Palette, SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import { useHoursSavedDisplay, useROIDashboard } from '../../services';
-
+import { useTranslation } from 'react-i18next';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 const CATEGORY_CONFIG: Record<string, { icon: IconName; color: string }> = {
@@ -190,7 +191,7 @@ export function HoursSavedChip() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -203,7 +204,7 @@ const styles = StyleSheet.create({
   loadingPlaceholder: {
     height: 120,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   // Hero Section
   heroSection: {
@@ -214,7 +215,7 @@ const styles = StyleSheet.create({
   heroIcon: {
     width: 56,
     height: 56,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     backgroundColor: Palette.hermesOrange + '15',
     alignItems: 'center',
     justifyContent: 'center',
@@ -224,12 +225,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   heroHeadline: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize + 1,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   heroSubheadline: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   // Breakdown Grid
@@ -244,13 +245,13 @@ const styles = StyleSheet.create({
     width: '48%',
     gap: Spacing.xs,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
   },
   breakdownIcon: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -258,12 +259,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   breakdownHours: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   breakdownCategory: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   // Footer
@@ -281,7 +282,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   comparisonText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   trend: {
@@ -290,8 +291,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   trendText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.titleFamily,
   },
   // CTA
   ctaButton: {
@@ -301,11 +302,11 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: Spacing.sm,
     backgroundColor: SemanticColors.actionPrimary + '10',
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   ctaText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.actionPrimary,
   },
   // Compact styles
@@ -317,7 +318,7 @@ const styles = StyleSheet.create({
   iconBadge: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: Palette.hermesOrange + '15',
     alignItems: 'center',
     justifyContent: 'center',
@@ -326,12 +327,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   compactValue: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   compactLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   compactValueRow: {
@@ -341,15 +342,15 @@ const styles = StyleSheet.create({
     paddingLeft: 52,
   },
   compactTrend: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.labelFamily,
   },
   // Widget styles
   widget: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Palette.hermesOrange + '10',
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: Palette.hermesOrange + '30',
@@ -358,7 +359,7 @@ const styles = StyleSheet.create({
   widgetIcon: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: Palette.hermesOrange + '20',
     alignItems: 'center',
     justifyContent: 'center',
@@ -368,23 +369,23 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   widgetValue: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   widgetLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   widgetValueBadge: {
     backgroundColor: SemanticColors.feedbackSuccessBg,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   widgetValueText: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackSuccess,
   },
   // Chip styles
@@ -398,8 +399,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   chipText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.hermesOrange,
   },
 });

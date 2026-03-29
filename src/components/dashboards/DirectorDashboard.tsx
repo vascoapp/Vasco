@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { hapticSuccess } from '../../utils/haptics';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import {
   mockProjects,
@@ -1076,17 +1077,17 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   greeting: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginBottom: 4,
   },
   title: {
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   headerSubtitle: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1094,10 +1095,10 @@ const styles = StyleSheet.create({
     backgroundColor: DIRECTOR_COLOR + '15',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   roleBadgeText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Manrope_600SemiBold',
     color: DIRECTOR_COLOR,
   },
@@ -1114,7 +1115,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfaceSecondary,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
   },
   statusPillActive: {
     backgroundColor: DIRECTOR_COLOR + '15',
@@ -1126,7 +1127,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackErrorBg,
   },
   statusPillText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Manrope_500Medium',
     color: SemanticColors.textSecondary,
   },
@@ -1153,7 +1154,7 @@ const styles = StyleSheet.create({
     borderBottomColor: DIRECTOR_COLOR,
   },
   tabLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'Manrope_500Medium',
     color: SemanticColors.textTertiary,
   },
@@ -1167,7 +1168,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textSecondary,
     textTransform: 'uppercase',
@@ -1178,7 +1179,7 @@ const styles = StyleSheet.create({
   statsBanner: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -1188,12 +1189,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statsBannerValue: {
-    fontSize: 22,
+    fontSize: TYPE.displaySize - 6,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   statsBannerLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -1211,7 +1212,7 @@ const styles = StyleSheet.create({
   quickAction: {
     flex: 1,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     alignItems: 'center',
     gap: 8,
@@ -1221,7 +1222,7 @@ const styles = StyleSheet.create({
   quickActionIcon: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     backgroundColor: DIRECTOR_COLOR + '15',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1238,12 +1239,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   quickActionBadgeText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: 'Manrope_700Bold',
-    color: '#fff',
+    color: Palette.white,
   },
   quickActionLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
     textAlign: 'center',
@@ -1252,7 +1253,7 @@ const styles = StyleSheet.create({
   // Cards
   card: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -1266,31 +1267,31 @@ const styles = StyleSheet.create({
   cardHeaderIcon: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: DIRECTOR_COLOR + '15',
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardTitle: {
     flex: 1,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   cardSubtitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
   },
   cardBadge: {
     backgroundColor: SemanticColors.feedbackWarning,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
   cardBadgeText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'Manrope_700Bold',
-    color: '#fff',
+    color: Palette.white,
   },
 
   // Portfolio Metrics
@@ -1298,7 +1299,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
   },
   portfolioMetricMain: {
@@ -1306,12 +1307,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   portfolioMetricValue: {
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.feedbackSuccess,
   },
   portfolioMetricLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     marginTop: 4,
   },
@@ -1329,7 +1330,7 @@ const styles = StyleSheet.create({
   },
   healthCard: {
     flex: 1,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     alignItems: 'center',
   },
@@ -1343,12 +1344,12 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackErrorBg,
   },
   healthValue: {
-    fontSize: 20,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   healthLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1365,12 +1366,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   projectName: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   projectMeta: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -1379,14 +1380,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   projectIrr: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: DIRECTOR_COLOR,
   },
   projectStatus: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
   },
   projectStatusGood: {
     backgroundColor: SemanticColors.feedbackSuccessBg,
@@ -1398,7 +1399,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackErrorBg,
   },
   projectStatusText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
@@ -1412,7 +1413,7 @@ const styles = StyleSheet.create({
   hubCard: {
     width: '48%',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -1421,17 +1422,17 @@ const styles = StyleSheet.create({
   hubIcon: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   hubTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   hubStat: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
 
@@ -1458,18 +1459,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   approvalTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
     flex: 1,
   },
   approvalAmount: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_700Bold',
     color: DIRECTOR_COLOR,
   },
   approvalDescription: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1480,7 +1481,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   approvalMetaText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
   priorityBadge: {
@@ -1489,7 +1490,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   priorityBadgeText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     textTransform: 'capitalize',
   },
@@ -1497,7 +1498,7 @@ const styles = StyleSheet.create({
   // Action Items
   actionsList: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
     overflow: 'hidden',
@@ -1513,7 +1514,7 @@ const styles = StyleSheet.create({
   actionIcon: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1521,12 +1522,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   actionTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   actionSubtitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -1543,24 +1544,24 @@ const styles = StyleSheet.create({
   riskScore: {
     width: 36,
     height: 36,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   riskScoreText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_700Bold',
   },
   riskContent: {
     flex: 1,
   },
   riskTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_500Medium',
     color: SemanticColors.textPrimary,
   },
   riskMeta: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -1573,7 +1574,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   viewAllText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: DIRECTOR_COLOR,
   },
@@ -1587,17 +1588,17 @@ const styles = StyleSheet.create({
   riskStatItem: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     alignItems: 'center',
   },
   riskStatValue: {
-    fontSize: 20,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   riskStatLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -1614,11 +1615,11 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   supplierStatLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
   },
   supplierStatValue: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
@@ -1633,18 +1634,18 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: '45%',
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     alignItems: 'center',
     gap: 2,
   },
   metricValue: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   metricLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
   },
   metricTrend: {
@@ -1654,7 +1655,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   metricTrendText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: 'Manrope_500Medium',
   },
 
@@ -1666,18 +1667,18 @@ const styles = StyleSheet.create({
   agentStatItem: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     alignItems: 'center',
     gap: 6,
   },
   agentStatValue: {
-    fontSize: 20,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   agentStatLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
     textAlign: 'center',
   },
@@ -1703,11 +1704,11 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   roiLabelText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
   },
   roiValue: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
@@ -1721,12 +1722,12 @@ const styles = StyleSheet.create({
     borderTopColor: SemanticColors.borderDefault,
   },
   roiTotalLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   roiTotalValue: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.feedbackSuccess,
   },
@@ -1739,24 +1740,24 @@ const styles = StyleSheet.create({
   handoverStatItem: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     alignItems: 'center',
   },
   handoverStatValue: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   handoverStatLabel: {
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     color: SemanticColors.textTertiary,
     marginTop: 2,
     textAlign: 'center',
   },
   handoverProjectItem: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     gap: 8,
   },
@@ -1769,19 +1770,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   handoverProjectName: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   handoverProjectMeta: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
   handoverProjectStatus: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
   },
   handoverProjectStatusComplete: {
     backgroundColor: SemanticColors.feedbackSuccessBg,
@@ -1796,7 +1797,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackErrorBg,
   },
   handoverProjectStatusText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
@@ -1826,7 +1827,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackWarning,
   },
   handoverProjectProgressText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textSecondary,
     width: 32,
@@ -1839,15 +1840,15 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackWarningBg,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
   },
   handoverBlockedText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.feedbackWarning,
   },
   handoverBlockedReason: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
 
@@ -1857,19 +1858,19 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   pipelineHeroValue: {
-    fontSize: 28,
+    fontSize: TYPE.displaySize,
     fontFamily: 'Manrope_700Bold',
     color: DIRECTOR_COLOR,
   },
   pipelineHeroLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     marginTop: 4,
   },
   pipelineBarTrack: {
     flexDirection: 'row',
     height: 12,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
     overflow: 'hidden',
     backgroundColor: SemanticColors.surfaceSecondary,
   },
@@ -1891,11 +1892,11 @@ const styles = StyleSheet.create({
   },
   pipelineLegendLabel: {
     flex: 1,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   pipelineLegendValue: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
@@ -1910,11 +1911,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   riskGaugeLabelText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   riskGaugeCount: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_700Bold',
   },
   riskGaugeBarTrack: {
@@ -1931,7 +1932,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     marginTop: Spacing.xs,
   },
@@ -1943,12 +1944,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   riskExposureValue: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   riskExposureLabel: {
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     color: SemanticColors.textTertiary,
   },
   riskExposureDivider: {
@@ -1960,7 +1961,7 @@ const styles = StyleSheet.create({
   // ROI Hero Card
   roiHeroCard: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -1982,12 +1983,12 @@ const styles = StyleSheet.create({
     backgroundColor: DIRECTOR_COLOR + '10',
   },
   roiHeroRingValue: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Manrope_700Bold',
     color: DIRECTOR_COLOR,
   },
   roiHeroRingLabel: {
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -2001,12 +2002,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   roiHeroSubValue: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   roiHeroSubLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
   roiHeroTrend: {
@@ -2019,7 +2020,7 @@ const styles = StyleSheet.create({
     borderTopColor: SemanticColors.borderDefault,
   },
   roiHeroTrendText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Manrope_500Medium',
   },
 
@@ -2032,7 +2033,7 @@ const styles = StyleSheet.create({
   actBarIcon: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -2047,11 +2048,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   actBarLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   actBarValue: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontFamily: 'Manrope_700Bold',
   },
   actBarTrack: {
@@ -2073,17 +2074,17 @@ const styles = StyleSheet.create({
   wfOverviewStatItem: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 10,
     alignItems: 'center',
   },
   wfOverviewStatValue: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   wfOverviewStatLabel: {
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -2095,29 +2096,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 10,
   },
   wfTypeIcon: {
     width: 28,
     height: 28,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   wfTypeLabel: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
   },
   wfTypeCount: {
     backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   wfTypeCountText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_700Bold',
   },
   wfEscalationAlert: {
@@ -2125,18 +2126,18 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 10,
     backgroundColor: SemanticColors.feedbackWarningBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 10,
     borderWidth: 1,
     borderColor: SemanticColors.feedbackWarningBorder,
   },
   wfEscalationAlertTitle: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.feedbackWarning,
   },
   wfEscalationAlertItem: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -2145,18 +2146,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     backgroundColor: DIRECTOR_COLOR + '08',
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 10,
     borderWidth: 1,
     borderColor: DIRECTOR_COLOR + '20',
   },
   wfPaymentSummaryTitle: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   wfPaymentSummaryValue: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },

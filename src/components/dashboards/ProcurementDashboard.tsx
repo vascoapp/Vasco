@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { Radius } from '../../theme/radius';
 import {
@@ -222,7 +223,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: SemanticColors.textSecondary,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
   },
   projectSelector: {
     flexDirection: 'row',
@@ -241,12 +242,12 @@ const styles = StyleSheet.create({
   },
   projectCountry: {
     color: COO_COLOR,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontWeight: '700',
   },
   projectName: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   projectNameActive: {
@@ -257,7 +258,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -275,12 +276,12 @@ const styles = StyleSheet.create({
   },
   contractValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 32,
+    fontSize: TYPE.displaySize + 4,
     fontWeight: '700',
   },
   contractLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     marginTop: 4,
   },
   changeOrderCard: {
@@ -305,12 +306,12 @@ const styles = StyleSheet.create({
   },
   coValue: {
     color: COO_COLOR,
-    fontSize: 28,
+    fontSize: TYPE.displaySize,
     fontWeight: '700',
   },
   coLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
   },
   coDetails: {
     flex: 1,
@@ -322,11 +323,11 @@ const styles = StyleSheet.create({
   },
   coDetailLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   coDetailValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
   },
   performanceCard: {
@@ -345,12 +346,12 @@ const styles = StyleSheet.create({
   },
   performanceValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontWeight: '700',
   },
   performanceLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   performanceBadge: {
     paddingHorizontal: 8,
@@ -358,7 +359,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
   },
   performanceBadgeText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontWeight: '600',
   },
   targetRow: {
@@ -366,7 +367,7 @@ const styles = StyleSheet.create({
   },
   targetLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
   },
   targetBar: {
     height: 6,
@@ -393,12 +394,12 @@ const styles = StyleSheet.create({
   },
   riskValue: {
     color: SemanticColors.feedbackWarning,
-    fontSize: 22,
+    fontSize: TYPE.displaySize - 6,
     fontWeight: '700',
   },
   riskLabel: {
     color: SemanticColors.textSecondary,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
   },
   contractList: {
     backgroundColor: SemanticColors.surfaceSecondary,
@@ -417,12 +418,12 @@ const styles = StyleSheet.create({
   },
   contractListName: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '500',
   },
   contractListType: {
     color: SemanticColors.textSecondary,
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     marginTop: 2,
   },
   contractListRight: {
@@ -430,12 +431,12 @@ const styles = StyleSheet.create({
   },
   contractListValue: {
     color: SemanticColors.textPrimary,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontWeight: '600',
   },
   contractListCo: {
     color: COO_COLOR,
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     marginTop: 2,
   },
 });

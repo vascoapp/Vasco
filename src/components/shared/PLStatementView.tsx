@@ -4,7 +4,7 @@
 
 import { View, Text, StyleSheet } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
-
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 export interface PLRow {
   label: string;
   actual: number;
@@ -103,7 +103,7 @@ export function PLStatementView({ rows, currency = 'GBP', accentColor = '#2563EB
 const styles = StyleSheet.create({
   container: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderMuted,
     overflow: 'hidden',
@@ -117,8 +117,8 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderMuted,
   },
   headerCell: {
-    fontSize: 9,
-    fontWeight: '700',
+    fontSize: TYPE.tinySize - 2,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     borderTopColor: SemanticColors.borderDefault,
   },
   dataCell: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textPrimary,
     fontVariant: ['tabular-nums'],
   },
@@ -165,13 +165,13 @@ const styles = StyleSheet.create({
     color: SemanticColors.textTertiary,
   },
   varText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
     textAlign: 'right',
     fontVariant: ['tabular-nums'],
   },
   boldText: {
-    fontWeight: '700',
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
 });

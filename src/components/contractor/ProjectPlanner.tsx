@@ -24,8 +24,8 @@ import {
   CapacityForecast,
   ProjectTemplate,
 } from '../../services/projectPlannerService';
-
-type TabType = 'predict' | 'materials' | 'capacity' | 'templates';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
+import { useTranslation } from 'react-i18next';type TabType = 'predict' | 'materials' | 'capacity' | 'templates';
 
 export function ProjectPlanner() {
   const [activeTab, setActiveTab] = useState<TabType>('predict');
@@ -500,9 +500,9 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.blue500 + '15',
   },
   tabText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
-    fontWeight: '500',
+    fontFamily: TYPE.labelFamily,
   },
   activeTabText: {
     color: Palette.blue500,
@@ -528,12 +528,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   predictButtonTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   predictButtonSubtitle: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -553,12 +553,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   predictionType: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   predictionConfidence: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -570,12 +570,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   durationValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.sectionFamily,
+    color: Palette.white,
   },
   durationUnit: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: 'rgba(255,255,255,0.8)',
   },
 
@@ -584,7 +584,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   rangeLabel: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginBottom: 8,
   },
@@ -610,7 +610,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   rangeLabelText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
 
@@ -629,12 +629,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   dateLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   dateValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
 
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
   },
   weatherText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: Palette.orange500,
   },
 
@@ -661,8 +661,8 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   factorsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 12,
   },
@@ -676,12 +676,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   factorName: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
   },
   factorDesc: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 1,
   },
@@ -693,13 +693,13 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginTop: 12,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 4,
     textAlign: 'center',
@@ -715,17 +715,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   summaryTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: 'rgba(255,255,255,0.8)',
   },
   summaryValue: {
     fontSize: 32,
-    fontWeight: '700',
-    color: '#fff',
+    fontFamily: TYPE.sectionFamily,
+    color: Palette.white,
     marginVertical: 4,
   },
   summaryNote: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: 'rgba(255,255,255,0.7)',
   },
   materialCard: {
@@ -743,13 +743,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   materialName: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   materialCost: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.blue500,
   },
   materialDetails: {
@@ -759,16 +759,16 @@ const styles = StyleSheet.create({
   },
   materialDetail: {},
   detailLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   detailValue: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
   },
   detailRange: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   confidenceBar: {
@@ -787,12 +787,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   capacitySubtitle: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -813,7 +813,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   legendText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
   },
   capacityList: {
@@ -830,7 +830,7 @@ const styles = StyleSheet.create({
   },
   capacityWeek: {
     width: 60,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   capacityBarContainer: {
@@ -847,15 +847,15 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   capacityHours: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
   capacityPercent: {
     width: 40,
     textAlign: 'right',
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
   capacityTip: {
     flexDirection: 'row',
@@ -868,14 +868,14 @@ const styles = StyleSheet.create({
   },
   capacityTipText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
     lineHeight: 18,
   },
 
   // Templates Tab
   templateIntro: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textSecondary,
     marginBottom: 16,
     lineHeight: 20,
@@ -906,12 +906,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   templateName: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   templateCategory: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
   },
   templateStats: {
@@ -926,12 +926,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   templateStatValue: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   templateStatLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -939,8 +939,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   phasesTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
@@ -968,12 +968,12 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.borderDefault,
   },
   phaseName: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textPrimary,
     marginTop: 4,
   },
   phaseDuration: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textSecondary,
   },
   useTemplateButton: {
@@ -986,8 +986,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   useTemplateText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: Palette.blue500,
   },
 
@@ -1007,13 +1007,13 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
   },
   modalTitle: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   modalAction: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
     color: Palette.blue500,
   },
   modalContent: {
@@ -1021,8 +1021,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 12,
     marginTop: 8,
@@ -1046,12 +1046,12 @@ const styles = StyleSheet.create({
     borderColor: Palette.blue500,
   },
   typeOptionText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     color: SemanticColors.textPrimary,
   },
   typeOptionTextSelected: {
-    color: '#fff',
-    fontWeight: '600',
+    color: Palette.white,
+    fontFamily: TYPE.titleFamily,
   },
   scopeOptions: {
     gap: 8,
@@ -1069,15 +1069,15 @@ const styles = StyleSheet.create({
     borderColor: Palette.blue500,
   },
   scopeLabel: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   scopeLabelSelected: {
     color: Palette.blue500,
   },
   scopeDesc: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1098,12 +1098,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   outdoorLabel: {
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
   },
   outdoorHint: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },

@@ -4,7 +4,7 @@
 
 import { View, Text, StyleSheet } from 'react-native';
 import { SemanticColors } from '../../theme/colors';
-
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 export interface ScenarioData {
   name: string;
   irr: string;
@@ -34,7 +34,7 @@ export function ScenarioComparisonCard({ scenarios, accentColor = '#2563EB' }: S
             <Text
               style={[
                 styles.scenarioName,
-                scenario.isBase && { color: accentColor, fontWeight: '700' },
+                scenario.isBase && { color: accentColor, fontFamily: TYPE.sectionFamily },
               ]}
             >
               {scenario.name}
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   column: {
     flex: 1,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: RADIUS.md,
     padding: 12,
     borderWidth: 1,
     borderColor: SemanticColors.borderMuted,
@@ -83,8 +83,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scenarioName: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -99,14 +99,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   metricLabel: {
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   metricValue: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     fontVariant: ['tabular-nums'],
   },

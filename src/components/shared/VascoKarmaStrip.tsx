@@ -6,6 +6,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, Modal, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { useKarmaProfile } from '../../services/vascoKarmaService';
 import type { KarmaLevel, KarmaBadge, KarmaAction } from '../../services/vascoKarmaService';
@@ -67,8 +68,8 @@ const ringStyles = StyleSheet.create({
     borderWidth: 3,
   },
   text: {
-    fontSize: 8,
-    fontWeight: '700',
+    fontSize: TYPE.tinySize - 3,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textSecondary,
   },
 });
@@ -214,7 +215,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 10,
     borderWidth: 1,
     borderColor: SemanticColors.borderMuted,
@@ -227,15 +228,15 @@ const styles = StyleSheet.create({
   levelBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   levelText: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.sectionFamily,
   },
   pointsText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textPrimary,
   },
   stripCenter: {
@@ -247,11 +248,11 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   streakFire: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
   },
   streakCount: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: TYPE.labelSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackWarning,
   },
   stripRight: {
@@ -278,8 +279,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   profileSection: {
@@ -292,16 +293,16 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     marginBottom: 8,
   },
   bigLevelText: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.displayFamily,
   },
   bigPoints: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPE.displaySize - 4,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     marginBottom: 8,
   },
@@ -318,7 +319,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   levelProgressText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
     marginTop: 4,
   },
@@ -327,28 +328,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     backgroundColor: SemanticColors.feedbackWarningBg,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.sm,
     marginBottom: Spacing.sm,
   },
   streakBigFire: {
-    fontSize: 32,
+    fontSize: TYPE.displaySize + 4,
   },
   streakBigCount: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
   },
   streakRecord: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
   },
   dailySection: {
     marginBottom: Spacing.sm,
   },
   sectionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
     marginBottom: 8,
   },
@@ -365,7 +366,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   dailyText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
   },
   badgesSection: {
@@ -383,17 +384,17 @@ const styles = StyleSheet.create({
   badgeCircle: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl,
     backgroundColor: Palette.hermesOrange + '15',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 4,
   },
   badgeName: {
-    fontSize: 9,
+    fontSize: TYPE.tinySize - 2,
     color: SemanticColors.textTertiary,
     textAlign: 'center',
-    fontWeight: '600',
+    fontFamily: TYPE.titleFamily,
   },
   actionsSection: {
     gap: 8,
@@ -405,11 +406,11 @@ const styles = StyleSheet.create({
   },
   actionLabel: {
     flex: 1,
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textPrimary,
   },
   actionPoints: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.sectionFamily,
   },
 });

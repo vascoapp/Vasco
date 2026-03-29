@@ -20,6 +20,7 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { hapticSuccess } from '../../utils/haptics';
 import { Spacing, SafeArea } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
@@ -1325,12 +1326,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   headerSubtitle: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -1346,12 +1347,12 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackError,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
   },
   alertBadgeText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Manrope_700Bold',
-    color: '#fff',
+    color: Palette.white,
   },
   headerAccent: {
     width: 6,
@@ -1361,7 +1362,7 @@ const styles = StyleSheet.create({
   headerMetrics: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
   },
   headerMetric: {
@@ -1369,12 +1370,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerMetricValue: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   headerMetricLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -1400,23 +1401,23 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: 10,
     paddingHorizontal: 4,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   tabButtonActive: {
     backgroundColor: CFO_COLOR,
   },
   tabButtonText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textSecondary,
   },
   tabButtonTextActive: {
-    color: '#fff',
+    color: Palette.white,
   },
   tabBadge: {
     backgroundColor: SemanticColors.feedbackError,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     minWidth: 16,
     height: 16,
     alignItems: 'center',
@@ -1424,12 +1425,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   tabBadgeActive: {
-    backgroundColor: '#fff',
+    backgroundColor: SemanticColors.surfacePrimary,
   },
   tabBadgeText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: 'Manrope_700Bold',
-    color: '#fff',
+    color: Palette.white,
   },
 
   // Scroll Content
@@ -1443,7 +1444,7 @@ const styles = StyleSheet.create({
 
   // Section
   sectionLabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
@@ -1453,7 +1454,7 @@ const styles = StyleSheet.create({
   // Cards
   card: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: 16,
     borderWidth: 1,
     borderColor: SemanticColors.borderMuted,
@@ -1467,18 +1468,18 @@ const styles = StyleSheet.create({
   cardHeaderIcon: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     backgroundColor: CFO_COLOR + '15',
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   cardSubtitle: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
     marginTop: 1,
   },
@@ -1486,15 +1487,15 @@ const styles = StyleSheet.create({
   // Badge Pill
   badgePill: {
     backgroundColor: CFO_COLOR,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     paddingHorizontal: 8,
     paddingVertical: 2,
     marginLeft: 'auto',
   },
   badgePillText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'Manrope_700Bold',
-    color: '#fff',
+    color: Palette.white,
   },
 
   // Approvals
@@ -1503,7 +1504,7 @@ const styles = StyleSheet.create({
   },
   approvalCard: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     gap: 10,
   },
@@ -1520,7 +1521,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   approvalTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
@@ -1530,7 +1531,7 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
   },
   approvalStatusDot: {
     width: 6,
@@ -1538,16 +1539,16 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   approvalStatusText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: 'Manrope_600SemiBold',
   },
   approvalProject: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
   approvalVendor: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
     marginTop: 1,
   },
@@ -1555,18 +1556,18 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   approvalAmountValue: {
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   approvalDue: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
   aiVerificationContainer: {
     backgroundColor: CFO_COLOR + '08',
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 10,
     gap: 8,
   },
@@ -1576,7 +1577,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   aiVerificationTitle: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'Manrope_600SemiBold',
     color: CFO_COLOR,
   },
@@ -1590,7 +1591,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   aiCheckLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textSecondary,
   },
   aiIssuesList: {
@@ -1603,7 +1604,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   aiIssueText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.feedbackWarning,
     flex: 1,
   },
@@ -1616,7 +1617,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfaceTertiary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     paddingVertical: 10,
     paddingHorizontal: 12,
     alignItems: 'center',
@@ -1632,12 +1633,12 @@ const styles = StyleSheet.create({
     borderColor: SemanticColors.feedbackError + '30',
   },
   approvalActionButtonText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   approvalActionButtonTextPrimary: {
-    color: '#fff',
+    color: Palette.white,
   },
   approvalActionButtonTextBlocked: {
     color: SemanticColors.feedbackError,
@@ -1649,12 +1650,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: CFO_COLOR + '30',
   },
   approvalActionButtonTextSecondary: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontFamily: 'Manrope_600SemiBold',
     color: CFO_COLOR,
   },
@@ -1669,7 +1670,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     width: '100%',
     maxWidth: 400,
   },
@@ -1681,7 +1682,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
@@ -1690,18 +1691,18 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   modalLabel: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   modalValue: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   modalAmount: {
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontFamily: 'Manrope_700Bold',
     color: CFO_COLOR,
   },
@@ -1711,19 +1712,19 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: CFO_COLOR + '10',
     padding: Spacing.sm,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
   },
   modalWarningText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     lineHeight: 16,
   },
   confirmInput: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 12,
-    fontSize: 16,
+    fontSize: TYPE.titleSize,
     fontFamily: 'Manrope_600SemiBold',
     textAlign: 'center',
     color: SemanticColors.textPrimary,
@@ -1741,11 +1742,11 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     alignItems: 'center',
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   modalCancelText: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textSecondary,
   },
@@ -1753,16 +1754,16 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     alignItems: 'center',
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: CFO_COLOR,
   },
   modalConfirmButtonDisabled: {
     backgroundColor: SemanticColors.surfaceSecondary,
   },
   modalConfirmText: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontFamily: 'Manrope_600SemiBold',
-    color: '#fff',
+    color: Palette.white,
   },
 
   // Handover Styles
@@ -1771,7 +1772,7 @@ const styles = StyleSheet.create({
   },
   handoverItem: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     gap: 8,
   },
@@ -1783,17 +1784,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   handoverProject: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   handoverWorkPackage: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
   handoverContractor: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -1801,14 +1802,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   handoverAmount: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   handoverStatusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
     marginTop: 4,
   },
   handoverStatusSignoff: {
@@ -1821,7 +1822,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfaceTertiary,
   },
   handoverStatusText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textSecondary,
   },
@@ -1851,7 +1852,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackError,
   },
   handoverProgressText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textSecondary,
     width: 32,
@@ -1864,10 +1865,10 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.feedbackWarningBg,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
   },
   handoverMissingText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.feedbackWarning,
     flex: 1,
   },
@@ -1880,7 +1881,7 @@ const styles = StyleSheet.create({
     borderTopColor: SemanticColors.borderMuted,
   },
   handoverDue: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
   handoverAction: {
@@ -1889,7 +1890,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   handoverActionText: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Manrope_600SemiBold',
     color: CFO_COLOR,
   },
@@ -1899,13 +1900,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     backgroundColor: SemanticColors.feedbackWarningBg,
-    borderRadius: 8,
+    borderRadius: RADIUS.sm,
     padding: 10,
     borderWidth: 1,
     borderColor: SemanticColors.feedbackWarningBorder,
   },
   handoverSummaryText: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
@@ -1919,19 +1920,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
   },
   drawRequestLeft: {
     flex: 1,
   },
   drawRequestProject: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   drawRequestStage: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -1939,13 +1940,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   drawRequestAmount: {
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   drawRequestStatus: {
     backgroundColor: SemanticColors.feedbackWarningBg,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
     paddingHorizontal: 6,
     paddingVertical: 2,
     marginTop: 4,
@@ -1954,14 +1955,14 @@ const styles = StyleSheet.create({
     backgroundColor: CFO_COLOR + '20',
   },
   drawRequestStatusText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textSecondary,
   },
 
   // Facility Utilization
   facilityUtilPercent: {
-    fontSize: 20,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Manrope_800ExtraBold',
   },
   facilityBarContainer: {
@@ -1991,11 +1992,11 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   facilityLegendLabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
   facilityLegendValue: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Manrope_700Bold',
   },
 
@@ -2005,19 +2006,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: CFO_COLOR + '12',
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: CFO_COLOR + '30',
   },
   netCashLeft: {},
   netCashLabel: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   netCashSublabel: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -2025,7 +2026,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   netCashValue: {
-    fontSize: 24,
+    fontSize: TYPE.displaySize - 4,
     fontFamily: 'Manrope_800ExtraBold',
     color: CFO_COLOR,
   },
@@ -2036,7 +2037,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   netCashTrendText: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'Manrope_600SemiBold',
   },
 
@@ -2051,25 +2052,25 @@ const styles = StyleSheet.create({
     width: 90,
   },
   irrBarProject: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   irrBarCountry: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
   },
   irrBarTrack: {
     flex: 1,
     height: 12,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
     overflow: 'hidden',
     position: 'relative',
   },
   irrBarFill: {
     height: '100%',
-    borderRadius: 6,
+    borderRadius: RADIUS.sm - 2,
   },
   irrBarGood: {
     backgroundColor: CFO_COLOR,
@@ -2087,7 +2088,7 @@ const styles = StyleSheet.create({
   },
   irrBarValue: {
     width: 42,
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     fontFamily: 'Manrope_700Bold',
     textAlign: 'right',
   },
@@ -2104,14 +2105,14 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.textTertiary,
   },
   irrTargetLegendText: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
   },
 
   // Investor Capital Flow
   investorFlowItem: {
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     gap: 8,
   },
@@ -2121,12 +2122,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   investorFlowName: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   investorFlowIRR: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     fontFamily: 'Manrope_700Bold',
   },
   investorFlowBarTrack: {
@@ -2145,12 +2146,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   investorFlowDistributed: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     fontFamily: 'Manrope_600SemiBold',
     color: CFO_COLOR,
   },
   investorFlowCommitted: {
-    fontSize: 11,
+    fontSize: TYPE.tinySize,
     color: SemanticColors.textTertiary,
   },
 
@@ -2167,12 +2168,12 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   auditorModalTitle: {
-    fontSize: 20,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   auditorModalSubtitle: {
-    fontSize: 13,
+    fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
     marginTop: 2,
   },
@@ -2193,14 +2194,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 12,
     gap: 12,
   },
   actionIcon: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2208,12 +2209,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   actionTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySize - 1,
     fontFamily: 'Manrope_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   actionSubtitle: {
-    fontSize: 12,
+    fontSize: TYPE.labelSize,
     color: SemanticColors.textTertiary,
     marginTop: 2,
   },
@@ -2222,7 +2223,7 @@ const styles = StyleSheet.create({
   aiSavingsKPIs: {
     flexDirection: 'row',
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: Spacing.sm,
     marginTop: Spacing.sm,
   },
@@ -2232,12 +2233,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   aiSavingsKPIValue: {
-    fontSize: 18,
+    fontSize: TYPE.sectionSize,
     fontFamily: 'Manrope_700Bold',
     color: SemanticColors.textPrimary,
   },
   aiSavingsKPILabel: {
-    fontSize: 10,
+    fontSize: TYPE.tinySize - 1,
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
