@@ -127,5 +127,6 @@ export const APP_CONFIG = {
     briefGenerator: true,
     commissions: true,
     weeklyReports: true,
+    contentMachine: true,
   },
 };
