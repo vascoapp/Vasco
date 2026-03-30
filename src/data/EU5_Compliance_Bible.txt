@@ -1,0 +1,2281 @@
+EU5 + UK + NL COMPLIANCE BIBLE (DRAFT)
+Scope: France, Spain, Italy, UK, Germany, Netherlands.
+Audience: Construction and trades contractors (general building, electrical,
+plumbing/HVAC, gas).
+Disclaimer: This is a structured research summary, not legal advice. Many
+requirements depend on trade, project type, and region. Always confirm with
+local regulators and professional bodies before operating.
+
+------------------------------------------------------------------------------
+EU-WIDE BASELINE (APPLIES ACROSS THESE MARKETS)
+------------------------------------------------------------------------------
+1) Data protection and privacy:
+   - GDPR applies to customer data (names, addresses, invoices, job photos).
+   - Maintain lawful basis, data minimization, retention, security, and
+     data-subject rights workflows.
+
+2) VAT and invoicing:
+   - VAT invoicing rules exist in every country (local required fields,
+     sequential numbering, VAT ID, tax rates, dates, etc.).
+
+3) Health and safety:
+   - National H&S laws implement EU safety directives for workplaces.
+   - Construction sites typically require a safety plan, risk assessment,
+     and site coordination for multi-employer sites.
+
+4) Trade regulation and certification:
+   - Electrical and gas work are regulated in all countries with mandatory
+     standards, licenses, or authorized installer schemes.
+
+5) Insurance:
+   - Public liability and employer liability (if employing staff) are common.
+   - Some countries require special construction liability insurance.
+
+------------------------------------------------------------------------------
+UNITED KINGDOM (UK)
+------------------------------------------------------------------------------
+Core laws and compliance:
+- CDM 2015 (Construction Design and Management) establishes duties for
+  clients, designers, principal designers, and contractors. Requires
+  planning, coordination, and appropriate competence.
+  Source: HSE CDM overview
+  https://www.hse.gov.uk/construction/cdm/2015/overview.htm
+
+- CIS (Construction Industry Scheme): contractors must register if paying
+  subcontractors; verify subcontractors; deduct/pay tax; file monthly returns.
+  Source: GOV.UK CIS contractor requirements
+  https://www.gov.uk/what-you-must-do-as-a-cis-contractor
+
+Invoicing:
+- Invoices must include identification, dates, description, amounts, VAT
+  where applicable.
+  Source: GOV.UK invoice requirements
+  https://www.gov.uk/invoicing-and-taking-payment-from-customers/invoices-what-they-must-include
+
+Electrical:
+- Building Regulations Part P: certain domestic electrical work must be
+  certified by a competent person scheme or notified to Building Control.
+  Source: GOV.UK competent person scheme
+  https://www.gov.uk/building-regulations-approval/use-a-competent-person-scheme
+
+Gas:
+- Gas work requires Gas Safe registration.
+  Source: GOV.UK license for gas work
+  https://www.gov.uk/find-licences/registration-to-carry-out-gas-work
+
+Insurance:
+- Employers Liability insurance required if employing staff (min GBP 5m).
+  Source: GOV.UK employers liability insurance
+  https://www.gov.uk/employers-liability-insurance
+
+UK checklist:
+[] Register CIS if paying subcontractors
+[] CDM dutyholder roles and H&S documentation (construction phase plan)
+[] VAT registration and invoice compliance
+[] Part P compliance / competent person scheme for electrical
+[] Gas Safe registration for gas work
+[] Employers liability and public liability insurance
+
+------------------------------------------------------------------------------
+NETHERLANDS
+------------------------------------------------------------------------------
+Business registration:
+- All new companies must register in the KVK Business Register.
+  Source: Business.gov.nl (KVK registration)
+  https://business.gov.nl/starting-your-business/registering-your-business/registration-at-the-netherlands-chamber-of-commerce-kvk/
+
+Building regulations:
+- Besluit bouwwerken leefomgeving (Bbl) sets rules for safety, health,
+  usability, and sustainability for all construction and renovation.
+  Source: Rijksoverheid (Bbl)
+  https://www.rijksoverheid.nl/onderwerpen/bouwregelgeving/besluit-bouwwerken-leefomgeving
+
+Invoicing:
+- Invoice data requirements defined by Belastingdienst.
+  Source: Belastingdienst invoice requirements
+  https://www.belastingdienst.nl/wps/wcm/connect/bldcontenten/belastingdienst/business/vat/vat_in_the_netherlands/vat_administration/invoice_requirements
+
+Safety certification (often client-required):
+- VCA/SCC safety certificate often required for high-risk work.
+  Source: Business.gov.nl VCA
+  https://business.gov.nl/staff/health-and-safety/certificate-for-working-safely-vca/
+
+Netherlands checklist:
+[] KVK registration completed
+[] Bbl compliance evidence and NEN standards where relevant
+[] VAT invoice requirements met (BTW ID, dates, rates, etc.)
+[] VCA certification if client or site requires it
+[] Trade-specific certifications (electrical/gas) per sector
+
+------------------------------------------------------------------------------
+GERMANY
+------------------------------------------------------------------------------
+Crafts registration and licensing:
+- Handwerksordnung (HwO) governs regulated trades; Handwerksrolle
+  registration is required for Annex A crafts.
+  Source: HwO law and Annex A list
+  https://www.gesetze-im-internet.de/hwo/
+  https://www.gesetze-im-internet.de/hwo/anlage_a.html
+
+Construction site safety:
+- Baustellenverordnung (BaustellV) regulates construction site safety,
+  pre-notification, and safety/health plans.
+  Source: BaustellV
+  https://www.gesetze-im-internet.de/baustellv/BJNR128300998.html
+
+Invoicing:
+- UStG Section 14 defines mandatory invoice fields and issuance rules.
+  Source: UStG Section 14
+  https://www.gesetze-im-internet.de/ustg_1980/__14.html
+
+Germany checklist:
+[] Check if trade is in Annex A (Meisterpflicht)
+[] Register in Handwerksrolle with local Handwerkskammer if required
+[] BaustellV requirements (pre-notification and safety plan as applicable)
+[] VAT invoice compliance per UStG 14
+[] Trade-specific standards (e.g., DIN/VDE for electrical; DVGW for gas)
+
+------------------------------------------------------------------------------
+FRANCE
+------------------------------------------------------------------------------
+Construction liability insurance:
+- Decennial liability insurance is mandatory for construction professionals.
+  Source: Service-Public (garantie decennale)
+  https://www.service-public.fr/particuliers/vosdroits/F2034
+
+Owner-side construction insurance:
+- Damage insurance (dommages-ouvrage) is required by the project owner
+  before work starts; relevant to your customer education.
+  Source: Service-Public (dommages-ouvrage)
+  https://www.service-public.fr/particuliers/vosdroits/F2032
+
+Invoicing:
+- Mandatory invoice fields and special mentions; includes insurance
+  references for artisans and new e-invoicing requirements.
+  Source: Entreprendre Service-Public (invoice mentions)
+  https://entreprendre.service-public.fr/vosdroits/F31808
+
+Energy renovation certification:
+- RGE label for energy renovation and renewable installations; required for
+  customers to access certain subsidies.
+  Source: Entreprendre Service-Public (RGE)
+  https://entreprendre.service-public.fr/vosdroits/F32251?lang=en
+
+France checklist:
+[] Decennial liability insurance (attestation provided to client)
+[] Invoice mandatory mentions + insurance details on quotes/invoices
+[] RGE label if doing energy renovation or renewable install
+[] Site safety plan and risk assessment per national H&S rules
+
+------------------------------------------------------------------------------
+SPAIN
+------------------------------------------------------------------------------
+Construction safety:
+- Ley 31/1995 (PRL) establishes workplace risk prevention duties.
+  Source: BOE (Ley 31/1995)
+  https://www.boe.es/buscar/act.php?id=BOE-A-1995-24292
+
+- RD 1627/1997 sets minimum safety requirements for construction sites,
+  safety and health plans, and coordinator roles.
+  Source: BOE (RD 1627/1997)
+  https://www.boe.es/buscar/act.php?id=BOE-A-1997-22614
+
+Construction accreditation registry:
+- REA (Registro de Empresas Acreditadas) required for construction companies
+  to be contracted/subcontracted.
+  Source: Ministerio de Trabajo (REA)
+  https://expinterweb.mites.gob.es/rea/
+
+Electrical:
+- REBT regulation for low-voltage electrical installations (RD 842/2002).
+  Source: BOE (RD 842/2002)
+  https://www.boe.es/buscar/doc.php?id=BOE-A-2002-18099
+
+Gas:
+- RD 919/2006 regulates gas distribution/use and gas installations.
+  Source: BOE (RD 919/2006)
+  https://www.boe.es/buscar/act.php?id=BOE-A-2006-15345
+
+VAT invoicing:
+- Agencia Tributaria provides VAT invoicing obligations.
+  Source: Agencia Tributaria VAT invoicing
+  https://sede.agenciatributaria.gob.es/Sede/en_gb/iva/facturacion-registro/facturacion-iva/obligacion-facturar.html
+
+Spain checklist:
+[] REA registration for construction firms
+[] PRL obligations (risk prevention, training, safety plans)
+[] RD 1627/1997 construction site safety plan where required
+[] REBT compliance for electrical work
+[] RD 919/2006 compliance for gas work
+[] VAT invoice requirements per Agencia Tributaria
+
+------------------------------------------------------------------------------
+ITALY
+------------------------------------------------------------------------------
+Workplace and construction safety:
+- D.Lgs. 81/2008 (Testo Unico Sicurezza) is the primary safety framework.
+  Source: Gazzetta Ufficiale
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+
+Installer authorization:
+- DM 37/2008 regulates installation of systems inside buildings and
+  requires declarations of conformity.
+  Source: Gazzetta Ufficiale (DM 37/2008)
+  https://www.gazzettaufficiale.it/eli/id/2008/03/12/008G0060/sg
+
+Contribution compliance:
+- DURC certifies contribution regularity for INPS/INAIL and is required
+  for works and procurement.
+  Source: INPS DURC online
+  https://www.inps.it/it/it/dettaglio-scheda.it.schede-servizio-strumento.schede-servizi.50130.durc-online.html
+
+Invoicing:
+- E-invoicing via SdI (Sistema di Interscambio) is required for VAT.
+  Source: Agenzia delle Entrate (fatture e corrispettivi)
+  https://www.agenziaentrate.gov.it/portale/schede/comunicazioni/fatture-e-corrispettivi/fatture-e-corrispettivi-st-imprese
+
+Italy checklist:
+[] D.Lgs. 81/2008 safety duties (risk assessments, site safety plans)
+[] DM 37/2008 compliance and declarations for electrical/gas/HVAC systems
+[] DURC compliance (contributions regularity)
+[] E-invoicing via SdI and VAT compliance
+
+------------------------------------------------------------------------------
+SINGLE SOURCE OF TRUTH (PRODUCT REQUIREMENT 6)
+------------------------------------------------------------------------------
+Goal: Build a compliance-first system of record that centralizes all data
+needed to operate, invoice, and pass audits.
+
+Minimum unified data model:
+- Customer history (contacts, sites, contracts, consent, GDPR)
+- Job history (scope, change orders, site logs, photos, safety records)
+- Pricing (quotes, pricebooks, approved rates, discounts)
+- Payment status (invoices, VAT, payments, retention, overdue)
+- Compliance docs (licenses, safety plans, insurance, certificates, site permits)
+
+Recommended compliance add-ons:
+- Worker status and training records (certs, toolbox talks, H&S training)
+- Equipment inspection logs (ladders, scaffolding, electrical tools)
+- Subcontractor verification (CIS/REA/KVK/Handwerksrolle/etc.)
+- Audit trail (who changed what, when, and why)
+
+Operational checklists (to embed in app):
+- Pre-job compliance check: permits, insurance, safety plan, site induction
+- During job: daily site log, incidents, PPE checks, H&S inspection
+- Close-out: completion certs, photos, as-built docs, warranty, final invoice
+
+------------------------------------------------------------------------------
+NOTES FOR IMPLEMENTATION IN YOUR APP
+------------------------------------------------------------------------------
+1) Country-specific checklists should be selectable by country and trade.
+2) Ensure each compliance item has: owner, due date, evidence upload.
+3) Store compliance evidence in the same job record (single source of truth).
+4) Provide automated reminders when certificates expire.
+
+------------------------------------------------------------------------------
+TRADE-SPECIFIC MODULES (APP-READY EXPANSION)
+------------------------------------------------------------------------------
+Each module should be enabled by country + trade + job type.
+For every item: collect "evidence", "issuer", "expiry date", and "scope".
+
+1) GENERAL CONTRACTOR / BUILDER
+   Compliance items:
+   - Company registration (KVK/REA/Handwerksrolle as applicable)
+   - Public liability and employer liability insurance
+   - Site safety plan / H&S plan (CDM/PRL/BaustellV/D.Lgs 81)
+   - Risk assessments and method statements
+   - Subcontractor verification (tax + safety + accreditation)
+   - Site induction records
+   Evidence examples:
+   - Registration certificate
+   - Insurance certificate
+   - Site safety plan PDF
+   - Induction sign-off sheets
+
+2) ELECTRICAL (LOW VOLTAGE INSTALLATIONS)
+   Compliance items:
+   - Country-specific electrical regulations (Part P / REBT / NEN / DIN/VDE)
+   - Licensed/competent person registration where required
+   - Periodic testing and commissioning certificates
+   Evidence examples:
+   - Competent person scheme membership
+   - Test/inspection certificate
+   - Electrical installation certificate
+
+3) GAS (INSTALLATION, SERVICE, COMMISSIONING)
+   Compliance items:
+   - Gas Safe (UK) or equivalent national authorization
+   - Gas installation regulations and inspections
+   Evidence examples:
+   - Gas Safe ID / registration proof
+   - Gas commissioning certificate
+   - Periodic safety inspection record
+
+4) PLUMBING / HVAC / HEATING
+   Compliance items:
+   - Trade-specific authorization where applicable
+   - Pressure test records and commissioning
+   Evidence examples:
+   - Commissioning sheets
+   - Test certificates
+
+5) ROOFING / ENVELOPE / STRUCTURE
+   Compliance items:
+   - Height safety plan and fall protection
+   - Structural calculations where required
+   Evidence examples:
+   - Safety method statement
+   - Structural sign-off (if required)
+
+6) ENERGY RENOVATION / RENEWABLES
+   Compliance items:
+   - France: RGE label if claiming energy subsidies
+   - Country-specific energy performance requirements (e.g. BENG in NL)
+   Evidence examples:
+   - RGE certificate
+   - Energy performance documentation
+
+------------------------------------------------------------------------------
+COUNTRY x TRADE MATRIX (HIGH-LEVEL)
+------------------------------------------------------------------------------
+UK:
+- Electrical: Part P / competent person schemes
+- Gas: Gas Safe
+- H&S: CDM 2015
+- Subcontractors: CIS
+
+Netherlands:
+- Electrical: NEN standards + sector scheme
+- Gas/HVAC: sector-specific certifications
+- H&S: VCA often required by clients
+- Building rules: Bbl
+
+Germany:
+- Electrical: DIN/VDE and Handwerksrolle if regulated trade
+- Gas/HVAC: DVGW standards + Handwerksrolle
+- H&S: BaustellV
+
+France:
+- Construction liability: decennial insurance
+- Energy renovation: RGE label for eligible work
+- Invoicing: mandatory mentions + insurance details
+
+Spain:
+- Electrical: REBT
+- Gas: RD 919/2006
+- H&S: PRL + RD 1627/1997
+- Accreditation: REA for construction companies
+
+Italy:
+- Installations: DM 37/2008 (declaration of conformity)
+- H&S: D.Lgs 81/2008
+- DURC for contribution regularity
+- E-invoicing via SdI
+
+------------------------------------------------------------------------------
+STANDARD COMPLIANCE DOCUMENT PACK (PER JOB)
+------------------------------------------------------------------------------
+Pre-job:
+- Contract / scope / drawings
+- Permits / approvals (where required)
+- Safety plan + risk assessment
+- Insurance certificates (company + site-specific if required)
+- Subcontractor verification
+
+During job:
+- Daily site log
+- Toolbox talks and safety briefings
+- Incident reports (if any)
+- Inspection checklists
+- Change orders
+
+Close-out:
+- Completion certificate / handover
+- Commissioning certificates
+- As-built documents / photos
+- Warranty documents
+- Final invoice + payment status
+
+------------------------------------------------------------------------------
+APP DATA MODEL (SINGLE SOURCE OF TRUTH EXPANDED)
+------------------------------------------------------------------------------
+Entities:
+- Company (legal info, VAT ID, registrations, insurance)
+- Person (worker, supervisor, subcontractor contacts)
+- Site (address, permits, hazards)
+- Project (country, trade, scope, schedule)
+- Job (tasks, status, checklists, compliance)
+- Document (type, issuer, expiry, file)
+- Invoice (country VAT rules, status, payment)
+- Audit Trail (change history)
+
+Required fields per Document:
+- doc_type (license, insurance, safety plan, certificate, permit)
+- issuer / authority
+- issue_date, expiry_date
+- scope (country, trade, project)
+- file_url
+- verified_by, verified_at
+
+Compliance scoring:
+- 0 = missing, 1 = submitted, 2 = verified, 3 = expired
+- Roll up to project risk status and "ready to start" flag
+
+------------------------------------------------------------------------------
+ROLE-BASED VIEWS (WHAT EACH ROLE NEEDS)
+------------------------------------------------------------------------------
+Owner / Director:
+- Compliance score by project, risk alerts, expired certificates
+- Financial exposure: uninsured work or missing documents
+
+CFO:
+- VAT compliance by country, invoice completeness, payment status
+
+COO / Ops:
+- Pre-start readiness checklist, site safety plan status
+
+Site Lead:
+- Daily checklist, toolbox talks, incident reporting
+
+------------------------------------------------------------------------------
+COMPLIANCE AUTOMATIONS
+------------------------------------------------------------------------------
+- Expiry alerts 30/60/90 days
+- Block job start if mandatory documents missing
+- Auto-attach relevant docs to invoices (where required)
+- One-click audit pack export (PDF + evidence list)
+
+------------------------------------------------------------------------------
+NEXT EXPANSION (OPTIONAL)
+------------------------------------------------------------------------------
+If you want, I can:
+1) Create trade-specific checklists per country (electrical, gas, HVAC).
+2) Add field-level invoice requirements per country.
+3) Add local/regional permit references by city/region.
+
+------------------------------------------------------------------------------
+TASK-BY-TASK BREAKDOWN (FULL PROGRAM)
+------------------------------------------------------------------------------
+Goal: Build complete EU5+UK+NL compliance bible, trade-by-trade.
+
+Phase 1: Country baseline (done, but to be deepened)
+Task 1.1: UK baseline (H&S, VAT, CIS, core certifications)
+Task 1.2: Netherlands baseline (Bbl, VAT, KVK, VCA)
+Task 1.3: Germany baseline (HwO, BaustellV, VAT)
+Task 1.4: France baseline (decennial, invoicing, RGE)
+Task 1.5: Spain baseline (PRL, RD 1627/1997, REA)
+Task 1.6: Italy baseline (D.Lgs 81/2008, DM 37/2008, DURC, e-invoicing)
+
+Phase 2: Trade modules (repeat for each country)
+Task 2.1: Electrical module (licenses, inspections, certificates)
+Task 2.2: Gas module (registration, commissioning, periodic checks)
+Task 2.3: Plumbing/HVAC module (tests, commissioning)
+Task 2.4: Roofing/height safety module (fall protection, methods)
+Task 2.5: Energy renovation / renewables module (labels, subsidies)
+Task 2.6: General contractor module (site safety + subcontractor control)
+
+Phase 3: Invoice field-level requirements
+Task 3.1: UK invoice mandatory fields (VAT + non-VAT)
+Task 3.2: NL invoice mandatory fields (BTW ID, VAT rates)
+Task 3.3: DE invoice mandatory fields (UStG 14)
+Task 3.4: FR invoice mandatory fields + insurance mention
+Task 3.5: ES invoice mandatory fields (AEAT)
+Task 3.6: IT e-invoice data fields (SdI)
+
+Phase 4: Compliance evidence packs (per trade)
+Task 4.1: Pre-job evidence pack
+Task 4.2: During-job evidence pack
+Task 4.3: Close-out evidence pack
+
+Phase 5: App mapping (single source of truth)
+Task 5.1: Data model finalized
+Task 5.2: Role-based views
+Task 5.3: Automations + alerts
+
+Phase 6: Regional variations (optional, after core)
+Task 6.1: Country regional permits (city/region)
+Task 6.2: Client-required certifications by sector
+
+------------------------------------------------------------------------------
+TASK 2.1 ELECTRICAL MODULE (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: electrical installations, testing, and compliance evidence by country.
+Output: app-ready checklist items + evidence docs to store.
+
+UK (England focus; Wales/Scotland/N. Ireland differ):
+- Building Regulations Part P (Approved Document P) applies to electrical
+  safety in dwellings and explains notification, design, inspection, testing.
+  Source: Approved Document P (GOV.UK)
+  https://www.gov.uk/government/publications/electrical-safety-approved-document-p
+- In rented homes, electrical installations must be inspected/tested at least
+  every 5 years by a qualified person; EICR is standard report.
+  Source: GOV.UK guidance on electrical safety standards
+  https://www.gov.uk/government/publications/electrical-safety-standards-in-the-private-and-social-rented-sectors-guidance/electrical-safety-standards-in-the-private-and-social-rented-sectors-guidance
+- Legal basis for rented sector standards: 2020 Regulations (England).
+  https://www.legislation.gov.uk/uksi/2020/312/contents
+Evidence to store:
+[] Competent person scheme registration (if applicable)
+[] Electrical Installation Certificate (EIC) / Minor Works Certificate
+[] EICR report + remedial works confirmation (if rental)
+
+Netherlands:
+- Working with electricity requires compliance with the Working Conditions
+  Act (Arbowet) and NEN standards; risk assessment and qualified staff.
+  Source: Business.gov.nl (RVO)
+  https://business.gov.nl/regulations/working-electricity/
+- NEN 1010: low-voltage electrical installations standard (installation,
+  expansion, adaptation).
+  Source: NEN standard page
+  https://www.nen.nl/en/nen-1010-2020-nl-272897
+- NEN 3140: safe operation of electrical installations and equipment.
+  Source: NEN standard page
+  https://www.nen.nl/en/nen-3140-2011-a3-2019-en-281305
+Evidence to store:
+[] NEN 1010 design/installation compliance evidence
+[] NEN 3140 work procedures + inspection logs
+[] Risk assessment (RI&E)
+
+Germany:
+- Electrical trade (Elektrotechniker) is a regulated craft in HwO Annex A,
+  requiring Handwerksrolle registration (Meister or equivalent).
+  Source: HwO Annex A
+  https://www.gesetze-im-internet.de/hwo/anlage_a.html
+- Low-voltage installation standards use DIN VDE 0100 series.
+  Source: VDE Verlag standard listing
+  https://www.vde-verlag.de/standards/0100149/din-vde-0100-100-vde-0100-100-2002-08.html
+Evidence to store:
+[] Handwerksrolle registration proof
+[] VDE 0100 compliance/testing documentation
+
+France:
+- NF C 15-100 is the core low-voltage installation standard (mandatory).
+  Source: AFNOR standard listing
+  https://www.boutique.afnor.org/fr-fr/norme/nf-c15100/installations-electriques-a-basse-tension-completee-avec-la-mise-a-jour-de-/fa005536/1556
+- CONSUEL issues Attestation de Conformite before first energization.
+  Source: CONSUEL official site
+  https://www.consuel.com/
+Evidence to store:
+[] NF C 15-100 compliance evidence (design/test)
+[] CONSUEL Attestation de Conformite (yellow/green/blue/violet as applicable)
+
+Spain:
+- REBT (Reglamento Electrotecnico para Baja Tension) via RD 842/2002 with
+  ITC-BT instructions governs low-voltage installations.
+  Source: BOE consolidated text
+  https://www.boe.es/buscar/act.php?id=BOE-A-2002-18099
+Evidence to store:
+[] REBT compliance documents (project/memoria, inspection)
+[] Installer accreditation per regional requirements
+
+Italy:
+- DM 37/2008 governs installation of systems inside buildings; requires
+  declaration of conformity for electrical installations.
+  Source: Gazzetta Ufficiale (DM 37/2008)
+  https://www.gazzettaufficiale.it/eli/id/2008/03/12/008G0060/sg
+Evidence to store:
+[] Declaration of Conformity (Dichiarazione di Conformita)
+[] Technical project/method statements as required
+
+------------------------------------------------------------------------------
+TASK 2.2 GAS MODULE (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: gas installations, commissioning, periodic checks, and evidence.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- Gas Safety (Installation and Use) Regulations 1998 (GSIUR).
+  Source: UK legislation
+  https://www.legislation.gov.uk/uksi/1998/2451/contents
+- Gas work requires Gas Safe registration.
+  Source: GOV.UK Gas Safe registration
+  https://www.gov.uk/find-licences/registration-to-carry-out-gas-work
+Evidence to store:
+[] Gas Safe registration + engineer ID scope
+[] Gas commissioning / safety check records
+[] Landlord gas safety records (if applicable)
+
+Netherlands:
+- Gas-related work must follow relevant NEN standards; safety work rules are
+  enforced via the Working Conditions Act and sector standards.
+  Source: Business.gov.nl (RVO) working with electricity guidance includes
+  NEN standards obligation (use same governance model for gas standards).
+  https://business.gov.nl/regulations/working-electricity/
+- Gas pipework guidance references NEN 1078/8078 via NPR 3378-4.
+  Source: NPR 3378-4 (NEN)
+  https://www.nen.nl/en/npr-3378-4-2023-nl-309845
+- Flue gas discharge systems: NEN 2757.
+  Source: NEN 2757-1
+  https://www.nen.nl/en/nen-2757-1-2019-nl-261560
+Evidence to store:
+[] NEN 1078/8078 compliance evidence (pipe sizing, materials)
+[] NPR 3378 guidance notes (if used)
+[] NEN 2757 flue system suitability checks
+
+Germany:
+- Gas installation technical rules are set by DVGW (e.g., TRGI/G 600).
+  Source: DVGW rules overview (DIN Media)
+  https://www.dinmedia.de/en/standards-products/dvgw
+Evidence to store:
+[] DVGW/TRGI compliance checklist
+[] Pressure/tightness test records
+
+France:
+- Domestic gas installations follow NF DTU 61.1 (AFNOR standard).
+  Source: NF DTU 61.1 (AFNOR)
+  https://www.boutique.afnor.org/en-gb/standard/nf-dtu-611-p2-a1/building-work-gas-installation-in-domestic-premises-part-2-technical-specif/fa140316/27767
+Evidence to store:
+[] NF DTU 61.1 compliance evidence
+[] Gas installation certificates as required by network operator
+
+Spain:
+- RD 919/2006 regulates distribution and use of gaseous fuels.
+  Source: BOE consolidated text
+  https://www.boe.es/buscar/act.php?id=BOE-A-2006-15345
+Evidence to store:
+[] Installer authorization / registration (regional)
+[] Gas installation commissioning certificate
+
+Italy:
+- DM 37/2008 regulates installation of systems in buildings (includes gas).
+  Source: Gazzetta Ufficiale (DM 37/2008)
+  https://www.gazzettaufficiale.it/eli/id/2008/03/12/008G0060/sg
+- UNI 7129 series governs domestic gas installations (UNI standard listing).
+  Source: UNI 7129-1 listing (2008 version replaced)
+  https://conto.uni.com/en/uni-7129-1-2008
+Evidence to store:
+[] Declaration of Conformity (gas system)
+[] UNI 7129 compliance evidence / commissioning records
+------------------------------------------------------------------------------
+TASK 2.3 PLUMBING + HVAC MODULE (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: water supply, sanitation, hot water, and HVAC systems installation,
+commissioning, maintenance, and evidence.
+Output: app-ready checklist items + evidence docs to store.
+
+UK (England focus; devolved nations differ):
+- Water Supply (Water Fittings) Regulations 1999 (requirements for water
+  fittings, installation, backflow prevention, notification).
+  Source: UK legislation
+  https://www.legislation.gov.uk/uksi/1999/1148/contents
+- Building Regulations Approved Document G covers sanitation, hot water safety,
+  and water efficiency.
+  Source: GOV.UK Approved Document G
+  https://www.gov.uk/government/publications/sanitation-hot-water-safety-and-water-efficiency-approved-document-g
+- HVAC refrigerants: F-gas rules apply to installation/servicing of equipment
+  containing F-gases (RAC, heat pumps).
+  Source: GOV.UK F-gas guidance collection
+  https://www.gov.uk/government/collections/eu-f-gas-regulation-guidance-for-users-producers-and-traders
+Evidence to store:
+[] Water fittings compliance / backflow protection evidence
+[] Hot water system design + commissioning record (temps/controls)
+[] Unvented cylinder installer qualification + commissioning certificate
+[] F-gas company/person certification + refrigerant handling log (if HVAC)
+
+Netherlands:
+- NEN 1006 sets minimum requirements for drinking water installations (design,
+  installation, and use).
+  Source: NEN 1006 standard listing
+  https://www.nen.nl/en/nen-1006-a1-2018-nl-246754
+- NEN-EN 806-1 covers installation inside buildings conveying water for human
+  consumption (European standard used in NL).
+  Source: NEN standard listing
+  https://www.nen.nl/en/nen-en-806-1-2000-en-46041
+- Bbl (Besluit bouwwerken leefomgeving) sets building requirements, including
+  building installations.
+  Source: Rijksoverheid Bbl
+  https://www.rijksoverheid.nl/onderwerpen/bouwregelgeving/besluit-bouwwerken-leefomgeving
+Evidence to store:
+[] NEN 1006 installation compliance evidence
+[] Pressure test / flush + commissioning record
+[] Legionella prevention plan or checks (if applicable)
+[] Maintenance log for HVAC equipment (if installed)
+
+Germany:
+- TRWI (technical rules for drinking water installations) references DIN EN 806
+  and DIN 1988 series, published by DVGW.
+  Source: DVGW Trinkwasserinstallation / TRWI overview
+  https://www.dvgw.de/themen/wasser/trinkwasser-installation?type=98
+Evidence to store:
+[] TRWI/DIN EN 806/DIN 1988 compliance checklist
+[] Pressure test + flushing/commissioning record
+[] Hot water hygiene checks / temperature control evidence (if applicable)
+
+France:
+- NF DTU 60.1 covers plumbing sanitary installations (hot/cold water, drainage,
+  sanitary appliances).
+  Source: AFNOR standard listing
+  https://www.boutique.afnor.org/fr-fr/norme/nf-dtu-601-p12/travaux-de-batiment-plomberie-sanitaire-pour-batiments-partie-12-criteres-g/fa166211/323132
+Evidence to store:
+[] NF DTU 60.1 compliance evidence
+[] Pressure test + commissioning record
+[] Hot water system settings + safety controls
+
+Spain:
+- Código Técnico de la Edificación (CTE) includes DB HS (Salubridad) with
+  HS 4 water supply requirements.
+  Source: BOE CTE (RD 314/2006)
+  https://www.boe.es/buscar/act.php?id=BOE-A-2006-5515
+- RITE regulates thermal installations in buildings (HVAC and domestic hot water).
+  Source: BOE RITE (RD 1027/2007)
+  https://www.boe.es/buscar/act.php?id=BOE-A-2007-15820
+Evidence to store:
+[] CTE DB HS compliance evidence (water supply design + materials)
+[] RITE installation/commissioning certificate + maintenance log
+[] Installer authorization (regional) for thermal systems (if required)
+
+Italy:
+- DM 37/2008 regulates installation of systems in buildings (includes water,
+  sanitary, and heating systems) and requires Declaration of Conformity.
+  Source: Gazzetta Ufficiale (DM 37/2008)
+  https://www.gazzettaufficiale.it/eli/id/2008/03/12/008G0060/sg
+- DPR 74/2013 defines rules for operation, maintenance, and inspection of
+  thermal systems (heating/cooling and DHW).
+  Source: Gazzetta Ufficiale (DPR 74/2013)
+  https://www.gazzettaufficiale.it/eli/id/2013/06/27/13G00114/sg
+Evidence to store:
+[] Declaration of Conformity for plumbing/heating systems
+[] Thermal system "libretto" + maintenance/inspection reports
+[] Commissioning/pressure test documentation
+------------------------------------------------------------------------------
+TASK 2.4 ROOFING / ENVELOPE / STRUCTURE MODULE (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: structural integrity, roof build-ups, waterproofing, insulation, and
+moisture protection. Evidence for compliance and as-built verification.
+Output: app-ready checklist items + evidence docs to store.
+
+UK (England focus; devolved nations differ):
+- Approved Document A (Structure) covers structural elements incl. roofs.
+  Source: GOV.UK Approved Document A
+  https://www.gov.uk/government/publications/structure-approved-document-a
+- Approved Document C covers resistance to moisture and contaminants.
+  Source: GOV.UK Approved Document C
+  https://www.gov.uk/government/publications/site-preparation-and-resistance-to-contaminates-and-moisture-approved-document-c
+- Approved Document L covers energy performance of building fabric.
+  Source: GOV.UK Approved Document L
+  https://www.gov.uk/government/publications/conservation-of-fuel-and-power-approved-document-l
+Evidence to store:
+[] Structural calculations + roof load design
+[] Roof waterproofing details + manufacturer data
+[] Insulation / U-value calculations + air-tightness test (if required)
+[] Damp-proofing and moisture control details
+
+Netherlands:
+- Bbl (Besluit bouwwerken leefomgeving) sets building requirements, including
+  structural safety, moisture protection, and energy performance.
+  Source: Rijksoverheid Bbl
+  https://www.rijksoverheid.nl/onderwerpen/bouwregelgeving/besluit-bouwwerken-leefomgeving
+Evidence to store:
+[] Structural calculations (Eurocode-based) + drawings
+[] Roof build-up + waterproofing system proof
+[] Thermal performance / insulation evidence
+
+Germany:
+- Building regulations are set by state Building Codes based on the Model
+  Building Code (MBO) and Technical Building Rules (MVV TB).
+  Source: DIBt overview
+  https://www.dibt.de/en/service/faqs/the-german-regulatory-system-for-construction-products-and-construction-techniques
+- GEG sets energy performance requirements for building envelope and systems.
+  Source: Gebäudeenergiegesetz (GEG)
+  https://www.gesetze-im-internet.de/geg/BJNR172810020.html
+Evidence to store:
+[] State building code compliance checklist (LBO/MBO references)
+[] Structural calculations + fire resistance class where required
+[] Roof waterproofing + insulation evidence (GEG)
+
+France:
+- NF DTU framework covers construction works standards, including DTU 40
+  roofing ("couverture") series under the NF DTU system.
+  Source: AFNOR Normalisation (NF DTU)
+  https://normalisation.afnor.org/thematiques/travaux-batiment-nf-dtu/
+Evidence to store:
+[] NF DTU roofing compliance evidence (material/system selection)
+[] Roof build-up + waterproofing test/inspection records
+[] Structural notes + insulation performance evidence
+
+Spain:
+- CTE (Código Técnico de la Edificación) covers structural safety (DB SE),
+  moisture protection (DB HS), and energy performance (DB HE).
+  Source: BOE CTE (RD 314/2006)
+  https://www.boe.es/buscar/act.php?id=BOE-A-2006-5515
+Evidence to store:
+[] CTE DB SE structural calculations
+[] CTE DB HS moisture protection / roof details
+[] CTE DB HE energy / insulation compliance evidence
+
+Italy:
+- NTC 2018 sets structural design requirements for buildings.
+  Source: Gazzetta Ufficiale (DM 17 gennaio 2018)
+  https://www.gazzettaufficiale.it/eli/id/2018/2/20/18A00716/sg
+Evidence to store:
+[] Structural calculations + NTC compliance statement
+[] Roof waterproofing system documentation
+[] Thermal performance documentation (if required)
+------------------------------------------------------------------------------
+TASK 2.5 ENERGY RENOVATION + RENEWABLES (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: energy performance, retrofit compliance, renewables integration (heat
+pumps, PV, solar thermal), and evidence for EPC/labels.
+Output: app-ready checklist items + evidence docs to store.
+
+UK (England focus; devolved nations differ):
+- Part L (Conservation of fuel and power) sets energy performance standards for
+  new and existing buildings.
+  Source: GOV.UK Approved Document L
+  https://www.gov.uk/government/publications/conservation-of-fuel-and-power-approved-document-l
+- Boiler Upgrade Scheme governs heat pump/biomass grants; requires EPC.
+  Source: GOV.UK Boiler Upgrade Scheme
+  https://www.gov.uk/apply-boiler-upgrade-scheme/check-if-youre-eligible
+Evidence to store:
+[] Part L compliance calculations (fabric + systems)
+[] EPC (valid) + post-renovation EPC
+[] Heat pump commissioning + installer evidence (if applicable)
+[] PV system design + commissioning certificate (if installed)
+
+Netherlands:
+- BENG energy performance requirements apply to new buildings and major
+  renovations; based on EPBD, assessed with NTA 8800.
+  Source: RVO BENG
+  https://www.rvo.nl/onderwerpen/wetten-en-regels-gebouwen/beng
+- BENG requirements are set in the Besluit Bouwwerken Leefomgeving (BBL).
+  Source: BBL (wetten.overheid.nl)
+  https://wetten.overheid.nl/BWBR0041297
+Evidence to store:
+[] BENG calculations (BENG 1/2/3) + NTA 8800 report
+[] EP-online registration + energy label (if required)
+[] Renewable system commissioning (PV/heat pump)
+
+Germany:
+- Gebäudeenergiegesetz (GEG) sets energy performance requirements for buildings
+  and technical systems (heating/cooling, hot water).
+  Source: GEG (gesetze-im-internet.de)
+  https://www.gesetze-im-internet.de/geg/BJNR172810020.html
+Evidence to store:
+[] GEG compliance calculations + retrofit scope
+[] Energy certificate (Energieausweis)
+[] Commissioning + efficiency settings for heat systems
+[] PV/renewables system documentation (if installed)
+
+France:
+- RE2020 is the environmental and energy regulation for new construction
+  (replacing RT2012), with energy + carbon metrics.
+  Source: Ministère de la Transition écologique (RE2020)
+  https://www.ecologie.gouv.fr/politiques-publiques/reglementation-environnementale-re2020
+Evidence to store:
+[] RE2020 compliance study (where applicable)
+[] Energy performance certificate (DPE)
+[] Renewable systems commissioning + maintenance plan
+
+Spain:
+- CTE includes DB HE (Ahorro de Energía) for energy performance and renewables.
+  Source: BOE CTE (RD 314/2006)
+  https://www.boe.es/buscar/act.php?id=BOE-A-2006-5515
+Evidence to store:
+[] CTE DB HE compliance report + energy calculations
+[] Commissioning certificate for thermal systems (if installed)
+[] PV/solar thermal system documentation (if installed)
+
+Italy:
+- D.Lgs 192/2005 transposes EPBD and sets energy performance rules; includes
+  APE (Attestato di Prestazione Energetica).
+  Source: Gazzetta Ufficiale (D.Lgs 192/2005)
+  https://www.gazzettaufficiale.it/eli/id/2005/10/15/05A09901/sg
+Evidence to store:
+[] APE before/after renovation (if required)
+[] Energy performance calculations + retrofit scope
+[] Renewable system commissioning + maintenance log
+------------------------------------------------------------------------------
+TASK 3.1 INVOICE FIELD-LEVEL REQUIREMENTS (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: required invoice fields per country, so the app can validate and
+auto-populate compliant invoices.
+Output: app-ready field checklist + evidence/doc links.
+
+UK:
+- GOV.UK invoice requirements for VAT invoicing and business invoicing.
+  Source: GOV.UK invoice requirements
+  https://www.gov.uk/invoicing-and-taking-payment-from-customers/invoices-what-they-must-include
+Required fields (typical):
+[] Unique invoice number
+[] Seller name, address, and contact details
+[] Buyer name and address
+[] Invoice date + supply date (tax point)
+[] Description of goods/services + quantity/price
+[] VAT rate, VAT amount, and totals (if VAT-registered)
+[] Total amount due + payment terms
+Evidence to store:
+[] VAT registration number (if applicable)
+[] Credit note/adjustment reference (if issued)
+
+Netherlands:
+- VAT invoice requirements (Belastingdienst).
+  Source: Belastingdienst invoice requirements
+  https://www.belastingdienst.nl/wps/wcm/connect/bldcontenten/belastingdienst/business/vat/vat_in_the_netherlands/vat_administration/invoice_requirements
+Required fields (typical):
+[] Supplier name + address + VAT ID
+[] Customer name + address
+[] Invoice date + invoice number
+[] Date of supply (if different)
+[] Description/quantity/price
+[] VAT rate + VAT amount + totals
+[] If reverse charge: statement + customer VAT ID
+Evidence to store:
+[] VAT ID verification (if reverse charge)
+[] Credit note reference
+
+Germany:
+- UStG Section 14: mandatory invoice information.
+  Source: UStG §14 (gesetze-im-internet.de)
+  https://www.gesetze-im-internet.de/ustg_1980/__14.html
+Required fields (typical):
+[] Seller name + address
+[] Buyer name + address
+[] Tax number or VAT ID
+[] Invoice date + sequential invoice number
+[] Description/quantity/price
+[] Date of supply/service
+[] VAT rate + VAT amount (or exemption note)
+[] Total amount due
+Evidence to store:
+[] VAT ID (if intra-EU supply)
+[] Reverse charge note (if applicable)
+
+France:
+- Mandatory invoice mentions for businesses.
+  Source: Service-Public invoice mentions
+  https://entreprendre.service-public.fr/vosdroits/F31808
+Required fields (typical):
+[] Seller name + address + SIREN/SIRET
+[] Buyer name + address
+[] Invoice number + date
+[] Description/quantity/unit price
+[] VAT rate + VAT amount (or exemption)
+[] Total amount due + payment terms
+[] Late payment penalties and recovery fee (if required)
+Evidence to store:
+[] VAT number (if applicable)
+[] Credit note reference
+
+Spain:
+- VAT invoicing obligations (Agencia Tributaria).
+  Source: Agencia Tributaria invoicing
+  https://sede.agenciatributaria.gob.es/Sede/en_gb/iva/facturacion-registro/facturacion-iva/obligacion-facturar.html
+Required fields (typical):
+[] Invoice number + date
+[] Seller name + address + NIF
+[] Buyer name + address + NIF (if required)
+[] Description/quantity/price
+[] VAT rate + VAT amount (or exemption)
+[] Total amount due
+Evidence to store:
+[] VAT exemption reference (if applicable)
+[] Credit note reference
+
+Italy:
+- Electronic invoicing and invoice obligations.
+  Source: Agenzia delle Entrate (Fatture e Corrispettivi)
+  https://www.agenziaentrate.gov.it/portale/schede/comunicazioni/fatture-e-corrispettivi/fatture-e-corrispettivi-st-imprese
+Required fields (typical):
+[] Supplier name + address + VAT number
+[] Customer name + address + VAT number / codice fiscale
+[] Invoice number + date
+[] Description/quantity/price
+[] VAT rate + VAT amount (or exemption code)
+[] Total amount due
+[] SDI/e-invoice transmission identifiers (where required)
+Evidence to store:
+[] SDI transmission receipt
+[] Credit note reference
+------------------------------------------------------------------------------
+TASK 3.2 INVOICE FORMATTING + E-INVOICING (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: e-invoicing formats, portals, and transmission rules (B2G/B2B).
+Output: app-ready formatting rules + routing identifiers.
+
+UK:
+- Electronic invoicing rules (HMRC VAT Notice 700/63). E-invoicing is optional,
+  must ensure authenticity/integrity/legibility; formats can be XML or PDF.
+  Source: HMRC VAT Notice 700/63
+  https://www.gov.uk/guidance/electronic-invoicing-notice-70063
+Formatting/transport notes:
+[] E-invoice same content as paper VAT invoice
+[] Ensure audit trail + secure transmission
+[] Customer agreement to e-invoicing
+
+Netherlands:
+- E-invoicing is mandatory for central government suppliers; more public bodies
+  require it by contract. Multiple sending methods incl. Peppol.
+  Source: Business.gov.nl (RVO) e-invoicing for government
+  https://business.gov.nl/regulation/e-invoicing-government-organisations/
+Formatting/transport notes:
+[] Use e-invoice channel (portal, software, or Peppol)
+[] Same legal requirements as paper invoice
+[] Government portal for occasional invoices
+
+Germany:
+- XRechnung is the national e-invoicing standard (XML) for federal authorities.
+  Source: E‑Rechnung Bund (XRechnung)
+  https://e-rechnung-bund.de/en/glossary/xrechnung/
+Formatting/transport notes:
+[] XRechnung XML required for federal B2G
+[] Include buyer reference (Leitweg-ID) for routing
+[] ZUGFeRD profile "XRECHNUNG" accepted in federal context
+
+France:
+- Chorus Pro is the official portal for B2G e-invoicing; supports Factur-X.
+  Source: Communauté Chorus Pro
+  https://communaute.chorus-pro.gouv.fr/electronic-invoice-issuer/?lang=en
+Formatting/transport notes:
+[] B2G invoices submitted via Chorus Pro
+[] Factur-X/structured formats supported
+
+Spain:
+- FACe is the general entry point for e-invoices to central government.
+  Source: Facturae portal (FACe)
+  https://www.facturae.gob.es/face
+- Facturae portal provides official format info and tools.
+  Source: Facturae portal
+  https://www.facturae.gob.es/
+Formatting/transport notes:
+[] B2G invoices must be submitted via FACe
+[] Facturae XML format used for B2G
+
+Italy:
+- SDI (Sistema di Interscambio) is the e-invoicing system managed by Agenzia
+  delle Entrate; accepts FatturaPA XML and routes to recipients.
+  Source: FatturaPA (SdI)
+  https://www.fatturapa.gov.it/it/sistemainterscambio/cose-il-sdi/
+Formatting/transport notes:
+[] FatturaPA XML required
+[] SDI performs validations + returns receipts/errors
+[] Use recipient code/PEC where required
+------------------------------------------------------------------------------
+ADDITIONAL TRADE MODULES (REQUESTED)
+------------------------------------------------------------------------------
+Note: Electrical is covered in Task 2.1. Plumbing/HVAC is covered in Task 2.3.
+
+------------------------------------------------------------------------------
+TASK 2.6 PAINTING / DECORATING (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: internal/external painting, coatings, surface prep, VOC exposure,
+hazardous substances handling, and waste disposal.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- COSHH requires control of hazardous substances (paints, solvents, dusts).
+  Source: HSE COSHH
+  https://www.hse.gov.uk/coshh/index.htm
+Evidence to store:
+[] COSHH risk assessment for paints/solvents/dust
+[] Safety Data Sheets (SDS) for coatings used
+[] PPE + ventilation method statement
+[] Waste disposal records for hazardous waste (if applicable)
+
+Netherlands:
+- Working Conditions Act (Arbowet) governs safe work and risk assessment.
+  Source: Arbeidsomstandighedenwet (wetten.overheid.nl)
+  https://wetten.overheid.nl/BWBR0010346/
+Evidence to store:
+[] RI&E risk assessment incl. hazardous substances
+[] SDS for coatings + application method
+[] PPE/ventilation plan + training record
+
+Germany:
+- Hazardous Substances Ordinance (GefStoffV) regulates handling of hazardous
+  substances and risk assessment.
+  Source: GefStoffV (gesetze-im-internet.de)
+  https://www.gesetze-im-internet.de/gefstoffv_2010/BJNR164400010.html
+Evidence to store:
+[] GefStoffV risk assessment + control measures
+[] SDS for coatings/solvents
+[] Worker instruction + PPE plan
+
+France:
+- Code du travail sets occupational safety and health obligations.
+  Source: Code du travail (code.travail.gouv.fr)
+  https://code.travail.gouv.fr/
+Evidence to store:
+[] Risk assessment (DUERP) for paints/solvents/dust
+[] SDS + ventilation/PPE plan
+[] Waste disposal proof for hazardous materials (if applicable)
+
+Spain:
+- PRL law governs occupational risk prevention.
+  Source: BOE PRL law
+  https://www.boe.es/buscar/act.php?id=BOE-A-1995-24292
+Evidence to store:
+[] Risk assessment + preventive plan
+[] SDS + PPE/ventilation plan
+[] Hazardous waste handling records
+
+Italy:
+- D.Lgs 81/2008 governs occupational health and safety.
+  Source: Gazzetta Ufficiale (D.Lgs 81/2008)
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+Evidence to store:
+[] Risk assessment (DVR) + method statement
+[] SDS for coatings/solvents
+[] PPE/ventilation plan + training record
+------------------------------------------------------------------------------
+TASK 2.7 CARPENTRY / JOINERY (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: structural/non-structural carpentry, timber framing, joinery, and dust
+control (wood dust), plus working-at-height safety.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- COSHH applies to wood dust and treated timber.
+  Source: HSE COSHH
+  https://www.hse.gov.uk/coshh/index.htm
+Evidence to store:
+[] COSHH assessment for wood dust/treated timber
+[] Dust extraction/ventilation plan
+[] PPE + tool safety checks
+
+Netherlands:
+- Arbowet governs safe work and risk assessment.
+  Source: Arbeidsomstandighedenwet
+  https://wetten.overheid.nl/BWBR0010346/
+Evidence to store:
+[] RI&E with wood dust + manual handling risks
+[] Dust extraction plan + PPE
+[] Tool inspection/maintenance log
+
+Germany:
+- GefStoffV applies to hazardous substances (e.g., wood dust categories).
+  Source: GefStoffV
+  https://www.gesetze-im-internet.de/gefstoffv_2010/BJNR164400010.html
+Evidence to store:
+[] GefStoffV assessment + controls for dust
+[] Extraction/ventilation plan + PPE
+
+France:
+- Code du travail covers occupational safety.
+  Source: Code du travail
+  https://code.travail.gouv.fr/
+Evidence to store:
+[] DUERP risk assessment (dust/height/manual handling)
+[] PPE + extraction plan
+
+Spain:
+- PRL law governs occupational risk prevention.
+  Source: BOE PRL law
+  https://www.boe.es/buscar/act.php?id=BOE-A-1995-24292
+Evidence to store:
+[] Risk assessment + preventive plan
+[] PPE + extraction plan
+
+Italy:
+- D.Lgs 81/2008 governs occupational health and safety.
+  Source: D.Lgs 81/2008
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+Evidence to store:
+[] DVR risk assessment + method statement
+[] PPE + dust control plan
+
+------------------------------------------------------------------------------
+TASK 2.8 FLOORING / TILING (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: tile/stone/wood flooring install, adhesives, silica dust control, and
+site safety.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- COSHH applies to silica dust and adhesives.
+  Source: HSE COSHH
+  https://www.hse.gov.uk/coshh/index.htm
+Evidence to store:
+[] COSHH assessment for dust/adhesives
+[] SDS for adhesives/grouts
+[] Dust control method + PPE
+
+Netherlands:
+- Arbowet governs safe work and risk assessment.
+  Source: Arbeidsomstandighedenwet
+  https://wetten.overheid.nl/BWBR0010346/
+Evidence to store:
+[] RI&E for silica dust + manual handling
+[] SDS for adhesives/grouts
+[] Dust control plan + PPE
+
+Germany:
+- GefStoffV applies to hazardous substances (dust, adhesives).
+  Source: GefStoffV
+  https://www.gesetze-im-internet.de/gefstoffv_2010/BJNR164400010.html
+Evidence to store:
+[] GefStoffV assessment + controls
+[] SDS + dust control plan
+
+France:
+- Code du travail covers occupational safety.
+  Source: Code du travail
+  https://code.travail.gouv.fr/
+Evidence to store:
+[] DUERP risk assessment
+[] SDS + dust control plan
+
+Spain:
+- PRL law governs occupational risk prevention.
+  Source: BOE PRL law
+  https://www.boe.es/buscar/act.php?id=BOE-A-1995-24292
+Evidence to store:
+[] Risk assessment + preventive plan
+[] SDS + dust control plan
+
+Italy:
+- D.Lgs 81/2008 governs occupational health and safety.
+  Source: D.Lgs 81/2008
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+Evidence to store:
+[] DVR risk assessment + method statement
+[] SDS + dust control plan
+
+------------------------------------------------------------------------------
+TASK 2.9 PLASTERING / DRYWALL (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: plasterboard install, joint compounds, sanding dust control, and
+working-at-height safety.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- COSHH applies to dust and compounds.
+  Source: HSE COSHH
+  https://www.hse.gov.uk/coshh/index.htm
+Evidence to store:
+[] COSHH assessment for dust/compounds
+[] SDS for joint compounds
+[] Dust control plan + PPE
+
+Netherlands:
+- Arbowet governs safe work and risk assessment.
+  Source: Arbeidsomstandighedenwet
+  https://wetten.overheid.nl/BWBR0010346/
+Evidence to store:
+[] RI&E for dust exposure
+[] SDS for compounds
+[] Dust control plan + PPE
+
+Germany:
+- GefStoffV applies to hazardous substances (dust, compounds).
+  Source: GefStoffV
+  https://www.gesetze-im-internet.de/gefstoffv_2010/BJNR164400010.html
+Evidence to store:
+[] GefStoffV assessment + controls
+[] SDS + dust control plan
+
+France:
+- Code du travail covers occupational safety.
+  Source: Code du travail
+  https://code.travail.gouv.fr/
+Evidence to store:
+[] DUERP risk assessment
+[] SDS + dust control plan
+
+Spain:
+- PRL law governs occupational risk prevention.
+  Source: BOE PRL law
+  https://www.boe.es/buscar/act.php?id=BOE-A-1995-24292
+Evidence to store:
+[] Risk assessment + preventive plan
+[] SDS + dust control plan
+
+Italy:
+- D.Lgs 81/2008 governs occupational health and safety.
+  Source: D.Lgs 81/2008
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+Evidence to store:
+[] DVR risk assessment + method statement
+[] SDS + dust control plan
+
+------------------------------------------------------------------------------
+TASK 2.10 GLAZING / WINDOWS (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: window/door glazing, safety glass handling, height work, and sealing.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- COSHH applies to sealants/adhesives; general H&S controls for handling glass.
+  Source: HSE COSHH
+  https://www.hse.gov.uk/coshh/index.htm
+Evidence to store:
+[] COSHH assessment for sealants
+[] Handling/lifting plan for glass
+[] PPE + site safety method statement
+
+Netherlands:
+- Arbowet governs safe work and risk assessment.
+  Source: Arbeidsomstandighedenwet
+  https://wetten.overheid.nl/BWBR0010346/
+Evidence to store:
+[] RI&E for manual handling + glass breakage risks
+[] SDS for sealants
+[] PPE + lifting plan
+
+Germany:
+- GefStoffV applies to hazardous substances (sealants).
+  Source: GefStoffV
+  https://www.gesetze-im-internet.de/gefstoffv_2010/BJNR164400010.html
+Evidence to store:
+[] GefStoffV assessment + controls
+[] SDS + handling plan
+
+France:
+- Code du travail covers occupational safety.
+  Source: Code du travail
+  https://code.travail.gouv.fr/
+Evidence to store:
+[] DUERP risk assessment
+[] SDS + handling plan
+
+Spain:
+- PRL law governs occupational risk prevention.
+  Source: BOE PRL law
+  https://www.boe.es/buscar/act.php?id=BOE-A-1995-24292
+Evidence to store:
+[] Risk assessment + preventive plan
+[] SDS + handling plan
+
+Italy:
+- D.Lgs 81/2008 governs occupational health and safety.
+  Source: D.Lgs 81/2008
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+Evidence to store:
+[] DVR risk assessment + method statement
+[] SDS + handling plan
+------------------------------------------------------------------------------
+TASK 2.11 INSULATION (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: thermal/acoustic insulation install, fiber handling, dust control, and
+fire-rated assemblies.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- COSHH applies to insulation fibers and adhesives.
+  Source: HSE COSHH
+  https://www.hse.gov.uk/coshh/index.htm
+Evidence to store:
+[] COSHH assessment for fibers/adhesives
+[] SDS for insulation products
+[] PPE + dust control method statement
+
+Netherlands:
+- Arbowet governs safe work and risk assessment.
+  Source: Arbeidsomstandighedenwet
+  https://wetten.overheid.nl/BWBR0010346/
+Evidence to store:
+[] RI&E for fiber exposure
+[] SDS for insulation products
+[] PPE + dust control plan
+
+Germany:
+- GefStoffV applies to hazardous substances (fibers/dust).
+  Source: GefStoffV
+  https://www.gesetze-im-internet.de/gefstoffv_2010/BJNR164400010.html
+Evidence to store:
+[] GefStoffV assessment + controls
+[] SDS + PPE plan
+
+France:
+- Code du travail covers occupational safety.
+  Source: Code du travail
+  https://code.travail.gouv.fr/
+Evidence to store:
+[] DUERP risk assessment
+[] SDS + PPE plan
+
+Spain:
+- PRL law governs occupational risk prevention.
+  Source: BOE PRL law
+  https://www.boe.es/buscar/act.php?id=BOE-A-1995-24292
+Evidence to store:
+[] Risk assessment + preventive plan
+[] SDS + PPE plan
+
+Italy:
+- D.Lgs 81/2008 governs occupational health and safety.
+  Source: D.Lgs 81/2008
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+Evidence to store:
+[] DVR risk assessment + method statement
+[] SDS + PPE plan
+
+------------------------------------------------------------------------------
+TASK 2.12 MASONRY / BRICKWORK (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: block/brick laying, mortar handling, silica dust control, and site
+stability.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- COSHH applies to silica dust and cementitious products.
+  Source: HSE COSHH
+  https://www.hse.gov.uk/coshh/index.htm
+Evidence to store:
+[] COSHH assessment for dust/cement
+[] SDS for mortar/cement
+[] Dust control + PPE plan
+
+Netherlands:
+- Arbowet governs safe work and risk assessment.
+  Source: Arbeidsomstandighedenwet
+  https://wetten.overheid.nl/BWBR0010346/
+Evidence to store:
+[] RI&E for silica dust/manual handling
+[] SDS for mortar/cement
+[] PPE + dust control plan
+
+Germany:
+- GefStoffV applies to hazardous substances (dust/cement).
+  Source: GefStoffV
+  https://www.gesetze-im-internet.de/gefstoffv_2010/BJNR164400010.html
+Evidence to store:
+[] GefStoffV assessment + controls
+[] SDS + dust control plan
+
+France:
+- Code du travail covers occupational safety.
+  Source: Code du travail
+  https://code.travail.gouv.fr/
+Evidence to store:
+[] DUERP risk assessment
+[] SDS + dust control plan
+
+Spain:
+- PRL law governs occupational risk prevention.
+  Source: BOE PRL law
+  https://www.boe.es/buscar/act.php?id=BOE-A-1995-24292
+Evidence to store:
+[] Risk assessment + preventive plan
+[] SDS + dust control plan
+
+Italy:
+- D.Lgs 81/2008 governs occupational health and safety.
+  Source: D.Lgs 81/2008
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+Evidence to store:
+[] DVR risk assessment + method statement
+[] SDS + dust control plan
+
+------------------------------------------------------------------------------
+TASK 2.13 CONCRETE / STRUCTURAL WORKS (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: concrete placement, formwork, reinforcement, and curing safety.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- COSHH applies to wet cement (skin/respiratory hazards).
+  Source: HSE COSHH
+  https://www.hse.gov.uk/coshh/index.htm
+Evidence to store:
+[] COSHH assessment for wet cement
+[] SDS for cement/admixtures
+[] PPE + wash stations plan
+
+Netherlands:
+- Arbowet governs safe work and risk assessment.
+  Source: Arbeidsomstandighedenwet
+  https://wetten.overheid.nl/BWBR0010346/
+Evidence to store:
+[] RI&E for wet cement + manual handling
+[] SDS for cement/admixtures
+[] PPE + site safety plan
+
+Germany:
+- GefStoffV applies to hazardous substances (cement, additives).
+  Source: GefStoffV
+  https://www.gesetze-im-internet.de/gefstoffv_2010/BJNR164400010.html
+Evidence to store:
+[] GefStoffV assessment + controls
+[] SDS + PPE plan
+
+France:
+- Code du travail covers occupational safety.
+  Source: Code du travail
+  https://code.travail.gouv.fr/
+Evidence to store:
+[] DUERP risk assessment
+[] SDS + PPE plan
+
+Spain:
+- PRL law governs occupational risk prevention.
+  Source: BOE PRL law
+  https://www.boe.es/buscar/act.php?id=BOE-A-1995-24292
+Evidence to store:
+[] Risk assessment + preventive plan
+[] SDS + PPE plan
+
+Italy:
+- D.Lgs 81/2008 governs occupational health and safety.
+  Source: D.Lgs 81/2008
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+Evidence to store:
+[] DVR risk assessment + method statement
+[] SDS + PPE plan
+
+------------------------------------------------------------------------------
+TASK 2.14 DEMOLITION / STRIP-OUT (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: demolition, strip-out, dust/noise control, and hazardous materials
+handling.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- COSHH applies to dust and hazardous materials.
+  Source: HSE COSHH
+  https://www.hse.gov.uk/coshh/index.htm
+Evidence to store:
+[] COSHH assessment for dust/hazardous materials
+[] Dust suppression plan + PPE
+[] Waste disposal records (incl. hazardous waste)
+
+Netherlands:
+- Arbowet governs safe work and risk assessment.
+  Source: Arbeidsomstandighedenwet
+  https://wetten.overheid.nl/BWBR0010346/
+Evidence to store:
+[] RI&E for demolition hazards
+[] Dust/noise control plan
+[] Waste disposal records
+
+Germany:
+- GefStoffV applies to hazardous substances (dusts/contaminants).
+  Source: GefStoffV
+  https://www.gesetze-im-internet.de/gefstoffv_2010/BJNR164400010.html
+Evidence to store:
+[] GefStoffV assessment + controls
+[] Waste disposal records
+
+France:
+- Code du travail covers occupational safety.
+  Source: Code du travail
+  https://code.travail.gouv.fr/
+Evidence to store:
+[] DUERP risk assessment
+[] Dust/noise control plan
+[] Waste disposal records
+
+Spain:
+- PRL law governs occupational risk prevention.
+  Source: BOE PRL law
+  https://www.boe.es/buscar/act.php?id=BOE-A-1995-24292
+Evidence to store:
+[] Risk assessment + preventive plan
+[] Dust/noise control plan
+[] Waste disposal records
+
+Italy:
+- D.Lgs 81/2008 governs occupational health and safety.
+  Source: D.Lgs 81/2008
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+Evidence to store:
+[] DVR risk assessment + method statement
+[] Dust/noise control plan
+[] Waste disposal records
+
+------------------------------------------------------------------------------
+TASK 2.15 SCAFFOLDING / WORK-AT-HEIGHT (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: scaffolding erection, fall protection, and inspection routines.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- COSHH not primary; fall protection governed under general H&S duties.
+  Source: HSE COSHH (for any hazardous substances used)
+  https://www.hse.gov.uk/coshh/index.htm
+Evidence to store:
+[] Scaffolding inspection log
+[] Fall protection method statement
+[] Competency/training records
+
+Netherlands:
+- Arbowet governs safe work and risk assessment.
+  Source: Arbeidsomstandighedenwet
+  https://wetten.overheid.nl/BWBR0010346/
+Evidence to store:
+[] RI&E for work-at-height
+[] Scaffolding inspection log
+[] Training records
+
+Germany:
+- GefStoffV not primary; apply general safety requirements via risk assessment.
+  Source: GefStoffV (for hazardous substances)
+  https://www.gesetze-im-internet.de/gefstoffv_2010/BJNR164400010.html
+Evidence to store:
+[] Risk assessment + scaffold inspection log
+[] Training/competency proof
+
+France:
+- Code du travail covers occupational safety.
+  Source: Code du travail
+  https://code.travail.gouv.fr/
+Evidence to store:
+[] DUERP risk assessment
+[] Scaffolding inspection log
+[] Training records
+
+Spain:
+- PRL law governs occupational risk prevention.
+  Source: BOE PRL law
+  https://www.boe.es/buscar/act.php?id=BOE-A-1995-24292
+Evidence to store:
+[] Risk assessment + preventive plan
+[] Scaffolding inspection log
+[] Training records
+
+Italy:
+- D.Lgs 81/2008 governs occupational health and safety.
+  Source: D.Lgs 81/2008
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+Evidence to store:
+[] DVR risk assessment + method statement
+[] Scaffolding inspection log
+[] Training records
+
+------------------------------------------------------------------------------
+TASK 2.16 METALWORK / WELDING (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: metal fabrication, welding fumes, hot works, and fire risk controls.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- COSHH applies to welding fumes.
+  Source: HSE COSHH
+  https://www.hse.gov.uk/coshh/index.htm
+Evidence to store:
+[] COSHH assessment for welding fumes
+[] Hot works permit + fire watch plan
+[] PPE + ventilation/extraction plan
+
+Netherlands:
+- Arbowet governs safe work and risk assessment.
+  Source: Arbeidsomstandighedenwet
+  https://wetten.overheid.nl/BWBR0010346/
+Evidence to store:
+[] RI&E for welding fumes + hot works
+[] PPE + extraction plan
+[] Hot works permit
+
+Germany:
+- GefStoffV applies to welding fumes.
+  Source: GefStoffV
+  https://www.gesetze-im-internet.de/gefstoffv_2010/BJNR164400010.html
+Evidence to store:
+[] GefStoffV assessment + controls
+[] PPE + extraction plan
+[] Hot works permit
+
+France:
+- Code du travail covers occupational safety.
+  Source: Code du travail
+  https://code.travail.gouv.fr/
+Evidence to store:
+[] DUERP risk assessment
+[] PPE + extraction plan
+[] Hot works permit
+
+Spain:
+- PRL law governs occupational risk prevention.
+  Source: BOE PRL law
+  https://www.boe.es/buscar/act.php?id=BOE-A-1995-24292
+Evidence to store:
+[] Risk assessment + preventive plan
+[] PPE + extraction plan
+[] Hot works permit
+
+Italy:
+- D.Lgs 81/2008 governs occupational health and safety.
+  Source: D.Lgs 81/2008
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+Evidence to store:
+[] DVR risk assessment + method statement
+[] PPE + extraction plan
+[] Hot works permit
+
+------------------------------------------------------------------------------
+TASK 2.17 WATERPROOFING / SEALANTS (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: membranes, sealants, damp-proofing, and solvent handling.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- COSHH applies to sealants/solvents.
+  Source: HSE COSHH
+  https://www.hse.gov.uk/coshh/index.htm
+Evidence to store:
+[] COSHH assessment for sealants/solvents
+[] SDS + PPE plan
+[] Ventilation method statement
+
+Netherlands:
+- Arbowet governs safe work and risk assessment.
+  Source: Arbeidsomstandighedenwet
+  https://wetten.overheid.nl/BWBR0010346/
+Evidence to store:
+[] RI&E + SDS for sealants
+[] PPE + ventilation plan
+
+Germany:
+- GefStoffV applies to hazardous substances (sealants/solvents).
+  Source: GefStoffV
+  https://www.gesetze-im-internet.de/gefstoffv_2010/BJNR164400010.html
+Evidence to store:
+[] GefStoffV assessment + controls
+[] SDS + PPE plan
+
+France:
+- Code du travail covers occupational safety.
+  Source: Code du travail
+  https://code.travail.gouv.fr/
+Evidence to store:
+[] DUERP risk assessment
+[] SDS + PPE plan
+
+Spain:
+- PRL law governs occupational risk prevention.
+  Source: BOE PRL law
+  https://www.boe.es/buscar/act.php?id=BOE-A-1995-24292
+Evidence to store:
+[] Risk assessment + preventive plan
+[] SDS + PPE plan
+
+Italy:
+- D.Lgs 81/2008 governs occupational health and safety.
+  Source: D.Lgs 81/2008
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+Evidence to store:
+[] DVR risk assessment + method statement
+[] SDS + PPE plan
+------------------------------------------------------------------------------
+TASK 2.18 GROUNDWORKS / EXCAVATION (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: excavation, trench safety, soil handling, and utility avoidance.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- General H&S duties; COSHH applies if contaminated soils present.
+  Source: HSE COSHH
+  https://www.hse.gov.uk/coshh/index.htm
+Evidence to store:
+[] Risk assessment for excavation + collapse prevention
+[] Utility locate records + permit-to-dig
+[] Soil contamination assessment (if applicable)
+
+Netherlands:
+- Arbowet governs safe work and risk assessment.
+  Source: Arbeidsomstandighedenwet
+  https://wetten.overheid.nl/BWBR0010346/
+Evidence to store:
+[] RI&E for excavation hazards
+[] Utility locate + permit-to-dig
+[] Soil contamination plan (if applicable)
+
+Germany:
+- GefStoffV applies if contaminated soils/hazardous substances present.
+  Source: GefStoffV
+  https://www.gesetze-im-internet.de/gefstoffv_2010/BJNR164400010.html
+Evidence to store:
+[] Risk assessment + trench safety plan
+[] Utility locate records
+[] Soil contamination documentation (if applicable)
+
+France:
+- Code du travail covers occupational safety.
+  Source: Code du travail
+  https://code.travail.gouv.fr/
+Evidence to store:
+[] DUERP risk assessment
+[] Utility locate + excavation method statement
+[] Soil contamination plan (if applicable)
+
+Spain:
+- PRL law governs occupational risk prevention.
+  Source: BOE PRL law
+  https://www.boe.es/buscar/act.php?id=BOE-A-1995-24292
+Evidence to store:
+[] Risk assessment + preventive plan
+[] Utility locate + excavation method statement
+[] Soil contamination plan (if applicable)
+
+Italy:
+- D.Lgs 81/2008 governs occupational health and safety.
+  Source: D.Lgs 81/2008
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+Evidence to store:
+[] DVR risk assessment + method statement
+[] Utility locate + permit-to-dig
+[] Soil contamination documentation (if applicable)
+
+------------------------------------------------------------------------------
+TASK 2.19 PAVING / LANDSCAPING (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: paving, hardscaping, landscaping, and equipment safety.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- COSHH applies to dusts, fuels, and chemicals (e.g., herbicides).
+  Source: HSE COSHH
+  https://www.hse.gov.uk/coshh/index.htm
+Evidence to store:
+[] COSHH assessment for dust/chemicals
+[] Equipment safety checks
+[] PPE + method statement
+
+Netherlands:
+- Arbowet governs safe work and risk assessment.
+  Source: Arbeidsomstandighedenwet
+  https://wetten.overheid.nl/BWBR0010346/
+Evidence to store:
+[] RI&E for equipment/manual handling
+[] PPE + method statement
+
+Germany:
+- GefStoffV applies to hazardous substances (chemicals).
+  Source: GefStoffV
+  https://www.gesetze-im-internet.de/gefstoffv_2010/BJNR164400010.html
+Evidence to store:
+[] GefStoffV assessment (chemicals)
+[] PPE + equipment checks
+
+France:
+- Code du travail covers occupational safety.
+  Source: Code du travail
+  https://code.travail.gouv.fr/
+Evidence to store:
+[] DUERP risk assessment
+[] PPE + method statement
+
+Spain:
+- PRL law governs occupational risk prevention.
+  Source: BOE PRL law
+  https://www.boe.es/buscar/act.php?id=BOE-A-1995-24292
+Evidence to store:
+[] Risk assessment + preventive plan
+[] PPE + method statement
+
+Italy:
+- D.Lgs 81/2008 governs occupational health and safety.
+  Source: D.Lgs 81/2008
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+Evidence to store:
+[] DVR risk assessment + method statement
+[] PPE + equipment checks
+
+------------------------------------------------------------------------------
+TASK 2.20 FIRE PROTECTION (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: fire stopping, fire doors, alarms, sprinklers, and certification.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- Follow building control/fire safety requirements; document test certs.
+  Source: GOV.UK Building Regulations (Approved Documents index)
+  https://www.gov.uk/guidance/building-regulations-and-approved-documents-index
+Evidence to store:
+[] Fire-stopping product certification
+[] Installation records + inspection sign-off
+[] Fire alarm/sprinkler commissioning certificates
+
+Netherlands:
+- Bbl sets building requirements including fire safety.
+  Source: Bbl (Rijksoverheid)
+  https://www.rijksoverheid.nl/onderwerpen/bouwregelgeving/besluit-bouwwerken-leefomgeving
+Evidence to store:
+[] Fire-stopping system documentation
+[] Commissioning certificates for alarms/suppression
+
+Germany:
+- State building codes (LBO) set fire safety requirements.
+  Source: DIBt overview (MBO/LBO)
+  https://www.dibt.de/en/service/faqs/the-german-regulatory-system-for-construction-products-and-construction-techniques
+Evidence to store:
+[] Fire-stopping product approvals (abZ/abP if required)
+[] Commissioning certificates
+
+France:
+- Fire safety rules under building regulations; document product approvals.
+  Source: Code du travail (general safety info)
+  https://code.travail.gouv.fr/
+Evidence to store:
+[] Fire-stopping product certification
+[] Commissioning certificates
+
+Spain:
+- CTE includes fire safety (DB SI).
+  Source: BOE CTE (RD 314/2006)
+  https://www.boe.es/buscar/act.php?id=BOE-A-2006-5515
+Evidence to store:
+[] DB SI compliance evidence
+[] Commissioning certificates
+
+Italy:
+- Fire safety rules under national regulations; document approvals.
+  Source: D.Lgs 81/2008 (safety framework)
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+Evidence to store:
+[] Fire-stopping product certification
+[] Commissioning certificates
+
+------------------------------------------------------------------------------
+TASK 2.21 SOLAR / PV INSTALLATION (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: solar PV and solar thermal installation, commissioning, and safety.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- Follow Part L energy requirements; ensure electrical safety compliance.
+  Source: GOV.UK Approved Document L
+  https://www.gov.uk/government/publications/conservation-of-fuel-and-power-approved-document-l
+Evidence to store:
+[] System design + commissioning certificate
+[] Electrical compliance evidence (if applicable)
+[] O&M manual + warranty
+
+Netherlands:
+- BENG/BBL energy performance requirements.
+  Source: RVO BENG / BBL
+  https://www.rvo.nl/onderwerpen/wetten-en-regels-gebouwen/beng
+Evidence to store:
+[] PV design + commissioning certificate
+[] BENG calculation impact
+
+Germany:
+- GEG energy performance requirements.
+  Source: GEG
+  https://www.gesetze-im-internet.de/geg/BJNR172810020.html
+Evidence to store:
+[] PV design + commissioning certificate
+[] Energy performance documentation
+
+France:
+- RE2020 energy/environment requirements.
+  Source: RE2020
+  https://www.ecologie.gouv.fr/politiques-publiques/reglementation-environnementale-re2020
+Evidence to store:
+[] PV design + commissioning certificate
+[] RE2020 compliance impact
+
+Spain:
+- CTE DB HE energy requirements.
+  Source: BOE CTE (RD 314/2006)
+  https://www.boe.es/buscar/act.php?id=BOE-A-2006-5515
+Evidence to store:
+[] PV/solar thermal commissioning certificate
+[] DB HE compliance evidence
+
+Italy:
+- D.Lgs 192/2005 energy performance rules.
+  Source: D.Lgs 192/2005
+  https://www.gazzettaufficiale.it/eli/id/2005/10/15/05A09901/sg
+Evidence to store:
+[] PV/solar thermal commissioning certificate
+[] APE impact (if required)
+
+------------------------------------------------------------------------------
+TASK 2.22 ELEVATORS / LIFTS (DEEP DIVE)
+------------------------------------------------------------------------------
+Purpose: lift installation, safety certification, and periodic inspections.
+Output: app-ready checklist items + evidence docs to store.
+
+UK:
+- Follow building control and safety standards; keep inspection certificates.
+  Source: GOV.UK Building Regulations index
+  https://www.gov.uk/guidance/building-regulations-and-approved-documents-index
+Evidence to store:
+[] Installation certificate + commissioning report
+[] Periodic inspection/maintenance logs
+
+Netherlands:
+- Bbl sets building requirements; keep inspection certificates.
+  Source: Bbl
+  https://www.rijksoverheid.nl/onderwerpen/bouwregelgeving/besluit-bouwwerken-leefomgeving
+Evidence to store:
+[] Installation certificate
+[] Periodic inspection/maintenance logs
+
+Germany:
+- State building codes and technical rules apply.
+  Source: DIBt overview
+  https://www.dibt.de/en/service/faqs/the-german-regulatory-system-for-construction-products-and-construction-techniques
+Evidence to store:
+[] Installation certificate
+[] Periodic inspection/maintenance logs
+
+France:
+- National safety obligations; keep inspection certificates.
+  Source: Code du travail (general safety info)
+  https://code.travail.gouv.fr/
+Evidence to store:
+[] Installation certificate
+[] Periodic inspection/maintenance logs
+
+Spain:
+- CTE and safety obligations apply; keep inspection certificates.
+  Source: BOE CTE (RD 314/2006)
+  https://www.boe.es/buscar/act.php?id=BOE-A-2006-5515
+Evidence to store:
+[] Installation certificate
+[] Periodic inspection/maintenance logs
+
+Italy:
+- Safety obligations apply; keep inspection certificates.
+  Source: D.Lgs 81/2008
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+Evidence to store:
+[] Installation certificate
+[] Periodic inspection/maintenance logs
+
+------------------------------------------------------------------------------
+TRADE-SPECIFIC LICENSING / CERTIFICATION LAYER (COUNTRY RULES)
+------------------------------------------------------------------------------
+Purpose: map which trades require formal registration/certification beyond
+general safety compliance. Applies to all trade modules in this bible.
+Output: app-ready "must-have" credential checks + evidence docs.
+
+UK (England focus; devolved nations differ):
+- Gas work: Gas Safe registration required.
+  Source: GOV.UK Gas Safe registration
+  https://www.gov.uk/find-licences/registration-to-carry-out-gas-work
+- Electrical notifiable work in dwellings: use Competent Person Scheme.
+  Source: GOV.UK competent person scheme (Part P)
+  https://www.gov.uk/building-regulations-approval/use-a-competent-person-scheme
+- HVAC with refrigerants: F-gas qualification/company certification required.
+  Source: GOV.UK F-gas guidance
+  https://www.gov.uk/government/collections/eu-f-gas-regulation-guidance-for-users-producers-and-traders
+Evidence to store:
+[] Gas Safe registration (scope)
+[] Competent Person Scheme ID (electrical)
+[] F-gas certificates (person + company)
+[] Building control approval where required
+
+Netherlands:
+- Companies must be registered with KVK; safety certification (VCA) often
+  required by clients for construction work.
+  Source: KVK registration + VCA certificate
+  https://business.gov.nl/starting-your-business/registering-your-business/registration-at-the-netherlands-chamber-of-commerce-kvk/
+  https://business.gov.nl/staff/health-and-safety/certificate-for-working-safely-vca/
+- Technical installations must comply with NEN standards via Bbl.
+  Source: Bbl (Rijksoverheid)
+  https://www.rijksoverheid.nl/onderwerpen/bouwregelgeving/besluit-bouwwerken-leefomgeving
+Evidence to store:
+[] KVK registration extract
+[] VCA certificate (if required by client)
+[] NEN compliance evidence for electrical/plumbing/HVAC
+
+Germany:
+- Regulated crafts listed in HwO Annex A require Handwerksrolle registration
+  (typically Meister or equivalent). Many construction trades fall here.
+  Source: HwO Annex A (regulated trades)
+  https://www.gesetze-im-internet.de/hwo/anlage_a.html
+- Building requirements via state building codes (LBO) based on MBO.
+  Source: DIBt overview (MBO/LBO)
+  https://www.dibt.de/en/service/faqs/the-german-regulatory-system-for-construction-products-and-construction-techniques
+Evidence to store:
+[] Handwerksrolle registration proof (if trade is Annex A)
+[] Meister/equivalent qualification (where required)
+[] Project approval/permit docs from local authority
+
+France:
+- Decennial liability insurance is mandatory for many building trades.
+  Source: Service-Public decennial liability
+  https://www.service-public.fr/particuliers/vosdroits/F2034
+- RGE label required for energy-renovation incentives (insulation/heat pumps/PV).
+  Source: RGE label (Service-Public)
+  https://entreprendre.service-public.fr/vosdroits/F32251?lang=en
+Evidence to store:
+[] Decennial insurance certificate
+[] RGE certificate (if energy-renovation work)
+[] DUERP risk assessment (per Code du travail)
+
+Spain:
+- Construction companies must be registered in REA for construction sector work.
+  Source: REA registry
+  https://expinterweb.mites.gob.es/rea/
+- CTE applies to building works; PRL applies to safety.
+  Source: CTE / PRL
+  https://www.boe.es/buscar/act.php?id=BOE-A-2006-5515
+  https://www.boe.es/buscar/act.php?id=BOE-A-1995-24292
+Evidence to store:
+[] REA registration
+[] CTE compliance evidence for relevant works
+[] PRL risk assessment + preventive plan
+
+Italy:
+- DM 37/2008 requires qualified companies for installation systems
+  (electrical, gas, plumbing, HVAC).
+  Source: DM 37/2008
+  https://www.gazzettaufficiale.it/eli/id/2008/03/12/008G0060/sg
+- D.Lgs 81/2008 applies to safety compliance.
+  Source: D.Lgs 81/2008
+  https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+Evidence to store:
+[] Qualified company declaration (DM 37/2008) for installations
+[] DVR risk assessment + training evidence
+
+------------------------------------------------------------------------------
+TRADE-BY-TRADE CREDENTIAL CHECKS (APP-READY, BY COUNTRY)
+------------------------------------------------------------------------------
+Note: Some trades rely on general construction registration + safety law only.
+Where official trade registries are required, they are listed below.
+
+UK (England focus; devolved nations differ):
+- Electrical (dwelling notifiable work): Competent Person Scheme (Part P).
+  Source: GOV.UK competent person scheme
+  https://www.gov.uk/building-regulations-approval/use-a-competent-person-scheme
+- Gas: Gas Safe registration.
+  Source: GOV.UK Gas Safe registration
+  https://www.gov.uk/find-licences/registration-to-carry-out-gas-work
+- HVAC with refrigerants: F-gas qualification/company certification.
+  Source: GOV.UK F-gas guidance
+  https://www.gov.uk/government/collections/eu-f-gas-regulation-guidance-for-users-producers-and-traders
+Checks to implement:
+[] Electrical work: Competent Person Scheme ID (if not using Building Control)
+[] Gas work: Gas Safe registration + scope
+[] Refrigerants: F-gas certificates (person + company)
+
+Netherlands:
+- All trades: KVK registration; VCA often required by clients.
+  Source: KVK registration / VCA certificate
+  https://business.gov.nl/starting-your-business/registering-your-business/registration-at-the-netherlands-chamber-of-commerce-kvk/
+  https://business.gov.nl/staff/health-and-safety/certificate-for-working-safely-vca/
+- Electrical/plumbing/HVAC: compliance with NEN standards via Bbl.
+  Source: Bbl
+  https://www.rijksoverheid.nl/onderwerpen/bouwregelgeving/besluit-bouwwerken-leefomgeving
+Checks to implement:
+[] KVK extract for any trade company
+[] VCA certificate if required by contract
+[] NEN compliance evidence for technical installations
+
+Germany:
+- Regulated trades require Handwerksrolle registration (HwO Annex A).
+  Source: HwO Annex A
+  https://www.gesetze-im-internet.de/hwo/anlage_a.html
+- Building authority requirements via state LBO (MBO-based).
+  Source: DIBt overview
+  https://www.dibt.de/en/service/faqs/the-german-regulatory-system-for-construction-products-and-construction-techniques
+Checks to implement:
+[] Handwerksrolle registration for regulated trades (electrical, gas, plumbing, etc.)
+[] Meister/equivalent proof where required
+
+France:
+- Decennial liability insurance for building trades.
+  Source: Service-Public decennial liability
+  https://www.service-public.fr/particuliers/vosdroits/F2034
+- RGE required for energy-renovation incentives (insulation/heat pumps/PV).
+  Source: RGE label
+  https://entreprendre.service-public.fr/vosdroits/F32251?lang=en
+Checks to implement:
+[] Decennial insurance certificate for applicable trades
+[] RGE certificate for energy-renovation scopes
+
+Spain:
+- Construction companies in sector registry REA.
+  Source: REA registry
+  https://expinterweb.mites.gob.es/rea/
+- CTE compliance for building works.
+  Source: BOE CTE
+  https://www.boe.es/buscar/act.php?id=BOE-A-2006-5515
+Checks to implement:
+[] REA registration for construction contractor
+[] CTE compliance evidence for relevant trade scope
+
+Italy:
+- DM 37/2008 requires qualified companies for installation systems:
+  electrical, gas, plumbing, HVAC.
+  Source: DM 37/2008
+  https://www.gazzettaufficiale.it/eli/id/2008/03/12/008G0060/sg
+Checks to implement:
+[] Qualified company declaration for installation systems (DM 37/2008)
+[] DVR safety compliance evidence (D.Lgs 81/2008)
+
+------------------------------------------------------------------------------
+OFFICIAL REGISTRY LOOKUPS (WHAT THE APP MUST DO)
+------------------------------------------------------------------------------
+UK:
+- Gas Safe check must verify engineer or business by license number. Support
+  lookup by license number and business registration number; store match result
+  + qualification scope.
+- Competent Person Register must allow lookup by postcode, trade type, or
+  business name and store scheme details + certificate reference.
+
+Netherlands:
+- KVK search must validate company existence and capture KVK number, legal
+  form, registered address, and activity description.
+- VCA register must verify diploma/certificate by holder name + DOB or diploma
+  number; store certificate type and validity dates.
+
+Germany:
+- Handwerksrolle/Handwerkskammer lookup must find responsible chamber via
+  postcode/city, then confirm company registration in the relevant trade.
+  Store chamber name + registration status.
+
+France:
+- RGE directory must search by location + work type and confirm RGE category
+  matches the requested scope. Store RGE status and validity.
+
+Spain:
+- REA lookup must validate that a construction company is accredited by using
+  CIF/NIF/NIE/REA identifier. Store REA status and registry details.
+
+Italy:
+- SUAP workflow must support filing/verification for DM 37/2008-qualified
+  companies. Store filing confirmation and responsible technical person.
+------------------------------------------------------------------------------
+SOURCE INDEX (PRIMARY OFFICIAL SOURCES)
+------------------------------------------------------------------------------
+UK:
+- CDM 2015 (HSE): https://www.hse.gov.uk/construction/cdm/2015/overview.htm
+- CIS (GOV.UK): https://www.gov.uk/what-you-must-do-as-a-cis-contractor
+- Invoice requirements (GOV.UK): https://www.gov.uk/invoicing-and-taking-payment-from-customers/invoices-what-they-must-include
+- Part P competent person scheme (GOV.UK): https://www.gov.uk/building-regulations-approval/use-a-competent-person-scheme
+- Gas Safe registration (GOV.UK): https://www.gov.uk/find-licences/registration-to-carry-out-gas-work
+- Employers liability insurance (GOV.UK): https://www.gov.uk/employers-liability-insurance
+- COSHH (HSE): https://www.hse.gov.uk/coshh/index.htm
+- Building Regulations index (GOV.UK): https://www.gov.uk/guidance/building-regulations-and-approved-documents-index
+- F-gas guidance (GOV.UK): https://www.gov.uk/government/collections/eu-f-gas-regulation-guidance-for-users-producers-and-traders
+- Gas Safe check (HSE): https://www.hse.gov.uk/gas/gas-safe-register-check.htm
+- Competent Person Register: https://www.competentperson.co.uk/
+
+Netherlands:
+- KVK registration: https://business.gov.nl/starting-your-business/registering-your-business/registration-at-the-netherlands-chamber-of-commerce-kvk/
+- Bbl (Rijksoverheid): https://www.rijksoverheid.nl/onderwerpen/bouwregelgeving/besluit-bouwwerken-leefomgeving
+- Invoice requirements (Belastingdienst): https://www.belastingdienst.nl/wps/wcm/connect/bldcontenten/belastingdienst/business/vat/vat_in_the_netherlands/vat_administration/invoice_requirements
+- VCA certificate (Business.gov.nl): https://business.gov.nl/staff/health-and-safety/certificate-for-working-safely-vca/
+- Arbowet (wetten.overheid.nl): https://wetten.overheid.nl/BWBR0010346/
+- KVK search: https://www.kvk.nl/zoeken/
+- VCA CDR register: https://cdr.ssvv.nl/
+
+Germany:
+- HwO law: https://www.gesetze-im-internet.de/hwo/
+- HwO Annex A (regulated trades): https://www.gesetze-im-internet.de/hwo/anlage_a.html
+- BaustellV: https://www.gesetze-im-internet.de/baustellv/BJNR128300998.html
+- UStG 14 invoicing: https://www.gesetze-im-internet.de/ustg_1980/__14.html
+- GefStoffV: https://www.gesetze-im-internet.de/gefstoffv_2010/BJNR164400010.html
+- DIBt MBO/LBO overview: https://www.dibt.de/en/service/faqs/the-german-regulatory-system-for-construction-products-and-construction-techniques
+- Handwerkskammer search: https://www.handwerkskammer.de/artikel/handwerkersuche-5620,0,15.html
+- Chamber finder: https://www.kammerfinder.de/
+
+France:
+- Decennial liability: https://www.service-public.fr/particuliers/vosdroits/F2034
+- Damage insurance (owner): https://www.service-public.fr/particuliers/vosdroits/F2032
+- Invoice mandatory mentions: https://entreprendre.service-public.fr/vosdroits/F31808
+- RGE label: https://entreprendre.service-public.fr/vosdroits/F32251?lang=en
+- Code du travail (digital): https://code.travail.gouv.fr/
+ - Decennial liability: https://www.service-public.fr/particuliers/vosdroits/F2034
+- RGE directory: https://france-renov.gouv.fr/annuaire-rge
+
+Spain:
+- PRL law: https://www.boe.es/buscar/act.php?id=BOE-A-1995-24292
+- Construction safety RD 1627/1997: https://www.boe.es/buscar/act.php?id=BOE-A-1997-22614
+- REA registry: https://expinterweb.mites.gob.es/rea/
+- REBT electrical regulation: https://www.boe.es/buscar/doc.php?id=BOE-A-2002-18099
+- Gas regulation RD 919/2006: https://www.boe.es/buscar/act.php?id=BOE-A-2006-15345
+- VAT invoicing (Agencia Tributaria): https://sede.agenciatributaria.gob.es/Sede/en_gb/iva/facturacion-registro/facturacion-iva/obligacion-facturar.html
+ - CTE (BOE): https://www.boe.es/buscar/act.php?id=BOE-A-2006-5515
+- REA lookup: https://expinterweb.mites.gob.es/rea/pub/consulta.htm
+
+Italy:
+- Safety law D.Lgs 81/2008: https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+- DM 37/2008 (installation systems): https://www.gazzettaufficiale.it/eli/id/2008/03/12/008G0060/sg
+- DURC online (INPS): https://www.inps.it/it/it/dettaglio-scheda.it.schede-servizio-strumento.schede-servizi.50130.durc-online.html
+- E-invoicing portal: https://www.agenziaentrate.gov.it/portale/schede/comunicazioni/fatture-e-corrispettivi/fatture-e-corrispettivi-st-imprese
+- D.Lgs 81/2008 (safety): https://www.gazzettaufficiale.it/eli/id/2008/04/30/008G0104/s
+- SUAP portal (Impresainungiorno): https://www.impresainungiorno.gov.it/

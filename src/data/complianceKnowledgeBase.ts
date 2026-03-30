@@ -1,3 +1,15 @@
+// =============================================================================
+// COMPLIANCE KNOWLEDGE BASE — Structured data for EU6 construction compliance
+// =============================================================================
+// SOURCE OF TRUTH: EU5_Compliance_Bible.txt (src/data/EU5_Compliance_Bible.txt)
+// This file extracts and structures the Bible's rules into app-ready data.
+// All compliance screens, EVE Auditor, and admin dashboard read from here.
+//
+// Last synced with Bible: 2026-03-28
+// To update: edit EU5_Compliance_Bible.txt, then update this structured extract.
+// For live strategy: see docs/live-compliance-strategy.md
+// =============================================================================
+
 import {
   ComplianceKnowledgeBase,
   CountryCode,
