@@ -60,6 +60,7 @@ import type { VascoInsight } from '../../src/components/shared/VascoInsightCard'
 
 // Dashboard Header
 import { ContractorDashboardHeader } from '../../src/components/contractor/ContractorDashboardHeader';
+import { VascoSavedBanner } from '../../src/components/contractor/VascoSavedBanner';
 import { hapticSuccess, hapticWarning } from '../../src/utils/haptics';
 import { useClockIn } from '../../src/services/clockInService';
 import { MS_PER_DAY, MS_PER_HOUR } from '../../src/utils/timeConstants';
@@ -969,7 +970,10 @@ export default function TodayScreen() {
           />
         </FadeIn>
 
-        {/* Action Required — now inside VascoCard above */}
+        {/* Vasco Saved You Banner — Instacart-style */}
+        <FadeIn delay={120}>
+          <VascoSavedBanner onViewDetails={() => router.push('/hub/savings' as any)} />
+        </FadeIn>
 
         {/* Today's Schedule + Active Jobs */}
         <View style={styles.section}>
