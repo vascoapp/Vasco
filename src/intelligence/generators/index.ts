@@ -14,6 +14,7 @@ import { useOverdueInvoiceInsight } from './overdueInvoiceGenerator';
 import { useSavingsOpportunityInsight } from './savingsOpportunityGenerator';
 import { useMarginDriftInsight } from './marginDriftGenerator';
 import { useCostVarianceInsight } from './costVarianceGenerator';
+import { useCrossSellInsight } from './crossSellGenerator';
 import { useComplianceAlertInsight } from './complianceAlertGenerator';
 import { useLaborEfficiencyInsight } from './laborEfficiencyGenerator';
 import { useEstimationCalibrationInsight } from './estimationCalibrationGenerator';
@@ -144,6 +145,7 @@ const GENERATOR_REGISTRY: GeneratorRegistration[] = [
   { id: 'savings-opportunity', screens: ['today', 'savings'], roles: ['contractor'] },
   { id: 'margin-drift', screens: ['today', 'savings', 'decisions', 'financials'], roles: ['contractor', 'cfo', 'director'] },
   { id: 'cost-variance', screens: ['today', 'jobs-list', 'werk'], roles: ['contractor'] },
+  { id: 'cross-sell', screens: ['today', 'werk', 'jobs-list'], roles: ['contractor'] },
   { id: 'compliance-alert', screens: ['today', 'meer', 'safety', 'quality', 'risks'], roles: ['contractor', 'sitelead', 'coo'] },
   { id: 'labor-efficiency', screens: ['today', 'decisions', 'efficiency'], roles: ['contractor', 'coo'] },
   { id: 'estimation-calibration', screens: ['today', 'savings'], roles: ['contractor'] },
@@ -213,6 +215,7 @@ export function useAllGenerators(ctx: GeneratorContext, dataCounts?: DataCounts)
   const savingsOpp = useSavingsOpportunityInsight(ctx);
   const marginDrift = useMarginDriftInsight(ctx);
   const costVariance = useCostVarianceInsight(ctx);
+  const crossSell = useCrossSellInsight(ctx);
   const complianceAlert = useComplianceAlertInsight(ctx);
   const laborEff = useLaborEfficiencyInsight(ctx);
   const estimationCal = useEstimationCalibrationInsight(ctx);
@@ -282,6 +285,7 @@ export function useAllGenerators(ctx: GeneratorContext, dataCounts?: DataCounts)
       { id: 'savings-opportunity', insight: savingsOpp },
       { id: 'margin-drift', insight: marginDrift },
       { id: 'cost-variance', insight: costVariance },
+      { id: 'cross-sell', insight: crossSell },
       { id: 'compliance-alert', insight: complianceAlert },
       { id: 'labor-efficiency', insight: laborEff },
       { id: 'estimation-calibration', insight: estimationCal },
@@ -343,7 +347,7 @@ export function useAllGenerators(ctx: GeneratorContext, dataCounts?: DataCounts)
       .map(r => r.insight)
       .filter((i): i is ScoredInsight => i !== null);
   }, [
-    overdueInvoice, savingsOpp, marginDrift, costVariance, complianceAlert, laborEff,
+    overdueInvoice, savingsOpp, marginDrift, costVariance, crossSell, complianceAlert, laborEff,
     estimationCal, dsoTrend, certExpiry, supplierPrice, weather,
     dailyPlanning, crossService, cashGap, cashflowInsight, capacity, goalProgress,
     profitability, financialAudit, marginRootCause, customerLifecycle,

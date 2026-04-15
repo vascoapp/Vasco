@@ -195,6 +195,22 @@ export async function rejectItem(itemId: string): Promise<void> {
     const item = items.find(i => i.id === itemId);
     if (item) {
       item.status = 'rejected';
+      // Dormant for any future sibling of this entity: if the contractor has
+      // rejected 3+ items with the same entityKey, silence that entity for
+      // 14 days to stop nagging (e.g. a customer who always pays late but
+      // the contractor doesn't want automated reminders).
+      if (item.entityKey) {
+        const siblings = items.filter((i) => i.entityKey === item.entityKey && i.status === 'rejected');
+        if (siblings.length >= 3) {
+          const mutedUntil = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+          for (const i of items) {
+            if (i.entityKey === item.entityKey && i.status === 'pending') {
+              i.snoozedUntil = mutedUntil;
+              i.snoozeCount = (i.snoozeCount ?? 0) + 1;
+            }
+          }
+        }
+      }
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
     }
   } catch {}

@@ -15,6 +15,20 @@ import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
 const TOKEN_KEY = '@vasco_push_token';
 const DEVICE_ID_KEY = '@vasco_device_id';
+const TOKEN_REFRESHED_AT_KEY = '@vasco_push_token_refreshed_at';
+const TOKEN_REFRESH_MS = 7 * 24 * 60 * 60 * 1000; // Re-register weekly
+
+/** Call on app foreground — re-registers with Expo if the token is older than
+ *  a week or missing. Fast no-op when recent. */
+export async function refreshPushTokenIfStale(): Promise<void> {
+  try {
+    const raw = await AsyncStorage.getItem(TOKEN_REFRESHED_AT_KEY);
+    const last = raw ? Number(raw) : 0;
+    if (Date.now() - last < TOKEN_REFRESH_MS) return;
+    const token = await registerForPushNotifications();
+    if (token) await AsyncStorage.setItem(TOKEN_REFRESHED_AT_KEY, String(Date.now()));
+  } catch {}
+}
 
 async function getOrCreateDeviceId(): Promise<string> {
   let id = await AsyncStorage.getItem(DEVICE_ID_KEY);

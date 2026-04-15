@@ -330,8 +330,25 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
     // Strip the score before adding to selectedServices
     const matchedClean = matched.map(({ score: _score, ...rest }) => rest);
 
+    // Ask the ML duration predictor to refine the rough quantity for each new
+    // line item. Fire-and-forget — falls back to the matched quantity on
+    // any failure so the UX never stalls.
+    import('../../services/mlPrefillService').then(async (mod) => {
+      const refined = await Promise.all(matchedClean.map(async (svc) => {
+        try {
+          const hours = await mod.prefillDurationForLine({
+            trade,
+            description: svc.item.name,
+            quantity: svc.quantity,
+          });
+          // Only override when the predictor came back with a reasonable value
+          return hours > 0 && hours < 24 ? { ...svc, quantity: hours } : svc;
+        } catch { return svc; }
+      }));
+      setSelectedServices(prev => [...prev, ...refined]);
+    }).catch(() => setSelectedServices(prev => [...prev, ...matchedClean]));
+
     setTimeout(() => {
-      setSelectedServices(prev => [...prev, ...matchedClean]);
       setAiExplanations(prev => ({ ...prev, ...explanations }));
       setScopeText('');
       setAiDrafting(false);

@@ -500,6 +500,21 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         };
         setJobs((prev) => [newJob, ...prev]);
 
+        // ML prefill: if the caller didn't supply estimated_duration, ask the
+        // predictor. Non-blocking so the optimistic row already rendered.
+        if (!newJob.estimatedDuration && newJob.trade) {
+          import('../services/jobPrefillService').then(async (mod) => {
+            try {
+              const pref = await mod.prefillJob({ trade: newJob.trade as string, title });
+              setJobs((prev) => prev.map((j) =>
+                j.id === tempId && !j.estimatedDuration
+                  ? { ...j, estimatedDuration: pref.suggestedHours, quotedAmount: j.quotedAmount ?? pref.suggestedPriceLow }
+                  : j,
+              ));
+            } catch {}
+          }).catch(() => {});
+        }
+
         if (isSupabaseConfigured) {
           try {
             // Hard 3s timeout: on flaky signal the UI button shouldn't appear hung
@@ -1179,6 +1194,25 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
         const tempId = `j-${Date.now()}`;
         const now = new Date().toISOString();
+
+        // Look for a customer-submitted preferred date in the moat
+        // (customer_interactions entries with type='decision' + data.preferredDate).
+        let scheduledDate: string | undefined;
+        try {
+          const raw = await AsyncStorage.getItem('@vasco_customer_interactions');
+          const interactions: any[] = raw ? JSON.parse(raw) : [];
+          const related = interactions.filter((i) => i.quoteId === quoteId);
+          const preferred = related
+            .map((i) => i.data?.preferredDate || i.data?.value)
+            .find((v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v));
+          if (preferred) {
+            const d = new Date(preferred);
+            if (!Number.isNaN(d.getTime()) && d.getTime() > Date.now() - 86400000) {
+              scheduledDate = d.toISOString();
+            }
+          }
+        } catch {}
+
         const newJob: Job = {
           id: tempId,
           customerId: quote.customer ?? null,
@@ -1193,6 +1227,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           notes: [],
           timeEntries: [],
           materials: [],
+          scheduledDate,
           createdAt: now,
           updatedAt: now,
         };
