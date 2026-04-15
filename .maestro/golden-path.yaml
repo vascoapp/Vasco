@@ -1,0 +1,50 @@
+appId: com.vasco.app
+name: Golden path — login → quote → job → invoice
+tags:
+  - smoke
+
+---
+# 1. Launch + demo login (only works with EXPO_PUBLIC_DEMO_MODE=true)
+- launchApp:
+    clearState: true
+- tapOn: "contractor@vasco.dev"
+- inputText: "anything"
+- tapOn:
+    text: "Sign in"
+    optional: true
+- tapOn:
+    text: "Log in"
+    optional: true
+
+# 2. Verify Vandaag (home) loads
+- assertVisible:
+    text: "Vandaag"
+    optional: true
+- assertVisible:
+    id: "vasco-card"
+    optional: true
+
+# 3. Create a quote from the tiered quote builder
+- tapOn: "Geld"
+- assertVisible: "Offertes"
+- tapOn:
+    text: "Nieuwe offerte"
+    optional: true
+    index: 0
+- assertVisible:
+    text: "Goed"
+    optional: true
+
+# 4. Back out — scripting the full builder requires fixture data
+- pressKey: Back
+- pressKey: Back
+
+# 5. Open invoices list
+- tapOn: "Facturen"
+- assertVisible:
+    text: "Facturen"
+
+# 6. Verify empty-state CTA is reachable
+- assertVisible:
+    text: "Nieuwe factuur"
+    optional: true

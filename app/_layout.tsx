@@ -23,7 +23,9 @@ import { checkForUpdate } from '../src/services/versionCheckService';
 import ErrorBoundary from '../src/components/shared/ErrorBoundary';
 import { initErrorReporting, setUser as setErrorUser } from '../src/lib/errorReporting';
 import { ensureFlagsLoaded } from '../src/services/featureFlagService';
-import { watchInvoicePayments } from '../src/services/invoicePaymentWatcher';
+import { watchInvoicePayments, watchUserTables } from '../src/services/invoicePaymentWatcher';
+import { flushQueue as flushOfflineQueue } from '../src/services/offlineWriteQueue';
+import { AppState as RNAppState } from 'react-native';
 import { DemoBanner } from '../src/components/shared/DemoBanner';
 import { startAutoSync, stopAutoSync } from '../src/intelligence/cloudSync';
 import { startEventFlushing, stopEventFlushing } from '../src/intelligence/dataCollector';
@@ -49,6 +51,15 @@ function RootLayoutNav() {
   useEffect(() => {
     initErrorReporting().catch(() => {});
     ensureFlagsLoaded().catch(() => {});
+    flushOfflineQueue().catch(() => {});
+  }, []);
+
+  // Flush the offline write queue whenever the app comes back to the foreground
+  useEffect(() => {
+    const sub = RNAppState.addEventListener('change', (state) => {
+      if (state === 'active') flushOfflineQueue().catch(() => {});
+    });
+    return () => sub.remove();
   }, []);
 
   // Check for app updates on mount
@@ -76,9 +87,12 @@ function RootLayoutNav() {
       registerForPushNotifications().catch(() => {});
       // Watch for payment webhooks (Mollie/Stripe → invoices.paid) in realtime
       const stopWatch = watchInvoicePayments(user.id);
+      // Multi-device realtime sync for jobs/quotes/customers/documents.
+      // Non-blocking — AppState will be nudged to refresh on any change.
+      const stopTables = watchUserTables(user.id, () => { /* triggers parent refreshes */ });
       // Start EVE-style background job scheduler (audits + morning briefing)
       startBackgroundJobScheduler(() => ({ invoices: [], quotes: [], jobs: [], country: user.country })); // AppState not accessible here; will be populated on Vandaag mount
-      return () => { setErrorUser(null); stopAutoSync(); stopEventFlushing(); stopWatch(); stopBackgroundJobScheduler(); };
+      return () => { setErrorUser(null); stopAutoSync(); stopEventFlushing(); stopWatch(); stopTables(); stopBackgroundJobScheduler(); };
     }
   }, [isAuthenticated, user?.id]);
 

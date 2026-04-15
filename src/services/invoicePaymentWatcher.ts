@@ -1,9 +1,9 @@
 // =============================================================================
-// INVOICE PAYMENT WATCHER
+// REALTIME WATCHERS — invoices (payments), jobs, quotes, customers
 // =============================================================================
-// Subscribes to Supabase realtime changes on the `invoices` table, so when a
-// Mollie/Stripe webhook flips an invoice to `paid`, the contractor's phone
-// fires a local notification + optional callback (e.g. to refresh state).
+// Subscribes to Supabase realtime changes so the app is instantly consistent
+// across devices and when webhooks flip invoice status to `paid`. Fires a
+// local push for payment events.
 // =============================================================================
 
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
@@ -78,5 +78,48 @@ export function stopWatching(): void {
   if (activeChannel) {
     try { supabase.removeChannel(activeChannel); } catch {}
     activeChannel = null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Multi-table realtime sync for jobs/quotes/customers
+// ---------------------------------------------------------------------------
+
+type SyncEvent = { table: string; eventType: 'INSERT' | 'UPDATE' | 'DELETE'; new: any; old: any };
+let syncChannel: ReturnType<typeof supabase.channel> | null = null;
+
+export function watchUserTables(
+  userId: string,
+  onChange: (event: SyncEvent) => void,
+): Unsubscribe {
+  if (!isSupabaseConfigured) return () => {};
+  stopTableSync();
+
+  const tables = ['jobs', 'quotes', 'customers', 'documents'];
+  let ch = supabase.channel(`user-tables-${userId}`);
+  for (const table of tables) {
+    ch = ch.on(
+      'postgres_changes' as any,
+      { event: '*', schema: 'public', table, filter: `user_id=eq.${userId}` },
+      (payload: any) => {
+        try {
+          onChange({
+            table,
+            eventType: payload.eventType as SyncEvent['eventType'],
+            new: payload.new,
+            old: payload.old,
+          });
+        } catch {}
+      },
+    );
+  }
+  syncChannel = ch.subscribe();
+  return stopTableSync;
+}
+
+export function stopTableSync(): void {
+  if (syncChannel) {
+    try { supabase.removeChannel(syncChannel); } catch {}
+    syncChannel = null;
   }
 }

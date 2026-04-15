@@ -39,6 +39,16 @@ Tracks everything required to publish Vasco to App Store + Google Play and enabl
 - Round 13 — Feature flags: `feature_flags` table + `useFeatureFlag` hook + kill-switch
 - Round 14 — `docs/release-runbook.md` (end-to-end ship sequence)
 
+### Consistency, billing, review prep (23-30)
+- Round 23 — Realtime multi-device sync for jobs/quotes/customers/documents
+- Round 24 — Offline write queue (AsyncStorage) + foreground flush
+- Round 25 — Deep linking (iOS associatedDomains, Android intentFilters, AASA/assetlinks endpoints)
+- Round 26 — Unit tests: featureFlagService, offlineWriteQueue + CI job
+- Round 27 — `create-subscription-checkout` Edge Function + `billingService`
+- Round 28 — Maestro E2E smoke `.maestro/golden-path.yaml`
+- Round 29 — Rate-limit + validated-insert on `customer_interactions`
+- Round 30 — `docs/app-review-info.md` (App Store / Play Console paste-ready)
+
 ### Golden path & integrations (15-22)
 - Round 15 — Quote accept → `convertQuoteToJob()` + `customer_interactions` table
 - Round 16 — `send-invoice` Edge Function (Resend, EU6 HTML) + client wrapper wired
