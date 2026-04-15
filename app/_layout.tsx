@@ -21,6 +21,7 @@ import { AppStateProvider } from '../src/state/AppState';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { checkForUpdate } from '../src/services/versionCheckService';
 import ErrorBoundary from '../src/components/shared/ErrorBoundary';
+import { initErrorReporting, setUser as setErrorUser } from '../src/lib/errorReporting';
 import { DemoBanner } from '../src/components/shared/DemoBanner';
 import { startAutoSync, stopAutoSync } from '../src/intelligence/cloudSync';
 import { startEventFlushing, stopEventFlushing } from '../src/intelligence/dataCollector';
@@ -41,6 +42,11 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
 
+  // Init error reporting (no-op if EXPO_PUBLIC_SENTRY_DSN unset)
+  useEffect(() => {
+    initErrorReporting().catch(() => {});
+  }, []);
+
   // Check for app updates on mount
   useEffect(() => {
     checkForUpdate().then(result => {
@@ -60,12 +66,13 @@ function RootLayoutNav() {
   // Start cloud sync when authenticated
   useEffect(() => {
     if (isAuthenticated && user?.id) {
+      setErrorUser(user.id);
       startAutoSync(user.id, user.role ?? 'contractor', user.trade, user.country);
       startEventFlushing(user.id);
       registerForPushNotifications().catch(() => {});
       // Start EVE-style background job scheduler (audits + morning briefing)
       startBackgroundJobScheduler(() => ({ invoices: [], quotes: [], jobs: [], country: user.country })); // AppState not accessible here; will be populated on Vandaag mount
-      return () => { stopAutoSync(); stopEventFlushing(); stopBackgroundJobScheduler(); };
+      return () => { setErrorUser(null); stopAutoSync(); stopEventFlushing(); stopBackgroundJobScheduler(); };
     }
   }, [isAuthenticated, user?.id]);
 

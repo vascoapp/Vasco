@@ -6,6 +6,7 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet, Share, Platform } from 'react-native';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { logWarn } from '../../utils/errorHandler';
+import { captureException } from '../../lib/errorReporting';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -29,6 +30,7 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
 
   componentDidCatch(error: Error, info: React.ErrorInfo): void {
     logWarn('ErrorBoundary', `Caught an error: ${error.message}`);
+    captureException(error, { extra: { componentStack: info.componentStack } });
   }
 
   render() {
