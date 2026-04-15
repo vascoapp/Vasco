@@ -84,7 +84,10 @@
         "expo-notifications",
         {
           "color": "#E35205",
-          "defaultChannel": "default"
+          "defaultChannel": "default",
+          "icon": "./assets/notification-icon.png",
+          "androidMode": "default",
+          "androidCollapsedTitle": "Vasco"
         }
       ],
       [

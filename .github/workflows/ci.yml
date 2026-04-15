@@ -27,7 +27,7 @@ jobs:
 
       - name: Type-check app/
         run: |
-          npx tsc --noEmit 2>&1 | tee tsc.log || true
+          npx --no-install tsc --noEmit 2>&1 | tee tsc.log || true
           if grep -q '^app/' tsc.log; then
             echo "::error::TypeScript errors in app/"
             grep '^app/' tsc.log

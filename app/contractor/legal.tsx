@@ -16,6 +16,48 @@ import { useAppState } from '../../src/state/AppState';
 const APP_VERSION = '1.0.0';
 const LAST_UPDATED = 'March 2026';
 
+type CountryCode = 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK';
+
+// Per-country legal + compliance details — shown only for the user's country
+const COUNTRY_COMPLIANCE: Record<CountryCode, { heading: string; body: string; einvoice: string; governingLaw: string }> = {
+  NL: {
+    heading: 'Nederland (NL)',
+    body: 'KvK (Kamer van Koophandel) registratie · BTW-nummer · Belastingdienst 7-jaar bewaarplicht · Nederlands Burgerlijk Wetboek voor contractrecht.',
+    einvoice: 'Peppol BIS 3.0 · UBL 2.1 (e-facturering Rijksoverheid, via Digipoort).',
+    governingLaw: 'These terms are governed by the laws of the Netherlands. Disputes will first be submitted to mediation in Amsterdam.',
+  },
+  DE: {
+    heading: 'Deutschland (DE)',
+    body: 'Handelsregister-Eintrag · Umsatzsteuer-ID (USt-IdNr) · GoBD-konforme Aufzeichnungen · 10-Jahre-Aufbewahrungspflicht (HGB §257) · B2B E-Rechnung seit Jan 2025 verpflichtend zu empfangen.',
+    einvoice: 'XRechnung (B2G · Bund/Länder) · ZUGFeRD (hybrid PDF+XML) · Peppol BIS 3.0.',
+    governingLaw: 'Es gilt deutsches Recht. Gerichtsstand ist der Sitz des Anbieters, soweit gesetzlich zulässig.',
+  },
+  FR: {
+    heading: 'France (FR)',
+    body: 'SIRET/SIREN · numéro TVA intracommunautaire · 10 ans de conservation (Code de commerce art. L123-22) · facturation électronique B2B obligatoire 2026-2027.',
+    einvoice: 'Factur-X · Peppol BIS 3.0 · Chorus Pro (B2G).',
+    governingLaw: 'Ces conditions sont régies par le droit français. Le tribunal de Paris est compétent.',
+  },
+  ES: {
+    heading: 'España (ES)',
+    body: 'NIF/CIF · NIF-IVA · 6 años de conservación (Código de Comercio art. 30) · TicketBAI (País Vasco) y Verifactu (resto de España) para registro de facturación.',
+    einvoice: 'Facturae (B2G, FACe) · Peppol BIS 3.0.',
+    governingLaw: 'Estas condiciones se rigen por la legislación española. Juzgados y Tribunales de Madrid.',
+  },
+  IT: {
+    heading: 'Italia (IT)',
+    body: 'Partita IVA · Codice Fiscale · FatturaPA obbligatoria via Sistema di Interscambio (SDI) · 10 anni di conservazione (Codice Civile art. 2220).',
+    einvoice: 'FatturaPA (obbligatoria B2B/B2G via SDI) · Peppol BIS 3.0.',
+    governingLaw: 'Queste condizioni sono regolate dal diritto italiano. Foro competente: Milano.',
+  },
+  UK: {
+    heading: 'United Kingdom (UK)',
+    body: 'Companies House registration · VAT number · HMRC 6-year retention · Making Tax Digital (MTD) compliance for VAT-registered businesses.',
+    einvoice: 'Peppol BIS 3.0 (NHS via NHS Shared Business Services).',
+    governingLaw: 'These terms are governed by the laws of England and Wales. Courts of London have exclusive jurisdiction.',
+  },
+};
+
 type IconName = keyof typeof Ionicons.glyphMap;
 
 interface LegalSubsection {
@@ -271,6 +313,30 @@ export default function LegalScreen() {
     contact: false,
   });
 
+  // Build sections dynamically so the Compliance block only shows the user's country
+  const userCountry = (user?.country as CountryCode | undefined) ?? 'NL';
+  const userCompliance = COUNTRY_COMPLIANCE[userCountry] ?? COUNTRY_COMPLIANCE.NL;
+  const sections: LegalSection[] = LEGAL_SECTIONS.map((section) => {
+    if (section.id !== 'compliance') return section;
+    return {
+      ...section,
+      subsections: [
+        {
+          headingKey: 'legal.perCountry',
+          headingDefault: 'Regulatory Information',
+          contentKey: `legal.perCountryContent_${userCountry}`,
+          contentDefault: `${userCompliance.heading}\n\n${userCompliance.body}`,
+        },
+        {
+          headingKey: 'legal.einvoicing',
+          headingDefault: 'E-Invoicing Standards',
+          contentKey: `legal.einvoicingContent_${userCountry}`,
+          contentDefault: userCompliance.einvoice,
+        },
+      ],
+    };
+  });
+
   const toggleSection = (id: string) => {
     setExpandedSections((prev) => ({ ...prev, [id]: !prev[id] }));
   };
@@ -337,7 +403,7 @@ export default function LegalScreen() {
         </View>
 
         {/* Legal sections */}
-        {LEGAL_SECTIONS.map((section) => (
+        {sections.map((section) => (
           <View key={section.id} style={styles.section}>
             {/* Section header — always visible */}
             <Pressable style={styles.sectionHeader} onPress={() => toggleSection(section.id)}>
@@ -402,7 +468,7 @@ export default function LegalScreen() {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            {t('legal.footerNote', 'These policies are governed by the laws of the Netherlands and the European Union.')}
+            {t(`legal.footerNote_${userCountry}`, userCompliance.governingLaw)}
           </Text>
         </View>
       </ScrollView>

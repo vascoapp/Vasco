@@ -39,6 +39,19 @@ Tracks everything required to publish Vasco to App Store + Google Play and enabl
 - Round 13 — Feature flags: `feature_flags` table + `useFeatureFlag` hook + kill-switch
 - Round 14 — `docs/release-runbook.md` (end-to-end ship sequence)
 
+### Production polish (31-40)
+- Round 31 — Stripe subscription webhook → `subscriptions` table sync
+- Round 32 — Admin revenue dashboard driven by Supabase (`admin/src/lib/revenue.ts`)
+- Round 33 — `A11yButton` wrapper for accessibility contract
+- Round 34 — `npm run i18n:audit` (0 gaps across 6 locales)
+- Round 35 — Notification plugin icon + androidMode
+- Round 36 — `app/auth/callback.tsx` for Supabase reset/verify/magiclink
+- Round 37 — `scanned_invoices` table + RLS (cross-device OCR history)
+- Round 38 — Invoice PDF prints country-specific registration + VAT label
+- Round 39 — `supabase/functions/_shared/ratelimit.ts`
+- Round 40 — expo-doctor passes (scripts renamed, jest-expo pinned)
+- Bonus — Legal screen compliance section filters by user.country (not all 6)
+
 ### Consistency, billing, review prep (23-30)
 - Round 23 — Realtime multi-device sync for jobs/quotes/customers/documents
 - Round 24 — Offline write queue (AsyncStorage) + foreground flush

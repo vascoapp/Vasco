@@ -128,8 +128,67 @@ Deno.serve(async (req) => {
 
     console.log(`Stripe event: type=${event.type}, id=${event.id}`);
 
+    const supabaseUrl0 = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey0 = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
     // -------------------------------------------------------------------------
-    // 2. Only handle payment_intent.succeeded
+    // 2a. Subscription lifecycle events → sync public.subscriptions
+    // -------------------------------------------------------------------------
+    if (
+      event.type === 'checkout.session.completed' ||
+      event.type === 'customer.subscription.created' ||
+      event.type === 'customer.subscription.updated' ||
+      event.type === 'customer.subscription.deleted'
+    ) {
+      if (!supabaseUrl0 || !supabaseServiceKey0) {
+        return new Response(JSON.stringify({ received: true, error: 'DB not configured' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const sub = event.data.object;
+      // Metadata carries user_id + tier from create-subscription-checkout
+      const userId = sub?.metadata?.user_id ?? sub?.subscription_data?.metadata?.user_id ?? null;
+      const tier = sub?.metadata?.tier ?? null;
+      const statusMap: Record<string, string> = {
+        trialing: 'trialing',
+        active: 'active',
+        past_due: 'past_due',
+        canceled: 'canceled',
+        incomplete: 'past_due',
+        incomplete_expired: 'expired',
+        unpaid: 'past_due',
+      };
+      const externalId = typeof sub?.id === 'string' ? sub.id : null;
+      const currentPeriodEnd = sub?.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null;
+      const status = event.type === 'customer.subscription.deleted'
+        ? 'canceled'
+        : statusMap[sub?.status ?? 'active'] ?? 'active';
+
+      if (userId && tier) {
+        const adminClient = createClient(supabaseUrl0, supabaseServiceKey0);
+        const { error: subErr } = await adminClient
+          .from('subscriptions')
+          .upsert({
+            user_id: userId,
+            tier,
+            status,
+            external_id: externalId,
+            external_provider: 'stripe',
+            current_period_ends_at: currentPeriodEnd,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'user_id' });
+        if (subErr) console.error('subscriptions upsert failed:', subErr.message);
+        else console.log(`Subscription synced: user=${userId} tier=${tier} status=${status}`);
+      } else {
+        console.warn(`Subscription event missing metadata — user_id=${userId} tier=${tier}`);
+      }
+      return new Response(JSON.stringify({ received: true, status: 'subscription_synced' }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // 2b. Only remaining handled event: payment_intent.succeeded (invoice paid)
     // -------------------------------------------------------------------------
     if (event.type !== 'payment_intent.succeeded') {
       // Acknowledge but ignore other event types
