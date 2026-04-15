@@ -24,6 +24,7 @@ import ErrorBoundary from '../src/components/shared/ErrorBoundary';
 import { initErrorReporting, setUser as setErrorUser } from '../src/lib/errorReporting';
 import { ensureFlagsLoaded } from '../src/services/featureFlagService';
 import { watchInvoicePayments, watchUserTables } from '../src/services/invoicePaymentWatcher';
+import { watchCustomerInteractions } from '../src/services/customerInteractionWatcher';
 import { flushQueue as flushOfflineQueue } from '../src/services/offlineWriteQueue';
 import { notifyNewQueueItems } from '../src/services/aiQueueNotifier';
 import { flushScanQueue } from '../src/services/offlineScanQueue';
@@ -97,6 +98,16 @@ function RootLayoutNav() {
       // Multi-device realtime sync for jobs/quotes/customers/documents.
       // Non-blocking — AppState will be nudged to refresh on any change.
       const stopTables = watchUserTables(user.id, () => { /* triggers parent refreshes */ });
+      // Realtime customer portal events: scoped to the user's quote ids via
+      // module snapshot so we never subscribe to foreign rows.
+      const stopInteractions = (() => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const snap = require('../src/state/appStateSnapshot').getAppStateSnapshot();
+          const quoteIds: string[] = (snap.quotes ?? []).map((q: any) => q.id).filter(Boolean);
+          return watchCustomerInteractions(user.id, quoteIds);
+        } catch { return () => {}; }
+      })();
       // Start EVE-style background job scheduler (audits + morning briefing).
       // Pull fresh AppState each tick via the module-level snapshot so the
       // scheduler never runs over empty arrays.
@@ -111,7 +122,7 @@ function RootLayoutNav() {
           country: user.country ?? snap.country,
         };
       });
-      return () => { setErrorUser(null); stopAutoSync(); stopEventFlushing(); stopWatch(); stopTables(); stopBackgroundJobScheduler(); };
+      return () => { setErrorUser(null); stopAutoSync(); stopEventFlushing(); stopWatch(); stopTables(); stopInteractions(); stopBackgroundJobScheduler(); };
     }
   }, [isAuthenticated, user?.id]);
 

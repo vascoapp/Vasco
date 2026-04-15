@@ -783,6 +783,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           paymentMethod: 'unknown',
           wasOverdue: (paidInv?.dueInDays ?? 0) < 0,
         }).catch(() => {});
+        // Close the payment-prediction calibration loop: record predicted vs
+        // actual days-to-pay so future DSO forecasts get more accurate.
+        const predictedDays = 14;
+        const actualDays = Math.max(0, 14 - (paidInv?.dueInDays ?? 0));
+        import('../intelligence/mlModels').then((ml) =>
+          ml.recordModelPrediction('payment', predictedDays, actualDays),
+        ).catch(() => {});
         // Ontology: propagate payment
         propagatePayment(id, 0).catch(() => {});
       },
@@ -1249,6 +1256,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           wasAccepted: true,
           acceptedPrice: quote.amount,
         }).catch(() => {});
+        // Close the quote-win calibration loop: feed the predictor with the
+        // actual outcome so future win-chance badges get more accurate.
+        import('../intelligence/mlModels').then((ml) =>
+          ml.recordModelPrediction('quote_win', 0.5, 1),
+        ).catch(() => {});
 
         if (isSupabaseConfigured) {
           try {

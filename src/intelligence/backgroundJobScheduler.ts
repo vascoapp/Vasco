@@ -714,17 +714,33 @@ export function startBackgroundJobScheduler(
         // EVE three-agent workforce status — run once per daily block so
         // the Analyst can surface cross-cutting insights (churn, margin drift).
         try {
-          const eve = await import('../services/eveAgentService');
-          const status = eve.getWorkforceStatus({
-            jobs: context.jobs,
-            invoices: context.invoices,
-            quotes: context.quotes,
+          // Convert the live snapshot into concrete EveAction items and stream
+          // them into the AI action queue so they surface in VascoCard alongside
+          // the generator-emitted items.
+          const { buildLiveActions } = await import('../services/eveLiveActionService');
+          const { addToQueue } = await import('../services/aiActionQueueService');
+          const actions = buildLiveActions({
+            jobs: context.jobs ?? [],
+            quotes: context.quotes ?? [],
+            invoices: context.invoices ?? [],
             customers: context.customers ?? [],
-          } as any);
-          // Auditor findings and Analyst insights stream into the queue via
-          // their own generators; we just log execution here.
-          // eslint-disable-next-line no-console
-          if (__DEV__) console.log('[EVE] workforce status:', status?.agent?.actions?.length ?? 0, 'actions');
+          });
+          for (const a of actions) {
+            const mappedType: any = a.type === 'draft_invoice' ? 'draft_invoice'
+              : a.type === 'compliance_gap' ? 'draft_reminder'
+              : 'general';
+            await addToQueue({
+              type: mappedType,
+              title: a.title,
+              description: a.description,
+              preparedData: a.preparedData,
+              actionLabel: a.actionLabel,
+              estimatedImpact: a.impact,
+              expiresAt: a.expiresAt,
+              entityKey: `eve-${a.type}-${(a.preparedData as any)?.jobId ?? (a.preparedData as any)?.invoiceId ?? a.id}`,
+              sourceGeneratorId: `eve-${a.agentType}`,
+            });
+          }
         } catch {}
         // Calibrate ML models from accumulated prediction/actual pairs
         await calibrateModels().catch(() => {});
