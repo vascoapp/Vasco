@@ -22,6 +22,7 @@ import {
   getPaymentMethodLabel,
 } from '../../src/services/customerPaymentPreferenceService';
 import { sendInvoice as sendInvoiceEmail } from '../../src/services/sendInvoiceService';
+import { effectiveStep, renderReminder } from '../../src/services/reminderCadenceService';
 import { generateXRechnungXML, generateZUGFeRDXML, type EInvoiceData } from '../../src/integrations/einvoice';
 import { Share as RNShare } from 'react-native';
 import { File, Paths } from 'expo-file-system';
@@ -232,11 +233,34 @@ export default function InvoiceDetailScreen() {
     }
 
     const paymentUrl = lastMolliePayment?.invoiceId === invoice.id ? lastMolliePayment.checkoutUrl : undefined;
+
+    // Cadence-aware escalation: if the invoice is already overdue we pick a
+    // gentle / firm / final template so the tone matches the situation.
+    const daysOverdue = invoice.dueInDays < 0 ? Math.abs(invoice.dueInDays) : 0;
+    let subject: string | undefined;
+    if (daysOverdue >= 3) {
+      const step = await effectiveStep((invoice as any).customer ?? '', daysOverdue);
+      if (step) {
+        const rendered = renderReminder({
+          step,
+          locale: language,
+          customer: invoice.customer,
+          ref: invoice.id,
+          amount: formatCurrency(invoice.amount, country),
+          days: daysOverdue,
+          link: paymentUrl ?? '',
+          business: (businessProfile as any)?.businessName ?? 'Vasco',
+        });
+        subject = rendered.subject;
+      }
+    }
+
     const result = await sendInvoiceEmail({
       invoiceId: invoice.id,
       to: customerEmail,
       paymentUrl,
       locale: language,
+      subject,
     });
     if (result.ok) {
       Alert.alert(

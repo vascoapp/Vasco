@@ -97,8 +97,20 @@ function RootLayoutNav() {
       // Multi-device realtime sync for jobs/quotes/customers/documents.
       // Non-blocking — AppState will be nudged to refresh on any change.
       const stopTables = watchUserTables(user.id, () => { /* triggers parent refreshes */ });
-      // Start EVE-style background job scheduler (audits + morning briefing)
-      startBackgroundJobScheduler(() => ({ invoices: [], quotes: [], jobs: [], country: user.country })); // AppState not accessible here; will be populated on Vandaag mount
+      // Start EVE-style background job scheduler (audits + morning briefing).
+      // Pull fresh AppState each tick via the module-level snapshot so the
+      // scheduler never runs over empty arrays.
+      startBackgroundJobScheduler(() => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const snap = require('../src/state/appStateSnapshot').getAppStateSnapshot();
+        return {
+          invoices: snap.invoices,
+          quotes: snap.quotes,
+          jobs: snap.jobs,
+          customers: snap.customers,
+          country: user.country ?? snap.country,
+        };
+      });
       return () => { setErrorUser(null); stopAutoSync(); stopEventFlushing(); stopWatch(); stopTables(); stopBackgroundJobScheduler(); };
     }
   }, [isAuthenticated, user?.id]);

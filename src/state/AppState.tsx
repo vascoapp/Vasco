@@ -1454,6 +1454,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     }).catch(() => {});
   }, [value]);
 
+  // Keep a module-level snapshot so non-hook consumers (scheduler, AI queue
+  // populator, eveAgentService.getWorkforceStatus) always see fresh state.
+  useEffect(() => {
+    import('./appStateSnapshot').then((mod) => {
+      mod.setAppStateSnapshot({ jobs, quotes, invoices, customers });
+    }).catch(() => {});
+  }, [jobs, quotes, invoices, customers]);
+
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
 }
 

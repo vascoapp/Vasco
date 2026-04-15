@@ -25,6 +25,7 @@ import { Sparkline } from '../../src/components/shared/Sparkline';
 import { VascoCard } from '../../src/components/shared/VascoCard';
 import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { EmptyState } from '../../src/components/shared/EmptyState';
+import { CashFlowForecastCard } from '../../src/components/contractor/CashFlowForecastCard';
 import { useAIQueue } from '../../src/services/aiActionQueueService';
 import { useVascoGuidance } from '../../src/services/vascoGuidanceService';
 
@@ -238,6 +239,15 @@ export default function GeldScreen() {
               <Text style={s.collectionText}>{t('money.collectionRate', 'Collection rate')}: <Text style={{ fontFamily: TYPE.sectionFamily, color: collectionRate >= 80 ? SemanticColors.feedbackSuccess : collectionRate >= 50 ? SemanticColors.feedbackWarning : SemanticColors.feedbackError }}>{collectionRate}%</Text></Text>
             </View>
           )}
+        </FadeIn>
+
+        {/* 30-day cash-flow forecast — inflows vs outflows */}
+        <FadeIn delay={30}>
+          <CashFlowForecastCard
+            invoices={invoices as any}
+            quotes={quotes as any}
+            jobs={[] as any}
+          />
         </FadeIn>
 
         {/* Vasco — financial AI (overdue reminders, payment predictions, expense tips) */}
