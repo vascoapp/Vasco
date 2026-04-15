@@ -42,3 +42,11 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# secrets (App Store / Play Store credentials)
+/secrets
+google-services.json
+GoogleService-Info.plist
+
+# admin build output
+admin/.next/

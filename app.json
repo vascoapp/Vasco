@@ -8,23 +8,35 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.vasco.app",
       "scheme": "vasco",
+      "buildNumber": "1",
       "infoPlist": {
-        "NSCameraUsageDescription": "Vasco uses the camera to scan invoices and take job photos",
-        "NSPhotoLibraryUsageDescription": "Vasco uses your photo library to attach photos to jobs and invoices"
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Vasco uses the camera to scan invoices, receipts, and take job site photos.",
+        "NSPhotoLibraryUsageDescription": "Vasco uses your photo library to attach photos to jobs, quotes, and invoices.",
+        "NSPhotoLibraryAddUsageDescription": "Vasco saves generated quotes, invoices, and reports to your photo library when you export them.",
+        "NSFaceIDUsageDescription": "Vasco uses Face ID to protect your account and authorize sensitive actions.",
+        "CFBundleLocalizations": ["en", "nl", "de", "fr", "es", "it"]
       }
     },
     "android": {
       "package": "com.vasco.app",
       "scheme": "vasco",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -33,7 +45,18 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "CAMERA",
-        "READ_EXTERNAL_STORAGE"
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "VIBRATE",
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "WAKE_LOCK"
+      ],
+      "blockedPermissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "READ_CONTACTS"
       ]
     },
     "web": {
@@ -43,7 +66,21 @@
       "expo-router",
       "expo-localization",
       "expo-web-browser",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "color": "#E35205",
+          "defaultChannel": "default"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Vasco needs access to your photos to attach images to jobs, quotes, and invoices.",
+          "cameraPermission": "Vasco needs access to your camera to scan invoices and document work on site."
+        }
+      ]
     ],
     "extra": {
       "eas": {
