@@ -84,11 +84,43 @@ const DEMO_QUOTE = {
 
 export default function CustomerViewScreen() {
   const router = useRouter();
-  const { quoteId } = useLocalSearchParams<{ quoteId?: string }>();
+  const { quoteId, t: tokenParam } = useLocalSearchParams<{ quoteId?: string; t?: string }>();
   const { quotes, customers, convertQuoteToJob } = useAppState();
+  const [remoteQuote, setRemoteQuote] = useState<typeof DEMO_QUOTE | null>(null);
+
+  // If the URL carries a signed token, fetch the quote via the public Edge
+  // Function. This is how external customers (not authed) see their own quote.
+  useEffect(() => {
+    if (!quoteId || !tokenParam) return;
+    let cancelled = false;
+    import('../../src/services/publicQuotePortalService').then(async (mod) => {
+      const result = await mod.fetchQuoteByToken(String(quoteId), String(tokenParam));
+      if (cancelled || !result.ok || !result.quote) return;
+      const q = result.quote;
+      setRemoteQuote({
+        id: q.id,
+        reference: q.reference,
+        businessName: q.business?.business_name ?? DEMO_QUOTE.businessName,
+        businessPhone: q.business?.phone ?? '',
+        businessEmail: q.business?.email ?? '',
+        customerId: '',
+        customerName: q.customer?.name ?? '',
+        title: (q.metadata as any)?.title ?? DEMO_QUOTE.title,
+        validUntil: (q.metadata as any)?.validUntil ?? '',
+        tiers: (q.metadata as any)?.tiers ?? [
+          { id: 'only' as const, label: 'Offerte', description: '', total: q.total, features: q.lines.map((l) => l.description) },
+        ],
+        decisions: [],
+        paymentTerms: (q.metadata as any)?.paymentTerms ?? '',
+        estimatedDuration: (q.metadata as any)?.estimatedDuration ?? '',
+      });
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [quoteId, tokenParam]);
 
   // Load real quote from AppState if quoteId provided, else fall back to demo preview
   const quote: typeof DEMO_QUOTE = (() => {
+    if (remoteQuote) return remoteQuote;
     if (quoteId) {
       const real = quotes.find(q => q.id === quoteId);
       if (real) {

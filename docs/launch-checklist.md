@@ -39,6 +39,16 @@ Tracks everything required to publish Vasco to App Store + Google Play and enabl
 - Round 13 — Feature flags: `feature_flags` table + `useFeatureFlag` hook + kill-switch
 - Round 14 — `docs/release-runbook.md` (end-to-end ship sequence)
 
+### Deep features + forecasting (73-80)
+- Round 73 — Public quote portal consumes signed `verify-quote-token`
+- Round 74 — SignaturePad SVG capture
+- Round 75 — Job photo gallery screen
+- Round 76 — `supabase/cron.sql` registration script
+- Round 77 — WhatsApp Business templates + consent + `wa.me` deep-link
+- Round 78 — Receipt PDF share-sheet flow
+- Round 79 — Customer VIP tagging (LTV + on-time + freshness composite)
+- Round 80 — 30-day cash-flow forecast using ML payment predictor
+
 ### Portal, admin, receipts, photos, digests, checklist (67-72)
 - Round 67 — Signed quote portal tokens (HMAC, 90d TTL)
 - Round 68 — Admin dashboard pulls real MRR + country breakdown
