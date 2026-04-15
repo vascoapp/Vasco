@@ -39,6 +39,17 @@ Tracks everything required to publish Vasco to App Store + Google Play and enabl
 - Round 13 — Feature flags: `feature_flags` table + `useFeatureFlag` hook + kill-switch
 - Round 14 — `docs/release-runbook.md` (end-to-end ship sequence)
 
+### Supplier orders, offline CRM, analytics, AI replies, hours, decisions (89-97)
+- Round 89 — `place-supplier-order` Edge Function + supplier_connections/PO migrations
+- Round 90 — Offline-first addCustomer via offlineWriteQueue
+- Round 91 — Analytics events snapshot + admin card
+- Round 92 — `draft-customer-reply` Edge Function + client wrapper
+- Round 93 — `dailyHoursService` per-day + live clock-in summary
+- Round 94 — `customerPortfolioFilter` helpers
+- Round 95 — Intelligence strict-type pass deferred
+- Round 96 — document_number unique index + retry
+- Round 97 — Customer decisions → decisionSyncService.submitDecision wired
+
 ### Forecast UI, tagging, suppliers, dunning (81-88)
 - Round 81 — `CashFlowForecastCard` component for Vandaag/Geld
 - Round 82 — `CustomerTagBadge` pill component

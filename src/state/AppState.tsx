@@ -449,6 +449,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             return (row as any).id as string;
           } catch (err) {
             logWarn('AppState', `addCustomer persist failed or timed out: ${err}`);
+            // Offline-first: queue the insert so it flushes when we're back online
+            try {
+              const { queueWrite } = await import('../services/offlineWriteQueue');
+              await queueWrite({
+                table: 'customers',
+                op: 'insert',
+                payload: { id: tempId, name, email, phone, address },
+              });
+            } catch {}
           }
         }
         markStepComplete('first_customer_added').catch(() => {});

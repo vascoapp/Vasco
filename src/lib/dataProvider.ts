@@ -313,24 +313,34 @@ export async function nextDocumentNumber(docType: 'quote' | 'invoice'): Promise<
     }
   }
 
-  try {
-    const { data, error } = await supabase.rpc('next_document_number', { p_doc_type: docType } as any);
-    if (error) throw error;
-    return data as string;
-  } catch {
-    // Supabase unreachable (paused/offline) — fallback to local counter
-    const storageKey = `@vasco_doc_counter_${docType}`;
-    const prefix = docType === 'quote' ? 'Q' : 'INV';
-    const yearSuffix = new Date().getFullYear().toString().slice(-2);
+  // Retry on 23505 (unique_violation) — brief races between two devices can
+  // both mint the same next-counter; the RPC or unique index will reject the
+  // dupe and we try again up to 3 times.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      const raw = await AsyncStorage.getItem(storageKey);
-      const current = raw ? parseInt(raw, 10) : 0;
-      const next = current + 1;
-      await AsyncStorage.setItem(storageKey, String(next));
-      return `${prefix}-${yearSuffix}${String(next).padStart(4, '0')}`;
-    } catch {
-      return `${prefix}-${yearSuffix}${String(Date.now()).slice(-6)}`;
+      const { data, error } = await supabase.rpc('next_document_number', { p_doc_type: docType } as any);
+      if (error) {
+        if ((error as any).code === '23505' && attempt < 2) continue;
+        throw error;
+      }
+      return data as string;
+    } catch (err) {
+      if ((err as any)?.code === '23505' && attempt < 2) continue;
+      break;
     }
+  }
+  // Supabase unreachable (paused/offline) — fallback to local counter
+  const storageKey = `@vasco_doc_counter_${docType}`;
+  const prefix = docType === 'quote' ? 'Q' : 'INV';
+  const yearSuffix = new Date().getFullYear().toString().slice(-2);
+  try {
+    const raw = await AsyncStorage.getItem(storageKey);
+    const current = raw ? parseInt(raw, 10) : 0;
+    const next = current + 1;
+    await AsyncStorage.setItem(storageKey, String(next));
+    return `${prefix}-${yearSuffix}${String(next).padStart(4, '0')}`;
+  } catch {
+    return `${prefix}-${yearSuffix}${String(Date.now()).slice(-6)}`;
   }
 }
 

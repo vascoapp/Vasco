@@ -178,6 +178,18 @@ export default function CustomerViewScreen() {
       quoteId: quote.id, customerId: quote.customerId, type: 'decision',
       data: { decisionId, value, question: quote.decisions.find(d => d.id === decisionId)?.question },
     });
+    // Close the customer↔contractor loop: submit into the shared
+    // decision_submissions table so the contractor's Decisions screen
+    // surfaces the new value in realtime.
+    import('../../src/services/decisionSyncService').then((mod) =>
+      mod.submitDecision({
+        trackerId: quote.id,
+        itemId: decisionId,
+        submittedBy: 'customer',
+        value,
+        submittedAt: new Date().toISOString(),
+      }).catch(() => {}),
+    ).catch(() => {});
   };
 
   const handleAccept = async () => {
