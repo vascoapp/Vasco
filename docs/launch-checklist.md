@@ -39,6 +39,16 @@ Tracks everything required to publish Vasco to App Store + Google Play and enabl
 - Round 13 — Feature flags: `feature_flags` table + `useFeatureFlag` hook + kill-switch
 - Round 14 — `docs/release-runbook.md` (end-to-end ship sequence)
 
+### Forecast UI, tagging, suppliers, dunning (81-88)
+- Round 81 — `CashFlowForecastCard` component for Vandaag/Geld
+- Round 82 — `CustomerTagBadge` pill component
+- Round 83 — `supplierOAuth` PKCE scaffold for 6 suppliers
+- Round 84 — `costVarianceGenerator` flags >20% overruns
+- Round 85 — `ShareQuoteButton` (signed URL → Share)
+- Round 86 — `reminderCadenceService` day 3/7/14 escalation
+- Round 87 — routeOptimizerService (already existed)
+- Round 88 — `restockSuggestionService` consumption → PO draft
+
 ### Deep features + forecasting (73-80)
 - Round 73 — Public quote portal consumes signed `verify-quote-token`
 - Round 74 — SignaturePad SVG capture
