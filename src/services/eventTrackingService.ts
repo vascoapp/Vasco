@@ -10,6 +10,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { consentService } from './consentService';
 
 const EVENTS_STORAGE_KEY = '@vasco_analytics_events';
 const SESSION_STORAGE_KEY = '@vasco_analytics_session';
@@ -167,6 +168,13 @@ export async function trackEvent(
   name: EventName,
   properties: EventProperties = {},
 ): Promise<void> {
+  // GDPR: honor user opt-out. `login`/`logout` always tracked locally for
+  // account-security auditing; all other events require explicit consent.
+  if (name !== 'login' && name !== 'logout') {
+    const optedIn = await consentService.getConsent('analytics');
+    if (!optedIn) return;
+  }
+
   if (!currentSessionId) {
     await initSession();
   }

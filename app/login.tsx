@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   ScrollView,
   StyleSheet,
@@ -248,7 +249,29 @@ export default function LoginScreen() {
             </FadeIn>
           )}
 
-          <View style={{ height: 40 }} />
+          <View style={{ height: 24 }} />
+
+          <View style={styles.legalFooter}>
+            <Text style={styles.legalFooterText}>
+              {t('auth.legalNotice', 'By continuing you agree to our')}{' '}
+              <Text
+                style={styles.legalLink}
+                onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_TERMS_URL ?? 'https://vasco.app/terms')}
+              >
+                {t('legal.termsOfService', 'Terms')}
+              </Text>
+              {' '}&{' '}
+              <Text
+                style={styles.legalLink}
+                onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://vasco.app/privacy')}
+              >
+                {t('legal.privacyPolicy', 'Privacy Policy')}
+              </Text>
+              .
+            </Text>
+          </View>
+
+          <View style={{ height: 16 }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -259,6 +282,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: SemanticColors.surfaceBackground,
+  },
+  legalFooter: {
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  legalFooterText: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: SemanticColors.textTertiary,
+    textAlign: 'center',
+  },
+  legalLink: {
+    color: Palette.hermesOrange,
+    textDecorationLine: 'underline',
   },
   scrollContent: {
     flexGrow: 1,
