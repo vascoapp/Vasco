@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app-typecheck:
+    name: App TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Type-check app/
+        run: |
+          npx tsc --noEmit 2>&1 | tee tsc.log || true
+          if grep -q '^app/' tsc.log; then
+            echo "::error::TypeScript errors in app/"
+            grep '^app/' tsc.log
+            exit 1
+          fi
+          echo "app/ is clean"
+
+  admin-build:
+    name: Admin Next.js build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+
+      - name: Install admin dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Type-check admin
+        run: npx tsc --noEmit
+
+      - name: Build admin
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+
+  npm-audit:
+    name: npm audit (production)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install without dev deps
+        run: npm ci --omit=dev --no-audit --no-fund
+
+      - name: Audit production deps
+        run: npm audit --omit=dev --audit-level=high

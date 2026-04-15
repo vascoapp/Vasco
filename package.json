@@ -9,7 +9,12 @@
     "web": "expo start --web",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "contrast:check": "node scripts/contrast-audit.js"
+    "contrast:check": "node scripts/contrast-audit.js",
+    "tsc": "tsc --noEmit",
+    "tsc:app": "tsc --noEmit && echo done",
+    "supabase:types": "supabase gen types typescript --linked > src/types/supabase.ts",
+    "supabase:push": "supabase db push",
+    "supabase:reset": "supabase db reset --linked"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",

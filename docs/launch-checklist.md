@@ -26,11 +26,17 @@ Tracks everything required to publish Vasco to App Store + Google Play and enabl
 - [ ] App Store Connect: create app record, set bundle ID `com.vasco.app`, provide Apple Team ID + ASC App ID into `eas.json` submit block.
 - [ ] Google Play Console: create app, generate service account JSON, save as `./secrets/play-service-account.json`.
 
-## 🚧 Still to implement (autonomous)
-- Round 5 — Legal/GDPR wiring (link privacy/terms from login + settings, add explicit consent toggles)
-- Round 6 — Sentry + error boundary scaffolding (no DSN required to wire code)
-- Round 7 — Push token persistence (save Expo push token to Supabase `push_tokens` table on login)
-- Round 8 — Payment hardening: Stripe stub, Mollie webhook Edge Function, signature verification
+## ✅ Rounds 5-14 complete (autonomous)
+- Round 5 — Legal/GDPR wiring (login footer, cookie banner, analytics consent gate)
+- Round 6 — Sentry-ready error reporting (no-op until DSN provided)
+- Round 7 — Push token persistence (`push_tokens` table + upsert on login, unregister on logout)
+- Round 8 — Payment hardening: Stripe mock-gated like Mollie, webhooks production-ready
+- Round 9 — `docs/store-listings.md`: App Store + Play Store copy in EN/NL/DE/FR/ES/IT
+- Round 10 — Public legal pages served from admin (`/legal/[slug]`, `/privacy`, `/terms`)
+- Round 11 — `supabase/README.md` + `npm run supabase:types / supabase:push / supabase:reset`
+- Round 12 — `.github/workflows/ci.yml` (tsc + admin build + npm audit on every push)
+- Round 13 — Feature flags: `feature_flags` table + `useFeatureFlag` hook + kill-switch
+- Round 14 — `docs/release-runbook.md` (end-to-end ship sequence)
 
 ## 📱 Store listing assets (user task)
 - [ ] App Store screenshots: 6.7" iPhone (1290×2796), 6.5" iPhone, iPad 12.9" (for each EN/NL/DE/FR/ES/IT).

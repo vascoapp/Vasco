@@ -22,6 +22,7 @@ import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { checkForUpdate } from '../src/services/versionCheckService';
 import ErrorBoundary from '../src/components/shared/ErrorBoundary';
 import { initErrorReporting, setUser as setErrorUser } from '../src/lib/errorReporting';
+import { ensureFlagsLoaded } from '../src/services/featureFlagService';
 import { DemoBanner } from '../src/components/shared/DemoBanner';
 import { startAutoSync, stopAutoSync } from '../src/intelligence/cloudSync';
 import { startEventFlushing, stopEventFlushing } from '../src/intelligence/dataCollector';
@@ -43,8 +44,10 @@ function RootLayoutNav() {
   const router = useRouter();
 
   // Init error reporting (no-op if EXPO_PUBLIC_SENTRY_DSN unset)
+  // and warm feature-flag cache from Supabase.
   useEffect(() => {
     initErrorReporting().catch(() => {});
+    ensureFlagsLoaded().catch(() => {});
   }, []);
 
   // Check for app updates on mount
