@@ -133,13 +133,16 @@ async function apiCall<T>(path: string, options?: RequestInit): Promise<T | null
 export async function createPayment(req: MolliePaymentRequest): Promise<MolliePaymentResult> {
   const connected = await isConnected();
   if (!connected) {
-    // Mock fallback for demo mode
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    return {
-      success: true,
-      paymentId: `pay_demo_${req.invoiceId}`,
-      checkoutUrl: 'https://www.mollie.com/demo/checkout',
-    };
+    // In demo/dev mode, return a simulated payment. In production builds, surface an explicit error.
+    if (__DEV__ || process.env.EXPO_PUBLIC_DEMO_MODE === 'true') {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      return {
+        success: true,
+        paymentId: `pay_demo_${req.invoiceId}`,
+        checkoutUrl: 'https://www.mollie.com/demo/checkout',
+      };
+    }
+    return { success: false, paymentId: '', checkoutUrl: '', error: 'Mollie not connected — configure the integration before accepting payments.' };
   }
 
   const result = await apiCall<MolliePayment>('payments', {
@@ -190,7 +193,10 @@ export async function createPaymentLink(req: {
 }): Promise<{ url: string; id: string } | null> {
   const connected = await isConnected();
   if (!connected) {
-    return { url: `https://pay.vasco.app/demo/${req.invoiceId}`, id: `pl_demo_${req.invoiceId}` };
+    if (__DEV__ || process.env.EXPO_PUBLIC_DEMO_MODE === 'true') {
+      return { url: `https://pay.vasco.app/demo/${req.invoiceId}`, id: `pl_demo_${req.invoiceId}` };
+    }
+    return null;
   }
 
   const result = await apiCall<{ id: string; _links: { paymentLink: { href: string } } }>('payment-links', {
@@ -221,6 +227,6 @@ export async function createMolliePayment(
     invoiceId,
     amount,
     description: `Factuur ${invoiceId}`,
-    redirectUrl: 'https://app.vasco.nl/payment/success',
+    redirectUrl: process.env.EXPO_PUBLIC_PAYMENT_SUCCESS_URL ?? 'https://app.vasco.nl/payment/success',
   });
 }

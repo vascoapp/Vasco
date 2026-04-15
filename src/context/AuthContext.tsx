@@ -66,9 +66,6 @@ async function isLockedOut(email: string): Promise<boolean> {
   }
 }
 
-// Demo mode password — required even for demo accounts
-const DEMO_PASSWORD = 'vasco-demo-2026';
-
 // ============================================
 // ROLE TYPES
 // ============================================

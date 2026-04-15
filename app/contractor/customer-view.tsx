@@ -44,8 +44,8 @@ async function recordInteraction(interaction: Omit<CustomerInteraction, 'id' | '
   return entry;
 }
 
-// Mock quote — in production, loaded from deep link / Supabase
-const MOCK_QUOTE = {
+// Fallback demo quote used only when no quoteId param is provided (preview mode)
+const DEMO_QUOTE = {
   id: 'q-demo-001',
   reference: 'Q-2026-0055',
   businessName: 'Van der Berg Installaties',
@@ -71,6 +71,35 @@ const MOCK_QUOTE = {
 
 export default function CustomerViewScreen() {
   const router = useRouter();
+  const { quoteId } = useLocalSearchParams<{ quoteId?: string }>();
+  const { quotes, customers } = useAppState();
+
+  // Load real quote from AppState if quoteId provided, else fall back to demo preview
+  const quote: typeof DEMO_QUOTE = (() => {
+    if (quoteId) {
+      const real = quotes.find(q => q.id === quoteId);
+      if (real) {
+        const cust = customers.find(c => c.id === real.customerId);
+        return {
+          id: real.id,
+          reference: (real as any).reference ?? real.id,
+          businessName: (real as any).businessName ?? DEMO_QUOTE.businessName,
+          businessPhone: (real as any).businessPhone ?? '',
+          businessEmail: (real as any).businessEmail ?? '',
+          customerId: real.customerId ?? '',
+          customerName: cust?.name ?? (real as any).customerName ?? '',
+          title: (real as any).title ?? (real as any).description ?? '',
+          validUntil: (real as any).validUntil ?? '',
+          tiers: (real as any).tiers ?? DEMO_QUOTE.tiers,
+          decisions: (real as any).decisions ?? [],
+          paymentTerms: (real as any).paymentTerms ?? '',
+          estimatedDuration: (real as any).estimatedDuration ?? '',
+        };
+      }
+    }
+    return DEMO_QUOTE;
+  })();
+
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [decisions, setDecisions] = useState<Record<string, string>>({});
   const [changeMessage, setChangeMessage] = useState('');
@@ -83,7 +112,7 @@ export default function CustomerViewScreen() {
   // Record page view for data moat
   useEffect(() => {
     if (!viewRecorded) {
-      recordInteraction({ quoteId: MOCK_QUOTE.id, customerId: MOCK_QUOTE.customerId, type: 'view', data: { reference: MOCK_QUOTE.reference } });
+      recordInteraction({ quoteId: quote.id, customerId: quote.customerId, type: 'view', data: { reference: quote.reference } });
       setViewRecorded(true);
     }
   }, [viewRecorded]);
@@ -92,8 +121,8 @@ export default function CustomerViewScreen() {
     setSelectedTier(tierId);
     // Data moat: capture which tier customer is considering
     recordInteraction({
-      quoteId: MOCK_QUOTE.id, customerId: MOCK_QUOTE.customerId, type: 'tier_select',
-      data: { tierId, tierTotal: MOCK_QUOTE.tiers.find(t => t.id === tierId)?.total },
+      quoteId: quote.id, customerId: quote.customerId, type: 'tier_select',
+      data: { tierId, tierTotal: quote.tiers.find(t => t.id === tierId)?.total },
     });
   };
 
@@ -101,8 +130,8 @@ export default function CustomerViewScreen() {
     setDecisions(prev => ({ ...prev, [decisionId]: value }));
     // Data moat: capture every decision
     recordInteraction({
-      quoteId: MOCK_QUOTE.id, customerId: MOCK_QUOTE.customerId, type: 'decision',
-      data: { decisionId, value, question: MOCK_QUOTE.decisions.find(d => d.id === decisionId)?.question },
+      quoteId: quote.id, customerId: quote.customerId, type: 'decision',
+      data: { decisionId, value, question: quote.decisions.find(d => d.id === decisionId)?.question },
     });
   };
 
@@ -111,7 +140,7 @@ export default function CustomerViewScreen() {
       Alert.alert('Kies een pakket', 'Selecteer eerst een pakket om door te gaan.');
       return;
     }
-    const requiredUnanswered = MOCK_QUOTE.decisions.filter(d => d.required && !decisions[d.id]);
+    const requiredUnanswered = quote.decisions.filter(d => d.required && !decisions[d.id]);
     if (requiredUnanswered.length > 0) {
       Alert.alert('Keuzes nodig', `Beantwoord eerst: ${requiredUnanswered.map(d => d.question).join(', ')}`);
       return;
@@ -119,8 +148,8 @@ export default function CustomerViewScreen() {
     hapticSuccess();
     // Data moat: capture acceptance with all selections
     recordInteraction({
-      quoteId: MOCK_QUOTE.id, customerId: MOCK_QUOTE.customerId, type: 'accept',
-      data: { tierId: selectedTier, tierTotal: MOCK_QUOTE.tiers.find(t => t.id === selectedTier)?.total, decisions, allDecisionsCompleted: Object.keys(decisions).length === MOCK_QUOTE.decisions.length },
+      quoteId: quote.id, customerId: quote.customerId, type: 'accept',
+      data: { tierId: selectedTier, tierTotal: quote.tiers.find(t => t.id === selectedTier)?.total, decisions, allDecisionsCompleted: Object.keys(decisions).length === quote.decisions.length },
     });
     setAccepted(true);
   };
@@ -129,7 +158,7 @@ export default function CustomerViewScreen() {
     if (!changeMessage.trim()) return;
     hapticSuccess();
     recordInteraction({
-      quoteId: MOCK_QUOTE.id, customerId: MOCK_QUOTE.customerId, type: 'change_request',
+      quoteId: quote.id, customerId: quote.customerId, type: 'change_request',
       data: { message: changeMessage, selectedTier, decisions },
     });
     Alert.alert('Verstuurd', 'Uw wijzigingsverzoek is verstuurd. De installateur neemt contact met u op.');
@@ -143,8 +172,8 @@ export default function CustomerViewScreen() {
         <View style={s.successState}>
           <Ionicons name="checkmark-circle" size={64} color={SemanticColors.feedbackSuccess} />
           <Text style={s.successTitle}>Offerte geaccepteerd!</Text>
-          <Text style={s.successRef}>Referentie: {MOCK_QUOTE.reference}</Text>
-          <Text style={s.successDesc}>{MOCK_QUOTE.businessName} neemt binnenkort contact op om een datum te plannen.</Text>
+          <Text style={s.successRef}>Referentie: {quote.reference}</Text>
+          <Text style={s.successDesc}>{quote.businessName} neemt binnenkort contact op om een datum te plannen.</Text>
           <Pressable style={s.successBtn} onPress={() => router.back()}>
             <Text style={s.successBtnText}>Sluiten</Text>
           </Pressable>
@@ -161,7 +190,7 @@ export default function CustomerViewScreen() {
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={s.headerTitle}>Offerte</Text>
-          <Text style={s.headerSub}>{MOCK_QUOTE.reference}</Text>
+          <Text style={s.headerSub}>{quote.reference}</Text>
         </View>
       </View>
 
@@ -169,14 +198,14 @@ export default function CustomerViewScreen() {
         {/* Business + greeting */}
         <View style={s.bizCard}>
           <View style={s.bizBar} />
-          <Text style={s.bizName}>{MOCK_QUOTE.businessName}</Text>
-          <Text style={s.greeting}>Beste {MOCK_QUOTE.customerName},</Text>
-          <Text style={s.greetingDesc}>Hierbij onze offerte voor: {MOCK_QUOTE.title}</Text>
+          <Text style={s.bizName}>{quote.businessName}</Text>
+          <Text style={s.greeting}>Beste {quote.customerName},</Text>
+          <Text style={s.greetingDesc}>Hierbij onze offerte voor: {quote.title}</Text>
         </View>
 
         {/* Tier selection */}
         <Text style={s.sectionTitle}>Kies uw pakket</Text>
-        {MOCK_QUOTE.tiers.map(tier => (
+        {quote.tiers.map(tier => (
           <Pressable
             key={tier.id}
             style={[s.tierCard, (tier as any).recommended && s.tierRecommended, selectedTier === tier.id && s.tierSelected]}
@@ -207,11 +236,11 @@ export default function CustomerViewScreen() {
         ))}
 
         {/* Customer decisions — inline */}
-        {MOCK_QUOTE.decisions.length > 0 && (
+        {quote.decisions.length > 0 && (
           <View style={s.decisionSection}>
             <Text style={s.sectionTitle}>Uw keuzes</Text>
             <Text style={s.sectionDesc}>Maak uw keuzes zodat we direct aan de slag kunnen</Text>
-            {MOCK_QUOTE.decisions.map(d => (
+            {quote.decisions.map(d => (
               <View key={d.id} style={s.decisionCard}>
                 <Text style={s.decisionQ}>
                   {d.question}{d.required ? ' *' : ''}
@@ -249,15 +278,15 @@ export default function CustomerViewScreen() {
         <View style={s.detailsCard}>
           <View style={s.detailRow}>
             <Ionicons name="time-outline" size={16} color={SemanticColors.textSecondary} />
-            <Text style={s.detailText}>Geschatte duur: {MOCK_QUOTE.estimatedDuration}</Text>
+            <Text style={s.detailText}>Geschatte duur: {quote.estimatedDuration}</Text>
           </View>
           <View style={s.detailRow}>
             <Ionicons name="card-outline" size={16} color={SemanticColors.textSecondary} />
-            <Text style={s.detailText}>{MOCK_QUOTE.paymentTerms}</Text>
+            <Text style={s.detailText}>{quote.paymentTerms}</Text>
           </View>
           <View style={s.detailRow}>
             <Ionicons name="calendar-outline" size={16} color={SemanticColors.textSecondary} />
-            <Text style={s.detailText}>Geldig tot {new Date(MOCK_QUOTE.validUntil).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}</Text>
+            <Text style={s.detailText}>Geldig tot {new Date(quote.validUntil).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}</Text>
           </View>
         </View>
 
@@ -291,7 +320,7 @@ export default function CustomerViewScreen() {
         {/* Contact */}
         <View style={s.contactCard}>
           <Text style={s.contactTitle}>Vragen?</Text>
-          <Text style={s.contactText}>{MOCK_QUOTE.businessPhone} · {MOCK_QUOTE.businessEmail}</Text>
+          <Text style={s.contactText}>{quote.businessPhone} · {quote.businessEmail}</Text>
         </View>
 
         <View style={{ height: 40 }} />
