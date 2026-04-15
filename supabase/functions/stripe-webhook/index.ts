@@ -10,6 +10,7 @@
 // =============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { dispatchPaidSideEffects } from '../_shared/paid-side-effects.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -254,6 +255,10 @@ Deno.serve(async (req) => {
     }
 
     console.log(`Invoice ${invoiceId} marked as paid via Stripe (${paymentId})`);
+
+    await dispatchPaidSideEffects(supabaseUrl, supabaseServiceKey, invoiceId).catch((err) =>
+      console.warn('paid side-effects failed:', String(err)),
+    );
 
     // -------------------------------------------------------------------------
     // 4. Always return 200 — Stripe retries on non-2xx responses

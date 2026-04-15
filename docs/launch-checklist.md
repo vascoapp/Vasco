@@ -39,6 +39,18 @@ Tracks everything required to publish Vasco to App Store + Google Play and enabl
 - Round 13 — Feature flags: `feature_flags` table + `useFeatureFlag` hook + kill-switch
 - Round 14 — `docs/release-runbook.md` (end-to-end ship sequence)
 
+### Portal, admin, receipts, photos, digests, checklist (67-72)
+- Round 67 — Signed quote portal tokens (HMAC, 90d TTL)
+- Round 68 — Admin dashboard pulls real MRR + country breakdown
+- Round 69 — Payment webhook fires receipt email + contractor push
+- Round 70 — Job photo upload to `job-photos` bucket + `job_photos` table
+- Round 71 — Weekly Monday-morning digest Edge Function
+- Round 72 — Job completion checklist (per-trade required items)
+
+### Server-side push + offline scans (65-66)
+- Round 65 — `send-push` Edge Function fan-outs to Expo Push API with dead-token pruning
+- Round 66 — `offlineScanQueue` with AsyncStorage + foreground flush
+
 ### Live function wiring (57-64)
 - Round 57 — withTimeout on addCustomer / addQuote / addInvoice writes
 - Round 58 — 3 generators emit enqueueHint (overdue, cert renewal, margin drift)

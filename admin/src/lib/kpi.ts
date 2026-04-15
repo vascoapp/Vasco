@@ -829,8 +829,30 @@ export function isUsingDemoData(): boolean {
 
 export async function fetchKPIDashboardData(days: number = 30): Promise<KPIDashboardData> {
   if (!isSupabaseConfigured()) return getDemoData(days);
-  // TODO: implement real Supabase queries
-  return getDemoData(days);
+  try {
+    const { fetchRevenueSnapshot } = await import('./revenue');
+    const snap = await fetchRevenueSnapshot();
+    const demo = getDemoData(days);
+    // Overlay real numbers onto the demo scaffold so the UI stays complete
+    // while the long-tail KPIs (funnel, retention) are still being built out.
+    return {
+      ...demo,
+      financial: {
+        ...demo.financial,
+        mrr: snap.mrr,
+      },
+      users: {
+        ...demo.users,
+        totalUsers: snap.totalUsers,
+      },
+      markets: demo.markets.map((row) => ({
+        ...row,
+        users: snap.countryBreakdown[row.market] ?? row.users,
+      })),
+    };
+  } catch {
+    return getDemoData(days);
+  }
 }
 
 export async function fetchDeveloperHubData(): Promise<DeveloperHubData> {

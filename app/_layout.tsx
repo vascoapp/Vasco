@@ -26,6 +26,7 @@ import { ensureFlagsLoaded } from '../src/services/featureFlagService';
 import { watchInvoicePayments, watchUserTables } from '../src/services/invoicePaymentWatcher';
 import { flushQueue as flushOfflineQueue } from '../src/services/offlineWriteQueue';
 import { notifyNewQueueItems } from '../src/services/aiQueueNotifier';
+import { flushScanQueue } from '../src/services/offlineScanQueue';
 import { AppState as RNAppState } from 'react-native';
 import { DemoBanner } from '../src/components/shared/DemoBanner';
 import { startAutoSync, stopAutoSync } from '../src/intelligence/cloudSync';
@@ -61,6 +62,7 @@ function RootLayoutNav() {
     const sub = RNAppState.addEventListener('change', (state) => {
       if (state === 'active') {
         flushOfflineQueue().catch(() => {});
+        flushScanQueue().catch(() => {});
         notifyNewQueueItems().catch(() => {});
       }
     });
