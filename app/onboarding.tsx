@@ -327,6 +327,27 @@ export default function OnboardingScreen() {
       await AsyncStorage.setItem('@vasco_onboarding', JSON.stringify(onboardingData));
       await AsyncStorage.setItem('@vasco_subscription', JSON.stringify({ tier: selectedPlan, billingCycle }));
 
+      // Persist tier selection server-side so the user can't downgrade by
+      // reinstalling the app and the web admin can report real tier metrics.
+      try {
+        const { isSupabaseConfigured, supabase } = await import('../src/lib/supabase');
+        if (isSupabaseConfigured) {
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (authUser) {
+            await (supabase.from('subscriptions' as any) as any).upsert({
+              user_id: authUser.id,
+              tier: selectedPlan,
+              billing_cycle: billingCycle,
+              status: selectedPlan === 'free' ? 'active' : 'trialing',
+              trial_ends_at: selectedPlan === 'free' ? null : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'user_id' });
+          }
+        }
+      } catch {
+        // Non-blocking: local AsyncStorage copy is still the source of truth in demo mode
+      }
+
       const userUpdates = {
         trade: selectedTrades[0],
         country: country ?? undefined,

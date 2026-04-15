@@ -103,8 +103,12 @@ export async function scanInvoicePhoto(
     }
   }
 
-  // Mock fallback for demo mode
-  return mockScanResult();
+  // Only fall back to demo scan in __DEV__ / demo mode.
+  // In production builds we surface a null so the UI can show an explicit error.
+  if (__DEV__ || process.env.EXPO_PUBLIC_DEMO_MODE === 'true') {
+    return mockScanResult();
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------

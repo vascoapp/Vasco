@@ -24,6 +24,7 @@ import { FadeIn } from '../../src/components/shared/FadeIn';
 import { Sparkline } from '../../src/components/shared/Sparkline';
 import { VascoCard } from '../../src/components/shared/VascoCard';
 import { SkeletonList } from '../../src/components/shared/SkeletonList';
+import { EmptyState } from '../../src/components/shared/EmptyState';
 import { useAIQueue } from '../../src/services/aiActionQueueService';
 import { useVascoGuidance } from '../../src/services/vascoGuidanceService';
 
@@ -311,9 +312,13 @@ export default function GeldScreen() {
                 ))}
               </View>
             ) : (
-              <View style={s.emptyCard}>
-                <Text style={s.emptyText}>{t('money.noInvoices', 'No invoices yet')}</Text>
-              </View>
+              <EmptyState
+                icon="receipt-outline"
+                title={t('money.noInvoicesTitle', 'No invoices yet')}
+                description={t('money.noInvoicesDesc', 'Create one from a completed job or from scratch — Vasco handles the reminders and payment links.')}
+                actionLabel={t('money.newInvoice', 'New invoice')}
+                onAction={() => router.push('/contractor/new-invoice' as any)}
+              />
             )}
           </View>
         </FadeIn>
@@ -363,9 +368,13 @@ export default function GeldScreen() {
                 ))}
               </View>
             ) : (
-              <View style={s.emptyCard}>
-                <Text style={s.emptyText}>{t('money.noQuotes', 'No quotes yet')}</Text>
-              </View>
+              <EmptyState
+                icon="document-text-outline"
+                title={t('money.noQuotesTitle', 'No quotes yet')}
+                description={t('money.noQuotesDesc', 'Try the tiered quote builder — customers accept directly from their phone.')}
+                actionLabel={t('quotes.newQuote', 'New quote')}
+                onAction={() => router.push('/contractor/tiered-quote' as any)}
+              />
             )}
           </View>
         </FadeIn>

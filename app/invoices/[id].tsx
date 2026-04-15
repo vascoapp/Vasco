@@ -21,6 +21,10 @@ import {
   getCustomerPaymentPreference,
   getPaymentMethodLabel,
 } from '../../src/services/customerPaymentPreferenceService';
+import { sendInvoice as sendInvoiceEmail } from '../../src/services/sendInvoiceService';
+import { generateXRechnungXML, generateZUGFeRDXML, type EInvoiceData } from '../../src/integrations/einvoice';
+import { Share as RNShare } from 'react-native';
+import { File, Paths } from 'expo-file-system';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -211,13 +215,46 @@ export default function InvoiceDetailScreen() {
     );
   };
 
-  const handleMarkSent = () => {
+  const handleMarkSent = async () => {
+    const customerEmail = (invoice as any).customerEmail ?? (invoice as any).customer_email;
+    const language = (user?.language ?? 'nl') as 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
+
+    // Optimistic local update
     markInvoiceSent(invoice.id);
     hapticSuccess();
-    Alert.alert(
-      t('invoices.reminderSent', 'Reminder sent'),
-      t('invoices.reminderSentDesc', 'Vasco will track this and remind you again if needed.'),
-    );
+
+    if (!customerEmail) {
+      Alert.alert(
+        t('invoices.noEmail', 'No customer email'),
+        t('invoices.noEmailDesc', 'Marked as sent locally. Add the customer email to send the invoice automatically next time.'),
+      );
+      return;
+    }
+
+    const paymentUrl = lastMolliePayment?.invoiceId === invoice.id ? lastMolliePayment.checkoutUrl : undefined;
+    const result = await sendInvoiceEmail({
+      invoiceId: invoice.id,
+      to: customerEmail,
+      paymentUrl,
+      locale: language,
+    });
+    if (result.ok) {
+      Alert.alert(
+        t('invoices.sentTitle', 'Invoice sent'),
+        t('invoices.sentDesc', {
+          defaultValue: 'Sent to {{email}}. Vasco will remind you if payment is late.',
+          email: customerEmail,
+        }),
+      );
+    } else {
+      Alert.alert(
+        t('invoices.sendFailedTitle', 'Email not sent'),
+        t('invoices.sendFailedDesc', {
+          defaultValue: 'Marked as sent locally, but the email could not be delivered: {{error}}',
+          error: result.error ?? 'unknown',
+        }),
+      );
+    }
   };
 
   const handleViewPdf = async () => {
@@ -225,6 +262,50 @@ export default function InvoiceDetailScreen() {
     const autoInv = invoiceAutomationService.getInvoice(invoice.id);
     if (autoInv) {
       await generateInvoicePdf(autoInv, businessProfile);
+    }
+  };
+
+  const handleExportEInvoice = async (format: 'XRechnung' | 'ZUGFeRD') => {
+    const currency = country === 'UK' ? 'GBP' : 'EUR';
+    const vatAmount = total * VAT_RATE;
+    const data: EInvoiceData = {
+      sellerName: (businessProfile as any)?.businessName ?? 'Vasco',
+      sellerAddress: (businessProfile as any)?.address ?? '',
+      sellerVatId: (businessProfile as any)?.vatId ?? '',
+      buyerName: invoice.customer ?? '',
+      buyerAddress: (invoice as any).customerAddress ?? '',
+      buyerVatId: (invoice as any).customerVatId,
+      invoiceNumber: (invoice as any).reference ?? invoice.id,
+      invoiceDate: (invoice as any).issuedAt?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
+      dueDate: new Date(Date.now() + (invoice.dueInDays || 14) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      currency,
+      lineItems: localItems.map((li: EditableLineItem) => ({
+        description: li.description,
+        quantity: li.quantity,
+        unitCode: 'piece',
+        unitPrice: li.unitPrice,
+        vatRate: VAT_RATE * 100,
+        vatAmount: li.quantity * li.unitPrice * VAT_RATE,
+        lineTotal: li.quantity * li.unitPrice,
+      })),
+      totalNet: total,
+      totalVat: vatAmount,
+      totalGross: total + vatAmount,
+      iban: (businessProfile as any)?.iban,
+      bic: (businessProfile as any)?.bic,
+      paymentReference: (invoice as any).reference ?? invoice.id,
+    };
+    const xml = format === 'XRechnung' ? generateXRechnungXML(data) : generateZUGFeRDXML(data);
+    const filename = `${data.invoiceNumber}-${format.toLowerCase()}.xml`;
+
+    try {
+      const file = new File(Paths.cache, filename);
+      file.write(xml);
+      await RNShare.share({ url: file.uri, title: filename });
+      hapticSuccess();
+    } catch {
+      // Fallback: share XML as plain text if filesystem/share fails
+      await RNShare.share({ message: xml, title: filename });
     }
   };
 
@@ -473,6 +554,16 @@ export default function InvoiceDetailScreen() {
             onPress={() => moneybirdConnected ? handleExportMoneybird() : router.push('/(modals)/moneybird' as any)}
             border
           />
+          {(country === 'DE' || country === 'FR') && (
+            <ActionRow
+              icon="code-slash-outline"
+              label={country === 'DE'
+                ? t('invoices.exportXRechnung', 'Export XRechnung (XML)')
+                : t('invoices.exportFacturX', 'Export Factur-X (XML)')}
+              onPress={() => handleExportEInvoice(country === 'DE' ? 'XRechnung' : 'ZUGFeRD')}
+              border
+            />
+          )}
           <ActionRow
             icon="send-outline"
             label={t('invoices.sendReminder', 'Send reminder')}

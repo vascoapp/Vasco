@@ -387,13 +387,51 @@ export async function syncPayments(): Promise<{ paidInvoiceIds: string[] }> {
 // Legacy stub (backwards compatible)
 // ---------------------------------------------------------------------------
 
-export async function exportInvoiceToMoneybird(invoiceId: string): Promise<MoneybirdExportResult> {
+export async function exportInvoiceToMoneybird(
+  invoiceId: string,
+  payload?: {
+    customerEmail?: string;
+    customerName?: string;
+    reference?: string;
+    dueDate?: string;
+    lineItems?: { description: string; price: number; quantity: number; vatRate: number }[];
+  },
+): Promise<MoneybirdExportResult> {
   const connected = await isConnected();
   if (!connected) {
-    // Fallback to mock for demo mode
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    return { success: true, exportedAt: new Date().toISOString() };
+    if (__DEV__ || process.env.EXPO_PUBLIC_DEMO_MODE === 'true') {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      return { success: true, exportedAt: new Date().toISOString() };
+    }
+    return { success: false, exportedAt: new Date().toISOString(), error: 'Moneybird not connected' };
   }
-  // Real export would need invoice data from AppState — this is the bridge point
-  return { success: true, exportedAt: new Date().toISOString() };
+
+  if (!payload?.lineItems || payload.lineItems.length === 0) {
+    return { success: false, exportedAt: new Date().toISOString(), error: 'No line items on invoice' };
+  }
+
+  // Find-or-create the contact in Moneybird
+  let contactId: string | undefined;
+  if (payload.customerEmail) {
+    const existing = await findContactByEmail(payload.customerEmail);
+    contactId = existing?.id;
+  }
+  if (!contactId) {
+    const created = await createContact({
+      company_name: payload.customerName ?? 'Customer',
+      email: payload.customerEmail,
+    });
+    contactId = created?.id;
+  }
+  if (!contactId) {
+    return { success: false, exportedAt: new Date().toISOString(), error: 'Could not resolve Moneybird contact' };
+  }
+
+  const result = await createInvoice({
+    contactId,
+    reference: payload.reference ?? invoiceId,
+    dueDate: payload.dueDate,
+    lineItems: payload.lineItems,
+  });
+  return result;
 }

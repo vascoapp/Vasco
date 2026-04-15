@@ -23,6 +23,7 @@ import { checkForUpdate } from '../src/services/versionCheckService';
 import ErrorBoundary from '../src/components/shared/ErrorBoundary';
 import { initErrorReporting, setUser as setErrorUser } from '../src/lib/errorReporting';
 import { ensureFlagsLoaded } from '../src/services/featureFlagService';
+import { watchInvoicePayments } from '../src/services/invoicePaymentWatcher';
 import { DemoBanner } from '../src/components/shared/DemoBanner';
 import { startAutoSync, stopAutoSync } from '../src/intelligence/cloudSync';
 import { startEventFlushing, stopEventFlushing } from '../src/intelligence/dataCollector';
@@ -73,9 +74,11 @@ function RootLayoutNav() {
       startAutoSync(user.id, user.role ?? 'contractor', user.trade, user.country);
       startEventFlushing(user.id);
       registerForPushNotifications().catch(() => {});
+      // Watch for payment webhooks (Mollie/Stripe → invoices.paid) in realtime
+      const stopWatch = watchInvoicePayments(user.id);
       // Start EVE-style background job scheduler (audits + morning briefing)
       startBackgroundJobScheduler(() => ({ invoices: [], quotes: [], jobs: [], country: user.country })); // AppState not accessible here; will be populated on Vandaag mount
-      return () => { setErrorUser(null); stopAutoSync(); stopEventFlushing(); stopBackgroundJobScheduler(); };
+      return () => { setErrorUser(null); stopAutoSync(); stopEventFlushing(); stopWatch(); stopBackgroundJobScheduler(); };
     }
   }, [isAuthenticated, user?.id]);
 

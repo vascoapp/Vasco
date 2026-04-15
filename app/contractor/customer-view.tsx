@@ -15,6 +15,7 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { useAppState } from '../../src/state/AppState';
+import { isSupabaseConfigured, supabase } from '../../src/lib/supabase';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 // Data moat: every customer interaction captured → AsyncStorage + Supabase-ready
@@ -40,7 +41,19 @@ async function recordInteraction(interaction: Omit<CustomerInteraction, 'id' | '
     all.push(entry);
     await AsyncStorage.setItem('@vasco_customer_interactions', JSON.stringify(all.slice(-500)));
   } catch {}
-  // TODO: When Supabase active, upsert to customer_interactions table
+  // Best-effort Supabase upsert for the data moat
+  if (isSupabaseConfigured) {
+    try {
+      await (supabase.from('customer_interactions' as any) as any).insert({
+        id: entry.id,
+        quote_id: entry.quoteId,
+        customer_id: entry.customerId,
+        type: entry.type,
+        data: entry.data,
+        created_at: entry.timestamp,
+      });
+    } catch {}
+  }
   return entry;
 }
 
@@ -72,7 +85,7 @@ const DEMO_QUOTE = {
 export default function CustomerViewScreen() {
   const router = useRouter();
   const { quoteId } = useLocalSearchParams<{ quoteId?: string }>();
-  const { quotes, customers } = useAppState();
+  const { quotes, customers, convertQuoteToJob } = useAppState();
 
   // Load real quote from AppState if quoteId provided, else fall back to demo preview
   const quote: typeof DEMO_QUOTE = (() => {
@@ -135,7 +148,7 @@ export default function CustomerViewScreen() {
     });
   };
 
-  const handleAccept = () => {
+  const handleAccept = async () => {
     if (!selectedTier) {
       Alert.alert('Kies een pakket', 'Selecteer eerst een pakket om door te gaan.');
       return;
@@ -147,10 +160,18 @@ export default function CustomerViewScreen() {
     }
     hapticSuccess();
     // Data moat: capture acceptance with all selections
-    recordInteraction({
+    await recordInteraction({
       quoteId: quote.id, customerId: quote.customerId, type: 'accept',
       data: { tierId: selectedTier, tierTotal: quote.tiers.find(t => t.id === selectedTier)?.total, decisions, allDecisionsCompleted: Object.keys(decisions).length === quote.decisions.length },
     });
+    // Golden path: auto-create a job from the accepted quote (if this is a real quote from AppState)
+    if (quoteId) {
+      try {
+        await convertQuoteToJob(quote.id);
+      } catch {
+        // Non-blocking — user still sees the success state
+      }
+    }
     setAccepted(true);
   };
 

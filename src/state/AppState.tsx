@@ -1087,12 +1087,31 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
       connectMoneybird: () => setMoneybirdConnected(true),
       exportInvoice: async (invoiceId) => {
-        const result = await exportInvoiceToMoneybird(invoiceId);
+        const inv = invoices.find((i) => i.id === invoiceId);
+        const cust = customers.find((c) => c.id === inv?.customer);
+        const invLineItems = lineItems.filter((li) => li.parentId === invoiceId);
+        const payload = inv
+          ? {
+              customerEmail: cust?.email,
+              customerName: cust?.name ?? inv.customer,
+              reference: (inv as any).reference ?? inv.id,
+              dueDate: (inv as any).dueDate,
+              lineItems: invLineItems.map((li) => ({
+                description: li.description,
+                price: li.unitPrice,
+                quantity: li.quantity,
+                vatRate: 21,
+              })),
+            }
+          : undefined;
+        const result = await exportInvoiceToMoneybird(invoiceId, payload);
         if (result.success) {
           setLastMoneybirdExport((prev) => ({
             ...prev,
             [invoiceId]: result.exportedAt,
           }));
+        } else if (result.error) {
+          logWarn('AppState', `Moneybird export failed: ${result.error}`);
         }
       },
       addInvoiceFromJob: async (jobId: string) => {
