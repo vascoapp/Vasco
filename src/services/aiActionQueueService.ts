@@ -62,6 +62,10 @@ export interface QueueItem {
   sourceGeneratorId?: string; // Which AI generator created this
   snoozedUntil?: string;   // ISO date — item hidden until this time
   snoozeCount?: number;    // How many times snoozed
+  /** Stable dedup key. Same key = same underlying entity (invoice id, etc.) */
+  entityKey?: string;
+  /** How many similar events rolled into this item (e.g. "3 overdue invoices"). */
+  count?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -137,18 +141,37 @@ export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'create
     createdAt: new Date().toISOString(),
   };
   try {
-    const queue = await getQueue();
-    // Deduplicate: don't add if same type + same title OR same sourceGeneratorId already pending
-    if (queue.some(q =>
-      q.type === item.type && (
+    const raw = await AsyncStorage.getItem(QUEUE_KEY);
+    const existing: QueueItem[] = raw ? JSON.parse(raw) : [];
+    // If there's an identical entity (type + entityKey), merge into a count badge
+    if (item.entityKey) {
+      const match = existing.find(q => q.status === 'pending' && q.type === item.type && q.entityKey === item.entityKey);
+      if (match) return ''; // same event, skip
+    }
+    // Same type but different entities → roll into a single badge with count
+    const siblingIdx = existing.findIndex(q => q.status === 'pending' && q.type === item.type && !!item.entityKey);
+    if (item.entityKey && siblingIdx >= 0) {
+      const sibling = existing[siblingIdx];
+      sibling.count = (sibling.count ?? 1) + 1;
+      sibling.title = sibling.count > 1 ? `${sibling.count}× ${stripCount(sibling.title)}` : sibling.title;
+      await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(existing));
+      return sibling.id;
+    }
+    // Legacy dedup fallback for items without entityKey
+    if (!item.entityKey && existing.some(q =>
+      q.status === 'pending' && q.type === item.type && (
         q.title === item.title ||
         (item.sourceGeneratorId && q.sourceGeneratorId === item.sourceGeneratorId)
       )
     )) return '';
-    queue.unshift(full);
-    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(queue.slice(0, 50)));
+    existing.unshift({ ...full, count: 1 });
+    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(existing.slice(0, 50)));
   } catch {}
   return id;
+}
+
+function stripCount(title: string): string {
+  return title.replace(/^\d+×\s+/, '');
 }
 
 export async function approveItem(itemId: string): Promise<QueueItem | null> {
@@ -284,6 +307,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       actionLabel: t('aiQueue.createInvoice'),
       estimatedImpact: t('aiQueue.revenueAmount', { amount: amountStr }),
       expiresAt: new Date(now + 7 * dayMs).toISOString(),
+      entityKey: `invoice-for-job:${job.id}`,
     });
     if (id) added++;
   }
@@ -308,6 +332,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       actionLabel: t('aiQueue.sendReminder'),
       estimatedImpact: t('aiQueue.speedsUpPayment'),
       expiresAt: new Date(now + 3 * dayMs).toISOString(),
+      entityKey: `reminder-for-invoice:${inv.id}`,
     });
     if (id) added++;
   }

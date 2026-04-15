@@ -575,6 +575,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             scopeChanges: 0,
             materialDelays: false,
           }).catch(() => {});
+          // Calibrate the duration predictor: feed estimated vs actual hours
+          // so future quotes get personalized coefficients.
+          if (job.estimatedDuration && actualHours > 0) {
+            import('../intelligence/mlModels').then((ml) =>
+              ml.recordModelPrediction('duration', job.estimatedDuration as number, actualHours),
+            ).catch(() => {});
+          }
           // Ontology: propagate job completion
           propagateJobCompletion(id, {
             actualCost,
@@ -1392,6 +1399,28 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       projects,
     ]
   );
+
+  // Register real side-effect bindings so actionExecutor can actually execute
+  // create_invoice / create_payment_link / etc instead of returning a route hint.
+  useEffect(() => {
+    // Import here to keep this optional and avoid a circular dep
+    import('../intelligence/actionExecutor').then((mod) => {
+      mod.registerExecutorBindings({
+        createInvoiceFromJob: async (jobId: string) => {
+          try {
+            const id = await (value as any).addInvoiceFromJob(jobId);
+            return id as string;
+          } catch { return null; }
+        },
+        createPaymentLink: async (invoiceId: string, amount: number) => {
+          try {
+            await (value as any).createPaymentLink(invoiceId, amount);
+            return 'ok';
+          } catch { return null; }
+        },
+      });
+    }).catch(() => {});
+  }, [value]);
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
 }

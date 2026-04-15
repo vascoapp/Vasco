@@ -81,7 +81,26 @@ export function VascoCard({
   const queueCount = queueItems.length;
   const hasContent = findingsCount > 0 || queueCount > 0 || topInsight || automationsCount > 0;
 
-  if (!hasContent && !briefing) return null;
+  if (!hasContent && !briefing) {
+    // First-run placeholder — without this, new users see a blank dashboard
+    return (
+      <Pressable
+        onPress={() => router.push('/contractor/tiered-quote' as any)}
+        style={s.emptyCard}
+        accessibilityRole="button"
+        accessibilityLabel={t('vasco.emptyCta', 'Create your first quote to see AI insights')}
+      >
+        <View style={s.emptyIconWrap}>
+          <Ionicons name="sparkles" size={22} color={Palette.hermesOrange} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={s.emptyTitle}>{t('vasco.emptyTitle', 'Vasco is ready')}</Text>
+          <Text style={s.emptyDesc}>{t('vasco.emptyDesc', 'Add your first quote or job and I\'ll start preparing actions here.')}</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+      </Pressable>
+    );
+  }
 
   // ── Smart collapsed summary: show top priority item ──
   const criticalFindings = briefing?.findings.filter(f => f.severity === 'critical') ?? [];
@@ -748,5 +767,34 @@ const s = StyleSheet.create({
   },
   disabled: {
     opacity: 0.6,
+  },
+  emptyCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.sm + 4,
+    backgroundColor: Palette.white,
+    borderRadius: RADIUS.lg,
+    padding: GRID.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderMuted,
+  },
+  emptyIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: RADIUS.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Palette.hermesOrange + '12',
+  },
+  emptyTitle: {
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
+  },
+  emptyDesc: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textSecondary,
+    marginTop: 2,
   },
 });

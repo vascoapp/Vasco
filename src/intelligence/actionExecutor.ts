@@ -27,6 +27,26 @@ export interface ActionResult {
   data?: Record<string, any>;
 }
 
+// ---------------------------------------------------------------------------
+// Executor bridge — lets AppState inject real side-effect functions so this
+// module can stay hook-free. If no binding is registered, handlers degrade
+// gracefully to the old route-hint behavior.
+// ---------------------------------------------------------------------------
+
+export interface ExecutorBindings {
+  createInvoiceFromJob?: (jobId: string) => Promise<string | null>;
+  createPaymentLink?: (invoiceId: string, amount: number) => Promise<string | null>;
+  createPurchaseOrder?: (materialName: string, supplier?: string) => Promise<string | null>;
+  scheduleJob?: (jobId: string, when: Date) => Promise<void>;
+  updateQuoteAmount?: (quoteId: string, newAmount: number) => Promise<void>;
+}
+
+let bindings: ExecutorBindings = {};
+
+export function registerExecutorBindings(next: ExecutorBindings): void {
+  bindings = { ...bindings, ...next };
+}
+
 export interface ActionLogEntry {
   id: string;
   actionType: InsightActionType;
@@ -66,22 +86,55 @@ const handlers: Record<InsightActionType, ActionHandler> = {
 
   create_invoice: async (params) => {
     const t = i18n.t.bind(i18n);
+    if (bindings.createInvoiceFromJob && params.jobId) {
+      try {
+        const invoiceId = await bindings.createInvoiceFromJob(String(params.jobId));
+        if (invoiceId) {
+          // Also generate a payment link when amount is available
+          if (bindings.createPaymentLink && typeof params.amount === 'number') {
+            await bindings.createPaymentLink(invoiceId, params.amount).catch(() => null);
+          }
+          return { success: true, message: t('action.invoiceCreated', { defaultValue: 'Invoice {{id}} created', id: invoiceId }), data: { invoiceId, route: `/invoices/${invoiceId}` } };
+        }
+      } catch (e) {
+        return { success: false, message: t('action.invoiceFailed', { defaultValue: 'Could not create invoice: {{err}}', err: String(e) }) };
+      }
+    }
     return { success: true, message: t('action.creatingInvoice', 'Creating invoice...'), data: { route: '/contractor/tiered-quote', jobId: params.jobId } };
   },
 
   order_materials: async (params) => {
     const t = i18n.t.bind(i18n);
+    if (bindings.createPurchaseOrder && params.materialName) {
+      try {
+        const poId = await bindings.createPurchaseOrder(String(params.materialName), params.supplier ? String(params.supplier) : undefined);
+        if (poId) {
+          return { success: true, message: t('action.orderCreated', { defaultValue: 'Purchase order created for {{material}}', material: params.materialName }), data: { poId, route: `/contractor/purchase-order/${poId}` } };
+        }
+      } catch {}
+    }
     return { success: true, message: t('action.orderCreated', { defaultValue: 'Purchase order created for {{material}}', material: params.materialName || t('action.materials', 'materials') }), data: { route: '/contractor/purchase-orders' } };
   },
 
   schedule_job: async (params) => {
     const t = i18n.t.bind(i18n);
+    if (bindings.scheduleJob && params.jobId && params.scheduledAt) {
+      try {
+        await bindings.scheduleJob(String(params.jobId), new Date(params.scheduledAt));
+        return { success: true, message: t('action.jobScheduled', { defaultValue: 'Job scheduled: {{title}}', title: params.jobTitle || '' }), data: { route: `/contractor/job/${params.jobId}` } };
+      } catch {}
+    }
     return { success: true, message: t('action.jobScheduled', { defaultValue: 'Job scheduled: {{title}}', title: params.jobTitle || '' }), data: { route: '/contractor/drag-schedule' } };
   },
 
   adjust_quote: async (params) => {
     const t = i18n.t.bind(i18n);
     const { quoteId, suggestedPrice } = params;
+    if (bindings.updateQuoteAmount && quoteId && typeof suggestedPrice === 'number') {
+      try {
+        await bindings.updateQuoteAmount(String(quoteId), suggestedPrice);
+      } catch {}
+    }
     return { success: true, message: t('action.quoteAdjusted', { defaultValue: 'Quote {{id}} adjusted to €{{price}}', id: quoteId, price: suggestedPrice }), data: { route: `/quotes/${quoteId}` } };
   },
 

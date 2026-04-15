@@ -6,7 +6,7 @@
 //        → AI Demo → Plan Selection → Review
 // =============================================================================
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   Alert,
   View,
@@ -220,6 +220,47 @@ export default function OnboardingScreen() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const [submitting, setSubmitting] = useState(false);
 
+  // Resume on mount: if the user already got partway through and backgrounded
+  // the app, restore them to the same step with their partial answers.
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem('@vasco_onboarding_progress');
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        if (typeof saved.step === 'number' && saved.step > 1 && saved.step <= 14) setStep(saved.step);
+        if (saved.language) setLanguage(saved.language);
+        if (saved.country) setCountry(saved.country);
+        if (saved.trades) setSelectedTrades(saved.trades);
+        if (saved.goals) setSelectedGoals(saved.goals);
+        if (saved.challenges) setSelectedChallenges(saved.challenges);
+        if (saved.teamSize) setTeamSize(saved.teamSize);
+        if (saved.businessType) setBusinessType(saved.businessType);
+        if (saved.regFields) setRegFields(saved.regFields);
+        if (saved.certs) setSelectedCerts(saved.certs);
+        if (saved.postcode) setPostcode(saved.postcode);
+        if (typeof saved.radius === 'number') setRadius(saved.radius);
+        if (saved.plan) setSelectedPlan(saved.plan);
+        if (saved.billingCycle) setBillingCycle(saved.billingCycle);
+      } catch {}
+    })();
+  }, []);
+
+  // Persist progress on every step change so backgrounding never loses work
+  useEffect(() => {
+    AsyncStorage.setItem('@vasco_onboarding_progress', JSON.stringify({
+      step, language, country, trades: selectedTrades, goals: selectedGoals,
+      challenges: selectedChallenges, teamSize, businessType, regFields,
+      certs: selectedCerts, postcode, radius, plan: selectedPlan, billingCycle,
+    })).catch(() => {});
+  }, [step, language, country, selectedTrades, selectedGoals, selectedChallenges,
+      teamSize, businessType, regFields, selectedCerts, postcode, radius, selectedPlan, billingCycle]);
+
+  // Gate cert step for regulated trades (electrical/plumbing/gas). User cannot
+  // proceed past the cert step without selecting at least one cert.
+  const REGULATED_TRADES = ['electrical', 'plumbing', 'gas'];
+  const needsCertification = selectedTrades.some((t) => REGULATED_TRADES.includes(t));
+
   const handleDemoMode = useCallback(async () => {
     try {
       hapticSuccess();
@@ -248,6 +289,7 @@ export default function OnboardingScreen() {
       };
       updateUser(userUpdates);
       await AsyncStorage.setItem('@vasco_user_profile', JSON.stringify(userUpdates)).catch(() => {});
+      AsyncStorage.removeItem('@vasco_onboarding_progress').catch(() => {});
       router.replace('/(contractor)');
     } catch (err) {
       if (__DEV__) console.error('Demo mode failed:', err);
@@ -287,9 +329,10 @@ export default function OnboardingScreen() {
       case 6: return selectedChallenges.length > 0;
       case 7: return teamSize !== null;
       case 8: return businessType !== null;
+      case 10: return !needsCertification || selectedCerts.length > 0;
       default: return true;
     }
-  }, [step, country, selectedTrades, selectedGoals, selectedChallenges, teamSize, businessType]);
+  }, [step, country, selectedTrades, selectedGoals, selectedChallenges, teamSize, businessType, needsCertification, selectedCerts]);
 
   const handleNext = () => {
     if (step < TOTAL_STEPS) {
@@ -356,6 +399,7 @@ export default function OnboardingScreen() {
       };
       updateUser(userUpdates);
       await AsyncStorage.setItem('@vasco_user_profile', JSON.stringify(userUpdates)).catch(() => {});
+      AsyncStorage.removeItem('@vasco_onboarding_progress').catch(() => {});
 
       i18n.changeLanguage(language);
 

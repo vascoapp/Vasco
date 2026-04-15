@@ -670,8 +670,11 @@ export function startBackgroundJobScheduler(
 
       const now = new Date();
       const hourAgo = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
-      const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString();
+      // Shortened from 6h → 2h so evening/late-day events (e.g. invoice overdue
+      // at 18:00) don't wait until tomorrow to fire dunning triggers.
+      const sixHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString();
       const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+      const halfDayAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString();
 
       const context = getContext();
 
@@ -702,8 +705,11 @@ export function startBackgroundJobScheduler(
         state.totalAuditsRun++;
       }
 
-      // Daily: full morning briefing + ML calibration + purchasing agent
-      if (!state.lastDailyRun || state.lastDailyRun < dayAgo) {
+      // Daily (or whenever briefing is >12h old): full morning briefing + ML
+      // calibration + purchasing agent. Previously this fired only if it had
+      // been a full 24h, so users opening the app mid-afternoon could see
+      // overnight-stale data.
+      if (!state.lastDailyRun || state.lastDailyRun < halfDayAgo) {
         await generateMorningBriefing(context);
         // Calibrate ML models from accumulated prediction/actual pairs
         await calibrateModels().catch(() => {});
