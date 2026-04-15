@@ -100,5 +100,10 @@ export function useOverdueInvoiceInsight(ctx: GeneratorContext): ScoredInsight |
       requiresApproval: false,
       estimatedImpact: `${gt('overdue_impact_faster', ctx.language)} — €${totalOverdue.toLocaleString('nl-NL')}`,
     },
-  };
+    enqueueHint: {
+      type: 'draft_reminder',
+      entityKey: `overdue-batch:${overdueInvoices.map(i => i.id).sort().join(',')}`,
+      expiresInDays: 3,
+    },
+  } as ScoredInsight;
 }

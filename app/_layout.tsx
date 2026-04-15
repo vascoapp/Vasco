@@ -25,6 +25,7 @@ import { initErrorReporting, setUser as setErrorUser } from '../src/lib/errorRep
 import { ensureFlagsLoaded } from '../src/services/featureFlagService';
 import { watchInvoicePayments, watchUserTables } from '../src/services/invoicePaymentWatcher';
 import { flushQueue as flushOfflineQueue } from '../src/services/offlineWriteQueue';
+import { notifyNewQueueItems } from '../src/services/aiQueueNotifier';
 import { AppState as RNAppState } from 'react-native';
 import { DemoBanner } from '../src/components/shared/DemoBanner';
 import { startAutoSync, stopAutoSync } from '../src/intelligence/cloudSync';
@@ -55,9 +56,13 @@ function RootLayoutNav() {
   }, []);
 
   // Flush the offline write queue whenever the app comes back to the foreground
+  // Also poll for new AI queue items and fire local push for first-time appearances
   useEffect(() => {
     const sub = RNAppState.addEventListener('change', (state) => {
-      if (state === 'active') flushOfflineQueue().catch(() => {});
+      if (state === 'active') {
+        flushOfflineQueue().catch(() => {});
+        notifyNewQueueItems().catch(() => {});
+      }
     });
     return () => sub.remove();
   }, []);

@@ -39,6 +39,16 @@ Tracks everything required to publish Vasco to App Store + Google Play and enabl
 - Round 13 — Feature flags: `feature_flags` table + `useFeatureFlag` hook + kill-switch
 - Round 14 — `docs/release-runbook.md` (end-to-end ship sequence)
 
+### Live function wiring (57-64)
+- Round 57 — withTimeout on addCustomer / addQuote / addInvoice writes
+- Round 58 — 3 generators emit enqueueHint (overdue, cert renewal, margin drift)
+- Round 59 — vascoGuidance hook auto-enqueues hinted insights into the action queue
+- Round 60 — invoiceScanService syncs scans to Supabase `scanned_invoices`
+- Round 61 — aiQueueNotifier fires local push on first-time queue items
+- Round 62 — business_settings extended with iban/bic/country/postcode/prefixes
+- Round 63 — Vandaag AI queue already prioritized by onboarding prefs (confirmed)
+- Round 64 — `npm run smoke:golden` CLI runner hits Supabase end-to-end
+
 ### Production polish (31-40)
 - Round 31 — Stripe subscription webhook → `subscriptions` table sync
 - Round 32 — Admin revenue dashboard driven by Supabase (`admin/src/lib/revenue.ts`)

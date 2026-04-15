@@ -441,14 +441,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
         if (isSupabaseConfigured) {
           try {
-            const row = await dbCreateCustomer({ name, email, phone, address });
+            const row = await withTimeout(dbCreateCustomer({ name, email, phone, address }), 3000, 'addCustomer');
             // Update temp ID with real DB ID
             setCustomers((prev) =>
               prev.map((c) => (c.id === tempId ? { ...c, id: (row as any).id } : c))
             );
             return (row as any).id as string;
           } catch (err) {
-            logWarn('AppState', `addCustomer persist failed: ${err}`);
+            logWarn('AppState', `addCustomer persist failed or timed out: ${err}`);
           }
         }
         markStepComplete('first_customer_added').catch(() => {});
@@ -792,15 +792,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // Persist to Supabase
         if (isSupabaseConfigured) {
           try {
-            const row = await createDocument({
+            const row = await withTimeout(createDocument({
               doc_type: 'quote',
               status: 'draft',
               document_number: docNumber,
               customer_id: customer,
               job_id: job,
               total_amount: total,
-            });
-            await upsertLineItems(
+            }), 3000, 'addQuote');
+            await withTimeout(upsertLineItems(
               row.id,
               items.map((item, idx) => ({
                 description: item.description,
@@ -809,9 +809,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 total_price: item.unitPrice * item.quantity,
                 position: idx,
               })),
-            );
+            ), 3000, 'addQuote.lineItems');
           } catch (err) {
-            logWarn('AppState', `addQuote persist failed: ${err}`);
+            logWarn('AppState', `addQuote persist failed or timed out: ${err}`);
           }
         }
 
@@ -1148,7 +1148,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
         if (isSupabaseConfigured) {
           try {
-            await createDocument({
+            await withTimeout(createDocument({
               doc_type: 'invoice',
               status: 'draft',
               document_number: docNumber,
@@ -1156,7 +1156,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               job_id: jobId,
               total_amount: amount,
               due_date: dueDate.toISOString(),
-            });
+            }), 3000, 'addInvoiceFromJob');
           } catch (err) {
             logWarn('AppState', `addInvoiceFromJob persist failed: ${err}`);
           }

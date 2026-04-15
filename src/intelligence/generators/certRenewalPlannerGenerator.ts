@@ -137,6 +137,11 @@ export function useCertRenewalPlannerInsight(ctx: GeneratorContext): ScoredInsig
         requiresApproval: false,
         estimatedImpact: expired.length > 0 ? gt('cert_planner_prevent_stop', ctx.language) : gt('cert_planner_spread', ctx.language),
       },
-    };
+      enqueueHint: {
+        type: 'cert_renewal',
+        entityKey: `cert-renewal:${expired.map(c => c.workerName + ':' + c.name).sort().join(',')}`,
+        expiresInDays: 14,
+      },
+    } as ScoredInsight;
   }, [workers]);
 }

@@ -95,5 +95,10 @@ export function useMarginDriftInsight(ctx: GeneratorContext): ScoredInsight | nu
       params: {},
       requiresApproval: true,
     },
-  };
+    enqueueHint: isNegative ? {
+      type: 'general' as const,
+      entityKey: `margin-drift:${Math.round(amount / 100) * 100}`,
+      expiresInDays: 7,
+    } : undefined,
+  } as ScoredInsight;
 }

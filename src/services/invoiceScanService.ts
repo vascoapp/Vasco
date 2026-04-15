@@ -185,6 +185,33 @@ async function saveScanHistory(invoice: ScannedInvoice): Promise<void> {
     const trimmed = history.slice(0, 200);
     await AsyncStorage.setItem(SCAN_HISTORY_KEY, JSON.stringify(trimmed));
   } catch {}
+  // Cross-device sync: push to scanned_invoices table (migration in round 37)
+  if (isSupabaseConfigured) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await (supabase.from('scanned_invoices' as any) as any).insert({
+        id: invoice.id,
+        user_id: user.id,
+        document_type: invoice.documentType,
+        supplier_name: invoice.supplierName,
+        supplier_address: invoice.supplierAddress ?? null,
+        supplier_vat: invoice.supplierVat ?? null,
+        document_number: invoice.documentNumber ?? null,
+        document_date: invoice.documentDate ?? null,
+        subtotal: invoice.subtotal,
+        vat_amount: invoice.vatAmount,
+        total: invoice.total,
+        currency: 'EUR',
+        payment_terms: invoice.paymentTerms ?? null,
+        confidence: invoice.confidence,
+        line_items: invoice.lineItems,
+        scanned_at: invoice.scannedAt,
+      });
+    } catch {
+      // Offline — AsyncStorage copy is still the source of truth; offlineWriteQueue can pick up later.
+    }
+  }
 }
 
 export async function getScanHistory(): Promise<ScannedInvoice[]> {

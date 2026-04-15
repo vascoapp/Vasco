@@ -13,6 +13,7 @@ import { useLearningProfile, incrementInsightsShown, setActiveRole } from '../in
 import { useAllGenerators } from '../intelligence/generators';
 import type { ScoredInsight, UserRole, ScreenContext, GeneratorLanguage, DataCounts } from '../intelligence/generators';
 import { scoreAndRankInsights, refreshCalibrationCache, refreshApprovalRateCache } from '../intelligence/insightScorer';
+import { enqueueInsightsIfHinted } from '../intelligence/generators/emitToQueue';
 import { useAppState } from '../state/AppState';
 
 // Re-export types for consumers
@@ -81,6 +82,14 @@ export function useVascoGuidance(role: UserRole, screen: ScreenContext): ScoredI
 
     return ranked;
   }, [rawInsights, screen, profile, now, role]);
+
+  // Side-effect: any insight with an enqueueHint flows into the AI action
+  // queue so the user sees it as an actionable item in VascoCard, not just
+  // a read-only banner.
+  useEffect(() => {
+    if (scoredInsights.length === 0) return;
+    enqueueInsightsIfHinted(scoredInsights).catch(() => {});
+  }, [scoredInsights]);
 
   return scoredInsights;
 }
