@@ -200,11 +200,13 @@ async function apiCall<T>(path: string, options?: RequestInit & { formData?: Rec
 export async function createPaymentLink(request: StripePaymentRequest): Promise<{ url: string; id: string } | null> {
   const connected = await isConnected();
   if (!connected) {
-    // Mock fallback for demo mode
-    return {
-      url: `https://pay.vasco.app/demo/${request.invoiceId}`,
-      id: `plink_demo_${request.invoiceId}`,
-    };
+    if (__DEV__ || process.env.EXPO_PUBLIC_DEMO_MODE === 'true') {
+      return {
+        url: `https://pay.vasco.app/demo/${request.invoiceId}`,
+        id: `plink_demo_${request.invoiceId}`,
+      };
+    }
+    return null;
   }
 
   const currency = (request.currency ?? 'GBP').toLowerCase();
@@ -240,14 +242,16 @@ export async function createPaymentLink(request: StripePaymentRequest): Promise<
 export async function createPayment(req: StripePaymentRequest): Promise<StripePaymentResult> {
   const connected = await isConnected();
   if (!connected) {
-    // Mock fallback for demo mode
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    return {
-      success: true,
-      paymentId: `pi_demo_${req.invoiceId}`,
-      checkoutUrl: 'https://checkout.stripe.com/demo',
-      clientSecret: `pi_demo_${req.invoiceId}_secret_demo`,
-    };
+    if (__DEV__ || process.env.EXPO_PUBLIC_DEMO_MODE === 'true') {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      return {
+        success: true,
+        paymentId: `pi_demo_${req.invoiceId}`,
+        checkoutUrl: 'https://checkout.stripe.com/demo',
+        clientSecret: `pi_demo_${req.invoiceId}_secret_demo`,
+      };
+    }
+    return { success: false, paymentId: '', checkoutUrl: '', error: 'Stripe not connected — add your API key before accepting payments.' };
   }
 
   const currency = (req.currency ?? 'GBP').toLowerCase();
