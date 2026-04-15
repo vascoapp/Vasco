@@ -26,7 +26,8 @@ Tracks everything required to publish Vasco to App Store + Google Play and enabl
 - [ ] App Store Connect: create app record, set bundle ID `com.vasco.app`, provide Apple Team ID + ASC App ID into `eas.json` submit block.
 - [ ] Google Play Console: create app, generate service account JSON, save as `./secrets/play-service-account.json`.
 
-## ✅ Rounds 5-14 complete (autonomous)
+## ✅ Rounds 5-22 complete (autonomous)
+### Infrastructure (5-14)
 - Round 5 — Legal/GDPR wiring (login footer, cookie banner, analytics consent gate)
 - Round 6 — Sentry-ready error reporting (no-op until DSN provided)
 - Round 7 — Push token persistence (`push_tokens` table + upsert on login, unregister on logout)
@@ -37,6 +38,16 @@ Tracks everything required to publish Vasco to App Store + Google Play and enabl
 - Round 12 — `.github/workflows/ci.yml` (tsc + admin build + npm audit on every push)
 - Round 13 — Feature flags: `feature_flags` table + `useFeatureFlag` hook + kill-switch
 - Round 14 — `docs/release-runbook.md` (end-to-end ship sequence)
+
+### Golden path & integrations (15-22)
+- Round 15 — Quote accept → `convertQuoteToJob()` + `customer_interactions` table
+- Round 16 — `send-invoice` Edge Function (Resend, EU6 HTML) + client wrapper wired
+- Round 17 — Invoice payment realtime watcher → local push on `status=paid`
+- Round 18 — `analyze-photo` Edge Function confirmed real (Claude Haiku Vision); prod mock fallback removed
+- Round 19 — `EmptyState` on geld invoice + quote lists with CTAs
+- Round 20 — Onboarding persists tier to `subscriptions` table
+- Round 21 — XRechnung + Factur-X export buttons on invoice detail (DE/FR)
+- Round 22 — Moneybird export is real end-to-end (find-or-create contact → POST invoice with tax-rate lookup)
 
 ## 📱 Store listing assets (user task)
 - [ ] App Store screenshots: 6.7" iPhone (1290×2796), 6.5" iPhone, iPad 12.9" (for each EN/NL/DE/FR/ES/IT).
