@@ -66,7 +66,10 @@ async function vectorSearch(query: string, type: string, limit: number = 5): Pro
 
   try {
     const embedding = await generateEmbedding(query);
-    if (!embedding) return [];
+    if (!embedding) {
+      if (__DEV__) console.warn('[semanticSearch] embedding generation returned null — falling back to keyword');
+      return [];
+    }
 
     const { data, error } = await (supabase.rpc as any)('match_similar_items', {
       query_embedding: embedding,
@@ -74,7 +77,14 @@ async function vectorSearch(query: string, type: string, limit: number = 5): Pro
       match_count: limit,
     });
 
-    if (error || !data) return [];
+    if (error) {
+      if (__DEV__) console.warn('[semanticSearch] pgvector RPC error:', error.message);
+      return [];
+    }
+    if (!data) {
+      if (__DEV__) console.warn('[semanticSearch] pgvector returned no rows (RPC may be missing?) — falling back to keyword');
+      return [];
+    }
     return (data as any[]).map(row => ({
       id: row.id,
       type: row.item_type,
@@ -83,7 +93,8 @@ async function vectorSearch(query: string, type: string, limit: number = 5): Pro
       score: row.similarity ?? 0,
       metadata: row.metadata ?? {},
     }));
-  } catch {
+  } catch (err) {
+    if (__DEV__) console.warn('[semanticSearch] vectorSearch threw:', String(err));
     return [];
   }
 }

@@ -711,6 +711,21 @@ export function startBackgroundJobScheduler(
       // overnight-stale data.
       if (!state.lastDailyRun || state.lastDailyRun < halfDayAgo) {
         await generateMorningBriefing(context);
+        // EVE three-agent workforce status — run once per daily block so
+        // the Analyst can surface cross-cutting insights (churn, margin drift).
+        try {
+          const eve = await import('../services/eveAgentService');
+          const status = eve.getWorkforceStatus({
+            jobs: context.jobs,
+            invoices: context.invoices,
+            quotes: context.quotes,
+            customers: context.customers ?? [],
+          } as any);
+          // Auditor findings and Analyst insights stream into the queue via
+          // their own generators; we just log execution here.
+          // eslint-disable-next-line no-console
+          if (__DEV__) console.log('[EVE] workforce status:', status?.agent?.actions?.length ?? 0, 'actions');
+        } catch {}
         // Calibrate ML models from accumulated prediction/actual pairs
         await calibrateModels().catch(() => {});
 

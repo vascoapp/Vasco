@@ -78,6 +78,7 @@ import {
 // Data / mocks
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { logWarn } from '../utils/errorHandler';
+import { withTimeout } from '../utils/withTimeout';
 import { trackEvent } from '../services/eventTrackingService';
 import { fireNotification } from '../services/notificationService';
 import { markStepComplete } from '../services/onboardingTrackerService';
@@ -492,18 +493,19 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
         if (isSupabaseConfigured) {
           try {
-            const row = await dbCreateJob({
+            // Hard 3s timeout: on flaky signal the UI button shouldn't appear hung
+            const row = await withTimeout(dbCreateJob({
               title,
               customer_id: customerId,
               description,
               ...extra,
-            });
+            }), 3000, 'addJob');
             setJobs((prev) =>
               prev.map((j) => (j.id === tempId ? { ...j, id: row.id } : j)),
             );
             return row.id;
           } catch (err) {
-            logWarn('AppState', `addJob persist failed: ${err}`);
+            logWarn('AppState', `addJob persist failed or timed out: ${err}`);
           }
         }
         // Ontology: create job entity + link to customer
@@ -1416,6 +1418,27 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           try {
             await (value as any).createPaymentLink(invoiceId, amount);
             return 'ok';
+          } catch { return null; }
+        },
+        scheduleJob: async (jobId: string, when: Date) => {
+          try {
+            (value as any).updateJob?.(jobId, { scheduledDate: when.toISOString() });
+          } catch {}
+        },
+        updateQuoteAmount: async (quoteId: string, newAmount: number) => {
+          try {
+            (value as any).updateQuote?.(quoteId, { amount: newAmount });
+          } catch {}
+        },
+        createPurchaseOrder: async (materialName: string, supplier?: string) => {
+          try {
+            // AppState doesn't own POs directly; delegate to purchaseOrderService
+            const { createPurchaseOrder } = await import('../services/purchaseOrderService');
+            const po = await createPurchaseOrder({
+              supplier: supplier ?? 'Preferred supplier',
+              items: [{ description: materialName, quantity: 1, unitPrice: 0 }],
+            } as any);
+            return po?.id ?? null;
           } catch { return null; }
         },
       });

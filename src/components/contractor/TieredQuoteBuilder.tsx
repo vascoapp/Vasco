@@ -16,6 +16,7 @@ import type { Customer } from '../../types/contractor';
 import type { TieredQuote, QuoteTier, PricebookItem } from '../../types/contractor-features';
 import { MS_PER_DAY } from '../../utils/timeConstants';
 import { MOCK_PRICEBOOK } from '../../data/mockPricebook';
+import { SimilarJobsSuggest } from '../shared/SimilarJobsSuggest';
 import { intelligence } from '../../intelligence/intelligenceEngine';
 import { useQuoteCalibration } from '../../services/estimationFeedbackService';
 import { predictPrice, type PricePrediction } from '../../intelligence/predictions';
@@ -229,6 +230,16 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
     return dp[m][n];
   };
 
+  // Re-use a past job: user typed a description → pgvector matched a similar
+  // completed job. Prefill the scope with that job's title so handleAIDraft
+  // can do the rest of the work.
+  const handlePickSimilarJob = (jobId: string) => {
+    const existing = MOCK_PRICEBOOK.find((pb) => pb.id === jobId);
+    if (existing?.name) {
+      setScopeText((prev) => prev ? `${prev} · ${existing.name}` : existing.name);
+    }
+  };
+
   // AI scope → line items: parse natural language into pricebook items
   const handleAIDraft = () => {
     if (!scopeText.trim() || aiDrafting) return;
@@ -418,6 +429,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
               <Text style={s.aiScanText}>Or scan a photo</Text>
               <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
             </Pressable>
+            <SimilarJobsSuggest query={scopeText} onPickJob={handlePickSimilarJob} />
           </View>
 
           {/* Services section */}
