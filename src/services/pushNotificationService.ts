@@ -6,11 +6,46 @@
 // =============================================================================
 
 import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
+import * as Application from 'expo-application';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MS_PER_HOUR } from '../utils/timeConstants';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
 const TOKEN_KEY = '@vasco_push_token';
+const DEVICE_ID_KEY = '@vasco_device_id';
+
+async function getOrCreateDeviceId(): Promise<string> {
+  let id = await AsyncStorage.getItem(DEVICE_ID_KEY);
+  if (!id) {
+    id = `${Platform.OS}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    await AsyncStorage.setItem(DEVICE_ID_KEY, id);
+  }
+  return id;
+}
+
+async function persistPushTokenToSupabase(token: string): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const deviceId = await getOrCreateDeviceId();
+    const platform = Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web';
+    await (supabase.from('push_tokens' as any) as any).upsert(
+      {
+        user_id: user.id,
+        device_id: deviceId,
+        token,
+        platform,
+        app_version: Application.nativeApplicationVersion ?? null,
+      },
+      { onConflict: 'user_id,device_id' },
+    );
+  } catch {
+    // Silent — push tokens are best-effort
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -19,6 +54,8 @@ const TOKEN_KEY = '@vasco_push_token';
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
@@ -49,13 +86,40 @@ export async function registerForPushNotifications(): Promise<string | null> {
       });
     }
 
-    const tokenData = await Notifications.getExpoPushTokenAsync();
+    // EAS requires projectId for getExpoPushTokenAsync() outside the dev client.
+    const projectId =
+      (Constants.expoConfig?.extra as any)?.eas?.projectId ||
+      (Constants as any).easConfig?.projectId;
+    if (!projectId) {
+      // No EAS project yet — skip remote token. Local notifications still work.
+      return null;
+    }
+
+    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
     const token = tokenData.data;
     await AsyncStorage.setItem(TOKEN_KEY, token);
+    // Best-effort: register with backend for server-side fanout
+    persistPushTokenToSupabase(token).catch(() => {});
     return token;
   } catch {
     return null;
   }
+}
+
+/** Remove the push token for this device from Supabase (call on logout). */
+export async function unregisterPushToken(): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const deviceId = await AsyncStorage.getItem(DEVICE_ID_KEY);
+    if (!deviceId) return;
+    await supabase
+      .from('push_tokens' as any)
+      .delete()
+      .eq('user_id', user.id)
+      .eq('device_id', deviceId);
+  } catch {}
 }
 
 export async function getPushToken(): Promise<string | null> {

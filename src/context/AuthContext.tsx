@@ -507,6 +507,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     trackEvent('logout').catch(() => {});
     await flushEvents().catch(() => {});
+    // Remove push token for this device before signing out (auth.uid() required)
+    try {
+      const mod = await import('../services/pushNotificationService');
+      await mod.unregisterPushToken();
+    } catch {}
     clearUserContext();
     stopAutoSync();
     if (isSupabaseConfigured) {
