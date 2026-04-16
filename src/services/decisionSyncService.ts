@@ -48,7 +48,7 @@ export async function submitDecision(submission: DecisionSubmission): Promise<bo
   if (!isSupabaseConfigured) return true;
 
   try {
-    const { error } = await supabase.from('decision_submissions').upsert({
+    const { error } = await (supabase.from as any)('decision_submissions').upsert({
       tracker_id: submission.trackerId,
       item_id: submission.itemId,
       submitted_by: submission.submittedBy,
@@ -66,9 +66,11 @@ export async function submitDecision(submission: DecisionSubmission): Promise<bo
     }
 
     // Update tracker completed count
-    await supabase.rpc('update_tracker_progress', {
-      p_tracker_id: submission.trackerId,
-    }).catch(() => {}); // Non-critical
+    try {
+      await (supabase.rpc as any)('update_tracker_progress', {
+        p_tracker_id: submission.trackerId,
+      });
+    } catch {} // Non-critical
 
     return true;
   } catch {
@@ -94,7 +96,7 @@ export async function getTrackerSubmissions(trackerId: string): Promise<Decision
 
     if (error || !data) return getLocalSubmissions(trackerId);
 
-    return data.map(row => ({
+    return (data as any[]).map(row => ({
       id: row.id,
       trackerId: row.tracker_id,
       itemId: row.item_id,
@@ -119,7 +121,7 @@ export async function logActivity(trackerId: string, activityType: string, itemI
   if (!isSupabaseConfigured) return;
 
   try {
-    await supabase.from('decision_activities').insert({
+    await (supabase.from as any)('decision_activities').insert({
       tracker_id: trackerId,
       activity_type: activityType,
       item_id: itemId,

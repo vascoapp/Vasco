@@ -7,7 +7,8 @@
 // the ask more gently than one to a risky payer).
 // =============================================================================
 
-import type { Customer, Job, Invoice } from '../types/contractor';
+import type { Customer, Job } from '../types/contractor';
+import type { Invoice } from '../domain/documents';
 
 export type CustomerTag = 'vip' | 'loyal' | 'new' | 'risky' | 'inactive';
 

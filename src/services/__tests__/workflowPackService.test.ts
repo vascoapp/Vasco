@@ -18,7 +18,7 @@ import {
 } from '../workflowPackService';
 
 // Mock aiActionQueueService.addToQueue for evaluateTriggers
-const mockAddToQueue = jest.fn(() => Promise.resolve('q-mock-id'));
+const mockAddToQueue = jest.fn((..._args: any[]) => Promise.resolve('q-mock-id'));
 jest.mock('../aiActionQueueService', () => ({
   addToQueue: (...args: any[]) => mockAddToQueue(...args),
   getQueueHistory: jest.fn(() => Promise.resolve([])),

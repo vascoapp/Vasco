@@ -182,6 +182,24 @@ export async function approveItem(itemId: string): Promise<QueueItem | null> {
     if (item) {
       item.status = 'approved';
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
+      // Feedback loop: emit to learning layer so insightScorer approval-rate
+      // cache picks up the signal on next refresh + force-refresh now so the
+      // next generator tick within this session sees it (not stuck on TTL).
+      try {
+        const { emitBusinessEvent } = await import('../intelligence/dataCollector');
+        await emitBusinessEvent('current-user', {
+          eventType: 'queue_item_approved',
+          entityType: 'job' as any,
+          entityId: item.entityKey ?? itemId,
+          payload: {
+            queueType: item.type,
+            generatorId: item.sourceGeneratorId,
+            count: item.count ?? 1,
+          },
+        });
+        const { refreshApprovalRateCache } = await import('../intelligence/insightScorer');
+        refreshApprovalRateCache().catch(() => {});
+      } catch {}
       return item;
     }
   } catch {}
@@ -212,6 +230,20 @@ export async function rejectItem(itemId: string): Promise<void> {
         }
       }
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
+      try {
+        const { emitBusinessEvent } = await import('../intelligence/dataCollector');
+        await emitBusinessEvent('current-user', {
+          eventType: 'queue_item_rejected',
+          entityType: 'job' as any,
+          entityId: item.entityKey ?? itemId,
+          payload: {
+            queueType: item.type,
+            generatorId: item.sourceGeneratorId,
+          },
+        });
+        const { refreshApprovalRateCache } = await import('../intelligence/insightScorer');
+        refreshApprovalRateCache().catch(() => {});
+      } catch {}
     }
   } catch {}
 }
@@ -246,6 +278,21 @@ export async function recordOutcome(
     const queueRaw = await AsyncStorage.getItem(QUEUE_KEY);
     const queueItems: QueueItem[] = queueRaw ? JSON.parse(queueRaw) : [];
     const item = queueItems.find(i => i.id === itemId);
+    // Emit to learning layer — customer-responded vs didn't-respond is a
+    // higher-quality signal than mere approve/reject (contractor may approve
+    // to dismiss, but customer reply proves the message worked).
+    try {
+      const { emitBusinessEvent } = await import('../intelligence/dataCollector');
+      await emitBusinessEvent('current-user', {
+        eventType: `queue_outcome_${outcome}`,
+        entityType: 'job' as any,
+        entityId: item?.entityKey ?? itemId,
+        payload: {
+          queueType: item?.type ?? 'unknown',
+          generatorId: item?.sourceGeneratorId,
+        },
+      });
+    } catch {}
     outcomes.push({
       itemId,
       type: item?.type ?? 'unknown',
@@ -288,15 +335,15 @@ export async function getQueueHistory(): Promise<QueueItem[]> {
 // ---------------------------------------------------------------------------
 
 interface PopulateQueueContext {
-  completedJobs: Array<{ id: string; title?: string; quotedAmount?: number; customerId?: string | null; status?: string }>;
-  overdueInvoices: Array<{ id: string; amount?: number; customer?: string; status?: string }>;
-  sentQuotes: Array<{ id: string; customer?: string; amount?: number; status?: string }>;
-  expiringCerts: Array<{ id?: string; name?: string; expiryDate?: string }>;
-  allJobs?: Array<{ id: string; status?: string; title?: string; customerId?: string | null }>;
-  allInvoices?: Array<{ id: string; status?: string }>;
-  allQuotes?: Array<{ id: string; status?: string }>;
+  completedJobs: Array<Record<string, any>>;
+  overdueInvoices: Array<Record<string, any>>;
+  sentQuotes: Array<Record<string, any>>;
+  expiringCerts: Array<Record<string, any>>;
+  allJobs?: Array<Record<string, any>>;
+  allInvoices?: Array<Record<string, any>>;
+  allQuotes?: Array<Record<string, any>>;
   customers?: Array<{ id: string; name?: string }>;
-  certs?: Array<{ id?: string; name?: string; expiryDate?: string }>;
+  certs?: Array<Record<string, any>>;
   country?: string;
   trade?: string;
 }
@@ -830,12 +877,12 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
 
   // ─── WIRED: Bulk purchase opportunity ───
   // If 3+ upcoming jobs need the same material category, suggest bulk order
-  const upcomingMaterials = new Map<string, { jobs: string[]; totalQty: number; unitPrice: number }>();
+  const upcomingMaterials: Map<string, { jobs: string[]; totalQty: number; unitPrice: number }> = new Map();
   for (const job of (context.allJobs ?? []).filter((j: any) => ['scheduled', 'in-progress', 'ingepland', 'bezig'].includes(j.status))) {
     for (const m of (job.materials ?? [])) {
       const key = (m.name || m.description || '').toLowerCase();
       if (!key) continue;
-      const entry = upcomingMaterials.get(key) ?? { jobs: [], totalQty: 0, unitPrice: m.unitPrice ?? 0 };
+      const entry = upcomingMaterials.get(key) ?? { jobs: [] as string[], totalQty: 0, unitPrice: m.unitPrice ?? 0 };
       entry.jobs.push(job.id);
       entry.totalQty += m.quantity ?? 1;
       upcomingMaterials.set(key, entry);

@@ -1129,7 +1129,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       exportInvoice: async (invoiceId) => {
         const inv = invoices.find((i) => i.id === invoiceId);
         const cust = customers.find((c) => c.id === inv?.customer);
-        const invLineItems = lineItems.filter((li) => li.parentId === invoiceId);
+        const invLineItems = (lineItems[invoiceId] ?? []) as QuoteLineItem[];
         const payload = inv
           ? {
               customerEmail: cust?.email,
@@ -1489,11 +1489,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         createPurchaseOrder: async (materialName: string, supplier?: string) => {
           try {
             // AppState doesn't own POs directly; delegate to purchaseOrderService
-            const { createPurchaseOrder } = await import('../services/purchaseOrderService');
-            const po = await createPurchaseOrder({
-              supplier: supplier ?? 'Preferred supplier',
-              items: [{ description: materialName, quantity: 1, unitPrice: 0 }],
-            } as any);
+            const { purchaseOrderService } = await import('../services/purchaseOrderService');
+            const supplierName = supplier ?? 'Preferred supplier';
+            const po = purchaseOrderService.createOrder(
+              supplierName.toLowerCase().replace(/\s+/g, '-'),
+              supplierName,
+              [{ description: materialName, quantity: 1, unitPrice: 0 } as any],
+            );
             return po?.id ?? null;
           } catch { return null; }
         },

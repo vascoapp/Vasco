@@ -295,7 +295,14 @@
     "active": "Aktiv",
     "byDate": "Nach Datum",
     "byStatus": "Nach Status",
-    "leadsAndQuotes": "Leads & Angebote"
+    "leadsAndQuotes": "Leads & Angebote",
+    "onMyWay": "Ich bin unterwegs",
+    "missingItems": "Fehlend für Compliance"
+  },
+  "compliance": {
+    "upgradeRequired": "Upgrade erforderlich",
+    "upgradeRequiredDesc": "Dieses Format erfordert das Contractor-Abo.",
+    "viewPlans": "Abos ansehen"
   },
   "invoices": {
     "title": "Rechnungen",
@@ -1225,7 +1232,9 @@
       "phonePlaceholder": "Telefonnummer",
       "emailPlaceholder": "E-Mail-Adresse",
       "noResults": "Keine Ergebnisse",
-      "tryDifferentSearch": "Versuchen Sie einen anderen Suchbegriff"
+      "tryDifferentSearch": "Versuchen Sie einen anderen Suchbegriff",
+      "possibleDuplicate": "Möglicher Duplikat",
+      "addAnyway": "Trotzdem hinzufügen"
     },
     "projects": {
       "title": "Projekte",
@@ -1344,5 +1353,17 @@
     "important": "Wichtig",
     "optional": "Optional",
     "enter": "{{name}} eingeben..."
+  },
+  "templates": {
+    "invoiceReminder": "Zahlungserinnerung",
+    "invoiceReminderBody": "Hallo {{customer}},\n\nfreundliche Erinnerung, dass Rechnung {{invoiceId}} über {{amount}} noch offen ist. Könnten Sie sie diese Woche begleichen?\n\nVielen Dank,\n{{contractorName}}",
+    "quoteFollowUp": "Angebot-Nachfassen",
+    "quoteFollowUpBody": "Hallo {{customer}},\n\nkurze Rückmeldung zum Angebot für „{{jobTitle}}\" ({{amount}}). Noch Fragen oder sollen wir loslegen?\n\nMit freundlichen Grüßen,\n{{contractorName}}",
+    "jobConfirmation": "Terminbestätigung",
+    "jobConfirmationBody": "Hallo {{customer}},\n\nhiermit bestätige ich unseren Termin für „{{jobTitle}}\" am {{date}}. Bei Änderungen bitte Bescheid geben.\n\nBis dahin,\n{{contractorName}}",
+    "scheduleChange": "Terminänderung",
+    "scheduleChangeBody": "Hallo {{customer}},\n\nich muss unseren Termin für „{{jobTitle}}\" auf {{date}} verschieben. Entschuldigen Sie die kurzfristige Änderung.\n\n{{contractorName}}",
+    "thankYou": "Vielen Dank",
+    "thankYouBody": "Hallo {{customer}},\n\ndanke für das Vertrauen bei „{{jobTitle}}\". Eine kurze Bewertung würde mir sehr helfen. Fragen? Jederzeit melden.\n\nMit freundlichen Grüßen,\n{{contractorName}}"
   }
 }

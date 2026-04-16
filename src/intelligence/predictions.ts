@@ -5,8 +5,9 @@
 // Falls back to local heuristics when offline
 // =============================================================================
 
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase as _supabase, isSupabaseConfigured } from '../lib/supabase';
 import { loadProfile } from './learningStorage';
+const supabase: any = _supabase;
 
 // ---------------------------------------------------------------------------
 // Types

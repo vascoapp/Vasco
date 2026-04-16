@@ -295,7 +295,14 @@
     "active": "Actief",
     "byDate": "Op datum",
     "byStatus": "Op status",
-    "leadsAndQuotes": "Leads & Offertes"
+    "leadsAndQuotes": "Leads & Offertes",
+    "onMyWay": "Ik kom eraan",
+    "missingItems": "Ontbreekt voor compliance"
+  },
+  "compliance": {
+    "upgradeRequired": "Upgrade nodig",
+    "upgradeRequiredDesc": "Dit formaat vereist het Contractor-abonnement.",
+    "viewPlans": "Bekijk abonnementen"
   },
   "invoices": {
     "title": "Facturen",
@@ -1225,7 +1232,9 @@
       "phonePlaceholder": "Telefoonnummer",
       "emailPlaceholder": "E-mailadres",
       "noResults": "Geen resultaten",
-      "tryDifferentSearch": "Probeer een andere zoekterm"
+      "tryDifferentSearch": "Probeer een andere zoekterm",
+      "possibleDuplicate": "Mogelijk duplicaat",
+      "addAnyway": "Toch toevoegen"
     },
     "projects": {
       "title": "Projecten",
@@ -1344,5 +1353,17 @@
     "important": "Belangrijk",
     "optional": "Optioneel",
     "enter": "Voer {{name}} in..."
+  },
+  "templates": {
+    "invoiceReminder": "Herinnering factuur",
+    "invoiceReminderBody": "Hoi {{customer}},\n\nKleine herinnering dat factuur {{invoiceId}} van {{amount}} nog openstaat. Kun je deze week afronden?\n\nGroet,\n{{contractorName}}",
+    "quoteFollowUp": "Opvolging offerte",
+    "quoteFollowUpBody": "Hoi {{customer}},\n\nEven checken over de offerte voor \"{{jobTitle}}\" ({{amount}}). Nog vragen of zullen we starten?\n\nGroet,\n{{contractorName}}",
+    "jobConfirmation": "Bevestiging afspraak",
+    "jobConfirmationBody": "Hoi {{customer}},\n\nBevestiging van onze afspraak voor \"{{jobTitle}}\" op {{date}}. Laat het weten als je wilt verzetten.\n\nTot dan,\n{{contractorName}}",
+    "scheduleChange": "Afspraak verzetten",
+    "scheduleChangeBody": "Hoi {{customer}},\n\nIk moet onze afspraak voor \"{{jobTitle}}\" verzetten naar {{date}}. Excuses voor de late wijziging.\n\n{{contractorName}}",
+    "thankYou": "Bedankt",
+    "thankYouBody": "Hoi {{customer}},\n\nBedankt voor het vertrouwen in \"{{jobTitle}}\". Een korte review zou veel betekenen. Problemen? Laat het me weten.\n\nGroet,\n{{contractorName}}"
   }
 }

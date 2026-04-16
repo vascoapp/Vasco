@@ -7,10 +7,14 @@
 // 3. Calibration data for improving generators
 // =============================================================================
 
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase as _supabase, isSupabaseConfigured } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ContractorLearningProfile } from './learningStorage';
 import { logWarn } from '../utils/errorHandler';
+
+// Cast to any so insert/select calls don't hit typegen drift while the real
+// Supabase schema lives server-side. Regenerate types post-launch to remove.
+const supabase: any = _supabase;
 
 const SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 const LAST_SYNC_KEY = '@vasco_last_cloud_sync';

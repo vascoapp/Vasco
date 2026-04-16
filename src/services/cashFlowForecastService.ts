@@ -9,7 +9,8 @@
 // Returns day-by-day net curve + confidence band.
 // =============================================================================
 
-import type { Invoice, Job, Quote } from '../types/contractor';
+import type { Invoice, Quote } from '../domain/documents';
+import type { Job } from '../types/contractor';
 import { predictPaymentTiming } from '../intelligence/mlModels';
 
 export interface ForecastDay {
@@ -77,10 +78,9 @@ export async function buildForecast(input: ForecastInput): Promise<ForecastSumma
     let expectedDaysOut = 14;
     try {
       const pred = await predictPaymentTiming({
-        customerId: (inv as any).customer ?? '',
-        invoiceAmount: amt,
-        dueDate: new Date(today.getTime() + 14 * DAY).toISOString(),
-        isOverdue: inv.status === 'overdue',
+        customerId: (inv as any).customerId ?? (inv as any).customer ?? '',
+        amount: amt,
+        dayOfWeek: today.getDay(),
       });
       expectedDaysOut = Math.max(0, Math.round((pred as any).expectedDaysToPay ?? 14));
     } catch {}

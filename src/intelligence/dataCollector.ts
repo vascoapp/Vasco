@@ -5,8 +5,9 @@
 // Stores locally (AsyncStorage) + syncs to Supabase for cross-user learning
 // =============================================================================
 
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase as _supabase, isSupabaseConfigured } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+const supabase: any = _supabase;
 
 const LOCAL_QUEUE_KEY = '@vasco_event_queue';
 const MAX_LOCAL_QUEUE = 500;

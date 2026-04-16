@@ -295,7 +295,14 @@
     "active": "Activo",
     "byDate": "Por fecha",
     "byStatus": "Por estado",
-    "leadsAndQuotes": "Leads & Presupuestos"
+    "leadsAndQuotes": "Leads & Presupuestos",
+    "onMyWay": "Estoy de camino",
+    "missingItems": "Falta para el cumplimiento"
+  },
+  "compliance": {
+    "upgradeRequired": "Actualización necesaria",
+    "upgradeRequiredDesc": "Este formato requiere el plan Contractor.",
+    "viewPlans": "Ver planes"
   },
   "invoices": {
     "title": "Facturas",
@@ -1225,7 +1232,9 @@
       "phonePlaceholder": "Número de teléfono",
       "emailPlaceholder": "Correo electrónico",
       "noResults": "Sin resultados",
-      "tryDifferentSearch": "Prueba con otro término de búsqueda"
+      "tryDifferentSearch": "Prueba con otro término de búsqueda",
+      "possibleDuplicate": "Posible duplicado",
+      "addAnyway": "Añadir igualmente"
     },
     "projects": {
       "title": "Proyectos",
@@ -1344,5 +1353,17 @@
     "important": "Importante",
     "optional": "Opcional",
     "enter": "Ingrese {{name}}..."
+  },
+  "templates": {
+    "invoiceReminder": "Recordatorio de factura",
+    "invoiceReminderBody": "Hola {{customer}},\n\nUn recordatorio amable: la factura {{invoiceId}} de {{amount}} sigue pendiente. ¿Podrías liquidarla esta semana?\n\nGracias,\n{{contractorName}}",
+    "quoteFollowUp": "Seguimiento de presupuesto",
+    "quoteFollowUpBody": "Hola {{customer}},\n\nSolo quería saber si tienes dudas sobre el presupuesto de \"{{jobTitle}}\" ({{amount}}). ¿Empezamos?\n\nUn saludo,\n{{contractorName}}",
+    "jobConfirmation": "Confirmación de cita",
+    "jobConfirmationBody": "Hola {{customer}},\n\nConfirmo nuestra cita para \"{{jobTitle}}\" el {{date}}. Avísame si necesitas cambiarla.\n\nNos vemos,\n{{contractorName}}",
+    "scheduleChange": "Cambio de cita",
+    "scheduleChangeBody": "Hola {{customer}},\n\nTengo que mover nuestra cita de \"{{jobTitle}}\" al {{date}}. Disculpa el cambio de última hora.\n\n{{contractorName}}",
+    "thankYou": "Gracias",
+    "thankYouBody": "Hola {{customer}},\n\nGracias por confiar en mí para \"{{jobTitle}}\". Una reseña breve me ayudaría mucho. Cualquier problema, avísame.\n\nUn saludo,\n{{contractorName}}"
   }
 }

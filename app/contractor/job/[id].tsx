@@ -17,6 +17,7 @@ import {
   Linking,
   RefreshControl,
   LayoutAnimation,
+  Share,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,6 +35,8 @@ import { PhotoGallery, type PhotoItem } from '../../../src/components/contractor
 import { showPhotoPicker } from '../../../src/utils/photoPicker';
 import JobComments from '../../../src/components/contractor/JobComments';
 import { addActivityEntry } from '../../../src/services/jobCommentsService';
+import { evaluateCompletion } from '../../../src/services/jobCompletionChecklist';
+import { listJobPhotos } from '../../../src/services/jobPhotoService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -102,7 +105,7 @@ export default function JobDetailPage() {
     }, 800);
   }, []);
 
-  const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap } = useAppState();
+  const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, businessProfile } = useAppState();
   const { advance, recordHours } = useJobLifecyclePipeline();
   const costVariance = useJobCostVariance(id || '');
   const job = useMemo(() => {
@@ -775,25 +778,66 @@ export default function JobDetailPage() {
             <Ionicons name="camera" size={18} color={Palette.hermesOrange} />
             <Text style={styles.actionSecondaryText}>{t('jobs.photo', 'Photo')}{photoCount > 0 ? ` (${photoCount})` : ''}</Text>
           </Pressable>
+          {!jobCompleted && (contact.phone || contact.email) && (
+            <Pressable
+              style={styles.actionSecondary}
+              accessibilityRole="button"
+              accessibilityLabel={t('jobs.onMyWay', 'Send on-my-way to customer')}
+              onPress={async () => {
+                try {
+                  const { renderTemplate } = await import('../../../src/services/whatsappTemplateService');
+                  const locale = ((businessProfile as any)?.language ?? 'en') as any;
+                  const text = renderTemplate('on_my_way', locale, {
+                    customer: contact.name || '',
+                    eta: '15 min',
+                    business: (businessProfile as any)?.businessName ?? 'Vasco',
+                  });
+                  await Share.share({ message: text, title: t('jobs.onMyWay', 'On my way') });
+                  hapticSuccess();
+                } catch {}
+              }}
+            >
+              <Ionicons name="navigate" size={18} color={Palette.hermesOrange} />
+              <Text style={styles.actionSecondaryText}>{t('jobs.onMyWay', 'On my way')}</Text>
+            </Pressable>
+          )}
           {!jobCompleted ? (
             <Pressable
               style={styles.actionSecondary}
               accessibilityRole="button"
               accessibilityLabel={t('jobs.done', 'Mark job as done')}
-              onPress={() => {
-                Alert.alert(t('jobs.completeJob', 'Complete job'), t('jobs.completeJobConfirm', 'Are you sure you want to complete this job?'), [
-                  { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-                  { text: t('jobs.complete', 'Complete'), onPress: async () => {
-                    hapticSuccess();
-                    if (clockedIn) {
-                      const { hours } = await timer.clockOut();
-                      if (hours > 0) {
-                        recordHours(job.id, Math.round(hours * 10) / 10);
+              onPress={async () => {
+                // Pre-flight: per-trade completion checklist
+                let checklistWarning = '';
+                try {
+                  const photos = await listJobPhotos(job.id).catch(() => []);
+                  const result = evaluateCompletion({
+                    job: job as any,
+                    photos: photos as any,
+                    signedOff: Boolean((job as any).customerSignoffAt),
+                  });
+                  if (!result.canComplete) {
+                    const missing = result.items.filter((i) => i.required && !i.satisfied).map((i) => `• ${i.label}`).join('\n');
+                    checklistWarning = `\n\n${t('jobs.missingItems', 'Missing for trade compliance')}:\n${missing}`;
+                  }
+                } catch {}
+                Alert.alert(
+                  t('jobs.completeJob', 'Complete job'),
+                  t('jobs.completeJobConfirm', 'Are you sure you want to complete this job?') + checklistWarning,
+                  [
+                    { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+                    { text: t('jobs.complete', 'Complete'), onPress: async () => {
+                      hapticSuccess();
+                      if (clockedIn) {
+                        const { hours } = await timer.clockOut();
+                        if (hours > 0) {
+                          recordHours(job.id, Math.round(hours * 10) / 10);
+                        }
                       }
-                    }
-                    setJobCompleted(true);
-                  }},
-                ]);
+                      setJobCompleted(true);
+                    }},
+                  ],
+                );
               }}
             >
               <Ionicons name="checkmark-circle" size={18} color={SemanticColors.feedbackSuccess} />

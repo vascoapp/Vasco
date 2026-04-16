@@ -8,7 +8,7 @@
 
 import * as Print from 'expo-print';
 import { Share } from 'react-native';
-import type { Invoice } from '../types/contractor';
+import type { Invoice } from '../domain/documents';
 
 interface ReceiptArgs {
   invoice: Pick<Invoice, 'id' | 'amount' | 'customer'>;

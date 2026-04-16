@@ -367,15 +367,15 @@ function buildInvoiceHtml(
   <div>${businessName}${businessAddress ? ' · ' + businessAddress : ''}</div>
   ${(() => {
     const parts: string[] = [];
-    const kvk = (businessProfile as any)?.kvkNumber;
-    const vat = (businessProfile as any)?.vatNumber;
-    const country = (businessProfile as any)?.country ?? 'NL';
-    if (country === 'NL' && kvk) parts.push(`KvK: ${kvk}`);
-    if (country === 'DE' && kvk) parts.push(`HRB: ${kvk}`);
-    if (country === 'FR' && kvk) parts.push(`SIRET: ${kvk}`);
-    if (country === 'ES' && kvk) parts.push(`NIF: ${kvk}`);
-    if (country === 'IT' && kvk) parts.push(`C.F.: ${kvk}`);
-    if (country === 'UK' && kvk) parts.push(`Co. no.: ${kvk}`);
+    const kvk = kvkNumber;
+    const vat = vatNumber;
+    const footerCountry = country ?? 'NL';
+    if (footerCountry === 'NL' && kvk) parts.push(`KvK: ${kvk}`);
+    if (footerCountry === 'DE' && kvk) parts.push(`HRB: ${kvk}`);
+    if (footerCountry === 'FR' && kvk) parts.push(`SIRET: ${kvk}`);
+    if (footerCountry === 'ES' && kvk) parts.push(`NIF: ${kvk}`);
+    if (footerCountry === 'IT' && kvk) parts.push(`C.F.: ${kvk}`);
+    if (footerCountry === 'UK' && kvk) parts.push(`Co. no.: ${kvk}`);
     if (vat) {
       const vatLabel = country === 'NL' ? 'BTW' : country === 'DE' ? 'USt-IdNr' : country === 'FR' ? 'TVA' : country === 'ES' ? 'NIF-IVA' : country === 'IT' ? 'P.IVA' : 'VAT';
       parts.push(`${vatLabel}: ${vat}`);

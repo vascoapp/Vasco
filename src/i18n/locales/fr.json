@@ -295,7 +295,14 @@
     "active": "Actif",
     "byDate": "Par date",
     "byStatus": "Par statut",
-    "leadsAndQuotes": "Prospects & Devis"
+    "leadsAndQuotes": "Prospects & Devis",
+    "onMyWay": "Je suis en route",
+    "missingItems": "Manquant pour la conformité"
+  },
+  "compliance": {
+    "upgradeRequired": "Mise à niveau requise",
+    "upgradeRequiredDesc": "Ce format nécessite le plan Contractor.",
+    "viewPlans": "Voir les plans"
   },
   "invoices": {
     "title": "Factures",
@@ -1225,7 +1232,9 @@
       "phonePlaceholder": "Numéro de téléphone",
       "emailPlaceholder": "Adresse e-mail",
       "noResults": "Aucun résultat",
-      "tryDifferentSearch": "Essayez un autre terme de recherche"
+      "tryDifferentSearch": "Essayez un autre terme de recherche",
+      "possibleDuplicate": "Doublon possible",
+      "addAnyway": "Ajouter quand même"
     },
     "projects": {
       "title": "Projets",
@@ -1344,5 +1353,17 @@
     "important": "Important",
     "optional": "Optionnel",
     "enter": "Entrez {{name}}..."
+  },
+  "templates": {
+    "invoiceReminder": "Rappel de facture",
+    "invoiceReminderBody": "Bonjour {{customer}},\n\nPetit rappel : la facture {{invoiceId}} de {{amount}} est toujours en attente. Pouvez-vous la régler cette semaine ?\n\nMerci,\n{{contractorName}}",
+    "quoteFollowUp": "Relance devis",
+    "quoteFollowUpBody": "Bonjour {{customer}},\n\nJe reviens vers vous concernant le devis « {{jobTitle}} » ({{amount}}). Des questions, ou on démarre ?\n\nCordialement,\n{{contractorName}}",
+    "jobConfirmation": "Confirmation de rendez-vous",
+    "jobConfirmationBody": "Bonjour {{customer}},\n\nJe confirme notre rendez-vous pour « {{jobTitle}} » le {{date}}. Dites-moi si vous souhaitez décaler.\n\nÀ bientôt,\n{{contractorName}}",
+    "scheduleChange": "Changement de rendez-vous",
+    "scheduleChangeBody": "Bonjour {{customer}},\n\nJe dois décaler notre rendez-vous pour « {{jobTitle}} » au {{date}}. Désolé pour ce changement de dernière minute.\n\n{{contractorName}}",
+    "thankYou": "Merci",
+    "thankYouBody": "Bonjour {{customer}},\n\nMerci pour votre confiance sur « {{jobTitle}} ». Un petit avis ferait vraiment plaisir. En cas de souci, n'hésitez pas.\n\nCordialement,\n{{contractorName}}"
   }
 }

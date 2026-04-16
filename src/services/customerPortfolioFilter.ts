@@ -5,7 +5,8 @@
 // declarative and testable.
 // =============================================================================
 
-import type { Customer, Job, Invoice } from '../types/contractor';
+import type { Customer, Job } from '../types/contractor';
+import type { Invoice } from '../domain/documents';
 import { scoreAllCustomers, type CustomerProfile, type CustomerTag } from './customerTaggingService';
 
 export type SortBy = 'ltv_desc' | 'ltv_asc' | 'name' | 'recent' | 'risk';

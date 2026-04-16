@@ -290,6 +290,25 @@ export default function InvoiceDetailScreen() {
   };
 
   const handleExportEInvoice = async (format: 'XRechnung' | 'ZUGFeRD') => {
+    // Tier gate: e-invoicing is Contractor-only
+    try {
+      const { loadSubscription } = await import('../../src/services/subscriptionService');
+      const { canUseEInvoiceFormat } = await import('../../src/services/complianceGatingService');
+      const sub = await loadSubscription();
+      const formatId = format === 'XRechnung' ? 'xrechnung' : country === 'FR' ? 'facturx' : 'zugferd';
+      const gate = canUseEInvoiceFormat(sub, formatId as any);
+      if (!gate.allowed) {
+        Alert.alert(
+          t('compliance.upgradeRequired', 'Upgrade required'),
+          gate.reason ?? t('compliance.upgradeRequiredDesc', 'This format needs the Contractor plan.'),
+          [
+            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+            { text: t('compliance.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+          ],
+        );
+        return;
+      }
+    } catch {}
     const currency = country === 'UK' ? 'GBP' : 'EUR';
     const vatAmount = total * VAT_RATE;
     const data: EInvoiceData = {

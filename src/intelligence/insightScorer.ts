@@ -24,7 +24,7 @@ import {
 import { getConfidenceMultiplier, getCalibrationScores, logPrediction } from './calibration';
 import type { CalibrationScore } from './calibration';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getQueueHistory } from '../services/aiActionQueueService';
+import { getQueueHistory, getOutcomes } from '../services/aiActionQueueService';
 
 // =============================================================================
 // GENERATOR DISPLAY NAMES (for consolidation evidence)
@@ -155,7 +155,10 @@ const APPROVAL_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
 export async function refreshApprovalRateCache(): Promise<void> {
   try {
-    const history = await getQueueHistory();
+    const [history, outcomes] = await Promise.all([
+      getQueueHistory(),
+      getOutcomes(),
+    ]);
     const stats: Record<string, { approved: number; total: number }> = {};
     for (const item of history) {
       const gen = item.sourceGeneratorId || 'unknown';
@@ -163,10 +166,29 @@ export async function refreshApprovalRateCache(): Promise<void> {
       stats[gen].total++;
       if (item.status === 'approved') stats[gen].approved++;
     }
+    // Map outcome itemIds → generatorId via history, tally per generator.
+    const itemGen = new Map<string, string>();
+    for (const item of history) itemGen.set(item.id, item.sourceGeneratorId || 'unknown');
+    const outcomeStats: Record<string, { positive: number; negative: number }> = {};
+    for (const o of outcomes) {
+      const gen = itemGen.get(o.itemId) ?? 'unknown';
+      if (!outcomeStats[gen]) outcomeStats[gen] = { positive: 0, negative: 0 };
+      if (o.outcome === 'positive') outcomeStats[gen].positive++;
+      else if (o.outcome === 'negative') outcomeStats[gen].negative++;
+    }
     const newCache = new Map<string, number>();
     for (const [gen, s] of Object.entries(stats)) {
-      if (s.total >= 2) { // need at least 2 data points
-        newCache.set(gen, s.approved / s.total);
+      if (s.total >= 2) {
+        let rate = s.approved / s.total;
+        // Nudge by customer-response signal when we have 3+ outcomes:
+        //   mostly-positive responses +10%, mostly-negative -10%.
+        const oc = outcomeStats[gen];
+        if (oc && oc.positive + oc.negative >= 3) {
+          const posRate = oc.positive / (oc.positive + oc.negative);
+          if (posRate >= 0.6) rate = Math.min(1, rate * 1.1);
+          else if (posRate <= 0.2) rate = Math.max(0, rate * 0.9);
+        }
+        newCache.set(gen, rate);
       }
     }
     approvalRateCache = newCache;

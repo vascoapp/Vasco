@@ -20,6 +20,9 @@ import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { isValidEmail, isValidPhone, sanitizeInput } from '../../src/utils/validation';
+import { CustomerTagBadge } from '../../src/components/contractor/CustomerTagBadge';
+import { scoreAllCustomers } from '../../src/services/customerTaggingService';
+import { findDuplicates } from '../../src/services/customerDedupService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -33,17 +36,23 @@ export default function CustomerPhonebookScreen() {
   const [newPhone, setNewPhone] = useState('');
   const [newEmail, setNewEmail] = useState('');
 
-  // Build contact list with job count
+  // Build contact list with job count + auto-tags
   const contacts = useMemo(() => {
+    const profiles = scoreAllCustomers(
+      customers as any,
+      jobs as any,
+      invoices as any,
+    );
     return customers
       .map(c => ({
         ...c,
         initials: c.name.split(' ').slice(0, 2).map(n => n[0]?.toUpperCase() || '').join(''),
         jobCount: jobs.filter(j => j.customerId === c.id).length,
         hasActive: jobs.some(j => j.customerId === c.id && ['scheduled', 'in-progress', 'accepted'].includes(j.status)),
+        tag: profiles.get(c.id)?.tag,
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [customers, jobs]);
+  }, [customers, jobs, invoices]);
 
   const filtered = search
     ? contacts.filter(c =>
@@ -79,12 +88,31 @@ export default function CustomerPhonebookScreen() {
       return;
     }
 
-    await addCustomer(cleanName, cleanEmail || undefined, cleanPhone || undefined);
-    hapticSuccess();
-    setNewName('');
-    setNewPhone('');
-    setNewEmail('');
-    setShowAdd(false);
+    const dupes = findDuplicates(
+      { name: cleanName, email: cleanEmail || undefined, phone: cleanPhone || undefined },
+      customers as any,
+    );
+    const commit = async () => {
+      await addCustomer(cleanName, cleanEmail || undefined, cleanPhone || undefined);
+      hapticSuccess();
+      setNewName('');
+      setNewPhone('');
+      setNewEmail('');
+      setShowAdd(false);
+    };
+    if (dupes.length > 0) {
+      const top = dupes[0];
+      Alert.alert(
+        t('contractor.customers.possibleDuplicate', 'Possible duplicate'),
+        `${top.existing.name}\n${top.reasons.join(' · ')}`,
+        [
+          { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+          { text: t('contractor.customers.addAnyway', 'Add anyway'), onPress: () => { void commit(); } },
+        ],
+      );
+      return;
+    }
+    await commit();
   };
 
   return (
@@ -136,7 +164,10 @@ export default function CustomerPhonebookScreen() {
 
                 {/* Name + subtitle */}
                 <View style={s.contactInfo}>
-                  <Text style={s.contactName} numberOfLines={1}>{contact.name}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: GRID.xs }}>
+                    <Text style={s.contactName} numberOfLines={1}>{contact.name}</Text>
+                    {contact.tag && contact.tag !== 'new' && <CustomerTagBadge tag={contact.tag} compact />}
+                  </View>
                   <Text style={s.contactMeta} numberOfLines={1}>
                     {[
                       contact.jobCount > 0 ? `${contact.jobCount} ${t('contractor.customers.jobs', 'jobs')}` : null,

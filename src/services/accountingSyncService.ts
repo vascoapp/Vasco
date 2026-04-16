@@ -87,7 +87,7 @@ export async function syncAccountingData(
       if (invoice.status === 'paid') continue;
 
       // Match by invoice ID or invoice number (providers may return either)
-      if (paidSet.has(invoice.id) || paidSet.has(invoice.invoiceNumber)) {
+      if (paidSet.has(invoice.id) || (invoice.invoiceNumber ? paidSet.has(invoice.invoiceNumber) : false)) {
         updatedInvoices.push({
           ...invoice,
           status: 'paid',

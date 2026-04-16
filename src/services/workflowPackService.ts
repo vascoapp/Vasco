@@ -418,7 +418,7 @@ function matchTrigger(
           const cust = (ctx.customers ?? []).find((c: any) => c.id === job.customerId);
           results.push({
             label: cust?.name || job.title || '',
-            customerId: job.customerId,
+            customerId: job.customerId ?? undefined,
             entityId: job.id,
             customer: cust?.name || '',
             job: job.title || '',

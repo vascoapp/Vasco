@@ -295,7 +295,14 @@
     "active": "Active",
     "byDate": "By date",
     "byStatus": "By status",
-    "leadsAndQuotes": "Leads & Quotes"
+    "leadsAndQuotes": "Leads & Quotes",
+    "onMyWay": "On my way",
+    "missingItems": "Missing for trade compliance"
+  },
+  "compliance": {
+    "upgradeRequired": "Upgrade required",
+    "upgradeRequiredDesc": "This format needs the Contractor plan.",
+    "viewPlans": "View plans"
   },
   "invoices": {
     "title": "Invoices",
@@ -1225,7 +1232,9 @@
       "phonePlaceholder": "Phone number",
       "emailPlaceholder": "Email address",
       "noResults": "No results",
-      "tryDifferentSearch": "Try a different search term"
+      "tryDifferentSearch": "Try a different search term",
+      "possibleDuplicate": "Possible duplicate",
+      "addAnyway": "Add anyway"
     },
     "projects": {
       "title": "Projects",
@@ -1344,5 +1353,17 @@
     "important": "Important",
     "optional": "Optional",
     "enter": "Enter {{name}}..."
+  },
+  "templates": {
+    "invoiceReminder": "Invoice reminder",
+    "invoiceReminderBody": "Hi {{customer}},\n\nA friendly reminder that invoice {{invoiceId}} of {{amount}} is still open. Could you settle it this week?\n\nThanks,\n{{contractorName}}",
+    "quoteFollowUp": "Quote follow-up",
+    "quoteFollowUpBody": "Hi {{customer}},\n\nJust checking in on the quote for \"{{jobTitle}}\" ({{amount}}). Any questions, or shall we get started?\n\nKind regards,\n{{contractorName}}",
+    "jobConfirmation": "Appointment confirmation",
+    "jobConfirmationBody": "Hi {{customer}},\n\nConfirming our appointment for \"{{jobTitle}}\" on {{date}}. Reply if you need to reschedule.\n\nSee you then,\n{{contractorName}}",
+    "scheduleChange": "Schedule change",
+    "scheduleChangeBody": "Hi {{customer}},\n\nI need to move our appointment for \"{{jobTitle}}\" to {{date}}. Apologies for the short notice.\n\n{{contractorName}}",
+    "thankYou": "Thank you",
+    "thankYouBody": "Hi {{customer}},\n\nThanks for trusting me with \"{{jobTitle}}\". A quick review would mean a lot. Any issues — just shout.\n\nKind regards,\n{{contractorName}}"
   }
 }

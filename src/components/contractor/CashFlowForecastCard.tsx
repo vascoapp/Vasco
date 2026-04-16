@@ -11,7 +11,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { buildForecast, type ForecastSummary } from '../../services/cashFlowForecastService';
-import type { Invoice, Job, Quote } from '../../types/contractor';
+import type { Invoice, Quote } from '../../domain/documents';
+import type { Job } from '../../types/contractor';
 
 interface Props {
   invoices: Invoice[];

@@ -295,7 +295,14 @@
     "active": "Attivo",
     "byDate": "Per data",
     "byStatus": "Per stato",
-    "leadsAndQuotes": "Contatti & Preventivi"
+    "leadsAndQuotes": "Contatti & Preventivi",
+    "onMyWay": "Sto arrivando",
+    "missingItems": "Mancante per conformità"
+  },
+  "compliance": {
+    "upgradeRequired": "Aggiornamento richiesto",
+    "upgradeRequiredDesc": "Questo formato richiede il piano Contractor.",
+    "viewPlans": "Vedi piani"
   },
   "invoices": {
     "title": "Fatture",
@@ -1225,7 +1232,9 @@
       "phonePlaceholder": "Numero di telefono",
       "emailPlaceholder": "Indirizzo e-mail",
       "noResults": "Nessun risultato",
-      "tryDifferentSearch": "Prova con un altro termine di ricerca"
+      "tryDifferentSearch": "Prova con un altro termine di ricerca",
+      "possibleDuplicate": "Possibile duplicato",
+      "addAnyway": "Aggiungi comunque"
     },
     "projects": {
       "title": "Progetti",
@@ -1344,5 +1353,17 @@
     "important": "Importante",
     "optional": "Opzionale",
     "enter": "Inserisci {{name}}..."
+  },
+  "templates": {
+    "invoiceReminder": "Promemoria fattura",
+    "invoiceReminderBody": "Ciao {{customer}},\n\npromemoria: la fattura {{invoiceId}} di {{amount}} è ancora aperta. Puoi saldarla questa settimana?\n\nGrazie,\n{{contractorName}}",
+    "quoteFollowUp": "Follow-up preventivo",
+    "quoteFollowUpBody": "Ciao {{customer}},\n\nvolevo sentire se ci sono dubbi sul preventivo \"{{jobTitle}}\" ({{amount}}). Qualche domanda, o partiamo?\n\nCordiali saluti,\n{{contractorName}}",
+    "jobConfirmation": "Conferma appuntamento",
+    "jobConfirmationBody": "Ciao {{customer}},\n\nconfermo il nostro appuntamento per \"{{jobTitle}}\" il {{date}}. Scrivimi se devi spostarlo.\n\nA presto,\n{{contractorName}}",
+    "scheduleChange": "Cambio appuntamento",
+    "scheduleChangeBody": "Ciao {{customer}},\n\ndevo spostare il nostro appuntamento per \"{{jobTitle}}\" al {{date}}. Scusa per il cambio last-minute.\n\n{{contractorName}}",
+    "thankYou": "Grazie",
+    "thankYouBody": "Ciao {{customer}},\n\ngrazie per aver scelto me per \"{{jobTitle}}\". Una recensione veloce sarebbe di grande aiuto. Qualsiasi problema, fammi sapere.\n\nCordiali saluti,\n{{contractorName}}"
   }
 }
