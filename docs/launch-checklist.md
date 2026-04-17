@@ -22,6 +22,27 @@ Tracks everything required to publish Vasco to App Store + Google Play and enabl
 - [x] **Late-payment autopilot (EU Directive 2011/7/EU)** — R167 (2026-04-17). `lateFeeService.computeLateFee()` ECB refi + 8pp margin (B2B), UK tiered recovery £40/£70/£100, consumer-skip. `reminderCadenceService.renderReminder` appends disclosure on firm/final steps. `send-invoice` Edge Function accepts `bodyOverride`. Invoice detail shows live "Entitled: €X late-fee + recovery" badge. 13/13 unit tests pass.
 - [x] ~~**Field Q&A over NEN/DIN/NF/UNE/BS corpus (Hebbia/Harvey pattern)**~~ — **DROPPED (2026-04-17)** after EU fact-check. Blockers: (1) National standards are copyrighted, per-copy €65–€516, licences explicitly bar AI ingestion; EU AI Act + DSM Directive Art. 4(3) require rightsholder authorisation, and standards bodies are building MARSS to enforce opt-outs. (2) Market already served — trade bodies (Techniek Nederland, ZVEH), manufacturer tools (Hager Ready, 60k+ installs) offer free/subsidised compliance lookup. (3) EU installers carry personal liability to inspection — a cited AI answer gives no legal defence, so no risk-reduction wedge. Feasible variant if revisited: RAG over **free** corpora only (government building regs, manufacturer docs, contractor's own job history) + white-label deal with one trade body that holds bulk licences.
 
+## 🕳 Known gaps (blocked on live Supabase or requires data migration)
+
+### Cross-contractor pricing moat — **40% operational** (audited 2026-04-17)
+The cohort-benchmark moat (advertised as a core differentiator) has infra + ingestion but **no working aggregation** and **no feedback loop**. Concretely:
+- ✅ `material_price_history` table exists and is written on every invoice scan (`invoiceScanService.ts:137-156`).
+- ✅ `pricing_intelligence` table exists and is written on every quote line item (`dataCollector.ts:210`).
+- ❌ RPC `get_trade_pricing_stats` (`002_ai_moat_infrastructure.sql:458-492`) reads from the wrong table (`learning_profiles` instead of `pricing_intelligence`) → returns empty.
+- ❌ RPC `compute_weekly_cohort_stats` (`002_ai_moat_infrastructure.sql:530-564`) has the same SQL bug.
+- ❌ No trigger writes into `cohort_weekly_stats` when a quote is accepted — so even if the RPCs were fixed, the aggregation table is never populated.
+- ⚠️ `useCohortBenchmarks` hook (`cohortBenchmarkService.ts:205-216`) is defined but not imported anywhere — dead code in UI.
+- ⚠️ `material_price_history` RLS is `SELECT USING (true)` — every contractor sees every supplier+price+timestamp. Minor GDPR exposure (no user_id but combinable with external data could identify).
+
+**Fix plan (requires live Supabase to validate):**
+1. New migration with corrected RPC SQL that aggregates from `pricing_intelligence` and `material_price_history`.
+2. Trigger on `quote_accepted` business_event → upsert into `cohort_weekly_stats`.
+3. Import `useCohortBenchmarks` into `TieredQuoteBuilder` or the quote detail screen so the contractor actually sees "similar jobs in your trade + country".
+4. Revise `material_price_history` RLS to enforce aggregation-only reads (no raw timestamps + supplier combos).
+5. k-anonymity guard: require ≥5 contractors per `trade × country × week` cell before surfacing a benchmark, else show "not enough data".
+
+**Why this isn't being fixed right now:** The RPC fix needs a live Supabase to apply the migration, run the RPC, and verify sample_size > 0. User hasn't provided creds — we'd be shipping untested SQL.
+
 ## 🔐 User must provide credentials
 - [ ] Run `npx eas init` after `eas login` — fills `expo.extra.eas.projectId` in `app.json`.
 - [ ] Create live Supabase project (or unpause current). Provide URL + anon key in `.env`.
