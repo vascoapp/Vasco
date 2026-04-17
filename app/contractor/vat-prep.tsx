@@ -22,6 +22,11 @@ import {
   type VatLine,
 } from '../../src/services/vatPrepService';
 import { useExpenses } from '../../src/services/expenseService';
+import {
+  shareSummary as shareVatSummary,
+  sharePdf as shareVatPdf,
+  openDigiD as openDigiDPortal,
+} from '../../src/services/vatPrepExportService';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 
@@ -30,7 +35,7 @@ type PeriodChoice = 'current' | 'previous';
 export default function VatPrepScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { invoices } = useAppState();
+  const { invoices, businessProfile } = useAppState();
   const { expenses: rawExpenses } = useExpenses();
   const [periodChoice, setPeriodChoice] = useState<PeriodChoice>('previous');
 
@@ -55,12 +60,39 @@ export default function VatPrepScreen() {
   const lowConfLines = draft.lines.filter((l) => l.confidence < 0.75);
 
   const handleExport = () => {
+    const businessName = (businessProfile as any)?.businessName ?? 'Vasco';
     Alert.alert(
       t('vatPrep.export', 'Export'),
       t('vatPrep.exportDesc', 'Vasco prepares the return — you submit via DigiD (Belastingdienst) or forward to your bookkeeper. This never auto-files.'),
       [
-        { text: t('vatPrep.copyToClipboard', 'Copy summary'), onPress: () => {/* future: clipboard + PDF */} },
-        { text: t('vatPrep.openDigiD', 'Open DigiD'), onPress: () => {/* future: Linking.openURL */} },
+        {
+          text: t('vatPrep.shareSummary', 'Share summary'),
+          onPress: () => {
+            shareVatSummary(draft, businessName).catch((err) => {
+              Alert.alert(t('common.error', 'Error'), String(err?.message ?? err));
+            });
+          },
+        },
+        {
+          text: t('vatPrep.sharePdf', 'Share PDF'),
+          onPress: () => {
+            shareVatPdf(draft, businessName).catch((err) => {
+              Alert.alert(t('common.error', 'Error'), String(err?.message ?? err));
+            });
+          },
+        },
+        {
+          text: t('vatPrep.openDigiD', 'Open DigiD'),
+          onPress: async () => {
+            const ok = await openDigiDPortal();
+            if (!ok) {
+              Alert.alert(
+                t('vatPrep.cannotOpen', 'Cannot open portal'),
+                t('vatPrep.cannotOpenDesc', 'Could not open the Belastingdienst portal. Open belastingdienst.nl in your browser.'),
+              );
+            }
+          },
+        },
         { text: t('common.close', 'Close'), style: 'cancel' },
       ],
     );
