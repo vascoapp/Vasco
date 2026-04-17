@@ -23,6 +23,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import i18n from '../src/i18n/i18n';
 import { useAuth, type Country, type Language } from '../src/context/AuthContext';
+import { useAppState } from '../src/state/AppState';
 import { SemanticColors, Palette } from '../src/theme/colors';
 import { SafeArea, Spacing } from '../src/theme/spacing';
 import { getDefaultLanguage } from '../src/i18n/formatting';
@@ -201,6 +202,7 @@ export default function OnboardingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user, updateUser } = useAuth();
+  const { updateBusinessProfile } = useAppState();
 
   const [step, setStep] = useState(1);
   const [language, setLanguage] = useState<Language>(
@@ -400,6 +402,35 @@ export default function OnboardingScreen() {
       updateUser(userUpdates);
       await AsyncStorage.setItem('@vasco_user_profile', JSON.stringify(userUpdates)).catch(() => {});
       AsyncStorage.removeItem('@vasco_onboarding_progress').catch(() => {});
+
+      // Push captured registration fields into AppState.businessProfile so
+      // the invoice-send legal gate (R145) sees the real values on day one.
+      try {
+        const countryVatKey = country === 'NL' ? 'btw'
+          : country === 'DE' ? 'ustIdNr'
+          : country === 'FR' ? 'tva'
+          : country === 'ES' ? 'nif'
+          : country === 'IT' ? 'partitaIva'
+          : country === 'UK' ? 'vatNumber'
+          : 'vatNumber';
+        const regRegKey = country === 'NL' ? 'kvk'
+          : country === 'DE' ? 'hrb'
+          : country === 'FR' ? 'siret'
+          : country === 'UK' ? 'companyNumber'
+          : country === 'ES' ? 'nif'
+          : country === 'IT' ? 'codiceFiscale'
+          : 'kvk';
+        await updateBusinessProfile({
+          country: (country ?? undefined) as any,
+          trade: selectedTrades[0],
+          businessType: businessType ?? undefined,
+          businessName: regFields.businessName || regFields.companyName || regFields.tradeName,
+          kvkNumber: regFields[regRegKey] || regFields.kvk,
+          vatNumber: regFields[countryVatKey] || regFields.vatNumber,
+          registrationNumber: regFields[regRegKey] || regFields.registrationNumber,
+          address: regFields.address || regFields.businessAddress,
+        });
+      } catch {}
 
       i18n.changeLanguage(language);
 

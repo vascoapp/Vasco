@@ -83,19 +83,38 @@ const MOCK_RESULT: AIAnalysisResult = {
 // Component
 // ---------------------------------------------------------------------------
 
+const MAX_PHOTOS = 5;
+
+interface CapturedPhoto {
+  uri: string;
+  base64: string;
+}
+
 export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoProps) {
   const { t } = useTranslation();
-  const [photo, setPhoto] = useState<string | null>(null);
-  const [photoBase64, setPhotoBase64] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<AIAnalysisResult | null>(null);
   const [items, setItems] = useState<DetectedItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // formatCurrency imported from ../../i18n/formatting
+  // Derive a primary photo for legacy single-photo render paths.
+  const photo = photos[0]?.uri ?? null;
 
-  // Take photo via camera or pick from gallery
+  const addPhoto = (p: CapturedPhoto) => {
+    setPhotos((prev) => (prev.length >= MAX_PHOTOS ? prev : [...prev, p]));
+    setError(null);
+  };
+
+  const removePhoto = (idx: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const atCap = photos.length >= MAX_PHOTOS;
+
+  // Take photo via camera (cumulative — multi-photo)
   const takePhoto = async () => {
+    if (atCap) return;
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert(t('photos.cameraAccess', 'Camera access required'), t('photos.cameraPermission', 'Give Vasco access to your camera to take photos.'));
@@ -104,41 +123,44 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
 
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
-      quality: 0.6, // Compress to reduce API cost (fewer tokens)
-      base64: true, // Get base64 for API
+      quality: 0.6,
+      base64: true,
       allowsEditing: false,
       exif: false,
     });
 
-    if (!result.canceled && result.assets[0]) {
-      setPhoto(result.assets[0].uri);
-      setPhotoBase64(result.assets[0].base64 || null);
-      setError(null);
-      analyzePhoto(result.assets[0].base64 || null);
+    if (!result.canceled && result.assets[0] && result.assets[0].base64) {
+      addPhoto({ uri: result.assets[0].uri, base64: result.assets[0].base64 });
     }
   };
 
-  // Pick from gallery (cheaper option — no camera needed)
+  // Pick from gallery — allow multi-select so contractor/customer can drop 3-5 angles in one go
   const pickFromGallery = async () => {
+    if (atCap) return;
+    const remaining = MAX_PHOTOS - photos.length;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       quality: 0.6,
       base64: true,
       allowsEditing: false,
+      allowsMultipleSelection: true,
+      selectionLimit: remaining,
     });
 
-    if (!result.canceled && result.assets[0]) {
-      setPhoto(result.assets[0].uri);
-      setPhotoBase64(result.assets[0].base64 || null);
+    if (!result.canceled) {
+      for (const asset of result.assets) {
+        if (!asset.base64) continue;
+        setPhotos((prev) => (prev.length >= MAX_PHOTOS ? prev : [...prev, { uri: asset.uri, base64: asset.base64! }]));
+      }
       setError(null);
-      analyzePhoto(result.assets[0].base64 || null);
     }
   };
 
-  // Analyze photo via Supabase Edge Function → Claude Haiku Vision
-  const analyzePhoto = async (base64: string | null) => {
-    if (!base64) {
-      setError('Foto kon niet worden geladen');
+  // Analyze photos via Supabase Edge Function → Claude Haiku Vision (multi-image)
+  const analyzePhotos = async () => {
+    const batch = photos.map((p) => p.base64);
+    if (batch.length === 0) {
+      setError('Voeg minstens één foto toe');
       return;
     }
 
@@ -168,7 +190,9 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
     try {
       const { data, error: fnError } = await supabase.functions.invoke('analyze-photo', {
         body: {
-          imageBase64: base64,
+          // New multi-photo path — Edge Function also falls back to legacy single imageBase64.
+          imagesBase64: batch,
+          imageBase64: batch[0],
           trade: 'general', // Would come from user profile
           country: 'NL',
         },
@@ -221,8 +245,8 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
   // RENDER
   // ============================================
 
-  // Empty state — no photo yet
-  if (!photo) {
+  // Empty state — no photos yet
+  if (photos.length === 0) {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
@@ -238,21 +262,70 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
           <View style={styles.cameraCircle}>
             <Ionicons name="camera" size={48} color={Palette.hermesOrange} />
           </View>
-          <Text style={styles.emptyTitle}>Maak een foto van de werkplek</Text>
+          <Text style={styles.emptyTitle}>{t('aiQuote.addPhotosTitle', 'Add 3–5 photos of the job')}</Text>
           <Text style={styles.emptyDesc}>
-            Vasco analyseert de foto en maakt automatisch een offerte met materialen, hoeveelheden en prijzen.
+            {t('aiQuote.addPhotosDesc', 'Multiple angles help Vasco detect materials, dimensions and work needed. Include a coin or tape measure for scale if you can.')}
           </Text>
 
           <Pressable style={styles.primaryBtn} onPress={takePhoto}>
             <Ionicons name="camera" size={20} color="#fff" />
-            <Text style={styles.primaryBtnText}>Maak foto</Text>
+            <Text style={styles.primaryBtnText}>{t('aiQuote.takePhoto', 'Take photo')}</Text>
           </Pressable>
 
           <Pressable style={styles.secondaryBtn} onPress={pickFromGallery}>
             <Ionicons name="images-outline" size={18} color={Palette.hermesOrange} />
-            <Text style={styles.secondaryBtnText}>Kies uit galerij</Text>
+            <Text style={styles.secondaryBtnText}>{t('aiQuote.pickGallery', 'Pick from gallery')}</Text>
           </Pressable>
         </View>
+      </View>
+    );
+  }
+
+  // Staging state — photos added, waiting for user to tap Analyze
+  if (!analysis && !analyzing) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>{t('aiQuote.readyToAnalyze', 'Ready to analyze')}</Text>
+          {onClose && (
+            <Pressable onPress={onClose} style={styles.closeBtn}>
+              <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
+            </Pressable>
+          )}
+        </View>
+        <ScrollView style={styles.scrollView} contentContainerStyle={{ padding: Spacing.md, gap: Spacing.md }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.sm, paddingVertical: Spacing.xs }}>
+            {photos.map((p, i) => (
+              <View key={p.uri + i} style={styles.thumbWrap}>
+                <Image source={{ uri: p.uri }} style={styles.thumb} />
+                <Pressable style={styles.thumbRemove} onPress={() => removePhoto(i)} accessibilityRole="button" accessibilityLabel={t('aiQuote.removePhoto', 'Remove photo')}>
+                  <Ionicons name="close" size={14} color="#fff" />
+                </Pressable>
+              </View>
+            ))}
+            {!atCap && (
+              <Pressable style={styles.thumbAdd} onPress={pickFromGallery} accessibilityRole="button" accessibilityLabel={t('aiQuote.addMore', 'Add more photos')}>
+                <Ionicons name="add" size={28} color={Palette.hermesOrange} />
+              </Pressable>
+            )}
+          </ScrollView>
+
+          <Text style={{ fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary }}>
+            {t('aiQuote.photosAdded', '{{count}} of {{max}} photos', { count: photos.length, max: MAX_PHOTOS })}
+          </Text>
+
+          <Pressable style={styles.primaryBtn} onPress={analyzePhotos}>
+            <Ionicons name="sparkles" size={18} color="#fff" />
+            <Text style={styles.primaryBtnText}>{t('aiQuote.analyze', 'Analyze photos')}</Text>
+          </Pressable>
+
+          {!atCap && (
+            <Pressable style={styles.secondaryBtn} onPress={takePhoto}>
+              <Ionicons name="camera" size={16} color={Palette.hermesOrange} />
+              <Text style={styles.secondaryBtnText}>{t('aiQuote.takeAnother', 'Take another angle')}</Text>
+            </Pressable>
+          )}
+        </ScrollView>
       </View>
     );
   }
@@ -262,7 +335,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Analyseren...</Text>
+          <Text style={styles.headerTitle}>{t('aiQuote.analyzing', 'Analyzing...')}</Text>
           {onClose && (
             <Pressable onPress={onClose} style={styles.closeBtn}>
               <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
@@ -270,10 +343,14 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
           )}
         </View>
         <View style={styles.analyzingState}>
-          <Image source={{ uri: photo }} style={styles.photoPreview} />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.sm, paddingHorizontal: Spacing.md }}>
+            {photos.map((p, i) => (
+              <Image key={p.uri + i} source={{ uri: p.uri }} style={styles.photoPreview} />
+            ))}
+          </ScrollView>
           <ActivityIndicator size="large" color={Palette.hermesOrange} />
-          <Text style={styles.analyzingText}>Vasco analyseert je foto...</Text>
-          <Text style={styles.analyzingSubtext}>Materialen, hoeveelheden en prijzen worden herkend</Text>
+          <Text style={styles.analyzingText}>{t('aiQuote.analyzingPhotos', 'Vasco is analyzing your photos...')}</Text>
+          <Text style={styles.analyzingSubtext}>{t('aiQuote.analyzingSubtext', 'Detecting materials, quantities and prices')}</Text>
         </View>
       </View>
     );
@@ -395,7 +472,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
 
         {/* Actions */}
         <View style={styles.actions}>
-          <Pressable style={styles.retakeBtn} onPress={() => { setPhoto(null); setPhotoBase64(null); setAnalysis(null); setItems([]); setError(null); }}>
+          <Pressable style={styles.retakeBtn} onPress={() => { setPhotos([]); setAnalysis(null); setItems([]); setError(null); }}>
             <Ionicons name="camera-reverse-outline" size={18} color={Palette.hermesOrange} />
             <Text style={styles.retakeBtnText}>Opnieuw</Text>
           </Pressable>
@@ -492,4 +569,17 @@ const styles = StyleSheet.create({
   retakeBtnText: { fontSize: TYPE.bodySize, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
   createBtn: { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.lg, paddingVertical: 16 },
   createBtnText: { fontSize: TYPE.bodySize, fontFamily: 'Inter_600SemiBold', color: Palette.white },
+
+  thumbWrap: { position: 'relative', width: 84, height: 84, borderRadius: RADIUS.md, overflow: 'hidden' },
+  thumb: { width: 84, height: 84, borderRadius: RADIUS.md, backgroundColor: SemanticColors.surfaceSecondary },
+  thumbRemove: {
+    position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: 11,
+    backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center',
+  },
+  thumbAdd: {
+    width: 84, height: 84, borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: Palette.hermesOrange, borderStyle: 'dashed',
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: SemanticColors.surfacePrimary,
+  },
 });

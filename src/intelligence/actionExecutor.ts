@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Share, Alert } from 'react-native';
 import { emitBusinessEvent } from './dataCollector';
 import { recordMetricSnapshot } from './learningStorage';
+import { getCurrentUserId } from '../lib/currentUser';
 import i18n from '../i18n/i18n';
 
 import type { InsightAction, InsightActionType } from './generators/types';
@@ -219,7 +220,7 @@ export async function executeAction(
   await logAction(entry);
 
   // Emit business event for AI learning
-  emitBusinessEvent('current-user', {
+  emitBusinessEvent(getCurrentUserId(), {
     eventType: 'insight_action_executed',
     entityType: 'job' as any,
     entityId: insightId,

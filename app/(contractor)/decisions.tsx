@@ -23,6 +23,7 @@ import { ShareDecisionTracker } from '../../src/components/contractor/ShareDecis
 import type { CustomerDecisionTracker, DecisionTemplate } from '../../src/types/decisions';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { useDecisionUpdates } from '../../src/services/decisionSyncService';
+import { PhotoSubmissionsPanel } from '../../src/components/contractor/PhotoSubmissionsPanel';
 
 type ViewMode = 'list' | 'detail' | 'template-picker';
 
@@ -186,13 +187,22 @@ export default function KeuzeScreen() {
         )}
 
         {viewMode === 'detail' && selectedTracker && (
-          <DecisionTrackerDetail
-            tracker={selectedTracker}
-            onClose={handleClose}
-            onSendReminder={handleSendReminder}
-            onRecordDecision={handleRecordDecision}
-            onShareWithCustomer={handleShareWithCustomer}
-          />
+          <>
+            <View style={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.md }}>
+              <PhotoSubmissionsPanel
+                submissions={decisionSubmissions}
+                trackerId={selectedTracker.id}
+                customerName={selectedTracker.customerName}
+              />
+            </View>
+            <DecisionTrackerDetail
+              tracker={selectedTracker}
+              onClose={handleClose}
+              onSendReminder={handleSendReminder}
+              onRecordDecision={handleRecordDecision}
+              onShareWithCustomer={handleShareWithCustomer}
+            />
+          </>
         )}
 
         {viewMode === 'template-picker' && (

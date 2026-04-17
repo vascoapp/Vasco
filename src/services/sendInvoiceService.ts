@@ -14,6 +14,10 @@ export interface SendInvoiceInput {
   /** Base64 PDF (without data:...; prefix). Optional. */
   pdfBase64?: string;
   locale?: Locale;
+  /** Optional body override. When the reminder cadence wants to supply the
+   * full message (e.g. firm/final with statutory-interest disclosure), the
+   * Edge Function should prefer this over its stock template. */
+  bodyOverride?: string;
 }
 
 export interface SendInvoiceResult {

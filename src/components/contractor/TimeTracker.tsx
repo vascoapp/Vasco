@@ -10,6 +10,7 @@ import { formatCurrency } from '../../i18n/formatting';
 import type { Job, TimeEntry } from '../../types/contractor';
 import { MOCK_JOBS } from '../../data/mockContractor';
 import { intelligence } from '../../intelligence/intelligenceEngine';
+import { getCurrentUserId } from '../../lib/currentUser';
 
 // Helper to create context for intelligence tracking
 const createTrackingContext = () => ({
@@ -76,7 +77,7 @@ export function TimeTracker({
     const job = MOCK_JOBS.find(j => j.id === selectedJobId);
     intelligence.trackEvent({
       eventType: 'clock_in',
-      userId: 'current-user',
+      userId: getCurrentUserId(),
       sessionId: 'current',
       context: createTrackingContext(),
       payload: {
@@ -101,7 +102,7 @@ export function TimeTracker({
       const job = activeEntry.jobId ? MOCK_JOBS.find(j => j.id === activeEntry.jobId) : undefined;
       intelligence.trackEvent({
         eventType: 'clock_out',
-        userId: 'current-user',
+        userId: getCurrentUserId(),
         sessionId: 'current',
         context: createTrackingContext(),
         payload: {

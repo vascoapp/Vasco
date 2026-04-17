@@ -28,6 +28,8 @@ import { watchCustomerInteractions } from '../src/services/customerInteractionWa
 import { flushQueue as flushOfflineQueue } from '../src/services/offlineWriteQueue';
 import { notifyNewQueueItems } from '../src/services/aiQueueNotifier';
 import { flushScanQueue } from '../src/services/offlineScanQueue';
+import { flushPendingDeltas } from '../src/services/reasonCodeService';
+import { flushPendingAffiliateClicks } from '../src/services/supplierBacklinkService';
 import { AppState as RNAppState } from 'react-native';
 import { DemoBanner } from '../src/components/shared/DemoBanner';
 import { startAutoSync, stopAutoSync } from '../src/intelligence/cloudSync';
@@ -55,6 +57,9 @@ function RootLayoutNav() {
     initErrorReporting().catch(() => {});
     ensureFlagsLoaded().catch(() => {});
     flushOfflineQueue().catch(() => {});
+    flushScanQueue().catch(() => {});
+    flushPendingDeltas().catch(() => {});
+    flushPendingAffiliateClicks().catch(() => {});
   }, []);
 
   // Flush the offline write queue whenever the app comes back to the foreground
@@ -64,6 +69,8 @@ function RootLayoutNav() {
       if (state === 'active') {
         flushOfflineQueue().catch(() => {});
         flushScanQueue().catch(() => {});
+        flushPendingDeltas().catch(() => {});
+        flushPendingAffiliateClicks().catch(() => {});
         notifyNewQueueItems().catch(() => {});
       }
     });
@@ -137,7 +144,12 @@ function RootLayoutNav() {
   useEffect(() => {
     if (!navigationReady.current) return;
 
-    const inAuthGroup = segments[0] === 'login';
+    const inAuthGroup =
+      segments[0] === 'login' ||
+      segments[0] === 'signup' ||
+      segments[0] === 'forgot-password' ||
+      segments[0] === 'reset-password' ||
+      segments[0] === 'auth'; // email-confirm / magic-link / password-recovery landings
     const inCustomerPortal = segments[0] === 'customer';
     const inOnboarding = segments[0] === 'onboarding';
 

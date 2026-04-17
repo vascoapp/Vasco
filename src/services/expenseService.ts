@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { emitBusinessEvent } from '../intelligence/dataCollector';
 import { recordMetricSnapshot } from '../intelligence/learningStorage';
+import { getCurrentUserId } from '../lib/currentUser';
 import { MS_PER_DAY } from '../utils/timeConstants';
 
 // =============================================================================
@@ -103,7 +104,7 @@ class ExpenseService {
     this.expenses.unshift(newExp);
     this.notify();
     // AI data collector — expense event
-    emitBusinessEvent('current-user', {
+    emitBusinessEvent(getCurrentUserId(), {
       eventType: 'expense_added',
       entityType: 'material',
       entityId: newExp.id,

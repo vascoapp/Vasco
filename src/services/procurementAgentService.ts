@@ -18,6 +18,7 @@ import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useCallback } from 'react';
 import { recordPricingData } from '../intelligence/dataCollector';
 import { recordMetricSnapshot, loadProfile } from '../intelligence/learningStorage';
+import { getCurrentUserId } from '../lib/currentUser';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -157,7 +158,7 @@ export async function sourceMaterial(
   // Feed price observations to AI data moat
   for (const opt of options) {
     const supplier = DUTCH_SUPPLIERS.find(s => s.id === opt.supplierId);
-    recordPricingData('current-user', {
+    recordPricingData(getCurrentUserId(), {
       trade,
       country: 'NL',
       lineDescription: need.name,

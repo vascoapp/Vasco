@@ -39,6 +39,7 @@ import { buildPriceRiskSignals } from '../logic/priceRisk';
 import { ingestPdfStub } from '../ingestion/ingestionStub';
 import { rowToExtractedDocument } from '../ingestion/extractionBridge';
 import { isSupabaseConfigured } from '../lib/supabase';
+import { getCurrentUserId, getCurrentCountry } from '../lib/currentUser';
 import { USE_SEED_DATA } from '../config/demo';
 import {
   loadQuotes,
@@ -205,7 +206,8 @@ const SEED_JOB_MATERIALS: Record<string, JobMaterial[]> = {
 };
 
 export function AppStateProvider({ children }: PropsWithChildren) {
-  const aiUserId = 'current-user'; // placeholder until AuthContext is accessible here
+  // Resolved at each render — currentUser ref is kept in sync by AuthContext.
+  const aiUserId = getCurrentUserId();
   const [isLoading, setIsLoading] = useState(isSupabaseConfigured);
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile>(
     useSeedData ? initialBusinessProfile : { isComplete: false, completenessPercent: 0 },
@@ -1425,12 +1427,19 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       setPendingBudgetExtraction,
       connectMollie: () => setMollieConnected(true),
       createPaymentLink: async (invoiceId, amount) => {
+        // Route by contractor country — UK → Stripe (GBP), everyone else → Mollie (EUR).
+        const country = getCurrentCountry();
+        if (country === 'UK') {
+          const { createStripePayment } = await import('../integrations/stripe');
+          const result = await createStripePayment(invoiceId, amount, 'UK');
+          if (result.success) {
+            setLastMolliePayment((prev) => ({ ...prev, [invoiceId]: result.paymentId ?? invoiceId }));
+          }
+          return;
+        }
         const result = await createMolliePayment(invoiceId, amount);
         if (result.success) {
-          setLastMolliePayment((prev) => ({
-            ...prev,
-            [invoiceId]: result.paymentId,
-          }));
+          setLastMolliePayment((prev) => ({ ...prev, [invoiceId]: result.paymentId }));
         }
       },
     }),

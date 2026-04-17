@@ -745,6 +745,13 @@ export function startBackgroundJobScheduler(
         // Calibrate ML models from accumulated prediction/actual pairs
         await calibrateModels().catch(() => {});
 
+        // Compliance agent — scan licenses/certs/insurance for 30/14/7/1-day
+        // expiry, upsert idempotent alerts, queue cert_renewal actions.
+        try {
+          const { scan } = await import('../services/complianceAgentService');
+          await scan().catch(() => {});
+        } catch {}
+
         // Purchasing Agent — daily price drop check (Pro+ only)
         try {
           const sub = await loadSubscription();

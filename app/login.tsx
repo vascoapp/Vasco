@@ -50,28 +50,46 @@ export default function LoginScreen() {
       setError(t('common.required', 'Vul je e-mailadres in'));
       return;
     }
-    const success = await login(email, password);
-    if (success) {
+    const result = await login(email, password);
+    if (result.ok) {
       setFailedAttempts(0);
       router.replace(getRouteForEmail(email));
-    } else {
-      const attempts = failedAttempts + 1;
-      setFailedAttempts(attempts);
-      if (attempts >= 5) {
-        setLockoutUntil(Date.now() + 30000);
-        setError(t('auth.tooManyAttempts', 'Too many attempts. Try again in 30 seconds.'));
-        setTimeout(() => { setLockoutUntil(0); setFailedAttempts(0); }, 30000);
-        return;
-      }
-      setError(t('common.error', 'Ongeldige gegevens'));
+      return;
     }
+    // Reason-specific messaging — network outages shouldn't look like "wrong password".
+    if (result.reason === 'network') {
+      setError(t('auth.networkError', 'Cannot reach server. Check your internet and try again.'));
+      return;
+    }
+    if (result.reason === 'locked') {
+      setError(t('auth.accountLocked', 'Account temporarily locked. Try again in a few minutes.'));
+      return;
+    }
+    if (result.reason === 'demo_disabled') {
+      setError(t('auth.demoDisabled', 'Demo accounts are disabled in production.'));
+      return;
+    }
+    // 'invalid' or 'unknown' — count toward client-side lockout
+    const attempts = failedAttempts + 1;
+    setFailedAttempts(attempts);
+    if (attempts >= 5) {
+      setLockoutUntil(Date.now() + 30000);
+      setError(t('auth.tooManyAttempts', 'Too many attempts. Try again in 30 seconds.'));
+      setTimeout(() => { setLockoutUntil(0); setFailedAttempts(0); }, 30000);
+      return;
+    }
+    setError(t('auth.invalidCredentials', 'Invalid email or password.'));
   };
 
   const handleDemoLogin = async (demoEmail: string) => {
     setEmail(demoEmail);
-    const success = await login(demoEmail, 'demo');
-    if (success) {
+    const result = await login(demoEmail, 'demo');
+    if (result.ok) {
       router.replace(getRouteForEmail(demoEmail));
+    } else if (result.reason === 'demo_disabled') {
+      setError(t('auth.demoDisabled', 'Demo accounts are disabled in production.'));
+    } else if (result.reason === 'network') {
+      setError(t('auth.networkError', 'Cannot reach server. Check your internet and try again.'));
     }
   };
 
@@ -157,12 +175,22 @@ export default function LoginScreen() {
                 icon="arrow-forward"
               />
 
-              <Pressable
-                style={styles.forgotBtn}
-                onPress={() => router.push('/forgot-password' as any)}
-              >
-                <Text style={styles.forgotBtnText}>{t('auth.forgotPassword', 'Forgot password?')}</Text>
-              </Pressable>
+              <View style={styles.authLinksRow}>
+                <Pressable
+                  style={styles.forgotBtn}
+                  onPress={() => router.push('/forgot-password' as any)}
+                >
+                  <Text style={styles.forgotBtnText}>{t('auth.forgotPassword', 'Forgot password?')}</Text>
+                </Pressable>
+                {!DEMO_MODE && (
+                  <Pressable
+                    style={styles.forgotBtn}
+                    onPress={() => router.push('/signup' as any)}
+                  >
+                    <Text style={styles.forgotBtnText}>{t('auth.createAccount', 'Create account')}</Text>
+                  </Pressable>
+                )}
+              </View>
             </View>
           </FadeIn>
 
@@ -465,6 +493,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_500Medium',
     flex: 1,
   },
+  authLinksRow: { flexDirection: 'row', justifyContent: 'center', gap: 24 },
   forgotBtn: { alignSelf: 'center', paddingVertical: 8 },
   forgotBtnText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: Palette.hermesOrange },
   // Demo

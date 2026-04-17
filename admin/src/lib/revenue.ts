@@ -21,6 +21,9 @@ export interface RevenueSnapshot {
   mrr: number;
   paidInvoicesLast30d: number;
   paidInvoiceRevenueLast30d: number;
+  affiliateClicksLast30d: number;
+  affiliateCommissionLast30d: number;
+  affiliateEstimatedLast30d: number;
   tierBreakdown: Record<string, number>;
   countryBreakdown: Record<string, number>;
   fetchedAt: string;
@@ -34,6 +37,9 @@ function empty(live: boolean): RevenueSnapshot {
     mrr: 0,
     paidInvoicesLast30d: 0,
     paidInvoiceRevenueLast30d: 0,
+    affiliateClicksLast30d: 0,
+    affiliateCommissionLast30d: 0,
+    affiliateEstimatedLast30d: 0,
     tierBreakdown: { free: 0, advanced: 0, pro: 0, contractor: 0 },
     countryBreakdown: {},
     fetchedAt: new Date().toISOString(),
@@ -47,14 +53,19 @@ export async function fetchRevenueSnapshot(): Promise<RevenueSnapshot> {
   if (!supabase) return empty(false);
 
   try {
-    const [{ data: subs }, { data: invoices }, { data: profiles }] = await Promise.all([
+    const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const [{ data: subs }, { data: invoices }, { data: profiles }, { data: clicks }] = await Promise.all([
       supabase.from("subscriptions").select("tier, status, billing_cycle"),
       supabase
         .from("invoices")
         .select("total, currency, paid_at, status")
         .eq("status", "paid")
-        .gte("paid_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
+        .gte("paid_at", since30d),
       supabase.from("business_profiles").select("country"),
+      supabase
+        .from("affiliate_clicks")
+        .select("converted, commission, estimated_commission, clicked_at")
+        .gte("clicked_at", since30d),
     ]);
 
     const snap = empty(true);
@@ -87,6 +98,17 @@ export async function fetchRevenueSnapshot(): Promise<RevenueSnapshot> {
       const c = p.country ?? "??";
       snap.countryBreakdown[c] = (snap.countryBreakdown[c] ?? 0) + 1;
     }
+
+    // Supplier affiliate commissions — actual when converted, estimate when not.
+    let affConverted = 0;
+    let affEstimated = 0;
+    for (const c of (clicks ?? []) as Array<{ converted?: boolean; commission?: number; estimated_commission?: number }>) {
+      if (c.converted && typeof c.commission === 'number') affConverted += c.commission;
+      else if (typeof c.estimated_commission === 'number') affEstimated += c.estimated_commission;
+    }
+    snap.affiliateClicksLast30d = clicks?.length ?? 0;
+    snap.affiliateCommissionLast30d = affConverted;
+    snap.affiliateEstimatedLast30d = affEstimated;
 
     return snap;
   } catch {

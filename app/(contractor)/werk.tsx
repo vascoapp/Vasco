@@ -64,6 +64,23 @@ export default function WerkScreen() {
 
   const handleCreateJob = async () => {
     if (!newJobTitle.trim()) return;
+    // Tier gate — free tier caps active jobs; prompt upgrade at the limit.
+    try {
+      const { loadSubscription, canCreateJob } = await import('../../src/services/subscriptionService');
+      const sub = await loadSubscription();
+      const gate = canCreateJob(sub);
+      if (!gate.allowed) {
+        Alert.alert(
+          t('billing.upgradeRequired', 'Upgrade required'),
+          gate.reason,
+          [
+            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+            { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+          ],
+        );
+        return;
+      }
+    } catch {}
     await addJob(newJobTitle.trim());
     hapticSuccess();
     setNewJobTitle('');

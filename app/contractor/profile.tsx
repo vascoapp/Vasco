@@ -140,7 +140,34 @@ export default function ProfileScreen() {
         {
           text: t('profile.deleteConfirm', 'Delete permanently'),
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
+            // GDPR Art. 17: persist the deletion request so the backend worker
+            // erases the user's data within 30 days. If the insert fails we
+            // must NOT claim deletion was scheduled.
+            let submitted = true;
+            try {
+              const { supabase, isSupabaseConfigured } = await import('../../src/lib/supabase');
+              if (isSupabaseConfigured) {
+                const { data: { user: authUser } } = await supabase.auth.getUser();
+                if (authUser) {
+                  const { error: insErr } = await (supabase.from('account_deletion_requests' as any) as any)
+                    .insert({ user_id: authUser.id, status: 'pending' });
+                  if (insErr) submitted = false;
+                } else {
+                  submitted = false;
+                }
+              }
+              // Demo mode: no backend to call; local logout clears AsyncStorage.
+            } catch {
+              submitted = false;
+            }
+            if (!submitted) {
+              Alert.alert(
+                t('profile.deletionFailed', 'Could not submit request'),
+                t('profile.deletionFailedDesc', 'Your request did not reach our servers. Check your internet and try again, or contact support.'),
+              );
+              return;
+            }
             Alert.alert(
               t('profile.deletionScheduled', 'Account deletion requested'),
               t('profile.deletionScheduledDesc', 'Your data will be removed within 30 days. You will receive a confirmation email.'),
@@ -219,28 +246,28 @@ export default function ProfileScreen() {
               icon="document-text"
               label={getRegistrationLabel(country)}
               value={businessProfile.kvkNumber || businessProfile.registrationNumber || t('profile.notSet', 'Not set')}
-              onPress={() => router.push('/contractor/business-settings' as any)}
+              onPress={() => router.push('/business-settings' as any)}
             />
             <SettingsRow
               icon="receipt"
               label={t('profile.vatNumber', 'VAT number')}
               value={businessProfile.vatNumber || t('profile.notSet', 'Not set')}
               border
-              onPress={() => router.push('/contractor/business-settings' as any)}
+              onPress={() => router.push('/business-settings' as any)}
             />
             <SettingsRow
               icon="location"
               label={t('profile.address', 'Address')}
               value={businessProfile.address || t('profile.notSet', 'Not set')}
               border
-              onPress={() => router.push('/contractor/business-settings' as any)}
+              onPress={() => router.push('/business-settings' as any)}
             />
             <SettingsRow
               icon="briefcase"
               label={t('profile.businessType', 'Business type')}
               value={businessProfile.businessType || t('profile.notSet', 'Not set')}
               border
-              onPress={() => router.push('/contractor/business-settings' as any)}
+              onPress={() => router.push('/business-settings' as any)}
             />
           </View>
         </View>
@@ -288,7 +315,7 @@ export default function ProfileScreen() {
             </Pressable>
             <Pressable
               style={[styles.row, styles.rowBorder]}
-              onPress={() => router.push('/contractor/notification-preferences' as any)}
+              onPress={() => router.push('/contractor/notifications' as any)}
             >
               <View style={styles.rowIcon}>
                 <Ionicons name="notifications" size={18} color={Palette.hermesOrange} />

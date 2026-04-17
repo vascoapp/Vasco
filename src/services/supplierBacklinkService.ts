@@ -6,7 +6,13 @@
 // Suppliers pay 2-8% referral commission on orders placed via the app.
 // =============================================================================
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Country } from '../context/AuthContext';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { getCurrentUserId } from '../lib/currentUser';
+
+const CLICKS_KEY = '@vasco_affiliate_clicks';
+const PENDING_KEY = '@vasco_affiliate_clicks_pending';
 
 // ─── Supplier Types ────────────────────────────────────────────────────────
 
@@ -162,6 +168,174 @@ export interface BacklinkRevenueSummary {
   totalCommission: number;
   avgCommissionPerClick: number;
   topSuppliers: { supplierId: string; name: string; clicks: number; commission: number }[];
+}
+
+// ─── Click Tracking ─────────────────────────────────────────────────────────
+// `trackClick` records every outbound affiliate tap so we can compute
+// commission totals without waiting on the supplier's postback. We also
+// write to Supabase `affiliate_clicks` (best-effort, offline-safe) so the
+// admin dashboard + monthly commission reconciliation have full history.
+// Suppliers' postbacks will later flip `converted` + fill `orderValue` on
+// these rows; meantime we hold the optimistic estimate.
+
+interface StoredClick extends BacklinkClick {
+  id: string;
+  supplierName: string;
+  estimatedCommission: number;
+}
+
+async function loadLocalClicks(): Promise<StoredClick[]> {
+  try {
+    const raw = await AsyncStorage.getItem(CLICKS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function saveLocalClicks(clicks: StoredClick[]): Promise<void> {
+  try {
+    await AsyncStorage.setItem(CLICKS_KEY, JSON.stringify(clicks.slice(-500)));
+  } catch {}
+}
+
+async function queuePending(id: string): Promise<void> {
+  try {
+    const raw = await AsyncStorage.getItem(PENDING_KEY);
+    const ids: string[] = raw ? JSON.parse(raw) : [];
+    if (!ids.includes(id)) ids.push(id);
+    await AsyncStorage.setItem(PENDING_KEY, JSON.stringify(ids.slice(-500)));
+  } catch {}
+}
+
+/** Record an outbound click on a supplier affiliate link. Always safe to call —
+ * never throws. Writes to AsyncStorage first; Supabase best-effort. */
+export async function trackClick(supplierId: string, opts?: { userId?: string }): Promise<void> {
+  const supplier = SUPPLIERS.find((s) => s.id === supplierId);
+  if (!supplier) return;
+  const userId = opts?.userId ?? getCurrentUserId();
+  const estimatedCommission = Math.round(supplier.avgOrderValue * (supplier.commissionRate / 100) * 100) / 100;
+  const click: StoredClick = {
+    id: `click_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    supplierId,
+    supplierName: supplier.name,
+    userId,
+    clickedAt: new Date().toISOString(),
+    converted: false,
+    orderValue: 0,
+    commission: 0,
+    estimatedCommission,
+  };
+
+  const all = await loadLocalClicks();
+  all.push(click);
+  await saveLocalClicks(all);
+
+  if (isSupabaseConfigured) {
+    try {
+      const { error } = await (supabase.from as any)('affiliate_clicks').insert({
+        id: click.id,
+        user_id: userId,
+        supplier_id: supplierId,
+        supplier_name: supplier.name,
+        clicked_at: click.clickedAt,
+        estimated_commission: estimatedCommission,
+        converted: false,
+      });
+      if (error) await queuePending(click.id);
+    } catch {
+      await queuePending(click.id);
+    }
+  } else {
+    await queuePending(click.id);
+  }
+}
+
+/** Mint a tracked URL + record the click. Single entry point callers should
+ * use whenever they open a supplier link — routing through this ensures no
+ * link leaks without tracking. */
+export async function openSupplierLink(supplierId: string, opts?: { userId?: string; extraParams?: Record<string, string> }): Promise<string | null> {
+  const result = generateBacklink(supplierId, opts?.userId ?? getCurrentUserId());
+  if (!result) return null;
+  await trackClick(supplierId, opts);
+  if (opts?.extraParams && Object.keys(opts.extraParams).length > 0) {
+    const extras = Object.entries(opts.extraParams)
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+      .join('&');
+    return `${result.trackedUrl}&${extras}`;
+  }
+  return result.trackedUrl;
+}
+
+/** Aggregate local click log into a revenue summary. For the admin dashboard
+ * this gets merged with server-side conversion postbacks via Supabase query. */
+export async function getRevenueSummary(): Promise<BacklinkRevenueSummary> {
+  const clicks = await loadLocalClicks();
+  const totalClicks = clicks.length;
+  const conversions = clicks.filter((c) => c.converted);
+  const totalConversions = conversions.length;
+  const totalOrderValue = conversions.reduce((s, c) => s + (c.orderValue ?? 0), 0);
+  const totalCommission = conversions.reduce((s, c) => s + (c.commission ?? c.estimatedCommission), 0);
+  const byId = new Map<string, { name: string; clicks: number; commission: number }>();
+  for (const c of clicks) {
+    const entry = byId.get(c.supplierId) ?? { name: c.supplierName, clicks: 0, commission: 0 };
+    entry.clicks += 1;
+    entry.commission += c.converted ? (c.commission ?? 0) : c.estimatedCommission;
+    byId.set(c.supplierId, entry);
+  }
+  const topSuppliers = [...byId.entries()]
+    .map(([supplierId, v]) => ({ supplierId, name: v.name, clicks: v.clicks, commission: v.commission }))
+    .sort((a, b) => b.commission - a.commission)
+    .slice(0, 10);
+  return {
+    totalClicks,
+    totalConversions,
+    conversionRate: totalClicks > 0 ? totalConversions / totalClicks : 0,
+    totalOrderValue,
+    totalCommission,
+    avgCommissionPerClick: totalClicks > 0 ? totalCommission / totalClicks : 0,
+    topSuppliers,
+  };
+}
+
+/** Flush pending affiliate_clicks rows that failed to insert. Called on app
+ * foreground alongside the other offline queues. */
+export async function flushPendingAffiliateClicks(): Promise<{ sent: number; remaining: number }> {
+  if (!isSupabaseConfigured) return { sent: 0, remaining: 0 };
+  try {
+    const raw = await AsyncStorage.getItem(PENDING_KEY);
+    const ids: string[] = raw ? JSON.parse(raw) : [];
+    if (ids.length === 0) return { sent: 0, remaining: 0 };
+    const all = await loadLocalClicks();
+    const byId = new Map(all.map((c) => [c.id, c]));
+    const stillPending: string[] = [];
+    let sent = 0;
+    for (const id of ids) {
+      const c = byId.get(id);
+      if (!c) continue;
+      try {
+        const { error } = await (supabase.from as any)('affiliate_clicks').insert({
+          id: c.id,
+          user_id: c.userId,
+          supplier_id: c.supplierId,
+          supplier_name: c.supplierName,
+          clicked_at: c.clickedAt,
+          estimated_commission: c.estimatedCommission,
+          converted: c.converted,
+          order_value: c.orderValue || null,
+          commission: c.commission || null,
+        });
+        if (error) stillPending.push(id);
+        else sent += 1;
+      } catch {
+        stillPending.push(id);
+      }
+    }
+    await AsyncStorage.setItem(PENDING_KEY, JSON.stringify(stillPending));
+    return { sent, remaining: stillPending.length };
+  } catch {
+    return { sent: 0, remaining: 0 };
+  }
 }
 
 // Categories for UI display

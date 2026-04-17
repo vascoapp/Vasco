@@ -26,6 +26,23 @@ export default function InvoiceFromQuoteScreen() {
 
   const handleCreateInvoice = useCallback(async () => {
     if (!id) return;
+    // Tier gate — block monthly-cap users before we mint an invoice number.
+    try {
+      const { loadSubscription, canCreateInvoice } = await import('../../../src/services/subscriptionService');
+      const sub = await loadSubscription();
+      const gate = canCreateInvoice(sub);
+      if (!gate.allowed) {
+        Alert.alert(
+          'Upgrade required',
+          gate.reason,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'View plans', onPress: () => router.push('/contractor/profile' as any) },
+          ],
+        );
+        return;
+      }
+    } catch {}
     setCreating(true);
     try {
       const newId = await addInvoice(id);
@@ -36,7 +53,7 @@ export default function InvoiceFromQuoteScreen() {
     } finally {
       setCreating(false);
     }
-  }, [id, addInvoice]);
+  }, [id, addInvoice, router]);
 
   const handleMarkSent = useCallback(() => {
     if (invoiceId) {

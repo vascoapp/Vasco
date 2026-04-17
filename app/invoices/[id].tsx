@@ -23,9 +23,11 @@ import {
 } from '../../src/services/customerPaymentPreferenceService';
 import { sendInvoice as sendInvoiceEmail } from '../../src/services/sendInvoiceService';
 import { effectiveStep, renderReminder } from '../../src/services/reminderCadenceService';
+import { computeLateFee, disclosureLineLocalized, type LateFeeCountry } from '../../src/services/lateFeeService';
 import { generateXRechnungXML, generateZUGFeRDXML, type EInvoiceData } from '../../src/integrations/einvoice';
 import { Share as RNShare } from 'react-native';
 import { File, Paths } from 'expo-file-system';
+import { checkInvoiceReadiness } from '../../src/utils/businessProfileValidation';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -217,6 +219,22 @@ export default function InvoiceDetailScreen() {
   };
 
   const handleMarkSent = async () => {
+    // Legal gate: invoice must carry country-required fields (KvK/HRB/SIRET,
+    // VAT ID, etc.) or it's non-compliant. Block send until profile complete.
+    const readiness = checkInvoiceReadiness(businessProfile);
+    if (!readiness.ready) {
+      Alert.alert(
+        t('invoices.profileIncomplete', 'Profile incomplete'),
+        t('invoices.profileIncompleteDesc', 'Complete your business details before sending invoices.') +
+          '\n\n' + readiness.missingLabels.map((l) => `• ${l}`).join('\n'),
+        [
+          { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+          { text: t('invoices.completeProfile', 'Complete profile'), onPress: () => router.push('/business-settings' as any) },
+        ],
+      );
+      return;
+    }
+
     const customerEmail = (invoice as any).customerEmail ?? (invoice as any).customer_email;
     const language = (user?.language ?? 'nl') as 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
 
@@ -238,9 +256,25 @@ export default function InvoiceDetailScreen() {
     // gentle / firm / final template so the tone matches the situation.
     const daysOverdue = invoice.dueInDays < 0 ? Math.abs(invoice.dueInDays) : 0;
     let subject: string | undefined;
+    let bodyOverride: string | undefined;
     if (daysOverdue >= 3) {
       const step = await effectiveStep((invoice as any).customer ?? '', daysOverdue);
       if (step) {
+        // EU Directive 2011/7/EU: B2B is entitled to statutory interest +
+        // €40 recovery fee. Disclosure required on firm/final steps.
+        const supportedCountries: LateFeeCountry[] = ['NL', 'DE', 'FR', 'ES', 'IT', 'UK'];
+        const feeCountry: LateFeeCountry = supportedCountries.includes(country as LateFeeCountry)
+          ? (country as LateFeeCountry)
+          : 'NL';
+        const feeBreakdown = computeLateFee({
+          invoiceAmount: invoice.amount,
+          daysOverdue,
+          country: feeCountry,
+          customerType: 'business',
+        });
+        const disclosure = feeBreakdown.applicable
+          ? disclosureLineLocalized(feeBreakdown, language)
+          : undefined;
         const rendered = renderReminder({
           step,
           locale: language,
@@ -250,8 +284,10 @@ export default function InvoiceDetailScreen() {
           days: daysOverdue,
           link: paymentUrl ?? '',
           business: (businessProfile as any)?.businessName ?? 'Vasco',
+          lateFeeDisclosure: disclosure,
         });
         subject = rendered.subject;
+        bodyOverride = rendered.body;
       }
     }
 
@@ -261,6 +297,7 @@ export default function InvoiceDetailScreen() {
       paymentUrl,
       locale: language,
       subject,
+      bodyOverride,
     });
     if (result.ok) {
       Alert.alert(
@@ -666,6 +703,39 @@ export default function InvoiceDetailScreen() {
                 showLine
               />
             )}
+            {/* EU Directive 2011/7/EU — statutory interest + €40 recovery fee */}
+            {invoice.status === 'overdue' && (() => {
+              const supportedCountries: LateFeeCountry[] = ['NL', 'DE', 'FR', 'ES', 'IT', 'UK'];
+              const feeCountry: LateFeeCountry = supportedCountries.includes(country as LateFeeCountry)
+                ? (country as LateFeeCountry)
+                : 'NL';
+              const fee = computeLateFee({
+                invoiceAmount: invoice.amount,
+                daysOverdue: Math.abs(invoice.dueInDays),
+                country: feeCountry,
+                customerType: 'business',
+              });
+              if (!fee.applicable || fee.interest + fee.recoveryFee < 1) return null;
+              const cur = fee.currency === 'GBP' ? '£' : '€';
+              return (
+                <TimelineEntry
+                  icon="warning-outline"
+                  color={SemanticColors.feedbackWarning}
+                  label={t('invoices.lateFeeEntitled', {
+                    defaultValue: 'Entitled: {{fee}} late-fee + recovery',
+                    fee: `${cur}${(fee.interest + fee.recoveryFee).toFixed(2)}`,
+                  })}
+                  labelColor={SemanticColors.textPrimary}
+                  date={t('invoices.lateFeeBreakdown', {
+                    defaultValue: '{{rate}}% interest ({{interest}}) + {{recovery}} fee',
+                    rate: fee.effectiveRatePct.toFixed(2),
+                    interest: `${cur}${fee.interest.toFixed(2)}`,
+                    recovery: `${cur}${fee.recoveryFee.toFixed(0)}`,
+                  })}
+                  showLine
+                />
+              );
+            })()}
             {/* Paid */}
             {invoice.status === 'paid' && (
               <TimelineEntry

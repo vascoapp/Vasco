@@ -8,6 +8,7 @@
 
 import type { Job } from '../types/contractor';
 import type { JobPhotoRecord, PhotoKind } from './jobPhotoService';
+import { complianceService, type Certification } from './complianceService';
 
 export type ChecklistItemId =
   | 'before_photo'
@@ -37,6 +38,9 @@ interface ChecklistContext {
   job: Job;
   photos: JobPhotoRecord[];
   signedOff?: boolean;
+  /** Optional overrides — most callers leave these undefined and let the
+   * checklist query `complianceService` for live cert state. Useful for
+   * tests + demo-mode screens that want to force a state. */
   hasGasCert?: boolean;
   hasElectricalTest?: boolean;
   hasWasteNote?: boolean;
@@ -45,6 +49,40 @@ interface ChecklistContext {
 
 function hasPhotoKind(photos: JobPhotoRecord[], kind: PhotoKind): boolean {
   return photos.some((p) => p.kind === kind);
+}
+
+/** Find a valid (not expired) certification whose name matches any of the
+ * given keywords (case-insensitive). Returns the matching cert or null. */
+function findValidCert(keywords: string[]): Certification | null {
+  try {
+    const certs = complianceService.getCertifications();
+    const now = Date.now();
+    const lc = keywords.map((k) => k.toLowerCase());
+    for (const c of certs) {
+      const name = (c.name ?? '').toLowerCase();
+      if (!lc.some((k) => name.includes(k))) continue;
+      const expiry = c.expiryDate ? new Date(c.expiryDate).getTime() : 0;
+      if (expiry <= now) continue; // expired
+      return c;
+    }
+  } catch {}
+  return null;
+}
+
+/** True when a non-expired cert matches. Pulls the override from the ctx
+ * first — when explicitly provided it wins over the live lookup. */
+function resolveCert(override: boolean | undefined, keywords: string[]): { ok: boolean; cert: Certification | null } {
+  if (override !== undefined) return { ok: override, cert: null };
+  const cert = findValidCert(keywords);
+  return { ok: Boolean(cert), cert };
+}
+
+function certHint(kind: string, cert: Certification | null, fallback: string): string {
+  if (!cert) return fallback;
+  const days = Math.floor((new Date(cert.expiryDate).getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+  if (days < 0) return `${cert.name} expired on ${new Date(cert.expiryDate).toLocaleDateString()}. Renew before closing.`;
+  if (days < 14) return `${cert.name} expires in ${days} day${days === 1 ? '' : 's'} — renew soon to keep this ${kind} valid.`;
+  return fallback;
 }
 
 /** Evaluate the checklist. Returns `canComplete=false` if any required item is missing. */
@@ -74,23 +112,26 @@ export function evaluateCompletion(ctx: ChecklistContext): ChecklistResult {
     satisfied: hasPhotoKind(ctx.photos, 'handover'),
   });
 
-  // Regulated trades — compliance paperwork
+  // Regulated trades — compliance paperwork. Resolve against live cert state
+  // so an expired Gaskeur actually blocks the job completion.
   if (trade === 'gas' || trade === 'plumbing') {
+    const gas = resolveCert(ctx.hasGasCert, ['gaskeur', 'cw-', 'gas safe', 'gasfitter']);
     items.push({
       id: 'gas_certificate',
       label: 'Gas safety / CW certificate',
       required: trade === 'gas',
-      satisfied: Boolean(ctx.hasGasCert),
-      hint: 'Upload Gaskeur / CW-attest before closing the job',
+      satisfied: gas.ok,
+      hint: certHint('gas cert', gas.cert, 'Upload Gaskeur / CW-attest before closing the job'),
     });
   }
   if (trade === 'electrical') {
+    const elec = resolveCert(ctx.hasElectricalTest, ['nen 1010', 'nen1010', 'eicr', '18th edition', 'niceic']);
     items.push({
       id: 'electrical_test',
       label: 'Electrical test report',
       required: true,
-      satisfied: Boolean(ctx.hasElectricalTest),
-      hint: 'NEN 1010 / EICR report is required for handover',
+      satisfied: elec.ok,
+      hint: certHint('electrical test', elec.cert, 'NEN 1010 / EICR report is required for handover'),
     });
   }
 

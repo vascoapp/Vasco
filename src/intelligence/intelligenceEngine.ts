@@ -32,6 +32,7 @@ import {
   insertTrainingExample as dbInsertTrainingExample,
 } from '../lib/intelligenceDataProvider';
 import { logWarn, logInfo } from '../utils/errorHandler';
+import { getCurrentUserId as _resolveUserId } from '../lib/currentUser';
 import { MS_PER_DAY } from '../utils/timeConstants';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1225,13 +1226,14 @@ export function trackUserAction(
   eventType: DataEventType,
   payload: Record<string, unknown>,
   entities: EntityRef[] = [],
-  userId: string = 'current-user'
+  userId?: string,
 ): Promise<string> {
+  const resolvedUserId = userId ?? _resolveUserId();
   const now = new Date();
 
   return intelligence.trackEvent({
     eventType,
-    userId,
+    userId: resolvedUserId,
     sessionId: 'current',
     context: {
       platform: 'ios',

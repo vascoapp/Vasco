@@ -112,6 +112,10 @@ export interface RenderArgs {
   days: number;
   link: string;
   business: string;
+  /** Optional legal disclosure line. When provided on firm/final steps it is
+   * appended to the body — required under EU Directive 2011/7/EU for B2B
+   * enforceability of statutory interest + €40 recovery fee. */
+  lateFeeDisclosure?: string;
 }
 
 export function renderReminder(args: RenderArgs): { subject: string; body: string } {
@@ -123,7 +127,14 @@ export function renderReminder(args: RenderArgs): { subject: string; body: strin
     .replace(/\{\{days\}\}/g, String(args.days))
     .replace(/\{\{link\}\}/g, args.link)
     .replace(/\{\{business\}\}/g, args.business);
-  return { subject: subst(tpl.subject), body: subst(tpl.body) };
+  const subject = subst(tpl.subject);
+  let body = subst(tpl.body);
+  // Append legal disclosure only on firm/final cadences — the friendly nudge
+  // should not lead with interest threats on day 3.
+  if (args.lateFeeDisclosure && (args.step === 'firm' || args.step === 'final')) {
+    body = `${body}\n\n${args.lateFeeDisclosure}`;
+  }
+  return { subject, body };
 }
 
 // ── Per-customer overrides (e.g. VIP → delay cadence by 3 days) ──────

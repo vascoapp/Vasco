@@ -7,6 +7,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback } from 'react';
+import { getCurrentUserId } from '../lib/currentUser';
 
 // =============================================================================
 // TYPES
@@ -222,7 +223,7 @@ export function useJobComments(jobId: string) {
 
   const postComment = useCallback(async (text: string, userId?: string, userName?: string) => {
     if (!jobId || !text.trim()) return;
-    await addComment(jobId, text.trim(), userId || 'current-user', userName);
+    await addComment(jobId, text.trim(), userId || getCurrentUserId(), userName);
     await refresh();
   }, [jobId, refresh]);
 

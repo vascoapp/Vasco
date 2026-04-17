@@ -683,6 +683,20 @@ class ComplianceService {
     return this.alerts.filter(a => !a.resolvedAt);
   }
 
+  /** All alert ids including resolved — used by the compliance agent to skip
+   * idempotent re-emission of the same (itemType, itemId, stage) tuple. */
+  getAllAlertIds(): string[] {
+    return this.alerts.map(a => a.id);
+  }
+
+  /** Upsert an alert. If id already exists this is a no-op (stage changed
+   * alerts get distinct ids). Notifies subscribers on insert. */
+  addAlert(alert: ComplianceAlert): void {
+    if (this.alerts.some(a => a.id === alert.id)) return;
+    this.alerts.push(alert);
+    this.notify();
+  }
+
   acknowledgeAlert(id: string): void {
     const alert = this.alerts.find(a => a.id === id);
     if (alert) {

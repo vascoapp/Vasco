@@ -10,6 +10,7 @@ import { emitBusinessEvent, emitMaterialPurchased } from '../intelligence/dataCo
 import { recordMetricSnapshot } from '../intelligence/learningStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getMaterialBaselines } from './cohortBenchmarkService';
+import { getCurrentUserId } from '../lib/currentUser';
 
 const SCAN_HISTORY_KEY = '@vasco_invoice_scans';
 const RATE_LIMIT_KEY = '@vasco_last_invoice_scan';
@@ -116,7 +117,7 @@ export async function scanInvoicePhoto(
 // ---------------------------------------------------------------------------
 
 export async function feedPricingMoat(invoice: ScannedInvoice): Promise<void> {
-  const userId = 'current-user';
+  const userId = getCurrentUserId();
 
   for (const item of invoice.lineItems) {
     // Emit material purchase event

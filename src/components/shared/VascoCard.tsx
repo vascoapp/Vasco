@@ -28,7 +28,7 @@ interface VascoCardProps {
   automationsCount: number;
   complianceStatus?: { valid: number; expiring: number; expired: number } | null;
   pendingDecisions?: number;
-  onApproveQueueItem: (id: string) => void;
+  onApproveQueueItem: (id: string, editedText?: string) => void;
   onRejectQueueItem: (id: string) => void;
   onInsightAction?: (insight: ScoredInsight) => void;
 }
@@ -242,7 +242,7 @@ export function VascoCard({
                 <EmbeddedApproval
                   key={item.id}
                   item={item}
-                  onApprove={() => { hapticSuccess(); onApproveQueueItem(item.id); }}
+                  onApprove={(editedText?: string) => { hapticSuccess(); onApproveQueueItem(item.id, editedText); }}
                   onReject={() => { hapticError(); onRejectQueueItem(item.id); }}
                   onSnooze={(hours: number) => { snoozeQueueItem(item.id, hours); }}
                 />
@@ -304,13 +304,14 @@ function getQueueIcon(type: string): IconName {
     case 'maintenance_due': return 'build-outline';
     case 'accounting_export': return 'cloud-upload-outline';
     case 'einvoice_submit': return 'document-attach-outline';
+    case 'customer_question': return 'chatbubbles-outline';
     default: return 'ellipse-outline';
   }
 }
 
 function EmbeddedApproval({ item, onApprove, onReject, onSnooze }: {
   item: QueueItem;
-  onApprove: () => void;
+  onApprove: (editedText?: string) => void;
   onReject: () => void;
   onSnooze: (hours: number) => void;
 }) {
@@ -318,6 +319,10 @@ function EmbeddedApproval({ item, onApprove, onReject, onSnooze }: {
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState('');
   const [approving, setApproving] = useState(false);
+
+  // Customer-question items: contractor approves a draft reply that gets
+  // written back to the portal. No Share sheet — the portal IS the channel.
+  const isCustomerQuestion = item.type === 'customer_question';
 
   // Types that share a message to the customer (editable before sending)
   const isShareable = [
@@ -347,6 +352,15 @@ function EmbeddedApproval({ item, onApprove, onReject, onSnooze }: {
     if (approving) return; // Prevent double-tap
     setApproving(true);
     try {
+      if (isCustomerQuestion) {
+        // Reply goes back to the portal via DB — no Share sheet. Pass edited
+        // text (or fall back to draft) up to the approve handler which writes
+        // to customer_questions.approved_reply.
+        const draft = (item.preparedData?.draftReply as string) || item.description;
+        const reply = editText.trim() || draft;
+        onApprove(reply);
+        return;
+      }
       if (isShareable) {
         const template = item.preparedData?.template || item.description;
         const text = editText || template;
@@ -403,8 +417,33 @@ function EmbeddedApproval({ item, onApprove, onReject, onSnooze }: {
         <Text style={s.reasoningText} numberOfLines={2}>{reasoning}</Text>
       )}
 
+      {/* Customer-question block: question + AI draft reply + edit */}
+      {isCustomerQuestion && (
+        <View style={s.cqBlock}>
+          <Text style={s.cqQuestionLabel}>{t('vasco.cqAsked', 'Customer asked')}</Text>
+          <Text style={s.cqQuestionText} numberOfLines={editing ? undefined : 3}>
+            {(item.preparedData?.question as string) || ''}
+          </Text>
+          {editing ? (
+            <TextInput
+              style={s.editInput}
+              value={editText || (item.preparedData?.draftReply as string) || ''}
+              onChangeText={setEditText}
+              multiline
+              placeholder={t('vasco.editReply', 'Edit the reply…')}
+              placeholderTextColor={SemanticColors.textTertiary}
+            />
+          ) : (
+            <>
+              <Text style={s.cqDraftLabel}>{t('vasco.cqDraftReply', 'Draft reply')}</Text>
+              <Text style={s.cqDraftText}>{(item.preparedData?.draftReply as string) || ''}</Text>
+            </>
+          )}
+        </View>
+      )}
+
       {/* Editable preview for shareable items (reminders, follow-ups, progress notes, etc.) */}
-      {editing && isShareable && (
+      {editing && isShareable && !isCustomerQuestion && (
         <TextInput
           style={s.editInput}
           value={editText || item.preparedData?.template || ''}
@@ -427,7 +466,7 @@ function EmbeddedApproval({ item, onApprove, onReject, onSnooze }: {
 
       {/* Action buttons */}
       <View style={s.embeddedActions}>
-        {isShareable && (
+        {(isShareable || isCustomerQuestion) && (
           <Pressable style={s.editBtn} onPress={() => setEditing(!editing)} accessibilityRole="button" accessibilityLabel={t('a11y.editMessage', 'Edit message')}>
             <Text style={s.editBtnText}>{editing ? t('vasco.done', 'Done') : t('vasco.edit', 'Edit')}</Text>
           </Pressable>
@@ -453,7 +492,7 @@ function EmbeddedApproval({ item, onApprove, onReject, onSnooze }: {
           ) : (
             <Ionicons name="checkmark" size={14} color={Palette.white} />
           )}
-          <Text style={s.approveBtnText}>{item.actionLabel}</Text>
+          <Text style={s.approveBtnText}>{isCustomerQuestion ? t('vasco.cqSendReply', 'Send reply') : item.actionLabel}</Text>
         </Pressable>
         <Pressable style={s.snoozeBtn} onPress={handleSnooze} accessibilityRole="button" accessibilityLabel={t('vasco.snooze', 'Remind later')}>
           <Ionicons name="time-outline" size={14} color={SemanticColors.textTertiary} />
@@ -630,6 +669,38 @@ const s = StyleSheet.create({
     color: SemanticColors.textPrimary,
     minHeight: 60,
     marginLeft: GRID.lg,
+  },
+  cqBlock: {
+    marginLeft: GRID.lg,
+    gap: GRID.xs,
+  },
+  cqQuestionLabel: {
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  cqQuestionText: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.bodyFamily,
+    color: SemanticColors.textPrimary,
+  },
+  cqDraftLabel: {
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.labelFamily,
+    color: Palette.hermesOrange,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: GRID.xs,
+  },
+  cqDraftText: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textPrimary,
+    backgroundColor: Palette.hermesOrange + '0D',
+    borderRadius: RADIUS.sm,
+    padding: GRID.sm,
   },
   editBtn: {
     backgroundColor: Palette.hermesOrange + '12',

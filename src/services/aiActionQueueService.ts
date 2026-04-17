@@ -7,12 +7,19 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { getCurrentUserId } from '../lib/currentUser';
 import i18n from '../i18n/i18n';
 import { getScanHistory, getFirstScanInsights } from './invoiceScanService';
 import { getTradeBaselines } from './cohortBenchmarkService';
 import { getCustomerIntelligence } from '../intelligence/tradeContext';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { loadOnboardingPreferences, type OnboardingPreferences, wantsPaymentFocus, wantsQuotingHelp, wantsComplianceFocus, wantsAutomationFocus, wantsGrowthFocus } from './onboardingPreferencesService';
+import {
+  fetchPendingCustomerQuestions,
+  approveCustomerQuestionReply,
+  rejectCustomerQuestionReply,
+  questionIdFromQueueItemId,
+} from './customerQuestionQueueBridge';
 
 const QUEUE_KEY = '@vasco_ai_queue';
 
@@ -46,7 +53,8 @@ export type QueueItemType =
   | 'safety_checklist'     // Pre-fill safety checklist for new site
   | 'tax_prep'             // Quarter-end tax document preparation
   | 'accounting_export'    // Export paid invoices to accounting software
-  | 'einvoice_submit';     // Submit e-invoice in country-specific format
+  | 'einvoice_submit'      // Submit e-invoice in country-specific format
+  | 'customer_question';   // High-stakes customer question from decision portal (R170)
 
 export interface QueueItem {
   id: string;
@@ -91,12 +99,19 @@ export async function getQueue(): Promise<QueueItem[]> {
     if (pruned.length < items.length) {
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(pruned)).catch(() => {});
     }
+    // Merge in remote high-stakes customer questions (R170). Dedup by id.
+    const remoteQuestions = await fetchPendingCustomerQuestions().catch(() => [] as QueueItem[]);
+    const existingIds = new Set(pending.map((i) => i.id));
+    const merged = [
+      ...remoteQuestions.filter((q) => !existingIds.has(q.id)),
+      ...pending,
+    ];
     // Prioritize queue items based on onboarding preferences
     const prefs = await loadOnboardingPreferences().catch(() => null);
     if (prefs && prefs.goals.length > 0) {
-      return prioritizeQueue(pending, prefs);
+      return prioritizeQueue(merged, prefs);
     }
-    return pending;
+    return merged;
   } catch {
     return [];
   }
@@ -174,7 +189,41 @@ function stripCount(title: string): string {
   return title.replace(/^\d+×\s+/, '');
 }
 
-export async function approveItem(itemId: string): Promise<QueueItem | null> {
+export async function approveItem(itemId: string, options?: { editedText?: string }): Promise<QueueItem | null> {
+  // Customer-question items are sourced from Supabase, not AsyncStorage — write
+  // the approved reply back so the portal poller renders it to the customer.
+  if (itemId.startsWith('cq:')) {
+    const questionId = questionIdFromQueueItemId(itemId);
+    if (!questionId) return null;
+    // Rebuild a shape the learning layer can still use for emitBusinessEvent.
+    // We pass through whatever edited text is available; if the contractor did
+    // not edit, fall back to the AI draft the bridge stashed in description.
+    const replyText = (options?.editedText ?? '').trim();
+    const ok = await approveCustomerQuestionReply(questionId, replyText);
+    if (!ok) return null;
+    try {
+      const { emitBusinessEvent } = await import('../intelligence/dataCollector');
+      await emitBusinessEvent(getCurrentUserId(), {
+        eventType: 'queue_item_approved',
+        entityType: 'job' as any,
+        entityId: questionId,
+        payload: { queueType: 'customer_question', edited: Boolean(options?.editedText) },
+      });
+      const { refreshApprovalRateCache } = await import('../intelligence/insightScorer');
+      refreshApprovalRateCache().catch(() => {});
+    } catch {}
+    return {
+      id: itemId,
+      type: 'customer_question',
+      status: 'approved',
+      title: '',
+      description: replyText,
+      preparedData: { questionId, approvedReply: replyText },
+      actionLabel: '',
+      estimatedImpact: '',
+      createdAt: new Date().toISOString(),
+    };
+  }
   try {
     const raw = await AsyncStorage.getItem(QUEUE_KEY);
     const items: QueueItem[] = raw ? JSON.parse(raw) : [];
@@ -187,7 +236,7 @@ export async function approveItem(itemId: string): Promise<QueueItem | null> {
       // next generator tick within this session sees it (not stuck on TTL).
       try {
         const { emitBusinessEvent } = await import('../intelligence/dataCollector');
-        await emitBusinessEvent('current-user', {
+        await emitBusinessEvent(getCurrentUserId(), {
           eventType: 'queue_item_approved',
           entityType: 'job' as any,
           entityId: item.entityKey ?? itemId,
@@ -207,6 +256,11 @@ export async function approveItem(itemId: string): Promise<QueueItem | null> {
 }
 
 export async function rejectItem(itemId: string): Promise<void> {
+  if (itemId.startsWith('cq:')) {
+    const questionId = questionIdFromQueueItemId(itemId);
+    if (questionId) await rejectCustomerQuestionReply(questionId);
+    return;
+  }
   try {
     const raw = await AsyncStorage.getItem(QUEUE_KEY);
     const items: QueueItem[] = raw ? JSON.parse(raw) : [];
@@ -232,7 +286,7 @@ export async function rejectItem(itemId: string): Promise<void> {
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
       try {
         const { emitBusinessEvent } = await import('../intelligence/dataCollector');
-        await emitBusinessEvent('current-user', {
+        await emitBusinessEvent(getCurrentUserId(), {
           eventType: 'queue_item_rejected',
           entityType: 'job' as any,
           entityId: item.entityKey ?? itemId,
@@ -283,7 +337,7 @@ export async function recordOutcome(
     // to dismiss, but customer reply proves the message worked).
     try {
       const { emitBusinessEvent } = await import('../intelligence/dataCollector');
-      await emitBusinessEvent('current-user', {
+      await emitBusinessEvent(getCurrentUserId(), {
         eventType: `queue_outcome_${outcome}`,
         entityType: 'job' as any,
         entityId: item?.entityKey ?? itemId,
@@ -1344,11 +1398,11 @@ export function useAIQueue() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const approve = useCallback(async (id: string) => {
+  const approve = useCallback(async (id: string, editedText?: string) => {
     if (processingRef.current.has(id)) return null; // Prevent double-tap
     processingRef.current.add(id);
     try {
-      const item = await approveItem(id);
+      const item = await approveItem(id, editedText ? { editedText } : undefined);
       setItems(prev => prev.filter(i => i.id !== id));
       return item;
     } finally {

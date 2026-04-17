@@ -5,7 +5,7 @@
 // client contact, notes, material predictions, and upsell opportunities
 // =============================================================================
 
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import {
   RefreshControl,
   LayoutAnimation,
   Share,
+  Modal,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -37,6 +38,7 @@ import JobComments from '../../../src/components/contractor/JobComments';
 import { addActivityEntry } from '../../../src/services/jobCommentsService';
 import { evaluateCompletion } from '../../../src/services/jobCompletionChecklist';
 import { listJobPhotos } from '../../../src/services/jobPhotoService';
+import { SignaturePad } from '../../../src/components/shared/SignaturePad';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -92,6 +94,19 @@ export default function JobDetailPage() {
   const clockedIn = timer.active && timer.jobId === id;
   const [photoCount, setPhotoCount] = useState(0);
   const [jobPhotos, setJobPhotos] = useState<PhotoItem[]>([]);
+
+  // Load real photo count from jobPhotoService on mount + every time we come back from /photos.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (!id) return;
+        const photos = await listJobPhotos(String(id));
+        if (!cancelled) setPhotoCount(photos.length);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [id]);
   const [jobCompleted, setJobCompleted] = useState(false);
   const [orderedMaterials, setOrderedMaterials] = useState<Set<string>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
@@ -105,7 +120,8 @@ export default function JobDetailPage() {
     }, 800);
   }, []);
 
-  const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, businessProfile } = useAppState();
+  const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, businessProfile, updateJob } = useAppState();
+  const [signatureModal, setSignatureModal] = useState<{ visible: boolean; onSigned?: () => void }>({ visible: false });
   const { advance, recordHours } = useJobLifecyclePipeline();
   const costVariance = useJobCostVariance(id || '');
   const job = useMemo(() => {
@@ -767,12 +783,7 @@ export default function JobDetailPage() {
             accessibilityLabel={`${t('jobs.photo', 'Take photo')}${photoCount > 0 ? `, ${photoCount} photos taken` : ''}`}
             onPress={() => {
               hapticSuccess();
-              LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-              setShowGallery(prev => !prev);
-              if (!showGallery) {
-                setPhotoCount(prev => prev + 1);
-                Alert.alert(t('jobs.photoSaved', 'Photo saved'), t('jobs.photoSavedDesc', { defaultValue: 'Photo {{count}} added to evidence.', count: photoCount + 1 }));
-              }
+              router.push(`/contractor/job/${job.id}/photos` as any);
             }}
           >
             <Ionicons name="camera" size={18} color={Palette.hermesOrange} />
@@ -809,6 +820,7 @@ export default function JobDetailPage() {
               onPress={async () => {
                 // Pre-flight: per-trade completion checklist
                 let checklistWarning = '';
+                let needsSignoff = false;
                 try {
                   const photos = await listJobPhotos(job.id).catch(() => []);
                   const result = evaluateCompletion({
@@ -819,23 +831,29 @@ export default function JobDetailPage() {
                   if (!result.canComplete) {
                     const missing = result.items.filter((i) => i.required && !i.satisfied).map((i) => `• ${i.label}`).join('\n');
                     checklistWarning = `\n\n${t('jobs.missingItems', 'Missing for trade compliance')}:\n${missing}`;
+                    needsSignoff = result.items.some((i) => i.id === 'customer_signoff' && i.required && !i.satisfied);
                   }
                 } catch {}
+                const doComplete = async () => {
+                  hapticSuccess();
+                  if (clockedIn) {
+                    const { hours } = await timer.clockOut();
+                    if (hours > 0) {
+                      recordHours(job.id, Math.round(hours * 10) / 10);
+                    }
+                  }
+                  setJobCompleted(true);
+                };
                 Alert.alert(
                   t('jobs.completeJob', 'Complete job'),
                   t('jobs.completeJobConfirm', 'Are you sure you want to complete this job?') + checklistWarning,
                   [
                     { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-                    { text: t('jobs.complete', 'Complete'), onPress: async () => {
-                      hapticSuccess();
-                      if (clockedIn) {
-                        const { hours } = await timer.clockOut();
-                        if (hours > 0) {
-                          recordHours(job.id, Math.round(hours * 10) / 10);
-                        }
-                      }
-                      setJobCompleted(true);
-                    }},
+                    ...(needsSignoff ? [{
+                      text: t('jobs.captureSignature', 'Capture signature'),
+                      onPress: () => setSignatureModal({ visible: true, onSigned: doComplete }),
+                    }] : []),
+                    { text: t('jobs.complete', 'Complete'), onPress: doComplete },
                   ],
                 );
               }}
@@ -927,6 +945,38 @@ export default function JobDetailPage() {
 
         <View style={{ height: 140 }} />
       </ScrollView>
+
+      <Modal
+        visible={signatureModal.visible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setSignatureModal({ visible: false })}
+      >
+        <View style={styles.signatureBackdrop}>
+          <View style={styles.signatureSheet}>
+            <Text style={styles.signatureTitle}>{t('jobs.customerSignature', 'Customer signature')}</Text>
+            <Text style={styles.signatureSubtitle}>{t('jobs.customerSignatureDesc', 'Ask the customer to sign below to confirm the work is completed.')}</Text>
+            <SignaturePad
+              label={contact.name}
+              onSave={(svg) => {
+                try {
+                  updateJob(job.id, { customerSignoffAt: new Date().toISOString(), signatureSvg: svg } as any);
+                } catch {}
+                const cb = signatureModal.onSigned;
+                setSignatureModal({ visible: false });
+                if (cb) cb();
+              }}
+            />
+            <Pressable
+              onPress={() => setSignatureModal({ visible: false })}
+              style={styles.signatureCancel}
+              accessibilityRole="button"
+            >
+              <Text style={styles.signatureCancelText}>{t('common.cancel', 'Cancel')}</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1710,5 +1760,38 @@ const styles = StyleSheet.create({
     fontFamily: TYPE.captionFamily,
     color: SemanticColors.textTertiary,
     marginTop: 1,
+  },
+  signatureBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  signatureSheet: {
+    backgroundColor: Palette.white,
+    borderTopLeftRadius: RADIUS.lg,
+    borderTopRightRadius: RADIUS.lg,
+    padding: GRID.lg,
+    gap: GRID.md,
+    paddingBottom: GRID.xl,
+  },
+  signatureTitle: {
+    fontSize: TYPE.sectionSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
+  },
+  signatureSubtitle: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.bodyFamily,
+    color: SemanticColors.textSecondary,
+  },
+  signatureCancel: {
+    alignSelf: 'center',
+    paddingVertical: GRID.sm,
+    paddingHorizontal: GRID.lg,
+  },
+  signatureCancelText: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textSecondary,
   },
 });

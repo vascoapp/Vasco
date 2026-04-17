@@ -14,6 +14,7 @@ import { useAppState } from '../../src/state/AppState';
 import { Ionicons } from '@expo/vector-icons';
 import { generateQuotePdf, type QuotePdfData } from '../../src/services/quotePdfService';
 import { shareQuoteWithAcceptanceLink } from '../../src/services/customerQuoteAcceptanceService';
+import { ShareQuoteButton } from '../../src/components/contractor/ShareQuoteButton';
 import { isDemoMode } from '../../src/context/AuthContext';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
 import { getVATRate } from '../../src/constants/taxRates';
@@ -186,6 +187,10 @@ export default function QuoteDetailScreen() {
         </View>
 
         <View style={styles.actions}>
+          {/* Signed portal link — customer can review + accept in browser */}
+          {quote.status === 'sent' && (
+            <ShareQuoteButton quoteId={quote.id} customerName={quote.customer} />
+          )}
           <PrimaryButton label={t('quotes.sharePdf', 'Share quote as PDF')} onPress={async () => {
             const items = lineItems[quote.id] ?? [];
             const subtotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);

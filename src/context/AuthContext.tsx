@@ -5,6 +5,7 @@ import { startAutoSync, stopAutoSync } from '../intelligence/cloudSync';
 import { trackEvent, initSession, setUserContext, clearUserContext, flushEvents } from '../services/eventTrackingService';
 import { DEMO_MODE } from '../config/demo';
 import { logWarn } from '../utils/errorHandler';
+import { setCurrentUser } from '../lib/currentUser';
 import type { Session } from '@supabase/supabase-js';
 
 // ---------------------------------------------------------------------------
@@ -320,13 +321,30 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
 // AUTH CONTEXT
 // ============================================
 
+export type LoginFailureReason =
+  | 'invalid'          // wrong email/password
+  | 'locked'           // too many failed attempts
+  | 'network'          // Supabase unreachable / offline
+  | 'demo_disabled'    // demo account used but DEMO_MODE=false in prod
+  | 'unknown';         // fallback — generic error
+
+export type LoginResult =
+  | { ok: true }
+  | { ok: false; reason: LoginFailureReason };
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   isDemoMode: boolean;
   session: Session | null;
-  login: (email: string, password: string) => Promise<boolean>;
+  /**
+   * Returns `ok: true` on success. On failure, `reason` indicates WHY so
+   * the login UI can surface an actionable message (network outage vs
+   * wrong password vs lockout vs demo-disabled in prod).
+   * Legacy boolean `!success.ok` remains equivalent to `false`.
+   */
+  login: (email: string, password: string) => Promise<LoginResult>;
   signUp: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<User>) => void;
@@ -378,6 +396,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Sync the module-level currentUser ref so non-hook consumers (schedulers,
+  // dataCollector, reasonCodeService) attribute events to the real user id.
+  useEffect(() => {
+    if (user?.id) {
+      setCurrentUser({ id: user.id, country: user.country, trade: (user as any).trade });
+    } else {
+      setCurrentUser(null);
+    }
+  }, [user?.id, user?.country, (user as any)?.trade]);
+
   // Load intelligence learning profile when user role is known
   useEffect(() => {
     if (user?.role) {
@@ -405,7 +433,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [!!user]);
 
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (email: string, password: string): Promise<LoginResult> => {
     setIsLoading(true);
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -415,7 +443,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (locked) {
       logWarn('Auth', `Login blocked — account locked out: ${normalizedEmail}`);
       setIsLoading(false);
-      return false;
+      return { ok: false, reason: 'locked' };
     }
 
     // --- Check for demo account ---
@@ -427,7 +455,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logWarn('Auth', `Demo login rejected — DEMO_MODE is disabled: ${normalizedEmail}`);
         await checkAndRecordFailedAttempt(normalizedEmail);
         setIsLoading(false);
-        return false;
+        return { ok: false, reason: 'demo_disabled' };
       }
 
       // If Supabase is configured, try real auth first
@@ -442,7 +470,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUserContext({ userId: authData.user.id, role: supaRole, country: (authData.user.user_metadata?.country as string) ?? 'NL' });
             trackEvent('login').catch(() => {});
           }
-          return true;
+          return { ok: true };
         }
         // Supabase auth failed — fall through to demo password check
       }
@@ -451,7 +479,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // In production (DEMO_MODE=false), demo accounts are blocked entirely above
       if (!password || password.trim().length === 0) {
         setIsLoading(false);
-        return false;
+        return { ok: false, reason: 'invalid' };
       }
 
       // Simulate delay for non-Supabase mode
@@ -469,7 +497,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       initSession({ userId: mockUser.id, role: analyticsRole, country: mockUser.country ?? 'NL' }).catch(() => {});
       setUserContext({ userId: mockUser.id, role: analyticsRole, country: mockUser.country ?? 'NL' });
       trackEvent('login').catch(() => {});
-      return true;
+      return { ok: true };
     }
 
     // --- Real Supabase auth for non-demo accounts ---
@@ -482,15 +510,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         initSession({ userId: realAuthData.user.id, role: realRole, country: (realAuthData.user.user_metadata?.country as string) ?? 'NL' }).catch(() => {});
         setUserContext({ userId: realAuthData.user.id, role: realRole, country: (realAuthData.user.user_metadata?.country as string) ?? 'NL' });
         trackEvent('login').catch(() => {});
-      } else if (error) {
-        await checkAndRecordFailedAttempt(normalizedEmail);
+        return { ok: true };
       }
-      return !error;
+      if (error) {
+        await checkAndRecordFailedAttempt(normalizedEmail);
+        // Distinguish network failures from credential failures. Supabase
+        // surfaces fetch failures as AuthRetryableFetchError or with a
+        // message matching /fetch|network|timeout/i.
+        const msg = (error.message || '').toLowerCase();
+        const isNetwork = /fetch|network|timeout|enotfound|econnreset|failed to fetch/.test(msg);
+        return { ok: false, reason: isNetwork ? 'network' : 'invalid' };
+      }
+      return { ok: false, reason: 'unknown' };
     }
 
     await checkAndRecordFailedAttempt(normalizedEmail);
     setIsLoading(false);
-    return false;
+    return { ok: false, reason: 'network' };
   }, []);
 
   const signUp = useCallback(async (email: string, password: string) => {

@@ -15,6 +15,13 @@ Tracks everything required to publish Vasco to App Store + Google Play and enabl
 - [x] `.env.example` expanded with server-vs-client secret guidance + Sentry/legal/demo flags.
 - [x] `.gitignore` updated (secrets/, google-services files, admin/.next).
 
+## 🗺 Phase-2 roadmap (post-launch, builds on credentials)
+- [x] **VAT prep (Truewind pattern)** — R169 (2026-04-16). NL BTW Q-prep: `src/services/vatPrepService.ts` classifies invoices + expenses per rubriek (1a/1b/1c/2a/3a/3b/4a/5b), flags 9% + verleggingsregeling as low-confidence, YoY variance (30%), warnings. `app/contractor/vat-prep.tsx` — period picker (prev/current), safety banner, totals, review. Entry card in geld tab (NL-gated). **Never auto-submits.** Next: DE/FR/ES/IT/UK (+1-2 wks per country).
+- [x] **Customer-reply AI in decisions portal (Decagon pattern)** — R168 (2026-04-16). Edge Function `classify-customer-question` (Claude Haiku 4.5), stakes classification, low+≥0.75 auto-send else high→contractor VascoCard. Migration `20260417_customer_questions.sql`. Portal UI card grounded on completed decisions + business context.
+- [x] **Supplier-affiliate ledger** — R166 (2026-04-16). `supplierBacklinkService` trackClick/openSupplierLink/getRevenueSummary. Offline queue + foreground flush. Migration `20260417_affiliate_clicks.sql`. Admin revenue dashboard `RevenueSnapshot` includes click + estimated + converted commission.
+- [x] **Late-payment autopilot (EU Directive 2011/7/EU)** — R167 (2026-04-17). `lateFeeService.computeLateFee()` ECB refi + 8pp margin (B2B), UK tiered recovery £40/£70/£100, consumer-skip. `reminderCadenceService.renderReminder` appends disclosure on firm/final steps. `send-invoice` Edge Function accepts `bodyOverride`. Invoice detail shows live "Entitled: €X late-fee + recovery" badge. 13/13 unit tests pass.
+- [ ] **Field Q&A over NEN/DIN/NF/UNE/BS corpus (Hebbia/Harvey pattern)** — RAG-with-citations over `complianceKnowledgeBase.ts`. Contractor on-site asks "NEN 1010 socket height for wet rooms?" → answer + regulation citation. 2 wks.
+
 ## 🔐 User must provide credentials
 - [ ] Run `npx eas init` after `eas login` — fills `expo.extra.eas.projectId` in `app.json`.
 - [ ] Create live Supabase project (or unpause current). Provide URL + anon key in `.env`.
@@ -26,7 +33,51 @@ Tracks everything required to publish Vasco to App Store + Google Play and enabl
 - [ ] App Store Connect: create app record, set bundle ID `com.vasco.app`, provide Apple Team ID + ASC App ID into `eas.json` submit block.
 - [ ] Google Play Console: create app, generate service account JSON, save as `./secrets/play-service-account.json`.
 
-## ✅ Rounds 5-22 complete (autonomous)
+## ✅ Rounds 5-150 complete (autonomous)
+
+### Photo-to-Quote Phase 1 (148-151)
+- Round 148 — `AIQuoteFromPhoto` multi-photo (up to 5, camera + multi-select gallery)
+- Round 149 — `analyze-photo` Edge Function accepts `imagesBase64[]` + cross-photo prompt
+- Round 150 — Customer decisions portal: real photo upload → `customer-uploads` bucket → signed URLs on `DecisionSubmission.photoUrls[]`
+- Round 151 — Contractor-side `PhotoSubmissionsPanel` + `photoQuoteHandoffService`: customer photos → "Draft quote" CTA → Edge Function with `imageUrls[]` → TieredQuoteBuilder prefilled
+- Round 152 — Reason-code learning loop: `quote_line_deltas` migration + `reasonCodeService` + `ReasonCodeSheet` bottom sheet wired to `updateQuantity` — every AI-baseline edit becomes a delta with captured reason for downstream cohort aggregation
+- Round 153 — Real-user attribution (`src/lib/currentUser.ts` + 25 call sites migrated off `'current-user'` literal) + onboarding→businessProfile wire so first-invoice legal gate passes for new users; auth expiry audit confirms auto-refresh → sign-out → redirect flow works
+- Round 154 — RN-reliable customer photo upload (base64→Uint8Array matches `jobPhotoService`; portal picker now captures base64); cold-start `flushPendingDeltas`/`flushScanQueue` so offline-saved data lands without requiring a foreground cycle
+- Round 155 — Structured login error codes (`LoginResult` discriminated union); network outages no longer look like "wrong password"; 5 new `auth.*` keys × 6 locales
+- Round 156 — Signup screen at `/signup` (real-user account creation was missing entirely — `signUp()` had zero callers); "Check your email" pending state, DEMO_MODE gate, auth-group widened to include `/signup` + `/forgot-password`, 18 new i18n keys × 6 locales
+- Round 157 — Auth callback route-group gate (unauth'd email-link taps no longer redirect before the callback runs) + new `/reset-password` screen so password-recovery emails can actually complete; 10 new i18n keys × 6 locales
+- Round 158 — Unified accounting router now covers 7 providers (was 3): moneybird/xero/quickbooks + lexoffice/pennylane/holded/fattureincloud. `exportInvoice()` + `syncPaymentStatus()` routed per-provider using existing helpers.
+- Round 159 — Payment providers: `AppState.createPaymentLink` now routes UK contractors to Stripe (GBP) and all others to Mollie (EUR); Mollie webhook normalizes `payment_provider: 'mollie'` for consistent admin revenue breakdown.
+- Round 160 — Compliance: `ios/PrivacyInfo.xcprivacy` (Apple App Store requirement since 2024-05-01) + real `account_deletion_requests` table so "Delete my account" actually submits a GDPR Art. 17 request instead of showing a theatrical Alert
+
+### Signature / gallery / share / gates (141-147)
+- Round 141 — `SignaturePad` modal on job-detail completion flow
+- Round 142 — Job "Photo" button → real `/contractor/job/[id]/photos` gallery
+- Round 143 — `ShareQuoteButton` mounted on quote detail (signed portal link)
+- Round 144 — 3 new i18n keys × 6 locales for signature flow
+- Round 145 — `checkInvoiceReadiness` legal gate on invoice send (country-required fields)
+- Round 146 — Tier-limit enforcement on new quote / invoice / job creation
+- Round 147 — 5 new i18n keys × 6 locales (+ 6 dead routes repaired)
+
+### EVE loop closed (134-140)
+- Round 134 — `approveItem`/`rejectItem` emit `queue_item_approved/rejected` business events
+- Round 135 — `recordOutcome` emits `queue_outcome_positive/negative/neutral`
+- Round 136 — `insightScorer.refreshApprovalRateCache` merges outcome signal (±10% nudge)
+- Round 137 — Force-refresh cache after approve/reject so next generator tick sees it
+- Round 138 — `templates.*` block added to all 6 locales (10 keys each — invoice reminder / quote followup / etc.)
+- Round 139 — 6 earlier UI keys backfilled to non-EN locales
+- Round 140 — i18n:audit: 0 missing across all 6 locales
+
+### Final EVE wiring (129-133)
+- Round 129 — Customer auto-tag badges on customer-crm rows
+- Round 130 — Customer dedup prompt before addCustomer
+- Round 131 — Job completion per-trade checklist with missing-items Alert
+- Round 132 — XRechnung/Factur-X export tier-gated via `canUseEInvoiceFormat`
+- Round 133 — "On my way" Share via whatsappTemplateService on job detail
+
+### Type clean (122-128)
+- Round 122-128 — Project-wide TS 108 → 0 via targeted type drift fixes
+
 ### Infrastructure (5-14)
 - Round 5 — Legal/GDPR wiring (login footer, cookie banner, analytics consent gate)
 - Round 6 — Sentry-ready error reporting (no-op until DSN provided)

@@ -634,7 +634,7 @@ export function DirectorDashboard({ initialTab = 'portfolio', showTabBar = true 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Tools</Text>
         <View style={styles.actionsList}>
-          <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/compliance' as any)}>
+          <Pressable style={styles.actionItem} onPress={() => router.push('/(contractor)/certificaten' as any)}>
             <View style={[styles.actionIcon, { backgroundColor: DIRECTOR_COLOR + '15' }]}>
               <Ionicons name="shield-checkmark" size={20} color={DIRECTOR_COLOR} />
             </View>
@@ -811,7 +811,7 @@ export function DirectorDashboard({ initialTab = 'portfolio', showTabBar = true 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Tools</Text>
         <View style={styles.actionsList}>
-          <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/compliance' as any)}>
+          <Pressable style={styles.actionItem} onPress={() => router.push('/(contractor)/certificaten' as any)}>
             <View style={[styles.actionIcon, { backgroundColor: DIRECTOR_COLOR + '15' }]}>
               <Ionicons name="shield-checkmark" size={20} color={DIRECTOR_COLOR} />
             </View>

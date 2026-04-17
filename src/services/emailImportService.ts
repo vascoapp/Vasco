@@ -18,6 +18,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { getCurrentUserId } from '../lib/currentUser';
 
 const CONFIG_KEY = '@vasco_email_import';
 
@@ -73,7 +74,7 @@ export async function getEmailImportConfig(userId: string): Promise<EmailImportC
 }
 
 export async function updateEmailImportConfig(updates: Partial<EmailImportConfig>): Promise<void> {
-  const current = await getEmailImportConfig('current-user');
+  const current = await getEmailImportConfig(getCurrentUserId());
   const updated = { ...current, ...updates };
   await AsyncStorage.setItem(CONFIG_KEY, JSON.stringify(updated));
 
@@ -81,7 +82,7 @@ export async function updateEmailImportConfig(updates: Partial<EmailImportConfig
   if (isSupabaseConfigured) {
     try {
       await (supabase.from('user_settings') as any).upsert({
-        user_id: 'current-user',
+        user_id: getCurrentUserId(),
         setting_key: 'email_import',
         setting_value: updated,
       });
@@ -97,7 +98,7 @@ export async function enableEmailImport(userId: string): Promise<EmailImportConf
 }
 
 export async function addTrustedSender(email: string): Promise<void> {
-  const config = await getEmailImportConfig('current-user');
+  const config = await getEmailImportConfig(getCurrentUserId());
   if (!config.trustedSenders.includes(email.toLowerCase())) {
     config.trustedSenders.push(email.toLowerCase());
     await AsyncStorage.setItem(CONFIG_KEY, JSON.stringify(config));
@@ -126,7 +127,7 @@ export async function recordImportEvent(event: EmailImportEvent): Promise<void> 
     await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 100)));
 
     // Update import count
-    const config = await getEmailImportConfig('current-user');
+    const config = await getEmailImportConfig(getCurrentUserId());
     config.importCount++;
     config.lastImportAt = event.receivedAt;
     await AsyncStorage.setItem(CONFIG_KEY, JSON.stringify(config));
@@ -145,7 +146,7 @@ export async function checkForNewImports(): Promise<EmailImportEvent[]> {
   try {
     const { data } = await (supabase.from('email_imports') as any)
       .select('*')
-      .eq('user_id', 'current-user')
+      .eq('user_id', getCurrentUserId())
       .eq('status', 'processed')
       .order('received_at', { ascending: false })
       .limit(10);

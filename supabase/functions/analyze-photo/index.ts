@@ -17,12 +17,24 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { imageBase64, trade, country, mode } = await req.json();
+    const { imageBase64, imagesBase64, imageUrls, trade, country, mode } = await req.json();
     const analysisMode = mode || 'quote'; // 'quote' | 'invoice'
 
-    if (!imageBase64) {
+    // Input shape priority: imageUrls[] (Claude fetches server-side) > imagesBase64[] > legacy imageBase64.
+    // URL path is used by the contractor's "Draft quote from these photos" flow when customer
+    // already uploaded to the customer-uploads bucket — avoids a client-side re-download + reencode.
+    const urls: string[] = Array.isArray(imageUrls)
+      ? imageUrls.filter((u: unknown) => typeof u === 'string' && (u as string).length > 0).slice(0, 5)
+      : [];
+    const photos: string[] = Array.isArray(imagesBase64) && imagesBase64.length > 0
+      ? imagesBase64.filter((b: unknown) => typeof b === 'string' && (b as string).length > 0).slice(0, 5)
+      : (typeof imageBase64 === 'string' && imageBase64.length > 0 ? [imageBase64] : []);
+
+    const totalImages = urls.length + photos.length;
+
+    if (totalImages === 0) {
       return new Response(
-        JSON.stringify({ error: 'imageBase64 is required' }),
+        JSON.stringify({ error: 'imageBase64, imagesBase64 or imageUrls is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -81,7 +93,42 @@ Guidelines:
 - Prices should be in ${currency}, excl VAT unless clearly stated incl VAT
 - Common Dutch suppliers: Technische Unie, Rexel, Solar, Hornbach, Brouwer, Sonepar`;
 
-    const prompt = analysisMode === 'invoice' ? invoicePrompt : `You are an expert construction trades estimator for ${tradeContext} work in ${countryContext}.
+    const multiPhotoHint = totalImages > 1
+      ? `\nYou are looking at ${totalImages} photos of the SAME job from different angles (before, detail, damage, overview). Use them together — do not double-count entities that appear in multiple photos. Higher confidence when an entity is visible in 2+ photos.`
+      : '';
+
+    // Certificate scanning mode — extract trade-cert fields from a photo of
+    // the cert card, PDF screenshot, or badge. Dates in YYYY-MM-DD.
+    const certificatePrompt = `You are an expert at reading construction trade certifications and professional licenses for ${countryContext}.
+
+Extract the data from this certificate photo. Return ONLY valid JSON:
+
+{
+  "certName": "Full certification name (e.g., VCA Basic, Gaskeur CW, NEN 1010, Meisterbrief, CSCS, Qualibat)",
+  "issuingBody": "Organization that issued it (SSVV, Kiwa, VCA, IHK, CITB, Qualibat, etc.)",
+  "certificationNumber": "Certificate or license number if visible",
+  "holderName": "Person or company the cert is issued to",
+  "issueDate": "YYYY-MM-DD",
+  "expiryDate": "YYYY-MM-DD",
+  "category": "technical" | "safety" | "environmental" | "quality" | "industry_specific",
+  "confidence": 0-100,
+  "warnings": ["Any concerns — e.g. 'expiry date not readable', 'photo too blurry for number'"]
+}
+
+Guidelines:
+- Common NL certs: VCA, Gaskeur-CW, NEN 1010, F-gassen, Erkend Gasfitter, BKB, Uneto-VNI
+- Common DE certs: Meisterbrief, Elektrofachkraft, SCC, F-Gase Zertifikat, Schornsteinfeger
+- Common FR certs: Qualibat, RGE, Qualifélec, CAP, BP
+- Common ES certs: Carné de Instalador, Sellos Térmicos
+- Common IT certs: Abilitazione 37/08, Patentino F-Gas
+- Common UK certs: CSCS, Gas Safe, NICEIC, WaterSafe, 18th Edition
+- Expiry date is critical — look for "valid until", "geldig tot", "gültig bis", "valable jusqu'au", phrases
+- If expiryDate isn't explicitly printed, leave it undefined (do NOT guess)
+- Set confidence low (<60) when fields are unclear or blurry`;
+
+    const prompt = analysisMode === 'certificate' ? certificatePrompt
+      : analysisMode === 'invoice' ? invoicePrompt
+      : `You are an expert construction trades estimator for ${tradeContext} work in ${countryContext}.${multiPhotoHint}
 
 Analyze this photo of a job site or area that needs work. Return a JSON object with quote line items.
 
@@ -125,25 +172,23 @@ Guidelines for pricing (${countryContext} market rates):
       },
       body: JSON.stringify({
         // Haiku is 10-20x cheaper than Sonnet/Opus — sufficient for structured photo analysis
-        // Haiku: ~$0.001/image vs Sonnet: ~$0.015/image
+        // Haiku: ~$0.001/image vs Sonnet: ~$0.015/image. Multi-photo scales linearly.
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1024, // Keep response tight — structured JSON doesn't need more
+        // Slightly more tokens for multi-photo since multi-entity lists can be longer.
+        max_tokens: totalImages > 1 ? 1536 : 1024,
         messages: [
           {
             role: 'user',
             content: [
-              {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: 'image/jpeg',
-                  data: imageBase64,
-                },
-              },
-              {
-                type: 'text',
-                text: prompt,
-              },
+              ...urls.map((u: string) => ({
+                type: 'image' as const,
+                source: { type: 'url' as const, url: u },
+              })),
+              ...photos.map((b: string) => ({
+                type: 'image' as const,
+                source: { type: 'base64' as const, media_type: 'image/jpeg' as const, data: b },
+              })),
+              { type: 'text' as const, text: prompt },
             ],
           },
         ],

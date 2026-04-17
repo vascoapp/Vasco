@@ -24,6 +24,11 @@ interface SendInvoiceRequest {
   paymentUrl?: string;
   pdfBase64?: string; // base64-encoded PDF attachment
   locale?: 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
+  /** Optional plain-text body override. Used by the dunning cadence so the
+   * firm/final reminders include the EU Directive 2011/7/EU statutory
+   * interest + €40 recovery disclosure. When present, replaces the stock
+   * HTML template (converted to simple HTML paragraphs). */
+  bodyOverride?: string;
 }
 
 const SUBJECT_BY_LOCALE: Record<string, (ref: string) => string> = {
@@ -147,7 +152,17 @@ Deno.serve(async (req) => {
 
     const ref = (invoice as any).reference ?? invoice.id;
     const subject = body.subject ?? (SUBJECT_BY_LOCALE[locale] ?? SUBJECT_BY_LOCALE.en)(ref);
-    const html = (BODY_BY_LOCALE[locale] ?? BODY_BY_LOCALE.en)({ ref, businessName, paymentUrl });
+    // bodyOverride (plain text with \n) → simple HTML paragraphs so the Resend
+    // email renders the cadence copy + disclosure properly.
+    const html = body.bodyOverride
+      ? body.bodyOverride
+          .split(/\n{2,}/)
+          .map((p) => `<p>${p.replace(/\n/g, '<br/>')}</p>`)
+          .join('\n') +
+        (paymentUrl
+          ? `<p><a href="${paymentUrl}" style="display:inline-block;padding:12px 20px;background:#E35205;color:#fff;border-radius:8px;text-decoration:none">Pay now</a></p>`
+          : '')
+      : (BODY_BY_LOCALE[locale] ?? BODY_BY_LOCALE.en)({ ref, businessName, paymentUrl });
 
     const emailPayload: Record<string, unknown> = {
       from: `${businessName} <${fromAddress}>`,

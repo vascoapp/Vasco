@@ -5,7 +5,7 @@
 // Step 2: Preview tiers + Vasco AI (calibration, pricing, tips) → send
 // =============================================================================
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
@@ -24,6 +24,10 @@ import { predictQuoteWin, type QuoteWinPrediction } from '../../intelligence/mlM
 import { useAuth } from '../../context/AuthContext';
 import { searchCatalog, type CatalogItem } from '../../integrations/suppliers';
 import { AIQuoteFromPhoto } from './AIQuoteFromPhoto';
+import { consumeHandoff } from '../../services/photoQuoteHandoffService';
+import { recordDelta, annotateDelta, type DeltaSource, type ReasonCode } from '../../services/reasonCodeService';
+import { ReasonCodeSheet } from './ReasonCodeSheet';
+import { getCurrentUserId } from '../../lib/currentUser';
 import { useQuoteTemplates, type QuoteTemplate, TEMPLATE_CATEGORIES } from '../../services/quoteTemplateService';
 import { hapticSuccess } from '../../utils/haptics';
 import { useTranslation } from 'react-i18next';
@@ -118,6 +122,65 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
   const { templates, use: useTemplate } = useQuoteTemplates();
   const [priceSuggestion, setPriceSuggestion] = useState<PricePrediction | null>(null);
   const [winPrediction, setWinPrediction] = useState<QuoteWinPrediction | null>(null);
+  const [handoffBanner, setHandoffBanner] = useState<string | null>(null);
+
+  // Baseline tracking for reason-code capture: records the AI-suggested
+  // quantity + source for each line so we can spot contractor edits against
+  // that baseline and ask "why did you change this?"
+  const baselinesRef = useRef<Map<string, { originalQty: number; originalUnitPrice: number; source: DeltaSource; sku?: string; description?: string }>>(new Map());
+  const lastDeltaIdsRef = useRef<Map<string, string>>(new Map());
+  const [reasonSheet, setReasonSheet] = useState<{
+    visible: boolean;
+    itemId?: string;
+    label?: string;
+    originalQty?: number;
+    newQty?: number;
+    deltaId?: string;
+  }>({ visible: false });
+
+  // Consume a photo-quote handoff if one was stashed by the Keuzes "Draft
+  // quote from these photos" flow. Prefill selectedServices so the builder
+  // opens already populated.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const h = await consumeHandoff();
+      if (cancelled || !h || !h.result) return;
+      const items = h.result.detectedItems ?? [];
+      const mapped = items
+        .filter((i) => i.selected !== false)
+        .map((item) => ({
+          item: {
+            id: item.id,
+            name: item.description,
+            description: item.category,
+            basePrice: item.suggestedPrice,
+            unit: item.unit,
+            category: item.category,
+          } as PricebookItem,
+          quantity: item.suggestedQuantity,
+          unit: item.unit,
+        }));
+      if (mapped.length > 0) {
+        setSelectedServices((prev) => [...prev, ...mapped]);
+        // Seed baselines so future qty edits become learning signals.
+        for (const m of mapped) {
+          baselinesRef.current.set(m.item.id, {
+            originalQty: m.quantity,
+            originalUnitPrice: m.item.basePrice,
+            source: 'photo_handoff',
+            sku: m.item.id,
+            description: m.item.name,
+          });
+        }
+      }
+      if (h.result.jobType) setScopeText(h.result.jobType);
+      setHandoffBanner(h.customerName
+        ? `Prefilled from ${h.photoUrls.length} photos sent by ${h.customerName}`
+        : `Prefilled from ${h.photoUrls.length} customer photos`);
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // AI predictions
   useEffect(() => {
@@ -195,8 +258,45 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
 
   const removeService = (itemId: string) => setSelectedServices(selectedServices.filter(s => s.item.id !== itemId));
   const updateQuantity = (itemId: string, qty: number) => {
-    if (qty <= 0) removeService(itemId);
-    else setSelectedServices(selectedServices.map(s => s.item.id === itemId ? { ...s, quantity: qty } : s));
+    if (qty <= 0) { removeService(itemId); return; }
+    setSelectedServices(selectedServices.map(s => s.item.id === itemId ? { ...s, quantity: qty } : s));
+
+    // Learning signal: if this line had a baseline and the quantity is now
+    // noticeably different (±1 or ±5%), record a delta + prompt for the
+    // reason. Only ask once per line per session to avoid nagging.
+    const baseline = baselinesRef.current.get(itemId);
+    if (!baseline) return;
+    const changedMeaningfully =
+      Math.abs(qty - baseline.originalQty) >= 1 ||
+      Math.abs(qty - baseline.originalQty) / Math.max(1, baseline.originalQty) >= 0.05;
+    if (!changedMeaningfully) return;
+    if (lastDeltaIdsRef.current.has(itemId)) return; // already asked
+
+    const svc = selectedServices.find(s => s.item.id === itemId);
+    const label = svc?.item.name ?? baseline.description ?? itemId;
+
+    recordDelta({
+      lineItemId: itemId,
+      sku: baseline.sku,
+      description: baseline.description ?? label,
+      originalQty: baseline.originalQty,
+      newQty: qty,
+      originalUnitPrice: baseline.originalUnitPrice,
+      newUnitPrice: svc?.item.basePrice,
+      source: baseline.source,
+      trade,
+      country,
+    }).then((deltaId) => {
+      lastDeltaIdsRef.current.set(itemId, deltaId);
+      setReasonSheet({
+        visible: true,
+        itemId,
+        label,
+        originalQty: baseline.originalQty,
+        newQty: qty,
+        deltaId,
+      });
+    }).catch(() => {});
   };
 
   const loadTemplate = (template: QuoteTemplate) => {
@@ -206,6 +306,12 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
       quantity: item.quantity, unit: item.unit,
     }));
     setSelectedServices(mapped);
+    for (const m of mapped) {
+      baselinesRef.current.set(m.item.id, {
+        originalQty: m.quantity, originalUnitPrice: m.item.basePrice,
+        source: 'template', sku: m.item.id, description: m.item.name,
+      });
+    }
     hapticSuccess();
   };
 
@@ -346,7 +452,21 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
         } catch { return svc; }
       }));
       setSelectedServices(prev => [...prev, ...refined]);
-    }).catch(() => setSelectedServices(prev => [...prev, ...matchedClean]));
+      for (const m of refined) {
+        baselinesRef.current.set(m.item.id, {
+          originalQty: m.quantity, originalUnitPrice: m.item.basePrice,
+          source: 'ai_draft', sku: m.item.id, description: m.item.name,
+        });
+      }
+    }).catch(() => {
+      setSelectedServices(prev => [...prev, ...matchedClean]);
+      for (const m of matchedClean) {
+        baselinesRef.current.set(m.item.id, {
+          originalQty: m.quantity, originalUnitPrice: m.item.basePrice,
+          source: 'ai_draft', sku: m.item.id, description: m.item.name,
+        });
+      }
+    });
 
     setTimeout(() => {
       setAiExplanations(prev => ({ ...prev, ...explanations }));
@@ -364,7 +484,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
       paymentTerms: '30% aanbetaling, 70% bij oplevering', status: 'sent',
     };
     intelligence.trackEvent({
-      eventType: 'quote_sent', userId: 'current-user', sessionId: 'current',
+      eventType: 'quote_sent', userId: getCurrentUserId(), sessionId: 'current',
       context: { platform: 'ios', appVersion: '1.0.0', dayOfWeek: new Date().getDay(), hourOfDay: new Date().getHours(), isWeekend: [0, 6].includes(new Date().getDay()), season: 'winter' },
       payload: { quoteReference: quote.reference, tierCount: 3, goodTotal: tiers[0].total, betterTotal: tiers[1].total, bestTotal: tiers[2].total, serviceCount: selectedServices.length, customerId: customer?.id },
       entities: customer ? [{ id: customer.id, type: 'customer', name: customer.name, confidence: 1.0 }] : [],
@@ -419,6 +539,17 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
         </View>
 
         <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} keyboardShouldPersistTaps="handled">
+          {/* Handoff banner — customer sent photos, quote is prefilled */}
+          {handoffBanner && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: GRID.xs, backgroundColor: Palette.hermesOrange + '10', borderRadius: RADIUS.md, padding: GRID.sm, marginBottom: GRID.sm }}>
+              <Ionicons name="sparkles" size={14} color={Palette.hermesOrange} />
+              <Text style={{ flex: 1, fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange }}>{handoffBanner}</Text>
+              <Pressable onPress={() => setHandoffBanner(null)} hitSlop={8}>
+                <Ionicons name="close" size={14} color={Palette.hermesOrange} />
+              </Pressable>
+            </View>
+          )}
+
           {/* AI Draft — describe scope → get line items */}
           <View style={s.aiDraftSection}>
             <View style={s.aiDraftInputRow}>
@@ -542,11 +673,32 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
                 quantity: item.suggestedQuantity, unit: item.unit,
               }));
               setSelectedServices(prev => [...prev, ...mapped]);
+              for (const m of mapped) {
+                baselinesRef.current.set(m.item.id, {
+                  originalQty: m.quantity, originalUnitPrice: m.item.basePrice,
+                  source: 'ai_draft', sku: m.item.id, description: m.item.name,
+                });
+              }
               setShowAIQuote(false);
             }}
             onClose={() => setShowAIQuote(false)}
           />
         </Modal>
+
+        {/* Reason-code sheet — fires after edits to AI-prefilled lines */}
+        <ReasonCodeSheet
+          visible={reasonSheet.visible}
+          lineLabel={reasonSheet.label}
+          originalQty={reasonSheet.originalQty}
+          newQty={reasonSheet.newQty}
+          onDismiss={() => setReasonSheet({ visible: false })}
+          onPick={(code: ReasonCode, freeText?: string) => {
+            if (reasonSheet.deltaId) {
+              annotateDelta(reasonSheet.deltaId, code, freeText).catch(() => {});
+            }
+            setReasonSheet({ visible: false });
+          }}
+        />
       </View>
     );
   }

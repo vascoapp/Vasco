@@ -518,7 +518,7 @@ export function COODashboard({ initialTab = 'financials', showTabBar = true }: C
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/team' as any)}>
+                <Pressable style={styles.actionItem} onPress={() => router.push('/worker' as any)}>
                   <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackInfo + '15' }]}>
                     <Ionicons name="people" size={18} color={SemanticColors.feedbackInfo} />
                   </View>
@@ -528,7 +528,7 @@ export function COODashboard({ initialTab = 'financials', showTabBar = true }: C
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
                 </Pressable>
-                <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/documents' as any)}>
+                <Pressable style={styles.actionItem} onPress={() => router.push('/hub/documents' as any)}>
                   <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
                     <Ionicons name="folder-open" size={18} color={SemanticColors.feedbackWarning} />
                   </View>

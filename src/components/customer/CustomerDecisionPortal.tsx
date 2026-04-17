@@ -20,6 +20,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
@@ -544,13 +545,14 @@ function CategoryDetailView({
                     onActivityLog?.('item_viewed', { itemId: item.id });
                   }
                 }}
-                onSubmit={(value, notes, linkedProduct) => {
+                onSubmit={(value, notes, linkedProduct, photoUrls) => {
                   onSubmitDecision({
                     itemId: item.id,
                     trackerId: portalData.accessToken,
                     customerId: 'customer',
                     value,
                     notes,
+                    photoUrls,
                     deviceType: Platform.OS === 'ios' || Platform.OS === 'android' ? 'mobile' : 'desktop',
                     linkedProduct,
                     submittedAt: new Date().toISOString(),
@@ -570,6 +572,7 @@ function CategoryDetailView({
                 }}
                 accentColor={accentColor}
                 contractorCountry={portalData.contractorCountry}
+                accessToken={portalData.accessToken}
               />
             ))}
           </View>
@@ -585,9 +588,167 @@ function CategoryDetailView({
           </View>
         )}
 
+        {/* Free-text question — Decagon pattern. Low-stakes gets an AI auto-reply,
+            high-stakes goes to the contractor's VascoCard queue for approval. */}
+        <AskAQuestionCard
+          accentColor={accentColor}
+          trackerAccessToken={portalData.accessToken}
+          contractorCountry={portalData.contractorCountry}
+          portalData={portalData}
+        />
+
         <View style={{ height: 100 }} />
       </ScrollView>
     </KeyboardAvoidingView>
+  );
+}
+
+// ============================================
+// ASK A QUESTION CARD (Decagon pattern)
+// ============================================
+
+function AskAQuestionCard({
+  accentColor,
+  trackerAccessToken,
+  contractorCountry,
+  portalData,
+}: {
+  accentColor: string;
+  trackerAccessToken: string;
+  contractorCountry?: string;
+  portalData: CustomerPortalData;
+}) {
+  const [question, setQuestion] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [reply, setReply] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const lang = (
+    contractorCountry === 'DE' ? 'de'
+    : contractorCountry === 'FR' ? 'fr'
+    : contractorCountry === 'ES' ? 'es'
+    : contractorCountry === 'IT' ? 'it'
+    : contractorCountry === 'UK' ? 'en'
+    : 'nl'
+  ) as 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
+
+  // Prior decisions to ground the AI on what the customer has already picked.
+  const decisions = portalData.categories.flatMap((c) =>
+    c.items
+      .filter((i) => i.status === 'decided' && i.value != null)
+      .slice(0, 10)
+      .map((i) => ({
+        item: i.name,
+        value: Array.isArray(i.value) ? i.value.join(', ') : String(i.value),
+      })),
+  );
+
+  const submit = async () => {
+    const text = question.trim();
+    if (!text || submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const { submitCustomerQuestion } = await import('../../services/customerQuestionService');
+      const result = await submitCustomerQuestion({
+        trackerAccessToken,
+        question: text,
+        language: lang,
+        context: {
+          businessName: portalData.contractorName,
+          contractorPhone: portalData.contractorPhone,
+          jobTitle: portalData.projectName,
+          decisions,
+        },
+      });
+      if (!result.ok) {
+        setError(result.error ?? 'Kon vraag niet versturen');
+        return;
+      }
+      if (result.autoReply) {
+        setReply(result.autoReply);
+      } else {
+        setPending(true);
+      }
+      setQuestion('');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const reset = () => {
+    setReply(null);
+    setPending(false);
+    setError(null);
+    setQuestion('');
+  };
+
+  return (
+    <View style={styles.askCard}>
+      <View style={styles.askHeader}>
+        <Ionicons name="chatbubble-ellipses" size={18} color={accentColor} />
+        <Text style={styles.askTitle}>Een vraag stellen</Text>
+      </View>
+      <Text style={styles.askSubtitle}>
+        Vraag iets over de planning, locatie of werkzaamheden — je krijgt direct antwoord of de aannemer bevestigt snel.
+      </Text>
+
+      {reply && (
+        <View style={styles.askReplyCard}>
+          <Ionicons name="sparkles" size={14} color={accentColor} />
+          <Text style={styles.askReplyText}>{reply}</Text>
+        </View>
+      )}
+
+      {pending && (
+        <View style={[styles.askReplyCard, { backgroundColor: SemanticColors.feedbackInfo + '10' }]}>
+          <Ionicons name="time-outline" size={14} color={SemanticColors.feedbackInfo} />
+          <Text style={[styles.askReplyText, { color: SemanticColors.feedbackInfo }]}>
+            Vraag verstuurd. De aannemer komt zo met een antwoord.
+          </Text>
+        </View>
+      )}
+
+      {error && (
+        <View style={[styles.askReplyCard, { backgroundColor: SemanticColors.feedbackError + '10' }]}>
+          <Ionicons name="alert-circle-outline" size={14} color={SemanticColors.feedbackError} />
+          <Text style={[styles.askReplyText, { color: SemanticColors.feedbackError }]}>{error}</Text>
+        </View>
+      )}
+
+      {!reply && !pending && (
+        <>
+          <TextInput
+            style={[styles.textInput, { minHeight: 80 }]}
+            placeholder="Typ je vraag… bijv. 'hoe laat komen jullie dinsdag?' of 'kun je ook de kraan vervangen?'"
+            placeholderTextColor={SemanticColors.textTertiary}
+            value={question}
+            onChangeText={setQuestion}
+            multiline
+            editable={!submitting}
+            maxLength={1000}
+          />
+          <Pressable
+            style={[styles.submitButton, { backgroundColor: accentColor }, (!question.trim() || submitting) && styles.submitButtonDisabled]}
+            onPress={submit}
+            disabled={!question.trim() || submitting}
+          >
+            <Text style={styles.submitButtonText}>
+              {submitting ? 'Versturen…' : 'Stel vraag'}
+            </Text>
+          </Pressable>
+        </>
+      )}
+
+      {(reply || pending) && (
+        <Pressable onPress={reset} style={{ alignSelf: 'center', paddingVertical: GRID.sm }}>
+          <Text style={{ fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: accentColor }}>
+            Nog een vraag
+          </Text>
+        </Pressable>
+      )}
+    </View>
   );
 }
 
@@ -602,10 +763,12 @@ interface DecisionItemCardProps {
   onSubmit: (
     value: string | number | boolean,
     notes?: string,
-    linkedProduct?: CustomerDecisionSubmission['linkedProduct']
+    linkedProduct?: CustomerDecisionSubmission['linkedProduct'],
+    photoUrls?: string[],
   ) => void;
   accentColor: string;
   contractorCountry?: string;
+  accessToken?: string;
 }
 
 function DecisionItemCard({
@@ -615,8 +778,52 @@ function DecisionItemCard({
   onSubmit,
   accentColor,
   contractorCountry,
+  accessToken,
 }: DecisionItemCardProps) {
   const [textValue, setTextValue] = useState('');
+  const [customerPhotos, setCustomerPhotos] = useState<Array<{ uri: string; base64?: string }>>([]);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const MAX_CUSTOMER_PHOTOS = 5;
+  // Display-only view model
+  const photoUris = customerPhotos.map((p) => p.uri);
+
+  const pickCustomerPhotos = async () => {
+    if (customerPhotos.length >= MAX_CUSTOMER_PHOTOS) return;
+    const remaining = MAX_CUSTOMER_PHOTOS - customerPhotos.length;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.7,
+      base64: true,
+      allowsMultipleSelection: true,
+      selectionLimit: remaining,
+    });
+    if (!result.canceled) {
+      const picked = result.assets
+        .filter((a) => !!a.uri)
+        .map((a) => ({ uri: a.uri, base64: a.base64 || undefined }));
+      setCustomerPhotos((prev) => [...prev, ...picked].slice(0, MAX_CUSTOMER_PHOTOS));
+    }
+  };
+
+  const takeCustomerPhoto = async () => {
+    if (customerPhotos.length >= MAX_CUSTOMER_PHOTOS) return;
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') return;
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      quality: 0.7,
+      base64: true,
+      allowsEditing: false,
+    });
+    if (!result.canceled && result.assets[0]?.uri) {
+      const shot = { uri: result.assets[0].uri, base64: result.assets[0].base64 || undefined };
+      setCustomerPhotos((prev) => [...prev, shot].slice(0, MAX_CUSTOMER_PHOTOS));
+    }
+  };
+
+  const removeCustomerPhoto = (idx: number) => {
+    setCustomerPhotos((prev) => prev.filter((_, i) => i !== idx));
+  };
   const [notes, setNotes] = useState('');
   const [showNotes, setShowNotes] = useState(false);
 
@@ -759,33 +966,97 @@ function DecisionItemCard({
           {item.inputType === 'photo' && (
             <View style={styles.photoSection}>
               <Text style={styles.photoInstructions}>
-                Stuur een foto of link van uw keuze naar de aannemer, of beschrijf wat u wilt.
+                Stuur foto's van uw keuze, of beschrijf wat u wilt. Meerdere hoeken helpen de aannemer meer.
               </Text>
+
+              {/* Photo thumbnails */}
+              {photoUris.length > 0 && (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: GRID.sm, paddingVertical: GRID.xs }}>
+                  {photoUris.map((uri, i) => (
+                    <View key={uri + i} style={{ position: 'relative' }}>
+                      <Image source={{ uri }} style={{ width: 84, height: 84, borderRadius: RADIUS.md, backgroundColor: SemanticColors.surfaceSecondary }} />
+                      <Pressable
+                        onPress={() => removeCustomerPhoto(i)}
+                        style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: 11, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' }}
+                        accessibilityRole="button"
+                        accessibilityLabel="Foto verwijderen"
+                      >
+                        <Ionicons name="close" size={14} color="#fff" />
+                      </Pressable>
+                    </View>
+                  ))}
+                </ScrollView>
+              )}
+
+              {/* Upload buttons */}
+              <View style={{ flexDirection: 'row', gap: GRID.sm }}>
+                {photoUris.length < MAX_CUSTOMER_PHOTOS && (
+                  <>
+                    <Pressable
+                      style={[styles.submitButton, { flex: 1, backgroundColor: SemanticColors.surfaceSecondary, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center' }]}
+                      onPress={takeCustomerPhoto}
+                    >
+                      <Ionicons name="camera" size={16} color={SemanticColors.textPrimary} />
+                      <Text style={[styles.submitButtonText, { color: SemanticColors.textPrimary }]}>Maak foto</Text>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.submitButton, { flex: 1, backgroundColor: SemanticColors.surfaceSecondary, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center' }]}
+                      onPress={pickCustomerPhotos}
+                    >
+                      <Ionicons name="images-outline" size={16} color={SemanticColors.textPrimary} />
+                      <Text style={[styles.submitButtonText, { color: SemanticColors.textPrimary }]}>Uit galerij</Text>
+                    </Pressable>
+                  </>
+                )}
+              </View>
+
+              {/* Optional description */}
               <TextInput
-                style={[styles.textInput, { minHeight: 80 }]}
-                placeholder="Beschrijf uw keuze of plak een link..."
+                style={[styles.textInput, { minHeight: 60 }]}
+                placeholder="Beschrijving (optioneel) — of plak een link..."
                 placeholderTextColor={SemanticColors.textTertiary}
                 value={textValue}
                 onChangeText={setTextValue}
                 multiline
               />
+
+              {/* Submit */}
               <Pressable
                 style={[
                   styles.submitButton,
                   { backgroundColor: accentColor },
-                  !textValue.trim() && styles.submitButtonDisabled,
+                  customerPhotos.length === 0 && !textValue.trim() && styles.submitButtonDisabled,
                 ]}
-                onPress={() => {
-                  if (textValue.trim()) {
-                    // Check if it's a URL
+                onPress={async () => {
+                  if (customerPhotos.length === 0 && !textValue.trim()) return;
+                  setUploadingPhotos(true);
+                  try {
+                    // Upload to Supabase Storage via customer-uploads bucket.
+                    // Each photo → signed URL returned so contractor sees it.
+                    let uploadedUrls: string[] = [];
+                    if (customerPhotos.length > 0) {
+                      const { uploadCustomerPhotos } = await import('../../services/customerPhotoUploadService');
+                      uploadedUrls = await uploadCustomerPhotos(customerPhotos, { accessToken }).catch(() => customerPhotos.map((p) => p.uri));
+                    }
                     const isUrl = textValue.match(/^https?:\/\//);
-                    onSubmit(textValue, notes, isUrl ? { name: textValue, url: textValue } : undefined);
+                    const valueForSubmit = uploadedUrls.length > 0
+                      ? `${uploadedUrls.length} foto${uploadedUrls.length > 1 ? "'s" : ''}${textValue.trim() ? ' — ' + textValue : ''}`
+                      : textValue;
+                    onSubmit(
+                      valueForSubmit,
+                      notes,
+                      isUrl ? { name: textValue, url: textValue } : undefined,
+                      uploadedUrls,
+                    );
                     setTextValue('');
+                    setCustomerPhotos([]);
+                  } finally {
+                    setUploadingPhotos(false);
                   }
                 }}
-                disabled={!textValue.trim()}
+                disabled={(customerPhotos.length === 0 && !textValue.trim()) || uploadingPhotos}
               >
-                <Text style={styles.submitButtonText}>Versturen</Text>
+                <Text style={styles.submitButtonText}>{uploadingPhotos ? 'Uploaden…' : 'Versturen'}</Text>
               </Pressable>
             </View>
           )}
@@ -1829,4 +2100,24 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: SemanticColors.feedbackSuccess,
   },
+
+  // "Ask a question" card — customer-reply AI (Decagon pattern)
+  askCard: {
+    marginTop: GRID.md,
+    padding: GRID.md,
+    borderRadius: RADIUS.lg,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderMuted,
+    gap: GRID.sm,
+  },
+  askHeader: { flexDirection: 'row', alignItems: 'center', gap: GRID.xs },
+  askTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  askSubtitle: { fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary },
+  askReplyCard: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: GRID.xs,
+    padding: GRID.sm, borderRadius: RADIUS.md,
+    backgroundColor: Palette.hermesOrange + '10',
+  },
+  askReplyText: { flex: 1, fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary, lineHeight: 18 },
 });

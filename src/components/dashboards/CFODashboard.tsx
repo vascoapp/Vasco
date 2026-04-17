@@ -1019,7 +1019,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
             {/* Herbestellen — standalone action below handovers */}
             <Pressable
               style={[styles.card, { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }]}
-              onPress={() => router.push('/contractor/reorder' as any)}
+              onPress={() => router.push('/contractor/purchase-orders' as any)}
             >
               <View style={[styles.cardHeaderIcon, { backgroundColor: SemanticColors.feedbackWarning + '15' }]}>
                 <Ionicons name="repeat" size={18} color={SemanticColors.feedbackWarning} />

@@ -518,10 +518,16 @@ export default function TodayScreen() {
             queueItems={aiQueue.items}
             topInsight={activeGuidance.length > 0 ? activeGuidance[0] : null}
             automationsCount={pendingAutomations}
-            onApproveQueueItem={async (id) => {
+            onApproveQueueItem={async (id, editedText) => {
               hapticSuccess();
               const item = aiQueue.items.find(i => i.id === id);
-              if (!item) { aiQueue.approve(id); return; }
+              if (!item) { aiQueue.approve(id, editedText); return; }
+
+              // Customer question: bridge service writes approved_reply to DB.
+              if (item.type === 'customer_question') {
+                await aiQueue.approve(id, editedText);
+                return;
+              }
 
               try {
               switch (item.type) {

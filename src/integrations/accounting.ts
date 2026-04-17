@@ -386,6 +386,66 @@ export async function exportInvoice(invoice: UnifiedInvoice): Promise<{ success:
       });
       return { success: result.success, externalId: result.quickbooksId, error: result.error };
     }
+    case 'lexoffice': {
+      const lex = await import('./lexoffice');
+      const payload = lex.vascoToLexofficeInvoice({
+        customerName: invoice.contactExternalId ?? '',
+        lineItems: invoice.lineItems.map((li) => ({
+          description: li.description, quantity: li.quantity, unitPrice: li.unitPrice,
+          vatRate: li.vatRate, unit: (li as any).unit ?? 'piece',
+        })),
+        date: invoice.invoiceDate,
+        dueDate: invoice.dueDate,
+      });
+      const id = await lex.createInvoice(payload);
+      return id
+        ? { success: true, externalId: id }
+        : { success: false, error: 'Lexoffice export failed' };
+    }
+    case 'pennylane': {
+      const pl = await import('./pennylane');
+      const result = await pl.createInvoice({
+        customerId: invoice.contactExternalId ?? '',
+        reference: invoice.reference,
+        lineItems: invoice.lineItems.map((li) => ({
+          description: li.description, price: li.unitPrice, quantity: li.quantity, vatRate: li.vatRate,
+        })),
+        dueDate: invoice.dueDate,
+      });
+      return { success: result.success, externalId: result.pennylaneId, error: result.error };
+    }
+    case 'holded': {
+      const hl = await import('./holded');
+      const result = await hl.createInvoice({
+        contactId: invoice.contactExternalId ?? '',
+        reference: invoice.reference,
+        lineItems: invoice.lineItems.map((li) => ({
+          description: li.description, price: li.unitPrice, quantity: li.quantity, vatRate: li.vatRate,
+        })),
+        dueDate: invoice.dueDate,
+      });
+      return { success: result.success, externalId: result.holdedId, error: result.error };
+    }
+    case 'fattureincloud': {
+      const fic = await import('./fattureincloud');
+      const clientId = Number(invoice.contactExternalId);
+      if (!Number.isFinite(clientId) || clientId <= 0) {
+        return { success: false, error: 'Fatture in Cloud client id missing' };
+      }
+      const result = await fic.createIssuedDocument({
+        clientId,
+        reference: invoice.reference,
+        lineItems: invoice.lineItems.map((li) => ({
+          description: li.description, price: li.unitPrice, quantity: li.quantity, vatRate: li.vatRate,
+        })),
+        dueDate: invoice.dueDate,
+      });
+      return {
+        success: result.success,
+        externalId: result.fattureInCloudId != null ? String(result.fattureInCloudId) : undefined,
+        error: result.error,
+      };
+    }
     default:
       return { success: false, error: `${config.provider} export niet beschikbaar` };
   }
@@ -407,6 +467,19 @@ export async function syncPaymentStatus(): Promise<{ paidInvoiceIds: string[] }>
     case 'quickbooks': {
       const qb = await import('./quickbooks');
       return qb.syncPaymentStatus();
+    }
+    case 'pennylane': {
+      const pl = await import('./pennylane');
+      return pl.syncPaymentStatus();
+    }
+    case 'holded': {
+      const hl = await import('./holded');
+      return hl.syncPaymentStatus();
+    }
+    case 'fattureincloud': {
+      const fic = await import('./fattureincloud');
+      const result = await fic.syncPaymentStatus();
+      return { paidInvoiceIds: result.paidInvoiceIds.map(String) };
     }
     default:
       return { paidInvoiceIds: [] };

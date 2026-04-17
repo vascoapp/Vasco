@@ -4,7 +4,7 @@
 // Comprehensive compliance and regulatory management interface
 // =============================================================================
 
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,9 @@ import {
   ScrollView,
   Pressable,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
+import { scan as runComplianceScan, getLastRun, type ComplianceScanResult } from '../../services/complianceAgentService';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
@@ -68,6 +70,67 @@ export function ComplianceCenter() {
     { id: 'requirements', label: 'Vakvereisten', icon: 'construct' },
   ];
 
+  // Compliance-agent scan state — last-run + one-tap "Scan now"
+  const [lastScanAt, setLastScanAt] = useState<Date | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [lastResult, setLastResult] = useState<ComplianceScanResult | null>(null);
+
+  useEffect(() => {
+    getLastRun().then(setLastScanAt).catch(() => {});
+  }, []);
+
+  const handleScanNow = useCallback(async () => {
+    setScanning(true);
+    try {
+      const result = await runComplianceScan({ force: true });
+      setLastResult(result);
+      setLastScanAt(new Date(result.ranAt));
+    } finally {
+      setScanning(false);
+    }
+  }, []);
+
+  const formatLastScan = (d: Date | null): string => {
+    if (!d) return t('compliance.neverScanned', 'Never scanned');
+    const mins = Math.floor((Date.now() - d.getTime()) / 60000);
+    if (mins < 1) return t('compliance.scannedJustNow', 'Scanned just now');
+    if (mins < 60) return t('compliance.scannedMinAgo', { defaultValue: 'Scanned {{min}} min ago', min: mins });
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return t('compliance.scannedHoursAgo', { defaultValue: 'Scanned {{h}}h ago', h: hours });
+    return t('compliance.scannedDaysAgo', { defaultValue: 'Scanned {{d}} days ago', d: Math.floor(hours / 24) });
+  };
+
+  const renderScanCard = () => (
+    <View style={styles.scanCard}>
+      <View style={styles.scanInfo}>
+        <Ionicons name="scan-outline" size={18} color={Palette.hermesOrange} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.scanTitle}>{t('compliance.agent', 'Compliance agent')}</Text>
+          <Text style={styles.scanSubtitle}>
+            {formatLastScan(lastScanAt)}
+            {lastResult
+              ? ` · ${t('compliance.scanSummary', { defaultValue: '{{alerts}} new alert, {{atRisk}} at risk', count: lastResult.alertsAdded, alerts: lastResult.alertsAdded, atRisk: lastResult.itemsAtRisk })}`
+              : ''}
+          </Text>
+        </View>
+      </View>
+      <Pressable
+        onPress={handleScanNow}
+        disabled={scanning}
+        style={[styles.scanBtn, scanning && { opacity: 0.6 }]}
+        accessibilityRole="button"
+        accessibilityLabel={t('compliance.scanNow', 'Scan now')}
+      >
+        {scanning
+          ? <ActivityIndicator size="small" color={Palette.white} />
+          : <Ionicons name="refresh" size={16} color={Palette.white} />}
+        <Text style={styles.scanBtnText}>
+          {scanning ? t('compliance.scanning', 'Scanning…') : t('compliance.scanNow', 'Scan now')}
+        </Text>
+      </Pressable>
+    </View>
+  );
+
   const renderComplianceScore = () => (
     <View style={styles.scoreContainer}>
       <View style={styles.scoreCircle}>
@@ -119,6 +182,7 @@ export function ComplianceCenter() {
 
   const renderOverviewTab = () => (
     <ScrollView style={styles.tabContent}>
+      {renderScanCard()}
       {renderComplianceScore()}
       {renderAlertsBanner()}
 
@@ -2006,6 +2070,24 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     overflow: 'hidden',
   },
+
+  // Scan card — compliance agent last-run + "Scan now" CTA
+  scanCard: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.sm,
+    padding: GRID.md, marginBottom: GRID.md,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: SemanticColors.borderMuted,
+  },
+  scanInfo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: GRID.sm },
+  scanTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  scanSubtitle: { fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary, marginTop: 2 },
+  scanBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: GRID.md, paddingVertical: GRID.sm,
+    borderRadius: RADIUS.sm, backgroundColor: Palette.hermesOrange,
+  },
+  scanBtnText: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.white },
 });
 
 export default ComplianceCenter;

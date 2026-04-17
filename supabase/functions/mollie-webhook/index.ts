@@ -148,6 +148,7 @@ Deno.serve(async (req) => {
           paid_at: paidAt,
           payment_id: paymentId,
           payment_method: payment.method || null,
+          payment_provider: 'mollie',
           updated_at: new Date().toISOString(),
         })
         .eq('id', invoiceId);

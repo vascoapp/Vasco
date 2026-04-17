@@ -758,7 +758,7 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>More</Text>
         <View style={styles.actionsList}>
-          <Pressable style={styles.actionItem} onPress={() => router.push('/contractor/decisions')}>
+          <Pressable style={styles.actionItem} onPress={() => router.push('/(contractor)/decisions' as any)}>
             <View style={[styles.actionIcon, { backgroundColor: SemanticColors.feedbackWarningBg }]}>
               <Ionicons name="people" size={20} color={SemanticColors.feedbackWarning} />
             </View>

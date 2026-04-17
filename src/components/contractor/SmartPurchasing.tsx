@@ -10,6 +10,7 @@ import type { SmartPurchaseAlert, MaterialCatalogItem, UpcomingMaterialNeed } fr
 import { MOCK_PURCHASE_ALERTS, MOCK_MATERIALS, MOCK_UPCOMING_NEEDS, MOCK_SUPPLIERS } from '../../data/mockPricebook';
 import { intelligence } from '../../intelligence/intelligenceEngine';
 import { RecommendationFeedbackList } from './RecommendationFeedback';
+import { getCurrentUserId } from '../../lib/currentUser';
 import { useRecommendationFeedback } from '../../hooks/useRecommendationFeedback';
 import { useTranslation } from 'react-i18next';
 // Helper to create context for intelligence tracking
@@ -215,7 +216,7 @@ function AlertsTab({
                   // Track material action for intelligence
                   intelligence.trackEvent({
                     eventType: 'material_price_checked',
-                    userId: 'current-user',
+                    userId: getCurrentUserId(),
                     sessionId: 'current',
                     context: createTrackingContext(),
                     payload: {
@@ -244,7 +245,7 @@ function AlertsTab({
                   // Track dismissal for learning what's not relevant
                   intelligence.trackEvent({
                     eventType: 'ai_recommendation_rejected',
-                    userId: 'current-user',
+                    userId: getCurrentUserId(),
                     sessionId: 'current',
                     context: createTrackingContext(),
                     payload: {
@@ -346,7 +347,7 @@ function UpcomingTab({
               // Track material added to shopping list
               intelligence.trackEvent({
                 eventType: 'material_purchased',
-                userId: 'current-user',
+                userId: getCurrentUserId(),
                 sessionId: 'current',
                 context: createTrackingContext(),
                 payload: {

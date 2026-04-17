@@ -88,6 +88,24 @@ export default function NewQuoteScreen() {
       return;
     }
 
+    // Tier gate — free users see an upgrade prompt when they hit their monthly quote cap.
+    try {
+      const { loadSubscription, canCreateQuote } = await import('../../src/services/subscriptionService');
+      const sub = await loadSubscription();
+      const gate = canCreateQuote(sub);
+      if (!gate.allowed) {
+        Alert.alert(
+          'Upgrade required',
+          gate.reason,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'View plans', onPress: () => router.push('/contractor/profile' as any) },
+          ],
+        );
+        return;
+      }
+    } catch {}
+
     setSaving(true);
     try {
       const quoteId = await addQuote(customer.trim(), job.trim(), validItems);

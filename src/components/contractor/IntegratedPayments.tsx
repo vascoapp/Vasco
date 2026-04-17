@@ -22,6 +22,7 @@ import { ContractorInvoice } from '../../types/contractor';
 import { MOCK_PAYMENT_SETTINGS } from '../../data/mockPricebook';
 import { MOCK_CONTRACTOR_INVOICES } from '../../data/mockContractor';
 import { intelligence } from '../../intelligence/intelligenceEngine';
+import { getCurrentUserId } from '../../lib/currentUser';
 import { useTranslation } from 'react-i18next';
 // Helper to create context for intelligence tracking
 const createTrackingContext = () => ({
@@ -375,7 +376,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
             // Track invoice sent for intelligence learning
             intelligence.trackEvent({
               eventType: 'invoice_sent',
-              userId: 'current-user',
+              userId: getCurrentUserId(),
               sessionId: 'current',
               context: createTrackingContext(),
               payload: {
@@ -410,7 +411,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
             // Track reminder sent for intelligence
             intelligence.trackEvent({
               eventType: 'payment_reminder_sent',
-              userId: 'current-user',
+              userId: getCurrentUserId(),
               sessionId: 'current',
               context: createTrackingContext(),
               payload: {
@@ -434,7 +435,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
             // Track reminder sent for intelligence
             intelligence.trackEvent({
               eventType: 'payment_reminder_sent',
-              userId: 'current-user',
+              userId: getCurrentUserId(),
               sessionId: 'current',
               context: createTrackingContext(),
               payload: {

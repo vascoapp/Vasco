@@ -63,7 +63,7 @@ export default function GeldScreen() {
   const [sendingInvoiceId, setSendingInvoiceId] = useState<string | null>(null);
   const [showInvoiceFilterModal, setShowInvoiceFilterModal] = useState(false);
   const [showQuoteFilterModal, setShowQuoteFilterModal] = useState(false);
-  const { invoices, quotes, markInvoiceSent, removeInvoice, removeQuote, isLoading } = useAppState();
+  const { invoices, quotes, markInvoiceSent, removeInvoice, removeQuote, isLoading, businessProfile } = useAppState();
   const cashFlow = useCashFlow();
   const fin = useFinancialAnalysis();
 
@@ -327,7 +327,7 @@ export default function GeldScreen() {
                 title={t('money.noInvoicesTitle', 'No invoices yet')}
                 description={t('money.noInvoicesDesc', 'Create one from a completed job or from scratch — Vasco handles the reminders and payment links.')}
                 actionLabel={t('money.newInvoice', 'New invoice')}
-                onAction={() => router.push('/contractor/new-invoice' as any)}
+                onAction={() => router.push('/invoices/new' as any)}
               />
             )}
           </View>
@@ -388,6 +388,29 @@ export default function GeldScreen() {
             )}
           </View>
         </FadeIn>
+
+        {/* BTW-aangifte voorbereiding — NL only for now */}
+        {businessProfile?.country === 'NL' && (
+          <FadeIn delay={110}>
+            <View style={s.section}>
+              <Pressable
+                onPress={() => router.push('/contractor/vat-prep' as any)}
+                accessibilityRole="button"
+                accessibilityLabel={t('vatPrep.cardTitle', 'BTW-aangifte voorbereiden')}
+                style={({ pressed }) => [s.vatCard, pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] }]}
+              >
+                <View style={s.vatIconWrap}>
+                  <Ionicons name="receipt-outline" size={22} color={Palette.hermesOrange} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.vatTitle}>{t('vatPrep.cardTitle', 'BTW-aangifte voorbereiden')}</Text>
+                  <Text style={s.vatSubtitle}>{t('vatPrep.cardSubtitle', 'Vasco classificeert facturen + kosten. Jij dient in.')}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
+              </Pressable>
+            </View>
+          </FadeIn>
+        )}
 
         {/* Cashflow — real analysis */}
         <FadeIn delay={120}>
@@ -855,6 +878,37 @@ const s = StyleSheet.create({
     fontSize: TYPE.bodySize,
     fontFamily: TYPE.bodyFamily,
     color: SemanticColors.textTertiary,
+  },
+
+  // VAT prep entry card
+  vatCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.md,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
+    padding: GRID.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  vatIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: RADIUS.md,
+    backgroundColor: Palette.hermesOrange + '14',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  vatTitle: {
+    fontFamily: TYPE.titleFamily,
+    fontSize: TYPE.titleSize,
+    color: SemanticColors.textPrimary,
+    marginBottom: 2,
+  },
+  vatSubtitle: {
+    fontFamily: TYPE.bodyFamily,
+    fontSize: TYPE.captionSize,
+    color: SemanticColors.textSecondary,
   },
 
   // Cashflow card — dashboard quality
