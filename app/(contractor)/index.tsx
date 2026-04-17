@@ -564,12 +564,32 @@ export default function TodayScreen() {
                   break;
 
                 // Invoice regeneration — create updated invoice with late fee
-                case 'invoice_regenerate':
-                  if (item.preparedData?.jobId) {
-                    await addInvoiceFromJob(item.preparedData.jobId);
-                  }
-                  router.push('/(contractor)/facturen' as any);
-                  break;
+                case 'invoice_regenerate': {
+                  // EU Directive 2011/7/EU: show the legally-entitled amount,
+                  // then route the contractor to the overdue invoice detail
+                  // where "resend" will include the statutory disclosure.
+                  const pd = item.preparedData ?? {};
+                  const cur = pd.currency === 'GBP' ? '£' : '€';
+                  const body = pd.interest != null && pd.recoveryFee != null
+                    ? `${t('vasco.regenLegalEntitled', { defaultValue: 'You are legally entitled to:' })}\n\n${pd.ratePct?.toFixed(2) ?? '0'}% interest · ${cur}${Number(pd.interest).toFixed(2)}\n${t('vasco.recoveryFee', { defaultValue: 'Recovery fee' })} · ${cur}${Number(pd.recoveryFee).toFixed(0)}\n\n${t('vasco.newTotal', { defaultValue: 'New total' })}: ${cur}${Number(pd.newTotal ?? 0).toFixed(2)}`
+                    : item.description;
+                  Alert.alert(
+                    item.title || t('vasco.regenerateInvoice', 'Regenerate invoice'),
+                    body,
+                    [
+                      { text: t('common.cancel', 'Cancel'), style: 'cancel', onPress: () => { /* do not approve */ } },
+                      {
+                        text: t('vasco.viewAndSend', 'Review + send'),
+                        onPress: () => {
+                          if (pd.invoiceId) router.push(`/invoices/${pd.invoiceId}` as any);
+                          else router.push('/(contractor)/facturen' as any);
+                          aiQueue.approve(id);
+                        },
+                      },
+                    ],
+                  );
+                  return; // Don't fall through to the default approve.
+                }
 
                 // Permit check — show inline checklist
                 case 'permit_check': {

@@ -20,6 +20,7 @@ import {
   rejectCustomerQuestionReply,
   questionIdFromQueueItemId,
 } from './customerQuestionQueueBridge';
+import { computeLateFee, type LateFeeCountry } from './lateFeeService';
 
 const QUEUE_KEY = '@vasco_ai_queue';
 
@@ -517,23 +518,50 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const due = new Date(inv.dueDate || '').getTime();
     return due && (now - due) > 30 * dayMs;
   });
+  const supportedFeeCountries: LateFeeCountry[] = ['NL', 'DE', 'FR', 'ES', 'IT', 'UK'];
+  const feeCountry: LateFeeCountry = supportedFeeCountries.includes((context.country ?? 'NL') as LateFeeCountry)
+    ? ((context.country ?? 'NL') as LateFeeCountry)
+    : 'NL';
   for (const inv of severelyOverdue.slice(0, 2)) {
     const daysOverdue = Math.ceil((now - new Date(inv.dueDate || '').getTime()) / dayMs);
-    const lateFee = Math.round((inv.amount || 0) * 0.02); // 2% late fee
+    // EU Directive 2011/7/EU: statutory interest + €40 (or UK tiered) recovery
+    // fee. Assumes B2B — we only auto-populate for overdue invoices on a
+    // customer record, which for most trades is business-to-business work.
+    // Contractor can strip the interest line if the end customer is a consumer.
+    const feeBreakdown = computeLateFee({
+      invoiceAmount: inv.amount || 0,
+      daysOverdue,
+      country: feeCountry,
+      customerType: 'business',
+    });
+    const interest = feeBreakdown.interest;
+    const recoveryFee = feeBreakdown.recoveryFee;
+    const lateFee = Math.round((interest + recoveryFee) * 100) / 100;
+    const currencySymbol = feeBreakdown.currency === 'GBP' ? '£' : '€';
     const id = await addToQueue({
       type: 'invoice_regenerate',
       title: t('automation.regenerateInvoice', { defaultValue: 'Regenerate invoice {{id}}', id: inv.id }),
       description: t('automation.daysOverdueWithFee', {
-        defaultValue: '{{days}} days overdue · +€{{fee}} late fee',
+        defaultValue: '{{days}} days overdue · +{{currency}}{{fee}} late fee',
         days: daysOverdue,
-        fee: lateFee,
+        fee: lateFee.toFixed(2),
+        currency: currencySymbol,
       }),
       preparedData: {
-        invoiceId: inv.id, originalAmount: inv.amount, lateFee, newTotal: (inv.amount || 0) + lateFee, customer: inv.customer,
-        reasoning: `${daysOverdue} days overdue. Adding a 2% late fee (€${lateFee}) signals urgency and recovers admin costs.`,
+        invoiceId: inv.id,
+        originalAmount: inv.amount,
+        lateFee,
+        interest,
+        recoveryFee,
+        ratePct: feeBreakdown.effectiveRatePct,
+        currency: feeBreakdown.currency,
+        disclosureLine: feeBreakdown.disclosureLine,
+        newTotal: (inv.amount || 0) + lateFee,
+        customer: inv.customer,
+        reasoning: `${daysOverdue} days overdue. EU Directive 2011/7/EU entitles you to ${feeBreakdown.effectiveRatePct.toFixed(2)}% statutory interest (${currencySymbol}${interest.toFixed(2)}) + ${currencySymbol}${recoveryFee.toFixed(0)} fixed recovery fee.`,
       },
       actionLabel: t('automation.regenerate', 'Regenerate'),
-      estimatedImpact: `€${((inv.amount || 0) + lateFee).toLocaleString(undefined)}`,
+      estimatedImpact: `${currencySymbol}${((inv.amount || 0) + lateFee).toLocaleString(undefined)}`,
       expiresAt: new Date(now + 7 * dayMs).toISOString(),
       sourceGeneratorId: 'automation_invoice_regen',
     });
