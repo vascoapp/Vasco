@@ -1297,7 +1297,12 @@ const styles = StyleSheet.create({
   },
   optionSelected: {
     borderColor: Palette.hermesOrange,
-    backgroundColor: `${Palette.hermesOrange}08`,
+    backgroundColor: `${Palette.hermesOrange}1A`,
+    shadowColor: Palette.hermesOrange,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 5,
   },
   optionFlag: {
     fontSize: 28,
@@ -1326,7 +1331,12 @@ const styles = StyleSheet.create({
   },
   tradeChipSelected: {
     borderColor: Palette.hermesOrange,
-    backgroundColor: `${Palette.hermesOrange}12`,
+    backgroundColor: `${Palette.hermesOrange}22`,
+    shadowColor: Palette.hermesOrange,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   tradeChipText: {
     fontSize: TYPE.bodySize,
@@ -1351,7 +1361,12 @@ const styles = StyleSheet.create({
   },
   goalCardSelected: {
     borderColor: Palette.hermesOrange,
-    backgroundColor: `${Palette.hermesOrange}08`,
+    backgroundColor: `${Palette.hermesOrange}1A`,
+    shadowColor: Palette.hermesOrange,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 5,
   },
   goalIcon: {
     width: 40,
@@ -1388,7 +1403,12 @@ const styles = StyleSheet.create({
   },
   teamCardSelected: {
     borderColor: Palette.hermesOrange,
-    backgroundColor: `${Palette.hermesOrange}08`,
+    backgroundColor: `${Palette.hermesOrange}1A`,
+    shadowColor: Palette.hermesOrange,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 5,
   },
   teamIcon: {
     width: 48,

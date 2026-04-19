@@ -1617,5 +1617,22 @@
     "common": {
       "goodMorning": "Goeiemorgen"
     }
+  },
+  "customerPortal": {
+    "title": "Klantportaal",
+    "welcome": "Welkom",
+    "intro": "Uw aannemer heeft keuzes voor u klaargezet. Voer de toegangscode in die u heeft ontvangen.",
+    "code": "Toegangscode",
+    "codePlaceholder": "bijv. ABC123",
+    "submit": "Bekijk mijn keuzes",
+    "demo": "Demo modus",
+    "privacy": "Geen account nodig. Uw keuzes worden veilig opgeslagen en direct doorgegeven aan uw aannemer.",
+    "invalidCode": "Voer een geldige toegangscode in."
+  },
+  "accept": {
+    "processing": "Je goedkeuring wordt verwerkt...",
+    "processingTitle": "Verwerken...",
+    "successTitle": "Geaccepteerd",
+    "errorTitle": "Fout"
   }
 }

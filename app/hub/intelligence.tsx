@@ -387,6 +387,11 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: Palette.hermesOrange,
+    shadowColor: Palette.hermesOrange,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 14,
+    elevation: 6,
   },
   timelineContent: {
     flex: 1,

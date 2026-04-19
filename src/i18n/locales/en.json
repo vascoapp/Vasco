@@ -1617,5 +1617,22 @@
     "common": {
       "goodMorning": "Good morning"
     }
+  },
+  "customerPortal": {
+    "title": "Customer portal",
+    "welcome": "Welcome",
+    "intro": "Your contractor has prepared choices for you. Enter the access code you received.",
+    "code": "Access code",
+    "codePlaceholder": "e.g. ABC123",
+    "submit": "View my choices",
+    "demo": "Demo mode",
+    "privacy": "No account needed. Your choices are stored securely and sent directly to your contractor.",
+    "invalidCode": "Please enter a valid access code."
+  },
+  "accept": {
+    "processing": "Processing your approval...",
+    "processingTitle": "Processing...",
+    "successTitle": "Accepted",
+    "errorTitle": "Error"
   }
 }

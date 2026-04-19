@@ -284,6 +284,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: GRID.xs,
     paddingVertical: GRID.md, borderRadius: RADIUS.md,
     backgroundColor: Palette.hermesOrange,
+    shadowColor: Palette.hermesOrange,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 14,
+    elevation: 6,
   },
   exportBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: Palette.white },
 });

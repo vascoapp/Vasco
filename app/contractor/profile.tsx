@@ -432,6 +432,11 @@ const styles = StyleSheet.create({
   avatar: {
     width: 72, height: 72, borderRadius: RADIUS.full + 8,
     backgroundColor: Palette.hermesOrange, alignItems: 'center', justifyContent: 'center',
+    shadowColor: Palette.hermesOrange,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 14,
+    elevation: 6,
   },
   avatarText: { fontSize: TYPE.displaySize - 4, fontFamily: TYPE.displayFamily, color: Palette.white },
   nameText: { fontSize: TYPE.sectionSize + 2, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, marginTop: GRID.sm + 4 },

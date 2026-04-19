@@ -317,6 +317,11 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: Palette.hermesOrange,
     borderRadius: 2,
+    shadowColor: Palette.hermesOrange,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 14,
+    elevation: 6,
   },
 
   // Timeline
@@ -353,6 +358,11 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.hermesOrange,
     borderRadius: 4,
     minHeight: 4,
+    shadowColor: Palette.hermesOrange,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 14,
+    elevation: 6,
   },
   timelineBarLabel: {
     fontSize: 10,

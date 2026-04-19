@@ -323,6 +323,11 @@ const s = StyleSheet.create({
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: Palette.hermesOrange,
     alignItems: 'center', justifyContent: 'center',
+    shadowColor: Palette.hermesOrange,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 14,
+    elevation: 6,
   },
 
   // Search
@@ -434,6 +439,11 @@ const s = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     marginTop: 8,
+    shadowColor: Palette.hermesOrange,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 14,
+    elevation: 6,
   },
   emptyBtnText: {
     fontSize: TYPE.bodySize,
@@ -478,6 +488,11 @@ const s = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 4,
+    shadowColor: Palette.hermesOrange,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 14,
+    elevation: 6,
   },
   submitBtnText: {
     fontSize: TYPE.bodySize,
