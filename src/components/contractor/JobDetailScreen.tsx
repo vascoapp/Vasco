@@ -146,7 +146,7 @@ export function JobDetailScreen({
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={onClose} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={styles.headerContent}>
           <Text style={styles.jobTitle} numberOfLines={1}>{job.title}</Text>

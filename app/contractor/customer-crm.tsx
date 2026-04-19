@@ -120,7 +120,7 @@ export default function CustomerPhonebookScreen() {
       {/* Header */}
       <View style={s.header}>
         <Pressable onPress={() => router.back()} hitSlop={12} style={s.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
+          <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={s.headerTitle}>{t('contractor.customers.title', 'Customers')}</Text>
         <Pressable onPress={() => setShowAdd(true)} style={s.addBtn}>

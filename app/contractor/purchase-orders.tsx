@@ -80,7 +80,7 @@ export default function PurchaseOrdersScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>{t('purchaseOrders.title', 'Inkooporders')}</Text>

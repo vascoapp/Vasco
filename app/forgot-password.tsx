@@ -78,7 +78,7 @@ export default function ForgotPasswordScreen() {
       >
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.closeBtn}>
-            <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
+            <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
           </Pressable>
         </View>
 

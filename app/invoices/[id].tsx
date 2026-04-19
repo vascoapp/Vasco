@@ -126,7 +126,7 @@ export default function InvoiceDetailScreen() {
       <View style={styles.container}>
         <View style={styles.headerBar}>
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
+            <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>{t('invoices.notFound', 'Invoice not found')}</Text>
           <View style={{ width: 40 }} />
@@ -394,7 +394,7 @@ export default function InvoiceDetailScreen() {
       {/* Header */}
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
+          <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>{t('invoices.invoice', 'Invoice')} {invoice.id}</Text>

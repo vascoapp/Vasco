@@ -251,7 +251,7 @@ export default function CustomerViewScreen() {
     <View style={s.container}>
       <View style={s.header}>
         <Pressable onPress={() => router.back()} style={s.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
+          <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={s.headerTitle}>Offerte</Text>

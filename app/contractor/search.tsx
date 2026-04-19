@@ -135,7 +135,7 @@ export default function SearchScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel="Go back">
-          <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={styles.searchBox}>
           <Ionicons name="search" size={18} color={SemanticColors.textTertiary} />

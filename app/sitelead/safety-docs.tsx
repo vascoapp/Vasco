@@ -148,7 +148,7 @@ export default function SafetyDocsScreen() {
       <View style={styles.container}>
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} hitSlop={8}>
-            <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+            <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>{t('safetyDocs.title')}</Text>
         </View>
@@ -203,7 +203,7 @@ export default function SafetyDocsScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Pressable onPress={() => setSelectedTemplate(null)} hitSlop={8}>
-          <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>{selectedTemplate.title}</Text>
       </View>

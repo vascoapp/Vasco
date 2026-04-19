@@ -63,7 +63,7 @@ export default function ExpensesScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel={t('common.back', 'Back')}>
-          <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>{t('expenses.title', 'Uitgaven')}</Text>

@@ -176,7 +176,7 @@ export function WhatIfAnalysisModal({
     <View style={styles.content}>
       <View style={styles.configHeader}>
         <Pressable onPress={() => setStep('select')} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={20} color={SemanticColors.textPrimary} />
+          <Ionicons name="chevron-back" size={20} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.configTitle}>{selectedScenario?.name}</Text>
       </View>

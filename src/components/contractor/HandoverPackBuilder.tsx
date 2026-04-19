@@ -705,7 +705,7 @@ export function HandoverPackBuilder({
           disabled={currentStepIndex === 0}
         >
           <Ionicons
-            name="arrow-back"
+            name="chevron-back"
             size={20}
             color={currentStepIndex === 0 ? SemanticColors.textDisabled : SemanticColors.textPrimary}
           />

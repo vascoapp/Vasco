@@ -185,7 +185,7 @@ export default function TimesheetScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
-          <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
+          <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>{t('timesheet.title', 'Urenregistratie')}</Text>

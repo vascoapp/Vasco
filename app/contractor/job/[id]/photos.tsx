@@ -71,7 +71,7 @@ export default function JobPhotosScreen() {
     <View style={s.container}>
       <View style={s.header}>
         <Pressable onPress={() => router.back()} style={s.backBtn} accessibilityRole="button" accessibilityLabel="Back">
-          <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
+          <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={s.title}>Photos</Text>
         <View style={{ width: 36 }} />

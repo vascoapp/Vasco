@@ -398,7 +398,7 @@ export function DecisionTrackerDetail({
       {/* Header */}
       <View style={styles.detailHeader}>
         <Pressable onPress={onClose} style={styles.backButton} accessibilityLabel={t('common.back')}>
-          <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={styles.headerContent}>
           <Text style={styles.detailTitle}>{tracker.customerName}</Text>

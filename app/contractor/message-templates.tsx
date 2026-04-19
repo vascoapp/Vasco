@@ -170,7 +170,7 @@ export default function MessageTemplatesScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
-          <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
+          <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('templates.title', 'Message Templates')}</Text>
         <Pressable onPress={handleNew} style={styles.addBtn} accessibilityRole="button" accessibilityLabel="New template">

@@ -225,7 +225,7 @@ export function JobMaterialsSuggestion({
       <View style={styles.header}>
         {onClose && (
           <Pressable onPress={onClose} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+            <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
           </Pressable>
         )}
         <View style={styles.headerContent}>

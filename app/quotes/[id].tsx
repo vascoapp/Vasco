@@ -62,7 +62,7 @@ export default function QuoteDetailScreen() {
             accessibilityLabel="Go back"
             accessibilityRole="button"
           >
-            <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
+            <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
           </Pressable>
           <View style={{ flex: 1 }}>
             <Text style={Typography.title}>{t('quotes.quote', 'Quote')} {quote.id}</Text>

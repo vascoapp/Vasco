@@ -500,7 +500,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
       <View style={s.container}>
         <View style={s.header}>
           <Pressable onPress={() => setShowPricebook(false)} style={s.closeBtn}>
-            <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
+            <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
           </Pressable>
           <View style={{ flex: 1 }}>
             <Text style={s.headerTitle}>Diensten toevoegen</Text>
@@ -710,7 +710,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
     <View style={s.container}>
       <View style={s.header}>
         <Pressable onPress={() => setStep('select')} style={s.closeBtn}>
-          <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
+          <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={s.headerTitle}>Offerte controleren</Text>

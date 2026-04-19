@@ -32,7 +32,7 @@ export default function AutomationsScreen() {
     <View style={s.container}>
       <View style={s.header}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={s.headerTitle}>{t('automations.title', 'Automatiseringen')}</Text>

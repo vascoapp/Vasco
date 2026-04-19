@@ -102,7 +102,7 @@ export default function InsuranceScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color="#1A1A1A" />
+          <Ionicons name="chevron-back" size={22} color="#1A1A1A" />
         </Pressable>
         <Text style={styles.headerTitle}>{t('insurance.title', 'Verzekeringen')}</Text>
         <Pressable onPress={() => openClaimForm()} style={styles.backBtn}>

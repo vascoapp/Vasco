@@ -519,7 +519,7 @@ function CategoryDetailView({
       {/* Header */}
       <View style={styles.categoryDetailHeader}>
         <Pressable style={styles.backButton} onPress={onBack}>
-          <Ionicons name="arrow-back" size={24} color={SemanticColors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={styles.categoryDetailTitle}>
           <Text style={styles.categoryDetailName}>{category.name}</Text>

@@ -197,7 +197,7 @@ export default function TeamPlanningScreen() {
             onPress={() => router.back()}
             style={styles.backButton}
           >
-            <Ionicons name="arrow-back" size={24} color={SL_COLORS.charcoal} />
+            <Ionicons name="chevron-back" size={24} color={SL_COLORS.charcoal} />
           </Pressable>
           <View style={styles.headerTextContainer}>
             <Text style={styles.headerTitle} numberOfLines={1}>{team.name}</Text>
