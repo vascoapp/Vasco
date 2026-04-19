@@ -102,7 +102,7 @@ export default function AcceptQuoteScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40, backgroundColor: '#fff' },
-  title: { fontSize: 24, fontWeight: '700', marginTop: 20, color: '#1A1A1A' },
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40, backgroundColor: "#14181F" },
+  title: { fontSize: 24, fontWeight: '700', marginTop: 20, color: "#FFFFFF" },
   message: { fontSize: 16, color: '#666', marginTop: 12, textAlign: 'center', lineHeight: 24 },
 });

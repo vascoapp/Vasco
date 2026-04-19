@@ -87,10 +87,12 @@ function Meta({ label, value, color }: { label: string; value: string; color: st
 
 const s = StyleSheet.create({
   card: {
-    backgroundColor: Palette.white,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: RADIUS.lg,
     padding: GRID.md,
     gap: GRID.sm,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
   },
   header: { flexDirection: 'row', alignItems: 'center', gap: GRID.xs },
   title: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textSecondary },

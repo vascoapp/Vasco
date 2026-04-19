@@ -94,7 +94,7 @@ const PAYMENT_METHOD_INFO: Record<PaymentMethodType, { name: string; icon: strin
   bancontact: { name: 'Bancontact', icon: 'card', color: '#005498' },
   creditcard: { name: 'Credit Card', icon: 'card-outline', color: '#1A1F71' },
   paypal: { name: 'PayPal', icon: 'logo-paypal', color: '#003087' },
-  applepay: { name: 'Apple Pay', icon: 'logo-apple', color: '#000000' },
+  applepay: { name: 'Apple Pay', icon: 'logo-apple', color: "#FFFFFF" },
   googlepay: { name: 'Google Pay', icon: 'logo-google', color: '#4285F4' },
   klarna: { name: 'Klarna', icon: 'time-outline', color: '#FFB3C7' },
   'bank-transfer': { name: 'Bank Transfer', icon: 'business-outline', color: SemanticColors.textSecondary },

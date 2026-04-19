@@ -51,13 +51,13 @@ const Palette = {
   orange800: '#9A3412',
   orange900: '#7C2D12',
 
-  // Vasco Brand - Bright Construction Orange
-  hermesOrange: '#F26522',     // Primary - bright, punchy orange
-  terracotta: '#D2691E',       // Secondary - warm terracotta
-  burntSienna: '#E07A5F',      // Accent - softer burnt sienna
-  pastelOrange: '#F8B195',     // Light - pastel peach/orange
-  peachCream: '#FFDAB9',       // Subtle - peachy cream
-  salmonLight: '#FFFFFF',       // Contractor background - porcelain white
+  // Vasco Brand — DraftKings Sunset Slate remap (2026-04-18)
+  hermesOrange: '#F97316',     // Primary accent — DK sunset orange
+  terracotta: '#C2410C',       // Secondary — DK dark orange
+  burntSienna: '#9A3412',      // Deep — DK primaryDark
+  pastelOrange: '#F59E0B',     // Highlight — DK amber
+  peachCream: '#F59E0B',       // Highlight echo
+  salmonLight: '#14181F',       // Contractor background — DK panel
 
   // Legacy Vasco (keep for backward compat)
   vascoPrimary: '#F26522',     // Updated to bright orange
@@ -337,12 +337,100 @@ const WarmTheme = {
 };
 
 // -----------------------------------------------------------------------------
-// ACTIVE THEME EXPORT
-// Using Warm Theme as default for Hermes orange aesthetic
+// DRAFTKINGS SUNSET SLATE THEME (active — 2026-04-18)
+// Dark slate surfaces, burnt→sunset→amber orange ramp, white text.
 // -----------------------------------------------------------------------------
-export const SemanticColors = WarmTheme;
+const DKTheme = {
+  // Surfaces
+  surfaceBackground: '#0B0E11',
+  surfacePrimary: '#14181F',
+  surfaceSecondary: '#1C2128',
+  surfaceTertiary: '#242A33',
+  surfaceOverlay: 'rgba(0, 0, 0, 0.6)',
+  surfaceInverse: '#FFFFFF',
+
+  // Borders
+  borderDefault: '#2A3038',
+  borderMuted: '#242A33',
+  borderFocused: '#F97316',
+  borderDisabled: '#1C2128',
+
+  // Text
+  textPrimary: '#FFFFFF',
+  textSecondary: '#9CA3AF',
+  textTertiary: '#6B7280',
+  textDisabled: '#4B5563',
+  textInverse: '#0B0E11',
+  textLink: '#F97316',
+
+  // Icons
+  iconPrimary: '#FFFFFF',
+  iconSecondary: '#9CA3AF',
+  iconDisabled: '#4B5563',
+  iconInverse: '#0B0E11',
+
+  // Actions
+  actionPrimary: '#C2410C',
+  actionPrimaryHover: '#9A3412',
+  actionPrimaryPressed: '#7C2D12',
+  actionPrimaryDisabled: '#3F2A22',
+
+  actionSecondary: '#F97316',
+  actionSecondaryHover: '#EA580C',
+  actionSecondaryPressed: '#C2410C',
+
+  actionTertiary: '#F59E0B',
+  actionGhost: 'transparent',
+  actionGhostHover: 'rgba(249, 115, 22, 0.12)',
+
+  // Feedback
+  feedbackSuccess: '#10B981',
+  feedbackSuccessBg: 'rgba(16, 185, 129, 0.15)',
+  feedbackSuccessBorder: 'rgba(16, 185, 129, 0.35)',
+
+  feedbackWarning: '#F59E0B',
+  feedbackWarningBg: 'rgba(245, 158, 11, 0.15)',
+  feedbackWarningBorder: 'rgba(245, 158, 11, 0.35)',
+
+  feedbackError: '#EF4444',
+  feedbackErrorBg: 'rgba(239, 68, 68, 0.15)',
+  feedbackErrorBorder: 'rgba(239, 68, 68, 0.35)',
+
+  feedbackInfo: '#3B82F6',
+  feedbackInfoBg: 'rgba(59, 130, 246, 0.15)',
+  feedbackInfoBorder: 'rgba(59, 130, 246, 0.35)',
+
+  // Status
+  statusOnTrack: '#10B981',
+  statusAtRisk: '#F59E0B',
+  statusCritical: '#EF4444',
+  statusPending: '#3B82F6',
+  statusComplete: '#10B981',
+  statusOverdue: '#EF4444',
+
+  // Roles
+  roleCFO: '#3B82F6',
+  roleCOO: '#8B5CF6',
+  roleSiteLead: '#F97316',
+  roleDirector: '#F97316',
+  roleContractor: '#F97316',
+
+  // Charts
+  chartPrimary: '#F97316',
+  chartSecondary: '#F59E0B',
+  chartTertiary: '#C2410C',
+  chartNeutral: '#6B7280',
+  chartPositive: '#10B981',
+  chartNegative: '#EF4444',
+};
+
+// -----------------------------------------------------------------------------
+// ACTIVE THEME EXPORT — DraftKings Sunset Slate
+// -----------------------------------------------------------------------------
+export const SemanticColors = DKTheme;
 export const LightSemanticColors = LightTheme;
 export const DarkSemanticColors = DarkTheme;
+export const WarmSemanticColors = WarmTheme;
 export { Palette };
 
 // -----------------------------------------------------------------------------
@@ -350,19 +438,19 @@ export { Palette };
 // Gradually migrate components to use SemanticColors instead
 // -----------------------------------------------------------------------------
 export const Colors = {
-  // Legacy mappings -> Using WarmTheme
-  background: WarmTheme.surfaceBackground,
-  surface: WarmTheme.surfacePrimary,
-  surfaceElevated: WarmTheme.surfaceSecondary,
-  border: WarmTheme.borderDefault,
-  text: WarmTheme.textPrimary,
-  muted: WarmTheme.textSecondary,
+  // Legacy mappings -> DKTheme (Sunset Slate)
+  background: DKTheme.surfaceBackground,
+  surface: DKTheme.surfacePrimary,
+  surfaceElevated: DKTheme.surfaceSecondary,
+  border: DKTheme.borderDefault,
+  text: DKTheme.textPrimary,
+  muted: DKTheme.textSecondary,
   accent: Palette.hermesOrange,
   accentMuted: Palette.burntSienna,
   accentSoft: Palette.pastelOrange,
   accentDeep: Palette.hermesOrange,
   accentSubtle: Palette.peachCream,
-  success: WarmTheme.feedbackSuccess,
-  warning: WarmTheme.feedbackWarning,
-  danger: WarmTheme.feedbackError,
+  success: DKTheme.feedbackSuccess,
+  warning: DKTheme.feedbackWarning,
+  danger: DKTheme.feedbackError,
 };

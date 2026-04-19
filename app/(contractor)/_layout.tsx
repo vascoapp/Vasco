@@ -67,6 +67,7 @@ const HIDDEN_TABS = [
   'besparen',
   'decisions',
   'facturen',
+  'vandaag-dk',
 ];
 
 export default function ContractorLayout() {

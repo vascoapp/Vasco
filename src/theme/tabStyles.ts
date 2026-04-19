@@ -21,8 +21,8 @@ import { Spacing, SafeArea } from './spacing';
 // DESIGN TOKENS (Wolt-aligned)
 // ============================================================================
 
-// Page background — very subtle warm gray for card contrast
-export const PAGE_BG = '#FAFAFA';
+// DraftKings Sunset Slate — dark page background
+export const PAGE_BG = '#0B0E11';
 
 // 8px grid spacing
 export const GRID = {
@@ -34,46 +34,44 @@ export const GRID = {
   xxl: 40,
 } as const;
 
-// Border radius scale
+// Border radius — soft (DK pilot-locked on 2026-04-18)
 export const RADIUS = {
   sm: 8,    // chips, badges, small elements
-  md: 12,   // inputs, buttons
-  lg: 16,   // cards, sections
-  xl: 20,   // modals
+  md: 10,   // inputs, buttons
+  lg: 14,   // cards, sections
+  xl: 18,   // modals
   full: 28, // FAB, avatars
 } as const;
 
-// Typography scale — clear hierarchy with contrast
-// Rule: ONLY headings are heavy. Body is regular. This creates readable contrast.
-// Heavy (Manrope 800/700) → Medium (Inter 600) → Regular (Inter 400)
+// Typography — Archivo (display) + Inter (body). DraftKings-inspired headlines.
 export const TYPE = {
-  // Display / page title — the ONLY ExtraBold element
+  // Display / page title — heaviest weight
   displaySize: 28,
-  displayFamily: 'Manrope_800ExtraBold',
+  displayFamily: 'Archivo_900Black',
   displayTracking: -0.8,
 
-  // Section headers — bold but smaller than display
+  // Section headers
   sectionSize: 18,
-  sectionFamily: 'Manrope_700Bold',
+  sectionFamily: 'Archivo_800ExtraBold',
   sectionTracking: -0.3,
 
-  // Card titles / list items — semibold, NOT bold
+  // Card titles / list items
   titleSize: 16,
-  titleFamily: 'Inter_600SemiBold',
+  titleFamily: 'Archivo_700Bold',
 
-  // Body text — regular weight for readability
+  // Body
   bodySize: 15,
   bodyFamily: 'Inter_400Regular',
 
-  // Descriptions / secondary text — regular, lighter color does the work
+  // Captions
   captionSize: 13,
   captionFamily: 'Inter_400Regular',
 
-  // Small labels / badges — medium for structure
+  // Labels
   labelSize: 12,
   labelFamily: 'Inter_500Medium',
 
-  // Tiny (overline)
+  // Tiny
   tinySize: 11,
   tinyFamily: 'Inter_500Medium',
 } as const;
@@ -272,7 +270,7 @@ export const tabStyles = StyleSheet.create({
   },
   kpiValue: {
     fontSize: 24,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
     letterSpacing: -0.5,
   },
@@ -387,7 +385,7 @@ export const tabStyles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
     letterSpacing: -0.3,
   },
@@ -444,7 +442,7 @@ export const tabStyles = StyleSheet.create({
   },
   badgeText: {
     fontSize: TYPE.labelSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: '#fff',
   },
 

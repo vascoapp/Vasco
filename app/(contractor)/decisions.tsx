@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 22,
     fontFamily: TYPE.sectionFamily,
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   newBadge: {
     backgroundColor: Palette.hermesOrange,

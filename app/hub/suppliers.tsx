@@ -288,14 +288,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 14,
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   headerSubtitle: {
     fontSize: 14,
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginHorizontal: Spacing.md,
     marginBottom: Spacing.sm,
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 14,
     padding: Spacing.md,
     shadowColor: '#000',
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   summaryLabel: {
     fontSize: 11,
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   supplierCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 14,
     padding: Spacing.md,
     shadowColor: '#000',
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
   supplierName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   supplierMeta: {
     flexDirection: 'row',
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   metricValue: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   pricingRow: {
     flexDirection: 'row',
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
   },
   materialChipText: {
     fontSize: 12,
-    color: '#1A1A1A',
+    color: "#FFFFFF",
     fontWeight: '500',
   },
 
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
   },
   emptyCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 16,
     padding: Spacing.xl,
     alignItems: 'center',

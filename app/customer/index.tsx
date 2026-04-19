@@ -113,7 +113,7 @@ export default function CustomerLandingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
   },
   inner: {
     flex: 1,
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   brandName: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
     letterSpacing: -0.5,
   },
   brandSub: {
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   welcomeText: {
     fontSize: 15,
@@ -183,10 +183,10 @@ const styles = StyleSheet.create({
   codeInput: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
     letterSpacing: 4,
     textAlign: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#1C2128",
     borderRadius: 12,
     padding: 16,
     borderWidth: 2,

@@ -167,14 +167,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 14,
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   headerSubtitle: {
     fontSize: 14,
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
 
   // Hero KPIs
   heroCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 16,
     padding: Spacing.md,
     gap: 12,
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   heroValue: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
     letterSpacing: -0.5,
   },
   heroLabel: {
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   breakdownCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 14,
     padding: Spacing.md,
     gap: 10,
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   breakdownLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   breakdownDesc: {
     fontSize: 12,
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   breakdownAmount: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   breakdownTrendBadge: {
     flexDirection: 'row',
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
 
   // Timeline
   timelineCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 16,
     padding: Spacing.md,
     gap: 12,
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
   timelineCumulativeValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
 
   // Opportunity
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
   opportunityTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   opportunityDesc: {
     fontSize: 12,

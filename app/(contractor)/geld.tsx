@@ -1,35 +1,36 @@
 // =============================================================================
-// GELD — Money tab. Clean answer to: "Where's my money?"
+// GELD — DraftKings-patterned money tab
 // =============================================================================
-// KPIs → VascoCard (financial AI) → Facturen+Offertes → Cashflow
-// No dashboards, no bleed between sections. Vasco is the financial brain.
+// Functions preserved (UI restructured):
+//   3-KPI stadium (omzet/uitstaand/pipeline, tappable, trend arrow) ·
+//   collection rate badge · CashFlowForecastCard · financial VascoCard ·
+//   facturen list + filter modal + long-press delete + draft send button ·
+//   offertes list + filter modal + new-quote button + long-press delete ·
+//   BTW-aangifte card (NL only) · cashflow (revenue/costs/profit/margin-bar/
+//   sparkline/projected/DSO) · overdue list + inline remind share + total ·
+//   top-customers bar chart + concentration-risk banner ·
+//   pull-to-refresh · FAB new quote · skeleton loader
 // =============================================================================
 
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Share, Platform, Alert, TextInput, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Share, Alert, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
-import { SemanticColors, Palette } from '../../src/theme/colors';
-import { SafeArea } from '../../src/theme/spacing';
-import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { DK } from '../../src/theme/draftkings';
 import { useAppState } from '../../src/state/AppState';
-import { useCashFlow } from '../../src/services/cashFlowService';
 import { useFinancialAnalysis } from '../../src/services/financialAnalysisService';
 import { formatCurrency } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
-import { FadeIn } from '../../src/components/shared/FadeIn';
 import { Sparkline } from '../../src/components/shared/Sparkline';
-import { VascoCard } from '../../src/components/shared/VascoCard';
 import { SkeletonList } from '../../src/components/shared/SkeletonList';
-import { EmptyState } from '../../src/components/shared/EmptyState';
 import { CashFlowForecastCard } from '../../src/components/contractor/CashFlowForecastCard';
 import { useAIQueue } from '../../src/services/aiActionQueueService';
 import { useVascoGuidance } from '../../src/services/vascoGuidanceService';
 
-// Month label helper for sparkline axis
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 function getLastNMonthLabels(n: number): string[] {
   const now = new Date();
@@ -41,7 +42,6 @@ function getLastNMonthLabels(n: number): string[] {
   return labels;
 }
 
-/** Compact currency: €12.5K, €1.2M, €850 */
 function compactCurrency(amount: number): string {
   if (Math.abs(amount) >= 1_000_000) return `\u20AC${(amount / 1_000_000).toFixed(1)}M`;
   if (Math.abs(amount) >= 1_000) return `\u20AC${(amount / 1_000).toFixed(1)}K`;
@@ -54,8 +54,6 @@ export default function GeldScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
-  const [invoiceFilter, setInvoiceFilter] = useState('');
-  const [quoteFilter, setQuoteFilter] = useState('');
   const [invoiceStatusFilter, setInvoiceStatusFilter] = useState<string>('all');
   const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>('all');
   const [invoiceSort, setInvoiceSort] = useState<SortMode>('date-desc');
@@ -64,30 +62,10 @@ export default function GeldScreen() {
   const [showInvoiceFilterModal, setShowInvoiceFilterModal] = useState(false);
   const [showQuoteFilterModal, setShowQuoteFilterModal] = useState(false);
   const { invoices, quotes, markInvoiceSent, removeInvoice, removeQuote, isLoading, businessProfile } = useAppState();
-  const cashFlow = useCashFlow();
   const fin = useFinancialAnalysis();
-
   const aiQueue = useAIQueue();
   const allGuidance = useVascoGuidance('contractor', 'geld');
   const topInsight = allGuidance.filter(g => g.priority === 'critical' || g.priority === 'high')[0] ?? null;
-
-  const handleDeleteDocument = useCallback((docId: string, docType: 'factuur' | 'offerte', docName: string) => {
-    const title = docType === 'factuur'
-      ? t('invoices.deleteInvoice', 'Delete invoice?')
-      : t('quotes.deleteQuote', 'Delete quote?');
-    Alert.alert(title, docName, [
-      { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-      {
-        text: t('common.delete', 'Delete'),
-        style: 'destructive',
-        onPress: () => {
-          if (docType === 'factuur') removeInvoice(docId);
-          else removeQuote(docId);
-          hapticSuccess();
-        },
-      },
-    ]);
-  }, [removeInvoice, removeQuote, t]);
 
   useEffect(() => { recordScreenVisit('geld'); }, []);
 
@@ -98,1194 +76,765 @@ export default function GeldScreen() {
     refreshTimerRef.current = setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
   }, []);
 
-  // Financial analysis — real numbers from the analysis engine
+  const handleDeleteDocument = useCallback((docId: string, docType: 'factuur' | 'offerte', docName: string) => {
+    const title = docType === 'factuur'
+      ? t('invoices.deleteInvoice', 'Delete invoice?')
+      : t('quotes.deleteQuote', 'Delete quote?');
+    Alert.alert(title, docName, [
+      { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+      { text: t('common.delete', 'Delete'), style: 'destructive', onPress: () => { (docType === 'factuur' ? removeInvoice : removeQuote)(docId); hapticSuccess(); } },
+    ]);
+  }, [removeInvoice, removeQuote, t]);
+
   const outstandingTotal = fin.totalOutstanding;
-  const overdueCount = fin.overdueCount;
   const paidTotal = fin.totalRevenue;
 
-  // Trend indicators — compare current vs previous month
-  const trendArrow = useCallback((current: number, previous: number): { icon: 'trending-up' | 'trending-down' | 'remove'; color: string } => {
-    if (previous === 0 || current === previous) return { icon: 'remove', color: SemanticColors.textTertiary };
-    return current > previous
-      ? { icon: 'trending-up', color: SemanticColors.feedbackSuccess }
-      : { icon: 'trending-down', color: SemanticColors.feedbackError };
-  }, []);
-  const revenueTrend = useMemo(() => {
+  const revenueTrend = useMemo((): { icon: 'trending-up' | 'trending-down' | 'remove'; color: string } => {
     const prev = fin.monthlyInflows.length >= 2 ? fin.monthlyInflows[fin.monthlyInflows.length - 2] : 0;
-    return trendArrow(paidTotal, prev);
-  }, [paidTotal, fin.monthlyInflows, trendArrow]);
+    if (prev === 0 || paidTotal === prev) return { icon: 'remove', color: DK.colors.textMuted };
+    return paidTotal > prev
+      ? { icon: 'trending-up', color: DK.colors.success }
+      : { icon: 'trending-down', color: DK.colors.danger };
+  }, [paidTotal, fin.monthlyInflows]);
 
-  // Collection rate — % of invoices paid on time (not overdue)
   const collectionRate = useMemo(() => {
-    const total = invoices.length;
-    if (total === 0) return 0;
-    const paidOnTime = invoices.filter((i: any) => i.status === 'paid').length;
-    return Math.round((paidOnTime / total) * 100);
+    if (invoices.length === 0) return 0;
+    return Math.round((invoices.filter((i: any) => i.status === 'paid').length / invoices.length) * 100);
   }, [invoices]);
 
-  // All documents: invoices + quotes, sorted by status priority (overdue first)
-  const documents = useMemo(() => {
-    const statusOrder: Record<string, number> = { overdue: 0, sent: 1, draft: 2, accepted: 3, paid: 4 };
-    const docs = [
-      ...invoices.map((inv: any) => ({
+  const invoiceDocs = useMemo(() => {
+    return invoices
+      .filter((inv: any) => invoiceStatusFilter === 'all' || inv.status === invoiceStatusFilter)
+      .map((inv: any) => ({
         id: inv.id,
-        type: 'factuur' as const,
         name: inv.customer || inv.customerName || inv.reference || inv.id,
         description: inv.job || t('invoices.invoice', 'Factuur'),
         amount: inv.total || inv.amount || 0,
         status: inv.status,
-        route: `/invoices/${inv.id}`,
-      })),
-      ...quotes.map((q: any) => ({
+      }))
+      .sort((a, b) => invoiceSort === 'value-desc' ? b.amount - a.amount : 0);
+  }, [invoices, invoiceStatusFilter, invoiceSort, t]);
+
+  const quoteDocs = useMemo(() => {
+    return quotes
+      .filter((q: any) => quoteStatusFilter === 'all' || q.status === quoteStatusFilter)
+      .map((q: any) => ({
         id: q.id,
-        type: 'offerte' as const,
         name: q.customer || q.id,
         description: q.job || q.description || t('quotes.quote', 'Offerte'),
         amount: q.amount || 0,
         status: q.status,
-        route: `/quotes/${q.id}`,
-      })),
-    ];
-    return docs.sort((a, b) => (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3));
-  }, [invoices, quotes]);
+      }))
+      .sort((a, b) => quoteSort === 'value-desc' ? b.amount - a.amount : 0);
+  }, [quotes, quoteStatusFilter, quoteSort, t]);
 
-  // Sparkline from financial analysis engine (last 6 months inflows)
-  const sparkData = useMemo(() => fin.monthlyInflows, [fin.monthlyInflows]);
+  const sparkData = fin.monthlyInflows;
   const sparkMonthLabels = useMemo(() => getLastNMonthLabels(sparkData.length || 6), [sparkData.length]);
-  const sparkMin = useMemo(() => sparkData.length ? Math.min(...sparkData) : 0, [sparkData]);
-  const sparkMax = useMemo(() => sparkData.length ? Math.max(...sparkData) : 0, [sparkData]);
+  const sparkMin = sparkData.length ? Math.min(...sparkData) : 0;
+  const sparkMax = sparkData.length ? Math.max(...sparkData) : 0;
 
-  // Overdue details sorted by most overdue first
   const sortedOverdue = useMemo(() =>
     [...fin.overdueDetails].sort((a, b) => b.daysOverdue - a.daysOverdue),
     [fin.overdueDetails]
   );
 
-  // Top customers: compute max revenue for bar chart
-  const maxCustomerRevenue = useMemo(() => {
-    if (fin.topCustomers.length === 0) return 0;
-    return Math.max(...fin.topCustomers.map(c => c.revenue));
-  }, [fin.topCustomers]);
-  const totalCustomerRevenue = useMemo(() => {
-    return fin.topCustomers.reduce((sum, c) => sum + c.revenue, 0);
-  }, [fin.topCustomers]);
+  const maxCustomerRevenue = useMemo(() =>
+    fin.topCustomers.length === 0 ? 0 : Math.max(...fin.topCustomers.map(c => c.revenue)),
+    [fin.topCustomers]
+  );
 
-  // Profit margin percentage
-  const marginPercent = useMemo(() => {
-    return paidTotal > 0 ? Math.round((fin.netIncome / paidTotal) * 100) : 0;
-  }, [fin.netIncome, paidTotal]);
+  const marginPercent = paidTotal > 0 ? Math.round((fin.netIncome / paidTotal) * 100) : 0;
 
-  // DSO status
-  const dsoStatus = useMemo((): { color: string; dotColor: string } => {
-    if (fin.avgDaysToPayment <= 21) return { color: SemanticColors.feedbackSuccess, dotColor: SemanticColors.feedbackSuccess };
-    if (fin.avgDaysToPayment <= 30) return { color: Palette.hermesOrange, dotColor: Palette.hermesOrange };
-    return { color: SemanticColors.feedbackError, dotColor: SemanticColors.feedbackError };
+  const dsoStatus = useMemo((): { color: string } => {
+    if (fin.avgDaysToPayment <= 21) return { color: DK.colors.success };
+    if (fin.avgDaysToPayment <= 30) return { color: DK.colors.accent };
+    return { color: DK.colors.danger };
   }, [fin.avgDaysToPayment]);
 
   if (isLoading) {
     return (
-      <View style={s.container}>
-        <View style={s.header}>
-          <Text style={s.headerTitle}>{t('tabs.money', 'Geld')}</Text>
-        </View>
+      <View style={s.root}>
+        <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
+          <View style={s.topBar}><Text style={s.title}>GELD</Text></View>
+        </SafeAreaView>
         <SkeletonList count={3} showAction lines={3} />
       </View>
     );
   }
 
+  const financialQueue = aiQueue.items.filter(i => i.type === 'draft_invoice' || i.type === 'draft_reminder');
+
   return (
-    <View style={s.container}>
-      <View style={s.header}>
-        <Text style={s.headerTitle}>{t('tabs.money', 'Geld')}</Text>
-      </View>
+    <View style={s.root}>
+      {/* ─── TOP BAR ─── */}
+      <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
+        <View style={s.topBar}>
+          <Text style={s.title}>GELD</Text>
+        </View>
+      </SafeAreaView>
 
       <ScrollView
         style={s.scroll}
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={DK.colors.accent} />}
       >
-        {/* KPIs — the 4 numbers that matter */}
-        <FadeIn delay={0}>
-          <View style={s.kpiCard}>
-            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)} accessibilityRole="button" accessibilityLabel={`${t('money.received', 'Ontvangen')}: ${formatCurrency(paidTotal)}`}>
-              <Ionicons name="wallet" size={16} color={SemanticColors.feedbackSuccess} style={{ marginBottom: GRID.xs }} />
-              <Text style={s.kpiLabel}>{t('money.revenue', 'Omzet')}</Text>
-              <View style={s.kpiValueRow}>
-                <Text style={[s.kpiValue, { color: SemanticColors.feedbackSuccess }]}>{compactCurrency(paidTotal)}</Text>
-                <Ionicons name={revenueTrend.icon} size={14} color={revenueTrend.color} />
-              </View>
-              <View style={[s.kpiAccentLine, { backgroundColor: SemanticColors.feedbackSuccess }]} />
-            </Pressable>
-            <View style={s.kpiDivider} />
-            <Pressable style={s.kpiItem} onPress={() => router.push('/(contractor)/facturen' as any)} accessibilityRole="button" accessibilityLabel={`${t('money.outstanding', 'Uitstaand')}: ${formatCurrency(outstandingTotal)}`}>
-              <Ionicons name="hourglass" size={16} color={Palette.hermesOrange} style={{ marginBottom: GRID.xs }} />
-              <Text style={s.kpiLabel}>{t('money.outstanding', 'Uitstaand')}</Text>
-              <Text style={s.kpiValue}>{compactCurrency(outstandingTotal)}</Text>
-              <View style={[s.kpiAccentLine, { backgroundColor: Palette.hermesOrange }]} />
-            </Pressable>
-            <View style={s.kpiDivider} />
-            <Pressable style={s.kpiItem} accessibilityRole="button" accessibilityLabel={`${t('money.pipeline', 'Pipeline')}: ${formatCurrency(fin.quotePipeline)}`}>
-              <Ionicons name="analytics" size={16} color={SemanticColors.feedbackInfo} style={{ marginBottom: GRID.xs }} />
-              <Text style={s.kpiLabel}>{t('money.pipeline', 'Pipeline')}</Text>
-              <Text style={s.kpiValue}>{compactCurrency(fin.quotePipeline)}</Text>
-              <View style={[s.kpiAccentLine, { backgroundColor: SemanticColors.feedbackInfo }]} />
-            </Pressable>
+        {/* ─── 3-KPI STADIUM ─── */}
+        <View style={s.kpiRow}>
+          <Pressable style={s.kpiTile} onPress={() => router.push('/(contractor)/facturen' as any)}>
+            <Text style={s.kpiLabel}>OMZET</Text>
+            <View style={s.kpiValueRow}>
+              <Text style={[s.kpiValue, { color: DK.colors.success }]}>{compactCurrency(paidTotal)}</Text>
+              <Ionicons name={revenueTrend.icon} size={14} color={revenueTrend.color} />
+            </View>
+          </Pressable>
+          <Pressable style={s.kpiTile} onPress={() => router.push('/(contractor)/facturen' as any)}>
+            <Text style={s.kpiLabel}>UITSTAAND</Text>
+            <Text style={[s.kpiValue, { color: DK.colors.accent }]}>{compactCurrency(outstandingTotal)}</Text>
+          </Pressable>
+          <Pressable style={s.kpiTile}>
+            <Text style={s.kpiLabel}>PIPELINE</Text>
+            <Text style={[s.kpiValue, { color: DK.colors.highlight }]}>{compactCurrency(fin.quotePipeline)}</Text>
+          </Pressable>
+        </View>
+
+        {/* ─── COLLECTION RATE BADGE ─── */}
+        {invoices.length > 0 && (
+          <View style={s.collectionBadge}>
+            <Ionicons name="checkmark-circle" size={14} color={collectionRate >= 80 ? DK.colors.success : collectionRate >= 50 ? DK.colors.highlight : DK.colors.danger} />
+            <Text style={s.collectionText}>COLLECTION RATE · <Text style={{ color: collectionRate >= 80 ? DK.colors.success : collectionRate >= 50 ? DK.colors.highlight : DK.colors.danger }}>{collectionRate}%</Text></Text>
           </View>
-          {/* Collection rate badge */}
-          {invoices.length > 0 && (
-            <View style={s.collectionBadge}>
-              <Ionicons name="checkmark-circle" size={14} color={collectionRate >= 80 ? SemanticColors.feedbackSuccess : collectionRate >= 50 ? SemanticColors.feedbackWarning : SemanticColors.feedbackError} />
-              <Text style={s.collectionText}>{t('money.collectionRate', 'Collection rate')}: <Text style={{ fontFamily: TYPE.sectionFamily, color: collectionRate >= 80 ? SemanticColors.feedbackSuccess : collectionRate >= 50 ? SemanticColors.feedbackWarning : SemanticColors.feedbackError }}>{collectionRate}%</Text></Text>
+        )}
+
+        {/* ─── NEW OFFERTE (primary creation CTA, elevated) ─── */}
+        <Pressable
+          style={({ pressed }) => [s.newQuoteBtn, pressed && { opacity: 0.9 }]}
+          onPress={() => router.push('/contractor/tiered-quote' as any)}
+        >
+          <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+          <Ionicons name="add-circle-outline" size={16} color="#FFFFFF" />
+          <Text style={s.newQuoteBtnText}>NIEUWE OFFERTE</Text>
+        </Pressable>
+
+        {/* ─── CASHFLOW FORECAST (embedded self-styled component) ─── */}
+        <CashFlowForecastCard invoices={invoices as any} quotes={quotes as any} jobs={[] as any} />
+
+        {/* ─── FINANCIAL AI QUEUE (was VascoCard) ─── */}
+        {(financialQueue.length > 0 || topInsight) && (
+          <View style={s.vascoPanel}>
+            <View style={s.vascoHeader}>
+              <View style={s.vascoChip}>
+                <View style={s.vascoChipDot} />
+                <Text style={s.vascoChipText}>EVE FINANCE</Text>
+              </View>
+              <Text style={s.vascoCountText}>{financialQueue.length}</Text>
+            </View>
+            {topInsight ? (
+              <Pressable onPress={() => (topInsight as any).actionRoute && router.push((topInsight as any).actionRoute)} style={s.vascoInsight}>
+                <Text style={s.vascoInsightTitle}>{topInsight.title}</Text>
+                <Text style={s.vascoInsightDesc} numberOfLines={2}>{topInsight.message}</Text>
+              </Pressable>
+            ) : null}
+            {financialQueue.slice(0, 3).map((item) => (
+              <View key={item.id} style={s.vascoQueueRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.vascoQueueTitle} numberOfLines={1}>{item.title}</Text>
+                  <Text style={s.vascoQueueImpact}>{item.estimatedImpact}</Text>
+                </View>
+                <Pressable hitSlop={6} onPress={() => aiQueue.reject(item.id)} style={s.vascoQueueReject}>
+                  <Ionicons name="close" size={12} color={DK.colors.textMuted} />
+                </Pressable>
+                <Pressable onPress={() => { hapticSuccess(); aiQueue.approve(item.id); }} style={s.vascoQueueApprove}>
+                  <Text style={s.vascoQueueApproveText}>{item.actionLabel.toUpperCase()}</Text>
+                </Pressable>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* ─── FACTUREN ─── */}
+        <View style={s.sectionHeaderRow}>
+          <View style={s.sectionTitleBlock}>
+            <Text style={s.sectionTitle}>FACTUREN</Text>
+            <View style={s.sectionCountPill}><Text style={s.sectionCountText}>{invoices.length}</Text></View>
+          </View>
+          <Pressable onPress={() => setShowInvoiceFilterModal(true)} hitSlop={8}>
+            <Ionicons name="options-outline" size={20} color={invoiceStatusFilter !== 'all' ? DK.colors.accent : DK.colors.textMuted} />
+          </Pressable>
+        </View>
+        {invoices.length > 0 ? (
+          <View style={s.docList}>
+            {invoiceDocs.map((doc) => (
+              <Pressable
+                key={doc.id}
+                style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9 }]}
+                onPress={() => router.push(`/invoices/${doc.id}` as any)}
+                onLongPress={() => handleDeleteDocument(doc.id, 'factuur', doc.name)}
+              >
+                <View style={[s.docDot, { backgroundColor: statusColor(doc.status) }]} />
+                <View style={{ flex: 1 }}>
+                  <Text style={s.docName} numberOfLines={1}>{doc.name}</Text>
+                  <Text style={s.docDesc} numberOfLines={1}>{doc.description} · {doc.status}</Text>
+                </View>
+                <Text style={s.docAmount}>{formatCurrency(doc.amount)}</Text>
+                {doc.status === 'draft' && (
+                  <Pressable
+                    style={[s.sendBtn, sendingInvoiceId === doc.id && { opacity: 0.5 }]}
+                    disabled={sendingInvoiceId === doc.id}
+                    onPress={(e) => {
+                      e.stopPropagation?.();
+                      if (sendingInvoiceId) return;
+                      setSendingInvoiceId(doc.id);
+                      try { hapticSuccess(); markInvoiceSent(doc.id); Alert.alert(t('invoices.markedAsSent', 'Invoice marked as sent'), t('invoices.markedAsSentDesc', 'Share the PDF with your customer via the share button on the invoice detail screen.')); }
+                      finally { setSendingInvoiceId(null); }
+                    }}
+                    hitSlop={6}
+                  >
+                    <Ionicons name="send" size={12} color="#FFFFFF" />
+                  </Pressable>
+                )}
+              </Pressable>
+            ))}
+          </View>
+        ) : (
+          <EmptyPanel
+            icon="receipt-outline"
+            title={t('money.noInvoicesTitle', 'NOG GEEN FACTUREN')}
+            description={t('money.noInvoicesDesc', 'Maak er een van een afgeronde klus.')}
+            ctaLabel={t('money.newInvoice', 'NIEUWE FACTUUR')}
+            onCta={() => router.push('/invoices/new' as any)}
+          />
+        )}
+
+        {/* ─── OFFERTES ─── */}
+        <View style={s.sectionHeaderRow}>
+          <View style={s.sectionTitleBlock}>
+            <Text style={s.sectionTitle}>OFFERTES</Text>
+            <View style={s.sectionCountPill}><Text style={s.sectionCountText}>{quotes.length}</Text></View>
+          </View>
+          <Pressable onPress={() => setShowQuoteFilterModal(true)} hitSlop={8}>
+            <Ionicons name="options-outline" size={20} color={quoteStatusFilter !== 'all' ? DK.colors.accent : DK.colors.textMuted} />
+          </Pressable>
+        </View>
+        {quotes.length > 0 ? (
+          <View style={s.docList}>
+            {quoteDocs.map((doc) => (
+              <Pressable
+                key={doc.id}
+                style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9 }]}
+                onPress={() => router.push(`/quotes/${doc.id}` as any)}
+                onLongPress={() => handleDeleteDocument(doc.id, 'offerte', doc.name)}
+              >
+                <View style={[s.docDot, { backgroundColor: statusColor(doc.status) }]} />
+                <View style={{ flex: 1 }}>
+                  <Text style={s.docName} numberOfLines={1}>{doc.name}</Text>
+                  <Text style={s.docDesc} numberOfLines={1}>{doc.description} · {doc.status}</Text>
+                </View>
+                <Text style={s.docAmount}>{formatCurrency(doc.amount)}</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : (
+          <EmptyPanel
+            icon="document-text-outline"
+            title={t('money.noQuotesTitle', 'NOG GEEN OFFERTES')}
+            description={t('money.noQuotesDesc', 'Gebruik de tiered quote builder.')}
+            ctaLabel={t('quotes.newQuote', 'NIEUWE OFFERTE')}
+            onCta={() => router.push('/contractor/tiered-quote' as any)}
+          />
+        )}
+
+        {/* ─── BTW-AANGIFTE (NL only) ─── */}
+        {businessProfile?.country === 'NL' && (
+          <Pressable
+            onPress={() => router.push('/contractor/vat-prep' as any)}
+            style={({ pressed }) => [s.vatCard, pressed && { opacity: 0.92 }]}
+          >
+            <View style={s.vatIconWrap}>
+              <Ionicons name="receipt-outline" size={20} color={DK.colors.accent} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.vatTitle}>BTW-AANGIFTE VOORBEREIDEN</Text>
+              <Text style={s.vatSub}>Vasco classificeert facturen + kosten. Jij dient in.</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={DK.colors.textMuted} />
+          </Pressable>
+        )}
+
+        {/* ─── CASHFLOW DEEP-DIVE ─── */}
+        <SectionHeader title="CASHFLOW" />
+        <View style={s.cfCard}>
+          <View style={s.cfRow}>
+            <CfItem label="OMZET" value={formatCurrency(paidTotal)} tone={DK.colors.success} />
+            <View style={s.cfDivider} />
+            <CfItem label="KOSTEN" value={formatCurrency(fin.totalExpenses)} tone={DK.colors.text} />
+            <View style={s.cfDivider} />
+            <View style={{ flex: 1 }}>
+              <View style={s.cfProfitRow}>
+                <Text style={[s.cfValue, { color: fin.netIncome >= 0 ? DK.colors.success : DK.colors.danger }]}>{formatCurrency(fin.netIncome)}</Text>
+                {paidTotal > 0 && (
+                  <View style={[s.marginPill, { backgroundColor: (marginPercent >= 0 ? DK.colors.success : DK.colors.danger) + '22', borderColor: (marginPercent >= 0 ? DK.colors.success : DK.colors.danger) + '55' }]}>
+                    <Text style={[s.marginPillText, { color: marginPercent >= 0 ? DK.colors.success : DK.colors.danger }]}>{marginPercent}%</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={s.cfLabel}>WINST</Text>
+            </View>
+          </View>
+          {/* Margin bar */}
+          <View style={s.marginBar}>
+            <LinearGradient
+              colors={[DK.colors.primary, DK.colors.accent, DK.colors.success]}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              style={[s.marginFill, { width: `${Math.min(Math.max(fin.profitMargin, 0), 100)}%` as any }]}
+            />
+          </View>
+          {/* Sparkline */}
+          {sparkData.length >= 2 && (
+            <View style={s.sparkBlock}>
+              <View style={s.sparkRow}>
+                <View style={s.sparkYAxis}>
+                  <Text style={s.sparkAxisLabel}>{formatCurrency(sparkMax)}</Text>
+                  <Text style={s.sparkAxisLabel}>{formatCurrency(sparkMin)}</Text>
+                </View>
+                <View style={{ flex: 1, alignItems: 'center' }}>
+                  <Sparkline data={sparkData} width={220} height={48} color={DK.colors.success} />
+                </View>
+              </View>
+              <View style={s.sparkXAxis}>
+                {sparkMonthLabels.map((label, idx) => (
+                  <Text key={idx} style={s.sparkAxisLabel}>{label}</Text>
+                ))}
+              </View>
             </View>
           )}
-        </FadeIn>
-
-        {/* 30-day cash-flow forecast — inflows vs outflows */}
-        <FadeIn delay={30}>
-          <CashFlowForecastCard
-            invoices={invoices as any}
-            quotes={quotes as any}
-            jobs={[] as any}
-          />
-        </FadeIn>
-
-        {/* Vasco — financial AI (overdue reminders, payment predictions, expense tips) */}
-        <FadeIn delay={40}>
-          <VascoCard
-            briefing={null}
-            queueItems={aiQueue.items.filter(i => i.type === 'draft_invoice' || i.type === 'draft_reminder')}
-            topInsight={topInsight}
-            automationsCount={0}
-            onApproveQueueItem={(id) => { hapticSuccess(); aiQueue.approve(id); }}
-            onRejectQueueItem={(id) => aiQueue.reject(id)}
-            onInsightAction={(insight) => {
-              if ((insight as any).actionRoute) router.push((insight as any).actionRoute as any);
-            }}
-          />
-        </FadeIn>
-
-        {/* Facturen — separate section */}
-        <FadeIn delay={80}>
-          <View style={s.section}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={s.sectionTitle}>{t('invoices.invoices', 'Facturen')}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: GRID.sm }}>
-                <Text style={s.sectionCount}>{invoices.length}</Text>
-                <Pressable onPress={() => setShowInvoiceFilterModal(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('money.filter', 'Filter')}>
-                  <Ionicons name="options-outline" size={20} color={invoiceStatusFilter !== 'all' ? Palette.hermesOrange : SemanticColors.textSecondary} />
-                </Pressable>
+          {/* Projected next month */}
+          <View style={s.projRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View style={[s.projIcon, { backgroundColor: (fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger) + '22' }]}>
+                <Ionicons name={fin.projectedCashflow >= 0 ? 'trending-up' : 'trending-down'} size={16} color={fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger} />
               </View>
+              <Text style={s.projLabel}>PROGNOSE VOLGENDE MAAND</Text>
             </View>
-            {invoices.length > 0 ? (
-              <View style={s.docList}>
-                {documents.filter(d => d.type === 'factuur' && (!invoiceFilter || d.name.toLowerCase().includes(invoiceFilter.toLowerCase())) && (invoiceStatusFilter === 'all' || d.status === invoiceStatusFilter)).sort((a, b) => invoiceSort === 'value-desc' ? b.amount - a.amount : 0).map((doc) => (
-                  <Pressable
-                    key={doc.id}
-                    style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
-                    onPress={() => router.push(doc.route as any)}
-                    onLongPress={() => handleDeleteDocument(doc.id, doc.type, doc.name)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${t('invoices.invoice', 'Factuur')}: ${doc.name}, ${formatCurrency(doc.amount)}, ${doc.status}`}
-                    accessibilityHint={t('a11y.opensDetails', 'Opens details')}
-                  >
-                    <View style={[s.docDot, { backgroundColor: getStatusColor(doc.status) }]} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={s.docName} numberOfLines={1} ellipsizeMode="tail">{doc.name}</Text>
-                      <Text style={s.docDesc} numberOfLines={1} ellipsizeMode="tail">{doc.description} · {doc.status}</Text>
-                    </View>
-                    <Text style={s.docAmount}>{formatCurrency(doc.amount)}</Text>
-                    {doc.status === 'draft' && (
-                      <Pressable
-                        style={[s.sendBtn, sendingInvoiceId === doc.id && { opacity: 0.5 }]}
-                        disabled={sendingInvoiceId === doc.id}
-                        onPress={(e) => {
-                          e.stopPropagation?.();
-                          if (sendingInvoiceId) return;
-                          setSendingInvoiceId(doc.id);
-                          try {
-                            hapticSuccess();
-                            markInvoiceSent(doc.id);
-                            Alert.alert(t('invoices.markedAsSent', 'Invoice marked as sent'), t('invoices.markedAsSentDesc', 'Share the PDF with your customer via the share button on the invoice detail screen.'));
-                          } finally {
-                            setSendingInvoiceId(null);
-                          }
-                        }}
-                        hitSlop={6}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('a11y.sendInvoice', 'Send invoice')}
-                      >
-                        <Ionicons name="send" size={14} color={Palette.white} />
-                      </Pressable>
-                    )}
-                  </Pressable>
-                ))}
-              </View>
-            ) : (
-              <EmptyState
-                icon="receipt-outline"
-                title={t('money.noInvoicesTitle', 'No invoices yet')}
-                description={t('money.noInvoicesDesc', 'Create one from a completed job or from scratch — Vasco handles the reminders and payment links.')}
-                actionLabel={t('money.newInvoice', 'New invoice')}
-                onAction={() => router.push('/invoices/new' as any)}
-              />
-            )}
+            <Text style={[s.projValue, { color: fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger }]}>
+              {formatCurrency(fin.projectedCashflow)}
+            </Text>
           </View>
-        </FadeIn>
-
-        {/* Offertes — separate section */}
-        <FadeIn delay={100}>
-          <View style={s.section}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={s.sectionTitle}>{t('quotes.quotes', 'Offertes')}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: GRID.sm }}>
-                <Text style={s.sectionCount}>{quotes.length}</Text>
-                <Pressable onPress={() => setShowQuoteFilterModal(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('money.filter', 'Filter')}>
-                  <Ionicons name="options-outline" size={20} color={quoteStatusFilter !== 'all' ? Palette.hermesOrange : SemanticColors.textSecondary} />
-                </Pressable>
+          {/* DSO */}
+          {fin.avgDaysToPayment > 0 && (
+            <View style={s.dsoRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={[s.dsoDot, { backgroundColor: dsoStatus.color }]} />
+                <Text style={s.dsoLabel}>GEM. BETAALTERMIJN</Text>
               </View>
+              <Text style={[s.dsoValue, { color: dsoStatus.color }]}>{fin.avgDaysToPayment}D</Text>
             </View>
+          )}
+        </View>
 
-            <Pressable
-              style={({ pressed }) => [s.newQuoteBtn, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
-              onPress={() => router.push('/contractor/tiered-quote' as any)}
-              accessibilityRole="button"
-              accessibilityLabel={t('quotes.newQuote', 'Nieuwe offerte')}
-            >
-              <Ionicons name="add-circle-outline" size={18} color={Palette.white} />
-              <Text style={s.newQuoteBtnText}>{t('quotes.newQuote', 'Nieuwe offerte')}</Text>
-            </Pressable>
-
-            {quotes.length > 0 ? (
-              <View style={s.docList}>
-                {documents.filter(d => d.type === 'offerte' && (!quoteFilter || d.name.toLowerCase().includes(quoteFilter.toLowerCase())) && (quoteStatusFilter === 'all' || d.status === quoteStatusFilter)).sort((a, b) => quoteSort === 'value-desc' ? b.amount - a.amount : 0).map((doc) => (
-                  <Pressable
-                    key={doc.id}
-                    style={({ pressed }) => [s.docRow, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
-                    onPress={() => router.push(doc.route as any)}
-                    onLongPress={() => handleDeleteDocument(doc.id, doc.type, doc.name)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${t('quotes.quote', 'Offerte')}: ${doc.name}, ${formatCurrency(doc.amount)}, ${doc.status}`}
-                    accessibilityHint={t('a11y.opensDetails', 'Opens details')}
-                  >
-                    <View style={[s.docDot, { backgroundColor: getStatusColor(doc.status) }]} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={s.docName} numberOfLines={1} ellipsizeMode="tail">{doc.name}</Text>
-                      <Text style={s.docDesc} numberOfLines={1} ellipsizeMode="tail">{doc.description} · {doc.status}</Text>
-                    </View>
-                    <Text style={s.docAmount}>{formatCurrency(doc.amount)}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            ) : (
-              <EmptyState
-                icon="document-text-outline"
-                title={t('money.noQuotesTitle', 'No quotes yet')}
-                description={t('money.noQuotesDesc', 'Try the tiered quote builder — customers accept directly from their phone.')}
-                actionLabel={t('quotes.newQuote', 'New quote')}
-                onAction={() => router.push('/contractor/tiered-quote' as any)}
-              />
-            )}
-          </View>
-        </FadeIn>
-
-        {/* BTW-aangifte voorbereiding — NL only for now */}
-        {businessProfile?.country === 'NL' && (
-          <FadeIn delay={110}>
-            <View style={s.section}>
-              <Pressable
-                onPress={() => router.push('/contractor/vat-prep' as any)}
-                accessibilityRole="button"
-                accessibilityLabel={t('vatPrep.cardTitle', 'BTW-aangifte voorbereiden')}
-                style={({ pressed }) => [s.vatCard, pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] }]}
-              >
-                <View style={s.vatIconWrap}>
-                  <Ionicons name="receipt-outline" size={22} color={Palette.hermesOrange} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.vatTitle}>{t('vatPrep.cardTitle', 'BTW-aangifte voorbereiden')}</Text>
-                  <Text style={s.vatSubtitle}>{t('vatPrep.cardSubtitle', 'Vasco classificeert facturen + kosten. Jij dient in.')}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
-              </Pressable>
-            </View>
-          </FadeIn>
-        )}
-
-        {/* Cashflow — real analysis */}
-        <FadeIn delay={120}>
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>{t('money.cashflow', 'Cashflow')}</Text>
-            <View style={s.cfCard}>
-              {/* Revenue / Costs / Profit row */}
-              <View style={s.cfRow}>
-                <View style={s.cfItem}>
-                  <Text style={[s.cfValueDisplay, { color: SemanticColors.feedbackSuccess }]}>
-                    {formatCurrency(paidTotal)}
-                  </Text>
-                  <Text style={s.cfLabel}>{t('money.revenue', 'Omzet')}</Text>
-                </View>
-                <View style={s.cfDivider} />
-                <View style={s.cfItem}>
-                  <Text style={s.cfValueDisplay}>
-                    {formatCurrency(fin.totalExpenses)}
-                  </Text>
-                  <Text style={s.cfLabel}>{t('money.costs', 'Kosten')}</Text>
-                </View>
-                <View style={s.cfDivider} />
-                <View style={s.cfItem}>
-                  <View style={s.profitRow}>
-                    <Text style={[s.cfValueDisplay, { color: fin.netIncome >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
-                      {formatCurrency(fin.netIncome)}
-                    </Text>
-                    {paidTotal > 0 && (
-                      <View style={[s.marginPill, { backgroundColor: marginPercent >= 0 ? SemanticColors.feedbackSuccessBg : SemanticColors.feedbackErrorBg }]}>
-                        <Text style={[s.marginPillText, { color: marginPercent >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
-                          {marginPercent}%
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                  <Text style={s.cfLabel}>{t('money.profit', 'Winst')}</Text>
-                </View>
-              </View>
-
-              {/* Margin bar with gradient */}
-              <View style={s.marginBar}>
-                <LinearGradient
-                  colors={[Palette.hermesOrange, SemanticColors.feedbackSuccess]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={[s.marginFill, { width: `${Math.min(Math.max(fin.profitMargin, 0), 100)}%` as any }]}
-                />
-              </View>
-
-              {/* Sparkline with axis labels */}
-              {sparkData.length >= 2 && (
-                <View style={s.sparkSection}>
-                  <View style={s.sparklineContainer}>
-                    {/* Y-axis labels */}
-                    <View style={s.sparkYAxis}>
-                      <Text style={s.sparkAxisLabel}>{formatCurrency(sparkMax)}</Text>
-                      <Text style={s.sparkAxisLabel}>{formatCurrency(sparkMin)}</Text>
-                    </View>
-                    <View style={s.sparkChartArea}>
-                      <Sparkline data={sparkData} width={220} height={48} color={SemanticColors.feedbackSuccess} />
-                    </View>
-                  </View>
-                  {/* X-axis month labels */}
-                  <View style={s.sparkXAxis}>
-                    {sparkMonthLabels.map((label, idx) => (
-                      <Text key={idx} style={s.sparkAxisLabel}>{label}</Text>
-                    ))}
-                  </View>
-                </View>
-              )}
-
-              {/* Projected next month — prominent card */}
-              <View style={s.projCard}>
-                <View style={s.projCardLeft}>
-                  <View style={[s.projIconWrap, { backgroundColor: fin.projectedCashflow >= 0 ? SemanticColors.feedbackSuccessBg : SemanticColors.feedbackErrorBg }]}>
-                    <Ionicons
-                      name={fin.projectedCashflow >= 0 ? 'trending-up' : 'trending-down'}
-                      size={18}
-                      color={fin.projectedCashflow >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError}
-                    />
-                  </View>
-                  <Text style={s.projCardLabel}>{t('money.projected', 'Prognose volgende maand')}</Text>
-                </View>
-                <Text style={[s.projCardValue, { color: fin.projectedCashflow >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
-                  {formatCurrency(fin.projectedCashflow)}
-                </Text>
-              </View>
-
-              {/* DSO with status dot */}
-              {fin.avgDaysToPayment > 0 && (
-                <View style={s.dsoRow}>
-                  <View style={s.dsoLeft}>
-                    <View style={[s.dsoDot, { backgroundColor: dsoStatus.dotColor }]} />
-                    <Text style={s.projLabel}>{t('money.dso', 'Gem. betaaltermijn')}</Text>
-                  </View>
-                  <Text style={[s.projValue, { color: dsoStatus.color }]}>
-                    {fin.avgDaysToPayment} {t('common.days', 'dagen')}
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        </FadeIn>
-
-        {/* Overdue invoices detail — urgency */}
+        {/* ─── OVERDUE ─── */}
         {sortedOverdue.length > 0 && (
-          <FadeIn delay={140}>
-            <View style={s.section}>
-              <Text style={s.sectionTitle}>{t('money.overdue', 'Achterstallig')}</Text>
-              <View style={s.docList}>
-                {sortedOverdue.map((od) => (
-                  <Pressable
-                    key={od.invoiceId}
-                    style={({ pressed }) => [s.overdueRow, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
-                    onPress={() => router.push(`/invoices/${od.invoiceId}` as any)}
-                    accessibilityRole="button"
-                  >
-                    <View style={{ flex: 1 }}>
-                      <Text style={s.docName} numberOfLines={1}>{od.customer}</Text>
-                      <View style={s.overdueMetaRow}>
-                        <View style={s.overduePill}>
-                          <Text style={s.overduePillText}>{od.daysOverdue}d</Text>
-                        </View>
-                        <Text style={s.docDesc}>{t('common.daysOverdue', 'dagen achterstallig')}</Text>
-                      </View>
+          <>
+            <SectionHeader title="ACHTERSTALLIG" count={sortedOverdue.length} accent={DK.colors.danger} />
+            <View style={s.docList}>
+              {sortedOverdue.map((od) => (
+                <Pressable
+                  key={od.invoiceId}
+                  style={({ pressed }) => [s.overdueRow, pressed && { opacity: 0.9 }]}
+                  onPress={() => router.push(`/invoices/${od.invoiceId}` as any)}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.docName} numberOfLines={1}>{od.customer}</Text>
+                    <View style={s.overdueMeta}>
+                      <View style={s.overduePill}><Text style={s.overduePillText}>{od.daysOverdue}D</Text></View>
+                      <Text style={s.docDesc}>{t('common.daysOverdue', 'dagen achterstallig')}</Text>
                     </View>
-                    <Text style={[s.docAmount, { color: SemanticColors.feedbackError }]}>{formatCurrency(od.amount)}</Text>
-                    <Pressable
-                      style={s.inlineRemindBtn}
-                      onPress={(e) => {
-                        e.stopPropagation?.();
-                        Share.share({ message: t('money.reminderMessage', { defaultValue: 'Hi, this is a friendly reminder that invoice for {{customer}} ({{amount}}) is {{days}} days overdue. Could you arrange payment?', customer: od.customer, amount: formatCurrency(od.amount), days: od.daysOverdue }) });
-                      }}
-                      hitSlop={6}
-                      accessibilityRole="button"
-                      accessibilityLabel={t('money.sendReminder', 'Send reminder')}
-                    >
-                      <Text style={s.inlineRemindText}>{t('money.remind', 'Remind')}</Text>
-                    </Pressable>
+                  </View>
+                  <Text style={[s.docAmount, { color: DK.colors.danger }]}>{formatCurrency(od.amount)}</Text>
+                  <Pressable
+                    style={s.remindBtn}
+                    hitSlop={6}
+                    onPress={(e) => {
+                      e.stopPropagation?.();
+                      Share.share({ message: t('money.reminderMessage', { defaultValue: 'Hi, this is a friendly reminder that invoice for {{customer}} ({{amount}}) is {{days}} days overdue. Could you arrange payment?', customer: od.customer, amount: formatCurrency(od.amount), days: od.daysOverdue }) });
+                    }}
+                  >
+                    <Text style={s.remindBtnText}>REMIND</Text>
                   </Pressable>
-                ))}
-                {/* Total outstanding at bottom */}
-                <View style={s.overdueTotalRow}>
-                  <Text style={s.overdueTotalLabel}>{t('money.totalOutstanding', 'Total outstanding')}</Text>
-                  <Text style={s.overdueTotalAmount}>{formatCurrency(fin.overdueAmount)}</Text>
-                </View>
+                </Pressable>
+              ))}
+              <View style={s.overdueTotalRow}>
+                <Text style={s.overdueTotalLabel}>TOTAAL OPENSTAAND</Text>
+                <Text style={s.overdueTotalAmount}>{formatCurrency(fin.overdueAmount)}</Text>
               </View>
             </View>
-          </FadeIn>
+          </>
         )}
 
-        {/* Top customers by revenue — with mini bar chart */}
+        {/* ─── TOP CUSTOMERS ─── */}
         {fin.topCustomers.length > 0 && (
-          <FadeIn delay={160}>
-            <View style={s.section}>
-              <Text style={s.sectionTitle}>{t('money.topCustomers', 'Top klanten')}</Text>
-              {fin.concentrationRisk && (
-                <View style={s.riskBanner}>
-                  <Ionicons name="warning" size={14} color={SemanticColors.feedbackWarning} />
-                  <Text style={s.riskText}>{t('money.concentrationRisk', 'High concentration: diversify your client base')}</Text>
-                </View>
-              )}
-              <View style={s.docList}>
-                {fin.topCustomers.map((cust) => {
-                  const barWidth = totalCustomerRevenue > 0 ? Math.max((cust.revenue / totalCustomerRevenue) * 100, 4) : 0;
-                  return (
-                    <View key={cust.customer} style={s.customerRow}>
-                      <View style={{ flex: 1 }}>
-                        <View style={s.customerHeader}>
-                          <Text style={s.docName} numberOfLines={1}>{cust.customer}</Text>
-                          <Text style={s.docAmount}>{formatCurrency(cust.revenue)}</Text>
-                        </View>
-                        <View style={s.customerBarTrack}>
-                          <View style={[
-                            s.customerBarFill,
-                            {
-                              width: `${barWidth}%` as any,
-                              backgroundColor: cust.percentage > 50 ? SemanticColors.feedbackWarning : Palette.hermesOrange,
-                            },
-                          ]} />
-                        </View>
-                        <Text style={s.customerMeta}>{cust.invoiceCount} {t('invoices.invoices', 'facturen')} · {cust.percentage}%</Text>
-                      </View>
-                    </View>
-                  );
-                })}
+          <>
+            <SectionHeader title="TOP KLANTEN" />
+            {fin.concentrationRisk && (
+              <View style={s.riskBanner}>
+                <Ionicons name="warning" size={14} color={DK.colors.highlight} />
+                <Text style={s.riskText}>HOGE CONCENTRATIE · DIVERSIFIEER JE KLANTENBESTAND</Text>
               </View>
+            )}
+            <View style={s.docList}>
+              {fin.topCustomers.map((cust) => {
+                const barWidth = maxCustomerRevenue > 0 ? Math.max((cust.revenue / maxCustomerRevenue) * 100, 4) : 0;
+                return (
+                  <View key={cust.customer} style={s.customerRow}>
+                    <View style={s.customerHeader}>
+                      <Text style={s.docName} numberOfLines={1}>{cust.customer}</Text>
+                      <Text style={s.docAmount}>{formatCurrency(cust.revenue)}</Text>
+                    </View>
+                    <View style={s.customerBarTrack}>
+                      <View style={[s.customerBarFill, { width: `${barWidth}%` as any, backgroundColor: cust.percentage > 50 ? DK.colors.highlight : DK.colors.accent }]} />
+                    </View>
+                    <Text style={s.customerMeta}>{cust.invoiceCount} FACTUREN · {cust.percentage}%</Text>
+                  </View>
+                );
+              })}
             </View>
-          </FadeIn>
+          </>
         )}
 
         <View style={{ height: 140 }} />
       </ScrollView>
 
-      {/* Invoice Filter Modal */}
+      {/* ─── FILTER MODALS ─── */}
       <Modal visible={showInvoiceFilterModal} transparent animationType="fade">
-        <Pressable style={s.filterModalOverlay} onPress={() => setShowInvoiceFilterModal(false)}>
-          <View style={s.filterModalSheet}>
-            <Text style={s.filterModalTitle}>{t('money.filterInvoices', 'Filter invoices')}</Text>
+        <Pressable style={s.modalOverlay} onPress={() => setShowInvoiceFilterModal(false)}>
+          <View style={s.modalSheet}>
+            <Text style={s.modalTitle}>FILTER FACTUREN</Text>
             {(['all', 'overdue', 'sent', 'paid', 'draft'] as const).map(status => (
-              <Pressable key={status} style={[s.filterModalRow, invoiceStatusFilter === status && s.filterModalRowActive]} onPress={() => { setInvoiceStatusFilter(status); setShowInvoiceFilterModal(false); }}>
-                <Text style={[s.filterModalRowText, invoiceStatusFilter === status && s.filterModalRowTextActive]}>
-                  {status === 'all' ? t('common.all', 'All') : status === 'overdue' ? t('money.overdue', 'Overdue') : status === 'sent' ? t('invoices.sent', 'Sent') : status === 'paid' ? t('invoices.paid', 'Paid') : t('invoices.draft', 'Draft')}
-                </Text>
-                {invoiceStatusFilter === status && <Ionicons name="checkmark" size={18} color={Palette.hermesOrange} />}
+              <Pressable key={status} style={[s.modalRow, invoiceStatusFilter === status && s.modalRowActive]} onPress={() => { setInvoiceStatusFilter(status); setShowInvoiceFilterModal(false); }}>
+                <Text style={[s.modalRowText, invoiceStatusFilter === status && s.modalRowTextActive]}>{status.toUpperCase()}</Text>
+                {invoiceStatusFilter === status && <Ionicons name="checkmark" size={18} color={DK.colors.accent} />}
               </Pressable>
             ))}
-            <View style={s.filterModalDivider} />
-            <Text style={s.filterModalSubtitle}>{t('money.sortBy', 'Sort by')}</Text>
+            <View style={s.modalDivider} />
+            <Text style={s.modalSubtitle}>SORTEREN OP</Text>
             {(['value-desc', 'date-desc'] as const).map(sort => (
-              <Pressable key={sort} style={[s.filterModalRow, invoiceSort === sort && s.filterModalRowActive]} onPress={() => { setInvoiceSort(sort); setShowInvoiceFilterModal(false); }}>
-                <Text style={[s.filterModalRowText, invoiceSort === sort && s.filterModalRowTextActive]}>
-                  {sort === 'value-desc' ? t('money.byValue', 'Value') : t('money.byDate', 'Date')}
-                </Text>
-                {invoiceSort === sort && <Ionicons name="checkmark" size={18} color={Palette.hermesOrange} />}
+              <Pressable key={sort} style={[s.modalRow, invoiceSort === sort && s.modalRowActive]} onPress={() => { setInvoiceSort(sort); setShowInvoiceFilterModal(false); }}>
+                <Text style={[s.modalRowText, invoiceSort === sort && s.modalRowTextActive]}>{sort === 'value-desc' ? 'WAARDE' : 'DATUM'}</Text>
+                {invoiceSort === sort && <Ionicons name="checkmark" size={18} color={DK.colors.accent} />}
               </Pressable>
             ))}
           </View>
         </Pressable>
       </Modal>
 
-      {/* Quote Filter Modal */}
       <Modal visible={showQuoteFilterModal} transparent animationType="fade">
-        <Pressable style={s.filterModalOverlay} onPress={() => setShowQuoteFilterModal(false)}>
-          <View style={s.filterModalSheet}>
-            <Text style={s.filterModalTitle}>{t('money.filterQuotes', 'Filter quotes')}</Text>
+        <Pressable style={s.modalOverlay} onPress={() => setShowQuoteFilterModal(false)}>
+          <View style={s.modalSheet}>
+            <Text style={s.modalTitle}>FILTER OFFERTES</Text>
             {(['all', 'sent', 'accepted', 'draft'] as const).map(status => (
-              <Pressable key={status} style={[s.filterModalRow, quoteStatusFilter === status && s.filterModalRowActive]} onPress={() => { setQuoteStatusFilter(status); setShowQuoteFilterModal(false); }}>
-                <Text style={[s.filterModalRowText, quoteStatusFilter === status && s.filterModalRowTextActive]}>
-                  {status === 'all' ? t('common.all', 'All') : status === 'sent' ? t('quotes.sent', 'Sent') : status === 'accepted' ? t('quotes.accepted', 'Accepted') : t('quotes.draft', 'Draft')}
-                </Text>
-                {quoteStatusFilter === status && <Ionicons name="checkmark" size={18} color={Palette.hermesOrange} />}
+              <Pressable key={status} style={[s.modalRow, quoteStatusFilter === status && s.modalRowActive]} onPress={() => { setQuoteStatusFilter(status); setShowQuoteFilterModal(false); }}>
+                <Text style={[s.modalRowText, quoteStatusFilter === status && s.modalRowTextActive]}>{status.toUpperCase()}</Text>
+                {quoteStatusFilter === status && <Ionicons name="checkmark" size={18} color={DK.colors.accent} />}
               </Pressable>
             ))}
-            <View style={s.filterModalDivider} />
-            <Text style={s.filterModalSubtitle}>{t('money.sortBy', 'Sort by')}</Text>
+            <View style={s.modalDivider} />
+            <Text style={s.modalSubtitle}>SORTEREN OP</Text>
             {(['value-desc', 'date-desc'] as const).map(sort => (
-              <Pressable key={sort} style={[s.filterModalRow, quoteSort === sort && s.filterModalRowActive]} onPress={() => { setQuoteSort(sort); setShowQuoteFilterModal(false); }}>
-                <Text style={[s.filterModalRowText, quoteSort === sort && s.filterModalRowTextActive]}>
-                  {sort === 'value-desc' ? t('money.byValue', 'Value') : t('money.byDate', 'Date')}
-                </Text>
-                {quoteSort === sort && <Ionicons name="checkmark" size={18} color={Palette.hermesOrange} />}
+              <Pressable key={sort} style={[s.modalRow, quoteSort === sort && s.modalRowActive]} onPress={() => { setQuoteSort(sort); setShowQuoteFilterModal(false); }}>
+                <Text style={[s.modalRowText, quoteSort === sort && s.modalRowTextActive]}>{sort === 'value-desc' ? 'WAARDE' : 'DATUM'}</Text>
+                {quoteSort === sort && <Ionicons name="checkmark" size={18} color={DK.colors.accent} />}
               </Pressable>
             ))}
           </View>
         </Pressable>
       </Modal>
 
-      {/* FAB — new quote */}
+      {/* ─── FAB ─── */}
       <Pressable
         style={({ pressed }) => [s.fab, pressed && { opacity: 0.9, transform: [{ scale: 0.96 }] }]}
         onPress={() => { hapticSuccess(); router.push('/contractor/tiered-quote' as any); }}
-        accessibilityRole="button"
-        accessibilityLabel={t('a11y.newQuote', 'New quote')}
       >
-        <Ionicons name="add" size={28} color={Palette.white} />
+        <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+        <Ionicons name="add" size={28} color="#FFFFFF" />
       </Pressable>
     </View>
   );
 }
 
-function getStatusColor(status?: string): string {
+// ─── Subcomponents ────────────────────────────────────────────────────────
+function SectionHeader({ title, count, accent }: { title: string; count?: number; accent?: string }) {
+  return (
+    <View style={s.sectionHeaderRow}>
+      <View style={s.sectionTitleBlock}>
+        <Text style={[s.sectionTitle, accent ? { color: accent } : null]}>{title}</Text>
+        {typeof count === 'number' ? (
+          <View style={[s.sectionCountPill, accent ? { backgroundColor: accent + '22', borderColor: accent + '55' } : null]}>
+            <Text style={[s.sectionCountText, accent ? { color: accent } : null]}>{count}</Text>
+          </View>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+function CfItem({ label, value, tone }: { label: string; value: string; tone: string }) {
+  return (
+    <View style={{ flex: 1 }}>
+      <Text style={[s.cfValue, { color: tone }]}>{value}</Text>
+      <Text style={s.cfLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function EmptyPanel({ icon, title, description, ctaLabel, onCta }: { icon: keyof typeof Ionicons.glyphMap; title: string; description: string; ctaLabel: string; onCta: () => void }) {
+  return (
+    <View style={s.emptyPanel}>
+      <View style={s.emptyIcon}><Ionicons name={icon} size={28} color={DK.colors.accent} /></View>
+      <Text style={s.emptyTitle}>{title}</Text>
+      <Text style={s.emptyDesc}>{description}</Text>
+      <Pressable style={({ pressed }) => [s.emptyCta, pressed && { opacity: 0.85 }]} onPress={onCta}>
+        <Text style={s.emptyCtaText}>{ctaLabel}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function statusColor(status?: string): string {
   switch (status) {
-    case 'paid': return SemanticColors.feedbackSuccess;
-    case 'sent': return SemanticColors.feedbackInfo;
-    case 'overdue': return SemanticColors.feedbackError;
-    case 'accepted': return SemanticColors.feedbackSuccess;
-    case 'draft': return SemanticColors.textTertiary;
-    default: return SemanticColors.textTertiary;
+    case 'paid': return DK.colors.success;
+    case 'sent': return DK.colors.accent;
+    case 'overdue': return DK.colors.danger;
+    case 'accepted': return DK.colors.success;
+    case 'draft': return DK.colors.textMuted;
+    default: return DK.colors.textMuted;
   }
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PAGE_BG },
-
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: SafeArea.top,
-    paddingHorizontal: SafeArea.side,
-    paddingBottom: GRID.sm,
-    backgroundColor: PAGE_BG,
-  },
-  headerTitle: {
-    fontSize: TYPE.displaySize,
-    fontFamily: TYPE.displayFamily,
-    color: SemanticColors.textPrimary,
-    letterSpacing: TYPE.displayTracking,
-  },
-
+  root: { flex: 1, backgroundColor: DK.colors.bg },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: SafeArea.side, paddingBottom: 100, gap: GRID.lg },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 20, gap: 14 },
 
-  // KPIs — premium
-  kpiCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: RADIUS.lg,
-    padding: GRID.md,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-  },
-  kpiItem: { flex: 1, alignItems: 'center' },
-  kpiValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  kpiLabel: {
-    fontSize: TYPE.labelSize,
-    fontFamily: TYPE.labelFamily,
-    color: SemanticColors.textTertiary,
-  },
-  kpiValue: {
-    fontSize: 24,
-    fontFamily: TYPE.displayFamily,
-    color: SemanticColors.textPrimary,
-    letterSpacing: -0.5,
-    marginTop: GRID.xs,
-  },
-  kpiAccentLine: {
-    width: 24,
-    height: 2,
-    borderRadius: 1,
-    marginTop: GRID.sm,
-  },
-  kpiDivider: {
-    width: StyleSheet.hairlineWidth,
-    height: 32,
-    backgroundColor: SemanticColors.borderDefault,
-  },
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
+  title: { fontFamily: DK.type.display900, fontSize: 28, color: DK.colors.text, letterSpacing: -0.8 },
 
-  // Collection rate badge
+  // KPI
+  kpiRow: { flexDirection: 'row', gap: 8 },
+  kpiTile: {
+    flex: 1,
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
+    padding: 14, minHeight: 82,
+    justifyContent: 'space-between',
+  },
+  kpiLabel: { fontFamily: DK.type.display800, fontSize: 10, color: DK.colors.textMuted, letterSpacing: 1.3 },
+  kpiValueRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  kpiValue: { fontFamily: DK.type.display900, fontSize: 22, letterSpacing: -0.6, lineHeight: 24 },
+
   collectionBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: GRID.xs,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: RADIUS.md,
-    paddingHorizontal: GRID.md,
-    paddingVertical: GRID.sm + 2,
-    marginTop: GRID.sm,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
+    alignSelf: 'flex-start',
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingVertical: 6, paddingHorizontal: 10,
+    borderRadius: DK.radius.chip,
+    backgroundColor: DK.colors.panel2,
+    borderWidth: 1, borderColor: DK.colors.border,
   },
   collectionText: {
-    fontSize: TYPE.captionSize,
-    fontFamily: TYPE.captionFamily,
-    color: SemanticColors.textSecondary,
+    fontFamily: DK.type.display800,
+    fontSize: 11,
+    color: DK.colors.textMuted,
+    letterSpacing: 1,
   },
 
-  // Sections
-  section: { gap: GRID.sm },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  sectionTitle: {
-    fontSize: TYPE.sectionSize,
-    fontFamily: TYPE.sectionFamily,
-    color: SemanticColors.textPrimary,
-    letterSpacing: TYPE.sectionTracking,
-  },
-  sectionCount: {
-    fontSize: TYPE.captionSize,
-    fontFamily: TYPE.labelFamily,
-    color: SemanticColors.textTertiary,
-    backgroundColor: SemanticColors.surfacePrimary,
-    paddingHorizontal: GRID.sm,
-    paddingVertical: 2,
-    borderRadius: RADIUS.sm,
-    overflow: 'hidden' as const,
-  },
-  seeAll: {
-    fontSize: TYPE.captionSize,
-    fontFamily: TYPE.titleFamily,
-    color: Palette.hermesOrange,
-  },
-
-  // New quote button
-  newQuoteBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: Palette.hermesOrange,
-    borderRadius: RADIUS.md,
-    paddingVertical: 14,
-  },
-  newQuoteBtnText: {
-    fontSize: TYPE.bodySize,
-    fontFamily: TYPE.titleFamily,
-    color: Palette.white,
-  },
-
-  // Filter
-  filterRow: { marginBottom: GRID.sm },
-  filterInput: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: GRID.xs, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md, paddingHorizontal: GRID.sm, paddingVertical: GRID.sm },
-  filterText: { flex: 1, fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary, padding: 0 },
-
-  // Document list
-  docList: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: RADIUS.lg,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-  },
-  docRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+  // Vasco panel
+  vascoPanel: {
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
     padding: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: SemanticColors.borderDefault,
+  },
+  vascoHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  vascoChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4, paddingHorizontal: 10, borderRadius: DK.radius.chip, backgroundColor: DK.colors.accent + '22', borderWidth: 1, borderColor: DK.colors.accent + '55' },
+  vascoChipDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: DK.colors.accent },
+  vascoChipText: { fontFamily: DK.type.display800, fontSize: 10, color: DK.colors.accent, letterSpacing: 1.3 },
+  vascoCountText: { fontFamily: DK.type.display900, fontSize: 12, color: DK.colors.textMuted },
+  vascoInsight: {
+    backgroundColor: DK.colors.panel2,
+    borderRadius: DK.radius.button,
+    borderWidth: 1, borderColor: DK.colors.border,
+    padding: 12, marginBottom: 8,
+  },
+  vascoInsightTitle: { fontFamily: DK.type.display800, fontSize: 13, color: DK.colors.text },
+  vascoInsightDesc: { fontFamily: DK.type.body400, fontSize: 12, color: DK.colors.textMuted, marginTop: 3, lineHeight: 16 },
+  vascoQueueRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: DK.colors.border },
+  vascoQueueTitle: { fontFamily: DK.type.display700, fontSize: 13, color: DK.colors.text },
+  vascoQueueImpact: { fontFamily: DK.type.body500, fontSize: 11, color: DK.colors.highlight, marginTop: 2 },
+  vascoQueueReject: { width: 26, height: 26, borderRadius: 13, backgroundColor: DK.colors.panel2, borderWidth: 1, borderColor: DK.colors.border, alignItems: 'center', justifyContent: 'center' },
+  vascoQueueApprove: { backgroundColor: DK.colors.accent, paddingVertical: 6, paddingHorizontal: 10, borderRadius: DK.radius.button },
+  vascoQueueApproveText: { fontFamily: DK.type.display900, fontSize: 10, color: DK.colors.bg, letterSpacing: 1 },
+
+  // Section headers
+  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
+  sectionTitleBlock: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sectionTitle: { fontFamily: DK.type.display900, fontSize: 13, color: DK.colors.text, letterSpacing: 1.8 },
+  sectionCountPill: { minWidth: 22, paddingHorizontal: 6, paddingVertical: 2, borderRadius: DK.radius.chip, backgroundColor: DK.colors.panel2, borderWidth: 1, borderColor: DK.colors.border, alignItems: 'center' },
+  sectionCountText: { fontFamily: DK.type.display900, fontSize: 10, color: DK.colors.textMuted },
+
+  // Doc list
+  docList: { gap: 6 },
+  docRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
+    padding: 12,
   },
   docDot: { width: 8, height: 8, borderRadius: 4 },
-  docName: {
-    fontSize: TYPE.bodySize,
-    fontFamily: TYPE.titleFamily,
-    color: SemanticColors.textPrimary,
-    flexShrink: 1,
-  },
-  docTypeBadge: {
-    backgroundColor: SemanticColors.textTertiary + '15',
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 4,
-  },
-  docTypeText: {
-    fontSize: TYPE.tinySize,
-    fontFamily: TYPE.tinyFamily,
-    color: SemanticColors.textTertiary,
-  },
-  docDesc: {
-    fontSize: TYPE.captionSize,
-    fontFamily: TYPE.captionFamily,
-    color: SemanticColors.textSecondary,
-    marginTop: 1,
-  },
-  docAmount: {
-    fontSize: TYPE.titleSize,
-    fontFamily: TYPE.sectionFamily,
-    color: SemanticColors.textPrimary,
-  },
-  sendBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: Palette.hermesOrange,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 6,
-  },
-  emptyCard: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: RADIUS.lg,
-    padding: 24,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: TYPE.bodySize,
-    fontFamily: TYPE.bodyFamily,
-    color: SemanticColors.textTertiary,
-  },
+  docName: { fontFamily: DK.type.display800, fontSize: 13, color: DK.colors.text },
+  docDesc: { fontFamily: DK.type.body400, fontSize: 11, color: DK.colors.textMuted, marginTop: 2 },
+  docAmount: { fontFamily: DK.type.display900, fontSize: 14, color: DK.colors.text, letterSpacing: -0.3 },
+  sendBtn: { width: 26, height: 26, borderRadius: 13, backgroundColor: DK.colors.accent, alignItems: 'center', justifyContent: 'center' },
 
-  // VAT prep entry card
+  // New quote primary
+  newQuoteBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: DK.radius.button,
+    overflow: 'hidden',
+    shadowColor: DK.colors.accent, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 8,
+  },
+  newQuoteBtnText: { fontFamily: DK.type.display900, fontSize: 13, color: '#FFFFFF', letterSpacing: 1.4 },
+
+  // VAT card
   vatCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: GRID.md,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: RADIUS.lg,
-    padding: GRID.md,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
+    padding: 14,
   },
-  vatIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: RADIUS.md,
-    backgroundColor: Palette.hermesOrange + '14',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  vatTitle: {
-    fontFamily: TYPE.titleFamily,
-    fontSize: TYPE.titleSize,
-    color: SemanticColors.textPrimary,
-    marginBottom: 2,
-  },
-  vatSubtitle: {
-    fontFamily: TYPE.bodyFamily,
-    fontSize: TYPE.captionSize,
-    color: SemanticColors.textSecondary,
-  },
+  vatIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: DK.colors.accent + '1A', alignItems: 'center', justifyContent: 'center' },
+  vatTitle: { fontFamily: DK.type.display800, fontSize: 13, color: DK.colors.text, letterSpacing: 0.8 },
+  vatSub: { fontFamily: DK.type.body400, fontSize: 12, color: DK.colors.textMuted, marginTop: 3 },
 
-  // Cashflow card — dashboard quality
+  // Cashflow card
   cfCard: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: RADIUS.lg,
-    padding: GRID.md,
-    gap: GRID.md,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
+    padding: 16, gap: 14,
   },
-  cfRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  cfItem: { flex: 1, alignItems: 'center' },
-  cfLabel: {
-    fontSize: TYPE.labelSize,
-    fontFamily: TYPE.labelFamily,
-    color: SemanticColors.textTertiary,
-    marginTop: 2,
-  },
-  cfValueDisplay: {
-    fontSize: 20,
-    fontFamily: TYPE.displayFamily,
-    color: SemanticColors.textPrimary,
-    letterSpacing: -0.5,
-  },
-  cfDivider: {
-    width: StyleSheet.hairlineWidth,
-    height: 36,
-    backgroundColor: SemanticColors.borderDefault,
-  },
-  profitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: GRID.xs,
-  },
-  marginPill: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: RADIUS.sm,
-  },
-  marginPillText: {
-    fontSize: TYPE.tinySize,
-    fontFamily: TYPE.labelFamily,
-  },
-  marginBar: {
-    height: 6,
-    backgroundColor: SemanticColors.borderDefault,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  marginFill: {
-    height: 6,
-    borderRadius: 3,
-  },
+  cfRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  cfDivider: { width: StyleSheet.hairlineWidth, alignSelf: 'stretch', backgroundColor: DK.colors.border },
+  cfValue: { fontFamily: DK.type.display900, fontSize: 18, letterSpacing: -0.4, lineHeight: 22 },
+  cfLabel: { fontFamily: DK.type.display800, fontSize: 10, color: DK.colors.textMuted, letterSpacing: 1.3, marginTop: 4 },
+  cfProfitRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
+  marginPill: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: DK.radius.chip, borderWidth: 1 },
+  marginPillText: { fontFamily: DK.type.display900, fontSize: 10, letterSpacing: 0.6 },
 
-  // Sparkline with axes
-  sparkSection: {
-    paddingTop: GRID.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: SemanticColors.borderDefault,
-  },
-  sparklineContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: GRID.sm,
-  },
-  sparkYAxis: {
-    justifyContent: 'space-between',
-    height: 48,
-    alignItems: 'flex-end',
-  },
-  sparkAxisLabel: {
-    fontSize: TYPE.tinySize,
-    fontFamily: TYPE.labelFamily,
-    color: SemanticColors.textTertiary,
-  },
-  sparkChartArea: {
-    flex: 1,
-  },
-  sparkXAxis: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: GRID.xs,
-    paddingLeft: 50, // offset for Y-axis labels
-  },
-  sparklineLabel: {
-    fontSize: TYPE.captionSize,
-    fontFamily: TYPE.captionFamily,
-    color: SemanticColors.textTertiary,
-  },
+  marginBar: { height: 6, backgroundColor: DK.colors.panel2, borderRadius: 3, overflow: 'hidden' },
+  marginFill: { height: '100%' },
 
-  // Projected cashflow — prominent card
-  projCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: PAGE_BG,
-    borderRadius: RADIUS.md,
-    padding: GRID.md,
-  },
-  projCardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: GRID.sm,
-    flex: 1,
-  },
-  projIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: RADIUS.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  projCardLabel: {
-    fontSize: TYPE.captionSize,
-    fontFamily: TYPE.captionFamily,
-    color: SemanticColors.textSecondary,
-    flex: 1,
-  },
-  projCardValue: {
-    fontSize: TYPE.sectionSize,
-    fontFamily: TYPE.sectionFamily,
-    letterSpacing: -0.3,
-  },
+  sparkBlock: { gap: 6 },
+  sparkRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sparkYAxis: { height: 48, justifyContent: 'space-between', alignItems: 'flex-end', minWidth: 40 },
+  sparkAxisLabel: { fontFamily: DK.type.body600, fontSize: 9, color: DK.colors.textMuted, letterSpacing: 0.5 },
+  sparkXAxis: { flexDirection: 'row', justifyContent: 'space-around' },
 
-  // DSO row
-  dsoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: GRID.xs,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: SemanticColors.borderDefault,
-  },
-  dsoLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: GRID.sm,
-  },
-  dsoDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
+  projRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: DK.colors.border },
+  projIcon: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  projLabel: { fontFamily: DK.type.display800, fontSize: 10, color: DK.colors.textMuted, letterSpacing: 1.2 },
+  projValue: { fontFamily: DK.type.display900, fontSize: 16, letterSpacing: -0.3 },
 
-  // Projection rows (kept for DSO label)
-  projRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: GRID.xs,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: SemanticColors.borderDefault,
-  },
-  projLabel: {
-    fontSize: TYPE.captionSize,
-    fontFamily: TYPE.captionFamily,
-    color: SemanticColors.textSecondary,
-  },
-  projValue: {
-    fontSize: TYPE.bodySize,
-    fontFamily: TYPE.sectionFamily,
-    color: SemanticColors.textPrimary,
-  },
+  dsoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: DK.colors.border },
+  dsoDot: { width: 8, height: 8, borderRadius: 4 },
+  dsoLabel: { fontFamily: DK.type.display800, fontSize: 10, color: DK.colors.textMuted, letterSpacing: 1.2 },
+  dsoValue: { fontFamily: DK.type.display900, fontSize: 14, letterSpacing: -0.3 },
 
-  // Overdue rows — red accent
+  // Overdue
   overdueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: SemanticColors.borderDefault,
-    borderLeftWidth: 2,
-    borderLeftColor: SemanticColors.feedbackError,
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.danger + '55',
+    padding: 12,
   },
-  overdueMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: GRID.xs,
-    marginTop: 2,
-  },
-  overduePill: {
-    backgroundColor: SemanticColors.feedbackErrorBg,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: RADIUS.sm,
-  },
-  overduePillText: {
-    fontSize: TYPE.tinySize,
-    fontFamily: TYPE.labelFamily,
-    color: SemanticColors.feedbackError,
-  },
-
-  // Customer rows with bar chart
-  customerRow: {
-    padding: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: SemanticColors.borderDefault,
-  },
-  customerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: GRID.xs,
-  },
-  customerBarTrack: {
-    height: 4,
-    backgroundColor: SemanticColors.borderDefault,
-    borderRadius: 2,
-    overflow: 'hidden',
-    marginBottom: GRID.xs,
-  },
-  customerBarFill: {
-    height: 4,
-    borderRadius: 2,
-  },
-  customerMeta: {
-    fontSize: TYPE.captionSize,
-    fontFamily: TYPE.captionFamily,
-    color: SemanticColors.textSecondary,
-  },
-
-  // Risk banner
-  riskBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: GRID.xs,
-    backgroundColor: SemanticColors.feedbackWarningBg,
-    borderRadius: RADIUS.sm,
-    paddingHorizontal: GRID.sm,
-    paddingVertical: GRID.sm,
-  },
-  riskText: {
-    fontSize: TYPE.captionSize,
-    fontFamily: TYPE.captionFamily,
-    color: SemanticColors.textSecondary,
-    flex: 1,
-  },
-
-  // Filter chips
-  chipRow: {
-    flexDirection: 'row',
-    gap: GRID.sm,
-    paddingBottom: GRID.sm,
-  },
-  filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: GRID.xs,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: RADIUS.full,
-    paddingHorizontal: GRID.md - 4,
-    paddingVertical: GRID.sm - 2,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-  },
-  filterChipActive: {
-    backgroundColor: Palette.hermesOrange,
-    borderColor: Palette.hermesOrange,
-  },
-  filterChipText: {
-    fontSize: TYPE.labelSize,
-    fontFamily: TYPE.labelFamily,
-    color: SemanticColors.textSecondary,
-  },
-  filterChipTextActive: {
-    color: Palette.white,
-  },
-  chipDivider: {
-    width: 1,
-    height: 20,
-    backgroundColor: SemanticColors.borderDefault,
-  },
-
-  // Inline remind button for overdue
-  inlineRemindBtn: {
-    marginLeft: GRID.sm,
-  },
-  inlineRemindText: {
-    fontSize: TYPE.captionSize,
-    fontFamily: TYPE.titleFamily,
-    color: Palette.hermesOrange,
-  },
+  overdueMeta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  overduePill: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: DK.radius.chip, backgroundColor: DK.colors.danger + '22', borderWidth: 1, borderColor: DK.colors.danger + '55' },
+  overduePillText: { fontFamily: DK.type.display900, fontSize: 10, color: DK.colors.danger, letterSpacing: 0.6 },
+  remindBtn: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: DK.radius.button, backgroundColor: DK.colors.danger, alignItems: 'center', justifyContent: 'center' },
+  remindBtnText: { fontFamily: DK.type.display900, fontSize: 10, color: '#FFFFFF', letterSpacing: 1.1 },
   overdueTotalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 14,
-    backgroundColor: SemanticColors.feedbackErrorBg,
-    borderBottomLeftRadius: RADIUS.lg,
-    borderBottomRightRadius: RADIUS.lg,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: DK.colors.panel2,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
+    paddingVertical: 14, paddingHorizontal: 14,
   },
-  overdueTotalLabel: {
-    fontSize: TYPE.bodySize,
-    fontFamily: TYPE.titleFamily,
-    color: SemanticColors.textPrimary,
-  },
-  overdueTotalAmount: {
-    fontSize: TYPE.sectionSize,
-    fontFamily: TYPE.sectionFamily,
-    color: SemanticColors.feedbackError,
-    letterSpacing: TYPE.sectionTracking,
-  },
+  overdueTotalLabel: { fontFamily: DK.type.display800, fontSize: 11, color: DK.colors.textMuted, letterSpacing: 1.3 },
+  overdueTotalAmount: { fontFamily: DK.type.display900, fontSize: 18, color: DK.colors.danger, letterSpacing: -0.3 },
 
-  // Filter modal
-  filterModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
+  // Top customers
+  riskBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingVertical: 10, paddingHorizontal: 12,
+    borderRadius: DK.radius.card,
+    backgroundColor: DK.colors.highlight + '1A',
+    borderWidth: 1, borderColor: DK.colors.highlight + '55',
+  },
+  riskText: { fontFamily: DK.type.display800, fontSize: 11, color: DK.colors.highlight, letterSpacing: 1, flex: 1 },
+  customerRow: {
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
+    padding: 12,
+  },
+  customerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  customerBarTrack: { height: 6, backgroundColor: DK.colors.panel2, borderRadius: 3, marginTop: 8, overflow: 'hidden' },
+  customerBarFill: { height: '100%', borderRadius: 3 },
+  customerMeta: { fontFamily: DK.type.body600, fontSize: 10, color: DK.colors.textMuted, marginTop: 6, letterSpacing: 0.8 },
+
+  // Empty panel
+  emptyPanel: {
     alignItems: 'center',
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
+    paddingVertical: 32, paddingHorizontal: 24,
+    gap: 8,
   },
-  filterModalSheet: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: RADIUS.lg,
-    padding: GRID.lg,
-    width: '80%',
-    maxWidth: 320,
+  emptyIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: DK.colors.accent + '1A', alignItems: 'center', justifyContent: 'center' },
+  emptyTitle: { fontFamily: DK.type.display900, fontSize: 14, color: DK.colors.text, letterSpacing: 1.4 },
+  emptyDesc: { fontFamily: DK.type.body400, fontSize: 12, color: DK.colors.textMuted, textAlign: 'center', lineHeight: 17 },
+  emptyCta: {
+    marginTop: 4,
+    paddingVertical: 10, paddingHorizontal: 16,
+    borderRadius: DK.radius.chip,
+    backgroundColor: DK.colors.accent + '14',
+    borderWidth: 1, borderColor: DK.colors.accent + '44',
   },
-  filterModalTitle: {
-    fontSize: TYPE.sectionSize,
-    fontFamily: TYPE.sectionFamily,
-    color: SemanticColors.textPrimary,
-    marginBottom: GRID.md,
-  },
-  filterModalSubtitle: {
-    fontSize: TYPE.labelSize,
-    fontFamily: TYPE.labelFamily,
-    color: SemanticColors.textTertiary,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
-    marginBottom: GRID.sm,
-  },
-  filterModalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: GRID.sm + 2,
-    borderRadius: RADIUS.sm,
-    paddingHorizontal: GRID.sm,
-  },
-  filterModalRowActive: {
-    backgroundColor: Palette.hermesOrange + '0A',
-  },
-  filterModalRowText: {
-    fontSize: TYPE.bodySize,
-    fontFamily: TYPE.bodyFamily,
-    color: SemanticColors.textPrimary,
-  },
-  filterModalRowTextActive: {
-    fontFamily: TYPE.titleFamily,
-    color: Palette.hermesOrange,
-  },
-  filterModalDivider: {
-    height: 1,
-    backgroundColor: SemanticColors.borderDefault,
-    marginVertical: GRID.sm,
-  },
+  emptyCtaText: { fontFamily: DK.type.display800, fontSize: 11, color: DK.colors.accent, letterSpacing: 1.2 },
+
+  // Filter modals
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalSheet: { width: '100%', maxWidth: 340, backgroundColor: DK.colors.panel, borderRadius: DK.radius.card, borderWidth: 1, borderColor: DK.colors.border, padding: 16 },
+  modalTitle: { fontFamily: DK.type.display900, fontSize: 14, color: DK.colors.text, letterSpacing: 1.6, marginBottom: 10 },
+  modalSubtitle: { fontFamily: DK.type.display800, fontSize: 11, color: DK.colors.textMuted, letterSpacing: 1.4, marginTop: 8, marginBottom: 6 },
+  modalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 10, borderRadius: DK.radius.button },
+  modalRowActive: { backgroundColor: DK.colors.accent + '14' },
+  modalRowText: { fontFamily: DK.type.display800, fontSize: 12, color: DK.colors.textMuted, letterSpacing: 1.1 },
+  modalRowTextActive: { color: DK.colors.accent },
+  modalDivider: { height: StyleSheet.hairlineWidth, backgroundColor: DK.colors.border, marginVertical: 8 },
 
   // FAB
   fab: {
-    position: 'absolute',
-    right: SafeArea.side,
-    bottom: 110,
-    width: 56,
-    height: 56,
-    borderRadius: RADIUS.full,
-    backgroundColor: Palette.hermesOrange,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
+    position: 'absolute', right: 20, bottom: 110,
+    width: 56, height: 56, borderRadius: 28,
+    alignItems: 'center', justifyContent: 'center',
+    overflow: 'hidden',
+    shadowColor: DK.colors.accent, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.5, shadowRadius: 18, elevation: 10,
   },
 });

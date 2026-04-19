@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: GRID.md,
     paddingVertical: GRID.sm,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#14181F",
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.borderMuted,
   },
@@ -514,7 +514,7 @@ const styles = StyleSheet.create({
     paddingBottom: SafeArea.bottom + GRID.xl,
   },
   versionCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#14181F",
     borderRadius: RADIUS.lg,
     padding: GRID.md,
     marginBottom: GRID.lg,
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   section: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#14181F",
     borderRadius: RADIUS.lg,
     marginBottom: GRID.md,
     overflow: 'hidden',
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
   gdprButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#14181F",
     borderRadius: RADIUS.lg,
     padding: GRID.md,
     gap: GRID.sm + 4,

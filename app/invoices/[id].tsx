@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: GRID.md,
     paddingVertical: GRID.sm,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#14181F",
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.borderMuted,
     gap: GRID.sm,
@@ -890,7 +890,7 @@ const styles = StyleSheet.create({
   },
   // Hero card
   heroCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#14181F",
     borderRadius: RADIUS.lg,
     padding: GRID.lg,
     alignItems: 'center',
@@ -909,7 +909,7 @@ const styles = StyleSheet.create({
   },
   // Card
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#14181F",
     borderRadius: RADIUS.lg,
     padding: GRID.md,
   },

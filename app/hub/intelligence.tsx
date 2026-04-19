@@ -236,14 +236,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 14,
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   headerSubtitle: {
     fontSize: 14,
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
 
   // Hero KPIs
   heroCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 16,
     padding: Spacing.md,
     gap: 12,
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
   heroValue: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
     letterSpacing: -0.5,
   },
   heroLabel: {
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '48%',
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 14,
     padding: Spacing.md,
     gap: 6,
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   statLabel: {
     fontSize: 12,
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
 
   // Timeline
   timelineCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 16,
     padding: Spacing.md,
     shadowColor: '#000',
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
   timelineType: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   timelineTime: {
     fontSize: 11,
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
 
   // Empty state
   emptyCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 16,
     padding: Spacing.xl,
     alignItems: 'center',
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 12,
     padding: Spacing.md,
     shadowColor: '#000',
@@ -464,6 +464,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
 });

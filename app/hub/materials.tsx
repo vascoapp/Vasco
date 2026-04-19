@@ -388,14 +388,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 14,
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   headerSubtitle: {
     fontSize: 14,
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    color: '#1A1A1A',
+    color: "#FFFFFF",
     padding: 0,
   },
 
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderWidth: 1,
     borderColor: '#E8E4DF',
   },
@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   materialCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 14,
     padding: Spacing.md,
     shadowColor: '#000',
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
   materialName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   materialMeta: {
     flexDirection: 'row',
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
   },
   specValue: {
     fontSize: 13,
-    color: '#1A1A1A',
+    color: "#FFFFFF",
     fontWeight: '500',
   },
   statsRow: {
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   statLabel: {
     fontSize: 11,
@@ -604,13 +604,13 @@ const styles = StyleSheet.create({
   priceSupplier: {
     flex: 1,
     fontSize: 12,
-    color: '#1A1A1A',
+    color: "#FFFFFF",
     fontWeight: '500',
   },
   priceAmount: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   saleBadge: {
     backgroundColor: '#16A34A12',
@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
   supplierName: {
     flex: 1,
     fontSize: 13,
-    color: '#1A1A1A',
+    color: "#FFFFFF",
     fontWeight: '500',
   },
   scoreBadge: {
@@ -667,7 +667,7 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
   },
   emptyCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 16,
     padding: Spacing.xl,
     alignItems: 'center',

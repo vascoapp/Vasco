@@ -1280,7 +1280,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingVertical: 10,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: "#0B0E11",
     borderRadius: RADIUS.md,
   },
   contactActionIcon: {

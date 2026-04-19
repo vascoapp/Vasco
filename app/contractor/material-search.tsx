@@ -1254,7 +1254,7 @@ const styles = StyleSheet.create({
     fontFamily: TYPE.sectionFamily,
   },
   cartBarButton: {
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: RADIUS.md,
     paddingHorizontal: GRID.lg,
     paddingVertical: GRID.sm + 2,

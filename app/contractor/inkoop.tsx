@@ -411,7 +411,7 @@ export default function InkoopScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#14181F",
   },
   header: {
     flexDirection: 'row',
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontFamily: 'Manrope_700Bold',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   headerBadge: {
     backgroundColor: SemanticColors.feedbackError,
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   quickChipText: {
     fontSize: 13,
     fontFamily: 'Inter_600SemiBold',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   chipBadge: {
     backgroundColor: SemanticColors.feedbackError,
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
   heroCard: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 16,
     paddingVertical: 16,
     paddingHorizontal: 8,
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
   heroValue: {
     fontSize: 17,
     fontFamily: 'Manrope_800ExtraBold',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   heroLabel: {
     fontSize: 10,
@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
   // Supplier cards
   supplierCard: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 16,
     overflow: 'hidden',
   },
@@ -578,7 +578,7 @@ const styles = StyleSheet.create({
   materialName: {
     fontSize: 14,
     fontFamily: 'Inter_600SemiBold',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   supplierMeta: {
     flexDirection: 'row',
@@ -645,7 +645,7 @@ const styles = StyleSheet.create({
   qtyText: {
     fontSize: 13,
     fontFamily: 'Manrope_700Bold',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   costText: {
     fontSize: 13,
@@ -675,7 +675,7 @@ const styles = StyleSheet.create({
   emptyCard: {
     alignItems: 'center',
     paddingVertical: 32,
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 16,
     gap: 8,
   },
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 16,
     padding: 16,
   },
@@ -705,7 +705,7 @@ const styles = StyleSheet.create({
   scannerTitle: {
     fontSize: 14,
     fontFamily: 'Inter_600SemiBold',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   scannerSub: {
     fontSize: 12,
@@ -715,7 +715,7 @@ const styles = StyleSheet.create({
 
   // Card
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#14181F",
     borderRadius: 16,
     padding: 16,
   },
@@ -747,7 +747,7 @@ const styles = StyleSheet.create({
   legendAmount: {
     fontSize: 13,
     fontFamily: 'Inter_600SemiBold',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
     marginRight: 8,
   },
   legendPct: {
@@ -771,7 +771,7 @@ const styles = StyleSheet.create({
   timelineAmount: {
     fontSize: 22,
     fontFamily: 'Manrope_800ExtraBold',
-    color: '#1A1A1A',
+    color: "#FFFFFF",
   },
   trendPill: {
     flexDirection: 'row',
@@ -816,7 +816,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   barLabelActive: {
-    color: '#1A1A1A',
+    color: "#FFFFFF",
     fontFamily: 'Manrope_700Bold',
   },
 });

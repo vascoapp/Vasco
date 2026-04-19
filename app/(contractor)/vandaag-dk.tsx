@@ -1,0 +1,545 @@
+// =============================================================================
+// VANDAAG — DraftKings-patterned layout (same blocks as legacy, restyled only)
+// =============================================================================
+// Block parity with the legacy Vandaag screen (git HEAD~1):
+//   1. Top bar (greeting + buttons)
+//   2. Clock-in strip (when active)
+//   3. KPI row (3 stats)
+//   4. Hero AI banner + inline queue items (was VascoCard)
+//   5. Savings banner (was VascoSavedBanner)
+//   6. Schedule (vertical job list)
+// No new sections added. Only visual treatment swapped to DraftKings rhythm.
+// =============================================================================
+
+import { useMemo, useCallback, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, Pressable, StatusBar, Alert } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { DK } from '../../src/theme/draftkings';
+import { useAppState } from '../../src/state/AppState';
+import { useDaySchedule, type ScheduledJob } from '../../src/services/smartSchedulerService';
+import { useAIQueue, type QueueItem } from '../../src/services/aiActionQueueService';
+import { evaluateTriggers } from '../../src/services/workflowPackService';
+import { useSavingsAggregation } from '../../src/services/savingsAggregatorService';
+import { useClockIn } from '../../src/services/clockInService';
+import { formatAmount } from '../../src/utils/formatAmount';
+import { hapticSuccess, hapticWarning } from '../../src/utils/haptics';
+
+export default function VandaagDK() {
+  const router = useRouter();
+  const { invoices, quotes, jobs, customers } = useAppState();
+  const today = new Date().toISOString().split('T')[0];
+
+  const daySchedule = useDaySchedule(today);
+  const clockIn = useClockIn();
+  const aiQueue = useAIQueue();
+  const savings = useSavingsAggregation();
+
+  // Populate AI queue on mount (was fired by legacy Vandaag's useEffect).
+  useEffect(() => {
+    evaluateTriggers({ invoices, quotes, jobs, customers })
+      .then(() => aiQueue.refresh())
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ─── KPI data (match legacy ContractorDashboardHeader: Afspraken + Verdiend + Quotes)
+  const todayJobs = daySchedule?.jobs ?? [];
+  const dailyEarnings = useMemo(() => {
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    return invoices
+      .filter((i) => i.status === 'paid' && i.paidAt && new Date(i.paidAt) >= start)
+      .reduce((s, i) => s + (i.total || 0), 0);
+  }, [invoices]);
+  const activeQuotes = quotes.filter((q) => q.status === 'sent').length;
+
+  const pendingQueue = aiQueue.items.filter((i) => i.status === 'pending' && !i.snoozedUntil);
+  const heroAction = pendingQueue[0];
+  const inlineQueue = pendingQueue.slice(1, 4);
+
+  const handleApprove = useCallback(async (id: string) => {
+    try { await aiQueue.approve(id); hapticSuccess(); }
+    catch (e) { hapticWarning(); Alert.alert('Kon actie niet uitvoeren', String((e as Error).message ?? e)); }
+  }, [aiQueue]);
+
+  const handleReject = useCallback(async (id: string) => {
+    try { await aiQueue.reject(id); } catch {}
+  }, [aiQueue]);
+
+  return (
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" />
+
+      {/* 1. TOP BAR ─── greeting + actions */}
+      <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
+        <View style={styles.topBar}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.overline}>
+              {new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase()}
+            </Text>
+            <Text style={styles.greeting}>Goeiemorgen.</Text>
+          </View>
+          <Pressable style={styles.bellBtn} onPress={() => router.push('/contractor/notifications' as any)} hitSlop={8}>
+            <Ionicons name="notifications-outline" size={20} color={DK.colors.text} />
+            {pendingQueue.length > 0 ? (
+              <View style={styles.bellBadge}>
+                <Text style={styles.bellBadgeText}>{pendingQueue.length}</Text>
+              </View>
+            ) : null}
+          </Pressable>
+        </View>
+      </SafeAreaView>
+
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* 2. CLOCK-IN STRIP (only when active) */}
+        {clockIn.active ? (
+          <View style={styles.clockStrip}>
+            <View style={styles.livePulse} />
+            <Text style={styles.clockLabel}>LIVE · GEKLOKT IN</Text>
+            <Text style={styles.clockTimer}>{clockIn.timerDisplay}</Text>
+          </View>
+        ) : null}
+
+        {/* 3. KPI ROW ─── 3 stats matching legacy ContractorDashboardHeader */}
+        <View style={styles.kpiRow}>
+          <KpiTile label="AFSPRAKEN" value={String(todayJobs.length)} tone={DK.colors.text} onPress={() => router.push('/contractor/drag-schedule' as any)} />
+          <KpiTile label="VERDIEND" value={formatAmount(dailyEarnings, 'nl')} tone={DK.colors.success} onPress={() => router.push('/(contractor)/geld' as any)} />
+          <KpiTile label="QUOTES" value={String(activeQuotes)} tone={DK.colors.highlight} onPress={() => router.push('/contractor/quote-list' as any)} />
+        </View>
+
+        {/* 4. VASCOCARD EQUIVALENT ─── hero AI action + inline queue items */}
+        <View style={styles.vascoCardWrap}>
+          <LinearGradient
+            colors={[DK.colors.primaryDark, DK.colors.primary, '#7C2D12']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.hero}
+          >
+            <View style={styles.heroGlowOverlay} />
+            <View style={styles.heroChip}>
+              <View style={styles.heroChipDot} />
+              <Text style={styles.heroChipText}>EVE ANALYST</Text>
+            </View>
+            {heroAction ? (
+              <>
+                <Text style={styles.heroTitle}>{heroAction.title}</Text>
+                <Text style={styles.heroBody} numberOfLines={2}>{heroAction.description}</Text>
+                <Pressable
+                  style={({ pressed }) => [styles.heroCTA, pressed && { opacity: 0.9 }]}
+                  onPress={() => handleApprove(heroAction.id)}
+                >
+                  <Text style={styles.heroCTAText}>{heroAction.actionLabel.toUpperCase()}</Text>
+                  <Text style={styles.heroCTAImpact}>· {heroAction.estimatedImpact}</Text>
+                </Pressable>
+              </>
+            ) : (
+              <>
+                <Text style={styles.heroTitle}>Alles onder controle.</Text>
+                <Text style={styles.heroBody}>Geen openstaande AI-acties.</Text>
+              </>
+            )}
+          </LinearGradient>
+
+          {/* Inline queue items — was VascoCard's embedded queue list */}
+          {inlineQueue.length > 0 ? (
+            <View style={styles.inlineQueue}>
+              {inlineQueue.map((item) => (
+                <InlineQueueRow key={item.id} item={item} onApprove={() => handleApprove(item.id)} onReject={() => handleReject(item.id)} />
+              ))}
+            </View>
+          ) : null}
+        </View>
+
+        {/* 5. SAVINGS BANNER ─── was VascoSavedBanner */}
+        {savings && savings.totalSavedThisMonth > 0 ? (
+          <Pressable style={({ pressed }) => [styles.savingsBanner, pressed && { opacity: 0.9 }]} onPress={() => router.push('/hub/savings' as any)}>
+            <View style={styles.savingsIcon}>
+              <Ionicons name="trending-up" size={16} color={DK.colors.success} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.savingsTitle}>VASCO BESPAARDE {formatAmount(savings.totalSavedThisMonth, 'nl')}</Text>
+              <Text style={styles.savingsSub}>Deze maand — bekijk breakdown</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={DK.colors.textMuted} />
+          </Pressable>
+        ) : null}
+
+        {/* 6. SCHEDULE LIST ─── vertical, was Today's Schedule block */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>PLANNING</Text>
+          <Pressable onPress={() => router.push('/contractor/drag-schedule' as any)} hitSlop={8}>
+            <Text style={styles.sectionLink}>ALLES →</Text>
+          </Pressable>
+        </View>
+        <View style={styles.scheduleList}>
+          {todayJobs.length === 0 ? (
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyText}>Geen jobs ingepland voor vandaag</Text>
+            </View>
+          ) : (
+            todayJobs.map((job) => (
+              <JobRow key={job.id} job={job} onPress={() => router.push(`/contractor/job/${job.id}` as any)} />
+            ))
+          )}
+        </View>
+
+        <View style={{ height: 120 }} />
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─── Subcomponents ────────────────────────────────────────────────────────
+function KpiTile({ label, value, tone, onPress }: { label: string; value: string; tone: string; onPress?: () => void }) {
+  return (
+    <Pressable style={({ pressed }) => [kpiStyles.tile, pressed && { opacity: 0.85 }]} onPress={onPress}>
+      <Text style={kpiStyles.label}>{label}</Text>
+      <Text style={[kpiStyles.value, { color: tone }]} numberOfLines={1}>{value}</Text>
+    </Pressable>
+  );
+}
+
+function InlineQueueRow({ item, onApprove, onReject }: { item: QueueItem; onApprove: () => void; onReject: () => void }) {
+  return (
+    <View style={inlineStyles.row}>
+      <View style={{ flex: 1 }}>
+        <Text style={inlineStyles.title} numberOfLines={1}>{item.title}</Text>
+        <Text style={inlineStyles.impact}>{item.estimatedImpact}</Text>
+      </View>
+      <Pressable onPress={onReject} hitSlop={6} style={inlineStyles.rejectBtn}>
+        <Ionicons name="close" size={14} color={DK.colors.textMuted} />
+      </Pressable>
+      <Pressable onPress={onApprove} style={({ pressed }) => [inlineStyles.approveBtn, pressed && { opacity: 0.85 }]}>
+        <Text style={inlineStyles.approveText}>{item.actionLabel.toUpperCase()}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function JobRow({ job, onPress }: { job: ScheduledJob; onPress: () => void }) {
+  const status = job.status === 'completed' ? 'voltooid' : job.status === 'in_progress' ? 'actief' : 'gepland';
+  const statusColor =
+    job.status === 'in_progress' ? DK.colors.success :
+    job.status === 'completed' ? DK.colors.textMuted :
+    DK.colors.highlight;
+  return (
+    <Pressable style={({ pressed }) => [jobStyles.row, pressed && { opacity: 0.9 }]} onPress={onPress}>
+      <Text style={jobStyles.time}>{job.startTime?.slice(0, 5) || '--:--'}</Text>
+      <View style={{ flex: 1 }}>
+        <Text style={jobStyles.title} numberOfLines={1}>{job.projectName}</Text>
+        <Text style={jobStyles.customer} numberOfLines={1}>{job.customerName}</Text>
+      </View>
+      <View style={[jobStyles.statusChip, { borderColor: statusColor + '55', backgroundColor: statusColor + '1A' }]}>
+        <Text style={[jobStyles.statusChipText, { color: statusColor }]}>{status}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
+// ─── Styles ───────────────────────────────────────────────────────────────
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: DK.colors.bg },
+  scroll: { flex: 1 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 20 },
+
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  overline: {
+    fontFamily: DK.type.display800,
+    fontSize: 11,
+    color: DK.colors.textMuted,
+    letterSpacing: 1.8,
+  },
+  greeting: {
+    fontFamily: DK.type.display900,
+    fontSize: 28,
+    color: DK.colors.text,
+    letterSpacing: -0.8,
+    marginTop: 4,
+  },
+  bellBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: DK.colors.panel,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: DK.colors.border,
+  },
+  bellBadge: {
+    position: 'absolute', top: 4, right: 4,
+    minWidth: 16, height: 16, borderRadius: 8,
+    backgroundColor: DK.colors.accent,
+    alignItems: 'center', justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  bellBadgeText: {
+    fontFamily: DK.type.display800,
+    fontSize: 9,
+    color: DK.colors.bg,
+  },
+
+  clockStrip: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    marginTop: 4, marginBottom: 14,
+    paddingVertical: 10, paddingHorizontal: 14,
+    borderRadius: DK.radius.chip,
+    backgroundColor: DK.colors.danger + '1A',
+    borderWidth: 1, borderColor: DK.colors.danger + '55',
+  },
+  livePulse: { width: 8, height: 8, borderRadius: 4, backgroundColor: DK.colors.danger },
+  clockLabel: {
+    fontFamily: DK.type.display800,
+    fontSize: 11,
+    color: DK.colors.danger,
+    letterSpacing: 1.5,
+    flex: 1,
+  },
+  clockTimer: {
+    fontFamily: DK.type.display900,
+    fontSize: 16,
+    color: DK.colors.danger,
+    letterSpacing: -0.3,
+  },
+
+  kpiRow: { flexDirection: 'row', gap: 8, marginTop: 4, marginBottom: 16 },
+
+  vascoCardWrap: {
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  hero: {
+    padding: 18,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  heroGlowOverlay: {
+    position: 'absolute',
+    top: -60, right: -60,
+    width: 180, height: 180,
+    borderRadius: 90,
+    backgroundColor: DK.colors.highlight,
+    opacity: 0.18,
+  },
+  heroChip: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingVertical: 4, paddingHorizontal: 10,
+    borderRadius: DK.radius.chip,
+    backgroundColor: '#0B0E11AA',
+    marginBottom: 12,
+  },
+  heroChipDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: DK.colors.highlight },
+  heroChipText: {
+    fontFamily: DK.type.display800,
+    fontSize: 10,
+    color: DK.colors.highlight,
+    letterSpacing: 1.5,
+  },
+  heroTitle: {
+    fontFamily: DK.type.display900,
+    fontSize: 22,
+    color: DK.colors.text,
+    letterSpacing: -0.5,
+    lineHeight: 26,
+  },
+  heroBody: {
+    fontFamily: DK.type.body500,
+    fontSize: 13,
+    color: '#FFFFFFCC',
+    lineHeight: 18,
+    marginTop: 8,
+    marginBottom: 14,
+  },
+  heroCTA: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 13,
+    borderRadius: DK.radius.button,
+    backgroundColor: '#FFFFFF',
+  },
+  heroCTAText: {
+    fontFamily: DK.type.display900,
+    fontSize: 13,
+    color: DK.colors.bg,
+    letterSpacing: 1,
+  },
+  heroCTAImpact: {
+    fontFamily: DK.type.body600,
+    fontSize: 12,
+    color: DK.colors.primary,
+  },
+
+  inlineQueue: {
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+  },
+
+  savingsBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
+    padding: 14,
+    marginBottom: 16,
+  },
+  savingsIcon: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: DK.colors.success + '1F',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  savingsTitle: {
+    fontFamily: DK.type.display800,
+    fontSize: 13,
+    color: DK.colors.text,
+    letterSpacing: 1,
+  },
+  savingsSub: {
+    fontFamily: DK.type.body400,
+    fontSize: 12,
+    color: DK.colors.textMuted,
+    marginTop: 2,
+  },
+
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4, marginBottom: 10,
+  },
+  sectionTitle: {
+    fontFamily: DK.type.display900,
+    fontSize: 13,
+    color: DK.colors.text,
+    letterSpacing: 1.8,
+  },
+  sectionLink: {
+    fontFamily: DK.type.display800,
+    fontSize: 11,
+    color: DK.colors.accent,
+    letterSpacing: 1.2,
+  },
+
+  scheduleList: { gap: 8 },
+  emptyCard: {
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
+    padding: 20,
+    alignItems: 'center',
+  },
+  emptyText: { fontFamily: DK.type.body500, fontSize: 13, color: DK.colors.textMuted },
+});
+
+const kpiStyles = StyleSheet.create({
+  tile: {
+    flex: 1,
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
+    padding: 14,
+    minHeight: 76,
+    justifyContent: 'space-between',
+  },
+  label: {
+    fontFamily: DK.type.display800,
+    fontSize: 9,
+    color: DK.colors.textMuted,
+    letterSpacing: 1.3,
+  },
+  value: {
+    fontFamily: DK.type.display900,
+    fontSize: 22,
+    letterSpacing: -0.5,
+    lineHeight: 24,
+  },
+});
+
+const inlineStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: DK.colors.border,
+  },
+  title: {
+    fontFamily: DK.type.display700,
+    fontSize: 13,
+    color: DK.colors.text,
+  },
+  impact: {
+    fontFamily: DK.type.body500,
+    fontSize: 11,
+    color: DK.colors.highlight,
+    marginTop: 2,
+  },
+  rejectBtn: {
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: DK.colors.panel2,
+    borderWidth: 1, borderColor: DK.colors.border,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  approveBtn: {
+    backgroundColor: DK.colors.accent,
+    paddingVertical: 7, paddingHorizontal: 12,
+    borderRadius: DK.radius.button,
+  },
+  approveText: {
+    fontFamily: DK.type.display900,
+    fontSize: 10,
+    color: DK.colors.bg,
+    letterSpacing: 1,
+  },
+});
+
+const jobStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
+    padding: 14,
+  },
+  time: {
+    fontFamily: DK.type.display900,
+    fontSize: 16,
+    color: DK.colors.accent,
+    letterSpacing: -0.3,
+    width: 52,
+  },
+  title: {
+    fontFamily: DK.type.display800,
+    fontSize: 14,
+    color: DK.colors.text,
+  },
+  customer: {
+    fontFamily: DK.type.body400,
+    fontSize: 12,
+    color: DK.colors.textMuted,
+    marginTop: 2,
+  },
+  statusChip: {
+    borderRadius: DK.radius.chip,
+    borderWidth: 1,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  statusChipText: {
+    fontFamily: DK.type.display700,
+    fontSize: 10,
+    letterSpacing: 1.3,
+    textTransform: 'uppercase',
+  },
+});

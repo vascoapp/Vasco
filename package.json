@@ -19,6 +19,7 @@
     "supabase:reset": "supabase db reset --linked"
   },
   "dependencies": {
+    "@expo-google-fonts/archivo": "^0.4.2",
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/manrope": "^0.4.2",
     "@expo/vector-icons": "^15.0.3",
@@ -66,7 +67,10 @@
   },
   "expo": {
     "install": {
-      "exclude": ["@types/jest", "jest-expo"]
+      "exclude": [
+        "@types/jest",
+        "jest-expo"
+      ]
     }
   },
   "private": true

@@ -16,6 +16,12 @@ import {
   Manrope_800ExtraBold,
   useFonts,
 } from '@expo-google-fonts/manrope';
+import {
+  Archivo_600SemiBold,
+  Archivo_700Bold,
+  Archivo_800ExtraBold,
+  Archivo_900Black,
+} from '@expo-google-fonts/archivo';
 import { ActivityIndicator, Alert, Linking, Platform, View } from 'react-native';
 import { AppStateProvider } from '../src/state/AppState';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
@@ -213,6 +219,10 @@ export default function RootLayout() {
     Manrope_600SemiBold,
     Manrope_700Bold,
     Manrope_800ExtraBold,
+    Archivo_600SemiBold,
+    Archivo_700Bold,
+    Archivo_800ExtraBold,
+    Archivo_900Black,
   });
 
   if (!fontsLoaded) {
@@ -223,8 +233,8 @@ export default function RootLayout() {
         <AppStateProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <RootLayoutNav />
-            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#FAFAFA', alignItems: 'center', justifyContent: 'center' }}>
-              <ActivityIndicator size="large" color="#E35205" />
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#0B0E11', alignItems: 'center', justifyContent: 'center' }}>
+              <ActivityIndicator size="large" color="#F97316" />
             </View>
           </GestureHandlerRootView>
         </AppStateProvider>

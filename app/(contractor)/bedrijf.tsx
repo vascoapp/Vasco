@@ -1,27 +1,29 @@
 // =============================================================================
-// KLANTEN — Customer Hub with Decision Trackers
+// KLANTEN — DraftKings-structured customers hub
 // =============================================================================
-// 5th tab. Vertical layout: KPIs → Decision trackers → Customer list
-// No horizontal scrolling — everything stacks vertically for reliability.
+// DK pattern applied: top bar · HERO FEATURE CARD (most urgent customer or
+// top revenue) · SEGMENTED TAB STRIP (OVERZICHT / BESLISSINGEN / CONTACTS) ·
+// tab-driven content · gradient CTAs. Functions preserved from legacy screen.
 // =============================================================================
 
-import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, TextInput, Modal, KeyboardAvoidingView, Platform, Share, FlatList, findNodeHandle } from 'react-native';
+import { useCallback, useEffect, useState, useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, TextInput, Modal, KeyboardAvoidingView, Platform, Share, FlatList } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { SemanticColors, Palette } from '../../src/theme/colors';
-import { SafeArea } from '../../src/theme/spacing';
-import { PAGE_BG, TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { DK } from '../../src/theme/draftkings';
 import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
-import { FadeIn } from '../../src/components/shared/FadeIn';
 import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { formatAmount } from '../../src/utils/formatAmount';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TRACKER_STORAGE_KEY = '@vasco_decision_trackers';
+
+type TabKey = 'overview' | 'decisions' | 'contacts';
 
 interface TrackerData {
   id: string;
@@ -48,27 +50,11 @@ export default function BedrijfScreen() {
   const [newEmail, setNewEmail] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const { customers, invoices, jobs, addCustomer, isLoading } = useAppState();
+  const [trackers, setTrackers] = useState<TrackerData[]>([]);
+  const [tab, setTab] = useState<TabKey>('overview');
 
   useEffect(() => { recordScreenVisit('klanten'); }, []);
 
-  const scrollRef = useRef<ScrollView>(null);
-  const customerListRef = useRef<View>(null);
-  const decisionsRef = useRef<View>(null);
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
-  }, []);
-
-  const handleAddCustomer = useCallback(async () => {
-    if (!newName.trim()) return;
-    await addCustomer(newName.trim(), newEmail.trim() || undefined, newPhone.trim() || undefined);
-    hapticSuccess();
-    setNewName(''); setNewEmail(''); setNewPhone('');
-    setShowAddModal(false);
-  }, [newName, newEmail, newPhone, addCustomer]);
-
-  // Decision trackers
-  const [trackers, setTrackers] = useState<TrackerData[]>([]);
   useEffect(() => {
     AsyncStorage.getItem(TRACKER_STORAGE_KEY).then(raw => {
       if (raw) {
@@ -85,15 +71,27 @@ export default function BedrijfScreen() {
     if (trackers.length > 0) AsyncStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify(trackers)).catch(() => {});
   }, [trackers]);
 
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
+  }, []);
+
+  const handleAddCustomer = useCallback(async () => {
+    if (!newName.trim()) return;
+    await addCustomer(newName.trim(), newEmail.trim() || undefined, newPhone.trim() || undefined);
+    hapticSuccess();
+    setNewName(''); setNewEmail(''); setNewPhone('');
+    setShowAddModal(false);
+  }, [newName, newEmail, newPhone, addCustomer]);
+
   const handleSendReminder = useCallback(async (trackerId: string) => {
     try {
       await Share.share({ message: t('customers.reminderMessage', 'Hi, could you review the pending decisions for your project? This helps us stay on schedule.') });
       setTrackers(prev => prev.map(tr => tr.id === trackerId ? { ...tr, lastActivity: 'Just now' } : tr));
       hapticSuccess();
-    } catch { /* cancelled */ }
+    } catch {}
   }, [t]);
 
-  // Customer stats
   const customerRevenue = useMemo(() => {
     const map: Record<string, number> = {};
     invoices.forEach((inv: any) => {
@@ -104,9 +102,7 @@ export default function BedrijfScreen() {
 
   const customerJobs = useMemo(() => {
     const map: Record<string, number> = {};
-    jobs.forEach((j: any) => {
-      if (j.customerId) map[j.customerId] = (map[j.customerId] || 0) + 1;
-    });
+    jobs.forEach((j: any) => { if (j.customerId) map[j.customerId] = (map[j.customerId] || 0) + 1; });
     return map;
   }, [jobs]);
 
@@ -115,202 +111,255 @@ export default function BedrijfScreen() {
   const completedTrackers = trackers.filter(tr => tr.decided >= tr.totalDecisions);
   const totalOverdue = trackers.reduce((s, tr) => s + tr.overdue, 0);
 
+  // Hero feature: most urgent tracker (by overdue count), or highest-revenue customer
+  const heroFeature = useMemo(() => {
+    const mostOverdue = [...trackers].sort((a, b) => b.overdue - a.overdue)[0];
+    if (mostOverdue && mostOverdue.overdue > 0) {
+      return { type: 'urgent' as const, tracker: mostOverdue };
+    }
+    const topActive = activeTrackers[0];
+    if (topActive) return { type: 'active' as const, tracker: topActive };
+    // Fallback: top-revenue customer
+    const topRevenueEntry = Object.entries(customerRevenue).sort((a, b) => b[1] - a[1])[0];
+    if (topRevenueEntry) {
+      const cust = customers.find(c => c.id === topRevenueEntry[0]);
+      if (cust) return { type: 'topRevenue' as const, customer: cust, revenue: topRevenueEntry[1] };
+    }
+    return null;
+  }, [trackers, activeTrackers, customerRevenue, customers]);
+
+  const tabs: { key: TabKey; label: string; count?: number }[] = [
+    { key: 'overview', label: 'OVERZICHT' },
+    { key: 'decisions', label: 'BESLISSINGEN', count: activeTrackers.length },
+    { key: 'contacts', label: 'CONTACTS', count: customers.length },
+  ];
+
   if (isLoading) {
     return (
-      <View style={s.container}>
-        <View style={s.header}>
-          <View>
-            <Text style={s.headerTitle}>{t('tabs.customers', 'Klanten')}</Text>
-          </View>
-        </View>
+      <View style={s.root}>
+        <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
+          <View style={s.topBar}><Text style={s.title}>KLANTEN</Text></View>
+        </SafeAreaView>
         <SkeletonList count={4} showAvatar lines={2} />
       </View>
     );
   }
 
   return (
-    <View style={s.container}>
-      {/* Header */}
-      <View style={s.header}>
-        <View>
-          <Text style={s.headerTitle}>{t('tabs.customers', 'Klanten')}</Text>
-          <Text style={s.headerSub}>{customers.length} {t('customers.contacts', 'contacts')} · {formatAmount(totalRevenue)}</Text>
+    <View style={s.root}>
+      {/* ─── TOP BAR ─── */}
+      <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
+        <View style={s.topBar}>
+          <View style={{ flex: 1 }}>
+            <Text style={s.title}>KLANTEN</Text>
+            <Text style={s.subtitle}>{customers.length} CONTACTS · {formatAmount(totalRevenue)}</Text>
+          </View>
+          <Pressable style={({ pressed }) => [s.addBtn, pressed && { opacity: 0.9 }]} onPress={() => setShowAddModal(true)}>
+            <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+            <Ionicons name="person-add" size={16} color="#FFFFFF" />
+          </Pressable>
         </View>
-        <Pressable style={({ pressed }) => [s.addBtn, pressed && { opacity: 0.8 }]} onPress={() => setShowAddModal(true)} accessibilityRole="button" accessibilityLabel={t('customers.newCustomer', 'Add new customer')}>
-          <Ionicons name="person-add" size={15} color="#fff" />
-        </Pressable>
-      </View>
+      </SafeAreaView>
 
       <ScrollView
-        ref={scrollRef}
         style={s.scroll}
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={DK.colors.accent} />}
       >
-        {/* KPI strip */}
-        <FadeIn delay={0} duration={300}>
-          <View style={s.kpiStrip}>
-            <Pressable style={s.kpi} onPress={() => scrollRef.current?.scrollTo({ y: 500, animated: true })} accessibilityRole="button" accessibilityLabel={`${customers.length} ${t('customers.contacts', 'Contacts')}`}>
-              <Ionicons name="people" size={16} color={Palette.hermesOrange} style={{ marginBottom: GRID.xs }} />
-              <Text style={s.kpiValue}>{customers.length}</Text>
-              <Text style={s.kpiLabel}>{t('customers.contacts', 'Contacts')}</Text>
-            </Pressable>
-            <View style={s.kpiDivider} />
-            <Pressable style={s.kpi} onPress={() => scrollRef.current?.scrollTo({ y: 200, animated: true })} accessibilityRole="button" accessibilityLabel={`${activeTrackers.length} ${t('customers.activeDecisions', 'Active decisions')}`}>
-              <Ionicons name="chatbubbles" size={16} color={SemanticColors.feedbackInfo} style={{ marginBottom: GRID.xs }} />
-              <Text style={s.kpiValue}>{activeTrackers.length}</Text>
-              <Text style={s.kpiLabel}>{t('customers.activeDecisions', 'Active decisions')}</Text>
-            </Pressable>
-            <View style={s.kpiDivider} />
-            <Pressable style={s.kpi} onPress={() => scrollRef.current?.scrollTo({ y: 500, animated: true })} accessibilityRole="button" accessibilityLabel={`${totalOverdue} ${t('customers.overdue', 'Overdue')}`}>
-              <Ionicons name="alert-circle" size={16} color={totalOverdue > 0 ? SemanticColors.feedbackError : SemanticColors.textTertiary} style={{ marginBottom: GRID.xs }} />
-              <Text style={[s.kpiValue, totalOverdue > 0 && { color: SemanticColors.feedbackError }]}>{totalOverdue}</Text>
-              <Text style={s.kpiLabel}>{t('customers.overdue', 'Overdue')}</Text>
-            </Pressable>
-          </View>
-        </FadeIn>
+        {/* ─── HERO FEATURE CARD ─── */}
+        {heroFeature ? (
+          <HeroFeatureCard
+            feature={heroFeature}
+            onPress={() => router.push('/(contractor)/decisions' as any)}
+            onRemind={(id) => handleSendReminder(id)}
+          />
+        ) : null}
 
-        {/* Decision Trackers — vertical cards */}
-        <FadeIn delay={100} duration={400}>
-          <View ref={decisionsRef} style={s.section}>
-            <View style={s.sectionRow}>
-              <Text style={s.sectionTitle}>{t('customers.decisions', 'Decisions')}</Text>
-              <Pressable onPress={() => router.push('/(contractor)/decisions' as any)} accessibilityRole="button" accessibilityLabel={t('customers.manage', 'Manage decisions')}>
-                <Text style={s.sectionLink}>{t('customers.manage', 'Manage')}</Text>
+        {/* ─── TAB STRIP ─── */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabStrip}>
+          {tabs.map((tb) => {
+            const active = tb.key === tab;
+            return (
+              <Pressable
+                key={tb.key}
+                style={[s.tab, active && s.tabActive]}
+                onPress={() => setTab(tb.key)}
+              >
+                <Text style={[s.tabText, active && s.tabTextActive]}>{tb.label}</Text>
+                {typeof tb.count === 'number' ? (
+                  <View style={[s.tabCount, active && s.tabCountActive]}>
+                    <Text style={[s.tabCountText, active && s.tabCountTextActive]}>{tb.count}</Text>
+                  </View>
+                ) : null}
               </Pressable>
+            );
+          })}
+        </ScrollView>
+
+        {/* ─── TAB CONTENT ─── */}
+        {tab === 'overview' && (
+          <>
+            {/* 3-KPI stadium */}
+            <View style={s.kpiRow}>
+              <KpiTile label="CONTACTS" value={customers.length} tone={DK.colors.accent} />
+              <KpiTile label="BESLISSINGEN" value={activeTrackers.length} tone={DK.colors.highlight} />
+              <KpiTile label="TE LAAT" value={totalOverdue} tone={totalOverdue > 0 ? DK.colors.danger : DK.colors.textMuted} />
             </View>
 
-            {activeTrackers.length === 0 && completedTrackers.length === 0 ? (
-              <Pressable style={s.emptyCard} onPress={() => router.push('/(contractor)/decisions' as any)} accessibilityRole="button" accessibilityLabel={t('customers.noTrackers', 'Create decision tracker')}>
-                <Ionicons name="chatbubbles-outline" size={32} color={Palette.hermesOrange} />
-                <Text style={s.emptyTitle}>{t('customers.noTrackers', 'No decision trackers yet')}</Text>
-                <Text style={s.emptyDesc}>{t('customers.noTrackersDesc', 'Create a tracker so customers can make choices about materials, finishes, and timing — keeping your project on schedule.')}</Text>
-              </Pressable>
-            ) : (
-              <View style={s.trackerList}>
-                {activeTrackers.map(tracker => {
-                  const pct = Math.round((tracker.decided / tracker.totalDecisions) * 100);
-                  return (
-                    <Pressable
-                      key={tracker.id}
-                      style={({ pressed }) => [s.trackerCard, pressed && { opacity: 0.95 }]}
-                      onPress={() => router.push('/(contractor)/decisions' as any)}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${tracker.customerName}, ${tracker.project}, ${tracker.decided} of ${tracker.totalDecisions} decisions`}
-                    >
-                      <View style={s.trackerHeader}>
-                        <View style={s.trackerAvatar}>
-                          <Text style={s.trackerAvatarText}>{tracker.customerName.charAt(0)}</Text>
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={s.trackerName}>{tracker.customerName}</Text>
-                          <Text style={s.trackerProject}>{tracker.project}</Text>
-                        </View>
-                        <View style={s.trackerCount}>
-                          <Text style={s.trackerCountText}>{tracker.decided}/{tracker.totalDecisions}</Text>
-                        </View>
-                      </View>
+            {/* Top 3 customers by revenue */}
+            {customers.length > 0 && (
+              <>
+                <Text style={s.subsectionLabel}>TOP KLANTEN</Text>
+                <View style={s.listGroup}>
+                  {Object.entries(customerRevenue)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3)
+                    .map(([cid, rev]) => {
+                      const c = customers.find(cx => cx.id === cid);
+                      if (!c) return null;
+                      return (
+                        <CustomerRow
+                          key={c.id}
+                          name={c.name}
+                          meta={`${customerJobs[c.id] || 0} JOBS · ${formatAmount(rev)}`}
+                          onPress={() => router.push('/contractor/customer-crm' as any)}
+                        />
+                      );
+                    })}
+                </View>
+              </>
+            )}
 
-                      {/* Progress bar */}
-                      <View style={s.progressTrack}>
-                        <View style={[s.progressFill, { width: `${pct}%` }]} />
-                      </View>
-
-                      <View style={s.trackerFooter}>
-                        {tracker.overdue > 0 ? (
-                          <View style={s.overduePill}>
-                            <Ionicons name="alert-circle" size={12} color={SemanticColors.feedbackError} />
-                            <Text style={s.overdueText}>{tracker.overdue} {t('customers.overdueItems', 'overdue')}</Text>
-                          </View>
-                        ) : (
-                          <Text style={s.trackerTime}>{tracker.lastActivity}</Text>
-                        )}
-                        <Pressable style={s.reminderBtn} onPress={() => handleSendReminder(tracker.id)} accessibilityRole="button" accessibilityLabel={`Send reminder to ${tracker.customerName}`}>
-                          <Ionicons name="paper-plane-outline" size={13} color={Palette.hermesOrange} />
-                          <Text style={s.reminderText}>{t('customers.remind', 'Remind')}</Text>
-                        </Pressable>
-                      </View>
-                    </Pressable>
-                  );
-                })}
-
-                {completedTrackers.length > 0 && (
-                  <View style={s.completedRow}>
-                    <Ionicons name="checkmark-circle" size={15} color={SemanticColors.feedbackSuccess} />
-                    <Text style={s.completedText}>{completedTrackers.length} {t('customers.completed', 'completed')}</Text>
-                  </View>
-                )}
+            {/* Completed trackers summary */}
+            {completedTrackers.length > 0 && (
+              <View style={s.completedBanner}>
+                <Ionicons name="checkmark-circle" size={14} color={DK.colors.success} />
+                <Text style={s.completedBannerText}>{completedTrackers.length} BESLISSINGEN AFGEROND</Text>
               </View>
             )}
-          </View>
-        </FadeIn>
+          </>
+        )}
 
-        {/* Customer List */}
-        <FadeIn delay={200} duration={400}>
-          <View ref={customerListRef} style={s.section}>
-            <View style={s.sectionRow}>
-              <Text style={s.sectionTitle}>{t('customers.allContacts', 'All contacts')}</Text>
-              <Pressable onPress={() => router.push('/contractor/customer-crm' as any)} accessibilityRole="button" accessibilityLabel={t('common.viewAll', 'View all customers')}>
-                <Text style={s.sectionLink}>{t('common.viewAll', 'View all')}</Text>
+        {tab === 'decisions' && (
+          activeTrackers.length === 0 && completedTrackers.length === 0 ? (
+            <Pressable style={s.emptyPanel} onPress={() => router.push('/(contractor)/decisions' as any)}>
+              <View style={s.emptyIcon}><Ionicons name="chatbubbles-outline" size={28} color={DK.colors.accent} /></View>
+              <Text style={s.emptyTitle}>NOG GEEN TRACKERS</Text>
+              <Text style={s.emptyDesc}>{t('customers.noTrackersDesc', 'Maak een tracker zodat klanten keuzes kunnen maken over materialen, afwerking en timing.')}</Text>
+            </Pressable>
+          ) : (
+            <View style={s.trackerList}>
+              {activeTrackers.map(tracker => {
+                const pct = Math.round((tracker.decided / tracker.totalDecisions) * 100);
+                return (
+                  <Pressable
+                    key={tracker.id}
+                    style={({ pressed }) => [s.trackerCard, pressed && { opacity: 0.95 }]}
+                    onPress={() => router.push('/(contractor)/decisions' as any)}
+                  >
+                    <View style={s.trackerHeader}>
+                      <View style={s.trackerAvatar}>
+                        <Text style={s.trackerAvatarText}>{tracker.customerName.charAt(0)}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={s.trackerName}>{tracker.customerName}</Text>
+                        <Text style={s.trackerProject}>{tracker.project}</Text>
+                      </View>
+                      <View style={s.trackerCount}>
+                        <Text style={s.trackerCountText}>{tracker.decided}/{tracker.totalDecisions}</Text>
+                      </View>
+                    </View>
+                    <View style={s.progressTrack}>
+                      <LinearGradient
+                        colors={[DK.colors.primary, DK.colors.accent]}
+                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                        style={[s.progressFill, { width: `${pct}%` as any }]}
+                      />
+                    </View>
+                    <View style={s.trackerFooter}>
+                      {tracker.overdue > 0 ? (
+                        <View style={s.overduePill}>
+                          <Ionicons name="alert-circle" size={11} color={DK.colors.danger} />
+                          <Text style={s.overdueText}>{tracker.overdue} TE LAAT</Text>
+                        </View>
+                      ) : (
+                        <Text style={s.trackerTime}>{tracker.lastActivity.toUpperCase()}</Text>
+                      )}
+                      <Pressable style={s.reminderBtn} onPress={() => handleSendReminder(tracker.id)}>
+                        <Ionicons name="paper-plane-outline" size={12} color={DK.colors.accent} />
+                        <Text style={s.reminderText}>REMIND</Text>
+                      </Pressable>
+                    </View>
+                  </Pressable>
+                );
+              })}
+              {completedTrackers.length > 0 && (
+                <View style={s.completedBanner}>
+                  <Ionicons name="checkmark-circle" size={14} color={DK.colors.success} />
+                  <Text style={s.completedBannerText}>{completedTrackers.length} AFGEROND</Text>
+                </View>
+              )}
+              <Pressable style={s.manageLink} onPress={() => router.push('/(contractor)/decisions' as any)}>
+                <Text style={s.manageLinkText}>MANAGE ALL DECISIONS</Text>
+                <Ionicons name="chevron-forward" size={14} color={DK.colors.accent} />
               </Pressable>
             </View>
+          )
+        )}
 
-            <View style={s.customerCard}>
-              {customers.length === 0 ? (
-                <View style={s.noCustomers}>
-                  <Ionicons name="people-outline" size={28} color={SemanticColors.textTertiary} />
-                  <Text style={s.noCustomersText}>{t('customers.emptyTitle', 'No customers yet')}</Text>
-                  <Pressable style={({ pressed }) => [s.emptyAddBtn, pressed && { opacity: 0.8 }]} onPress={() => setShowAddModal(true)} accessibilityRole="button" accessibilityLabel={t('customers.newCustomer', 'Add new customer')}>
-                    <Text style={s.emptyAddBtnText}>{t('customers.newCustomer', 'New customer')}</Text>
-                  </Pressable>
-                </View>
-              ) : (
+        {tab === 'contacts' && (
+          customers.length === 0 ? (
+            <View style={s.emptyPanel}>
+              <View style={s.emptyIcon}><Ionicons name="people-outline" size={28} color={DK.colors.accent} /></View>
+              <Text style={s.emptyTitle}>NOG GEEN KLANTEN</Text>
+              <Pressable style={({ pressed }) => [s.emptyCta, pressed && { opacity: 0.85 }]} onPress={() => setShowAddModal(true)}>
+                <Text style={s.emptyCtaText}>NIEUWE KLANT</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <>
+              <View style={s.customerCard}>
                 <FlatList
-                  data={customers.slice(0, 6)}
+                  data={customers.slice(0, 10)}
                   keyExtractor={(item) => item.id}
                   scrollEnabled={false}
                   renderItem={({ item: customer, index: idx }) => (
-                    <Pressable
-                      style={({ pressed }) => [s.customerRow, idx < Math.min(customers.length, 6) - 1 && s.customerBorder, pressed && { backgroundColor: PAGE_BG }]}
+                    <CustomerRow
+                      key={customer.id}
+                      name={customer.name}
+                      meta={`${customerJobs[customer.id] || 0} JOBS${(customerRevenue[customer.id] || 0) > 0 ? ` · ${formatAmount(customerRevenue[customer.id])}` : ''}`}
                       onPress={() => router.push('/contractor/customer-crm' as any)}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${customer.name}, ${customerJobs[customer.id] || 0} jobs`}
-                    >
-                      <View style={s.customerAvatar}>
-                        <Text style={s.customerAvatarText}>{customer.name.charAt(0).toUpperCase()}</Text>
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={s.customerName} numberOfLines={1} ellipsizeMode="tail">{customer.name}</Text>
-                        <Text style={s.customerMeta}>
-                          {customerJobs[customer.id] || 0} {t('customers.jobsLabel', 'jobs')}
-                          {(customerRevenue[customer.id] || 0) > 0 && ` · ${formatAmount(customerRevenue[customer.id])}`}
-                        </Text>
-                      </View>
-                      <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
-                    </Pressable>
+                      borderBottom={idx < Math.min(customers.length, 10) - 1}
+                      inCard
+                    />
                   )}
                 />
-              )}
-            </View>
-          </View>
-        </FadeIn>
+              </View>
+              <Pressable style={s.manageLink} onPress={() => router.push('/contractor/customer-crm' as any)}>
+                <Text style={s.manageLinkText}>VIEW ALL CONTACTS</Text>
+                <Ionicons name="chevron-forward" size={14} color={DK.colors.accent} />
+              </Pressable>
+            </>
+          )
+        )}
 
         <View style={{ height: 140 }} />
       </ScrollView>
 
-      {/* Add Customer Modal */}
+      {/* ─── ADD CUSTOMER MODAL ─── */}
       <Modal visible={showAddModal} transparent animationType="slide">
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
           <Pressable style={s.modalOverlay} onPress={() => setShowAddModal(false)}>
             <Pressable style={s.modalSheet} onPress={(e) => e.stopPropagation()}>
               <View style={s.modalHandle} />
-              <Text style={s.modalTitle}>{t('customers.newCustomer', 'New customer')}</Text>
-              <TextInput style={s.modalInput} value={newName} onChangeText={setNewName} placeholder={t('customers.namePlaceholder', 'Customer name')} placeholderTextColor={SemanticColors.textTertiary} autoFocus />
-              <TextInput style={s.modalInput} value={newEmail} onChangeText={setNewEmail} placeholder={t('customers.emailPlaceholder', 'Email')} placeholderTextColor={SemanticColors.textTertiary} keyboardType="email-address" autoCapitalize="none" />
-              <TextInput style={s.modalInput} value={newPhone} onChangeText={setNewPhone} placeholder={t('customers.phonePlaceholder', 'Phone')} placeholderTextColor={SemanticColors.textTertiary} keyboardType="phone-pad" />
-              <Pressable style={[s.modalSubmit, !newName.trim() && { opacity: 0.5 }]} onPress={handleAddCustomer} disabled={!newName.trim()} accessibilityRole="button" accessibilityLabel={t('customers.addBtn', 'Add customer')}>
-                <Text style={s.modalSubmitText}>{t('customers.addBtn', 'Add customer')}</Text>
+              <Text style={s.modalTitle}>NIEUWE KLANT</Text>
+              <TextInput style={s.modalInput} value={newName} onChangeText={setNewName} placeholder={t('customers.namePlaceholder', 'Customer name')} placeholderTextColor={DK.colors.textMuted} autoFocus />
+              <TextInput style={s.modalInput} value={newEmail} onChangeText={setNewEmail} placeholder={t('customers.emailPlaceholder', 'Email')} placeholderTextColor={DK.colors.textMuted} keyboardType="email-address" autoCapitalize="none" />
+              <TextInput style={s.modalInput} value={newPhone} onChangeText={setNewPhone} placeholder={t('customers.phonePlaceholder', 'Phone')} placeholderTextColor={DK.colors.textMuted} keyboardType="phone-pad" />
+              <Pressable style={[s.modalSubmit, !newName.trim() && { opacity: 0.5 }]} onPress={handleAddCustomer} disabled={!newName.trim()}>
+                <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+                <Text style={s.modalSubmitText}>KLANT TOEVOEGEN</Text>
               </Pressable>
             </Pressable>
           </Pressable>
@@ -320,97 +369,401 @@ export default function BedrijfScreen() {
   );
 }
 
+// ─── Subcomponents ────────────────────────────────────────────────────────
+type HeroFeature =
+  | { type: 'urgent'; tracker: TrackerData }
+  | { type: 'active'; tracker: TrackerData }
+  | { type: 'topRevenue'; customer: { id: string; name: string }; revenue: number };
+
+function HeroFeatureCard({ feature, onPress, onRemind }: { feature: HeroFeature; onPress: () => void; onRemind: (id: string) => void }) {
+  const isTracker = feature.type === 'urgent' || feature.type === 'active';
+  const label = feature.type === 'urgent' ? 'URGENT' : feature.type === 'active' ? 'TOP BESLISSING' : 'TOP KLANT';
+  const isUrgent = feature.type === 'urgent';
+  const tone = isUrgent ? DK.colors.danger : DK.colors.highlight;
+  const chipBg = isUrgent ? '#FFFFFF' : tone + '22';
+  const chipBorder = isUrgent ? '#FFFFFF' : tone + '55';
+  const chipTextColor = isUrgent ? DK.colors.bg : tone;
+  return (
+    <View style={heroStyles.wrap}>
+      <LinearGradient
+        colors={[DK.colors.primaryDark, DK.colors.primary, '#7C2D12']}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+        style={heroStyles.card}
+      >
+        <View style={[heroStyles.glow, { backgroundColor: tone }]} />
+        <View style={[heroStyles.chip, { backgroundColor: chipBg, borderColor: chipBorder }, isUrgent && heroStyles.urgentChip]}>
+          {isUrgent
+            ? <View style={heroStyles.urgentDot} />
+            : <Ionicons name="star" size={12} color={tone} />}
+          <Text style={[heroStyles.chipText, { color: chipTextColor }]}>{label}</Text>
+        </View>
+
+        {isTracker ? (
+          <>
+            {/* Top-right stacked pills */}
+            <View style={heroStyles.cornerPills}>
+              <View style={[heroStyles.pill, heroStyles.pillDecided]}>
+                <Text style={heroStyles.pillLabel}>BESLIST</Text>
+                <Text style={[heroStyles.pillValue, { color: DK.colors.highlight }]}>{feature.tracker.decided}/{feature.tracker.totalDecisions}</Text>
+              </View>
+              {feature.tracker.overdue > 0 ? (
+                <View style={[heroStyles.pill, heroStyles.pillOverdue]}>
+                  <Text style={heroStyles.pillLabel}>TE LAAT</Text>
+                  <Text style={[heroStyles.pillValue, { color: '#FFFFFF' }]}>{feature.tracker.overdue}</Text>
+                </View>
+              ) : null}
+            </View>
+
+            <Text style={heroStyles.title} numberOfLines={2}>{feature.tracker.customerName}</Text>
+            <Text style={heroStyles.subtitle} numberOfLines={1}>{feature.tracker.project}</Text>
+            <View style={{ height: 20 }} />
+            <View style={heroStyles.ctaRow}>
+              <Pressable style={heroStyles.remindBtn} onPress={() => onRemind(feature.tracker.id)}>
+                <Ionicons name="paper-plane-outline" size={14} color="#FFFFFF" />
+                <Text style={heroStyles.remindText}>REMIND</Text>
+              </Pressable>
+              <Pressable style={({ pressed }) => [heroStyles.openBtn, pressed && { opacity: 0.92 }]} onPress={onPress}>
+                <Text style={heroStyles.openText}>OPEN</Text>
+                <Ionicons name="arrow-forward" size={14} color={DK.colors.bg} />
+              </Pressable>
+            </View>
+          </>
+        ) : (
+          <>
+            {/* Top-right revenue pill */}
+            <View style={heroStyles.cornerPills}>
+              <View style={[heroStyles.pill, heroStyles.pillDecided]}>
+                <Text style={heroStyles.pillLabel}>OMZET</Text>
+                <Text style={[heroStyles.pillValue, { color: DK.colors.success }]}>{formatAmount(feature.revenue)}</Text>
+              </View>
+            </View>
+
+            <Text style={heroStyles.title} numberOfLines={2}>{feature.customer.name}</Text>
+            <View style={{ height: 20 }} />
+            <Pressable style={({ pressed }) => [heroStyles.openBtn, pressed && { opacity: 0.92 }]} onPress={onPress}>
+              <Text style={heroStyles.openText}>OPEN KLANT</Text>
+              <Ionicons name="arrow-forward" size={14} color={DK.colors.bg} />
+            </Pressable>
+          </>
+        )}
+      </LinearGradient>
+    </View>
+  );
+}
+
+function KpiTile({ label, value, tone }: { label: string; value: number; tone: string }) {
+  return (
+    <View style={s.kpiTile}>
+      <Text style={s.kpiLabel}>{label}</Text>
+      <Text style={[s.kpiValue, { color: tone }]}>{value}</Text>
+    </View>
+  );
+}
+
+function CustomerRow({ name, meta, onPress, borderBottom, inCard }: { name: string; meta?: string; onPress: () => void; borderBottom?: boolean; inCard?: boolean }) {
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        inCard ? s.customerRowInCard : s.customerRow,
+        borderBottom && s.customerBorder,
+        pressed && { backgroundColor: DK.colors.panel2 },
+      ]}
+      onPress={onPress}
+    >
+      <View style={s.customerAvatar}>
+        <Text style={s.customerAvatarText}>{name.charAt(0).toUpperCase()}</Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={s.customerName} numberOfLines={1}>{name}</Text>
+        {meta ? <Text style={s.customerMeta}>{meta}</Text> : null}
+      </View>
+      <Ionicons name="chevron-forward" size={14} color={DK.colors.textMuted} />
+    </Pressable>
+  );
+}
+
+// ─── Styles ───────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PAGE_BG },
-
-  // Header
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingTop: SafeArea.top, paddingHorizontal: SafeArea.side, paddingBottom: GRID.sm,
-    backgroundColor: PAGE_BG,
-  },
-  headerTitle: { fontSize: TYPE.displaySize, fontFamily: TYPE.displayFamily, color: SemanticColors.textPrimary, letterSpacing: TYPE.displayTracking },
-  headerSub: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
-  addBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: Palette.hermesOrange, alignItems: 'center', justifyContent: 'center' },
-
-  // Scroll
+  root: { flex: 1, backgroundColor: DK.colors.bg },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: SafeArea.side, paddingTop: GRID.sm, paddingBottom: 100, gap: GRID.lg },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 20, gap: 14 },
 
-  // KPI strip
-  kpiStrip: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md,
-    borderWidth: 1, borderColor: SemanticColors.borderDefault,
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
+  title: { fontFamily: DK.type.display900, fontSize: 28, color: DK.colors.text, letterSpacing: -0.8 },
+  subtitle: { fontFamily: DK.type.display800, fontSize: 11, color: DK.colors.textMuted, letterSpacing: 1.3, marginTop: 3 },
+  addBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center',
+    overflow: 'hidden',
+    shadowColor: DK.colors.accent, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 6,
   },
-  kpi: { flex: 1, alignItems: 'center' },
-  kpiValue: { fontSize: 22, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
-  kpiLabel: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textSecondary, marginTop: 2 },
-  kpiDivider: { width: 1, height: 28, backgroundColor: SemanticColors.borderDefault },
 
-  // Section
-  section: { gap: GRID.sm },
-  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, letterSpacing: TYPE.sectionTracking },
-  sectionLink: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange },
+  // Tab strip
+  tabStrip: { gap: 6, paddingRight: 20 },
+  tab: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingVertical: 10, paddingHorizontal: 14,
+    borderRadius: DK.radius.button,
+    backgroundColor: DK.colors.panel,
+    borderWidth: 1, borderColor: DK.colors.border,
+  },
+  tabActive: { backgroundColor: DK.colors.accent, borderColor: DK.colors.accent },
+  tabText: { fontFamily: DK.type.display900, fontSize: 11, color: DK.colors.textMuted, letterSpacing: 1.4 },
+  tabTextActive: { color: DK.colors.bg },
+  tabCount: {
+    minWidth: 20, paddingHorizontal: 6, paddingVertical: 2,
+    borderRadius: DK.radius.chip,
+    backgroundColor: DK.colors.panel2,
+    alignItems: 'center',
+  },
+  tabCountActive: { backgroundColor: '#0B0E1144' },
+  tabCountText: { fontFamily: DK.type.display900, fontSize: 10, color: DK.colors.textMuted },
+  tabCountTextActive: { color: DK.colors.bg },
 
-  // Tracker list — VERTICAL (no horizontal scroll)
-  trackerList: { gap: GRID.sm },
+  subsectionLabel: {
+    fontFamily: DK.type.display800,
+    fontSize: 10,
+    color: DK.colors.textMuted,
+    letterSpacing: 1.4,
+    marginTop: 4,
+    marginBottom: -6,
+  },
+
+  // KPI
+  kpiRow: { flexDirection: 'row', gap: 8 },
+  kpiTile: {
+    flex: 1,
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
+    padding: 14, minHeight: 82,
+    justifyContent: 'space-between',
+  },
+  kpiLabel: { fontFamily: DK.type.display800, fontSize: 10, color: DK.colors.textMuted, letterSpacing: 1.3 },
+  kpiValue: { fontFamily: DK.type.display900, fontSize: 28, letterSpacing: -0.8, lineHeight: 30 },
+
+  listGroup: { gap: 8 },
+
+  // Tracker list
+  trackerList: { gap: 8 },
   trackerCard: {
-    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.md,
-    gap: GRID.sm, borderWidth: 1, borderColor: SemanticColors.borderDefault,
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
+    padding: 14, gap: 10,
   },
-  trackerHeader: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm },
-  trackerAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: Palette.hermesOrange + '12', alignItems: 'center', justifyContent: 'center' },
-  trackerAvatarText: { fontSize: TYPE.titleSize, fontFamily: TYPE.sectionFamily, color: Palette.hermesOrange },
-  trackerName: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
-  trackerProject: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
-  trackerCount: { backgroundColor: PAGE_BG, borderRadius: RADIUS.sm, paddingHorizontal: GRID.sm, paddingVertical: GRID.xs },
-  trackerCountText: { fontSize: TYPE.titleSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  trackerHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  trackerAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: DK.colors.accent + '1A', alignItems: 'center', justifyContent: 'center' },
+  trackerAvatarText: { fontFamily: DK.type.display900, fontSize: 14, color: DK.colors.accent },
+  trackerName: { fontFamily: DK.type.display800, fontSize: 14, color: DK.colors.text },
+  trackerProject: { fontFamily: DK.type.body400, fontSize: 12, color: DK.colors.textMuted, marginTop: 2 },
+  trackerCount: { backgroundColor: DK.colors.panel2, borderRadius: DK.radius.chip, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: DK.colors.border },
+  trackerCountText: { fontFamily: DK.type.display900, fontSize: 12, color: DK.colors.text },
 
-  // Progress
-  progressTrack: { height: 4, backgroundColor: SemanticColors.borderDefault, borderRadius: 2 },
-  progressFill: { height: 4, backgroundColor: Palette.hermesOrange, borderRadius: 2 },
+  progressTrack: { height: 6, backgroundColor: DK.colors.panel2, borderRadius: 3, overflow: 'hidden' },
+  progressFill: { height: '100%' },
 
-  // Tracker footer
   trackerFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  trackerTime: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
-  overduePill: { flexDirection: 'row', alignItems: 'center', gap: GRID.xs, backgroundColor: SemanticColors.feedbackError + '10', paddingHorizontal: GRID.sm, paddingVertical: GRID.xs, borderRadius: RADIUS.sm },
-  overdueText: { fontSize: TYPE.tinySize, fontFamily: TYPE.titleFamily, color: SemanticColors.feedbackError },
-  reminderBtn: { flexDirection: 'row', alignItems: 'center', gap: GRID.xs },
-  reminderText: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange },
+  trackerTime: { fontFamily: DK.type.display800, fontSize: 10, color: DK.colors.textMuted, letterSpacing: 1.1 },
+  overduePill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 4, paddingHorizontal: 8, borderRadius: DK.radius.chip, backgroundColor: DK.colors.danger + '1A', borderWidth: 1, borderColor: DK.colors.danger + '55' },
+  overdueText: { fontFamily: DK.type.display900, fontSize: 10, color: DK.colors.danger, letterSpacing: 0.8 },
+  reminderBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 4, paddingHorizontal: 8, borderRadius: DK.radius.chip, backgroundColor: DK.colors.accent + '14', borderWidth: 1, borderColor: DK.colors.accent + '44' },
+  reminderText: { fontFamily: DK.type.display800, fontSize: 10, color: DK.colors.accent, letterSpacing: 0.8 },
 
-  // Completed
-  completedRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, paddingVertical: GRID.xs },
-  completedText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
-
-  // Empty
-  emptyCard: {
-    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: GRID.lg,
-    alignItems: 'center', gap: GRID.sm, borderWidth: 1, borderColor: SemanticColors.borderDefault,
+  // Completed banner
+  completedBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingVertical: 10, paddingHorizontal: 12,
+    borderRadius: DK.radius.chip,
+    backgroundColor: DK.colors.success + '14',
+    borderWidth: 1, borderColor: DK.colors.success + '44',
+    alignSelf: 'flex-start',
   },
-  emptyTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary, textAlign: 'center' },
-  emptyDesc: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary, textAlign: 'center', lineHeight: 22 },
+  completedBannerText: { fontFamily: DK.type.display800, fontSize: 11, color: DK.colors.success, letterSpacing: 1.1 },
 
   // Customer list
-  customerCard: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden', borderWidth: 1, borderColor: SemanticColors.borderDefault },
-  customerRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, padding: GRID.md },
-  customerBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: SemanticColors.borderDefault },
-  customerAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: Palette.hermesOrange + '10', alignItems: 'center', justifyContent: 'center' },
-  customerAvatarText: { fontSize: TYPE.captionSize, fontFamily: TYPE.sectionFamily, color: Palette.hermesOrange },
-  customerName: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
-  customerMeta: { fontSize: TYPE.tinySize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary, marginTop: 1 },
-  noCustomers: { padding: GRID.lg, alignItems: 'center', gap: GRID.sm },
-  noCustomersText: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textTertiary },
-  emptyAddBtn: { backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.md, paddingHorizontal: GRID.lg, paddingVertical: GRID.sm + 2, marginTop: GRID.xs },
-  emptyAddBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: '#fff' },
+  customerRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    padding: 12,
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
+  },
+  customerRowInCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    padding: 14,
+  },
+  customerCard: {
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
+    overflow: 'hidden',
+  },
+  customerBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: DK.colors.border },
+  customerAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: DK.colors.accent + '1A', alignItems: 'center', justifyContent: 'center' },
+  customerAvatarText: { fontFamily: DK.type.display900, fontSize: 12, color: DK.colors.accent },
+  customerName: { fontFamily: DK.type.display800, fontSize: 13, color: DK.colors.text },
+  customerMeta: { fontFamily: DK.type.display800, fontSize: 10, color: DK.colors.textMuted, marginTop: 2, letterSpacing: 0.8 },
+
+  // Empty
+  emptyPanel: {
+    alignItems: 'center',
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1, borderColor: DK.colors.border,
+    paddingVertical: 32, paddingHorizontal: 24, gap: 8,
+  },
+  emptyIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: DK.colors.accent + '1A', alignItems: 'center', justifyContent: 'center' },
+  emptyTitle: { fontFamily: DK.type.display900, fontSize: 14, color: DK.colors.text, letterSpacing: 1.4 },
+  emptyDesc: { fontFamily: DK.type.body400, fontSize: 12, color: DK.colors.textMuted, textAlign: 'center', lineHeight: 17 },
+  emptyCta: { marginTop: 8, paddingVertical: 10, paddingHorizontal: 20, borderRadius: DK.radius.chip, backgroundColor: DK.colors.accent + '14', borderWidth: 1, borderColor: DK.colors.accent + '44' },
+  emptyCtaText: { fontFamily: DK.type.display800, fontSize: 11, color: DK.colors.accent, letterSpacing: 1.2 },
+
+  manageLink: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 10,
+  },
+  manageLinkText: { fontFamily: DK.type.display800, fontSize: 11, color: DK.colors.accent, letterSpacing: 1.2 },
 
   // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: SemanticColors.surfacePrimary, borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl, padding: GRID.lg, paddingBottom: 40, gap: GRID.sm },
-  modalHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: SemanticColors.borderDefault, alignSelf: 'center', marginBottom: GRID.sm },
-  modalTitle: { fontSize: TYPE.sectionSize + 2, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
-  modalInput: { backgroundColor: PAGE_BG, borderRadius: RADIUS.md, paddingHorizontal: GRID.md, paddingVertical: GRID.sm + 4, fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary },
-  modalSubmit: { backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.md, paddingVertical: GRID.md, alignItems: 'center' },
-  modalSubmitText: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: '#fff' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+  modalSheet: {
+    backgroundColor: DK.colors.panel,
+    borderTopLeftRadius: DK.radius.card, borderTopRightRadius: DK.radius.card,
+    borderTopWidth: 1, borderLeftWidth: 1, borderRightWidth: 1, borderColor: DK.colors.border,
+    padding: 20, paddingBottom: 40, gap: 10,
+  },
+  modalHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: DK.colors.border, alignSelf: 'center', marginBottom: 8 },
+  modalTitle: { fontFamily: DK.type.display900, fontSize: 16, color: DK.colors.text, letterSpacing: 1.8 },
+  modalInput: {
+    backgroundColor: DK.colors.panel2,
+    borderRadius: DK.radius.button,
+    borderWidth: 1, borderColor: DK.colors.border,
+    paddingHorizontal: 14, paddingVertical: 14,
+    fontSize: 15,
+    fontFamily: DK.type.body500,
+    color: DK.colors.text,
+  },
+  modalSubmit: {
+    borderRadius: DK.radius.button,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    marginTop: 4,
+  },
+  modalSubmitText: { fontFamily: DK.type.display900, fontSize: 13, color: '#FFFFFF', letterSpacing: 1.4 },
+});
+
+const heroStyles = StyleSheet.create({
+  wrap: {
+    borderRadius: DK.radius.card,
+    shadowColor: DK.colors.accent, shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.45, shadowRadius: 28, elevation: 12,
+  },
+  card: {
+    borderRadius: DK.radius.card,
+    padding: 18,
+    overflow: 'hidden',
+  },
+  glow: {
+    position: 'absolute',
+    top: -60, right: -60,
+    width: 180, height: 180,
+    borderRadius: 90,
+    opacity: 0.18,
+  },
+  chip: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingVertical: 4, paddingHorizontal: 10,
+    borderRadius: DK.radius.chip,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  urgentChip: {
+    shadowColor: '#FFFFFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
+    elevation: 6,
+    paddingVertical: 5, paddingHorizontal: 12,
+  },
+  urgentDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: DK.colors.danger },
+  chipText: { fontFamily: DK.type.display900, fontSize: 10, letterSpacing: 1.5 },
+  title: {
+    fontFamily: DK.type.display900,
+    fontSize: 22,
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+    lineHeight: 26,
+  },
+  subtitle: {
+    fontFamily: DK.type.body500,
+    fontSize: 13,
+    color: '#FFFFFFCC',
+    marginTop: 4,
+  },
+  // Top-right stacked pills (visually distinct, unbunched, positioned away from title)
+  cornerPills: {
+    position: 'absolute',
+    top: 16, right: 16,
+    alignItems: 'flex-end',
+    gap: 6,
+    zIndex: 2,
+  },
+  pill: {
+    paddingVertical: 5, paddingHorizontal: 10,
+    borderRadius: DK.radius.chip,
+    borderWidth: 1,
+    alignItems: 'flex-end',
+    minWidth: 72,
+  },
+  pillDecided: {
+    backgroundColor: DK.colors.highlight,
+    borderColor: DK.colors.highlight,
+    shadowColor: DK.colors.highlight,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  pillOverdue: {
+    backgroundColor: DK.colors.danger,
+    borderColor: DK.colors.danger,
+    shadowColor: DK.colors.danger,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.55,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  pillLabel: {
+    fontFamily: DK.type.display800,
+    fontSize: 8,
+    color: '#0B0E11CC',
+    letterSpacing: 1.3,
+  },
+  pillValue: {
+    fontFamily: DK.type.display900,
+    fontSize: 13,
+    marginTop: 1,
+    letterSpacing: -0.2,
+  },
+  ctaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  remindBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingVertical: 10, paddingHorizontal: 14,
+    borderRadius: DK.radius.button,
+    backgroundColor: '#0B0E1177',
+    borderWidth: 1, borderColor: '#FFFFFF22',
+  },
+  remindText: { fontFamily: DK.type.display800, fontSize: 11, color: '#FFFFFF', letterSpacing: 1.1 },
+  openBtn: {
+    flex: 1,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: DK.radius.button,
+    backgroundColor: '#FFFFFF',
+  },
+  openText: { fontFamily: DK.type.display900, fontSize: 13, color: DK.colors.bg, letterSpacing: 1.2 },
 });

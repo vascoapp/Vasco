@@ -375,7 +375,7 @@ const s = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg,
     padding: GRID.md, overflow: 'hidden',
   },
-  cardUnread: { backgroundColor: '#fff' },
+  cardUnread: { backgroundColor: "#14181F" },
   cardAccent: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, borderTopLeftRadius: RADIUS.lg, borderBottomLeftRadius: RADIUS.lg },
   iconWrap: { width: 40, height: 40, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' },
   content: { flex: 1, gap: GRID.xs },
