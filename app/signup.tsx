@@ -17,9 +17,11 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../src/context/AuthContext';
 import { DEMO_MODE } from '../src/config/demo';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SemanticColors, Palette } from '../src/theme/colors';
 import { Spacing } from '../src/theme/spacing';
 import { TYPE, RADIUS, GRID } from '../src/theme/tabStyles';
+import { DK } from '../src/theme/draftkings';
 import { FadeIn } from '../src/components/shared/FadeIn';
 import { GradientButton } from '../src/components/shared/GradientButton';
 import { isValidEmail } from '../src/utils/validation';
@@ -111,9 +113,19 @@ export default function SignupScreen() {
           <FadeIn delay={0}>
             <View style={styles.header}>
               <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backIconBtn} accessibilityRole="button" accessibilityLabel={t('auth.backToLogin', 'Back to login')}>
-                <Ionicons name="arrow-back" size={22} color={SemanticColors.textPrimary} />
+                <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
               </Pressable>
-              <Text style={styles.title}>{t('signup.title', 'Create your account')}</Text>
+              <View style={styles.markWrap}>
+                <LinearGradient
+                  colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.mark}
+                >
+                  <Ionicons name="flash" size={22} color="#FFFFFF" />
+                </LinearGradient>
+              </View>
+              <Text style={styles.title}>{t('signup.title', 'Create your account').toUpperCase()}</Text>
               <Text style={styles.subtitle}>{t('signup.subtitle', 'Start your 14-day trial — no card required.')}</Text>
             </View>
           </FadeIn>
@@ -201,7 +213,19 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfaceSecondary,
     alignItems: 'center', justifyContent: 'center',
   },
-  title: { fontSize: TYPE.displaySize, fontFamily: TYPE.displayFamily, color: SemanticColors.textPrimary, marginTop: Spacing.md },
+  markWrap: {
+    marginTop: Spacing.md, marginBottom: 6,
+    shadowColor: DK.colors.accent,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.45,
+    shadowRadius: 18,
+    elevation: 8,
+  },
+  mark: {
+    width: 48, height: 48, borderRadius: 24,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  title: { fontSize: 30, fontFamily: 'Archivo_900Black', color: SemanticColors.textPrimary, marginTop: 4, letterSpacing: -0.8 },
   subtitle: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary },
   form: { gap: Spacing.sm },
   input: {

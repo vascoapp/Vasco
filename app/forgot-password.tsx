@@ -13,9 +13,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { supabase, isSupabaseConfigured } from '../src/lib/supabase';
 import { SemanticColors, Palette } from '../src/theme/colors';
 import { SafeArea } from '../src/theme/spacing';
+import { DK } from '../src/theme/draftkings';
 import { GradientButton } from '../src/components/shared/GradientButton';
 
 export default function ForgotPasswordScreen() {
@@ -81,7 +83,17 @@ export default function ForgotPasswordScreen() {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title}>{t('auth.resetPassword', 'Reset password')}</Text>
+          <View style={styles.markWrap}>
+            <LinearGradient
+              colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.mark}
+            >
+              <Ionicons name="lock-closed" size={22} color="#FFFFFF" />
+            </LinearGradient>
+          </View>
+          <Text style={styles.title}>{t('auth.resetPassword', 'Reset password').toUpperCase()}</Text>
           <Text style={styles.subtitle}>
             {t('auth.resetInstructions', 'Enter your email and we\'ll send you a reset link')}
           </Text>
@@ -143,11 +155,25 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 8,
   },
+  markWrap: {
+    alignSelf: 'center',
+    marginBottom: 8,
+    shadowColor: DK.colors.accent,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.45,
+    shadowRadius: 18,
+    elevation: 8,
+  },
+  mark: {
+    width: 56, height: 56, borderRadius: 28,
+    alignItems: 'center', justifyContent: 'center',
+  },
   title: {
     fontSize: 24,
-    fontFamily: 'Archivo_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
     color: SemanticColors.textPrimary,
     textAlign: 'center',
+    letterSpacing: -0.6,
   },
   subtitle: {
     fontSize: 15,

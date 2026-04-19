@@ -1272,9 +1272,9 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     fontSize: 22,
-    fontFamily: TYPE.sectionFamily,
+    fontFamily: 'Archivo_900Black',
     color: SemanticColors.textPrimary,
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
   },
   stepSubtitle: {
     fontSize: TYPE.bodySize,

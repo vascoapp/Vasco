@@ -15,10 +15,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { supabase, isSupabaseConfigured } from '../src/lib/supabase';
 import { SemanticColors, Palette } from '../src/theme/colors';
 import { Spacing } from '../src/theme/spacing';
 import { TYPE, RADIUS } from '../src/theme/tabStyles';
+import { DK } from '../src/theme/draftkings';
 import { FadeIn } from '../src/components/shared/FadeIn';
 import { GradientButton } from '../src/components/shared/GradientButton';
 
@@ -80,7 +82,17 @@ export default function ResetPasswordScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <FadeIn delay={0}>
-            <Text style={styles.title}>{t('resetPassword.title', 'Set a new password')}</Text>
+            <View style={styles.markWrap}>
+              <LinearGradient
+                colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.mark}
+              >
+                <Ionicons name="key" size={22} color="#FFFFFF" />
+              </LinearGradient>
+            </View>
+            <Text style={styles.title}>{t('resetPassword.title', 'Set a new password').toUpperCase()}</Text>
             <Text style={styles.subtitle}>{t('resetPassword.subtitle', 'Choose a password with at least 8 characters.')}</Text>
           </FadeIn>
 
@@ -131,7 +143,20 @@ export default function ResetPasswordScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: SemanticColors.surfaceBackground },
   scrollContent: { padding: Spacing.lg, gap: Spacing.lg, paddingTop: Spacing.xl * 2 },
-  title: { fontSize: TYPE.displaySize, fontFamily: TYPE.displayFamily, color: SemanticColors.textPrimary },
+  markWrap: {
+    alignSelf: 'flex-start',
+    marginBottom: 10,
+    shadowColor: DK.colors.accent,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.45,
+    shadowRadius: 18,
+    elevation: 8,
+  },
+  mark: {
+    width: 48, height: 48, borderRadius: 24,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  title: { fontSize: 28, fontFamily: 'Archivo_900Black', color: SemanticColors.textPrimary, letterSpacing: -0.8 },
   subtitle: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary, marginTop: Spacing.sm },
   form: { gap: Spacing.sm, marginTop: Spacing.lg },
   input: {
