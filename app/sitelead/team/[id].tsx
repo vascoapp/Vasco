@@ -538,8 +538,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontFamily: 'Manrope_700Bold',
-    color: SL_COLORS.charcoal,
-  },
+    color: SL_COLORS.charcoal, textTransform: 'uppercase', letterSpacing: 1.2 },
   headerSubtitle: {
     fontSize: 14,
     color: SL_COLORS.warmGray,

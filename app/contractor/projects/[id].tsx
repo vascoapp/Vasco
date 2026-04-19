@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     paddingTop: SafeArea.top, paddingHorizontal: SafeArea.side, paddingBottom: 12,
   },
-  headerTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  headerTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   headerSub: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
   statusBtn: { backgroundColor: Palette.hermesOrange + '15', borderRadius: RADIUS.sm, paddingHorizontal: 10, paddingVertical: 6 },
   statusBtnText: { fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: Palette.hermesOrange },

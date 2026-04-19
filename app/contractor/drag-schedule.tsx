@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PAGE_BG },
   header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingHorizontal: SafeArea.side, paddingTop: SafeArea.top, paddingBottom: Spacing.xs },
   backButton: { padding: 4 },
-  headerTitle: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  headerTitle: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   headerSubtitle: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 2 },
   exportButton: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 4, backgroundColor: Palette.hermesOrange + '10', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   exportButtonText: { fontSize: 12, fontFamily: 'Manrope_600SemiBold', color: Palette.hermesOrange },

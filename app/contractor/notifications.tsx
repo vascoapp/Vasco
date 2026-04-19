@@ -337,7 +337,7 @@ const s = StyleSheet.create({
     paddingHorizontal: SafeArea.side, paddingTop: SafeArea.top, paddingBottom: GRID.xs,
   },
   backBtn: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: TYPE.displaySize, fontFamily: TYPE.displayFamily, letterSpacing: TYPE.displayTracking, color: SemanticColors.textPrimary },
+  headerTitle: { fontSize: TYPE.displaySize, fontFamily: TYPE.displayFamily,  color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   markAllBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: Palette.hermesOrange + '0A', alignItems: 'center', justifyContent: 'center' },
 
   // Unread strip

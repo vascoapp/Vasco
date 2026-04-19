@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     paddingBottom: GRID.sm + 4,
   },
   backBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  headerTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: SafeArea.side, gap: GRID.lg - 4 },
   avatarSection: { alignItems: 'center', paddingVertical: Spacing.lg },

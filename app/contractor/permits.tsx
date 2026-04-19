@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
   },
   backButton: { padding: 4 },
-  headerTitle: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  headerTitle: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   headerSubtitle: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 2 },
   tabBar: { flexDirection: 'row', paddingHorizontal: Spacing.lg, gap: 6, paddingBottom: Spacing.md },
   tab: { flex: 1, paddingVertical: 8, borderRadius: 12, backgroundColor: SemanticColors.surfacePrimary, alignItems: 'center' },

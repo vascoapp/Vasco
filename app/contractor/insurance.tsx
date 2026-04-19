@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingTop: SafeArea.top, paddingBottom: 12,
   },
   backBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 18, fontFamily: 'Manrope_700Bold', color: "#FFFFFF" },
+  headerTitle: { fontSize: 18, fontFamily: 'Manrope_700Bold', color: "#FFFFFF", textTransform: 'uppercase', letterSpacing: 1.2 },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingTop: 8, gap: 12 },
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 4 },

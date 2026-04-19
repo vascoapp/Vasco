@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     paddingTop: SafeArea.top, paddingHorizontal: SafeArea.side, paddingBottom: 12,
   },
-  headerTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  headerTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   headerDate: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
   completeBadge: {
     backgroundColor: Palette.hermesOrange + '15', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.sm,

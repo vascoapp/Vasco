@@ -867,9 +867,8 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: TYPE.sectionSize,
     fontFamily: TYPE.sectionFamily,
-    letterSpacing: TYPE.sectionTracking,
-    color: SemanticColors.textPrimary,
-  },
+    
+    color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   statusBadge: {
     paddingHorizontal: GRID.sm + 2,
     paddingVertical: GRID.xs,

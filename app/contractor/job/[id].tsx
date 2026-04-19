@@ -1010,8 +1010,7 @@ const styles = StyleSheet.create({
     fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     flex: 1,
-    textAlign: 'center',
-  },
+    textAlign: 'center', textTransform: 'uppercase', letterSpacing: 1.2 },
   moreBtn: {
     width: 40,
     height: 40,

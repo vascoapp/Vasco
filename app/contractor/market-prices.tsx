@@ -256,7 +256,7 @@ export default function MarketPricesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PAGE_BG },
   header: { flexDirection: 'row', alignItems: 'center', paddingTop: SafeArea.top, paddingHorizontal: SafeArea.side, paddingBottom: 12 },
-  headerTitle: { fontSize: TYPE.displaySize, fontFamily: TYPE.displayFamily, color: SemanticColors.textPrimary, letterSpacing: TYPE.displayTracking },
+  headerTitle: { fontSize: TYPE.displaySize, fontFamily: TYPE.displayFamily, color: SemanticColors.textPrimary,  textTransform: 'uppercase', letterSpacing: 1.2 },
   headerSub: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: SafeArea.side, gap: GRID.md },

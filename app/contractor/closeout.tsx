@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PAGE_BG },
   header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingHorizontal: SafeArea.side, paddingTop: SafeArea.top, paddingBottom: Spacing.sm },
   backButton: { padding: 4 },
-  headerTitle: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  headerTitle: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   headerSubtitle: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 2 },
   scrollView: { flex: 1, paddingHorizontal: SafeArea.side },
   emptyState: { alignItems: 'center', paddingVertical: 60, gap: Spacing.sm },

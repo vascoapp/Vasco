@@ -318,8 +318,7 @@ const s = StyleSheet.create({
     fontSize: TYPE.displaySize,
     fontFamily: TYPE.displayFamily,
     color: SemanticColors.textPrimary,
-    letterSpacing: TYPE.displayTracking,
-  },
+     textTransform: 'uppercase', letterSpacing: 1.2 },
   addBtn: {
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: Palette.hermesOrange,

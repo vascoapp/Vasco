@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     paddingTop: SafeArea.top, paddingHorizontal: SafeArea.side, paddingBottom: 12,
   },
-  headerTitle: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  headerTitle: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   headerSubtitle: { fontSize: 13, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
   filterRow: {
     flexDirection: 'row', gap: 8,

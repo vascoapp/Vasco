@@ -261,8 +261,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: TYPE.sectionSize,
     fontFamily: TYPE.sectionFamily,
-    color: SemanticColors.textPrimary,
-  },
+    color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   scrollView: {
     flex: 1,
   },

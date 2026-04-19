@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
   },
   backButton: { marginRight: Spacing.md },
-  headerTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  headerTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: SafeArea.side, paddingTop: Spacing.md, gap: Spacing.md },
   summaryBanner: {

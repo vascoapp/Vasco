@@ -402,7 +402,7 @@ const s = StyleSheet.create({
     paddingTop: SafeArea.top, paddingHorizontal: SafeArea.side, paddingBottom: GRID.sm,
   },
   backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: SemanticColors.surfacePrimary, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  headerTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   headerSub: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: Palette.hermesOrange, marginTop: 1 },
 
   scroll: { flex: 1 },

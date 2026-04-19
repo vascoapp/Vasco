@@ -296,8 +296,7 @@ const styles = StyleSheet.create({
     fontSize: TYPE.sectionSize,
     fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
-    letterSpacing: TYPE.sectionTracking,
-  },
+     textTransform: 'uppercase', letterSpacing: 1.2 },
   headerRight: {
     width: 44,
     height: 44,

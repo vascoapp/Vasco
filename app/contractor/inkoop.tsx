@@ -431,8 +431,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontFamily: 'Manrope_700Bold',
-    color: "#FFFFFF",
-  },
+    color: "#FFFFFF", textTransform: 'uppercase', letterSpacing: 1.2 },
   headerBadge: {
     backgroundColor: SemanticColors.feedbackError,
     borderRadius: 12,

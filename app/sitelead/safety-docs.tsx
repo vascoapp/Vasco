@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingTop: SafeArea.top, paddingHorizontal: SafeArea.side, paddingBottom: 12,
   },
-  headerTitle: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, flex: 1 },
+  headerTitle: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, flex: 1, textTransform: 'uppercase', letterSpacing: 1.2 },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: SafeArea.side, gap: Spacing.md },
   section: { gap: 8 },

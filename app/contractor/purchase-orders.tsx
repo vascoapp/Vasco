@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
-  headerTitle: { fontSize: TYPE.displaySize - 4, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  headerTitle: { fontSize: TYPE.displaySize - 4, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   headerSubtitle: { fontSize: TYPE.captionSize + 1, color: SemanticColors.textSecondary, marginTop: 2 },
   statsBar: {
     flexDirection: 'row',
