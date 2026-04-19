@@ -18,6 +18,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +26,7 @@ import i18n from '../src/i18n/i18n';
 import { useAuth, type Country, type Language } from '../src/context/AuthContext';
 import { useAppState } from '../src/state/AppState';
 import { SemanticColors, Palette } from '../src/theme/colors';
+import { DK } from '../src/theme/draftkings';
 import { SafeArea, Spacing } from '../src/theme/spacing';
 import { getDefaultLanguage } from '../src/i18n/formatting';
 import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../src/config/paymentMethods';
@@ -484,8 +486,15 @@ export default function OnboardingScreen() {
       case 1:
         return (
           <View style={styles.centeredContent}>
-            <View style={styles.logoContainer}>
-              <Text style={styles.logoText}>V</Text>
+            <View style={styles.logoWrap}>
+              <LinearGradient
+                colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.logoContainer}
+              >
+                <Text style={styles.logoText}>V</Text>
+              </LinearGradient>
             </View>
             <Text style={styles.welcomeTitle}>{t('onboarding.welcome')}</Text>
             <Text style={styles.welcomeSubtitle}>{t('onboarding.subtitle')}</Text>
@@ -1222,26 +1231,33 @@ const styles = StyleSheet.create({
     gap: GRID.md,
     paddingBottom: GRID.xl,
   },
+  logoWrap: {
+    marginBottom: 8,
+    shadowColor: DK.colors.accent,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 22,
+    elevation: 10,
+  },
   logoContainer: {
     width: 80,
     height: 80,
-    borderRadius: 20,
-    backgroundColor: Palette.hermesOrange,
+    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
   },
   logoText: {
     fontSize: 40,
-    fontFamily: TYPE.displayFamily,
-    color: Palette.white,
+    fontFamily: 'Archivo_900Black',
+    color: '#FFFFFF',
+    letterSpacing: -1,
   },
   welcomeTitle: {
-    fontSize: 30,
-    fontFamily: TYPE.displayFamily,
+    fontSize: 32,
+    fontFamily: 'Archivo_900Black',
     color: SemanticColors.textPrimary,
     textAlign: 'center',
-    letterSpacing: -0.5,
+    letterSpacing: -1,
   },
   welcomeSubtitle: {
     fontSize: TYPE.titleSize,

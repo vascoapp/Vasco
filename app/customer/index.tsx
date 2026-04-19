@@ -1,19 +1,20 @@
 // =============================================================================
-// CUSTOMER PORTAL - Landing Page
+// CUSTOMER PORTAL — Landing Page (DraftKings style)
 // =============================================================================
 // Entry point for customers to access their decision portal.
-// Customers enter an access code shared by their contractor to view
-// and submit project decisions.
 // =============================================================================
 
 import { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Palette } from '../../src/theme/colors';
+import { useTranslation } from 'react-i18next';
+import { DK } from '../../src/theme/draftkings';
 
 export default function CustomerLandingScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [accessCode, setAccessCode] = useState('');
   const [error, setError] = useState('');
@@ -21,7 +22,7 @@ export default function CustomerLandingScreen() {
   const handleSubmit = () => {
     const trimmed = accessCode.trim().toUpperCase();
     if (trimmed.length < 4) {
-      setError('Voer een geldige toegangscode in.');
+      setError(t('customerPortal.invalidCode', 'Voer een geldige toegangscode in.'));
       return;
     }
     setError('');
@@ -33,76 +34,81 @@ export default function CustomerLandingScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        style={styles.inner}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        {/* Back button for contractor preview */}
-        <Pressable style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#666" />
+    <SafeAreaView style={s.root} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView style={s.inner} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <Pressable style={s.backBtn} onPress={() => router.back()} hitSlop={8}>
+          <Ionicons name="chevron-back" size={22} color={DK.colors.text} />
         </Pressable>
 
-        {/* Logo area */}
-        <View style={styles.logoArea}>
-          <View style={styles.logoCircle}>
-            <Ionicons name="construct" size={32} color="#fff" />
+        {/* Hero mark */}
+        <View style={s.hero}>
+          <View style={s.markWrap}>
+            <LinearGradient
+              colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={s.mark}
+            >
+              <Ionicons name="construct" size={34} color="#FFFFFF" />
+            </LinearGradient>
           </View>
-          <Text style={styles.brandName}>Vasco</Text>
-          <Text style={styles.brandSub}>Klantportaal</Text>
+          <Text style={s.brand}>VASCO</Text>
+          <Text style={s.brandSub}>{t('customerPortal.title', 'Klantportaal').toUpperCase()}</Text>
         </View>
 
         {/* Welcome */}
-        <View style={styles.welcomeArea}>
-          <Text style={styles.welcomeTitle}>Welkom</Text>
-          <Text style={styles.welcomeText}>
-            Uw aannemer heeft keuzes voor u klaargezet.{'\n'}
-            Voer de toegangscode in die u heeft ontvangen.
+        <View style={s.welcome}>
+          <Text style={s.welcomeTitle}>{t('customerPortal.welcome', 'Welkom')}</Text>
+          <Text style={s.welcomeBody}>
+            {t('customerPortal.intro', 'Uw aannemer heeft keuzes voor u klaargezet. Voer de toegangscode in die u heeft ontvangen.')}
           </Text>
         </View>
 
-        {/* Access code input */}
-        <View style={styles.inputArea}>
-          <Text style={styles.inputLabel}>Toegangscode</Text>
+        {/* Access code */}
+        <View style={s.inputArea}>
+          <Text style={s.inputLabel}>{t('customerPortal.code', 'Toegangscode').toUpperCase()}</Text>
           <TextInput
-            style={[styles.codeInput, error ? styles.codeInputError : null]}
+            style={[s.codeInput, error ? s.codeInputError : null]}
             value={accessCode}
-            onChangeText={(text) => {
-              setAccessCode(text.toUpperCase());
-              if (error) setError('');
-            }}
-            placeholder="bijv. ABC123"
-            placeholderTextColor="#999"
+            onChangeText={(text) => { setAccessCode(text.toUpperCase()); if (error) setError(''); }}
+            placeholder={t('customerPortal.codePlaceholder', 'bijv. ABC123')}
+            placeholderTextColor={DK.colors.textMuted}
             autoCapitalize="characters"
             autoCorrect={false}
             maxLength={8}
             returnKeyType="go"
             onSubmitEditing={handleSubmit}
           />
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          {error ? <Text style={s.errorText}>{error}</Text> : null}
         </View>
 
-        {/* Submit button */}
+        {/* Primary submit */}
         <Pressable
-          style={[styles.submitBtn, !accessCode.trim() && styles.submitBtnDisabled]}
+          style={({ pressed }) => [s.submitBtn, !accessCode.trim() && s.submitBtnDisabled, pressed && { opacity: 0.9 }]}
           onPress={handleSubmit}
           disabled={!accessCode.trim()}
         >
-          <Text style={styles.submitBtnText}>Bekijk mijn keuzes</Text>
-          <Ionicons name="arrow-forward" size={18} color="#fff" />
+          <LinearGradient
+            colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <Text style={s.submitBtnText}>{t('customerPortal.submit', 'Bekijk mijn keuzes').toUpperCase()}</Text>
+          <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
         </Pressable>
 
-        {/* Demo button */}
-        <Pressable style={styles.demoBtn} onPress={handleDemo}>
-          <Ionicons name="play-circle" size={20} color={Palette.hermesOrange} />
-          <Text style={styles.demoBtnText}>Demo modus</Text>
+        {/* Demo secondary */}
+        <Pressable style={({ pressed }) => [s.demoBtn, pressed && { opacity: 0.85 }]} onPress={handleDemo}>
+          <Ionicons name="play-circle-outline" size={18} color={DK.colors.accent} />
+          <Text style={s.demoBtnText}>{t('customerPortal.demo', 'Demo modus').toUpperCase()}</Text>
         </Pressable>
 
-        {/* Info footer */}
-        <View style={styles.footer}>
-          <Ionicons name="lock-closed" size={14} color="#999" />
-          <Text style={styles.footerText}>
-            Geen account nodig. Uw keuzes worden veilig opgeslagen en direct doorgegeven aan uw aannemer.
+        {/* Footer */}
+        <View style={s.footer}>
+          <Ionicons name="lock-closed" size={14} color={DK.colors.textMuted} />
+          <Text style={s.footerText}>
+            {t('customerPortal.privacy', 'Geen account nodig. Uw keuzes worden veilig opgeslagen en direct doorgegeven aan uw aannemer.')}
           </Text>
         </View>
       </KeyboardAvoidingView>
@@ -110,136 +116,126 @@ export default function CustomerLandingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#14181F",
-  },
-  inner: {
-    flex: 1,
-    paddingHorizontal: 24,
-  },
+const s = StyleSheet.create({
+  root: { flex: 1, backgroundColor: DK.colors.bg },
+  inner: { flex: 1, paddingHorizontal: 24 },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: DK.colors.panel,
+    borderWidth: 1, borderColor: DK.colors.border,
+    alignItems: 'center', justifyContent: 'center',
     marginTop: 8,
   },
 
-  // Logo
-  logoArea: {
-    alignItems: 'center',
-    marginTop: 24,
-    gap: 8,
+  hero: { alignItems: 'center', marginTop: 24, gap: 10 },
+  markWrap: {
+    shadowColor: DK.colors.accent,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.55,
+    shadowRadius: 24,
+    elevation: 10,
+    marginBottom: 8,
   },
-  logoCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    backgroundColor: Palette.hermesOrange,
-    alignItems: 'center',
-    justifyContent: 'center',
+  mark: {
+    width: 72, height: 72, borderRadius: 36,
+    alignItems: 'center', justifyContent: 'center',
   },
-  brandName: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: "#FFFFFF",
-    letterSpacing: -0.5,
+  brand: {
+    fontFamily: 'Archivo_900Black',
+    fontSize: 32,
+    color: DK.colors.text,
+    letterSpacing: -1,
   },
   brandSub: {
-    fontSize: 14,
-    color: '#888',
-    fontWeight: '500',
+    fontFamily: 'Archivo_800ExtraBold',
+    fontSize: 11,
+    color: DK.colors.textMuted,
+    letterSpacing: 1.8,
   },
 
-  // Welcome
-  welcomeArea: {
-    marginTop: 32,
-    gap: 8,
-  },
+  welcome: { marginTop: 28, gap: 8 },
   welcomeTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: "#FFFFFF",
+    fontFamily: 'Archivo_900Black',
+    fontSize: 24,
+    color: DK.colors.text,
+    letterSpacing: -0.4,
   },
-  welcomeText: {
-    fontSize: 15,
-    color: '#666',
-    lineHeight: 22,
+  welcomeBody: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 14,
+    color: DK.colors.textMuted,
+    lineHeight: 20,
   },
 
-  // Input
-  inputArea: {
-    marginTop: 28,
-    gap: 6,
-  },
+  inputArea: { marginTop: 24, gap: 8 },
   inputLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#444',
+    fontFamily: 'Archivo_800ExtraBold',
+    fontSize: 10,
+    color: DK.colors.textMuted,
+    letterSpacing: 1.4,
   },
   codeInput: {
+    fontFamily: 'Archivo_900Black',
     fontSize: 24,
-    fontWeight: '700',
-    color: "#FFFFFF",
+    color: DK.colors.text,
     letterSpacing: 4,
     textAlign: 'center',
-    backgroundColor: "#1C2128",
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
     borderWidth: 2,
-    borderColor: '#E5E5E5',
+    borderColor: DK.colors.border,
+    paddingVertical: 18,
   },
-  codeInputError: {
-    borderColor: '#EF4444',
-  },
+  codeInputError: { borderColor: DK.colors.danger },
   errorText: {
-    fontSize: 13,
-    color: '#EF4444',
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 12,
+    color: DK.colors.danger,
     marginTop: 4,
   },
 
-  // Submit
   submitBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: Palette.hermesOrange,
-    borderRadius: 12,
+    borderRadius: DK.radius.button,
     paddingVertical: 16,
     marginTop: 20,
+    overflow: 'hidden',
+    shadowColor: DK.colors.accent,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 18,
+    elevation: 10,
   },
-  submitBtnDisabled: {
-    opacity: 0.4,
-  },
+  submitBtnDisabled: { opacity: 0.4 },
   submitBtnText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#fff',
+    fontFamily: 'Archivo_900Black',
+    fontSize: 14,
+    color: '#FFFFFF',
+    letterSpacing: 1.4,
   },
 
-  // Demo
   demoBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1.5,
-    borderColor: Palette.hermesOrange,
-    borderRadius: 12,
+    borderColor: DK.colors.accent,
+    borderRadius: DK.radius.button,
     paddingVertical: 14,
     marginTop: 12,
+    backgroundColor: DK.colors.accent + '14',
   },
   demoBtnText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Palette.hermesOrange,
+    fontFamily: 'Archivo_800ExtraBold',
+    fontSize: 12,
+    color: DK.colors.accent,
+    letterSpacing: 1.3,
   },
 
-  // Footer
   footer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -250,8 +246,9 @@ const styles = StyleSheet.create({
   },
   footerText: {
     flex: 1,
+    fontFamily: 'Inter_500Medium',
     fontSize: 12,
-    color: '#999',
+    color: DK.colors.textMuted,
     lineHeight: 18,
   },
 });

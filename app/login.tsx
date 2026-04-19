@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +22,7 @@ import { useAuth, ROLE_CONFIGS, type UserRole } from '../src/context/AuthContext
 import { DEMO_MODE, DEMO_ACCOUNTS } from '../src/config/demo';
 import { SemanticColors, Palette } from '../src/theme/colors';
 import { SafeArea, Spacing } from '../src/theme/spacing';
+import { DK } from '../src/theme/draftkings';
 import { FadeIn } from '../src/components/shared/FadeIn';
 import { GradientButton } from '../src/components/shared/GradientButton';
 
@@ -104,36 +106,21 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Hero */}
+          {/* Hero — DraftKings-style gradient mark */}
           <FadeIn delay={0} duration={600}>
             <View style={styles.hero}>
-              {/* Little explorer guy */}
-              <View style={styles.guyWrapper}>
-                {/* Hat */}
-                <View style={styles.guyHatBrim} />
-                <View style={styles.guyHatTop} />
-                {/* Head */}
-                <View style={styles.guyHead}>
-                  <View style={styles.guyEyeL} />
-                  <View style={styles.guyEyeR} />
-                  <View style={styles.guySmile} />
-                </View>
-                {/* Body */}
-                <View style={styles.guyBody}>
-                  {/* Spyglass in hand */}
-                  <View style={styles.guySpyglass} />
-                  <View style={styles.guySpyglassLens} />
-                </View>
-                {/* Legs */}
-                <View style={styles.guyLegs}>
-                  <View style={styles.guyLegL} />
-                  <View style={styles.guyLegR} />
-                </View>
-                {/* Shadow */}
-                <View style={styles.guyShadow} />
+              <View style={styles.markWrap}>
+                <LinearGradient
+                  colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.mark}
+                >
+                  <Ionicons name="flash" size={40} color="#FFFFFF" />
+                </LinearGradient>
               </View>
-              <Text style={styles.brand}>Vasco</Text>
-              <Text style={styles.tagline}>{t('auth.tagline', 'Built for the trades')}</Text>
+              <Text style={styles.brand}>VASCO</Text>
+              <Text style={styles.tagline}>{t('auth.tagline', 'Built for the trades').toUpperCase()}</Text>
             </View>
           </FadeIn>
 
@@ -450,17 +437,35 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.06)',
     marginTop: 2,
   },
+  markWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 18,
+    shadowColor: DK.colors.accent,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.55,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  mark: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   brand: {
-    fontSize: 36,
+    fontSize: 40,
     fontFamily: 'Archivo_900Black',
     color: SemanticColors.textPrimary,
-    letterSpacing: -1,
+    letterSpacing: -1.2,
   },
   tagline: {
-    fontSize: 15,
-    fontFamily: 'Inter_600SemiBold',
-    color: SemanticColors.textSecondary,
-    marginTop: 4,
+    fontSize: 11,
+    fontFamily: 'Archivo_800ExtraBold',
+    color: DK.colors.textMuted,
+    letterSpacing: 2,
+    marginTop: 8,
   },
 
   // Form
