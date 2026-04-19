@@ -57,11 +57,11 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textSecondary,
   },
   labelActive: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
   },
   indicator: {
     position: 'absolute',

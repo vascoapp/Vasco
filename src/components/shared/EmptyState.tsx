@@ -85,14 +85,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: TYPE.titleSize + 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
     textAlign: 'center',
     marginBottom: 4,
   },
   description: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: 'Inter_500Medium',
     color: SemanticColors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
@@ -110,6 +110,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: Palette.white,
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
   },
 });

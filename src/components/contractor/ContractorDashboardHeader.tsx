@@ -89,12 +89,12 @@ const styles = StyleSheet.create({
   },
   kpiValue: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
     fontVariant: ['tabular-nums'] as any,
   },
   kpiLabel: {
     fontSize: TYPE.tinySize - 1,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.4,

@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     fontSize: TYPE.titleSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.surfacePrimary,
   },
 });

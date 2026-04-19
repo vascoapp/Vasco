@@ -187,7 +187,7 @@ export default function MoneybirdConnectModal() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: Spacing.lg, gap: Spacing.md },
-  title: { fontSize: 22, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  title: { fontSize: 22, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary },
   subtitle: { fontSize: 14, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
   inputSection: { gap: 6 },
   label: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },

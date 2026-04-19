@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
   },
   totalValue: {
     fontSize: 28,
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
     color: SemanticColors.textPrimary,
     letterSpacing: -0.8,
   },

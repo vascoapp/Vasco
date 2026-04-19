@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
   },
   gdprSectionTitle: {
     fontSize: TYPE.labelSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textTertiary,
     letterSpacing: 0.8,
     paddingHorizontal: GRID.xs,

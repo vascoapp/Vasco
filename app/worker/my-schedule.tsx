@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
   },
   summaryValue: {
     fontSize: 24,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
     letterSpacing: -0.5,
   },

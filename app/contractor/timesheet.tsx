@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     paddingVertical: GRID.md,
   },
   clockButtonActive: { backgroundColor: SemanticColors.feedbackError },
-  clockButtonTitle: { fontSize: TYPE.titleSize, fontFamily: 'Manrope_700Bold', color: Palette.white },
+  clockButtonTitle: { fontSize: TYPE.titleSize, fontFamily: 'Archivo_800ExtraBold', color: Palette.white },
   clockButtonSub: { fontSize: TYPE.captionSize + 1, fontFamily: 'Inter_500Medium', color: Palette.white + 'CC', marginTop: 2 },
   tabBar: { flexDirection: 'row', paddingHorizontal: Spacing.lg, gap: 6, paddingBottom: Spacing.sm },
   tab: { flex: 1, paddingVertical: GRID.sm, borderRadius: RADIUS.md, backgroundColor: SemanticColors.surfacePrimary, alignItems: 'center' },

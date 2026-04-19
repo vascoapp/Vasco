@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     marginTop: Spacing.xl,
   },
-  title: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, textAlign: 'center' },
+  title: { fontSize: 24, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary, textAlign: 'center' },
   subtitle: { fontSize: 15, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary, textAlign: 'center', lineHeight: 22 },
   features: { gap: 10, alignSelf: 'stretch' },
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },

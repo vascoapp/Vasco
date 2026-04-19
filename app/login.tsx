@@ -452,13 +452,13 @@ const styles = StyleSheet.create({
   },
   brand: {
     fontSize: 36,
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
     color: SemanticColors.textPrimary,
     letterSpacing: -1,
   },
   tagline: {
     fontSize: 15,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textSecondary,
     marginTop: 4,
   },
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 16,
     fontSize: 15,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
@@ -490,7 +490,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: SemanticColors.feedbackError,
     fontSize: 13,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: 'Inter_600SemiBold',
     flex: 1,
   },
   authLinksRow: { flexDirection: 'row', justifyContent: 'center', gap: 24 },
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     fontSize: 12,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -551,12 +551,12 @@ const styles = StyleSheet.create({
   },
   demoName: {
     fontSize: 15,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   demoRole: {
     fontSize: 12,
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: 'Inter_500Medium',
     color: SemanticColors.textSecondary,
   },
   demoArrow: {

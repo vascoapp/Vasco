@@ -1194,8 +1194,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: SemanticColors.textPrimary,
     fontSize: TYPE.titleSize,
-    fontWeight: '600',
-  },
+    fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1.2 },
   seeAllButton: {
     flexDirection: 'row',
     alignItems: 'center',

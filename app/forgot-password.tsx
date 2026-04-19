@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
     textAlign: 'center',
   },
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 16,
     fontSize: 15,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,

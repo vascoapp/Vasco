@@ -584,8 +584,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: TYPE.sectionSize,
     fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
+    color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   headerSubtitle: {
     fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,

@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   },
   completeButtonText: {
     fontSize: TYPE.titleSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.surfacePrimary,
   },
   addItemButton: {

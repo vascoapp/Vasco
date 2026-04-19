@@ -1083,7 +1083,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: TYPE.displaySize - 4,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   headerSubtitle: {
@@ -1099,7 +1099,7 @@ const styles = StyleSheet.create({
   },
   roleBadgeText: {
     fontSize: TYPE.labelSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: DIRECTOR_COLOR,
   },
 
@@ -1128,7 +1128,7 @@ const styles = StyleSheet.create({
   },
   statusPillText: {
     fontSize: TYPE.labelSize,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textSecondary,
   },
   statusPillTextActive: {
@@ -1155,12 +1155,12 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: TYPE.tinySize,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textTertiary,
   },
   tabLabelActive: {
     color: DIRECTOR_COLOR,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
   },
 
   // Sections
@@ -1169,7 +1169,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -1190,7 +1190,7 @@ const styles = StyleSheet.create({
   },
   statsBannerValue: {
     fontSize: TYPE.displaySize - 6,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   statsBannerLabel: {
@@ -1240,12 +1240,12 @@ const styles = StyleSheet.create({
   },
   quickActionBadgeText: {
     fontSize: TYPE.tinySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: Palette.white,
   },
   quickActionLabel: {
     fontSize: TYPE.tinySize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
     textAlign: 'center',
   },
@@ -1275,7 +1275,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     flex: 1,
     fontSize: TYPE.titleSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   cardSubtitle: {
@@ -1290,7 +1290,7 @@ const styles = StyleSheet.create({
   },
   cardBadgeText: {
     fontSize: TYPE.tinySize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: Palette.white,
   },
 
@@ -1308,7 +1308,7 @@ const styles = StyleSheet.create({
   },
   portfolioMetricValue: {
     fontSize: TYPE.displaySize - 4,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.feedbackSuccess,
   },
   portfolioMetricLabel: {
@@ -1345,7 +1345,7 @@ const styles = StyleSheet.create({
   },
   healthValue: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   healthLabel: {
@@ -1367,7 +1367,7 @@ const styles = StyleSheet.create({
   },
   projectName: {
     fontSize: TYPE.bodySize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   projectMeta: {
@@ -1381,7 +1381,7 @@ const styles = StyleSheet.create({
   },
   projectIrr: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: DIRECTOR_COLOR,
   },
   projectStatus: {
@@ -1400,7 +1400,7 @@ const styles = StyleSheet.create({
   },
   projectStatusText: {
     fontSize: TYPE.tinySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
 
@@ -1428,7 +1428,7 @@ const styles = StyleSheet.create({
   },
   hubTitle: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   hubStat: {
@@ -1460,13 +1460,13 @@ const styles = StyleSheet.create({
   },
   approvalTitle: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
     flex: 1,
   },
   approvalAmount: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: DIRECTOR_COLOR,
   },
   approvalDescription: {
@@ -1491,7 +1491,7 @@ const styles = StyleSheet.create({
   },
   priorityBadgeText: {
     fontSize: TYPE.tinySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     textTransform: 'capitalize',
   },
 
@@ -1523,7 +1523,7 @@ const styles = StyleSheet.create({
   },
   actionTitle: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   actionSubtitle: {
@@ -1550,14 +1550,14 @@ const styles = StyleSheet.create({
   },
   riskScoreText: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
   },
   riskContent: {
     flex: 1,
   },
   riskTitle: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
   },
   riskMeta: {
@@ -1575,7 +1575,7 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: DIRECTOR_COLOR,
   },
 
@@ -1594,7 +1594,7 @@ const styles = StyleSheet.create({
   },
   riskStatValue: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   riskStatLabel: {
@@ -1620,7 +1620,7 @@ const styles = StyleSheet.create({
   },
   supplierStatValue: {
     fontSize: TYPE.titleSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
 
@@ -1641,7 +1641,7 @@ const styles = StyleSheet.create({
   },
   metricValue: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   metricLabel: {
@@ -1656,7 +1656,7 @@ const styles = StyleSheet.create({
   },
   metricTrendText: {
     fontSize: TYPE.tinySize - 1,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: 'Inter_600SemiBold',
   },
 
   // Agent Stats
@@ -1674,7 +1674,7 @@ const styles = StyleSheet.create({
   },
   agentStatValue: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   agentStatLabel: {
@@ -1709,7 +1709,7 @@ const styles = StyleSheet.create({
   },
   roiValue: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   roiTotal: {
@@ -1723,12 +1723,12 @@ const styles = StyleSheet.create({
   },
   roiTotalLabel: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   roiTotalValue: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.feedbackSuccess,
   },
 
@@ -1746,7 +1746,7 @@ const styles = StyleSheet.create({
   },
   handoverStatValue: {
     fontSize: TYPE.titleSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   handoverStatLabel: {
@@ -1771,7 +1771,7 @@ const styles = StyleSheet.create({
   },
   handoverProjectName: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   handoverProjectMeta: {
@@ -1798,7 +1798,7 @@ const styles = StyleSheet.create({
   },
   handoverProjectStatusText: {
     fontSize: TYPE.tinySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   handoverProjectProgress: {
@@ -1828,7 +1828,7 @@ const styles = StyleSheet.create({
   },
   handoverProjectProgressText: {
     fontSize: TYPE.tinySize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textSecondary,
     width: 32,
     textAlign: 'right',
@@ -1844,7 +1844,7 @@ const styles = StyleSheet.create({
   },
   handoverBlockedText: {
     fontSize: TYPE.tinySize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.feedbackWarning,
   },
   handoverBlockedReason: {
@@ -1859,7 +1859,7 @@ const styles = StyleSheet.create({
   },
   pipelineHeroValue: {
     fontSize: TYPE.displaySize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: DIRECTOR_COLOR,
   },
   pipelineHeroLabel: {
@@ -1897,7 +1897,7 @@ const styles = StyleSheet.create({
   },
   pipelineLegendValue: {
     fontSize: TYPE.labelSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
 
@@ -1916,7 +1916,7 @@ const styles = StyleSheet.create({
   },
   riskGaugeCount: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
   },
   riskGaugeBarTrack: {
     height: 10,
@@ -1945,7 +1945,7 @@ const styles = StyleSheet.create({
   },
   riskExposureValue: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   riskExposureLabel: {
@@ -1984,7 +1984,7 @@ const styles = StyleSheet.create({
   },
   roiHeroRingValue: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: DIRECTOR_COLOR,
   },
   roiHeroRingLabel: {
@@ -2003,7 +2003,7 @@ const styles = StyleSheet.create({
   },
   roiHeroSubValue: {
     fontSize: TYPE.titleSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   roiHeroSubLabel: {
@@ -2021,7 +2021,7 @@ const styles = StyleSheet.create({
   },
   roiHeroTrendText: {
     fontSize: TYPE.labelSize,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: 'Inter_600SemiBold',
   },
 
   // Activity Bars
@@ -2053,7 +2053,7 @@ const styles = StyleSheet.create({
   },
   actBarValue: {
     fontSize: TYPE.captionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
   },
   actBarTrack: {
     height: 6,
@@ -2080,7 +2080,7 @@ const styles = StyleSheet.create({
   },
   wfOverviewStatValue: {
     fontSize: TYPE.titleSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   wfOverviewStatLabel: {
@@ -2119,7 +2119,7 @@ const styles = StyleSheet.create({
   },
   wfTypeCountText: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
   },
   wfEscalationAlert: {
     flexDirection: 'row',
@@ -2133,7 +2133,7 @@ const styles = StyleSheet.create({
   },
   wfEscalationAlertTitle: {
     fontSize: TYPE.captionSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.feedbackWarning,
   },
   wfEscalationAlertItem: {
@@ -2153,7 +2153,7 @@ const styles = StyleSheet.create({
   },
   wfPaymentSummaryTitle: {
     fontSize: TYPE.captionSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   wfPaymentSummaryValue: {

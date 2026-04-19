@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   label: {
     color: Palette.white,
     fontSize: 16,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     letterSpacing: 0.3,
   },
   labelMd: {

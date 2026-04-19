@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
   // Section Title
   sectionTitle: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
     color: SemanticColors.textPrimary,
     letterSpacing: -0.5,
     marginBottom: 12,
@@ -623,7 +623,7 @@ const styles = StyleSheet.create({
   },
   healthScore: {
     fontSize: TYPE.displaySize - 4,
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
   },
   healthRight: {
     flex: 1,
@@ -1037,7 +1037,7 @@ const styles = StyleSheet.create({
   },
   expenseSummaryValue: {
     fontSize: TYPE.displaySize + 4,
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
     color: Palette.white,
     marginTop: 4,
   },
@@ -1172,7 +1172,7 @@ const styles = StyleSheet.create({
   },
   invoiceDetailAmount: {
     fontSize: 36,
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
     color: SemanticColors.textPrimary,
     marginBottom: 8,
   },

@@ -94,7 +94,7 @@ export default function TabsLayout() {
         },
         tabBarActiveTintColor: primaryColor,
         tabBarInactiveTintColor: SemanticColors.textTertiary,
-        tabBarLabelStyle: { fontSize: 11, fontFamily: 'Manrope_600SemiBold', marginTop: 4 },
+        tabBarLabelStyle: { fontSize: 11, fontFamily: 'Archivo_700Bold', marginTop: 4 },
       }}
     >
       {tabs.map((tab) => (

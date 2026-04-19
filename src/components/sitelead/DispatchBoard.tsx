@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: TYPE.displaySize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   subtitle: {
@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   statLabel: {
@@ -589,7 +589,7 @@ const styles = StyleSheet.create({
   },
   jobTime: {
     fontSize: TYPE.titleSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   jobDuration: {
@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
   },
   jobValue: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
     marginLeft: 'auto',
   },

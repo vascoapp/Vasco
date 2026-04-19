@@ -28,6 +28,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: SafeArea.top,
   },
-  title: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  title: { fontSize: 20, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary },
   subtitle: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 8 },
 });

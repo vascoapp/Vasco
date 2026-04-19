@@ -1285,9 +1285,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: TYPE.displaySize - 4,
-    fontFamily: 'Manrope_700Bold',
-    color: SemanticColors.textPrimary,
-  },
+    fontFamily: 'Archivo_800ExtraBold',
+    color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   headerSubtitle: {
     fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
@@ -1315,7 +1314,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: TYPE.labelSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -1343,7 +1342,7 @@ const styles = StyleSheet.create({
   },
   dropdownCountryTag: {
     fontSize: TYPE.tinySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: Palette.white,
     backgroundColor: COO_COLOR,
     paddingHorizontal: 6,
@@ -1353,7 +1352,7 @@ const styles = StyleSheet.create({
   },
   dropdownSelectedName: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
     flex: 1,
   },
@@ -1379,18 +1378,18 @@ const styles = StyleSheet.create({
   },
   dropdownItemCountry: {
     fontSize: TYPE.tinySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: COO_COLOR,
   },
   dropdownItemName: {
     flex: 1,
     fontSize: TYPE.captionSize,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textSecondary,
   },
   dropdownItemNameActive: {
     color: SemanticColors.textPrimary,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
   },
 
   // Cards
@@ -1404,7 +1403,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   cardHeaderRow: {
@@ -1414,7 +1413,7 @@ const styles = StyleSheet.create({
   },
   cardHeaderStat: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
 
@@ -1443,7 +1442,7 @@ const styles = StyleSheet.create({
   },
   spiStatus: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
     marginTop: 2,
   },
@@ -1457,7 +1456,7 @@ const styles = StyleSheet.create({
   },
   spiValue: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
 
@@ -1479,7 +1478,7 @@ const styles = StyleSheet.create({
   },
   progressPercent: {
     fontSize: TYPE.captionSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   progressVariance: {
@@ -1518,7 +1517,7 @@ const styles = StyleSheet.create({
   },
   activityLegendValue: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   dangerText: {
@@ -1544,7 +1543,7 @@ const styles = StyleSheet.create({
   },
   dateCardValue: {
     fontSize: TYPE.captionSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
     marginTop: 2,
   },
@@ -1564,7 +1563,7 @@ const styles = StyleSheet.create({
   whatIfButtonText: {
     flex: 1,
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: COO_COLOR,
   },
 
@@ -1584,7 +1583,7 @@ const styles = StyleSheet.create({
   },
   alertCardTitle: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.feedbackError,
   },
   alertCardItem: {
@@ -1626,7 +1625,7 @@ const styles = StyleSheet.create({
   },
   permitPipelineLegendCount: {
     fontSize: TYPE.captionSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
 
@@ -1651,7 +1650,7 @@ const styles = StyleSheet.create({
   },
   conditionsRingValue: {
     fontSize: TYPE.displaySize - 6,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   conditionsRingLabel: {
@@ -1679,7 +1678,7 @@ const styles = StyleSheet.create({
   },
   conditionsDischargeValue: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
 
@@ -1703,7 +1702,7 @@ const styles = StyleSheet.create({
   },
   timelineDays: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: COO_COLOR,
   },
   timelineExtension: {
@@ -1719,7 +1718,7 @@ const styles = StyleSheet.create({
   },
   esgRatingText: {
     fontSize: TYPE.labelSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
   },
   esgRingRow: {
     flexDirection: 'row',
@@ -1741,7 +1740,7 @@ const styles = StyleSheet.create({
   },
   esgRingValue: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   esgRingLabel: {
@@ -1764,7 +1763,7 @@ const styles = StyleSheet.create({
   },
   esgMetricValue: {
     fontSize: TYPE.captionSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
 
@@ -1789,7 +1788,7 @@ const styles = StyleSheet.create({
   },
   precisionRingValue: {
     fontSize: TYPE.displaySize - 6,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   precisionRingLabel: {
@@ -1811,7 +1810,7 @@ const styles = StyleSheet.create({
   },
   precisionMetricValue: {
     fontSize: TYPE.titleSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
 
@@ -1863,7 +1862,7 @@ const styles = StyleSheet.create({
   },
   elasticStatValue: {
     fontSize: TYPE.titleSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
     marginTop: 2,
   },
@@ -1892,7 +1891,7 @@ const styles = StyleSheet.create({
   },
   maintenanceName: {
     fontSize: TYPE.captionSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   maintenanceMeta: {
@@ -1902,7 +1901,7 @@ const styles = StyleSheet.create({
   },
   maintenanceSaving: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.feedbackSuccess,
   },
   maintenanceBarTrack: {
@@ -1931,7 +1930,7 @@ const styles = StyleSheet.create({
   },
   experienceValue: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   experienceLabel: {
@@ -1971,7 +1970,7 @@ const styles = StyleSheet.create({
   },
   procurementCardValue: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   procurementCardLabel: {
@@ -1994,7 +1993,7 @@ const styles = StyleSheet.create({
   },
   coTotalValue: {
     fontSize: TYPE.bodySize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: Palette.hermesOrange,
   },
   riskInline: {
@@ -2012,7 +2011,7 @@ const styles = StyleSheet.create({
   },
   riskInlineValue: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.feedbackWarning,
   },
 
@@ -2025,7 +2024,7 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     fontSize: TYPE.labelSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
   },
   procurementStatsRow: {
     flexDirection: 'row',
@@ -2040,7 +2039,7 @@ const styles = StyleSheet.create({
   },
   procurementStatMiniValue: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   procurementStatMiniLabel: {
@@ -2079,7 +2078,7 @@ const styles = StyleSheet.create({
   },
   innovationRingValue: {
     fontSize: TYPE.titleSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   innovationLabel: {
@@ -2089,7 +2088,7 @@ const styles = StyleSheet.create({
   },
   innovationSublabel: {
     fontSize: TYPE.labelSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   innovationProgress: {
@@ -2113,7 +2112,7 @@ const styles = StyleSheet.create({
   },
   wfBadgeText: {
     fontSize: TYPE.tinySize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: Palette.white,
   },
   wfItem: {
@@ -2137,7 +2136,7 @@ const styles = StyleSheet.create({
   },
   wfTypeBadgeText: {
     fontSize: TYPE.tinySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
   },
   wfActionRequired: {
     paddingHorizontal: 8,
@@ -2146,11 +2145,11 @@ const styles = StyleSheet.create({
   },
   wfActionRequiredText: {
     fontSize: TYPE.tinySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
   },
   wfItemTitle: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   wfItemMeta: {
@@ -2198,7 +2197,7 @@ const styles = StyleSheet.create({
   },
   wfActionButtonText: {
     fontSize: TYPE.captionSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: Palette.white,
   },
 
@@ -2226,7 +2225,7 @@ const styles = StyleSheet.create({
   },
   actionTitle: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   actionSubtitle: {

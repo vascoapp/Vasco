@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 24,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SL_COLORS.charcoal, textTransform: 'uppercase', letterSpacing: 1.2 },
   headerSubtitle: {
     fontSize: 14,
@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
   },
   teamInfoTitle: {
     fontSize: 18,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SL_COLORS.charcoal,
   },
   teamInfoSubtitle: {
@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
   teamInfoValue: {
     fontSize: 14,
     color: SL_COLORS.charcoal,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: 'Inter_600SemiBold',
     flex: 1,
   },
   progressContainer: {
@@ -627,12 +627,12 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: 14,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SL_COLORS.charcoal,
   },
   progressPercentage: {
     fontSize: 14,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SL_COLORS.terracotta,
   },
   progressBarContainer: {
@@ -657,7 +657,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SL_COLORS.charcoal,
   },
   sectionDate: {
@@ -685,7 +685,7 @@ const styles = StyleSheet.create({
   },
   memberInitials: {
     fontSize: 14,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SL_COLORS.terracotta,
   },
   memberInfo: {
@@ -693,7 +693,7 @@ const styles = StyleSheet.create({
   },
   memberName: {
     fontSize: 15,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SL_COLORS.charcoal,
   },
   memberRole: {
@@ -708,7 +708,7 @@ const styles = StyleSheet.create({
   },
   memberStatusText: {
     fontSize: 12,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
   },
 
   // Schedule Blocks
@@ -727,7 +727,7 @@ const styles = StyleSheet.create({
   },
   scheduleTime: {
     fontSize: 12,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SL_COLORS.warmGray,
   },
   scheduleTimeline: {
@@ -754,7 +754,7 @@ const styles = StyleSheet.create({
   },
   scheduleTask: {
     fontSize: 15,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SL_COLORS.charcoal,
     marginBottom: 4,
   },
@@ -781,7 +781,7 @@ const styles = StyleSheet.create({
   },
   scheduleProgressText: {
     fontSize: 12,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SL_COLORS.warmGray,
     width: 40,
     textAlign: 'right',
@@ -811,7 +811,7 @@ const styles = StyleSheet.create({
   },
   aiTitle: {
     fontSize: 15,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SL_COLORS.charcoal,
     marginBottom: 2,
   },
@@ -831,7 +831,7 @@ const styles = StyleSheet.create({
   },
   noteTime: {
     fontSize: 13,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SL_COLORS.terracotta,
     marginBottom: 4,
   },
@@ -867,12 +867,12 @@ const styles = StyleSheet.create({
   },
   actionButtonTextPrimary: {
     fontSize: 16,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SL_COLORS.cream,
   },
   actionButtonTextSecondary: {
     fontSize: 16,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SL_COLORS.terracotta,
   },
 

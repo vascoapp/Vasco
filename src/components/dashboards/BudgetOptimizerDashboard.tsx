@@ -1371,8 +1371,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: TYPE.sectionSize,
     fontWeight: '700',
-    color: SemanticColors.textPrimary,
-  },
+    color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   headerSubtitle: {
     fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
@@ -1438,8 +1437,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: SemanticColors.textPrimary,
     marginTop: Spacing.xs,
-    marginBottom: 6,
-  },
+    marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1.2 },
 
   // ── Hero Card ─────────────────────────────────────────────────────────────
   heroHeader: {

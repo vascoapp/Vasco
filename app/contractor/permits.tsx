@@ -419,12 +419,12 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
   },
   backButton: { padding: 4 },
-  headerTitle: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
+  headerTitle: { fontSize: 24, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   headerSubtitle: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 2 },
   tabBar: { flexDirection: 'row', paddingHorizontal: Spacing.lg, gap: 6, paddingBottom: Spacing.md },
   tab: { flex: 1, paddingVertical: 8, borderRadius: 12, backgroundColor: SemanticColors.surfacePrimary, alignItems: 'center' },
   tabActive: { backgroundColor: Palette.hermesOrange },
-  tabText: { fontSize: 13, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textTertiary },
+  tabText: { fontSize: 13, fontFamily: 'Archivo_700Bold', color: SemanticColors.textTertiary },
   tabTextActive: { color: '#fff' },
   scrollView: { flex: 1, paddingHorizontal: SafeArea.side },
 
@@ -435,11 +435,11 @@ const styles = StyleSheet.create({
   },
   permitAccent: { width: 3, alignSelf: 'stretch' },
   permitInfo: { flex: 1 },
-  permitTitle: { fontSize: 14, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textPrimary },
+  permitTitle: { fontSize: 14, fontFamily: 'Archivo_700Bold', color: SemanticColors.textPrimary },
   permitType: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 1 },
   permitRef: { fontSize: 11, color: SemanticColors.textTertiary, marginTop: 1 },
   permitRight: { alignItems: 'flex-end' },
-  permitStatus: { fontSize: 11, fontFamily: 'Manrope_600SemiBold' },
+  permitStatus: { fontSize: 11, fontFamily: 'Archivo_700Bold' },
 
   // Expanded
   expandedContent: {
@@ -455,22 +455,22 @@ const styles = StyleSheet.create({
     alignItems: 'center', backgroundColor: Palette.hermesOrange + '10',
     paddingVertical: 8, borderRadius: 8, marginTop: 4,
   },
-  submitButtonText: { fontSize: 13, fontFamily: 'Manrope_600SemiBold', color: Palette.hermesOrange },
+  submitButtonText: { fontSize: 13, fontFamily: 'Archivo_700Bold', color: Palette.hermesOrange },
 
   // Wizard
-  wizardTitle: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  wizardTitle: { fontSize: 20, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary },
   wizardSubtitle: { fontSize: 14, color: SemanticColors.textSecondary },
-  wizardBack: { fontSize: 14, color: Palette.hermesOrange, fontFamily: 'Manrope_600SemiBold' },
+  wizardBack: { fontSize: 14, color: Palette.hermesOrange, fontFamily: 'Archivo_700Bold' },
   typeCard: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
     backgroundColor: SemanticColors.surfacePrimary, borderRadius: 12,
     padding: Spacing.md, borderWidth: 1, borderColor: SemanticColors.borderDefault,
   },
   typeCardSelected: { borderColor: Palette.hermesOrange, backgroundColor: Palette.hermesOrange + '08' },
-  typeName: { fontSize: 15, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textPrimary },
+  typeName: { fontSize: 15, fontFamily: 'Archivo_700Bold', color: SemanticColors.textPrimary },
   typeDesc: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 2 },
   inputGroup: { gap: 4 },
-  inputLabel: { fontSize: 13, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textSecondary },
+  inputLabel: { fontSize: 13, fontFamily: 'Archivo_700Bold', color: SemanticColors.textSecondary },
   textInput: {
     backgroundColor: SemanticColors.surfacePrimary, borderRadius: 12,
     padding: Spacing.sm, paddingHorizontal: Spacing.md,
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
     borderColor: Palette.hermesOrange, backgroundColor: Palette.hermesOrange + '08',
   },
   jobPickerChipText: {
-    fontSize: 13, fontFamily: 'Manrope_600SemiBold', color: SemanticColors.textSecondary,
+    fontSize: 13, fontFamily: 'Archivo_700Bold', color: SemanticColors.textSecondary,
   },
   jobPickerChipTextActive: {
     color: Palette.hermesOrange,
@@ -497,5 +497,5 @@ const styles = StyleSheet.create({
     gap: Spacing.xs, backgroundColor: Palette.hermesOrange,
     borderRadius: 12, padding: Spacing.md, paddingVertical: 14, marginTop: Spacing.sm,
   },
-  createButtonText: { fontSize: 16, fontFamily: 'Manrope_700Bold', color: '#fff' },
+  createButtonText: { fontSize: 16, fontFamily: 'Archivo_800ExtraBold', color: '#fff' },
 });

@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: TYPE.titleSize + 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
     marginBottom: 16,
   },
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   actionLabel: {
     flex: 1,
     fontSize: TYPE.titleSize,
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: 'Inter_600SemiBold',
   },
   cancelBtn: {
     marginTop: 12,
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   },
   cancelText: {
     fontSize: TYPE.bodySize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textSecondary,
   },
 });

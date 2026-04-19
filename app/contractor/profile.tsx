@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
   nameText: { fontSize: TYPE.sectionSize + 2, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, marginTop: GRID.sm + 4 },
   roleText: { fontSize: TYPE.captionSize, color: SemanticColors.textTertiary, marginTop: GRID.xs },
   sectionWrap: { gap: GRID.sm },
-  sectionLabel: { fontSize: TYPE.labelSize, fontFamily: 'Manrope_700Bold', color: SemanticColors.textTertiary, letterSpacing: 0.8, paddingHorizontal: GRID.xs },
+  sectionLabel: { fontSize: TYPE.labelSize, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textTertiary, letterSpacing: 0.8, paddingHorizontal: GRID.xs },
   card: {
     backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden',
   },
@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: SemanticColors.borderDefault,
   },
   scoreTitle: { flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
-  scoreValue: { fontSize: TYPE.titleSize, fontFamily: 'Manrope_700Bold', color: Palette.hermesOrange },
+  scoreValue: { fontSize: TYPE.titleSize, fontFamily: 'Archivo_800ExtraBold', color: Palette.hermesOrange },
   scoreBreakdown: { paddingHorizontal: 14, paddingVertical: 10, gap: GRID.sm },
   scoreRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   scoreMetricLabel: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },

@@ -1327,9 +1327,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: TYPE.displaySize - 4,
-    fontFamily: 'Manrope_700Bold',
-    color: SemanticColors.textPrimary,
-  },
+    fontFamily: 'Archivo_800ExtraBold',
+    color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   headerSubtitle: {
     fontSize: TYPE.captionSize,
     color: SemanticColors.textSecondary,
@@ -1351,7 +1350,7 @@ const styles = StyleSheet.create({
   },
   alertBadgeText: {
     fontSize: TYPE.labelSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: Palette.white,
   },
   headerAccent: {
@@ -1371,7 +1370,7 @@ const styles = StyleSheet.create({
   },
   headerMetricValue: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   headerMetricLabel: {
@@ -1409,7 +1408,7 @@ const styles = StyleSheet.create({
   },
   tabButtonText: {
     fontSize: TYPE.tinySize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textSecondary,
   },
   tabButtonTextActive: {
@@ -1429,7 +1428,7 @@ const styles = StyleSheet.create({
   },
   tabBadgeText: {
     fontSize: TYPE.tinySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: Palette.white,
   },
 
@@ -1445,7 +1444,7 @@ const styles = StyleSheet.create({
   // Section
   sectionLabel: {
     fontSize: TYPE.tinySize - 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -1475,7 +1474,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   cardSubtitle: {
@@ -1494,7 +1493,7 @@ const styles = StyleSheet.create({
   },
   badgePillText: {
     fontSize: TYPE.tinySize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: Palette.white,
   },
 
@@ -1522,7 +1521,7 @@ const styles = StyleSheet.create({
   },
   approvalTitle: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   approvalStatusBadge: {
@@ -1540,7 +1539,7 @@ const styles = StyleSheet.create({
   },
   approvalStatusText: {
     fontSize: TYPE.tinySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
   },
   approvalProject: {
     fontSize: TYPE.labelSize,
@@ -1557,7 +1556,7 @@ const styles = StyleSheet.create({
   },
   approvalAmountValue: {
     fontSize: TYPE.titleSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   approvalDue: {
@@ -1578,7 +1577,7 @@ const styles = StyleSheet.create({
   },
   aiVerificationTitle: {
     fontSize: TYPE.tinySize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: CFO_COLOR,
   },
   aiCheckRow: {
@@ -1634,7 +1633,7 @@ const styles = StyleSheet.create({
   },
   approvalActionButtonText: {
     fontSize: TYPE.captionSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   approvalActionButtonTextPrimary: {
@@ -1656,7 +1655,7 @@ const styles = StyleSheet.create({
   },
   approvalActionButtonTextSecondary: {
     fontSize: TYPE.captionSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: CFO_COLOR,
   },
 
@@ -1683,7 +1682,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   modalBody: {
@@ -1698,12 +1697,12 @@ const styles = StyleSheet.create({
   },
   modalValue: {
     fontSize: TYPE.bodySize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   modalAmount: {
     fontSize: TYPE.displaySize - 4,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: CFO_COLOR,
   },
   modalWarning: {
@@ -1725,7 +1724,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
     padding: 12,
     fontSize: TYPE.titleSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     textAlign: 'center',
     color: SemanticColors.textPrimary,
     borderWidth: 1,
@@ -1747,7 +1746,7 @@ const styles = StyleSheet.create({
   },
   modalCancelText: {
     fontSize: TYPE.bodySize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textSecondary,
   },
   modalConfirmButton: {
@@ -1762,7 +1761,7 @@ const styles = StyleSheet.create({
   },
   modalConfirmText: {
     fontSize: TYPE.bodySize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: Palette.white,
   },
 
@@ -1785,7 +1784,7 @@ const styles = StyleSheet.create({
   },
   handoverProject: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   handoverWorkPackage: {
@@ -1803,7 +1802,7 @@ const styles = StyleSheet.create({
   },
   handoverAmount: {
     fontSize: TYPE.bodySize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   handoverStatusBadge: {
@@ -1823,7 +1822,7 @@ const styles = StyleSheet.create({
   },
   handoverStatusText: {
     fontSize: TYPE.tinySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textSecondary,
   },
   handoverProgressContainer: {
@@ -1853,7 +1852,7 @@ const styles = StyleSheet.create({
   },
   handoverProgressText: {
     fontSize: TYPE.tinySize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textSecondary,
     width: 32,
     textAlign: 'right',
@@ -1891,7 +1890,7 @@ const styles = StyleSheet.create({
   },
   handoverActionText: {
     fontSize: TYPE.labelSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: CFO_COLOR,
   },
   handoverSummary: {
@@ -1907,7 +1906,7 @@ const styles = StyleSheet.create({
   },
   handoverSummaryText: {
     fontSize: TYPE.captionSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
 
@@ -1928,7 +1927,7 @@ const styles = StyleSheet.create({
   },
   drawRequestProject: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   drawRequestStage: {
@@ -1941,7 +1940,7 @@ const styles = StyleSheet.create({
   },
   drawRequestAmount: {
     fontSize: TYPE.bodySize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   drawRequestStatus: {
@@ -1956,14 +1955,14 @@ const styles = StyleSheet.create({
   },
   drawRequestStatusText: {
     fontSize: TYPE.tinySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textSecondary,
   },
 
   // Facility Utilization
   facilityUtilPercent: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
   },
   facilityBarContainer: {
     gap: 8,
@@ -1997,7 +1996,7 @@ const styles = StyleSheet.create({
   },
   facilityLegendValue: {
     fontSize: TYPE.labelSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
   },
 
   // Net Cash Card
@@ -2014,7 +2013,7 @@ const styles = StyleSheet.create({
   netCashLeft: {},
   netCashLabel: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   netCashSublabel: {
@@ -2027,7 +2026,7 @@ const styles = StyleSheet.create({
   },
   netCashValue: {
     fontSize: TYPE.displaySize - 4,
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
     color: CFO_COLOR,
   },
   netCashTrend: {
@@ -2038,7 +2037,7 @@ const styles = StyleSheet.create({
   },
   netCashTrendText: {
     fontSize: TYPE.tinySize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
   },
 
   // IRR Comparison Bars
@@ -2053,7 +2052,7 @@ const styles = StyleSheet.create({
   },
   irrBarProject: {
     fontSize: TYPE.labelSize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   irrBarCountry: {
@@ -2089,7 +2088,7 @@ const styles = StyleSheet.create({
   irrBarValue: {
     width: 42,
     fontSize: TYPE.labelSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     textAlign: 'right',
   },
   irrTargetLegend: {
@@ -2123,12 +2122,12 @@ const styles = StyleSheet.create({
   },
   investorFlowName: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   investorFlowIRR: {
     fontSize: TYPE.captionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
   },
   investorFlowBarTrack: {
     height: 8,
@@ -2147,7 +2146,7 @@ const styles = StyleSheet.create({
   },
   investorFlowDistributed: {
     fontSize: TYPE.tinySize,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: CFO_COLOR,
   },
   investorFlowCommitted: {
@@ -2169,7 +2168,7 @@ const styles = StyleSheet.create({
   },
   auditorModalTitle: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   auditorModalSubtitle: {
@@ -2210,7 +2209,7 @@ const styles = StyleSheet.create({
   },
   actionTitle: {
     fontSize: TYPE.bodySize - 1,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
   },
   actionSubtitle: {
@@ -2234,7 +2233,7 @@ const styles = StyleSheet.create({
   },
   aiSavingsKPIValue: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   aiSavingsKPILabel: {

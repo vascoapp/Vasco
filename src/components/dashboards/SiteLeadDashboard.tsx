@@ -1095,7 +1095,7 @@ const styles = StyleSheet.create({
   } as any,
   headerNotifBadgeText: {
     fontSize: TYPE.tinySize - 3,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: Palette.white,
   },
   headerAvatar: {
@@ -1108,7 +1108,7 @@ const styles = StyleSheet.create({
   },
   headerAvatarText: {
     fontSize: TYPE.titleSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: Palette.white,
   },
 
@@ -1138,7 +1138,7 @@ const styles = StyleSheet.create({
   },
   gaugeValue: {
     fontSize: TYPE.displaySize - 6,
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
     color: SemanticColors.textPrimary,
   },
   gaugeLabel: {
@@ -1279,8 +1279,7 @@ const styles = StyleSheet.create({
     fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     letterSpacing: TYPE.sectionTracking,
-    flex: 1,
-  },
+    flex: 1, textTransform: 'uppercase' },
   sectionBadge: {
     backgroundColor: Palette.hermesOrange + '18',
     paddingHorizontal: 10,
@@ -1368,7 +1367,7 @@ const styles = StyleSheet.create({
   },
   teamDeviation: {
     fontSize: TYPE.labelSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
   },
   teamTask: {
     fontSize: TYPE.labelSize,
@@ -1520,7 +1519,7 @@ const styles = StyleSheet.create({
   },
   safetyBannerScore: {
     fontSize: TYPE.displaySize - 6,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     marginTop: 2,
   },
   ltirLabel: {
@@ -1529,7 +1528,7 @@ const styles = StyleSheet.create({
   },
   ltirValue: {
     fontSize: TYPE.displaySize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
   },
 
   // Bar charts
@@ -1550,7 +1549,7 @@ const styles = StyleSheet.create({
   },
   barValue: {
     fontSize: TYPE.labelSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
   },
   barTrack: {
     height: 5,
@@ -1615,7 +1614,7 @@ const styles = StyleSheet.create({
   },
   closureRingValue: {
     fontSize: TYPE.bodySize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
   },
   closureRingLabel: {
     fontSize: TYPE.tinySize - 2,
@@ -1736,7 +1735,7 @@ const pStyles = StyleSheet.create({
   },
   dateHeader: {
     fontSize: TYPE.titleSize + 1,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   dayDots: {
@@ -1783,7 +1782,7 @@ const pStyles = StyleSheet.create({
   },
   summaryValue: {
     fontSize: TYPE.sectionSize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   summaryLabel: {
@@ -1895,7 +1894,7 @@ const pStyles = StyleSheet.create({
   },
   progressText: {
     fontSize: TYPE.tinySize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     minWidth: 32,
     textAlign: 'right',
   },
@@ -1953,7 +1952,7 @@ const pStyles = StyleSheet.create({
   },
   aiButtonText: {
     fontSize: TYPE.bodySize,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: Palette.white,
   },
 });

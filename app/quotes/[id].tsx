@@ -375,12 +375,12 @@ const styles = StyleSheet.create({
   },
   grandTotalLabel: {
     fontSize: 16,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   grandTotalValue: {
     fontSize: 18,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   validUntilRow: {
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
   },
   acceptButtonText: {
     color: '#fff',
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
     fontSize: 16,
   },
   secondaryButton: {
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
   },
   secondaryText: {
     color: SemanticColors.textPrimary,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Archivo_700Bold',
   },
   appliedText: {
     color: SemanticColors.feedbackSuccess,

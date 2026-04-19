@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: "#FFFFFF", textTransform: 'uppercase', letterSpacing: 1.2 },
   headerBadge: {
     backgroundColor: SemanticColors.feedbackError,
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
   },
   headerBadgeText: {
     fontSize: 11,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: '#fff',
   },
   scrollView: { flex: 1 },
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
   },
   chipBadgeText: {
     fontSize: 10,
-    fontFamily: 'Manrope_700Bold' as const,
+    fontFamily: 'Archivo_800ExtraBold' as const,
     color: '#fff',
   },
 
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
   },
   heroValue: {
     fontSize: 17,
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
     color: "#FFFFFF",
   },
   heroLabel: {
@@ -531,7 +531,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 13,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: '#999',
     letterSpacing: 0.8,
   },
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
   },
   urgencyValue: {
     fontSize: 12,
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
   },
 
   // Stock bar
@@ -643,7 +643,7 @@ const styles = StyleSheet.create({
   },
   qtyText: {
     fontSize: 13,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: "#FFFFFF",
   },
   costText: {
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
   },
   savingsChipText: {
     fontSize: 10,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.feedbackSuccess,
   },
   orderBtn: {
@@ -769,7 +769,7 @@ const styles = StyleSheet.create({
   },
   timelineAmount: {
     fontSize: 22,
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
     color: "#FFFFFF",
   },
   trendPill: {
@@ -783,7 +783,7 @@ const styles = StyleSheet.create({
   },
   trendText: {
     fontSize: 12,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.feedbackSuccess,
   },
   chartRow: {
@@ -805,7 +805,7 @@ const styles = StyleSheet.create({
   },
   barValue: {
     fontSize: 10,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
     color: Palette.hermesOrange,
     marginBottom: 4,
   },
@@ -816,6 +816,6 @@ const styles = StyleSheet.create({
   },
   barLabelActive: {
     color: "#FFFFFF",
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Archivo_800ExtraBold',
   },
 });

@@ -507,14 +507,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12,
   },
-  headerTitle: { fontSize: TYPE.sectionSize, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, letterSpacing: -0.3 },
+  headerTitle: { fontSize: TYPE.sectionSize, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary, letterSpacing: -0.3 },
   closeBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: SemanticColors.surfacePrimary, alignItems: 'center', justifyContent: 'center' },
   scrollView: { flex: 1, paddingHorizontal: 20 },
 
   // Empty state
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, gap: 16 },
   cameraCircle: { width: 96, height: 96, borderRadius: 48, backgroundColor: Palette.hermesOrange + '12', alignItems: 'center', justifyContent: 'center' },
-  emptyTitle: { fontSize: TYPE.sectionSize, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, textAlign: 'center' },
+  emptyTitle: { fontSize: TYPE.sectionSize, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary, textAlign: 'center' },
   emptyDesc: { fontSize: TYPE.bodySize, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary, textAlign: 'center', lineHeight: 22 },
   primaryBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.lg, paddingVertical: 16, paddingHorizontal: 32 },
   primaryBtnText: { fontSize: TYPE.titleSize, fontFamily: 'Inter_600SemiBold', color: Palette.white },
@@ -535,9 +535,9 @@ const styles = StyleSheet.create({
   summaryRow: { flexDirection: 'row', backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: 16, marginBottom: 16 },
   summaryItem: { flex: 1, alignItems: 'center' },
   summaryLabel: { fontSize: TYPE.labelSize, fontFamily: 'Inter_500Medium', color: SemanticColors.textSecondary },
-  summaryValue: { fontSize: TYPE.titleSize, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, marginTop: 4 },
+  summaryValue: { fontSize: TYPE.titleSize, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary, marginTop: 4 },
 
-  sectionTitle: { fontSize: TYPE.titleSize, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary, marginBottom: 10 },
+  sectionTitle: { fontSize: TYPE.titleSize, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary, marginBottom: 10 },
 
   itemCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: 14, marginBottom: 8 },
   itemCardDeselected: { opacity: 0.5 },
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
   qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   qtyBtn: { width: 24, height: 24, borderRadius: RADIUS.md, backgroundColor: SemanticColors.surfaceSecondary, alignItems: 'center', justifyContent: 'center' },
   qtyText: { fontSize: TYPE.captionSize, fontFamily: 'Inter_500Medium', color: SemanticColors.textPrimary, minWidth: 50, textAlign: 'center' },
-  itemPrice: { fontSize: TYPE.bodySize, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
+  itemPrice: { fontSize: TYPE.bodySize, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary },
 
   notesSection: { marginTop: 16 },
   noteRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 },
@@ -561,8 +561,8 @@ const styles = StyleSheet.create({
   totalLabel: { fontSize: TYPE.bodySize, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
   totalValue: { fontSize: TYPE.bodySize, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
   totalRowFinal: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: SemanticColors.borderDefault, paddingTop: 10, marginTop: 6 },
-  totalFinalLabel: { fontSize: TYPE.titleSize, fontFamily: 'Manrope_700Bold', color: SemanticColors.textPrimary },
-  totalFinalValue: { fontSize: TYPE.sectionSize, fontFamily: 'Manrope_700Bold', color: Palette.hermesOrange },
+  totalFinalLabel: { fontSize: TYPE.titleSize, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary },
+  totalFinalValue: { fontSize: TYPE.sectionSize, fontFamily: 'Archivo_800ExtraBold', color: Palette.hermesOrange },
 
   actions: { flexDirection: 'row', gap: 10, marginTop: 20 },
   retakeBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, paddingVertical: 16 },
