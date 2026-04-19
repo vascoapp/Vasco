@@ -129,16 +129,16 @@ export default function BedrijfScreen() {
   }, [trackers, activeTrackers, customerRevenue, customers]);
 
   const tabs: { key: TabKey; label: string; count?: number }[] = [
-    { key: 'overview', label: 'OVERZICHT' },
-    { key: 'decisions', label: 'BESLISSINGEN', count: activeTrackers.length },
-    { key: 'contacts', label: 'CONTACTS', count: customers.length },
+    { key: 'overview', label: t('dk.tabs.overview', 'Overview').toUpperCase() },
+    { key: 'decisions', label: t('dk.tabs.decisions', 'Decisions').toUpperCase(), count: activeTrackers.length },
+    { key: 'contacts', label: t('dk.tabs.contacts', 'Contacts').toUpperCase(), count: customers.length },
   ];
 
   if (isLoading) {
     return (
       <View style={s.root}>
         <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
-          <View style={s.topBar}><Text style={s.title}>KLANTEN</Text></View>
+          <View style={s.topBar}><Text style={s.title}>{t('tabs.customers', 'Klanten').toUpperCase()}</Text></View>
         </SafeAreaView>
         <SkeletonList count={4} showAvatar lines={2} />
       </View>
@@ -151,8 +151,8 @@ export default function BedrijfScreen() {
       <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
         <View style={s.topBar}>
           <View style={{ flex: 1 }}>
-            <Text style={s.title}>KLANTEN</Text>
-            <Text style={s.subtitle}>{customers.length} CONTACTS · {formatAmount(totalRevenue)}</Text>
+            <Text style={s.title}>{t('tabs.customers', 'Klanten').toUpperCase()}</Text>
+            <Text style={s.subtitle}>{customers.length} {t('dk.tabs.contacts', 'Contacts').toUpperCase()} · {formatAmount(totalRevenue)}</Text>
           </View>
           <Pressable style={({ pressed }) => [s.addBtn, pressed && { opacity: 0.9 }]} onPress={() => setShowAddModal(true)}>
             <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
@@ -202,15 +202,15 @@ export default function BedrijfScreen() {
           <>
             {/* 3-KPI stadium */}
             <View style={s.kpiRow}>
-              <KpiTile label="CONTACTS" value={customers.length} tone={DK.colors.accent} />
-              <KpiTile label="BESLISSINGEN" value={activeTrackers.length} tone={DK.colors.highlight} />
-              <KpiTile label="TE LAAT" value={totalOverdue} tone={totalOverdue > 0 ? DK.colors.danger : DK.colors.textMuted} />
+              <KpiTile label={t('dk.tabs.contacts', 'Contacts').toUpperCase()} value={customers.length} tone={DK.colors.accent} />
+              <KpiTile label={t('dk.tabs.decisions', 'Decisions').toUpperCase()} value={activeTrackers.length} tone={DK.colors.highlight} />
+              <KpiTile label={t('dk.pill.overdue', 'Overdue').toUpperCase()} value={totalOverdue} tone={totalOverdue > 0 ? DK.colors.danger : DK.colors.textMuted} />
             </View>
 
             {/* Top 3 customers by revenue */}
             {customers.length > 0 && (
               <>
-                <Text style={s.subsectionLabel}>TOP KLANTEN</Text>
+                <Text style={s.subsectionLabel}>{t('dk.money.topCustomers', 'Top customers').toUpperCase()}</Text>
                 <View style={s.listGroup}>
                   {Object.entries(customerRevenue)
                     .sort((a, b) => b[1] - a[1])
@@ -222,7 +222,7 @@ export default function BedrijfScreen() {
                         <CustomerRow
                           key={c.id}
                           name={c.name}
-                          meta={`${customerJobs[c.id] || 0} JOBS · ${formatAmount(rev)}`}
+                          meta={`${customerJobs[c.id] || 0} ${t('dk.pill.jobs', 'Jobs').toUpperCase()} · ${formatAmount(rev)}`}
                           onPress={() => router.push('/contractor/customer-crm' as any)}
                         />
                       );
@@ -235,7 +235,7 @@ export default function BedrijfScreen() {
             {completedTrackers.length > 0 && (
               <View style={s.completedBanner}>
                 <Ionicons name="checkmark-circle" size={14} color={DK.colors.success} />
-                <Text style={s.completedBannerText}>{completedTrackers.length} BESLISSINGEN AFGEROND</Text>
+                <Text style={s.completedBannerText}>{t('dk.money.completedCount', { count: completedTrackers.length, defaultValue: '{{count}} completed' }).toUpperCase()}</Text>
               </View>
             )}
           </>
@@ -245,7 +245,7 @@ export default function BedrijfScreen() {
           activeTrackers.length === 0 && completedTrackers.length === 0 ? (
             <Pressable style={s.emptyPanel} onPress={() => router.push('/(contractor)/decisions' as any)}>
               <View style={s.emptyIcon}><Ionicons name="chatbubbles-outline" size={28} color={DK.colors.accent} /></View>
-              <Text style={s.emptyTitle}>NOG GEEN TRACKERS</Text>
+              <Text style={s.emptyTitle}>{t('dk.empty.noTrackers', 'No trackers yet').toUpperCase()}</Text>
               <Text style={s.emptyDesc}>{t('customers.noTrackersDesc', 'Maak een tracker zodat klanten keuzes kunnen maken over materialen, afwerking en timing.')}</Text>
             </Pressable>
           ) : (
@@ -281,14 +281,14 @@ export default function BedrijfScreen() {
                       {tracker.overdue > 0 ? (
                         <View style={s.overduePill}>
                           <Ionicons name="alert-circle" size={11} color={DK.colors.danger} />
-                          <Text style={s.overdueText}>{tracker.overdue} TE LAAT</Text>
+                          <Text style={s.overdueText}>{tracker.overdue} {t('dk.pill.overdue', 'Overdue').toUpperCase()}</Text>
                         </View>
                       ) : (
                         <Text style={s.trackerTime}>{tracker.lastActivity.toUpperCase()}</Text>
                       )}
                       <Pressable style={s.reminderBtn} onPress={() => handleSendReminder(tracker.id)}>
                         <Ionicons name="paper-plane-outline" size={12} color={DK.colors.accent} />
-                        <Text style={s.reminderText}>REMIND</Text>
+                        <Text style={s.reminderText}>{t('dk.actions.remind', 'Remind').toUpperCase()}</Text>
                       </Pressable>
                     </View>
                   </Pressable>
@@ -297,11 +297,11 @@ export default function BedrijfScreen() {
               {completedTrackers.length > 0 && (
                 <View style={s.completedBanner}>
                   <Ionicons name="checkmark-circle" size={14} color={DK.colors.success} />
-                  <Text style={s.completedBannerText}>{completedTrackers.length} AFGEROND</Text>
+                  <Text style={s.completedBannerText}>{t('dk.money.completedCount', { count: completedTrackers.length, defaultValue: '{{count}} completed' }).toUpperCase()}</Text>
                 </View>
               )}
               <Pressable style={s.manageLink} onPress={() => router.push('/(contractor)/decisions' as any)}>
-                <Text style={s.manageLinkText}>MANAGE ALL DECISIONS</Text>
+                <Text style={s.manageLinkText}>{t('dk.section.manageAll', 'Manage all').toUpperCase()} {t('dk.tabs.decisions', 'Decisions').toUpperCase()}</Text>
                 <Ionicons name="chevron-forward" size={14} color={DK.colors.accent} />
               </Pressable>
             </View>
@@ -312,9 +312,9 @@ export default function BedrijfScreen() {
           customers.length === 0 ? (
             <View style={s.emptyPanel}>
               <View style={s.emptyIcon}><Ionicons name="people-outline" size={28} color={DK.colors.accent} /></View>
-              <Text style={s.emptyTitle}>NOG GEEN KLANTEN</Text>
+              <Text style={s.emptyTitle}>{t('dk.empty.noCustomers', 'No customers yet').toUpperCase()}</Text>
               <Pressable style={({ pressed }) => [s.emptyCta, pressed && { opacity: 0.85 }]} onPress={() => setShowAddModal(true)}>
-                <Text style={s.emptyCtaText}>NIEUWE KLANT</Text>
+                <Text style={s.emptyCtaText}>{t('dk.actions.newCustomer', 'New customer').toUpperCase()}</Text>
               </Pressable>
             </View>
           ) : (
@@ -328,7 +328,7 @@ export default function BedrijfScreen() {
                     <CustomerRow
                       key={customer.id}
                       name={customer.name}
-                      meta={`${customerJobs[customer.id] || 0} JOBS${(customerRevenue[customer.id] || 0) > 0 ? ` · ${formatAmount(customerRevenue[customer.id])}` : ''}`}
+                      meta={`${customerJobs[customer.id] || 0} {t('dk.pill.jobs', 'Jobs').toUpperCase()}${(customerRevenue[customer.id] || 0) > 0 ? ` · ${formatAmount(customerRevenue[customer.id])}` : ''}`}
                       onPress={() => router.push('/contractor/customer-crm' as any)}
                       borderBottom={idx < Math.min(customers.length, 10) - 1}
                       inCard
@@ -337,7 +337,7 @@ export default function BedrijfScreen() {
                 />
               </View>
               <Pressable style={s.manageLink} onPress={() => router.push('/contractor/customer-crm' as any)}>
-                <Text style={s.manageLinkText}>VIEW ALL CONTACTS</Text>
+                <Text style={s.manageLinkText}>{t('dk.section.viewAll', 'View all').toUpperCase()} {t('dk.tabs.contacts', 'Contacts').toUpperCase()}</Text>
                 <Ionicons name="chevron-forward" size={14} color={DK.colors.accent} />
               </Pressable>
             </>
@@ -353,13 +353,13 @@ export default function BedrijfScreen() {
           <Pressable style={s.modalOverlay} onPress={() => setShowAddModal(false)}>
             <Pressable style={s.modalSheet} onPress={(e) => e.stopPropagation()}>
               <View style={s.modalHandle} />
-              <Text style={s.modalTitle}>NIEUWE KLANT</Text>
+              <Text style={s.modalTitle}>{t('dk.actions.newCustomer', 'New customer').toUpperCase()}</Text>
               <TextInput style={s.modalInput} value={newName} onChangeText={setNewName} placeholder={t('customers.namePlaceholder', 'Customer name')} placeholderTextColor={DK.colors.textMuted} autoFocus />
               <TextInput style={s.modalInput} value={newEmail} onChangeText={setNewEmail} placeholder={t('customers.emailPlaceholder', 'Email')} placeholderTextColor={DK.colors.textMuted} keyboardType="email-address" autoCapitalize="none" />
               <TextInput style={s.modalInput} value={newPhone} onChangeText={setNewPhone} placeholder={t('customers.phonePlaceholder', 'Phone')} placeholderTextColor={DK.colors.textMuted} keyboardType="phone-pad" />
               <Pressable style={[s.modalSubmit, !newName.trim() && { opacity: 0.5 }]} onPress={handleAddCustomer} disabled={!newName.trim()}>
                 <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-                <Text style={s.modalSubmitText}>KLANT TOEVOEGEN</Text>
+                <Text style={s.modalSubmitText}>{t('dk.actions.addCustomer', 'Add customer').toUpperCase()}</Text>
               </Pressable>
             </Pressable>
           </Pressable>
@@ -376,8 +376,9 @@ type HeroFeature =
   | { type: 'topRevenue'; customer: { id: string; name: string }; revenue: number };
 
 function HeroFeatureCard({ feature, onPress, onRemind }: { feature: HeroFeature; onPress: () => void; onRemind: (id: string) => void }) {
+  const { t } = useTranslation();
   const isTracker = feature.type === 'urgent' || feature.type === 'active';
-  const label = feature.type === 'urgent' ? 'URGENT' : feature.type === 'active' ? 'TOP BESLISSING' : 'TOP KLANT';
+  const label = (feature.type === 'urgent' ? t('dk.hero.urgent', 'Urgent') : feature.type === 'active' ? t('dk.hero.topDecision', 'Top decision') : t('dk.hero.topCustomer', 'Top customer')).toUpperCase();
   const isUrgent = feature.type === 'urgent';
   const tone = isUrgent ? DK.colors.danger : DK.colors.highlight;
   const chipBg = isUrgent ? '#FFFFFF' : tone + '22';
@@ -403,12 +404,12 @@ function HeroFeatureCard({ feature, onPress, onRemind }: { feature: HeroFeature;
             {/* Top-right stacked pills */}
             <View style={heroStyles.cornerPills}>
               <View style={[heroStyles.pill, heroStyles.pillDecided]}>
-                <Text style={heroStyles.pillLabel}>BESLIST</Text>
+                <Text style={heroStyles.pillLabel}>{t('dk.pill.decided', 'Decided').toUpperCase()}</Text>
                 <Text style={[heroStyles.pillValue, { color: DK.colors.highlight }]}>{feature.tracker.decided}/{feature.tracker.totalDecisions}</Text>
               </View>
               {feature.tracker.overdue > 0 ? (
                 <View style={[heroStyles.pill, heroStyles.pillOverdue]}>
-                  <Text style={heroStyles.pillLabel}>TE LAAT</Text>
+                  <Text style={heroStyles.pillLabel}>{t('dk.pill.overdue', 'Overdue').toUpperCase()}</Text>
                   <Text style={[heroStyles.pillValue, { color: '#FFFFFF' }]}>{feature.tracker.overdue}</Text>
                 </View>
               ) : null}
@@ -420,10 +421,10 @@ function HeroFeatureCard({ feature, onPress, onRemind }: { feature: HeroFeature;
             <View style={heroStyles.ctaRow}>
               <Pressable style={heroStyles.remindBtn} onPress={() => onRemind(feature.tracker.id)}>
                 <Ionicons name="paper-plane-outline" size={14} color="#FFFFFF" />
-                <Text style={heroStyles.remindText}>REMIND</Text>
+                <Text style={heroStyles.remindText}>{t('dk.actions.remind', 'Remind').toUpperCase()}</Text>
               </Pressable>
               <Pressable style={({ pressed }) => [heroStyles.openBtn, pressed && { opacity: 0.92 }]} onPress={onPress}>
-                <Text style={heroStyles.openText}>OPEN</Text>
+                <Text style={heroStyles.openText}>{t('dk.actions.open', 'Open').toUpperCase()}</Text>
                 <Ionicons name="arrow-forward" size={14} color={DK.colors.bg} />
               </Pressable>
             </View>
@@ -433,7 +434,7 @@ function HeroFeatureCard({ feature, onPress, onRemind }: { feature: HeroFeature;
             {/* Top-right revenue pill */}
             <View style={heroStyles.cornerPills}>
               <View style={[heroStyles.pill, heroStyles.pillDecided]}>
-                <Text style={heroStyles.pillLabel}>OMZET</Text>
+                <Text style={heroStyles.pillLabel}>{t('dk.pill.revenue', 'Revenue').toUpperCase()}</Text>
                 <Text style={[heroStyles.pillValue, { color: DK.colors.success }]}>{formatAmount(feature.revenue)}</Text>
               </View>
             </View>
@@ -441,7 +442,7 @@ function HeroFeatureCard({ feature, onPress, onRemind }: { feature: HeroFeature;
             <Text style={heroStyles.title} numberOfLines={2}>{feature.customer.name}</Text>
             <View style={{ height: 20 }} />
             <Pressable style={({ pressed }) => [heroStyles.openBtn, pressed && { opacity: 0.92 }]} onPress={onPress}>
-              <Text style={heroStyles.openText}>OPEN KLANT</Text>
+              <Text style={heroStyles.openText}>{t('dk.actions.openCustomer', 'Open customer').toUpperCase()}</Text>
               <Ionicons name="arrow-forward" size={14} color={DK.colors.bg} />
             </Pressable>
           </>

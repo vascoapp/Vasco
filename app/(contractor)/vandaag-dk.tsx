@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { DK } from '../../src/theme/draftkings';
 import { useAppState } from '../../src/state/AppState';
 import { useDaySchedule, type ScheduledJob } from '../../src/services/smartSchedulerService';
@@ -28,6 +29,7 @@ import { formatAmount } from '../../src/utils/formatAmount';
 import { hapticSuccess, hapticWarning } from '../../src/utils/haptics';
 
 export default function VandaagDK() {
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { invoices, quotes, jobs, customers } = useAppState();
   const today = new Date().toISOString().split('T')[0];
@@ -61,7 +63,7 @@ export default function VandaagDK() {
 
   const handleApprove = useCallback(async (id: string) => {
     try { await aiQueue.approve(id); hapticSuccess(); }
-    catch (e) { hapticWarning(); Alert.alert('Kon actie niet uitvoeren', String((e as Error).message ?? e)); }
+    catch (e) { hapticWarning(); Alert.alert(t('dk.empty.noExtraActions', 'Action failed'), String((e as Error).message ?? e)); }
   }, [aiQueue]);
 
   const handleReject = useCallback(async (id: string) => {
@@ -77,9 +79,9 @@ export default function VandaagDK() {
         <View style={styles.topBar}>
           <View style={{ flex: 1 }}>
             <Text style={styles.overline}>
-              {new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase()}
+              {new Date().toLocaleDateString(i18n.language, { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase()}
             </Text>
-            <Text style={styles.greeting}>Goeiemorgen.</Text>
+            <Text style={styles.greeting}>{t('dk.common.goodMorning', 'Good morning')}.</Text>
           </View>
           <Pressable style={styles.bellBtn} onPress={() => router.push('/contractor/notifications' as any)} hitSlop={8}>
             <Ionicons name="notifications-outline" size={20} color={DK.colors.text} />
@@ -97,16 +99,16 @@ export default function VandaagDK() {
         {clockIn.active ? (
           <View style={styles.clockStrip}>
             <View style={styles.livePulse} />
-            <Text style={styles.clockLabel}>LIVE · GEKLOKT IN</Text>
+            <Text style={styles.clockLabel}>{t('dk.hero.liveClockedIn', 'Live · clocked in').toUpperCase()}</Text>
             <Text style={styles.clockTimer}>{clockIn.timerDisplay}</Text>
           </View>
         ) : null}
 
         {/* 3. KPI ROW ─── 3 stats matching legacy ContractorDashboardHeader */}
         <View style={styles.kpiRow}>
-          <KpiTile label="AFSPRAKEN" value={String(todayJobs.length)} tone={DK.colors.text} onPress={() => router.push('/contractor/drag-schedule' as any)} />
-          <KpiTile label="VERDIEND" value={formatAmount(dailyEarnings, 'nl')} tone={DK.colors.success} onPress={() => router.push('/(contractor)/geld' as any)} />
-          <KpiTile label="QUOTES" value={String(activeQuotes)} tone={DK.colors.highlight} onPress={() => router.push('/contractor/quote-list' as any)} />
+          <KpiTile label={t('dk.pill.appointments', 'Appointments').toUpperCase()} value={String(todayJobs.length)} tone={DK.colors.text} onPress={() => router.push('/contractor/drag-schedule' as any)} />
+          <KpiTile label={t('dk.pill.earned', 'Earned').toUpperCase()} value={formatAmount(dailyEarnings, i18n.language)} tone={DK.colors.success} onPress={() => router.push('/(contractor)/geld' as any)} />
+          <KpiTile label={t('dk.pill.quotes', 'Quotes').toUpperCase()} value={String(activeQuotes)} tone={DK.colors.highlight} onPress={() => router.push('/contractor/quote-list' as any)} />
         </View>
 
         {/* 4. VASCOCARD EQUIVALENT ─── hero AI action + inline queue items */}
@@ -120,7 +122,7 @@ export default function VandaagDK() {
             <View style={styles.heroGlowOverlay} />
             <View style={styles.heroChip}>
               <View style={styles.heroChipDot} />
-              <Text style={styles.heroChipText}>EVE ANALYST</Text>
+              <Text style={styles.heroChipText}>{t('dk.hero.eveAnalyst', 'EVE Analyst').toUpperCase()}</Text>
             </View>
             {heroAction ? (
               <>
@@ -136,8 +138,8 @@ export default function VandaagDK() {
               </>
             ) : (
               <>
-                <Text style={styles.heroTitle}>Alles onder controle.</Text>
-                <Text style={styles.heroBody}>Geen openstaande AI-acties.</Text>
+                <Text style={styles.heroTitle}>{t('dk.empty.allUpToDate', 'All clear')}.</Text>
+                <Text style={styles.heroBody}>{t('dk.empty.allUpToDateDesc', 'No open AI actions.')}</Text>
               </>
             )}
           </LinearGradient>
@@ -159,8 +161,8 @@ export default function VandaagDK() {
               <Ionicons name="trending-up" size={16} color={DK.colors.success} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.savingsTitle}>VASCO BESPAARDE {formatAmount(savings.totalSavedThisMonth, 'nl')}</Text>
-              <Text style={styles.savingsSub}>Deze maand — bekijk breakdown</Text>
+              <Text style={styles.savingsTitle}>{t('dk.savings.savedThisMonth', { amount: formatAmount(savings.totalSavedThisMonth, i18n.language), defaultValue: 'Vasco saved you {{amount}}' }).toUpperCase()}</Text>
+              <Text style={styles.savingsSub}>{t('dk.savings.monthSub', 'This month — view breakdown')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={DK.colors.textMuted} />
           </Pressable>
@@ -168,15 +170,15 @@ export default function VandaagDK() {
 
         {/* 6. SCHEDULE LIST ─── vertical, was Today's Schedule block */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>PLANNING</Text>
+          <Text style={styles.sectionTitle}>{t('dk.section.planning', 'Schedule').toUpperCase()}</Text>
           <Pressable onPress={() => router.push('/contractor/drag-schedule' as any)} hitSlop={8}>
-            <Text style={styles.sectionLink}>ALLES →</Text>
+            <Text style={styles.sectionLink}>{t('dk.section.all', 'All').toUpperCase()} →</Text>
           </Pressable>
         </View>
         <View style={styles.scheduleList}>
           {todayJobs.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyText}>Geen jobs ingepland voor vandaag</Text>
+              <Text style={styles.emptyText}>{t('dk.empty.noJobsToday', 'No jobs today')}</Text>
             </View>
           ) : (
             todayJobs.map((job) => (
@@ -219,7 +221,8 @@ function InlineQueueRow({ item, onApprove, onReject }: { item: QueueItem; onAppr
 }
 
 function JobRow({ job, onPress }: { job: ScheduledJob; onPress: () => void }) {
-  const status = job.status === 'completed' ? 'voltooid' : job.status === 'in_progress' ? 'actief' : 'gepland';
+  const { t } = useTranslation();
+  const status = job.status === 'completed' ? t('dk.status.completed', 'Completed') : job.status === 'in_progress' ? t('dk.status.active', 'Active') : t('dk.status.scheduled', 'Scheduled');
   const statusColor =
     job.status === 'in_progress' ? DK.colors.success :
     job.status === 'completed' ? DK.colors.textMuted :

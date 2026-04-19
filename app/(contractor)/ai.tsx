@@ -209,17 +209,17 @@ export default function VascoScreen() {
   ];
 
   const tabs: { key: TabKey; label: string; count?: number }[] = [
-    { key: 'queue', label: 'QUEUE', count: proactiveActions.length },
-    { key: 'insights', label: 'INSIGHTS', count: recommendations.length },
-    { key: 'automations', label: 'AUTOMATIONS', count: autoToggles.filter(a => a.enabled).length },
-    { key: 'more', label: 'MEER' },
+    { key: 'queue', label: t('dk.tabs.queue', 'Queue').toUpperCase(), count: proactiveActions.length },
+    { key: 'insights', label: t('dk.tabs.insights', 'Insights').toUpperCase(), count: recommendations.length },
+    { key: 'automations', label: t('dk.tabs.automations', 'Automations').toUpperCase(), count: autoToggles.filter(a => a.enabled).length },
+    { key: 'more', label: t('dk.tabs.more', 'More').toUpperCase() },
   ];
 
   if (isLoading) {
     return (
       <View style={s.root}>
         <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
-          <View style={s.topBar}><Text style={s.title}>VASCO</Text></View>
+          <View style={s.topBar}><Text style={s.title}>{t('tabs.ai', 'Vasco').toUpperCase()}</Text></View>
         </SafeAreaView>
         <SkeletonList count={3} showAction lines={2} />
       </View>
@@ -231,7 +231,7 @@ export default function VascoScreen() {
       {/* ─── TOP BAR ─── */}
       <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
         <View style={s.topBar}>
-          <Text style={s.title}>VASCO</Text>
+          <Text style={s.title}>{t('tabs.ai', 'Vasco').toUpperCase()}</Text>
           <Pressable style={s.iconBtn} onPress={() => router.push('/contractor/profile' as any)} hitSlop={8}>
             <Ionicons name="settings-outline" size={20} color={DK.colors.text} />
           </Pressable>
@@ -297,7 +297,7 @@ export default function VascoScreen() {
                     </View>
                     {action.priority === 'high' && (
                       <View style={s.highBadge}>
-                        <Text style={s.highBadgeText}>HIGH</Text>
+                        <Text style={s.highBadgeText}>{t('dk.pill.high', 'High').toUpperCase()}</Text>
                       </View>
                     )}
                   </View>
@@ -327,7 +327,7 @@ export default function VascoScreen() {
                         }}
                       >
                         <Ionicons name={editingId === action.id ? 'checkmark' : 'create-outline'} size={16} color={DK.colors.accent} />
-                        <Text style={s.editBtnText}>{editingId === action.id ? 'KLAAR' : 'EDIT'}</Text>
+                        <Text style={s.editBtnText}>{editingId === action.id ? t('dk.actions.done', 'Done').toUpperCase() : 'EDIT'}</Text>
                       </Pressable>
                     )}
                   </View>
@@ -336,15 +336,15 @@ export default function VascoScreen() {
               {actioned.size > 0 && (
                 <View style={s.doneRow}>
                   <Ionicons name="checkmark-circle" size={14} color={DK.colors.success} />
-                  <Text style={s.doneText}>{t('ai.actionsCompleted', { count: actioned.size }).toUpperCase()}</Text>
+                  <Text style={s.doneText}>{t('dk.ai.actionsCompletedUpper', { count: actioned.size, defaultValue: '{{count}} actions completed' }).toUpperCase()}</Text>
                 </View>
               )}
             </View>
           ) : (
             <EmptyPanel
               icon="sparkles-outline"
-              title={proactiveActions.length === 0 ? t('ai.nothingToDo') : 'GEEN EXTRA ACTIES'}
-              desc={proactiveActions.length === 0 ? t('ai.monitoringDesc') : 'De feature actie hierboven is je enige openstaande item.'}
+              title={proactiveActions.length === 0 ? t('dk.empty.nothingToDo', 'Nothing to do').toUpperCase() : t('dk.empty.noExtraActions', 'No extra actions').toUpperCase()}
+              desc={proactiveActions.length === 0 ? t('dk.empty.noInsightsDesc', 'Vasco is scanning.') : t('dk.empty.noExtraActionsDesc', 'The featured action above is your only open item.')}
             />
           )
         )}
@@ -368,7 +368,7 @@ export default function VascoScreen() {
               ))}
             </View>
           ) : (
-            <EmptyPanel icon="bulb-outline" title="GEEN INSIGHTS" desc="Vasco scant je data. Nieuwe insights verschijnen hier zodra ze relevant zijn." />
+            <EmptyPanel icon="bulb-outline" title={t('dk.empty.noInsights', 'No insights').toUpperCase()} desc={t('dk.empty.noInsightsDesc', 'Vasco is scanning your data. New insights appear here when they are relevant.')} />
           )
         )}
 
@@ -377,7 +377,7 @@ export default function VascoScreen() {
             {timeSaved.weeklyHoursSaved > 0 && (
               <View style={s.savedBanner}>
                 <Ionicons name="time-outline" size={14} color={DK.colors.success} />
-                <Text style={s.savedBannerText}>+{timeSaved.weeklyHoursSaved.toFixed(1)}H BESPAARD / WEEK</Text>
+                <Text style={s.savedBannerText}>{t('dk.ai.hoursSavedPerWeek', { hours: timeSaved.weeklyHoursSaved.toFixed(1), defaultValue: '+{{hours}}h saved / week' }).toUpperCase()}</Text>
               </View>
             )}
             <View style={s.autoList}>
@@ -408,11 +408,11 @@ export default function VascoScreen() {
             </View>
             {automationResults.length > 0 && (
               <Text style={s.autoResultCount}>
-                {t('ai.actionsExecutedThisWeek', { count: automationResults.filter(r => r.actionTaken).length }).toUpperCase()}
+                {t('dk.ai.actionsExecutedWeek', { count: automationResults.filter(r => r.actionTaken).length, defaultValue: '{{count}} actions executed this week' }).toUpperCase()}
               </Text>
             )}
             <Pressable style={s.manageLink} onPress={() => router.push('/contractor/automations' as any)}>
-              <Text style={s.manageLinkText}>MANAGE ALL AUTOMATIONS</Text>
+              <Text style={s.manageLinkText}>{t('dk.ai.manageAllAutomations', 'Manage all automations').toUpperCase()}</Text>
               <Ionicons name="chevron-forward" size={14} color={DK.colors.accent} />
             </Pressable>
           </>
@@ -420,19 +420,19 @@ export default function VascoScreen() {
 
         {tab === 'more' && (
           <>
-            <Text style={s.subsectionLabel}>QUICK ACCESS</Text>
+            <Text style={s.subsectionLabel}>{t('dk.ai.quickAccess', 'Quick access').toUpperCase()}</Text>
             <View style={s.chipRow}>
               <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/(contractor)/certificaten' as any)}>
                 <Ionicons name="shield-checkmark-outline" size={14} color={DK.colors.accent} />
-                <Text style={s.chipText}>{t('ai.certificates').toUpperCase()}</Text>
+                <Text style={s.chipText}>{t('ai.certificates', 'Certificates').toUpperCase()}</Text>
               </Pressable>
               <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/(contractor)/besparen' as any)}>
                 <Ionicons name="wallet-outline" size={14} color={DK.colors.accent} />
-                <Text style={s.chipText}>{t('ai.savings').toUpperCase()}</Text>
+                <Text style={s.chipText}>{t('ai.savings', 'Savings').toUpperCase()}</Text>
               </Pressable>
             </View>
 
-            <Text style={s.subsectionLabel}>ACCOUNT & PRIVACY</Text>
+            <Text style={s.subsectionLabel}>{t('dk.ai.accountPrivacy', 'Account & privacy').toUpperCase()}</Text>
             <View style={s.gdprList}>
               <GdprRow icon="chatbox-ellipses-outline" label={t('profile.sendFeedback')} onPress={() => Linking.openURL('mailto:support@vasco.app?subject=Vasco Feedback')} />
               <GdprRow icon="document-text-outline" label={t('profile.legal')} onPress={() => router.push('/contractor/legal' as any)} />
@@ -461,7 +461,7 @@ function HeroActionCard({ action, editingId, editText, setEditingId, setEditText
         <View style={heroStyles.glow} />
         <View style={heroStyles.chip}>
           <Ionicons name="flash" size={12} color={DK.colors.highlight} />
-          <Text style={heroStyles.chipText}>{action.priority === 'high' ? 'TOP PRIORITY' : 'NEXT ACTION'}</Text>
+          <Text style={heroStyles.chipText}>{(action.priority === 'high' ? t('dk.hero.topPriority', 'Top priority') : t('dk.hero.nextAction', 'Next action')).toUpperCase()}</Text>
         </View>
         <Text style={heroStyles.title} numberOfLines={2}>{action.title}</Text>
         <Text style={heroStyles.body} numberOfLines={2}>{action.reason}</Text>
@@ -493,7 +493,7 @@ function HeroActionCard({ action, editingId, editText, setEditingId, setEditText
               }}
             >
               <Ionicons name={editing ? 'checkmark' : 'create-outline'} size={20} color="#FFFFFF" />
-              <Text style={heroStyles.editBtnText}>{editing ? 'KLAAR' : 'EDIT'}</Text>
+              <Text style={heroStyles.editBtnText}>{editing ? t('dk.actions.done', 'Done').toUpperCase() : 'EDIT'}</Text>
             </Pressable>
           )}
         </View>
@@ -513,7 +513,7 @@ function AllUpToDateHero() {
       >
         <View style={[heroStyles.chip, { backgroundColor: DK.colors.success + '22', borderColor: DK.colors.success + '55' }]}>
           <Ionicons name="checkmark-circle" size={12} color={DK.colors.success} />
-          <Text style={[heroStyles.chipText, { color: DK.colors.success }]}>ALL CLEAR</Text>
+          <Text style={[heroStyles.chipText, { color: DK.colors.success }]}>{t('dk.hero.allClear', 'All clear').toUpperCase()}</Text>
         </View>
         <Text style={heroStyles.title}>{t('ai.allUpToDate')}</Text>
         <Text style={heroStyles.body}>{t('ai.scanningDesc')}</Text>

@@ -155,7 +155,7 @@ export default function GeldScreen() {
     return (
       <View style={s.root}>
         <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
-          <View style={s.topBar}><Text style={s.title}>GELD</Text></View>
+          <View style={s.topBar}><Text style={s.title}>{t('tabs.money', 'Geld').toUpperCase()}</Text></View>
         </SafeAreaView>
         <SkeletonList count={3} showAction lines={3} />
       </View>
@@ -182,18 +182,18 @@ export default function GeldScreen() {
         {/* ─── 3-KPI STADIUM ─── */}
         <View style={s.kpiRow}>
           <Pressable style={s.kpiTile} onPress={() => router.push('/(contractor)/facturen' as any)}>
-            <Text style={s.kpiLabel}>OMZET</Text>
+            <Text style={s.kpiLabel}>{t('dk.pill.revenue', 'Revenue').toUpperCase()}</Text>
             <View style={s.kpiValueRow}>
               <Text style={[s.kpiValue, { color: DK.colors.success }]}>{compactCurrency(paidTotal)}</Text>
               <Ionicons name={revenueTrend.icon} size={14} color={revenueTrend.color} />
             </View>
           </Pressable>
           <Pressable style={s.kpiTile} onPress={() => router.push('/(contractor)/facturen' as any)}>
-            <Text style={s.kpiLabel}>UITSTAAND</Text>
+            <Text style={s.kpiLabel}>{t('dk.pill.outstanding', 'Outstanding').toUpperCase()}</Text>
             <Text style={[s.kpiValue, { color: DK.colors.accent }]}>{compactCurrency(outstandingTotal)}</Text>
           </Pressable>
           <Pressable style={s.kpiTile}>
-            <Text style={s.kpiLabel}>PIPELINE</Text>
+            <Text style={s.kpiLabel}>{t('dk.pill.pipeline', 'Pipeline').toUpperCase()}</Text>
             <Text style={[s.kpiValue, { color: DK.colors.highlight }]}>{compactCurrency(fin.quotePipeline)}</Text>
           </Pressable>
         </View>
@@ -202,7 +202,7 @@ export default function GeldScreen() {
         {invoices.length > 0 && (
           <View style={s.collectionBadge}>
             <Ionicons name="checkmark-circle" size={14} color={collectionRate >= 80 ? DK.colors.success : collectionRate >= 50 ? DK.colors.highlight : DK.colors.danger} />
-            <Text style={s.collectionText}>COLLECTION RATE · <Text style={{ color: collectionRate >= 80 ? DK.colors.success : collectionRate >= 50 ? DK.colors.highlight : DK.colors.danger }}>{collectionRate}%</Text></Text>
+            <Text style={s.collectionText}>{t('dk.pill.collectionRate', 'Collection rate').toUpperCase()} · <Text style={{ color: collectionRate >= 80 ? DK.colors.success : collectionRate >= 50 ? DK.colors.highlight : DK.colors.danger }}>{collectionRate}%</Text></Text>
           </View>
         )}
 
@@ -213,7 +213,7 @@ export default function GeldScreen() {
         >
           <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
           <Ionicons name="add-circle-outline" size={16} color="#FFFFFF" />
-          <Text style={s.newQuoteBtnText}>NIEUWE OFFERTE</Text>
+          <Text style={s.newQuoteBtnText}>{t('dk.actions.newQuote', 'New quote').toUpperCase()}</Text>
         </Pressable>
 
         {/* ─── CASHFLOW FORECAST (embedded self-styled component) ─── */}
@@ -225,7 +225,7 @@ export default function GeldScreen() {
             <View style={s.vascoHeader}>
               <View style={s.vascoChip}>
                 <View style={s.vascoChipDot} />
-                <Text style={s.vascoChipText}>EVE FINANCE</Text>
+                <Text style={s.vascoChipText}>{t('dk.hero.eveFinance', 'EVE Finance').toUpperCase()}</Text>
               </View>
               <Text style={s.vascoCountText}>{financialQueue.length}</Text>
             </View>
@@ -255,7 +255,7 @@ export default function GeldScreen() {
         {/* ─── FACTUREN ─── */}
         <View style={s.sectionHeaderRow}>
           <View style={s.sectionTitleBlock}>
-            <Text style={s.sectionTitle}>FACTUREN</Text>
+            <Text style={s.sectionTitle}>{t('invoices.invoices', 'Facturen').toUpperCase()}</Text>
             <View style={s.sectionCountPill}><Text style={s.sectionCountText}>{invoices.length}</Text></View>
           </View>
           <Pressable onPress={() => setShowInvoiceFilterModal(true)} hitSlop={8}>
@@ -299,9 +299,9 @@ export default function GeldScreen() {
         ) : (
           <EmptyPanel
             icon="receipt-outline"
-            title={t('money.noInvoicesTitle', 'NOG GEEN FACTUREN')}
-            description={t('money.noInvoicesDesc', 'Maak er een van een afgeronde klus.')}
-            ctaLabel={t('money.newInvoice', 'NIEUWE FACTUUR')}
+            title={t('dk.empty.noInvoices', 'No invoices yet').toUpperCase()}
+            description={t('dk.empty.noInvoicesDesc', 'Create one from a completed job.')}
+            ctaLabel={t('dk.actions.newInvoice', 'New invoice').toUpperCase()}
             onCta={() => router.push('/invoices/new' as any)}
           />
         )}
@@ -309,7 +309,7 @@ export default function GeldScreen() {
         {/* ─── OFFERTES ─── */}
         <View style={s.sectionHeaderRow}>
           <View style={s.sectionTitleBlock}>
-            <Text style={s.sectionTitle}>OFFERTES</Text>
+            <Text style={s.sectionTitle}>{t('quotes.quotes', 'Offertes').toUpperCase()}</Text>
             <View style={s.sectionCountPill}><Text style={s.sectionCountText}>{quotes.length}</Text></View>
           </View>
           <Pressable onPress={() => setShowQuoteFilterModal(true)} hitSlop={8}>
@@ -337,9 +337,9 @@ export default function GeldScreen() {
         ) : (
           <EmptyPanel
             icon="document-text-outline"
-            title={t('money.noQuotesTitle', 'NOG GEEN OFFERTES')}
-            description={t('money.noQuotesDesc', 'Gebruik de tiered quote builder.')}
-            ctaLabel={t('quotes.newQuote', 'NIEUWE OFFERTE')}
+            title={t('dk.empty.noQuotes', 'No quotes yet').toUpperCase()}
+            description={t('dk.empty.noQuotesDesc', 'Use the tiered quote builder.')}
+            ctaLabel={t('dk.actions.newQuote', 'New quote').toUpperCase()}
             onCta={() => router.push('/contractor/tiered-quote' as any)}
           />
         )}
@@ -354,20 +354,20 @@ export default function GeldScreen() {
               <Ionicons name="receipt-outline" size={20} color={DK.colors.accent} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={s.vatTitle}>BTW-AANGIFTE VOORBEREIDEN</Text>
-              <Text style={s.vatSub}>Vasco classificeert facturen + kosten. Jij dient in.</Text>
+              <Text style={s.vatTitle}>{t('dk.money.vatPrep', 'Prepare VAT return').toUpperCase()}</Text>
+              <Text style={s.vatSub}>{t('dk.money.vatPrepSub', 'Vasco classifies invoices + expenses. You file.')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={DK.colors.textMuted} />
           </Pressable>
         )}
 
         {/* ─── CASHFLOW DEEP-DIVE ─── */}
-        <SectionHeader title="CASHFLOW" />
+        <SectionHeader title={t('dk.money.cashflow', 'Cashflow').toUpperCase()} />
         <View style={s.cfCard}>
           <View style={s.cfRow}>
-            <CfItem label="OMZET" value={formatCurrency(paidTotal)} tone={DK.colors.success} />
+            <CfItem label={t('dk.pill.revenue', 'Revenue').toUpperCase()} value={formatCurrency(paidTotal)} tone={DK.colors.success} />
             <View style={s.cfDivider} />
-            <CfItem label="KOSTEN" value={formatCurrency(fin.totalExpenses)} tone={DK.colors.text} />
+            <CfItem label={t('dk.money.costs', 'Costs').toUpperCase()} value={formatCurrency(fin.totalExpenses)} tone={DK.colors.text} />
             <View style={s.cfDivider} />
             <View style={{ flex: 1 }}>
               <View style={s.cfProfitRow}>
@@ -378,7 +378,7 @@ export default function GeldScreen() {
                   </View>
                 )}
               </View>
-              <Text style={s.cfLabel}>WINST</Text>
+              <Text style={s.cfLabel}>{t('dk.money.profit', 'Profit').toUpperCase()}</Text>
             </View>
           </View>
           {/* Margin bar */}
@@ -414,7 +414,7 @@ export default function GeldScreen() {
               <View style={[s.projIcon, { backgroundColor: (fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger) + '22' }]}>
                 <Ionicons name={fin.projectedCashflow >= 0 ? 'trending-up' : 'trending-down'} size={16} color={fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger} />
               </View>
-              <Text style={s.projLabel}>PROGNOSE VOLGENDE MAAND</Text>
+              <Text style={s.projLabel}>{t('dk.money.projectedMonth', 'Projected next month').toUpperCase()}</Text>
             </View>
             <Text style={[s.projValue, { color: fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger }]}>
               {formatCurrency(fin.projectedCashflow)}
@@ -425,9 +425,9 @@ export default function GeldScreen() {
             <View style={s.dsoRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <View style={[s.dsoDot, { backgroundColor: dsoStatus.color }]} />
-                <Text style={s.dsoLabel}>GEM. BETAALTERMIJN</Text>
+                <Text style={s.dsoLabel}>{t('dk.money.avgDso', 'Avg payment term').toUpperCase()}</Text>
               </View>
-              <Text style={[s.dsoValue, { color: dsoStatus.color }]}>{fin.avgDaysToPayment}D</Text>
+              <Text style={[s.dsoValue, { color: dsoStatus.color }]}>{fin.avgDaysToPayment}{t('dk.status.daysShort', 'D')}</Text>
             </View>
           )}
         </View>
@@ -435,7 +435,7 @@ export default function GeldScreen() {
         {/* ─── OVERDUE ─── */}
         {sortedOverdue.length > 0 && (
           <>
-            <SectionHeader title="ACHTERSTALLIG" count={sortedOverdue.length} accent={DK.colors.danger} />
+            <SectionHeader title={t('dk.money.dunning', 'Overdue').toUpperCase()} count={sortedOverdue.length} accent={DK.colors.danger} />
             <View style={s.docList}>
               {sortedOverdue.map((od) => (
                 <Pressable
@@ -446,8 +446,8 @@ export default function GeldScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={s.docName} numberOfLines={1}>{od.customer}</Text>
                     <View style={s.overdueMeta}>
-                      <View style={s.overduePill}><Text style={s.overduePillText}>{od.daysOverdue}D</Text></View>
-                      <Text style={s.docDesc}>{t('common.daysOverdue', 'dagen achterstallig')}</Text>
+                      <View style={s.overduePill}><Text style={s.overduePillText}>{od.daysOverdue}{t('dk.status.daysShort', 'D')}</Text></View>
+                      <Text style={s.docDesc}>{t('dk.status.daysOverdue', 'days overdue')}</Text>
                     </View>
                   </View>
                   <Text style={[s.docAmount, { color: DK.colors.danger }]}>{formatCurrency(od.amount)}</Text>
@@ -459,12 +459,12 @@ export default function GeldScreen() {
                       Share.share({ message: t('money.reminderMessage', { defaultValue: 'Hi, this is a friendly reminder that invoice for {{customer}} ({{amount}}) is {{days}} days overdue. Could you arrange payment?', customer: od.customer, amount: formatCurrency(od.amount), days: od.daysOverdue }) });
                     }}
                   >
-                    <Text style={s.remindBtnText}>REMIND</Text>
+                    <Text style={s.remindBtnText}>{t('dk.actions.remind', 'Remind').toUpperCase()}</Text>
                   </Pressable>
                 </Pressable>
               ))}
               <View style={s.overdueTotalRow}>
-                <Text style={s.overdueTotalLabel}>TOTAAL OPENSTAAND</Text>
+                <Text style={s.overdueTotalLabel}>{t('dk.money.totalOutstanding', 'Total outstanding').toUpperCase()}</Text>
                 <Text style={s.overdueTotalAmount}>{formatCurrency(fin.overdueAmount)}</Text>
               </View>
             </View>
@@ -474,11 +474,11 @@ export default function GeldScreen() {
         {/* ─── TOP CUSTOMERS ─── */}
         {fin.topCustomers.length > 0 && (
           <>
-            <SectionHeader title="TOP KLANTEN" />
+            <SectionHeader title={t('dk.money.topCustomers', 'Top customers').toUpperCase()} />
             {fin.concentrationRisk && (
               <View style={s.riskBanner}>
                 <Ionicons name="warning" size={14} color={DK.colors.highlight} />
-                <Text style={s.riskText}>HOGE CONCENTRATIE · DIVERSIFIEER JE KLANTENBESTAND</Text>
+                <Text style={s.riskText}>{t('dk.money.concentrationRisk', 'High concentration · diversify your client base').toUpperCase()}</Text>
               </View>
             )}
             <View style={s.docList}>
@@ -493,7 +493,7 @@ export default function GeldScreen() {
                     <View style={s.customerBarTrack}>
                       <View style={[s.customerBarFill, { width: `${barWidth}%` as any, backgroundColor: cust.percentage > 50 ? DK.colors.highlight : DK.colors.accent }]} />
                     </View>
-                    <Text style={s.customerMeta}>{cust.invoiceCount} FACTUREN · {cust.percentage}%</Text>
+                    <Text style={s.customerMeta}>{cust.invoiceCount} {t('invoices.invoices', 'Facturen').toUpperCase()} · {cust.percentage}%</Text>
                   </View>
                 );
               })}
@@ -508,7 +508,7 @@ export default function GeldScreen() {
       <Modal visible={showInvoiceFilterModal} transparent animationType="fade">
         <Pressable style={s.modalOverlay} onPress={() => setShowInvoiceFilterModal(false)}>
           <View style={s.modalSheet}>
-            <Text style={s.modalTitle}>FILTER FACTUREN</Text>
+            <Text style={s.modalTitle}>{t('dk.actions.filterInvoices', 'Filter invoices').toUpperCase()}</Text>
             {(['all', 'overdue', 'sent', 'paid', 'draft'] as const).map(status => (
               <Pressable key={status} style={[s.modalRow, invoiceStatusFilter === status && s.modalRowActive]} onPress={() => { setInvoiceStatusFilter(status); setShowInvoiceFilterModal(false); }}>
                 <Text style={[s.modalRowText, invoiceStatusFilter === status && s.modalRowTextActive]}>{status.toUpperCase()}</Text>
@@ -516,10 +516,10 @@ export default function GeldScreen() {
               </Pressable>
             ))}
             <View style={s.modalDivider} />
-            <Text style={s.modalSubtitle}>SORTEREN OP</Text>
+            <Text style={s.modalSubtitle}>{t('dk.actions.sortBy', 'Sort by').toUpperCase()}</Text>
             {(['value-desc', 'date-desc'] as const).map(sort => (
               <Pressable key={sort} style={[s.modalRow, invoiceSort === sort && s.modalRowActive]} onPress={() => { setInvoiceSort(sort); setShowInvoiceFilterModal(false); }}>
-                <Text style={[s.modalRowText, invoiceSort === sort && s.modalRowTextActive]}>{sort === 'value-desc' ? 'WAARDE' : 'DATUM'}</Text>
+                <Text style={[s.modalRowText, invoiceSort === sort && s.modalRowTextActive]}>{(sort === 'value-desc' ? t('dk.actions.byValue', 'Value') : t('dk.actions.byDate', 'Date')).toUpperCase()}</Text>
                 {invoiceSort === sort && <Ionicons name="checkmark" size={18} color={DK.colors.accent} />}
               </Pressable>
             ))}
@@ -530,7 +530,7 @@ export default function GeldScreen() {
       <Modal visible={showQuoteFilterModal} transparent animationType="fade">
         <Pressable style={s.modalOverlay} onPress={() => setShowQuoteFilterModal(false)}>
           <View style={s.modalSheet}>
-            <Text style={s.modalTitle}>FILTER OFFERTES</Text>
+            <Text style={s.modalTitle}>{t('dk.actions.filterQuotes', 'Filter quotes').toUpperCase()}</Text>
             {(['all', 'sent', 'accepted', 'draft'] as const).map(status => (
               <Pressable key={status} style={[s.modalRow, quoteStatusFilter === status && s.modalRowActive]} onPress={() => { setQuoteStatusFilter(status); setShowQuoteFilterModal(false); }}>
                 <Text style={[s.modalRowText, quoteStatusFilter === status && s.modalRowTextActive]}>{status.toUpperCase()}</Text>
@@ -541,7 +541,7 @@ export default function GeldScreen() {
             <Text style={s.modalSubtitle}>SORTEREN OP</Text>
             {(['value-desc', 'date-desc'] as const).map(sort => (
               <Pressable key={sort} style={[s.modalRow, quoteSort === sort && s.modalRowActive]} onPress={() => { setQuoteSort(sort); setShowQuoteFilterModal(false); }}>
-                <Text style={[s.modalRowText, quoteSort === sort && s.modalRowTextActive]}>{sort === 'value-desc' ? 'WAARDE' : 'DATUM'}</Text>
+                <Text style={[s.modalRowText, quoteSort === sort && s.modalRowTextActive]}>{(sort === 'value-desc' ? t('dk.actions.byValue', 'Value') : t('dk.actions.byDate', 'Date')).toUpperCase()}</Text>
                 {quoteSort === sort && <Ionicons name="checkmark" size={18} color={DK.colors.accent} />}
               </Pressable>
             ))}

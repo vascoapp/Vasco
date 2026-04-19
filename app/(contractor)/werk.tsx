@@ -144,17 +144,17 @@ export default function WerkScreen() {
   ];
 
   const tabs: { key: TabKey; label: string; count: number }[] = ([
-    { key: 'today' as TabKey, label: 'VANDAAG', count: scheduledToday, visible: true },
-    { key: 'active' as TabKey, label: 'ACTIEF', count: activeCount, visible: true },
-    { key: 'leads' as TabKey, label: 'LEADS', count: leadCount, visible: true },
-    { key: 'projects' as TabKey, label: 'PROJECTEN', count: activeProjects.length, visible: !!user?.isAannemer },
+    { key: 'today' as TabKey, label: t('dk.tabs.today', 'Today').toUpperCase(), count: scheduledToday, visible: true },
+    { key: 'active' as TabKey, label: t('dk.tabs.active', 'Active').toUpperCase(), count: activeCount, visible: true },
+    { key: 'leads' as TabKey, label: t('dk.tabs.leads', 'Leads').toUpperCase(), count: leadCount, visible: true },
+    { key: 'projects' as TabKey, label: t('dk.tabs.projects', 'Projects').toUpperCase(), count: activeProjects.length, visible: !!user?.isAannemer },
   ] as const).filter((t) => t.visible).map(({ key, label, count }) => ({ key, label, count }));
 
   if (isLoading) {
     return (
       <View style={styles.root}>
         <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
-          <View style={styles.topBar}><Text style={styles.title}>WERK</Text></View>
+          <View style={styles.topBar}><Text style={styles.title}>{t('tabs.jobs', 'Werk').toUpperCase()}</Text></View>
         </SafeAreaView>
         <SkeletonList count={4} lines={2} />
       </View>
@@ -170,11 +170,11 @@ export default function WerkScreen() {
         </SafeAreaView>
         <View style={styles.fullEmpty}>
           <Ionicons name="briefcase-outline" size={48} color={DK.colors.textMuted} />
-          <Text style={styles.fullEmptyTitle}>NOG GEEN KLUSSEN</Text>
-          <Text style={styles.fullEmptyDesc}>Maak je eerste klus aan</Text>
+          <Text style={styles.fullEmptyTitle}>{t('dk.empty.noJobs', 'No jobs yet').toUpperCase()}</Text>
+          <Text style={styles.fullEmptyDesc}>{t('dk.empty.noJobsDesc', 'Create your first job')}</Text>
           <Pressable style={styles.fullEmptyBtn} onPress={() => router.push('/contractor/tiered-quote' as any)}>
             <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-            <Text style={styles.fullEmptyBtnText}>NIEUWE KLUS</Text>
+            <Text style={styles.fullEmptyBtnText}>{t('dk.actions.newJob', 'New job').toUpperCase()}</Text>
           </Pressable>
         </View>
       </View>
@@ -190,7 +190,7 @@ export default function WerkScreen() {
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {tab === 'active' && (
               <Pressable onPress={() => setSortBy(prev => prev === 'date' ? 'status' : 'date')} hitSlop={8} style={styles.sortChip}>
-                <Text style={styles.sortChipText}>{sortBy === 'date' ? 'DATUM ↓' : 'STATUS ↓'}</Text>
+                <Text style={styles.sortChipText}>{sortBy === 'date' ? `${t('dk.actions.byDate','Date').toUpperCase()} ↓` : `${t('dk.actions.byStatus','Status').toUpperCase()} ↓`}</Text>
               </Pressable>
             )}
             <Pressable style={styles.iconBtn} onPress={() => router.push('/contractor/search' as any)} hitSlop={8}>
@@ -267,7 +267,7 @@ export default function WerkScreen() {
               ))}
             </View>
           ) : (
-            <EmptyBlock icon="briefcase-outline" title="GEEN ACTIEVE KLUSSEN" desc="Start een klus vanuit Leads of plan er eentje in." ctaLabel="NIEUWE KLUS" ctaIcon="add-outline" onCta={() => setShowNewJob(true)} />
+            <EmptyBlock icon="briefcase-outline" title={t('dk.empty.noActive', 'No active jobs').toUpperCase()} desc={t('dk.empty.noActiveDesc', 'Start a job from Leads or schedule one.')} ctaLabel={t('dk.actions.newJob', 'New job').toUpperCase()} ctaIcon="add-outline" onCta={() => setShowNewJob(true)} />
           )
         )}
 
@@ -286,7 +286,7 @@ export default function WerkScreen() {
               ))}
             </View>
           ) : (
-            <EmptyBlock icon="people-outline" title="GEEN LEADS" desc="Vraag klanten een quote aan of maak er eentje." ctaLabel="NIEUWE OFFERTE" ctaIcon="document-text-outline" onCta={() => router.push('/contractor/tiered-quote' as any)} />
+            <EmptyBlock icon="people-outline" title={t('dk.empty.noLeads', 'No leads').toUpperCase()} desc={t('dk.empty.noLeadsDesc', 'Request a quote from customers or create one.')} ctaLabel={t('dk.actions.newQuote', 'New quote').toUpperCase()} ctaIcon="document-text-outline" onCta={() => router.push('/contractor/tiered-quote' as any)} />
           )
         )}
 
@@ -304,7 +304,7 @@ export default function WerkScreen() {
               ))}
             </View>
           ) : (
-            <EmptyBlock icon="folder-open-outline" title="GEEN PROJECTEN" desc="Maak een project aan om klussen te bundelen." ctaLabel="PROJECT AANMAKEN" ctaIcon="add-outline" onCta={() => router.push('/contractor/projects' as any)} />
+            <EmptyBlock icon="folder-open-outline" title={t('dk.empty.noProjects', 'No projects').toUpperCase()} desc={t('dk.empty.noProjectsDesc', 'Create a project to bundle jobs.')} ctaLabel={t('dk.empty.noProjects', 'Create project').toUpperCase()} ctaIcon="add-outline" onCta={() => router.push('/contractor/projects' as any)} />
           )
         )}
 
@@ -317,7 +317,7 @@ export default function WerkScreen() {
           <Pressable style={styles.modalOverlay} onPress={() => setShowNewJob(false)}>
             <Pressable style={styles.modalSheet} onPress={() => {}}>
               <View style={styles.modalHandle} />
-              <Text style={styles.modalTitle}>NIEUWE KLUS</Text>
+              <Text style={styles.modalTitle}>{t('dk.actions.newJob', 'New job').toUpperCase()}</Text>
               <TextInput
                 style={styles.modalInput}
                 placeholder={t('pipeline.jobDescription', 'Omschrijving klus')}
@@ -350,7 +350,7 @@ export default function WerkScreen() {
                   end={{ x: 1, y: 1 }}
                   style={StyleSheet.absoluteFill}
                 />
-                <Text style={styles.modalSubmitText}>AANMAKEN</Text>
+                <Text style={styles.modalSubmitText}>{t('dk.actions.createJob', 'Create').toUpperCase()}</Text>
               </Pressable>
             </Pressable>
           </Pressable>
@@ -376,8 +376,9 @@ export default function WerkScreen() {
 
 // ─── Subcomponents ────────────────────────────────────────────────────────
 function HeroJobCard({ heroJob, onPress }: { heroJob: { type: 'live' | 'next' | 'active'; job: any }; onPress: () => void }) {
+  const { t } = useTranslation();
   const { type, job } = heroJob;
-  const label = type === 'live' ? 'LIVE · BEZIG' : type === 'next' ? 'EERSTVOLGENDE' : 'ACTIEF NU';
+  const label = (type === 'live' ? t('dk.hero.liveBezig', 'Live · in progress') : type === 'next' ? t('dk.hero.next', 'Up next') : t('dk.hero.activeNow', 'Active now')).toUpperCase();
   const tone = type === 'live' ? DK.colors.danger : DK.colors.highlight;
   const startStr = job.startTime
     ? new Date(job.startTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
@@ -398,18 +399,18 @@ function HeroJobCard({ heroJob, onPress }: { heroJob: { type: 'live' | 'next' | 
         <Text style={heroStyles.customer} numberOfLines={1}>{job.customerName || job.customer || ''}</Text>
         <View style={heroStyles.metaRow}>
           <View style={heroStyles.metaChip}>
-            <Text style={heroStyles.metaLabel}>TIJD</Text>
+            <Text style={heroStyles.metaLabel}>{t('dk.pill.time', 'Time').toUpperCase()}</Text>
             <Text style={heroStyles.metaValue}>{startStr}</Text>
           </View>
           {(job.address || job.customerName) ? (
             <View style={heroStyles.metaChip}>
-              <Text style={heroStyles.metaLabel}>LOCATIE</Text>
+              <Text style={heroStyles.metaLabel}>{t('dk.pill.location', 'Location').toUpperCase()}</Text>
               <Text style={heroStyles.metaValue} numberOfLines={1}>{job.address || job.customerName}</Text>
             </View>
           ) : null}
         </View>
         <View style={heroStyles.ctaRow}>
-          <Text style={heroStyles.ctaText}>OPEN KLUS</Text>
+          <Text style={heroStyles.ctaText}>{t('dk.actions.openJob', 'Open job').toUpperCase()}</Text>
           <Ionicons name="arrow-forward" size={14} color={DK.colors.bg} />
         </View>
       </LinearGradient>
@@ -422,9 +423,9 @@ function TodayContent({ todayJobs, onOpenJob, onPlanCta, t }: { todayJobs: any[]
     return (
       <EmptyBlock
         icon="sunny-outline"
-        title="GEEN JOBS VANDAAG"
+        title={t('dk.empty.noJobsToday', 'No jobs today').toUpperCase()}
         desc={t('dashboard.noJobsTodayDesc', 'Jouw dag is vrij — plan volgende week.')}
-        ctaLabel="PLAN JE WEEK"
+        ctaLabel={t('dk.fab.planSchedule', 'Plan your week').toUpperCase()}
         ctaIcon="calendar-outline"
         onCta={onPlanCta}
       />
