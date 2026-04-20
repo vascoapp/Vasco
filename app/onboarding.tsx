@@ -6,7 +6,7 @@
 //        → AI Demo → Plan Selection → Review
 // =============================================================================
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Alert,
   View,
@@ -35,6 +35,7 @@ import { GradientButton } from '../src/components/shared/GradientButton';
 import { hapticSuccess } from '../src/utils/haptics';
 import { GRID, RADIUS, TYPE } from '../src/theme/tabStyles';
 import { TIERS, type SubscriptionTier } from '../src/services/subscriptionService';
+import { emitOnboardingCompleted } from '../src/intelligence/dataCollector';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -206,6 +207,7 @@ export default function OnboardingScreen() {
   const { user, updateUser } = useAuth();
   const { updateBusinessProfile } = useAppState();
 
+  const onboardingStartRef = useRef(Date.now());
   const [step, setStep] = useState(1);
   const [language, setLanguage] = useState<Language>(
     (i18n.language as Language) || 'en'
@@ -451,6 +453,21 @@ export default function OnboardingScreen() {
       ];
       await AsyncStorage.setItem('@vasco_jobs', JSON.stringify(seedJobs)).catch(() => {});
       await AsyncStorage.setItem('@vasco_customers', JSON.stringify(seedCustomers)).catch(() => {});
+
+      // Analytics event: funnel — signup → onboarding completed → first quote → first invoice → first paid
+      try {
+        const { isSupabaseConfigured, supabase } = await import('../src/lib/supabase');
+        const authUser = isSupabaseConfigured ? (await supabase.auth.getUser()).data.user : null;
+        const uid = authUser?.id ?? `anon_${Date.now()}`;
+        await emitOnboardingCompleted(uid, {
+          country: country ?? 'unknown',
+          trade: selectedTrades[0] ?? 'unknown',
+          teamSize: teamSize ?? 'unknown',
+          tierSelected: selectedPlan ?? 'free',
+          stepsCompleted: TOTAL_STEPS,
+          durationSeconds: Math.round((Date.now() - onboardingStartRef.current) / 1000),
+        });
+      } catch {}
 
       hapticSuccess();
       router.replace('/(contractor)');

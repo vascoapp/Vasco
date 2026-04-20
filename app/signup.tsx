@@ -25,6 +25,7 @@ import { DK } from '../src/theme/draftkings';
 import { FadeIn } from '../src/components/shared/FadeIn';
 import { GradientButton } from '../src/components/shared/GradientButton';
 import { isValidEmail } from '../src/utils/validation';
+import { emitSignupCompleted } from '../src/intelligence/dataCollector';
 import { DKLabel } from '../src/components/shared/DKLabel';
 
 export default function SignupScreen() {
@@ -70,6 +71,12 @@ export default function SignupScreen() {
     const result = await signUp(trimmedEmail, password);
     setSubmitting(false);
     if (result.success) {
+      // Fire analytics event — funnel head. userId may not be available
+      // before email confirmation; use email as stable identifier in that case.
+      emitSignupCompleted((result as any).userId ?? trimmedEmail, {
+        email: trimmedEmail,
+        method: 'email',
+      }).catch(() => {});
       // Supabase typically requires email confirmation. Show a "check your
       // email" state — onAuthStateChange will fire SIGNED_IN → auto-redirect
       // handled by app/_layout.tsx once the user confirms.

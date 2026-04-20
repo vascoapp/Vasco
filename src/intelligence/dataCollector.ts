@@ -19,7 +19,7 @@ const BATCH_SIZE = 50;
 
 export interface BusinessEvent {
   eventType: string;
-  entityType: 'quote' | 'job' | 'invoice' | 'customer' | 'material' | 'payment';
+  entityType: 'quote' | 'job' | 'invoice' | 'customer' | 'material' | 'payment' | 'user';
   entityId: string;
   payload: Record<string, any>;
   trade?: string;
@@ -166,6 +166,36 @@ export async function emitPaymentReceived(userId: string, invoiceId: string, dat
     entityType: 'payment',
     entityId: invoiceId,
     payload: data,
+  });
+}
+
+export async function emitSignupCompleted(userId: string, data: {
+  email: string;
+  method: 'email' | 'demo' | 'oauth';
+  source?: string; // e.g., 'landing_page', 'referral_link'
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'signup_completed',
+    entityType: 'user',
+    entityId: userId,
+    payload: data,
+  });
+}
+
+export async function emitOnboardingCompleted(userId: string, data: {
+  country: string;
+  trade: string;
+  teamSize: string;
+  tierSelected: string;
+  stepsCompleted: number;
+  durationSeconds: number;
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'onboarding_completed',
+    entityType: 'user',
+    entityId: userId,
+    payload: data,
+    trade: data.trade,
   });
 }
 
