@@ -25,6 +25,7 @@ import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { useAutomations, type AutomationContext } from '../../src/services/automationService';
 import { exportAllData } from '../../src/services/dataExportService';
 import { requestAccountDeletion } from '../../src/services/accountDeletionService';
+import { DKLabel } from '../../src/components/shared/DKLabel';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type TabKey = 'queue' | 'insights' | 'automations' | 'more';
@@ -219,7 +220,7 @@ export default function VascoScreen() {
     return (
       <View style={s.root}>
         <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
-          <View style={s.topBar}><Text style={s.title}>{t('tabs.ai', 'Vasco').toUpperCase()}</Text></View>
+          <View style={s.topBar}><DKLabel style={s.title}>{t('tabs.ai', 'Vasco')}</DKLabel></View>
         </SafeAreaView>
         <SkeletonList count={3} showAction lines={2} />
       </View>
@@ -231,7 +232,7 @@ export default function VascoScreen() {
       {/* ─── TOP BAR ─── */}
       <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
         <View style={s.topBar}>
-          <Text style={s.title}>{t('tabs.ai', 'Vasco').toUpperCase()}</Text>
+          <DKLabel style={s.title}>{t('tabs.ai', 'Vasco')}</DKLabel>
           <Pressable style={s.iconBtn} onPress={() => router.push('/contractor/profile' as any)} hitSlop={8}>
             <Ionicons name="settings-outline" size={20} color={DK.colors.text} />
           </Pressable>
@@ -297,7 +298,7 @@ export default function VascoScreen() {
                     </View>
                     {action.priority === 'high' && (
                       <View style={s.highBadge}>
-                        <Text style={s.highBadgeText}>{t('dk.pill.high', 'High').toUpperCase()}</Text>
+                        <DKLabel style={s.highBadgeText}>{t('dk.pill.high', 'High')}</DKLabel>
                       </View>
                     )}
                   </View>
@@ -312,11 +313,11 @@ export default function VascoScreen() {
                   )}
                   <View style={s.actionButtons}>
                     <Pressable style={s.dismissBtn} onPress={() => handleDismiss(action.id)}>
-                      <Text style={s.dismissBtnText}>{t('ai.later').toUpperCase()}</Text>
+                      <DKLabel style={s.dismissBtnText}>{t('ai.later')}</DKLabel>
                     </Pressable>
                     <Pressable style={({ pressed }) => [s.approveBtn, pressed && { opacity: 0.9 }]} onPress={() => handleAction(action)}>
                       <Ionicons name={action.actionType === 'share' ? 'send' : action.actionType === 'navigate' ? 'arrow-forward' : 'checkmark'} size={14} color={DK.colors.bg} />
-                      <Text style={s.approveBtnText}>{action.actionLabel.toUpperCase()}</Text>
+                      <DKLabel style={s.approveBtnText}>{action.actionLabel}</DKLabel>
                     </Pressable>
                     {action.actionType === 'share' && action.shareText && (
                       <Pressable
@@ -412,7 +413,7 @@ export default function VascoScreen() {
               </Text>
             )}
             <Pressable style={s.manageLink} onPress={() => router.push('/contractor/automations' as any)}>
-              <Text style={s.manageLinkText}>{t('dk.ai.manageAllAutomations', 'Manage all automations').toUpperCase()}</Text>
+              <DKLabel style={s.manageLinkText}>{t('dk.ai.manageAllAutomations', 'Manage all automations')}</DKLabel>
               <Ionicons name="chevron-forward" size={14} color={DK.colors.accent} />
             </Pressable>
           </>
@@ -420,19 +421,19 @@ export default function VascoScreen() {
 
         {tab === 'more' && (
           <>
-            <Text style={s.subsectionLabel}>{t('dk.ai.quickAccess', 'Quick access').toUpperCase()}</Text>
+            <DKLabel style={s.subsectionLabel}>{t('dk.ai.quickAccess', 'Quick access')}</DKLabel>
             <View style={s.chipRow}>
               <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/(contractor)/certificaten' as any)}>
                 <Ionicons name="shield-checkmark-outline" size={14} color={DK.colors.accent} />
-                <Text style={s.chipText}>{t('ai.certificates', 'Certificates').toUpperCase()}</Text>
+                <DKLabel style={s.chipText}>{t('ai.certificates', 'Certificates')}</DKLabel>
               </Pressable>
               <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/(contractor)/besparen' as any)}>
                 <Ionicons name="wallet-outline" size={14} color={DK.colors.accent} />
-                <Text style={s.chipText}>{t('ai.savings', 'Savings').toUpperCase()}</Text>
+                <DKLabel style={s.chipText}>{t('ai.savings', 'Savings')}</DKLabel>
               </Pressable>
             </View>
 
-            <Text style={s.subsectionLabel}>{t('dk.ai.accountPrivacy', 'Account & privacy').toUpperCase()}</Text>
+            <DKLabel style={s.subsectionLabel}>{t('dk.ai.accountPrivacy', 'Account & privacy')}</DKLabel>
             <View style={s.gdprList}>
               <GdprRow icon="chatbox-ellipses-outline" label={t('profile.sendFeedback')} onPress={() => Linking.openURL('mailto:support@vasco.app?subject=Vasco Feedback')} />
               <GdprRow icon="document-text-outline" label={t('profile.legal')} onPress={() => router.push('/contractor/legal' as any)} />
@@ -478,10 +479,10 @@ function HeroActionCard({ action, editingId, editText, setEditingId, setEditText
 
         <View style={heroStyles.ctaRow}>
           <Pressable style={heroStyles.dismissBtn} onPress={onDismiss}>
-            <Text style={heroStyles.dismissText}>{t('ai.later').toUpperCase()}</Text>
+            <DKLabel style={heroStyles.dismissText}>{t('ai.later')}</DKLabel>
           </Pressable>
           <Pressable style={({ pressed }) => [heroStyles.approveBtn, pressed && { opacity: 0.92 }]} onPress={onApprove}>
-            <Text style={heroStyles.approveText}>{action.actionLabel.toUpperCase()}</Text>
+            <DKLabel style={heroStyles.approveText}>{action.actionLabel}</DKLabel>
             <Ionicons name={action.actionType === 'share' ? 'send' : action.actionType === 'navigate' ? 'arrow-forward' : 'checkmark'} size={14} color={DK.colors.bg} />
           </Pressable>
           {action.actionType === 'share' && action.shareText && (
@@ -513,7 +514,7 @@ function AllUpToDateHero() {
       >
         <View style={[heroStyles.chip, { backgroundColor: DK.colors.success + '22', borderColor: DK.colors.success + '55' }]}>
           <Ionicons name="checkmark-circle" size={12} color={DK.colors.success} />
-          <Text style={[heroStyles.chipText, { color: DK.colors.success }]}>{t('dk.hero.allClear', 'All clear').toUpperCase()}</Text>
+          <DKLabel style={[heroStyles.chipText, { color: DK.colors.success }]}>{t('dk.hero.allClear', 'All clear')}</DKLabel>
         </View>
         <Text style={heroStyles.title}>{t('ai.allUpToDate')}</Text>
         <Text style={heroStyles.body}>{t('ai.scanningDesc')}</Text>

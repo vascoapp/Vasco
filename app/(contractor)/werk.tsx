@@ -23,6 +23,7 @@ import { hapticSuccess } from '../../src/utils/haptics';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { useAuth } from '../../src/context/AuthContext';
+import { DKLabel } from '../../src/components/shared/DKLabel';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -154,7 +155,7 @@ export default function WerkScreen() {
     return (
       <View style={styles.root}>
         <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
-          <View style={styles.topBar}><Text style={styles.title}>{t('tabs.jobs', 'Werk').toUpperCase()}</Text></View>
+          <View style={styles.topBar}><DKLabel style={styles.title}>{t('tabs.jobs', 'Werk')}</DKLabel></View>
         </SafeAreaView>
         <SkeletonList count={4} lines={2} />
       </View>
@@ -170,11 +171,11 @@ export default function WerkScreen() {
         </SafeAreaView>
         <View style={styles.fullEmpty}>
           <Ionicons name="briefcase-outline" size={48} color={DK.colors.textMuted} />
-          <Text style={styles.fullEmptyTitle}>{t('dk.empty.noJobs', 'No jobs yet').toUpperCase()}</Text>
+          <DKLabel style={styles.fullEmptyTitle}>{t('dk.empty.noJobs', 'No jobs yet')}</DKLabel>
           <Text style={styles.fullEmptyDesc}>{t('dk.empty.noJobsDesc', 'Create your first job')}</Text>
           <Pressable style={styles.fullEmptyBtn} onPress={() => router.push('/contractor/tiered-quote' as any)}>
             <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-            <Text style={styles.fullEmptyBtnText}>{t('dk.actions.newJob', 'New job').toUpperCase()}</Text>
+            <DKLabel style={styles.fullEmptyBtnText}>{t('dk.actions.newJob', 'New job')}</DKLabel>
           </Pressable>
         </View>
       </View>
@@ -218,7 +219,7 @@ export default function WerkScreen() {
               onPress={() => router.push(q.route as any)}
             >
               <Ionicons name={q.icon} size={14} color={DK.colors.accent} />
-              <Text style={styles.chipText}>{q.label.toUpperCase()}</Text>
+              <DKLabel style={styles.chipText}>{q.label}</DKLabel>
             </Pressable>
           ))}
         </ScrollView>
@@ -317,7 +318,7 @@ export default function WerkScreen() {
           <Pressable style={styles.modalOverlay} onPress={() => setShowNewJob(false)}>
             <Pressable style={styles.modalSheet} onPress={() => {}}>
               <View style={styles.modalHandle} />
-              <Text style={styles.modalTitle}>{t('dk.actions.newJob', 'New job').toUpperCase()}</Text>
+              <DKLabel style={styles.modalTitle}>{t('dk.actions.newJob', 'New job')}</DKLabel>
               <TextInput
                 style={styles.modalInput}
                 placeholder={t('pipeline.jobDescription', 'Omschrijving klus')}
@@ -350,7 +351,7 @@ export default function WerkScreen() {
                   end={{ x: 1, y: 1 }}
                   style={StyleSheet.absoluteFill}
                 />
-                <Text style={styles.modalSubmitText}>{t('dk.actions.createJob', 'Create').toUpperCase()}</Text>
+                <DKLabel style={styles.modalSubmitText}>{t('dk.actions.createJob', 'Create')}</DKLabel>
               </Pressable>
             </Pressable>
           </Pressable>
@@ -399,18 +400,18 @@ function HeroJobCard({ heroJob, onPress }: { heroJob: { type: 'live' | 'next' | 
         <Text style={heroStyles.customer} numberOfLines={1}>{job.customerName || job.customer || ''}</Text>
         <View style={heroStyles.metaRow}>
           <View style={heroStyles.metaChip}>
-            <Text style={heroStyles.metaLabel}>{t('dk.pill.time', 'Time').toUpperCase()}</Text>
+            <DKLabel style={heroStyles.metaLabel}>{t('dk.pill.time', 'Time')}</DKLabel>
             <Text style={heroStyles.metaValue}>{startStr}</Text>
           </View>
           {(job.address || job.customerName) ? (
             <View style={heroStyles.metaChip}>
-              <Text style={heroStyles.metaLabel}>{t('dk.pill.location', 'Location').toUpperCase()}</Text>
+              <DKLabel style={heroStyles.metaLabel}>{t('dk.pill.location', 'Location')}</DKLabel>
               <Text style={heroStyles.metaValue} numberOfLines={1}>{job.address || job.customerName}</Text>
             </View>
           ) : null}
         </View>
         <View style={heroStyles.ctaRow}>
-          <Text style={heroStyles.ctaText}>{t('dk.actions.openJob', 'Open job').toUpperCase()}</Text>
+          <DKLabel style={heroStyles.ctaText}>{t('dk.actions.openJob', 'Open job')}</DKLabel>
           <Ionicons name="arrow-forward" size={14} color={DK.colors.bg} />
         </View>
       </LinearGradient>

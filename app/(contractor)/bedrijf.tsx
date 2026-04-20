@@ -20,6 +20,7 @@ import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { formatAmount } from '../../src/utils/formatAmount';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DKLabel } from '../../src/components/shared/DKLabel';
 
 const TRACKER_STORAGE_KEY = '@vasco_decision_trackers';
 
@@ -138,7 +139,7 @@ export default function BedrijfScreen() {
     return (
       <View style={s.root}>
         <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
-          <View style={s.topBar}><Text style={s.title}>{t('tabs.customers', 'Klanten').toUpperCase()}</Text></View>
+          <View style={s.topBar}><DKLabel style={s.title}>{t('tabs.customers', 'Klanten')}</DKLabel></View>
         </SafeAreaView>
         <SkeletonList count={4} showAvatar lines={2} />
       </View>
@@ -151,7 +152,7 @@ export default function BedrijfScreen() {
       <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
         <View style={s.topBar}>
           <View style={{ flex: 1 }}>
-            <Text style={s.title}>{t('tabs.customers', 'Klanten').toUpperCase()}</Text>
+            <DKLabel style={s.title}>{t('tabs.customers', 'Klanten')}</DKLabel>
             <Text style={s.subtitle}>{customers.length} {t('dk.tabs.contacts', 'Contacts').toUpperCase()} · {formatAmount(totalRevenue)}</Text>
           </View>
           <Pressable style={({ pressed }) => [s.addBtn, pressed && { opacity: 0.9 }]} onPress={() => setShowAddModal(true)}>
@@ -210,7 +211,7 @@ export default function BedrijfScreen() {
             {/* Top 3 customers by revenue */}
             {customers.length > 0 && (
               <>
-                <Text style={s.subsectionLabel}>{t('dk.money.topCustomers', 'Top customers').toUpperCase()}</Text>
+                <DKLabel style={s.subsectionLabel}>{t('dk.money.topCustomers', 'Top customers')}</DKLabel>
                 <View style={s.listGroup}>
                   {Object.entries(customerRevenue)
                     .sort((a, b) => b[1] - a[1])
@@ -245,7 +246,7 @@ export default function BedrijfScreen() {
           activeTrackers.length === 0 && completedTrackers.length === 0 ? (
             <Pressable style={s.emptyPanel} onPress={() => router.push('/(contractor)/decisions' as any)}>
               <View style={s.emptyIcon}><Ionicons name="chatbubbles-outline" size={28} color={DK.colors.accent} /></View>
-              <Text style={s.emptyTitle}>{t('dk.empty.noTrackers', 'No trackers yet').toUpperCase()}</Text>
+              <DKLabel style={s.emptyTitle}>{t('dk.empty.noTrackers', 'No trackers yet')}</DKLabel>
               <Text style={s.emptyDesc}>{t('customers.noTrackersDesc', 'Maak een tracker zodat klanten keuzes kunnen maken over materialen, afwerking en timing.')}</Text>
             </Pressable>
           ) : (
@@ -284,11 +285,11 @@ export default function BedrijfScreen() {
                           <Text style={s.overdueText}>{tracker.overdue} {t('dk.pill.overdue', 'Overdue').toUpperCase()}</Text>
                         </View>
                       ) : (
-                        <Text style={s.trackerTime}>{tracker.lastActivity.toUpperCase()}</Text>
+                        <DKLabel style={s.trackerTime}>{tracker.lastActivity}</DKLabel>
                       )}
                       <Pressable style={s.reminderBtn} onPress={() => handleSendReminder(tracker.id)}>
                         <Ionicons name="paper-plane-outline" size={12} color={DK.colors.accent} />
-                        <Text style={s.reminderText}>{t('dk.actions.remind', 'Remind').toUpperCase()}</Text>
+                        <DKLabel style={s.reminderText}>{t('dk.actions.remind', 'Remind')}</DKLabel>
                       </Pressable>
                     </View>
                   </Pressable>
@@ -312,9 +313,9 @@ export default function BedrijfScreen() {
           customers.length === 0 ? (
             <View style={s.emptyPanel}>
               <View style={s.emptyIcon}><Ionicons name="people-outline" size={28} color={DK.colors.accent} /></View>
-              <Text style={s.emptyTitle}>{t('dk.empty.noCustomers', 'No customers yet').toUpperCase()}</Text>
+              <DKLabel style={s.emptyTitle}>{t('dk.empty.noCustomers', 'No customers yet')}</DKLabel>
               <Pressable style={({ pressed }) => [s.emptyCta, pressed && { opacity: 0.85 }]} onPress={() => setShowAddModal(true)}>
-                <Text style={s.emptyCtaText}>{t('dk.actions.newCustomer', 'New customer').toUpperCase()}</Text>
+                <DKLabel style={s.emptyCtaText}>{t('dk.actions.newCustomer', 'New customer')}</DKLabel>
               </Pressable>
             </View>
           ) : (
@@ -353,13 +354,13 @@ export default function BedrijfScreen() {
           <Pressable style={s.modalOverlay} onPress={() => setShowAddModal(false)}>
             <Pressable style={s.modalSheet} onPress={(e) => e.stopPropagation()}>
               <View style={s.modalHandle} />
-              <Text style={s.modalTitle}>{t('dk.actions.newCustomer', 'New customer').toUpperCase()}</Text>
+              <DKLabel style={s.modalTitle}>{t('dk.actions.newCustomer', 'New customer')}</DKLabel>
               <TextInput style={s.modalInput} value={newName} onChangeText={setNewName} placeholder={t('customers.namePlaceholder', 'Customer name')} placeholderTextColor={DK.colors.textMuted} autoFocus />
               <TextInput style={s.modalInput} value={newEmail} onChangeText={setNewEmail} placeholder={t('customers.emailPlaceholder', 'Email')} placeholderTextColor={DK.colors.textMuted} keyboardType="email-address" autoCapitalize="none" />
               <TextInput style={s.modalInput} value={newPhone} onChangeText={setNewPhone} placeholder={t('customers.phonePlaceholder', 'Phone')} placeholderTextColor={DK.colors.textMuted} keyboardType="phone-pad" />
               <Pressable style={[s.modalSubmit, !newName.trim() && { opacity: 0.5 }]} onPress={handleAddCustomer} disabled={!newName.trim()}>
                 <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-                <Text style={s.modalSubmitText}>{t('dk.actions.addCustomer', 'Add customer').toUpperCase()}</Text>
+                <DKLabel style={s.modalSubmitText}>{t('dk.actions.addCustomer', 'Add customer')}</DKLabel>
               </Pressable>
             </Pressable>
           </Pressable>
@@ -404,12 +405,12 @@ function HeroFeatureCard({ feature, onPress, onRemind }: { feature: HeroFeature;
             {/* Top-right stacked pills */}
             <View style={heroStyles.cornerPills}>
               <View style={[heroStyles.pill, heroStyles.pillDecided]}>
-                <Text style={heroStyles.pillLabel}>{t('dk.pill.decided', 'Decided').toUpperCase()}</Text>
+                <DKLabel style={heroStyles.pillLabel}>{t('dk.pill.decided', 'Decided')}</DKLabel>
                 <Text style={[heroStyles.pillValue, { color: DK.colors.highlight }]}>{feature.tracker.decided}/{feature.tracker.totalDecisions}</Text>
               </View>
               {feature.tracker.overdue > 0 ? (
                 <View style={[heroStyles.pill, heroStyles.pillOverdue]}>
-                  <Text style={heroStyles.pillLabel}>{t('dk.pill.overdue', 'Overdue').toUpperCase()}</Text>
+                  <DKLabel style={heroStyles.pillLabel}>{t('dk.pill.overdue', 'Overdue')}</DKLabel>
                   <Text style={[heroStyles.pillValue, { color: '#FFFFFF' }]}>{feature.tracker.overdue}</Text>
                 </View>
               ) : null}
@@ -421,10 +422,10 @@ function HeroFeatureCard({ feature, onPress, onRemind }: { feature: HeroFeature;
             <View style={heroStyles.ctaRow}>
               <Pressable style={heroStyles.remindBtn} onPress={() => onRemind(feature.tracker.id)}>
                 <Ionicons name="paper-plane-outline" size={14} color="#FFFFFF" />
-                <Text style={heroStyles.remindText}>{t('dk.actions.remind', 'Remind').toUpperCase()}</Text>
+                <DKLabel style={heroStyles.remindText}>{t('dk.actions.remind', 'Remind')}</DKLabel>
               </Pressable>
               <Pressable style={({ pressed }) => [heroStyles.openBtn, pressed && { opacity: 0.92 }]} onPress={onPress}>
-                <Text style={heroStyles.openText}>{t('dk.actions.open', 'Open').toUpperCase()}</Text>
+                <DKLabel style={heroStyles.openText}>{t('dk.actions.open', 'Open')}</DKLabel>
                 <Ionicons name="arrow-forward" size={14} color={DK.colors.bg} />
               </Pressable>
             </View>
@@ -434,7 +435,7 @@ function HeroFeatureCard({ feature, onPress, onRemind }: { feature: HeroFeature;
             {/* Top-right revenue pill */}
             <View style={heroStyles.cornerPills}>
               <View style={[heroStyles.pill, heroStyles.pillDecided]}>
-                <Text style={heroStyles.pillLabel}>{t('dk.pill.revenue', 'Revenue').toUpperCase()}</Text>
+                <DKLabel style={heroStyles.pillLabel}>{t('dk.pill.revenue', 'Revenue')}</DKLabel>
                 <Text style={[heroStyles.pillValue, { color: DK.colors.success }]}>{formatAmount(feature.revenue)}</Text>
               </View>
             </View>
@@ -442,7 +443,7 @@ function HeroFeatureCard({ feature, onPress, onRemind }: { feature: HeroFeature;
             <Text style={heroStyles.title} numberOfLines={2}>{feature.customer.name}</Text>
             <View style={{ height: 20 }} />
             <Pressable style={({ pressed }) => [heroStyles.openBtn, pressed && { opacity: 0.92 }]} onPress={onPress}>
-              <Text style={heroStyles.openText}>{t('dk.actions.openCustomer', 'Open customer').toUpperCase()}</Text>
+              <DKLabel style={heroStyles.openText}>{t('dk.actions.openCustomer', 'Open customer')}</DKLabel>
               <Ionicons name="arrow-forward" size={14} color={DK.colors.bg} />
             </Pressable>
           </>
@@ -472,7 +473,7 @@ function CustomerRow({ name, meta, onPress, borderBottom, inCard }: { name: stri
       onPress={onPress}
     >
       <View style={s.customerAvatar}>
-        <Text style={s.customerAvatarText}>{name.charAt(0).toUpperCase()}</Text>
+        <DKLabel style={s.customerAvatarText}>{name.charAt(0)}</DKLabel>
       </View>
       <View style={{ flex: 1 }}>
         <Text style={s.customerName} numberOfLines={1}>{name}</Text>

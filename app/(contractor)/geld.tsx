@@ -30,6 +30,7 @@ import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { CashFlowForecastCard } from '../../src/components/contractor/CashFlowForecastCard';
 import { useAIQueue } from '../../src/services/aiActionQueueService';
 import { useVascoGuidance } from '../../src/services/vascoGuidanceService';
+import { DKLabel } from '../../src/components/shared/DKLabel';
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 function getLastNMonthLabels(n: number): string[] {
@@ -155,7 +156,7 @@ export default function GeldScreen() {
     return (
       <View style={s.root}>
         <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
-          <View style={s.topBar}><Text style={s.title}>{t('tabs.money', 'Geld').toUpperCase()}</Text></View>
+          <View style={s.topBar}><DKLabel style={s.title}>{t('tabs.money', 'Geld')}</DKLabel></View>
         </SafeAreaView>
         <SkeletonList count={3} showAction lines={3} />
       </View>
@@ -182,18 +183,18 @@ export default function GeldScreen() {
         {/* ─── 3-KPI STADIUM ─── */}
         <View style={s.kpiRow}>
           <Pressable style={s.kpiTile} onPress={() => router.push('/(contractor)/facturen' as any)}>
-            <Text style={s.kpiLabel}>{t('dk.pill.revenue', 'Revenue').toUpperCase()}</Text>
+            <DKLabel style={s.kpiLabel}>{t('dk.pill.revenue', 'Revenue')}</DKLabel>
             <View style={s.kpiValueRow}>
               <Text style={[s.kpiValue, { color: DK.colors.success }]}>{compactCurrency(paidTotal)}</Text>
               <Ionicons name={revenueTrend.icon} size={14} color={revenueTrend.color} />
             </View>
           </Pressable>
           <Pressable style={s.kpiTile} onPress={() => router.push('/(contractor)/facturen' as any)}>
-            <Text style={s.kpiLabel}>{t('dk.pill.outstanding', 'Outstanding').toUpperCase()}</Text>
+            <DKLabel style={s.kpiLabel}>{t('dk.pill.outstanding', 'Outstanding')}</DKLabel>
             <Text style={[s.kpiValue, { color: DK.colors.accent }]}>{compactCurrency(outstandingTotal)}</Text>
           </Pressable>
           <Pressable style={s.kpiTile}>
-            <Text style={s.kpiLabel}>{t('dk.pill.pipeline', 'Pipeline').toUpperCase()}</Text>
+            <DKLabel style={s.kpiLabel}>{t('dk.pill.pipeline', 'Pipeline')}</DKLabel>
             <Text style={[s.kpiValue, { color: DK.colors.highlight }]}>{compactCurrency(fin.quotePipeline)}</Text>
           </Pressable>
         </View>
@@ -213,7 +214,7 @@ export default function GeldScreen() {
         >
           <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
           <Ionicons name="add-circle-outline" size={16} color="#FFFFFF" />
-          <Text style={s.newQuoteBtnText}>{t('dk.actions.newQuote', 'New quote').toUpperCase()}</Text>
+          <DKLabel style={s.newQuoteBtnText}>{t('dk.actions.newQuote', 'New quote')}</DKLabel>
         </Pressable>
 
         {/* ─── CASHFLOW FORECAST (embedded self-styled component) ─── */}
@@ -225,7 +226,7 @@ export default function GeldScreen() {
             <View style={s.vascoHeader}>
               <View style={s.vascoChip}>
                 <View style={s.vascoChipDot} />
-                <Text style={s.vascoChipText}>{t('dk.hero.eveFinance', 'EVE Finance').toUpperCase()}</Text>
+                <DKLabel style={s.vascoChipText}>{t('dk.hero.eveFinance', 'EVE Finance')}</DKLabel>
               </View>
               <Text style={s.vascoCountText}>{financialQueue.length}</Text>
             </View>
@@ -245,7 +246,7 @@ export default function GeldScreen() {
                   <Ionicons name="close" size={12} color={DK.colors.textMuted} />
                 </Pressable>
                 <Pressable onPress={() => { hapticSuccess(); aiQueue.approve(item.id); }} style={s.vascoQueueApprove}>
-                  <Text style={s.vascoQueueApproveText}>{item.actionLabel.toUpperCase()}</Text>
+                  <DKLabel style={s.vascoQueueApproveText}>{item.actionLabel}</DKLabel>
                 </Pressable>
               </View>
             ))}
@@ -255,7 +256,7 @@ export default function GeldScreen() {
         {/* ─── FACTUREN ─── */}
         <View style={s.sectionHeaderRow}>
           <View style={s.sectionTitleBlock}>
-            <Text style={s.sectionTitle}>{t('invoices.invoices', 'Facturen').toUpperCase()}</Text>
+            <DKLabel style={s.sectionTitle}>{t('invoices.invoices', 'Facturen')}</DKLabel>
             <View style={s.sectionCountPill}><Text style={s.sectionCountText}>{invoices.length}</Text></View>
           </View>
           <Pressable onPress={() => setShowInvoiceFilterModal(true)} hitSlop={8}>
@@ -309,7 +310,7 @@ export default function GeldScreen() {
         {/* ─── OFFERTES ─── */}
         <View style={s.sectionHeaderRow}>
           <View style={s.sectionTitleBlock}>
-            <Text style={s.sectionTitle}>{t('quotes.quotes', 'Offertes').toUpperCase()}</Text>
+            <DKLabel style={s.sectionTitle}>{t('quotes.quotes', 'Offertes')}</DKLabel>
             <View style={s.sectionCountPill}><Text style={s.sectionCountText}>{quotes.length}</Text></View>
           </View>
           <Pressable onPress={() => setShowQuoteFilterModal(true)} hitSlop={8}>
@@ -354,7 +355,7 @@ export default function GeldScreen() {
               <Ionicons name="receipt-outline" size={20} color={DK.colors.accent} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={s.vatTitle}>{t('dk.money.vatPrep', 'Prepare VAT return').toUpperCase()}</Text>
+              <DKLabel style={s.vatTitle}>{t('dk.money.vatPrep', 'Prepare VAT return')}</DKLabel>
               <Text style={s.vatSub}>{t('dk.money.vatPrepSub', 'Vasco classifies invoices + expenses. You file.')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={DK.colors.textMuted} />
@@ -378,7 +379,7 @@ export default function GeldScreen() {
                   </View>
                 )}
               </View>
-              <Text style={s.cfLabel}>{t('dk.money.profit', 'Profit').toUpperCase()}</Text>
+              <DKLabel style={s.cfLabel}>{t('dk.money.profit', 'Profit')}</DKLabel>
             </View>
           </View>
           {/* Margin bar */}
@@ -414,7 +415,7 @@ export default function GeldScreen() {
               <View style={[s.projIcon, { backgroundColor: (fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger) + '22' }]}>
                 <Ionicons name={fin.projectedCashflow >= 0 ? 'trending-up' : 'trending-down'} size={16} color={fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger} />
               </View>
-              <Text style={s.projLabel}>{t('dk.money.projectedMonth', 'Projected next month').toUpperCase()}</Text>
+              <DKLabel style={s.projLabel}>{t('dk.money.projectedMonth', 'Projected next month')}</DKLabel>
             </View>
             <Text style={[s.projValue, { color: fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger }]}>
               {formatCurrency(fin.projectedCashflow)}
@@ -425,7 +426,7 @@ export default function GeldScreen() {
             <View style={s.dsoRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <View style={[s.dsoDot, { backgroundColor: dsoStatus.color }]} />
-                <Text style={s.dsoLabel}>{t('dk.money.avgDso', 'Avg payment term').toUpperCase()}</Text>
+                <DKLabel style={s.dsoLabel}>{t('dk.money.avgDso', 'Avg payment term')}</DKLabel>
               </View>
               <Text style={[s.dsoValue, { color: dsoStatus.color }]}>{fin.avgDaysToPayment}{t('dk.status.daysShort', 'D')}</Text>
             </View>
@@ -459,12 +460,12 @@ export default function GeldScreen() {
                       Share.share({ message: t('money.reminderMessage', { defaultValue: 'Hi, this is a friendly reminder that invoice for {{customer}} ({{amount}}) is {{days}} days overdue. Could you arrange payment?', customer: od.customer, amount: formatCurrency(od.amount), days: od.daysOverdue }) });
                     }}
                   >
-                    <Text style={s.remindBtnText}>{t('dk.actions.remind', 'Remind').toUpperCase()}</Text>
+                    <DKLabel style={s.remindBtnText}>{t('dk.actions.remind', 'Remind')}</DKLabel>
                   </Pressable>
                 </Pressable>
               ))}
               <View style={s.overdueTotalRow}>
-                <Text style={s.overdueTotalLabel}>{t('dk.money.totalOutstanding', 'Total outstanding').toUpperCase()}</Text>
+                <DKLabel style={s.overdueTotalLabel}>{t('dk.money.totalOutstanding', 'Total outstanding')}</DKLabel>
                 <Text style={s.overdueTotalAmount}>{formatCurrency(fin.overdueAmount)}</Text>
               </View>
             </View>
@@ -478,7 +479,7 @@ export default function GeldScreen() {
             {fin.concentrationRisk && (
               <View style={s.riskBanner}>
                 <Ionicons name="warning" size={14} color={DK.colors.highlight} />
-                <Text style={s.riskText}>{t('dk.money.concentrationRisk', 'High concentration · diversify your client base').toUpperCase()}</Text>
+                <DKLabel style={s.riskText}>{t('dk.money.concentrationRisk', 'High concentration · diversify your client base')}</DKLabel>
               </View>
             )}
             <View style={s.docList}>
@@ -508,15 +509,15 @@ export default function GeldScreen() {
       <Modal visible={showInvoiceFilterModal} transparent animationType="fade">
         <Pressable style={s.modalOverlay} onPress={() => setShowInvoiceFilterModal(false)}>
           <View style={s.modalSheet}>
-            <Text style={s.modalTitle}>{t('dk.actions.filterInvoices', 'Filter invoices').toUpperCase()}</Text>
+            <DKLabel style={s.modalTitle}>{t('dk.actions.filterInvoices', 'Filter invoices')}</DKLabel>
             {(['all', 'overdue', 'sent', 'paid', 'draft'] as const).map(status => (
               <Pressable key={status} style={[s.modalRow, invoiceStatusFilter === status && s.modalRowActive]} onPress={() => { setInvoiceStatusFilter(status); setShowInvoiceFilterModal(false); }}>
-                <Text style={[s.modalRowText, invoiceStatusFilter === status && s.modalRowTextActive]}>{status.toUpperCase()}</Text>
+                <DKLabel style={[s.modalRowText, invoiceStatusFilter === status && s.modalRowTextActive]}>{status}</DKLabel>
                 {invoiceStatusFilter === status && <Ionicons name="checkmark" size={18} color={DK.colors.accent} />}
               </Pressable>
             ))}
             <View style={s.modalDivider} />
-            <Text style={s.modalSubtitle}>{t('dk.actions.sortBy', 'Sort by').toUpperCase()}</Text>
+            <DKLabel style={s.modalSubtitle}>{t('dk.actions.sortBy', 'Sort by')}</DKLabel>
             {(['value-desc', 'date-desc'] as const).map(sort => (
               <Pressable key={sort} style={[s.modalRow, invoiceSort === sort && s.modalRowActive]} onPress={() => { setInvoiceSort(sort); setShowInvoiceFilterModal(false); }}>
                 <Text style={[s.modalRowText, invoiceSort === sort && s.modalRowTextActive]}>{(sort === 'value-desc' ? t('dk.actions.byValue', 'Value') : t('dk.actions.byDate', 'Date')).toUpperCase()}</Text>
@@ -530,10 +531,10 @@ export default function GeldScreen() {
       <Modal visible={showQuoteFilterModal} transparent animationType="fade">
         <Pressable style={s.modalOverlay} onPress={() => setShowQuoteFilterModal(false)}>
           <View style={s.modalSheet}>
-            <Text style={s.modalTitle}>{t('dk.actions.filterQuotes', 'Filter quotes').toUpperCase()}</Text>
+            <DKLabel style={s.modalTitle}>{t('dk.actions.filterQuotes', 'Filter quotes')}</DKLabel>
             {(['all', 'sent', 'accepted', 'draft'] as const).map(status => (
               <Pressable key={status} style={[s.modalRow, quoteStatusFilter === status && s.modalRowActive]} onPress={() => { setQuoteStatusFilter(status); setShowQuoteFilterModal(false); }}>
-                <Text style={[s.modalRowText, quoteStatusFilter === status && s.modalRowTextActive]}>{status.toUpperCase()}</Text>
+                <DKLabel style={[s.modalRowText, quoteStatusFilter === status && s.modalRowTextActive]}>{status}</DKLabel>
                 {quoteStatusFilter === status && <Ionicons name="checkmark" size={18} color={DK.colors.accent} />}
               </Pressable>
             ))}

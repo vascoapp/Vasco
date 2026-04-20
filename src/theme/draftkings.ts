@@ -2,7 +2,7 @@
 // DRAFTKINGS-INSPIRED THEME (pilot — Sunset Slate)
 // =============================================================================
 // Parallel token set, not a replacement. Used by pilot screens only
-// (currently app/(contractor)/vandaag-dk.tsx). The locked production design
+// (currently app/(contractor)/index.tsx). The locked production design
 // system in tabStyles.ts remains unchanged until this pilot is approved.
 // Locked by user on 2026-04-18 from the Admin Design Lab pilot.
 // =============================================================================
