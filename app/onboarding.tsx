@@ -1230,8 +1230,13 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.borderDefault,
   },
   stepDotActive: {
-    width: 20,
+    width: 24,
     backgroundColor: Palette.hermesOrange,
+    shadowColor: Palette.hermesOrange,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 4,
   },
   stepDotDone: {
     backgroundColor: Palette.pastelOrange,

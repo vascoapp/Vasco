@@ -1274,17 +1274,22 @@ const styles = StyleSheet.create({
   contractorAvatar: {
     width: 48,
     height: 48,
-    borderRadius: RADIUS.full,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#F97316',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 5,
   },
   contractorInitials: {
     fontSize: TYPE.sectionSize,
-    fontWeight: '700',
+    fontFamily: 'Archivo_900Black',
   },
   contractorName: {
     fontSize: TYPE.titleSize,
-    fontWeight: '600',
+    fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.textPrimary,
   },
   companyName: {
