@@ -25,6 +25,7 @@ import { SafeArea, Spacing } from '../src/theme/spacing';
 import { DK } from '../src/theme/draftkings';
 import { FadeIn } from '../src/components/shared/FadeIn';
 import { GradientButton } from '../src/components/shared/GradientButton';
+import { DKLabel } from '../src/components/shared/DKLabel';
 
 const ENTERPRISE_ROLES: UserRole[] = ['cfo', 'coo', 'site-lead', 'director'];
 
@@ -120,7 +121,7 @@ export default function LoginScreen() {
                 </LinearGradient>
               </View>
               <Text style={styles.brand}>VASCO</Text>
-              <Text style={styles.tagline}>{t('auth.tagline', 'Built for the trades').toUpperCase()}</Text>
+              <DKLabel style={styles.tagline}>{t('auth.tagline', 'Built for the trades')}</DKLabel>
             </View>
           </FadeIn>
 

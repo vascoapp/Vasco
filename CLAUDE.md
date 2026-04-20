@@ -49,7 +49,7 @@ src/
   components/         # React components (shared, contractor, sitelead, dashboards)
   types/              # TypeScript types (6 compliance files, project, contractor)
   i18n/               # 6 locale files + formatting
-  theme/              # tabStyles.ts (LOCKED design system), colors, spacing
+  theme/              # tabStyles.ts (shared tokens) + draftkings.ts (DK Sunset Slate tokens) + colors.ts (semantic aliases)
 admin/                # Web admin dashboard (Next.js 16 + Tailwind v4)
   admin.config.ts     # All configuration (branding, funnel, pods, modules)
   src/app/admin/      # AdminShell (PIN auth) + AdminTabs (sidebar routing)
@@ -88,20 +88,29 @@ cd admin && npx tsc --noEmit     # Check admin TS errors
 - **7 automation packs:** Incasso, Quote follow-up, Maintenance, End-of-day, Welcome, Customer decisions, Purchasing
 - **Pricing moat:** 8 data channels, invoice photo scanning, EU6 price indexes, cross-contractor benchmarks
 
-## Design System (LOCKED — do not change without explicit user request)
-- **Typography:** Manrope (headings: 800ExtraBold, 700Bold) + Inter (body: 600SemiBold, 400Regular)
+## Design System — DraftKings Sunset Slate (active since 2026-04-18, R175)
+Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-inspired light system. Full token reference: `memory/draftkings-theme.md`.
+
+- **Typography:** Archivo (display: 900Black, 800ExtraBold, 700Bold, 600SemiBold) + Inter (body: 400/500/600/700)
 - **Type scale:** display 28px, section 18px, title 16px, body 15px, caption 13px, label 12px, tiny 11px
-- **Colors:** `Palette.hermesOrange` (#E35205) primary, SemanticColors for status
-- **Spacing:** 8px grid (GRID.xs=4, sm=8, md=16, lg=24, xl=32)
-- **Radius:** RADIUS.sm=8, md=12, lg=16, xl=20, full=28
-- **Background:** PAGE_BG (#F2F2F7), white cards, no shadows on cards
+- **Colors:** DK tokens in `src/theme/draftkings.ts` (also re-exported as SemanticColors via `src/theme/colors.ts`)
+  - bg `#0B0E11` / panel `#14181F` / panel2 `#1C2128` / border `#2A3038`
+  - text `#FFFFFF` / textMuted `#9CA3AF`
+  - primaryDark `#9A3412` → primary `#C2410C` → accent `#F97316` (CTA gradient ramp) / highlight `#F59E0B`
+  - `Palette.hermesOrange` remapped to `#F97316` (DK accent)
+- **Spacing:** 8px grid unchanged (GRID.xs=4, sm=8, md=16, lg=24, xl=32)
+- **Radius (soft):** RADIUS.sm=8, md=10, lg=14, xl=18, full=28
+- **Effects:** DK CTAs use LinearGradient (primaryDark→primary→accent) + amber glow shadow (`shadowColor: DK.colors.accent, shadowOpacity 0.4-0.5`)
+- **Background:** PAGE_BG `#0B0E11` (dark slate), panel cards, UPPERCASE Archivo_900Black for prominent titles with letter-spacing 1.2-1.8
 
 ## Conventions
 - Use TypeScript for all new files
 - Use TYPE/RADIUS/GRID constants from `src/theme/tabStyles.ts` — never hardcode font sizes or radii
-- Use `SemanticColors`/`Palette` — never hardcode hex colors
-- Use `Palette.hermesOrange` as primary accent — never terracotta/burntSienna
+- Use `SemanticColors` / `DK` (from `src/theme/draftkings.ts`) — never hardcode hex colors
+- Use `Palette.hermesOrange` (remapped to DK sunset) or the explicit DK tokens for accents
 - Generator strings use `gt()` from `generatorTranslations.ts` — never hardcode Dutch
+- UPPERCASE labels: use `DKLabel` from `src/components/shared/DKLabel.tsx` — preserves screen-reader accessibility via `accessibilityLabel`
+- Drill-down screens: use `DKScreenHeader` from `src/components/shared/DKScreenHeader.tsx` for consistent back + title
 - Always run `npx tsc --noEmit | grep "^app/"` after changes
 - Always update memory .md files after completing work
 

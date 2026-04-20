@@ -23,6 +23,7 @@ import { TYPE, RADIUS } from '../src/theme/tabStyles';
 import { DK } from '../src/theme/draftkings';
 import { FadeIn } from '../src/components/shared/FadeIn';
 import { GradientButton } from '../src/components/shared/GradientButton';
+import { DKLabel } from '../src/components/shared/DKLabel';
 
 export default function ResetPasswordScreen() {
   const { t } = useTranslation();
@@ -92,7 +93,7 @@ export default function ResetPasswordScreen() {
                 <Ionicons name="key" size={22} color="#FFFFFF" />
               </LinearGradient>
             </View>
-            <Text style={styles.title}>{t('resetPassword.title', 'Set a new password').toUpperCase()}</Text>
+            <DKLabel style={styles.title}>{t('resetPassword.title', 'Set a new password')}</DKLabel>
             <Text style={styles.subtitle}>{t('resetPassword.subtitle', 'Choose a password with at least 8 characters.')}</Text>
           </FadeIn>
 

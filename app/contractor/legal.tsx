@@ -12,6 +12,7 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
 import { useAuth } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
+import { DKLabel } from '../../src/components/shared/DKLabel';
 
 const APP_VERSION = '1.0.0';
 const LAST_UPDATED = 'March 2026';
@@ -434,7 +435,7 @@ export default function LegalScreen() {
 
         {/* GDPR Action Buttons */}
         <View style={styles.gdprSection}>
-          <Text style={styles.gdprSectionTitle}>{t('legal.yourData', 'YOUR DATA').toUpperCase()}</Text>
+          <DKLabel style={styles.gdprSectionTitle}>{t('legal.yourData', 'YOUR DATA')}</DKLabel>
 
           <Pressable style={styles.gdprButton} onPress={handleExportData}>
             <View style={styles.gdprButtonIcon}>

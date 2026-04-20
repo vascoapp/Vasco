@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { DK } from '../../src/theme/draftkings';
+import { DKLabel } from '../../src/components/shared/DKLabel';
 
 export default function CustomerLandingScreen() {
   const { t } = useTranslation();
@@ -53,7 +54,7 @@ export default function CustomerLandingScreen() {
             </LinearGradient>
           </View>
           <Text style={s.brand}>VASCO</Text>
-          <Text style={s.brandSub}>{t('customerPortal.title', 'Klantportaal').toUpperCase()}</Text>
+          <DKLabel style={s.brandSub}>{t('customerPortal.title', 'Klantportaal')}</DKLabel>
         </View>
 
         {/* Welcome */}
@@ -66,7 +67,7 @@ export default function CustomerLandingScreen() {
 
         {/* Access code */}
         <View style={s.inputArea}>
-          <Text style={s.inputLabel}>{t('customerPortal.code', 'Toegangscode').toUpperCase()}</Text>
+          <DKLabel style={s.inputLabel}>{t('customerPortal.code', 'Toegangscode')}</DKLabel>
           <TextInput
             style={[s.codeInput, error ? s.codeInputError : null]}
             value={accessCode}
@@ -94,14 +95,14 @@ export default function CustomerLandingScreen() {
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
           />
-          <Text style={s.submitBtnText}>{t('customerPortal.submit', 'Bekijk mijn keuzes').toUpperCase()}</Text>
+          <DKLabel style={s.submitBtnText}>{t('customerPortal.submit', 'Bekijk mijn keuzes')}</DKLabel>
           <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
         </Pressable>
 
         {/* Demo secondary */}
         <Pressable style={({ pressed }) => [s.demoBtn, pressed && { opacity: 0.85 }]} onPress={handleDemo}>
           <Ionicons name="play-circle-outline" size={18} color={DK.colors.accent} />
-          <Text style={s.demoBtnText}>{t('customerPortal.demo', 'Demo modus').toUpperCase()}</Text>
+          <DKLabel style={s.demoBtnText}>{t('customerPortal.demo', 'Demo modus')}</DKLabel>
         </Pressable>
 
         {/* Footer */}

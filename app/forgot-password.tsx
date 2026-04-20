@@ -19,6 +19,7 @@ import { SemanticColors, Palette } from '../src/theme/colors';
 import { SafeArea } from '../src/theme/spacing';
 import { DK } from '../src/theme/draftkings';
 import { GradientButton } from '../src/components/shared/GradientButton';
+import { DKLabel } from '../src/components/shared/DKLabel';
 
 export default function ForgotPasswordScreen() {
   const { t } = useTranslation();
@@ -93,7 +94,7 @@ export default function ForgotPasswordScreen() {
               <Ionicons name="lock-closed" size={22} color="#FFFFFF" />
             </LinearGradient>
           </View>
-          <Text style={styles.title}>{t('auth.resetPassword', 'Reset password').toUpperCase()}</Text>
+          <DKLabel style={styles.title}>{t('auth.resetPassword', 'Reset password')}</DKLabel>
           <Text style={styles.subtitle}>
             {t('auth.resetInstructions', 'Enter your email and we\'ll send you a reset link')}
           </Text>

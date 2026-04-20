@@ -9,6 +9,7 @@ import { processAcceptance } from '../../src/services/customerQuoteAcceptanceSer
 import { useAppState } from '../../src/state/AppState';
 import { logWarn } from '../../src/utils/errorHandler';
 import { DK } from '../../src/theme/draftkings';
+import { DKLabel } from '../../src/components/shared/DKLabel';
 
 // ---------------------------------------------------------------------------
 // Token validation + rate limiting
@@ -120,7 +121,7 @@ export default function AcceptQuoteScreen() {
           </LinearGradient>
         )}
       </View>
-      <Text style={styles.title}>{title.toUpperCase()}</Text>
+      <DKLabel style={styles.title}>{title}</DKLabel>
       <Text style={styles.message}>{message}</Text>
     </View>
   );

@@ -25,6 +25,7 @@ import { DK } from '../src/theme/draftkings';
 import { FadeIn } from '../src/components/shared/FadeIn';
 import { GradientButton } from '../src/components/shared/GradientButton';
 import { isValidEmail } from '../src/utils/validation';
+import { DKLabel } from '../src/components/shared/DKLabel';
 
 export default function SignupScreen() {
   const { t } = useTranslation();
@@ -125,7 +126,7 @@ export default function SignupScreen() {
                   <Ionicons name="flash" size={22} color="#FFFFFF" />
                 </LinearGradient>
               </View>
-              <Text style={styles.title}>{t('signup.title', 'Create your account').toUpperCase()}</Text>
+              <DKLabel style={styles.title}>{t('signup.title', 'Create your account')}</DKLabel>
               <Text style={styles.subtitle}>{t('signup.subtitle', 'Start your 14-day trial — no card required.')}</Text>
             </View>
           </FadeIn>

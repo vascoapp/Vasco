@@ -14,6 +14,7 @@ import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useAuth } from '../../src/context/AuthContext';
 import { isDemoMode } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
+import { DKLabel } from '../../src/components/shared/DKLabel';
 
 const LANG_OPTIONS = [
   { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
@@ -202,7 +203,7 @@ export default function ProfileScreen() {
 
         {/* Contractor Score */}
         <View style={styles.sectionWrap}>
-          <Text style={styles.sectionLabel}>{t('profile.performance', 'PERFORMANCE').toUpperCase()}</Text>
+          <DKLabel style={styles.sectionLabel}>{t('profile.performance', 'PERFORMANCE')}</DKLabel>
           <View style={styles.card}>
             <View style={styles.scoreHeader}>
               <Ionicons name="trophy" size={20} color={Palette.hermesOrange} />
@@ -228,7 +229,7 @@ export default function ProfileScreen() {
 
         {/* Account Section */}
         <View style={styles.sectionWrap}>
-          <Text style={styles.sectionLabel}>{t('profile.account', 'ACCOUNT').toUpperCase()}</Text>
+          <DKLabel style={styles.sectionLabel}>{t('profile.account', 'ACCOUNT')}</DKLabel>
           <View style={styles.card}>
             <SettingsRow icon="person" label={t('profile.name', 'Name')} value={user?.name ?? ''} />
             <SettingsRow icon="mail" label={t('profile.email', 'Email')} value={user?.email ?? ''} border />
@@ -240,7 +241,7 @@ export default function ProfileScreen() {
 
         {/* Business Section */}
         <View style={styles.sectionWrap}>
-          <Text style={styles.sectionLabel}>{t('profile.business', 'BUSINESS').toUpperCase()}</Text>
+          <DKLabel style={styles.sectionLabel}>{t('profile.business', 'BUSINESS')}</DKLabel>
           <View style={styles.card}>
             <SettingsRow
               icon="document-text"
@@ -274,7 +275,7 @@ export default function ProfileScreen() {
 
         {/* Integrations */}
         <View style={styles.sectionWrap}>
-          <Text style={styles.sectionLabel}>{t('profile.integrations', 'INTEGRATIONS').toUpperCase()}</Text>
+          <DKLabel style={styles.sectionLabel}>{t('profile.integrations', 'INTEGRATIONS')}</DKLabel>
           <View style={styles.card}>
             {integrations.map((item, idx) => (
               <Pressable
@@ -303,7 +304,7 @@ export default function ProfileScreen() {
 
         {/* Settings */}
         <View style={styles.sectionWrap}>
-          <Text style={styles.sectionLabel}>{t('profile.settings', 'SETTINGS').toUpperCase()}</Text>
+          <DKLabel style={styles.sectionLabel}>{t('profile.settings', 'SETTINGS')}</DKLabel>
           <View style={styles.card}>
             <Pressable style={styles.row} onPress={handleLanguageSwitch}>
               <View style={styles.rowIcon}>
@@ -338,7 +339,7 @@ export default function ProfileScreen() {
 
         {/* Data & Privacy */}
         <View style={styles.sectionWrap}>
-          <Text style={styles.sectionLabel}>{t('profile.dataPrivacy', 'DATA & PRIVACY').toUpperCase()}</Text>
+          <DKLabel style={styles.sectionLabel}>{t('profile.dataPrivacy', 'DATA & PRIVACY')}</DKLabel>
           <View style={styles.card}>
             <Pressable style={styles.row} onPress={handleExportData}>
               <View style={styles.rowIcon}>
