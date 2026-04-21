@@ -24,24 +24,44 @@ Tracks everything required to publish Vasco to App Store + Google Play and enabl
 
 ## 🕳 Known gaps (blocked on live Supabase or requires data migration)
 
-### Cross-contractor pricing moat — **40% operational** (audited 2026-04-17)
-The cohort-benchmark moat (advertised as a core differentiator) has infra + ingestion but **no working aggregation** and **no feedback loop**. Concretely:
-- ✅ `material_price_history` table exists and is written on every invoice scan (`invoiceScanService.ts:137-156`).
-- ✅ `pricing_intelligence` table exists and is written on every quote line item (`dataCollector.ts:210`).
-- ❌ RPC `get_trade_pricing_stats` (`002_ai_moat_infrastructure.sql:458-492`) reads from the wrong table (`learning_profiles` instead of `pricing_intelligence`) → returns empty.
-- ❌ RPC `compute_weekly_cohort_stats` (`002_ai_moat_infrastructure.sql:530-564`) has the same SQL bug.
-- ❌ No trigger writes into `cohort_weekly_stats` when a quote is accepted — so even if the RPCs were fixed, the aggregation table is never populated.
-- ⚠️ `useCohortBenchmarks` hook (`cohortBenchmarkService.ts:205-216`) is defined but not imported anywhere — dead code in UI.
-- ⚠️ `material_price_history` RLS is `SELECT USING (true)` — every contractor sees every supplier+price+timestamp. Minor GDPR exposure (no user_id but combinable with external data could identify).
+### Cross-contractor pricing moat — **code-fixed 2026-04-21, validation pending Supabase creds**
+Previously 40% operational (audited 2026-04-17). New migration `20260421_cohort_moat_fix.sql` addresses every known defect; end-to-end verification still requires a live Supabase to run the RPCs against real rows.
 
-**Fix plan (requires live Supabase to validate):**
-1. New migration with corrected RPC SQL that aggregates from `pricing_intelligence` and `material_price_history`.
-2. Trigger on `quote_accepted` business_event → upsert into `cohort_weekly_stats`.
-3. Import `useCohortBenchmarks` into `TieredQuoteBuilder` or the quote detail screen so the contractor actually sees "similar jobs in your trade + country".
-4. Revise `material_price_history` RLS to enforce aggregation-only reads (no raw timestamps + supplier combos).
-5. k-anonymity guard: require ≥5 contractors per `trade × country × week` cell before surfacing a benchmark, else show "not enough data".
+**Shipped in R187 (2026-04-21):**
+- ✅ `get_trade_pricing_stats` rewritten to read from `pricing_intelligence` (not the nonexistent `learning_profiles`). Returns NULLs + `sample_size=0` when fewer than 5 distinct contractors contributed (k-anonymity gate).
+- ✅ `compute_weekly_cohort_stats` rewritten to aggregate real columns from `pricing_intelligence`, joined against `job_duration_data` (for duration ratio) and `customer_payment_patterns` (for DSO). `HAVING COUNT(DISTINCT user_id) >= 5`.
+- ✅ Trigger `trg_quote_accepted_cohort` on `business_events` fires `compute_weekly_cohort_stats(NULL)` whenever a `quote_accepted` row is inserted (fire-and-forget, wrapped to never block the insert).
+- ✅ `material_price_history` raw SELECT policy replaced with owner-only (`auth.uid() = observed_by`). Authenticated clients read aggregates via the new `material_price_benchmarks` VIEW (per trade×country×material×unit, >=5 observers required). New RPC `get_material_cohort_stats` wraps the view for the client.
+- ✅ `useCohortBenchmarks` now imported and rendered in `TieredQuoteBuilder.tsx` preview step — shows "Similar {trade} jobs in {country}: €X/u · Y% accept · Based on N quotes from M contractors" inside the Vasco advice card. Hidden when below k-anonymity threshold.
+- ✅ `cohortBenchmarkService.fetchCohortFromCloud` consumes the new RPC shapes correctly; previous implementation assumed `.materials`/`.trades` keys that never existed.
+- ✅ 3 new i18n keys × 6 locales (`quotes.cohortBenchmark`, `quotes.cohortAcceptance`, `quotes.cohortSample`).
 
-**Why this isn't being fixed right now:** The RPC fix needs a live Supabase to apply the migration, run the RPC, and verify sample_size > 0. User hasn't provided creds — we'd be shipping untested SQL.
+**Still pending live Supabase:**
+1. `supabase db push` the new migration on the prod project.
+2. Run `SELECT compute_weekly_cohort_stats();` once to backfill the first week's row.
+3. Verify `SELECT * FROM get_trade_pricing_stats('plumbing','NL');` returns sample_size>0 once real data lands.
+4. Confirm trigger fires by tailing `business_events` and checking `cohort_weekly_stats.computed_at` advances.
+
+### Moat enrichment (R188, 2026-04-21) — additive, schema-stable
+Second migration `20260421_moat_enrichment.sql` deepens the signal without any renames/drops/type-changes (every ALTER is `ADD COLUMN IF NOT EXISTS`, every RPC is `CREATE OR REPLACE`).
+
+- **New pricing_intelligence columns** (all optional, CHECK-constrained enums): `decline_reason`, `time_to_decision_hours`, `reminder_count_before_decision`, `counter_offer_amount`, `contractor_segment` (solo/small_team/medium/large). Two partial indexes (`idx_pricing_segment`, `idx_pricing_decline`) only index rows where the column is set, so the cost on legacy rows is zero.
+- **New `contractor_pricing_calibration` table** (unique on `user_id+trade+country`). Stores per-user deltas vs cohort median: price %, acceptance pp, margin pp, with confidence score. Owner-only RLS.
+- **New RPC `compute_contractor_calibration(user_id, trade, country)`** — upserts calibration from last 12 months of pricing_intelligence, excluding self from cohort (no self-bias), gated by k-anonymity ≥5 cohort contractors + ≥5 own samples.
+- **New RPC `get_contractor_calibration(...)`** — thin reader.
+- **New RPC `get_line_item_edit_distribution(trade, country, description_like)`** — aggregates `quote_line_deltas` to answer "how does the cohort typically adjust this line?" with median qty/price delta % and top reason code. K-anonymity ≥5.
+- **New trigger `trg_quote_outcome_calibration`** on `business_events` fires `compute_contractor_calibration` for the emitting user whenever `quote_accepted` or `quote_rejected` lands. Wrapped so it can't block the insert.
+
+**Client side (same round):**
+- `dataCollector.recordPricingOutcome` gains 5 optional fields (`declineReason`, `timeToDecisionHours`, `reminderCountBeforeDecision`, `counterOfferAmount`, `contractorSegment`); patch is built conditionally so re-decisions don't overwrite prior values with null.
+- `dataCollector.recordPricingData` gains optional `contractorSegment`.
+- `Quote` domain type gains `declineReason?` + `counterOfferAmount?` for future reject-flow UI.
+- `AppState.updateQuote` now computes `timeToDecisionHours` from `quote.sentAt` and pipes `declineReason` + `counterOfferAmount` from the update. Hardcoded `'general'/'NL'` replaced with `businessProfile.trade/country` at the `recordPricingData` call site.
+- New hook `useContractorCalibration(userId, trade, country)` + plain async `getContractorCalibration`, `getLineEditDistribution` in `cohortBenchmarkService.ts`.
+- `TieredQuoteBuilder` preview step shows a personalized pill: "Your pricing vs cohort: +8% · +3pp acceptance · Based on your last 24 quotes (confidence 72%)". Hidden when confidence <30%.
+- 3 new i18n keys × 6 locales (`quotes.calibrationLead` / `calibrationAccept` / `calibrationSample`).
+
+**Schema-stability audit**: zero renames, zero drops, zero type changes, zero removed constraints. Existing `updateQuote({ status: 'rejected' })` calls still work without passing reason. The old `recordPricingOutcome({ wasAccepted })` signature is still valid. Migration can be re-applied.
 
 ## 🔐 User must provide credentials
 - [ ] Run `npx eas init` after `eas login` — fills `expo.extra.eas.projectId` in `app.json`.

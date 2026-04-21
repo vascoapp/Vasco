@@ -12,12 +12,10 @@
 // 5. Public price indexes (priceIndexService)
 // =============================================================================
 
-import { useState, useEffect, useMemo } from 'react';
-import { MS_PER_DAY } from '../utils/timeConstants';
+import { useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getScanHistory } from './invoiceScanService';
-import type { PriceRecommendation } from './invoiceScanService';
 
 const CACHE_KEY = '@vasco_cohort_benchmarks';
 const CACHE_TTL = 4 * 60 * 60 * 1000; // 4 hours
@@ -74,22 +72,69 @@ async function fetchCohortFromCloud(trade: string, country: string): Promise<Coh
   if (!isSupabaseConfigured) return null;
 
   try {
-    // Call the RPC function that computes weekly stats
-    const weekKey = getWeekKey();
-    const { data, error } = await (supabase.rpc as any)('compute_weekly_cohort_stats', { week_key: weekKey });
-    if (error || !data) return null;
+    // Trade-level aggregates (k-anonymity >=5 enforced server-side)
+    const { data: tradeRows, error: tradeErr } = await (supabase.rpc as any)(
+      'get_trade_pricing_stats',
+      { p_trade: trade, p_country: country },
+    );
+    if (tradeErr) return null;
+    const tradeStat = Array.isArray(tradeRows) ? tradeRows[0] : tradeRows;
+    const contractorCount: number = Number(tradeStat?.contractor_count ?? 0);
 
-    // Also fetch trade-specific pricing stats
-    const { data: pricing } = await (supabase.rpc as any)('get_trade_pricing_stats', {
-      p_trade: trade,
-      p_country: country,
-    });
+    // Material-level aggregates from the aggregation-only view
+    const { data: materialRows, error: matErr } = await (supabase.rpc as any)(
+      'get_material_cohort_stats',
+      { p_trade: trade, p_country: country },
+    );
+    if (matErr) return null;
+
+    // Below k-anonymity threshold → let caller fall back to local baselines.
+    if (contractorCount < 5 && (!materialRows || materialRows.length === 0)) {
+      return null;
+    }
+
+    const materialBenchmarks: MaterialBenchmark[] = Array.isArray(materialRows)
+      ? materialRows.map((r: any) => ({
+          materialName: String(r.material_name ?? ''),
+          category: String(r.material_category ?? 'general'),
+          trade,
+          country,
+          avgPrice: Number(r.avg_price ?? 0),
+          medianPrice: Number(r.median_price ?? 0),
+          p25: Number(r.p25_price ?? 0),
+          p75: Number(r.p75_price ?? 0),
+          minPrice: Number(r.min_price ?? 0),
+          maxPrice: Number(r.max_price ?? 0),
+          priceChange30d: 0,
+          priceChange90d: 0,
+          trend: 'stable' as const,
+          volatility: 0,
+          sampleSize: Number(r.sample_size ?? 0),
+          lastUpdated: String(r.last_observed ?? new Date().toISOString()),
+        }))
+      : [];
+
+    // Build a single TradeBenchmark row for (trade, country) from the RPC stat.
+    // quoted_unit_price averages are per-line, not strictly hourly rate — but
+    // this is the signal the cohort exposes until we tag hourly-line items.
+    const tradeBenchmarks: TradeBenchmark[] = tradeStat && contractorCount >= 5
+      ? [{
+          trade,
+          country,
+          avgHourlyRate: Number(tradeStat.avg_hourly_rate ?? 0),
+          medianHourlyRate: Number(tradeStat.median_hourly_rate ?? 0),
+          avgJobMargin: Number(tradeStat.avg_margin ?? 0),
+          avgQuoteAcceptanceRate: Number(tradeStat.acceptance_rate ?? 0),
+          avgDSO: 0, // sourced from compute_weekly_cohort_stats, not this RPC
+          sampleSize: Number(tradeStat.sample_size ?? 0),
+        }]
+      : [];
 
     return {
-      materialBenchmarks: pricing?.materials ?? [],
-      tradeBenchmarks: pricing?.trades ?? [],
+      materialBenchmarks,
+      tradeBenchmarks,
       lastSync: new Date().toISOString(),
-      contractorsInCohort: data?.contractor_count ?? 0,
+      contractorsInCohort: contractorCount,
     };
   } catch {
     return null;
@@ -213,6 +258,120 @@ export function useCohortBenchmarks(trade: string = 'general', country: string =
   }, [trade, country]);
 
   return { benchmarks: data, loading };
+}
+
+// ---------------------------------------------------------------------------
+// Contractor calibration — personalized pricing signal (R188)
+// ---------------------------------------------------------------------------
+// Answers "how do you price vs the cohort median, and how does that affect
+// your acceptance rate?" Returned null when the user hasn't accumulated
+// enough of their own history (>=5 quotes) or cohort is below k-anonymity.
+
+export interface ContractorCalibration {
+  medianPriceVsCohortPct: number | null;      // e.g. +8 means 8% above cohort median
+  acceptanceRateVsCohortPct: number | null;   // percentage points
+  marginVsCohortPct: number | null;           // percentage points
+  sampleSize: number;
+  cohortSampleSize: number;
+  confidence: number;                         // 0.0-1.0
+  computedAt: string;
+}
+
+export async function getContractorCalibration(
+  userId: string,
+  trade: string,
+  country: string,
+): Promise<ContractorCalibration | null> {
+  if (!isSupabaseConfigured) return null;
+  try {
+    const { data, error } = await (supabase.rpc as any)('get_contractor_calibration', {
+      p_user_id: userId,
+      p_trade: trade,
+      p_country: country,
+    });
+    if (error) return null;
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) return null;
+    return {
+      medianPriceVsCohortPct: row.median_price_vs_cohort_pct ?? null,
+      acceptanceRateVsCohortPct: row.acceptance_rate_vs_cohort_pct ?? null,
+      marginVsCohortPct: row.margin_vs_cohort_pct ?? null,
+      sampleSize: Number(row.sample_size ?? 0),
+      cohortSampleSize: Number(row.cohort_sample_size ?? 0),
+      confidence: Number(row.confidence ?? 0),
+      computedAt: String(row.computed_at ?? new Date().toISOString()),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function useContractorCalibration(
+  userId: string | null | undefined,
+  trade: string = 'general',
+  country: string = 'NL',
+) {
+  const [data, setData] = useState<ContractorCalibration | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId) {
+      setData(null);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    getContractorCalibration(userId, trade, country)
+      .then(res => { if (!cancelled) setData(res); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [userId, trade, country]);
+
+  return { calibration: data, loading };
+}
+
+// ---------------------------------------------------------------------------
+// Line-item edit distribution (R188)
+// ---------------------------------------------------------------------------
+// "Contractors like you typically adjust this line by +X%". Surfaced next to
+// AI-baseline quote lines. Server enforces k-anonymity >=5.
+
+export interface LineEditDistribution {
+  sampleSize: number;
+  contractorCount: number;
+  medianQtyDeltaPct: number | null;
+  medianUnitPriceDeltaPct: number | null;
+  topReasonCode: string | null;
+  topReasonShare: number | null; // 0.0-1.0
+}
+
+export async function getLineEditDistribution(
+  trade: string,
+  country: string,
+  descriptionLike: string,
+): Promise<LineEditDistribution | null> {
+  if (!isSupabaseConfigured) return null;
+  try {
+    const { data, error } = await (supabase.rpc as any)('get_line_item_edit_distribution', {
+      p_trade: trade,
+      p_country: country,
+      p_description_like: descriptionLike,
+    });
+    if (error) return null;
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) return null;
+    return {
+      sampleSize: Number(row.sample_size ?? 0),
+      contractorCount: Number(row.contractor_count ?? 0),
+      medianQtyDeltaPct: row.median_qty_delta_pct ?? null,
+      medianUnitPriceDeltaPct: row.median_unit_price_delta_pct ?? null,
+      topReasonCode: row.top_reason_code ?? null,
+      topReasonShare: row.top_reason_share ?? null,
+    };
+  } catch {
+    return null;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -501,14 +660,3 @@ export function getAllMaterialBaselines(country: CountryCode = 'NL'): { name: st
   }));
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function getWeekKey(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const jan1 = new Date(year, 0, 1);
-  const week = Math.ceil(((now.getTime() - jan1.getTime()) / MS_PER_DAY + jan1.getDay() + 1) / 7);
-  return `${year}-W${String(week).padStart(2, '0')}`;
-}

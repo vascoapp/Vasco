@@ -1027,7 +1027,25 @@
   },
   "quotes": {
     "newQuote": "Nuovo preventivo",
-    "quote": "Preventivo"
+    "quote": "Preventivo",
+    "cohortBenchmark": "Lavori di {{trade}} simili in {{country}}:",
+    "cohortAcceptance": "accettato",
+    "cohortSample": "Basato su {{count}} preventivi di {{contractors}} artigiani",
+    "calibrationLead": "I tuoi prezzi vs coorte:",
+    "calibrationAccept": "accettazione",
+    "calibrationSample": "Basato sui tuoi ultimi {{count}} preventivi (confidenza {{conf}}%)",
+    "lineHintQty": "La coorte di solito regola la quantità di",
+    "lineHintPrice": "prezzo",
+    "cohortTuned": "Vasco ha calibrato {{lines}} righe su {{total}} con {{contractors}} decisioni della coorte",
+    "reasonCode": {
+      "waste_underestimated": "sfrido sottostimato",
+      "measurement_correction": "correzione di misura",
+      "labor_underestimated": "manodopera sottostimata",
+      "customer_upgrade": "cliente ha scelto upgrade",
+      "local_supplier_cheaper": "fornitore locale più economico",
+      "site_condition_harder": "cantiere più difficile del previsto",
+      "other": "altro"
+    }
   },
   "insights": {
     "thanksFeedback": "Grazie per il feedback",

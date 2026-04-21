@@ -1027,7 +1027,25 @@
   },
   "quotes": {
     "newQuote": "Nouveau devis",
-    "quote": "Devis"
+    "quote": "Devis",
+    "cohortBenchmark": "Chantiers {{trade}} similaires en {{country}}:",
+    "cohortAcceptance": "accepté",
+    "cohortSample": "Basé sur {{count}} devis de {{contractors}} artisans",
+    "calibrationLead": "Vos prix vs cohorte:",
+    "calibrationAccept": "acceptation",
+    "calibrationSample": "Basé sur vos {{count}} derniers devis (confiance {{conf}}%)",
+    "lineHintQty": "La cohorte ajuste généralement la quantité de",
+    "lineHintPrice": "prix",
+    "cohortTuned": "Vasco a ajusté {{lines}} lignes sur {{total}} à partir de {{contractors}} décisions de la cohorte",
+    "reasonCode": {
+      "waste_underestimated": "chutes sous-estimées",
+      "measurement_correction": "correction de mesure",
+      "labor_underestimated": "main d'œuvre sous-estimée",
+      "customer_upgrade": "upgrade client",
+      "local_supplier_cheaper": "fournisseur local moins cher",
+      "site_condition_harder": "chantier plus difficile que prévu",
+      "other": "autre"
+    }
   },
   "insights": {
     "thanksFeedback": "Merci pour votre retour",

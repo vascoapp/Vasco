@@ -15,6 +15,7 @@ import { loadProfile, type ContractorLearningProfile, type JobOutcome } from './
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../i18n/i18n';
+import { getQuoteWinModel, scoreQuoteWin } from '../services/quoteWinModelService';
 
 const MODEL_CACHE_KEY = '@vasco_ml_models';
 
@@ -70,12 +71,32 @@ export interface PaymentPrediction {
 export async function predictQuoteWin(params: {
   amount: number;
   trade: string;
+  country?: string;
   customerId?: string;
+  customerType?: string;
   jobType?: string;
 }): Promise<QuoteWinPrediction> {
   const profile = await loadProfile();
   const learned = await getLearnedCoefficients();
   const jobs = profile.jobCompletionHistory ?? [];
+
+  // R191: Try the cohort-trained logistic regression model first. When no
+  // model exists (e.g. new trade/country combo below k-anonymity), fall
+  // through to the legacy heuristic below.
+  const trainedProbability = await (async () => {
+    if (!params.country) return null;
+    try {
+      const loaded = await getQuoteWinModel(params.trade, params.country);
+      if (!loaded) return null;
+      const { probability, confidence } = scoreQuoteWin(
+        { amount: params.amount, customerType: params.customerType ?? null },
+        loaded.weights,
+      );
+      return { probability, confidence, samples: loaded.trainingSamples, accuracy: loaded.accuracy };
+    } catch {
+      return null;
+    }
+  })();
 
   // Historical acceptance rate — use learned coefficient if available
   const tradeJobs = jobs.filter(j => j.jobType === params.trade || !params.trade);
@@ -98,8 +119,17 @@ export async function predictQuoteWin(params: {
   const month = new Date().getMonth();
   const seasonFactor = [0.9, 0.9, 0.95, 1.0, 1.05, 1.1, 1.1, 1.05, 1.0, 0.95, 0.9, 0.85][month];
 
-  const probability = Math.min(0.95, Math.max(0.1, baseRate * priceFactor * seasonFactor));
-  const confidence = Math.min(0.95, 0.3 + tradeJobs.length * 0.05);
+  const heuristicProbability = Math.min(0.95, Math.max(0.1, baseRate * priceFactor * seasonFactor));
+  const heuristicConfidence = Math.min(0.95, 0.3 + tradeJobs.length * 0.05);
+
+  // Blend: cohort-trained model dominates when available; heuristic is the
+  // safety net. We don't average — the trained model already incorporates
+  // price and season signals, so averaging with the heuristic would re-weight
+  // them. Instead: if trained.confidence > 0.5 use it outright; below that
+  // threshold fall back to the heuristic.
+  const useTrained = trainedProbability !== null && trainedProbability.confidence >= 0.5;
+  const probability = useTrained ? trainedProbability!.probability : heuristicProbability;
+  const confidence = useTrained ? trainedProbability!.confidence : heuristicConfidence;
 
   // Suggested price range for optimal acceptance
   const optimalLow = Math.round(avgAmount * 0.85);

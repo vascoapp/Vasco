@@ -1027,7 +1027,25 @@
   },
   "quotes": {
     "newQuote": "Nuevo presupuesto",
-    "quote": "Presupuesto"
+    "quote": "Presupuesto",
+    "cohortBenchmark": "Trabajos de {{trade}} similares en {{country}}:",
+    "cohortAcceptance": "aceptado",
+    "cohortSample": "Basado en {{count}} presupuestos de {{contractors}} contratistas",
+    "calibrationLead": "Tus precios vs cohorte:",
+    "calibrationAccept": "aceptación",
+    "calibrationSample": "Basado en tus últimos {{count}} presupuestos (confianza {{conf}}%)",
+    "lineHintQty": "La cohorte suele ajustar la cantidad",
+    "lineHintPrice": "precio",
+    "cohortTuned": "Vasco ajustó {{lines}} de {{total}} líneas a partir de {{contractors}} decisiones de la cohorte",
+    "reasonCode": {
+      "waste_underestimated": "merma subestimada",
+      "measurement_correction": "corrección de medidas",
+      "labor_underestimated": "mano de obra subestimada",
+      "customer_upgrade": "cliente eligió mejora",
+      "local_supplier_cheaper": "proveedor local más barato",
+      "site_condition_harder": "obra más difícil de lo previsto",
+      "other": "otro"
+    }
   },
   "insights": {
     "thanksFeedback": "Gracias por tu comentario",

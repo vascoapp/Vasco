@@ -849,17 +849,20 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }
 
         // AI data collector — quote event + per-line pricing intelligence
+        // R188: real trade/country from businessProfile (was hardcoded 'general'/'NL')
+        // so cohort aggregation works for non-Dutch/non-generalist contractors.
+        const profTrade = businessProfile.trade ?? 'general';
+        const profCountry = businessProfile.country ?? 'NL';
         emitQuoteCreated(aiUserId, docNumber, {
           customerId: customer,
           totalAmount: total,
           lineItemCount: items.length,
-          trade: 'general',
+          trade: profTrade,
         }).catch(() => {});
-        // Record each line item for pricing intelligence
         for (const item of items) {
           recordPricingData(aiUserId, {
-            trade: 'general',
-            country: 'NL',
+            trade: profTrade,
+            country: profCountry,
             lineDescription: item.description,
             quotedUnitPrice: item.unitPrice,
             quotedQuantity: item.quantity,
@@ -1248,15 +1251,20 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         );
 
         // AI data collector — quote accepted + pricing outcome
+        const sentAtMsAcc = quote.sentAt ? new Date(quote.sentAt).getTime() : null;
+        const ttdHoursAcc = sentAtMsAcc
+          ? Math.max(0, Math.round((Date.now() - sentAtMsAcc) / (1000 * 60 * 60)))
+          : undefined;
         emitQuoteAccepted(aiUserId, quoteId, {
           customerId: quote.customer ?? '',
           quotedAmount: quote.amount,
           acceptedAmount: quote.amount,
-          daysToAccept: 0,
+          daysToAccept: ttdHoursAcc !== undefined ? Math.round(ttdHoursAcc / 24) : 0,
         }).catch(() => {});
         recordPricingOutcome(aiUserId, quoteId, {
           wasAccepted: true,
           acceptedPrice: quote.amount,
+          timeToDecisionHours: ttdHoursAcc,
         }).catch(() => {});
         // Close the quote-win calibration loop: feed the predictor with the
         // actual outcome so future win-chance badges get more accurate.
@@ -1330,15 +1338,20 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             updatedAt: nowTs,
           };
           setJobs((prev) => [autoJob, ...prev]);
+          const sentAtMsUp = quote.sentAt ? new Date(quote.sentAt).getTime() : null;
+          const ttdHoursUp = sentAtMsUp
+            ? Math.max(0, Math.round((Date.now() - sentAtMsUp) / (1000 * 60 * 60)))
+            : undefined;
           emitQuoteAccepted(aiUserId, id, {
             customerId: quote.customer ?? '',
             quotedAmount: quote.amount,
             acceptedAmount: quote.amount,
-            daysToAccept: 0,
+            daysToAccept: ttdHoursUp !== undefined ? Math.round(ttdHoursUp / 24) : 0,
           }).catch(() => {});
           recordPricingOutcome(aiUserId, id, {
             wasAccepted: true,
             acceptedPrice: quote.amount,
+            timeToDecisionHours: ttdHoursUp,
           }).catch(() => {});
           if (isSupabaseConfigured) {
             dbCreateJob({
@@ -1354,12 +1367,23 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
         // AI data collector — track quote rejection
         if (updates.status === 'rejected' && quote) {
+          const declineReason = updates.declineReason ?? 'customer_declined';
+          const counterOffer = updates.counterOfferAmount;
+          const sentAtMs = quote.sentAt ? new Date(quote.sentAt).getTime() : null;
+          const timeToDecisionHours = sentAtMs
+            ? Math.max(0, Math.round((Date.now() - sentAtMs) / (1000 * 60 * 60)))
+            : undefined;
           emitQuoteRejected(aiUserId, id, {
             customerId: quote.customer ?? '',
             quotedAmount: quote.amount,
-            reason: 'customer_declined',
+            reason: declineReason,
           }).catch(() => {});
-          recordPricingOutcome(aiUserId, id, { wasAccepted: false }).catch(() => {});
+          recordPricingOutcome(aiUserId, id, {
+            wasAccepted: false,
+            declineReason,
+            counterOfferAmount: counterOffer,
+            timeToDecisionHours,
+          }).catch(() => {});
         }
       },
 

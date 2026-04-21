@@ -1027,7 +1027,25 @@
   },
   "quotes": {
     "newQuote": "Neues Angebot",
-    "quote": "Angebot"
+    "quote": "Angebot",
+    "cohortBenchmark": "Ähnliche {{trade}}-Aufträge in {{country}}:",
+    "cohortAcceptance": "angenommen",
+    "cohortSample": "Basierend auf {{count}} Angeboten von {{contractors}} Handwerkern",
+    "calibrationLead": "Deine Preise vs. Kohorte:",
+    "calibrationAccept": "Annahme",
+    "calibrationSample": "Basierend auf deinen letzten {{count}} Angeboten (Konfidenz {{conf}}%)",
+    "lineHintQty": "Kohorte passt Menge typischerweise an",
+    "lineHintPrice": "Preis",
+    "cohortTuned": "Vasco hat {{lines}} von {{total}} Zeilen anhand von {{contractors}} Kohortenentscheidungen angepasst",
+    "reasonCode": {
+      "waste_underestimated": "Verschnitt unterschätzt",
+      "measurement_correction": "Maßkorrektur",
+      "labor_underestimated": "Arbeitszeit unterschätzt",
+      "customer_upgrade": "Kunde wählte Upgrade",
+      "local_supplier_cheaper": "lokaler Lieferant günstiger",
+      "site_condition_harder": "Baustelle schwieriger als erwartet",
+      "other": "sonstiges"
+    }
   },
   "insights": {
     "thanksFeedback": "Danke für dein Feedback",

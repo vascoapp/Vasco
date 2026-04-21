@@ -1,6 +1,15 @@
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue';
 
+export type QuoteDeclineReason =
+  | 'price_too_high'
+  | 'chose_competitor'
+  | 'scope_changed'
+  | 'no_response'
+  | 'timing'
+  | 'customer_declined'
+  | 'other';
+
 export type Quote = {
   id: string;
   customer: string;
@@ -15,6 +24,9 @@ export type Quote = {
   lastUpdated: string;
   sentAt?: string;
   createdAt?: string;
+  // R188: structured rejection reason — fed into pricing_intelligence for moat
+  declineReason?: QuoteDeclineReason;
+  counterOfferAmount?: number;
 };
 
 export type Invoice = {

@@ -1027,7 +1027,25 @@
   },
   "quotes": {
     "newQuote": "New quote",
-    "quote": "Quote"
+    "quote": "Quote",
+    "cohortBenchmark": "Similar {{trade}} jobs in {{country}}:",
+    "cohortAcceptance": "accept",
+    "cohortSample": "Based on {{count}} quotes from {{contractors}} contractors",
+    "calibrationLead": "Your pricing vs cohort:",
+    "calibrationAccept": "acceptance",
+    "calibrationSample": "Based on your last {{count}} quotes (confidence {{conf}}%)",
+    "lineHintQty": "Cohort typically adjusts qty",
+    "lineHintPrice": "price",
+    "cohortTuned": "Vasco tuned {{lines}} of {{total}} lines from {{contractors}} cohort decisions",
+    "reasonCode": {
+      "waste_underestimated": "waste underestimated",
+      "measurement_correction": "measurement correction",
+      "labor_underestimated": "labor underestimated",
+      "customer_upgrade": "customer upgrade",
+      "local_supplier_cheaper": "local supplier cheaper",
+      "site_condition_harder": "site harder than expected",
+      "other": "other"
+    }
   },
   "insights": {
     "thanksFeedback": "Thanks for your feedback",

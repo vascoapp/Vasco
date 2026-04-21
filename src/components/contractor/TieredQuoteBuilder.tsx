@@ -25,8 +25,15 @@ import { useAuth } from '../../context/AuthContext';
 import { searchCatalog, type CatalogItem } from '../../integrations/suppliers';
 import { AIQuoteFromPhoto } from './AIQuoteFromPhoto';
 import { consumeHandoff } from '../../services/photoQuoteHandoffService';
+import { applyCohortAdjustments, type CohortAdjustmentSummary } from '../../services/pricingMoatService';
 import { recordDelta, annotateDelta, type DeltaSource, type ReasonCode } from '../../services/reasonCodeService';
 import { ReasonCodeSheet } from './ReasonCodeSheet';
+import {
+  useCohortBenchmarks,
+  useContractorCalibration,
+  getLineEditDistribution,
+  type LineEditDistribution,
+} from '../../services/cohortBenchmarkService';
 import { getCurrentUserId } from '../../lib/currentUser';
 import { useQuoteTemplates, type QuoteTemplate, TEMPLATE_CATEGORIES } from '../../services/quoteTemplateService';
 import { hapticSuccess } from '../../utils/haptics';
@@ -123,6 +130,10 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
   const [priceSuggestion, setPriceSuggestion] = useState<PricePrediction | null>(null);
   const [winPrediction, setWinPrediction] = useState<QuoteWinPrediction | null>(null);
   const [handoffBanner, setHandoffBanner] = useState<string | null>(null);
+  const { benchmarks: cohort } = useCohortBenchmarks(trade, country);
+  const { calibration } = useContractorCalibration(user?.id ?? null, trade, country);
+  const [lineHints, setLineHints] = useState<Record<string, LineEditDistribution | null>>({});
+  const [cohortTuneSummary, setCohortTuneSummary] = useState<CohortAdjustmentSummary | null>(null);
 
   // Baseline tracking for reason-code capture: records the AI-suggested
   // quantity + source for each line so we can spot contractor edits against
@@ -147,28 +158,52 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
       const h = await consumeHandoff();
       if (cancelled || !h || !h.result) return;
       const items = h.result.detectedItems ?? [];
-      const mapped = items
-        .filter((i) => i.selected !== false)
-        .map((item) => ({
+      // R190: run AI-baseline lines through the cohort tuner before showing.
+      // Each line gets cohort-typical qty/price adjustments capped at ±50%,
+      // blended with the contractor's own calibration offset (half weight).
+      const { lines: tuned, summary } = await applyCohortAdjustments(
+        items
+          .filter((i) => i.selected !== false)
+          .map((i) => ({
+            id: i.id,
+            description: i.description,
+            quantity: i.suggestedQuantity,
+            unitPrice: i.suggestedPrice,
+          })),
+        { trade, country, userId: user?.id ?? null },
+      );
+      if (cancelled) return;
+      if (summary.linesAdjusted > 0) setCohortTuneSummary(summary);
+      // Rebuild the `mapped` shape TieredQuoteBuilder expects, with the tuned
+      // qty/price as the baseline the contractor sees.
+      const itemsById = new Map(items.map((i) => [i.id, i]));
+      const mapped = tuned.map((t) => {
+        const src = itemsById.get(t.id)!;
+        return {
           item: {
-            id: item.id,
-            name: item.description,
-            description: item.category,
-            basePrice: item.suggestedPrice,
-            unit: item.unit,
-            category: item.category,
+            id: src.id,
+            name: src.description,
+            description: src.category,
+            basePrice: t.unitPrice,
+            unit: src.unit,
+            category: src.category,
           } as PricebookItem,
-          quantity: item.suggestedQuantity,
-          unit: item.unit,
-        }));
+          quantity: t.quantity,
+          unit: src.unit,
+        };
+      });
       if (mapped.length > 0) {
         setSelectedServices((prev) => [...prev, ...mapped]);
-        // Seed baselines so future qty edits become learning signals.
-        for (const m of mapped) {
+        // Seed baselines using the values the contractor actually sees.
+        // Source tag = 'cohort' when we applied an adjustment, 'photo_handoff'
+        // otherwise — preserves delta-capture attribution correctly.
+        for (let i = 0; i < mapped.length; i += 1) {
+          const m = mapped[i];
+          const wasAdjusted = tuned[i].adjustmentApplied;
           baselinesRef.current.set(m.item.id, {
             originalQty: m.quantity,
             originalUnitPrice: m.item.basePrice,
-            source: 'photo_handoff',
+            source: wasAdjusted ? 'cohort' : 'photo_handoff',
             sku: m.item.id,
             description: m.item.name,
           });
@@ -190,9 +225,37 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
   useEffect(() => {
     if (selectedServices.length > 0) {
       const total = selectedServices.reduce((s, sv) => s + sv.item.basePrice * sv.quantity, 0);
-      predictQuoteWin({ trade, amount: total }).then(setWinPrediction).catch(() => {});
+      predictQuoteWin({ trade, country, amount: total }).then(setWinPrediction).catch(() => {});
     }
-  }, [selectedServices.length, trade]);
+  }, [selectedServices.length, trade, country]);
+
+  // R189: Fetch per-line cohort edit distribution lazily on entering preview.
+  // K-anonymity ≥5 enforced server-side, so a null result just means "not
+  // enough data" and the row renders without a hint. Cache keyed by the first
+  // 3 tokens of the description so similar lines share the lookup.
+  useEffect(() => {
+    if (step !== 'preview' || selectedServices.length === 0) return;
+    const tokens = (desc: string) =>
+      desc.toLowerCase().split(/\s+/).filter(Boolean).slice(0, 3).join(' ');
+    const keys = Array.from(new Set(selectedServices.map(sv => tokens(sv.item.name)))).filter(k => k && !(k in lineHints));
+    if (keys.length === 0) return;
+    let cancelled = false;
+    Promise.all(
+      keys.map(key =>
+        getLineEditDistribution(trade, country, key)
+          .then(res => [key, res] as const)
+          .catch(() => [key, null] as const),
+      ),
+    ).then(rows => {
+      if (cancelled) return;
+      setLineHints(prev => {
+        const next = { ...prev };
+        for (const [k, v] of rows) next[k] = v;
+        return next;
+      });
+    });
+    return () => { cancelled = true; };
+  }, [step, selectedServices, trade, country, lineHints]);
 
   // Calibration
   const calibrationLineItems = selectedServices.map(s => ({ description: s.item.name, estimate: s.item.basePrice * s.quantity }));
@@ -550,6 +613,24 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
             </View>
           )}
 
+          {/* R190: cohort-tune badge — only surfaces when the moat actually
+              adjusted something the contractor is about to see. */}
+          {cohortTuneSummary && cohortTuneSummary.linesAdjusted > 0 && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: GRID.xs, backgroundColor: SemanticColors.feedbackSuccess + '12', borderRadius: RADIUS.md, padding: GRID.sm, marginBottom: GRID.sm }}>
+              <Ionicons name="trending-up" size={14} color={SemanticColors.feedbackSuccess} />
+              <Text style={{ flex: 1, fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: SemanticColors.feedbackSuccess }}>
+                {t('quotes.cohortTuned', 'Vasco tuned {{lines}} of {{total}} lines from {{contractors}} cohort decisions', {
+                  lines: cohortTuneSummary.linesAdjusted,
+                  total: cohortTuneSummary.totalLines,
+                  contractors: cohortTuneSummary.totalCohortContractors,
+                })}
+              </Text>
+              <Pressable onPress={() => setCohortTuneSummary(null)} hitSlop={8}>
+                <Ionicons name="close" size={14} color={SemanticColors.feedbackSuccess} />
+              </Pressable>
+            </View>
+          )}
+
           {/* AI Draft — describe scope → get line items */}
           <View style={s.aiDraftSection}>
             <View style={s.aiDraftInputRow}>
@@ -779,6 +860,74 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
               <Text style={s.vascoExplain}>{winPrediction.recommendation}</Text>
             </View>
           )}
+
+          {/* Cross-contractor cohort benchmark (k-anonymity >=5 enforced server-side) */}
+          {(() => {
+            const tb = cohort?.tradeBenchmarks?.find(b => b.trade === trade && b.country === country);
+            if (!tb || tb.sampleSize < 1) return null;
+            return (
+              <View style={s.vascoRow}>
+                <Text style={s.vascoText}>
+                  {t('quotes.cohortBenchmark', 'Similar {{trade}} jobs in {{country}}:', { trade, country })}{' '}
+                  <Text style={{ fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary }}>
+                    {fmt(tb.medianHourlyRate)}/u
+                  </Text>
+                  {tb.avgQuoteAcceptanceRate > 0 && (
+                    <Text style={s.vascoText}>
+                      {' · '}{Math.round(tb.avgQuoteAcceptanceRate * 100)}% {t('quotes.cohortAcceptance', 'accept')}
+                    </Text>
+                  )}
+                </Text>
+                <Text style={s.vascoExplain}>
+                  {t('quotes.cohortSample', 'Based on {{count}} quotes from {{contractors}} contractors', {
+                    count: tb.sampleSize,
+                    contractors: cohort?.contractorsInCohort ?? 0,
+                  })}
+                </Text>
+              </View>
+            );
+          })()}
+
+          {/* Personalized calibration — your pricing vs cohort (R188). Only
+              shown when >=5 own samples + cohort >= k-anonymity gate. */}
+          {calibration && calibration.medianPriceVsCohortPct !== null && calibration.confidence >= 0.3 && (
+            <View style={s.vascoRow}>
+              {(() => {
+                const pricePct = calibration.medianPriceVsCohortPct ?? 0;
+                const acceptPp = calibration.acceptanceRateVsCohortPct ?? 0;
+                const priceAbove = pricePct >= 0;
+                const acceptAbove = acceptPp >= 0;
+                const priceColor = Math.abs(pricePct) < 5
+                  ? SemanticColors.textPrimary
+                  : (priceAbove ? SemanticColors.feedbackWarning : SemanticColors.feedbackSuccess);
+                return (
+                  <>
+                    <Text style={s.vascoText}>
+                      {t('quotes.calibrationLead', 'Your pricing vs cohort:')}{' '}
+                      <Text style={{ fontFamily: TYPE.titleFamily, color: priceColor }}>
+                        {priceAbove ? '+' : ''}{pricePct.toFixed(0)}%
+                      </Text>
+                      {calibration.acceptanceRateVsCohortPct !== null && (
+                        <Text style={s.vascoText}>
+                          {' · '}
+                          <Text style={{ fontFamily: TYPE.titleFamily, color: acceptAbove ? SemanticColors.feedbackSuccess : SemanticColors.feedbackWarning }}>
+                            {acceptAbove ? '+' : ''}{acceptPp.toFixed(0)}pp
+                          </Text>
+                          {' '}{t('quotes.calibrationAccept', 'acceptance')}
+                        </Text>
+                      )}
+                    </Text>
+                    <Text style={s.vascoExplain}>
+                      {t('quotes.calibrationSample', 'Based on your last {{count}} quotes (confidence {{conf}}%)', {
+                        count: calibration.sampleSize,
+                        conf: Math.round(calibration.confidence * 100),
+                      })}
+                    </Text>
+                  </>
+                );
+              })()}
+            </View>
+          )}
         </View>
 
         {/* Tier preview cards */}
@@ -820,12 +969,53 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
         <View style={s.section}>
           <Text style={s.sectionTitle}>Regels (standaard)</Text>
           <View style={s.serviceList}>
-            {selectedServices.map(sv => (
-              <View key={sv.item.id} style={s.serviceRow}>
-                <Text style={s.serviceName}>{sv.item.name}</Text>
-                <Text style={s.servicePrice}>{sv.quantity} × {fmt(sv.item.basePrice * 1.25)}</Text>
-              </View>
-            ))}
+            {selectedServices.map(sv => {
+              const hintKey = sv.item.name.toLowerCase().split(/\s+/).filter(Boolean).slice(0, 3).join(' ');
+              const hint = lineHints[hintKey];
+              const hasHint =
+                hint &&
+                hint.contractorCount >= 5 &&
+                (hint.medianQtyDeltaPct !== null || hint.medianUnitPriceDeltaPct !== null);
+              return (
+                <View key={sv.item.id} style={s.serviceRowCol}>
+                  <View style={s.serviceRow}>
+                    <Text style={s.serviceName}>{sv.item.name}</Text>
+                    <Text style={s.servicePrice}>{sv.quantity} × {fmt(sv.item.basePrice * 1.25)}</Text>
+                  </View>
+                  {hasHint && (
+                    <View style={s.lineHintRow}>
+                      <Ionicons name="sparkles-outline" size={11} color={Palette.hermesOrange} />
+                      <Text style={s.lineHintText}>
+                        {hint!.medianQtyDeltaPct !== null && Math.abs(hint!.medianQtyDeltaPct) >= 1 && (
+                          <>
+                            {t('quotes.lineHintQty', 'Cohort typically adjusts qty')}{' '}
+                            <Text style={{ fontFamily: TYPE.titleFamily }}>
+                              {hint!.medianQtyDeltaPct! >= 0 ? '+' : ''}{hint!.medianQtyDeltaPct!.toFixed(0)}%
+                            </Text>
+                          </>
+                        )}
+                        {hint!.medianQtyDeltaPct !== null && Math.abs(hint!.medianQtyDeltaPct) >= 1 &&
+                         hint!.medianUnitPriceDeltaPct !== null && Math.abs(hint!.medianUnitPriceDeltaPct) >= 1 && ' · '}
+                        {hint!.medianUnitPriceDeltaPct !== null && Math.abs(hint!.medianUnitPriceDeltaPct) >= 1 && (
+                          <>
+                            {t('quotes.lineHintPrice', 'price')}{' '}
+                            <Text style={{ fontFamily: TYPE.titleFamily }}>
+                              {hint!.medianUnitPriceDeltaPct! >= 0 ? '+' : ''}{hint!.medianUnitPriceDeltaPct!.toFixed(0)}%
+                            </Text>
+                          </>
+                        )}
+                        {hint!.topReasonCode && hint!.topReasonShare !== null && hint!.topReasonShare >= 0.3 && (
+                          <>
+                            {' · '}
+                            {t(`quotes.reasonCode.${hint!.topReasonCode}`, hint!.topReasonCode)}
+                          </>
+                        )}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
           </View>
         </View>
       </ScrollView>
@@ -888,12 +1078,17 @@ const s = StyleSheet.create({
 
   // Service list
   serviceList: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden' },
-  serviceRow: {
-    flexDirection: 'row', alignItems: 'center', padding: 14, gap: 10,
+  serviceRowCol: {
+    flexDirection: 'column', padding: 14, gap: 4,
     borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: SemanticColors.borderDefault,
   },
-  serviceName: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  serviceRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+  },
+  serviceName: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary, flex: 1 },
   servicePrice: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
+  lineHintRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  lineHintText: { fontSize: TYPE.tinySize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, flex: 1 },
 
   qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   qtyBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: SemanticColors.surfaceSecondary, alignItems: 'center', justifyContent: 'center' },

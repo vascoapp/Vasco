@@ -232,12 +232,14 @@ export async function recordPricingData(userId: string, data: {
   vatRate: number;
   customerType?: string;
   region?: string;
+  // R188: contractor segment for cohort slicing (additive, optional)
+  contractorSegment?: ContractorSegment;
 }): Promise<void> {
   if (!isSupabaseConfigured) return;
 
   const season = getSeason();
   try {
-    await supabase.from('pricing_intelligence').insert({
+    const row: Record<string, unknown> = {
       user_id: userId,
       trade: data.trade,
       country: data.country,
@@ -250,11 +252,24 @@ export async function recordPricingData(userId: string, data: {
       customer_type: data.customerType,
       region: data.region,
       season,
-    });
+    };
+    if (data.contractorSegment !== undefined) row.contractor_segment = data.contractorSegment;
+    await supabase.from('pricing_intelligence').insert(row as any);
   } catch {
     // Silent fail — don't block the UI
   }
 }
+
+export type DeclineReason =
+  | 'price_too_high'
+  | 'chose_competitor'
+  | 'scope_changed'
+  | 'no_response'
+  | 'timing'
+  | 'customer_declined'
+  | 'other';
+
+export type ContractorSegment = 'solo' | 'small_team' | 'medium' | 'large';
 
 export async function recordPricingOutcome(userId: string, quoteId: string, data: {
   wasAccepted: boolean;
@@ -262,19 +277,34 @@ export async function recordPricingOutcome(userId: string, quoteId: string, data
   actualCost?: number;
   actualHours?: number;
   marginPercent?: number;
+  // R188: moat enrichment — all additive, all optional
+  declineReason?: DeclineReason;
+  timeToDecisionHours?: number;
+  reminderCountBeforeDecision?: number;
+  counterOfferAmount?: number;
+  contractorSegment?: ContractorSegment;
 }): Promise<void> {
   if (!isSupabaseConfigured) return;
 
   try {
+    const patch: Record<string, unknown> = {
+      was_accepted: data.wasAccepted,
+      accepted_price: data.acceptedPrice,
+      actual_cost: data.actualCost,
+      actual_hours: data.actualHours,
+      margin_percent: data.marginPercent,
+      [data.wasAccepted ? 'accepted_at' : 'completed_at']: new Date().toISOString(),
+    };
+    // Only include new columns when the caller supplied them, so we don't
+    // overwrite a previously-written value with null on a re-decision.
+    if (data.declineReason !== undefined)               patch.decline_reason = data.declineReason;
+    if (data.timeToDecisionHours !== undefined)         patch.time_to_decision_hours = data.timeToDecisionHours;
+    if (data.reminderCountBeforeDecision !== undefined) patch.reminder_count_before_decision = data.reminderCountBeforeDecision;
+    if (data.counterOfferAmount !== undefined)          patch.counter_offer_amount = data.counterOfferAmount;
+    if (data.contractorSegment !== undefined)           patch.contractor_segment = data.contractorSegment;
+
     await supabase.from('pricing_intelligence')
-      .update({
-        was_accepted: data.wasAccepted,
-        accepted_price: data.acceptedPrice,
-        actual_cost: data.actualCost,
-        actual_hours: data.actualHours,
-        margin_percent: data.marginPercent,
-        [data.wasAccepted ? 'accepted_at' : 'completed_at']: new Date().toISOString(),
-      })
+      .update(patch)
       .eq('quote_id', quoteId)
       .eq('user_id', userId);
   } catch {

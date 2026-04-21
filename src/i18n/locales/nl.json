@@ -1027,7 +1027,25 @@
   },
   "quotes": {
     "newQuote": "Nieuwe offerte",
-    "quote": "Offerte"
+    "quote": "Offerte",
+    "cohortBenchmark": "Vergelijkbare {{trade}}-klussen in {{country}}:",
+    "cohortAcceptance": "geaccepteerd",
+    "cohortSample": "Op basis van {{count}} offertes van {{contractors}} vakmannen",
+    "calibrationLead": "Jouw prijs t.o.v. cohort:",
+    "calibrationAccept": "acceptatie",
+    "calibrationSample": "Op basis van je laatste {{count}} offertes (betrouwbaarheid {{conf}}%)",
+    "lineHintQty": "Cohort past aantal meestal aan met",
+    "lineHintPrice": "prijs",
+    "cohortTuned": "Vasco heeft {{lines}} van {{total}} regels aangepast op basis van {{contractors}} cohortbeslissingen",
+    "reasonCode": {
+      "waste_underestimated": "afval onderschat",
+      "measurement_correction": "meetcorrectie",
+      "labor_underestimated": "uren onderschat",
+      "customer_upgrade": "klant koos upgrade",
+      "local_supplier_cheaper": "lokale leverancier goedkoper",
+      "site_condition_harder": "locatie zwaarder dan verwacht",
+      "other": "overig"
+    }
   },
   "insights": {
     "thanksFeedback": "Bedankt voor je feedback",
