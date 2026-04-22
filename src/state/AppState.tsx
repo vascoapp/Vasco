@@ -966,9 +966,32 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }
       },
       updateInvoice: (id, updates) => {
-        setInvoices((prev) =>
-          prev.map((inv) => inv.id === id ? { ...inv, ...updates } : inv)
+        const prev = invoices.find(inv => inv.id === id);
+        setInvoices((p) =>
+          p.map((inv) => inv.id === id ? { ...inv, ...updates } : inv)
         );
+        // R213: on invoice status -> sent, run predictPaymentTiming and
+        // enqueue a VascoCard when the model flags the invoice as high
+        // risk of late payment. Mirror of R209 low-win-alert for quotes.
+        if (updates.status === 'sent' && prev?.status !== 'sent') {
+          const current = prev ? { ...prev, ...updates } : null;
+          if (current) {
+            const cust = customers.find((c: any) => c.id === current.customer || c.name === current.customer);
+            Promise.all([
+              import('../services/lateRiskAlertGenerator'),
+              import('../services/aiActionQueueService'),
+            ]).then(async ([gen, queueMod]) => {
+              const draft = await gen.generateLateRiskAlert({
+                invoiceId: id,
+                customerName: cust?.name ?? null,
+                customerId: cust?.id,
+                country: businessProfile.country ?? 'NL',
+                amount: current.amount,
+              });
+              if (draft) await queueMod.addToQueue(draft);
+            }).catch(() => {});
+          }
+        }
       },
       updateBusinessProfile: async (updates) => {
         setBusinessProfile((prev) => ({

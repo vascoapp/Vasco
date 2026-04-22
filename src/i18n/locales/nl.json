@@ -1059,7 +1059,11 @@
     "lowWinTitle": "Lage winkans · {{customer}}",
     "lowWinDescription": "Model voorspelt {{pct}}% acceptatie. Overweeg een belletje of kleine korting.",
     "lowWinAction": "Follow-up plannen",
-    "lowWinImpact": "~€{{value}} op het spel"
+    "lowWinImpact": "~€{{value}} op het spel",
+    "lateRiskTitle": "Risico op late betaling · {{customer}}",
+    "lateRiskDescription": "Model voorspelt ~{{days}} dagen ({{conf}}% zekerheid). Stuur een vroege herinnering of vraag een aanbetaling op de volgende factuur.",
+    "lateRiskAction": "Vroege herinnering plannen",
+    "lateRiskImpact": "~€{{value}} loopt vertraging op"
   },
   "insights": {
     "thanksFeedback": "Bedankt voor je feedback",

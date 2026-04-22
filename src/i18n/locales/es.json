@@ -1059,7 +1059,11 @@
     "lowWinTitle": "Baja probabilidad · {{customer}}",
     "lowWinDescription": "El modelo predice {{pct}}% de aceptación. Considera una llamada de seguimiento o un pequeño descuento.",
     "lowWinAction": "Planificar seguimiento",
-    "lowWinImpact": "~€{{value}} en juego"
+    "lowWinImpact": "~€{{value}} en juego",
+    "lateRiskTitle": "Riesgo de impago · {{customer}}",
+    "lateRiskDescription": "El modelo predice ~{{days}} días ({{conf}}% conf). Envía un recordatorio anticipado o solicita un anticipo en la próxima factura.",
+    "lateRiskAction": "Planificar recordatorio",
+    "lateRiskImpact": "~€{{value}} en riesgo de retraso"
   },
   "insights": {
     "thanksFeedback": "Gracias por tu comentario",

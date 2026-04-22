@@ -1059,7 +1059,11 @@
     "lowWinTitle": "Bassa probabilità · {{customer}}",
     "lowWinDescription": "Il modello prevede {{pct}}% di accettazione. Considera una chiamata di follow-up o un piccolo sconto.",
     "lowWinAction": "Pianifica follow-up",
-    "lowWinImpact": "~€{{value}} in gioco"
+    "lowWinImpact": "~€{{value}} in gioco",
+    "lateRiskTitle": "Rischio di pagamento in ritardo · {{customer}}",
+    "lateRiskDescription": "Il modello prevede ~{{days}} giorni ({{conf}}% conf). Invia un sollecito anticipato o richiedi un acconto sulla prossima fattura.",
+    "lateRiskAction": "Pianifica sollecito anticipato",
+    "lateRiskImpact": "~€{{value}} a rischio di ritardo"
   },
   "insights": {
     "thanksFeedback": "Grazie per il feedback",

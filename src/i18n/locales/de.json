@@ -1059,7 +1059,11 @@
     "lowWinTitle": "Geringe Gewinnchance · {{customer}}",
     "lowWinDescription": "Modell prognostiziert {{pct}}% Annahme. Erwäge einen Nachfass-Anruf oder kleinen Rabatt.",
     "lowWinAction": "Nachfassen",
-    "lowWinImpact": "~€{{value}} auf dem Spiel"
+    "lowWinImpact": "~€{{value}} auf dem Spiel",
+    "lateRiskTitle": "Zahlungsverzugsrisiko · {{customer}}",
+    "lateRiskDescription": "Modell sagt ~{{days}} Tage ({{conf}}% Konfidenz). Sende eine frühe Erinnerung oder fordere eine Anzahlung für die nächste Rechnung.",
+    "lateRiskAction": "Frühe Erinnerung planen",
+    "lateRiskImpact": "~€{{value}} von Verzug bedroht"
   },
   "insights": {
     "thanksFeedback": "Danke für dein Feedback",

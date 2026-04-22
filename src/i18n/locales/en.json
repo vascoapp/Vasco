@@ -1059,7 +1059,11 @@
     "lowWinTitle": "Low win chance · {{customer}}",
     "lowWinDescription": "Model predicts {{pct}}% acceptance. Consider a follow-up call or a small discount.",
     "lowWinAction": "Plan follow-up",
-    "lowWinImpact": "~€{{value}} at stake"
+    "lowWinImpact": "~€{{value}} at stake",
+    "lateRiskTitle": "Late-payment risk · {{customer}}",
+    "lateRiskDescription": "Model predicts ~{{days}}-day payment ({{conf}}% conf). Send an early reminder or request a deposit on the next invoice.",
+    "lateRiskAction": "Plan early reminder",
+    "lateRiskImpact": "~€{{value}} at risk of delay"
   },
   "insights": {
     "thanksFeedback": "Thanks for your feedback",

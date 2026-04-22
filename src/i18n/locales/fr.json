@@ -1059,7 +1059,11 @@
     "lowWinTitle": "Faible chance d'acceptation · {{customer}}",
     "lowWinDescription": "Le modèle prédit {{pct}}% d'acceptation. Envisagez un appel de suivi ou une petite remise.",
     "lowWinAction": "Planifier un suivi",
-    "lowWinImpact": "~€{{value}} en jeu"
+    "lowWinImpact": "~€{{value}} en jeu",
+    "lateRiskTitle": "Risque de retard de paiement · {{customer}}",
+    "lateRiskDescription": "Le modèle prédit ~{{days}} jours ({{conf}}% de confiance). Envoyez une relance précoce ou demandez un acompte sur la prochaine facture.",
+    "lateRiskAction": "Planifier une relance précoce",
+    "lateRiskImpact": "~€{{value}} exposés au retard"
   },
   "insights": {
     "thanksFeedback": "Merci pour votre retour",

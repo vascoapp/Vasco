@@ -56,7 +56,8 @@ export type QueueItemType =
   | 'accounting_export'    // Export paid invoices to accounting software
   | 'einvoice_submit'      // Submit e-invoice in country-specific format
   | 'customer_question'    // High-stakes customer question from decision portal (R170)
-  | 'low_win_alert';       // R209 — trained quote-win model flags a sent quote as low probability
+  | 'low_win_alert'        // R209 — trained quote-win model flags a sent quote as low probability
+  | 'late_payment_risk_alert'; // R213 — predictPaymentTiming flags a sent invoice as high-risk-late
 
 export interface QueueItem {
   id: string;
