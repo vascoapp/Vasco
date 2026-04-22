@@ -1055,6 +1055,12 @@
       "other": "overig"
     }
   },
+  "queue": {
+    "lowWinTitle": "Lage winkans · {{customer}}",
+    "lowWinDescription": "Model voorspelt {{pct}}% acceptatie. Overweeg een belletje of kleine korting.",
+    "lowWinAction": "Follow-up plannen",
+    "lowWinImpact": "~€{{value}} op het spel"
+  },
   "insights": {
     "thanksFeedback": "Bedankt voor je feedback",
     "handled": "Afgehandeld",

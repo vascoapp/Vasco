@@ -1311,6 +1311,25 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         if (updates.status === 'sent') {
           trackEvent('quote_sent', { quoteId: id }).catch(() => {});
           markStepComplete('first_quote_sent').catch(() => {});
+          // R209: run the trained quote-win model on the sent quote — when
+          // it returns a confident low probability, enqueue an EVE nudge.
+          // Fire-and-forget; the queue generator is null-safe on cold-start.
+          if (quote) {
+            const cust = customers.find((c: any) => c.id === quote.customer);
+            Promise.all([
+              import('../services/lowWinAlertGenerator'),
+              import('../services/aiActionQueueService'),
+            ]).then(async ([gen, queueMod]) => {
+              const draft = await gen.generateLowWinAlert({
+                quoteId: id,
+                customerName: cust?.name ?? null,
+                trade: businessProfile.trade ?? 'general',
+                country: businessProfile.country ?? 'NL',
+                amount: quote.amount,
+              });
+              if (draft) await queueMod.addToQueue(draft);
+            }).catch(() => {});
+          }
         }
         // Auto-create job when quote is accepted (EVE pattern: quote → job)
         // Delegates to convertQuoteToJob which handles job creation, AI events, and persistence

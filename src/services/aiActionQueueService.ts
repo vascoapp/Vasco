@@ -55,7 +55,8 @@ export type QueueItemType =
   | 'tax_prep'             // Quarter-end tax document preparation
   | 'accounting_export'    // Export paid invoices to accounting software
   | 'einvoice_submit'      // Submit e-invoice in country-specific format
-  | 'customer_question';   // High-stakes customer question from decision portal (R170)
+  | 'customer_question'    // High-stakes customer question from decision portal (R170)
+  | 'low_win_alert';       // R209 — trained quote-win model flags a sent quote as low probability
 
 export interface QueueItem {
   id: string;

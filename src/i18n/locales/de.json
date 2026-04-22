@@ -1055,6 +1055,12 @@
       "other": "sonstiges"
     }
   },
+  "queue": {
+    "lowWinTitle": "Geringe Gewinnchance · {{customer}}",
+    "lowWinDescription": "Modell prognostiziert {{pct}}% Annahme. Erwäge einen Nachfass-Anruf oder kleinen Rabatt.",
+    "lowWinAction": "Nachfassen",
+    "lowWinImpact": "~€{{value}} auf dem Spiel"
+  },
   "insights": {
     "thanksFeedback": "Danke für dein Feedback",
     "handled": "Erledigt",

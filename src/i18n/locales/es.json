@@ -1055,6 +1055,12 @@
       "other": "otro"
     }
   },
+  "queue": {
+    "lowWinTitle": "Baja probabilidad · {{customer}}",
+    "lowWinDescription": "El modelo predice {{pct}}% de aceptación. Considera una llamada de seguimiento o un pequeño descuento.",
+    "lowWinAction": "Planificar seguimiento",
+    "lowWinImpact": "~€{{value}} en juego"
+  },
   "insights": {
     "thanksFeedback": "Gracias por tu comentario",
     "handled": "Hecho",
