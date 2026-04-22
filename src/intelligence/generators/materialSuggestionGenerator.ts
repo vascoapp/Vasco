@@ -9,9 +9,16 @@ import type { ScoredInsight, GeneratorContext } from './types';
 import { useAppState } from '../../state/AppState';
 import { logPrediction } from '../calibration';
 import { gt } from '../generatorTranslations';
+import { useSupplierLeadTimeDrift } from '../../services/supplierLeadTimeMoatService';
 
 export function useMaterialSuggestionInsight(ctx: GeneratorContext): ScoredInsight | null {
-  const { jobs, jobMaterials, materials, priceObservations } = useAppState();
+  const { jobs, jobMaterials, materials, priceObservations, businessProfile } = useAppState();
+  // R218: supplier lead-time drift — when lead times are lengthening,
+  // the suggestion upgrades to 'order early' urgency.
+  const leadTimeDrift = useSupplierLeadTimeDrift(
+    businessProfile?.trade ?? 'general',
+    businessProfile?.country ?? 'NL',
+  );
 
   // Need jobs with materials to make suggestions
   const jobsWithMaterials = jobs.filter(j => {
@@ -85,10 +92,14 @@ export function useMaterialSuggestionInsight(ctx: GeneratorContext): ScoredInsig
     rawScore: 0,
     reasoning: {
       observation: `${topMaterial.name} is het meest gebruikte materiaal`,
-      evidence: `Voorkomt in ${topCount} van ${jobsWithMaterials.length} klussen (${usagePct}%)`,
-      implication: priceDropNote
-        ? `Er is een prijsdaling — bestel nu voor betere marges`
-        : `Voeg dit materiaal vroeg toe om vertragingen te voorkomen`,
+      evidence: leadTimeDrift && leadTimeDrift.rows.length > 0
+        ? `Voorkomt in ${topCount} van ${jobsWithMaterials.length} klussen (${usagePct}%). Cohort leverancier-levertijden zijn aan het ${leadTimeDrift.rows[0].driftDays > 0 ? 'verlengen' : 'verkorten'} (${leadTimeDrift.rows[0].supplierName}: ${leadTimeDrift.rows[0].driftDays > 0 ? '+' : ''}${Math.round(leadTimeDrift.rows[0].driftDays)}d).`
+        : `Voorkomt in ${topCount} van ${jobsWithMaterials.length} klussen (${usagePct}%)`,
+      implication: leadTimeDrift && leadTimeDrift.rows.length > 0 && leadTimeDrift.rows[0].driftDays >= 5
+        ? `Levertijden worden langer — bestel vroeger om vertragingen te voorkomen. ${priceDropNote ? 'Er is ook een prijsdaling nu.' : ''}`
+        : priceDropNote
+          ? `Er is een prijsdaling — bestel nu voor betere marges`
+          : `Voeg dit materiaal vroeg toe om vertragingen te voorkomen`,
       suggestion: 'Voeg veelgebruikte materialen standaard toe aan nieuwe klussen',
     },
     dataPoints: jobsWithMaterials.length,

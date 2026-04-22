@@ -6,6 +6,7 @@
 // moving) with a time-dimension view (availability moving).
 // =============================================================================
 
+import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
@@ -86,6 +87,19 @@ export async function getSupplierLeadTimeDrift(
   } catch {
     return { rows: [], fetchedAt: new Date().toISOString() };
   }
+}
+
+// R218: React hook for intelligence generators consuming lead-time drift.
+export function useSupplierLeadTimeDrift(trade: string, country: string) {
+  const [bundle, setBundle] = useState<LeadTimeDriftBundle | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    getSupplierLeadTimeDrift(trade, country)
+      .then(b => { if (!cancelled) setBundle(b); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [trade, country]);
+  return bundle;
 }
 
 export const __internal = { CACHE_KEY, CACHE_TTL_MS, cacheKey };
