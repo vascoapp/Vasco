@@ -377,6 +377,8 @@
   "invoices": {
     "title": "Invoices",
     "new": "New invoice",
+    "predictedPayment": "Predicted: ~{{days}}d",
+    "cohortDso": "Cohort median: {{days}}d",
     "profileIncomplete": "Profile incomplete",
     "profileIncompleteDesc": "Complete your business details before sending invoices.",
     "completeProfile": "Complete profile",

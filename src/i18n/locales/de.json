@@ -377,6 +377,8 @@
   "invoices": {
     "title": "Rechnungen",
     "new": "Neue Rechnung",
+    "predictedPayment": "Prognose: ~{{days}}T",
+    "cohortDso": "Kohorten-Median: {{days}}T",
     "profileIncomplete": "Geschäftsprofil unvollständig",
     "profileIncompleteDesc": "Vervollständigen Sie Ihre Geschäftsdaten, bevor Sie Rechnungen versenden.",
     "completeProfile": "Profil vervollständigen",

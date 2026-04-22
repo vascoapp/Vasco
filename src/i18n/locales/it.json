@@ -377,6 +377,8 @@
   "invoices": {
     "title": "Fatture",
     "new": "Nuova fattura",
+    "predictedPayment": "Previsto: ~{{days}}g",
+    "cohortDso": "Mediana coorte: {{days}}g",
     "profileIncomplete": "Profilo aziendale incompleto",
     "profileIncompleteDesc": "Completa i dati aziendali prima di inviare fatture.",
     "completeProfile": "Completa profilo",

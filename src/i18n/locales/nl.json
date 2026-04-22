@@ -377,6 +377,8 @@
   "invoices": {
     "title": "Facturen",
     "new": "Nieuwe factuur",
+    "predictedPayment": "Voorspeld: ~{{days}}d",
+    "cohortDso": "Cohort mediaan: {{days}}d",
     "profileIncomplete": "Bedrijfsgegevens onvolledig",
     "profileIncompleteDesc": "Vul je bedrijfsgegevens aan voordat je facturen verstuurt.",
     "completeProfile": "Gegevens aanvullen",

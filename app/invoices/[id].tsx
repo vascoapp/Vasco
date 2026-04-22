@@ -28,6 +28,8 @@ import { generateXRechnungXML, generateZUGFeRDXML, type EInvoiceData } from '../
 import { Share as RNShare } from 'react-native';
 import { File, Paths } from 'expo-file-system';
 import { checkInvoiceReadiness } from '../../src/utils/businessProfileValidation';
+import { useCohortDso } from '../../src/services/paymentTimingMoatService';
+import { predictPaymentTiming } from '../../src/intelligence/mlModels';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -83,6 +85,22 @@ export default function InvoiceDetailScreen() {
   const invoice = invoices.find((item) => item.id === id);
   const country = user?.country ?? 'NL';
   const paymentMethods = getPaymentDisplayForCountry(country);
+  // R214: cohort-backed payment timing for the invoice detail caption.
+  // Hook unconditionally; consumer below is null-safe.
+  const cohortDso = useCohortDso(businessProfile?.country ?? country, null);
+  const [paymentPrediction, setPaymentPrediction] = useState<{ days: number; confidence: number } | null>(null);
+  useEffect(() => {
+    if (!invoice || invoice.status === 'paid') return;
+    let cancelled = false;
+    predictPaymentTiming({
+      amount: invoice.amount,
+      country: businessProfile?.country ?? country,
+      customerId: invoice.customerId,
+    }).then(p => {
+      if (!cancelled && p) setPaymentPrediction({ days: p.predictedDays, confidence: p.confidence });
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [invoice?.id, invoice?.amount, invoice?.status, businessProfile?.country, country]);
 
   // Editable state
   const [editingCustomer, setEditingCustomer] = useState(false);
@@ -758,6 +776,25 @@ export default function InvoiceDetailScreen() {
                   ? new Date(invoice.dueDate).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })
                   : ''}
               />
+            )}
+            {/* R214: cohort-backed payment timing caption. Hidden on paid
+                invoices and when the cohort row is k-anonymity-suppressed. */}
+            {invoice.status !== 'paid' && (paymentPrediction || (cohortDso?.medianDso && cohortDso.sampleSize > 0)) && (
+              <Text style={{
+                fontSize: TYPE.captionSize,
+                fontFamily: TYPE.captionFamily,
+                color: SemanticColors.textSecondary,
+                marginTop: GRID.xs,
+                marginLeft: GRID.sm,
+              }}>
+                {paymentPrediction
+                  ? t('invoices.predictedPayment', 'Predicted: ~{{days}}d', { days: paymentPrediction.days })
+                  : null}
+                {paymentPrediction && cohortDso?.medianDso ? ' · ' : ''}
+                {cohortDso?.medianDso && cohortDso.sampleSize > 0
+                  ? t('invoices.cohortDso', 'Cohort median: {{days}}d', { days: Math.round(cohortDso.medianDso) })
+                  : null}
+              </Text>
             )}
           </View>
         </View>
