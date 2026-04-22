@@ -1622,7 +1622,8 @@
       "topCustomers": "Top clienti",
       "materialDriftTitle": "Variazione prezzi materiali",
       "materialDriftSub": "{{count}} avvisi dalla coorte",
-      "marketWide": "tutto il mercato"
+      "marketWide": "tutto il mercato",
+      "affectedQuotes": "{{count}} preventivi aperti"
     },
     "ai": {
       "automationsTitle": "Automazioni",

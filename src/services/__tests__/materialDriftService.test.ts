@@ -26,7 +26,9 @@ import {
   severityFor,
   directionFor,
   getMaterialDrift,
+  matchQuotesToDrift,
   __internal,
+  type MaterialDriftRow,
 } from '../materialDriftService';
 
 beforeEach(() => {
@@ -129,6 +131,85 @@ describe('materialDriftService', () => {
   describe('boundary constants', () => {
     test('severity thresholds are consistent', () => {
       expect(__internal.SEVERITY_MEDIUM_MIN).toBeLessThan(__internal.SEVERITY_HIGH_MIN);
+    });
+  });
+
+  describe('matchQuotesToDrift', () => {
+    const makeDrift = (materialName: string): MaterialDriftRow => ({
+      materialName,
+      materialCategory: null,
+      unit: 'meter',
+      supplierId: 's1',
+      supplierName: 'S1',
+      baselinePrice: 1,
+      recentPrice: 1.2,
+      driftPct: 20,
+      recentSampleSize: 5,
+      baselineSampleSize: 30,
+      recentObserverCount: 3,
+      isMarketWide: false,
+    });
+
+    test('empty inputs return empty map', () => {
+      expect(matchQuotesToDrift([], [])).toEqual({});
+      expect(matchQuotesToDrift([makeDrift('copper pipe 15mm')], [])).toEqual({});
+    });
+
+    test('matches open quote with line referencing the drifted material', () => {
+      const result = matchQuotesToDrift(
+        [makeDrift('copper pipe 15mm')],
+        [
+          {
+            id: 'q1', status: 'sent',
+            lineItems: [{ description: 'Copper pipe 15mm type B' }],
+          },
+        ],
+      );
+      expect(result['copper pipe 15mm']).toEqual(['q1']);
+    });
+
+    test('skips accepted / rejected quotes', () => {
+      const result = matchQuotesToDrift(
+        [makeDrift('pvc 40mm')],
+        [
+          { id: 'q1', status: 'accepted', lineItems: [{ description: 'PVC 40mm pipe' }] },
+          { id: 'q2', status: 'rejected', lineItems: [{ description: 'PVC 40mm pipe' }] },
+        ],
+      );
+      expect(result['pvc 40mm']).toBeUndefined();
+    });
+
+    test('includes quotes with no status (treat as draft)', () => {
+      const result = matchQuotesToDrift(
+        [makeDrift('gas valve')],
+        [{ id: 'q1', lineItems: [{ description: 'Gas valve 22mm' }] }],
+      );
+      expect(result['gas valve']).toEqual(['q1']);
+    });
+
+    test('multiple drifts match independently across the same quotes', () => {
+      const result = matchQuotesToDrift(
+        [makeDrift('copper pipe 15mm'), makeDrift('gas valve')],
+        [
+          {
+            id: 'q1', status: 'sent',
+            lineItems: [
+              { description: 'Copper pipe 15mm' },
+              { description: 'Gas valve' },
+            ],
+          },
+        ],
+      );
+      expect(result['copper pipe 15mm']).toEqual(['q1']);
+      expect(result['gas valve']).toEqual(['q1']);
+    });
+
+    test('no match when description is unrelated', () => {
+      const result = matchQuotesToDrift(
+        [makeDrift('copper pipe 15mm')],
+        [{ id: 'q1', status: 'sent', lineItems: [{ description: 'wall paint 10l' }] }],
+      );
+      expect(result).toEqual({});
     });
   });
 });

@@ -1622,7 +1622,8 @@
       "topCustomers": "Meilleurs clients",
       "materialDriftTitle": "Dérive des prix matériaux",
       "materialDriftSub": "{{count}} alertes de la cohorte",
-      "marketWide": "marché entier"
+      "marketWide": "marché entier",
+      "affectedQuotes": "{{count}} devis ouverts"
     },
     "ai": {
       "automationsTitle": "Automatisations",

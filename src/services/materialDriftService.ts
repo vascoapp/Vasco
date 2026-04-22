@@ -158,10 +158,61 @@ export function useMaterialDrift(trade: string, country: string) {
   return { drift: bundle, loading, refresh };
 }
 
+// ---------------------------------------------------------------------------
+// Match drift → open quotes (R193)
+// ---------------------------------------------------------------------------
+// A drift signal is only actionable when the contractor can see which of
+// their own open quotes are affected. We pattern-match drift.materialName
+// against each line's description using the same first-3-token key we
+// already use in TieredQuoteBuilder line hints.
+
+interface LineLike { description: string }
+interface QuoteLike {
+  id: string;
+  status?: string;
+  lineItems?: LineLike[];
+}
+
+function firstTokens(s: string, n = 2): string {
+  return s.toLowerCase().split(/\s+/).filter(Boolean).slice(0, n).join(' ');
+}
+
+/**
+ * For each drift row, return the IDs of OPEN quotes (status = draft | sent)
+ * whose line items reference the same material (by first-2-token fuzzy
+ * match against the line description).
+ *
+ * Returned map is keyed by driftRow.materialName (already lower-cased).
+ */
+export function matchQuotesToDrift(
+  drifts: MaterialDriftRow[],
+  quotes: QuoteLike[],
+): Record<string, string[]> {
+  if (!drifts || drifts.length === 0) return {};
+  const out: Record<string, string[]> = {};
+  const openQuotes = quotes.filter(
+    q => q.status === 'draft' || q.status === 'sent' || q.status === undefined,
+  );
+  for (const d of drifts) {
+    const driftKey = firstTokens(d.materialName);
+    if (!driftKey) continue;
+    const affected: string[] = [];
+    for (const q of openQuotes) {
+      const lines = q.lineItems ?? [];
+      if (lines.some(l => firstTokens(l.description).includes(driftKey) || driftKey.includes(firstTokens(l.description)))) {
+        affected.push(q.id);
+      }
+    }
+    if (affected.length > 0) out[d.materialName] = affected;
+  }
+  return out;
+}
+
 // Exported for tests only.
 export const __internal = {
   CACHE_KEY,
   CACHE_TTL_MS,
   SEVERITY_MEDIUM_MIN,
   SEVERITY_HIGH_MIN,
+  firstTokens,
 };

@@ -1622,7 +1622,8 @@
       "topCustomers": "Top customers",
       "materialDriftTitle": "Material price drift",
       "materialDriftSub": "{{count}} alerts from the cohort",
-      "marketWide": "market-wide"
+      "marketWide": "market-wide",
+      "affectedQuotes": "{{count}} open quotes"
     },
     "ai": {
       "automationsTitle": "Automations",

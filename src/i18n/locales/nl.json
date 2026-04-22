@@ -1622,7 +1622,8 @@
       "topCustomers": "Top klanten",
       "materialDriftTitle": "Materiaalprijs drift",
       "materialDriftSub": "{{count}} meldingen uit het cohort",
-      "marketWide": "marktbreed"
+      "marketWide": "marktbreed",
+      "affectedQuotes": "{{count}} lopende offertes"
     },
     "ai": {
       "automationsTitle": "Automations",

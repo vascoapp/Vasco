@@ -6,6 +6,7 @@
 // (no data, k-anonymity not yet satisfied, or nothing moved >=5%).
 // =============================================================================
 
+import { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -16,8 +17,10 @@ import {
   useMaterialDrift,
   severityFor,
   directionFor,
+  matchQuotesToDrift,
   type MaterialDriftRow,
 } from '../../services/materialDriftService';
+import { useAppState } from '../../state/AppState';
 
 const TOP_N = 3;
 
@@ -30,6 +33,15 @@ interface Props {
 export function MaterialDriftCard({ trade, country, onPress }: Props) {
   const { t } = useTranslation();
   const { drift, loading } = useMaterialDrift(trade, country);
+  const { quotes } = useAppState();
+
+  // R193: match each drift row to the contractor's open quotes so we can
+  // show "affects N open quotes" beside the drift chip. Recompute only
+  // when drift rows or quotes change.
+  const affectedMap = useMemo(
+    () => matchQuotesToDrift(drift?.rows ?? [], quotes as any),
+    [drift, quotes],
+  );
 
   // Hide while loading OR when there's no actionable drift. Rendering an
   // empty state would just be noise on the geld tab.
@@ -73,14 +85,18 @@ export function MaterialDriftCard({ trade, country, onPress }: Props) {
 
       <View style={s.list}>
         {top.map(row => (
-          <DriftRow key={`${row.materialName}|${row.supplierId}`} row={row} />
+          <DriftRow
+            key={`${row.materialName}|${row.supplierId}`}
+            row={row}
+            affectedCount={(affectedMap[row.materialName] ?? []).length}
+          />
         ))}
       </View>
     </Pressable>
   );
 }
 
-function DriftRow({ row }: { row: MaterialDriftRow }) {
+function DriftRow({ row, affectedCount }: { row: MaterialDriftRow; affectedCount: number }) {
   const { t } = useTranslation();
   const severity = severityFor(row.driftPct);
   const direction = directionFor(row.driftPct);
@@ -101,6 +117,9 @@ function DriftRow({ row }: { row: MaterialDriftRow }) {
           {row.supplierName}
           {row.isMarketWide
             ? ` · ${t('dk.money.marketWide', 'market-wide')}`
+            : ''}
+          {affectedCount > 0
+            ? ` · ${t('dk.money.affectedQuotes', '{{count}} open quotes', { count: affectedCount })}`
             : ''}
         </Text>
       </View>
