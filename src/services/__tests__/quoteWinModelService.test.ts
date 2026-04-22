@@ -119,4 +119,56 @@ describe('quoteWinModelService', () => {
     const farDist = Math.hypot(jan.month_sin - jul.month_sin, jan.month_cos - jul.month_cos);
     expect(dist).toBeLessThan(farDist);
   });
+
+  test('R208: contractor segment one-hots exclusive, solo=baseline', () => {
+    const solo = __internal.featurize({ total_amount: 1, customer_type: null, month_num: 1, contractor_segment: 'solo' });
+    const small = __internal.featurize({ total_amount: 1, customer_type: null, month_num: 1, contractor_segment: 'small_team' });
+    const medium = __internal.featurize({ total_amount: 1, customer_type: null, month_num: 1, contractor_segment: 'medium' });
+    const large = __internal.featurize({ total_amount: 1, customer_type: null, month_num: 1, contractor_segment: 'large' });
+    // Solo is the implicit baseline — all three segment flags zero.
+    expect(solo.is_small_team).toBe(0);
+    expect(solo.is_medium).toBe(0);
+    expect(solo.is_large).toBe(0);
+    // Each non-solo segment sets exactly one flag.
+    expect(small.is_small_team + small.is_medium + small.is_large).toBe(1);
+    expect(small.is_small_team).toBe(1);
+    expect(medium.is_medium).toBe(1);
+    expect(large.is_large).toBe(1);
+  });
+
+  test('R208: segment flag meaningfully shifts score when weights reflect it', () => {
+    // Hand-craft a model where is_large has a strong positive weight;
+    // verify scoring a large-segment quote exceeds a solo-segment one.
+    const model = {
+      bias: 0,
+      weights: {
+        log_amount: 0, month_sin: 0, month_cos: 0,
+        is_residential: 0, is_commercial: 0,
+        is_small_team: 0, is_medium: 0, is_large: 2.0,
+      },
+      featureMeans: { log_amount: 0, month_sin: 0, month_cos: 0, is_residential: 0, is_commercial: 0, is_small_team: 0, is_medium: 0, is_large: 0 },
+      featureStds:  { log_amount: 1, month_sin: 1, month_cos: 1, is_residential: 1, is_commercial: 1, is_small_team: 1, is_medium: 1, is_large: 1 },
+      nSamples: 50,
+      trainedAt: new Date().toISOString(),
+    };
+    const solo = scoreQuoteWin({ amount: 1000, contractorSegment: 'solo' }, model);
+    const large = scoreQuoteWin({ amount: 1000, contractorSegment: 'large' }, model);
+    expect(large.probability).toBeGreaterThan(solo.probability);
+  });
+
+  test('R208: legacy 5-feature model scores without NaN on new-shape input', () => {
+    // Simulate a pre-R208 persisted model — only the original 5 features.
+    const legacy = {
+      bias: 0.5,
+      weights: { log_amount: -0.3, month_sin: 0.1, month_cos: 0.1, is_residential: 0.4, is_commercial: -0.2 } as any,
+      featureMeans: { log_amount: 7, month_sin: 0, month_cos: 0, is_residential: 0.5, is_commercial: 0.5 } as any,
+      featureStds: { log_amount: 1, month_sin: 0.7, month_cos: 0.7, is_residential: 0.5, is_commercial: 0.5 } as any,
+      nSamples: 60,
+      trainedAt: new Date().toISOString(),
+    };
+    const r = scoreQuoteWin({ amount: 2500, customerType: 'residential', contractorSegment: 'medium' }, legacy);
+    expect(r.probability).toBeGreaterThanOrEqual(0);
+    expect(r.probability).toBeLessThanOrEqual(1);
+    expect(Number.isFinite(r.probability)).toBe(true);
+  });
 });

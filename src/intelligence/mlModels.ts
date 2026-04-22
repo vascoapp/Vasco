@@ -18,6 +18,17 @@ import i18n from '../i18n/i18n';
 import { getQuoteWinModel, scoreQuoteWin } from '../services/quoteWinModelService';
 import { getCohortDso } from '../services/paymentTimingMoatService';
 import { getCohortDurationRatio } from '../services/jobDurationMoatService';
+import { loadOnboardingPreferences, type TeamSize } from '../services/onboardingPreferencesService';
+
+// R208: map onboarding TeamSize → pricing_intelligence.contractor_segment.
+// 'small' on the onboarding side stores as 'small_team' on the model side.
+function teamSizeToSegment(t: TeamSize | null): string | null {
+  if (t === 'solo') return 'solo';
+  if (t === 'small') return 'small_team';
+  if (t === 'medium') return 'medium';
+  if (t === 'large') return 'large';
+  return null;
+}
 
 const MODEL_CACHE_KEY = '@vasco_ml_models';
 
@@ -85,13 +96,24 @@ export async function predictQuoteWin(params: {
   // R191: Try the cohort-trained logistic regression model first. When no
   // model exists (e.g. new trade/country combo below k-anonymity), fall
   // through to the legacy heuristic below.
+  // R208: also thread contractor_segment from onboarding prefs so the
+  // feature we trained on is actually non-zero at score time.
   const trainedProbability = await (async () => {
     if (!params.country) return null;
     try {
       const loaded = await getQuoteWinModel(params.trade, params.country);
       if (!loaded) return null;
+      let segment: string | null = null;
+      try {
+        const prefs = await loadOnboardingPreferences();
+        segment = teamSizeToSegment(prefs.teamSize);
+      } catch {}
       const { probability, confidence } = scoreQuoteWin(
-        { amount: params.amount, customerType: params.customerType ?? null },
+        {
+          amount: params.amount,
+          customerType: params.customerType ?? null,
+          contractorSegment: segment,
+        },
         loaded.weights,
       );
       return { probability, confidence, samples: loaded.trainingSamples, accuracy: loaded.accuracy };

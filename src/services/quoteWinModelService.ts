@@ -24,12 +24,18 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 // version bump (handled automatically by save_quote_win_model incrementing
 // model_version on every save).
 
+// R208: contractor_segment one-hots added. Feature order is the source of
+// truth and must not be reordered — models persisted under prior orderings
+// still load, and defensive lookups treat missing weights as 0.
 export const FEATURE_NAMES = [
   'log_amount',
   'month_sin',
   'month_cos',
   'is_residential',
   'is_commercial',
+  'is_small_team',
+  'is_medium',
+  'is_large',
 ] as const;
 
 export type FeatureName = (typeof FEATURE_NAMES)[number];
@@ -47,39 +53,55 @@ export interface ScoreInput {
   amount: number;
   month?: number; // 1-12; defaults to current month
   customerType?: string | null;
+  contractorSegment?: string | null; // R208: 'solo' (baseline) | 'small_team' | 'medium' | 'large'
 }
 
 export interface ModelWeights {
   bias: number;
-  weights: Record<FeatureName, number>;
-  featureMeans: Record<FeatureName, number>;
-  featureStds: Record<FeatureName, number>;
+  // R208: Partial so legacy models persisted under older FEATURE_NAMES
+  // still deserialize without type-level pressure to add null entries.
+  // Scoring treats missing weights as 0.
+  weights: Partial<Record<FeatureName, number>>;
+  featureMeans: Partial<Record<FeatureName, number>>;
+  featureStds: Partial<Record<FeatureName, number>>;
   nSamples: number;
   trainedAt: string;
 }
 
-function featurize(row: Pick<TrainingRow, 'total_amount' | 'customer_type' | 'month_num'>): Record<FeatureName, number> {
+function featurize(
+  row: Pick<TrainingRow, 'total_amount' | 'customer_type' | 'month_num'> & {
+    contractor_segment?: string | null;
+  },
+): Record<FeatureName, number> {
   const safeAmount = Math.max(1, row.total_amount || 1);
   const m = row.month_num || 1;
   const angle = (2 * Math.PI * (m - 1)) / 12;
+  const seg = row.contractor_segment ?? null;
   return {
     log_amount: Math.log(safeAmount),
     month_sin: Math.sin(angle),
     month_cos: Math.cos(angle),
     is_residential: row.customer_type === 'residential' ? 1 : 0,
     is_commercial: row.customer_type === 'commercial' ? 1 : 0,
+    is_small_team: seg === 'small_team' ? 1 : 0,
+    is_medium: seg === 'medium' ? 1 : 0,
+    is_large: seg === 'large' ? 1 : 0, // 'solo' is the implicit baseline
   };
 }
 
 function standardize(
   vec: Record<FeatureName, number>,
-  means: Record<FeatureName, number>,
-  stds: Record<FeatureName, number>,
+  means: Partial<Record<FeatureName, number>>,
+  stds: Partial<Record<FeatureName, number>>,
 ): Record<FeatureName, number> {
   const out = {} as Record<FeatureName, number>;
   for (const f of FEATURE_NAMES) {
-    const s = stds[f] || 1;
-    out[f] = (vec[f] - means[f]) / s;
+    // R208: missing mean/std in a legacy model means the feature wasn't
+    // in that training run — treat as mean=0, std=1 so the feature
+    // cleanly contributes zero to the dot-product.
+    const mean = means[f] ?? 0;
+    const std = stds[f] || 1;
+    out[f] = (vec[f] - mean) / std;
   }
   return out;
 }
@@ -197,11 +219,17 @@ export function scoreQuoteWin(
     total_amount: input.amount,
     customer_type: input.customerType ?? null,
     month_num: month,
+    contractor_segment: input.contractorSegment ?? null,
   });
   const xs = standardize(raw, model.featureMeans, model.featureStds);
 
   let z = model.bias;
-  for (const f of FEATURE_NAMES) z += model.weights[f] * xs[f];
+  for (const f of FEATURE_NAMES) {
+    // R208: missing weight → feature contributes 0 to the dot product.
+    // Lets us load legacy 5-feature models and score with the 8-feature
+    // input without NaN propagation.
+    z += (model.weights[f] ?? 0) * xs[f];
+  }
   const probability = sigmoid(z);
 
   // Confidence scales with training set size, saturating near 100 samples.
