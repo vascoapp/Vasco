@@ -20,7 +20,7 @@ you have the credentials listed below.
 ```bash
 npm i -g eas-cli
 eas login
-eas init --id <create-new-project>    # fills app.json expo.extra.eas.projectId
+eas init                              # creates project + fills app.json expo.extra.eas.projectId
 eas credentials                       # upload APNs p8 + FCM server key
 ```
 
@@ -41,10 +41,22 @@ npm run supabase:types
 supabase secrets set \
   STRIPE_WEBHOOK_SECRET=whsec_... \
   MOLLIE_API_KEY=live_... \
-  MOLLIE_WEBHOOK_SECRET=...
+  MOLLIE_WEBHOOK_SECRET=... \
+  RESEND_API_KEY=re_... \
+  ANTHROPIC_API_KEY=sk-ant-...
 
-# Deploy functions
-supabase functions deploy mollie-webhook stripe-webhook analyze-photo predict-duration predict-price
+# Deploy all Edge Functions (15 total as of R220).
+# Safer than listing each one since the set grows over time.
+for fn in supabase/functions/*/; do
+  name=$(basename "$fn")
+  [ "$name" = "_shared" ] && continue
+  supabase functions deploy "$name"
+done
+
+# Register cron jobs (weekly-digest, stale-draft-cleanup,
+# drain-account-deletions). Open supabase/cron.sql, replace the two
+# placeholders (<SUPABASE_URL> + <SERVICE_ROLE_KEY>) and run it against
+# the project DB via Dashboard → SQL Editor or `psql $PG_URL -f supabase/cron.sql`.
 ```
 
 Then copy project URL + anon key into `.env`:
@@ -81,6 +93,15 @@ pages live at `/legal/privacy-policy` and `/legal/terms-of-service`.
 - Add privacy-policy URL: `https://admin.vasco.app/legal/privacy-policy`.
 - Fill Apple Team ID + ASC App ID in `eas.json` submit block.
 - Save Play service account JSON to `./secrets/play-service-account.json`.
+
+## 4b. Pre-build sanity checks
+
+```bash
+npx tsc --noEmit                       # must be 0 errors project-wide
+(cd admin && npx tsc --noEmit)         # must be 0 errors
+npm test                               # full jest — all suites green (259+ tests as of R219)
+npm run i18n:audit                     # all 6 locales aligned; exits non-zero if gaps
+```
 
 ## 5. Preview build (internal QA)
 
