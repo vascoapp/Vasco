@@ -10,6 +10,7 @@
 // to hold or raise.
 // =============================================================================
 
+import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
@@ -84,6 +85,19 @@ export async function getMarginDrift(
   } catch {
     return null;
   }
+}
+
+// R215: React hook for intelligence generators consuming margin drift.
+export function useMarginDrift(trade: string, country: string) {
+  const [bundle, setBundle] = useState<MarginDrift | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    getMarginDrift(trade, country)
+      .then(b => { if (!cancelled) setBundle(b); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [trade, country]);
+  return bundle;
 }
 
 export const __internal = { CACHE_KEY, CACHE_TTL_MS, cacheKey };

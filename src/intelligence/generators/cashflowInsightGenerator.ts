@@ -13,6 +13,7 @@ import { logPrediction } from '../calibration';
 import { gt } from '../generatorTranslations';
 import { useAppState } from '../../state/AppState';
 import { useCohortDso } from '../../services/paymentTimingMoatService';
+import { useMarginDrift } from '../../services/marginDriftService';
 
 export const cashflowInsightGenerator: InsightGenerator = {
   id: 'cashflow-insight',
@@ -29,6 +30,9 @@ export function useCashflowInsight(ctx: GeneratorContext): ScoredInsight | null 
   // R211: cohort DSO — replace the static "14-21 days" benchmark with a
   // real country-specific median when available.
   const cohortDso = useCohortDso(businessProfile?.country ?? 'NL', null);
+  // R215: margin drift — used in win-rate low branch to clarify if the
+  // issue is trade-wide compression vs individual pricing.
+  const marginDrift = useMarginDrift(businessProfile?.trade ?? 'general', businessProfile?.country ?? 'NL');
 
   // Record metric snapshots for trend tracking
   if (fin.avgDaysToPayment > 0) recordMetricSnapshot('dso', fin.avgDaysToPayment);
@@ -196,8 +200,12 @@ export function useCashflowInsight(ctx: GeneratorContext): ScoredInsight | null 
       rawScore: 0.6,
       reasoning: {
         observation: `Quote win rate is ${fin.quoteWinRate}%`,
-        evidence: `Based on all decided quotes (accepted + rejected + expired).`,
-        implication: `Low conversion means more effort per acquired job. Review pricing.`,
+        evidence: marginDrift && marginDrift.driftPp < -2
+          ? `Based on all decided quotes. Cohort margin dropped ${marginDrift.driftPp.toFixed(1)}pp recently — market-wide compression, not just you.`
+          : `Based on all decided quotes (accepted + rejected + expired).`,
+        implication: marginDrift && marginDrift.driftPp < -2
+          ? `Trade margins are compressing cohort-wide. Pricing below market won't solve this — consider upselling or tier-based differentiation.`
+          : `Low conversion means more effort per acquired job. Review pricing.`,
         suggestion: `Consider tiered pricing, faster response times, or competitive analysis.`,
       },
       dataPoints: 3,

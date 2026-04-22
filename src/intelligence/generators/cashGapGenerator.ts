@@ -107,7 +107,7 @@ export function useCashGapInsight(ctx: GeneratorContext): ScoredInsight | null {
     rawScore: 0,
     reasoning: {
       observation: `${criticalAlerts.length} kritieke incasso-waarschuwing${criticalAlerts.length > 1 ? 'en' : ''} — DSO ${dso.currentDSO} dagen`,
-      evidence: `Op basis van ${sequences.length} actieve dunning-sequences, DSO trend: ${dso.trend}${anomaly.isAnomaly ? ` — anomalie gedetecteerd (${anomaly.zScore.toFixed(1)}σ)` : ''}`,
+      evidence: `Op basis van ${sequences.length} actieve dunning-sequences, DSO trend: ${dso.trend}. Cohort mediaan (jouw land): ${dso.industryAverage}d — jij zit ${dso.currentDSO - dso.industryAverage > 0 ? '+' : ''}${dso.currentDSO - dso.industryAverage}d ${dso.currentDSO > dso.industryAverage ? 'boven' : 'onder'} het gemiddelde.${anomaly.isAnomaly ? ` Anomalie gedetecteerd (${anomaly.zScore.toFixed(1)}σ).` : ''}`,
       implication: `Cash flow druk: ${nextPaymentETA}.${dsoImproving ? ' DSO-trend is dalend (positief).' : ''}`,
       suggestion: activeSequences.length > 0
         ? `${activeSequences.length} automatische herinneringen lopen — controleer of handmatige opvolging nodig is`
