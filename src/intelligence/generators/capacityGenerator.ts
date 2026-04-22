@@ -8,6 +8,8 @@ import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { logPrediction } from '../calibration';
 import { getSeasonalMultiplier, detectAnomaly, getAdaptiveThreshold } from '../adaptiveThresholds';
 import { gt } from '../generatorTranslations';
+import { useAppState } from '../../state/AppState';
+import { useCohortDuration } from '../../services/jobDurationMoatService';
 
 export const capacityGenerator: InsightGenerator = {
   id: 'capacity',
@@ -20,6 +22,11 @@ export const capacityGenerator: InsightGenerator = {
 
 export function useCapacityInsight(ctx: GeneratorContext): ScoredInsight | null {
   const { data: forecast } = useCapacityForecast(undefined, 7);
+  const { businessProfile } = useAppState();
+  // R212: cohort duration ratio — if contractors like you typically exceed
+  // quoted hours by 15%, a utilization reading of 85% is really closer
+  // to 98%. Used to soften/sharpen the overload copy.
+  const cohortDuration = useCohortDuration(businessProfile?.trade ?? 'general', null);
 
   if (!forecast || forecast.length === 0) return null;
 
@@ -75,7 +82,9 @@ export function useCapacityInsight(ctx: GeneratorContext): ScoredInsight | null 
       reasoning: {
         observation: `${overCapDays.length} van ${forecast.length} dagen boven ${Math.round(overCapThreshold)}% bezetting`,
         evidence: `Op basis van ${forecast.length}-daagse capaciteitsvoorspelling${anomaly.isAnomaly ? ` — anomalie gedetecteerd (${anomaly.zScore.toFixed(1)}σ)` : ''}${(() => { const t = getTrend(ctx.profile, 'capacityUtilization', 4); return t && t.slope !== 0 ? ` — bezettingstrend: ${t.direction}` : ''; })()}`,
-        implication: 'Overbelasting leidt tot uitloop, kwaliteitsverlies en stress',
+        implication: cohortDuration && cohortDuration.medianRatio !== null && cohortDuration.medianRatio > 1.05
+          ? `Overbelasting leidt tot uitloop — en cohort loopt ${Math.round((cohortDuration.medianRatio - 1) * 100)}% uit op estimates, dus je reserve is kleiner dan het lijkt.`
+          : 'Overbelasting leidt tot uitloop, kwaliteitsverlies en stress',
         suggestion: 'Verschuif niet-urgente klussen naar dagen met meer ruimte',
       },
       dataPoints: forecast.length,

@@ -9,6 +9,7 @@
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import { useAppState } from '../../state/AppState';
 import { gt } from '../generatorTranslations';
+import { useCohortBenchmarks } from '../../services/cohortBenchmarkService';
 
 const ADJACENT_TRADES: Record<string, Array<{ trade: string; pitch: string }>> = {
   roofing:    [{ trade: 'solar',      pitch: 'Roof is fresh — great moment to add PV panels with a single scaffolding visit.' },
@@ -37,7 +38,11 @@ export const crossSellGenerator: InsightGenerator = {
 };
 
 export function useCrossSellInsight(ctx: GeneratorContext): ScoredInsight | null {
-  const { jobs } = useAppState();
+  const { jobs, businessProfile } = useAppState();
+  // R212: cohort benchmarks for the contractor's own trade — the hook must
+  // be called unconditionally (React rules). We re-key below against the
+  // adjacent-trade pick, so this resolves the data for the same trade set.
+  const { benchmarks } = useCohortBenchmarks(businessProfile?.trade ?? 'general', businessProfile?.country ?? 'NL');
 
   // Jobs completed in the last 30 days without a follow-up quote already sent
   const recent = jobs
@@ -52,6 +57,11 @@ export function useCrossSellInsight(ctx: GeneratorContext): ScoredInsight | null
 
   const options = ADJACENT_TRADES[(candidate.trade ?? '').toLowerCase()] ?? [];
   const pick = options[0];
+  // R212: cohort acceptance rate for the ADJACENT trade sourced from the
+  // already-fetched bundle (getTradeBaselines returns all trades × country).
+  const adjacentAccept = benchmarks?.tradeBenchmarks?.find(
+    b => b.trade === pick?.trade && b.country === (businessProfile?.country ?? 'NL'),
+  )?.avgQuoteAcceptanceRate ?? null;
 
   return {
     id: `cross-sell-${candidate.id}`,
@@ -68,7 +78,9 @@ export function useCrossSellInsight(ctx: GeneratorContext): ScoredInsight | null
     rawScore: 0,
     reasoning: {
       observation: `${candidate.trade} job completed recently for this customer`,
-      evidence: `${recent.length} jobs completed in the last 30 days`,
+      evidence: adjacentAccept !== null && adjacentAccept > 0
+        ? `${recent.length} jobs completed in the last 30 days. Cohort median acceptance for ${pick.trade}: ${Math.round(adjacentAccept * 100)}%.`
+        : `${recent.length} jobs completed in the last 30 days`,
       implication: 'Warm customer + existing site access = high win probability',
       suggestion: `Send a short ${pick.trade} quote within a week of handover`,
     },
