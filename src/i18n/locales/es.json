@@ -1631,7 +1631,14 @@
       "materialDriftSub": "{{count}} alertas de la cohorte",
       "marketWide": "todo el mercado",
       "affectedQuotes": "{{count}} presupuestos abiertos",
-      "seasonalPeak": "temporada alta +{{pct}}%"
+      "seasonalPeak": "temporada alta +{{pct}}%",
+      "marketPulseTitle": "Pulso del mercado",
+      "marketPulseSub": "Señales de la cohorte para {{trade}} en {{country}}",
+      "pulseMargin": "Margen del oficio",
+      "pulseRisk": "Tasa de impagos",
+      "pulseRiskSub": "~{{reminders}} recordatorios en promedio",
+      "pulseLag": "Tiempo típico de aceptación",
+      "pulseLagSub": "{{contractors}} contratistas, {{samples}} presupuestos"
     },
     "ai": {
       "automationsTitle": "Automatizaciones",

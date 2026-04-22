@@ -1631,7 +1631,14 @@
       "materialDriftSub": "{{count}} meldingen uit het cohort",
       "marketWide": "marktbreed",
       "affectedQuotes": "{{count}} lopende offertes",
-      "seasonalPeak": "hoogseizoen +{{pct}}%"
+      "seasonalPeak": "hoogseizoen +{{pct}}%",
+      "marketPulseTitle": "Marktpolsslag",
+      "marketPulseSub": "Cohortsignalen voor {{trade}} in {{country}}",
+      "pulseMargin": "Branchemarge",
+      "pulseRisk": "Te laat betaalde facturen",
+      "pulseRiskSub": "~{{reminders}} herinneringen gemiddeld",
+      "pulseLag": "Typische acceptatietijd",
+      "pulseLagSub": "{{contractors}} vakmannen, {{samples}} offertes"
     },
     "ai": {
       "automationsTitle": "Automations",

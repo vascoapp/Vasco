@@ -1631,7 +1631,14 @@
       "materialDriftSub": "{{count}} avvisi dalla coorte",
       "marketWide": "tutto il mercato",
       "affectedQuotes": "{{count}} preventivi aperti",
-      "seasonalPeak": "alta stagione +{{pct}}%"
+      "seasonalPeak": "alta stagione +{{pct}}%",
+      "marketPulseTitle": "Polso del mercato",
+      "marketPulseSub": "Segnali della coorte per {{trade}} in {{country}}",
+      "pulseMargin": "Margine del mestiere",
+      "pulseRisk": "Tasso di mora",
+      "pulseRiskSub": "~{{reminders}} solleciti in media",
+      "pulseLag": "Tempo tipico di accettazione",
+      "pulseLagSub": "{{contractors}} artigiani, {{samples}} preventivi"
     },
     "ai": {
       "automationsTitle": "Automazioni",

@@ -1631,7 +1631,14 @@
       "materialDriftSub": "{{count}} alertes de la cohorte",
       "marketWide": "marché entier",
       "affectedQuotes": "{{count}} devis ouverts",
-      "seasonalPeak": "pleine saison +{{pct}}%"
+      "seasonalPeak": "pleine saison +{{pct}}%",
+      "marketPulseTitle": "Pouls du marché",
+      "marketPulseSub": "Signaux de la cohorte pour {{trade}} en {{country}}",
+      "pulseMargin": "Marge du métier",
+      "pulseRisk": "Taux de retards",
+      "pulseRiskSub": "~{{reminders}} relances en moyenne",
+      "pulseLag": "Délai d'acceptation typique",
+      "pulseLagSub": "{{contractors}} artisans, {{samples}} devis"
     },
     "ai": {
       "automationsTitle": "Automatisations",

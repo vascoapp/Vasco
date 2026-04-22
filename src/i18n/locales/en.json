@@ -1631,7 +1631,14 @@
       "materialDriftSub": "{{count}} alerts from the cohort",
       "marketWide": "market-wide",
       "affectedQuotes": "{{count}} open quotes",
-      "seasonalPeak": "peak season +{{pct}}%"
+      "seasonalPeak": "peak season +{{pct}}%",
+      "marketPulseTitle": "Market pulse",
+      "marketPulseSub": "Cohort signals for {{trade}} in {{country}}",
+      "pulseMargin": "Trade margin",
+      "pulseRisk": "Overdue rate",
+      "pulseRiskSub": "~{{reminders}} reminders avg",
+      "pulseLag": "Typical accept lag",
+      "pulseLagSub": "{{contractors}} contractors, {{samples}} quotes"
     },
     "ai": {
       "automationsTitle": "Automations",

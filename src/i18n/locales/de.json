@@ -1631,7 +1631,14 @@
       "materialDriftSub": "{{count}} Meldungen aus der Kohorte",
       "marketWide": "marktweit",
       "affectedQuotes": "{{count}} offene Angebote",
-      "seasonalPeak": "Hochsaison +{{pct}}%"
+      "seasonalPeak": "Hochsaison +{{pct}}%",
+      "marketPulseTitle": "Marktpuls",
+      "marketPulseSub": "Kohortensignale für {{trade}} in {{country}}",
+      "pulseMargin": "Branchenmarge",
+      "pulseRisk": "Überfällig-Rate",
+      "pulseRiskSub": "~{{reminders}} Mahnungen im Schnitt",
+      "pulseLag": "Typische Annahmedauer",
+      "pulseLagSub": "{{contractors}} Handwerker, {{samples}} Angebote"
     },
     "ai": {
       "automationsTitle": "Automatisierungen",

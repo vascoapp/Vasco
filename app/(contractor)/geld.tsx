@@ -29,6 +29,7 @@ import { Sparkline } from '../../src/components/shared/Sparkline';
 import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { CashFlowForecastCard } from '../../src/components/contractor/CashFlowForecastCard';
 import { MaterialDriftCard } from '../../src/components/contractor/MaterialDriftCard';
+import { MarketPulseCard } from '../../src/components/contractor/MarketPulseCard';
 import { useAIQueue } from '../../src/services/aiActionQueueService';
 import { useVascoGuidance } from '../../src/services/vascoGuidanceService';
 import { DKLabel } from '../../src/components/shared/DKLabel';
@@ -368,6 +369,12 @@ export default function GeldScreen() {
           trade={businessProfile?.trade ?? 'general'}
           country={businessProfile?.country ?? 'NL'}
           onPress={() => router.push('/contractor/market-prices' as any)}
+        />
+
+        {/* ─── MARKET PULSE (R205) — margin drift + customer risk + accept lag ─── */}
+        <MarketPulseCard
+          trade={businessProfile?.trade ?? 'general'}
+          country={businessProfile?.country ?? 'NL'}
         />
 
         {/* ─── CASHFLOW DEEP-DIVE ─── */}
