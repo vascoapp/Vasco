@@ -1037,6 +1037,13 @@
     "lineHintQty": "Kohorte passt Menge typischerweise an",
     "lineHintPrice": "Preis",
     "cohortTuned": "Vasco hat {{lines}} von {{total}} Zeilen anhand von {{contractors}} Kohortenentscheidungen angepasst",
+    "seasonalityLead": "Annahme im {{season}} liegt {{delta}}pp unter {{best}}:",
+    "season": {
+      "winter": "Winter",
+      "spring": "Frühling",
+      "summer": "Sommer",
+      "autumn": "Herbst"
+    },
     "reasonCode": {
       "waste_underestimated": "Verschnitt unterschätzt",
       "measurement_correction": "Maßkorrektur",

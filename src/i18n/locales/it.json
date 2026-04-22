@@ -1037,6 +1037,13 @@
     "lineHintQty": "La coorte di solito regola la quantità di",
     "lineHintPrice": "prezzo",
     "cohortTuned": "Vasco ha calibrato {{lines}} righe su {{total}} con {{contractors}} decisioni della coorte",
+    "seasonalityLead": "Accettazione in {{season}} è {{delta}}pp inferiore a {{best}}:",
+    "season": {
+      "winter": "inverno",
+      "spring": "primavera",
+      "summer": "estate",
+      "autumn": "autunno"
+    },
     "reasonCode": {
       "waste_underestimated": "sfrido sottostimato",
       "measurement_correction": "correzione di misura",

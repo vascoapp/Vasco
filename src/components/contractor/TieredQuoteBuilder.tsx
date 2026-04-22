@@ -34,6 +34,10 @@ import {
   getLineEditDistribution,
   type LineEditDistribution,
 } from '../../services/cohortBenchmarkService';
+import {
+  useQuoteSeasonal,
+  acceptanceDeltaVsBest,
+} from '../../services/seasonalityMoatService';
 import { getCurrentUserId } from '../../lib/currentUser';
 import { useQuoteTemplates, type QuoteTemplate, TEMPLATE_CATEGORIES } from '../../services/quoteTemplateService';
 import { hapticSuccess } from '../../utils/haptics';
@@ -132,6 +136,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
   const [handoffBanner, setHandoffBanner] = useState<string | null>(null);
   const { benchmarks: cohort } = useCohortBenchmarks(trade, country);
   const { calibration } = useContractorCalibration(user?.id ?? null, trade, country);
+  const { bundle: seasonalBundle } = useQuoteSeasonal(trade, country);
   const [lineHints, setLineHints] = useState<Record<string, LineEditDistribution | null>>({});
   const [cohortTuneSummary, setCohortTuneSummary] = useState<CohortAdjustmentSummary | null>(null);
 
@@ -928,6 +933,27 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
               })()}
             </View>
           )}
+
+          {/* R198: Seasonality — show only when current-vs-best season
+              acceptance delta is >=10pp (below that is statistical noise). */}
+          {(() => {
+            const delta = acceptanceDeltaVsBest(seasonalBundle);
+            if (!delta || delta.deltaPp < 10) return null;
+            return (
+              <View style={s.vascoRow}>
+                <Text style={s.vascoText}>
+                  {t('quotes.seasonalityLead', '{{season}} acceptance is {{delta}}pp below {{best}}:', {
+                    season: t(`quotes.season.${delta.current.season}`, delta.current.season),
+                    delta: Math.round(delta.deltaPp),
+                    best: t(`quotes.season.${delta.best.season}`, delta.best.season),
+                  })}{' '}
+                  <Text style={{ fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary }}>
+                    {Math.round(delta.current.acceptanceRate * 100)}% vs {Math.round(delta.best.acceptanceRate * 100)}%
+                  </Text>
+                </Text>
+              </View>
+            );
+          })()}
         </View>
 
         {/* Tier preview cards */}

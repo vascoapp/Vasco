@@ -1037,6 +1037,13 @@
     "lineHintQty": "Cohort past aantal meestal aan met",
     "lineHintPrice": "prijs",
     "cohortTuned": "Vasco heeft {{lines}} van {{total}} regels aangepast op basis van {{contractors}} cohortbeslissingen",
+    "seasonalityLead": "Acceptatie in {{season}} is {{delta}}pp lager dan in {{best}}:",
+    "season": {
+      "winter": "winter",
+      "spring": "lente",
+      "summer": "zomer",
+      "autumn": "herfst"
+    },
     "reasonCode": {
       "waste_underestimated": "afval onderschat",
       "measurement_correction": "meetcorrectie",

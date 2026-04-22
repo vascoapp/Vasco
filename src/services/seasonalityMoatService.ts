@@ -10,6 +10,7 @@
 // Both share 24h AsyncStorage caching and a small season-of-now helper.
 // =============================================================================
 
+import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
@@ -206,6 +207,24 @@ export function materialPriceVsCheapestSeason(
     cheapest,
     pctAboveCheapest: ((current.medianPrice - cheapest.medianPrice) / cheapest.medianPrice) * 100,
   };
+}
+
+// ---------------------------------------------------------------------------
+// React hooks
+// ---------------------------------------------------------------------------
+
+export function useQuoteSeasonal(trade: string, country: string) {
+  const [bundle, setBundle] = useState<QuoteSeasonalBundle | null>(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getQuoteSeasonalPattern(trade, country)
+      .then(b => { if (!cancelled) setBundle(b); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [trade, country]);
+  return { bundle, loading };
 }
 
 export const __internal = {
