@@ -273,6 +273,7 @@
     "pipeline": "Pipeline",
     "calendar": "Calendrier",
     "timeTracking": "Suivi du temps",
+    "cohortCostBaseline": "Cohorte type : {{ratio}}% du devis · {{overrun}}% dépassent",
     "newJob": "Nouveau chantier",
     "noJobs": "Aucun chantier",
     "noJobsDesc": "Créez votre premier chantier pour commencer",
@@ -1638,7 +1639,9 @@
       "pulseRisk": "Taux de retards",
       "pulseRiskSub": "~{{reminders}} relances en moyenne",
       "pulseLag": "Délai d'acceptation typique",
-      "pulseLagSub": "{{contractors}} artisans, {{samples}} devis"
+      "pulseLagSub": "{{contractors}} artisans, {{samples}} devis",
+      "pulseSupply": "Chaîne d'approvisionnement",
+      "daysShort": "j"
     },
     "ai": {
       "automationsTitle": "Automatisations",

@@ -31,6 +31,7 @@ import { useClockIn } from '../../../src/services/clockInService';
 import { smartSchedulerService, LIFECYCLE_ORDER, LIFECYCLE_LABELS, LIFECYCLE_COLORS, LIFECYCLE_NEXT_ACTION, useJobLifecyclePipeline } from '../../../src/services/smartSchedulerService';
 import type { JobLifecycleStatus } from '../../../src/services/smartSchedulerService';
 import { useJobCostVariance } from '../../../src/services/jobCostTrackingService';
+import { getCohortCostVariance, type CohortCostVariance } from '../../../src/services/costVarianceMoatService';
 import { useAppState } from '../../../src/state/AppState';
 import { PhotoGallery, type PhotoItem } from '../../../src/components/contractor/PhotoGallery';
 import { showPhotoPicker } from '../../../src/utils/photoPicker';
@@ -124,6 +125,16 @@ export default function JobDetailPage() {
   const [signatureModal, setSignatureModal] = useState<{ visible: boolean; onSigned?: () => void }>({ visible: false });
   const { advance, recordHours } = useJobLifecyclePipeline();
   const costVariance = useJobCostVariance(id || '');
+  // R206: cohort cost-variance baseline for the contractor's trade/country.
+  // Purely informational — shown as a caption below the per-job margin bar.
+  const [cohortCostVar, setCohortCostVar] = useState<CohortCostVariance | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const tr = businessProfile?.trade ?? 'general';
+    const co = businessProfile?.country ?? 'NL';
+    getCohortCostVariance(tr, co).then(b => { if (!cancelled) setCohortCostVar(b); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [businessProfile?.trade, businessProfile?.country]);
   const job = useMemo(() => {
     const fromScheduler = smartSchedulerService.getJob(id || '');
     if (fromScheduler) return fromScheduler;
@@ -642,6 +653,20 @@ export default function JobDetailPage() {
                   {costVariance.marginDelta <= 0 ? t('jobs.underBudget', 'Under budget') : `${costVariance.marginPercent.toFixed(0)}% ${t('jobs.over', 'over')}`}
                 </Text>
               </View>
+              {/* R206: cohort baseline — only when k-anonymity threshold clears */}
+              {cohortCostVar && cohortCostVar.medianRatio !== null && cohortCostVar.contractorCount >= 5 && (
+                <Text style={{
+                  fontSize: TYPE.captionSize,
+                  fontFamily: TYPE.captionFamily,
+                  color: SemanticColors.textSecondary,
+                  marginTop: GRID.xs,
+                }}>
+                  {t('jobs.cohortCostBaseline', 'Cohort typical: {{ratio}}% of quote · {{overrun}}% jobs overrun', {
+                    ratio: Math.round(cohortCostVar.medianRatio * 100),
+                    overrun: Math.round((cohortCostVar.overrunRate ?? 0) * 100),
+                  })}
+                </Text>
+              )}
             </View>
           </View>
         )}

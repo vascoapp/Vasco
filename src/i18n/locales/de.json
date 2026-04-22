@@ -273,6 +273,7 @@
     "pipeline": "Pipeline",
     "calendar": "Kalender",
     "timeTracking": "Zeiterfassung",
+    "cohortCostBaseline": "Kohorte typisch: {{ratio}}% vom Angebot · {{overrun}}% überschreiten",
     "newJob": "Neuer Auftrag",
     "noJobs": "Noch keine Aufträge",
     "noJobsDesc": "Erstellen Sie Ihren ersten Auftrag",
@@ -1638,7 +1639,9 @@
       "pulseRisk": "Überfällig-Rate",
       "pulseRiskSub": "~{{reminders}} Mahnungen im Schnitt",
       "pulseLag": "Typische Annahmedauer",
-      "pulseLagSub": "{{contractors}} Handwerker, {{samples}} Angebote"
+      "pulseLagSub": "{{contractors}} Handwerker, {{samples}} Angebote",
+      "pulseSupply": "Lieferkette",
+      "daysShort": "T"
     },
     "ai": {
       "automationsTitle": "Automatisierungen",

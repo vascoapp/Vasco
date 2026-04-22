@@ -273,6 +273,7 @@
     "pipeline": "Pipeline",
     "calendar": "Calendar",
     "timeTracking": "Time tracking",
+    "cohortCostBaseline": "Cohort typical: {{ratio}}% of quote · {{overrun}}% jobs overrun",
     "newJob": "New job",
     "noJobs": "No jobs yet",
     "noJobsDesc": "Create your first job to get started",
@@ -1638,7 +1639,9 @@
       "pulseRisk": "Overdue rate",
       "pulseRiskSub": "~{{reminders}} reminders avg",
       "pulseLag": "Typical accept lag",
-      "pulseLagSub": "{{contractors}} contractors, {{samples}} quotes"
+      "pulseLagSub": "{{contractors}} contractors, {{samples}} quotes",
+      "pulseSupply": "Supply chain",
+      "daysShort": "d"
     },
     "ai": {
       "automationsTitle": "Automations",

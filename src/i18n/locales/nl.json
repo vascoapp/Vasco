@@ -273,6 +273,7 @@
     "pipeline": "Pipeline",
     "calendar": "Kalender",
     "timeTracking": "Tijdregistratie",
+    "cohortCostBaseline": "Cohort gemiddelde: {{ratio}}% van offerte · {{overrun}}% overschrijdt",
     "newJob": "Nieuwe klus",
     "noJobs": "Nog geen klussen",
     "noJobsDesc": "Maak je eerste klus aan om te beginnen",
@@ -1638,7 +1639,9 @@
       "pulseRisk": "Te laat betaalde facturen",
       "pulseRiskSub": "~{{reminders}} herinneringen gemiddeld",
       "pulseLag": "Typische acceptatietijd",
-      "pulseLagSub": "{{contractors}} vakmannen, {{samples}} offertes"
+      "pulseLagSub": "{{contractors}} vakmannen, {{samples}} offertes",
+      "pulseSupply": "Leveringsketen",
+      "daysShort": "d"
     },
     "ai": {
       "automationsTitle": "Automations",

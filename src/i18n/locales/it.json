@@ -273,6 +273,7 @@
     "pipeline": "Pipeline",
     "calendar": "Calendario",
     "timeTracking": "Registrazione ore",
+    "cohortCostBaseline": "Coorte tipica: {{ratio}}% del preventivo · {{overrun}}% sforano",
     "newJob": "Nuovo cantiere",
     "noJobs": "Nessun cantiere",
     "noJobsDesc": "Crea il tuo primo cantiere per iniziare",
@@ -1638,7 +1639,9 @@
       "pulseRisk": "Tasso di mora",
       "pulseRiskSub": "~{{reminders}} solleciti in media",
       "pulseLag": "Tempo tipico di accettazione",
-      "pulseLagSub": "{{contractors}} artigiani, {{samples}} preventivi"
+      "pulseLagSub": "{{contractors}} artigiani, {{samples}} preventivi",
+      "pulseSupply": "Catena di fornitura",
+      "daysShort": "g"
     },
     "ai": {
       "automationsTitle": "Automazioni",

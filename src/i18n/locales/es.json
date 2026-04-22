@@ -273,6 +273,7 @@
     "pipeline": "Pipeline",
     "calendar": "Calendario",
     "timeTracking": "Control horario",
+    "cohortCostBaseline": "Cohorte típica: {{ratio}}% del presupuesto · {{overrun}}% se pasan",
     "newJob": "Nueva obra",
     "noJobs": "Sin obras",
     "noJobsDesc": "Crea tu primera obra para empezar",
@@ -1638,7 +1639,9 @@
       "pulseRisk": "Tasa de impagos",
       "pulseRiskSub": "~{{reminders}} recordatorios en promedio",
       "pulseLag": "Tiempo típico de aceptación",
-      "pulseLagSub": "{{contractors}} contratistas, {{samples}} presupuestos"
+      "pulseLagSub": "{{contractors}} contratistas, {{samples}} presupuestos",
+      "pulseSupply": "Cadena de suministro",
+      "daysShort": "d"
     },
     "ai": {
       "automationsTitle": "Automatizaciones",

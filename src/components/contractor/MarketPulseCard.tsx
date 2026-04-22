@@ -21,6 +21,7 @@ import { DKLabel } from '../shared/DKLabel';
 import { getMarginDrift, type MarginDrift } from '../../services/marginDriftService';
 import { getCohortOverdueRate, bandFor, type CohortCustomerRisk } from '../../services/customerRiskMoatService';
 import { getCohortAcceptLag, type CohortAcceptLag } from '../../services/quoteResponseLagMoatService';
+import { getSupplierLeadTimeDrift, severityFor as leadTimeSeverityFor, type LeadTimeDriftRow } from '../../services/supplierLeadTimeMoatService';
 
 interface Props {
   trade: string;
@@ -32,6 +33,7 @@ export function MarketPulseCard({ trade, country }: Props) {
   const [margin, setMargin] = useState<MarginDrift | null>(null);
   const [risk, setRisk] = useState<CohortCustomerRisk | null>(null);
   const [lag, setLag] = useState<CohortAcceptLag | null>(null);
+  const [leadTime, setLeadTime] = useState<LeadTimeDriftRow | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -39,11 +41,15 @@ export function MarketPulseCard({ trade, country }: Props) {
       getMarginDrift(trade, country),
       getCohortOverdueRate(country, null),
       getCohortAcceptLag(trade, country, null),
-    ]).then(([m, r, l]) => {
+      getSupplierLeadTimeDrift(trade, country),
+    ]).then(([m, r, l, supplyBundle]) => {
       if (cancelled) return;
       setMargin(m);
       setRisk(r);
       setLag(l);
+      // Surface only the top (largest-magnitude) supplier drift — matches
+      // how the RPC already sorts the result set.
+      setLeadTime(supplyBundle.rows[0] ?? null);
     });
     return () => { cancelled = true; };
   }, [trade, country]);
@@ -52,8 +58,9 @@ export function MarketPulseCard({ trade, country }: Props) {
   const showMargin = margin !== null; // RPC only returns when |drift| ≥ 2pp
   const showRisk = risk !== null && risk.overdueRate !== null && risk.contractorCount >= 5;
   const showLag = lag !== null && lag.medianHours !== null && lag.contractorCount >= 5;
+  const showLeadTime = leadTime !== null;
 
-  if (!showMargin && !showRisk && !showLag) return null;
+  if (!showMargin && !showRisk && !showLag && !showLeadTime) return null;
 
   return (
     <View style={s.card}>
@@ -75,7 +82,32 @@ export function MarketPulseCard({ trade, country }: Props) {
         {showMargin && <MarginRow drift={margin!} />}
         {showRisk && <RiskRow risk={risk!} />}
         {showLag && <LagRow lag={lag!} />}
+        {showLeadTime && <SupplyChainRow row={leadTime!} />}
       </View>
+    </View>
+  );
+}
+
+function SupplyChainRow({ row }: { row: LeadTimeDriftRow }) {
+  const { t } = useTranslation();
+  const up = row.driftDays >= 0;
+  const severe = leadTimeSeverityFor(row.driftDays) === 'high';
+  const tone = up
+    ? (severe ? DK.colors.danger : DK.colors.accent)
+    : DK.colors.success;
+  return (
+    <View style={s.row}>
+      <View style={{ flex: 1 }}>
+        <Text style={s.rowTitle} numberOfLines={1}>
+          {t('dk.money.pulseSupply', 'Supply chain')}
+        </Text>
+        <Text style={s.rowSub} numberOfLines={1}>
+          {row.supplierName} · {Math.round(row.baselineDays)}{t('dk.money.daysShort', 'd')} → {Math.round(row.recentDays)}{t('dk.money.daysShort', 'd')}
+        </Text>
+      </View>
+      <Text style={[s.rowDelta, { color: tone }]}>
+        {up ? '+' : ''}{row.driftDays.toFixed(0)}{t('dk.money.daysShort', 'd')}
+      </Text>
     </View>
   );
 }
