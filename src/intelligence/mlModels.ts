@@ -16,6 +16,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../i18n/i18n';
 import { getQuoteWinModel, scoreQuoteWin } from '../services/quoteWinModelService';
+import { getCohortDso } from '../services/paymentTimingMoatService';
 
 const MODEL_CACHE_KEY = '@vasco_ml_models';
 
@@ -228,13 +229,29 @@ export async function predictPaymentTiming(params: {
   customerId?: string;
   amount: number;
   dayOfWeek?: number; // 0=Sun, 1=Mon, etc.
+  country?: string;         // R195: enables cohort DSO fallback
+  customerType?: string;
 }): Promise<PaymentPrediction> {
   const profile = await loadProfile();
   const learned = await getLearnedCoefficients();
   const { invoicePatterns } = profile;
 
-  // Base DSO — use learned personal DSO if available
-  const baseDSO = learned?.personalBaseDSO ?? (invoicePatterns.avgDSO || 21);
+  // R195: when the contractor has no personal invoice history, try the
+  // cohort DSO for their (country, customer_type) before falling back to
+  // the hardcoded 21-day default. Personal data always wins when present.
+  let cohortDSO: number | null = null;
+  if (!learned?.personalBaseDSO && !(invoicePatterns.avgDSO > 0) && params.country) {
+    try {
+      const cohort = await getCohortDso(params.country, params.customerType ?? null);
+      if (cohort?.medianDso && cohort.sampleSize > 0) cohortDSO = cohort.medianDso;
+    } catch {}
+  }
+
+  // Base DSO — personal learned > personal avg > cohort median > 21-day default
+  const baseDSO = learned?.personalBaseDSO
+    ?? (invoicePatterns.avgDSO > 0 ? invoicePatterns.avgDSO : null)
+    ?? cohortDSO
+    ?? 21;
 
   // Amount factor: larger invoices take longer
   const amountFactor = params.amount <= 500 ? 0.85
