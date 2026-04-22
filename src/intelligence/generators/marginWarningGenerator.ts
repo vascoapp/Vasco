@@ -10,9 +10,16 @@ import { useAppState } from '../../state/AppState';
 import { recordMetricSnapshot } from '../learningStorage';
 import { logPrediction } from '../calibration';
 import { gt } from '../generatorTranslations';
+import { useMarginDrift } from '../../services/marginDriftService';
 
 export function useMarginWarningInsight(ctx: GeneratorContext): ScoredInsight | null {
-  const { jobs, jobMaterials, quotes } = useAppState();
+  const { jobs, jobMaterials, quotes, businessProfile } = useAppState();
+  // R217: cohort margin drift — when the cohort is compressing, a low
+  // margin on one job is a trade-wide pattern, not just this job's issue.
+  const marginDrift = useMarginDrift(
+    businessProfile?.trade ?? 'general',
+    businessProfile?.country ?? 'NL',
+  );
 
   // Find jobs with both a quoted amount and materials
   const jobsWithCosts = jobs.filter(j => {
@@ -85,10 +92,14 @@ export function useMarginWarningInsight(ctx: GeneratorContext): ScoredInsight | 
     rawScore: 0,
     reasoning: {
       observation: `Klus "${worstJob.title}" heeft een projectmarge van ${marginPct}%`,
-      evidence: `Materiaalkosten: €${worstMaterialCost.toLocaleString('nl-NL')}, offerte: €${worstQuoted.toLocaleString('nl-NL')}`,
+      evidence: marginDrift && marginDrift.driftPp < -2
+        ? `Materiaalkosten: €${worstMaterialCost.toLocaleString('nl-NL')}, offerte: €${worstQuoted.toLocaleString('nl-NL')}. Cohort marge zakte ${marginDrift.driftPp.toFixed(1)}pp recent (${marginDrift.recentContractorCount} vakmannen) — markt comprimeert.`
+        : `Materiaalkosten: €${worstMaterialCost.toLocaleString('nl-NL')}, offerte: €${worstQuoted.toLocaleString('nl-NL')}`,
       implication: isNegative
         ? 'Deze klus kost meer dan de offerte — directe actie nodig'
-        : 'Bij onverwachte kosten draait deze klus verlies',
+        : marginDrift && marginDrift.driftPp < -2
+          ? 'Bij onverwachte kosten draait deze klus verlies. Cohort comprimeert ook — trade-wide patroon, niet alleen deze klus.'
+          : 'Bij onverwachte kosten draait deze klus verlies',
       suggestion: isNegative
         ? 'Bespreek meerwerk met de klant of zoek goedkopere materialen'
         : 'Houd materiaalkosten scherp in de gaten en voorkom scope creep',

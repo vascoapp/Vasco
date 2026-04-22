@@ -8,6 +8,8 @@ import { logPrediction } from '../calibration';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { detectAnomaly, getSeasonalMultiplier } from '../adaptiveThresholds';
 import { gt } from '../generatorTranslations';
+import { useAppState } from '../../state/AppState';
+import { useMarginDrift } from '../../services/marginDriftService';
 
 export const marginDriftGenerator: InsightGenerator = {
   id: 'margin-drift',
@@ -20,6 +22,13 @@ export const marginDriftGenerator: InsightGenerator = {
 
 export function useMarginDriftInsight(ctx: GeneratorContext): ScoredInsight | null {
   const costSummary = useJobCostSummary();
+  const { businessProfile } = useAppState();
+  // R217: cohort margin drift — if the market is also compressing,
+  // evidence distinguishes internal issues from trade-wide pressure.
+  const cohortDrift = useMarginDrift(
+    businessProfile?.trade ?? 'general',
+    businessProfile?.country ?? 'NL',
+  );
 
   // Record margin leakage for trend tracking
   recordMetricSnapshot('marginLeakage', costSummary.totalMarginLeakage);
@@ -78,7 +87,7 @@ export function useMarginDriftInsight(ctx: GeneratorContext): ScoredInsight | nu
       observation: isNegative
         ? `Marges lopen €${amount.toLocaleString('nl-NL')} achter op begroting`
         : `Marges lopen €${amount.toLocaleString('nl-NL')} voor op begroting`,
-      evidence: `Op basis van ${jobCount} actieve klussen deze maand${anomaly.isAnomaly ? ` — anomalie gedetecteerd (${anomaly.zScore.toFixed(1)}σ)` : ''}${(() => { const t = getTrend(ctx.profile, 'marginLeakage', 4); return t && t.slope !== 0 ? ` — marge-trend: ${t.direction}` : ''; })()}`,
+      evidence: `Op basis van ${jobCount} actieve klussen deze maand${anomaly.isAnomaly ? ` — anomalie gedetecteerd (${anomaly.zScore.toFixed(1)}σ)` : ''}${(() => { const t = getTrend(ctx.profile, 'marginLeakage', 4); return t && t.slope !== 0 ? ` — marge-trend: ${t.direction}` : ''; })()}${cohortDrift && Math.abs(cohortDrift.driftPp) >= 2 ? `. Cohort margedrift: ${cohortDrift.driftPp >= 0 ? '+' : ''}${cohortDrift.driftPp.toFixed(1)}pp (${cohortDrift.recentContractorCount} vakmannen).` : ''}`,
       implication: isNegative
         ? `Bij gelijkblijvend tempo verlies je €${(amount * 12).toLocaleString('nl-NL')}/jaar`
         : `Op jaarbasis is dit +€${(amount * 12).toLocaleString('nl-NL')} extra winst`,

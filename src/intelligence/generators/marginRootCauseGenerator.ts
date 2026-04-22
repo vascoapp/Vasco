@@ -15,11 +15,20 @@ import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { logPrediction } from '../calibration';
 import { isAboveThreshold, getAdaptiveThreshold } from '../adaptiveThresholds';
 import { gt } from '../generatorTranslations';
+import { useAppState } from '../../state/AppState';
+import { useMarginDrift } from '../../services/marginDriftService';
 
 export function useMarginRootCauseInsight(ctx: GeneratorContext): ScoredInsight | null {
   const costSummary = useJobCostSummary();
   const labor = useLaborCosts();
   const estimation = useEstimationAccuracy();
+  const { businessProfile } = useAppState();
+  // R217: cohort margin drift — when trade-wide compression is present,
+  // the root cause analysis adds a 5th cause: market-wide margin pressure.
+  const marginDrift = useMarginDrift(
+    businessProfile?.trade ?? 'general',
+    businessProfile?.country ?? 'NL',
+  );
 
   // Record margin leakage snapshot
   recordMetricSnapshot('marginLeakage', costSummary.totalMarginLeakage);
@@ -115,8 +124,8 @@ export function useMarginRootCauseInsight(ctx: GeneratorContext): ScoredInsight 
     rawScore: 0,
     reasoning: {
       observation: `€${costSummary.totalMarginLeakage.toLocaleString('nl-NL')} marge-lek over recente klussen`,
-      evidence: `Oorzakenanalyse uit ${causes.length} bronnen: kostentracking, arbeidsanalyse, schattingsfeedback${(() => { const t = getTrend(ctx.profile, 'marginLeakage', 4); return t && t.slope !== 0 ? ` — trend: ${t.slope > 0 ? 'stijgend' : 'dalend'} (${t.direction})` : ''; })()}`,
-      implication: `${primaryCause.explanation}. Totaal verklaard: €${totalIdentified.toLocaleString('nl-NL')} van €${costSummary.totalMarginLeakage.toLocaleString('nl-NL')}`,
+      evidence: `Oorzakenanalyse uit ${causes.length} bronnen: kostentracking, arbeidsanalyse, schattingsfeedback${(() => { const t = getTrend(ctx.profile, 'marginLeakage', 4); return t && t.slope !== 0 ? ` — trend: ${t.slope > 0 ? 'stijgend' : 'dalend'} (${t.direction})` : ''; })()}${marginDrift && marginDrift.driftPp < -2 ? ` — cohort marge zakte ${marginDrift.driftPp.toFixed(1)}pp (markt comprimeert).` : ''}`,
+      implication: `${primaryCause.explanation}. Totaal verklaard: €${totalIdentified.toLocaleString('nl-NL')} van €${costSummary.totalMarginLeakage.toLocaleString('nl-NL')}${marginDrift && marginDrift.driftPp < -2 ? `. Cohort margedrift van ${marginDrift.driftPp.toFixed(1)}pp is een 5e oorzaak — marktdruk, niet alleen intern.` : ''}`,
       suggestion: primaryCause.id === 'estimation'
         ? 'Kalibreer je uurschattingen per klustype — de feedback-loop toont waar je consistent te laag schat'
         : primaryCause.id === 'idle'
