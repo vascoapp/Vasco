@@ -1619,7 +1619,10 @@
       "profit": "Bénéfice",
       "costs": "Coûts",
       "cashflow": "Trésorerie",
-      "topCustomers": "Meilleurs clients"
+      "topCustomers": "Meilleurs clients",
+      "materialDriftTitle": "Dérive des prix matériaux",
+      "materialDriftSub": "{{count}} alertes de la cohorte",
+      "marketWide": "marché entier"
     },
     "ai": {
       "automationsTitle": "Automatisations",

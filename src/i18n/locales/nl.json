@@ -1619,7 +1619,10 @@
       "profit": "Winst",
       "costs": "Kosten",
       "cashflow": "Cashflow",
-      "topCustomers": "Top klanten"
+      "topCustomers": "Top klanten",
+      "materialDriftTitle": "Materiaalprijs drift",
+      "materialDriftSub": "{{count}} meldingen uit het cohort",
+      "marketWide": "marktbreed"
     },
     "ai": {
       "automationsTitle": "Automations",

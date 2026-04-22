@@ -1619,7 +1619,10 @@
       "profit": "Beneficio",
       "costs": "Costes",
       "cashflow": "Flujo de caja",
-      "topCustomers": "Top clientes"
+      "topCustomers": "Top clientes",
+      "materialDriftTitle": "Variación de precios de material",
+      "materialDriftSub": "{{count}} alertas de la cohorte",
+      "marketWide": "todo el mercado"
     },
     "ai": {
       "automationsTitle": "Automatizaciones",

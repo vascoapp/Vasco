@@ -28,6 +28,7 @@ import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { Sparkline } from '../../src/components/shared/Sparkline';
 import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { CashFlowForecastCard } from '../../src/components/contractor/CashFlowForecastCard';
+import { MaterialDriftCard } from '../../src/components/contractor/MaterialDriftCard';
 import { useAIQueue } from '../../src/services/aiActionQueueService';
 import { useVascoGuidance } from '../../src/services/vascoGuidanceService';
 import { DKLabel } from '../../src/components/shared/DKLabel';
@@ -361,6 +362,13 @@ export default function GeldScreen() {
             <Ionicons name="chevron-forward" size={18} color={DK.colors.textMuted} />
           </Pressable>
         )}
+
+        {/* ─── MATERIAL DRIFT (R192) — cohort-observed supplier price moves ─── */}
+        <MaterialDriftCard
+          trade={businessProfile?.trade ?? 'general'}
+          country={businessProfile?.country ?? 'NL'}
+          onPress={() => router.push('/contractor/market-prices' as any)}
+        />
 
         {/* ─── CASHFLOW DEEP-DIVE ─── */}
         <SectionHeader title={t('dk.money.cashflow', 'Cashflow').toUpperCase()} />

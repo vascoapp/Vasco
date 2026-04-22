@@ -63,6 +63,17 @@ Second migration `20260421_moat_enrichment.sql` deepens the signal without any r
 
 **Schema-stability audit**: zero renames, zero drops, zero type changes, zero removed constraints. Existing `updateQuote({ status: 'rejected' })` calls still work without passing reason. The old `recordPricingOutcome({ wasAccepted })` signature is still valid. Migration can be re-applied.
 
+### Moat — line-item hints, reverse loop, quote-win ML (R189–R191, 2026-04-21)
+- **R189** Per-line cohort edit-distribution rendered under each service row in `TieredQuoteBuilder` preview step. K-anonymity ≥5 + localized reason-code labels × 6 locales.
+- **R190** Reverse loop: `src/services/pricingMoatService.ts` `applyCohortAdjustments` applies cohort-typical qty/price deltas to AI-baseline lines BEFORE the contractor sees them. ±50% outlier cap. Contractor calibration applied at HALF weight. Batch RPC `get_line_adjustments_batch` (additive migration `20260421_moat_reverse_loop.sql`). Green "Vasco tuned N of M lines from K cohort decisions" badge. 10/10 unit tests.
+- **R191** Cohort-trained logistic regression replaces heuristic-only `predictQuoteWin`. Migration `20260421_quote_win_model.sql` adds 3 RPCs (`get_quote_win_training_data`, `save_quote_win_model` SECURITY DEFINER, `get_quote_win_model`). Pure-JS LR in `src/services/quoteWinModelService.ts`: 5 features, 250-epoch gradient descent, L2=0.01, feature standardization. Opportunistic 7-day retrain, single-flight. Trained model wins when confidence ≥0.5; else heuristic. 10/10 unit tests.
+
+### Moat — material price drift (R192, 2026-04-22) — second moat dimension
+First non-pricing-per-se moat dimension — *supplier* signal instead of *quote* signal. Migration `20260422_material_drift.sql` adds RPC `get_material_drift(trade, country, recent_days=30, baseline_days=90, min_drift_pct=5.0)`: compares recent vs baseline window medians per (material, supplier) cell, emits drift_pct + baseline_price + recent_price + sample sizes + `is_market_wide` flag (true when ≥2 suppliers for the same material all drifted same direction, indicating a market shift vs a single-supplier anomaly). K-anonymity ≥3 recent observers per cell, baseline ≥3 samples.
+Client: `src/services/materialDriftService.ts` with 6h AsyncStorage cache, severity bucket (medium 5-11%, high ≥12%, abs-value for drops), `useMaterialDrift` hook + `getMaterialDrift` + `refresh`. New `src/components/contractor/MaterialDriftCard.tsx` DK-themed, hidden when no signal, top 3 alerts with severity tone (amber/red up, green down), tappable to `/contractor/market-prices`. Wired into `geld` tab between VAT-prep and cashflow. 3 new i18n keys × 6 locales. 14/14 unit tests. Combined moat suites: 34/34 pass.
+
+**Schema-stability audit (R192)**: one new RPC, zero table changes, zero column changes, zero renames. Re-runnable.
+
 ## 🔐 User must provide credentials
 - [ ] Run `npx eas init` after `eas login` — fills `expo.extra.eas.projectId` in `app.json`.
 - [ ] Create live Supabase project (or unpause current). Provide URL + anon key in `.env`.

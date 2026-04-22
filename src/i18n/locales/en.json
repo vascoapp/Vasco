@@ -1619,7 +1619,10 @@
       "profit": "Profit",
       "costs": "Costs",
       "cashflow": "Cashflow",
-      "topCustomers": "Top customers"
+      "topCustomers": "Top customers",
+      "materialDriftTitle": "Material price drift",
+      "materialDriftSub": "{{count}} alerts from the cohort",
+      "marketWide": "market-wide"
     },
     "ai": {
       "automationsTitle": "Automations",
