@@ -271,6 +271,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       setQuotes(q);
       setInvoices(inv);
       setBusinessProfile(bp);
+      // R210: once businessProfile.country is known, prime the cohort DSO
+      // so the DSO generator + collections insights see the real cohort
+      // median instead of the hardcoded 32-day industry average.
+      if (bp?.country) {
+        import('../services/collectionsAgentService')
+          .then(m => m.primeCohortIndustryAverage(bp.country as string))
+          .catch(() => {});
+      }
       setLineItems(li);
       setCustomers(cust);
       setJobs(j);

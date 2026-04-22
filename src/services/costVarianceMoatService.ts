@@ -6,6 +6,7 @@
 // quoted buffers comfortably cover actuals. Per (trade, country, job_type?).
 // =============================================================================
 
+import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
@@ -70,6 +71,24 @@ export async function getCohortCostVariance(
   } catch {
     return null;
   }
+}
+
+// Lightweight React hook for surfacing the cohort baseline inside the
+// sync intelligence generators (R210 wire-in).
+export function useCohortCostVariance(
+  trade: string,
+  country: string,
+  jobType?: string | null,
+) {
+  const [bundle, setBundle] = useState<CohortCostVariance | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    getCohortCostVariance(trade, country, jobType ?? null)
+      .then(b => { if (!cancelled) setBundle(b); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [trade, country, jobType]);
+  return bundle;
 }
 
 export const __internal = { CACHE_KEY, CACHE_TTL_MS, cacheKey };

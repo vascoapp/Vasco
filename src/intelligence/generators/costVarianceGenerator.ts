@@ -9,6 +9,7 @@
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import { gt } from '../generatorTranslations';
 import { useAppState } from '../../state/AppState';
+import { useCohortCostVariance } from '../../services/costVarianceMoatService';
 
 export const costVarianceGenerator: InsightGenerator = {
   id: 'cost-variance',
@@ -22,7 +23,13 @@ export const costVarianceGenerator: InsightGenerator = {
 const OVERRUN_PCT = 0.2;
 
 export function useCostVarianceInsight(ctx: GeneratorContext): ScoredInsight | null {
-  const { jobs } = useAppState();
+  const { jobs, businessProfile } = useAppState();
+  // R210: cohort baseline — when available, use it to contextualize the
+  // overrun as "vs cohort" rather than just "vs your own quote".
+  const cohortBaseline = useCohortCostVariance(
+    businessProfile?.trade ?? 'general',
+    businessProfile?.country ?? 'NL',
+  );
 
   const problem = jobs
     .filter((j: any) => (j.status === 'completed' || j.status === 'in-progress') && (j.quotedAmount ?? 0) > 0)
@@ -60,8 +67,12 @@ export function useCostVarianceInsight(ctx: GeneratorContext): ScoredInsight | n
     rawScore: 0,
     reasoning: {
       observation: `Actual cost of "${worst.j.title}" is ${overrunPct}% over the quoted amount`,
-      evidence: `Materials + labour summed against quotedAmount`,
-      implication: `If this pattern repeats across 5 similar jobs you'd lose €${diff * 5} next quarter`,
+      evidence: cohortBaseline && cohortBaseline.medianRatio !== null && cohortBaseline.contractorCount >= 5
+        ? `Materials + labour summed against quotedAmount. Cohort median lands at ${Math.round(cohortBaseline.medianRatio * 100)}% of quote (${Math.round((cohortBaseline.overrunRate ?? 0) * 100)}% of cohort jobs overrun).`
+        : `Materials + labour summed against quotedAmount`,
+      implication: cohortBaseline && cohortBaseline.medianRatio !== null && cohortBaseline.medianRatio < 1 + (worst.overrun)
+        ? `Your overrun is worse than the cohort median — not just the quote error, also ~${Math.round((worst.overrun - (cohortBaseline.medianRatio - 1)) * 100)}pp above typical.`
+        : `If this pattern repeats across 5 similar jobs you'd lose €${diff * 5} next quarter`,
       suggestion: 'Bump your quote template for this trade by 10-15% or add a contingency line',
     },
     dataPoints: problem.length,

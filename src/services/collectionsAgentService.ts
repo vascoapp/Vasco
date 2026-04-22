@@ -67,6 +67,11 @@ const MOCK_DSO_METRICS: DSOMetrics = {
   industryAverage: 32,
 };
 
+// R210: industryAverage is overridden from the cohort (R195 `get_cohort_dso`)
+// when available, so the DSO generator and related insights compare the
+// contractor against the real cohort median instead of a static 32.
+let cohortIndustryAverage: number | null = null;
+
 const MOCK_DUNNING_SEQUENCES: DunningSequence[] = [
   {
     id: 'dun-001',
@@ -223,7 +228,11 @@ class CollectionsAgentService {
   }
 
   getDSOMetrics(): DSOMetrics {
-    return MOCK_DSO_METRICS;
+    // R210: fold the cohort industry average in when primed.
+    return {
+      ...MOCK_DSO_METRICS,
+      industryAverage: cohortIndustryAverage ?? MOCK_DSO_METRICS.industryAverage,
+    };
   }
 
   getDunningSequences(): DunningSequence[] {
@@ -297,4 +306,29 @@ export function useCollectionsAgent(): {
       dso: service.getDSOMetrics(),
     };
   }, []);
+}
+
+// ---------------------------------------------------------------------------
+// R210 — cohort-backed industry average
+// ---------------------------------------------------------------------------
+
+/**
+ * Prime the cohort industry average so `getDSOMetrics().industryAverage`
+ * reflects the R195 `get_cohort_dso` median instead of the hardcoded 32.
+ * Safe to call repeatedly (no-op when cohort is thin). Intended to be
+ * called from AppState bootstrap once `businessProfile.country` is known.
+ */
+export async function primeCohortIndustryAverage(
+  country: string,
+  customerType?: string | null,
+): Promise<void> {
+  try {
+    const mod = await import('./paymentTimingMoatService');
+    const cohort = await mod.getCohortDso(country, customerType ?? null);
+    if (cohort?.medianDso && cohort.sampleSize > 0) {
+      cohortIndustryAverage = cohort.medianDso;
+    }
+  } catch {
+    // silent — heuristic default remains in effect
+  }
 }
