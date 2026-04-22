@@ -12,6 +12,7 @@
     "contrast:check": "node scripts/contrast-audit.js",
     "i18n:audit": "node scripts/i18n-audit.js",
     "smoke:golden": "node scripts/golden-path-smoke.mjs",
+    "smoke:endpoints": "node scripts/endpoint-health.mjs",
     "typecheck": "tsc --noEmit",
     "typecheck:app": "tsc --noEmit && echo done",
     "supabase:types": "supabase gen types typescript --linked > src/types/supabase.ts",

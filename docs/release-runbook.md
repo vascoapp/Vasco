@@ -103,6 +103,23 @@ npm test                               # full jest — all suites green (259+ te
 npm run i18n:audit                     # all 6 locales aligned; exits non-zero if gaps
 ```
 
+## 4c. Endpoint-health check (run after every deploy)
+
+Asserts 2xx / allowed-4xx on every Edge Function + representative
+RLS-protected reads + a couple of moat RPCs. Exit 1 on any 5xx or
+unexpected status. Needs a real user JWT.
+
+```bash
+SUPABASE_URL=https://xxx.supabase.co \
+SUPABASE_ANON_KEY=eyJ... \
+TEST_USER_JWT=$(supabase auth ... )        # or grab from the app
+npm run smoke:endpoints
+```
+
+Skips the three service-role / signed-webhook endpoints by default
+(mollie-webhook, stripe-webhook, weekly-digest, drain-account-deletions).
+Override via `SKIP_FUNCTIONS=name1,name2`.
+
 ## 5. Preview build (internal QA)
 
 ```bash
