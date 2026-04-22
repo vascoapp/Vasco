@@ -33,6 +33,17 @@ export type VatClassNL =
   | 'rubriek_4a'   // Intra-EU acquisitions
   | 'rubriek_5b';  // Input VAT (expenses)
 
+// R221 — DE (Umsatzsteuer-Voranmeldung / UStVA). Kennziffern are the German
+// tax form's line codes — these map 1:1 to the ELSTER XML fields.
+export type VatRateDE = 19 | 7 | 0;
+export type VatClassDE =
+  | 'kz_81'   // Standard 19% — construction services, materials
+  | 'kz_86'   // Reduced 7% — rarely applicable to trades (e.g. prints)
+  | 'kz_35'   // Reverse charge §13b UStG (received)
+  | 'kz_41'   // Intra-community supplies tax-free (§4 Nr. 1b)
+  | 'kz_43'   // Exports outside EU
+  | 'kz_66';  // Input VAT (Vorsteuer) from other businesses
+
 export interface VatLine {
   id: string;
   sourceType: 'invoice_sent' | 'expense_paid';
@@ -41,21 +52,26 @@ export interface VatLine {
   date: string;
   netAmount: number;           // excl VAT
   vatAmount: number;
-  vatRate: VatRateNL;
-  classification: VatClassNL;
+  vatRate: VatRateNL | VatRateDE;
+  classification: VatClassNL | VatClassDE;
   confidence: number;           // 0-1
   warnings: string[];
 }
 
+// Common draft shape across countries; country-specific rollups are stored
+// under the `rollups` map keyed by classification (`rubriek_*` for NL,
+// `kz_*` for DE). Old code paths that read e.g. draft.rubriek_1a still work
+// via the legacy NL-flat accessors below.
 export interface VatReturnDraft {
-  country: 'NL';
+  country: 'NL' | 'DE';
   period: string;               // e.g. "2026-Q1"
   periodStart: string;
   periodEnd: string;
   currency: 'EUR';
   lines: VatLine[];
 
-  // Roll-ups per BTW return section
+  // Flat per-class rollups (NL legacy shape kept for backwards compat on NL;
+  // on DE these are populated with 0/0 and the DE rollups live under `rollups`).
   rubriek_1a: { net: number; vat: number };
   rubriek_1b: { net: number; vat: number };
   rubriek_1c: { net: number; vat: number };
@@ -64,6 +80,10 @@ export interface VatReturnDraft {
   rubriek_3b: { net: number; vat: number };
   rubriek_4a: { net: number; vat: number };
   rubriek_5b: { net: number; vat: number };
+
+  // R221: country-agnostic rollup map. For NL this duplicates the flat fields;
+  // for DE it holds the `kz_*` buckets.
+  rollups: Record<string, { net: number; vat: number }>;
 
   totalOutputVat: number;       // what we owe
   totalInputVat: number;        // what we reclaim
@@ -77,7 +97,7 @@ export interface VatReturnDraft {
 }
 
 export interface VatPrepInput {
-  country: 'NL';
+  country: 'NL' | 'DE';
   periodStart: string;
   periodEnd: string;
   invoices: Invoice[];
@@ -128,6 +148,63 @@ function classifyInvoice(invoice: Invoice): { classification: VatClassNL; rate: 
   return { classification, rate, confidence, warnings };
 }
 
+/**
+ * DE classifier (R221). Default 19% standard rate (KZ 81). Flags:
+ *   - 7% reduced (KZ 86) — very rare for trade services, high review cost
+ *   - §13b reverse charge (KZ 35) — common in B2B construction subcontract
+ *   - Intra-community supplies tax-free (KZ 41)
+ *   - Exports outside EU (KZ 43)
+ */
+function classifyInvoiceDE(invoice: Invoice): { classification: VatClassDE; rate: VatRateDE; confidence: number; warnings: string[] } {
+  const warnings: string[] = [];
+  let classification: VatClassDE = 'kz_81';
+  let rate: VatRateDE = 19;
+  let confidence = 0.9;
+
+  const label = `${invoice.job ?? ''} ${invoice.customer ?? ''} ${(invoice as any).description ?? ''}`.toLowerCase();
+
+  if (/§13b|reverse.?charge|reverse ?proxy|nettorechnung|steuerschuldn?erschaft/.test(label)) {
+    classification = 'kz_35';
+    rate = 0;
+    confidence = 0.7;
+    warnings.push('§13b UStG — USt-IdNr. des Kunden prüfen');
+  } else if (/innergemein|intra.?EU|VAT reverse/.test(label)) {
+    classification = 'kz_41';
+    rate = 0;
+    confidence = 0.65;
+    warnings.push('Innergemeinschaftliche Lieferung — Umsatzsteuer-Nummer Empfänger prüfen');
+  } else if (/export|drittland/.test(label)) {
+    classification = 'kz_43';
+    rate = 0;
+    confidence = 0.7;
+  } else if (/(druck|zeitschrift|buch|hotelübernachtung|ermäßigt)/.test(label)) {
+    classification = 'kz_86';
+    rate = 7;
+    confidence = 0.55;
+    warnings.push('7%-Satz ist für Bauleistungen selten — manuell prüfen');
+  }
+
+  return { classification, rate, confidence, warnings };
+}
+
+function classifyExpenseDE(exp: VatPrepInput['expenses'][number]): { classification: VatClassDE; rate: VatRateDE; confidence: number; warnings: string[] } {
+  const warnings: string[] = [];
+  const label = `${exp.description ?? ''} ${exp.category ?? ''}`.toLowerCase();
+  let rate: VatRateDE = 19;
+  let confidence = 0.9;
+  if (exp.vatRate === 7 || exp.vatRate === 0) {
+    rate = exp.vatRate as VatRateDE;
+    confidence = 0.75;
+  }
+  if (rate === 7) warnings.push('7%-Vorsteuer ist selten bei Baubedarf — Beleg prüfen');
+  if (/versicherung|bankgebühr|miete \(umsatzsteuerfrei\)|rentenversicherung/.test(label)) {
+    rate = 0;
+    confidence = 0.6;
+    warnings.push('Wahrscheinlich umsatzsteuerfrei — kein Vorsteuerabzug');
+  }
+  return { classification: 'kz_66', rate, confidence, warnings };
+}
+
 function classifyExpense(exp: VatPrepInput['expenses'][number]): { classification: VatClassNL; rate: VatRateNL; confidence: number; warnings: string[] } {
   const warnings: string[] = [];
   const label = `${exp.description ?? ''} ${exp.category ?? ''}`.toLowerCase();
@@ -152,9 +229,10 @@ function classifyExpense(exp: VatPrepInput['expenses'][number]): { classificatio
 // ─── Main prep function ─────────────────────────────────────────────────────
 
 export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
-  if (input.country !== 'NL') {
+  if (input.country !== 'NL' && input.country !== 'DE') {
     throw new Error(`VAT prep: country ${input.country} not yet supported`);
   }
+  const isDE = input.country === 'DE';
 
   const lines: VatLine[] = [];
   const periodStartMs = new Date(input.periodStart).getTime();
@@ -172,7 +250,8 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
     if (inv.status === 'draft') continue;
     const gross = inv.amount ?? 0;
     if (gross <= 0) continue;
-    const { classification, rate, confidence, warnings } = classifyInvoice(inv);
+    const classified = isDE ? classifyInvoiceDE(inv) : classifyInvoice(inv);
+    const { classification, rate, confidence, warnings } = classified;
     const net = rate > 0 ? gross / (1 + rate / 100) : gross;
     const vat = gross - net;
     lines.push({
@@ -195,7 +274,8 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
     if (!inPeriod(exp.date)) continue;
     const gross = exp.amount ?? 0;
     if (gross <= 0) continue;
-    const { classification, rate, confidence, warnings } = classifyExpense(exp);
+    const classifiedExp = isDE ? classifyExpenseDE(exp) : classifyExpense(exp);
+    const { classification, rate, confidence, warnings } = classifiedExp;
     const net = rate > 0 ? gross / (1 + rate / 100) : gross;
     const vat = gross - net;
     lines.push({
@@ -213,35 +293,44 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
     });
   }
 
-  // Rollups
-  const bucket = (k: VatClassNL) => ({ net: 0, vat: 0 });
-  const rollups: Record<VatClassNL, { net: number; vat: number }> = {
-    rubriek_1a: bucket('rubriek_1a'),
-    rubriek_1b: bucket('rubriek_1b'),
-    rubriek_1c: bucket('rubriek_1c'),
-    rubriek_2a: bucket('rubriek_2a'),
-    rubriek_3a: bucket('rubriek_3a'),
-    rubriek_3b: bucket('rubriek_3b'),
-    rubriek_4a: bucket('rubriek_4a'),
-    rubriek_5b: bucket('rubriek_5b'),
+  // Rollups — country-agnostic map, keyed by classification string.
+  const rollups: Record<string, { net: number; vat: number }> = {
+    // NL buckets always present (zero for DE drafts — makes JSON shape stable).
+    rubriek_1a: { net: 0, vat: 0 },
+    rubriek_1b: { net: 0, vat: 0 },
+    rubriek_1c: { net: 0, vat: 0 },
+    rubriek_2a: { net: 0, vat: 0 },
+    rubriek_3a: { net: 0, vat: 0 },
+    rubriek_3b: { net: 0, vat: 0 },
+    rubriek_4a: { net: 0, vat: 0 },
+    rubriek_5b: { net: 0, vat: 0 },
+    // DE buckets
+    kz_81: { net: 0, vat: 0 },
+    kz_86: { net: 0, vat: 0 },
+    kz_35: { net: 0, vat: 0 },
+    kz_41: { net: 0, vat: 0 },
+    kz_43: { net: 0, vat: 0 },
+    kz_66: { net: 0, vat: 0 },
   };
   for (const l of lines) {
-    rollups[l.classification].net += l.netAmount;
-    rollups[l.classification].vat += l.vatAmount;
+    const k = l.classification as string;
+    if (!rollups[k]) rollups[k] = { net: 0, vat: 0 };
+    rollups[k].net += l.netAmount;
+    rollups[k].vat += l.vatAmount;
   }
-  // Round rollups
-  for (const k of Object.keys(rollups) as VatClassNL[]) {
+  for (const k of Object.keys(rollups)) {
     rollups[k] = {
       net: Math.round(rollups[k].net * 100) / 100,
       vat: Math.round(rollups[k].vat * 100) / 100,
     };
   }
 
-  const totalOutputVat =
-    rollups.rubriek_1a.vat + rollups.rubriek_1b.vat + rollups.rubriek_1c.vat
-    + rollups.rubriek_2a.vat + rollups.rubriek_3a.vat + rollups.rubriek_3b.vat
-    + rollups.rubriek_4a.vat;
-  const totalInputVat = rollups.rubriek_5b.vat;
+  const totalOutputVat = isDE
+    ? (rollups.kz_81.vat + rollups.kz_86.vat + rollups.kz_41.vat + rollups.kz_43.vat)
+    : (rollups.rubriek_1a.vat + rollups.rubriek_1b.vat + rollups.rubriek_1c.vat
+       + rollups.rubriek_2a.vat + rollups.rubriek_3a.vat + rollups.rubriek_3b.vat
+       + rollups.rubriek_4a.vat);
+  const totalInputVat = isDE ? rollups.kz_66.vat : rollups.rubriek_5b.vat;
   const netPayable = Math.round((totalOutputVat - totalInputVat) * 100) / 100;
 
   // YoY variance alert
@@ -262,13 +351,21 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
   }
 
   return {
-    country: 'NL',
+    country: input.country,
     period: periodLabel(input.periodStart),
     periodStart: input.periodStart,
     periodEnd: input.periodEnd,
     currency: 'EUR',
     lines,
-    ...rollups,
+    rubriek_1a: rollups.rubriek_1a,
+    rubriek_1b: rollups.rubriek_1b,
+    rubriek_1c: rollups.rubriek_1c,
+    rubriek_2a: rollups.rubriek_2a,
+    rubriek_3a: rollups.rubriek_3a,
+    rubriek_3b: rollups.rubriek_3b,
+    rubriek_4a: rollups.rubriek_4a,
+    rubriek_5b: rollups.rubriek_5b,
+    rollups,
     totalOutputVat: Math.round(totalOutputVat * 100) / 100,
     totalInputVat: Math.round(totalInputVat * 100) / 100,
     netPayable,
@@ -312,3 +409,9 @@ export function previousBtwPeriod(now: Date = new Date()): { periodStart: string
     periodEnd: end.toISOString().slice(0, 10),
   };
 }
+
+// R221 — DE UStVA uses quarterly filing by default (monthly for high-revenue
+// firms). Default cadence matches NL BTW; helpers are thin aliases so the
+// screen code can pick the right pair by country.
+export const currentUstvaPeriod = currentBtwPeriod;
+export const previousUstvaPeriod = previousBtwPeriod;

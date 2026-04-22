@@ -115,15 +115,83 @@ describe('prepareVatReturn — NL BTW', () => {
     expect(draft.warnings.some((w) => w.includes('wijkt'))).toBe(true);
   });
 
-  it('throws for non-NL countries (not yet supported)', () => {
+  it('throws for unsupported countries (FR/ES/IT/UK)', () => {
     const input: VatPrepInput = {
-      country: 'DE' as any,
+      country: 'FR' as any,
       periodStart: '2026-01-01',
       periodEnd: '2026-03-31',
       invoices: [],
       expenses: [],
     };
     expect(() => prepareVatReturn(input)).toThrow(/not yet supported/);
+  });
+});
+
+// R221 — DE UStVA support
+describe('prepareVatReturn — DE UStVA', () => {
+  it('classifies a standard 19% DE invoice into kz_81', () => {
+    const draft = prepareVatReturn({
+      country: 'DE',
+      periodStart: '2026-01-01',
+      periodEnd: '2026-03-31',
+      invoices: [
+        { id: 'inv-1', customer: 'Fam. Müller', job: 'Badsanierung', amount: 1190, status: 'sent', sentAt: '2026-02-15', lastUpdated: '2026-02-15', dueInDays: 14 } as any,
+      ],
+      expenses: [],
+    });
+    expect(draft.country).toBe('DE');
+    expect(draft.lines).toHaveLength(1);
+    // 1190 gross @ 19% → 1000 net + 190 VAT
+    expect(draft.lines[0].netAmount).toBeCloseTo(1000, 2);
+    expect(draft.lines[0].vatAmount).toBeCloseTo(190, 2);
+    expect(draft.lines[0].classification).toBe('kz_81');
+    expect(draft.rollups.kz_81.vat).toBeCloseTo(190, 2);
+    expect(draft.totalOutputVat).toBeCloseTo(190, 2);
+  });
+
+  it('flags §13b reverse-charge as kz_35 with low confidence', () => {
+    const draft = prepareVatReturn({
+      country: 'DE',
+      periodStart: '2026-01-01',
+      periodEnd: '2026-03-31',
+      invoices: [
+        { id: 'inv-2', customer: 'BauGmbH', job: 'Subunternehmer Leistung §13b Nettorechnung', amount: 5000, status: 'sent', sentAt: '2026-01-20', lastUpdated: '2026-01-20', dueInDays: 30 } as any,
+      ],
+      expenses: [],
+    });
+    expect(draft.lines[0].classification).toBe('kz_35');
+    expect(draft.lines[0].vatAmount).toBe(0);
+    expect(draft.lines[0].confidence).toBeLessThan(0.75);
+    expect(draft.rollups.kz_35.net).toBeCloseTo(5000, 2);
+  });
+
+  it('classifies German business expense with 19% vorsteuer into kz_66', () => {
+    const draft = prepareVatReturn({
+      country: 'DE',
+      periodStart: '2026-01-01',
+      periodEnd: '2026-03-31',
+      invoices: [],
+      expenses: [
+        { id: 'exp-1', description: 'Werkzeug Bauhaus', date: '2026-02-10', amount: 119, vatRate: 19 },
+      ],
+    });
+    expect(draft.lines[0].classification).toBe('kz_66');
+    expect(draft.lines[0].vatAmount).toBeCloseTo(19, 2);
+    expect(draft.totalInputVat).toBeCloseTo(19, 2);
+  });
+
+  it('netPayable = output minus input VAT on DE drafts', () => {
+    const draft = prepareVatReturn({
+      country: 'DE',
+      periodStart: '2026-01-01',
+      periodEnd: '2026-03-31',
+      invoices: [
+        { id: 'inv-3', customer: 'A', job: 'x', amount: 1190, status: 'sent', sentAt: '2026-02-01', lastUpdated: '', dueInDays: 0 } as any,
+      ],
+      expenses: [{ id: 'exp-2', description: 'Material', date: '2026-02-05', amount: 238, vatRate: 19 }],
+    });
+    // output 190, input 38 → netPayable 152
+    expect(draft.netPayable).toBeCloseTo(152, 2);
   });
 });
 

@@ -348,7 +348,7 @@ export default function GeldScreen() {
         )}
 
         {/* ─── BTW-AANGIFTE (NL only) ─── */}
-        {businessProfile?.country === 'NL' && (
+        {(businessProfile?.country === 'NL' || businessProfile?.country === 'DE') && (
           <Pressable
             onPress={() => router.push('/contractor/vat-prep' as any)}
             style={({ pressed }) => [s.vatCard, pressed && { opacity: 0.92 }]}

@@ -39,10 +39,14 @@ export default function VatPrepScreen() {
   const { expenses: rawExpenses } = useExpenses();
   const [periodChoice, setPeriodChoice] = useState<PeriodChoice>('previous');
 
+  // R221: country gate — NL BTW and DE UStVA both supported. Screen geld
+  // already gates entry by businessProfile.country so by the time we land
+  // here the contractor is in a supported jurisdiction.
+  const country: 'NL' | 'DE' = businessProfile?.country === 'DE' ? 'DE' : 'NL';
   const draft: VatReturnDraft = useMemo(() => {
     const bounds = periodChoice === 'current' ? currentBtwPeriod() : previousBtwPeriod();
     return prepareVatReturn({
-      country: 'NL',
+      country,
       periodStart: bounds.periodStart,
       periodEnd: bounds.periodEnd,
       invoices: invoices as any,
@@ -55,7 +59,7 @@ export default function VatPrepScreen() {
         category: e.category,
       })),
     });
-  }, [periodChoice, invoices, rawExpenses]);
+  }, [country, periodChoice, invoices, rawExpenses]);
 
   const lowConfLines = draft.lines.filter((l) => l.confidence < 0.75);
 
