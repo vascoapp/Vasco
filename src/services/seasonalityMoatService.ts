@@ -227,6 +227,24 @@ export function useQuoteSeasonal(trade: string, country: string) {
   return { bundle, loading };
 }
 
+export function useMaterialSeasonal(
+  trade: string,
+  country: string,
+  materialName?: string | null,
+) {
+  const [bundle, setBundle] = useState<MaterialSeasonalBundle | null>(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getMaterialSeasonalPattern(trade, country, materialName ?? null)
+      .then(b => { if (!cancelled) setBundle(b); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [trade, country, materialName]);
+  return { bundle, loading };
+}
+
 export const __internal = {
   CACHE_KEY_QUOTE,
   CACHE_KEY_MATERIAL,

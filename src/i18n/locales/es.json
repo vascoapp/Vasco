@@ -1630,7 +1630,8 @@
       "materialDriftTitle": "Variación de precios de material",
       "materialDriftSub": "{{count}} alertas de la cohorte",
       "marketWide": "todo el mercado",
-      "affectedQuotes": "{{count}} presupuestos abiertos"
+      "affectedQuotes": "{{count}} presupuestos abiertos",
+      "seasonalPeak": "temporada alta +{{pct}}%"
     },
     "ai": {
       "automationsTitle": "Automatizaciones",

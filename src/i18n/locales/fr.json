@@ -1630,7 +1630,8 @@
       "materialDriftTitle": "Dérive des prix matériaux",
       "materialDriftSub": "{{count}} alertes de la cohorte",
       "marketWide": "marché entier",
-      "affectedQuotes": "{{count}} devis ouverts"
+      "affectedQuotes": "{{count}} devis ouverts",
+      "seasonalPeak": "pleine saison +{{pct}}%"
     },
     "ai": {
       "automationsTitle": "Automatisations",

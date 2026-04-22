@@ -21,6 +21,10 @@ import {
   matchQuotesToDrift,
   type MaterialDriftRow,
 } from '../../services/materialDriftService';
+import {
+  useMaterialSeasonal,
+  materialPriceVsCheapestSeason,
+} from '../../services/seasonalityMoatService';
 import { useAppState } from '../../state/AppState';
 
 const TOP_N = 3;
@@ -36,6 +40,9 @@ export function MaterialDriftCard({ trade, country, onPress }: Props) {
   const router = useRouter();
   const { drift, loading } = useMaterialDrift(trade, country);
   const { quotes } = useAppState();
+  // R199: fetch material seasonal bundle once; per-row matching happens in
+  // DriftRow via materialPriceVsCheapestSeason.
+  const { bundle: seasonalBundle } = useMaterialSeasonal(trade, country, null);
 
   // R193: match each drift row to the contractor's open quotes so we can
   // show "affects N open quotes" beside the drift chip. Recompute only
@@ -88,11 +95,13 @@ export function MaterialDriftCard({ trade, country, onPress }: Props) {
       <View style={s.list}>
         {top.map(row => {
           const affectedIds = affectedMap[row.materialName] ?? [];
+          const seasonal = materialPriceVsCheapestSeason(seasonalBundle, row.materialName);
           return (
             <DriftRow
               key={`${row.materialName}|${row.supplierId}`}
               row={row}
               affectedCount={affectedIds.length}
+              seasonalPeakPct={seasonal && seasonal.pctAboveCheapest >= 8 ? seasonal.pctAboveCheapest : null}
               onRowPress={
                 affectedIds.length > 0
                   ? () => router.push(`/quotes/${affectedIds[0]}` as any)
@@ -109,10 +118,12 @@ export function MaterialDriftCard({ trade, country, onPress }: Props) {
 function DriftRow({
   row,
   affectedCount,
+  seasonalPeakPct,
   onRowPress,
 }: {
   row: MaterialDriftRow;
   affectedCount: number;
+  seasonalPeakPct: number | null;
   onRowPress?: () => void;
 }) {
   const { t } = useTranslation();
@@ -147,6 +158,9 @@ function DriftRow({
             : ''}
           {affectedCount > 0
             ? ` · ${t('dk.money.affectedQuotes', '{{count}} open quotes', { count: affectedCount })}`
+            : ''}
+          {seasonalPeakPct !== null
+            ? ` · ${t('dk.money.seasonalPeak', 'peak season +{{pct}}%', { pct: Math.round(seasonalPeakPct) })}`
             : ''}
         </Text>
       </View>

@@ -1630,7 +1630,8 @@
       "materialDriftTitle": "Materiaalprijs drift",
       "materialDriftSub": "{{count}} meldingen uit het cohort",
       "marketWide": "marktbreed",
-      "affectedQuotes": "{{count}} lopende offertes"
+      "affectedQuotes": "{{count}} lopende offertes",
+      "seasonalPeak": "hoogseizoen +{{pct}}%"
     },
     "ai": {
       "automationsTitle": "Automations",

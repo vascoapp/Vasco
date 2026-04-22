@@ -1630,7 +1630,8 @@
       "materialDriftTitle": "Material price drift",
       "materialDriftSub": "{{count}} alerts from the cohort",
       "marketWide": "market-wide",
-      "affectedQuotes": "{{count}} open quotes"
+      "affectedQuotes": "{{count}} open quotes",
+      "seasonalPeak": "peak season +{{pct}}%"
     },
     "ai": {
       "automationsTitle": "Automations",

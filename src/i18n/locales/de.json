@@ -1630,7 +1630,8 @@
       "materialDriftTitle": "Materialpreis-Drift",
       "materialDriftSub": "{{count}} Meldungen aus der Kohorte",
       "marketWide": "marktweit",
-      "affectedQuotes": "{{count}} offene Angebote"
+      "affectedQuotes": "{{count}} offene Angebote",
+      "seasonalPeak": "Hochsaison +{{pct}}%"
     },
     "ai": {
       "automationsTitle": "Automatisierungen",
