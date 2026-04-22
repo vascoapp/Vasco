@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../i18n/i18n';
 import { getQuoteWinModel, scoreQuoteWin } from '../services/quoteWinModelService';
 import { getCohortDso } from '../services/paymentTimingMoatService';
+import { getCohortDurationRatio } from '../services/jobDurationMoatService';
 
 const MODEL_CACHE_KEY = '@vasco_ml_models';
 
@@ -165,6 +166,7 @@ export async function predictJobDuration(params: {
   estimatedHours: number;
   materialCount: number;
   crewSize: number;
+  jobType?: string; // R196: enables cohort duration fallback
 }): Promise<DurationPrediction> {
   const profile = await loadProfile();
   const learned = await getLearnedCoefficients();
@@ -172,11 +174,23 @@ export async function predictJobDuration(params: {
 
   // Historical accuracy for this trade — use learned coefficient if available
   const tradeJobs = jobs.filter(j => j.jobType === params.trade && j.actualHours > 0);
+
+  // R196: when the contractor has fewer than 3 personal trade jobs, pull a
+  // cohort-median ratio instead of the hardcoded 1.15 default. Personal
+  // data always wins when present.
+  let cohortRatio: number | null = null;
+  if (learned?.durationAccuracyRatio == null && tradeJobs.length < 3) {
+    try {
+      const cohort = await getCohortDurationRatio(params.trade, params.jobType ?? null);
+      if (cohort?.medianRatio && cohort.sampleSize > 0) cohortRatio = cohort.medianRatio;
+    } catch {}
+  }
+
   const accuracyRatio = learned?.durationAccuracyRatio != null
     ? learned.durationAccuracyRatio
     : tradeJobs.length >= 3
       ? tradeJobs.reduce((s, j) => s + j.actualHours / Math.max(j.estimatedHours, 1), 0) / tradeJobs.length
-      : 1.15; // contractors typically underestimate by 15%
+      : cohortRatio ?? 1.15; // cohort median > 1.15 (contractors typically underestimate by 15%)
 
   // Complexity multiplier based on materials
   const complexityMult = params.materialCount <= 5 ? 1.0
