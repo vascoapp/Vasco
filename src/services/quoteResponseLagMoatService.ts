@@ -7,6 +7,7 @@
 // a strong signal to send a friendly nudge.
 // =============================================================================
 
+import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
@@ -84,6 +85,23 @@ export async function getCohortAcceptLag(
   } catch {
     return null;
   }
+}
+
+// R216: React hook for intelligence generators.
+export function useCohortAcceptLag(
+  trade: string,
+  country: string,
+  customerType?: string | null,
+) {
+  const [bundle, setBundle] = useState<CohortAcceptLag | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    getCohortAcceptLag(trade, country, customerType ?? null)
+      .then(b => { if (!cancelled) setBundle(b); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [trade, country, customerType]);
+  return bundle;
 }
 
 export const __internal = { CACHE_KEY, CACHE_TTL_MS, cacheKey };

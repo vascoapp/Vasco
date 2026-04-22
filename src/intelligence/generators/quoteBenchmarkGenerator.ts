@@ -10,9 +10,17 @@ import { useAppState } from '../../state/AppState';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { logPrediction } from '../calibration';
 import { gt } from '../generatorTranslations';
+import { useCohortAcceptLag } from '../../services/quoteResponseLagMoatService';
 
 export function useQuoteBenchmarkInsight(ctx: GeneratorContext): ScoredInsight | null {
-  const { quotes, jobs } = useAppState();
+  const { quotes, jobs, businessProfile } = useAppState();
+  // R216: cohort accept-lag — evidence line cites how long cohort typically
+  // takes to accept, so contractor knows if their outstanding quotes are slow.
+  const acceptLag = useCohortAcceptLag(
+    businessProfile?.trade ?? 'general',
+    businessProfile?.country ?? 'NL',
+    null,
+  );
 
   // Need at least 3 past quotes to benchmark
   const sentOrAccepted = quotes.filter(q => q.status === 'sent');
@@ -89,7 +97,9 @@ export function useQuoteBenchmarkInsight(ctx: GeneratorContext): ScoredInsight |
     rawScore: 0,
     reasoning: {
       observation: `${bestAmounts.length} offertes gevonden voor "${bestJobType}"`,
-      evidence: `Mediaan: €${median.toLocaleString('nl-NL')}, acceptatieratio: ${acceptanceRate}%`,
+      evidence: acceptLag && acceptLag.medianHours !== null && acceptLag.contractorCount >= 5
+        ? `Mediaan: €${median.toLocaleString('nl-NL')}, acceptatieratio: ${acceptanceRate}%. Cohort accepteert doorgaans binnen ${Math.round(acceptLag.medianHours / 24)}d (p75: ${Math.round(acceptLag.p75Hours! / 24)}d).`
+        : `Mediaan: €${median.toLocaleString('nl-NL')}, acceptatieratio: ${acceptanceRate}%`,
       implication: `Gebruik deze benchmark om je prijsstelling te optimaliseren`,
       suggestion: acceptanceRate < 50
         ? 'Overweeg je prijzen te verlagen — de acceptatieratio is onder 50%'
