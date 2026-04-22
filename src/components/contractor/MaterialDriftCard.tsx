@@ -10,6 +10,7 @@ import { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useRouter } from 'expo-router';
 import { DK } from '../../theme/draftkings';
 import { TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { DKLabel } from '../shared/DKLabel';
@@ -32,6 +33,7 @@ interface Props {
 
 export function MaterialDriftCard({ trade, country, onPress }: Props) {
   const { t } = useTranslation();
+  const router = useRouter();
   const { drift, loading } = useMaterialDrift(trade, country);
   const { quotes } = useAppState();
 
@@ -84,19 +86,35 @@ export function MaterialDriftCard({ trade, country, onPress }: Props) {
       </View>
 
       <View style={s.list}>
-        {top.map(row => (
-          <DriftRow
-            key={`${row.materialName}|${row.supplierId}`}
-            row={row}
-            affectedCount={(affectedMap[row.materialName] ?? []).length}
-          />
-        ))}
+        {top.map(row => {
+          const affectedIds = affectedMap[row.materialName] ?? [];
+          return (
+            <DriftRow
+              key={`${row.materialName}|${row.supplierId}`}
+              row={row}
+              affectedCount={affectedIds.length}
+              onRowPress={
+                affectedIds.length > 0
+                  ? () => router.push(`/quotes/${affectedIds[0]}` as any)
+                  : undefined
+              }
+            />
+          );
+        })}
       </View>
     </Pressable>
   );
 }
 
-function DriftRow({ row, affectedCount }: { row: MaterialDriftRow; affectedCount: number }) {
+function DriftRow({
+  row,
+  affectedCount,
+  onRowPress,
+}: {
+  row: MaterialDriftRow;
+  affectedCount: number;
+  onRowPress?: () => void;
+}) {
   const { t } = useTranslation();
   const severity = severityFor(row.driftPct);
   const direction = directionFor(row.driftPct);
@@ -107,8 +125,17 @@ function DriftRow({ row, affectedCount }: { row: MaterialDriftRow; affectedCount
         : DK.colors.accent
       : DK.colors.success;
 
+  const Container: any = onRowPress ? Pressable : View;
+  const containerProps: any = onRowPress
+    ? {
+        onPress: (e: any) => { e.stopPropagation?.(); onRowPress(); },
+        hitSlop: 6,
+        style: ({ pressed }: { pressed: boolean }) => [s.row, pressed && { opacity: 0.85 }],
+      }
+    : { style: s.row };
+
   return (
-    <View style={s.row}>
+    <Container {...containerProps}>
       <View style={{ flex: 1 }}>
         <Text style={s.rowTitle} numberOfLines={1}>
           {row.materialName}
@@ -133,8 +160,11 @@ function DriftRow({ row, affectedCount }: { row: MaterialDriftRow; affectedCount
           size={12}
           color={tone}
         />
+        {onRowPress && (
+          <Ionicons name="chevron-forward" size={12} color={DK.colors.textMuted} />
+        )}
       </View>
-    </View>
+    </Container>
   );
 }
 

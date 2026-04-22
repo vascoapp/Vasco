@@ -17,6 +17,8 @@ export interface QuotePrefillInput {
   crewSize?: number;
   amount: number;
   customerId?: string;
+  customerType?: string;
+  country?: string;         // R194: required to activate the cohort-trained quote-win model
   priceVsMarketPct?: number;
 }
 
@@ -44,6 +46,8 @@ export async function prefillFromQuote(input: QuotePrefillInput): Promise<QuoteP
     }).catch(() => null),
     predictQuoteWin({
       trade: input.trade,
+      country: input.country,           // R194: threads through to trained LR path
+      customerType: input.customerType,
       amount: input.amount,
       priceVsMarketPct: input.priceVsMarketPct ?? 0,
       customerId: input.customerId,
