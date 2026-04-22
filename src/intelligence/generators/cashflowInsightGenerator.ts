@@ -11,6 +11,8 @@ import { useFinancialAnalysis } from '../../services/financialAnalysisService';
 import { recordMetricSnapshot } from '../learningStorage';
 import { logPrediction } from '../calibration';
 import { gt } from '../generatorTranslations';
+import { useAppState } from '../../state/AppState';
+import { useCohortDso } from '../../services/paymentTimingMoatService';
 
 export const cashflowInsightGenerator: InsightGenerator = {
   id: 'cashflow-insight',
@@ -23,6 +25,10 @@ export const cashflowInsightGenerator: InsightGenerator = {
 
 export function useCashflowInsight(ctx: GeneratorContext): ScoredInsight | null {
   const fin = useFinancialAnalysis();
+  const { businessProfile } = useAppState();
+  // R211: cohort DSO — replace the static "14-21 days" benchmark with a
+  // real country-specific median when available.
+  const cohortDso = useCohortDso(businessProfile?.country ?? 'NL', null);
 
   // Record metric snapshots for trend tracking
   if (fin.avgDaysToPayment > 0) recordMetricSnapshot('dso', fin.avgDaysToPayment);
@@ -208,7 +214,9 @@ export function useCashflowInsight(ctx: GeneratorContext): ScoredInsight | null 
       category: 'financial',
       priority: fin.avgDaysToPayment > 45 ? 'high' : 'medium',
       title: gt('fin_dso_high_title', lang, { days: fin.avgDaysToPayment }),
-      message: `Customers take an average of ${fin.avgDaysToPayment} days to pay. Industry benchmark: 14-21 days.`,
+      message: cohortDso?.medianDso && cohortDso.sampleSize > 0
+        ? `Customers take an average of ${fin.avgDaysToPayment} days to pay. Cohort median: ${Math.round(cohortDso.medianDso)} days.`
+        : `Customers take an average of ${fin.avgDaysToPayment} days to pay. Industry benchmark: 14-21 days.`,
       icon: 'hourglass',
       actionLabel: gt('fin_action_send_invoices', lang),
       actionRoute: '/(contractor)/facturen',
@@ -218,8 +226,12 @@ export function useCashflowInsight(ctx: GeneratorContext): ScoredInsight | null 
       rawScore: 0.55,
       reasoning: {
         observation: `Average days to payment: ${fin.avgDaysToPayment} days`,
-        evidence: `Based on paid invoices with sent and paid dates.`,
-        implication: `High DSO ties up working capital and increases cash flow risk.`,
+        evidence: cohortDso?.medianDso && cohortDso.sampleSize > 0
+          ? `Based on paid invoices with sent and paid dates. Cohort (${cohortDso.contractorCount} contractors, ${cohortDso.sampleSize} samples) median: ${Math.round(cohortDso.medianDso)}d.`
+          : `Based on paid invoices with sent and paid dates.`,
+        implication: cohortDso?.medianDso && fin.avgDaysToPayment > cohortDso.medianDso + 7
+          ? `You're ${fin.avgDaysToPayment - Math.round(cohortDso.medianDso)}d above cohort — real capital drag, not just seasonal.`
+          : `High DSO ties up working capital and increases cash flow risk.`,
         suggestion: `Send invoices sooner, offer payment links, use automated reminders.`,
       },
       dataPoints: 3,

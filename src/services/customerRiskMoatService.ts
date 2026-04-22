@@ -7,6 +7,7 @@
 // this gives a grounded baseline instead of a naive zero-risk assumption.
 // =============================================================================
 
+import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
@@ -79,6 +80,23 @@ export async function getCohortOverdueRate(
   } catch {
     return null;
   }
+}
+
+// R211: React hook for surfacing cohort overdue rate inside intelligence
+// generators (customer payment history, invoice-send risk, etc).
+export function useCohortOverdueRate(
+  country: string,
+  customerType?: string | null,
+) {
+  const [bundle, setBundle] = useState<CohortCustomerRisk | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    getCohortOverdueRate(country, customerType ?? null)
+      .then(b => { if (!cancelled) setBundle(b); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [country, customerType]);
+  return bundle;
 }
 
 export const __internal = { CACHE_KEY, CACHE_TTL_MS, cacheKey };

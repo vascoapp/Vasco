@@ -6,6 +6,7 @@
 // grounded in real EU6 market data instead of a hardcoded 21-day default.
 // =============================================================================
 
+import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
@@ -64,6 +65,19 @@ export async function getCohortDso(
   } catch {
     return null;
   }
+}
+
+// R211: React hook for intelligence generators / UI surfaces.
+export function useCohortDso(country: string, customerType?: string | null) {
+  const [bundle, setBundle] = useState<CohortDso | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    getCohortDso(country, customerType ?? null)
+      .then(b => { if (!cancelled) setBundle(b); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [country, customerType]);
+  return bundle;
 }
 
 export const __internal = { CACHE_KEY, CACHE_TTL_MS, cacheKey };

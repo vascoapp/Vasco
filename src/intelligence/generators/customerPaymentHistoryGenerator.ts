@@ -10,9 +10,13 @@ import { useAppState } from '../../state/AppState';
 import { recordMetricSnapshot } from '../learningStorage';
 import { logPrediction } from '../calibration';
 import { gt } from '../generatorTranslations';
+import { useCohortOverdueRate } from '../../services/customerRiskMoatService';
 
 export function useCustomerPaymentHistoryInsight(ctx: GeneratorContext): ScoredInsight | null {
-  const { invoices, customers } = useAppState();
+  const { invoices, customers, businessProfile } = useAppState();
+  // R211: cohort overdue rate — used as a reference point to decide
+  // whether the customer's rate is "just above market" or genuinely risky.
+  const cohortRisk = useCohortOverdueRate(businessProfile?.country ?? 'NL', null);
 
   if (invoices.length < 2 || customers.length === 0) return null;
 
@@ -88,8 +92,12 @@ export function useCustomerPaymentHistoryInsight(ctx: GeneratorContext): ScoredI
     rawScore: 0,
     reasoning: {
       observation: `${slowestPayer.customerName} betaalt regelmatig te laat`,
-      evidence: `${slowestPayer.overdueCount} van ${slowestPayer.totalInvoices} facturen waren verlopen`,
-      implication: `Dit verhoogt je DSO en blokkeert werkkapitaal`,
+      evidence: cohortRisk && cohortRisk.overdueRate !== null && cohortRisk.contractorCount >= 5
+        ? `${slowestPayer.overdueCount} van ${slowestPayer.totalInvoices} facturen waren verlopen (${overdueRate}%). Cohort in jouw land: ${Math.round((cohortRisk.overdueRate ?? 0) * 100)}%.`
+        : `${slowestPayer.overdueCount} van ${slowestPayer.totalInvoices} facturen waren verlopen`,
+      implication: cohortRisk && cohortRisk.overdueRate !== null && overdueRate > (cohortRisk.overdueRate * 100 + 10)
+        ? `Dit is ${Math.round(overdueRate - (cohortRisk.overdueRate * 100))}pp boven het cohort — serieuze risico, niet gewoon slechte gewoonte.`
+        : `Dit verhoogt je DSO en blokkeert werkkapitaal`,
       suggestion: isSevere
         ? 'Bied 2% korting bij betaling binnen 7 dagen, of vraag een aanbetaling'
         : 'Stuur facturen direct na oplevering en plan automatische herinneringen',
