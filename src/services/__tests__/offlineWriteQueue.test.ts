@@ -33,7 +33,8 @@ describe('offlineWriteQueue', () => {
 
   test('queues a write and keeps it when Supabase is offline', async () => {
     mockSupabase(false);
-    const { queueWrite, queueSize, flushQueue } = await import('../offlineWriteQueue');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { queueWrite, queueSize, flushQueue } = require('../offlineWriteQueue');
     await queueWrite({ table: 'jobs', op: 'insert', payload: { id: 'j1' } });
     expect(await queueSize()).toBe(1);
     const result = await flushQueue();
@@ -43,7 +44,8 @@ describe('offlineWriteQueue', () => {
 
   test('drains the queue once Supabase is reachable', async () => {
     mockSupabase(true);
-    const { queueWrite, queueSize, flushQueue } = await import('../offlineWriteQueue');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { queueWrite, queueSize, flushQueue } = require('../offlineWriteQueue');
     await queueWrite({ table: 'jobs', op: 'insert', payload: { id: 'j1' } });
     await queueWrite({ table: 'jobs', op: 'upsert', payload: { id: 'j2' } });
     expect(await queueSize()).toBe(2);

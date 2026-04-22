@@ -62,13 +62,15 @@ describe('formatting', () => {
     });
 
     it('should format EUR for ES', () => {
-      const result = formatCurrency(1000, 'ES');
-      expect(result).toContain('1.000');
+      // Use ≥10000 so thousands separator is guaranteed across Node ICU
+      // variants (ES/IT omit separator on 4-digit numbers in some datasets).
+      const result = formatCurrency(10000, 'ES');
+      expect(result).toContain('10.000');
     });
 
     it('should format EUR for IT', () => {
-      const result = formatCurrency(1000, 'IT');
-      expect(result).toContain('1.000');
+      const result = formatCurrency(10000, 'IT');
+      expect(result).toContain('10.000');
     });
   });
 

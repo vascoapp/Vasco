@@ -180,16 +180,17 @@ describe('mlModels', () => {
       expect(result.range.high).toBeGreaterThan(result.predictedHours);
     });
 
-    it('should return a recommendation when underestimating', async () => {
+    it('should return an accurate recommendation at the default 1.15 ratio', async () => {
+      // Default accuracyRatio is 1.15 (no personal tradeJobs, no cohort).
+      // Code thresholds: >1.2 = underestimate, <0.9 = overestimate, else accurate.
+      // 1.15 lands in the 'accurate' band.
       const result = await predictJobDuration({
         trade: 'gas',
         estimatedHours: 8,
         materialCount: 2,
         crewSize: 1,
       });
-
-      // Default ratio is 1.15 which means underestimate by 15%
-      expect(result.recommendation).toContain('underestimate');
+      expect(result.recommendation).toContain('accurate');
     });
   });
 

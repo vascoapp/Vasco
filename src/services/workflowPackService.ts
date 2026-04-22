@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback } from 'react';
 import i18n from '../i18n/i18n';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { addToQueue, getQueueHistory } from './aiActionQueueService';
 
 const PACKS_KEY = '@vasco_workflow_packs';
 
@@ -241,7 +242,6 @@ export async function getPackROI(packId: string): Promise<{
   estimatedRevenue: number;
   estimatedTimeSaved: number; // minutes
 }> {
-  const { getQueueHistory } = await import('./aiActionQueueService');
   const history = await getQueueHistory();
   const packActions = history.filter(h => h.sourceGeneratorId === `workflow_${packId}`);
   const approved = packActions.filter(h => h.status === 'approved');
@@ -294,7 +294,6 @@ interface TriggerContext {
 }
 
 export async function evaluateTriggers(context: TriggerContext): Promise<number> {
-  const { addToQueue } = await import('./aiActionQueueService');
   const packs = await getWorkflowPacks();
   const enabledPacks = packs.filter(p => p.enabled);
   const now = Date.now();
