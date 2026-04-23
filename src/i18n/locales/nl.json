@@ -1314,6 +1314,7 @@
   "signup": {
     "title": "Maak je account aan",
     "subtitle": "Start je proefperiode van 14 dagen — geen creditcard nodig.",
+    "referredBy": "Uitgenodigd · code {{code}}",
     "passwordPlaceholder": "Wachtwoord (min. 8 tekens)",
     "confirmPasswordPlaceholder": "Bevestig wachtwoord",
     "acceptLine": "Ik ga akkoord met de",

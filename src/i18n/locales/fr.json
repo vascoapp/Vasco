@@ -1314,6 +1314,7 @@
   "signup": {
     "title": "Créez votre compte",
     "subtitle": "Commencez votre essai de 14 jours — sans carte bancaire.",
+    "referredBy": "Parrainé · code {{code}}",
     "passwordPlaceholder": "Mot de passe (8 caractères min.)",
     "confirmPasswordPlaceholder": "Confirmez le mot de passe",
     "acceptLine": "J'accepte les",

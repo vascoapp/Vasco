@@ -6,13 +6,13 @@
 // route to /onboarding for the 14-step Cal-AI-style setup.
 // =============================================================================
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator, KeyboardAvoidingView, Linking, Platform,
   Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../src/context/AuthContext';
@@ -27,6 +27,11 @@ import { GradientButton } from '../src/components/shared/GradientButton';
 import { isValidEmail } from '../src/utils/validation';
 import { emitSignupCompleted } from '../src/intelligence/dataCollector';
 import { DKLabel } from '../src/components/shared/DKLabel';
+import {
+  applyPendingReferral,
+  getPendingReferral,
+  stashPendingReferral,
+} from '../src/services/referralAttributionService';
 
 export default function SignupScreen() {
   const { t } = useTranslation();
@@ -39,6 +44,20 @@ export default function SignupScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
+  // R230: referral code (from ?ref=CODE deep-link or AsyncStorage).
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const searchParams = useLocalSearchParams<{ ref?: string | string[] }>();
+
+  useEffect(() => {
+    const raw = Array.isArray(searchParams.ref) ? searchParams.ref[0] : searchParams.ref;
+    (async () => {
+      // Prefer a fresh code from the URL; fall back to any previously-stashed
+      // one so the code survives the email-confirm round trip.
+      const fromUrl = raw ? await stashPendingReferral(raw) : null;
+      const code = fromUrl ?? (await getPendingReferral());
+      if (code) setReferralCode(code);
+    })();
+  }, [searchParams.ref]);
 
   const handleSignup = async () => {
     setError('');
@@ -73,10 +92,18 @@ export default function SignupScreen() {
     if (result.success) {
       // Fire analytics event — funnel head. userId may not be available
       // before email confirmation; use email as stable identifier in that case.
-      emitSignupCompleted((result as any).userId ?? trimmedEmail, {
+      const userId = (result as any).userId as string | undefined;
+      emitSignupCompleted(userId ?? trimmedEmail, {
         email: trimmedEmail,
         method: 'email',
       }).catch(() => {});
+      // R230: attribute referral code if a userId is already available
+      // (Supabase occasionally returns one pre-confirmation). Otherwise the
+      // code stays in AsyncStorage and the first SIGNED_IN handler in
+      // app/_layout.tsx calls applyPendingReferral after confirmation.
+      if (userId) {
+        applyPendingReferral(userId).catch(() => {});
+      }
       // Supabase typically requires email confirmation. Show a "check your
       // email" state — onAuthStateChange will fire SIGNED_IN → auto-redirect
       // handled by app/_layout.tsx once the user confirms.
@@ -135,6 +162,15 @@ export default function SignupScreen() {
               </View>
               <DKLabel style={styles.title}>{t('signup.title', 'Create your account')}</DKLabel>
               <Text style={styles.subtitle}>{t('signup.subtitle', 'Start your 14-day trial — no card required.')}</Text>
+              {/* R230: referral-code chip when ?ref=CODE was provided */}
+              {referralCode && (
+                <View style={styles.refChip}>
+                  <Ionicons name="gift-outline" size={14} color={Palette.hermesOrange} />
+                  <Text style={styles.refChipText}>
+                    {t('signup.referredBy', { defaultValue: 'Referred · code {{code}}', code: referralCode })}
+                  </Text>
+                </View>
+              )}
             </View>
           </FadeIn>
 
@@ -235,6 +271,24 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 30, fontFamily: 'Archivo_900Black', color: SemanticColors.textPrimary, marginTop: 4, letterSpacing: -0.8 },
   subtitle: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary },
+  refChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: GRID.sm,
+    alignSelf: 'flex-start',
+    paddingHorizontal: GRID.sm,
+    paddingVertical: 4,
+    borderRadius: RADIUS.md,
+    backgroundColor: Palette.hermesOrange + '18',
+    borderWidth: 1,
+    borderColor: Palette.hermesOrange + '40',
+  },
+  refChipText: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.hermesOrange,
+  },
   form: { gap: Spacing.sm },
   input: {
     borderWidth: 1, borderColor: SemanticColors.borderDefault,

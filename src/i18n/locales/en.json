@@ -1314,6 +1314,7 @@
   "signup": {
     "title": "Create your account",
     "subtitle": "Start your 14-day trial — no card required.",
+    "referredBy": "Referred · code {{code}}",
     "passwordPlaceholder": "Password (min 8 characters)",
     "confirmPasswordPlaceholder": "Confirm password",
     "acceptLine": "I accept the",

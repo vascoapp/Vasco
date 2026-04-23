@@ -377,7 +377,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
       if (s?.user) {
         setUser({
@@ -388,6 +388,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           company: s.user.user_metadata?.company ?? '',
           projects: [],
         });
+        // R230: if the user had a pending referral code stashed before
+        // email confirmation, apply it now on first SIGNED_IN event.
+        if (event === 'SIGNED_IN') {
+          import('../services/referralAttributionService')
+            .then((mod) => mod.applyPendingReferral(s.user.id))
+            .catch(() => {});
+        }
       } else {
         setUser(null);
       }

@@ -1314,6 +1314,7 @@
   "signup": {
     "title": "Konto erstellen",
     "subtitle": "Starte deine 14-tägige Testphase — ohne Kreditkarte.",
+    "referredBy": "Eingeladen · Code {{code}}",
     "passwordPlaceholder": "Passwort (min. 8 Zeichen)",
     "confirmPasswordPlaceholder": "Passwort bestätigen",
     "acceptLine": "Ich akzeptiere die",

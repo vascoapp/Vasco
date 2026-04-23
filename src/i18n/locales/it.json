@@ -1314,6 +1314,7 @@
   "signup": {
     "title": "Crea il tuo account",
     "subtitle": "Inizia la tua prova di 14 giorni — senza carta.",
+    "referredBy": "Invitato · codice {{code}}",
     "passwordPlaceholder": "Password (min. 8 caratteri)",
     "confirmPasswordPlaceholder": "Conferma password",
     "acceptLine": "Accetto i",
