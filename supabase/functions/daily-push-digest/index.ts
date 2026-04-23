@@ -32,55 +32,118 @@ const MIN_QUEUE = 2;
 const MIN_STALING = 1;
 const MIN_JOBS_TOMORROW = 1;
 
+type PushType = 'overdue_invoices' | 'queue_waiting' | 'staling_quotes' | 'jobs_tomorrow';
+type PushLocale = 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
+
 interface Decision {
-  type: string;
+  type: PushType;
   title: string;
   body: string;
   entityKey: string;
+  params: { count: number; amount?: number };
 }
 
-/** Mirror of src/services/pushDigestPolicy.ts#pickDailyPush. */
+// Mirror of src/services/pushDigestPolicy.ts — kept in sync via the jest
+// suite on the policy file. If you change one, change both.
+type TemplatePair = { title: string; body: string };
+const TEMPLATES: Record<PushLocale, Record<PushType, { one?: TemplatePair; many?: TemplatePair; any?: TemplatePair }>> = {
+  en: {
+    overdue_invoices: { one: { title: '€{amount} overdue', body: '{count} invoice past due. Send a reminder in 2 taps.' }, many: { title: '€{amount} overdue', body: '{count} invoices past due. Send a reminder in 2 taps.' } },
+    queue_waiting: { any: { title: '{count} actions waiting', body: 'Vasco prepared {count} things for you. Approve or skip.' } },
+    staling_quotes: { one: { title: '{count} quote going stale', body: 'Cohort usually accepts within a week. A nudge often unsticks them.' }, many: { title: '{count} quotes going stale', body: 'Cohort usually accepts within a week. A nudge often unsticks them.' } },
+    jobs_tomorrow: { one: { title: '{count} job tomorrow', body: 'Materials ready? Route planned? Tap to prep in 30 seconds.' }, many: { title: '{count} jobs tomorrow', body: 'Materials ready? Route planned? Tap to prep in 30 seconds.' } },
+  },
+  nl: {
+    overdue_invoices: { one: { title: '€{amount} te laat', body: '{count} factuur staat open. Stuur herinnering in 2 tikken.' }, many: { title: '€{amount} te laat', body: '{count} facturen staan open. Stuur herinnering in 2 tikken.' } },
+    queue_waiting: { any: { title: '{count} acties wachten', body: 'Vasco heeft {count} dingen voor je klaarstaan. Keur goed of sla over.' } },
+    staling_quotes: { one: { title: '{count} offerte loopt vast', body: 'Cohort accepteert meestal binnen een week. Een nudge helpt vaak.' }, many: { title: '{count} offertes lopen vast', body: 'Cohort accepteert meestal binnen een week. Een nudge helpt vaak.' } },
+    jobs_tomorrow: { one: { title: '{count} klus morgen', body: 'Materiaal gereed? Route gepland? Tik om in 30s voor te bereiden.' }, many: { title: '{count} klussen morgen', body: 'Materiaal gereed? Route gepland? Tik om in 30s voor te bereiden.' } },
+  },
+  de: {
+    overdue_invoices: { one: { title: '€{amount} überfällig', body: '{count} Rechnung überfällig. In 2 Taps erinnern.' }, many: { title: '€{amount} überfällig', body: '{count} Rechnungen überfällig. In 2 Taps erinnern.' } },
+    queue_waiting: { any: { title: '{count} Aktionen warten', body: 'Vasco hat {count} Dinge vorbereitet. Genehmigen oder überspringen.' } },
+    staling_quotes: { one: { title: '{count} Angebot bleibt hängen', body: 'Die Kohorte nimmt meist innerhalb einer Woche an. Ein Nachfassen hilft.' }, many: { title: '{count} Angebote bleiben hängen', body: 'Die Kohorte nimmt meist innerhalb einer Woche an. Ein Nachfassen hilft.' } },
+    jobs_tomorrow: { one: { title: '{count} Auftrag morgen', body: 'Material bereit? Route geplant? 30 Sekunden bis startklar.' }, many: { title: '{count} Aufträge morgen', body: 'Material bereit? Route geplant? 30 Sekunden bis startklar.' } },
+  },
+  fr: {
+    overdue_invoices: { one: { title: '{amount} € en retard', body: '{count} facture impayée. Relance en 2 taps.' }, many: { title: '{amount} € en retard', body: '{count} factures impayées. Relance en 2 taps.' } },
+    queue_waiting: { any: { title: '{count} actions en attente', body: 'Vasco a préparé {count} éléments. Approuvez ou passez.' } },
+    staling_quotes: { one: { title: '{count} devis ralenti', body: 'La cohorte accepte habituellement en une semaine. Une relance aide.' }, many: { title: '{count} devis ralentis', body: 'La cohorte accepte habituellement en une semaine. Une relance aide.' } },
+    jobs_tomorrow: { one: { title: '{count} chantier demain', body: 'Matériel prêt ? Itinéraire ? 30s pour tout préparer.' }, many: { title: '{count} chantiers demain', body: 'Matériel prêt ? Itinéraires ? 30s pour tout préparer.' } },
+  },
+  es: {
+    overdue_invoices: { one: { title: '{amount} € vencidos', body: '{count} factura vencida. Envía recordatorio en 2 toques.' }, many: { title: '{amount} € vencidos', body: '{count} facturas vencidas. Envía recordatorio en 2 toques.' } },
+    queue_waiting: { any: { title: '{count} acciones esperando', body: 'Vasco preparó {count} cosas. Aprueba o salta.' } },
+    staling_quotes: { one: { title: '{count} presupuesto atascado', body: 'La cohorte acepta en ~1 semana. Un recordatorio suele funcionar.' }, many: { title: '{count} presupuestos atascados', body: 'La cohorte acepta en ~1 semana. Un recordatorio suele funcionar.' } },
+    jobs_tomorrow: { one: { title: '{count} obra mañana', body: '¿Materiales listos? ¿Ruta? 30s para prepararlo.' }, many: { title: '{count} obras mañana', body: '¿Materiales listos? ¿Rutas? 30s para prepararlo.' } },
+  },
+  it: {
+    overdue_invoices: { one: { title: '{amount} € in scadenza', body: '{count} fattura scaduta. Invia sollecito in 2 tap.' }, many: { title: '{amount} € in scadenza', body: '{count} fatture scadute. Invia sollecito in 2 tap.' } },
+    queue_waiting: { any: { title: '{count} azioni in attesa', body: 'Vasco ha preparato {count} cose. Approva o salta.' } },
+    staling_quotes: { one: { title: '{count} preventivo fermo', body: 'La coorte accetta di solito entro una settimana. Un sollecito aiuta.' }, many: { title: '{count} preventivi fermi', body: 'La coorte accetta di solito entro una settimana. Un sollecito aiuta.' } },
+    jobs_tomorrow: { one: { title: '{count} cantiere domani', body: 'Materiali pronti? Percorso? 30s per prepararti.' }, many: { title: '{count} cantieri domani', body: 'Materiali pronti? Percorsi? 30s per prepararti.' } },
+  },
+};
+
+function localeForCountry(country: string | null | undefined): PushLocale {
+  switch ((country ?? '').toUpperCase()) {
+    case 'NL': return 'nl';
+    case 'DE': return 'de';
+    case 'FR': return 'fr';
+    case 'ES': return 'es';
+    case 'IT': return 'it';
+    case 'UK':
+    default:   return 'en';
+  }
+}
+
+function formatAmount(n: number, locale: PushLocale): string {
+  const group = locale === 'en' ? ',' : locale === 'fr' ? ' ' : '.';
+  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, group);
+}
+
+function fillTemplate(tpl: string, params: { count: number; amount?: number }, locale: PushLocale): string {
+  return tpl
+    .replace('{count}', String(params.count))
+    .replace('{amount}', params.amount != null ? formatAmount(params.amount, locale) : '');
+}
+
+function formatForLocale(type: PushType, params: { count: number; amount?: number }, locale: PushLocale): { title: string; body: string } {
+  const entry = (TEMPLATES[locale] ?? TEMPLATES.en)[type];
+  const pluralKey = params.count > 1 ? 'many' : 'one';
+  const pair = entry.any ?? (entry as any)[pluralKey] ?? entry.one ?? entry.many!;
+  return {
+    title: fillTemplate(pair.title, params, locale),
+    body:  fillTemplate(pair.body,  params, locale),
+  };
+}
+
 function pickDailyPush(input: {
   overdueInvoiceCount: number;
   overdueInvoiceAmount: number;
   queuePendingCount: number;
   stalingQuoteCount: number;
   jobsTomorrowCount: number;
-}): Decision | null {
+}, locale: PushLocale): Decision | null {
   if (input.overdueInvoiceCount >= MIN_OVERDUE_COUNT && input.overdueInvoiceAmount >= MIN_OVERDUE_AMOUNT) {
-    const plural = input.overdueInvoiceCount > 1 ? 's' : '';
-    return {
-      type: 'overdue_invoices',
-      title: `€${input.overdueInvoiceAmount.toLocaleString()} overdue`,
-      body: `${input.overdueInvoiceCount} invoice${plural} past due. Send a reminder in 2 taps.`,
-      entityKey: `overdue:${input.overdueInvoiceCount}:${input.overdueInvoiceAmount}`,
-    };
+    const params = { count: input.overdueInvoiceCount, amount: input.overdueInvoiceAmount };
+    const { title, body } = formatForLocale('overdue_invoices', params, locale);
+    return { type: 'overdue_invoices', title, body, entityKey: `overdue:${input.overdueInvoiceCount}:${input.overdueInvoiceAmount}`, params };
   }
   if (input.queuePendingCount >= MIN_QUEUE) {
-    return {
-      type: 'queue_waiting',
-      title: `${input.queuePendingCount} actions waiting`,
-      body: `Vasco prepared ${input.queuePendingCount} things for you. Approve or skip.`,
-      entityKey: `queue:${input.queuePendingCount}`,
-    };
+    const params = { count: input.queuePendingCount };
+    const { title, body } = formatForLocale('queue_waiting', params, locale);
+    return { type: 'queue_waiting', title, body, entityKey: `queue:${input.queuePendingCount}`, params };
   }
   if (input.stalingQuoteCount >= MIN_STALING) {
-    const plural = input.stalingQuoteCount > 1 ? 's' : '';
-    return {
-      type: 'staling_quotes',
-      title: `${input.stalingQuoteCount} quote${plural} going stale`,
-      body: `Cohort usually accepts within a week. A nudge often unsticks them.`,
-      entityKey: `staling:${input.stalingQuoteCount}`,
-    };
+    const params = { count: input.stalingQuoteCount };
+    const { title, body } = formatForLocale('staling_quotes', params, locale);
+    return { type: 'staling_quotes', title, body, entityKey: `staling:${input.stalingQuoteCount}`, params };
   }
   if (input.jobsTomorrowCount >= MIN_JOBS_TOMORROW) {
-    const plural = input.jobsTomorrowCount > 1 ? 's' : '';
-    return {
-      type: 'jobs_tomorrow',
-      title: `${input.jobsTomorrowCount} job${plural} tomorrow`,
-      body: `Materials ready? Route planned? Tap to prep in 30 seconds.`,
-      entityKey: `tomorrow:${input.jobsTomorrowCount}`,
-    };
+    const params = { count: input.jobsTomorrowCount };
+    const { title, body } = formatForLocale('jobs_tomorrow', params, locale);
+    return { type: 'jobs_tomorrow', title, body, entityKey: `tomorrow:${input.jobsTomorrowCount}`, params };
   }
   return null;
 }
@@ -135,6 +198,15 @@ Deno.serve(async (req) => {
       continue;
     }
 
+    // R227: look up country → locale so push copy is localized. If the
+    // business_settings row is missing we fall through to English.
+    const { data: settings } = await admin
+      .from('business_settings')
+      .select('country')
+      .eq('user_id', userId)
+      .maybeSingle();
+    const locale = localeForCountry((settings as any)?.country);
+
     // 2. Fetch state.
     const [overdue, queue, staling, tomorrow] = await Promise.all([
       admin.from('documents')
@@ -169,7 +241,7 @@ Deno.serve(async (req) => {
       queuePendingCount: queue.count ?? 0,
       stalingQuoteCount: (staling.data ?? []).length,
       jobsTomorrowCount: tomorrow.count ?? 0,
-    });
+    }, locale);
 
     if (!decision) {
       results.push({ userId, decision: 'none', delivery: 'skipped' });

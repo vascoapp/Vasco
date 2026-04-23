@@ -2,7 +2,12 @@
  * @jest-environment node
  */
 
-import { pickDailyPush, __internal } from '../pushDigestPolicy';
+import {
+  pickDailyPush,
+  formatForLocale,
+  localeForCountry,
+  __internal,
+} from '../pushDigestPolicy';
 
 const zero = {
   overdueInvoiceCount: 0,
@@ -84,5 +89,96 @@ describe('pushDigestPolicy.pickDailyPush', () => {
   test('thresholds are coherent', () => {
     expect(__internal.MIN_OVERDUE_AMOUNT).toBeGreaterThan(0);
     expect(__internal.MIN_QUEUE).toBeGreaterThan(__internal.MIN_STALING);
+  });
+});
+
+// R227 — localization coverage
+describe('localeForCountry', () => {
+  test.each([
+    ['NL', 'nl'], ['DE', 'de'], ['FR', 'fr'],
+    ['ES', 'es'], ['IT', 'it'], ['UK', 'en'],
+  ] as const)('%s → %s', (country, expected) => {
+    expect(localeForCountry(country)).toBe(expected);
+  });
+  test('null / unknown → en', () => {
+    expect(localeForCountry(null)).toBe('en');
+    expect(localeForCountry('XX')).toBe('en');
+    expect(localeForCountry(undefined)).toBe('en');
+  });
+});
+
+describe('formatForLocale', () => {
+  const overdue = pickDailyPush({
+    ...zero,
+    overdueInvoiceCount: 2,
+    overdueInvoiceAmount: 3500,
+  })!;
+
+  test('NL overdue uses "te laat" with dot thousands', () => {
+    const out = formatForLocale(overdue, 'nl');
+    expect(out.title).toContain('€3.500 te laat');
+    expect(out.body).toContain('facturen staan open');
+  });
+
+  test('DE overdue uses "überfällig"', () => {
+    const out = formatForLocale(overdue, 'de');
+    expect(out.title).toContain('überfällig');
+    expect(out.body).toContain('Rechnungen');
+  });
+
+  test('FR overdue uses space thousands', () => {
+    const out = formatForLocale(overdue, 'fr');
+    // FR uses space-as-thousands — match any whitespace char to avoid
+    // flakes across Node ICU / intl datasets.
+    expect(out.title).toMatch(/3\s500/);
+    expect(out.body).toContain('factures');
+  });
+
+  test('ES overdue uses "vencidos" + dot thousands', () => {
+    const out = formatForLocale(overdue, 'es');
+    expect(out.title).toContain('3.500');
+    expect(out.title).toContain('vencidos');
+  });
+
+  test('IT overdue uses "in scadenza"', () => {
+    const out = formatForLocale(overdue, 'it');
+    expect(out.title).toContain('in scadenza');
+    expect(out.body).toContain('fatture scadute');
+  });
+
+  test('queue_waiting has no plural variant — uses "any" in all 6 locales', () => {
+    const dec = pickDailyPush({ ...zero, queuePendingCount: 4 })!;
+    for (const loc of ['en', 'nl', 'de', 'fr', 'es', 'it'] as const) {
+      const out = formatForLocale(dec, loc);
+      expect(out.title).toContain('4');
+      expect(out.body.length).toBeGreaterThan(10);
+    }
+  });
+
+  test('singular variant fires when count === 1', () => {
+    const dec = pickDailyPush({ ...zero, stalingQuoteCount: 1 })!;
+    const nl = formatForLocale(dec, 'nl');
+    // NL has distinct singular ("offerte loopt vast") vs plural ("offertes lopen vast")
+    expect(nl.title).toContain('offerte loopt vast');
+  });
+
+  test('every (locale, type) combo resolves to a non-empty title+body', () => {
+    const fixtures = [
+      pickDailyPush({ ...zero, overdueInvoiceCount: 1, overdueInvoiceAmount: 500 })!,
+      pickDailyPush({ ...zero, queuePendingCount: 3 })!,
+      pickDailyPush({ ...zero, stalingQuoteCount: 2 })!,
+      pickDailyPush({ ...zero, jobsTomorrowCount: 1 })!,
+    ];
+    for (const dec of fixtures) {
+      for (const loc of ['en', 'nl', 'de', 'fr', 'es', 'it'] as const) {
+        const out = formatForLocale(dec, loc);
+        expect(out.title.length).toBeGreaterThan(0);
+        expect(out.body.length).toBeGreaterThan(0);
+        // {count} / {amount} placeholders must be resolved.
+        expect(out.title).not.toContain('{count}');
+        expect(out.title).not.toContain('{amount}');
+        expect(out.body).not.toContain('{count}');
+      }
+    }
   });
 });
