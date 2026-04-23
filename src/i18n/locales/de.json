@@ -1076,6 +1076,20 @@
     "firstJob": "Ersten Auftrag einplanen",
     "firstPayment": "Erste Zahlung erhalten"
   },
+  "referrals": {
+    "title": "Handwerker einladen",
+    "heroTitle": "Vasco teilen, gemeinsam sparen",
+    "heroSub": "Jeder Handwerker, der sich mit deinem Code anmeldet, bekommt einen Monat gratis — du auch, sobald er die erste Rechnung sendet.",
+    "yourCode": "Dein Code",
+    "shareCta": "Code teilen",
+    "statInvited": "Eingeladen",
+    "statActive": "Aktiv",
+    "statCredited": "Gutschrift erhalten",
+    "footnote": "Die Gutschrift wird automatisch ausgelöst, sobald ein eingeladener Handwerker seine erste Rechnung versendet. Kein Ablauf.",
+    "shareErrorTitle": "Teilen fehlgeschlagen",
+    "entryLabel": "Handwerker einladen",
+    "entrySub": "Beide einen Monat gratis bei erster Rechnung"
+  },
   "insights": {
     "thanksFeedback": "Danke für dein Feedback",
     "handled": "Erledigt",

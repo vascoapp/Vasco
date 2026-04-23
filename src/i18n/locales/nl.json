@@ -1076,6 +1076,20 @@
     "firstJob": "Plan je eerste klus",
     "firstPayment": "Ontvang je eerste betaling"
   },
+  "referrals": {
+    "title": "Nodig vakmannen uit",
+    "heroTitle": "Deel Vasco, bespaar samen",
+    "heroSub": "Elke vakman die zich aanmeldt met jouw code krijgt een maand gratis — en jij ook, zodra ze hun eerste factuur sturen.",
+    "yourCode": "Jouw code",
+    "shareCta": "Deel mijn code",
+    "statInvited": "Uitgenodigd",
+    "statActive": "Actief",
+    "statCredited": "Beloning ontvangen",
+    "footnote": "Beloning wordt automatisch toegekend zodra een uitgenodigde vakman de eerste factuur stuurt. Geen vervaldatum.",
+    "shareErrorTitle": "Delen mislukt",
+    "entryLabel": "Nodig vakmannen uit",
+    "entrySub": "Beiden een maand gratis bij eerste factuur"
+  },
   "insights": {
     "thanksFeedback": "Bedankt voor je feedback",
     "handled": "Afgehandeld",

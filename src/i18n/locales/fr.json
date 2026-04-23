@@ -1076,6 +1076,20 @@
     "firstJob": "Planifiez votre premier chantier",
     "firstPayment": "Recevez votre premier paiement"
   },
+  "referrals": {
+    "title": "Inviter des artisans",
+    "heroTitle": "Partagez Vasco, économisez ensemble",
+    "heroSub": "Chaque artisan qui s'inscrit avec votre code reçoit un mois offert — vous aussi, dès qu'il envoie sa première facture.",
+    "yourCode": "Votre code",
+    "shareCta": "Partager mon code",
+    "statInvited": "Invités",
+    "statActive": "Actifs",
+    "statCredited": "Crédités",
+    "footnote": "Le crédit est appliqué automatiquement dès qu'un artisan invité envoie sa première facture. Sans expiration.",
+    "shareErrorTitle": "Partage impossible",
+    "entryLabel": "Inviter des artisans",
+    "entrySub": "Un mois offert pour chacun dès la première facture"
+  },
   "insights": {
     "thanksFeedback": "Merci pour votre retour",
     "handled": "Terminé",

@@ -1076,6 +1076,20 @@
     "firstJob": "Schedule your first job",
     "firstPayment": "Receive your first payment"
   },
+  "referrals": {
+    "title": "Invite contractors",
+    "heroTitle": "Share Vasco, save together",
+    "heroSub": "Every contractor who signs up with your code gets a month free — and so do you, once they send their first invoice.",
+    "yourCode": "Your code",
+    "shareCta": "Share my code",
+    "statInvited": "Invited",
+    "statActive": "Active",
+    "statCredited": "Credited",
+    "footnote": "Credit is applied automatically when a referred contractor sends their first invoice. No expiry.",
+    "shareErrorTitle": "Share failed",
+    "entryLabel": "Invite contractors",
+    "entrySub": "Both get a free month when they invoice"
+  },
   "insights": {
     "thanksFeedback": "Thanks for your feedback",
     "handled": "Done",

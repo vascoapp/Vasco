@@ -334,6 +334,17 @@ export default function ProfileScreen() {
               <Text style={styles.rowLabel}>{t('profile.privacyTerms', 'Privacy & terms')}</Text>
               <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
             </Pressable>
+            {/* R229: referrals entry */}
+            <Pressable
+              style={[styles.row, styles.rowBorder]}
+              onPress={() => router.push('/contractor/referrals' as any)}
+            >
+              <View style={styles.rowIcon}>
+                <Ionicons name="people" size={18} color={Palette.hermesOrange} />
+              </View>
+              <Text style={styles.rowLabel}>{t('referrals.entryLabel', 'Invite contractors')}</Text>
+              <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+            </Pressable>
           </View>
         </View>
 

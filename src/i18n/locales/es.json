@@ -1076,6 +1076,20 @@
     "firstJob": "Programa tu primera obra",
     "firstPayment": "Recibe tu primer pago"
   },
+  "referrals": {
+    "title": "Invita contratistas",
+    "heroTitle": "Comparte Vasco, ahorra juntos",
+    "heroSub": "Cada contratista que se registre con tu código recibe un mes gratis — y tú también, en cuanto envíe su primera factura.",
+    "yourCode": "Tu código",
+    "shareCta": "Compartir mi código",
+    "statInvited": "Invitados",
+    "statActive": "Activos",
+    "statCredited": "Acreditados",
+    "footnote": "El crédito se aplica automáticamente cuando un contratista referido envía su primera factura. Sin caducidad.",
+    "shareErrorTitle": "No se pudo compartir",
+    "entryLabel": "Invita contratistas",
+    "entrySub": "Un mes gratis para ambos con la primera factura"
+  },
   "insights": {
     "thanksFeedback": "Gracias por tu comentario",
     "handled": "Hecho",

@@ -1076,6 +1076,20 @@
     "firstJob": "Pianifica il primo cantiere",
     "firstPayment": "Ricevi il primo pagamento"
   },
+  "referrals": {
+    "title": "Invita artigiani",
+    "heroTitle": "Condividi Vasco, risparmiate insieme",
+    "heroSub": "Ogni artigiano che si iscrive con il tuo codice riceve un mese gratis — e tu pure, appena invia la sua prima fattura.",
+    "yourCode": "Il tuo codice",
+    "shareCta": "Condividi il codice",
+    "statInvited": "Invitati",
+    "statActive": "Attivi",
+    "statCredited": "Accreditati",
+    "footnote": "Il credito viene applicato automaticamente quando un artigiano invitato invia la sua prima fattura. Senza scadenza.",
+    "shareErrorTitle": "Condivisione fallita",
+    "entryLabel": "Invita artigiani",
+    "entrySub": "Un mese gratis per entrambi alla prima fattura"
+  },
   "insights": {
     "thanksFeedback": "Grazie per il feedback",
     "handled": "Fatto",
