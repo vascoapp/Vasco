@@ -62,5 +62,24 @@ select cron.schedule(
   $$
 );
 
+-- R226 — daily money-relevant push digest at 18:00 UTC.
+-- Picks one push per user per day (overdue invoices / EVE queue /
+-- staling quotes / tomorrow's jobs) and fans out via send-push.
+-- Rate-limited to max 1/user/day + 24h dedupe on (type, entity_key).
+select cron.schedule(
+  'vasco-daily-push-digest',
+  '0 18 * * *',
+  $$
+    select net.http_post(
+      url := '<SUPABASE_URL>/functions/v1/daily-push-digest',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
+      ),
+      body := '{}'::jsonb
+    );
+  $$
+);
+
 -- Listing live jobs (run in psql after setup to verify):
 -- select * from cron.job;
