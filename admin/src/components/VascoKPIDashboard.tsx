@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchKPIDashboardData, isUsingDemoData, type KPIDashboardData, type DailyRevenue } from "@/lib/kpi";
+import { AdminRetentionCohorts } from "./AdminRetentionCohorts";
 
 const PERIODS = [
   { label: "7d", days: 7 },
@@ -253,6 +254,9 @@ export function VascoKPIDashboard() {
           <StatCard label="WAU / MAU" value={`${((users.activeThisWeek / users.activeThisMonth) * 100).toFixed(0)}%`} sub="stickiness" />
         </div>
       </div>
+
+      {/* R224 — signup cohort retention heatmap */}
+      <AdminRetentionCohorts />
     </div>
   );
 }
