@@ -28,6 +28,7 @@ import { useClockIn } from '../../src/services/clockInService';
 import { formatAmount } from '../../src/utils/formatAmount';
 import { hapticSuccess, hapticWarning } from '../../src/utils/haptics';
 import { DKLabel } from '../../src/components/shared/DKLabel';
+import { ActivationChecklist } from '../../src/components/contractor/ActivationChecklist';
 
 export default function VandaagDK() {
   const { t, i18n } = useTranslation();
@@ -104,6 +105,9 @@ export default function VandaagDK() {
             <Text style={styles.clockTimer}>{clockIn.timerDisplay}</Text>
           </View>
         ) : null}
+
+        {/* 2b. ACTIVATION CHECKLIST (R225) — auto-hides when all 5 milestones met */}
+        <ActivationChecklist />
 
         {/* 3. KPI ROW ─── 3 stats matching legacy ContractorDashboardHeader */}
         <View style={styles.kpiRow}>

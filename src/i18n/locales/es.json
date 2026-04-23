@@ -1067,6 +1067,15 @@
     "lateRiskAction": "Planificar recordatorio",
     "lateRiskImpact": "~€{{value}} en riesgo de retraso"
   },
+  "activation": {
+    "title": "Configuración",
+    "progress": "{{done}} de {{total}} · primera victoria rápida",
+    "profile": "Completa tu perfil de empresa",
+    "firstCustomer": "Añade tu primer cliente",
+    "firstQuote": "Envía tu primer presupuesto",
+    "firstJob": "Programa tu primera obra",
+    "firstPayment": "Recibe tu primer pago"
+  },
   "insights": {
     "thanksFeedback": "Gracias por tu comentario",
     "handled": "Hecho",

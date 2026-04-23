@@ -1067,6 +1067,15 @@
     "lateRiskAction": "Vroege herinnering plannen",
     "lateRiskImpact": "~€{{value}} loopt vertraging op"
   },
+  "activation": {
+    "title": "Aan de slag",
+    "progress": "{{done}} van {{total}} · snel eerste winst",
+    "profile": "Maak je bedrijfsprofiel af",
+    "firstCustomer": "Voeg je eerste klant toe",
+    "firstQuote": "Stuur je eerste offerte",
+    "firstJob": "Plan je eerste klus",
+    "firstPayment": "Ontvang je eerste betaling"
+  },
   "insights": {
     "thanksFeedback": "Bedankt voor je feedback",
     "handled": "Afgehandeld",

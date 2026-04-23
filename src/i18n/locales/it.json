@@ -1067,6 +1067,15 @@
     "lateRiskAction": "Pianifica sollecito anticipato",
     "lateRiskImpact": "~€{{value}} a rischio di ritardo"
   },
+  "activation": {
+    "title": "Configurazione",
+    "progress": "{{done}} di {{total}} · prima vittoria veloce",
+    "profile": "Completa il profilo aziendale",
+    "firstCustomer": "Aggiungi il primo cliente",
+    "firstQuote": "Invia il primo preventivo",
+    "firstJob": "Pianifica il primo cantiere",
+    "firstPayment": "Ricevi il primo pagamento"
+  },
   "insights": {
     "thanksFeedback": "Grazie per il feedback",
     "handled": "Fatto",

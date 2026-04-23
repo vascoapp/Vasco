@@ -1067,6 +1067,15 @@
     "lateRiskAction": "Plan early reminder",
     "lateRiskImpact": "~€{{value}} at risk of delay"
   },
+  "activation": {
+    "title": "Get set up",
+    "progress": "{{done}} of {{total}} · first win fast",
+    "profile": "Complete your business profile",
+    "firstCustomer": "Add your first customer",
+    "firstQuote": "Send your first quote",
+    "firstJob": "Schedule your first job",
+    "firstPayment": "Receive your first payment"
+  },
   "insights": {
     "thanksFeedback": "Thanks for your feedback",
     "handled": "Done",

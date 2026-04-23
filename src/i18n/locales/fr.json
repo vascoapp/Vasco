@@ -1067,6 +1067,15 @@
     "lateRiskAction": "Planifier une relance précoce",
     "lateRiskImpact": "~€{{value}} exposés au retard"
   },
+  "activation": {
+    "title": "Configuration",
+    "progress": "{{done}} sur {{total}} · premier résultat rapide",
+    "profile": "Complétez votre profil entreprise",
+    "firstCustomer": "Ajoutez votre premier client",
+    "firstQuote": "Envoyez votre premier devis",
+    "firstJob": "Planifiez votre premier chantier",
+    "firstPayment": "Recevez votre premier paiement"
+  },
   "insights": {
     "thanksFeedback": "Merci pour votre retour",
     "handled": "Terminé",

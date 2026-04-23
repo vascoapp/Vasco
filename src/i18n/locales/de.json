@@ -1067,6 +1067,15 @@
     "lateRiskAction": "Frühe Erinnerung planen",
     "lateRiskImpact": "~€{{value}} von Verzug bedroht"
   },
+  "activation": {
+    "title": "Einrichtung",
+    "progress": "{{done}} von {{total}} · schneller erster Erfolg",
+    "profile": "Firmenprofil vervollständigen",
+    "firstCustomer": "Ersten Kunden anlegen",
+    "firstQuote": "Erstes Angebot versenden",
+    "firstJob": "Ersten Auftrag einplanen",
+    "firstPayment": "Erste Zahlung erhalten"
+  },
   "insights": {
     "thanksFeedback": "Danke für dein Feedback",
     "handled": "Erledigt",
