@@ -24,7 +24,7 @@
       "bundleIdentifier": "com.vasco.app",
       "scheme": "vasco",
       "buildNumber": "1",
-      "associatedDomains": ["applinks:vasco.app", "applinks:pay.vasco.app"],
+      "associatedDomains": ["applinks:vasco.app", "applinks:pay.vasco.app", "applinks:admin.vasco.app"],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Vasco uses the camera to scan invoices, receipts, and take job site photos.",
@@ -45,7 +45,8 @@
           "data": [
             { "scheme": "https", "host": "vasco.app", "pathPrefix": "/quote" },
             { "scheme": "https", "host": "vasco.app", "pathPrefix": "/invoice" },
-            { "scheme": "https", "host": "pay.vasco.app" }
+            { "scheme": "https", "host": "pay.vasco.app" },
+            { "scheme": "https", "host": "admin.vasco.app", "pathPrefix": "/ref" }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }
