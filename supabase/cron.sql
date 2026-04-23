@@ -81,5 +81,24 @@ select cron.schedule(
   $$
 );
 
+-- R228 — weekly churn win-back email, Mondays 10:00 UTC.
+-- Finds users with 14+ days of zero business_events + 7+ days since
+-- signup, picks new_stalled or active_quiet variant, sends via Resend.
+-- Rate-limited to 1 email per user per 30 days.
+select cron.schedule(
+  'vasco-churn-winback',
+  '0 10 * * 1',
+  $$
+    select net.http_post(
+      url := '<SUPABASE_URL>/functions/v1/churn-winback-email',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
+      ),
+      body := '{}'::jsonb
+    );
+  $$
+);
+
 -- Listing live jobs (run in psql after setup to verify):
 -- select * from cron.job;
