@@ -100,5 +100,24 @@ select cron.schedule(
   $$
 );
 
+-- R232 — daily referral credit grant, 04:00 UTC.
+-- Calls grant_referral_credits RPC which flips every activated
+-- attribution to 'credited' and inserts 1-month subscription_credits
+-- rows for both referrer and referred. Idempotent.
+select cron.schedule(
+  'vasco-grant-referral-credits',
+  '0 4 * * *',
+  $$
+    select net.http_post(
+      url := '<SUPABASE_URL>/functions/v1/grant-referral-credits',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
+      ),
+      body := '{}'::jsonb
+    );
+  $$
+);
+
 -- Listing live jobs (run in psql after setup to verify):
 -- select * from cron.job;
