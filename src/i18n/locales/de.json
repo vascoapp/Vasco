@@ -1086,6 +1086,7 @@
     "statActive": "Aktiv",
     "statCredited": "Gutschrift erhalten",
     "footnote": "Die Gutschrift wird automatisch ausgelöst, sobald ein eingeladener Handwerker seine erste Rechnung versendet. Kein Ablauf.",
+    "creditsAvailable": "{{months}} Monat(e) Abo-Guthaben bereit — wird bei deiner nächsten Verlängerung angewendet.",
     "shareErrorTitle": "Teilen fehlgeschlagen",
     "entryLabel": "Handwerker einladen",
     "entrySub": "Beide einen Monat gratis bei erster Rechnung"

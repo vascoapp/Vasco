@@ -1086,6 +1086,7 @@
     "statActive": "Actifs",
     "statCredited": "Crédités",
     "footnote": "Le crédit est appliqué automatiquement dès qu'un artisan invité envoie sa première facture. Sans expiration.",
+    "creditsAvailable": "{{months}} mois de crédit d'abonnement prêts — appliqués à votre prochain renouvellement.",
     "shareErrorTitle": "Partage impossible",
     "entryLabel": "Inviter des artisans",
     "entrySub": "Un mois offert pour chacun dès la première facture"

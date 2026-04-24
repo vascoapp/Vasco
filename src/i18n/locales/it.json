@@ -1086,6 +1086,7 @@
     "statActive": "Attivi",
     "statCredited": "Accreditati",
     "footnote": "Il credito viene applicato automaticamente quando un artigiano invitato invia la sua prima fattura. Senza scadenza.",
+    "creditsAvailable": "{{months}} mese/i di credito abbonamento pronti — applicati al prossimo rinnovo.",
     "shareErrorTitle": "Condivisione fallita",
     "entryLabel": "Invita artigiani",
     "entrySub": "Un mese gratis per entrambi alla prima fattura"

@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/context/AuthContext';
 import { useReferral } from '../../src/services/referralService';
+import { useCreditsSummary } from '../../src/services/subscriptionCreditsService';
 import { DK } from '../../src/theme/draftkings';
 import { TYPE, RADIUS, GRID, PAGE_BG } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
@@ -22,6 +23,7 @@ export default function ReferralsScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { code, summary, shareUrl, loading, refresh } = useReferral(user?.id ?? null);
+  const { summary: credits } = useCreditsSummary(user?.id ?? null);
 
   const handleShare = async () => {
     if (!shareUrl || !code) return;
@@ -87,6 +89,20 @@ export default function ReferralsScreen() {
           <StatPill label={t('referrals.statActive', 'Active')} value={summary?.activatedCount ?? 0} />
           <StatPill label={t('referrals.statCredited', 'Credited')} value={summary?.creditedCount ?? 0} />
         </View>
+
+        {/* R233: available subscription-credit balance (months). Hidden
+            when zero — keeps the screen quiet until there's real value. */}
+        {credits && credits.availableMonths > 0 && (
+          <View style={s.creditBanner}>
+            <Ionicons name="gift" size={18} color={DK.colors.accent} />
+            <Text style={s.creditBannerText}>
+              {t('referrals.creditsAvailable', {
+                defaultValue: '{{months}} month(s) of subscription credit ready — applied at your next renewal.',
+                months: credits.availableMonths,
+              })}
+            </Text>
+          </View>
+        )}
 
         <Text style={s.footnote}>
           {t('referrals.footnote', 'Credit is applied automatically when a referred contractor sends their first invoice. No expiry.')}
@@ -177,6 +193,24 @@ const s = StyleSheet.create({
   statsRow: {
     flexDirection: 'row',
     gap: GRID.sm,
+  },
+  creditBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.sm,
+    backgroundColor: DK.colors.accent + '14',
+    borderWidth: 1,
+    borderColor: DK.colors.accent + '40',
+    borderRadius: RADIUS.md,
+    paddingVertical: GRID.sm,
+    paddingHorizontal: GRID.md,
+  },
+  creditBannerText: {
+    flex: 1,
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.bodyFamily,
+    color: DK.colors.text,
+    lineHeight: 20,
   },
   pill: {
     flex: 1,

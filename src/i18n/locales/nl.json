@@ -1086,6 +1086,7 @@
     "statActive": "Actief",
     "statCredited": "Beloning ontvangen",
     "footnote": "Beloning wordt automatisch toegekend zodra een uitgenodigde vakman de eerste factuur stuurt. Geen vervaldatum.",
+    "creditsAvailable": "{{months}} maand(en) abonnementstegoed klaar — wordt toegepast bij je volgende verlenging.",
     "shareErrorTitle": "Delen mislukt",
     "entryLabel": "Nodig vakmannen uit",
     "entrySub": "Beiden een maand gratis bij eerste factuur"

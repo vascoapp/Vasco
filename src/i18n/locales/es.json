@@ -1086,6 +1086,7 @@
     "statActive": "Activos",
     "statCredited": "Acreditados",
     "footnote": "El crédito se aplica automáticamente cuando un contratista referido envía su primera factura. Sin caducidad.",
+    "creditsAvailable": "{{months}} mes(es) de crédito de suscripción listos — se aplican en tu próxima renovación.",
     "shareErrorTitle": "No se pudo compartir",
     "entryLabel": "Invita contratistas",
     "entrySub": "Un mes gratis para ambos con la primera factura"

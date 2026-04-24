@@ -1086,6 +1086,7 @@
     "statActive": "Active",
     "statCredited": "Credited",
     "footnote": "Credit is applied automatically when a referred contractor sends their first invoice. No expiry.",
+    "creditsAvailable": "{{months}} month(s) of subscription credit ready — applied at your next renewal.",
     "shareErrorTitle": "Share failed",
     "entryLabel": "Invite contractors",
     "entrySub": "Both get a free month when they invoice"
