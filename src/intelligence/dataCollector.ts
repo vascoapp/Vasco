@@ -208,6 +208,11 @@ export async function emitMaterialPurchased(userId: string, data: {
   unit: string;
   trade: string;
   jobId?: string;
+  // R241: optional fields needed by predictors but missing from many call sites.
+  country?: string;
+  materialCategory?: string;
+  deliveryDays?: number;
+  postcode?: string;
 }): Promise<void> {
   await emitBusinessEvent(userId, {
     eventType: 'material_purchased',
@@ -216,6 +221,33 @@ export async function emitMaterialPurchased(userId: string, data: {
     payload: data,
     trade: data.trade,
   });
+
+  // R241: cloud-sync emit audit fix. emitBusinessEvent only writes to
+  // business_events; the material price spike + supplier lead-time
+  // predictors read from material_price_history directly. Without a
+  // direct insert here, those models get zero training data forever.
+  if (isSupabaseConfigured) {
+    try {
+      await supabase.from('material_price_history').insert({
+        user_id: userId,
+        supplier_id: data.supplierId,
+        supplier_name: data.supplierName,
+        material_name: data.materialName,
+        material_category: data.materialCategory ?? null,
+        unit_price: data.price,
+        quantity: data.quantity,
+        unit: data.unit,
+        total_price: data.price * data.quantity,
+        trade: data.trade,
+        country: data.country ?? null,
+        delivery_days: data.deliveryDays ?? null,
+        postcode: data.postcode ?? null,
+        observed_at: new Date().toISOString(),
+      } as any);
+    } catch {
+      // Silent — business_events still has the event for fallback.
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect, type React
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { startAutoSync, stopAutoSync } from '../intelligence/cloudSync';
+import { startEventFlushing, stopEventFlushing } from '../intelligence/dataCollector';
 import { trackEvent, initSession, setUserContext, clearUserContext, flushEvents } from '../services/eventTrackingService';
 import { DEMO_MODE } from '../config/demo';
 import { logWarn } from '../utils/errorHandler';
@@ -497,8 +498,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await clearLockout(normalizedEmail);
       setUser(mockUser);
       setIsLoading(false);
-      // Start AI cloud sync
+      // Start AI cloud sync + event-queue flusher (R241: was previously
+      // never started — events sat in AsyncStorage forever unless an
+      // emit happened to flush inline).
       startAutoSync(normalizedEmail, mockUser.role ?? 'contractor', mockUser.trade, mockUser.country);
+      startEventFlushing(mockUser.id);
       // Analytics tracking
       const analyticsRole = mockUser.role === 'site-lead' ? 'sitelead' as const : (mockUser.role === 'contractor' ? 'contractor' as const : 'contractor' as const);
       initSession({ userId: mockUser.id, role: analyticsRole, country: mockUser.country ?? 'NL' }).catch(() => {});
@@ -557,6 +561,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {}
     clearUserContext();
     stopAutoSync();
+    stopEventFlushing();
     if (isSupabaseConfigured) {
       await supabase.auth.signOut();
     }
