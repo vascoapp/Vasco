@@ -153,6 +153,32 @@ let approvalRateCache: Map<string, number> = new Map(); // generatorId → appro
 let approvalRateCacheAge = 0;
 const APPROVAL_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
+// R237: cross-contractor (global) approval rates from
+// generator_approval_rates_global view. Refreshed lazily, TTL 1h.
+// Blended into the per-user signal at low weight so personal preferences
+// dominate but a generator that's universally rejected still gets dampened.
+let globalApprovalRateCache: Map<string, number> = new Map();
+let globalApprovalRateCacheAge = 0;
+const GLOBAL_APPROVAL_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+const GLOBAL_BLEND_WEIGHT = 0.3; // local rate weighted 0.7, global 0.3
+
+export async function refreshGlobalApprovalRateCache(): Promise<void> {
+  try {
+    const { supabase, isSupabaseConfigured } = await import('../lib/supabase');
+    if (!isSupabaseConfigured) return;
+    const { data, error } = await (supabase.rpc as any)('get_global_generator_rates');
+    if (error || !Array.isArray(data)) return;
+    const cache = new Map<string, number>();
+    for (const row of data as Array<{ generator_id: string; approval_rate: number | null }>) {
+      if (row.generator_id && row.approval_rate !== null && Number.isFinite(row.approval_rate)) {
+        cache.set(row.generator_id, row.approval_rate);
+      }
+    }
+    globalApprovalRateCache = cache;
+    globalApprovalRateCacheAge = Date.now();
+  } catch { /* silent */ }
+}
+
 export async function refreshApprovalRateCache(): Promise<void> {
   try {
     const [history, outcomes] = await Promise.all([
@@ -197,14 +223,32 @@ export async function refreshApprovalRateCache(): Promise<void> {
 }
 
 function getApprovalRateMultiplier(generatorId: string): number {
-  // Auto-refresh stale cache
+  // Auto-refresh stale per-user cache
   if (approvalRateCacheAge === 0 || Date.now() - approvalRateCacheAge > APPROVAL_CACHE_TTL_MS) {
     refreshApprovalRateCache().catch(() => {});
   }
-  const rate = approvalRateCache.get(generatorId);
-  if (rate === undefined) return 1.0; // no history → neutral
-  if (rate >= 0.8) return 1.3;        // 80%+ approval → boost
-  if (rate <= 0.2) return 0.5;        // 20%- approval → dampen
+  // Auto-refresh stale global cache (R237)
+  if (globalApprovalRateCacheAge === 0 || Date.now() - globalApprovalRateCacheAge > GLOBAL_APPROVAL_CACHE_TTL_MS) {
+    refreshGlobalApprovalRateCache().catch(() => {});
+  }
+
+  const localRate = approvalRateCache.get(generatorId);
+  const globalRate = globalApprovalRateCache.get(generatorId);
+
+  // Blend: local dominates (0.7) when present, global fills in or nudges (0.3).
+  // If only one signal exists, it carries full weight.
+  let blended: number | null = null;
+  if (localRate !== undefined && globalRate !== undefined) {
+    blended = localRate * (1 - GLOBAL_BLEND_WEIGHT) + globalRate * GLOBAL_BLEND_WEIGHT;
+  } else if (localRate !== undefined) {
+    blended = localRate;
+  } else if (globalRate !== undefined) {
+    blended = globalRate;
+  }
+
+  if (blended === null) return 1.0;   // no history → neutral
+  if (blended >= 0.8) return 1.3;     // 80%+ approval → boost
+  if (blended <= 0.2) return 0.5;     // 20%- approval → dampen
   return 1.0;                          // middle ground → neutral
 }
 

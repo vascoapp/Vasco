@@ -439,6 +439,50 @@ export async function resolveOutcomesFromJobHistory(): Promise<void> {
     { generatorId: 'labor-efficiency', actualValue: avgDurationRatio, tolerancePercent: 20 },
     { generatorId: 'capacity', actualValue: avgDurationRatio * 100, tolerancePercent: 25 },
     { generatorId: 'estimation-variance-type', actualValue: avgVarianceRatio * 100, tolerancePercent: 15 },
+    // R237: extended coverage — these generators predict against the same
+    // job-completion signals; passing them through the same resolver lets
+    // the calibration multiplier kick in for them too.
+    { generatorId: 'margin-warning', actualValue: avgMargin, tolerancePercent: 15 },
+    { generatorId: 'similar-job-comparison', actualValue: avgDurationRatio, tolerancePercent: 25 },
+    { generatorId: 'crew-performance', actualValue: avgDurationRatio, tolerancePercent: 25 },
+    { generatorId: 'project-budget-variance', actualValue: totalLeakage, tolerancePercent: 20 },
+    { generatorId: 'project-risk-score', actualValue: avgVarianceRatio * 100, tolerancePercent: 25 },
+  ]);
+}
+
+/**
+ * Resolve quote-outcome predictions. Called when a quote is accepted or
+ * rejected. Generators that predicted likelihood-of-acceptance get graded
+ * here; the actualValue is 1 for accepted, 0 for rejected.
+ */
+export async function resolveOutcomesFromQuoteOutcome(
+  accepted: boolean,
+  daysToDecision?: number,
+): Promise<void> {
+  const { resolveCalibrationPredictions } = await import('./calibration');
+  const v = accepted ? 100 : 0; // %-style for tolerance math
+  const ops: Array<{ generatorId: string; actualValue: number; tolerancePercent?: number }> = [
+    { generatorId: 'quote-benchmark', actualValue: v, tolerancePercent: 20 },
+    { generatorId: 'customer-lifecycle', actualValue: v, tolerancePercent: 25 },
+  ];
+  if (typeof daysToDecision === 'number' && daysToDecision >= 0) {
+    ops.push({ generatorId: 'customer-payment-history', actualValue: daysToDecision, tolerancePercent: 30 });
+  }
+  await resolveCalibrationPredictions(ops);
+}
+
+/**
+ * Resolve material/supplier predictions. Called when a material purchase
+ * lands. actualPrice is what the contractor paid per unit.
+ */
+export async function resolveOutcomesFromMaterialPurchase(
+  actualUnitPrice: number,
+): Promise<void> {
+  const { resolveCalibrationPredictions } = await import('./calibration');
+  await resolveCalibrationPredictions([
+    { generatorId: 'supplier-price', actualValue: actualUnitPrice, tolerancePercent: 15 },
+    { generatorId: 'material-suggestion', actualValue: actualUnitPrice, tolerancePercent: 20 },
+    { generatorId: 'supplier-price-anomaly', actualValue: actualUnitPrice, tolerancePercent: 20 },
   ]);
 }
 

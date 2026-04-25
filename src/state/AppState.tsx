@@ -1131,6 +1131,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           trade: 'general',
           jobId: jm.jobId,
         }).catch(() => {});
+        // R237: resolve calibration predictions tied to material/supplier signals.
+        if ((jm.unitPrice ?? 0) > 0) {
+          import('../intelligence/learningStorage').then((m) =>
+            m.resolveOutcomesFromMaterialPurchase(jm.unitPrice ?? 0),
+          ).catch(() => {});
+        }
         return tempId;
       },
       updateJobMaterialStatus: (id, jobId, status) => {
@@ -1302,6 +1308,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         import('../intelligence/mlModels').then((ml) =>
           ml.recordModelPrediction('quote_win', 0.5, 1),
         ).catch(() => {});
+        // R237: also resolve quote-outcome calibration predictions for
+        // generators that predicted likelihood-of-acceptance.
+        import('../intelligence/learningStorage').then((m) =>
+          m.resolveOutcomesFromQuoteOutcome(true, ttdHoursAcc !== undefined ? Math.round(ttdHoursAcc / 24) : undefined),
+        ).catch(() => {});
 
         if (isSupabaseConfigured) {
           try {
@@ -1434,6 +1445,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             counterOfferAmount: counterOffer,
             timeToDecisionHours,
           }).catch(() => {});
+          // R237: resolve quote-outcome calibration predictions for the
+          // generators that predicted likelihood-of-acceptance.
+          import('../intelligence/learningStorage').then((m) =>
+            m.resolveOutcomesFromQuoteOutcome(false, timeToDecisionHours !== undefined ? Math.round(timeToDecisionHours / 24) : undefined),
+          ).catch(() => {});
         }
       },
 

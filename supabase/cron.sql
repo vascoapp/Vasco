@@ -119,5 +119,34 @@ select cron.schedule(
   $$
 );
 
+-- R237 — weekly ML retrain, Mondays 02:00 UTC.
+-- Walks every (trade, country) cohort and retrains the quote-win model so
+-- low-traffic cohorts retrain on a schedule instead of waiting for a quote
+-- draft to fire client-side retrainInBackground. Also refreshes
+-- cohort_weekly_stats for the current ISO week.
+select cron.schedule(
+  'vasco-weekly-retrain-models',
+  '0 2 * * 1',
+  $$
+    select net.http_post(
+      url := '<SUPABASE_URL>/functions/v1/weekly-retrain-models',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
+      ),
+      body := '{}'::jsonb
+    );
+  $$
+);
+
+-- R237 — nightly refresh of generator_approval_rates_global, 03:30 UTC.
+-- Cross-contractor approval-rate aggregation that insightScorer blends into
+-- per-user signal. Refreshed in-DB (no edge function needed).
+select cron.schedule(
+  'vasco-refresh-generator-approval-rates',
+  '30 3 * * *',
+  $$ select public.refresh_generator_approval_rates(); $$
+);
+
 -- Listing live jobs (run in psql after setup to verify):
 -- select * from cron.job;

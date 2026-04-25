@@ -107,7 +107,47 @@ Deno.serve(async (req) => {
       seasonalFactor = seasonalMedian / median;
     }
 
-    const adjustedPrice = suggestedPrice * regionalFactor * seasonalFactor;
+    // Delta-correction factor (R237): contractors edit AI/cohort baselines
+    // via the reasonCodeService, recording (original_unit_price → new_unit_price)
+    // with source='ai_draft' or 'cohort'. We use the median ratio for the
+    // same trade × country in the last 90 days as a residual correction.
+    // Closes the loop: if AI consistently underestimates electrical jobs in
+    // NL by 8%, every future suggestion lifts by 8%.
+    let deltaFactor = 1.0;
+    let deltaSampleSize = 0;
+    try {
+      const { data: deltas } = await supabase
+        .from('quote_line_deltas')
+        .select('original_unit_price, new_unit_price, source')
+        .eq('trade', trade)
+        .eq('country', country)
+        .in('source', ['ai_draft', 'cohort'])
+        .not('original_unit_price', 'is', null)
+        .not('new_unit_price', 'is', null)
+        .gte('created_at', new Date(Date.now() - 90 * 86400000).toISOString())
+        .limit(500);
+      if (deltas && deltas.length >= 5) {
+        const ratios = (deltas as Array<{ original_unit_price: number; new_unit_price: number }>)
+          .map((d) => {
+            const pred = Number(d.original_unit_price) || 0;
+            const edited = Number(d.new_unit_price) || 0;
+            if (pred <= 0) return null;
+            return edited / pred;
+          })
+          .filter((r): r is number => r !== null && Number.isFinite(r) && r > 0.3 && r < 3.0)
+          .sort((a, b) => a - b);
+        if (ratios.length >= 5) {
+          const median = ratios[Math.floor(ratios.length / 2)];
+          // Clamp so a noisy week can't swing predictions more than ±20%.
+          deltaFactor = Math.max(0.8, Math.min(1.2, median));
+          deltaSampleSize = ratios.length;
+        }
+      }
+    } catch {
+      // Best-effort — never block prediction on the correction signal.
+    }
+
+    const adjustedPrice = suggestedPrice * regionalFactor * seasonalFactor * deltaFactor;
 
     // 3. Margin insights
     const margins = pricingData
@@ -131,6 +171,8 @@ Deno.serve(async (req) => {
         adjustments: {
           regional: Math.round((regionalFactor - 1) * 100),
           seasonal: Math.round((seasonalFactor - 1) * 100),
+          deltaCorrection: Math.round((deltaFactor - 1) * 100),
+          deltaSampleSize,
         },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
