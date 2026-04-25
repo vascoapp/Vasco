@@ -1,6 +1,6 @@
 # Billing Integration — Credit Redemption
 
-Last updated: 2026-04-21 (R234)
+Last updated: 2026-04-25 (R235)
 
 ## What this covers
 
@@ -23,9 +23,26 @@ Tests: 21 passing across `subscriptionCreditsService.test.ts` (10) and
 `billingCreditRedemption.test.ts` (11) including edge dates (Jan 31 → Feb 28,
 Mar 31 → Apr 30), year boundaries, multi-month rows, and maxMonths clamping.
 
-## The integration gap
+## Status (2026-04-25)
 
-The primitive is wired. **Credit consumption is not yet triggered on renewal.**
+- Option B (DB-extend) **wired into both webhooks** behind `CREDIT_REDEMPTION_ENABLED` env flag. Set to `'true'` on the project's secrets to enable. Idempotency + restore on failure both handled.
+- Option A (Stripe coupon) still unwired — see "Option A" section below for the plan when you have live Stripe creds.
+- Safety primitives shipped: `webhook_idempotency` table + `restore_subscription_credits` RPC (migration `20260425_credit_redemption_safety.sql`).
+
+## How to flip Option B live
+
+1. Run `supabase db push` (applies the safety migration).
+2. Re-deploy `mollie-webhook` and `stripe-webhook` (`supabase functions deploy …`).
+3. In Supabase dashboard → Edge Functions → Secrets, add `CREDIT_REDEMPTION_ENABLED = true`.
+4. From that moment, every Stripe `customer.subscription.created` / `customer.subscription.updated` event and every Mollie recurring `payment.paid` event consumes available credits and pushes `subscriptions.current_period_ends_at` forward by that many months. The provider still charges full price — credits become "free extra months" on top of the paid period.
+
+To pause: flip the secret to `false` (or delete it). In-flight credits stay consumed; that's fine — the subscription period was already extended.
+
+---
+
+## The integration gap (legacy section, kept for context)
+
+Originally Option B and Option A were both unwired. Option B is now live.
 The webhooks (`mollie-webhook`, `stripe-webhook`) currently handle:
 
 - Mollie: `payment.paid` → mark invoice paid (invoice payments, not subscription charges)

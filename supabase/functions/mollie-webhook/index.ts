@@ -10,6 +10,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { dispatchPaidSideEffects } from '../_shared/paid-side-effects.ts';
+import { claimWebhookEvent, redeemCredits, restoreCredits } from '../_shared/credit-redemption.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -167,6 +168,52 @@ Deno.serve(async (req) => {
       await dispatchPaidSideEffects(supabaseUrl, supabaseServiceKey, invoiceId).catch((err) =>
         console.warn('paid side-effects failed:', String(err)),
       );
+    }
+
+    // -------------------------------------------------------------------------
+    // 3b. Subscription renewal? Redeem credits + extend period (Option B).
+    // Mollie recurring payments carry payment.subscriptionId. metadata.user_id
+    // is set when create-subscription-checkout creates the subscription.
+    // Feature-flagged via CREDIT_REDEMPTION_ENABLED.
+    // -------------------------------------------------------------------------
+    if (
+      payment.status === 'paid' &&
+      payment.subscriptionId &&
+      Deno.env.get('CREDIT_REDEMPTION_ENABLED') === 'true'
+    ) {
+      const userId = payment.metadata?.userId ?? payment.metadata?.user_id ?? null;
+      const supabaseUrl2 = Deno.env.get('SUPABASE_URL');
+      const supabaseServiceKey2 = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      if (userId && supabaseUrl2 && supabaseServiceKey2) {
+        const isFirstSeeing = await claimWebhookEvent(supabaseUrl2, supabaseServiceKey2, 'mollie', paymentId);
+        if (isFirstSeeing) {
+          const { monthsApplied, consumed } = await redeemCredits(
+            supabaseUrl2, supabaseServiceKey2, userId, 12,
+          );
+          if (monthsApplied > 0) {
+            try {
+              const admin = createClient(supabaseUrl2, supabaseServiceKey2);
+              const { data: sub } = await admin
+                .from('subscriptions')
+                .select('current_period_ends_at')
+                .eq('user_id', userId)
+                .maybeSingle();
+              const base = sub?.current_period_ends_at ? new Date(sub.current_period_ends_at) : new Date();
+              const day = base.getDate();
+              base.setMonth(base.getMonth() + monthsApplied);
+              if (base.getDate() < day) base.setDate(0);
+              await admin
+                .from('subscriptions')
+                .update({ current_period_ends_at: base.toISOString(), updated_at: new Date().toISOString() })
+                .eq('user_id', userId);
+              console.log(`Mollie: extended period for user=${userId} by ${monthsApplied}mo`);
+            } catch (err) {
+              await restoreCredits(supabaseUrl2, supabaseServiceKey2, consumed.map((c) => c.consumedId));
+              console.error('Mollie period extension failed, credits restored:', String(err));
+            }
+          }
+        }
+      }
     }
 
     // -------------------------------------------------------------------------

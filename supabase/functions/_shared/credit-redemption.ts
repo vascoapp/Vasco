@@ -62,3 +62,46 @@ export async function redeemCredits(
   const monthsApplied = consumed.reduce((sum, c) => sum + (c.monthsFree || 0), 0);
   return { monthsApplied, consumed };
 }
+
+/**
+ * Returns true if (provider, eventId) was inserted (first time we see it),
+ * false if it already existed (this webhook retried). Use to gate
+ * non-idempotent side effects like credit consumption.
+ */
+export async function claimWebhookEvent(
+  supabaseUrl: string,
+  serviceKey: string,
+  provider: 'stripe' | 'mollie',
+  eventId: string,
+): Promise<boolean> {
+  const admin = createClient(supabaseUrl, serviceKey);
+  const { data, error } = await admin
+    .from('webhook_idempotency')
+    .insert({ provider, event_id: eventId })
+    .select('event_id');
+  if (error) {
+    // Postgres unique-violation = 23505 → already processed
+    if ((error as any).code === '23505') return false;
+    console.warn('claimWebhookEvent error:', error.message);
+    return false;
+  }
+  return Array.isArray(data) && data.length > 0;
+}
+
+/**
+ * Un-consume credits previously redeemed. Call when a downstream step fails
+ * after redeemCredits succeeded (e.g. Stripe coupon apply 500s). Best-effort —
+ * logs and swallows on failure.
+ */
+export async function restoreCredits(
+  supabaseUrl: string,
+  serviceKey: string,
+  consumedIds: string[],
+): Promise<void> {
+  if (consumedIds.length === 0) return;
+  const admin = createClient(supabaseUrl, serviceKey);
+  const { error } = await admin.rpc('restore_subscription_credits', {
+    p_consumed_ids: consumedIds,
+  });
+  if (error) console.warn('restore_subscription_credits failed:', error.message);
+}

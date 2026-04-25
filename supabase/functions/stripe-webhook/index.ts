@@ -11,6 +11,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { dispatchPaidSideEffects } from '../_shared/paid-side-effects.ts';
+import { claimWebhookEvent, redeemCredits, restoreCredits } from '../_shared/credit-redemption.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -167,6 +168,32 @@ Deno.serve(async (req) => {
 
       if (userId && tier) {
         const adminClient = createClient(supabaseUrl0, supabaseServiceKey0);
+
+        // Option B: redeem available credits and extend the period accordingly.
+        // Feature-flagged via CREDIT_REDEMPTION_ENABLED so this stays dark
+        // until you flip it. Idempotent via webhook_idempotency.
+        let extendedPeriodEnd = currentPeriodEnd;
+        const creditFlag = Deno.env.get('CREDIT_REDEMPTION_ENABLED') === 'true';
+        const isFirstSeeing = await claimWebhookEvent(supabaseUrl0, supabaseServiceKey0, 'stripe', event.id);
+        if (creditFlag && isFirstSeeing && status === 'active' && currentPeriodEnd) {
+          const { monthsApplied, consumed } = await redeemCredits(
+            supabaseUrl0, supabaseServiceKey0, userId, 12,
+          );
+          if (monthsApplied > 0) {
+            try {
+              const d = new Date(currentPeriodEnd);
+              const day = d.getDate();
+              d.setMonth(d.getMonth() + monthsApplied);
+              if (d.getDate() < day) d.setDate(0);
+              extendedPeriodEnd = d.toISOString();
+              console.log(`Extended period for user=${userId} by ${monthsApplied}mo → ${extendedPeriodEnd}`);
+            } catch (err) {
+              await restoreCredits(supabaseUrl0, supabaseServiceKey0, consumed.map((c) => c.consumedId));
+              console.error('period extension failed, credits restored:', String(err));
+            }
+          }
+        }
+
         const { error: subErr } = await adminClient
           .from('subscriptions')
           .upsert({
@@ -175,7 +202,7 @@ Deno.serve(async (req) => {
             status,
             external_id: externalId,
             external_provider: 'stripe',
-            current_period_ends_at: currentPeriodEnd,
+            current_period_ends_at: extendedPeriodEnd,
             updated_at: new Date().toISOString(),
           }, { onConflict: 'user_id' });
         if (subErr) console.error('subscriptions upsert failed:', subErr.message);
