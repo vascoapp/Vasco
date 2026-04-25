@@ -281,8 +281,15 @@ class AnalyticsService {
     return MOCK_INSIGHTS.filter((i) => i.impact === 'high');
   }
 
-  dismissInsight(insightId: string): void {
+  dismissInsight(insightId: string, generatorId?: string, screen?: string): void {
     trackUserAction('insight_dismissed', { insightId });
+    // R238: persist as a global negative-gradient signal so cross-contractor
+    // approval rate aggregation in insightScorer.ts picks up the dismissal.
+    if (generatorId) {
+      import('./intelligenceCaptureService').then((m) =>
+        m.recordGeneratorDismissal({ insightId, generatorId, screen }),
+      ).catch(() => {});
+    }
   }
 
   actOnInsight(insightId: string): void {

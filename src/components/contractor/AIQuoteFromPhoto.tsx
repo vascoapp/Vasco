@@ -213,6 +213,18 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
         setAnalysis(data);
         setItems(data.detectedItems || []);
         hapticSuccess();
+        // R238: persist for cross-quote learning + future agent queries.
+        import('../../services/intelligenceCaptureService').then((m) =>
+          m.persistPhotoAnalysis({
+            trade: 'general',
+            detectedRooms: data.detectedRooms ?? data.rooms ?? undefined,
+            detectedMaterials: data.detectedItems ?? undefined,
+            estimatedComplexity: data.estimatedComplexity ?? undefined,
+            estimatedDurationHours: data.estimatedDurationHours ?? undefined,
+            estimatedCostEur: data.estimatedTotal ?? undefined,
+            rawResponse: data,
+          }),
+        ).catch(() => {});
       }
     } catch {
       setAnalysis(MOCK_RESULT);

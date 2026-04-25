@@ -139,6 +139,24 @@ select cron.schedule(
   $$
 );
 
+-- R238 — daily extra-model training, 03:00 UTC.
+-- Computes cashflow gap, capacity overrun, supplier lead-time, material
+-- price forecasts. Persists to ml_* tables for cheap UI reads.
+select cron.schedule(
+  'vasco-train-extra-models',
+  '0 3 * * *',
+  $$
+    select net.http_post(
+      url := '<SUPABASE_URL>/functions/v1/train-extra-models',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
+      ),
+      body := '{}'::jsonb
+    );
+  $$
+);
+
 -- R237 — nightly refresh of generator_approval_rates_global, 03:30 UTC.
 -- Cross-contractor approval-rate aggregation that insightScorer blends into
 -- per-user signal. Refreshed in-DB (no edge function needed).
