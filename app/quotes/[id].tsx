@@ -15,6 +15,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { generateQuotePdf, type QuotePdfData } from '../../src/services/quotePdfService';
 import { shareQuoteWithAcceptanceLink } from '../../src/services/customerQuoteAcceptanceService';
 import { ShareQuoteButton } from '../../src/components/contractor/ShareQuoteButton';
+import { useEffect } from 'react';
+import { getQuoteEngagement, type QuoteEngagement } from '../../src/services/intelligenceCaptureService';
 import { isDemoMode } from '../../src/context/AuthContext';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
 import { getVATRate } from '../../src/constants/taxRates';
@@ -28,6 +30,16 @@ export default function QuoteDetailScreen() {
   const quoteLineItems = lineItems[quote?.id ?? ''] ?? [];
   const priceRisk = priceRisks.find((risk) => risk.quoteId === quote?.id);
   const [applied, setApplied] = useState(false);
+  const [engagement, setEngagement] = useState<QuoteEngagement | null>(null);
+
+  useEffect(() => {
+    if (!quote?.id) return;
+    let cancelled = false;
+    getQuoteEngagement(quote.id).then((e) => {
+      if (!cancelled) setEngagement(e);
+    });
+    return () => { cancelled = true; };
+  }, [quote?.id]);
   const [editing, setEditing] = useState(false);
 
   if (!quote) {
@@ -185,6 +197,33 @@ export default function QuoteDetailScreen() {
             </Text>
           </View>
         </View>
+
+        {engagement && engagement.totalEvents > 0 && (
+          <View style={styles.engagementCard}>
+            <Text style={styles.engagementTitle}>Customer activity</Text>
+            <Text style={styles.engagementMeta}>
+              Opened {engagement.portalOpenedCount}× · {Math.round(engagement.totalEngagementSeconds / 60) || 1} min total
+              {engagement.lastSeenAt ? ` · last seen ${new Date(engagement.lastSeenAt).toLocaleDateString()}` : ''}
+            </Text>
+            <View style={styles.engagementSignals}>
+              {engagement.priceExpandedCount > 0 && (
+                <Text style={styles.engagementSignal}>📊 Expanded pricing {engagement.priceExpandedCount}×</Text>
+              )}
+              {engagement.acceptHoveredCount > 0 && (
+                <Text style={[styles.engagementSignal, styles.engagementPositive]}>✓ Hovered accept {engagement.acceptHoveredCount}×</Text>
+              )}
+              {engagement.declineHoveredCount > 0 && (
+                <Text style={[styles.engagementSignal, styles.engagementNegative]}>✗ Hovered decline {engagement.declineHoveredCount}×</Text>
+              )}
+              {engagement.questionStartedCount > 0 && (
+                <Text style={styles.engagementSignal}>💬 Started {engagement.questionStartedCount} question{engagement.questionStartedCount > 1 ? 's' : ''}</Text>
+              )}
+              {!engagement.decided && engagement.totalEvents > 5 && (
+                <Text style={[styles.engagementSignal, styles.engagementHint]}>High engagement, no decision yet — consider a follow-up</Text>
+              )}
+            </View>
+          </View>
+        )}
 
         <View style={styles.actions}>
           {/* Signed portal link — customer can review + accept in browser */}
@@ -399,6 +438,42 @@ const styles = StyleSheet.create({
   },
   actions: {
     gap: Spacing.sm,
+  },
+  engagementCard: {
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    gap: Spacing.xs,
+  },
+  engagementTitle: {
+    ...Typography.muted,
+    color: SemanticColors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  engagementMeta: {
+    ...Typography.body,
+    color: SemanticColors.textPrimary,
+    marginTop: Spacing.xs,
+  },
+  engagementSignals: {
+    marginTop: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  engagementSignal: {
+    ...Typography.body,
+    color: SemanticColors.textSecondary,
+  },
+  engagementPositive: {
+    color: SemanticColors.feedbackSuccess,
+  },
+  engagementNegative: {
+    color: SemanticColors.feedbackError,
+  },
+  engagementHint: {
+    color: Palette.hermesOrange,
+    fontWeight: '600',
   },
   acceptButton: {
     borderRadius: Radius.md,

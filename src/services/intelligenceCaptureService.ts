@@ -325,6 +325,54 @@ export async function queryMarginTrend(trade: string, country: string, months = 
   }
 }
 
+export interface QuoteEngagement {
+  totalEvents: number;
+  uniqueSessions: number;
+  portalOpenedCount: number;
+  quoteViewedCount: number;
+  priceExpandedCount: number;
+  lineClickedCount: number;
+  photoViewedCount: number;
+  acceptHoveredCount: number;
+  declineHoveredCount: number;
+  questionStartedCount: number;
+  questionSentCount: number;
+  totalEngagementSeconds: number;
+  firstSeenAt: string | null;
+  lastSeenAt: string | null;
+  decided: boolean;
+  decision: string | null;
+}
+
+export async function getQuoteEngagement(quoteId: string): Promise<QuoteEngagement | null> {
+  if (!isSupabaseConfigured) return null;
+  try {
+    const { data, error } = await (supabase.rpc as any)('get_quote_engagement', { p_quote_id: quoteId });
+    if (error || !Array.isArray(data) || data.length === 0) return null;
+    const r = data[0] as any;
+    return {
+      totalEvents: Number(r.total_events) || 0,
+      uniqueSessions: Number(r.unique_sessions) || 0,
+      portalOpenedCount: Number(r.portal_opened_count) || 0,
+      quoteViewedCount: Number(r.quote_viewed_count) || 0,
+      priceExpandedCount: Number(r.price_expanded_count) || 0,
+      lineClickedCount: Number(r.line_clicked_count) || 0,
+      photoViewedCount: Number(r.photo_viewed_count) || 0,
+      acceptHoveredCount: Number(r.accept_hovered_count) || 0,
+      declineHoveredCount: Number(r.decline_hovered_count) || 0,
+      questionStartedCount: Number(r.question_started_count) || 0,
+      questionSentCount: Number(r.question_sent_count) || 0,
+      totalEngagementSeconds: Number(r.total_engagement_seconds) || 0,
+      firstSeenAt: r.first_seen_at ?? null,
+      lastSeenAt: r.last_seen_at ?? null,
+      decided: Boolean(r.decided),
+      decision: r.decision ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function queryWinrateDistribution(trade: string, country: string): Promise<Array<{ amountBucket: string; winRate: number; quotes: number; contractors: number }>> {
   if (!isSupabaseConfigured) return [];
   try {

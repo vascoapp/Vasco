@@ -354,6 +354,19 @@ export async function recordPricingOutcome(userId: string, quoteId: string, data
         .eq('user_id', userId)
         .maybeSingle();
       if (piRow) {
+        // R242: enrich training features with portal engagement signals.
+        // The quote-win retrain learns "high engagement → high accept" patterns
+        // automatically once these land in model_training_pairs.features.
+        let engagementFeatures: Record<string, any> = {};
+        try {
+          const { data: engData } = await (supabase.rpc as any)(
+            'get_quote_engagement_features',
+            { p_quote_id: quoteId },
+          );
+          if (engData && typeof engData === 'object') engagementFeatures = engData;
+        } catch {
+          // Best-effort — pair still writes without engagement features.
+        }
         await (supabase.rpc as any)('write_training_pair', {
           p_model_name: 'quote_win',
           p_user_id: userId,
@@ -367,6 +380,7 @@ export async function recordPricingOutcome(userId: string, quoteId: string, data
             month_num: new Date(piRow.quoted_at ?? Date.now()).getMonth() + 1,
             time_to_decision_hours: data.timeToDecisionHours ?? null,
             reminder_count: data.reminderCountBeforeDecision ?? null,
+            ...engagementFeatures,
           },
           p_target: data.wasAccepted ? 1 : 0,
           p_target_label: data.wasAccepted ? 'accepted' : 'rejected',
