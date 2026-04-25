@@ -471,6 +471,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           }
         }
         markStepComplete('first_customer_added').catch(() => {});
+        // R243: fire-and-forget embedding so semantic-customer-search works
+        const embedText = [name, email, phone, address].filter(Boolean).join(' ');
+        if (embedText.length > 3) {
+          import('../services/embeddingService').then((m) =>
+            m.embedCustomer({ customerId: tempId, text: embedText }),
+          ).catch(() => {});
+        }
         return tempId;
       },
       // ═════════════════════════════════════════════════════════════════════
@@ -1135,6 +1142,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         if ((jm.unitPrice ?? 0) > 0) {
           import('../intelligence/learningStorage').then((m) =>
             m.resolveOutcomesFromMaterialPurchase(jm.unitPrice ?? 0),
+          ).catch(() => {});
+        }
+        // R243: embed material so cohort-wide similarity search works
+        const matName = String(jm.materialId ?? '').trim();
+        if (matName.length > 2) {
+          import('../services/embeddingService').then((m) =>
+            m.embedMaterial({ trade: 'general', materialName: matName, text: matName }),
           ).catch(() => {});
         }
         return tempId;

@@ -367,6 +367,24 @@ export async function recordPricingOutcome(userId: string, quoteId: string, data
         } catch {
           // Best-effort — pair still writes without engagement features.
         }
+        // R243: weight training pair by customer quality score so good
+        // customers (paid on time + reviewed + referred + rebooked) train
+        // the model harder than disputed/poor jobs.
+        let pairWeight = 1.0;
+        try {
+          const customerId = (piRow as any).customer_id ?? null;
+          if (customerId) {
+            const { data: weightData } = await (supabase.rpc as any)(
+              'get_customer_quality_weight',
+              { p_customer_id: customerId },
+            );
+            if (typeof weightData === 'number' && Number.isFinite(weightData)) {
+              pairWeight = Math.max(0.5, Math.min(1.5, weightData));
+            }
+          }
+        } catch {
+          // Default weight 1.0 stands.
+        }
         await (supabase.rpc as any)('write_training_pair', {
           p_model_name: 'quote_win',
           p_user_id: userId,
@@ -385,7 +403,7 @@ export async function recordPricingOutcome(userId: string, quoteId: string, data
           p_target: data.wasAccepted ? 1 : 0,
           p_target_label: data.wasAccepted ? 'accepted' : 'rejected',
           p_source: 'auto',
-          p_weight: 1.0,
+          p_weight: pairWeight,
         });
       }
     } catch {

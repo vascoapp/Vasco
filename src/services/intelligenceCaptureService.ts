@@ -373,6 +373,76 @@ export async function getQuoteEngagement(quoteId: string): Promise<QuoteEngageme
   }
 }
 
+// R243: photo-analysis cohort summary (closes photo_analyses dormant loop)
+export interface PhotoAnalysisCohort {
+  avgDurationHours: number | null;
+  avgCostEur: number | null;
+  medianCostEur: number | null;
+  sampleSize: number;
+  contractorCount: number;
+}
+
+export async function getPhotoAnalysisCohort(
+  trade: string,
+  country?: string,
+  complexity?: 'simple' | 'moderate' | 'complex',
+): Promise<PhotoAnalysisCohort | null> {
+  if (!isSupabaseConfigured) return null;
+  try {
+    const { data, error } = await (supabase.rpc as any)('get_photo_analysis_cohort', {
+      p_trade: trade,
+      p_country: country ?? null,
+      p_complexity: complexity ?? null,
+    });
+    if (error || !Array.isArray(data) || data.length === 0) return null;
+    const r = data[0] as any;
+    return {
+      avgDurationHours: r.avg_duration_hours ?? null,
+      avgCostEur: r.avg_cost_eur ?? null,
+      medianCostEur: r.median_cost_eur ?? null,
+      sampleSize: Number(r.sample_size) || 0,
+      contractorCount: Number(r.contractor_count) || 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// R243: daily metric range for charts (closes ts_daily_business_metrics loop)
+export interface DailyMetricPoint {
+  day: string;
+  quotesSent: number;
+  quotesAccepted: number;
+  invoicesSent: number;
+  invoicesPaid: number;
+  totalQuotedEur: number;
+  totalPaidEur: number;
+}
+
+export async function getDailyMetrics(days = 90): Promise<DailyMetricPoint[]> {
+  if (!isSupabaseConfigured) return [];
+  const userId = getCurrentUserId();
+  if (!userId) return [];
+  try {
+    const { data, error } = await (supabase.rpc as any)('query_daily_metrics', {
+      p_user_id: userId,
+      p_days: days,
+    });
+    if (error || !Array.isArray(data)) return [];
+    return (data as any[]).map((r) => ({
+      day: String(r.day),
+      quotesSent: Number(r.quotes_sent) || 0,
+      quotesAccepted: Number(r.quotes_accepted) || 0,
+      invoicesSent: Number(r.invoices_sent) || 0,
+      invoicesPaid: Number(r.invoices_paid) || 0,
+      totalQuotedEur: Number(r.total_quoted_eur) || 0,
+      totalPaidEur: Number(r.total_paid_eur) || 0,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function queryWinrateDistribution(trade: string, country: string): Promise<Array<{ amountBucket: string; winRate: number; quotes: number; contractors: number }>> {
   if (!isSupabaseConfigured) return [];
   try {
