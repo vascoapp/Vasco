@@ -234,6 +234,9 @@ export async function recordPricingData(userId: string, data: {
   region?: string;
   // R188: contractor segment for cohort slicing (additive, optional)
   contractorSegment?: ContractorSegment;
+  // R240: full postcode for cell-level cohort training. Captured server-side
+  // for granularity but never exposed to other contractors (k-anonymity gates).
+  postcode?: string;
 }): Promise<void> {
   if (!isSupabaseConfigured) return;
 
@@ -254,6 +257,7 @@ export async function recordPricingData(userId: string, data: {
       season,
     };
     if (data.contractorSegment !== undefined) row.contractor_segment = data.contractorSegment;
+    if (data.postcode !== undefined) row.postcode = data.postcode;
     await supabase.from('pricing_intelligence').insert(row as any);
   } catch {
     // Silent fail — don't block the UI

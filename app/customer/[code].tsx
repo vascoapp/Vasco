@@ -297,6 +297,30 @@ export default function CustomerPortalScreen() {
 
     // Buffer for batch processing
     decisionIntelligence.trackActivity(activity);
+
+    // R239+: route to customer_portal_events for the moat learning pipeline.
+    // Map portal action names to portal_event_type enum values.
+    const map: Record<string, string> = {
+      item_viewed: 'quote_viewed',
+      item_expanded: 'price_expanded',
+      line_clicked: 'line_clicked',
+      photo_viewed: 'photo_viewed',
+      accept_hovered: 'accept_hovered',
+      decline_hovered: 'decline_hovered',
+      question_started: 'question_started',
+      question_sent: 'question_sent',
+    };
+    const eventType = map[action];
+    if (eventType) {
+      import('../../src/services/intelligenceCaptureService').then((m) =>
+        m.recordPortalEvent({
+          portalToken: portalData.accessToken,
+          decisionId: metadata?.itemId as string | undefined,
+          eventType: eventType as any,
+          metadata,
+        }),
+      ).catch(() => {});
+    }
   };
 
   // Show access code entry if no portal data

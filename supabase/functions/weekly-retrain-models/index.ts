@@ -170,15 +170,38 @@ Deno.serve(async (req) => {
 
       for (const { trade, country } of pairs) {
         try {
-          const { data: trainingRows, error: trainErr } = await admin.rpc(
-            'get_quote_win_training_data',
-            { p_trade: trade, p_country: country, p_months: 12 },
-          );
-          if (trainErr) {
-            summary.errors.push(`fetch ${trade}/${country}: ${trainErr.message}`);
-            continue;
+          // R239+: prefer the labeled-pairs table (decouples training from
+          // live event schema). Fall back to the raw RPC if pairs table is
+          // empty for this cohort — historical bootstrap path.
+          let rows: TrainingRow[] = [];
+          const { data: pairRows } = await admin
+            .from('model_training_pairs')
+            .select('features, target')
+            .eq('model_name', 'quote_win')
+            .eq('trade', trade)
+            .eq('country', country)
+            .gte('recorded_at', new Date(Date.now() - 365 * 86400000).toISOString())
+            .limit(5000);
+          if (pairRows && pairRows.length >= 20) {
+            rows = (pairRows as Array<{ features: any; target: number }>).map((r) => ({
+              total_amount: Number(r.features?.total_amount) || 0,
+              customer_type: r.features?.customer_type ?? null,
+              month_num: Number(r.features?.month_num) || 1,
+              contractor_segment: r.features?.contractor_segment ?? null,
+              line_count: Number(r.features?.line_count) || 1,
+              was_accepted: r.target === 1,
+            }));
+          } else {
+            const { data: trainingRows, error: trainErr } = await admin.rpc(
+              'get_quote_win_training_data',
+              { p_trade: trade, p_country: country, p_months: 12 },
+            );
+            if (trainErr) {
+              summary.errors.push(`fetch ${trade}/${country}: ${trainErr.message}`);
+              continue;
+            }
+            rows = (trainingRows ?? []) as TrainingRow[];
           }
-          const rows = (trainingRows ?? []) as TrainingRow[];
           if (rows.length < 20) {
             summary.models_skipped_low_data += 1;
             continue;

@@ -55,6 +55,17 @@ export async function analyzePhotoUrls(
     });
     if (error || !data) return null;
     if ((data as any).error) return (data as any).fallback ?? null;
+    // R239+: persist for cross-quote learning
+    import('./intelligenceCaptureService').then((m) =>
+      m.persistPhotoAnalysis({
+        trade: opts.trade ?? 'general',
+        detectedMaterials: (data as any).detectedItems,
+        estimatedComplexity: (data as any).estimatedComplexity,
+        estimatedDurationHours: (data as any).estimatedDurationHours,
+        estimatedCostEur: (data as any).estimatedTotal,
+        rawResponse: data as any,
+      }),
+    ).catch(() => {});
     return data as any;
   } catch {
     return null;

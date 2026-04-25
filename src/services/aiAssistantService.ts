@@ -478,8 +478,15 @@ export function useProactiveInsights(showDismissed: boolean = false) {
     return unsubscribe;
   }, [showDismissed]);
 
-  const dismissInsight = useCallback((insightId: string) => {
+  const dismissInsight = useCallback((insightId: string, generatorId?: string, screen?: string) => {
     aiAssistantService.dismissInsight(insightId);
+    // R239+: also persist as cross-contractor dismissal signal for the
+    // global generator approval-rate aggregation.
+    if (generatorId) {
+      import('./intelligenceCaptureService').then((m) =>
+        m.recordGeneratorDismissal({ insightId, generatorId, screen }),
+      ).catch(() => {});
+    }
   }, []);
 
   const activeCount = useMemo(() => aiAssistantService.getActiveInsightCount(), [insights]);

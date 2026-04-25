@@ -54,6 +54,10 @@ export async function extractCertData(imageBase64: string): Promise<ExtractedCer
     });
     if (error || !data) return DEMO_RESULT;
     if ((data as any).error) return (data as any).fallback ?? DEMO_RESULT;
+    // R239+: persist for cross-document learning
+    import('./intelligenceCaptureService').then((m) =>
+      m.persistPhotoAnalysis({ rawResponse: data }),
+    ).catch(() => {});
     return normalizeResult(data);
   } catch {
     return DEMO_RESULT;

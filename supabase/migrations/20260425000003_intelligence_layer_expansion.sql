@@ -306,8 +306,23 @@ where margin_percent is not null
 group by trade, country, date_trunc('month', quoted_at);
 create unique index on public.mv_margin_by_trade_month (trade, country, month);
 
+-- pricing_intelligence is line-item-level; aggregate to quote-level first.
 drop materialized view if exists public.mv_winrate_by_amount cascade;
 create materialized view public.mv_winrate_by_amount as
+with quote_totals as (
+  select
+    quote_id,
+    user_id,
+    trade,
+    country,
+    sum(quoted_total) as total_amount,
+    bool_or(was_accepted) as was_accepted,
+    min(quoted_at) as quoted_at
+  from public.pricing_intelligence
+  where quote_id is not null
+    and quoted_at > now() - interval '12 months'
+  group by quote_id, user_id, trade, country
+)
 select
   trade,
   country,
@@ -321,9 +336,8 @@ select
   count(*) as quotes,
   count(distinct user_id) as contractors,
   (count(*) filter (where was_accepted))::real / nullif(count(*),0)::real as win_rate
-from public.pricing_intelligence
+from quote_totals
 where total_amount is not null
-  and quoted_at > now() - interval '12 months'
 group by trade, country,
   case
     when total_amount < 1000 then 'under_1k'

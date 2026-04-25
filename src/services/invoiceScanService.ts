@@ -96,6 +96,13 @@ export async function scanInvoicePhoto(
         await saveScanHistory(invoice);
         // Feed the moat
         await feedPricingMoat(invoice);
+        // R239+: persist analysis for cross-quote learning + agent queries
+        import('./intelligenceCaptureService').then((m) =>
+          m.persistPhotoAnalysis({
+            detectedMaterials: data.lineItems,
+            rawResponse: data,
+          }),
+        ).catch(() => {});
 
         return invoice;
       }

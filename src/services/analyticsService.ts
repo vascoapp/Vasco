@@ -355,8 +355,8 @@ export function useBenchmarks() {
 export function useInsights() {
   const [insights, setInsights] = useState<PerformanceInsight[]>(() => analyticsService.getInsights());
 
-  const dismissInsight = useCallback((insightId: string) => {
-    analyticsService.dismissInsight(insightId);
+  const dismissInsight = useCallback((insightId: string, generatorId?: string, screen?: string) => {
+    analyticsService.dismissInsight(insightId, generatorId, screen);
     setInsights((prev) => prev.filter((i) => i.id !== insightId));
   }, []);
 

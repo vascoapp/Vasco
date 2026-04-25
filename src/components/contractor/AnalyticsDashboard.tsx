@@ -364,7 +364,7 @@ export function AnalyticsDashboard() {
             )}
             <Pressable
               style={styles.dismissButton}
-              onPress={() => dismissInsight(insight.id)}
+              onPress={() => dismissInsight(insight.id, (insight as any).generatorId, 'analytics-dashboard')}
             >
               <Text style={styles.dismissButtonText}>Verbergen</Text>
             </Pressable>

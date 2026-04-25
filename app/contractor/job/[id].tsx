@@ -814,6 +814,20 @@ export default function JobDetailPage() {
             <Ionicons name="camera" size={18} color={Palette.hermesOrange} />
             <Text style={styles.actionSecondaryText}>{t('jobs.photo', 'Photo')}{photoCount > 0 ? ` (${photoCount})` : ''}</Text>
           </Pressable>
+          {jobCompleted && (
+            <Pressable
+              style={styles.actionSecondary}
+              accessibilityRole="button"
+              accessibilityLabel={t('jobs.qualityFeedback', 'Add quality feedback')}
+              onPress={() => {
+                hapticSuccess();
+                router.push(`/contractor/job-quality/${job.id}` as any);
+              }}
+            >
+              <Ionicons name="star-outline" size={18} color={Palette.hermesOrange} />
+              <Text style={styles.actionSecondaryText}>{t('jobs.qualityFeedback', 'Feedback')}</Text>
+            </Pressable>
+          )}
           {!jobCompleted && (contact.phone || contact.email) && (
             <Pressable
               style={styles.actionSecondary}
