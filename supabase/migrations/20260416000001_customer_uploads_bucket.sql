@@ -22,6 +22,10 @@ values ('customer-uploads', 'customer-uploads', false)
 on conflict (id) do nothing;
 
 -- Anon can upload (no auth on the portal side)
+drop policy if exists "customer-uploads anon insert" on storage.objects;
+drop policy if exists "customer-uploads anon select" on storage.objects;
+drop policy if exists "customer-uploads service delete" on storage.objects;
+
 create policy "customer-uploads anon insert"
   on storage.objects for insert
   with check (bucket_id = 'customer-uploads');

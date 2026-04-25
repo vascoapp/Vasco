@@ -8,7 +8,7 @@
 
 create table if not exists public.feature_flags (
   key text not null,
-  country text,               -- null = global, or 'NL'/'DE'/'FR'/'ES'/'IT'/'UK'
+  country text not null default 'GLOBAL',  -- 'GLOBAL' = all markets, or 'NL'/'DE'/'FR'/'ES'/'IT'/'UK'
   enabled boolean not null default false,
   rollout_percent int not null default 0 check (rollout_percent between 0 and 100),
   description text,
@@ -48,10 +48,10 @@ create trigger feature_flags_set_updated_at
 
 -- Seed the initial set so new installs can opt-in without a manual SQL run
 insert into public.feature_flags (key, country, enabled, rollout_percent, description) values
-  ('payments_mollie', null, true, 100, 'Mollie payments globally'),
+  ('payments_mollie', 'GLOBAL', true, 100, 'Mollie payments globally'),
   ('payments_stripe_uk', 'UK', true, 100, 'Stripe payments for UK market'),
-  ('eve_agent', null, true, 100, 'EVE proactive AI queue'),
-  ('purchasing_agent', null, true, 100, 'Advanced purchasing agent (Pro tier)'),
-  ('whatsapp_business', null, false, 0, 'WhatsApp Business outreach'),
-  ('live_tracking', null, false, 0, 'GPS live tracking (requires explicit consent)')
+  ('eve_agent', 'GLOBAL', true, 100, 'EVE proactive AI queue'),
+  ('purchasing_agent', 'GLOBAL', true, 100, 'Advanced purchasing agent (Pro tier)'),
+  ('whatsapp_business', 'GLOBAL', false, 0, 'WhatsApp Business outreach'),
+  ('live_tracking', 'GLOBAL', false, 0, 'GPS live tracking (requires explicit consent)')
 on conflict (key, country) do nothing;

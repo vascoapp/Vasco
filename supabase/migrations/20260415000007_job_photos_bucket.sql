@@ -31,6 +31,10 @@ create policy "users manage their own photos"
   with check (auth.uid() = user_id);
 
 -- Storage RLS: only owning user can read/write their folder
+drop policy if exists "job-photos read own" on storage.objects;
+drop policy if exists "job-photos write own" on storage.objects;
+drop policy if exists "job-photos delete own" on storage.objects;
+
 create policy "job-photos read own"
   on storage.objects for select
   using (bucket_id = 'job-photos' and (auth.uid())::text = (storage.foldername(name))[1]);

@@ -186,34 +186,6 @@ CUSTOMER NAME: ${customerName || '(unknown)'}
 QUESTION: ${question}${groundingBlock}`;
 }
 
-1. Classify STAKES:
-   - "low": purely informational/logistical (arrival time, parking, how to prepare, where to find something, confirmation of appointment).
-   - "high": ANYTHING involving price change, scope change (new work requested), schedule change, technical advice, or a commitment by the contractor.
-   When in doubt, classify as "high" — we never want the AI to commit the contractor to work or promises.
-
-2. Draft a reply in ${language} (same language the customer wrote in if possible).
-   - For "low" stakes: a direct, friendly answer the AI can auto-send.
-   - For "high" stakes: a reply the contractor can review + approve (acknowledge the question, buy time, never commit to prices or scope).
-   - Keep it concise — 1-3 short sentences. No signoff ("Best," / "Thanks,"). Sound like a person, not a bot.
-
-3. CRITICAL SAFETY:
-   - NEVER quote a price.
-   - NEVER confirm a new scope item as included.
-   - NEVER commit a new schedule without contractor approval.
-   - If the customer asks about emergency (gas leak, flood, fire): stakes "high", draft tells them to call 112 and that contractor will follow up.
-
-Return ONLY valid JSON, no markdown:
-{
-  "stakes": "low" | "high",
-  "confidence": 0.0-1.0,
-  "reason": "one short sentence on why you picked that stakes level",
-  "draft": "your reply text in ${language}"
-}
-
-CUSTOMER NAME: ${customerName || '(unknown)'}
-QUESTION: ${question}`;
-}
-
 async function classifyWithClaude(prompt: string, anthropicKey: string): Promise<AIClassification | null> {
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {

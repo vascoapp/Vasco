@@ -23,6 +23,10 @@
 -- contribute, so the UI can fall back to local baselines without leaking
 -- per-contractor pricing.
 
+DROP FUNCTION IF EXISTS get_trade_pricing_stats(TEXT, TEXT, TEXT, INT) CASCADE;
+DROP FUNCTION IF EXISTS get_trade_pricing_stats(TEXT, TEXT, INT) CASCADE;
+DROP FUNCTION IF EXISTS get_trade_pricing_stats(TEXT, TEXT) CASCADE;
+
 CREATE OR REPLACE FUNCTION get_trade_pricing_stats(
   p_trade TEXT,
   p_country TEXT,
@@ -87,6 +91,9 @@ $$;
 -- Aggregates real columns from pricing_intelligence (+ business_events for DSO
 -- when payment_received is emitted). Idempotent via ON CONFLICT; the caller
 -- passes the ISO week key ('2026-W17') or we default to the current week.
+
+DROP FUNCTION IF EXISTS compute_weekly_cohort_stats(TEXT) CASCADE;
+DROP FUNCTION IF EXISTS compute_weekly_cohort_stats() CASCADE;
 
 CREATE OR REPLACE FUNCTION compute_weekly_cohort_stats(
   p_week_key TEXT DEFAULT NULL
@@ -235,6 +242,10 @@ GRANT SELECT ON material_price_benchmarks TO authenticated;
 -- ---------------------------------------------------------------------------
 -- Thin RPC wrapper around material_price_benchmarks. The hook calls this with
 -- (trade, country) and optionally a material_name to narrow to one line item.
+
+DROP FUNCTION IF EXISTS get_material_cohort_stats(TEXT, TEXT, TEXT, INT) CASCADE;
+DROP FUNCTION IF EXISTS get_material_cohort_stats(TEXT, TEXT, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS get_material_cohort_stats(TEXT, TEXT) CASCADE;
 
 CREATE OR REPLACE FUNCTION get_material_cohort_stats(
   p_trade TEXT,

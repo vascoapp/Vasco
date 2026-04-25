@@ -311,5 +311,5 @@ select
   count(*) filter (where po.observed_at > now() - interval '90 days') as observation_count,
   max(po.observed_at) as last_observed_at
 from price_observations po
-left join material_catalog mc on mc.id = po.material_id and mc.user_id = po.user_id
+left join material_catalog mc on mc.id::text = po.material_id and mc.user_id = po.user_id
 group by po.user_id, po.material_id, mc.name;
