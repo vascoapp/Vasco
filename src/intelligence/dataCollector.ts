@@ -307,6 +307,40 @@ export async function recordPricingOutcome(userId: string, quoteId: string, data
       .update(patch)
       .eq('quote_id', quoteId)
       .eq('user_id', userId);
+
+    // R239: also persist a labeled training pair for the retrain pipeline.
+    // Decouples training data from live event tables — the schema can
+    // evolve without breaking historical training reproducibility.
+    try {
+      const { data: piRow } = await (supabase.from as any)('pricing_intelligence')
+        .select('trade, country, total_amount, customer_type, contractor_segment, line_count, quoted_at')
+        .eq('quote_id', quoteId)
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (piRow) {
+        await (supabase.rpc as any)('write_training_pair', {
+          p_model_name: 'quote_win',
+          p_user_id: userId,
+          p_trade: piRow.trade ?? null,
+          p_country: piRow.country ?? null,
+          p_features: {
+            total_amount: piRow.total_amount,
+            customer_type: piRow.customer_type,
+            contractor_segment: piRow.contractor_segment,
+            line_count: piRow.line_count,
+            month_num: new Date(piRow.quoted_at ?? Date.now()).getMonth() + 1,
+            time_to_decision_hours: data.timeToDecisionHours ?? null,
+            reminder_count: data.reminderCountBeforeDecision ?? null,
+          },
+          p_target: data.wasAccepted ? 1 : 0,
+          p_target_label: data.wasAccepted ? 'accepted' : 'rejected',
+          p_source: 'auto',
+          p_weight: 1.0,
+        });
+      }
+    } catch {
+      // Best-effort — training-pair write failures must not block the outcome.
+    }
   } catch {
     // Silent fail
   }

@@ -138,6 +138,19 @@ export default function CustomerPortalScreen() {
         completedDecisions: data.completedDecisions,
         overdueDecisions: data.overdueDecisions,
       }).catch((err) => { if (__DEV__) console.error('Failed to sync portal access:', err); });
+
+      // R239: write to customer_portal_events for the moat learning pipeline.
+      // Anon insert — no contractor_user_id when we don't have it yet.
+      import('../../src/services/intelligenceCaptureService').then((m) =>
+        m.recordPortalEvent({
+          portalToken: data.accessToken,
+          eventType: 'portal_opened',
+          metadata: {
+            totalDecisions: data.totalDecisions,
+            completedDecisions: data.completedDecisions,
+          },
+        }),
+      ).catch(() => {});
     } else {
       setError('Project niet gevonden. Controleer de code en probeer opnieuw.');
     }
@@ -211,6 +224,22 @@ export default function CustomerPortalScreen() {
     } catch (err) {
       if (__DEV__) console.error('Failed to sync decision:', err);
     }
+
+    // R239: portal-event telemetry for the moat
+    const valueStr = String(submission.value).toLowerCase();
+    const eventType = valueStr.includes('approve') || valueStr.includes('accept') || valueStr === 'yes' || valueStr === 'true'
+      ? 'accepted'
+      : (valueStr.includes('decline') || valueStr.includes('reject') || valueStr === 'no' || valueStr === 'false')
+        ? 'declined'
+        : 'session_ended';
+    import('../../src/services/intelligenceCaptureService').then((m) =>
+      m.recordPortalEvent({
+        portalToken: portalData.accessToken,
+        decisionId: submission.itemId,
+        eventType,
+        durationMs: timeToDecide ? timeToDecide * 1000 : undefined,
+      }),
+    ).catch(() => {});
 
     // Update local state to reflect the decision
     const updatedCategories = portalData.categories.map((category) => ({
