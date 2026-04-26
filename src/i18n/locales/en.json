@@ -1819,6 +1819,7 @@
     "daysOverdue": "{{count}} days overdue",
     "dueToday": "due today",
     "dueInDays": "due in {{count}} days",
-    "loading": "Loading"
+    "loading": "Loading",
+    "upcomingTitle": "MAINTENANCE"
   }
 }

@@ -1819,6 +1819,7 @@
     "daysOverdue": "{{count}} Tage überfällig",
     "dueToday": "heute fällig",
     "dueInDays": "in {{count}} Tagen fällig",
-    "loading": "Lädt"
+    "loading": "Lädt",
+    "upcomingTitle": "WARTUNG"
   }
 }

@@ -1819,6 +1819,7 @@
     "daysOverdue": "{{count}} dagen te laat",
     "dueToday": "vandaag",
     "dueInDays": "over {{count}} dagen",
-    "loading": "Laden"
+    "loading": "Laden",
+    "upcomingTitle": "ONDERHOUD"
   }
 }

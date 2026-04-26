@@ -187,6 +187,61 @@ export default function DragScheduleScreen() {
           <Text style={styles.headerTitle}>{t('schedule.daySchedule', 'Dagplanning')}</Text>
           <Text style={styles.headerSubtitle}>{today}</Text>
         </View>
+        <Pressable
+          onPress={async () => {
+            // R254: optimize today's job order via the new scheduler. Uses
+            // postcode-prefix proximity for distance + priority weighting.
+            if (schedule.length < 2) {
+              Alert.alert(t('schedule.optimizeNeedTwo', 'Need at least 2 jobs to optimize'));
+              return;
+            }
+            try {
+              const { optimizeSchedule } = await import('../../src/services/optimalSchedulerService');
+              const startCountry = ((jobs as any[]).find((j) => j?.address?.country)?.address?.country ?? 'NL');
+              const startPostcode = (jobs as any[]).find((j) => j?.address?.postcode)?.address?.postcode ?? '';
+              const optimized = optimizeSchedule(
+                schedule.map((s) => {
+                  const j = (jobs as any[]).find((x) => x.id === s.jobId);
+                  return {
+                    id: s.jobId,
+                    title: s.title,
+                    postcode: j?.address?.postcode,
+                    country: (j?.address?.country ?? startCountry),
+                    estimatedHours: s.duration,
+                    priority: j?.priority,
+                  };
+                }),
+                {
+                  date: todayStr,
+                  startPostcode: startPostcode || ((jobs as any[])[0]?.address?.postcode ?? ''),
+                  startCountry,
+                },
+              );
+              const newSchedule = optimized.stops.map((stop, idx) => ({
+                jobId: stop.job.id,
+                title: stop.job.title ?? '',
+                customerName: schedule.find((s) => s.jobId === stop.job.id)?.customerName ?? '',
+                startHour: parseInt(stop.arrivalAt.split(':')[0], 10),
+                duration: stop.job.estimatedHours,
+                color: COLORS[idx % COLORS.length],
+              }));
+              setSchedule(newSchedule);
+              hapticSuccess();
+              const summary = `${optimized.totalDriveKm}km · ${Math.round(optimized.totalDriveMin)}min driving`
+                + (optimized.warnings.length ? `\n⚠ ${optimized.warnings.join('; ')}` : '');
+              Alert.alert(t('schedule.optimizedTitle', 'Route optimized'), summary);
+            } catch (e) {
+              hapticWarning();
+              Alert.alert(t('schedule.optimizeFailed', 'Optimization failed'), String((e as Error).message ?? e));
+            }
+          }}
+          style={styles.exportButton}
+          accessibilityRole="button"
+          accessibilityLabel={t('schedule.optimize', 'Optimize order')}
+        >
+          <Ionicons name="flash-outline" size={18} color={Palette.hermesOrange} />
+          <Text style={styles.exportButtonText}>{t('schedule.optimize', 'Optimize')}</Text>
+        </Pressable>
         <Pressable onPress={handleExportCalendar} style={styles.exportButton} accessibilityRole="button" accessibilityLabel={t('schedule.export', 'Export to calendar')}>
           <Ionicons name="calendar-outline" size={18} color={Palette.hermesOrange} />
           <Text style={styles.exportButtonText}>{t('schedule.export', 'Exporteer')}</Text>

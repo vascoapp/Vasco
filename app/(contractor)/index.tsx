@@ -30,6 +30,7 @@ import { hapticSuccess, hapticWarning } from '../../src/utils/haptics';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 import { ActivationChecklist } from '../../src/components/contractor/ActivationChecklist';
 import { ProjectSwitcher } from '../../src/components/contractor/ProjectSwitcher';
+import { UpcomingRecurringWidget } from '../../src/components/contractor/UpcomingRecurringWidget';
 
 export default function VandaagDK() {
   const { t, i18n } = useTranslation();
@@ -119,6 +120,9 @@ export default function VandaagDK() {
 
         {/* R248: Project switcher — only renders for aannemer with active projects */}
         <ProjectSwitcher />
+
+        {/* R254: upcoming recurring jobs — auto-hides when no contracts due */}
+        <UpcomingRecurringWidget />
 
         {/* 4. VASCOCARD EQUIVALENT ─── hero AI action + inline queue items */}
         <View style={styles.vascoCardWrap}>
