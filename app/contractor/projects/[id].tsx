@@ -175,6 +175,40 @@ export default function ProjectDetailScreen() {
           </View>
         </FadeIn>
 
+        {/* R246: Site-lead actions for aannemer running this project. */}
+        {/* Wires the existing site-lead drill-downs into the contractor view. */}
+        <FadeIn delay={150}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('project.siteOps', 'Site operations')}</Text>
+            <View style={styles.siteOpsGrid}>
+              <Pressable style={styles.siteOpsTile} onPress={() => router.push(`/sitelead/dispatch?projectId=${project.id}` as any)}>
+                <Ionicons name="people" size={20} color={Palette.hermesOrange} />
+                <Text style={styles.siteOpsLabel}>{t('siteOps.dispatch', 'Dispatch')}</Text>
+              </Pressable>
+              <Pressable style={styles.siteOpsTile} onPress={() => router.push(`/sitelead/daily-report?projectId=${project.id}` as any)}>
+                <Ionicons name="document-text" size={20} color={Palette.hermesOrange} />
+                <Text style={styles.siteOpsLabel}>{t('siteOps.dailyReport', 'Daily report')}</Text>
+              </Pressable>
+              <Pressable style={styles.siteOpsTile} onPress={() => router.push(`/sitelead/log-defect?projectId=${project.id}` as any)}>
+                <Ionicons name="alert-circle" size={20} color={Palette.hermesOrange} />
+                <Text style={styles.siteOpsLabel}>{t('siteOps.defects', 'Defects')}</Text>
+              </Pressable>
+              <Pressable style={styles.siteOpsTile} onPress={() => router.push(`/sitelead/inspection?projectId=${project.id}` as any)}>
+                <Ionicons name="checkmark-done" size={20} color={Palette.hermesOrange} />
+                <Text style={styles.siteOpsLabel}>{t('siteOps.inspection', 'Inspection')}</Text>
+              </Pressable>
+              <Pressable style={styles.siteOpsTile} onPress={() => router.push(`/sitelead/incident-report?projectId=${project.id}` as any)}>
+                <Ionicons name="warning" size={20} color={Palette.hermesOrange} />
+                <Text style={styles.siteOpsLabel}>{t('siteOps.incident', 'Incident')}</Text>
+              </Pressable>
+              <Pressable style={styles.siteOpsTile} onPress={() => router.push(`/sitelead/safety-docs?projectId=${project.id}` as any)}>
+                <Ionicons name="shield-checkmark" size={20} color={Palette.hermesOrange} />
+                <Text style={styles.siteOpsLabel}>{t('siteOps.safety', 'Safety')}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </FadeIn>
+
         {/* Milestones placeholder */}
         <FadeIn delay={200}>
           <View style={styles.section}>
@@ -233,4 +267,16 @@ const styles = StyleSheet.create({
   milestoneText: { flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary },
   milestoneComplete: { textDecorationLine: 'line-through', color: SemanticColors.textTertiary },
   milestoneWeek: { fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: SemanticColors.textSecondary },
+  siteOpsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID.sm },
+  siteOpsTile: {
+    flexBasis: '31%',
+    flexGrow: 1,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    gap: 6,
+  },
+  siteOpsLabel: { fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: SemanticColors.textPrimary, textAlign: 'center' },
 });
