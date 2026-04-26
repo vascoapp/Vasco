@@ -139,7 +139,7 @@ interface GeneratorRegistration {
   roles: UserRole[];
 }
 
-const GENERATOR_REGISTRY: GeneratorRegistration[] = [
+export const GENERATOR_REGISTRY: GeneratorRegistration[] = [
   // Contractor + enterprise roles where relevant
   { id: 'overdue-invoice', screens: ['today', 'invoices', 'cashflow'], roles: ['contractor', 'cfo'] },
   { id: 'savings-opportunity', screens: ['today', 'savings'], roles: ['contractor'] },
@@ -190,11 +190,14 @@ const GENERATOR_REGISTRY: GeneratorRegistration[] = [
   { id: 'supplier-risk', screens: ['emerging', 'procurement'], roles: ['coo', 'sitelead'] },
   { id: 'permit-delay', screens: ['market', 'permits'], roles: ['coo', 'director'] },
   { id: 'change-order-velocity', screens: ['financials', 'efficiency', 'costs'], roles: ['coo', 'cfo'] },
-  // Site lead-specific generators
-  { id: 'crew-performance', screens: ['today', 'overview', 'schedule', 'dispatch'], roles: ['sitelead'] },
-  { id: 'incident-trend', screens: ['today', 'safety', 'overview'], roles: ['sitelead', 'coo'] },
-  { id: 'defect-cluster', screens: ['today', 'quality', 'overview', 'issues'], roles: ['sitelead', 'coo'] },
-  { id: 'cert-renewal-planner', screens: ['today', 'safety', 'compliance', 'overview'], roles: ['sitelead'] },
+  // Site lead-specific generators — also exposed to contractor when isAannemer.
+  // Generators internally return null when site-lead data is absent (no defects/
+  // incidents/reports), so solo contractors don't see noise; aannemers running
+  // multi-trade projects with logged site activity DO see the insights.
+  { id: 'crew-performance', screens: ['today', 'overview', 'schedule', 'dispatch'], roles: ['sitelead', 'contractor'] },
+  { id: 'incident-trend', screens: ['today', 'safety', 'overview'], roles: ['sitelead', 'coo', 'contractor'] },
+  { id: 'defect-cluster', screens: ['today', 'quality', 'overview', 'issues'], roles: ['sitelead', 'coo', 'contractor'] },
+  { id: 'cert-renewal-planner', screens: ['today', 'safety', 'compliance', 'overview'], roles: ['sitelead', 'contractor'] },
   // Director generators
   { id: 'handover-bottleneck', screens: ['portfolio', 'approvals'], roles: ['director', 'cfo'] },
   { id: 'portfolio-health', screens: ['portfolio', 'performance'], roles: ['director'] },

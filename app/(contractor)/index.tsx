@@ -29,6 +29,7 @@ import { formatAmount } from '../../src/utils/formatAmount';
 import { hapticSuccess, hapticWarning } from '../../src/utils/haptics';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 import { ActivationChecklist } from '../../src/components/contractor/ActivationChecklist';
+import { ProjectSwitcher } from '../../src/components/contractor/ProjectSwitcher';
 
 export default function VandaagDK() {
   const { t, i18n } = useTranslation();
@@ -115,6 +116,9 @@ export default function VandaagDK() {
           <KpiTile label={t('dk.pill.earned', 'Earned').toUpperCase()} value={formatAmount(dailyEarnings, i18n.language)} tone={DK.colors.success} onPress={() => router.push('/(contractor)/geld' as any)} />
           <KpiTile label={t('dk.pill.quotes', 'Quotes').toUpperCase()} value={String(activeQuotes)} tone={DK.colors.highlight} onPress={() => router.push('/contractor/quote-list' as any)} />
         </View>
+
+        {/* R248: Project switcher — only renders for aannemer with active projects */}
+        <ProjectSwitcher />
 
         {/* 4. VASCOCARD EQUIVALENT ─── hero AI action + inline queue items */}
         <View style={styles.vascoCardWrap}>
