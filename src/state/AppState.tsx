@@ -744,10 +744,25 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             quote.id === id ? { ...quote, status: 'sent', lastUpdated: 'Just now' } : quote
           )
         );
+        const now = new Date();
         if (isSupabaseConfigured) {
-          updateDocument(id, { status: 'sent', sent_at: new Date().toISOString() }).catch((err) =>
+          updateDocument(id, { status: 'sent', sent_at: now.toISOString() }).catch((err) =>
             logWarn('AppState', `markQuoteSent persist failed: ${err}`)
           );
+          // R255: time-of-day capture into pricing_intelligence so the
+          // cohort RPC can slice acceptance rate by hour-of-day × day-of-week.
+          import('../lib/supabase').then(({ supabase }) => {
+            (supabase.from as any)('pricing_intelligence')
+              .update({
+                sent_at: now.toISOString(),
+                sent_at_hour: now.getHours(),
+                sent_at_dow: now.getDay(),
+              })
+              .eq('quote_id', id)
+              .eq('user_id', aiUserId)
+              .then(() => {})
+              .catch(() => {});
+          }).catch(() => {});
         }
         scheduleQuoteFollowUp({ quoteId: id, customerName: 'Klant', daysAfterSent: 3 }).catch(() => {});
         trackEvent('quote_sent', { quoteId: id }).catch(() => {});

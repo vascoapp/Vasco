@@ -1838,5 +1838,10 @@
     "job": "Auftrag",
     "jobs": "Aufträge",
     "empty": "— keine Aufträge geplant —"
+  },
+  "optStats": {
+    "weekly": "Vasco optimierte {{count}} Routen diese Woche",
+    "savedKmMin": "{{km}}km · {{min}}min gespart",
+    "lifetime": "{{count}} insgesamt"
   }
 }

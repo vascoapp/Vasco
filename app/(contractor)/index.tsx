@@ -31,6 +31,7 @@ import { DKLabel } from '../../src/components/shared/DKLabel';
 import { ActivationChecklist } from '../../src/components/contractor/ActivationChecklist';
 import { ProjectSwitcher } from '../../src/components/contractor/ProjectSwitcher';
 import { UpcomingRecurringWidget } from '../../src/components/contractor/UpcomingRecurringWidget';
+import { OptimizationStatsWidget } from '../../src/components/contractor/OptimizationStatsWidget';
 
 export default function VandaagDK() {
   const { t, i18n } = useTranslation();
@@ -123,6 +124,9 @@ export default function VandaagDK() {
 
         {/* R254: upcoming recurring jobs — auto-hides when no contracts due */}
         <UpcomingRecurringWidget />
+
+        {/* R255: route-optimization weekly savings — auto-hides until first applied */}
+        <OptimizationStatsWidget />
 
         {/* 4. VASCOCARD EQUIVALENT ─── hero AI action + inline queue items */}
         <View style={styles.vascoCardWrap}>

@@ -1838,5 +1838,10 @@
     "job": "job",
     "jobs": "jobs",
     "empty": "— no jobs scheduled —"
+  },
+  "optStats": {
+    "weekly": "Vasco optimized {{count}} routes this week",
+    "savedKmMin": "Saved {{km}}km · {{min}}min",
+    "lifetime": "{{count}} all-time"
   }
 }

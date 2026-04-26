@@ -1838,5 +1838,10 @@
     "job": "klus",
     "jobs": "klussen",
     "empty": "— geen klussen ingepland —"
+  },
+  "optStats": {
+    "weekly": "Vasco optimaliseerde {{count}} routes deze week",
+    "savedKmMin": "Bespaard: {{km}}km · {{min}}min",
+    "lifetime": "{{count}} totaal"
   }
 }
