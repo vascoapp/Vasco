@@ -1243,7 +1243,11 @@
     "onTimeRate": "Pünktlichkeitsrate",
     "repeatCustomers": "Stammkunden",
     "performance": "Leistung",
-    "kvkNumber": "KvK-Nummer"
+    "kvkNumber": "KvK-Nummer",
+    "vatScheme": "USt-Schema",
+    "vatStandard": "Standard",
+    "auditTrail": "Audit-Trail",
+    "auditTrailValue": "GoBD-konform"
   },
   "search": {
     "job": "Auftrag",
@@ -1763,5 +1767,20 @@
     "allLink": "Alle ›",
     "newProject": "NEU",
     "hint": "Tippen zum Abwählen · lang drücken zum Öffnen · Baustellen-Aktionen auf Heute passen sich an"
+  },
+  "vatScheme": {
+    "standard": "Standard-USt",
+    "korNl": "KOR — Kleineondernemersregeling",
+    "kleinunternehmer": "Kleinunternehmer (§19 UStG)"
+  },
+  "audit": {
+    "totalEntries": "Audit-Einträge",
+    "totalEntriesDesc": "Hash-verkettete Aufzeichnung von Rechnungs-Lifecycle-Ereignissen",
+    "integrity": "Kettenintegrität",
+    "checking": "Wird geprüft...",
+    "valid": "✓ ungebrochen",
+    "verify": "Überprüfung starten",
+    "export": "Trail exportieren (.txt)",
+    "footnote": "GoBD verlangt 10 Jahre Aufbewahrung. Die Hash-Kette beweist, dass kein Eintrag nachträglich verändert wurde. Für vollständige Archiv-Zertifizierung (DATEV-zertifiziert) kombinieren Sie den Export mit dem Archiv Ihres Steuerberaters."
   }
 }

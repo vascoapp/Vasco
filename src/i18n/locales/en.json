@@ -1243,7 +1243,11 @@
     "onTimeRate": "On-time rate",
     "repeatCustomers": "Repeat customers",
     "performance": "Performance",
-    "kvkNumber": "KvK Number"
+    "kvkNumber": "KvK Number",
+    "vatScheme": "VAT scheme",
+    "vatStandard": "Standard",
+    "auditTrail": "Audit trail",
+    "auditTrailValue": "GoBD-compliant"
   },
   "search": {
     "job": "Job",
@@ -1763,5 +1767,20 @@
     "allLink": "All ›",
     "newProject": "NEW",
     "hint": "Tap to deselect · long-press to open · site-lead actions on Vandaag scope to active project"
+  },
+  "vatScheme": {
+    "standard": "Standard VAT",
+    "korNl": "KOR — Kleineondernemersregeling",
+    "kleinunternehmer": "Kleinunternehmer (§19 UStG)"
+  },
+  "audit": {
+    "totalEntries": "Audit entries",
+    "totalEntriesDesc": "Hash-chained record of invoice lifecycle events",
+    "integrity": "Chain integrity",
+    "checking": "Checking...",
+    "valid": "✓ unbroken",
+    "verify": "Run verification",
+    "export": "Export trail (.txt)",
+    "footnote": "GoBD requires 10-year retention. The hash chain proves no entry was retroactively changed. For full archive certification (DATEV-zertifiziert), pair this export with your accountant's archive."
   }
 }

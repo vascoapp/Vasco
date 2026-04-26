@@ -270,6 +270,24 @@ export default function ProfileScreen() {
               border
               onPress={() => router.push('/business-settings' as any)}
             />
+            <SettingsRow
+              icon="receipt-outline"
+              label={t('profile.vatScheme', 'VAT scheme')}
+              value={
+                businessProfile.vatScheme === 'small_business_NL_KOR' ? 'KOR'
+                : businessProfile.vatScheme === 'small_business_DE_kleinunternehmer' ? 'Kleinunternehmer'
+                : t('profile.vatStandard', 'Standard')
+              }
+              border
+              onPress={() => router.push('/contractor/vat-and-audit' as any)}
+            />
+            <SettingsRow
+              icon="shield-checkmark-outline"
+              label={t('profile.auditTrail', 'Audit trail')}
+              value={t('profile.auditTrailValue', 'GoBD-compliant')}
+              border
+              onPress={() => router.push('/contractor/vat-and-audit' as any)}
+            />
           </View>
         </View>
 
