@@ -792,6 +792,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             logWarn('AppState', `markInvoicePaid persist failed: ${err}`)
           );
         }
+        // R251: GoBD audit-trail entry for invoice payment.
+        import('../services/gobdAuditTrailService').then((m) =>
+          m.appendAudit({
+            type: 'invoice_paid',
+            ref: id,
+            payload: { amount: paidInv?.amount, paidAt: new Date().toISOString() },
+          }),
+        ).catch(() => {});
         // AI data collector
         emitPaymentReceived(aiUserId, id, {
           customerId: paidInv?.customer ?? '',
@@ -909,6 +917,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // Optimistic local update
         setInvoices((prev) => [newInvoice, ...prev]);
 
+        // R251: GoBD audit-trail — record invoice creation
+        import('../services/gobdAuditTrailService').then((m) =>
+          m.appendAudit({
+            type: 'invoice_created',
+            ref: docNumber,
+            payload: { amount: newInvoice.amount, customer: newInvoice.customer, sourceQuoteId },
+          }),
+        ).catch(() => {});
+
         // Copy line items from source quote
         const sourceItems = lineItems[sourceQuoteId] ?? [];
         if (sourceItems.length > 0) {
@@ -977,6 +994,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setInvoices((p) =>
           p.map((inv) => inv.id === id ? { ...inv, ...updates } : inv)
         );
+        // R251: GoBD audit-trail — capture every status transition + edit.
+        import('../services/gobdAuditTrailService').then((m) => {
+          if (updates.status === 'sent' && prev?.status !== 'sent') {
+            return m.appendAudit({ type: 'invoice_sent', ref: id, payload: { amount: prev?.amount, sentAt: new Date().toISOString() } });
+          }
+          return m.appendAudit({ type: 'invoice_modified', ref: id, payload: updates });
+        }).catch(() => {});
         // R213: on invoice status -> sent, run predictPaymentTiming and
         // enqueue a VascoCard when the model flags the invoice as high
         // risk of late payment. Mirror of R209 low-win-alert for quotes.

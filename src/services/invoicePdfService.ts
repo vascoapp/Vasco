@@ -139,6 +139,8 @@ function buildInvoiceHtml(
   iban?: string,
   showPoweredBy?: boolean,
   insuranceRef?: string,
+  // R251: small-business VAT exemption (NL KOR / DE Kleinunternehmer §19)
+  vatScheme?: 'standard' | 'small_business_NL_KOR' | 'small_business_DE_kleinunternehmer',
 ): string {
   const L = getLabels(language);
   const curr = getCurrencySymbol(country);
@@ -147,28 +149,41 @@ function buildInvoiceHtml(
   const issueDate = invoice.issueDate.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
   const dueDate = invoice.dueDate.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
 
+  // R251: small-business scheme zeroes VAT and adds a legal note row.
+  const isSmallBusinessExempt = vatScheme === 'small_business_NL_KOR'
+    || vatScheme === 'small_business_DE_kleinunternehmer';
+  const exemptionNote = vatScheme === 'small_business_NL_KOR'
+    ? 'BTW niet van toepassing — kleineondernemersregeling (KOR).'
+    : vatScheme === 'small_business_DE_kleinunternehmer'
+      ? 'Gemäß § 19 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmer).'
+      : null;
+
   const lineItemRows = invoice.lineItems.map(item => `
     <tr>
       <td class="item-desc">${item.description}</td>
       <td class="item-num">${item.quantity}</td>
       <td class="item-num">${curr}${fmt(item.unitPrice, locale)}</td>
-      <td class="item-num">${item.vatRate}%</td>
+      <td class="item-num">${isSmallBusinessExempt ? '0%' : item.vatRate + '%'}</td>
       <td class="item-num item-total">${curr}${fmt(item.quantity * item.unitPrice, locale)}</td>
     </tr>`).join('\n');
 
   const statusLabel = L.status[invoice.status] || L.status.draft;
   const sColor = statusColor(invoice.status);
 
-  // VAT breakdown by rate
+  // VAT breakdown by rate — zero everything for small-business scheme.
   const vatByRate = new Map<number, number>();
-  invoice.lineItems.forEach(li => {
-    const vatAmt = li.quantity * li.unitPrice * li.vatRate / 100;
-    vatByRate.set(li.vatRate, (vatByRate.get(li.vatRate) ?? 0) + vatAmt);
-  });
-  const vatRows = Array.from(vatByRate.entries())
-    .sort((a, b) => a[0] - b[0])
-    .map(([rate, amount]) => `<div class="summary-row"><span>${L.vatAmount} ${rate}%</span><span>${curr}${fmt(amount, locale)}</span></div>`)
-    .join('\n');
+  if (!isSmallBusinessExempt) {
+    invoice.lineItems.forEach(li => {
+      const vatAmt = li.quantity * li.unitPrice * li.vatRate / 100;
+      vatByRate.set(li.vatRate, (vatByRate.get(li.vatRate) ?? 0) + vatAmt);
+    });
+  }
+  const vatRows = isSmallBusinessExempt
+    ? `<div class="summary-row"><span>${L.vatAmount}</span><span>${curr}${fmt(0, locale)}</span></div>`
+    : Array.from(vatByRate.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([rate, amount]) => `<div class="summary-row"><span>${L.vatAmount} ${rate}%</span><span>${curr}${fmt(amount, locale)}</span></div>`)
+        .join('\n');
 
   return `<!DOCTYPE html>
 <html lang="${language || 'en'}">
@@ -352,6 +367,11 @@ function buildInvoiceHtml(
   </div>
 </div>
 
+${exemptionNote ? `<!-- Small-business VAT exemption legal note (R251) -->
+<div style="background:#FEF3C7;border-left:4px solid #F59E0B;padding:12px 16px;margin-bottom:16px;font-size:12px;color:#78350F;">
+  ${exemptionNote}
+</div>` : ''}
+
 <!-- Payment -->
 <div class="payment-box">
   <div class="payment-title">${L.paymentInfo}</div>
@@ -425,6 +445,8 @@ export async function generateInvoicePdf(
     insuranceRef?: string;
     country?: Country;
     language?: string;
+    // R251: small-business scheme controls VAT rendering
+    vatScheme?: 'standard' | 'small_business_NL_KOR' | 'small_business_DE_kleinunternehmer';
   },
   paymentUrl?: string,
   options?: {
@@ -443,6 +465,7 @@ export async function generateInvoicePdf(
     businessProfile?.iban,
     options?.showPoweredBy,
     businessProfile?.insuranceRef,
+    businessProfile?.vatScheme,
   );
 
   const { uri } = await Print.printToFileAsync({ html, base64: false });
