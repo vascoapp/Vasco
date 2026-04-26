@@ -1821,5 +1821,22 @@
     "dueInDays": "due in {{count}} days",
     "loading": "Loading",
     "upcomingTitle": "MAINTENANCE"
+  },
+  "schedule": {
+    "optimize": "Optimize",
+    "optimizeRoute": "Optimize route",
+    "optimizeNeedTwo": "Need at least 2 jobs to optimize",
+    "optimizedTitle": "Optimized route",
+    "optimizeFailed": "Optimization failed",
+    "openDragToApply": "Open the drag schedule to apply this order.",
+    "viewWeek": "Week overview"
+  },
+  "weekly": {
+    "title": "WEEK OVERVIEW",
+    "today": "Today",
+    "optimize": "OPTIMIZE",
+    "job": "job",
+    "jobs": "jobs",
+    "empty": "— no jobs scheduled —"
   }
 }

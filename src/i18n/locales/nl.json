@@ -1821,5 +1821,22 @@
     "dueInDays": "over {{count}} dagen",
     "loading": "Laden",
     "upcomingTitle": "ONDERHOUD"
+  },
+  "schedule": {
+    "optimize": "Optimaliseer",
+    "optimizeRoute": "Route optimaliseren",
+    "optimizeNeedTwo": "Minstens 2 klussen nodig om te optimaliseren",
+    "optimizedTitle": "Geoptimaliseerde route",
+    "optimizeFailed": "Optimalisatie mislukt",
+    "openDragToApply": "Open de planning om deze volgorde toe te passen.",
+    "viewWeek": "Weekoverzicht"
+  },
+  "weekly": {
+    "title": "WEEKOVERZICHT",
+    "today": "Vandaag",
+    "optimize": "OPTIMALISEER",
+    "job": "klus",
+    "jobs": "klussen",
+    "empty": "— geen klussen ingepland —"
   }
 }

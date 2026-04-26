@@ -245,12 +245,62 @@ export default function WerkScreen() {
 
         {/* ─── TAB CONTENT ─── */}
         {tab === 'today' && (
-          <TodayContent
-            todayJobs={todayJobs}
-            onOpenJob={(id) => router.push(`/contractor/job/${id}` as any)}
-            onPlanCta={() => router.push('/contractor/drag-schedule' as any)}
-            t={t}
-          />
+          <>
+            <Pressable
+              style={styles.weekLink}
+              onPress={() => router.push('/contractor/weekly-overview' as any)}
+            >
+              <Ionicons name="calendar" size={14} color={DK.colors.text} />
+              <Text style={styles.weekLinkText}>{t('schedule.viewWeek', 'Week overview').toUpperCase()}</Text>
+              <Ionicons name="chevron-forward" size={14} color={DK.colors.textMuted} />
+            </Pressable>
+            {todayJobs.length >= 2 && (
+              <Pressable
+                style={styles.optimizeBtn}
+                onPress={async () => {
+                  try {
+                    const { optimizeSchedule } = await import('../../src/services/optimalSchedulerService');
+                    const allJobs = jobs as any[];
+                    const startCountry = (allJobs.find((j) => j?.address?.country)?.address?.country ?? 'NL') as any;
+                    const startPostcode = allJobs.find((j) => j?.address?.postcode)?.address?.postcode ?? '';
+                    const optimized = optimizeSchedule(
+                      todayJobs.map((entry: any) => {
+                        const j = allJobs.find((x) => x.id === entry.id);
+                        return {
+                          id: entry.id,
+                          title: entry.title ?? entry.jobTitle ?? 'Job',
+                          postcode: j?.address?.postcode,
+                          country: j?.address?.country ?? startCountry,
+                          estimatedHours: (entry.duration ?? 120) / 60,
+                          priority: j?.priority,
+                        };
+                      }),
+                      {
+                        date: new Date().toISOString().slice(0, 10),
+                        startPostcode: startPostcode || (allJobs[0]?.address?.postcode ?? ''),
+                        startCountry,
+                      },
+                    );
+                    const summary = `${optimized.totalDriveKm}km · ${Math.round(optimized.totalDriveMin)}min`
+                      + (optimized.warnings.length ? `\n⚠ ${optimized.warnings.join('; ')}` : '')
+                      + `\n\n${t('schedule.openDragToApply', 'Open the drag schedule to apply this order.')}`;
+                    Alert.alert(t('schedule.optimizedTitle', 'Optimized route'), summary);
+                  } catch (e) {
+                    Alert.alert(t('schedule.optimizeFailed', 'Optimization failed'), String((e as Error).message ?? e));
+                  }
+                }}
+              >
+                <Ionicons name="flash" size={14} color={DK.colors.accent} />
+                <Text style={styles.optimizeText}>{t('schedule.optimizeRoute', 'OPTIMIZE ROUTE').toUpperCase()}</Text>
+              </Pressable>
+            )}
+            <TodayContent
+              todayJobs={todayJobs}
+              onOpenJob={(id) => router.push(`/contractor/job/${id}` as any)}
+              onPlanCta={() => router.push('/contractor/drag-schedule' as any)}
+              t={t}
+            />
+          </>
         )}
 
         {tab === 'active' && (
@@ -584,6 +634,45 @@ const styles = StyleSheet.create({
   tabCountTextActive: { color: DK.colors.bg },
 
   listGroup: { gap: 8 },
+
+  // R254: optimize-route button on Werk Today
+  optimizeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: DK.radius.chip,
+    backgroundColor: DK.colors.panel,
+    borderWidth: 1,
+    borderColor: DK.colors.accent,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+  },
+  optimizeText: {
+    fontFamily: DK.type.display800,
+    fontSize: 11,
+    color: DK.colors.accent,
+    letterSpacing: 1.2,
+  },
+  weekLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: DK.radius.chip,
+    backgroundColor: DK.colors.panel,
+    marginBottom: 8,
+  },
+  weekLinkText: {
+    flex: 1,
+    fontFamily: DK.type.display800,
+    fontSize: 11,
+    color: DK.colors.text,
+    letterSpacing: 1,
+  },
 
   // Today row
   todayRow: {

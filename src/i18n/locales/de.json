@@ -1821,5 +1821,22 @@
     "dueInDays": "in {{count}} Tagen fällig",
     "loading": "Lädt",
     "upcomingTitle": "WARTUNG"
+  },
+  "schedule": {
+    "optimize": "Optimieren",
+    "optimizeRoute": "Route optimieren",
+    "optimizeNeedTwo": "Mindestens 2 Aufträge zum Optimieren",
+    "optimizedTitle": "Optimierte Route",
+    "optimizeFailed": "Optimierung fehlgeschlagen",
+    "openDragToApply": "Öffne den Tagesplan, um diese Reihenfolge anzuwenden.",
+    "viewWeek": "Wochenübersicht"
+  },
+  "weekly": {
+    "title": "WOCHENÜBERSICHT",
+    "today": "Heute",
+    "optimize": "OPTIMIEREN",
+    "job": "Auftrag",
+    "jobs": "Aufträge",
+    "empty": "— keine Aufträge geplant —"
   }
 }
