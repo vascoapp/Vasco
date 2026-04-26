@@ -174,6 +174,92 @@ export async function lookupHandelsregister(hrbNumber: string): Promise<CompanyL
 }
 
 // ---------------------------------------------------------------------------
+// NL UBO register — Ultimate Beneficial Owner lookup (R250)
+// ---------------------------------------------------------------------------
+// Required for B2B onboarding under Wwft (anti-money-laundering act).
+// The KvK UBO register is gated — full data needs a paid KvK API key with
+// the UBO add-on. We expose a clean shape so the call site can decide
+// whether to surface "verified", "unverified", or "lookup-required".
+
+export interface UboRecord {
+  fullName: string;
+  natureOfControl: 'shareholding' | 'voting_rights' | 'other';
+  percentage?: number;       // beneficial-ownership percentage when known
+  pep: boolean;              // politically exposed person flag
+  registeredAt?: string;     // ISO date when listed in UBO register
+}
+
+export interface UboLookupResult {
+  found: boolean;
+  kvkNumber: string;
+  ubos: UboRecord[];
+  source: 'kvk_ubo_api' | 'unavailable';
+  error?: string;
+  // Wwft due-diligence flags so the contractor can document compliance
+  highRisk: boolean;
+  jurisdiction: 'NL';
+}
+
+const KVK_UBO_BASE = 'https://api.kvk.nl/api/v1/uboregister';
+
+export async function lookupNlUbo(kvkNumber: string, apiKey?: string): Promise<UboLookupResult> {
+  const cleaned = kvkNumber.replace(/\D/g, '');
+  if (cleaned.length !== 8) {
+    return {
+      found: false, kvkNumber: kvkNumber, ubos: [], source: 'unavailable',
+      highRisk: false, jurisdiction: 'NL',
+      error: 'KvK number must be 8 digits',
+    };
+  }
+  if (!apiKey) {
+    return {
+      found: false, kvkNumber: cleaned, ubos: [], source: 'unavailable',
+      highRisk: false, jurisdiction: 'NL',
+      error: 'KvK UBO API key not configured',
+    };
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+
+  try {
+    const res = await fetch(`${KVK_UBO_BASE}/${cleaned}`, {
+      headers: { apikey: apiKey, Accept: 'application/json' },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) {
+      return {
+        found: false, kvkNumber: cleaned, ubos: [], source: 'kvk_ubo_api',
+        highRisk: false, jurisdiction: 'NL', error: `KvK UBO ${res.status}`,
+      };
+    }
+    const json = await res.json();
+    const rawUbos = (json?.ubos ?? json?.results ?? []) as any[];
+    const ubos: UboRecord[] = rawUbos.map((u) => ({
+      fullName: String(u.fullName ?? u.naam ?? '(unknown)'),
+      natureOfControl: (u.aardZeggenschap ?? u.nature ?? 'other') as UboRecord['natureOfControl'],
+      percentage: typeof u.percentage === 'number' ? u.percentage : undefined,
+      pep: Boolean(u.pep ?? u.politicallyExposed),
+      registeredAt: u.registeredAt ?? undefined,
+    }));
+    const highRisk = ubos.some((u) => u.pep) || ubos.length === 0;
+    return {
+      found: ubos.length > 0,
+      kvkNumber: cleaned, ubos,
+      source: 'kvk_ubo_api',
+      highRisk, jurisdiction: 'NL',
+    };
+  } catch (err) {
+    clearTimeout(timeout);
+    return {
+      found: false, kvkNumber: cleaned, ubos: [], source: 'unavailable',
+      highRisk: false, jurisdiction: 'NL', error: String(err),
+    };
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Unified entry — picks the right lookup by country
 // ---------------------------------------------------------------------------
 
