@@ -446,6 +446,62 @@ export async function exportInvoice(invoice: UnifiedInvoice): Promise<{ success:
         error: result.error,
       };
     }
+    case 'datev': {
+      const datev = await import('./datev');
+      const totalAmount = invoice.lineItems.reduce(
+        (sum, li) => sum + li.quantity * li.unitPrice * (1 + (li.vatRate ?? 0) / 100),
+        0,
+      );
+      const blendedVat = invoice.lineItems[0]?.vatRate ?? 19;
+      const result = await datev.exportToDATEV([{
+        id: invoice.reference ?? '',
+        customerName: invoice.contactExternalId ?? '',
+        amount: totalAmount,
+        vatRate: blendedVat,
+        date: invoice.invoiceDate,
+        isPaid: false,
+      }]);
+      return result.success
+        ? { success: true, externalId: `datev-${result.exportedAt}` }
+        : { success: false, error: result.error ?? 'DATEV export failed' };
+    }
+    case 'sevdesk': {
+      const sd = await import('./sevdesk');
+      const id = await sd.createInvoice({
+        invoiceDate: invoice.invoiceDate,
+        contact: { id: Number(invoice.contactExternalId), objectName: 'Contact' },
+        invoiceType: 'RE',
+      } as any);
+      return id != null
+        ? { success: true, externalId: String(id) }
+        : { success: false, error: 'SevDesk export failed' };
+    }
+    case 'exact_online': {
+      const ex = await import('./exact');
+      const result = await ex.createInvoice({
+        customerExternalId: invoice.contactExternalId ?? '',
+        reference: invoice.reference,
+        invoiceDate: invoice.invoiceDate,
+        dueDate: invoice.dueDate,
+        lineItems: invoice.lineItems.map((li) => ({
+          description: li.description, quantity: li.quantity, unitPrice: li.unitPrice, vatRate: li.vatRate,
+        })),
+      });
+      return { success: result.success, externalId: result.exactId, error: result.error };
+    }
+    case 'eboekhouden': {
+      const eb = await import('./eboekhouden');
+      const result = await eb.createInvoice({
+        customerExternalId: invoice.contactExternalId ?? '',
+        reference: invoice.reference,
+        invoiceDate: invoice.invoiceDate,
+        dueDate: invoice.dueDate,
+        lineItems: invoice.lineItems.map((li) => ({
+          description: li.description, quantity: li.quantity, unitPrice: li.unitPrice, vatRate: li.vatRate,
+        })),
+      });
+      return { success: result.success, externalId: result.eboekhoudenId, error: result.error };
+    }
     default:
       return { success: false, error: `${config.provider} export niet beschikbaar` };
   }
@@ -481,6 +537,16 @@ export async function syncPaymentStatus(): Promise<{ paidInvoiceIds: string[] }>
       const result = await fic.syncPaymentStatus();
       return { paidInvoiceIds: result.paidInvoiceIds.map(String) };
     }
+    case 'exact_online': {
+      const ex = await import('./exact');
+      return ex.syncPaymentStatus();
+    }
+    case 'eboekhouden': {
+      const eb = await import('./eboekhouden');
+      return eb.syncPaymentStatus();
+    }
+    // DATEV + SevDesk: payment-status sync not implemented in those clients yet.
+    // Fall through to default; users can manually mark paid.
     default:
       return { paidInvoiceIds: [] };
   }
