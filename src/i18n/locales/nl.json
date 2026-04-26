@@ -1247,7 +1247,9 @@
     "vatScheme": "BTW-regeling",
     "vatStandard": "Standaard",
     "auditTrail": "Audit-spoor",
-    "auditTrailValue": "GoBD-conform"
+    "auditTrailValue": "GoBD-conform",
+    "maintenanceContracts": "Onderhoudscontracten",
+    "recurringValue": "Beheer"
   },
   "search": {
     "job": "Klus",
@@ -1782,5 +1784,41 @@
     "verify": "Verificatie uitvoeren",
     "export": "Exporteer audit-spoor (.txt)",
     "footnote": "GoBD vereist 10 jaar bewaartermijn. De hash-keten bewijst dat geen entry achteraf is gewijzigd. Voor volledige archiefcertificering (DATEV-zertifiziert) combineer deze export met het archief van je boekhouder."
+  },
+  "recurring": {
+    "title": "ONDERHOUD",
+    "empty": "Nog geen onderhoudscontracten",
+    "emptyDesc": "Zet onderhoudscontracten op zodat klanten automatisch terugkomen.",
+    "overdue": "Achterstallig",
+    "dueThisWeek": "Deze week",
+    "later": "Komt eraan",
+    "paused": "Gepauzeerd",
+    "addNew": "NIEUW ONDERHOUDSCONTRACT",
+    "newTitle": "NIEUW ONDERHOUD",
+    "editTitle": "ONDERHOUD BEWERKEN",
+    "basicInfo": "BASIS",
+    "customer": "KLANT",
+    "cadence": "FREQUENTIE",
+    "estimates": "SCHATTINGEN",
+    "titleLabel": "Titel",
+    "titlePlaceholder": "Jaarlijks ketelonderhoud",
+    "descLabel": "Beschrijving (optioneel)",
+    "customDays": "Aangepast interval (dagen)",
+    "amount": "Bedrag (€)",
+    "durationHours": "Duur (uren)",
+    "reminderDays": "Herinner X dagen vooraf",
+    "monthly": "Maandelijks",
+    "quarterly": "Per kwartaal",
+    "semiannual": "Halfjaarlijks",
+    "annual": "Jaarlijks",
+    "custom": "Aangepast",
+    "titleRequired": "Titel vereist",
+    "customerRequired": "Kies een klant",
+    "deleteConfirm": "Dit onderhoudscontract verwijderen?",
+    "delete": "Verwijderen",
+    "daysOverdue": "{{count}} dagen te laat",
+    "dueToday": "vandaag",
+    "dueInDays": "over {{count}} dagen",
+    "loading": "Laden"
   }
 }

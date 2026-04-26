@@ -1247,7 +1247,9 @@
     "vatScheme": "USt-Schema",
     "vatStandard": "Standard",
     "auditTrail": "Audit-Trail",
-    "auditTrailValue": "GoBD-konform"
+    "auditTrailValue": "GoBD-konform",
+    "maintenanceContracts": "Wartungsverträge",
+    "recurringValue": "Verwalten"
   },
   "search": {
     "job": "Auftrag",
@@ -1782,5 +1784,41 @@
     "verify": "Überprüfung starten",
     "export": "Trail exportieren (.txt)",
     "footnote": "GoBD verlangt 10 Jahre Aufbewahrung. Die Hash-Kette beweist, dass kein Eintrag nachträglich verändert wurde. Für vollständige Archiv-Zertifizierung (DATEV-zertifiziert) kombinieren Sie den Export mit dem Archiv Ihres Steuerberaters."
+  },
+  "recurring": {
+    "title": "WARTUNG",
+    "empty": "Noch keine Wartungsverträge",
+    "emptyDesc": "Richten Sie Wartungsverträge ein — Kunden kommen automatisch zurück.",
+    "overdue": "Überfällig",
+    "dueThisWeek": "Diese Woche",
+    "later": "Bevorstehend",
+    "paused": "Pausiert",
+    "addNew": "NEUER WARTUNGSVERTRAG",
+    "newTitle": "NEUE WARTUNG",
+    "editTitle": "WARTUNG BEARBEITEN",
+    "basicInfo": "GRUNDLAGEN",
+    "customer": "KUNDE",
+    "cadence": "INTERVALL",
+    "estimates": "SCHÄTZUNGEN",
+    "titleLabel": "Titel",
+    "titlePlaceholder": "Jährliche Heizungswartung",
+    "descLabel": "Beschreibung (optional)",
+    "customDays": "Benutzerdef. Intervall (Tage)",
+    "amount": "Betrag (€)",
+    "durationHours": "Dauer (Stunden)",
+    "reminderDays": "X Tage vorher erinnern",
+    "monthly": "Monatlich",
+    "quarterly": "Quartalsweise",
+    "semiannual": "Halbjährlich",
+    "annual": "Jährlich",
+    "custom": "Benutzerdefiniert",
+    "titleRequired": "Titel erforderlich",
+    "customerRequired": "Kunde auswählen",
+    "deleteConfirm": "Diesen Wartungsvertrag löschen?",
+    "delete": "Löschen",
+    "daysOverdue": "{{count}} Tage überfällig",
+    "dueToday": "heute fällig",
+    "dueInDays": "in {{count}} Tagen fällig",
+    "loading": "Lädt"
   }
 }

@@ -1247,7 +1247,9 @@
     "vatScheme": "VAT scheme",
     "vatStandard": "Standard",
     "auditTrail": "Audit trail",
-    "auditTrailValue": "GoBD-compliant"
+    "auditTrailValue": "GoBD-compliant",
+    "maintenanceContracts": "Maintenance contracts",
+    "recurringValue": "Manage"
   },
   "search": {
     "job": "Job",
@@ -1782,5 +1784,41 @@
     "verify": "Run verification",
     "export": "Export trail (.txt)",
     "footnote": "GoBD requires 10-year retention. The hash chain proves no entry was retroactively changed. For full archive certification (DATEV-zertifiziert), pair this export with your accountant's archive."
+  },
+  "recurring": {
+    "title": "MAINTENANCE",
+    "empty": "No recurring jobs yet",
+    "emptyDesc": "Set up maintenance contracts so customers come back automatically.",
+    "overdue": "Overdue",
+    "dueThisWeek": "Due this week",
+    "later": "Coming up",
+    "paused": "Paused",
+    "addNew": "NEW MAINTENANCE CONTRACT",
+    "newTitle": "NEW MAINTENANCE",
+    "editTitle": "EDIT MAINTENANCE",
+    "basicInfo": "BASICS",
+    "customer": "CUSTOMER",
+    "cadence": "CADENCE",
+    "estimates": "ESTIMATES",
+    "titleLabel": "Title",
+    "titlePlaceholder": "Annual boiler maintenance",
+    "descLabel": "Description (optional)",
+    "customDays": "Custom interval (days)",
+    "amount": "Amount (€)",
+    "durationHours": "Duration (hours)",
+    "reminderDays": "Remind X days before due",
+    "monthly": "Monthly",
+    "quarterly": "Quarterly",
+    "semiannual": "Semi-annual",
+    "annual": "Annual",
+    "custom": "Custom",
+    "titleRequired": "Title required",
+    "customerRequired": "Pick a customer",
+    "deleteConfirm": "Delete this maintenance contract?",
+    "delete": "Delete contract",
+    "daysOverdue": "{{count}} days overdue",
+    "dueToday": "due today",
+    "dueInDays": "due in {{count}} days",
+    "loading": "Loading"
   }
 }

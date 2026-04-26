@@ -288,6 +288,13 @@ export default function ProfileScreen() {
               border
               onPress={() => router.push('/contractor/vat-and-audit' as any)}
             />
+            <SettingsRow
+              icon="repeat-outline"
+              label={t('profile.maintenanceContracts', 'Maintenance contracts')}
+              value={t('profile.recurringValue', 'Manage')}
+              border
+              onPress={() => router.push('/contractor/recurring' as any)}
+            />
           </View>
         </View>
 
