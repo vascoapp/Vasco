@@ -184,12 +184,30 @@ export async function listPayments(limit = 25): Promise<MolliePayment[]> {
 // Payment link — shareable link for customers
 // ---------------------------------------------------------------------------
 
+// R250: country-aware default payment methods. Pass `customerCountry`
+// instead of `method` and the right local methods get picked automatically.
+// NL → iDEAL+SEPA dominate; DE → Sofort+SEPA-Direct-Debit+Klarna.
+export function defaultPaymentMethodsForCountry(country: string | undefined): string[] | undefined {
+  const c = (country ?? '').toUpperCase();
+  if (c === 'NL') return ['ideal', 'sepadirectdebit', 'creditcard', 'paypal'];
+  if (c === 'BE') return ['bancontact', 'sepadirectdebit', 'creditcard'];
+  if (c === 'DE') return ['sofort', 'sepadirectdebit', 'klarnapaylater', 'creditcard'];
+  if (c === 'AT') return ['eps', 'sepadirectdebit', 'creditcard'];
+  if (c === 'FR') return ['creditcard', 'sepadirectdebit', 'paypal'];
+  if (c === 'ES') return ['creditcard', 'sepadirectdebit', 'paypal'];
+  if (c === 'IT') return ['creditcard', 'sepadirectdebit', 'paypal'];
+  if (c === 'UK') return ['creditcard', 'paypal'];
+  if (c === 'SE' || c === 'NO' || c === 'DK' || c === 'FI') return ['klarnapaylater', 'creditcard', 'paypal'];
+  return undefined;
+}
+
 export async function createPaymentLink(req: {
   invoiceId: string;
   amount: number;
   description: string;
   expiresAt?: string;
   method?: string[]; // Country-specific Mollie methods (e.g. ['ideal', 'creditcard', 'paypal'])
+  customerCountry?: string; // R250: when set, default methods auto-pick if `method` omitted
 }): Promise<{ url: string; id: string } | null> {
   const connected = await isConnected();
   if (!connected) {
@@ -199,13 +217,15 @@ export async function createPaymentLink(req: {
     return null;
   }
 
+  const resolvedMethods = req.method
+    ?? (req.customerCountry ? defaultPaymentMethodsForCountry(req.customerCountry) : undefined);
   const result = await apiCall<{ id: string; _links: { paymentLink: { href: string } } }>('payment-links', {
     method: 'POST',
     body: JSON.stringify({
       amount: { currency: 'EUR', value: req.amount.toFixed(2) },
       description: req.description,
       expiresAt: req.expiresAt,
-      ...(req.method ? { method: req.method } : {}),
+      ...(resolvedMethods ? { method: resolvedMethods } : {}),
     }),
   });
 

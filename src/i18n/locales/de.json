@@ -301,7 +301,8 @@
     "missingItems": "Fehlend für Compliance",
     "captureSignature": "Unterschrift aufnehmen",
     "customerSignature": "Kundenunterschrift",
-    "customerSignatureDesc": "Bitte den Kunden, unten zu unterschreiben, um die Arbeit zu bestätigen."
+    "customerSignatureDesc": "Bitte den Kunden, unten zu unterschreiben, um die Arbeit zu bestätigen.",
+    "qualityFeedback": "Feedback"
   },
   "compliance": {
     "docRequirements": "Dokumentanforderungen",
@@ -1055,7 +1056,9 @@
       "local_supplier_cheaper": "lokaler Lieferant günstiger",
       "site_condition_harder": "Baustelle schwieriger als erwartet",
       "other": "sonstiges"
-    }
+    },
+    "cohortRecommendations": "Andere Handwerker fügten auch hinzu",
+    "cohortRecommendationsDesc": "Positionen, die andere Handwerker in ähnlichen Angeboten hinzufügten"
   },
   "queue": {
     "lowWinTitle": "Geringe Gewinnchance · {{customer}}",
@@ -1163,7 +1166,8 @@
     "statusPlanning": "Planung",
     "statusActive": "Aktiv",
     "statusOnHold": "Pausiert",
-    "statusCompleted": "Abgeschlossen"
+    "statusCompleted": "Abgeschlossen",
+    "siteOps": "Baustellen-Aktionen"
   },
   "automation": {
     "progressNote": "Hallo {{customer}}, Update zu {{job}}: {{hours}}h gearbeitet heute. Alles im Plan. Fragen? Melden Sie sich!",
@@ -1711,5 +1715,53 @@
     "processingTitle": "Verarbeitung...",
     "successTitle": "Akzeptiert",
     "errorTitle": "Fehler"
+  },
+  "siteOps": {
+    "dispatch": "Disposition",
+    "dailyReport": "Tagesbericht",
+    "defects": "Mängel",
+    "inspection": "Inspektion",
+    "incident": "Vorfall",
+    "safety": "Sicherheit"
+  },
+  "engagement": {
+    "title": "Kundenaktivität",
+    "openedTimes": "{{count}}× geöffnet · insgesamt {{minutes}} Min",
+    "lastSeen": "zuletzt gesehen {{date}}",
+    "expandedPricing": "Preise {{count}}× erweitert",
+    "hoveredAccept": "Annehmen-Button {{count}}× berührt",
+    "hoveredDecline": "Ablehnen-Button {{count}}× berührt",
+    "startedQuestion": "{{count}} Frage(n) begonnen",
+    "highEngagementHint": "Hohe Aktivität, noch keine Entscheidung — Follow-up sinnvoll"
+  },
+  "moatInsights": {
+    "title": "MARKT & LEISTUNG",
+    "cohortMargin": "Kohorten-Marge",
+    "winRate": "Win-Rate je Angebotsgruppe",
+    "last30Days": "Letzte 30 Tage",
+    "sent": "Versendet",
+    "accepted": "Akzeptiert",
+    "received": "Erhalten",
+    "underAmount": "Unter {{amount}}",
+    "betweenAmount": "{{from}} – {{to}}",
+    "overAmount": "Über {{amount}}"
+  },
+  "reconciliation": {
+    "title": "BANK-ABGLEICH",
+    "subtitle": "Vasco fand {{count}} Zahlung(en), die zu offenen Rechnungen passen.",
+    "invoiceLabel": "Rechnung {{id}}",
+    "confidence": "Sicherheit: {{percent}}%",
+    "confirmPaid": "BEZAHLT",
+    "reasonExactAmount": "exakter Betrag",
+    "reasonAmountWithin": "Betrag im 2%-Bereich",
+    "reasonIban": "IBAN-Übereinstimmung",
+    "reasonName": "Name-Übereinstimmung",
+    "reasonDaysAfter": "{{days}}T nach Versand"
+  },
+  "projectSwitcher": {
+    "activeProjects": "AKTIVE PROJEKTE",
+    "allLink": "Alle ›",
+    "newProject": "NEU",
+    "hint": "Tippen zum Abwählen · lang drücken zum Öffnen · Baustellen-Aktionen auf Heute passen sich an"
   }
 }

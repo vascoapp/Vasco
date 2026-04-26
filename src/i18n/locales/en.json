@@ -301,7 +301,8 @@
     "missingItems": "Missing for trade compliance",
     "captureSignature": "Capture signature",
     "customerSignature": "Customer signature",
-    "customerSignatureDesc": "Ask the customer to sign below to confirm the work is completed."
+    "customerSignatureDesc": "Ask the customer to sign below to confirm the work is completed.",
+    "qualityFeedback": "Feedback"
   },
   "compliance": {
     "docRequirements": "Document requirements",
@@ -1055,7 +1056,9 @@
       "local_supplier_cheaper": "local supplier cheaper",
       "site_condition_harder": "site harder than expected",
       "other": "other"
-    }
+    },
+    "cohortRecommendations": "Contractors also added",
+    "cohortRecommendationsDesc": "Lines other contractors added to similar quotes"
   },
   "queue": {
     "lowWinTitle": "Low win chance · {{customer}}",
@@ -1163,7 +1166,8 @@
     "statusPlanning": "Planning",
     "statusActive": "Active",
     "statusOnHold": "On hold",
-    "statusCompleted": "Completed"
+    "statusCompleted": "Completed",
+    "siteOps": "Site operations"
   },
   "automation": {
     "progressNote": "Hi {{customer}}, update on {{job}}: {{hours}}h worked today. Progress is on track. Any questions, let me know!",
@@ -1711,5 +1715,53 @@
     "processingTitle": "Processing...",
     "successTitle": "Accepted",
     "errorTitle": "Error"
+  },
+  "siteOps": {
+    "dispatch": "Dispatch",
+    "dailyReport": "Daily report",
+    "defects": "Defects",
+    "inspection": "Inspection",
+    "incident": "Incident",
+    "safety": "Safety"
+  },
+  "engagement": {
+    "title": "Customer activity",
+    "openedTimes": "Opened {{count}}× · {{minutes}} min total",
+    "lastSeen": "last seen {{date}}",
+    "expandedPricing": "Expanded pricing {{count}}×",
+    "hoveredAccept": "Hovered accept {{count}}×",
+    "hoveredDecline": "Hovered decline {{count}}×",
+    "startedQuestion": "Started {{count}} question(s)",
+    "highEngagementHint": "High engagement, no decision yet — consider a follow-up"
+  },
+  "moatInsights": {
+    "title": "MARKT & PRESTATIE",
+    "cohortMargin": "Cohort margin",
+    "winRate": "Win-rate per quote group",
+    "last30Days": "Last 30 days",
+    "sent": "Sent",
+    "accepted": "Accepted",
+    "received": "Received",
+    "underAmount": "Under {{amount}}",
+    "betweenAmount": "{{from}} – {{to}}",
+    "overAmount": "Over {{amount}}"
+  },
+  "reconciliation": {
+    "title": "BANK MATCHES",
+    "subtitle": "Vasco found {{count}} payment(s) matching your open invoices.",
+    "invoiceLabel": "Invoice {{id}}",
+    "confidence": "Confidence: {{percent}}%",
+    "confirmPaid": "PAID",
+    "reasonExactAmount": "exact amount match",
+    "reasonAmountWithin": "amount within 2%",
+    "reasonIban": "IBAN match",
+    "reasonName": "name match",
+    "reasonDaysAfter": "{{days}}d after sent"
+  },
+  "projectSwitcher": {
+    "activeProjects": "ACTIVE PROJECTS",
+    "allLink": "All ›",
+    "newProject": "NEW",
+    "hint": "Tap to deselect · long-press to open · site-lead actions on Vandaag scope to active project"
   }
 }

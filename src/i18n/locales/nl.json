@@ -301,7 +301,8 @@
     "missingItems": "Ontbreekt voor compliance",
     "captureSignature": "Handtekening vastleggen",
     "customerSignature": "Handtekening klant",
-    "customerSignatureDesc": "Vraag de klant hieronder te tekenen om het werk af te ronden."
+    "customerSignatureDesc": "Vraag de klant hieronder te tekenen om het werk af te ronden.",
+    "qualityFeedback": "Feedback"
   },
   "compliance": {
     "docRequirements": "Documentvereisten",
@@ -1055,7 +1056,9 @@
       "local_supplier_cheaper": "lokale leverancier goedkoper",
       "site_condition_harder": "locatie zwaarder dan verwacht",
       "other": "overig"
-    }
+    },
+    "cohortRecommendations": "Andere aannemers voegden ook toe",
+    "cohortRecommendationsDesc": "Regels die andere aannemers in vergelijkbare offertes toevoegden"
   },
   "queue": {
     "lowWinTitle": "Lage winkans · {{customer}}",
@@ -1163,7 +1166,8 @@
     "statusPlanning": "Planning",
     "statusActive": "Actief",
     "statusOnHold": "Gepauzeerd",
-    "statusCompleted": "Afgerond"
+    "statusCompleted": "Afgerond",
+    "siteOps": "Werfacties"
   },
   "automation": {
     "progressNote": "Hi {{customer}}, update over {{job}}: {{hours}}u gewerkt vandaag. Alles op schema. Vragen? Laat het weten!",
@@ -1711,5 +1715,53 @@
     "processingTitle": "Verwerken...",
     "successTitle": "Geaccepteerd",
     "errorTitle": "Fout"
+  },
+  "siteOps": {
+    "dispatch": "Dispatch",
+    "dailyReport": "Dagrapport",
+    "defects": "Gebreken",
+    "inspection": "Inspectie",
+    "incident": "Incident",
+    "safety": "Veiligheid"
+  },
+  "engagement": {
+    "title": "Klant-activiteit",
+    "openedTimes": "Geopend {{count}}× · {{minutes}} min totaal",
+    "lastSeen": "laatst gezien {{date}}",
+    "expandedPricing": "Prijzen uitgevouwen {{count}}×",
+    "hoveredAccept": "Acceptknop {{count}}× gehoverd",
+    "hoveredDecline": "Afwijsknop {{count}}× gehoverd",
+    "startedQuestion": "{{count}} vraag/vragen begonnen",
+    "highEngagementHint": "Veel activiteit, nog geen besluit — overweeg follow-up"
+  },
+  "moatInsights": {
+    "title": "MARKT & PRESTATIE",
+    "cohortMargin": "Cohort marge",
+    "winRate": "Win-rate per offerte-groep",
+    "last30Days": "Laatste 30 dagen",
+    "sent": "Verstuurd",
+    "accepted": "Geaccepteerd",
+    "received": "Ontvangen",
+    "underAmount": "Onder {{amount}}",
+    "betweenAmount": "{{from}} – {{to}}",
+    "overAmount": "Boven {{amount}}"
+  },
+  "reconciliation": {
+    "title": "BANK-MATCHES",
+    "subtitle": "Vasco vond {{count}} betaling(en) die overeenkomen met openstaande facturen.",
+    "invoiceLabel": "Factuur {{id}}",
+    "confidence": "Zekerheid: {{percent}}%",
+    "confirmPaid": "BETAALD",
+    "reasonExactAmount": "exact bedrag",
+    "reasonAmountWithin": "bedrag binnen 2%",
+    "reasonIban": "IBAN match",
+    "reasonName": "naam match",
+    "reasonDaysAfter": "{{days}}d na versturen"
+  },
+  "projectSwitcher": {
+    "activeProjects": "ACTIEVE PROJECTEN",
+    "allLink": "Alle ›",
+    "newProject": "NIEUW",
+    "hint": "Tik om te deselecteren · lang ingedrukt om te openen · werfacties op Vandaag passen zich aan"
   }
 }
