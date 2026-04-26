@@ -8,7 +8,7 @@ import {
   Pressable,
   Image,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
@@ -37,7 +37,8 @@ export default function IncidentReportScreen() {
   const [severity, setSeverity] = useState<Severity>('Laag');
   const [photos, setPhotos] = useState<PhotoResult[]>([]);
   const [showToast, setShowToast] = useState(false);
-  const { addIncident } = useIncidents();
+  const { projectId } = useLocalSearchParams<{ projectId?: string }>();
+  const { addIncident } = useIncidents(projectId);
 
   const FORM_KEY = '@vasco_incident_draft';
 

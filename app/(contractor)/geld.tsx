@@ -23,6 +23,7 @@ import { DK } from '../../src/theme/draftkings';
 import { useAppState } from '../../src/state/AppState';
 import { useFinancialAnalysis } from '../../src/services/financialAnalysisService';
 import { MoatInsightsCard } from '../../src/components/contractor/MoatInsightsCard';
+import { ReconciliationCard } from '../../src/components/contractor/ReconciliationCard';
 import { formatCurrency } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
@@ -201,6 +202,9 @@ export default function GeldScreen() {
             <Text style={[s.kpiValue, { color: DK.colors.highlight }]}>{compactCurrency(fin.quotePipeline)}</Text>
           </Pressable>
         </View>
+
+        {/* R247: bank-reconciliation surface — actionable, shown first */}
+        <ReconciliationCard />
 
         {/* R243: MARKT & PRESTATIE — closes mv_winrate_by_amount + */}
         {/* mv_margin_by_trade_month + ts_daily_business_metrics dormant tables */}

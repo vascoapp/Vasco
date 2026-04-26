@@ -140,6 +140,37 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
   const [lineHints, setLineHints] = useState<Record<string, LineEditDistribution | null>>({});
   const [cohortTuneSummary, setCohortTuneSummary] = useState<CohortAdjustmentSummary | null>(null);
 
+  // R247: cohort line-content recommender. Suggests line items that other
+  // contractors in this trade × country added but the current contractor
+  // hasn't yet. K-anonymity + ≥10% adoption gates surface in the RPC.
+  const [lineRecommendations, setLineRecommendations] = useState<Array<{
+    description: string;
+    suggestedUnitPrice: number;
+    recommendationRate: number;
+    contractorCount: number;
+  }>>([]);
+
+  useEffect(() => {
+    if (step !== 'preview' || selectedServices.length === 0) {
+      setLineRecommendations([]);
+      return;
+    }
+    let cancelled = false;
+    const existing = selectedServices.map((s) => s.item.description ?? s.item.name ?? '').filter(Boolean);
+    import('../../services/quoteRecommenderService').then(async (m) => {
+      const recs = await m.getLineRecommendations({
+        trade, country, existingDescriptions: existing, limit: 3,
+      });
+      if (!cancelled) setLineRecommendations(recs.map((r) => ({
+        description: r.description,
+        suggestedUnitPrice: r.suggestedUnitPrice,
+        recommendationRate: r.recommendationRate,
+        contractorCount: r.contractorCount,
+      })));
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [step, selectedServices, trade, country]);
+
   // Baseline tracking for reason-code capture: records the AI-suggested
   // quantity + source for each line so we can spot contractor edits against
   // that baseline and ask "why did you change this?"
@@ -633,6 +664,38 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
               <Pressable onPress={() => setCohortTuneSummary(null)} hitSlop={8}>
                 <Ionicons name="close" size={14} color={SemanticColors.feedbackSuccess} />
               </Pressable>
+            </View>
+          )}
+
+          {/* R247: cohort line recommender — "contractors with similar quotes also added X" */}
+          {lineRecommendations.length > 0 && (
+            <View style={{ backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md, padding: GRID.sm, marginBottom: GRID.sm, gap: GRID.xs }}>
+              <Text style={{ fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textSecondary, textTransform: 'uppercase', letterSpacing: 1 }}>
+                {t('quotes.cohortRecommendations', 'Contractors also added')}
+              </Text>
+              {lineRecommendations.map((rec, idx) => (
+                <Pressable
+                  key={`${rec.description}-${idx}`}
+                  onPress={() => {
+                    const newItem: any = {
+                      item: { id: `cohort-${idx}-${Date.now()}`, name: rec.description, description: rec.description, unitPrice: rec.suggestedUnitPrice },
+                      quantity: 1,
+                      unit: 'piece',
+                    };
+                    setSelectedServices((prev) => [...prev, newItem]);
+                    setLineRecommendations((prev) => prev.filter((_, i) => i !== idx));
+                  }}
+                  style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: GRID.xs, gap: GRID.sm }}
+                >
+                  <Ionicons name="add-circle-outline" size={18} color={Palette.hermesOrange} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary }}>{rec.description}</Text>
+                    <Text style={{ fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textSecondary }}>
+                      €{rec.suggestedUnitPrice.toFixed(2)} · {Math.round(rec.recommendationRate * 100)}% van vergelijkbare offertes · {rec.contractorCount} aannemers
+                    </Text>
+                  </View>
+                </Pressable>
+              ))}
             </View>
           )}
 

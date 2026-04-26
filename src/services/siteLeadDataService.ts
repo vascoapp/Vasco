@@ -29,6 +29,9 @@ export interface Defect {
   guaranteeRef?: string;
   guaranteeExpiry?: string;
   closedAt?: string;
+  // R247: scope to a specific aannemer project when the contractor is
+  // running the site-lead view from a project context.
+  projectId?: string;
 }
 
 export interface DailyReport {
@@ -47,6 +50,7 @@ export interface DailyReport {
   generalNotes: string;
   photoCount: number;
   submittedAt: string;
+  projectId?: string;
 }
 
 export interface InspectionRecord {
@@ -57,6 +61,7 @@ export interface InspectionRecord {
   totalItems: number;
   notes: string;
   completedAt: string;
+  projectId?: string;
 }
 
 export interface IncidentRecord {
@@ -69,6 +74,7 @@ export interface IncidentRecord {
   peopleInvolved: string;
   photoCount: number;
   submittedAt: string;
+  projectId?: string;
 }
 
 // ============================================
@@ -242,22 +248,23 @@ export const siteLeadDataService = new SiteLeadDataService();
 // HOOKS
 // ============================================
 
-export function useDefects(status?: 'open' | 'closed') {
+// R247: optional projectId scopes results to a specific aannemer project.
+// When omitted, returns all rows (legacy behavior).
+export function useDefects(status?: 'open' | 'closed', projectId?: string) {
   const [defects, setDefects] = useState<Defect[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    siteLeadDataService.load().then(() => {
-      setDefects(siteLeadDataService.getDefects(status));
-      setLoading(false);
-    });
-    return siteLeadDataService.subscribe(() => {
-      setDefects(siteLeadDataService.getDefects(status));
-    });
-  }, [status]);
+    const refresh = () => {
+      const all = siteLeadDataService.getDefects(status);
+      setDefects(projectId ? all.filter((d) => d.projectId === projectId) : all);
+    };
+    siteLeadDataService.load().then(() => { refresh(); setLoading(false); });
+    return siteLeadDataService.subscribe(refresh);
+  }, [status, projectId]);
 
   const addDefect = useCallback((defect: Omit<Defect, 'id' | 'date' | 'status'>) =>
-    siteLeadDataService.addDefect(defect), []);
+    siteLeadDataService.addDefect({ ...defect, projectId: defect.projectId ?? projectId }), [projectId]);
 
   const closeDefect = useCallback((id: string) =>
     siteLeadDataService.closeDefect(id), []);
@@ -265,44 +272,56 @@ export function useDefects(status?: 'open' | 'closed') {
   return { defects, loading, addDefect, closeDefect };
 }
 
-export function useDailyReports() {
+export function useDailyReports(projectId?: string) {
   const [reports, setReports] = useState<DailyReport[]>([]);
 
   useEffect(() => {
-    siteLeadDataService.load().then(() => setReports(siteLeadDataService.getReports()));
-    return siteLeadDataService.subscribe(() => setReports(siteLeadDataService.getReports()));
-  }, []);
+    const refresh = () => {
+      const all = siteLeadDataService.getReports();
+      setReports(projectId ? all.filter((r) => r.projectId === projectId) : all);
+    };
+    siteLeadDataService.load().then(refresh);
+    return siteLeadDataService.subscribe(refresh);
+  }, [projectId]);
 
   const addReport = useCallback((report: Omit<DailyReport, 'id' | 'submittedAt'>) =>
-    siteLeadDataService.addReport(report), []);
+    siteLeadDataService.addReport({ ...report, projectId: report.projectId ?? projectId }), [projectId]);
 
   return { reports, addReport };
 }
 
-export function useInspections() {
+export function useInspections(projectId?: string) {
   const [inspections, setInspections] = useState<InspectionRecord[]>([]);
 
   useEffect(() => {
-    siteLeadDataService.load().then(() => setInspections(siteLeadDataService.getInspections()));
-    return siteLeadDataService.subscribe(() => setInspections(siteLeadDataService.getInspections()));
-  }, []);
+    const refresh = () => {
+      const all = siteLeadDataService.getInspections();
+      setInspections(projectId ? all.filter((r) => r.projectId === projectId) : all);
+    };
+    siteLeadDataService.load().then(refresh);
+    return siteLeadDataService.subscribe(refresh);
+  }, [projectId]);
 
   const addInspection = useCallback((record: Omit<InspectionRecord, 'id' | 'completedAt'>) =>
-    siteLeadDataService.addInspection(record), []);
+    siteLeadDataService.addInspection({ ...record, projectId: record.projectId ?? projectId }), [projectId]);
 
   return { inspections, addInspection };
 }
 
-export function useIncidents() {
+export function useIncidents(projectId?: string) {
   const [incidents, setIncidents] = useState<IncidentRecord[]>([]);
 
   useEffect(() => {
-    siteLeadDataService.load().then(() => setIncidents(siteLeadDataService.getIncidents()));
-    return siteLeadDataService.subscribe(() => setIncidents(siteLeadDataService.getIncidents()));
-  }, []);
+    const refresh = () => {
+      const all = siteLeadDataService.getIncidents();
+      setIncidents(projectId ? all.filter((r) => r.projectId === projectId) : all);
+    };
+    siteLeadDataService.load().then(refresh);
+    return siteLeadDataService.subscribe(refresh);
+  }, [projectId]);
 
   const addIncident = useCallback((record: Omit<IncidentRecord, 'id' | 'submittedAt'>) =>
-    siteLeadDataService.addIncident(record), []);
+    siteLeadDataService.addIncident({ ...record, projectId: record.projectId ?? projectId }), [projectId]);
 
   return { incidents, addIncident };
 }

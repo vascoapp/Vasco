@@ -7,7 +7,7 @@ import {
   Pressable,
   TextInput,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
@@ -44,7 +44,8 @@ export default function InspectionScreen() {
   const [customItems, setCustomItems] = useState<{id: string; label: string}[]>([]);
   const [newItemText, setNewItemText] = useState('');
   const [showAddItem, setShowAddItem] = useState(false);
-  const { addInspection } = useInspections();
+  const { projectId } = useLocalSearchParams<{ projectId?: string }>();
+  const { addInspection } = useInspections(projectId);
 
   const checklistItems: ChecklistItem[] = CHECKLIST_KEYS.map(ck => ({
     id: ck.id,

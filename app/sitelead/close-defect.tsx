@@ -8,7 +8,7 @@ import {
   Pressable,
   RefreshControl,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
@@ -27,7 +27,8 @@ export default function CloseDefectScreen() {
   const router = useRouter();
   const inlineTip = useInlineInsight('sitelead', 'close-defect', 'overview');
   const [filter, setFilter] = useState<Severity>('alle');
-  const { defects: allDefects, closeDefect } = useDefects('open');
+  const { projectId } = useLocalSearchParams<{ projectId?: string }>();
+  const { defects: allDefects, closeDefect } = useDefects('open', projectId);
 
   const getSeverityColor = (severity: 'hoog' | 'middel' | 'laag') => {
     switch (severity) {
