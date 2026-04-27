@@ -1058,7 +1058,20 @@
       "other": "overig"
     },
     "cohortRecommendations": "Andere aannemers voegden ook toe",
-    "cohortRecommendationsDesc": "Regels die andere aannemers in vergelijkbare offertes toevoegden"
+    "cohortRecommendationsDesc": "Regels die andere aannemers in vergelijkbare offertes toevoegden",
+    "todHint": "Beste verzendmoment: {{day}} {{part}} — {{lift}}pp hogere acceptatie",
+    "todSample": "Op basis van {{count}} offertes van collega's in {{country}}",
+    "todSun": "zondag",
+    "todMon": "maandag",
+    "todTue": "dinsdag",
+    "todWed": "woensdag",
+    "todThu": "donderdag",
+    "todFri": "vrijdag",
+    "todSat": "zaterdag",
+    "todPart_morning": "ochtend",
+    "todPart_midday": "middag",
+    "todPart_afternoon": "namiddag",
+    "todPart_evening": "avond"
   },
   "queue": {
     "lowWinTitle": "Lage winkans · {{customer}}",

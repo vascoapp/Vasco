@@ -1058,7 +1058,20 @@
       "other": "sonstiges"
     },
     "cohortRecommendations": "Andere Handwerker fügten auch hinzu",
-    "cohortRecommendationsDesc": "Positionen, die andere Handwerker in ähnlichen Angeboten hinzufügten"
+    "cohortRecommendationsDesc": "Positionen, die andere Handwerker in ähnlichen Angeboten hinzufügten",
+    "todHint": "Beste Sendezeit: {{day}} {{part}} — {{lift}}pp höhere Annahme",
+    "todSample": "Basierend auf {{count}} Angeboten von Kollegen in {{country}}",
+    "todSun": "Sonntag",
+    "todMon": "Montag",
+    "todTue": "Dienstag",
+    "todWed": "Mittwoch",
+    "todThu": "Donnerstag",
+    "todFri": "Freitag",
+    "todSat": "Samstag",
+    "todPart_morning": "Vormittag",
+    "todPart_midday": "Mittag",
+    "todPart_afternoon": "Nachmittag",
+    "todPart_evening": "Abend"
   },
   "queue": {
     "lowWinTitle": "Geringe Gewinnchance · {{customer}}",

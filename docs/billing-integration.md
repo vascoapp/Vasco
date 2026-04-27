@@ -1,6 +1,6 @@
 # Billing Integration — Credit Redemption
 
-Last updated: 2026-04-25 (R235)
+Last updated: 2026-04-27 (R260 — Option A wired, awaits live Stripe creds)
 
 ## What this covers
 
@@ -23,11 +23,24 @@ Tests: 21 passing across `subscriptionCreditsService.test.ts` (10) and
 `billingCreditRedemption.test.ts` (11) including edge dates (Jan 31 → Feb 28,
 Mar 31 → Apr 30), year boundaries, multi-month rows, and maxMonths clamping.
 
-## Status (2026-04-25)
+## Status (2026-04-27)
 
 - Option B (DB-extend) **wired into both webhooks** behind `CREDIT_REDEMPTION_ENABLED` env flag. Set to `'true'` on the project's secrets to enable. Idempotency + restore on failure both handled.
-- Option A (Stripe coupon) still unwired — see "Option A" section below for the plan when you have live Stripe creds.
+- Option A (Stripe coupon) **wired into stripe-webhook** behind `STRIPE_COUPON_REDEMPTION` env flag. Branches on `invoice.upcoming`, creates a one-time coupon, applies it to the subscription so the next finalized invoice picks it up. Mutually exclusive with Option B (Option B is skipped when Option A is on). Awaits live Stripe creds for end-to-end validation.
 - Safety primitives shipped: `webhook_idempotency` table + `restore_subscription_credits` RPC (migration `20260425_credit_redemption_safety.sql`).
+
+### How to flip Option A live (preferred for UK / Stripe markets)
+
+1. In Supabase secrets:
+   - `STRIPE_API_KEY` = `sk_live_...` (or `sk_test_...` for sandbox)
+   - `STRIPE_COUPON_REDEMPTION` = `true`
+   - **Do NOT also set** `CREDIT_REDEMPTION_ENABLED=true` — A and B are mutually exclusive and the webhook gates B off when A is on.
+2. In Stripe dashboard → Developers → Webhooks, ensure the endpoint subscribes to `invoice.upcoming` (in addition to the existing `customer.subscription.*` + `payment_intent.succeeded`).
+3. Re-deploy `stripe-webhook` (`supabase functions deploy stripe-webhook`).
+4. Trigger a test: in Stripe dashboard, advance a test subscription to fire `invoice.upcoming` (or wait for a real cycle).
+5. Verify in Supabase logs: `Applied Nmo coupon (X¢ EUR) to sub=...`. The next finalized invoice should be reduced by the coupon amount.
+
+If the coupon-create or subscription-apply step fails, `restoreCredits` un-redeems the consumed rows so the user keeps their credit. The `Idempotency-Key` header on Stripe API calls makes retries safe.
 
 ## How to flip Option B live
 

@@ -1055,7 +1055,20 @@
       "local_supplier_cheaper": "proveedor local más barato",
       "site_condition_harder": "obra más difícil de lo previsto",
       "other": "otro"
-    }
+    },
+    "todHint": "Mejor momento para enviar: {{day}} {{part}} — {{lift}}pp más de aceptación",
+    "todSample": "Sobre {{count}} presupuestos de colegas en {{country}}",
+    "todSun": "domingo",
+    "todMon": "lunes",
+    "todTue": "martes",
+    "todWed": "miércoles",
+    "todThu": "jueves",
+    "todFri": "viernes",
+    "todSat": "sábado",
+    "todPart_morning": "mañana",
+    "todPart_midday": "mediodía",
+    "todPart_afternoon": "tarde",
+    "todPart_evening": "noche"
   },
   "queue": {
     "lowWinTitle": "Baja probabilidad · {{customer}}",

@@ -1055,7 +1055,20 @@
       "local_supplier_cheaper": "fornitore locale più economico",
       "site_condition_harder": "cantiere più difficile del previsto",
       "other": "altro"
-    }
+    },
+    "todHint": "Momento migliore per inviare: {{day}} {{part}} — {{lift}}pp di accettazione in più",
+    "todSample": "Su {{count}} preventivi di colleghi in {{country}}",
+    "todSun": "domenica",
+    "todMon": "lunedì",
+    "todTue": "martedì",
+    "todWed": "mercoledì",
+    "todThu": "giovedì",
+    "todFri": "venerdì",
+    "todSat": "sabato",
+    "todPart_morning": "mattina",
+    "todPart_midday": "mezzogiorno",
+    "todPart_afternoon": "pomeriggio",
+    "todPart_evening": "sera"
   },
   "queue": {
     "lowWinTitle": "Bassa probabilità · {{customer}}",

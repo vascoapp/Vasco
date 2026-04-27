@@ -38,6 +38,7 @@ import {
   useQuoteSeasonal,
   acceptanceDeltaVsBest,
 } from '../../services/seasonalityMoatService';
+import { useTimeOfDayHint, dayPart } from '../../services/timeOfDayAcceptanceService';
 import { getCurrentUserId } from '../../lib/currentUser';
 import { useQuoteTemplates, type QuoteTemplate, TEMPLATE_CATEGORIES } from '../../services/quoteTemplateService';
 import { hapticSuccess } from '../../utils/haptics';
@@ -137,6 +138,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
   const { benchmarks: cohort } = useCohortBenchmarks(trade, country);
   const { calibration } = useContractorCalibration(user?.id ?? null, trade, country);
   const { bundle: seasonalBundle } = useQuoteSeasonal(trade, country);
+  const { hint: timeOfDayHint } = useTimeOfDayHint(trade, country);
   const [lineHints, setLineHints] = useState<Record<string, LineEditDistribution | null>>({});
   const [cohortTuneSummary, setCohortTuneSummary] = useState<CohortAdjustmentSummary | null>(null);
 
@@ -950,6 +952,38 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
                   {t('quotes.cohortSample', 'Based on {{count}} quotes from {{contractors}} contractors', {
                     count: tb.sampleSize,
                     contractors: cohort?.contractorsInCohort ?? 0,
+                  })}
+                </Text>
+              </View>
+            );
+          })()}
+
+          {/* Time-of-day acceptance hint (R260). k-anonymity gated server-side. */}
+          {timeOfDayHint && (() => {
+            const dows = [
+              t('quotes.todSun', 'Sunday'),
+              t('quotes.todMon', 'Monday'),
+              t('quotes.todTue', 'Tuesday'),
+              t('quotes.todWed', 'Wednesday'),
+              t('quotes.todThu', 'Thursday'),
+              t('quotes.todFri', 'Friday'),
+              t('quotes.todSat', 'Saturday'),
+            ];
+            const partKey = `quotes.todPart_${dayPart(timeOfDayHint.bestBucket.hourOfDay)}`;
+            const partFallback = dayPart(timeOfDayHint.bestBucket.hourOfDay);
+            return (
+              <View style={s.vascoRow}>
+                <Text style={s.vascoText}>
+                  {t('quotes.todHint', 'Best time to send: {{day}} {{part}} — {{lift}}pp higher acceptance', {
+                    day: dows[timeOfDayHint.bestBucket.dayOfWeek] ?? '',
+                    part: t(partKey, partFallback),
+                    lift: Math.round(timeOfDayHint.liftPoints * 100),
+                  })}
+                </Text>
+                <Text style={s.vascoExplain}>
+                  {t('quotes.todSample', 'Across {{count}} quotes from peers in {{country}}', {
+                    count: timeOfDayHint.totalSamples,
+                    country,
                   })}
                 </Text>
               </View>

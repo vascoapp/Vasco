@@ -1058,7 +1058,20 @@
       "other": "other"
     },
     "cohortRecommendations": "Contractors also added",
-    "cohortRecommendationsDesc": "Lines other contractors added to similar quotes"
+    "cohortRecommendationsDesc": "Lines other contractors added to similar quotes",
+    "todHint": "Best time to send: {{day}} {{part}} — {{lift}}pp higher acceptance",
+    "todSample": "Across {{count}} quotes from peers in {{country}}",
+    "todSun": "Sunday",
+    "todMon": "Monday",
+    "todTue": "Tuesday",
+    "todWed": "Wednesday",
+    "todThu": "Thursday",
+    "todFri": "Friday",
+    "todSat": "Saturday",
+    "todPart_morning": "morning",
+    "todPart_midday": "midday",
+    "todPart_afternoon": "afternoon",
+    "todPart_evening": "evening"
   },
   "queue": {
     "lowWinTitle": "Low win chance · {{customer}}",

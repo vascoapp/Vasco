@@ -1055,7 +1055,20 @@
       "local_supplier_cheaper": "fournisseur local moins cher",
       "site_condition_harder": "chantier plus difficile que prévu",
       "other": "autre"
-    }
+    },
+    "todHint": "Meilleur moment d'envoi : {{day}} {{part}} — {{lift}}pp d'acceptation en plus",
+    "todSample": "Sur {{count}} devis de pairs en {{country}}",
+    "todSun": "dimanche",
+    "todMon": "lundi",
+    "todTue": "mardi",
+    "todWed": "mercredi",
+    "todThu": "jeudi",
+    "todFri": "vendredi",
+    "todSat": "samedi",
+    "todPart_morning": "matin",
+    "todPart_midday": "midi",
+    "todPart_afternoon": "après-midi",
+    "todPart_evening": "soir"
   },
   "queue": {
     "lowWinTitle": "Faible chance d'acceptation · {{customer}}",

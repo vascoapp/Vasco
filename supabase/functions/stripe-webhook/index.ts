@@ -134,6 +134,116 @@ Deno.serve(async (req) => {
     const supabaseServiceKey0 = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     // -------------------------------------------------------------------------
+    // 2.0 invoice.upcoming → Option A: apply referral credits as a Stripe Coupon
+    //     so the next charge is reduced by N whole months. Feature-flagged via
+    //     STRIPE_COUPON_REDEMPTION; mutually exclusive with Option B.
+    //     Stripe fires this ~1h before the actual invoice finalizes.
+    // -------------------------------------------------------------------------
+    if (event.type === 'invoice.upcoming') {
+      const couponFlag = Deno.env.get('STRIPE_COUPON_REDEMPTION') === 'true';
+      const stripeApiKey = Deno.env.get('STRIPE_API_KEY');
+      if (!couponFlag || !stripeApiKey || !supabaseUrl0 || !supabaseServiceKey0) {
+        return new Response(JSON.stringify({ received: true, status: 'invoice.upcoming ignored' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const upcoming = event.data.object;
+      const userId =
+        upcoming?.subscription_details?.metadata?.user_id ??
+        upcoming?.metadata?.user_id ??
+        null;
+      const customerId = upcoming?.customer ?? null;
+      const currency = (upcoming?.currency ?? 'eur').toLowerCase();
+      // Per-month price = first recurring line's unit_amount (cents)
+      const firstLine = Array.isArray(upcoming?.lines?.data) ? upcoming.lines.data[0] : null;
+      const monthlyAmountCents = Number(
+        firstLine?.price?.unit_amount ?? firstLine?.amount ?? upcoming?.amount_due ?? 0,
+      );
+
+      if (!userId || !customerId || monthlyAmountCents <= 0) {
+        return new Response(JSON.stringify({ received: true, status: 'invoice.upcoming missing fields' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const isFirstSeeingUpcoming = await claimWebhookEvent(
+        supabaseUrl0, supabaseServiceKey0, 'stripe', event.id,
+      );
+      if (!isFirstSeeingUpcoming) {
+        return new Response(JSON.stringify({ received: true, status: 'invoice.upcoming retry' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { monthsApplied, consumed } = await redeemCredits(
+        supabaseUrl0, supabaseServiceKey0, userId, 12,
+      );
+      if (monthsApplied === 0) {
+        return new Response(JSON.stringify({ received: true, status: 'no credits' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Cap discount at the upcoming invoice's amount_due so a 12-month credit
+      // can't go negative against a 1-month bill.
+      const amountDue = Number(upcoming?.amount_due ?? 0);
+      let amountOffCents = monthsApplied * monthlyAmountCents;
+      if (amountDue > 0 && amountOffCents > amountDue) amountOffCents = amountDue;
+
+      try {
+        // Stripe REST: form-encoded coupon create
+        const couponBody = new URLSearchParams({
+          amount_off: String(amountOffCents),
+          currency,
+          duration: 'once',
+          'metadata[source]': 'vasco_credits',
+          'metadata[consumed_ids]': consumed.map((c) => c.consumedId).join(','),
+        });
+        const couponResp = await fetch('https://api.stripe.com/v1/coupons', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${stripeApiKey}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Idempotency-Key': `vasco-coupon-${event.id}`,
+          },
+          body: couponBody.toString(),
+        });
+        if (!couponResp.ok) throw new Error(`coupon create ${couponResp.status}`);
+        const coupon = await couponResp.json();
+
+        // Apply as default subscription coupon → next finalized invoice picks it up.
+        // (We can't update an `upcoming` invoice's id directly — it's a simulation.)
+        const subId = upcoming?.subscription ?? null;
+        if (!subId) throw new Error('no subscription on upcoming invoice');
+        const subBody = new URLSearchParams({ coupon: coupon.id });
+        const subResp = await fetch(`https://api.stripe.com/v1/subscriptions/${subId}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${stripeApiKey}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Idempotency-Key': `vasco-sub-coupon-${event.id}`,
+          },
+          body: subBody.toString(),
+        });
+        if (!subResp.ok) throw new Error(`subscription coupon apply ${subResp.status}`);
+
+        console.log(
+          `Applied ${monthsApplied}mo coupon (${amountOffCents}¢ ${currency}) to sub=${subId} for user=${userId}`,
+        );
+        return new Response(JSON.stringify({
+          received: true, status: 'credits_applied',
+          months: monthsApplied, amount_off: amountOffCents,
+        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch (err) {
+        await restoreCredits(supabaseUrl0, supabaseServiceKey0, consumed.map((c) => c.consumedId));
+        console.error('Option A coupon flow failed, credits restored:', String(err));
+        return new Response(JSON.stringify({ received: true, status: 'coupon_failed_restored' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // -------------------------------------------------------------------------
     // 2a. Subscription lifecycle events → sync public.subscriptions
     // -------------------------------------------------------------------------
     if (
@@ -170,12 +280,13 @@ Deno.serve(async (req) => {
         const adminClient = createClient(supabaseUrl0, supabaseServiceKey0);
 
         // Option B: redeem available credits and extend the period accordingly.
-        // Feature-flagged via CREDIT_REDEMPTION_ENABLED so this stays dark
-        // until you flip it. Idempotent via webhook_idempotency.
+        // Feature-flagged via CREDIT_REDEMPTION_ENABLED. Skipped when Option A
+        // (STRIPE_COUPON_REDEMPTION) is on so we don't double-redeem.
         let extendedPeriodEnd = currentPeriodEnd;
         const creditFlag = Deno.env.get('CREDIT_REDEMPTION_ENABLED') === 'true';
+        const couponMode = Deno.env.get('STRIPE_COUPON_REDEMPTION') === 'true';
         const isFirstSeeing = await claimWebhookEvent(supabaseUrl0, supabaseServiceKey0, 'stripe', event.id);
-        if (creditFlag && isFirstSeeing && status === 'active' && currentPeriodEnd) {
+        if (creditFlag && !couponMode && isFirstSeeing && status === 'active' && currentPeriodEnd) {
           const { monthsApplied, consumed } = await redeemCredits(
             supabaseUrl0, supabaseServiceKey0, userId, 12,
           );
