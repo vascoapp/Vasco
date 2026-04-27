@@ -18,6 +18,7 @@ import { scheduleJobReminder } from '../../src/services/pushNotificationService'
 import { useTranslation } from 'react-i18next';
 import { shareAllScheduledJobs } from '../../src/services/calendarExportService';
 import { getCalendarSyncSettings, syncJobToCalendar } from '../../src/services/calendarSyncService';
+import { detectConflicts } from '../../src/services/scheduleConflictService';
 import type { Job } from '../../src/domain/jobs';
 
 const CAL_PROMPT_DISMISSED_KEY = '@vasco_calendar_prompt_dismissed';
@@ -121,31 +122,53 @@ export default function DragScheduleScreen() {
   const utilizationPct = Math.round((totalScheduledHours / 10) * 100); // 10h workday
 
   const handleDropOnSlot = (hour: number, job: { jobId: string; title: string; customerName: string; estimatedHours: number }) => {
-    // Check for conflicts
-    const hasConflict = schedule.some(s =>
-      (hour >= s.startHour && hour < s.startHour + s.duration) ||
-      (hour + job.estimatedHours > s.startHour && hour < s.startHour + s.duration)
+    // R272: structured conflict detection — overlap + working hours (HARD)
+    // and travel-buffer (SOFT, overridable).
+    const report = detectConflicts(
+      { startHour: hour, durationHours: job.estimatedHours },
+      schedule.map((s) => ({ jobId: s.jobId, title: s.title, startHour: s.startHour, durationHours: s.duration })),
     );
 
-    if (hasConflict) {
+    const proceed = () => {
+      const color = COLORS[schedule.length % COLORS.length];
+      setSchedule(prev => [...prev, {
+        jobId: job.jobId,
+        title: job.title,
+        customerName: job.customerName,
+        startHour: hour,
+        duration: job.estimatedHours,
+        color,
+      }]);
+      setUnassigned(prev => prev.filter(u => u.jobId !== job.jobId));
+      hapticSuccess();
+      setDraggedJob(null);
+      setDropTargetHour(null);
+    };
+
+    if (report.hardConflict) {
       hapticWarning();
-      Alert.alert(t('schedule.conflict', 'Conflict'), t('schedule.conflictDesc', 'Er is al een klus ingepland op dit tijdstip. Kies een ander tijdslot.'));
+      const reasons = report.issues.filter((i) => i.severity === 'hard').map((i) => `• ${i.message}`).join('\n');
+      Alert.alert(t('schedule.conflict', 'Conflict'), reasons);
+      setDraggedJob(null);
+      setDropTargetHour(null);
       return;
     }
 
-    const color = COLORS[schedule.length % COLORS.length];
-    setSchedule(prev => [...prev, {
-      jobId: job.jobId,
-      title: job.title,
-      customerName: job.customerName,
-      startHour: hour,
-      duration: job.estimatedHours,
-      color,
-    }]);
-    setUnassigned(prev => prev.filter(u => u.jobId !== job.jobId));
-    hapticSuccess();
-    setDraggedJob(null);
-    setDropTargetHour(null);
+    if (report.softConflict) {
+      hapticWarning();
+      const reasons = report.issues.filter((i) => i.severity === 'soft').map((i) => `• ${i.message}`).join('\n');
+      Alert.alert(
+        t('schedule.softConflictTitle', 'Heads up'),
+        reasons,
+        [
+          { text: t('schedule.softCancel', 'Pick another slot'), style: 'cancel', onPress: () => { setDraggedJob(null); setDropTargetHour(null); } },
+          { text: t('schedule.softOverride', 'Schedule anyway'), onPress: proceed },
+        ],
+      );
+      return;
+    }
+
+    proceed();
 
     // PERSIST to AppState — update job with scheduled date/time and status
     try {

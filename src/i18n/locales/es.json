@@ -716,7 +716,17 @@
     "noNotifications": "Sin notificaciones",
     "view": "Ver →",
     "preferences": "Preferencias de notificación",
-    "on": "Activado"
+    "on": "Activado",
+    "prefLabels": {
+      "schedule_change": "Cambios de horario",
+      "overdue_invoice": "Facturas vencidas",
+      "team_assignment": "Asignaciones de equipo",
+      "approval_request": "Solicitudes de aprobacion",
+      "permit_update": "Actualizaciones de permisos",
+      "delivery_update": "Actualizaciones de entrega",
+      "credential_expiry": "Caducidad de certificado",
+      "general": "General"
+    }
   },
   "insurance": {
     "title": "Seguros",
@@ -1887,7 +1897,10 @@
     "calendarPromptTitle": "¿Sincronizar con tu calendario?",
     "calendarPromptBody": "Muestra tus trabajos en el calendario del teléfono para no perderte ninguno.",
     "calendarPromptDismiss": "Ahora no",
-    "calendarPromptEnable": "Activar"
+    "calendarPromptEnable": "Activar",
+    "softConflictTitle": "Atencion",
+    "softCancel": "Elegir otro hueco",
+    "softOverride": "Programar igual"
   },
   "marketInsights": {
     "title": "INSIGHTS DEL MERCADO",

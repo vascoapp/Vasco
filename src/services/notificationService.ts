@@ -6,8 +6,11 @@
 // Ready to wire to expo-notifications when installed.
 // =============================================================================
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MS_PER_DAY, MS_PER_HOUR } from '../utils/timeConstants';
+
+const PERSIST_KEY = '@vasco_notifications_v2';
 
 // =============================================================================
 // TYPES
@@ -51,65 +54,27 @@ export interface NotificationStats {
 }
 
 // =============================================================================
-// MOCK DATA
+// DEFAULT PREFERENCES
 // =============================================================================
-
-const now = new Date();
-
-const mockNotifications: AppNotification[] = [
-  {
-    id: 'n-1', type: 'approval_request', priority: 'high',
-    title: 'Offerte wacht op goedkeuring',
-    body: 'Offerte q-seed-3 voor Badkamer renovatie — Fam. Jansen (€4.850) wacht op uw goedkeuring.',
-    read: false, actionRoute: '/quotes/q-seed-3', actionLabel: 'Bekijk',
-    createdAt: new Date(now.getTime() - MS_PER_HOUR * 2),
-  },
-  {
-    id: 'n-2', type: 'overdue_invoice', priority: 'urgent',
-    title: 'Factuur verlopen',
-    body: 'Factuur inv-seed-1 voor Hotel NH — €2.450 is 5 dagen verlopen.',
-    read: false, actionRoute: '/invoices/inv-seed-1',
-    createdAt: new Date(now.getTime() - MS_PER_HOUR * 6),
-  },
-  {
-    id: 'n-3', type: 'schedule_change', priority: 'medium',
-    title: 'Planning gewijzigd',
-    body: 'Lekkage inspectie — Fam. Bakker (job-004) is verplaatst naar morgen 08:00.',
-    read: false, actionRoute: '/contractor/job/job-004',
-    createdAt: new Date(now.getTime() - MS_PER_HOUR * 12),
-  },
-  {
-    id: 'n-4', type: 'delivery_update', priority: 'medium',
-    title: 'Levering bevestigd',
-    body: 'Materialen voor CV-ketel onderhoud (job-002) worden morgen geleverd door Technische Unie.',
-    read: true, actionRoute: '/contractor/job/job-002',
-    createdAt: new Date(now.getTime() - MS_PER_DAY),
-  },
-  {
-    id: 'n-5', type: 'team_assignment', priority: 'low',
-    title: 'Jan de Vries toegewezen',
-    body: 'Onderaannemer Jan de Vries is toegewezen aan Badkamer renovatie — Fam. Jansen (job-003).',
-    read: true, actionRoute: '/contractor/job/job-003',
-    createdAt: new Date(now.getTime() - MS_PER_DAY * 2),
-  },
-  {
-    id: 'n-6', type: 'credential_expiry', priority: 'high',
-    title: 'Certificaat verloopt binnenkort',
-    body: 'KOMO Keurmerk verloopt op 10 apr 2026. Vernieuw op tijd om boetes te voorkomen.',
-    read: true, actionRoute: '/(contractor)/certificaten',
-    createdAt: new Date(now.getTime() - MS_PER_DAY * 3),
-  },
-];
+// Labels are i18n keys looked up at render time, so the same data drives
+// every locale. Translation lives in src/i18n/locales/{xx}.json under
+// notifications.prefLabels.*
+//
+// R272 — removed the 6 hardcoded Dutch mock notifications that referenced
+// fake job/invoice IDs (q-seed-3, inv-seed-1, etc.). The notifications
+// screen now derives live notifications from real AppState data via
+// `deriveLiveNotifications()`, and persists user-fired ones to
+// AsyncStorage so they survive app reload.
 
 const defaultPreferences: NotificationPreference[] = [
-  { type: 'schedule_change', label: 'Planningswijzigingen', enabled: true, pushEnabled: true },
-  { type: 'overdue_invoice', label: 'Verlopen facturen', enabled: true, pushEnabled: true },
-  { type: 'team_assignment', label: 'Teamtoewijzingen', enabled: true, pushEnabled: false },
-  { type: 'approval_request', label: 'Goedkeuringsverzoeken', enabled: true, pushEnabled: true },
-  { type: 'permit_update', label: 'Vergunning updates', enabled: true, pushEnabled: false },
-  { type: 'delivery_update', label: 'Leveringsupdates', enabled: true, pushEnabled: false },
-  { type: 'credential_expiry', label: 'Certificaat verlopen', enabled: true, pushEnabled: true },
-  { type: 'general', label: 'Algemeen', enabled: true, pushEnabled: false },
+  { type: 'schedule_change', label: 'notifications.prefLabels.schedule_change', enabled: true, pushEnabled: true },
+  { type: 'overdue_invoice', label: 'notifications.prefLabels.overdue_invoice', enabled: true, pushEnabled: true },
+  { type: 'team_assignment', label: 'notifications.prefLabels.team_assignment', enabled: true, pushEnabled: false },
+  { type: 'approval_request', label: 'notifications.prefLabels.approval_request', enabled: true, pushEnabled: true },
+  { type: 'permit_update', label: 'notifications.prefLabels.permit_update', enabled: true, pushEnabled: false },
+  { type: 'delivery_update', label: 'notifications.prefLabels.delivery_update', enabled: true, pushEnabled: false },
+  { type: 'credential_expiry', label: 'notifications.prefLabels.credential_expiry', enabled: true, pushEnabled: true },
+  { type: 'general', label: 'notifications.prefLabels.general', enabled: true, pushEnabled: false },
 ];
 
 // =============================================================================
@@ -121,14 +86,48 @@ type NotifListener = () => void;
 class NotificationService {
   private static instance: NotificationService;
   private listeners: Set<NotifListener> = new Set();
-  private notifications: AppNotification[] = [...mockNotifications];
+  private notifications: AppNotification[] = [];
   private preferences: NotificationPreference[] = [...defaultPreferences];
+  private hydrated = false;
 
   static getInstance(): NotificationService {
     if (!NotificationService.instance) {
       NotificationService.instance = new NotificationService();
+      NotificationService.instance.hydrate();
     }
     return NotificationService.instance;
+  }
+
+  /** Load persisted user-fired notifications on first instantiation. */
+  private async hydrate(): Promise<void> {
+    if (this.hydrated) return;
+    try {
+      const raw = await AsyncStorage.getItem(PERSIST_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as AppNotification[];
+        if (Array.isArray(parsed)) {
+          // Revive Date objects from ISO strings
+          this.notifications = parsed.map((n) => ({
+            ...n,
+            createdAt: new Date(n.createdAt as any),
+          }));
+          this.notify();
+        }
+      }
+    } catch {
+      // Ignore; start with empty list
+    }
+    this.hydrated = true;
+  }
+
+  private async persist(): Promise<void> {
+    try {
+      // Trim to last 50 — older notifications drop off
+      const trimmed = this.notifications.slice(0, 50);
+      await AsyncStorage.setItem(PERSIST_KEY, JSON.stringify(trimmed));
+    } catch {
+      // Silent
+    }
   }
 
   subscribe(listener: NotifListener): () => void {
@@ -146,22 +145,31 @@ class NotificationService {
 
   markRead(id: string): void {
     const n = this.notifications.find(x => x.id === id);
-    if (n) { n.read = true; this.notify(); }
+    if (n) { n.read = true; this.notify(); this.persist(); }
   }
 
   markAllRead(): void {
     this.notifications.forEach(n => { n.read = true; });
     this.notify();
+    this.persist();
   }
 
   addNotification(type: NotificationType, priority: NotificationPriority, title: string, body: string, actionRoute?: string): void {
+    // Dedup: same type+title+body within last 5min collapses
+    const fiveMinAgo = Date.now() - 5 * 60 * 1000;
+    const dup = this.notifications.find(
+      (n) => n.type === type && n.title === title && n.body === body && n.createdAt.getTime() > fiveMinAgo,
+    );
+    if (dup) return;
+
     this.notifications.unshift({
-      id: `n-${Date.now()}`,
+      id: `n-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       type, priority, title, body,
       read: false, actionRoute,
       createdAt: new Date(),
     });
     this.notify();
+    this.persist();
   }
 
   togglePreference(type: NotificationType, field: 'enabled' | 'pushEnabled'): void {
@@ -227,4 +235,105 @@ export function useNotificationPreferences() {
   const toggle = useCallback((type: NotificationType, field: 'enabled' | 'pushEnabled') =>
     notificationService.togglePreference(type, field), []);
   return { preferences: prefs, toggle };
+}
+
+// =============================================================================
+// LIVE-DERIVED NOTIFICATIONS (R272)
+// =============================================================================
+// Generate notifications on the fly from real AppState data so the inbox is
+// never empty when the contractor has actionable items. These are virtual —
+// they don't persist or count toward markRead state. Combined with the
+// persisted user-fired list at the screen level.
+
+export interface DerivableState {
+  invoices: Array<{ id: string; status: string; dueInDays?: number; amount?: number; customer?: string }>;
+  jobs: Array<{ id: string; title?: string; status?: string; scheduledDate?: string }>;
+  certifications?: Array<{ id: string; name?: string; expiresAt?: string }>;
+}
+
+export function deriveLiveNotifications(state: DerivableState): AppNotification[] {
+  const out: AppNotification[] = [];
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  // Overdue invoices → urgent virtual notifications.
+  // Skip paid/partial — only unsent/overdue trigger reminders.
+  const PAID_STATUSES = new Set(['paid', 'partial', 'draft']);
+  for (const inv of state.invoices ?? []) {
+    if (PAID_STATUSES.has(inv.status)) continue;
+    if (inv.status === 'overdue' || (typeof inv.dueInDays === 'number' && inv.dueInDays < 0)) {
+      const days = Math.abs(inv.dueInDays ?? 0);
+      out.push({
+        id: `live-invoice-${inv.id}`,
+        type: 'overdue_invoice',
+        priority: days > 14 ? 'urgent' : 'high',
+        title: 'Invoice overdue',
+        body: `${inv.customer ? `${inv.customer} — ` : ''}invoice ${inv.id} is ${days} days overdue${inv.amount ? ` (€${Math.round(inv.amount).toLocaleString()})` : ''}.`,
+        read: false,
+        actionRoute: `/invoices/${inv.id}`,
+        createdAt: new Date(Date.now() - MS_PER_HOUR * Math.min(days, 24)),
+      });
+    }
+  }
+
+  // Today's scheduled jobs → medium "schedule" notifications (low priority,
+  // fewer surfaced)
+  const todayJobs = (state.jobs ?? []).filter(
+    (j) => j.scheduledDate === todayStr && (j.status === 'scheduled' || j.status === 'in-progress'),
+  );
+  if (todayJobs.length > 0) {
+    out.push({
+      id: 'live-today-schedule',
+      type: 'schedule_change',
+      priority: 'medium',
+      title: `${todayJobs.length} job${todayJobs.length > 1 ? 's' : ''} today`,
+      body: todayJobs.slice(0, 3).map((j) => j.title ?? j.id).join(', ') + (todayJobs.length > 3 ? '…' : ''),
+      read: false,
+      actionRoute: '/contractor/drag-schedule',
+      createdAt: new Date(Date.now() - MS_PER_HOUR * 1),
+    });
+  }
+
+  // Expiring certifications (≤30 days)
+  for (const cert of state.certifications ?? []) {
+    if (!cert.expiresAt) continue;
+    const daysUntil = Math.floor((new Date(cert.expiresAt).getTime() - Date.now()) / MS_PER_DAY);
+    if (daysUntil >= 0 && daysUntil <= 30) {
+      out.push({
+        id: `live-cert-${cert.id}`,
+        type: 'credential_expiry',
+        priority: daysUntil <= 7 ? 'urgent' : 'high',
+        title: 'Certificate expiring',
+        body: `${cert.name ?? cert.id} expires in ${daysUntil} day${daysUntil === 1 ? '' : 's'}.`,
+        read: false,
+        actionRoute: '/(contractor)/certificaten',
+        createdAt: new Date(Date.now() - MS_PER_HOUR * 2),
+      });
+    }
+  }
+
+  return out;
+}
+
+/**
+ * Combine derived (real-data) + persisted (user-fired) into a single feed.
+ * Pass the AppState's invoices/jobs/certifications arrays.
+ */
+export function useCombinedNotifications(state: DerivableState) {
+  const { notifications: persisted, markRead, markAllRead } = useNotifications();
+  const derived = useMemo(() => deriveLiveNotifications(state), [
+    state.invoices, state.jobs, state.certifications,
+  ]);
+  const merged = useMemo(() => {
+    // Persisted first (newest user-actions), derived after
+    const all = [...persisted, ...derived];
+    // Dedup by id
+    const seen = new Set<string>();
+    return all.filter((n) => {
+      if (seen.has(n.id)) return false;
+      seen.add(n.id);
+      return true;
+    });
+  }, [persisted, derived]);
+
+  return { notifications: merged, markRead, markAllRead };
 }

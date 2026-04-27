@@ -17,9 +17,11 @@ import {
   useNotifications,
   useUnreadCount,
   useNotificationPreferences,
+  useCombinedNotifications,
   type AppNotification,
   type NotificationType,
 } from '../../src/services/notificationService';
+import { useAppState } from '../../src/state/AppState';
 import {
   useGroupedNotifications,
   useQuietHours,
@@ -48,7 +50,13 @@ export default function NotificationsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('inbox');
-  const { notifications, markRead, markAllRead } = useNotifications();
+  // R272: combined feed = persisted user-fired + live-derived from AppState
+  const { invoices, jobs } = useAppState();
+  const { notifications, markRead, markAllRead } = useCombinedNotifications({
+    invoices: invoices as any,
+    jobs: jobs as any,
+    // certifications: not yet on AppState — wire when the field lands
+  });
   const stats = useUnreadCount();
   const { preferences, toggle } = useNotificationPreferences();
   const { groups, toggleGroup } = useGroupedNotifications(notifications);
@@ -307,7 +315,7 @@ export default function NotificationsScreen() {
                         <Ionicons name={conf.icon} size={16} color={conf.color} />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={s.prefLabel}>{pref.label}</Text>
+                        <Text style={s.prefLabel}>{t(pref.label, pref.type)}</Text>
                       </View>
                       <Switch
                         value={pref.enabled}

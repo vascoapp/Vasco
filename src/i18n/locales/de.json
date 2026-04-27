@@ -717,7 +717,17 @@
     "noNotifications": "Keine Benachrichtigungen",
     "view": "Anzeigen →",
     "preferences": "Benachrichtigungseinstellungen",
-    "on": "An"
+    "on": "An",
+    "prefLabels": {
+      "schedule_change": "Terminänderungen",
+      "overdue_invoice": "Überfällige Rechnungen",
+      "team_assignment": "Team-Zuweisungen",
+      "approval_request": "Freigabeanfragen",
+      "permit_update": "Genehmigungs-Updates",
+      "delivery_update": "Liefer-Updates",
+      "credential_expiry": "Zertifikatsablauf",
+      "general": "Allgemein"
+    }
   },
   "insurance": {
     "title": "Versicherungen",
@@ -1908,7 +1918,10 @@
     "calendarPromptTitle": "Mit deinem Kalender synchronisieren?",
     "calendarPromptBody": "Zeige deine Aufträge im Telefonkalender, damit du keinen verpasst.",
     "calendarPromptDismiss": "Nicht jetzt",
-    "calendarPromptEnable": "Aktivieren"
+    "calendarPromptEnable": "Aktivieren",
+    "softConflictTitle": "Achtung",
+    "softCancel": "Anderen Slot wahlen",
+    "softOverride": "Trotzdem planen"
   },
   "weekly": {
     "title": "WOCHENÜBERSICHT",

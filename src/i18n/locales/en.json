@@ -717,7 +717,17 @@
     "noNotifications": "No notifications",
     "view": "View →",
     "preferences": "Notification preferences",
-    "on": "On"
+    "on": "On",
+    "prefLabels": {
+      "schedule_change": "Schedule changes",
+      "overdue_invoice": "Overdue invoices",
+      "team_assignment": "Team assignments",
+      "approval_request": "Approval requests",
+      "permit_update": "Permit updates",
+      "delivery_update": "Delivery updates",
+      "credential_expiry": "Certificate expiry",
+      "general": "General"
+    }
   },
   "insurance": {
     "title": "Insurance",
@@ -1908,7 +1918,10 @@
     "calendarPromptTitle": "Sync to your calendar?",
     "calendarPromptBody": "Show your jobs in your phone calendar so you never miss one.",
     "calendarPromptDismiss": "Not now",
-    "calendarPromptEnable": "Enable"
+    "calendarPromptEnable": "Enable",
+    "softConflictTitle": "Heads up",
+    "softCancel": "Pick another slot",
+    "softOverride": "Schedule anyway"
   },
   "weekly": {
     "title": "WEEK OVERVIEW",

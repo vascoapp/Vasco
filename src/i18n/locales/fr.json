@@ -716,7 +716,17 @@
     "noNotifications": "Aucune notification",
     "view": "Voir →",
     "preferences": "Préférences de notification",
-    "on": "Activé"
+    "on": "Activé",
+    "prefLabels": {
+      "schedule_change": "Changements de planning",
+      "overdue_invoice": "Factures en retard",
+      "team_assignment": "Affectations d'equipe",
+      "approval_request": "Demandes d'approbation",
+      "permit_update": "Mises a jour permis",
+      "delivery_update": "Mises a jour livraisons",
+      "credential_expiry": "Expiration certificat",
+      "general": "General"
+    }
   },
   "insurance": {
     "title": "Assurance",
@@ -1887,7 +1897,10 @@
     "calendarPromptTitle": "Synchroniser avec votre agenda ?",
     "calendarPromptBody": "Affichez vos chantiers dans votre agenda pour ne plus en manquer.",
     "calendarPromptDismiss": "Plus tard",
-    "calendarPromptEnable": "Activer"
+    "calendarPromptEnable": "Activer",
+    "softConflictTitle": "Attention",
+    "softCancel": "Choisir un autre creneau",
+    "softOverride": "Planifier quand meme"
   },
   "marketInsights": {
     "title": "INSIGHTS DU MARCHÉ",

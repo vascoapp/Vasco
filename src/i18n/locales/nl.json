@@ -969,7 +969,17 @@
     "noNotifications": "Geen meldingen",
     "view": "Bekijk →",
     "preferences": "Meldingsvoorkeuren",
-    "on": "Aan"
+    "on": "Aan",
+    "prefLabels": {
+      "schedule_change": "Planningswijzigingen",
+      "overdue_invoice": "Verlopen facturen",
+      "team_assignment": "Teamtoewijzingen",
+      "approval_request": "Goedkeuringsverzoeken",
+      "permit_update": "Vergunning updates",
+      "delivery_update": "Leveringsupdates",
+      "credential_expiry": "Certificaat verlopen",
+      "general": "Algemeen"
+    }
   },
   "insurance": {
     "title": "Verzekeringen",
@@ -1908,7 +1918,10 @@
     "calendarPromptTitle": "Synchroniseren met je agenda?",
     "calendarPromptBody": "Toon je klussen in je telefoonagenda zodat je nooit een mist.",
     "calendarPromptDismiss": "Niet nu",
-    "calendarPromptEnable": "Inschakelen"
+    "calendarPromptEnable": "Inschakelen",
+    "softConflictTitle": "Let op",
+    "softCancel": "Kies ander tijdstip",
+    "softOverride": "Toch inplannen"
   },
   "weekly": {
     "title": "WEEKOVERZICHT",
