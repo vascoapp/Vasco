@@ -1857,5 +1857,10 @@
     "invoicesPaid": "Facturen betaald",
     "received": "Ontvangen",
     "footnote": "Cohort-data gebruikt k-anonimiteit (≥5 aannemers per cel). Jouw individuele cijfers worden nooit aan anderen getoond."
+  },
+  "error": {
+    "somethingWrong": "ER GING IETS MIS",
+    "bodyContractor": "Een scherm kon niet laden. Je gegevens zijn veilig — probeer opnieuw of kies een ander tabblad.",
+    "retry": "Opnieuw proberen"
   }
 }

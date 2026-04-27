@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { DK } from '../../theme/draftkings';
 import { TYPE, GRID, RADIUS } from '../../theme/tabStyles';
 import { DKLabel } from '../shared/DKLabel';
+import { Skeleton } from '../shared/Skeleton';
 import {
   getRecurringInstances,
   type RecurringJobInstance,
@@ -37,7 +38,20 @@ function UpcomingRecurringWidgetImpl() {
 
   useEffect(() => { load(); }, [load]);
 
-  if (loading || items.length === 0) return null;
+  if (loading) {
+    return (
+      <View style={styles.wrap}>
+        <View style={styles.header}>
+          <Skeleton width={120} height={12} />
+        </View>
+        <View style={styles.card}>
+          <View style={[styles.row, { gap: 8 }]}><Skeleton width={8} height={8} borderRadius={4} /><Skeleton width={'60%'} height={14} /></View>
+          <View style={[styles.row, styles.rowBorder, { gap: 8 }]}><Skeleton width={8} height={8} borderRadius={4} /><Skeleton width={'45%'} height={14} /></View>
+        </View>
+      </View>
+    );
+  }
+  if (items.length === 0) return null;
 
   const overdueCount = items.filter((i) => i.overdue).length;
 

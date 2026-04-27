@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { DK } from '../../theme/draftkings';
 import { TYPE, GRID, RADIUS } from '../../theme/tabStyles';
 import { DKLabel } from '../shared/DKLabel';
+import { Skeleton } from '../shared/Skeleton';
 import {
   queryMarginTrend,
   queryWinrateDistribution,
@@ -70,7 +71,24 @@ function MoatInsightsCardImpl({ trade, country }: Props) {
     return () => { cancelled = true; };
   }, [effectiveTrade, effectiveCountry]);
 
-  if (state.loading) return null;
+  if (state.loading) {
+    return (
+      <View style={styles.card}>
+        <View style={styles.headerRow}>
+          <Skeleton width={140} height={12} />
+          <Skeleton width={14} height={14} borderRadius={7} />
+        </View>
+        <View style={[styles.row, { gap: 12 }]}>
+          <Skeleton width={'70%'} height={14} />
+          <Skeleton width={'20%'} height={14} />
+        </View>
+        <View style={[styles.row, { gap: 12 }]}>
+          <Skeleton width={'55%'} height={14} />
+          <Skeleton width={'20%'} height={14} />
+        </View>
+      </View>
+    );
+  }
 
   const hasAny = state.marginTrend.length > 0 || state.winRates.length > 0 || state.dailyMetrics.length > 0;
   if (!hasAny) return null;
