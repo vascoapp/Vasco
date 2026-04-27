@@ -11,7 +11,7 @@
 //   - aannemer has zero active projects
 // =============================================================================
 
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,7 +22,7 @@ import { useAppState } from '../../state/AppState';
 import { useAuth } from '../../context/AuthContext';
 import { useActiveProject } from '../../services/activeProjectService';
 
-export function ProjectSwitcher() {
+function ProjectSwitcherImpl() {
   const router = useRouter();
   const { user } = useAuth();
   const { projects } = useAppState();
@@ -163,3 +163,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: GRID.md,
   },
 });
+
+export const ProjectSwitcher = memo(ProjectSwitcherImpl);

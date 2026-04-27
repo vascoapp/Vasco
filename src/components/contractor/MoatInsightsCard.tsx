@@ -12,7 +12,7 @@
 // hide rather than show empty placeholders.
 // =============================================================================
 
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,7 +39,7 @@ interface State {
   dailyMetrics: DailyMetricPoint[];
 }
 
-export function MoatInsightsCard({ trade, country }: Props) {
+function MoatInsightsCardImpl({ trade, country }: Props) {
   const router = useRouter();
   const { user } = useAuth();
   const effectiveTrade = trade ?? user?.trade ?? 'plumbing';
@@ -199,3 +199,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 });
+
+export const MoatInsightsCard = memo(MoatInsightsCardImpl);

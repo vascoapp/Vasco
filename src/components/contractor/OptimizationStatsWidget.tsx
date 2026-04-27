@@ -5,7 +5,7 @@
 // has been applied at least once. Hidden when zero applied optimizations.
 // =============================================================================
 
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,7 +14,7 @@ import { DK } from '../../theme/draftkings';
 import { TYPE, GRID, RADIUS } from '../../theme/tabStyles';
 import { getWeeklyStats, type WeeklyOptimizationStats } from '../../services/optimizationStatsService';
 
-export function OptimizationStatsWidget() {
+function OptimizationStatsWidgetImpl() {
   const { t } = useTranslation();
   const router = useRouter();
   const [stats, setStats] = useState<WeeklyOptimizationStats | null>(null);
@@ -74,3 +74,5 @@ const styles = StyleSheet.create({
   title: { fontSize: 14, fontFamily: TYPE.titleFamily, color: DK.colors.text },
   subtitle: { fontSize: 12, fontFamily: TYPE.captionFamily, color: DK.colors.textMuted, marginTop: 2 },
 });
+
+export const OptimizationStatsWidget = memo(OptimizationStatsWidgetImpl);

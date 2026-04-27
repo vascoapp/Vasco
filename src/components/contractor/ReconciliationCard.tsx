@@ -8,7 +8,7 @@
 // Renders nothing when no high-confidence matches exist or no bank connected.
 // =============================================================================
 
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DK } from '../../theme/draftkings';
@@ -22,7 +22,7 @@ import {
 } from '../../integrations/banking';
 import { useAppState } from '../../state/AppState';
 
-export function ReconciliationCard() {
+function ReconciliationCardImpl() {
   const { invoices, markInvoicePaid } = useAppState() as any;
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -137,3 +137,5 @@ const styles = StyleSheet.create({
   },
   confirmText: { color: '#000', fontFamily: TYPE.titleFamily, fontSize: 12, letterSpacing: 1.2 },
 });
+
+export const ReconciliationCard = memo(ReconciliationCardImpl);

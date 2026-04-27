@@ -7,7 +7,7 @@
 // Hidden when no recurring jobs exist or none are due in the horizon.
 // =============================================================================
 
-import { useEffect, useState, useCallback } from 'react';
+import { memo, useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,7 +23,7 @@ import {
 const HORIZON_DAYS = 30;
 const MAX_VISIBLE = 4;
 
-export function UpcomingRecurringWidget() {
+function UpcomingRecurringWidgetImpl() {
   const { t } = useTranslation();
   const router = useRouter();
   const [items, setItems] = useState<RecurringJobInstance[]>([]);
@@ -120,3 +120,5 @@ const styles = StyleSheet.create({
   meta: { fontSize: 11, fontFamily: TYPE.captionFamily, color: DK.colors.textMuted, marginTop: 2 },
   amount: { fontSize: 13, fontFamily: TYPE.titleFamily, color: DK.colors.accent },
 });
+
+export const UpcomingRecurringWidget = memo(UpcomingRecurringWidgetImpl);
