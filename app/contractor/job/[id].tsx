@@ -498,37 +498,7 @@ export default function JobDetailPage() {
           </View>
         </View>
 
-        {/* ============================================ */}
-        {/* 3. ROUTE PLANNER                            */}
-        {/* ============================================ */}
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>{t('jobs.route', 'Route')}</Text>
-          <Pressable
-            style={styles.routeCard}
-            onPress={() => {
-              const address = encodeURIComponent(job.address);
-              Linking.openURL(`https://maps.apple.com/?daddr=${address}`);
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={`Navigate to ${job.address}`}
-          >
-            <View style={styles.routeAccent} />
-            <View style={styles.routeContent}>
-              <View style={styles.routeIconWrap}>
-                <Ionicons name="navigate" size={20} color={Palette.hermesOrange} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.routeAddress} numberOfLines={2}>{job.address}</Text>
-                {job.travelTime && (
-                  <Text style={styles.routeEta}>~{job.travelTime} {t('jobs.minDrive', 'min drive')}</Text>
-                )}
-              </View>
-              <View style={styles.routeOpenBtn}>
-                <Ionicons name="open-outline" size={16} color={Palette.hermesOrange} />
-              </View>
-            </View>
-          </Pressable>
-        </View>
+        {/* R267: Route section removed — duplicate of Notes/Activity per user feedback */}
 
         {/* ============================================ */}
         {/* 4. JOB NOTES                                */}
@@ -759,34 +729,7 @@ export default function JobDetailPage() {
           </View>
         )}
 
-        {/* ============================================ */}
-        {/* 7. AUDIT TRAIL — Job lifecycle timeline     */}
-        {/* ============================================ */}
-        {auditTrail.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Timeline</Text>
-            <View style={styles.timelineContainer}>
-              {auditTrail.map((event, idx) => (
-                <View key={idx} style={styles.timelineRow}>
-                  <View style={styles.timelineLeft}>
-                    <View style={[styles.timelineDot, { backgroundColor: event.color }]}>
-                      <Ionicons name={event.icon} size={12} color="#fff" />
-                    </View>
-                    {idx < auditTrail.length - 1 && <View style={styles.timelineLine} />}
-                  </View>
-                  <View style={styles.timelineContent}>
-                    <Text style={styles.timelineLabel}>{event.label}</Text>
-                    <Text style={styles.timelineDate}>
-                      {event.date.length > 10
-                        ? new Date(event.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
-                        : event.date}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
+        {/* R267: Timeline section removed — Activity feed below covers same lifecycle */}
 
         {/* ============================================ */}
         {/* 7c. ACTIVITY & COMMENTS                     */}
@@ -906,6 +849,23 @@ export default function JobDetailPage() {
                   }
                   setJobCompleted(true);
                 };
+                // R267: digital-signature now has 3 paths — capture in-app,
+                // request from customer remotely, or skip when not required.
+                const requestRemoteSignature = async () => {
+                  try {
+                    const customerLabel = job.customerName || t('jobs.customer', 'customer');
+                    const messageBody = t(
+                      'jobs.signatureRequestBody',
+                      'Hi {{customer}}, please sign off on the completed work for "{{job}}": vasco.app/sign/{{ref}}',
+                      { customer: customerLabel, job: job.projectName || 'the project', ref: id },
+                    );
+                    await Share.share({
+                      message: messageBody,
+                      title: t('jobs.signatureRequestTitle', 'Sign-off request'),
+                    });
+                    addActivityEntry(id || '', 'signature_requested', `Sign-off link sent to ${customerLabel}`).catch(() => {});
+                  } catch {}
+                };
                 Alert.alert(
                   t('jobs.completeJob', 'Complete job'),
                   t('jobs.completeJobConfirm', 'Are you sure you want to complete this job?') + checklistWarning,
@@ -915,6 +875,10 @@ export default function JobDetailPage() {
                       text: t('jobs.captureSignature', 'Capture signature'),
                       onPress: () => setSignatureModal({ visible: true, onSigned: doComplete }),
                     }] : []),
+                    {
+                      text: t('jobs.requestSignature', 'Request from customer'),
+                      onPress: requestRemoteSignature,
+                    },
                     { text: t('jobs.complete', 'Complete'), onPress: doComplete },
                   ],
                 );

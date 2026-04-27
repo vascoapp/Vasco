@@ -329,7 +329,7 @@ export default function BedrijfScreen() {
                     <CustomerRow
                       key={customer.id}
                       name={customer.name}
-                      meta={`${customerJobs[customer.id] || 0} {t('dk.pill.jobs', 'Jobs').toUpperCase()}${(customerRevenue[customer.id] || 0) > 0 ? ` · ${formatAmount(customerRevenue[customer.id])}` : ''}`}
+                      meta={`${customerJobs[customer.id] || 0} ${t('dk.pill.jobs', 'Jobs').toUpperCase()}${(customerRevenue[customer.id] || 0) > 0 ? ` · ${formatAmount(customerRevenue[customer.id])}` : ''}`}
                       onPress={() => router.push('/contractor/customer-crm' as any)}
                       borderBottom={idx < Math.min(customers.length, 10) - 1}
                       inCard

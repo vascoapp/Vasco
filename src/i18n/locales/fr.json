@@ -305,7 +305,11 @@
     "captureSignature": "Capturer la signature",
     "customerSignature": "Signature du client",
     "customerSignatureDesc": "Demandez au client de signer ci-dessous pour confirmer la fin des travaux.",
-    "postcodeCohort": "Code postal : €{{price}}/h médian · {{accept}}% acceptation · {{n}} devis"
+    "postcodeCohort": "Code postal : €{{price}}/h médian · {{accept}}% acceptation · {{n}} devis",
+    "requestSignature": "Demander au client",
+    "signatureRequestTitle": "Demande de signature",
+    "signatureRequestBody": "Bonjour {{customer}}, signez la réception des travaux pour \"{{job}}\" : vasco.app/sign/{{ref}}",
+    "customer": "client"
   },
   "compliance": {
     "docRequirements": "Documents requis",
@@ -1589,7 +1593,13 @@
       "next": "À suivre",
       "activeNow": "Actif maintenant",
       "allClear": "Tout est clair",
-      "nextAction": "Prochaine action"
+      "nextAction": "Prochaine action",
+      "guideToday": "Aujourd'hui : {{job}}",
+      "guideTodayDesc": "Ouvrez le chantier pour pointer, enregistrer les matériaux et finir à temps.",
+      "guideFollowup": "Relancer {{count}} devis ouvert(s)",
+      "guideFollowupDesc": "Les clients qui répondent en 48h convertissent ~3x plus.",
+      "guideStart": "Commencez par votre premier devis",
+      "guideStartDesc": "Prenez une photo — Vasco rédige le devis."
     },
     "pill": {
       "decided": "Décidé",
@@ -1632,7 +1642,9 @@
       "sortBy": "Trier par",
       "byValue": "Valeur",
       "byDate": "Date",
-      "byStatus": "Statut"
+      "byStatus": "Statut",
+      "maintenanceContract": "Contrat de maintenance",
+      "viewQuotes": "Voir les devis"
     },
     "empty": {
       "noJobs": "Aucune mission",
@@ -1657,7 +1669,8 @@
       "noExtraActions": "Aucune action supplémentaire",
       "noExtraActionsDesc": "L'action ci-dessus est votre seul élément ouvert.",
       "allUpToDate": "Tout est clair",
-      "allUpToDateDesc": "Aucune action IA en attente."
+      "allUpToDateDesc": "Aucune action IA en attente.",
+      "firstJob": "premier chantier"
     },
     "fab": {
       "planSchedule": "Planifiez votre semaine",
@@ -1887,5 +1900,16 @@
     "verify": "Lancer la vérification",
     "export": "Exporter le journal (.txt)",
     "footnote": "Le GoBD exige 10 ans de conservation. La chaîne de hash prouve qu'aucune entrée n'a été modifiée a posteriori. Pour une certification d'archive complète (DATEV-zertifiziert), couplez cet export à l'archive de votre comptable."
+  },
+  "savings": {
+    "title": "ÉCONOMIES IA",
+    "thisMonth": "Ce mois-ci",
+    "thisMonthA11y": "Voir les économies du mois",
+    "thisYear": "Cette année",
+    "projected": "Projeté",
+    "trendLine": "+{{trend}}% tendance · {{perJob}}/chantier · {{benchmark}}% au-dessus du secteur",
+    "breakdownTitle": "RÉPARTITION PAR CATÉGORIE",
+    "timelineTitle": "ÉCONOMIES DANS LE TEMPS",
+    "cumulative": "Cumulé"
   }
 }

@@ -386,15 +386,34 @@ export default function GeldScreen() {
           country={businessProfile?.country ?? 'NL'}
         />
 
-        {/* ─── CASHFLOW DEEP-DIVE ─── */}
+        {/* ─── CASHFLOW DEEP-DIVE ─── (R267: each section now wired) */}
         <SectionHeader title={t('dk.money.cashflow', 'Cashflow').toUpperCase()} />
         <View style={s.cfCard}>
           <View style={s.cfRow}>
-            <CfItem label={t('dk.pill.revenue', 'Revenue').toUpperCase()} value={formatCurrency(paidTotal)} tone={DK.colors.success} />
+            <Pressable
+              style={({ pressed }) => [{ flex: 1 }, pressed && { opacity: 0.7 }]}
+              onPress={() => router.push('/(contractor)/facturen' as any)}
+              accessibilityRole="button"
+              accessibilityLabel={t('dk.pill.revenue', 'Revenue')}
+            >
+              <CfItem label={t('dk.pill.revenue', 'Revenue').toUpperCase()} value={formatCurrency(paidTotal)} tone={DK.colors.success} />
+            </Pressable>
             <View style={s.cfDivider} />
-            <CfItem label={t('dk.money.costs', 'Costs').toUpperCase()} value={formatCurrency(fin.totalExpenses)} tone={DK.colors.text} />
+            <Pressable
+              style={({ pressed }) => [{ flex: 1 }, pressed && { opacity: 0.7 }]}
+              onPress={() => router.push('/hub/costs' as any)}
+              accessibilityRole="button"
+              accessibilityLabel={t('dk.money.costs', 'Costs')}
+            >
+              <CfItem label={t('dk.money.costs', 'Costs').toUpperCase()} value={formatCurrency(fin.totalExpenses)} tone={DK.colors.text} />
+            </Pressable>
             <View style={s.cfDivider} />
-            <View style={{ flex: 1 }}>
+            <Pressable
+              style={({ pressed }) => [{ flex: 1 }, pressed && { opacity: 0.7 }]}
+              onPress={() => router.push('/hub/savings' as any)}
+              accessibilityRole="button"
+              accessibilityLabel={t('dk.money.profit', 'Profit')}
+            >
               <View style={s.cfProfitRow}>
                 <Text style={[s.cfValue, { color: fin.netIncome >= 0 ? DK.colors.success : DK.colors.danger }]}>{formatCurrency(fin.netIncome)}</Text>
                 {paidTotal > 0 && (
@@ -404,7 +423,7 @@ export default function GeldScreen() {
                 )}
               </View>
               <DKLabel style={s.cfLabel}>{t('dk.money.profit', 'Profit')}</DKLabel>
-            </View>
+            </Pressable>
           </View>
           {/* Margin bar */}
           <View style={s.marginBar}>
@@ -433,27 +452,43 @@ export default function GeldScreen() {
               </View>
             </View>
           )}
-          {/* Projected next month */}
-          <View style={s.projRow}>
+          {/* Projected next month → cashflow forecast hub */}
+          <Pressable
+            style={({ pressed }) => [s.projRow, pressed && { opacity: 0.7 }]}
+            onPress={() => router.push('/hub/intelligence' as any)}
+            accessibilityRole="button"
+            accessibilityLabel={t('dk.money.projectedMonth', 'Projected next month')}
+          >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <View style={[s.projIcon, { backgroundColor: (fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger) + '22' }]}>
                 <Ionicons name={fin.projectedCashflow >= 0 ? 'trending-up' : 'trending-down'} size={16} color={fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger} />
               </View>
               <DKLabel style={s.projLabel}>{t('dk.money.projectedMonth', 'Projected next month')}</DKLabel>
             </View>
-            <Text style={[s.projValue, { color: fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger }]}>
-              {formatCurrency(fin.projectedCashflow)}
-            </Text>
-          </View>
-          {/* DSO */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={[s.projValue, { color: fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger }]}>
+                {formatCurrency(fin.projectedCashflow)}
+              </Text>
+              <Ionicons name="chevron-forward" size={14} color={DK.colors.textMuted} />
+            </View>
+          </Pressable>
+          {/* DSO → invoices list filtered to overdue */}
           {fin.avgDaysToPayment > 0 && (
-            <View style={s.dsoRow}>
+            <Pressable
+              style={({ pressed }) => [s.dsoRow, pressed && { opacity: 0.7 }]}
+              onPress={() => router.push('/(contractor)/facturen' as any)}
+              accessibilityRole="button"
+              accessibilityLabel={t('dk.money.avgDso', 'Avg payment term')}
+            >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <View style={[s.dsoDot, { backgroundColor: dsoStatus.color }]} />
                 <DKLabel style={s.dsoLabel}>{t('dk.money.avgDso', 'Avg payment term')}</DKLabel>
               </View>
-              <Text style={[s.dsoValue, { color: dsoStatus.color }]}>{fin.avgDaysToPayment}{t('dk.status.daysShort', 'D')}</Text>
-            </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={[s.dsoValue, { color: dsoStatus.color }]}>{fin.avgDaysToPayment}{t('dk.status.daysShort', 'D')}</Text>
+                <Ionicons name="chevron-forward" size={14} color={DK.colors.textMuted} />
+              </View>
+            </Pressable>
           )}
         </View>
 

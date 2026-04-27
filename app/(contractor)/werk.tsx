@@ -403,6 +403,23 @@ export default function WerkScreen() {
                 />
                 <DKLabel style={styles.modalSubmitText}>{t('dk.actions.createJob', 'Create')}</DKLabel>
               </Pressable>
+
+              {/* R267: maintenance contract ingress — was buried in Profile */}
+              <Pressable
+                style={styles.maintenanceLink}
+                onPress={() => {
+                  setShowNewJob(false);
+                  router.push('/contractor/recurring/new' as any);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={t('dk.actions.maintenanceContract', 'Recurring maintenance contract')}
+              >
+                <Ionicons name="repeat" size={16} color={DK.colors.accent} />
+                <DKLabel style={styles.maintenanceLinkText}>
+                  {t('dk.actions.maintenanceContract', 'Recurring maintenance contract')}
+                </DKLabel>
+                <Ionicons name="chevron-forward" size={14} color={DK.colors.accent} />
+              </Pressable>
             </Pressable>
           </Pressable>
         </KeyboardAvoidingView>
@@ -444,7 +461,7 @@ function HeroJobCard({ heroJob, onPress }: { heroJob: { type: 'live' | 'next' | 
         <View style={[heroStyles.glow, { backgroundColor: tone }]} />
         <View style={[heroStyles.chip, { backgroundColor: tone + '22', borderColor: tone + '55' }]}>
           {type === 'live' ? <View style={[heroStyles.pulse, { backgroundColor: tone }]} /> : null}
-          <Text style={[heroStyles.chipText, { color: tone }]}>{label}</Text>
+          <Text style={[heroStyles.chipText, { color: type === 'live' ? '#FFFFFF' : tone }]}>{label}</Text>
         </View>
         <Text style={heroStyles.title} numberOfLines={2}>{job.projectName || job.title}</Text>
         <Text style={heroStyles.customer} numberOfLines={1}>{job.customerName || job.customer || ''}</Text>
@@ -783,6 +800,17 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   modalSubmitText: { fontFamily: DK.type.display900, fontSize: 13, color: '#FFFFFF', letterSpacing: 1.4 },
+  maintenanceLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: DK.colors.border,
+  },
+  maintenanceLinkText: { color: DK.colors.accent, fontSize: 12, letterSpacing: 1.2 },
   suggestionsRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
   suggestionChip: {
     backgroundColor: DK.colors.panel2,

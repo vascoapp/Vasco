@@ -61,12 +61,15 @@ const CONTRACTOR_TABS: TabConfig[] = [
   },
 ];
 
-// Hidden screens: accessible via navigation but not in tab bar
+// Hidden screens: accessible via navigation but not in tab bar.
+// `error` is the route-group error boundary (R257) — Expo Router would
+// otherwise list it as a tab.
 const HIDDEN_TABS = [
   'certificaten',
   'besparen',
   'decisions',
   'facturen',
+  'error',
 ];
 
 export default function ContractorLayout() {

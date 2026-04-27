@@ -306,7 +306,11 @@
     "customerSignature": "Handtekening klant",
     "customerSignatureDesc": "Vraag de klant hieronder te tekenen om het werk af te ronden.",
     "qualityFeedback": "Feedback",
-    "postcodeCohort": "Postcodegebied: €{{price}}/u mediaan · {{accept}}% acceptatie · {{n}} offertes"
+    "postcodeCohort": "Postcodegebied: €{{price}}/u mediaan · {{accept}}% acceptatie · {{n}} offertes",
+    "requestSignature": "Vraag aan klant",
+    "signatureRequestTitle": "Aftekenverzoek",
+    "signatureRequestBody": "Hoi {{customer}}, teken het uitgevoerde werk voor \"{{job}}\" af: vasco.app/sign/{{ref}}",
+    "customer": "klant"
   },
   "compliance": {
     "docRequirements": "Documentvereisten",
@@ -1599,7 +1603,13 @@
       "next": "Eerstvolgende",
       "activeNow": "Actief nu",
       "allClear": "Alles onder controle",
-      "nextAction": "Volgende actie"
+      "nextAction": "Volgende actie",
+      "guideToday": "Vandaag: {{job}}",
+      "guideTodayDesc": "Open de klus om in te klokken, materialen te loggen en op tijd af te ronden.",
+      "guideFollowup": "Volg {{count}} open offerte(s) op",
+      "guideFollowupDesc": "Klanten die binnen 48u reageren, accepteren ~3x vaker.",
+      "guideStart": "Begin met je eerste offerte",
+      "guideStartDesc": "Maak een foto van het werk — Vasco maakt de offerte."
     },
     "pill": {
       "decided": "Beslist",
@@ -1642,7 +1652,9 @@
       "sortBy": "Sorteren op",
       "byValue": "Waarde",
       "byDate": "Datum",
-      "byStatus": "Status"
+      "byStatus": "Status",
+      "maintenanceContract": "Onderhoudscontract",
+      "viewQuotes": "Bekijk offertes"
     },
     "empty": {
       "noJobs": "Nog geen klussen",
@@ -1667,7 +1679,8 @@
       "noExtraActions": "Geen extra acties",
       "noExtraActionsDesc": "De feature actie hierboven is je enige openstaande item.",
       "allUpToDate": "Alles onder controle",
-      "allUpToDateDesc": "Geen openstaande AI-acties."
+      "allUpToDateDesc": "Geen openstaande AI-acties.",
+      "firstJob": "eerste klus"
     },
     "fab": {
       "planSchedule": "Plan je week",
@@ -1897,5 +1910,16 @@
     "bodyContractor": "Een scherm kon niet laden. Je gegevens zijn veilig — probeer opnieuw of kies een ander tabblad.",
     "retry": "Opnieuw proberen",
     "body": "Een scherm kon niet laden. Probeer opnieuw."
+  },
+  "savings": {
+    "title": "AI BESPARINGEN",
+    "thisMonth": "Deze maand",
+    "thisMonthA11y": "Bekijk besparingen deze maand",
+    "thisYear": "Dit jaar",
+    "projected": "Geprojecteerd",
+    "trendLine": "+{{trend}}% trend · {{perJob}}/klus · {{benchmark}}% boven branche",
+    "breakdownTitle": "UITSPLITSING PER CATEGORIE",
+    "timelineTitle": "BESPARINGSVERLOOP",
+    "cumulative": "Cumulatief"
   }
 }

@@ -21,7 +21,9 @@ export type ActivityType =
   | 'material_added'
   | 'invoice_created'
   | 'timer_started'
-  | 'timer_stopped';
+  | 'timer_stopped'
+  | 'signature_requested'
+  | 'signature_captured';
 
 export interface JobComment {
   id: string;
@@ -196,6 +198,10 @@ export function getActivityIcon(type: ActivityType): { name: string; color: stri
       return { name: 'play-circle-outline', color: '#E35205' };
     case 'timer_stopped':
       return { name: 'stop-circle-outline', color: '#EF4444' };
+    case 'signature_requested':
+      return { name: 'paper-plane-outline', color: '#F97316' };
+    case 'signature_captured':
+      return { name: 'create-outline', color: '#16A34A' };
   }
 }
 

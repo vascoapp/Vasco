@@ -112,10 +112,9 @@ export default function VandaagDK() {
         {/* 2b. ACTIVATION CHECKLIST (R225) — auto-hides when all 5 milestones met */}
         <ActivationChecklist />
 
-        {/* 3. KPI ROW ─── 3 stats matching legacy ContractorDashboardHeader */}
+        {/* 3. KPI ROW ─── 2 stats (Earned removed per R267 — duplicate of Geld tab) */}
         <View style={styles.kpiRow}>
           <KpiTile label={t('dk.pill.appointments', 'Appointments').toUpperCase()} value={String(todayJobs.length)} tone={DK.colors.text} onPress={() => router.push('/contractor/drag-schedule' as any)} />
-          <KpiTile label={t('dk.pill.earned', 'Earned').toUpperCase()} value={formatAmount(dailyEarnings, i18n.language)} tone={DK.colors.success} onPress={() => router.push('/(contractor)/geld' as any)} />
           <KpiTile label={t('dk.pill.quotes', 'Quotes').toUpperCase()} value={String(activeQuotes)} tone={DK.colors.highlight} onPress={() => router.push('/contractor/quote-list' as any)} />
         </View>
 
@@ -155,8 +154,36 @@ export default function VandaagDK() {
               </>
             ) : (
               <>
-                <Text style={styles.heroTitle}>{t('dk.empty.allUpToDate', 'All clear')}.</Text>
-                <Text style={styles.heroBody}>{t('dk.empty.allUpToDateDesc', 'No open AI actions.')}</Text>
+                <Text style={styles.heroTitle}>
+                  {todayJobs.length > 0
+                    ? t('dk.hero.guideToday', "Today's focus: {{job}}", { job: (todayJobs[0] as any).title || (todayJobs[0] as any).projectName || t('dk.empty.firstJob', 'first job') })
+                    : activeQuotes > 0
+                      ? t('dk.hero.guideFollowup', 'Follow up on {{count}} open quote(s)', { count: activeQuotes })
+                      : t('dk.hero.guideStart', 'Start with your first quote')}
+                </Text>
+                <Text style={styles.heroBody}>
+                  {todayJobs.length > 0
+                    ? t('dk.hero.guideTodayDesc', 'Open the job to clock in, log materials, and finish on time.')
+                    : activeQuotes > 0
+                      ? t('dk.hero.guideFollowupDesc', 'Customers who reply within 48h convert ~3x more often.')
+                      : t('dk.hero.guideStartDesc', 'Take a photo of the work and Vasco will draft the quote.')}
+                </Text>
+                <Pressable
+                  style={({ pressed }) => [styles.heroCTA, pressed && { opacity: 0.9 }]}
+                  onPress={() => {
+                    if (todayJobs.length > 0) router.push(`/contractor/job/${(todayJobs[0] as any).id}` as any);
+                    else if (activeQuotes > 0) router.push('/contractor/quote-list' as any);
+                    else router.push('/contractor/tiered-quote' as any);
+                  }}
+                >
+                  <DKLabel style={styles.heroCTAText}>
+                    {todayJobs.length > 0
+                      ? t('dk.actions.openJob', 'Open job')
+                      : activeQuotes > 0
+                        ? t('dk.actions.viewQuotes', 'View quotes')
+                        : t('dk.actions.newQuote', 'New quote')}
+                  </DKLabel>
+                </Pressable>
               </>
             )}
           </LinearGradient>
@@ -178,7 +205,7 @@ export default function VandaagDK() {
               <Ionicons name="trending-up" size={16} color={DK.colors.success} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.savingsTitle}>{t('dk.savings.savedThisMonth', { amount: formatAmount(savings.totalSavedThisMonth, i18n.language), defaultValue: 'Vasco saved you {{amount}}' }).toUpperCase()}</Text>
+              <Text style={styles.savingsTitle}>{t('dk.savings.savedThisMonth', { amount: formatAmount(savings.totalSavedThisMonth), defaultValue: 'Vasco saved you {{amount}}' }).toUpperCase()}</Text>
               <Text style={styles.savingsSub}>{t('dk.savings.monthSub', 'This month — view breakdown')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={DK.colors.textMuted} />
@@ -439,7 +466,8 @@ const styles = StyleSheet.create({
     fontFamily: DK.type.display900,
     fontSize: 13,
     color: DK.colors.text,
-    letterSpacing: 1.8,
+    letterSpacing: 1.2,
+    flexShrink: 1,
   },
   sectionLink: {
     fontFamily: DK.type.display800,

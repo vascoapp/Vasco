@@ -305,7 +305,11 @@
     "captureSignature": "Cattura firma",
     "customerSignature": "Firma del cliente",
     "customerSignatureDesc": "Chiedi al cliente di firmare qui sotto per confermare il lavoro completato.",
-    "postcodeCohort": "CAP: €{{price}}/h mediana · {{accept}}% accettazione · {{n}} preventivi"
+    "postcodeCohort": "CAP: €{{price}}/h mediana · {{accept}}% accettazione · {{n}} preventivi",
+    "requestSignature": "Richiedi al cliente",
+    "signatureRequestTitle": "Richiesta firma",
+    "signatureRequestBody": "Ciao {{customer}}, firma la ricezione del lavoro \"{{job}}\": vasco.app/sign/{{ref}}",
+    "customer": "cliente"
   },
   "compliance": {
     "docRequirements": "Documenti richiesti",
@@ -1589,7 +1593,13 @@
       "next": "Prossimo",
       "activeNow": "Attivo ora",
       "allClear": "Tutto a posto",
-      "nextAction": "Prossima azione"
+      "nextAction": "Prossima azione",
+      "guideToday": "Oggi: {{job}}",
+      "guideTodayDesc": "Apri il lavoro per timbrare, registrare materiali e finire in tempo.",
+      "guideFollowup": "Segui {{count}} preventivo/i aperto/i",
+      "guideFollowupDesc": "I clienti che rispondono in 48h convertono ~3x in più.",
+      "guideStart": "Inizia con il tuo primo preventivo",
+      "guideStartDesc": "Scatta una foto — Vasco redige il preventivo."
     },
     "pill": {
       "decided": "Deciso",
@@ -1632,7 +1642,9 @@
       "sortBy": "Ordina per",
       "byValue": "Valore",
       "byDate": "Data",
-      "byStatus": "Stato"
+      "byStatus": "Stato",
+      "maintenanceContract": "Contratto di manutenzione",
+      "viewQuotes": "Vedi preventivi"
     },
     "empty": {
       "noJobs": "Nessun lavoro",
@@ -1657,7 +1669,8 @@
       "noExtraActions": "Nessuna azione extra",
       "noExtraActionsDesc": "L'azione sopra è l'unico elemento aperto.",
       "allUpToDate": "Tutto a posto",
-      "allUpToDateDesc": "Nessuna azione AI aperta."
+      "allUpToDateDesc": "Nessuna azione AI aperta.",
+      "firstJob": "primo lavoro"
     },
     "fab": {
       "planSchedule": "Pianifica la settimana",
@@ -1887,5 +1900,16 @@
     "verify": "Esegui verifica",
     "export": "Esporta registro (.txt)",
     "footnote": "Il GoBD richiede 10 anni di conservazione. La catena di hash dimostra che nessuna voce è stata modificata a posteriori. Per la certificazione completa di archivio (DATEV-zertifiziert), abbina questa esportazione all'archivio del tuo commercialista."
+  },
+  "savings": {
+    "title": "RISPARMI AI",
+    "thisMonth": "Questo mese",
+    "thisMonthA11y": "Visualizza risparmi del mese",
+    "thisYear": "Quest'anno",
+    "projected": "Previsto",
+    "trendLine": "+{{trend}}% trend · {{perJob}}/lavoro · {{benchmark}}% sopra il settore",
+    "breakdownTitle": "SUDDIVISIONE PER CATEGORIA",
+    "timelineTitle": "RISPARMI NEL TEMPO",
+    "cumulative": "Cumulativo"
   }
 }

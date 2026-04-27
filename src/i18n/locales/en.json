@@ -306,7 +306,11 @@
     "customerSignature": "Customer signature",
     "customerSignatureDesc": "Ask the customer to sign below to confirm the work is completed.",
     "qualityFeedback": "Feedback",
-    "postcodeCohort": "Postcode area: €{{price}}/u median · {{accept}}% accept · {{n}} quotes"
+    "postcodeCohort": "Postcode area: €{{price}}/u median · {{accept}}% accept · {{n}} quotes",
+    "requestSignature": "Request from customer",
+    "signatureRequestTitle": "Sign-off request",
+    "signatureRequestBody": "Hi {{customer}}, please sign off on the completed work for \"{{job}}\": vasco.app/sign/{{ref}}",
+    "customer": "customer"
   },
   "compliance": {
     "docRequirements": "Document requirements",
@@ -1599,7 +1603,13 @@
       "next": "Up next",
       "activeNow": "Active now",
       "allClear": "All clear",
-      "nextAction": "Next action"
+      "nextAction": "Next action",
+      "guideToday": "Today's focus: {{job}}",
+      "guideTodayDesc": "Open the job to clock in, log materials, and finish on time.",
+      "guideFollowup": "Follow up on {{count}} open quote(s)",
+      "guideFollowupDesc": "Customers who reply within 48h convert ~3x more often.",
+      "guideStart": "Start with your first quote",
+      "guideStartDesc": "Take a photo of the work and Vasco will draft the quote."
     },
     "pill": {
       "decided": "Decided",
@@ -1642,7 +1652,9 @@
       "sortBy": "Sort by",
       "byValue": "Value",
       "byDate": "Date",
-      "byStatus": "Status"
+      "byStatus": "Status",
+      "maintenanceContract": "Recurring maintenance contract",
+      "viewQuotes": "View quotes"
     },
     "empty": {
       "noJobs": "No jobs yet",
@@ -1667,7 +1679,8 @@
       "noExtraActions": "No extra actions",
       "noExtraActionsDesc": "The featured action above is your only open item.",
       "allUpToDate": "All clear",
-      "allUpToDateDesc": "No open AI actions."
+      "allUpToDateDesc": "No open AI actions.",
+      "firstJob": "first job"
     },
     "fab": {
       "planSchedule": "Plan your week",
@@ -1897,5 +1910,16 @@
     "bodyContractor": "A screen failed to render. Your data is safe — try again or pick another tab.",
     "retry": "Try again",
     "body": "A screen failed to render. Try again."
+  },
+  "savings": {
+    "title": "AI BESPARINGEN",
+    "thisMonth": "This month",
+    "thisMonthA11y": "View this month savings",
+    "thisYear": "This year",
+    "projected": "Projected",
+    "trendLine": "+{{trend}}% trend · {{perJob}}/job · {{benchmark}}% above industry",
+    "breakdownTitle": "BREAKDOWN BY CATEGORY",
+    "timelineTitle": "SAVINGS OVER TIME",
+    "cumulative": "Cumulative"
   }
 }

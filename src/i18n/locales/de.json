@@ -306,7 +306,11 @@
     "customerSignature": "Kundenunterschrift",
     "customerSignatureDesc": "Bitte den Kunden, unten zu unterschreiben, um die Arbeit zu bestätigen.",
     "qualityFeedback": "Feedback",
-    "postcodeCohort": "PLZ-Gebiet: €{{price}}/Std. Median · {{accept}}% Annahme · {{n}} Angebote"
+    "postcodeCohort": "PLZ-Gebiet: €{{price}}/Std. Median · {{accept}}% Annahme · {{n}} Angebote",
+    "requestSignature": "Vom Kunden anfordern",
+    "signatureRequestTitle": "Abnahmeanfrage",
+    "signatureRequestBody": "Hi {{customer}}, bitte die abgeschlossene Arbeit für \"{{job}}\" abnehmen: vasco.app/sign/{{ref}}",
+    "customer": "Kunde"
   },
   "compliance": {
     "docRequirements": "Dokumentanforderungen",
@@ -1599,7 +1603,13 @@
       "next": "Als Nächstes",
       "activeNow": "Jetzt aktiv",
       "allClear": "Alles im Griff",
-      "nextAction": "Nächste Aktion"
+      "nextAction": "Nächste Aktion",
+      "guideToday": "Heute: {{job}}",
+      "guideTodayDesc": "Auftrag öffnen, einstempeln, Material erfassen und pünktlich abschließen.",
+      "guideFollowup": "{{count}} offene Angebot(e) nachfassen",
+      "guideFollowupDesc": "Kunden, die innerhalb 48h antworten, konvertieren ~3x häufiger.",
+      "guideStart": "Beginne mit deinem ersten Angebot",
+      "guideStartDesc": "Foto von der Arbeit — Vasco entwirft das Angebot."
     },
     "pill": {
       "decided": "Entschieden",
@@ -1642,7 +1652,9 @@
       "sortBy": "Sortieren nach",
       "byValue": "Wert",
       "byDate": "Datum",
-      "byStatus": "Status"
+      "byStatus": "Status",
+      "maintenanceContract": "Wartungsvertrag",
+      "viewQuotes": "Angebote ansehen"
     },
     "empty": {
       "noJobs": "Noch keine Aufträge",
@@ -1667,7 +1679,8 @@
       "noExtraActions": "Keine weiteren Aktionen",
       "noExtraActionsDesc": "Die Aktion oben ist dein einziger offener Punkt.",
       "allUpToDate": "Alles im Griff",
-      "allUpToDateDesc": "Keine offenen KI-Aktionen."
+      "allUpToDateDesc": "Keine offenen KI-Aktionen.",
+      "firstJob": "erster Auftrag"
     },
     "fab": {
       "planSchedule": "Plane deine Woche",
@@ -1897,5 +1910,16 @@
     "bodyContractor": "Ein Bildschirm konnte nicht geladen werden. Deine Daten sind sicher — versuche es erneut oder wechsle den Tab.",
     "retry": "Erneut versuchen",
     "body": "Ein Bildschirm konnte nicht geladen werden. Versuche es erneut."
+  },
+  "savings": {
+    "title": "KI-EINSPARUNGEN",
+    "thisMonth": "Diesen Monat",
+    "thisMonthA11y": "Einsparungen diesen Monat ansehen",
+    "thisYear": "Dieses Jahr",
+    "projected": "Prognose",
+    "trendLine": "+{{trend}}% Trend · {{perJob}}/Auftrag · {{benchmark}}% über Branche",
+    "breakdownTitle": "AUFSCHLÜSSELUNG NACH KATEGORIE",
+    "timelineTitle": "EINSPARUNGEN ÜBER ZEIT",
+    "cumulative": "Kumulativ"
   }
 }
