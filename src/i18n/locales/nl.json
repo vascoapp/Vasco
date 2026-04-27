@@ -2022,5 +2022,44 @@
       "phone": "Telefoon",
       "other": "Anders"
     }
+  },
+  "inkoop": {
+    "title": "Inkoop",
+    "receiptScanner": "Bon scanner",
+    "receiptScannerDesc": "Scan een bon om kosten te verwerken",
+    "reorder": "Herbestellen",
+    "suppliers": "Leveranciers",
+    "suppliersList": "Je werkt met {{count}} leveranciers:\n\n{{names}}",
+    "suppliersEmpty": "Nog geen leveranciers gekoppeld.",
+    "benchmarking": "Benchmarking",
+    "searchMaterial": "Zoek materiaal",
+    "importing": "Importeren…",
+    "importFailedTitle": "Import mislukt",
+    "importFailedNoData": "Het bestand bevat geen geldige data.",
+    "importFailedRead": "Er ging iets mis bij het lezen van het bestand.",
+    "noArticlesTitle": "Geen artikelen",
+    "noArticlesDesc": "Er konden geen artikelen uit het bestand worden gelezen. Controleer of het een geldig DATANORM-bestand is.",
+    "importSuccessTitle": "Import geslaagd",
+    "importSuccessBody": "{{imported}} materialen geïmporteerd van {{supplier}}.{{skippedNote}}",
+    "importSkipped": "{{count}} overgeslagen (duplicaten of ongeldige prijs).",
+    "stockOk": "Voorraad op orde",
+    "noReorders": "Er zijn geen herbestellingen nodig.",
+    "stockoutsAvoided": "Stockouts\nvoorkomen",
+    "totalSaved": "Totaal\nbespaard",
+    "forecastAccuracy": "Voorspel\nnauwkeurig",
+    "stock": "Voorraad",
+    "lowCount": "{{count}} laag",
+    "supplier": "Leverancier",
+    "outNow": "Op!",
+    "ordered": "Besteld",
+    "orderedBody": "{{name}} is besteld.",
+    "savings": "Besparingen",
+    "breakdown": {
+      "materials": "Materialen",
+      "suppliers": "Leveranciers",
+      "efficiency": "Efficiëntie",
+      "other": "Overig"
+    },
+    "savedThisYear": "Bespaard dit jaar"
   }
 }

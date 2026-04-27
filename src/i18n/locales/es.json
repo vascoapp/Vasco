@@ -2012,5 +2012,44 @@
       "phone": "Teléfono",
       "other": "Otro"
     }
+  },
+  "inkoop": {
+    "title": "Purchasing",
+    "receiptScanner": "Receipt scanner",
+    "receiptScannerDesc": "Scan a receipt to record costs",
+    "reorder": "Reorder",
+    "suppliers": "Suppliers",
+    "suppliersList": "You work with {{count}} suppliers:\n\n{{names}}",
+    "suppliersEmpty": "No suppliers linked yet.",
+    "benchmarking": "Benchmarking",
+    "searchMaterial": "Search material",
+    "importing": "Importing…",
+    "importFailedTitle": "Import failed",
+    "importFailedNoData": "The file contains no valid data.",
+    "importFailedRead": "Something went wrong reading the file.",
+    "noArticlesTitle": "No articles",
+    "noArticlesDesc": "No articles could be read from the file. Verify it is a valid DATANORM file.",
+    "importSuccessTitle": "Import successful",
+    "importSuccessBody": "{{imported}} materials imported from {{supplier}}.{{skippedNote}}",
+    "importSkipped": "{{count}} skipped (duplicates or invalid price).",
+    "stockOk": "Stock is in order",
+    "noReorders": "No reorders needed right now.",
+    "stockoutsAvoided": "Stockouts\navoided",
+    "totalSaved": "Total\nsaved",
+    "forecastAccuracy": "Forecast\naccuracy",
+    "stock": "Stock",
+    "lowCount": "{{count}} low",
+    "supplier": "Supplier",
+    "outNow": "Out!",
+    "ordered": "Ordered",
+    "orderedBody": "{{name}} has been ordered.",
+    "savings": "Savings",
+    "breakdown": {
+      "materials": "Materials",
+      "suppliers": "Suppliers",
+      "efficiency": "Efficiency",
+      "other": "Other"
+    },
+    "savedThisYear": "Saved this year"
   }
 }

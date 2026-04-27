@@ -9,6 +9,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Modal, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import { File as ExpoFile } from 'expo-file-system';
@@ -22,6 +23,7 @@ import { parseDateanormV4, parseDateanormV5, importDatanormToMoat } from '../../
 
 export default function InkoopScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const savings = useSavingsAggregation();
   const timeline = useSavingsTimeline();
   const { inventory, lowStockCount } = useInventory();
@@ -49,7 +51,7 @@ export default function InkoopScreen() {
       const text = await file.text();
 
       if (!text || text.trim().length < 10) {
-        Alert.alert('Import mislukt', 'Het bestand bevat geen geldige data.');
+        Alert.alert(t('inkoop.importFailedTitle', 'Import failed'), t('inkoop.importFailedNoData', 'The file contains no valid data.'));
         setIsImporting(false);
         return;
       }
@@ -60,7 +62,7 @@ export default function InkoopScreen() {
       const articles = isV5 ? parseDateanormV5(text) : parseDateanormV4(text);
 
       if (articles.length === 0) {
-        Alert.alert('Geen artikelen', 'Er konden geen artikelen uit het bestand worden gelezen. Controleer of het een geldig DATANORM-bestand is.');
+        Alert.alert(t('inkoop.noArticlesTitle', 'No articles'), t('inkoop.noArticlesDesc', 'No articles could be read from the file. Verify it is a valid DATANORM file.'));
         setIsImporting(false);
         return;
       }
@@ -80,11 +82,15 @@ export default function InkoopScreen() {
       });
 
       Alert.alert(
-        'Import geslaagd',
-        `${imported} materialen geimporteerd van ${supplierName}.${skipped > 0 ? `\n${skipped} overgeslagen (duplicaten of ongeldige prijs).` : ''}`,
+        t('inkoop.importSuccessTitle', 'Import successful'),
+        t('inkoop.importSuccessBody', '{{imported}} materials imported from {{supplier}}.{{skippedNote}}', {
+          imported,
+          supplier: supplierName,
+          skippedNote: skipped > 0 ? `\n${t('inkoop.importSkipped', '{{count}} skipped (duplicates or invalid price).', { count: skipped })}` : '',
+        }),
       );
     } catch {
-      Alert.alert('Import mislukt', 'Er ging iets mis bij het lezen van het bestand.');
+      Alert.alert(t('inkoop.importFailedTitle', 'Import failed'), t('inkoop.importFailedRead', 'Something went wrong reading the file.'));
     } finally {
       setIsImporting(false);
     }
@@ -106,7 +112,7 @@ export default function InkoopScreen() {
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={22} color="#1A1A1A" />
         </Pressable>
-        <Text style={styles.headerTitle}>Inkoop</Text>
+        <Text style={styles.headerTitle}>{t('inkoop.title', 'Purchasing')}</Text>
         <View style={{ width: 40, alignItems: 'flex-end' }}>
           {criticalCount > 0 && (
             <View style={styles.headerBadge}>
@@ -128,7 +134,7 @@ export default function InkoopScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickActions}>
           <Pressable style={styles.quickChip} onPress={() => setShowReceiptScanner(true)}>
             <Ionicons name="scan" size={16} color={Palette.hermesOrange} />
-            <Text style={styles.quickChipText}>Bon Scanner</Text>
+            <Text style={styles.quickChipText}>{t('inkoop.receiptScanner', 'Receipt scanner')}</Text>
           </Pressable>
           <Pressable style={styles.quickChip} onPress={() => {
             if (criticalCount > 0) {
@@ -138,23 +144,28 @@ export default function InkoopScreen() {
                 ? `/contractor/material-search?q=${encodeURIComponent(firstCritical.materialName)}` as any
                 : '/contractor/material-search' as any);
             } else {
-              Alert.alert('Voorraad op orde', 'Er zijn geen herbestellingen nodig.');
+              Alert.alert(t('inkoop.stockOk', 'Stock is in order'), t('inkoop.noReorders', 'No reorders needed right now.'));
             }
           }}>
             <Ionicons name="repeat" size={16} color={Palette.hermesOrange} />
-            <Text style={styles.quickChipText}>Herbestellen</Text>
+            <Text style={styles.quickChipText}>{t('inkoop.reorder', 'Reorder')}</Text>
             {criticalCount > 0 && <View style={styles.chipBadge}><Text style={styles.chipBadgeText}>{criticalCount}</Text></View>}
           </Pressable>
           <Pressable style={styles.quickChip} onPress={() => {
             const suppliers = [...new Set(inventory.map(i => i.preferredSupplier).filter(Boolean))];
-            Alert.alert('Leveranciers', suppliers.length > 0 ? `Je werkt met ${suppliers.length} leveranciers:\n\n${suppliers.join('\n')}` : 'Nog geen leveranciers gekoppeld.');
+            Alert.alert(
+              t('inkoop.suppliers', 'Suppliers'),
+              suppliers.length > 0
+                ? t('inkoop.suppliersList', 'You work with {{count}} suppliers:\n\n{{names}}', { count: suppliers.length, names: suppliers.join('\n') })
+                : t('inkoop.suppliersEmpty', 'No suppliers linked yet.'),
+            );
           }}>
             <Ionicons name="storefront" size={16} color={Palette.hermesOrange} />
-            <Text style={styles.quickChipText}>Leveranciers</Text>
+            <Text style={styles.quickChipText}>{t('inkoop.suppliers', 'Suppliers')}</Text>
           </Pressable>
           <Pressable style={styles.quickChip} onPress={() => router.push('/contractor/market-prices' as any)}>
             <Ionicons name="bar-chart" size={16} color={Palette.hermesOrange} />
-            <Text style={styles.quickChipText}>Benchmarking</Text>
+            <Text style={styles.quickChipText}>{t('inkoop.benchmarking', 'Benchmarking')}</Text>
           </Pressable>
           <Pressable
             style={[styles.quickChip, isImporting && { opacity: 0.5 }]}
@@ -162,11 +173,11 @@ export default function InkoopScreen() {
             disabled={isImporting}
           >
             <Ionicons name="cloud-upload" size={16} color={Palette.hermesOrange} />
-            <Text style={styles.quickChipText}>{isImporting ? 'Importeren...' : 'DATANORM'}</Text>
+            <Text style={styles.quickChipText}>{isImporting ? t('inkoop.importing', 'Importing…') : 'DATANORM'}</Text>
           </Pressable>
           <Pressable style={styles.quickChip} onPress={() => router.push('/contractor/material-search' as any)}>
             <Ionicons name="search" size={16} color={Palette.hermesOrange} />
-            <Text style={styles.quickChipText}>Zoek materiaal</Text>
+            <Text style={styles.quickChipText}>{t('inkoop.searchMaterial', 'Search material')}</Text>
           </Pressable>
         </ScrollView>
 
@@ -179,21 +190,21 @@ export default function InkoopScreen() {
               <Ionicons name="shield-checkmark" size={18} color={SemanticColors.feedbackSuccess} />
             </View>
             <Text style={styles.heroValue}>{statistics.stockoutsAvoided}</Text>
-            <Text style={styles.heroLabel}>Stockouts{'\n'}voorkomen</Text>
+            <Text style={styles.heroLabel}>{t('inkoop.stockoutsAvoided', 'Stockouts\navoided')}</Text>
           </View>
           <View style={styles.heroCard}>
             <View style={[styles.heroIconWrap, { backgroundColor: Palette.hermesOrange + '12' }]}>
               <Ionicons name="wallet" size={18} color={Palette.hermesOrange} />
             </View>
             <Text style={styles.heroValue}>€{statistics.totalSavings}</Text>
-            <Text style={styles.heroLabel}>Totaal{'\n'}bespaard</Text>
+            <Text style={styles.heroLabel}>{t('inkoop.totalSaved', 'Total\nsaved')}</Text>
           </View>
           <View style={styles.heroCard}>
             <View style={[styles.heroIconWrap, { backgroundColor: '#3B82F612' }]}>
               <Ionicons name="analytics" size={18} color="#3B82F6" />
             </View>
             <Text style={styles.heroValue}>{statistics.accuracyRate}%</Text>
-            <Text style={styles.heroLabel}>Voorspel{'\n'}nauwkeurig</Text>
+            <Text style={styles.heroLabel}>{t('inkoop.forecastAccuracy', 'Forecast\naccuracy')}</Text>
           </View>
         </View>
 
@@ -202,11 +213,11 @@ export default function InkoopScreen() {
         {/* ============================================ */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Voorraad</Text>
+            <Text style={styles.sectionTitle}>{t('inkoop.stock', 'Stock')}</Text>
             {lowStockCount > 0 && (
               <View style={styles.alertPill}>
                 <View style={styles.alertDot} />
-                <Text style={styles.alertPillText}>{lowStockCount} laag</Text>
+                <Text style={styles.alertPillText}>{t('inkoop.lowCount', '{{count}} low', { count: lowStockCount })}</Text>
               </View>
             )}
           </View>
@@ -226,14 +237,14 @@ export default function InkoopScreen() {
                         <Text style={styles.materialName} numberOfLines={1}>{suggestion.materialName}</Text>
                         <View style={styles.supplierMeta}>
                           <Ionicons name="storefront" size={11} color="#999" />
-                          <Text style={styles.supplierText}>{item?.preferredSupplier || 'Leverancier'}</Text>
+                          <Text style={styles.supplierText}>{item?.preferredSupplier || t('inkoop.supplier', 'Supplier')}</Text>
                           <Text style={styles.categoryDot}>·</Text>
                           <Text style={styles.supplierText}>{suggestion.category}</Text>
                         </View>
                       </View>
                       <View style={[styles.urgencyChip, { backgroundColor: getPriorityColor(suggestion.priority) + '12' }]}>
                         <Text style={[styles.urgencyValue, { color: getPriorityColor(suggestion.priority) }]}>
-                          {suggestion.daysUntilStockout === 0 ? 'Op!' : `${suggestion.daysUntilStockout}d`}
+                          {suggestion.daysUntilStockout === 0 ? t('inkoop.outNow', 'Out!') : `${suggestion.daysUntilStockout}d`}
                         </Text>
                       </View>
                     </View>
@@ -265,7 +276,7 @@ export default function InkoopScreen() {
                         style={styles.orderBtn}
                         onPress={() => {
                           markOrdered(suggestion.id);
-                          Alert.alert('Besteld', `${suggestion.materialName} is besteld.`);
+                          Alert.alert(t('inkoop.ordered', 'Ordered'), t('inkoop.orderedBody', '{{name}} has been ordered.', { name: suggestion.materialName }));
                         }}
                       >
                         <Ionicons name="cart" size={14} color="#fff" />
@@ -278,7 +289,7 @@ export default function InkoopScreen() {
           ) : (
             <View style={styles.emptyCard}>
               <Ionicons name="checkmark-circle" size={28} color={SemanticColors.feedbackSuccess} />
-              <Text style={styles.emptyText}>Voorraad op orde!</Text>
+              <Text style={styles.emptyText}>{t('inkoop.stockOk', 'Stock is in order!')}</Text>
             </View>
           )}
         </View>
@@ -291,8 +302,8 @@ export default function InkoopScreen() {
             <Ionicons name="scan" size={20} color={Palette.hermesOrange} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.scannerTitle}>Bon Scanner</Text>
-            <Text style={styles.scannerSub}>Scan een bon om kosten te verwerken</Text>
+            <Text style={styles.scannerTitle}>{t('inkoop.receiptScanner', 'Receipt scanner')}</Text>
+            <Text style={styles.scannerSub}>{t('inkoop.receiptScannerDesc', 'Scan a receipt to record costs')}</Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color="#CCC" />
         </Pressable>
@@ -301,7 +312,7 @@ export default function InkoopScreen() {
         {/* 4. BESPARINGEN                              */}
         {/* ============================================ */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Besparingen</Text>
+          <Text style={styles.sectionTitle}>{t('inkoop.savings', 'Savings')}</Text>
 
           {/* Savings breakdown */}
           <View style={styles.card}>
@@ -312,10 +323,10 @@ export default function InkoopScreen() {
               <View style={{ flex: 10, backgroundColor: '#DDD' }} />
             </View>
             {([
-              { label: 'Materialen', amount: '€1.840', pct: '45%', color: Palette.hermesOrange },
-              { label: 'Leveranciers', amount: '€1.020', pct: '25%', color: Palette.hermesOrange + 'CC' },
-              { label: 'Efficiëntie', amount: '€820', pct: '20%', color: Palette.pastelOrange },
-              { label: 'Overig', amount: '€410', pct: '10%', color: '#CCC' },
+              { label: t('inkoop.breakdown.materials', 'Materials'), amount: '€1.840', pct: '45%', color: Palette.hermesOrange },
+              { label: t('inkoop.breakdown.suppliers', 'Suppliers'), amount: '€1.020', pct: '25%', color: Palette.hermesOrange + 'CC' },
+              { label: t('inkoop.breakdown.efficiency', 'Efficiency'), amount: '€820', pct: '20%', color: Palette.pastelOrange },
+              { label: t('inkoop.breakdown.other', 'Other'), amount: '€410', pct: '10%', color: '#CCC' },
             ] as const).map(r => (
               <View key={r.label} style={styles.legendRow}>
                 <View style={[styles.legendDot, { backgroundColor: r.color }]} />
@@ -330,7 +341,7 @@ export default function InkoopScreen() {
           <View style={styles.card}>
             <View style={styles.timelineTop}>
               <View>
-                <Text style={styles.timelineLabel}>Bespaard dit jaar</Text>
+                <Text style={styles.timelineLabel}>{t('inkoop.savedThisYear', 'Saved this year')}</Text>
                 <Text style={styles.timelineAmount}>€{savings.totalSavedThisYear.toLocaleString(undefined)}</Text>
               </View>
               <View style={styles.trendPill}>
