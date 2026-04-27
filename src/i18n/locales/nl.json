@@ -1861,6 +1861,7 @@
   "error": {
     "somethingWrong": "ER GING IETS MIS",
     "bodyContractor": "Een scherm kon niet laden. Je gegevens zijn veilig — probeer opnieuw of kies een ander tabblad.",
-    "retry": "Opnieuw proberen"
+    "retry": "Opnieuw proberen",
+    "body": "Een scherm kon niet laden. Probeer opnieuw."
   }
 }

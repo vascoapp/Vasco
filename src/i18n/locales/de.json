@@ -1861,6 +1861,7 @@
   "error": {
     "somethingWrong": "ETWAS IST SCHIEFGELAUFEN",
     "bodyContractor": "Ein Bildschirm konnte nicht geladen werden. Deine Daten sind sicher — versuche es erneut oder wechsle den Tab.",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "body": "Ein Bildschirm konnte nicht geladen werden. Versuche es erneut."
   }
 }

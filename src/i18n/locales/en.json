@@ -1861,6 +1861,7 @@
   "error": {
     "somethingWrong": "SOMETHING WENT WRONG",
     "bodyContractor": "A screen failed to render. Your data is safe — try again or pick another tab.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "body": "A screen failed to render. Try again."
   }
 }
