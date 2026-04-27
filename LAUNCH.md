@@ -9,10 +9,10 @@ Status legend: ✅ done · ⚠️ partial · ❌ not started · ⏸ waiting on u
 
 ## 0. Snapshot
 
-- Code: **42 commits** on `main` of `https://github.com/VascoBuild/vasco`
+- Code: **45 commits** on `main` of `https://github.com/VascoBuild/vasco`
 - TypeScript: **0 errors**
-- Jest: **469 / 469 passing** across 41 suites
-- Supabase project: `gblhqhorkarocmputhte` (live, all migrations except `20260427000001_time_of_day_capture` pushed — push that one when ready)
+- Jest: **493 / 493 passing** across 43 suites
+- Supabase project: `gblhqhorkarocmputhte` (live, all migrations except `20260427000001_time_of_day_capture` and `20260427000002_invoice_payment_timing` pushed — push those when ready)
 - Edge functions deployed: 21 (analyze-photo, churn-winback-email, classify-customer-question, create-subscription-checkout, daily-push-digest, draft-customer-reply, drain-account-deletions, embed-text, grant-referral-credits, mollie-webhook, place-supplier-order, predict-duration, predict-price, send-invoice, send-push, sign-quote-token, stripe-webhook, train-extra-models, verify-quote-token, weekly-digest, weekly-retrain-models)
 - Cron jobs: 9 registered
 
@@ -193,12 +193,12 @@ If any check fails, fix before opening to wider testers.
 
 In rough priority. Build only when justified by user feedback.
 
-- Stripe Coupon Option A in `weekly-retrain-models` (credits → discount, R235 deferred)
+- ~~Stripe Coupon Option A~~ — wired R260 behind `STRIPE_COUPON_REDEMPTION`; awaits live Stripe creds to validate end-to-end
+- ~~Time-of-day acceptance prediction surfaces in TieredQuoteBuilder~~ — wired R260 (quotes) + R261 (invoices)
 - Snelstart + Twinfield (NL accounting) when first user requests
 - Embedded insurance via Hokodo (revenue play)
 - Optimize scheduling v2 with real Mapbox routing (not just postcode prefix)
 - Per-country onboarding flow polish (auto-suggest VAT scheme from declared turnover)
-- Time-of-day acceptance prediction surfaces in TieredQuoteBuilder
 - Customer churn risk classifier (skipped twice; revisit when retention data accrues)
 - Worker app expansion beyond schedule + timesheet (only if multi-employee contractors land)
 
