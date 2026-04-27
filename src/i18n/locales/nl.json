@@ -1993,5 +1993,21 @@
     "quote": "Offerte",
     "call": "Bellen",
     "email": "E-mail"
+  },
+  "inbox": {
+    "fromCustomer": "Van klant",
+    "capture": "Vastleggen",
+    "captureTitle": "Wat zei de klant?",
+    "placeholder": "Plak of typ het bericht…",
+    "save": "Opslaan",
+    "delete": "Verwijderen",
+    "empty": "Nog geen klantberichten. Tik op Vastleggen wanneer ze contact opnemen.",
+    "ch": {
+      "whatsapp": "WhatsApp",
+      "sms": "SMS",
+      "email": "E-mail",
+      "phone": "Telefoon",
+      "other": "Anders"
+    }
   }
 }

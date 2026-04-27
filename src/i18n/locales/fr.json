@@ -1983,5 +1983,21 @@
     "quote": "Devis",
     "call": "Appeler",
     "email": "E-mail"
+  },
+  "inbox": {
+    "fromCustomer": "Du client",
+    "capture": "Saisir",
+    "captureTitle": "Quest-ce que le client a dit ?",
+    "placeholder": "Collez ou tapez le message…",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "empty": "Aucun message client. Tapez Saisir lorsqu'ils vous contactent.",
+    "ch": {
+      "whatsapp": "WhatsApp",
+      "sms": "SMS",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "other": "Autre"
+    }
   }
 }

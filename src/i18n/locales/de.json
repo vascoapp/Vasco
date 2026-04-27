@@ -1993,5 +1993,21 @@
     "quote": "Angebot",
     "call": "Anrufen",
     "email": "E-Mail"
+  },
+  "inbox": {
+    "fromCustomer": "Vom Kunden",
+    "capture": "Erfassen",
+    "captureTitle": "Was sagte der Kunde?",
+    "placeholder": "Nachricht einfügen oder tippen…",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "empty": "Noch keine Kundennachrichten. Tippe auf Erfassen, wenn sie sich melden.",
+    "ch": {
+      "whatsapp": "WhatsApp",
+      "sms": "SMS",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "other": "Andere"
+    }
   }
 }

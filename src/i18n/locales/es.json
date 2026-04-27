@@ -1983,5 +1983,21 @@
     "quote": "Presupuesto",
     "call": "Llamar",
     "email": "Correo"
+  },
+  "inbox": {
+    "fromCustomer": "Del cliente",
+    "capture": "Capturar",
+    "captureTitle": "¿Qué dijo el cliente?",
+    "placeholder": "Pega o escribe el mensaje…",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "empty": "Aún no hay mensajes del cliente. Toca Capturar cuando contacten.",
+    "ch": {
+      "whatsapp": "WhatsApp",
+      "sms": "SMS",
+      "email": "Correo",
+      "phone": "Teléfono",
+      "other": "Otro"
+    }
   }
 }

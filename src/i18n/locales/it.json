@@ -1983,5 +1983,21 @@
     "quote": "Preventivo",
     "call": "Chiamare",
     "email": "E-mail"
+  },
+  "inbox": {
+    "fromCustomer": "Dal cliente",
+    "capture": "Acquisisci",
+    "captureTitle": "Cosa ha detto il cliente?",
+    "placeholder": "Incolla o digita il messaggio…",
+    "save": "Salva",
+    "delete": "Elimina",
+    "empty": "Nessun messaggio del cliente. Tocca Acquisisci quando ti contattano.",
+    "ch": {
+      "whatsapp": "WhatsApp",
+      "sms": "SMS",
+      "email": "E-mail",
+      "phone": "Telefono",
+      "other": "Altro"
+    }
   }
 }

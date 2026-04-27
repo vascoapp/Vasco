@@ -1993,5 +1993,21 @@
     "quote": "Quote",
     "call": "Call",
     "email": "Email"
+  },
+  "inbox": {
+    "fromCustomer": "From customer",
+    "capture": "Capture",
+    "captureTitle": "What did the customer say?",
+    "placeholder": "Paste or type the message…",
+    "save": "Save",
+    "delete": "Delete",
+    "empty": "No customer messages yet. Tap Capture when they reach out.",
+    "ch": {
+      "whatsapp": "WhatsApp",
+      "sms": "SMS",
+      "email": "Email",
+      "phone": "Phone",
+      "other": "Other"
+    }
   }
 }

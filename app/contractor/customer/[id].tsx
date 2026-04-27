@@ -3,8 +3,8 @@
 // R270: smart-reply chips above the action buttons (Google-Inbox style).
 // =============================================================================
 
-import { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Linking } from 'react-native';
+import { useMemo, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Linking, Modal, TextInput, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +14,8 @@ import { SafeArea } from '../../../src/theme/spacing';
 import { useAppState } from '../../../src/state/AppState';
 import { FadeIn } from '../../../src/components/shared/FadeIn';
 import { generateSmartReplies, type SmartReply } from '../../../src/services/customerSmartReplyService';
+import { useCustomerInbox, type InboundChannel } from '../../../src/services/customerInboxService';
+import { recordImpression, recordTap, primeCache as primeReplyCache } from '../../../src/services/smartReplyLearningService';
 import { hapticSuccess } from '../../../src/utils/haptics';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -38,7 +40,18 @@ export default function CustomerDetailScreen() {
     [customerQuotes]
   );
 
-  // R270: Google-style smart replies — surface 3 context-aware snippets
+  // R271: customer inbox — captured inbound messages feed smart replies
+  const inbox = useCustomerInbox(id);
+  const [inboxModalOpen, setInboxModalOpen] = useState(false);
+  const [inboxDraft, setInboxDraft] = useState('');
+  const [inboxChannel, setInboxChannel] = useState<InboundChannel>('whatsapp');
+
+  // Prime the smart-reply learning cache once on mount so getChipMultiplier
+  // has stats before the first scoring pass.
+  useEffect(() => { primeReplyCache().catch(() => {}); }, []);
+
+  // R270: Google-style smart replies — surface 3 context-aware snippets.
+  // R271: lastInboundMessage now reads from the customer inbox.
   const smartReplies = useMemo<SmartReply[]>(() => {
     if (!customer) return [];
     const sortByDate = (arr: any[], key: string) =>
@@ -66,11 +79,19 @@ export default function CustomerDetailScreen() {
         completedAt: latestJ.completedAt,
       } : undefined,
       isNewCustomer: customerJobs.length === 0 && customerQuotes.length === 0,
+      lastInboundMessage: inbox.latest?.body,
     });
-  }, [customer, customerQuotes, customerInvoices, customerJobs]);
+  }, [customer, customerQuotes, customerInvoices, customerJobs, inbox.latest]);
+
+  // R271: record impressions whenever new chips are about to render.
+  useEffect(() => {
+    smartReplies.forEach((r) => { recordImpression(r.id).catch(() => {}); });
+  }, [smartReplies]);
 
   const sendSmartReply = (reply: SmartReply) => {
     hapticSuccess();
+    // R271: track the tap so the learning loop can dampen unused suggestions.
+    recordTap(reply.id).catch(() => {});
     const body = encodeURIComponent(reply.body);
     if (reply.channel === 'whatsapp' && customer?.phone) {
       Linking.openURL(`whatsapp://send?phone=${customer.phone.replace(/\s/g, '')}&text=${body}`).catch(() => {});
@@ -79,6 +100,15 @@ export default function CustomerDetailScreen() {
     } else if (reply.channel === 'email' && customer?.email) {
       Linking.openURL(`mailto:${customer.email}?body=${body}`).catch(() => {});
     }
+  };
+
+  const saveInboundMessage = async () => {
+    const body = inboxDraft.trim();
+    if (!body) return;
+    await inbox.add(body, inboxChannel);
+    setInboxDraft('');
+    setInboxModalOpen(false);
+    hapticSuccess();
   };
 
   if (!customer) {
@@ -130,6 +160,53 @@ export default function CustomerDetailScreen() {
               <Text style={s.kpiLabel}>Facturen</Text>
             </View>
           </View>
+        </FadeIn>
+
+        {/* R271: Inbound message inbox — captured customer messages feed
+             smart-reply context. Shows latest inbound + "Capture" CTA. */}
+        <FadeIn delay={30}>
+          <View style={s.inboxHeader}>
+            <Ionicons name="chatbox-ellipses-outline" size={12} color={SemanticColors.textTertiary} />
+            <Text style={s.inboxHeaderText}>{t('inbox.fromCustomer', 'From customer').toUpperCase()}</Text>
+            <Pressable
+              onPress={() => setInboxModalOpen(true)}
+              hitSlop={8}
+              style={{ marginLeft: 'auto' }}
+              accessibilityRole="button"
+              accessibilityLabel={t('inbox.capture', 'Capture inbound message')}
+            >
+              <Text style={s.inboxCapture}>+ {t('inbox.capture', 'Capture').toUpperCase()}</Text>
+            </Pressable>
+          </View>
+          {inbox.latest ? (
+            <View style={s.inboxBubble}>
+              <Text style={s.inboxBody} numberOfLines={4}>{inbox.latest.body}</Text>
+              <View style={s.inboxMeta}>
+                <Ionicons
+                  name={inbox.latest.channel === 'whatsapp' ? 'logo-whatsapp' : inbox.latest.channel === 'email' ? 'mail-outline' : inbox.latest.channel === 'sms' ? 'chatbubble-outline' : inbox.latest.channel === 'phone' ? 'call-outline' : 'ellipsis-horizontal'}
+                  size={11}
+                  color={SemanticColors.textTertiary}
+                />
+                <Text style={s.inboxMetaText}>
+                  {new Date(inbox.latest.capturedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                  {inbox.messages.length > 1 ? ` · +${inbox.messages.length - 1} more` : ''}
+                </Text>
+                <Pressable
+                  onPress={() => inbox.latest && inbox.remove(inbox.latest.id)}
+                  hitSlop={6}
+                  style={{ marginLeft: 'auto' }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('inbox.delete', 'Delete')}
+                >
+                  <Ionicons name="close" size={14} color={SemanticColors.textTertiary} />
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+            <View style={s.inboxEmpty}>
+              <Text style={s.inboxEmptyText}>{t('inbox.empty', 'No customer messages yet. Tap Capture when they reach out.')}</Text>
+            </View>
+          )}
         </FadeIn>
 
         {/* R270: Smart-reply chips — Google-Inbox style 1-tap replies.
@@ -243,6 +320,50 @@ export default function CustomerDetailScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* R271: capture-inbound modal */}
+      <Modal visible={inboxModalOpen} transparent animationType="slide" onRequestClose={() => setInboxModalOpen(false)}>
+        <Pressable style={s.modalOverlay} onPress={() => setInboxModalOpen(false)}>
+          <Pressable style={s.modalSheet} onPress={(e) => e.stopPropagation()}>
+            <View style={s.modalHandle} />
+            <Text style={s.modalTitle}>{t('inbox.captureTitle', 'What did the customer say?')}</Text>
+            <View style={s.channelChips}>
+              {(['whatsapp','sms','email','phone','other'] as InboundChannel[]).map((ch) => (
+                <Pressable
+                  key={ch}
+                  style={[s.channelChip, inboxChannel === ch && s.channelChipActive]}
+                  onPress={() => setInboxChannel(ch)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: inboxChannel === ch }}
+                >
+                  <Text style={[s.channelChipText, inboxChannel === ch && s.channelChipTextActive]}>
+                    {t(`inbox.ch.${ch}`, ch)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            <TextInput
+              style={s.inboxInput}
+              value={inboxDraft}
+              onChangeText={setInboxDraft}
+              placeholder={t('inbox.placeholder', 'Paste or type the message…')}
+              placeholderTextColor={SemanticColors.textTertiary}
+              multiline
+              autoFocus
+              maxLength={1000}
+            />
+            <Pressable
+              style={[s.modalSubmit, !inboxDraft.trim() && { opacity: 0.5 }]}
+              onPress={saveInboundMessage}
+              disabled={!inboxDraft.trim()}
+              accessibilityRole="button"
+              accessibilityLabel={t('inbox.save', 'Save')}
+            >
+              <Text style={s.modalSubmitText}>{t('inbox.save', 'Save').toUpperCase()}</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -307,6 +428,65 @@ const s = StyleSheet.create({
     color: SemanticColors.textPrimary,
     lineHeight: 16,
   },
+  // R271: inbox section
+  inboxHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: SafeArea.side, marginTop: GRID.md, marginBottom: GRID.xs,
+  },
+  inboxHeaderText: { fontSize: 10, fontFamily: TYPE.labelFamily, color: SemanticColors.textTertiary, letterSpacing: 1.2 },
+  inboxCapture: { fontSize: 10, fontFamily: TYPE.labelFamily, color: Palette.hermesOrange, letterSpacing: 1.2 },
+  inboxBubble: {
+    marginHorizontal: SafeArea.side,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderLeftWidth: 3, borderLeftColor: SemanticColors.feedbackInfo,
+    borderRadius: RADIUS.md, padding: GRID.sm, gap: 6,
+  },
+  inboxBody: { fontSize: 13, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary, lineHeight: 18 },
+  inboxMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  inboxMetaText: { fontSize: 10, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
+  inboxEmpty: {
+    marginHorizontal: SafeArea.side,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md, padding: GRID.sm,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault, borderStyle: 'dashed',
+  },
+  inboxEmptyText: { fontSize: 12, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary, textAlign: 'center' },
+  // R271: capture-inbound modal
+  modalOverlay: { flex: 1, backgroundColor: '#000A', justifyContent: 'flex-end' },
+  modalSheet: {
+    backgroundColor: PAGE_BG, padding: GRID.lg, gap: GRID.sm,
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingBottom: GRID.xl + 12,
+  },
+  modalHandle: {
+    width: 40, height: 4, borderRadius: 2,
+    backgroundColor: SemanticColors.textTertiary,
+    alignSelf: 'center', marginBottom: 8,
+  },
+  modalTitle: { fontSize: 16, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  channelChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  channelChip: {
+    paddingHorizontal: GRID.sm, paddingVertical: 6,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.full,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
+  },
+  channelChipActive: { backgroundColor: Palette.hermesOrange + '22', borderColor: Palette.hermesOrange },
+  channelChipText: { fontSize: 11, fontFamily: TYPE.labelFamily, color: SemanticColors.textSecondary, letterSpacing: 0.5 },
+  channelChipTextActive: { color: Palette.hermesOrange },
+  inboxInput: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md, padding: GRID.sm,
+    minHeight: 100, textAlignVertical: 'top',
+    color: SemanticColors.textPrimary, fontSize: 14, fontFamily: TYPE.bodyFamily,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
+  },
+  modalSubmit: {
+    backgroundColor: Palette.hermesOrange,
+    borderRadius: RADIUS.md, paddingVertical: 14,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  modalSubmitText: { color: '#FFFFFF', fontFamily: TYPE.titleFamily, fontSize: 13, letterSpacing: 1.2 },
   actionBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange },
   sectionTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, letterSpacing: TYPE.sectionTracking, marginTop: GRID.sm },
   card: { flexDirection: 'row', alignItems: 'center', backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden' },

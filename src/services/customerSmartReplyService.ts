@@ -13,6 +13,7 @@
 // =============================================================================
 
 import i18n from '../i18n/i18n';
+import { getChipMultiplier } from './smartReplyLearningService';
 
 export type SmartReplyChannel = 'whatsapp' | 'sms' | 'email';
 
@@ -171,7 +172,10 @@ export function generateSmartReplies(ctx: CustomerContext, max = 3): SmartReply[
     );
   }
 
-  return out
+  // R271: apply learning multiplier — chips the user consistently ignores
+  // get dampened, ones they tap get boosted. Neutral until ≥3 impressions.
+  const learned = out.map((r) => ({ ...r, priority: r.priority * getChipMultiplier(r.id) }));
+  return learned
     .sort((a, b) => b.priority - a.priority)
     .slice(0, max);
 }
