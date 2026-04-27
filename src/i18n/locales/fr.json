@@ -1711,5 +1711,147 @@
     "processingTitle": "Traitement...",
     "successTitle": "Accepté",
     "errorTitle": "Erreur"
+  },
+  "siteOps": {
+    "dispatch": "Dispatch",
+    "dailyReport": "Rapport journalier",
+    "defects": "Défauts",
+    "inspection": "Inspection",
+    "incident": "Incident",
+    "safety": "Sécurité"
+  },
+  "engagement": {
+    "title": "Activité du client",
+    "openedTimes": "Ouvert {{count}}× · {{minutes}} min au total",
+    "lastSeen": "vu pour la dernière fois {{date}}",
+    "expandedPricing": "Prix dépliés {{count}}×",
+    "hoveredAccept": "A survolé Accepter {{count}}×",
+    "hoveredDecline": "A survolé Refuser {{count}}×",
+    "startedQuestion": "{{count}} question(s) commencée(s)",
+    "highEngagementHint": "Forte activité, pas de décision — relance conseillée"
+  },
+  "moatInsights": {
+    "title": "MARCHÉ & PERFORMANCE",
+    "cohortMargin": "Marge cohorte",
+    "winRate": "Taux de succès par tranche de devis",
+    "last30Days": "30 derniers jours",
+    "sent": "Envoyés",
+    "accepted": "Acceptés",
+    "received": "Reçus",
+    "underAmount": "Moins de {{amount}}",
+    "betweenAmount": "{{from}} – {{to}}",
+    "overAmount": "Plus de {{amount}}"
+  },
+  "reconciliation": {
+    "title": "RAPPROCHEMENT BANCAIRE",
+    "subtitle": "Vasco a trouvé {{count}} paiement(s) correspondant à des factures impayées.",
+    "invoiceLabel": "Facture {{id}}",
+    "confidence": "Certitude : {{percent}}%",
+    "confirmPaid": "PAYÉ",
+    "reasonExactAmount": "montant exact",
+    "reasonAmountWithin": "montant à 2 % près",
+    "reasonIban": "IBAN concordant",
+    "reasonName": "nom concordant",
+    "reasonDaysAfter": "{{days}}j après envoi"
+  },
+  "projectSwitcher": {
+    "activeProjects": "PROJETS ACTIFS",
+    "allLink": "Tous ›",
+    "newProject": "NOUVEAU",
+    "hint": "Touchez pour désélectionner · maintenez pour ouvrir · les actions chantier sur Aujourd'hui s'adaptent"
+  },
+  "recurring": {
+    "title": "MAINTENANCE",
+    "empty": "Aucun contrat récurrent pour le moment",
+    "emptyDesc": "Mettez en place des contrats de maintenance pour que les clients reviennent automatiquement.",
+    "overdue": "En retard",
+    "dueThisWeek": "Cette semaine",
+    "later": "À venir",
+    "paused": "En pause",
+    "addNew": "NOUVEAU CONTRAT DE MAINTENANCE",
+    "newTitle": "NOUVELLE MAINTENANCE",
+    "editTitle": "MODIFIER LA MAINTENANCE",
+    "basicInfo": "BASES",
+    "customer": "CLIENT",
+    "cadence": "FRÉQUENCE",
+    "estimates": "ESTIMATIONS",
+    "titleLabel": "Titre",
+    "titlePlaceholder": "Entretien annuel chaudière",
+    "descLabel": "Description (optionnelle)",
+    "customDays": "Intervalle personnalisé (jours)",
+    "amount": "Montant (€)",
+    "durationHours": "Durée (heures)",
+    "reminderDays": "Rappeler X jours avant échéance",
+    "monthly": "Mensuel",
+    "quarterly": "Trimestriel",
+    "semiannual": "Semestriel",
+    "annual": "Annuel",
+    "custom": "Personnalisé",
+    "titleRequired": "Titre requis",
+    "customerRequired": "Choisissez un client",
+    "deleteConfirm": "Supprimer ce contrat de maintenance ?",
+    "delete": "Supprimer le contrat",
+    "daysOverdue": "{{count}} jours de retard",
+    "dueToday": "aujourd'hui",
+    "dueInDays": "dans {{count}} jours",
+    "loading": "Chargement",
+    "upcomingTitle": "MAINTENANCE"
+  },
+  "optStats": {
+    "weekly": "Vasco a optimisé {{count}} itinéraires cette semaine",
+    "savedKmMin": "Économisé : {{km}}km · {{min}}min",
+    "lifetime": "{{count}} au total"
+  },
+  "weekly": {
+    "title": "VUE HEBDOMADAIRE",
+    "today": "Aujourd'hui",
+    "optimize": "OPTIMISER",
+    "job": "chantier",
+    "jobs": "chantiers",
+    "empty": "— aucun chantier prévu —"
+  },
+  "schedule": {
+    "optimize": "Optimiser",
+    "optimizeRoute": "Optimiser l'itinéraire",
+    "optimizeNeedTwo": "Au moins 2 chantiers requis",
+    "optimizedTitle": "Itinéraire optimisé",
+    "optimizeFailed": "Optimisation échouée",
+    "openDragToApply": "Ouvrez la planification pour appliquer cet ordre.",
+    "viewWeek": "Vue hebdomadaire"
+  },
+  "marketInsights": {
+    "title": "INSIGHTS DU MARCHÉ",
+    "subtitle": "Benchmarks cohorte {{trade}} · {{country}}",
+    "empty": "Pas encore assez de données cohorte",
+    "emptyDesc": "Les insights se débloquent quand 5+ artisans dans votre métier × pays ont enregistré assez de devis. Continuez à utiliser l'application — vos données comptent aussi.",
+    "marginTrend": "MARGE COHORTE — 12 MOIS",
+    "winRate": "TAUX DE SUCCÈS PAR MONTANT",
+    "last30Days": "30 DERNIERS JOURS — VOTRE ACTIVITÉ",
+    "quotesSent": "Devis envoyés",
+    "accepted": "Acceptés",
+    "invoicesPaid": "Factures payées",
+    "received": "Reçus",
+    "footnote": "Les données cohorte utilisent le k-anonymat (≥5 artisans par cellule). Vos chiffres individuels ne sont jamais exposés."
+  },
+  "error": {
+    "somethingWrong": "UNE ERREUR EST SURVENUE",
+    "bodyContractor": "L'écran n'a pas pu se charger. Vos données sont en sécurité — réessayez ou choisissez un autre onglet.",
+    "body": "L'écran n'a pas pu se charger. Réessayez.",
+    "retry": "Réessayer"
+  },
+  "vatScheme": {
+    "standard": "TVA standard",
+    "korNl": "KOR — Régime petit entrepreneur (NL)",
+    "kleinunternehmer": "Kleinunternehmer (§19 UStG)"
+  },
+  "audit": {
+    "totalEntries": "Entrées d'audit",
+    "totalEntriesDesc": "Journal chaîné par hash des événements de facture",
+    "integrity": "Intégrité de la chaîne",
+    "checking": "Vérification...",
+    "valid": "✓ intacte",
+    "verify": "Lancer la vérification",
+    "export": "Exporter le journal (.txt)",
+    "footnote": "Le GoBD exige 10 ans de conservation. La chaîne de hash prouve qu'aucune entrée n'a été modifiée a posteriori. Pour une certification d'archive complète (DATEV-zertifiziert), couplez cet export à l'archive de votre comptable."
   }
 }

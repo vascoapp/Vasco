@@ -1711,5 +1711,147 @@
     "processingTitle": "Procesando...",
     "successTitle": "Aceptado",
     "errorTitle": "Error"
+  },
+  "siteOps": {
+    "dispatch": "Asignación",
+    "dailyReport": "Parte diario",
+    "defects": "Defectos",
+    "inspection": "Inspección",
+    "incident": "Incidente",
+    "safety": "Seguridad"
+  },
+  "engagement": {
+    "title": "Actividad del cliente",
+    "openedTimes": "Abierto {{count}}× · {{minutes}} min en total",
+    "lastSeen": "visto por última vez {{date}}",
+    "expandedPricing": "Precios expandidos {{count}}×",
+    "hoveredAccept": "Pasó por Aceptar {{count}}×",
+    "hoveredDecline": "Pasó por Rechazar {{count}}×",
+    "startedQuestion": "{{count}} pregunta(s) iniciada(s)",
+    "highEngagementHint": "Mucha actividad, sin decisión — considera un seguimiento"
+  },
+  "moatInsights": {
+    "title": "MERCADO Y RENDIMIENTO",
+    "cohortMargin": "Margen cohorte",
+    "winRate": "Tasa de aceptación por importe",
+    "last30Days": "Últimos 30 días",
+    "sent": "Enviados",
+    "accepted": "Aceptados",
+    "received": "Recibido",
+    "underAmount": "Menos de {{amount}}",
+    "betweenAmount": "{{from}} – {{to}}",
+    "overAmount": "Más de {{amount}}"
+  },
+  "reconciliation": {
+    "title": "COINCIDENCIAS BANCARIAS",
+    "subtitle": "Vasco encontró {{count}} pago(s) que coinciden con tus facturas pendientes.",
+    "invoiceLabel": "Factura {{id}}",
+    "confidence": "Certeza: {{percent}}%",
+    "confirmPaid": "PAGADO",
+    "reasonExactAmount": "importe exacto",
+    "reasonAmountWithin": "importe dentro del 2%",
+    "reasonIban": "IBAN coincide",
+    "reasonName": "nombre coincide",
+    "reasonDaysAfter": "{{days}}d tras envío"
+  },
+  "projectSwitcher": {
+    "activeProjects": "PROYECTOS ACTIVOS",
+    "allLink": "Todos ›",
+    "newProject": "NUEVO",
+    "hint": "Toca para deseleccionar · mantén para abrir · acciones de obra en Hoy se adaptan"
+  },
+  "recurring": {
+    "title": "MANTENIMIENTO",
+    "empty": "Aún no hay contratos recurrentes",
+    "emptyDesc": "Configura contratos de mantenimiento para que los clientes vuelvan automáticamente.",
+    "overdue": "Vencido",
+    "dueThisWeek": "Esta semana",
+    "later": "Próximamente",
+    "paused": "En pausa",
+    "addNew": "NUEVO CONTRATO DE MANTENIMIENTO",
+    "newTitle": "NUEVO MANTENIMIENTO",
+    "editTitle": "EDITAR MANTENIMIENTO",
+    "basicInfo": "BÁSICOS",
+    "customer": "CLIENTE",
+    "cadence": "FRECUENCIA",
+    "estimates": "ESTIMACIONES",
+    "titleLabel": "Título",
+    "titlePlaceholder": "Mantenimiento anual caldera",
+    "descLabel": "Descripción (opcional)",
+    "customDays": "Intervalo personalizado (días)",
+    "amount": "Importe (€)",
+    "durationHours": "Duración (horas)",
+    "reminderDays": "Recordar X días antes",
+    "monthly": "Mensual",
+    "quarterly": "Trimestral",
+    "semiannual": "Semestral",
+    "annual": "Anual",
+    "custom": "Personalizado",
+    "titleRequired": "Título requerido",
+    "customerRequired": "Elige un cliente",
+    "deleteConfirm": "¿Eliminar este contrato de mantenimiento?",
+    "delete": "Eliminar contrato",
+    "daysOverdue": "{{count}} días de retraso",
+    "dueToday": "hoy",
+    "dueInDays": "en {{count}} días",
+    "loading": "Cargando",
+    "upcomingTitle": "MANTENIMIENTO"
+  },
+  "optStats": {
+    "weekly": "Vasco optimizó {{count}} rutas esta semana",
+    "savedKmMin": "Ahorrado: {{km}}km · {{min}}min",
+    "lifetime": "{{count}} en total"
+  },
+  "weekly": {
+    "title": "VISTA SEMANAL",
+    "today": "Hoy",
+    "optimize": "OPTIMIZAR",
+    "job": "trabajo",
+    "jobs": "trabajos",
+    "empty": "— sin trabajos programados —"
+  },
+  "schedule": {
+    "optimize": "Optimizar",
+    "optimizeRoute": "Optimizar ruta",
+    "optimizeNeedTwo": "Se necesitan al menos 2 trabajos",
+    "optimizedTitle": "Ruta optimizada",
+    "optimizeFailed": "Optimización fallida",
+    "openDragToApply": "Abre la planificación para aplicar este orden.",
+    "viewWeek": "Vista semanal"
+  },
+  "marketInsights": {
+    "title": "INSIGHTS DEL MERCADO",
+    "subtitle": "Benchmarks de cohorte {{trade}} · {{country}}",
+    "empty": "Aún no hay datos suficientes",
+    "emptyDesc": "Los insights se desbloquean cuando 5+ contratistas en tu oficio × país han registrado suficientes presupuestos. Sigue usando la app — tus datos también cuentan.",
+    "marginTrend": "MARGEN COHORTE — 12 MESES",
+    "winRate": "TASA DE ACEPTACIÓN POR IMPORTE",
+    "last30Days": "ÚLTIMOS 30 DÍAS — TU ACTIVIDAD",
+    "quotesSent": "Presupuestos enviados",
+    "accepted": "Aceptados",
+    "invoicesPaid": "Facturas pagadas",
+    "received": "Recibido",
+    "footnote": "Los datos de cohorte usan k-anonimato (≥5 contratistas por celda). Tus cifras individuales nunca se exponen."
+  },
+  "error": {
+    "somethingWrong": "ALGO SALIÓ MAL",
+    "bodyContractor": "Una pantalla no se ha podido cargar. Tus datos están a salvo — inténtalo de nuevo o elige otra pestaña.",
+    "body": "Una pantalla no se ha podido cargar. Inténtalo de nuevo.",
+    "retry": "Reintentar"
+  },
+  "vatScheme": {
+    "standard": "IVA estándar",
+    "korNl": "KOR — Régimen pequeño empresario (NL)",
+    "kleinunternehmer": "Kleinunternehmer (§19 UStG)"
+  },
+  "audit": {
+    "totalEntries": "Entradas de auditoría",
+    "totalEntriesDesc": "Registro encadenado por hash de eventos de factura",
+    "integrity": "Integridad de la cadena",
+    "checking": "Comprobando...",
+    "valid": "✓ intacta",
+    "verify": "Ejecutar verificación",
+    "export": "Exportar registro (.txt)",
+    "footnote": "GoBD requiere 10 años de retención. La cadena de hash demuestra que ninguna entrada fue modificada a posteriori. Para certificación de archivo completa (DATEV-zertifiziert), combina esta exportación con el archivo de tu contable."
   }
 }
