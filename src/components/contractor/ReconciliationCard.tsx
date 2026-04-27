@@ -81,7 +81,12 @@ export function ReconciliationCard() {
             <Text style={styles.reasons}>{m.reasons.join(' · ')}</Text>
             <Text style={styles.confidence}>Zekerheid: {Math.round(m.confidence * 100)}%</Text>
           </View>
-          <Pressable style={styles.confirmBtn} onPress={() => handleConfirm(m)}>
+          <Pressable
+            style={styles.confirmBtn}
+            onPress={() => handleConfirm(m)}
+            accessibilityRole="button"
+            accessibilityLabel={`Mark invoice ${m.invoiceId} as paid`}
+          >
             <Ionicons name="checkmark" size={18} color="#000" />
             <Text style={styles.confirmText}>BETAALD</Text>
           </Pressable>

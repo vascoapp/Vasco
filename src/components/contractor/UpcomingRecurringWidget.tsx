@@ -47,6 +47,8 @@ export function UpcomingRecurringWidget() {
         style={styles.header}
         onPress={() => router.push('/contractor/recurring' as any)}
         hitSlop={6}
+        accessibilityRole="link"
+        accessibilityLabel={`Maintenance — ${items.length} due${overdueCount > 0 ? `, ${overdueCount} overdue` : ''}`}
       >
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Ionicons name="repeat" size={14} color={DK.colors.accent} />
@@ -69,6 +71,8 @@ export function UpcomingRecurringWidget() {
               key={inst.template.id}
               style={[styles.row, idx > 0 && styles.rowBorder]}
               onPress={() => router.push(`/contractor/recurring/${inst.template.id}` as any)}
+              accessibilityRole="button"
+              accessibilityLabel={`${inst.template.title}, ${dueLabel}`}
             >
               <View style={[styles.dot, inst.overdue ? styles.dotOverdue : inst.daysUntilDue <= 7 ? styles.dotSoon : styles.dotLater]} />
               <View style={{ flex: 1 }}>

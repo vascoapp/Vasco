@@ -47,7 +47,7 @@ export function ProjectSwitcher() {
     <View style={styles.wrap}>
       <View style={styles.headerRow}>
         <DKLabel style={styles.title}>ACTIVE PROJECTS</DKLabel>
-        <Pressable hitSlop={8} onPress={() => router.push('/contractor/projects' as any)}>
+        <Pressable hitSlop={8} accessibilityRole="link" accessibilityLabel="View all projects" onPress={() => router.push('/contractor/projects' as any)}>
           <Text style={styles.allLink}>All ›</Text>
         </Pressable>
       </View>
@@ -60,6 +60,9 @@ export function ProjectSwitcher() {
               style={[styles.pill, isActive && styles.pillActive]}
               onPress={() => handleSelect(p.id)}
               onLongPress={() => handleOpenDetail(p.id)}
+              accessibilityRole="button"
+              accessibilityLabel={`${isActive ? 'Active' : 'Inactive'} project ${p.title}. Tap to ${isActive ? 'deselect' : 'select'}, long-press to open.`}
+              accessibilityState={{ selected: isActive }}
             >
               <Ionicons
                 name={isActive ? 'checkmark-circle' : 'folder-outline'}
@@ -72,7 +75,7 @@ export function ProjectSwitcher() {
             </Pressable>
           );
         })}
-        <Pressable style={styles.addPill} onPress={() => router.push('/contractor/projects' as any)}>
+        <Pressable style={styles.addPill} accessibilityRole="button" accessibilityLabel="Create new project" onPress={() => router.push('/contractor/projects' as any)}>
           <Ionicons name="add" size={16} color={DK.colors.accent} />
           <Text style={styles.addPillText}>NEW</Text>
         </Pressable>

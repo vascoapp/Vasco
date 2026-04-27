@@ -32,6 +32,8 @@ export function OptimizationStatsWidget() {
       style={styles.card}
       onPress={() => router.push('/contractor/weekly-overview' as any)}
       hitSlop={6}
+      accessibilityRole="link"
+      accessibilityLabel={`Vasco saved ${stats.weekKmSaved}km and ${stats.weekMinSaved} minutes this week. View weekly overview.`}
     >
       <View style={styles.iconWrap}>
         <Ionicons name="flash" size={16} color={DK.colors.accent} />
