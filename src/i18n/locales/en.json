@@ -1867,7 +1867,11 @@
     "dueToday": "due today",
     "dueInDays": "due in {{count}} days",
     "loading": "Loading",
-    "upcomingTitle": "MAINTENANCE"
+    "upcomingTitle": "MAINTENANCE",
+    "heroChip": "Recurring revenue",
+    "heroActive": "Active contracts",
+    "heroMrr": "Per month",
+    "heroNext": "Next: {{title}} · {{days}}d"
   },
   "schedule": {
     "optimize": "Optimize",

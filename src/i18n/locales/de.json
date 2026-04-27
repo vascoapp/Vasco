@@ -1867,7 +1867,11 @@
     "dueToday": "heute fällig",
     "dueInDays": "in {{count}} Tagen fällig",
     "loading": "Lädt",
-    "upcomingTitle": "WARTUNG"
+    "upcomingTitle": "WARTUNG",
+    "heroChip": "Wiederkehrender Umsatz",
+    "heroActive": "Aktive Verträge",
+    "heroMrr": "Pro Monat",
+    "heroNext": "Nächste: {{title}} · {{days}}T"
   },
   "schedule": {
     "optimize": "Optimieren",

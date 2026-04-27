@@ -1833,7 +1833,11 @@
     "dueToday": "hoy",
     "dueInDays": "en {{count}} días",
     "loading": "Cargando",
-    "upcomingTitle": "MANTENIMIENTO"
+    "upcomingTitle": "MANTENIMIENTO",
+    "heroChip": "Ingresos recurrentes",
+    "heroActive": "Contratos activos",
+    "heroMrr": "Por mes",
+    "heroNext": "Próximo: {{title}} · {{days}}d"
   },
   "optStats": {
     "weekly": "Vasco optimizó {{count}} rutas esta semana",

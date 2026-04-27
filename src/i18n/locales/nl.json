@@ -1867,7 +1867,11 @@
     "dueToday": "vandaag",
     "dueInDays": "over {{count}} dagen",
     "loading": "Laden",
-    "upcomingTitle": "ONDERHOUD"
+    "upcomingTitle": "ONDERHOUD",
+    "heroChip": "Terugkerende omzet",
+    "heroActive": "Actieve contracten",
+    "heroMrr": "Per maand",
+    "heroNext": "Volgende: {{title}} · {{days}}d"
   },
   "schedule": {
     "optimize": "Optimaliseer",
