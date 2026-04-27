@@ -1953,5 +1953,45 @@
     "breakdownTitle": "UITSPLITSING PER CATEGORIE",
     "timelineTitle": "BESPARINGSVERLOOP",
     "cumulative": "Cumulatief"
+  },
+  "smartReply": {
+    "suggested": "Voorgestelde antwoorden",
+    "customize": "Aanpassen",
+    "inbound": {
+      "when": "Ik check de planning en kom er vandaag op terug.",
+      "price": "Ik stuur binnen 24u een schriftelijke offerte.",
+      "confirm": "Top, ik ga ermee aan de slag en bevestig de volgende stap."
+    },
+    "reason": {
+      "inboundWhen": "Ze vroegen over timing",
+      "inboundPrice": "Ze vroegen over prijs",
+      "inboundYes": "Ze bevestigden",
+      "quoteAged": "Offerte {{days}}d geleden verstuurd, nog geen besluit",
+      "quoteFresh": "Offerte recent verstuurd",
+      "invoiceOverdue": "Factuur {{days}}d te laat",
+      "jobCompleted": "Klus recent afgerond",
+      "jobScheduled": "Klus staat ingepland",
+      "newCustomer": "Geen eerdere interactie"
+    },
+    "quote": {
+      "followup": "Hoi {{name}}, ik check even de offerte — nog vragen?",
+      "thanks": "Bedankt voor het bekijken van de offerte, laat het weten als iets onduidelijk is."
+    },
+    "invoice": {
+      "overdue": "Vriendelijke herinnering — factuur {{ref}} is {{days}} dagen te laat."
+    },
+    "job": {
+      "feedback": "Hopelijk werkt alles goed na ons bezoek — feedback?",
+      "onway": "Ik ben zo onderweg voor {{title}}."
+    },
+    "new": {
+      "greet": "Hoi {{name}}, bedankt voor je bericht — wanneer past een korte bezichtiging?",
+      "ack": "Begrepen, ik bekijk het en kom vandaag met een plan terug."
+    }
+  },
+  "customer": {
+    "quote": "Offerte",
+    "call": "Bellen",
+    "email": "E-mail"
   }
 }

@@ -442,18 +442,8 @@ export function DecisionTrackerDetail({
         </Pressable>
       </View>
 
-      {/* R269: message templates ingress — context-aware from decision flow */}
-      <Pressable
-        style={styles.templatesLink}
-        onPress={() => router.push('/contractor/message-templates' as any)}
-        accessibilityRole="button"
-        accessibilityLabel={t('dt.editTemplates', 'Edit reminder templates')}
-      >
-        <Ionicons name="create-outline" size={13} color={SemanticColors.textTertiary} />
-        <Text style={styles.templatesLinkText}>
-          {t('dt.editTemplates', 'Edit reminder templates')}
-        </Text>
-      </Pressable>
+      {/* R270: templates ingress consolidated to customer detail screen
+          (next to smart-reply chips) so we don't have two entry points. */}
 
       {/* Tab Bar */}
       <View style={styles.tabBar}>

@@ -1953,5 +1953,45 @@
     "breakdownTitle": "BREAKDOWN BY CATEGORY",
     "timelineTitle": "SAVINGS OVER TIME",
     "cumulative": "Cumulative"
+  },
+  "smartReply": {
+    "suggested": "Suggested replies",
+    "customize": "Customize",
+    "inbound": {
+      "when": "Let me check the schedule and confirm by end of day.",
+      "price": "I will send a written quote within 24h.",
+      "confirm": "Great, I'll proceed and confirm the next step."
+    },
+    "reason": {
+      "inboundWhen": "They asked about timing",
+      "inboundPrice": "They asked about price",
+      "inboundYes": "They confirmed",
+      "quoteAged": "Quote sent {{days}}d ago, no decision",
+      "quoteFresh": "Quote sent recently",
+      "invoiceOverdue": "Invoice {{days}}d overdue",
+      "jobCompleted": "Job completed recently",
+      "jobScheduled": "Job is scheduled",
+      "newCustomer": "No prior interaction"
+    },
+    "quote": {
+      "followup": "Hi {{name}}, just checking in on the quote — any questions?",
+      "thanks": "Thanks for reviewing the quote, let me know if anything is unclear."
+    },
+    "invoice": {
+      "overdue": "Friendly reminder — invoice {{ref}} is {{days}} days overdue."
+    },
+    "job": {
+      "feedback": "Hope everything looks good after our visit — any feedback?",
+      "onway": "Heads-up — I'll be on my way for {{title}} shortly."
+    },
+    "new": {
+      "greet": "Hi {{name}}, thanks for reaching out — when works for a quick site visit?",
+      "ack": "Got it, I'll review and come back to you with a plan today."
+    }
+  },
+  "customer": {
+    "quote": "Quote",
+    "call": "Call",
+    "email": "Email"
   }
 }

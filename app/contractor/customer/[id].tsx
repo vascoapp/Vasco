@@ -1,5 +1,6 @@
 // =============================================================================
 // CUSTOMER DETAIL — Transaction history, quotes, invoices, lifetime value
+// R270: smart-reply chips above the action buttons (Google-Inbox style).
 // =============================================================================
 
 import { useMemo } from 'react';
@@ -12,6 +13,8 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../../src/theme/tabStyles';
 import { SafeArea } from '../../../src/theme/spacing';
 import { useAppState } from '../../../src/state/AppState';
 import { FadeIn } from '../../../src/components/shared/FadeIn';
+import { generateSmartReplies, type SmartReply } from '../../../src/services/customerSmartReplyService';
+import { hapticSuccess } from '../../../src/utils/haptics';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -34,6 +37,49 @@ export default function CustomerDetailScreen() {
     customerQuotes.reduce((s: number, q: any) => s + (q.amount ?? 0), 0),
     [customerQuotes]
   );
+
+  // R270: Google-style smart replies — surface 3 context-aware snippets
+  const smartReplies = useMemo<SmartReply[]>(() => {
+    if (!customer) return [];
+    const sortByDate = (arr: any[], key: string) =>
+      [...arr].sort((a, b) => new Date(b[key] ?? 0).getTime() - new Date(a[key] ?? 0).getTime());
+    const latestQ = sortByDate(customerQuotes, 'sentAt')[0] ?? sortByDate(customerQuotes, 'createdAt')[0];
+    const latestI = sortByDate(customerInvoices, 'sentAt')[0] ?? sortByDate(customerInvoices, 'createdAt')[0];
+    const latestJ = sortByDate(customerJobs, 'updatedAt')[0] ?? sortByDate(customerJobs, 'createdAt')[0];
+    return generateSmartReplies({
+      customerName: customer.name,
+      customerEmail: customer.email,
+      customerPhone: customer.phone,
+      latestQuote: latestQ ? {
+        id: latestQ.id, status: latestQ.status,
+        sentAt: latestQ.sentAt ?? latestQ.createdAt,
+        amount: latestQ.amount,
+      } : undefined,
+      latestInvoice: latestI ? {
+        id: latestI.id, status: latestI.status,
+        sentAt: latestI.sentAt ?? latestI.createdAt,
+        dueInDays: latestI.dueInDays,
+        amount: latestI.amount,
+      } : undefined,
+      latestJob: latestJ ? {
+        id: latestJ.id, title: latestJ.title, status: latestJ.status,
+        completedAt: latestJ.completedAt,
+      } : undefined,
+      isNewCustomer: customerJobs.length === 0 && customerQuotes.length === 0,
+    });
+  }, [customer, customerQuotes, customerInvoices, customerJobs]);
+
+  const sendSmartReply = (reply: SmartReply) => {
+    hapticSuccess();
+    const body = encodeURIComponent(reply.body);
+    if (reply.channel === 'whatsapp' && customer?.phone) {
+      Linking.openURL(`whatsapp://send?phone=${customer.phone.replace(/\s/g, '')}&text=${body}`).catch(() => {});
+    } else if (reply.channel === 'sms' && customer?.phone) {
+      Linking.openURL(`sms:${customer.phone}?body=${body}`).catch(() => {});
+    } else if (reply.channel === 'email' && customer?.email) {
+      Linking.openURL(`mailto:${customer.email}?body=${body}`).catch(() => {});
+    }
+  };
 
   if (!customer) {
     return (
@@ -86,20 +132,60 @@ export default function CustomerDetailScreen() {
           </View>
         </FadeIn>
 
+        {/* R270: Smart-reply chips — Google-Inbox style 1-tap replies.
+             Single ingress to message-templates lives here too — no other
+             entry points elsewhere. */}
+        {smartReplies.length > 0 && (
+          <FadeIn delay={40}>
+            <View style={s.smartReplyHeader}>
+              <Ionicons name="sparkles" size={12} color={Palette.hermesOrange} />
+              <Text style={s.smartReplyHeaderText}>{t('smartReply.suggested', 'Suggested replies').toUpperCase()}</Text>
+              <Pressable
+                onPress={() => router.push('/contractor/message-templates' as any)}
+                hitSlop={8}
+                style={{ marginLeft: 'auto' }}
+                accessibilityRole="button"
+                accessibilityLabel={t('smartReply.customize', 'Customize')}
+              >
+                <Text style={s.smartReplyCustomize}>{t('smartReply.customize', 'Customize').toUpperCase()}</Text>
+              </Pressable>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.smartReplyRow}>
+              {smartReplies.map((r) => (
+                <Pressable
+                  key={r.id}
+                  style={({ pressed }) => [s.smartReplyChip, pressed && { opacity: 0.85 }]}
+                  onPress={() => sendSmartReply(r)}
+                  accessibilityRole="button"
+                  accessibilityLabel={r.body}
+                  accessibilityHint={r.reason}
+                >
+                  <Ionicons
+                    name={r.channel === 'whatsapp' ? 'logo-whatsapp' : r.channel === 'sms' ? 'chatbubble-outline' : 'mail-outline'}
+                    size={14}
+                    color={Palette.hermesOrange}
+                  />
+                  <Text style={s.smartReplyChipText} numberOfLines={2}>{r.body}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </FadeIn>
+        )}
+
         {/* Quick actions */}
         <FadeIn delay={50}>
           <View style={s.actions}>
             <Pressable style={s.actionBtn} onPress={() => router.push('/contractor/tiered-quote' as any)}>
               <Ionicons name="document-text-outline" size={20} color={Palette.hermesOrange} />
-              <Text style={s.actionBtnText}>Offerte</Text>
+              <Text style={s.actionBtnText}>{t('customer.quote', 'Offerte')}</Text>
             </Pressable>
             <Pressable style={s.actionBtn} onPress={() => { if (customer.phone) { Linking.openURL(`tel:${customer.phone}`); } }}>
               <Ionicons name="call-outline" size={20} color={Palette.hermesOrange} />
-              <Text style={s.actionBtnText}>Bellen</Text>
+              <Text style={s.actionBtnText}>{t('customer.call', 'Call')}</Text>
             </Pressable>
             <Pressable style={s.actionBtn} onPress={() => { if (customer.email) { Linking.openURL(`mailto:${customer.email}`); } }}>
               <Ionicons name="mail-outline" size={20} color={Palette.hermesOrange} />
-              <Text style={s.actionBtnText}>E-mail</Text>
+              <Text style={s.actionBtnText}>{t('customer.email', 'E-mail')}</Text>
             </Pressable>
           </View>
         </FadeIn>
@@ -175,6 +261,52 @@ const s = StyleSheet.create({
   kpiDivider: { width: 1, height: 28, backgroundColor: SemanticColors.borderDefault },
   actions: { flexDirection: 'row', gap: GRID.sm },
   actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: GRID.sm, backgroundColor: Palette.hermesOrange + '10', borderRadius: RADIUS.lg, paddingVertical: 12 },
+  // R270: smart-reply chip strip
+  smartReplyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: SafeArea.side,
+    marginTop: GRID.md,
+    marginBottom: GRID.xs,
+  },
+  smartReplyHeaderText: {
+    fontSize: 10,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textTertiary,
+    letterSpacing: 1.2,
+  },
+  smartReplyCustomize: {
+    fontSize: 10,
+    fontFamily: TYPE.labelFamily,
+    color: Palette.hermesOrange,
+    letterSpacing: 1.2,
+  },
+  smartReplyRow: {
+    flexDirection: 'row',
+    gap: GRID.xs,
+    paddingHorizontal: SafeArea.side,
+    paddingBottom: GRID.xs,
+  },
+  smartReplyChip: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderWidth: 1,
+    borderColor: Palette.hermesOrange + '40',
+    borderRadius: RADIUS.lg,
+    paddingHorizontal: GRID.sm,
+    paddingVertical: 8,
+    maxWidth: 240,
+  },
+  smartReplyChipText: {
+    flex: 1,
+    fontSize: 12,
+    fontFamily: TYPE.bodyFamily,
+    color: SemanticColors.textPrimary,
+    lineHeight: 16,
+  },
   actionBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange },
   sectionTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, letterSpacing: TYPE.sectionTracking, marginTop: GRID.sm },
   card: { flexDirection: 'row', alignItems: 'center', backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden' },
