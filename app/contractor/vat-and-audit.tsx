@@ -29,6 +29,7 @@ import {
 } from '../../src/services/gobdAuditTrailService';
 import { hapticSuccess } from '../../src/utils/haptics';
 import type { VatScheme } from '../../src/domain/business';
+import { suggestVatScheme } from '../../src/services/vatSchemeAdvisor';
 
 export default function VatAndAuditScreen() {
   const { t } = useTranslation();
@@ -111,6 +112,39 @@ export default function VatAndAuditScreen() {
     <SafeAreaView style={styles.root}>
       <DKScreenHeader title="VAT & AUDIT" />
       <ScrollView contentContainerStyle={styles.content}>
+
+        {/* R263: advisor banner — only when high-confidence and differs from current */}
+        {(() => {
+          const advice = suggestVatScheme({
+            country: businessProfile.country,
+            businessType: (businessProfile as any).businessType,
+            teamSize: (businessProfile as any).teamSize,
+          });
+          if (!advice.confident || advice.suggested === scheme) return null;
+          return (
+            <View style={styles.advisor}>
+              <View style={styles.advisorHeader}>
+                <Ionicons name="bulb" size={18} color={DK.colors.accent} />
+                <DKLabel style={styles.advisorLabel}>
+                  {t('vatScheme.advisor.title', 'SUGGESTED FOR YOU')}
+                </DKLabel>
+              </View>
+              <Text style={styles.advisorBody}>
+                {t(advice.i18nKey, advice.reason)}
+              </Text>
+              <Pressable
+                style={styles.advisorBtn}
+                onPress={() => handleSchemeChange(advice.suggested)}
+                accessibilityRole="button"
+                accessibilityLabel={t('vatScheme.advisor.applyA11y', 'Apply suggested VAT scheme')}
+              >
+                <Text style={styles.advisorBtnText}>
+                  {t('vatScheme.advisor.apply', 'USE THIS SCHEME')}
+                </Text>
+              </Pressable>
+            </View>
+          );
+        })()}
 
         {/* VAT scheme picker */}
         <DKLabel style={styles.section}>VAT SCHEME</DKLabel>
@@ -240,6 +274,39 @@ const styles = StyleSheet.create({
     marginTop: GRID.sm,
   },
   noticeText: { flex: 1, fontSize: 13, fontFamily: TYPE.bodyFamily, color: DK.colors.text },
+  advisor: {
+    backgroundColor: DK.colors.accent + '14',
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    borderColor: DK.colors.accent + '40',
+    padding: GRID.md,
+    marginBottom: GRID.md,
+    gap: GRID.xs,
+  },
+  advisorHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.xs,
+  },
+  advisorLabel: { color: DK.colors.accent, fontSize: 11, letterSpacing: 1.4 },
+  advisorBody: { fontSize: 13, fontFamily: TYPE.bodyFamily, color: DK.colors.text, lineHeight: 18 },
+  advisorBtn: {
+    alignSelf: 'flex-start',
+    backgroundColor: DK.colors.accent,
+    paddingHorizontal: GRID.md,
+    paddingVertical: GRID.xs + 2,
+    borderRadius: RADIUS.full,
+    marginTop: GRID.xs,
+    shadowColor: DK.colors.accent,
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+  },
+  advisorBtnText: {
+    color: '#000',
+    fontFamily: TYPE.titleFamily,
+    fontSize: 12,
+    letterSpacing: 1.2,
+  },
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -415,7 +415,9 @@
     "todTitle": "Beste verzendmoment",
     "todHintFaster": "{{day}} {{part}} — gemiddeld ~{{days}} dagen sneller betaald",
     "todHintHigher": "{{day}} {{part}} — {{lift}}pp hoger betaalpercentage",
-    "todSample": "Op basis van {{count}} facturen van collega's in {{country}}"
+    "todSample": "Op basis van {{count}} facturen van collega's in {{country}}",
+    "todHintWait": "Wachten tot {{day}} {{part}} → ~{{days}} dagen sneller betaald",
+    "todHintNow": "Goed moment om te versturen — {{day}} {{part}} is het piekmoment"
   },
   "expenses": {
     "title": "Uitgaven",
@@ -1075,7 +1077,9 @@
     "todPart_morning": "ochtend",
     "todPart_midday": "middag",
     "todPart_afternoon": "namiddag",
-    "todPart_evening": "avond"
+    "todPart_evening": "avond",
+    "todHintWait": "Wachten tot {{day}} {{part}} → {{lift}}pp hogere acceptatie",
+    "todHintNow": "Goed moment om te versturen — {{day}} {{part}} is het piekmoment"
   },
   "queue": {
     "lowWinTitle": "Lage winkans · {{customer}}",
@@ -1790,7 +1794,16 @@
   "vatScheme": {
     "standard": "Standaard BTW",
     "korNl": "KOR — Kleineondernemersregeling",
-    "kleinunternehmer": "Kleinunternehmer (§19 UStG)"
+    "kleinunternehmer": "Kleinunternehmer (§19 UStG)",
+    "advisor": {
+      "title": "AANBEVOLEN VOOR JOU",
+      "apply": "GEBRUIK DEZE REGELING",
+      "applyA11y": "Pas voorgestelde BTW-regeling toe",
+      "standardTeam": "Standaard BTW — kleineondernemers­regelingen gelden alleen voor zzp'ers.",
+      "standardCountry": "Standaard BTW — geen kleineondernemers­regeling beschikbaar voor jouw land/rechtsvorm.",
+      "korNl": "Solo eenmanszaak — KOR past als je jaaromzet onder €20.000 blijft.",
+      "kleinDe": "Solo Einzelunternehmen — Kleinunternehmerregeling past bij voorjaars­omzet ≤ €22.000 en lopend jaar ≤ €50.000."
+    }
   },
   "audit": {
     "totalEntries": "Audit-entries",

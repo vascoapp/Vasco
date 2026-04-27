@@ -414,7 +414,9 @@
     "todTitle": "Momento migliore per inviare",
     "todHintFaster": "{{day}} {{part}} — pagato ~{{days}} giorni prima in media",
     "todHintHigher": "{{day}} {{part}} — {{lift}}pp di tasso di pagamento in più",
-    "todSample": "Su {{count}} fatture di colleghi in {{country}}"
+    "todSample": "Su {{count}} fatture di colleghi in {{country}}",
+    "todHintWait": "Aspettare fino a {{day}} {{part}} → pagato ~{{days}} giorni prima",
+    "todHintNow": "Buon momento per inviare — {{day}} {{part}} è la fascia di picco"
   },
   "expenses": {
     "title": "Spese",
@@ -1072,7 +1074,9 @@
     "todPart_morning": "mattina",
     "todPart_midday": "mezzogiorno",
     "todPart_afternoon": "pomeriggio",
-    "todPart_evening": "sera"
+    "todPart_evening": "sera",
+    "todHintWait": "Aspettare fino a {{day}} {{part}} → {{lift}}pp di accettazione in più",
+    "todHintNow": "Buon momento per inviare — {{day}} {{part}} è la fascia di picco"
   },
   "queue": {
     "lowWinTitle": "Bassa probabilità · {{customer}}",
@@ -1859,7 +1863,16 @@
   "vatScheme": {
     "standard": "IVA standard",
     "korNl": "KOR — Regime piccolo imprenditore (NL)",
-    "kleinunternehmer": "Kleinunternehmer (§19 UStG)"
+    "kleinunternehmer": "Kleinunternehmer (§19 UStG)",
+    "advisor": {
+      "title": "CONSIGLIATO PER TE",
+      "apply": "USA QUESTO REGIME",
+      "applyA11y": "Applica regime IVA suggerito",
+      "standardTeam": "IVA standard — i regimi per piccole imprese si applicano solo agli autonomi solo.",
+      "standardCountry": "IVA standard — nessun regime per piccole imprese disponibile per il tuo paese/forma giuridica.",
+      "korNl": "Eenmanszaak in solo — KOR adatto se il fatturato annuo resta sotto €20.000.",
+      "kleinDe": "Einzelunternehmen in solo — Kleinunternehmer adatto con fatturato anno precedente ≤ €22.000 e anno corrente ≤ €50.000."
+    }
   },
   "audit": {
     "totalEntries": "Voci di audit",

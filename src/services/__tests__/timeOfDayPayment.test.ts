@@ -67,6 +67,42 @@ describe('buildPaymentTimingHint', () => {
   });
 });
 
+describe('classifyPaymentNow (R262)', () => {
+  const { classifyPaymentNow } = require('../timeOfDayPaymentService');
+  const mk = (h: number, dow: number, paidRate: number, medianDays: number | null, n = 20) => ({
+    hourOfDay: h, dayOfWeek: dow,
+    paidRate, medianDaysToPaid: medianDays,
+    sampleSize: n, contractorCount: 6,
+  });
+
+  test('neutral when too few buckets', () => {
+    expect(classifyPaymentNow([mk(9, 2, 0.7, 10)], 9, 2)).toEqual({ tone: 'neutral', daysSlowerVsBest: 0 });
+  });
+
+  test('send_now when current bucket is the best', () => {
+    const buckets = [
+      mk(9, 2, 0.85, 8), mk(20, 6, 0.40, 25), mk(14, 3, 0.60, 18), mk(16, 4, 0.65, 15),
+    ];
+    expect(classifyPaymentNow(buckets, 9, 2).tone).toBe('send_now');
+  });
+
+  test('send_later when current is meaningfully slower than best', () => {
+    const buckets = [
+      mk(9, 2, 0.85, 8), mk(20, 6, 0.40, 25), mk(14, 3, 0.60, 18), mk(16, 4, 0.65, 15),
+    ];
+    const r = classifyPaymentNow(buckets, 20, 6);
+    expect(r.tone).toBe('send_later');
+    expect(r.daysSlowerVsBest).toBeCloseTo(17, 5);
+  });
+
+  test('neutral when current bucket has no median days data', () => {
+    const buckets = [
+      mk(9, 2, 0.85, 8), mk(20, 6, 0.40, null), mk(14, 3, 0.60, 18), mk(16, 4, 0.65, 15),
+    ];
+    expect(classifyPaymentNow(buckets, 20, 6).tone).toBe('neutral');
+  });
+});
+
 describe('dayPart', () => {
   test.each([
     [0, 'morning'], [10, 'morning'],

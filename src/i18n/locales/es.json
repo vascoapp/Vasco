@@ -414,7 +414,9 @@
     "todTitle": "Mejor momento para enviar",
     "todHintFaster": "{{day}} {{part}} — cobrado ~{{days}} días antes en promedio",
     "todHintHigher": "{{day}} {{part}} — {{lift}}pp más de tasa de cobro",
-    "todSample": "Sobre {{count}} facturas de colegas en {{country}}"
+    "todSample": "Sobre {{count}} facturas de colegas en {{country}}",
+    "todHintWait": "Esperar hasta {{day}} {{part}} → cobrado ~{{days}} días antes",
+    "todHintNow": "Buen momento para enviar — {{day}} {{part}} es la franja pico"
   },
   "expenses": {
     "title": "Gastos",
@@ -1072,7 +1074,9 @@
     "todPart_morning": "mañana",
     "todPart_midday": "mediodía",
     "todPart_afternoon": "tarde",
-    "todPart_evening": "noche"
+    "todPart_evening": "noche",
+    "todHintWait": "Esperar hasta {{day}} {{part}} → {{lift}}pp más de aceptación",
+    "todHintNow": "Buen momento para enviar — {{day}} {{part}} es la franja pico"
   },
   "queue": {
     "lowWinTitle": "Baja probabilidad · {{customer}}",
@@ -1859,7 +1863,16 @@
   "vatScheme": {
     "standard": "IVA estándar",
     "korNl": "KOR — Régimen pequeño empresario (NL)",
-    "kleinunternehmer": "Kleinunternehmer (§19 UStG)"
+    "kleinunternehmer": "Kleinunternehmer (§19 UStG)",
+    "advisor": {
+      "title": "RECOMENDADO PARA TI",
+      "apply": "USAR ESTE RÉGIMEN",
+      "applyA11y": "Aplicar régimen de IVA sugerido",
+      "standardTeam": "IVA estándar — los regímenes de pequeñas empresas solo aplican a autónomos en solitario.",
+      "standardCountry": "IVA estándar — no hay régimen de pequeñas empresas disponible para tu país/forma jurídica.",
+      "korNl": "Eenmanszaak en solo — KOR encaja si tu facturación anual se mantiene por debajo de €20.000.",
+      "kleinDe": "Einzelunternehmen en solo — Kleinunternehmer encaja con facturación año anterior ≤ €22.000 y año en curso ≤ €50.000."
+    }
   },
   "audit": {
     "totalEntries": "Entradas de auditoría",

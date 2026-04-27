@@ -27,6 +27,13 @@ export interface TimeOfDayHint {
   totalSamples: number;
 }
 
+export interface ContextualTimingTone {
+  tone: 'send_now' | 'send_later' | 'neutral';
+  // Lift between the best bucket and the current bucket, in percentage points.
+  // Positive = best is better than now; 0 = now is the best slot.
+  liftVsNow: number;
+}
+
 const MIN_BUCKETS_FOR_HINT = 4;
 const MIN_LIFT_POINTS = 0.08;
 
@@ -86,21 +93,52 @@ export function dayPart(hour: number): 'morning' | 'midday' | 'afternoon' | 'eve
   return 'evening';
 }
 
+const SIGNIFICANT_LIFT = 0.05;
+
+/**
+ * Given the cohort buckets and the current (hour, dow), classify whether the
+ * user should send now, wait, or that timing doesn't matter much. The current
+ * bucket may not exist in the data (k-anonymity gated it out) — in that case
+ * we fall back to the average across all buckets.
+ */
+export function classifyNow(
+  buckets: TimeOfDayBucket[],
+  nowHour: number,
+  nowDow: number,
+): ContextualTimingTone {
+  if (buckets.length < MIN_BUCKETS_FOR_HINT) {
+    return { tone: 'neutral', liftVsNow: 0 };
+  }
+  const best = buckets.reduce((a, b) => (b.acceptanceRate > a.acceptanceRate ? b : a));
+  const nowBucket = buckets.find((b) => b.hourOfDay === nowHour && b.dayOfWeek === nowDow);
+  const nowRate = nowBucket
+    ? nowBucket.acceptanceRate
+    : buckets.reduce((sum, b) => sum + b.acceptanceRate * b.sampleSize, 0) /
+      Math.max(1, buckets.reduce((sum, b) => sum + b.sampleSize, 0));
+
+  const lift = best.acceptanceRate - nowRate;
+  if (lift < SIGNIFICANT_LIFT) return { tone: 'send_now', liftVsNow: 0 };
+  return { tone: 'send_later', liftVsNow: lift };
+}
+
 export function useTimeOfDayHint(trade: string | undefined, country: string | undefined) {
   const [hint, setHint] = useState<TimeOfDayHint | null>(null);
+  const [buckets, setBuckets] = useState<TimeOfDayBucket[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (!trade || !country) {
       setHint(null);
+      setBuckets([]);
       return;
     }
     let cancelled = false;
     setLoading(true);
     fetchTimeOfDayBuckets(trade, country)
-      .then((buckets) => {
+      .then((b) => {
         if (cancelled) return;
-        setHint(buildTimeOfDayHint(buckets));
+        setBuckets(b);
+        setHint(buildTimeOfDayHint(b));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -110,5 +148,5 @@ export function useTimeOfDayHint(trade: string | undefined, country: string | un
     };
   }, [trade, country]);
 
-  return { hint, loading };
+  return { hint, buckets, loading };
 }

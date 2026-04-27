@@ -415,7 +415,9 @@
     "todTitle": "Beste Sendezeit",
     "todHintFaster": "{{day}} {{part}} — durchschnittlich ~{{days}} Tage schneller bezahlt",
     "todHintHigher": "{{day}} {{part}} — {{lift}}pp höhere Zahlungsrate",
-    "todSample": "Basierend auf {{count}} Rechnungen von Kollegen in {{country}}"
+    "todSample": "Basierend auf {{count}} Rechnungen von Kollegen in {{country}}",
+    "todHintWait": "Bis {{day}} {{part}} warten → ~{{days}} Tage schneller bezahlt",
+    "todHintNow": "Guter Moment zum Senden — {{day}} {{part}} ist der Spitzenwert"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -1075,7 +1077,9 @@
     "todPart_morning": "Vormittag",
     "todPart_midday": "Mittag",
     "todPart_afternoon": "Nachmittag",
-    "todPart_evening": "Abend"
+    "todPart_evening": "Abend",
+    "todHintWait": "Bis {{day}} {{part}} warten → {{lift}}pp höhere Annahme",
+    "todHintNow": "Guter Moment zum Senden — {{day}} {{part}} ist der Spitzenwert"
   },
   "queue": {
     "lowWinTitle": "Geringe Gewinnchance · {{customer}}",
@@ -1790,7 +1794,16 @@
   "vatScheme": {
     "standard": "Standard-USt",
     "korNl": "KOR — Kleineondernemersregeling",
-    "kleinunternehmer": "Kleinunternehmer (§19 UStG)"
+    "kleinunternehmer": "Kleinunternehmer (§19 UStG)",
+    "advisor": {
+      "title": "EMPFEHLUNG FÜR DICH",
+      "apply": "DIESE REGELUNG ÜBERNEHMEN",
+      "applyA11y": "Vorgeschlagene USt-Regelung übernehmen",
+      "standardTeam": "Standard-USt — Kleinunternehmerregelungen gelten nur für Solo-Unternehmer.",
+      "standardCountry": "Standard-USt — keine Kleinunternehmerregelung für dein Land/deine Rechtsform.",
+      "korNl": "Solo eenmanszaak — KOR passt, wenn dein Jahresumsatz unter €20.000 bleibt.",
+      "kleinDe": "Solo Einzelunternehmen — Kleinunternehmer passt bei Vorjahresumsatz ≤ €22.000 und laufendem Jahr ≤ €50.000."
+    }
   },
   "audit": {
     "totalEntries": "Audit-Einträge",

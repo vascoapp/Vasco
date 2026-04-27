@@ -428,6 +428,7 @@ export default function OnboardingScreen() {
           country: (country ?? undefined) as any,
           trade: selectedTrades[0],
           businessType: businessType ?? undefined,
+          teamSize: (teamSize as any) ?? undefined,
           businessName: regFields.businessName || regFields.companyName || regFields.tradeName,
           kvkNumber: regFields[regRegKey] || regFields.kvk,
           vatNumber: regFields[countryVatKey] || regFields.vatNumber,

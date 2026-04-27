@@ -30,7 +30,7 @@ import { File, Paths } from 'expo-file-system';
 import { checkInvoiceReadiness } from '../../src/utils/businessProfileValidation';
 import { useCohortDso } from '../../src/services/paymentTimingMoatService';
 import { predictPaymentTiming } from '../../src/intelligence/mlModels';
-import { useTimeOfDayPaymentHint, dayPart as paymentDayPart } from '../../src/services/timeOfDayPaymentService';
+import { useTimeOfDayPaymentHint, dayPart as paymentDayPart, classifyPaymentNow } from '../../src/services/timeOfDayPaymentService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -89,7 +89,7 @@ export default function InvoiceDetailScreen() {
   // R214: cohort-backed payment timing for the invoice detail caption.
   // Hook unconditionally; consumer below is null-safe.
   const cohortDso = useCohortDso(businessProfile?.country ?? country, null);
-  const { hint: paymentTimingHint } = useTimeOfDayPaymentHint(
+  const { hint: paymentTimingHint, buckets: paymentTimingBuckets } = useTimeOfDayPaymentHint(
     (user as any)?.trade ?? (businessProfile as any)?.trade,
     businessProfile?.country ?? country,
   );
@@ -443,7 +443,7 @@ export default function InvoiceDetailScreen() {
           </Text>
         </View>
 
-        {/* R261: time-of-day payment timing hint — only when unsent or unpaid */}
+        {/* R261/R262: time-of-day payment timing — only when unsent/unpaid */}
         {invoice.status !== 'paid' && paymentTimingHint && (() => {
           const dows = [
             t('quotes.todSun', 'Sunday'),
@@ -459,20 +459,37 @@ export default function InvoiceDetailScreen() {
           const day = dows[paymentTimingHint.bestBucket.dayOfWeek] ?? '';
           const part = t(partKey, partFallback);
           const days = paymentTimingHint.daysSavedVsWorst;
-          return (
-            <View style={[styles.card, { borderLeftWidth: 3, borderLeftColor: Palette.hermesOrange }]}>
-              <View style={styles.cardHeader}>
-                <Ionicons name="time-outline" size={18} color={Palette.hermesOrange} />
-                <Text style={styles.cardTitle}>{t('invoices.todTitle', 'Best time to send')}</Text>
-              </View>
-              <Text style={{ color: SemanticColors.textPrimary, fontFamily: TYPE.bodyFamily, fontSize: 14, marginTop: 4 }}>
-                {days >= 2
+
+          const now = new Date();
+          const nowTone = classifyPaymentNow(paymentTimingBuckets, now.getHours(), now.getDay());
+          const slowerDays = Math.round(nowTone.daysSlowerVsBest);
+
+          const accent = nowTone.tone === 'send_later' ? '#F59E0B' : Palette.hermesOrange;
+          const headline =
+            nowTone.tone === 'send_later' && slowerDays >= 2
+              ? t('invoices.todHintWait', 'Waiting until {{day}} {{part}} → paid ~{{days}} days faster', {
+                  day, part, days: slowerDays,
+                })
+              : nowTone.tone === 'send_now'
+                ? t('invoices.todHintNow', 'Good time to send — {{day}} {{part}} is the peak slot', {
+                    day, part,
+                  })
+                : days >= 2
                   ? t('invoices.todHintFaster', '{{day}} {{part}} — paid ~{{days}} days faster on average', {
                       day, part, days: Math.round(days),
                     })
                   : t('invoices.todHintHigher', '{{day}} {{part}} — {{lift}}pp higher paid rate', {
                       day, part, lift: Math.round(paymentTimingHint.paidRateLiftPoints * 100),
-                    })}
+                    });
+
+          return (
+            <View style={[styles.card, { borderLeftWidth: 3, borderLeftColor: accent }]}>
+              <View style={styles.cardHeader}>
+                <Ionicons name="time-outline" size={18} color={accent} />
+                <Text style={styles.cardTitle}>{t('invoices.todTitle', 'Best time to send')}</Text>
+              </View>
+              <Text style={{ color: SemanticColors.textPrimary, fontFamily: TYPE.bodyFamily, fontSize: 14, marginTop: 4 }}>
+                {headline}
               </Text>
               <Text style={{ color: SemanticColors.textTertiary, fontFamily: TYPE.captionFamily, fontSize: 11, marginTop: 4 }}>
                 {t('invoices.todSample', 'Across {{count}} invoices from peers in {{country}}', {

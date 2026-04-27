@@ -22,6 +22,9 @@ export type BusinessProfile = {
   registrationNumber?: string;
   trade?: string;
   businessType?: string;
+  // R263: team size, captured in onboarding step 7. Used by the VAT scheme
+  // advisor to suggest KOR / Kleinunternehmer (only solo contractors qualify).
+  teamSize?: 'solo' | 'small' | 'medium' | 'large';
   certifications?: string[];
   serviceAreaRadius?: number;
   enabledPaymentMethods?: string[];

@@ -415,7 +415,9 @@
     "todTitle": "Best time to send",
     "todHintFaster": "{{day}} {{part}} — paid ~{{days}} days faster on average",
     "todHintHigher": "{{day}} {{part}} — {{lift}}pp higher paid rate",
-    "todSample": "Across {{count}} invoices from peers in {{country}}"
+    "todSample": "Across {{count}} invoices from peers in {{country}}",
+    "todHintWait": "Waiting until {{day}} {{part}} → paid ~{{days}} days faster",
+    "todHintNow": "Good time to send — {{day}} {{part}} is the peak slot"
   },
   "expenses": {
     "title": "Expenses",
@@ -1075,7 +1077,9 @@
     "todPart_morning": "morning",
     "todPart_midday": "midday",
     "todPart_afternoon": "afternoon",
-    "todPart_evening": "evening"
+    "todPart_evening": "evening",
+    "todHintWait": "Waiting until {{day}} {{part}} → {{lift}}pp higher acceptance",
+    "todHintNow": "Good time to send — {{day}} {{part}} is the peak slot"
   },
   "queue": {
     "lowWinTitle": "Low win chance · {{customer}}",
@@ -1790,7 +1794,16 @@
   "vatScheme": {
     "standard": "Standard VAT",
     "korNl": "KOR — Kleineondernemersregeling",
-    "kleinunternehmer": "Kleinunternehmer (§19 UStG)"
+    "kleinunternehmer": "Kleinunternehmer (§19 UStG)",
+    "advisor": {
+      "title": "SUGGESTED FOR YOU",
+      "apply": "USE THIS SCHEME",
+      "applyA11y": "Apply suggested VAT scheme",
+      "standardTeam": "Standard VAT — small-business schemes only apply to solo contractors.",
+      "standardCountry": "Standard VAT — no small-business exemption available for your country/business type.",
+      "korNl": "Solo eenmanszaak — KOR fits if your annual turnover stays under €20.000.",
+      "kleinDe": "Solo Einzelunternehmen — Kleinunternehmer fits if previous-year turnover ≤ €22.000 and current-year ≤ €50.000."
+    }
   },
   "audit": {
     "totalEntries": "Audit entries",

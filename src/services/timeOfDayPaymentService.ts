@@ -114,21 +114,55 @@ export function dayPart(hour: number): 'morning' | 'midday' | 'afternoon' | 'eve
   return 'evening';
 }
 
+export interface PaymentTimingTone {
+  tone: 'send_now' | 'send_later' | 'neutral';
+  daysSlowerVsBest: number;       // positive = now is N days slower than best
+}
+
+const PAYMENT_SIGNIFICANT_DAYS = 1.5;
+
+const paymentScore = (b: PaymentTimingBucket): number => {
+  const days = b.medianDaysToPaid ?? 60;
+  return b.paidRate - days / 60;
+};
+
+export function classifyPaymentNow(
+  buckets: PaymentTimingBucket[],
+  nowHour: number,
+  nowDow: number,
+): PaymentTimingTone {
+  if (buckets.length < MIN_BUCKETS_FOR_HINT) {
+    return { tone: 'neutral', daysSlowerVsBest: 0 };
+  }
+  const best = buckets.reduce((a, b) => (paymentScore(b) > paymentScore(a) ? b : a));
+  const nowBucket = buckets.find((b) => b.hourOfDay === nowHour && b.dayOfWeek === nowDow);
+  const bestDays = best.medianDaysToPaid ?? 60;
+  const nowDays = nowBucket?.medianDaysToPaid ?? null;
+  if (nowDays === null) return { tone: 'neutral', daysSlowerVsBest: 0 };
+
+  const slower = nowDays - bestDays;
+  if (slower < PAYMENT_SIGNIFICANT_DAYS) return { tone: 'send_now', daysSlowerVsBest: 0 };
+  return { tone: 'send_later', daysSlowerVsBest: slower };
+}
+
 export function useTimeOfDayPaymentHint(trade: string | undefined, country: string | undefined) {
   const [hint, setHint] = useState<PaymentTimingHint | null>(null);
+  const [buckets, setBuckets] = useState<PaymentTimingBucket[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (!trade || !country) {
       setHint(null);
+      setBuckets([]);
       return;
     }
     let cancelled = false;
     setLoading(true);
     fetchPaymentTimingBuckets(trade, country)
-      .then((buckets) => {
+      .then((b) => {
         if (cancelled) return;
-        setHint(buildPaymentTimingHint(buckets));
+        setBuckets(b);
+        setHint(buildPaymentTimingHint(b));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -138,5 +172,5 @@ export function useTimeOfDayPaymentHint(trade: string | undefined, country: stri
     };
   }, [trade, country]);
 
-  return { hint, loading };
+  return { hint, buckets, loading };
 }
