@@ -1084,7 +1084,26 @@
     "todPart_afternoon": "pomeriggio",
     "todPart_evening": "sera",
     "todHintWait": "Aspettare fino a {{day}} {{part}} → {{lift}}pp di accettazione in più",
-    "todHintNow": "Buon momento per inviare — {{day}} {{part}} è la fascia di picco"
+    "todHintNow": "Buon momento per inviare — {{day}} {{part}} è la fascia di picco",
+    "heroAccepted": "Preventivo accettato",
+    "heroRejected": "Preventivo rifiutato",
+    "heroValidUntil": "Valido fino al {{date}}",
+    "customerActivity": "Attività del cliente",
+    "engagementSummary": "Aperto {{count}}× · {{minutes}} min totali",
+    "lastSeen": "visto l'ultima volta",
+    "expandedPricing": "Prezzi espansi",
+    "hoveredAccept": "Hover su accetta",
+    "hoveredDecline": "Hover su rifiuta",
+    "startedQuestions": "{{count}} domanda/e iniziata/e",
+    "followupHint": "Alto interesse, nessuna decisione — considera un follow-up",
+    "status": {
+      "draft": "Bozza",
+      "sent": "Inviato",
+      "viewed": "Visto",
+      "accepted": "Accettato",
+      "rejected": "Rifiutato",
+      "expired": "Scaduto"
+    }
   },
   "queue": {
     "lowWinTitle": "Bassa probabilità · {{customer}}",

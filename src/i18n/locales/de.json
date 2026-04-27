@@ -1087,7 +1087,26 @@
     "todPart_afternoon": "Nachmittag",
     "todPart_evening": "Abend",
     "todHintWait": "Bis {{day}} {{part}} warten → {{lift}}pp höhere Annahme",
-    "todHintNow": "Guter Moment zum Senden — {{day}} {{part}} ist der Spitzenwert"
+    "todHintNow": "Guter Moment zum Senden — {{day}} {{part}} ist der Spitzenwert",
+    "heroAccepted": "Angebot angenommen",
+    "heroRejected": "Angebot abgelehnt",
+    "heroValidUntil": "Gültig bis {{date}}",
+    "customerActivity": "Kundenaktivität",
+    "engagementSummary": "{{count}}× geöffnet · {{minutes}} Min gesamt",
+    "lastSeen": "zuletzt gesehen",
+    "expandedPricing": "Preise erweitert",
+    "hoveredAccept": "Annehmen gehovert",
+    "hoveredDecline": "Ablehnen gehovert",
+    "startedQuestions": "{{count}} Frage(n) begonnen",
+    "followupHint": "Hohes Interesse, noch keine Entscheidung — Follow-up erwägen",
+    "status": {
+      "draft": "Entwurf",
+      "sent": "Versendet",
+      "viewed": "Angesehen",
+      "accepted": "Angenommen",
+      "rejected": "Abgelehnt",
+      "expired": "Abgelaufen"
+    }
   },
   "queue": {
     "lowWinTitle": "Geringe Gewinnchance · {{customer}}",

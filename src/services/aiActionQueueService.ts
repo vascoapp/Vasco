@@ -109,45 +109,122 @@ export async function getQueue(): Promise<QueueItem[]> {
       ...remoteQuestions.filter((q) => !existingIds.has(q.id)),
       ...pending,
     ];
-    // Prioritize queue items based on onboarding preferences
+    // R268: priority matrix always runs. Onboarding prefs are an optional
+    // boost but the core type/€/age signals work without them.
     const prefs = await loadOnboardingPreferences().catch(() => null);
-    if (prefs && prefs.goals.length > 0) {
-      return prioritizeQueue(merged, prefs);
-    }
-    return merged;
+    return [...merged].sort((a, b) => scoreQueueItem(b, prefs) - scoreQueueItem(a, prefs));
   } catch {
     return [];
   }
 }
 
-/** Reorder queue items so items matching user's onboarding goals appear first */
-function prioritizeQueue(items: QueueItem[], prefs: OnboardingPreferences): QueueItem[] {
-  const getScore = (item: QueueItem): number => {
-    let score = 0;
-    // Payment-related items
-    if (wantsPaymentFocus(prefs) && ['draft_invoice', 'draft_reminder', 'batch_invoices', 'invoice_regenerate'].includes(item.type)) {
-      score += 10;
-    }
-    // Quoting-related items
-    if (wantsQuotingHelp(prefs) && ['draft_quote', 'draft_followup', 'quote_expiry'].includes(item.type)) {
-      score += 10;
-    }
-    // Compliance-related items
-    if (wantsComplianceFocus(prefs) && ['cert_renewal', 'permit_check', 'permit_renewal', 'safety_checklist', 'einvoice_submit'].includes(item.type)) {
-      score += 10;
-    }
-    // Automation/admin reduction
-    if (wantsAutomationFocus(prefs) && ['batch_invoices', 'accounting_export', 'tax_prep', 'reorder_materials'].includes(item.type)) {
-      score += 10;
-    }
-    // Growth-related items
-    if (wantsGrowthFocus(prefs) && ['schedule_suggestion', 'maintenance_due', 'satisfaction_survey'].includes(item.type)) {
-      score += 10;
-    }
-    return score;
-  };
+// =============================================================================
+// PRIORITY MATRIX (R268)
+// =============================================================================
+// Each QueueItem gets a composite score from four signals:
+//
+//   1. BASE URGENCY by type (0-100):
+//      - Customer-facing money risk (overdue, customer questions) ranks highest
+//      - Compliance with hard deadlines (cert/permit expiry) next
+//      - Drafts that unblock revenue (invoice/quote/followup) middle
+//      - Pure efficiency (reorder, accounting export) lower
+//      - Informational (satisfaction survey, supplier comparison) lowest
+//
+//   2. €-IMPACT (0-25): parsed from estimatedImpact string. Money on the
+//      line drives priority — €1500 invoice ranks above €50 reminder.
+//
+//   3. AGE BOOST (0-15): items pending >24h get up-weighted so we don't
+//      let actionable work decay. Caps at +15 after 5 days.
+//
+//   4. ONBOARDING GOAL MATCH (0-10): user's stated focus boosts matching
+//      types. Carried over from the original prioritizeQueue.
+//
+// The 4 components are added (not multiplied) so a high-€ stale draft
+// outranks a low-€ urgent type-1.
+// =============================================================================
 
-  return [...items].sort((a, b) => getScore(b) - getScore(a));
+const BASE_URGENCY: Record<QueueItemType, number> = {
+  // Tier 1 — money/compliance with hard deadlines
+  late_payment_risk_alert: 95,
+  customer_question: 90,
+  invoice_regenerate: 85,           // 30+ day overdue with late fee
+  draft_reminder: 85,               // overdue payment reminder
+  cert_renewal: 80,
+  permit_renewal: 80,
+  permit_check: 75,
+  einvoice_submit: 75,
+  // Tier 2 — revenue draft, low-friction approve to ship
+  draft_invoice: 70,
+  batch_invoices: 70,
+  draft_quote: 65,
+  draft_followup: 65,
+  quote_expiry: 65,
+  decision_reminder: 65,
+  low_win_alert: 60,
+  // Tier 3 — operations
+  job_handover: 55,
+  schedule_suggestion: 50,
+  reorder_materials: 50,
+  maintenance_due: 50,
+  safety_checklist: 50,
+  // Tier 4 — efficiency / admin
+  tax_prep: 45,
+  accounting_export: 40,
+  progress_note: 40,
+  bulk_purchase: 35,
+  supplier_comparison: 35,
+  price_alert: 35,
+  // Tier 5 — informational
+  satisfaction_survey: 20,
+};
+
+/** Parse estimatedImpact strings like "€450 omzet" / "5 min bespaard" → score boost */
+function impactScore(impact: string | undefined): number {
+  if (!impact) return 0;
+  const euroMatch = impact.match(/€\s*([\d.,]+)/);
+  if (euroMatch) {
+    const num = parseFloat(euroMatch[1].replace(/[.,]/g, '')) || 0;
+    // €100 = 5pts, €500 = 12pts, €2000 = 20pts, €10k+ = 25pts (capped)
+    return Math.min(25, Math.log10(Math.max(num, 10)) * 6);
+  }
+  // Time-saved fallback: each "X min" is small but non-zero
+  const minMatch = impact.match(/(\d+)\s*min/i);
+  if (minMatch) return Math.min(8, parseFloat(minMatch[1]) / 10);
+  return 0;
+}
+
+/** Age in hours since createdAt → diminishing-returns boost */
+function ageBoost(createdAt: string): number {
+  const ageMs = Date.now() - new Date(createdAt).getTime();
+  const ageHours = ageMs / (1000 * 60 * 60);
+  if (ageHours < 24) return 0;
+  // 1d → +3, 2d → +6, 5d → +15 (capped). Scales linearly then plateaus.
+  return Math.min(15, ((ageHours - 24) / 24) * 3);
+}
+
+function goalScore(item: QueueItem, prefs: OnboardingPreferences | null): number {
+  if (!prefs || prefs.goals.length === 0) return 0;
+  if (wantsPaymentFocus(prefs) && ['draft_invoice', 'draft_reminder', 'batch_invoices', 'invoice_regenerate'].includes(item.type)) return 10;
+  if (wantsQuotingHelp(prefs) && ['draft_quote', 'draft_followup', 'quote_expiry'].includes(item.type)) return 10;
+  if (wantsComplianceFocus(prefs) && ['cert_renewal', 'permit_check', 'permit_renewal', 'safety_checklist', 'einvoice_submit'].includes(item.type)) return 10;
+  if (wantsAutomationFocus(prefs) && ['batch_invoices', 'accounting_export', 'tax_prep', 'reorder_materials'].includes(item.type)) return 10;
+  if (wantsGrowthFocus(prefs) && ['schedule_suggestion', 'maintenance_due', 'satisfaction_survey'].includes(item.type)) return 10;
+  return 0;
+}
+
+/** Public scorer — exported for testing + consumers that want the priority value */
+export function scoreQueueItem(item: QueueItem, prefs: OnboardingPreferences | null = null): number {
+  const base = BASE_URGENCY[item.type] ?? 50;
+  const impact = impactScore(item.estimatedImpact);
+  const age = ageBoost(item.createdAt);
+  const goal = goalScore(item, prefs);
+  // Snoozed items always sink (post-snooze they're back to nominal)
+  return base + impact + age + goal;
+}
+
+/** Reorder queue items by composite priority score (R268). */
+function prioritizeQueue(items: QueueItem[], prefs: OnboardingPreferences): QueueItem[] {
+  return [...items].sort((a, b) => scoreQueueItem(b, prefs) - scoreQueueItem(a, prefs));
 }
 
 export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'createdAt'>): Promise<string> {

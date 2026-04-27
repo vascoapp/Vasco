@@ -1087,7 +1087,26 @@
     "todPart_afternoon": "namiddag",
     "todPart_evening": "avond",
     "todHintWait": "Wachten tot {{day}} {{part}} → {{lift}}pp hogere acceptatie",
-    "todHintNow": "Goed moment om te versturen — {{day}} {{part}} is het piekmoment"
+    "todHintNow": "Goed moment om te versturen — {{day}} {{part}} is het piekmoment",
+    "heroAccepted": "Offerte geaccepteerd",
+    "heroRejected": "Offerte afgewezen",
+    "heroValidUntil": "Geldig tot {{date}}",
+    "customerActivity": "Klantactiviteit",
+    "engagementSummary": "{{count}}× geopend · {{minutes}} min totaal",
+    "lastSeen": "laatst gezien",
+    "expandedPricing": "Prijzen uitgeklapt",
+    "hoveredAccept": "Op accepteer gehoverd",
+    "hoveredDecline": "Op afwijzen gehoverd",
+    "startedQuestions": "{{count}} vraag/vragen begonnen",
+    "followupHint": "Veel interesse, nog geen beslissing — overweeg een follow-up",
+    "status": {
+      "draft": "Concept",
+      "sent": "Verzonden",
+      "viewed": "Bekeken",
+      "accepted": "Geaccepteerd",
+      "rejected": "Afgewezen",
+      "expired": "Verlopen"
+    }
   },
   "queue": {
     "lowWinTitle": "Lage winkans · {{customer}}",

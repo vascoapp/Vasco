@@ -1084,7 +1084,26 @@
     "todPart_afternoon": "après-midi",
     "todPart_evening": "soir",
     "todHintWait": "Attendre jusqu'à {{day}} {{part}} → {{lift}}pp d'acceptation en plus",
-    "todHintNow": "Bon moment pour envoyer — {{day}} {{part}} est le pic"
+    "todHintNow": "Bon moment pour envoyer — {{day}} {{part}} est le pic",
+    "heroAccepted": "Devis accepté",
+    "heroRejected": "Devis refusé",
+    "heroValidUntil": "Valable jusqu'au {{date}}",
+    "customerActivity": "Activité client",
+    "engagementSummary": "Ouvert {{count}}× · {{minutes}} min au total",
+    "lastSeen": "vu pour la dernière fois",
+    "expandedPricing": "Prix développés",
+    "hoveredAccept": "Survolé accepter",
+    "hoveredDecline": "Survolé refuser",
+    "startedQuestions": "{{count}} question(s) commencée(s)",
+    "followupHint": "Forte attention, pas de décision — envisagez une relance",
+    "status": {
+      "draft": "Brouillon",
+      "sent": "Envoyé",
+      "viewed": "Vu",
+      "accepted": "Accepté",
+      "rejected": "Refusé",
+      "expired": "Expiré"
+    }
   },
   "queue": {
     "lowWinTitle": "Faible chance d'acceptation · {{customer}}",

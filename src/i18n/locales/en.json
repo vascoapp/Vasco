@@ -1087,7 +1087,26 @@
     "todPart_afternoon": "afternoon",
     "todPart_evening": "evening",
     "todHintWait": "Waiting until {{day}} {{part}} → {{lift}}pp higher acceptance",
-    "todHintNow": "Good time to send — {{day}} {{part}} is the peak slot"
+    "todHintNow": "Good time to send — {{day}} {{part}} is the peak slot",
+    "heroAccepted": "Quote accepted",
+    "heroRejected": "Quote rejected",
+    "heroValidUntil": "Valid until {{date}}",
+    "customerActivity": "Customer activity",
+    "engagementSummary": "Opened {{count}}× · {{minutes}} min total",
+    "lastSeen": "last seen",
+    "expandedPricing": "Expanded pricing",
+    "hoveredAccept": "Hovered accept",
+    "hoveredDecline": "Hovered decline",
+    "startedQuestions": "Started {{count}} question(s)",
+    "followupHint": "High engagement, no decision yet — consider a follow-up",
+    "status": {
+      "draft": "Draft",
+      "sent": "Sent",
+      "viewed": "Viewed",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "expired": "Expired"
+    }
   },
   "queue": {
     "lowWinTitle": "Low win chance · {{customer}}",
