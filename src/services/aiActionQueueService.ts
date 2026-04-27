@@ -212,14 +212,35 @@ function goalScore(item: QueueItem, prefs: OnboardingPreferences | null): number
   return 0;
 }
 
-/** Public scorer — exported for testing + consumers that want the priority value */
+/**
+ * Public scorer — exported for testing + consumers that want the priority value.
+ *
+ * R269: when sourceGeneratorId is set, the additive (base+impact+age+goal)
+ * score is multiplied by the generator's trust score from insightScorer.
+ * Generators the user consistently approves/calibrates well get boosted
+ * (~×1.3-1.7); dismissed/inaccurate ones get dampened (~×0.5-0.7).
+ * This bridges the 14-dim insight matrix into the queue without bloating
+ * the queue's own dimensions.
+ */
 export function scoreQueueItem(item: QueueItem, prefs: OnboardingPreferences | null = null): number {
   const base = BASE_URGENCY[item.type] ?? 50;
   const impact = impactScore(item.estimatedImpact);
   const age = ageBoost(item.createdAt);
   const goal = goalScore(item, prefs);
-  // Snoozed items always sink (post-snooze they're back to nominal)
-  return base + impact + age + goal;
+  const additive = base + impact + age + goal;
+  // R269: bridge to insight calibration when generator is known. Sync require
+  // so the queue scorer stays sync — the underlying caches are pre-populated.
+  if (item.sourceGeneratorId) {
+    try {
+      // Lazy require to avoid pulling intelligence layer into queue tests.
+      const scorer = require('../intelligence/insightScorer');
+      const mult = scorer.getGeneratorTrustMultiplier?.(item.sourceGeneratorId) ?? 1;
+      return additive * mult;
+    } catch {
+      return additive;
+    }
+  }
+  return additive;
 }
 
 /** Reorder queue items by composite priority score (R268). */

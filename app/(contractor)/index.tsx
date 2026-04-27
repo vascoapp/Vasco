@@ -212,7 +212,9 @@ export default function VandaagDK() {
           </Pressable>
         ) : null}
 
-        {/* 6. SCHEDULE LIST ─── vertical, was Today's Schedule block */}
+        {/* 6. SCHEDULE LIST ─── vertical, was Today's Schedule block.
+             R269: calendar-settings is now wired via contextual prompt at
+             scheduling time (drag-schedule.tsx) — no header button needed. */}
         <View style={styles.sectionHeader}>
           <DKLabel style={styles.sectionTitle}>{t('dk.section.planning', 'Schedule')}</DKLabel>
           <Pressable onPress={() => router.push('/contractor/drag-schedule' as any)} hitSlop={8}>

@@ -1565,7 +1565,8 @@
     "critical": "Kritiek",
     "important": "Belangrijk",
     "optional": "Optioneel",
-    "enter": "Voer {{name}} in..."
+    "enter": "Voer {{name}} in...",
+    "editTemplates": "Herinnerings­sjablonen bewerken"
   },
   "templates": {
     "invoiceReminder": "Herinnering factuur",
@@ -1605,7 +1606,8 @@
       "details": "Details",
       "manage": "Beheer",
       "manageAll": "Beheer alles",
-      "viewAll": "Bekijk alles"
+      "viewAll": "Bekijk alles",
+      "messageTemplates": "Berichtsjablonen"
     },
     "hero": {
       "urgent": "Urgent",
@@ -1673,7 +1675,8 @@
       "byDate": "Datum",
       "byStatus": "Status",
       "maintenanceContract": "Onderhoudscontract",
-      "viewQuotes": "Bekijk offertes"
+      "viewQuotes": "Bekijk offertes",
+      "serviceAgreement": "Serviceovereenkomst"
     },
     "empty": {
       "noJobs": "Nog geen klussen",
@@ -1745,7 +1748,9 @@
       "pulseLag": "Typische acceptatietijd",
       "pulseLagSub": "{{contractors}} vakmannen, {{samples}} offertes",
       "pulseSupply": "Leveringsketen",
-      "daysShort": "d"
+      "daysShort": "d",
+      "reports": "Financiële rapporten",
+      "reportsSub": "V&W, maandelijks + per kwartaal. CSV/PDF export."
     },
     "ai": {
       "automationsTitle": "Automations",
@@ -1899,7 +1904,11 @@
     "optimizedTitle": "Geoptimaliseerde route",
     "optimizeFailed": "Optimalisatie mislukt",
     "openDragToApply": "Open de planning om deze volgorde toe te passen.",
-    "viewWeek": "Weekoverzicht"
+    "viewWeek": "Weekoverzicht",
+    "calendarPromptTitle": "Synchroniseren met je agenda?",
+    "calendarPromptBody": "Toon je klussen in je telefoonagenda zodat je nooit een mist.",
+    "calendarPromptDismiss": "Niet nu",
+    "calendarPromptEnable": "Inschakelen"
   },
   "weekly": {
     "title": "WEEKOVERZICHT",

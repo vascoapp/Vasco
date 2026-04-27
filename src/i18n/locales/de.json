@@ -1565,7 +1565,8 @@
     "critical": "Kritisch",
     "important": "Wichtig",
     "optional": "Optional",
-    "enter": "{{name}} eingeben..."
+    "enter": "{{name}} eingeben...",
+    "editTemplates": "Erinnerungsvorlagen bearbeiten"
   },
   "templates": {
     "invoiceReminder": "Zahlungserinnerung",
@@ -1605,7 +1606,8 @@
       "details": "Details",
       "manage": "Verwalten",
       "manageAll": "Alle verwalten",
-      "viewAll": "Alle anzeigen"
+      "viewAll": "Alle anzeigen",
+      "messageTemplates": "Nachrichtenvorlagen"
     },
     "hero": {
       "urgent": "Dringend",
@@ -1673,7 +1675,8 @@
       "byDate": "Datum",
       "byStatus": "Status",
       "maintenanceContract": "Wartungsvertrag",
-      "viewQuotes": "Angebote ansehen"
+      "viewQuotes": "Angebote ansehen",
+      "serviceAgreement": "Servicevertrag"
     },
     "empty": {
       "noJobs": "Noch keine Aufträge",
@@ -1745,7 +1748,9 @@
       "pulseLag": "Typische Annahmedauer",
       "pulseLagSub": "{{contractors}} Handwerker, {{samples}} Angebote",
       "pulseSupply": "Lieferkette",
-      "daysShort": "T"
+      "daysShort": "T",
+      "reports": "Finanzberichte",
+      "reportsSub": "GuV, monatlich + quartalsweise. CSV/PDF Export."
     },
     "ai": {
       "automationsTitle": "Automatisierungen",
@@ -1899,7 +1904,11 @@
     "optimizedTitle": "Optimierte Route",
     "optimizeFailed": "Optimierung fehlgeschlagen",
     "openDragToApply": "Öffne den Tagesplan, um diese Reihenfolge anzuwenden.",
-    "viewWeek": "Wochenübersicht"
+    "viewWeek": "Wochenübersicht",
+    "calendarPromptTitle": "Mit deinem Kalender synchronisieren?",
+    "calendarPromptBody": "Zeige deine Aufträge im Telefonkalender, damit du keinen verpasst.",
+    "calendarPromptDismiss": "Nicht jetzt",
+    "calendarPromptEnable": "Aktivieren"
   },
   "weekly": {
     "title": "WOCHENÜBERSICHT",

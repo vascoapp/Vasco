@@ -1555,7 +1555,8 @@
     "critical": "Critique",
     "important": "Important",
     "optional": "Optionnel",
-    "enter": "Entrez {{name}}..."
+    "enter": "Entrez {{name}}...",
+    "editTemplates": "Modifier modèles de relance"
   },
   "templates": {
     "invoiceReminder": "Rappel de facture",
@@ -1595,7 +1596,8 @@
       "details": "Détails",
       "manage": "Gérer",
       "manageAll": "Tout gérer",
-      "viewAll": "Tout voir"
+      "viewAll": "Tout voir",
+      "messageTemplates": "Modèles de message"
     },
     "hero": {
       "urgent": "Urgent",
@@ -1663,7 +1665,8 @@
       "byDate": "Date",
       "byStatus": "Statut",
       "maintenanceContract": "Contrat de maintenance",
-      "viewQuotes": "Voir les devis"
+      "viewQuotes": "Voir les devis",
+      "serviceAgreement": "Contrat de service"
     },
     "empty": {
       "noJobs": "Aucune mission",
@@ -1735,7 +1738,9 @@
       "pulseLag": "Délai d'acceptation typique",
       "pulseLagSub": "{{contractors}} artisans, {{samples}} devis",
       "pulseSupply": "Chaîne d'approvisionnement",
-      "daysShort": "j"
+      "daysShort": "j",
+      "reports": "Rapports financiers",
+      "reportsSub": "P&L, mensuel + trimestriel. Export CSV/PDF."
     },
     "ai": {
       "automationsTitle": "Automatisations",
@@ -1878,7 +1883,11 @@
     "optimizedTitle": "Itinéraire optimisé",
     "optimizeFailed": "Optimisation échouée",
     "openDragToApply": "Ouvrez la planification pour appliquer cet ordre.",
-    "viewWeek": "Vue hebdomadaire"
+    "viewWeek": "Vue hebdomadaire",
+    "calendarPromptTitle": "Synchroniser avec votre agenda ?",
+    "calendarPromptBody": "Affichez vos chantiers dans votre agenda pour ne plus en manquer.",
+    "calendarPromptDismiss": "Plus tard",
+    "calendarPromptEnable": "Activer"
   },
   "marketInsights": {
     "title": "INSIGHTS DU MARCHÉ",

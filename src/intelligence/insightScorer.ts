@@ -222,6 +222,19 @@ export async function refreshApprovalRateCache(): Promise<void> {
   } catch { /* silent */ }
 }
 
+/**
+ * R269: Public helper for the AI queue scorer to bridge in calibration +
+ * approval-rate signals from the insight layer. Returns a multiplier in
+ * roughly [0.5, 1.7] — generators with high approval/calibration get
+ * boosted, dismissed/inaccurate ones get dampened.
+ *
+ * Returns 1.0 (neutral) when generatorId is unknown or has no history.
+ */
+export function getGeneratorTrustMultiplier(generatorId: string | undefined): number {
+  if (!generatorId) return 1.0;
+  return getCalibratedMultiplier(generatorId) * getApprovalRateMultiplier(generatorId);
+}
+
 function getApprovalRateMultiplier(generatorId: string): number {
   // Auto-refresh stale per-user cache
   if (approvalRateCacheAge === 0 || Date.now() - approvalRateCacheAge > APPROVAL_CACHE_TTL_MS) {

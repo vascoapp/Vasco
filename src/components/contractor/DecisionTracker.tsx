@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, GRID, RADIUS } from '../../theme/tabStyles';
@@ -318,6 +319,7 @@ export function DecisionTrackerDetail({
   onShareWithCustomer,
 }: DecisionTrackerDetailProps) {
   const { t } = useTranslation();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'overview' | 'overdue' | 'pending' | 'completed'>('overview');
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
@@ -439,6 +441,19 @@ export function DecisionTrackerDetail({
           <Text style={styles.reminderBtnText}>Email</Text>
         </Pressable>
       </View>
+
+      {/* R269: message templates ingress — context-aware from decision flow */}
+      <Pressable
+        style={styles.templatesLink}
+        onPress={() => router.push('/contractor/message-templates' as any)}
+        accessibilityRole="button"
+        accessibilityLabel={t('dt.editTemplates', 'Edit reminder templates')}
+      >
+        <Ionicons name="create-outline" size={13} color={SemanticColors.textTertiary} />
+        <Text style={styles.templatesLinkText}>
+          {t('dt.editTemplates', 'Edit reminder templates')}
+        </Text>
+      </Pressable>
 
       {/* Tab Bar */}
       <View style={styles.tabBar}>
@@ -1293,6 +1308,20 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.borderDefault,
+  },
+  templatesLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    paddingVertical: 6,
+    marginTop: 4,
+  },
+  templatesLinkText: {
+    fontSize: 11,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textTertiary,
+    textDecorationLine: 'underline',
   },
   reminderBtn: {
     flex: 1,

@@ -373,6 +373,23 @@ export default function GeldScreen() {
           </Pressable>
         )}
 
+        {/* R269: financial reports — was orphaned in /contractor/reports */}
+        <Pressable
+          onPress={() => router.push('/contractor/reports' as any)}
+          style={({ pressed }) => [s.vatCard, pressed && { opacity: 0.92 }]}
+          accessibilityRole="button"
+          accessibilityLabel={t('dk.money.reports', 'Financial reports')}
+        >
+          <View style={s.vatIconWrap}>
+            <Ionicons name="bar-chart-outline" size={20} color={DK.colors.accent} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <DKLabel style={s.vatTitle}>{t('dk.money.reports', 'Financial reports')}</DKLabel>
+            <Text style={s.vatSub}>{t('dk.money.reportsSub', 'P&L, monthly + quarterly. CSV/PDF export.')}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={DK.colors.textMuted} />
+        </Pressable>
+
         {/* ─── MATERIAL DRIFT (R192) — cohort-observed supplier price moves ─── */}
         <MaterialDriftCard
           trade={businessProfile?.trade ?? 'general'}

@@ -8,6 +8,7 @@ import { useState, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Dimensions, PanResponder } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
@@ -16,7 +17,40 @@ import { hapticSuccess, hapticWarning } from '../../src/utils/haptics';
 import { scheduleJobReminder } from '../../src/services/pushNotificationService';
 import { useTranslation } from 'react-i18next';
 import { shareAllScheduledJobs } from '../../src/services/calendarExportService';
+import { getCalendarSyncSettings, syncJobToCalendar } from '../../src/services/calendarSyncService';
 import type { Job } from '../../src/domain/jobs';
+
+const CAL_PROMPT_DISMISSED_KEY = '@vasco_calendar_prompt_dismissed';
+
+/**
+ * R269: After scheduling, either silently sync (if enabled) or one-time-prompt
+ * the user to enable calendar sync. Dismissed prompts are remembered.
+ */
+async function maybePromptCalendarSync(
+  job: { id: string; scheduledDate?: string; scheduledStartTime?: string; scheduledEndTime?: string; title?: string; estimatedDuration?: number },
+  router: ReturnType<typeof useRouter>,
+  t: (k: string, d?: any) => string,
+): Promise<void> {
+  try {
+    const settings = await getCalendarSyncSettings();
+    if (settings.enabled) {
+      await syncJobToCalendar(job as Job);
+      return;
+    }
+    const dismissed = await AsyncStorage.getItem(CAL_PROMPT_DISMISSED_KEY);
+    if (dismissed === 'true') return;
+    Alert.alert(
+      t('schedule.calendarPromptTitle', 'Sync to your calendar?'),
+      t('schedule.calendarPromptBody', 'Show your jobs in your phone calendar so you never miss one.'),
+      [
+        { text: t('schedule.calendarPromptDismiss', 'Not now'), style: 'cancel', onPress: () => AsyncStorage.setItem(CAL_PROMPT_DISMISSED_KEY, 'true').catch(() => {}) },
+        { text: t('schedule.calendarPromptEnable', 'Enable'), onPress: () => router.push('/contractor/calendar-settings' as any) },
+      ],
+    );
+  } catch {
+    // Best-effort — never block scheduling
+  }
+}
 
 type IconName = keyof typeof Ionicons.glyphMap;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -115,13 +149,22 @@ export default function DragScheduleScreen() {
 
     // PERSIST to AppState — update job with scheduled date/time and status
     try {
+      const startTime = `${hour.toString().padStart(2, '0')}:00`;
+      const endTime = `${(hour + job.estimatedHours).toString().padStart(2, '0')}:00`;
       updateJob(job.jobId, {
         scheduledDate: todayStr,
-        scheduledStartTime: `${hour.toString().padStart(2, '0')}:00`,
-        scheduledEndTime: `${(hour + job.estimatedHours).toString().padStart(2, '0')}:00`,
+        scheduledStartTime: startTime,
+        scheduledEndTime: endTime,
         estimatedDuration: job.estimatedHours,
       });
       updateJobStatus(job.jobId, 'scheduled');
+      // R269: contextual calendar prompt during scheduling — auto-sync if
+      // already enabled, else one-time prompt to enable.
+      maybePromptCalendarSync(
+        { id: job.jobId, title: job.title, scheduledDate: todayStr, scheduledStartTime: startTime, scheduledEndTime: endTime, estimatedDuration: job.estimatedHours },
+        router,
+        t,
+      );
     } catch {}
 
     // Fire-and-forget push notification reminder (1h before scheduled time)

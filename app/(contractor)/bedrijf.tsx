@@ -345,6 +345,18 @@ export default function BedrijfScreen() {
           )
         )}
 
+        {/* R269: message templates — was orphaned in /contractor/message-templates */}
+        <Pressable
+          style={s.manageLink}
+          onPress={() => router.push('/contractor/message-templates' as any)}
+          accessibilityRole="button"
+          accessibilityLabel={t('dk.section.messageTemplates', 'Message templates')}
+        >
+          <Ionicons name="chatbubbles-outline" size={14} color={DK.colors.accent} />
+          <Text style={s.manageLinkText}>{t('dk.section.messageTemplates', 'Message templates').toUpperCase()}</Text>
+          <Ionicons name="chevron-forward" size={14} color={DK.colors.accent} />
+        </Pressable>
+
         <View style={{ height: 140 }} />
       </ScrollView>
 

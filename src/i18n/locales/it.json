@@ -1555,7 +1555,8 @@
     "critical": "Critico",
     "important": "Importante",
     "optional": "Opzionale",
-    "enter": "Inserisci {{name}}..."
+    "enter": "Inserisci {{name}}...",
+    "editTemplates": "Modifica modelli di promemoria"
   },
   "templates": {
     "invoiceReminder": "Promemoria fattura",
@@ -1595,7 +1596,8 @@
       "details": "Dettagli",
       "manage": "Gestisci",
       "manageAll": "Gestisci tutto",
-      "viewAll": "Vedi tutto"
+      "viewAll": "Vedi tutto",
+      "messageTemplates": "Modelli di messaggio"
     },
     "hero": {
       "urgent": "Urgente",
@@ -1663,7 +1665,8 @@
       "byDate": "Data",
       "byStatus": "Stato",
       "maintenanceContract": "Contratto di manutenzione",
-      "viewQuotes": "Vedi preventivi"
+      "viewQuotes": "Vedi preventivi",
+      "serviceAgreement": "Contratto di servizio"
     },
     "empty": {
       "noJobs": "Nessun lavoro",
@@ -1735,7 +1738,9 @@
       "pulseLag": "Tempo tipico di accettazione",
       "pulseLagSub": "{{contractors}} artigiani, {{samples}} preventivi",
       "pulseSupply": "Catena di fornitura",
-      "daysShort": "g"
+      "daysShort": "g",
+      "reports": "Report finanziari",
+      "reportsSub": "Conto economico, mensile + trimestrale. Export CSV/PDF."
     },
     "ai": {
       "automationsTitle": "Automazioni",
@@ -1878,7 +1883,11 @@
     "optimizedTitle": "Percorso ottimizzato",
     "optimizeFailed": "Ottimizzazione fallita",
     "openDragToApply": "Apri la pianificazione per applicare l'ordine.",
-    "viewWeek": "Vista settimanale"
+    "viewWeek": "Vista settimanale",
+    "calendarPromptTitle": "Sincronizzare con il tuo calendario?",
+    "calendarPromptBody": "Mostra i tuoi lavori nel calendario del telefono per non perderne nessuno.",
+    "calendarPromptDismiss": "Non ora",
+    "calendarPromptEnable": "Attiva"
   },
   "marketInsights": {
     "title": "INSIGHT DI MERCATO",

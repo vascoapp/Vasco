@@ -1555,7 +1555,8 @@
     "critical": "Crítico",
     "important": "Importante",
     "optional": "Opcional",
-    "enter": "Ingrese {{name}}..."
+    "enter": "Ingrese {{name}}...",
+    "editTemplates": "Editar plantillas de recordatorio"
   },
   "templates": {
     "invoiceReminder": "Recordatorio de factura",
@@ -1595,7 +1596,8 @@
       "details": "Detalles",
       "manage": "Gestionar",
       "manageAll": "Gestionar todo",
-      "viewAll": "Ver todo"
+      "viewAll": "Ver todo",
+      "messageTemplates": "Plantillas de mensaje"
     },
     "hero": {
       "urgent": "Urgente",
@@ -1663,7 +1665,8 @@
       "byDate": "Fecha",
       "byStatus": "Estado",
       "maintenanceContract": "Contrato de mantenimiento",
-      "viewQuotes": "Ver presupuestos"
+      "viewQuotes": "Ver presupuestos",
+      "serviceAgreement": "Contrato de servicio"
     },
     "empty": {
       "noJobs": "Aún no hay trabajos",
@@ -1735,7 +1738,9 @@
       "pulseLag": "Tiempo típico de aceptación",
       "pulseLagSub": "{{contractors}} contratistas, {{samples}} presupuestos",
       "pulseSupply": "Cadena de suministro",
-      "daysShort": "d"
+      "daysShort": "d",
+      "reports": "Informes financieros",
+      "reportsSub": "P&G, mensual + trimestral. Exportar CSV/PDF."
     },
     "ai": {
       "automationsTitle": "Automatizaciones",
@@ -1878,7 +1883,11 @@
     "optimizedTitle": "Ruta optimizada",
     "optimizeFailed": "Optimización fallida",
     "openDragToApply": "Abre la planificación para aplicar este orden.",
-    "viewWeek": "Vista semanal"
+    "viewWeek": "Vista semanal",
+    "calendarPromptTitle": "¿Sincronizar con tu calendario?",
+    "calendarPromptBody": "Muestra tus trabajos en el calendario del teléfono para no perderte ninguno.",
+    "calendarPromptDismiss": "Ahora no",
+    "calendarPromptEnable": "Activar"
   },
   "marketInsights": {
     "title": "INSIGHTS DEL MERCADO",

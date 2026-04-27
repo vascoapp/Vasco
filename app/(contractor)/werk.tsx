@@ -404,7 +404,7 @@ export default function WerkScreen() {
                 <DKLabel style={styles.modalSubmitText}>{t('dk.actions.createJob', 'Create')}</DKLabel>
               </Pressable>
 
-              {/* R267: maintenance contract ingress — was buried in Profile */}
+              {/* R267/R269: contract-based job ingress — was buried in Profile */}
               <Pressable
                 style={styles.maintenanceLink}
                 onPress={() => {
@@ -417,6 +417,22 @@ export default function WerkScreen() {
                 <Ionicons name="repeat" size={16} color={DK.colors.accent} />
                 <DKLabel style={styles.maintenanceLinkText}>
                   {t('dk.actions.maintenanceContract', 'Recurring maintenance contract')}
+                </DKLabel>
+                <Ionicons name="chevron-forward" size={14} color={DK.colors.accent} />
+              </Pressable>
+              {/* R269: service-agreements — long-form contracts (was orphaned) */}
+              <Pressable
+                style={styles.maintenanceLink}
+                onPress={() => {
+                  setShowNewJob(false);
+                  router.push('/contractor/service-agreements' as any);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={t('dk.actions.serviceAgreement', 'Service agreement')}
+              >
+                <Ionicons name="document-text-outline" size={16} color={DK.colors.accent} />
+                <DKLabel style={styles.maintenanceLinkText}>
+                  {t('dk.actions.serviceAgreement', 'Service agreement')}
                 </DKLabel>
                 <Ionicons name="chevron-forward" size={14} color={DK.colors.accent} />
               </Pressable>

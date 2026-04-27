@@ -1565,7 +1565,8 @@
     "critical": "Critical",
     "important": "Important",
     "optional": "Optional",
-    "enter": "Enter {{name}}..."
+    "enter": "Enter {{name}}...",
+    "editTemplates": "Edit reminder templates"
   },
   "templates": {
     "invoiceReminder": "Invoice reminder",
@@ -1605,7 +1606,8 @@
       "details": "Details",
       "manage": "Manage",
       "manageAll": "Manage all",
-      "viewAll": "View all"
+      "viewAll": "View all",
+      "messageTemplates": "Message templates"
     },
     "hero": {
       "urgent": "Urgent",
@@ -1673,7 +1675,8 @@
       "byDate": "Date",
       "byStatus": "Status",
       "maintenanceContract": "Recurring maintenance contract",
-      "viewQuotes": "View quotes"
+      "viewQuotes": "View quotes",
+      "serviceAgreement": "Service agreement"
     },
     "empty": {
       "noJobs": "No jobs yet",
@@ -1745,7 +1748,9 @@
       "pulseLag": "Typical accept lag",
       "pulseLagSub": "{{contractors}} contractors, {{samples}} quotes",
       "pulseSupply": "Supply chain",
-      "daysShort": "d"
+      "daysShort": "d",
+      "reports": "Financial reports",
+      "reportsSub": "P&L, monthly + quarterly. CSV/PDF export."
     },
     "ai": {
       "automationsTitle": "Automations",
@@ -1899,7 +1904,11 @@
     "optimizedTitle": "Optimized route",
     "optimizeFailed": "Optimization failed",
     "openDragToApply": "Open the drag schedule to apply this order.",
-    "viewWeek": "Week overview"
+    "viewWeek": "Week overview",
+    "calendarPromptTitle": "Sync to your calendar?",
+    "calendarPromptBody": "Show your jobs in your phone calendar so you never miss one.",
+    "calendarPromptDismiss": "Not now",
+    "calendarPromptEnable": "Enable"
   },
   "weekly": {
     "title": "WEEK OVERVIEW",
