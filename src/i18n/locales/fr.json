@@ -410,7 +410,11 @@
     "exportToAccounting": "Exporter vers la comptabilité",
     "shareInvoice": "Partager la facture",
     "downloadPdf": "Télécharger le PDF",
-    "invoice": "Facture"
+    "invoice": "Facture",
+    "todTitle": "Meilleur moment d'envoi",
+    "todHintFaster": "{{day}} {{part}} — payé ~{{days}} jours plus vite en moyenne",
+    "todHintHigher": "{{day}} {{part}} — {{lift}}pp de taux de paiement en plus",
+    "todSample": "Sur {{count}} factures de pairs en {{country}}"
   },
   "expenses": {
     "title": "Dépenses",

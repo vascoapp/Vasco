@@ -411,7 +411,11 @@
     "exportToAccounting": "Export to accounting",
     "shareInvoice": "Share invoice",
     "downloadPdf": "Download PDF",
-    "invoice": "Invoice"
+    "invoice": "Invoice",
+    "todTitle": "Best time to send",
+    "todHintFaster": "{{day}} {{part}} — paid ~{{days}} days faster on average",
+    "todHintHigher": "{{day}} {{part}} — {{lift}}pp higher paid rate",
+    "todSample": "Across {{count}} invoices from peers in {{country}}"
   },
   "expenses": {
     "title": "Expenses",

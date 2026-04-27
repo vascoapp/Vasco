@@ -411,7 +411,11 @@
     "exportToAccounting": "In Buchhaltung exportieren",
     "shareInvoice": "Rechnung teilen",
     "downloadPdf": "PDF herunterladen",
-    "invoice": "Rechnung"
+    "invoice": "Rechnung",
+    "todTitle": "Beste Sendezeit",
+    "todHintFaster": "{{day}} {{part}} — durchschnittlich ~{{days}} Tage schneller bezahlt",
+    "todHintHigher": "{{day}} {{part}} — {{lift}}pp höhere Zahlungsrate",
+    "todSample": "Basierend auf {{count}} Rechnungen von Kollegen in {{country}}"
   },
   "expenses": {
     "title": "Ausgaben",

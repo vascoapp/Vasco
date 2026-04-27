@@ -411,7 +411,11 @@
     "exportToAccounting": "Exporteer naar boekhouding",
     "shareInvoice": "Factuur delen",
     "downloadPdf": "Download PDF",
-    "invoice": "Factuur"
+    "invoice": "Factuur",
+    "todTitle": "Beste verzendmoment",
+    "todHintFaster": "{{day}} {{part}} — gemiddeld ~{{days}} dagen sneller betaald",
+    "todHintHigher": "{{day}} {{part}} — {{lift}}pp hoger betaalpercentage",
+    "todSample": "Op basis van {{count}} facturen van collega's in {{country}}"
   },
   "expenses": {
     "title": "Uitgaven",

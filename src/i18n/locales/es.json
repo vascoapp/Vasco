@@ -410,7 +410,11 @@
     "exportToAccounting": "Exportar a contabilidad",
     "shareInvoice": "Compartir factura",
     "downloadPdf": "Descargar PDF",
-    "invoice": "Factura"
+    "invoice": "Factura",
+    "todTitle": "Mejor momento para enviar",
+    "todHintFaster": "{{day}} {{part}} — cobrado ~{{days}} días antes en promedio",
+    "todHintHigher": "{{day}} {{part}} — {{lift}}pp más de tasa de cobro",
+    "todSample": "Sobre {{count}} facturas de colegas en {{country}}"
   },
   "expenses": {
     "title": "Gastos",
