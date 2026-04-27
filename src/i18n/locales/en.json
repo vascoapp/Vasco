@@ -1843,5 +1843,19 @@
     "weekly": "Vasco optimized {{count}} routes this week",
     "savedKmMin": "Saved {{km}}km · {{min}}min",
     "lifetime": "{{count}} all-time"
+  },
+  "marketInsights": {
+    "title": "MARKET INSIGHTS",
+    "subtitle": "{{trade}} · {{country}} cohort benchmarks",
+    "empty": "Not enough cohort data yet",
+    "emptyDesc": "Insights unlock when 5+ contractors in your trade × country bucket have logged enough quotes. Keep using the app — your own data also feeds in.",
+    "marginTrend": "COHORT MARGIN — 12 MONTHS",
+    "winRate": "WIN-RATE BY QUOTE AMOUNT",
+    "last30Days": "LAST 30 DAYS — YOUR ACTIVITY",
+    "quotesSent": "Quotes sent",
+    "accepted": "Accepted",
+    "invoicesPaid": "Invoices paid",
+    "received": "Received",
+    "footnote": "Cohort data uses k-anonymity (≥5 contractors per cell). Your individual numbers are never exposed to others."
   }
 }

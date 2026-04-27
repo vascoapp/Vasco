@@ -1843,5 +1843,19 @@
     "weekly": "Vasco optimaliseerde {{count}} routes deze week",
     "savedKmMin": "Bespaard: {{km}}km · {{min}}min",
     "lifetime": "{{count}} totaal"
+  },
+  "marketInsights": {
+    "title": "MARKT-INZICHTEN",
+    "subtitle": "{{trade}} · {{country}} cohort-benchmarks",
+    "empty": "Nog niet genoeg cohort-data",
+    "emptyDesc": "Inzichten ontgrendelen zodra 5+ aannemers in je vakgebied × land genoeg offertes hebben gelogd. Blijf de app gebruiken — je eigen data telt ook mee.",
+    "marginTrend": "COHORT-MARGE — 12 MAANDEN",
+    "winRate": "WIN-RATE PER OFFERTE-BEDRAG",
+    "last30Days": "LAATSTE 30 DAGEN — JOUW ACTIVITEIT",
+    "quotesSent": "Offertes verstuurd",
+    "accepted": "Geaccepteerd",
+    "invoicesPaid": "Facturen betaald",
+    "received": "Ontvangen",
+    "footnote": "Cohort-data gebruikt k-anonimiteit (≥5 aannemers per cel). Jouw individuele cijfers worden nooit aan anderen getoond."
   }
 }

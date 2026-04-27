@@ -13,7 +13,9 @@
 // =============================================================================
 
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { DK } from '../../theme/draftkings';
 import { TYPE, GRID, RADIUS } from '../../theme/tabStyles';
 import { DKLabel } from '../shared/DKLabel';
@@ -38,6 +40,7 @@ interface State {
 }
 
 export function MoatInsightsCard({ trade, country }: Props) {
+  const router = useRouter();
   const { user } = useAuth();
   const effectiveTrade = trade ?? user?.trade ?? 'plumbing';
   const effectiveCountry = country ?? user?.country ?? 'NL';
@@ -83,8 +86,16 @@ export function MoatInsightsCard({ trade, country }: Props) {
   );
 
   return (
-    <View style={styles.card}>
-      <DKLabel style={styles.title}>MARKT &amp; PRESTATIE</DKLabel>
+    <Pressable
+      style={styles.card}
+      onPress={() => router.push('/contractor/market-insights' as any)}
+      accessibilityRole="link"
+      accessibilityLabel={`Market insights for ${effectiveTrade} in ${effectiveCountry}. Tap for full breakdown.`}
+    >
+      <View style={styles.headerRow}>
+        <DKLabel style={styles.title}>MARKT &amp; PRESTATIE</DKLabel>
+        <Ionicons name="chevron-forward" size={14} color={DK.colors.textMuted} />
+      </View>
 
       {recentMonth && (
         <View style={styles.row}>
@@ -128,7 +139,7 @@ export function MoatInsightsCard({ trade, country }: Props) {
           </View>
         </>
       )}
-    </View>
+    </Pressable>
   );
 }
 
@@ -150,9 +161,14 @@ const styles = StyleSheet.create({
     marginVertical: GRID.md,
     gap: GRID.xs,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: GRID.sm,
+  },
   title: {
     color: DK.colors.accent,
-    marginBottom: GRID.sm,
   },
   subtitle: {
     color: DK.colors.textMuted,

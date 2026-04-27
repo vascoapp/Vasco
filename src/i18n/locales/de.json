@@ -1843,5 +1843,19 @@
     "weekly": "Vasco optimierte {{count}} Routen diese Woche",
     "savedKmMin": "{{km}}km · {{min}}min gespart",
     "lifetime": "{{count}} insgesamt"
+  },
+  "marketInsights": {
+    "title": "MARKT-EINBLICKE",
+    "subtitle": "{{trade}} · {{country}} Kohorten-Benchmarks",
+    "empty": "Noch nicht genug Kohorten-Daten",
+    "emptyDesc": "Einblicke werden freigeschaltet, sobald 5+ Handwerker in Ihrer Gewerk × Land Kategorie genug Angebote erfasst haben. Nutzen Sie die App weiter — Ihre eigenen Daten fließen auch ein.",
+    "marginTrend": "KOHORTEN-MARGE — 12 MONATE",
+    "winRate": "WIN-RATE NACH ANGEBOTSBETRAG",
+    "last30Days": "LETZTE 30 TAGE — IHRE AKTIVITÄT",
+    "quotesSent": "Angebote versendet",
+    "accepted": "Akzeptiert",
+    "invoicesPaid": "Rechnungen bezahlt",
+    "received": "Erhalten",
+    "footnote": "Kohorten-Daten nutzen k-Anonymität (≥5 Handwerker pro Zelle). Ihre einzelnen Zahlen werden nie offengelegt."
   }
 }
