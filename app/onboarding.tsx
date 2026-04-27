@@ -424,17 +424,39 @@ export default function OnboardingScreen() {
           : country === 'ES' ? 'nif'
           : country === 'IT' ? 'codiceFiscale'
           : 'kvk';
+        // R264: pre-apply confident VAT scheme so the contractor lands already
+        // configured rather than discovering it in settings later. Only applies
+        // when advisor.confident=true (NL eenmanszaak+solo or DE Einzel+solo).
+        const { suggestVatScheme } = await import('../src/services/vatSchemeAdvisor');
+        const advice = suggestVatScheme({ country, businessType, teamSize });
+        const vatSchemeToApply = advice.confident ? advice.suggested : 'standard';
+
         await updateBusinessProfile({
           country: (country ?? undefined) as any,
           trade: selectedTrades[0],
           businessType: businessType ?? undefined,
           teamSize: (teamSize as any) ?? undefined,
+          vatScheme: vatSchemeToApply,
           businessName: regFields.businessName || regFields.companyName || regFields.tradeName,
           kvkNumber: regFields[regRegKey] || regFields.kvk,
           vatNumber: regFields[countryVatKey] || regFields.vatNumber,
           registrationNumber: regFields[regRegKey] || regFields.registrationNumber,
           address: regFields.address || regFields.businessAddress,
         });
+
+        // Surface a one-shot toast so the contractor knows it was preset and
+        // can change it if their turnover will exceed the threshold.
+        if (advice.confident) {
+          const toastKey = vatSchemeToApply === 'small_business_NL_KOR'
+            ? 'onboarding.vatPresetKor'
+            : 'onboarding.vatPresetKlein';
+          Alert.alert(
+            t('onboarding.vatPresetTitle', 'VAT scheme set'),
+            t(toastKey, vatSchemeToApply === 'small_business_NL_KOR'
+              ? 'Selected KOR — change in Settings if turnover will exceed €20.000.'
+              : 'Selected Kleinunternehmer — change in Settings if turnover will exceed €22.000.'),
+          );
+        }
       } catch {}
 
       i18n.changeLanguage(language);

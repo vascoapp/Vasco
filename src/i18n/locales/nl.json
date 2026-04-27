@@ -233,7 +233,10 @@
     "valueProp2Title": "Sneller betaald worden",
     "valueProp2Desc": "Betaallinks, automatische herinneringen, achterstallige betalingen",
     "valueProp3Title": "Blijf compliant",
-    "valueProp3Desc": "Vergunningen, certificaten, EU-regelgeving — alles bijgehouden"
+    "valueProp3Desc": "Vergunningen, certificaten, EU-regelgeving — alles bijgehouden",
+    "vatPresetTitle": "BTW-regeling ingesteld",
+    "vatPresetKor": "KOR geselecteerd — wijzig in Instellingen als je omzet boven €20.000 uitkomt.",
+    "vatPresetKlein": "Kleinunternehmer geselecteerd — wijzig in Instellingen als omzet boven €22.000 komt."
   },
   "dashboard": {
     "goodMorning": "Goedemorgen",
@@ -302,7 +305,8 @@
     "captureSignature": "Handtekening vastleggen",
     "customerSignature": "Handtekening klant",
     "customerSignatureDesc": "Vraag de klant hieronder te tekenen om het werk af te ronden.",
-    "qualityFeedback": "Feedback"
+    "qualityFeedback": "Feedback",
+    "postcodeCohort": "Postcodegebied: €{{price}}/u mediaan · {{accept}}% acceptatie · {{n}} offertes"
   },
   "compliance": {
     "docRequirements": "Documentvereisten",

@@ -32,6 +32,7 @@ import { smartSchedulerService, LIFECYCLE_ORDER, LIFECYCLE_LABELS, LIFECYCLE_COL
 import type { JobLifecycleStatus } from '../../../src/services/smartSchedulerService';
 import { useJobCostVariance } from '../../../src/services/jobCostTrackingService';
 import { getCohortCostVariance, type CohortCostVariance } from '../../../src/services/costVarianceMoatService';
+import { usePostcodeCohort } from '../../../src/services/cohortBenchmarkService';
 import { useAppState } from '../../../src/state/AppState';
 import { PhotoGallery, type PhotoItem } from '../../../src/components/contractor/PhotoGallery';
 import { showPhotoPicker } from '../../../src/utils/photoPicker';
@@ -135,6 +136,13 @@ export default function JobDetailPage() {
     getCohortCostVariance(tr, co).then(b => { if (!cancelled) setCohortCostVar(b); }).catch(() => {});
     return () => { cancelled = true; };
   }, [businessProfile?.trade, businessProfile?.country]);
+  // R265: postcode-level cohort benchmark for the job's address
+  const jobPostcode = (jobs.find((j: any) => j.id === id) as any)?.address?.postcode ?? null;
+  const { cohort: postcodeCohort } = usePostcodeCohort(
+    businessProfile?.trade ?? 'general',
+    businessProfile?.country ?? 'NL',
+    jobPostcode,
+  );
   const job = useMemo(() => {
     const fromScheduler = smartSchedulerService.getJob(id || '');
     if (fromScheduler) return fromScheduler;
@@ -664,6 +672,21 @@ export default function JobDetailPage() {
                   {t('jobs.cohortCostBaseline', 'Cohort typical: {{ratio}}% of quote · {{overrun}}% jobs overrun', {
                     ratio: Math.round(cohortCostVar.medianRatio * 100),
                     overrun: Math.round((cohortCostVar.overrunRate ?? 0) * 100),
+                  })}
+                </Text>
+              )}
+              {/* R265: postcode-level cohort — only when the job's postcode area has ≥5 contractors */}
+              {postcodeCohort && postcodeCohort.contractorCount >= 5 && postcodeCohort.medianUnitPrice !== null && (
+                <Text style={{
+                  fontSize: TYPE.captionSize,
+                  fontFamily: TYPE.captionFamily,
+                  color: SemanticColors.textSecondary,
+                  marginTop: GRID.xs,
+                }}>
+                  {t('jobs.postcodeCohort', 'Postcode area: €{{price}}/u median · {{accept}}% accept · {{n}} quotes', {
+                    price: Math.round(postcodeCohort.medianUnitPrice),
+                    accept: Math.round((postcodeCohort.acceptanceRate ?? 0) * 100),
+                    n: postcodeCohort.sampleSize,
                   })}
                 </Text>
               )}

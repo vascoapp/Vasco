@@ -306,6 +306,11 @@ export async function getContractorCalibration(
   }
 }
 
+// R265: postcode-level cohort surface lives in postcodeCohortService.ts —
+// kept separate to avoid pulling cohortBenchmarkService's heavy transitive
+// imports (AsyncStorage, invoiceScanService) into job-detail-screen test paths.
+export { getPostcodeCohort, usePostcodeCohort, type PostcodeCohort } from './postcodeCohortService';
+
 export function useContractorCalibration(
   userId: string | null | undefined,
   trade: string = 'general',

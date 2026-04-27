@@ -889,8 +889,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // AI data collector — quote event + per-line pricing intelligence
         // R188: real trade/country from businessProfile (was hardcoded 'general'/'NL')
         // so cohort aggregation works for non-Dutch/non-generalist contractors.
+        // R265: also pass the job-site postcode so the postcode-level cohort
+        // RPC (R246, get_postcode_cohort_stats) actually has data to read.
         const profTrade = businessProfile.trade ?? 'general';
         const profCountry = businessProfile.country ?? 'NL';
+        const jobPostcode = job
+          ? (jobs.find((j) => j.id === job) as any)?.address?.postcode
+            ?? (jobs.find((j) => j.id === job) as any)?.address_postcode
+          : undefined;
         emitQuoteCreated(aiUserId, docNumber, {
           customerId: customer,
           totalAmount: total,
@@ -905,6 +911,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             quotedUnitPrice: item.unitPrice,
             quotedQuantity: item.quantity,
             vatRate: (item as any).vatRate ?? 21,
+            postcode: jobPostcode,
           }).catch(() => {});
         }
 

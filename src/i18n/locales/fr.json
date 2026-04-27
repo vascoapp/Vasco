@@ -233,7 +233,10 @@
     "valueProp2Title": "Soyez payé plus vite",
     "valueProp2Desc": "Liens de paiement, rappels automatiques, suivi des retards",
     "valueProp3Title": "Restez conforme",
-    "valueProp3Desc": "Permis, certificats, réglementations UE — tout suivi"
+    "valueProp3Desc": "Permis, certificats, réglementations UE — tout suivi",
+    "vatPresetTitle": "Régime de TVA défini",
+    "vatPresetKor": "KOR sélectionné — modifiez dans Paramètres si votre CA dépasse €20.000.",
+    "vatPresetKlein": "Kleinunternehmer sélectionné — modifiez dans Paramètres si CA > €22.000."
   },
   "dashboard": {
     "goodMorning": "Bonjour",
@@ -301,7 +304,8 @@
     "missingItems": "Manquant pour la conformité",
     "captureSignature": "Capturer la signature",
     "customerSignature": "Signature du client",
-    "customerSignatureDesc": "Demandez au client de signer ci-dessous pour confirmer la fin des travaux."
+    "customerSignatureDesc": "Demandez au client de signer ci-dessous pour confirmer la fin des travaux.",
+    "postcodeCohort": "Code postal : €{{price}}/h médian · {{accept}}% acceptation · {{n}} devis"
   },
   "compliance": {
     "docRequirements": "Documents requis",

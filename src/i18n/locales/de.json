@@ -233,7 +233,10 @@
     "valueProp2Title": "Schneller bezahlt werden",
     "valueProp2Desc": "Zahlungslinks, automatische Erinnerungen, Überfälligkeitsverfolgung",
     "valueProp3Title": "Konform bleiben",
-    "valueProp3Desc": "Genehmigungen, Zertifikate, EU-Vorschriften — alles im Blick"
+    "valueProp3Desc": "Genehmigungen, Zertifikate, EU-Vorschriften — alles im Blick",
+    "vatPresetTitle": "USt-Regelung gesetzt",
+    "vatPresetKor": "KOR ausgewählt — in den Einstellungen ändern, falls Umsatz über €20.000.",
+    "vatPresetKlein": "Kleinunternehmer ausgewählt — in Einstellungen ändern, falls Umsatz über €22.000."
   },
   "dashboard": {
     "goodMorning": "Guten Morgen",
@@ -302,7 +305,8 @@
     "captureSignature": "Unterschrift aufnehmen",
     "customerSignature": "Kundenunterschrift",
     "customerSignatureDesc": "Bitte den Kunden, unten zu unterschreiben, um die Arbeit zu bestätigen.",
-    "qualityFeedback": "Feedback"
+    "qualityFeedback": "Feedback",
+    "postcodeCohort": "PLZ-Gebiet: €{{price}}/Std. Median · {{accept}}% Annahme · {{n}} Angebote"
   },
   "compliance": {
     "docRequirements": "Dokumentanforderungen",

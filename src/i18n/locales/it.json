@@ -233,7 +233,10 @@
     "valueProp2Title": "Pagato più velocemente",
     "valueProp2Desc": "Link di pagamento, promemoria automatici, monitoraggio scaduti",
     "valueProp3Title": "Resta conforme",
-    "valueProp3Desc": "Permessi, certificati, normative UE — tutto tracciato"
+    "valueProp3Desc": "Permessi, certificati, normative UE — tutto tracciato",
+    "vatPresetTitle": "Regime IVA impostato",
+    "vatPresetKor": "KOR selezionato — cambia in Impostazioni se il fatturato supera €20.000.",
+    "vatPresetKlein": "Kleinunternehmer selezionato — cambia in Impostazioni se supera €22.000."
   },
   "dashboard": {
     "goodMorning": "Buongiorno",
@@ -301,7 +304,8 @@
     "missingItems": "Mancante per conformità",
     "captureSignature": "Cattura firma",
     "customerSignature": "Firma del cliente",
-    "customerSignatureDesc": "Chiedi al cliente di firmare qui sotto per confermare il lavoro completato."
+    "customerSignatureDesc": "Chiedi al cliente di firmare qui sotto per confermare il lavoro completato.",
+    "postcodeCohort": "CAP: €{{price}}/h mediana · {{accept}}% accettazione · {{n}} preventivi"
   },
   "compliance": {
     "docRequirements": "Documenti richiesti",

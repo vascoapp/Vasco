@@ -233,7 +233,10 @@
     "valueProp2Title": "Get paid faster",
     "valueProp2Desc": "Payment links, automated reminders, overdue tracking",
     "valueProp3Title": "Stay compliant",
-    "valueProp3Desc": "Permits, certificates, EU regulations — all tracked"
+    "valueProp3Desc": "Permits, certificates, EU regulations — all tracked",
+    "vatPresetTitle": "VAT scheme set",
+    "vatPresetKor": "Selected KOR — change in Settings if turnover will exceed €20.000.",
+    "vatPresetKlein": "Selected Kleinunternehmer — change in Settings if turnover will exceed €22.000."
   },
   "dashboard": {
     "goodMorning": "Good morning",
@@ -302,7 +305,8 @@
     "captureSignature": "Capture signature",
     "customerSignature": "Customer signature",
     "customerSignatureDesc": "Ask the customer to sign below to confirm the work is completed.",
-    "qualityFeedback": "Feedback"
+    "qualityFeedback": "Feedback",
+    "postcodeCohort": "Postcode area: €{{price}}/u median · {{accept}}% accept · {{n}} quotes"
   },
   "compliance": {
     "docRequirements": "Document requirements",

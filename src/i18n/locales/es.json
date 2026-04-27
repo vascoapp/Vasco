@@ -233,7 +233,10 @@
     "valueProp2Title": "Cobra más rápido",
     "valueProp2Desc": "Enlaces de pago, recordatorios automáticos, seguimiento de morosidad",
     "valueProp3Title": "Mantente conforme",
-    "valueProp3Desc": "Permisos, certificados, regulaciones UE — todo controlado"
+    "valueProp3Desc": "Permisos, certificados, regulaciones UE — todo controlado",
+    "vatPresetTitle": "Régimen de IVA configurado",
+    "vatPresetKor": "KOR seleccionado — cámbialo en Ajustes si tu facturación supera €20.000.",
+    "vatPresetKlein": "Kleinunternehmer seleccionado — cámbialo en Ajustes si supera €22.000."
   },
   "dashboard": {
     "goodMorning": "Buenos días",
@@ -301,7 +304,8 @@
     "missingItems": "Falta para el cumplimiento",
     "captureSignature": "Capturar firma",
     "customerSignature": "Firma del cliente",
-    "customerSignatureDesc": "Pide al cliente que firme abajo para confirmar que el trabajo está finalizado."
+    "customerSignatureDesc": "Pide al cliente que firme abajo para confirmar que el trabajo está finalizado.",
+    "postcodeCohort": "Código postal: €{{price}}/h mediana · {{accept}}% aceptación · {{n}} presupuestos"
   },
   "compliance": {
     "docRequirements": "Documentación requerida",
