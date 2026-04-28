@@ -22,7 +22,14 @@ export interface WorkflowStep {
   delayDays: number;         // Wait X days
   action: string;            // Do this
   channel: 'email' | 'sms' | 'push' | 'in_app';
-  template: string;          // Message template
+  /** Literal message template — used as fallback when i18nKey not resolvable
+   *  AND when the contractor has customized the copy. */
+  template: string;
+  /** Optional i18n key under `workflowPacks.*`. When set, evaluateTriggers
+   *  resolves this against the contractor's locale at run time, so a DE
+   *  contractor gets German default copy instead of Dutch. Customizing
+   *  the pack swaps to the literal `template` field. */
+  i18nKey?: string;
 }
 
 export interface WorkflowPack {
@@ -50,11 +57,11 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
     customizable: true,
     enabled: true,
     steps: [
-      { trigger: 'invoice_sent', delayDays: -3, action: 'send_pre_reminder', channel: 'email', template: 'Beste {{customer}}, uw factuur {{invoice}} van €{{amount}} vervalt over 3 dagen.' },
-      { trigger: 'invoice_overdue', delayDays: 3, action: 'send_friendly_reminder', channel: 'email', template: 'Beste {{customer}}, dit is een vriendelijke herinnering voor factuur {{invoice}} van €{{amount}}.' },
-      { trigger: 'invoice_overdue', delayDays: 7, action: 'send_reminder', channel: 'email', template: 'Beste {{customer}}, uw factuur {{invoice}} van €{{amount}} is 7 dagen over de vervaldatum.' },
-      { trigger: 'invoice_overdue', delayDays: 14, action: 'send_urgent_reminder', channel: 'sms', template: 'Herinnering: factuur {{invoice}} €{{amount}} is 14 dagen achterstallig. Gelieve direct te betalen.' },
-      { trigger: 'invoice_overdue', delayDays: 30, action: 'send_final_notice', channel: 'email', template: 'Laatste herinnering: factuur {{invoice}} is 30 dagen achterstallig. Zonder betaling binnen 7 dagen starten we incasso.' },
+      { trigger: 'invoice_sent', delayDays: -3, action: 'send_pre_reminder', channel: 'email', i18nKey: 'workflowPacks.incasso.preReminder', template: 'Beste {{customer}}, uw factuur {{invoice}} van €{{amount}} vervalt over 3 dagen.' },
+      { trigger: 'invoice_overdue', delayDays: 3, action: 'send_friendly_reminder', channel: 'email', i18nKey: 'workflowPacks.incasso.friendlyReminder', template: 'Beste {{customer}}, dit is een vriendelijke herinnering voor factuur {{invoice}} van €{{amount}}.' },
+      { trigger: 'invoice_overdue', delayDays: 7, action: 'send_reminder', channel: 'email', i18nKey: 'workflowPacks.incasso.reminder', template: 'Beste {{customer}}, uw factuur {{invoice}} van €{{amount}} is 7 dagen over de vervaldatum.' },
+      { trigger: 'invoice_overdue', delayDays: 14, action: 'send_urgent_reminder', channel: 'sms', i18nKey: 'workflowPacks.incasso.urgentReminder', template: 'Herinnering: factuur {{invoice}} €{{amount}} is 14 dagen achterstallig. Gelieve direct te betalen.' },
+      { trigger: 'invoice_overdue', delayDays: 30, action: 'send_final_notice', channel: 'email', i18nKey: 'workflowPacks.incasso.finalNotice', template: 'Laatste herinnering: factuur {{invoice}} is 30 dagen achterstallig. Zonder betaling binnen 7 dagen starten we incasso.' },
     ],
   },
   {
@@ -66,8 +73,8 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
     customizable: true,
     enabled: true,
     steps: [
-      { trigger: 'quote_sent', delayDays: 3, action: 'send_quote_followup', channel: 'email', template: 'Beste {{customer}}, heeft u de offerte voor {{job}} van €{{amount}} kunnen bekijken? Ik hoor graag van u.' },
-      { trigger: 'quote_sent', delayDays: 7, action: 'send_quote_reminder', channel: 'email', template: 'Beste {{customer}}, ter herinnering: de offerte voor {{job}} is nog 7 dagen geldig. Laat u het weten als u vragen heeft?' },
+      { trigger: 'quote_sent', delayDays: 3, action: 'send_quote_followup', channel: 'email', i18nKey: 'workflowPacks.quoteFollowup.day3', template: 'Beste {{customer}}, heeft u de offerte voor {{job}} van €{{amount}} kunnen bekijken? Ik hoor graag van u.' },
+      { trigger: 'quote_sent', delayDays: 7, action: 'send_quote_reminder', channel: 'email', i18nKey: 'workflowPacks.quoteFollowup.day7', template: 'Beste {{customer}}, ter herinnering: de offerte voor {{job}} is nog 7 dagen geldig. Laat u het weten als u vragen heeft?' },
     ],
   },
   {
@@ -79,8 +86,8 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
     customizable: true,
     enabled: true,
     steps: [
-      { trigger: 'job_completed', delayDays: 335, action: 'send_maintenance_reminder', channel: 'email', template: 'Beste {{customer}}, het is bijna een jaar geleden dat we {{job}} voor u hebben uitgevoerd. Tijd voor onderhoud?' },
-      { trigger: 'job_completed', delayDays: 365, action: 'send_maintenance_followup', channel: 'sms', template: 'Herinnering: tijd voor jaarlijks onderhoud. Bel ons op {{phone}} voor een afspraak.' },
+      { trigger: 'job_completed', delayDays: 335, action: 'send_maintenance_reminder', channel: 'email', i18nKey: 'workflowPacks.maintenance.reminder', template: 'Beste {{customer}}, het is bijna een jaar geleden dat we {{job}} voor u hebben uitgevoerd. Tijd voor onderhoud?' },
+      { trigger: 'job_completed', delayDays: 365, action: 'send_maintenance_followup', channel: 'sms', i18nKey: 'workflowPacks.maintenance.followup', template: 'Herinnering: tijd voor jaarlijks onderhoud. Bel ons op {{phone}} voor een afspraak.' },
     ],
   },
   {
@@ -92,9 +99,9 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
     customizable: false,
     enabled: true,
     steps: [
-      { trigger: 'daily_17:00', delayDays: 0, action: 'auto_log_hours', channel: 'in_app', template: 'Uren vandaag: {{hours}}u gewerkt op {{jobCount}} klussen.' },
-      { trigger: 'daily_17:00', delayDays: 0, action: 'flag_incomplete_jobs', channel: 'push', template: '{{count}} klussen nog niet afgerond vandaag.' },
-      { trigger: 'daily_17:00', delayDays: 0, action: 'prep_tomorrow', channel: 'in_app', template: 'Morgen: {{tomorrowJobs}} klussen gepland.' },
+      { trigger: 'daily_17:00', delayDays: 0, action: 'auto_log_hours', channel: 'in_app', i18nKey: 'workflowPacks.endOfDay.logHours', template: 'Uren vandaag: {{hours}}u gewerkt op {{jobCount}} klussen.' },
+      { trigger: 'daily_17:00', delayDays: 0, action: 'flag_incomplete_jobs', channel: 'push', i18nKey: 'workflowPacks.endOfDay.incompleteJobs', template: '{{count}} klussen nog niet afgerond vandaag.' },
+      { trigger: 'daily_17:00', delayDays: 0, action: 'prep_tomorrow', channel: 'in_app', i18nKey: 'workflowPacks.endOfDay.prepTomorrow', template: 'Morgen: {{tomorrowJobs}} klussen gepland.' },
     ],
   },
   {
@@ -106,8 +113,8 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
     customizable: true,
     enabled: true,
     steps: [
-      { trigger: 'quote_accepted', delayDays: 0, action: 'send_welcome', channel: 'email', template: 'Welkom {{customer}}! Bedankt voor uw vertrouwen. Uw project {{job}} staat ingepland. U kunt de voortgang volgen via uw klantportaal.' },
-      { trigger: 'job_started', delayDays: 0, action: 'send_start_notification', channel: 'sms', template: 'Goed nieuws: we zijn begonnen met {{job}}! Verwachte oplevering: {{endDate}}.' },
+      { trigger: 'quote_accepted', delayDays: 0, action: 'send_welcome', channel: 'email', i18nKey: 'workflowPacks.newCustomer.welcome', template: 'Welkom {{customer}}! Bedankt voor uw vertrouwen. Uw project {{job}} staat ingepland. U kunt de voortgang volgen via uw klantportaal.' },
+      { trigger: 'job_started', delayDays: 0, action: 'send_start_notification', channel: 'sms', i18nKey: 'workflowPacks.newCustomer.start', template: 'Goed nieuws: we zijn begonnen met {{job}}! Verwachte oplevering: {{endDate}}.' },
     ],
   },
   {
@@ -119,8 +126,8 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
     customizable: true,
     enabled: false,
     steps: [
-      { trigger: 'decision_pending', delayDays: 3, action: 'send_decision_reminder', channel: 'email', template: 'Beste {{customer}}, u heeft nog openstaande keuzes voor {{project}}. Laat het ons weten zodat we verder kunnen.' },
-      { trigger: 'decision_pending', delayDays: 7, action: 'send_decision_urgent', channel: 'sms', template: '{{customer}}, uw keuzes voor {{project}} zijn nodig om vertraging te voorkomen. Reageer alstublieft vandaag.' },
+      { trigger: 'decision_pending', delayDays: 3, action: 'send_decision_reminder', channel: 'email', i18nKey: 'workflowPacks.decisions.reminder', template: 'Beste {{customer}}, u heeft nog openstaande keuzes voor {{project}}. Laat het ons weten zodat we verder kunnen.' },
+      { trigger: 'decision_pending', delayDays: 7, action: 'send_decision_urgent', channel: 'sms', i18nKey: 'workflowPacks.decisions.urgent', template: '{{customer}}, uw keuzes voor {{project}} zijn nodig om vertraging te voorkomen. Reageer alstublieft vandaag.' },
     ],
   },
   {
@@ -132,9 +139,9 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
     customizable: true,
     enabled: false,
     steps: [
-      { trigger: 'stock_low', delayDays: 0, action: 'send_reorder_alert', channel: 'push', template: '{{material}} bijna op ({{stock}} over). Bestel bij {{supplier}} voor €{{price}}/stuk.' },
-      { trigger: 'price_drop', delayDays: 0, action: 'send_price_alert', channel: 'in_app', template: '{{material}} is {{pct}}% goedkoper bij {{supplier}}. Bespaar €{{savings}} per bestelling.' },
-      { trigger: 'bulk_opportunity', delayDays: 0, action: 'send_bulk_alert', channel: 'push', template: 'Combineer bestellingen voor {{material}} over {{jobCount}} klussen — bespaar €{{savings}} met bulkkorting.' },
+      { trigger: 'stock_low', delayDays: 0, action: 'send_reorder_alert', channel: 'push', i18nKey: 'workflowPacks.purchasing.stockLow', template: '{{material}} bijna op ({{stock}} over). Bestel bij {{supplier}} voor €{{price}}/stuk.' },
+      { trigger: 'price_drop', delayDays: 0, action: 'send_price_alert', channel: 'in_app', i18nKey: 'workflowPacks.purchasing.priceDrop', template: '{{material}} is {{pct}}% goedkoper bij {{supplier}}. Bespaar €{{savings}} per bestelling.' },
+      { trigger: 'bulk_opportunity', delayDays: 0, action: 'send_bulk_alert', channel: 'push', i18nKey: 'workflowPacks.purchasing.bulk', template: 'Combineer bestellingen voor {{material}} over {{jobCount}} klussen — bespaar €{{savings}} met bulkkorting.' },
     ],
   },
   {
@@ -146,7 +153,7 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
     customizable: true,
     enabled: true,
     steps: [
-      { trigger: 'job_clockout', delayDays: 0, action: 'send_progress_note', channel: 'sms', template: 'Hi {{customer}}, update: {{hours}}u gewerkt aan {{job}} vandaag. Alles op schema. Vragen? Laat het weten!' },
+      { trigger: 'job_clockout', delayDays: 0, action: 'send_progress_note', channel: 'sms', i18nKey: 'workflowPacks.dailyUpdate.progress', template: 'Hi {{customer}}, update: {{hours}}u gewerkt aan {{job}} vandaag. Alles op schema. Vragen? Laat het weten!' },
     ],
   },
   {
@@ -158,8 +165,8 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
     customizable: false,
     enabled: true,
     steps: [
-      { trigger: 'job_completed', delayDays: 0, action: 'prepare_handover', channel: 'in_app', template: "Opleveringspakket klaar: {{photoCount}} foto's, {{hours}}u gewerkt. Verstuur naar {{customer}}." },
-      { trigger: 'job_completed', delayDays: 7, action: 'send_satisfaction_survey', channel: 'sms', template: 'Hi {{customer}}, hoe was je ervaring met {{job}}? Je feedback helpt ons verbeteren!' },
+      { trigger: 'job_completed', delayDays: 0, action: 'prepare_handover', channel: 'in_app', i18nKey: 'workflowPacks.handover.ready', template: "Opleveringspakket klaar: {{photoCount}} foto's, {{hours}}u gewerkt. Verstuur naar {{customer}}." },
+      { trigger: 'job_completed', delayDays: 7, action: 'send_satisfaction_survey', channel: 'sms', i18nKey: 'workflowPacks.handover.survey', template: 'Hi {{customer}}, hoe was je ervaring met {{job}}? Je feedback helpt ons verbeteren!' },
     ],
   },
   {
@@ -171,7 +178,7 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
     customizable: false,
     enabled: true,
     steps: [
-      { trigger: 'job_created', delayDays: 0, action: 'check_permits', channel: 'in_app', template: 'Vergunningscheck voor {{job}}: {{permitCount}} vereisten gevonden voor {{country}}.' },
+      { trigger: 'job_created', delayDays: 0, action: 'check_permits', channel: 'in_app', i18nKey: 'workflowPacks.permits.check', template: 'Vergunningscheck voor {{job}}: {{permitCount}} vereisten gevonden voor {{country}}.' },
     ],
   },
 ];
@@ -304,7 +311,13 @@ export async function evaluateTriggers(context: TriggerContext): Promise<number>
       const matches = matchTrigger(step, context, now);
       for (const match of matches.slice(0, 2)) { // Max 2 per step to avoid queue spam
         try {
-          const resolved = resolveTemplate(step.template, match);
+          // R274: prefer i18nKey when present so non-NL contractors get
+          // their locale's default copy. Fall back to literal template
+          // when key missing or i18n returns the key unchanged (no
+          // translation registered).
+          const i18nValue = step.i18nKey ? i18n.t(step.i18nKey, { defaultValue: '' }) : '';
+          const baseTemplate = i18nValue && i18nValue !== step.i18nKey ? i18nValue : step.template;
+          const resolved = resolveTemplate(baseTemplate, match);
           const id = await addToQueue({
             type: mapActionToQueueType(step.action),
             title: `${pack.name}: ${match.label || ''}`,
