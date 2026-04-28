@@ -1,6 +1,7 @@
 // Hub: Data Intelligence — Contractor ingestion overview
 import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Palette } from '../../src/theme/colors';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
@@ -8,27 +9,28 @@ import { useIngestionStats } from '../../src/services/ingestionIntelligenceServi
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-function timeAgo(dateStr: string): string {
+function timeAgo(dateStr: string, t: any): string {
   if (!dateStr) return '';
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return 'zojuist';
-  if (mins < 60) return `${mins}m geleden`;
+  if (mins < 1) return t('intel.justNow', 'just now');
+  if (mins < 60) return t('intel.minsAgo', '{{n}}m ago', { n: mins });
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}u geleden`;
+  if (hrs < 24) return t('intel.hrsAgo', '{{n}}h ago', { n: hrs });
   const days = Math.floor(hrs / 24);
-  return `${days}d geleden`;
+  return t('intel.daysAgo', '{{n}}d ago', { n: days });
 }
 
 const SOURCE_LABELS: Record<string, string> = {
-  pdf: 'PDF Import',
-  paste: 'Tekst Plak',
-  excel: 'Excel Import',
-  csv: 'CSV Import',
-  camera: 'Camera Scan',
+  pdf: 'PDF',
+  paste: 'Paste',
+  excel: 'Excel',
+  csv: 'CSV',
+  camera: 'Camera',
 };
 
 export default function IntelligenceHubScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { stats, loading, refresh } = useIngestionStats();
 
@@ -81,8 +83,8 @@ export default function IntelligenceHubScreen() {
           <Ionicons name="chevron-back" size={22} color="#1A1A1A" />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>Data Intelligence</Text>
-          <Text style={styles.headerSubtitle}>Jouw ingestion-overzicht</Text>
+          <Text style={styles.headerTitle}>{t('intel.title', 'Data Intelligence')}</Text>
+          <Text style={styles.headerSubtitle}>{t('intel.subtitle', 'Your ingestion overview')}</Text>
         </View>
         {loading && <ActivityIndicator size="small" color={Palette.hermesOrange} />}
       </View>
@@ -99,34 +101,34 @@ export default function IntelligenceHubScreen() {
               <Text style={styles.heroValue}>
                 {stats.materialsCount.toLocaleString(undefined)}
               </Text>
-              <Text style={styles.heroLabel}>Materialen</Text>
+              <Text style={styles.heroLabel}>{t('intel.materials', 'Materials')}</Text>
             </View>
             <View style={styles.heroDivider} />
             <View style={styles.heroKPI}>
               <Text style={styles.heroValue}>
                 {stats.priceObservationsCount.toLocaleString(undefined)}
               </Text>
-              <Text style={styles.heroLabel}>Prijsobservaties</Text>
+              <Text style={styles.heroLabel}>{t('intel.priceObservations', 'Price observations')}</Text>
             </View>
             <View style={styles.heroDivider} />
             <View style={styles.heroKPI}>
               <Text style={styles.heroValue}>
                 {stats.suppliersCount.toLocaleString(undefined)}
               </Text>
-              <Text style={styles.heroLabel}>Leveranciers</Text>
+              <Text style={styles.heroLabel}>{t('intel.suppliers', 'Suppliers')}</Text>
             </View>
           </View>
           <View style={styles.heroTrendRow}>
             <Ionicons name="analytics" size={16} color={Palette.hermesOrange} />
             <Text style={styles.heroTrendText}>
-              {stats.documentsProcessed} documenten verwerkt
-              {stats.calibrationAccuracy > 0 ? ` · ${stats.calibrationAccuracy}% nauwkeurigheid` : ''}
+              {t('intel.docsProcessed', '{{n}} documents processed', { n: stats.documentsProcessed })}
+              {stats.calibrationAccuracy > 0 ? ` · ${t('intel.accuracy', '{{pct}}% accuracy', { pct: stats.calibrationAccuracy })}` : ''}
             </Text>
           </View>
         </View>
 
         {/* System Stats */}
-        <Text style={styles.sectionTitle}>SYSTEEM STATISTIEKEN</Text>
+        <Text style={styles.sectionTitle}>{t('intel.systemStats', 'SYSTEM STATISTICS')}</Text>
         <View style={styles.statsGrid}>
           {SYSTEM_STATS.map((stat) => (
             <View key={stat.label} style={styles.statCard}>
@@ -140,7 +142,7 @@ export default function IntelligenceHubScreen() {
         </View>
 
         {/* Recent Processing */}
-        <Text style={styles.sectionTitle}>RECENTE VERWERKING</Text>
+        <Text style={styles.sectionTitle}>{t('intel.recentProcessing', 'RECENT PROCESSING')}</Text>
         {stats.recentEvents.length > 0 ? (
           <View style={styles.timelineCard}>
             {stats.recentEvents.map((evt, idx) => (
@@ -159,7 +161,7 @@ export default function IntelligenceHubScreen() {
                     <Text style={styles.timelineType}>
                       {SOURCE_LABELS[evt.sourceType] ?? evt.sourceType}
                     </Text>
-                    <Text style={styles.timelineTime}>{timeAgo(evt.createdAt)}</Text>
+                    <Text style={styles.timelineTime}>{timeAgo(evt.createdAt, t)}</Text>
                   </View>
                   {evt.supplier ? (
                     <Text style={styles.timelineSupplier}>{evt.supplier}</Text>
@@ -177,8 +179,8 @@ export default function IntelligenceHubScreen() {
         ) : (
           <View style={styles.emptyCard}>
             <Ionicons name="cloud-upload-outline" size={32} color="#CCC" />
-            <Text style={styles.emptyText}>Nog geen verwerkingen</Text>
-            <Text style={styles.emptySubtext}>Importeer een factuur of catalogus om te beginnen</Text>
+            <Text style={styles.emptyText}>{t('intel.noProcessing', 'No processing yet')}</Text>
+            <Text style={styles.emptySubtext}>{t('intel.noProcessingDesc', 'Import an invoice or catalog to get started')}</Text>
           </View>
         )}
 
@@ -189,7 +191,7 @@ export default function IntelligenceHubScreen() {
             onPress={() => router.push('/hub/materials')}
           >
             <Ionicons name="cube" size={20} color={Palette.hermesOrange} />
-            <Text style={styles.quickActionText}>Materialen</Text>
+            <Text style={styles.quickActionText}>{t('intel.materials', 'Materials')}</Text>
             <Ionicons name="chevron-forward" size={16} color="#999" />
           </Pressable>
           <Pressable
@@ -197,7 +199,7 @@ export default function IntelligenceHubScreen() {
             onPress={() => router.push('/hub/suppliers')}
           >
             <Ionicons name="business" size={20} color={Palette.hermesOrange} />
-            <Text style={styles.quickActionText}>Leveranciers</Text>
+            <Text style={styles.quickActionText}>{t('intel.suppliers', 'Suppliers')}</Text>
             <Ionicons name="chevron-forward" size={16} color="#999" />
           </Pressable>
         </View>
@@ -207,7 +209,7 @@ export default function IntelligenceHubScreen() {
             onPress={() => router.push('/(modals)/ingestion')}
           >
             <Ionicons name="scan" size={20} color={Palette.hermesOrange} />
-            <Text style={styles.quickActionText}>Importeren</Text>
+            <Text style={styles.quickActionText}>{t('intel.import', 'Import')}</Text>
             <Ionicons name="chevron-forward" size={16} color="#999" />
           </Pressable>
         </View>

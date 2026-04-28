@@ -46,6 +46,7 @@ function formatDate(dateStr: string): string {
 }
 
 function MaterialDetailPanel({ material }: { material: Material }) {
+  const { t } = useTranslation();
   const { suppliers, jobMaterials, priceObservations } = useAppState();
 
   // Price observations for this material
@@ -78,7 +79,7 @@ function MaterialDetailPanel({ material }: { material: Material }) {
       {/* Specs */}
       {material.specifications && Object.keys(material.specifications).length > 0 && (
         <View style={styles.specsSection}>
-          <Text style={styles.detailSectionTitle}>Specificaties</Text>
+          <Text style={styles.detailSectionTitle}>{t('materials.specifications', 'Specifications')}</Text>
           {Object.entries(material.specifications).map(([key, value]) => (
             <View key={key} style={styles.specRow}>
               <Text style={styles.specKey}>{key}</Text>
@@ -92,15 +93,15 @@ function MaterialDetailPanel({ material }: { material: Material }) {
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{material.avgMonthlyUsage ?? '-'}</Text>
-          <Text style={styles.statLabel}>{material.baseUnit}/mnd</Text>
+          <Text style={styles.statLabel}>{material.baseUnit}/{t('materials.perMonth', 'mo')}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{material.reorderPoint ?? '-'}</Text>
-          <Text style={styles.statLabel}>Bestelpunt</Text>
+          <Text style={styles.statLabel}>{t('materials.reorderPoint', 'Reorder point')}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{jobCount}</Text>
-          <Text style={styles.statLabel}>Klussen</Text>
+          <Text style={styles.statLabel}>{t('materials.jobs', 'Jobs')}</Text>
         </View>
       </View>
 
@@ -112,7 +113,7 @@ function MaterialDetailPanel({ material }: { material: Material }) {
           color="#666"
         />
         <Text style={styles.demandText}>
-          {material.demandPattern === 'steady' ? 'Regelmatig' : material.demandPattern === 'seasonal' ? 'Seizoensgebonden' : 'Projectmatig'}
+          {material.demandPattern === 'steady' ? t('materials.demandSteady', 'Steady') : material.demandPattern === 'seasonal' ? t('materials.demandSeasonal', 'Seasonal') : t('materials.demandProject', 'Project-based')}
         </Text>
       </View>
 
@@ -120,12 +121,12 @@ function MaterialDetailPanel({ material }: { material: Material }) {
       {prices.length > 0 && (
         <View style={styles.priceSection}>
           <View style={styles.priceSectionHeader}>
-            <Text style={styles.detailSectionTitle}>Prijshistorie</Text>
+            <Text style={styles.detailSectionTitle}>{t('materials.priceHistory', 'Price history')}</Text>
             {prices.length >= 2 && (() => {
               const latest = prices[0].price;
               const previous = prices[1].price;
               const trendColor = latest > previous ? '#EF4444' : latest < previous ? '#16A34A' : '#999';
-              const trendLabel = latest > previous ? 'Stijgend' : latest < previous ? 'Dalend' : 'Stabiel';
+              const trendLabel = latest > previous ? t('materials.trendRising', 'Rising') : latest < previous ? t('materials.trendFalling', 'Falling') : t('materials.trendStable', 'Stable');
               return (
                 <View style={[styles.trendBadge, { backgroundColor: trendColor + '12' }]}>
                   <Ionicons
@@ -141,14 +142,14 @@ function MaterialDetailPanel({ material }: { material: Material }) {
           {prices.slice(0, 5).map((po) => (
             <View key={po.id} style={styles.priceRow}>
               <Text style={styles.priceSupplier} numberOfLines={1}>
-                {po.supplierName ?? 'Onbekend'}
+                {po.supplierName ?? t('materials.unknownSupplier', 'Unknown')}
               </Text>
               <Text style={styles.priceAmount}>
                 {'\u20AC'}{po.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </Text>
               {po.isSale && (
                 <View style={styles.saleBadge}>
-                  <Text style={styles.saleText}>Sale</Text>
+                  <Text style={styles.saleText}>{t('materials.sale', 'Sale')}</Text>
                 </View>
               )}
               <Text style={styles.priceDate}>{formatDate(po.observedAt)}</Text>
@@ -160,7 +161,7 @@ function MaterialDetailPanel({ material }: { material: Material }) {
       {/* Linked suppliers */}
       {linkedSuppliers.length > 0 && (
         <View style={styles.suppliersSection}>
-          <Text style={styles.detailSectionTitle}>Leveranciers</Text>
+          <Text style={styles.detailSectionTitle}>{t('materials.suppliers', 'Suppliers')}</Text>
           {linkedSuppliers.map((sup) => (
             <View key={sup.id} style={styles.supplierRow}>
               <View style={styles.supplierDot} />
@@ -263,9 +264,9 @@ export default function MaterialsHubScreen() {
           <Ionicons name="chevron-back" size={22} color="#1A1A1A" />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>Materialen</Text>
+          <Text style={styles.headerTitle}>{t('materials.title', 'Materials')}</Text>
           <Text style={styles.headerSubtitle}>
-            {materials.length} items in catalogus
+            {t('materials.itemsInCatalog', '{{count}} items in catalog', { count: materials.length })}
           </Text>
         </View>
       </View>
@@ -276,7 +277,7 @@ export default function MaterialsHubScreen() {
           <Ionicons name="search" size={18} color="#999" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Zoek materiaal, merk of SKU..."
+            placeholder={t('materials.searchPlaceholder', 'Search material, brand or SKU…')}
             placeholderTextColor="#999"
             value={query}
             onChangeText={setQuery}
@@ -310,7 +311,7 @@ export default function MaterialsHubScreen() {
               styles.chipText,
               !selectedCategory && styles.chipTextSelected,
             ]}>
-              Alles
+              {t('materials.all', 'All')}
             </Text>
           </Pressable>
           {categories.map((cat) => (
@@ -351,8 +352,8 @@ export default function MaterialsHubScreen() {
             </Text>
             <Text style={styles.emptySubtext}>
               {query || selectedCategory
-                ? 'Probeer een andere zoekopdracht'
-                : 'Importeer facturen of catalogi om je materialen-database op te bouwen'}
+                ? t('materials.tryDifferentSearch', 'Try a different search')
+                : t('materials.importToBuild', 'Import invoices or catalogs to build your material database')}
             </Text>
             {!query && !selectedCategory && (
               <Pressable
@@ -360,7 +361,7 @@ export default function MaterialsHubScreen() {
                 onPress={() => router.push('/(modals)/ingestion')}
               >
                 <Ionicons name="scan" size={18} color="#fff" />
-                <Text style={styles.emptyButtonText}>Importeren</Text>
+                <Text style={styles.emptyButtonText}>{t('materials.import', 'Import')}</Text>
               </Pressable>
             )}
           </View>

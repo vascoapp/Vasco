@@ -8,6 +8,7 @@ import {
   FlatList,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Palette } from '../../src/theme/colors';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
@@ -16,11 +17,11 @@ import type { Supplier } from '../../src/domain/suppliers';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-const STATUS_COLORS: Record<string, { bg: string; fg: string; label: string }> = {
-  active: { bg: '#16A34A12', fg: '#16A34A', label: 'Actief' },
-  inactive: { bg: '#6B728012', fg: '#6B7280', label: 'Inactief' },
-  pending: { bg: '#F59E0B12', fg: '#F59E0B', label: 'In afwachting' },
-  blocked: { bg: '#EF444412', fg: '#EF4444', label: 'Geblokkeerd' },
+const STATUS_COLORS: Record<string, { bg: string; fg: string; labelKey: string; labelFallback: string }> = {
+  active: { bg: '#16A34A12', fg: '#16A34A', labelKey: 'suppliers.statusActive', labelFallback: 'Active' },
+  inactive: { bg: '#6B728012', fg: '#6B7280', labelKey: 'suppliers.statusInactive', labelFallback: 'Inactive' },
+  pending: { bg: '#F59E0B12', fg: '#F59E0B', labelKey: 'suppliers.statusPending', labelFallback: 'Pending' },
+  blocked: { bg: '#EF444412', fg: '#EF4444', labelKey: 'suppliers.statusBlocked', labelFallback: 'Blocked' },
 };
 
 function scoreColor(score: number | undefined): string {
@@ -37,6 +38,7 @@ function formatCurrency(amount: number): string {
 // ── Supplier Detail Panel ────────────────────────────────
 
 function SupplierDetailPanel({ supplier }: { supplier: Supplier }) {
+  const { t } = useTranslation();
   const { jobMaterials, materials } = useAppState();
 
   // Find materials supplied by this supplier
@@ -57,25 +59,25 @@ function SupplierDetailPanel({ supplier }: { supplier: Supplier }) {
       {/* Performance metrics */}
       <View style={styles.metricsGrid}>
         <View style={styles.metricItem}>
-          <Text style={styles.metricLabel}>Betrouwbaarheid</Text>
+          <Text style={styles.metricLabel}>{t('suppliers.reliability', 'Reliability')}</Text>
           <Text style={[styles.metricValue, { color: scoreColor(supplier.reliabilityScore) }]}>
             {supplier.reliabilityScore != null ? `${supplier.reliabilityScore}%` : '-'}
           </Text>
         </View>
         <View style={styles.metricItem}>
-          <Text style={styles.metricLabel}>Op tijd</Text>
+          <Text style={styles.metricLabel}>{t('suppliers.onTime', 'On time')}</Text>
           <Text style={[styles.metricValue, { color: scoreColor(supplier.onTimeDeliveryRate != null ? supplier.onTimeDeliveryRate * 100 : undefined) }]}>
             {supplier.onTimeDeliveryRate != null ? `${Math.round(supplier.onTimeDeliveryRate * 100)}%` : '-'}
           </Text>
         </View>
         <View style={styles.metricItem}>
-          <Text style={styles.metricLabel}>Kwaliteit</Text>
+          <Text style={styles.metricLabel}>{t('suppliers.quality', 'Quality')}</Text>
           <Text style={[styles.metricValue, { color: scoreColor(supplier.qualityScore) }]}>
             {supplier.qualityScore != null ? `${supplier.qualityScore}` : '-'}
           </Text>
         </View>
         <View style={styles.metricItem}>
-          <Text style={styles.metricLabel}>Levertijd</Text>
+          <Text style={styles.metricLabel}>{t('suppliers.leadTime', 'Lead time')}</Text>
           <Text style={styles.metricValue}>
             {supplier.avgLeadTimeDays != null ? `${supplier.avgLeadTimeDays}d` : '-'}
           </Text>
@@ -97,10 +99,10 @@ function SupplierDetailPanel({ supplier }: { supplier: Supplier }) {
               color: supplier.avgPriceVsMarket <= 0.95 ? '#16A34A' : supplier.avgPriceVsMarket <= 1.05 ? '#F59E0B' : '#EF4444',
             }]}>
               {supplier.avgPriceVsMarket <= 0.95
-                ? `${Math.round((1 - supplier.avgPriceVsMarket) * 100)}% onder markt`
+                ? t('suppliers.belowMarket', '{{pct}}% below market', { pct: Math.round((1 - supplier.avgPriceVsMarket) * 100) })
                 : supplier.avgPriceVsMarket <= 1.05
-                  ? 'Marktconform'
-                  : `${Math.round((supplier.avgPriceVsMarket - 1) * 100)}% boven markt`}
+                  ? t('suppliers.atMarket', 'At market')
+                  : t('suppliers.aboveMarket', '{{pct}}% above market', { pct: Math.round((supplier.avgPriceVsMarket - 1) * 100) })}
             </Text>
           </View>
         )}
@@ -117,13 +119,13 @@ function SupplierDetailPanel({ supplier }: { supplier: Supplier }) {
         {supplier.creditTerms != null && supplier.creditTerms > 0 && (
           <View style={styles.termItem}>
             <Ionicons name="calendar-outline" size={14} color="#666" />
-            <Text style={styles.termText}>{supplier.creditTerms} dagen betaaltermijn</Text>
+            <Text style={styles.termText}>{t('suppliers.paymentTerms', '{{days}} day payment terms', { days: supplier.creditTerms })}</Text>
           </View>
         )}
         {supplier.apiEnabled && (
           <View style={styles.termItem}>
             <Ionicons name="code-slash" size={14} color="#3B82F6" />
-            <Text style={[styles.termText, { color: '#3B82F6' }]}>API gekoppeld</Text>
+            <Text style={[styles.termText, { color: '#3B82F6' }]}>{t('suppliers.apiLinked', 'API linked')}</Text>
           </View>
         )}
       </View>
@@ -131,7 +133,7 @@ function SupplierDetailPanel({ supplier }: { supplier: Supplier }) {
       {/* Materials from this supplier */}
       {suppliedMaterials.length > 0 && (
         <View style={styles.materialsSection}>
-          <Text style={styles.sectionTitle}>Geleverde materialen</Text>
+          <Text style={styles.sectionTitle}>{t('suppliers.deliveredMaterials', 'Delivered materials')}</Text>
           {suppliedMaterials.map((mat) => (
             <View key={mat.id} style={styles.materialChip}>
               <Text style={styles.materialChipText} numberOfLines={1}>{mat.name}</Text>
@@ -146,6 +148,7 @@ function SupplierDetailPanel({ supplier }: { supplier: Supplier }) {
 // ── Main Screen ────────────────────────────────────────────
 
 export default function SuppliersHubScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { suppliers, isLoading } = useAppState();
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -182,10 +185,10 @@ export default function SuppliersHubScreen() {
             <Text style={styles.supplierName} numberOfLines={1}>{item.name}</Text>
             <View style={styles.supplierMeta}>
               <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
-                <Text style={[styles.statusText, { color: statusStyle.fg }]}>{statusStyle.label}</Text>
+                <Text style={[styles.statusText, { color: statusStyle.fg }]}>{t(statusStyle.labelKey, statusStyle.labelFallback)}</Text>
               </View>
               <Text style={styles.spendText}>
-                {formatCurrency(item.totalSpend)} besteed
+                {t('suppliers.spent', '{{amount}} spent', { amount: formatCurrency(item.totalSpend) })}
               </Text>
             </View>
           </View>
@@ -215,9 +218,9 @@ export default function SuppliersHubScreen() {
           <Ionicons name="chevron-back" size={22} color="#1A1A1A" />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>Leveranciers</Text>
+          <Text style={styles.headerTitle}>{t('suppliers.title', 'Suppliers')}</Text>
           <Text style={styles.headerSubtitle}>
-            {suppliers.length} leveranciers
+            {t('suppliers.count', '{{count}} suppliers', { count: suppliers.length })}
           </Text>
         </View>
       </View>
@@ -227,21 +230,21 @@ export default function SuppliersHubScreen() {
         <View style={styles.summaryStrip}>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryValue}>{formatCurrency(totalSpend)}</Text>
-            <Text style={styles.summaryLabel}>Totaal besteed</Text>
+            <Text style={styles.summaryLabel}>{t('suppliers.totalSpent', 'Total spent')}</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
             <Text style={[styles.summaryValue, { color: scoreColor(avgReliability) }]}>
               {avgReliability}%
             </Text>
-            <Text style={styles.summaryLabel}>Gem. betrouwbaarheid</Text>
+            <Text style={styles.summaryLabel}>{t('suppliers.avgReliability', 'Avg reliability')}</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
             <Text style={styles.summaryValue}>
               {suppliers.filter((s) => s.apiEnabled).length}
             </Text>
-            <Text style={styles.summaryLabel}>API gekoppeld</Text>
+            <Text style={styles.summaryLabel}>{t('suppliers.apiLinked', 'API linked')}</Text>
           </View>
         </View>
       )}
@@ -259,9 +262,9 @@ export default function SuppliersHubScreen() {
         <View style={styles.emptyContainer}>
           <View style={styles.emptyCard}>
             <Ionicons name="business-outline" size={48} color="#CCC" />
-            <Text style={styles.emptyText}>Nog geen leveranciers</Text>
+            <Text style={styles.emptyText}>{t('suppliers.noSuppliers', 'No suppliers yet')}</Text>
             <Text style={styles.emptySubtext}>
-              Leveranciers worden automatisch toegevoegd bij het importeren van facturen
+              {t('suppliers.autoAdded', 'Suppliers are added automatically when invoices are imported')}
             </Text>
           </View>
         </View>

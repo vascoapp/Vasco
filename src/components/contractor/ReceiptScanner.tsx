@@ -390,21 +390,21 @@ Totaal:                                   €217,70`);
 
       <View style={styles.divider}>
         <View style={styles.dividerLine} />
-        <Text style={styles.dividerText}>of voer handmatig in</Text>
+        <Text style={styles.dividerText}>{t('receipt.orManualEntry', 'or enter manually')}</Text>
         <View style={styles.dividerLine} />
       </View>
 
       {/* Manual Text Entry */}
       <View style={styles.manualEntry}>
         <View style={styles.manualEntryHeader}>
-          <Text style={styles.manualEntryLabel}>Bon inhoud</Text>
+          <Text style={styles.manualEntryLabel}>{t('receipt.receiptContent', 'Receipt content')}</Text>
           <Pressable onPress={handleDemoText}>
-            <Text style={styles.demoLink}>Demo tekst</Text>
+            <Text style={styles.demoLink}>{t('receipt.demoText', 'Demo text')}</Text>
           </Pressable>
         </View>
         <TextInput
           style={styles.textArea}
-          placeholder="Plak hier de tekst van de bon of factuur..."
+          placeholder={t('receipt.placeholder', 'Paste the receipt or invoice text here…')}
           placeholderTextColor={SemanticColors.textTertiary}
           value={rawText}
           onChangeText={onTextChange}
@@ -421,11 +421,11 @@ Totaal:                                   €217,70`);
         disabled={!rawText.trim() || isProcessing}
       >
         {isProcessing ? (
-          <Text style={styles.extractButtonText}>Verwerken...</Text>
+          <Text style={styles.extractButtonText}>{t('receipt.processing', 'Processing…')}</Text>
         ) : (
           <>
             <Ionicons name="sparkles" size={20} color="#fff" />
-            <Text style={styles.extractButtonText}>Verwerk met AI</Text>
+            <Text style={styles.extractButtonText}>{t('receipt.processWithAi', 'Process with AI')}</Text>
           </>
         )}
       </Pressable>
@@ -434,7 +434,7 @@ Totaal:                                   €217,70`);
       <View style={styles.infoBox}>
         <Ionicons name="information-circle" size={18} color={SemanticColors.feedbackInfo} />
         <Text style={styles.infoText}>
-          Prijzen worden automatisch opgeslagen om u betere inkoopadviezen te geven.
+          {t('receipt.infoText', 'Prices are auto-saved to give you better purchasing recommendations.')}
         </Text>
       </View>
     </ScrollView>
@@ -453,6 +453,7 @@ interface ReviewModeProps {
 }
 
 function ReviewMode({ invoice, result, onConfirm, onScanAgain }: ReviewModeProps) {
+  const { t } = useTranslation();
   const confidencePercent = Math.round(invoice.extractionConfidence * 100);
 
   return (
@@ -466,48 +467,48 @@ function ReviewMode({ invoice, result, onConfirm, onScanAgain }: ReviewModeProps
             color={confidencePercent >= 70 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackWarning}
           />
           <Text style={styles.confidenceText}>
-            {confidencePercent}% zekerheid
+            {t('receipt.confidence', '{{pct}}% confident', { pct: confidencePercent })}
           </Text>
         </View>
         {confidencePercent < 70 && (
           <Text style={styles.confidenceHint}>
-            Controleer de gegevens hieronder extra goed
+            {t('receipt.checkCarefully', 'Double-check the data below carefully')}
           </Text>
         )}
       </View>
 
       {/* Invoice Header */}
       <View style={styles.reviewCard}>
-        <Text style={styles.reviewCardTitle}>Factuurgegevens</Text>
+        <Text style={styles.reviewCardTitle}>{t('receipt.invoiceData', 'Invoice data')}</Text>
 
         <View style={styles.reviewRow}>
-          <Text style={styles.reviewLabel}>Type</Text>
+          <Text style={styles.reviewLabel}>{t('receipt.type', 'Type')}</Text>
           <Text style={styles.reviewValue}>
-            {invoice.documentType === 'invoice' && 'Factuur'}
-            {invoice.documentType === 'receipt' && 'Kassabon'}
-            {invoice.documentType === 'quote' && 'Offerte'}
-            {invoice.documentType === 'order' && 'Bestelling'}
-            {invoice.documentType === 'unknown' && 'Onbekend'}
+            {invoice.documentType === 'invoice' && t('receipt.docInvoice', 'Invoice')}
+            {invoice.documentType === 'receipt' && t('receipt.docReceipt', 'Receipt')}
+            {invoice.documentType === 'quote' && t('receipt.docQuote', 'Quote')}
+            {invoice.documentType === 'order' && t('receipt.docOrder', 'Order')}
+            {invoice.documentType === 'unknown' && t('receipt.docUnknown', 'Unknown')}
           </Text>
         </View>
 
         {invoice.supplierName && (
           <View style={styles.reviewRow}>
-            <Text style={styles.reviewLabel}>Leverancier</Text>
+            <Text style={styles.reviewLabel}>{t('receipt.supplier', 'Supplier')}</Text>
             <Text style={styles.reviewValue}>{invoice.supplierName}</Text>
           </View>
         )}
 
         {invoice.documentNumber && (
           <View style={styles.reviewRow}>
-            <Text style={styles.reviewLabel}>Nummer</Text>
+            <Text style={styles.reviewLabel}>{t('receipt.number', 'Number')}</Text>
             <Text style={styles.reviewValue}>{invoice.documentNumber}</Text>
           </View>
         )}
 
         {invoice.documentDate && (
           <View style={styles.reviewRow}>
-            <Text style={styles.reviewLabel}>Datum</Text>
+            <Text style={styles.reviewLabel}>{t('receipt.date', 'Date')}</Text>
             <Text style={styles.reviewValue}>{invoice.documentDate}</Text>
           </View>
         )}
@@ -516,7 +517,7 @@ function ReviewMode({ invoice, result, onConfirm, onScanAgain }: ReviewModeProps
       {/* Line Items */}
       <View style={styles.reviewCard}>
         <Text style={styles.reviewCardTitle}>
-          Artikelen ({invoice.lineItems.length})
+          {t('receipt.articles', 'Articles ({{count}})', { count: invoice.lineItems.length })}
         </Text>
 
         {invoice.lineItems.map((item, index) => (
@@ -526,25 +527,25 @@ function ReviewMode({ invoice, result, onConfirm, onScanAgain }: ReviewModeProps
 
       {/* Totals */}
       <View style={styles.reviewCard}>
-        <Text style={styles.reviewCardTitle}>Totalen</Text>
+        <Text style={styles.reviewCardTitle}>{t('receipt.totals', 'Totals')}</Text>
 
         {invoice.subtotal && (
           <View style={styles.reviewRow}>
-            <Text style={styles.reviewLabel}>Subtotaal</Text>
+            <Text style={styles.reviewLabel}>{t('receipt.subtotal', 'Subtotal')}</Text>
             <Text style={styles.reviewValue}>{formatCurrency(invoice.subtotal)}</Text>
           </View>
         )}
 
         {invoice.vatAmount && (
           <View style={styles.reviewRow}>
-            <Text style={styles.reviewLabel}>BTW ({invoice.vatRate || 21}%)</Text>
+            <Text style={styles.reviewLabel}>{t('receipt.vat', 'VAT')} ({invoice.vatRate || 21}%)</Text>
             <Text style={styles.reviewValue}>{formatCurrency(invoice.vatAmount)}</Text>
           </View>
         )}
 
         {invoice.total && (
           <View style={[styles.reviewRow, styles.reviewRowTotal]}>
-            <Text style={styles.reviewLabelTotal}>Totaal</Text>
+            <Text style={styles.reviewLabelTotal}>{t('receipt.total', 'Total')}</Text>
             <Text style={styles.reviewValueTotal}>{formatCurrency(invoice.total)}</Text>
           </View>
         )}
@@ -565,11 +566,11 @@ function ReviewMode({ invoice, result, onConfirm, onScanAgain }: ReviewModeProps
       {/* Actions */}
       <View style={styles.reviewActions}>
         <Pressable style={styles.secondaryButton} onPress={onScanAgain}>
-          <Text style={styles.secondaryButtonText}>Opnieuw scannen</Text>
+          <Text style={styles.secondaryButtonText}>{t('receipt.scanAgain', 'Scan again')}</Text>
         </Pressable>
         <Pressable style={styles.primaryButton} onPress={onConfirm}>
           <Ionicons name="checkmark" size={20} color="#fff" />
-          <Text style={styles.primaryButtonText}>Bevestigen</Text>
+          <Text style={styles.primaryButtonText}>{t('receipt.confirm', 'Confirm')}</Text>
         </Pressable>
       </View>
 
@@ -638,36 +639,37 @@ interface ResultModeProps {
 }
 
 function ResultMode({ result, onScanAnother, onClose }: ResultModeProps) {
+  const { t } = useTranslation();
   return (
     <View style={styles.resultContainer}>
       <View style={styles.resultIcon}>
         <Ionicons name="checkmark-circle" size={64} color={SemanticColors.feedbackSuccess} />
       </View>
 
-      <Text style={styles.resultTitle}>Bon verwerkt!</Text>
+      <Text style={styles.resultTitle}>{t('receipt.processedTitle', 'Receipt processed!')}</Text>
       <Text style={styles.resultSubtitle}>
-        De prijzen zijn toegevoegd aan uw prijsintelligentie
+        {t('receipt.processedDesc', 'Prices have been added to your pricing intelligence')}
       </Text>
 
       <View style={styles.resultStats}>
         <View style={styles.resultStat}>
           <Text style={styles.resultStatValue}>{result.priceObservationsCreated}</Text>
-          <Text style={styles.resultStatLabel}>Prijzen opgeslagen</Text>
+          <Text style={styles.resultStatLabel}>{t('receipt.pricesSaved', 'Prices saved')}</Text>
         </View>
         <View style={styles.resultStatDivider} />
         <View style={styles.resultStat}>
           <Text style={styles.resultStatValue}>{result.materialsResolved}</Text>
-          <Text style={styles.resultStatLabel}>Materialen herkend</Text>
+          <Text style={styles.resultStatLabel}>{t('receipt.materialsRecognized', 'Materials recognized')}</Text>
         </View>
       </View>
 
       <View style={styles.resultActions}>
         <Pressable style={styles.primaryButton} onPress={onScanAnother}>
           <Ionicons name="add" size={20} color="#fff" />
-          <Text style={styles.primaryButtonText}>Nog een bon scannen</Text>
+          <Text style={styles.primaryButtonText}>{t('receipt.scanAnother', 'Scan another receipt')}</Text>
         </Pressable>
         <Pressable style={styles.textButton} onPress={onClose}>
-          <Text style={styles.textButtonText}>Sluiten</Text>
+          <Text style={styles.textButtonText}>{t('common.close', 'Close')}</Text>
         </Pressable>
       </View>
     </View>

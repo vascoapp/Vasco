@@ -84,8 +84,8 @@ export default function QuoteTemplatesScreen() {
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>Offerte Sjablonen</Text>
-          <Text style={styles.headerSubtitle}>{templates.length} sjablonen beschikbaar</Text>
+          <Text style={styles.headerTitle}>{t('quoteTemplates.title', 'Quote templates')}</Text>
+          <Text style={styles.headerSubtitle}>{t('quoteTemplates.available', '{{count}} templates available', { count: templates.length })}</Text>
         </View>
         <Pressable onPress={() => setShowCreate(!showCreate)} style={styles.addBtn}>
           <Ionicons name={showCreate ? 'close' : 'add'} size={24} color={Palette.hermesOrange} />
@@ -98,7 +98,7 @@ export default function QuoteTemplatesScreen() {
           style={[styles.categoryChip, !selectedCategory && styles.categoryChipActive]}
           onPress={() => setSelectedCategory(null)}
         >
-          <Text style={[styles.categoryText, !selectedCategory && styles.categoryTextActive]}>Alle</Text>
+          <Text style={[styles.categoryText, !selectedCategory && styles.categoryTextActive]}>{t('quoteTemplates.all', 'All')}</Text>
         </Pressable>
         {TEMPLATE_CATEGORIES.map(cat => (
           <Pressable
@@ -121,15 +121,15 @@ export default function QuoteTemplatesScreen() {
       {/* Create Form */}
       {showCreate && (
         <View style={styles.createCard}>
-          <Text style={styles.createTitle}>Nieuw sjabloon</Text>
+          <Text style={styles.createTitle}>{t('quoteTemplates.newTemplate', 'New template')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Sjabloon naam"
+            placeholder={t('quoteTemplates.templateName', 'Template name')}
             placeholderTextColor={SemanticColors.textTertiary}
             value={newName}
             onChangeText={setNewName}
           />
-          <Text style={styles.inputLabel}>Categorie</Text>
+          <Text style={styles.inputLabel}>{t('quoteTemplates.category', 'Category')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxHeight: 36 }}>
             <View style={styles.catChipRow}>
               {TEMPLATE_CATEGORIES.map(cat => (
@@ -145,17 +145,17 @@ export default function QuoteTemplatesScreen() {
               ))}
             </View>
           </ScrollView>
-          <Text style={styles.inputLabel}>Eerste regel</Text>
+          <Text style={styles.inputLabel}>{t('quoteTemplates.firstLine', 'First line')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Omschrijving"
+            placeholder={t('quoteTemplates.descriptionPlaceholder', 'Description')}
             placeholderTextColor={SemanticColors.textTertiary}
             value={newItemDesc}
             onChangeText={setNewItemDesc}
           />
           <TextInput
             style={styles.input}
-            placeholder="Prijs excl. BTW"
+            placeholder={t('quoteTemplates.pricePlaceholder', 'Price ex. VAT')}
             placeholderTextColor={SemanticColors.textTertiary}
             value={newItemPrice}
             onChangeText={setNewItemPrice}
@@ -166,7 +166,7 @@ export default function QuoteTemplatesScreen() {
             onPress={handleCreate}
           >
             <Ionicons name="add-circle-outline" size={18} color={Palette.white} />
-            <Text style={styles.createBtnText}>Toevoegen</Text>
+            <Text style={styles.createBtnText}>{t('quoteTemplates.add', 'Add')}</Text>
           </Pressable>
         </View>
       )}
@@ -177,7 +177,7 @@ export default function QuoteTemplatesScreen() {
         {filtered.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="document-text-outline" size={40} color={SemanticColors.textTertiary} />
-            <Text style={styles.emptyText}>Geen sjablonen in deze categorie</Text>
+            <Text style={styles.emptyText}>{t('quoteTemplates.noTemplates', 'No templates in this category')}</Text>
           </View>
         ) : (
           filtered.map(template => {
@@ -196,11 +196,11 @@ export default function QuoteTemplatesScreen() {
                   <View style={styles.templateInfo}>
                     <Text style={styles.templateName}>{template.name}</Text>
                     <Text style={styles.templateMeta}>
-                      {catConfig?.label} · {template.items.length} regels · {fmt(template.subtotal)}
+                      {catConfig?.label} · {t('quoteTemplates.linesCount', '{{count}} lines', { count: template.items.length })} · {fmt(template.subtotal)}
                     </Text>
                     <View style={styles.usageBadge}>
                       <Ionicons name="repeat-outline" size={12} color={SemanticColors.textTertiary} />
-                      <Text style={styles.usageText}>{template.usageCount}× gebruikt</Text>
+                      <Text style={styles.usageText}>{t('quoteTemplates.usedCount', '{{count}}× used', { count: template.usageCount })}</Text>
                     </View>
                   </View>
                   <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={18} color={SemanticColors.textTertiary} />
@@ -237,7 +237,7 @@ export default function QuoteTemplatesScreen() {
                     <View style={styles.expandedActions}>
                       <Pressable style={styles.useButton} onPress={() => handleUseTemplate(template)}>
                         <Ionicons name="copy-outline" size={16} color={Palette.white} />
-                        <Text style={styles.useButtonText}>Gebruik sjabloon</Text>
+                        <Text style={styles.useButtonText}>{t('quoteTemplates.useTemplate', 'Use template')}</Text>
                       </Pressable>
                       <Pressable style={styles.deleteButton} onPress={() => handleDelete(template)}>
                         <Ionicons name="trash-outline" size={16} color={SemanticColors.feedbackError} />
