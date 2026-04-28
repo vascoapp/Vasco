@@ -9,6 +9,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { Palette, SemanticColors } from '../../src/theme/colors';
 import { PAGE_BG, TYPE } from '../../src/theme/tabStyles';
 import { hapticSuccess } from '../../src/utils/haptics';
@@ -28,6 +29,7 @@ import { PhotoSubmissionsPanel } from '../../src/components/contractor/PhotoSubm
 type ViewMode = 'list' | 'detail' | 'template-picker';
 
 export default function KeuzeScreen() {
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedTracker, setSelectedTracker] = useState<CustomerDecisionTracker | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -164,7 +166,7 @@ export default function KeuzeScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.titleRow}>
-        <Text style={styles.pageTitle}>Klant Keuzes</Text>
+        <Text style={styles.pageTitle}>{t('decisions.title', 'Customer decisions')}</Text>
         {decisionNewCount > 0 && (
           <View style={styles.newBadge}>
             <Text style={styles.newBadgeText}>{decisionNewCount} nieuw</Text>

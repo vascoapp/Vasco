@@ -442,7 +442,8 @@
     "todHintHigher": "{{day}} {{part}} — {{lift}}pp di tasso di pagamento in più",
     "todSample": "Su {{count}} fatture di colleghi in {{country}}",
     "todHintWait": "Aspettare fino a {{day}} {{part}} → pagato ~{{days}} giorni prima",
-    "todHintNow": "Buon momento per inviare — {{day}} {{part}} è la fascia di picco"
+    "todHintNow": "Buon momento per inviare — {{day}} {{part}} è la fascia di picco",
+    "invoicePrefix": "Invoice {{number}}"
   },
   "expenses": {
     "title": "Spese",
@@ -1796,7 +1797,8 @@
       "reports": "Report finanziari",
       "reportsSub": "Conto economico, mensile + trimestrale. Export CSV/PDF.",
       "purchasing": "Acquisti",
-      "purchasingSub": "Scanner ricevute, riordini, prezzi fornitori."
+      "purchasingSub": "Scanner ricevute, riordini, prezzi fornitori.",
+      "sortBy": "SORT BY"
     },
     "ai": {
       "automationsTitle": "Automazioni",
@@ -2298,5 +2300,11 @@
     "linesCount": "{{count}} lines",
     "usedCount": "{{count}}× used",
     "useTemplate": "Use template"
+  },
+  "decisions": {
+    "title": "Customer decisions"
+  },
+  "besparen": {
+    "materialFallback": "Material {{id}}"
   }
 }

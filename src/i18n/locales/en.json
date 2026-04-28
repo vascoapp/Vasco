@@ -443,7 +443,8 @@
     "todHintHigher": "{{day}} {{part}} — {{lift}}pp higher paid rate",
     "todSample": "Across {{count}} invoices from peers in {{country}}",
     "todHintWait": "Waiting until {{day}} {{part}} → paid ~{{days}} days faster",
-    "todHintNow": "Good time to send — {{day}} {{part}} is the peak slot"
+    "todHintNow": "Good time to send — {{day}} {{part}} is the peak slot",
+    "invoicePrefix": "Invoice {{number}}"
   },
   "expenses": {
     "title": "Expenses",
@@ -1806,7 +1807,8 @@
       "reports": "Financial reports",
       "reportsSub": "P&L, monthly + quarterly. CSV/PDF export.",
       "purchasing": "Purchasing",
-      "purchasingSub": "Receipt scanner, reorders, supplier prices."
+      "purchasingSub": "Receipt scanner, reorders, supplier prices.",
+      "sortBy": "SORT BY"
     },
     "ai": {
       "automationsTitle": "Automations",
@@ -2308,5 +2310,11 @@
     "linesCount": "{{count}} lines",
     "usedCount": "{{count}}× used",
     "useTemplate": "Use template"
+  },
+  "decisions": {
+    "title": "Customer decisions"
+  },
+  "besparen": {
+    "materialFallback": "Material {{id}}"
   }
 }

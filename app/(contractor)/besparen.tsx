@@ -95,7 +95,7 @@ export default function BesparenScreen() {
       .map(m => {
         const mat = materials.find(x => x.id === m.materialId);
         return {
-          name: mat?.name ?? `Materiaal ${m.materialId}`,
+          name: mat?.name ?? t('besparen.materialFallback', 'Material {{id}}', { id: m.materialId }),
           quantity: m.quantity,
           unit: m.unit,
           jobId: job.id,

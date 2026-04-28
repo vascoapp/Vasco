@@ -634,7 +634,7 @@ export default function GeldScreen() {
               </Pressable>
             ))}
             <View style={s.modalDivider} />
-            <Text style={s.modalSubtitle}>SORTEREN OP</Text>
+            <Text style={s.modalSubtitle}>{t('dk.money.sortBy', 'SORT BY')}</Text>
             {(['value-desc', 'date-desc'] as const).map(sort => (
               <Pressable key={sort} style={[s.modalRow, quoteSort === sort && s.modalRowActive]} onPress={() => { setQuoteSort(sort); setShowQuoteFilterModal(false); }}>
                 <Text style={[s.modalRowText, quoteSort === sort && s.modalRowTextActive]}>{(sort === 'value-desc' ? t('dk.actions.byValue', 'Value') : t('dk.actions.byDate', 'Date')).toUpperCase()}</Text>

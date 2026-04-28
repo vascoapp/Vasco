@@ -442,7 +442,8 @@
     "todHintHigher": "{{day}} {{part}} — {{lift}}pp más de tasa de cobro",
     "todSample": "Sobre {{count}} facturas de colegas en {{country}}",
     "todHintWait": "Esperar hasta {{day}} {{part}} → cobrado ~{{days}} días antes",
-    "todHintNow": "Buen momento para enviar — {{day}} {{part}} es la franja pico"
+    "todHintNow": "Buen momento para enviar — {{day}} {{part}} es la franja pico",
+    "invoicePrefix": "Invoice {{number}}"
   },
   "expenses": {
     "title": "Gastos",
@@ -1796,7 +1797,8 @@
       "reports": "Informes financieros",
       "reportsSub": "P&G, mensual + trimestral. Exportar CSV/PDF.",
       "purchasing": "Compras",
-      "purchasingSub": "Escáner de recibos, pedidos, precios de proveedores."
+      "purchasingSub": "Escáner de recibos, pedidos, precios de proveedores.",
+      "sortBy": "SORT BY"
     },
     "ai": {
       "automationsTitle": "Automatizaciones",
@@ -2298,5 +2300,11 @@
     "linesCount": "{{count}} lines",
     "usedCount": "{{count}}× used",
     "useTemplate": "Use template"
+  },
+  "decisions": {
+    "title": "Customer decisions"
+  },
+  "besparen": {
+    "materialFallback": "Material {{id}}"
   }
 }

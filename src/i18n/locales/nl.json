@@ -443,7 +443,8 @@
     "todHintHigher": "{{day}} {{part}} — {{lift}}pp hoger betaalpercentage",
     "todSample": "Op basis van {{count}} facturen van collega's in {{country}}",
     "todHintWait": "Wachten tot {{day}} {{part}} → ~{{days}} dagen sneller betaald",
-    "todHintNow": "Goed moment om te versturen — {{day}} {{part}} is het piekmoment"
+    "todHintNow": "Goed moment om te versturen — {{day}} {{part}} is het piekmoment",
+    "invoicePrefix": "Factuur {{number}}"
   },
   "expenses": {
     "title": "Uitgaven",
@@ -1806,7 +1807,8 @@
       "reports": "Financiële rapporten",
       "reportsSub": "V&W, maandelijks + per kwartaal. CSV/PDF export.",
       "purchasing": "Inkoop",
-      "purchasingSub": "Bon scanner, herbestellen, leveranciersprijzen."
+      "purchasingSub": "Bon scanner, herbestellen, leveranciersprijzen.",
+      "sortBy": "SORTEREN OP"
     },
     "ai": {
       "automationsTitle": "Automations",
@@ -2308,5 +2310,11 @@
     "linesCount": "{{count}} regels",
     "usedCount": "{{count}}× gebruikt",
     "useTemplate": "Gebruik sjabloon"
+  },
+  "decisions": {
+    "title": "Klant Keuzes"
+  },
+  "besparen": {
+    "materialFallback": "Materiaal {{id}}"
   }
 }

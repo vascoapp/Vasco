@@ -236,7 +236,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                       const link = await createPaymentLink({
                         invoiceId: invoice.id,
                         amount: autoInv.total,
-                        description: `Factuur ${autoInv.invoiceNumber}`,
+                        description: t('invoices.invoicePrefix', 'Invoice {{number}}', { number: autoInv.invoiceNumber }),
                       });
                       hapticSuccess();
                       const text = buildInvoiceShareText(autoInv, businessProfile.businessName, link?.url);
@@ -259,7 +259,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                       const link = await createPaymentLink({
                         invoiceId: invoice.id,
                         amount: autoInv.total,
-                        description: `Factuur ${autoInv.invoiceNumber}`,
+                        description: t('invoices.invoicePrefix', 'Invoice {{number}}', { number: autoInv.invoiceNumber }),
                       });
                       await generateInvoicePdf(autoInv, businessProfile, link?.url);
                     } else {
@@ -276,7 +276,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                     const link = await createPaymentLink({
                       invoiceId: invoice.id,
                       amount: invoice.amount,
-                      description: `Factuur ${invoice.id}`,
+                      description: t('invoices.invoicePrefix', 'Invoice {{number}}', { number: invoice.id }),
                     });
                     if (link?.url) {
                       hapticSuccess();

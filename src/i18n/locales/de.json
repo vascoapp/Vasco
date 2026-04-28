@@ -443,7 +443,8 @@
     "todHintHigher": "{{day}} {{part}} — {{lift}}pp höhere Zahlungsrate",
     "todSample": "Basierend auf {{count}} Rechnungen von Kollegen in {{country}}",
     "todHintWait": "Bis {{day}} {{part}} warten → ~{{days}} Tage schneller bezahlt",
-    "todHintNow": "Guter Moment zum Senden — {{day}} {{part}} ist der Spitzenwert"
+    "todHintNow": "Guter Moment zum Senden — {{day}} {{part}} ist der Spitzenwert",
+    "invoicePrefix": "Invoice {{number}}"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -1806,7 +1807,8 @@
       "reports": "Finanzberichte",
       "reportsSub": "GuV, monatlich + quartalsweise. CSV/PDF Export.",
       "purchasing": "Einkauf",
-      "purchasingSub": "Belegscanner, Nachbestellungen, Lieferantenpreise."
+      "purchasingSub": "Belegscanner, Nachbestellungen, Lieferantenpreise.",
+      "sortBy": "SORT BY"
     },
     "ai": {
       "automationsTitle": "Automatisierungen",
@@ -2308,5 +2310,11 @@
     "linesCount": "{{count}} lines",
     "usedCount": "{{count}}× used",
     "useTemplate": "Use template"
+  },
+  "decisions": {
+    "title": "Customer decisions"
+  },
+  "besparen": {
+    "materialFallback": "Material {{id}}"
   }
 }
