@@ -33,7 +33,9 @@
     "customer": "Klant",
     "project": "Project",
     "and": "en",
-    "thisJob": "deze klus"
+    "thisJob": "deze klus",
+    "apply": "Toepassen",
+    "ignore": "Negeren"
   },
   "tabs": {
     "today": "Vandaag",
@@ -381,7 +383,23 @@
     "analyzingPhotos": "Vasco analyseert je foto's...",
     "analyzingSubtext": "Materialen, hoeveelheden en prijzen worden herkend",
     "pleaseWait": "Even wachten",
-    "rateLimitMessage": "Je kunt opnieuw scannen over {{seconds}} seconden."
+    "rateLimitMessage": "Je kunt opnieuw scannen over {{seconds}} seconden.",
+    "title": "AI offerte",
+    "complexity": "Complexiteit",
+    "complexitySimple": "Eenvoudig",
+    "complexityComplex": "Complex",
+    "complexityModerate": "Gemiddeld",
+    "estimatedHours": "Geschatte uren",
+    "hourShort": "u",
+    "items": "Items",
+    "detectedItems": "Gevonden items",
+    "confidenceLabel": "{{pct}}% zeker",
+    "observations": "Observaties",
+    "warnings": "Let op",
+    "subtotal": "Subtotaal",
+    "vat": "BTW (21%)",
+    "total": "Totaal",
+    "retake": "Opnieuw"
   },
   "invoices": {
     "title": "Facturen",
@@ -1116,7 +1134,30 @@
       "accepted": "Geaccepteerd",
       "rejected": "Afgewezen",
       "expired": "Verlopen"
-    }
+    },
+    "addServices": "Diensten toevoegen",
+    "services": "Diensten",
+    "unitPiece": "stuk",
+    "scopePlaceholder": "Beschrijf de werkomvang…",
+    "orScanPhoto": "Of scan een foto",
+    "orFromTemplate": "Of start van sjabloon:",
+    "lineCount": "{{count}} regels",
+    "pickFromPricebook": "Kies diensten uit je prijslijst",
+    "forgotten": "Vergeten?",
+    "bottomSummary": "{{count}} diensten · {{total}} (standaard)",
+    "reviewQuote": "Bekijk offerte",
+    "checkQuote": "Offerte controleren",
+    "vascoAdvice": "Vasco advies",
+    "calibrationLine": "Op basis van {{count}} eerdere klussen: uren {{adjustment}}",
+    "onSchedule": "op schema",
+    "calibrationApplied": "Kalibratie toegepast",
+    "priceAdvice": "Aanbevolen uurprijs: {{rate}} · Acceptatiekans: {{rate2}}%",
+    "winChance": "Win-kans:",
+    "recommended": "AANBEVOLEN",
+    "inclVat": "incl. btw",
+    "upsellStat": "83% van klanten kiest Standaard of Premium",
+    "linesStandard": "Regels (standaard)",
+    "sendQuote": "Offerte versturen"
   },
   "queue": {
     "lowWinTitle": "Lage winkans · {{customer}}",
@@ -1576,7 +1617,10 @@
     "important": "Belangrijk",
     "optional": "Optioneel",
     "enter": "Voer {{name}} in...",
-    "editTemplates": "Herinnerings­sjablonen bewerken"
+    "editTemplates": "Herinnerings­sjablonen bewerken",
+    "openWhatsappFailed": "Kon WhatsApp niet openen",
+    "openSmsFailed": "Kon SMS niet openen",
+    "openEmailFailed": "Kon e-mail niet openen"
   },
   "templates": {
     "invoiceReminder": "Herinnering factuur",
@@ -1760,7 +1804,9 @@
       "pulseSupply": "Leveringsketen",
       "daysShort": "d",
       "reports": "Financiële rapporten",
-      "reportsSub": "V&W, maandelijks + per kwartaal. CSV/PDF export."
+      "reportsSub": "V&W, maandelijks + per kwartaal. CSV/PDF export.",
+      "purchasing": "Inkoop",
+      "purchasingSub": "Bon scanner, herbestellen, leveranciersprijzen."
     },
     "ai": {
       "automationsTitle": "Automations",

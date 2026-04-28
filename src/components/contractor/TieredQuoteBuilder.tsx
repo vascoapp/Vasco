@@ -604,8 +604,8 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
             <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
           </Pressable>
           <View style={{ flex: 1 }}>
-            <Text style={s.headerTitle}>Diensten toevoegen</Text>
-            <Text style={s.headerSub}>{TRADE_LABELS[trade] ?? 'Diensten'}</Text>
+            <Text style={s.headerTitle}>{t('quotes.addServices', 'Add services')}</Text>
+            <Text style={s.headerSub}>{TRADE_LABELS[trade] ?? t('quotes.services', 'Services')}</Text>
           </View>
         </View>
         <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} keyboardShouldPersistTaps="handled">
@@ -615,7 +615,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
               <Pressable key={item.id} style={[s.pbItem, isSelected && s.pbItemSelected]} onPress={() => addService(item)}>
                 <View style={{ flex: 1 }}>
                   <Text style={s.pbName}>{item.name}</Text>
-                  <Text style={s.pbPrice}>{fmt(item.basePrice)}/{item.unit || 'stuk'}</Text>
+                  <Text style={s.pbPrice}>{fmt(item.basePrice)}/{item.unit || t('quotes.unitPiece', 'piece')}</Text>
                 </View>
                 <Ionicons name={isSelected ? 'checkmark-circle' : 'add-circle-outline'} size={22} color={isSelected ? SemanticColors.feedbackSuccess : Palette.hermesOrange} />
               </Pressable>
@@ -634,7 +634,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
             <Ionicons name="close" size={22} color={SemanticColors.textPrimary} />
           </Pressable>
           <View style={{ flex: 1 }}>
-            <Text style={s.headerTitle}>Nieuwe offerte</Text>
+            <Text style={s.headerTitle}>{t('quotes.newQuote', 'New quote')}</Text>
             {customer && <Text style={s.headerSub}>{customer.name}</Text>}
           </View>
         </View>
@@ -709,7 +709,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
                 style={s.aiDraftInput}
                 value={scopeText}
                 onChangeText={setScopeText}
-                placeholder="Describe the job scope..."
+                placeholder={t('quotes.scopePlaceholder', 'Describe the job scope…')}
                 placeholderTextColor={SemanticColors.textTertiary}
                 returnKeyType="send"
                 onSubmitEditing={handleAIDraft}
@@ -725,7 +725,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
             </View>
             <Pressable style={s.aiScanRow} onPress={() => setShowAIQuote(true)}>
               <Ionicons name="camera" size={16} color={Palette.hermesOrange} />
-              <Text style={s.aiScanText}>Or scan a photo</Text>
+              <Text style={s.aiScanText}>{t('quotes.orScanPhoto', 'Or scan a photo')}</Text>
               <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
             </Pressable>
             <SimilarJobsSuggest query={scopeText} onPickJob={handlePickSimilarJob} />
@@ -734,7 +734,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
           {/* Services section */}
           <View style={s.section}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={s.sectionTitle}>{TRADE_LABELS[trade] ?? 'Diensten'}</Text>
+              <Text style={s.sectionTitle}>{TRADE_LABELS[trade] ?? t('quotes.services', 'Services')}</Text>
               <Pressable style={s.addBtn} onPress={() => setShowPricebook(true)}>
                 <Ionicons name="add" size={16} color={Palette.hermesOrange} />
                 <Text style={s.addBtnText}>{t('common.add', 'Add')}</Text>
@@ -772,19 +772,19 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
                 {/* Templates */}
                 {templates.length > 0 && (
                   <View style={{ gap: 8 }}>
-                    <Text style={s.templateLabel}>Of start van sjabloon:</Text>
+                    <Text style={s.templateLabel}>{t('quotes.orFromTemplate', 'Or start from template:')}</Text>
                     {templates.slice(0, 3).map(tpl => (
                       <Pressable key={tpl.id} style={s.templateRow} onPress={() => loadTemplate(tpl)}>
                         <Ionicons name="copy-outline" size={16} color={Palette.hermesOrange} />
                         <Text style={s.templateName}>{tpl.name}</Text>
-                        <Text style={s.templateMeta}>{tpl.items.length} regels</Text>
+                        <Text style={s.templateMeta}>{t('quotes.lineCount', '{{count}} lines', { count: tpl.items.length })}</Text>
                       </Pressable>
                     ))}
                   </View>
                 )}
                 <Pressable style={s.emptyBox} onPress={() => setShowPricebook(true)}>
                   <Ionicons name="document-text-outline" size={28} color={SemanticColors.textTertiary} />
-                  <Text style={s.emptyText}>Kies diensten uit je prijslijst</Text>
+                  <Text style={s.emptyText}>{t('quotes.pickFromPricebook', 'Pick services from your pricebook')}</Text>
                 </Pressable>
               </>
             )}
@@ -793,7 +793,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
             {selectedServices.length > 0 && (
               <View style={s.suggestRow}>
                 <Ionicons name="bulb-outline" size={14} color={SemanticColors.textTertiary} />
-                <Text style={s.suggestLabel}>Vergeten?</Text>
+                <Text style={s.suggestLabel}>{t('quotes.forgotten', 'Forgot something?')}</Text>
                 {(TRADE_SUGGESTIONS[trade] ?? TRADE_SUGGESTIONS.general).slice(0, 3).map(item => (
                   <View key={item} style={s.suggestChip}>
                     <Text style={s.suggestChipText}>{item}</Text>
@@ -807,9 +807,9 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
         {/* Bottom: go to preview */}
         {selectedServices.length > 0 && (
           <View style={s.bottom}>
-            <Text style={s.bottomSummary}>{selectedServices.length} diensten · {fmt(tiers[1].total)} (standaard)</Text>
+            <Text style={s.bottomSummary}>{t('quotes.bottomSummary', '{{count}} services · {{total}} (standard)', { count: selectedServices.length, total: fmt(tiers[1].total) })}</Text>
             <Pressable style={s.nextBtn} onPress={() => { hapticSuccess(); setStep('preview'); }}>
-              <Text style={s.nextBtnText}>Bekijk offerte</Text>
+              <Text style={s.nextBtnText}>{t('quotes.reviewQuote', 'Review quote')}</Text>
               <Ionicons name="arrow-forward" size={18} color={Palette.white} />
             </Pressable>
           </View>
@@ -864,7 +864,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={s.headerTitle}>Offerte controleren</Text>
+          <Text style={s.headerTitle}>{t('quotes.checkQuote', 'Check quote')}</Text>
           {customer && <Text style={s.headerSub}>{customer.name}</Text>}
         </View>
       </View>
@@ -874,17 +874,19 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
         <View style={s.vascoCard}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Ionicons name="flash" size={16} color={Palette.hermesOrange} />
-            <Text style={s.vascoTitle}>Vasco advies</Text>
+            <Text style={s.vascoTitle}>{t('quotes.vascoAdvice', 'Vasco advice')}</Text>
           </View>
 
           {/* Calibration */}
           {calibrations.length > 0 && !calibrationApplied && (
             <View style={s.vascoRow}>
               <Text style={s.vascoText}>
-                Op basis van {calibrations[0]?.basedOnJobCount || 0} eerdere klussen: uren{' '}
-                {calibrations.some(c => c.combinedMultiplier > 1)
-                  ? `+${Math.round((Math.max(...calibrations.map(c => c.combinedMultiplier)) - 1) * 100)}%`
-                  : 'op schema'}
+                {t('quotes.calibrationLine', 'Based on {{count}} prior jobs: hours {{adjustment}}', {
+                  count: calibrations[0]?.basedOnJobCount || 0,
+                  adjustment: calibrations.some(c => c.combinedMultiplier > 1)
+                    ? `+${Math.round((Math.max(...calibrations.map(c => c.combinedMultiplier)) - 1) * 100)}%`
+                    : t('quotes.onSchedule', 'on schedule'),
+                })}
               </Text>
               <View style={{ flexDirection: 'row', gap: 6 }}>
                 <Pressable style={s.vascoApply} onPress={() => {
@@ -894,10 +896,10 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
                   }));
                   setCalibrationApplied(true);
                 }}>
-                  <Text style={s.vascoApplyText}>Toepassen</Text>
+                  <Text style={s.vascoApplyText}>{t('common.apply', 'Apply')}</Text>
                 </Pressable>
                 <Pressable style={s.vascoSkip} onPress={() => setCalibrationApplied(true)}>
-                  <Text style={s.vascoSkipText}>Negeer</Text>
+                  <Text style={s.vascoSkipText}>{t('common.ignore', 'Ignore')}</Text>
                 </Pressable>
               </View>
             </View>
@@ -905,7 +907,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
           {calibrationApplied && calibrations.length > 0 && (
             <View style={s.vascoRow}>
               <Ionicons name="checkmark-circle" size={14} color={SemanticColors.feedbackSuccess} />
-              <Text style={[s.vascoText, { color: SemanticColors.feedbackSuccess }]}>Kalibratie toegepast</Text>
+              <Text style={[s.vascoText, { color: SemanticColors.feedbackSuccess }]}>{t('quotes.calibrationApplied', 'Calibration applied')}</Text>
             </View>
           )}
 
@@ -913,7 +915,10 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
           {priceSuggestion && (priceSuggestion.suggestedPrice ?? 0) > 0 && (
             <View style={s.vascoRow}>
               <Text style={s.vascoText}>
-                Aanbevolen uurprijs: {fmt(priceSuggestion.suggestedPrice ?? 0)} · Acceptatiekans: {Math.round((priceSuggestion.acceptanceRate ?? 0) * 100)}%
+                {t('quotes.priceAdvice', 'Recommended hourly rate: {{rate}} · Acceptance rate: {{rate2}}%', {
+                  rate: fmt(priceSuggestion.suggestedPrice ?? 0),
+                  rate2: Math.round((priceSuggestion.acceptanceRate ?? 0) * 100),
+                })}
               </Text>
             </View>
           )}
@@ -922,7 +927,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
           {winPrediction && (
             <View style={s.vascoRow}>
               <Text style={s.vascoText}>
-                Win-kans:{' '}
+                {t('quotes.winChance', 'Win chance:')}{' '}
                 <Text style={{ color: winPrediction.probability >= 0.7 ? SemanticColors.feedbackSuccess : winPrediction.probability >= 0.5 ? SemanticColors.feedbackWarning : SemanticColors.feedbackError, fontFamily: TYPE.titleFamily }}>
                   {Math.round(winPrediction.probability * 100)}%
                 </Text>
@@ -1076,7 +1081,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
               <View key={tier.tier} style={[s.tierCard, tier.isRecommended && { borderColor: Palette.hermesOrange, borderWidth: 2 }]}>
                 {tier.isRecommended && (
                   <View style={s.recRibbon}>
-                    <Text style={s.recRibbonText}>AANBEVOLEN</Text>
+                    <Text style={s.recRibbonText}>{t('quotes.recommended', 'RECOMMENDED')}</Text>
                   </View>
                 )}
                 <View style={[s.tierIconCircle, { backgroundColor: cfg.color + '15' }]}>
@@ -1084,7 +1089,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
                 </View>
                 <Text style={[s.tierName, { color: cfg.color }]}>{tier.name}</Text>
                 <Text style={s.tierPrice}>{fmt(tier.total)}</Text>
-                <Text style={s.tierVat}>incl. btw</Text>
+                <Text style={s.tierVat}>{t('quotes.inclVat', 'incl. VAT')}</Text>
                 {tier.features.map((f, i) => (
                   <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, width: '100%' }}>
                     <Ionicons name="checkmark" size={12} color={SemanticColors.feedbackSuccess} />
@@ -1099,12 +1104,12 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
         {/* Upsell stat */}
         <View style={s.upsellRow}>
           <Ionicons name="trending-up" size={14} color={SemanticColors.feedbackSuccess} />
-          <Text style={s.upsellText}>83% van klanten kiest Standaard of Premium</Text>
+          <Text style={s.upsellText}>{t('quotes.upsellStat', '83% of customers pick Standard or Premium')}</Text>
         </View>
 
         {/* Line items summary */}
         <View style={s.section}>
-          <Text style={s.sectionTitle}>Regels (standaard)</Text>
+          <Text style={s.sectionTitle}>{t('quotes.linesStandard', 'Lines (standard)')}</Text>
           <View style={s.serviceList}>
             {selectedServices.map(sv => {
               const hintKey = sv.item.name.toLowerCase().split(/\s+/).filter(Boolean).slice(0, 3).join(' ');
@@ -1161,7 +1166,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
       <View style={s.bottom}>
         <Pressable style={s.sendBtn} onPress={handleSend}>
           <Ionicons name="send" size={18} color={Palette.white} />
-          <Text style={s.sendBtnText}>Offerte versturen</Text>
+          <Text style={s.sendBtnText}>{t('quotes.sendQuote', 'Send quote')}</Text>
         </Pressable>
       </View>
     </View>

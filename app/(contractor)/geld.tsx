@@ -390,6 +390,25 @@ export default function GeldScreen() {
           <Ionicons name="chevron-forward" size={18} color={DK.colors.textMuted} />
         </Pressable>
 
+        {/* R273: purchasing hub — receipt scanner, reorders, DATANORM imports.
+             Was reachable only via AI action route. Now a Geld section link
+             since purchasing/spend tracking is part of money management. */}
+        <Pressable
+          onPress={() => router.push('/contractor/inkoop' as any)}
+          style={({ pressed }) => [s.vatCard, pressed && { opacity: 0.92 }]}
+          accessibilityRole="button"
+          accessibilityLabel={t('dk.money.purchasing', 'Purchasing')}
+        >
+          <View style={s.vatIconWrap}>
+            <Ionicons name="cart-outline" size={20} color={DK.colors.accent} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <DKLabel style={s.vatTitle}>{t('dk.money.purchasing', 'Purchasing')}</DKLabel>
+            <Text style={s.vatSub}>{t('dk.money.purchasingSub', 'Receipt scanner, reorders, supplier prices.')}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={DK.colors.textMuted} />
+        </Pressable>
+
         {/* ─── MATERIAL DRIFT (R192) — cohort-observed supplier price moves ─── */}
         <MaterialDriftCard
           trade={businessProfile?.trade ?? 'general'}

@@ -262,7 +262,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>AI Offerte</Text>
+          <Text style={styles.headerTitle}>{t('aiQuote.title', 'AI quote')}</Text>
           {onClose && (
             <Pressable onPress={onClose} style={styles.closeBtn}>
               <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
@@ -372,7 +372,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{analysis?.jobType || 'AI Offerte'}</Text>
+        <Text style={styles.headerTitle}>{analysis?.jobType || t('aiQuote.title', 'AI quote')}</Text>
         {onClose && (
           <Pressable onPress={onClose} style={styles.closeBtn}>
             <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
@@ -395,21 +395,25 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
         {/* Summary */}
         <View style={styles.summaryRow}>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Complexiteit</Text>
-            <Text style={styles.summaryValue}>{analysis?.complexity === 'simple' ? 'Eenvoudig' : analysis?.complexity === 'complex' ? 'Complex' : 'Gemiddeld'}</Text>
+            <Text style={styles.summaryLabel}>{t('aiQuote.complexity', 'Complexity')}</Text>
+            <Text style={styles.summaryValue}>{
+              analysis?.complexity === 'simple' ? t('aiQuote.complexitySimple', 'Simple')
+              : analysis?.complexity === 'complex' ? t('aiQuote.complexityComplex', 'Complex')
+              : t('aiQuote.complexityModerate', 'Moderate')
+            }</Text>
           </View>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Geschatte uren</Text>
-            <Text style={styles.summaryValue}>~{analysis?.estimatedHours || 0}u</Text>
+            <Text style={styles.summaryLabel}>{t('aiQuote.estimatedHours', 'Estimated hours')}</Text>
+            <Text style={styles.summaryValue}>~{analysis?.estimatedHours || 0}{t('aiQuote.hourShort', 'h')}</Text>
           </View>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Items</Text>
+            <Text style={styles.summaryLabel}>{t('aiQuote.items', 'Items')}</Text>
             <Text style={styles.summaryValue}>{selectedItems.length}/{items.length}</Text>
           </View>
         </View>
 
         {/* Detected items */}
-        <Text style={styles.sectionTitle}>Gevonden items</Text>
+        <Text style={styles.sectionTitle}>{t('aiQuote.detectedItems', 'Detected items')}</Text>
         {items.map(item => (
           <Pressable
             key={item.id}
@@ -423,7 +427,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
             />
             <View style={{ flex: 1 }}>
               <Text style={styles.itemDesc}>{item.description}</Text>
-              <Text style={styles.itemCategory}>{item.category} · {item.confidence}% zeker</Text>
+              <Text style={styles.itemCategory}>{item.category} · {t('aiQuote.confidenceLabel', '{{pct}}% confident', { pct: item.confidence })}</Text>
             </View>
             <View style={styles.itemRight}>
               <View style={styles.qtyRow}>
@@ -443,7 +447,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
         {/* Notes */}
         {analysis?.notes && analysis.notes.length > 0 && (
           <View style={styles.notesSection}>
-            <Text style={styles.sectionTitle}>Observaties</Text>
+            <Text style={styles.sectionTitle}>{t('aiQuote.observations', 'Observations')}</Text>
             {analysis.notes.map((note, i) => (
               <View key={i} style={styles.noteRow}>
                 <Ionicons name="eye-outline" size={14} color={SemanticColors.textSecondary} />
@@ -456,7 +460,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
         {/* Warnings */}
         {analysis?.warnings && analysis.warnings.length > 0 && (
           <View style={styles.warningsSection}>
-            <Text style={styles.sectionTitle}>Let op</Text>
+            <Text style={styles.sectionTitle}>{t('aiQuote.warnings', 'Warnings')}</Text>
             {analysis.warnings.map((warning, i) => (
               <View key={i} style={styles.warningRow}>
                 <Ionicons name="alert-circle-outline" size={14} color={SemanticColors.feedbackWarning} />
@@ -469,15 +473,15 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
         {/* Totals */}
         <View style={styles.totalCard}>
           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Subtotaal</Text>
+            <Text style={styles.totalLabel}>{t('aiQuote.subtotal', 'Subtotal')}</Text>
             <Text style={styles.totalValue}>{formatCurrency(subtotal)}</Text>
           </View>
           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>BTW (21%)</Text>
+            <Text style={styles.totalLabel}>{t('aiQuote.vat', 'VAT (21%)')}</Text>
             <Text style={styles.totalValue}>{formatCurrency(vat)}</Text>
           </View>
           <View style={[styles.totalRow, styles.totalRowFinal]}>
-            <Text style={styles.totalFinalLabel}>Totaal</Text>
+            <Text style={styles.totalFinalLabel}>{t('aiQuote.total', 'Total')}</Text>
             <Text style={styles.totalFinalValue}>{formatCurrency(total)}</Text>
           </View>
         </View>
@@ -486,14 +490,14 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
         <View style={styles.actions}>
           <Pressable style={styles.retakeBtn} onPress={() => { setPhotos([]); setAnalysis(null); setItems([]); setError(null); }}>
             <Ionicons name="camera-reverse-outline" size={18} color={Palette.hermesOrange} />
-            <Text style={styles.retakeBtnText}>Opnieuw</Text>
+            <Text style={styles.retakeBtnText}>{t('aiQuote.retake', 'Retake')}</Text>
           </Pressable>
           <Pressable
             style={[styles.createBtn, selectedItems.length === 0 && { opacity: 0.5 }]}
             onPress={() => {
               if (selectedItems.length > 0) {
                 hapticSuccess();
-                onCreateQuote(selectedItems, analysis?.jobType || 'AI Offerte');
+                onCreateQuote(selectedItems, analysis?.jobType || t('aiQuote.title', 'AI quote'));
               }
             }}
             disabled={selectedItems.length === 0}

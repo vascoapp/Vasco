@@ -33,7 +33,9 @@
     "customer": "Customer",
     "project": "Project",
     "and": "and",
-    "thisJob": "this job"
+    "thisJob": "this job",
+    "apply": "Apply",
+    "ignore": "Ignore"
   },
   "tabs": {
     "today": "Today",
@@ -381,7 +383,23 @@
     "analyzingPhotos": "Vasco is analyzing your photos...",
     "analyzingSubtext": "Detecting materials, quantities and prices",
     "pleaseWait": "Please wait",
-    "rateLimitMessage": "You can scan again in {{seconds}} seconds."
+    "rateLimitMessage": "You can scan again in {{seconds}} seconds.",
+    "title": "AI quote",
+    "complexity": "Complexity",
+    "complexitySimple": "Simple",
+    "complexityComplex": "Complex",
+    "complexityModerate": "Moderate",
+    "estimatedHours": "Estimated hours",
+    "hourShort": "h",
+    "items": "Items",
+    "detectedItems": "Detected items",
+    "confidenceLabel": "{{pct}}% confident",
+    "observations": "Observations",
+    "warnings": "Warnings",
+    "subtotal": "Subtotal",
+    "vat": "VAT (21%)",
+    "total": "Total",
+    "retake": "Retake"
   },
   "invoices": {
     "title": "Invoices",
@@ -1116,7 +1134,30 @@
       "accepted": "Accepted",
       "rejected": "Rejected",
       "expired": "Expired"
-    }
+    },
+    "addServices": "Add services",
+    "services": "Services",
+    "unitPiece": "piece",
+    "scopePlaceholder": "Describe the job scope…",
+    "orScanPhoto": "Or scan a photo",
+    "orFromTemplate": "Or start from template:",
+    "lineCount": "{{count}} lines",
+    "pickFromPricebook": "Pick services from your pricebook",
+    "forgotten": "Forgot something?",
+    "bottomSummary": "{{count}} services · {{total}} (standard)",
+    "reviewQuote": "Review quote",
+    "checkQuote": "Check quote",
+    "vascoAdvice": "Vasco advice",
+    "calibrationLine": "Based on {{count}} prior jobs: hours {{adjustment}}",
+    "onSchedule": "on schedule",
+    "calibrationApplied": "Calibration applied",
+    "priceAdvice": "Recommended hourly rate: {{rate}} · Acceptance rate: {{rate2}}%",
+    "winChance": "Win chance:",
+    "recommended": "RECOMMENDED",
+    "inclVat": "incl. VAT",
+    "upsellStat": "83% of customers pick Standard or Premium",
+    "linesStandard": "Lines (standard)",
+    "sendQuote": "Send quote"
   },
   "queue": {
     "lowWinTitle": "Low win chance · {{customer}}",
@@ -1576,7 +1617,10 @@
     "important": "Important",
     "optional": "Optional",
     "enter": "Enter {{name}}...",
-    "editTemplates": "Edit reminder templates"
+    "editTemplates": "Edit reminder templates",
+    "openWhatsappFailed": "Could not open WhatsApp",
+    "openSmsFailed": "Could not open SMS",
+    "openEmailFailed": "Could not open email"
   },
   "templates": {
     "invoiceReminder": "Invoice reminder",
@@ -1760,7 +1804,9 @@
       "pulseSupply": "Supply chain",
       "daysShort": "d",
       "reports": "Financial reports",
-      "reportsSub": "P&L, monthly + quarterly. CSV/PDF export."
+      "reportsSub": "P&L, monthly + quarterly. CSV/PDF export.",
+      "purchasing": "Purchasing",
+      "purchasingSub": "Receipt scanner, reorders, supplier prices."
     },
     "ai": {
       "automationsTitle": "Automations",

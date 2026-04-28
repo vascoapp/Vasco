@@ -361,18 +361,18 @@ export function DecisionTrackerDetail({
     if (channel === 'whatsapp' && tracker.customerPhone) {
       const url = `whatsapp://send?phone=${tracker.customerPhone.replace(/\s/g, '')}&text=${encodeURIComponent(message)}`;
       Linking.openURL(url).catch(() => {
-        Alert.alert('Error', 'Could not open WhatsApp');
+        Alert.alert(t('common.error', 'Error'), t('dt.openWhatsappFailed', 'Could not open WhatsApp'));
       });
     } else if (channel === 'sms' && tracker.customerPhone) {
       const url = `sms:${tracker.customerPhone}?body=${encodeURIComponent(message)}`;
       Linking.openURL(url).catch(() => {
-        Alert.alert('Error', 'Could not open SMS');
+        Alert.alert(t('common.error', 'Error'), t('dt.openSmsFailed', 'Could not open SMS'));
       });
     } else if (channel === 'email' && tracker.customerEmail) {
       const subject = t('dt.decisionsNeeded', { template: tracker.templateName });
       const url = `mailto:${tracker.customerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
       Linking.openURL(url).catch(() => {
-        Alert.alert('Error', 'Could not open email');
+        Alert.alert(t('common.error', 'Error'), t('dt.openEmailFailed', 'Could not open email'));
       });
     }
 

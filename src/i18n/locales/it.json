@@ -33,7 +33,9 @@
     "customer": "Cliente",
     "project": "Progetto",
     "and": "e",
-    "thisJob": "questo lavoro"
+    "thisJob": "questo lavoro",
+    "apply": "Applica",
+    "ignore": "Ignora"
   },
   "tabs": {
     "today": "Oggi",
@@ -380,7 +382,23 @@
     "analyzingPhotos": "Vasco sta analizzando le tue foto...",
     "analyzingSubtext": "Rilevamento materiali, quantità e prezzi",
     "pleaseWait": "Un momento",
-    "rateLimitMessage": "Potrai scansionare di nuovo tra {{seconds}} secondi."
+    "rateLimitMessage": "Potrai scansionare di nuovo tra {{seconds}} secondi.",
+    "title": "AI quote",
+    "complexity": "Complexity",
+    "complexitySimple": "Simple",
+    "complexityComplex": "Complex",
+    "complexityModerate": "Moderate",
+    "estimatedHours": "Estimated hours",
+    "hourShort": "h",
+    "items": "Items",
+    "detectedItems": "Detected items",
+    "confidenceLabel": "{{pct}}% confident",
+    "observations": "Observations",
+    "warnings": "Warnings",
+    "subtotal": "Subtotal",
+    "vat": "VAT (21%)",
+    "total": "Total",
+    "retake": "Retake"
   },
   "invoices": {
     "title": "Fatture",
@@ -1053,7 +1071,7 @@
     "noResponse": "No"
   },
   "quotes": {
-    "newQuote": "Nuovo preventivo",
+    "newQuote": "New quote",
     "quote": "Preventivo",
     "cohortBenchmark": "Lavori di {{trade}} simili in {{country}}:",
     "cohortAcceptance": "accettato",
@@ -1113,7 +1131,30 @@
       "accepted": "Accettato",
       "rejected": "Rifiutato",
       "expired": "Scaduto"
-    }
+    },
+    "addServices": "Add services",
+    "services": "Services",
+    "unitPiece": "piece",
+    "scopePlaceholder": "Describe the job scope…",
+    "orScanPhoto": "Or scan a photo",
+    "orFromTemplate": "Or start from template:",
+    "lineCount": "{{count}} lines",
+    "pickFromPricebook": "Pick services from your pricebook",
+    "forgotten": "Forgot something?",
+    "bottomSummary": "{{count}} services · {{total}} (standard)",
+    "reviewQuote": "Review quote",
+    "checkQuote": "Check quote",
+    "vascoAdvice": "Vasco advice",
+    "calibrationLine": "Based on {{count}} prior jobs: hours {{adjustment}}",
+    "onSchedule": "on schedule",
+    "calibrationApplied": "Calibration applied",
+    "priceAdvice": "Recommended hourly rate: {{rate}} · Acceptance rate: {{rate2}}%",
+    "winChance": "Win chance:",
+    "recommended": "RECOMMENDED",
+    "inclVat": "incl. VAT",
+    "upsellStat": "83% of customers pick Standard or Premium",
+    "linesStandard": "Lines (standard)",
+    "sendQuote": "Send quote"
   },
   "queue": {
     "lowWinTitle": "Bassa probabilità · {{customer}}",
@@ -1566,7 +1607,10 @@
     "important": "Importante",
     "optional": "Opzionale",
     "enter": "Inserisci {{name}}...",
-    "editTemplates": "Modifica modelli di promemoria"
+    "editTemplates": "Modifica modelli di promemoria",
+    "openWhatsappFailed": "Could not open WhatsApp",
+    "openSmsFailed": "Could not open SMS",
+    "openEmailFailed": "Could not open email"
   },
   "templates": {
     "invoiceReminder": "Promemoria fattura",
@@ -1750,7 +1794,9 @@
       "pulseSupply": "Catena di fornitura",
       "daysShort": "g",
       "reports": "Report finanziari",
-      "reportsSub": "Conto economico, mensile + trimestrale. Export CSV/PDF."
+      "reportsSub": "Conto economico, mensile + trimestrale. Export CSV/PDF.",
+      "purchasing": "Acquisti",
+      "purchasingSub": "Scanner ricevute, riordini, prezzi fornitori."
     },
     "ai": {
       "automationsTitle": "Automazioni",
