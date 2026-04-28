@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
@@ -31,6 +32,7 @@ import { processExtraction, type ProcessExtractionStats } from '../../src/ingest
 type Tab = 'upload' | 'paste' | 'excel';
 
 export default function IngestionModal() {
+  const { t } = useTranslation();
   const { extractedDocs, priceRisks, addExtractedDoc, setPendingBudgetExtraction } = useAppState();
   const router = useRouter();
 
@@ -266,9 +268,9 @@ export default function IngestionModal() {
   return (
     <Screen backgroundColor={SemanticColors.surfacePrimary}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={Typography.title}>Ingestion pool</Text>
+        <Text style={Typography.title}>{t('ingestion.title', 'Ingestion pool')}</Text>
         <Text style={Typography.muted}>
-          Add past quotes, invoices, emails, or PDFs. You choose what gets shared.
+          {t('ingestion.subtitle', 'Add past quotes, invoices, emails, or PDFs. You choose what gets shared.')}
         </Text>
 
         {/* Tab bar */}
@@ -278,7 +280,7 @@ export default function IngestionModal() {
             onPress={() => { setActiveTab('upload'); handleClear(); }}
           >
             <Text style={[styles.tabText, activeTab === 'upload' && styles.tabTextActive]}>
-              Upload PDF
+              {t('ingestion.tabUpload', 'Upload PDF')}
             </Text>
           </Pressable>
           <Pressable
@@ -286,7 +288,7 @@ export default function IngestionModal() {
             onPress={() => { setActiveTab('paste'); handleClear(); }}
           >
             <Text style={[styles.tabText, activeTab === 'paste' && styles.tabTextActive]}>
-              Paste text
+              {t('ingestion.tabPaste', 'Paste text')}
             </Text>
           </Pressable>
           <Pressable
@@ -294,7 +296,7 @@ export default function IngestionModal() {
             onPress={() => { setActiveTab('excel'); handleClear(); }}
           >
             <Text style={[styles.tabText, activeTab === 'excel' && styles.tabTextActive]}>
-              Excel/CSV
+              {t('ingestion.tabExcel', 'Excel/CSV')}
             </Text>
           </Pressable>
         </View>
@@ -304,42 +306,42 @@ export default function IngestionModal() {
           <View style={styles.card}>
             {activeTab === 'upload' ? (
               <>
-                <Text style={Typography.subtitle}>Upload a PDF</Text>
+                <Text style={Typography.subtitle}>{t('ingestion.uploadPdf', 'Upload a PDF')}</Text>
                 <Text style={Typography.muted}>
-                  Select an invoice, quote, or receipt PDF to extract data from.
+                  {t('ingestion.uploadPdfDesc', 'Select an invoice, quote, or receipt PDF to extract data from.')}
                 </Text>
-                <PrimaryButton label={extracting ? 'Extracting...' : 'Choose PDF'} onPress={handlePdfUpload} />
+                <PrimaryButton label={extracting ? t('ingestion.extracting', 'Extracting…') : t('ingestion.choosePdf', 'Choose PDF')} onPress={handlePdfUpload} />
               </>
             ) : activeTab === 'paste' ? (
               <>
-                <Text style={Typography.subtitle}>Paste invoice text</Text>
+                <Text style={Typography.subtitle}>{t('ingestion.pasteText', 'Paste invoice text')}</Text>
                 <Text style={Typography.muted}>
-                  Paste the full text of an invoice, quote, or receipt.
+                  {t('ingestion.pasteDesc', 'Paste the full text of an invoice, quote, or receipt.')}
                 </Text>
                 <TextInput
                   style={styles.textInput}
                   value={pasteText}
                   onChangeText={setPasteText}
-                  placeholder="Paste invoice / quote text here..."
+                  placeholder={t('ingestion.pastePlaceholder', 'Paste invoice / quote text here…')}
                   placeholderTextColor={SemanticColors.textSecondary}
                   multiline
                   numberOfLines={8}
                   textAlignVertical="top"
                 />
                 <PrimaryButton
-                  label={extracting ? 'Extracting...' : 'Extract'}
+                  label={extracting ? t('ingestion.extracting', 'Extracting…') : t('ingestion.extract', 'Extract')}
                   onPress={handlePasteSubmit}
                 />
               </>
             ) : (
               <>
-                <Text style={Typography.subtitle}>Import Excel or CSV</Text>
+                <Text style={Typography.subtitle}>{t('ingestion.importExcel', 'Import Excel or CSV')}</Text>
                 <Text style={Typography.muted}>
-                  Select a supplier price list, invoice export, or material spreadsheet.
+                  {t('ingestion.importExcelDesc', 'Select a supplier price list, invoice export, or material spreadsheet.')}
                 </Text>
                 {parsedSpreadsheet && parsedSpreadsheet.sheets.length > 1 && (
                   <View style={styles.sheetSelector}>
-                    <Text style={Typography.muted}>Sheet:</Text>
+                    <Text style={Typography.muted}>{t('ingestion.sheet', 'Sheet:')}</Text>
                     <View style={styles.sheetChips}>
                       {parsedSpreadsheet.sheets.map((sheet, idx) => (
                         <Pressable
@@ -359,7 +361,7 @@ export default function IngestionModal() {
                   </View>
                 )}
                 <PrimaryButton
-                  label={extracting ? 'Reading...' : 'Choose file'}
+                  label={extracting ? t('ingestion.reading', 'Reading…') : t('ingestion.chooseFile', 'Choose file')}
                   onPress={handleExcelUpload}
                 />
               </>
@@ -372,9 +374,9 @@ export default function IngestionModal() {
         {statusMessage !== '' && !result?.success && (
           <View style={[styles.card, { alignItems: 'center', gap: Spacing.sm }]}>
             <Ionicons name="alert-circle-outline" size={36} color={SemanticColors.feedbackError} />
-            <Text style={[Typography.subtitle, { textAlign: 'center' }]}>Extraction failed</Text>
+            <Text style={[Typography.subtitle, { textAlign: 'center' }]}>{t('ingestion.extractionFailed', 'Extraction failed')}</Text>
             <Text style={[Typography.muted, { color: SemanticColors.feedbackError, textAlign: 'center' }]}>{statusMessage}</Text>
-            <PrimaryButton label="Try again" onPress={handleClear} />
+            <PrimaryButton label={t('ingestion.tryAgain', 'Try again')} onPress={handleClear} />
           </View>
         )}
 
@@ -386,13 +388,13 @@ export default function IngestionModal() {
             onPress={() => router.push('/hub/budget-optimizer' as any)}
           >
             <Text style={[Typography.subtitle, { color: SemanticColors.actionPrimary }]}>
-              Begroting gedetecteerd
+              {t('ingestion.budgetDetected', 'Budget detected')}
             </Text>
             <Text style={Typography.muted}>
-              Dit bestand lijkt een kostenbegroting te zijn. Open de Budget Optimizer voor AI-analyse en besparingsmogelijkheden.
+              {t('ingestion.budgetDetectedDesc', 'This file looks like a cost budget. Open the Budget Optimizer for AI analysis and savings opportunities.')}
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginTop: Spacing.xs }}>
-              <Text style={{ color: SemanticColors.actionPrimary, fontWeight: '600' }}>Open Budget Optimizer</Text>
+              <Text style={{ color: SemanticColors.actionPrimary, fontWeight: '600' }}>{t('ingestion.openBudgetOptimizer', 'Open Budget Optimizer')}</Text>
               <Text style={{ color: SemanticColors.actionPrimary }}>→</Text>
             </View>
           </Pressable>
@@ -401,7 +403,7 @@ export default function IngestionModal() {
         {result?.invoice && (
           <View style={styles.card}>
             <View style={styles.resultHeader}>
-              <Text style={Typography.subtitle}>Extraction result</Text>
+              <Text style={Typography.subtitle}>{t('ingestion.result', 'Extraction result')}</Text>
               <View style={[styles.badge, { backgroundColor: confidenceColor(result.invoice.extractionConfidence) + '22' }]}>
                 <Text style={[styles.badgeText, { color: confidenceColor(result.invoice.extractionConfidence) }]}>
                   {confidenceLabel(result.invoice.extractionConfidence)} ({Math.round(result.invoice.extractionConfidence * 100)}%)
@@ -411,24 +413,24 @@ export default function IngestionModal() {
 
             {/* Header info */}
             <View style={styles.metaRow}>
-              <Text style={Typography.muted}>Type</Text>
+              <Text style={Typography.muted}>{t('ingestion.type', 'Type')}</Text>
               <Text style={Typography.body}>{result.invoice.documentType}</Text>
             </View>
             {result.invoice.supplierName && (
               <View style={styles.metaRow}>
-                <Text style={Typography.muted}>Supplier</Text>
+                <Text style={Typography.muted}>{t('ingestion.supplier', 'Supplier')}</Text>
                 <Text style={Typography.body}>{result.invoice.supplierName}</Text>
               </View>
             )}
             {result.invoice.documentNumber && (
               <View style={styles.metaRow}>
-                <Text style={Typography.muted}>Doc #</Text>
+                <Text style={Typography.muted}>{t('ingestion.docNumber', 'Doc #')}</Text>
                 <Text style={Typography.body}>{result.invoice.documentNumber}</Text>
               </View>
             )}
             {result.invoice.documentDate && (
               <View style={styles.metaRow}>
-                <Text style={Typography.muted}>Date</Text>
+                <Text style={Typography.muted}>{t('ingestion.date', 'Date')}</Text>
                 <Text style={Typography.body}>{result.invoice.documentDate}</Text>
               </View>
             )}
@@ -460,7 +462,7 @@ export default function IngestionModal() {
             {result.invoice.lineItems.length > 0 && (
               <>
                 <Text style={[Typography.subtitle, { marginTop: Spacing.md }]}>
-                  Line items ({result.invoice.lineItems.length})
+                  {t('ingestion.lineItems', 'Line items ({{count}})', { count: result.invoice.lineItems.length })}
                 </Text>
                 {result.invoice.lineItems.map((item) => (
                   <View key={item.id} style={styles.lineItem}>
@@ -481,21 +483,21 @@ export default function IngestionModal() {
             <View style={styles.totalSection}>
               {result.invoice.subtotal != null && (
                 <View style={styles.metaRow}>
-                  <Text style={Typography.muted}>Subtotal</Text>
+                  <Text style={Typography.muted}>{t('ingestion.subtotal', 'Subtotal')}</Text>
                   <Text style={Typography.body}>{formatCurrency(result.invoice.subtotal)}</Text>
                 </View>
               )}
               {result.invoice.vatAmount != null && (
                 <View style={styles.metaRow}>
                   <Text style={Typography.muted}>
-                    VAT{result.invoice.vatRate ? ` (${result.invoice.vatRate}%)` : ''}
+                    {t('ingestion.vat', 'VAT')}{result.invoice.vatRate ? ` (${result.invoice.vatRate}%)` : ''}
                   </Text>
                   <Text style={Typography.body}>{formatCurrency(result.invoice.vatAmount)}</Text>
                 </View>
               )}
               {result.invoice.total != null && (
                 <View style={styles.metaRow}>
-                  <Text style={Typography.subtitle}>Total</Text>
+                  <Text style={Typography.subtitle}>{t('ingestion.total', 'Total')}</Text>
                   <Text style={Typography.subtitle}>{formatCurrency(result.invoice.total)}</Text>
                 </View>
               )}
@@ -523,11 +525,11 @@ export default function IngestionModal() {
             {/* Action buttons */}
             <View style={styles.actionRow}>
               <PrimaryButton
-                label={saving ? 'Saving...' : 'Save'}
+                label={saving ? t('ingestion.saving', 'Saving…') : t('common.save', 'Save')}
                 onPress={handleSave}
               />
               <Pressable style={styles.secondaryButton} onPress={handleClear}>
-                <Text style={styles.secondaryText}>New extraction</Text>
+                <Text style={styles.secondaryText}>{t('ingestion.newExtraction', 'New extraction')}</Text>
               </Pressable>
             </View>
           </View>
@@ -535,25 +537,25 @@ export default function IngestionModal() {
 
         {/* Insights link */}
         <View style={styles.card}>
-          <Text style={Typography.subtitle}>What we learn</Text>
+          <Text style={Typography.subtitle}>{t('ingestion.whatWeLearn', 'What we learn')}</Text>
           <Text style={Typography.muted}>
-            Pricing benchmarks, missing scope items, and payment risk signals.
+            {t('ingestion.whatWeLearnDesc', 'Pricing benchmarks, missing scope items, and payment risk signals.')}
           </Text>
           <Text style={Typography.muted}>
-            Price-risk signals found: {priceRisks.length}
+            {t('ingestion.priceRiskCount', 'Price-risk signals found: {{count}}', { count: priceRisks.length })}
           </Text>
           <Link href="/(modals)/insights" asChild>
             <Pressable style={styles.secondaryButton}>
-              <Text style={styles.secondaryText}>View insights</Text>
+              <Text style={styles.secondaryText}>{t('ingestion.viewInsights', 'View insights')}</Text>
             </Pressable>
           </Link>
         </View>
 
         {/* Parsed documents list */}
         <View style={styles.card}>
-          <Text style={Typography.subtitle}>Parsed documents</Text>
+          <Text style={Typography.subtitle}>{t('ingestion.parsedDocuments', 'Parsed documents')}</Text>
           {pdfCount === 0 ? (
-            <Text style={Typography.muted}>No parsed documents yet.</Text>
+            <Text style={Typography.muted}>{t('ingestion.noParsedDocs', 'No parsed documents yet.')}</Text>
           ) : (
             extractedDocs.map((doc, index) => (
               <View key={`${doc.docType}-${index}`} style={styles.docRow}>

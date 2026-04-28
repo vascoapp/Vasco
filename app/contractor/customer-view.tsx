@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Linking } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SemanticColors, Palette } from '../../src/theme/colors';
@@ -83,6 +84,7 @@ const DEMO_QUOTE = {
 };
 
 export default function CustomerViewScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { quoteId, t: tokenParam } = useLocalSearchParams<{ quoteId?: string; t?: string }>();
   const { quotes, customers, convertQuoteToJob } = useAppState();
@@ -194,12 +196,12 @@ export default function CustomerViewScreen() {
 
   const handleAccept = async () => {
     if (!selectedTier) {
-      Alert.alert('Kies een pakket', 'Selecteer eerst een pakket om door te gaan.');
+      Alert.alert(t('customerView.pickTierTitle', 'Pick a package'), t('customerView.pickTierDesc', 'Select a package first to continue.'));
       return;
     }
     const requiredUnanswered = quote.decisions.filter(d => d.required && !decisions[d.id]);
     if (requiredUnanswered.length > 0) {
-      Alert.alert('Keuzes nodig', `Beantwoord eerst: ${requiredUnanswered.map(d => d.question).join(', ')}`);
+      Alert.alert(t('customerView.choicesNeeded', 'Choices needed'), t('customerView.answerFirst', 'Answer first: {{questions}}', { questions: requiredUnanswered.map(d => d.question).join(', ') }));
       return;
     }
     hapticSuccess();
@@ -226,7 +228,7 @@ export default function CustomerViewScreen() {
       quoteId: quote.id, customerId: quote.customerId, type: 'change_request',
       data: { message: changeMessage, selectedTier, decisions },
     });
-    Alert.alert('Verstuurd', 'Uw wijzigingsverzoek is verstuurd. De installateur neemt contact met u op.');
+    Alert.alert(t('customerView.sentTitle', 'Sent'), t('customerView.changeRequestSent', 'Your change request has been sent. The contractor will contact you.'));
     setShowChangeForm(false);
     setChangeMessage('');
   };
@@ -236,11 +238,11 @@ export default function CustomerViewScreen() {
       <View style={s.container}>
         <View style={s.successState}>
           <Ionicons name="checkmark-circle" size={64} color={SemanticColors.feedbackSuccess} />
-          <Text style={s.successTitle}>Offerte geaccepteerd!</Text>
-          <Text style={s.successRef}>Referentie: {quote.reference}</Text>
-          <Text style={s.successDesc}>{quote.businessName} neemt binnenkort contact op om een datum te plannen.</Text>
+          <Text style={s.successTitle}>{t('customerView.acceptedTitle', 'Quote accepted!')}</Text>
+          <Text style={s.successRef}>{t('customerView.reference', 'Reference')}: {quote.reference}</Text>
+          <Text style={s.successDesc}>{t('customerView.acceptedDesc', '{{business}} will be in touch shortly to schedule.', { business: quote.businessName })}</Text>
           <Pressable style={s.successBtn} onPress={() => router.back()}>
-            <Text style={s.successBtnText}>Sluiten</Text>
+            <Text style={s.successBtnText}>{t('common.close', 'Close')}</Text>
           </Pressable>
         </View>
       </View>
@@ -254,7 +256,7 @@ export default function CustomerViewScreen() {
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={s.headerTitle}>Offerte</Text>
+          <Text style={s.headerTitle}>{t('customerView.quote', 'Quote')}</Text>
           <Text style={s.headerSub}>{quote.reference}</Text>
         </View>
       </View>
@@ -264,12 +266,12 @@ export default function CustomerViewScreen() {
         <View style={s.bizCard}>
           <View style={s.bizBar} />
           <Text style={s.bizName}>{quote.businessName}</Text>
-          <Text style={s.greeting}>Beste {quote.customerName},</Text>
-          <Text style={s.greetingDesc}>Hierbij onze offerte voor: {quote.title}</Text>
+          <Text style={s.greeting}>{t('customerView.dear', 'Dear {{name}},', { name: quote.customerName })}</Text>
+          <Text style={s.greetingDesc}>{t('customerView.quoteFor', 'Our quote for: {{title}}', { title: quote.title })}</Text>
         </View>
 
         {/* Tier selection */}
-        <Text style={s.sectionTitle}>Kies uw pakket</Text>
+        <Text style={s.sectionTitle}>{t('customerView.pickPackage', 'Pick your package')}</Text>
         {quote.tiers.map(tier => (
           <Pressable
             key={tier.id}
@@ -277,7 +279,7 @@ export default function CustomerViewScreen() {
             onPress={() => handleTierSelect(tier.id)}
           >
             {(tier as any).recommended && (
-              <View style={s.recBadge}><Text style={s.recBadgeText}>Aanbevolen</Text></View>
+              <View style={s.recBadge}><Text style={s.recBadgeText}>{t('customerView.recommended', 'Recommended')}</Text></View>
             )}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <View>
@@ -303,8 +305,8 @@ export default function CustomerViewScreen() {
         {/* Customer decisions — inline */}
         {quote.decisions.length > 0 && (
           <View style={s.decisionSection}>
-            <Text style={s.sectionTitle}>Uw keuzes</Text>
-            <Text style={s.sectionDesc}>Maak uw keuzes zodat we direct aan de slag kunnen</Text>
+            <Text style={s.sectionTitle}>{t('customerView.yourChoices', 'Your choices')}</Text>
+            <Text style={s.sectionDesc}>{t('customerView.yourChoicesDesc', 'Make your choices so we can start right away')}</Text>
             {quote.decisions.map(d => (
               <View key={d.id} style={s.decisionCard}>
                 <Text style={s.decisionQ}>
@@ -331,10 +333,10 @@ export default function CustomerViewScreen() {
           <View style={s.paymentPrefCard}>
             <View style={s.paymentPrefHeader}>
               <Ionicons name="card" size={18} color={Palette.hermesOrange} />
-              <Text style={s.paymentPrefTitle}>Betaalvoorkeur klant</Text>
+              <Text style={s.paymentPrefTitle}>{t('customerView.paymentPref', 'Customer payment preference')}</Text>
             </View>
             <Text style={s.paymentPrefValue}>
-              Klant heeft voorkeur voor: {decisions['payment_method']}
+              {t('customerView.paymentPrefValue', 'Customer prefers: {{method}}', { method: decisions['payment_method'] })}
             </Text>
           </View>
         )}
@@ -343,7 +345,7 @@ export default function CustomerViewScreen() {
         <View style={s.detailsCard}>
           <View style={s.detailRow}>
             <Ionicons name="time-outline" size={16} color={SemanticColors.textSecondary} />
-            <Text style={s.detailText}>Geschatte duur: {quote.estimatedDuration}</Text>
+            <Text style={s.detailText}>{t('customerView.estimatedDuration', 'Estimated duration')}: {quote.estimatedDuration}</Text>
           </View>
           <View style={s.detailRow}>
             <Ionicons name="card-outline" size={16} color={SemanticColors.textSecondary} />
@@ -351,19 +353,19 @@ export default function CustomerViewScreen() {
           </View>
           <View style={s.detailRow}>
             <Ionicons name="calendar-outline" size={16} color={SemanticColors.textSecondary} />
-            <Text style={s.detailText}>Geldig tot {new Date(quote.validUntil).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}</Text>
+            <Text style={s.detailText}>{t('customerView.validUntil', 'Valid until {{date}}', { date: new Date(quote.validUntil).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) })}</Text>
           </View>
         </View>
 
         {/* Actions */}
         <Pressable style={[s.acceptBtn, !selectedTier && { opacity: 0.5 }]} onPress={handleAccept}>
           <Ionicons name="checkmark-circle" size={20} color={Palette.white} />
-          <Text style={s.acceptBtnText}>Offerte accepteren</Text>
+          <Text style={s.acceptBtnText}>{t('customerView.acceptQuote', 'Accept quote')}</Text>
         </Pressable>
 
         <Pressable style={s.changeBtn} onPress={() => setShowChangeForm(!showChangeForm)}>
           <Ionicons name="chatbubble-outline" size={18} color={Palette.hermesOrange} />
-          <Text style={s.changeBtnText}>Wijziging aanvragen</Text>
+          <Text style={s.changeBtnText}>{t('customerView.requestChange', 'Request a change')}</Text>
         </Pressable>
 
         {showChangeForm && (
@@ -372,19 +374,19 @@ export default function CustomerViewScreen() {
               style={s.changeInput}
               value={changeMessage}
               onChangeText={setChangeMessage}
-              placeholder="Beschrijf uw gewenste wijziging..."
+              placeholder={t('customerView.describeChange', 'Describe the change you want…')}
               placeholderTextColor={SemanticColors.textTertiary}
               multiline
             />
             <Pressable style={s.sendChangeBtn} onPress={handleChangeRequest}>
-              <Text style={s.sendChangeBtnText}>Verstuur verzoek</Text>
+              <Text style={s.sendChangeBtnText}>{t('customerView.sendRequest', 'Send request')}</Text>
             </Pressable>
           </View>
         )}
 
         {/* Contact */}
         <View style={s.contactCard}>
-          <Text style={s.contactTitle}>Vragen?</Text>
+          <Text style={s.contactTitle}>{t('customerView.questions', 'Questions?')}</Text>
           <Text style={s.contactText}>{quote.businessPhone} · {quote.businessEmail}</Text>
         </View>
 

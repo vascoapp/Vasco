@@ -1,5 +1,6 @@
 // Hub: Costs - Portfolio cost overview with project breakdowns and contingency tracking
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing } from '../../src/theme/spacing';
@@ -80,6 +81,7 @@ function getCPIColor(cpi: number): string {
 // -----------------------------------------------------------------------------
 
 export default function CostsScreen() {
+  const { t } = useTranslation();
   const insights = useVascoGuidance('cfo', 'cfo-costs');
   const inlineTip = useInlineInsight('cfo', 'cfo-costs', 'budget');
   const contingencyTip = useInlineInsight('cfo', 'cfo-costs', 'contingency');
@@ -98,23 +100,23 @@ export default function CostsScreen() {
       <View style={styles.summaryCard}>
         <View style={styles.summaryHeader}>
           <Ionicons name="wallet-outline" size={20} color={Palette.hermesOrange} />
-          <Text style={styles.summaryTitle}>Portfolio Kostenanalyse</Text>
+          <Text style={styles.summaryTitle}>{t('costs.portfolioAnalysis', 'Portfolio cost analysis')}</Text>
         </View>
 
         <View style={styles.summaryRow}>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Totaal Budget</Text>
+            <Text style={styles.summaryLabel}>{t('costs.totalBudget', 'Total budget')}</Text>
             <Text style={styles.summaryValue}>{formatCurrency(totalBudget)}</Text>
           </View>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Totaal Besteed</Text>
+            <Text style={styles.summaryLabel}>{t('costs.totalSpent', 'Total spent')}</Text>
             <View style={styles.summaryValueRow}>
               <Text style={styles.summaryValue}>{formatCurrency(totalSpent)}</Text>
               <Text style={styles.summaryPercent}>{spentPercent}%</Text>
             </View>
           </View>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Afwijking</Text>
+            <Text style={styles.summaryLabel}>{t('costs.variance', 'Variance')}</Text>
             <Text style={[styles.summaryValue, { color: SemanticColors.feedbackError }]}>
               -£1.3M
             </Text>
@@ -126,8 +128,8 @@ export default function CostsScreen() {
           <View style={[styles.progressFill, { width: `${spentPercent}%` }]} />
         </View>
         <View style={styles.progressLabels}>
-          <Text style={styles.progressLabelLeft}>Besteed</Text>
-          <Text style={styles.progressLabelRight}>{100 - spentPercent}% resterend</Text>
+          <Text style={styles.progressLabelLeft}>{t('costs.spent', 'Spent')}</Text>
+          <Text style={styles.progressLabelRight}>{t('costs.remaining', '{{pct}}% remaining', { pct: 100 - spentPercent })}</Text>
         </View>
       </View>
 
@@ -137,8 +139,8 @@ export default function CostsScreen() {
 
       {/* Section Header - Project Costs */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Projectkosten</Text>
-        <Text style={styles.sectionSubtitle}>{PROJECTS.length} projecten</Text>
+        <Text style={styles.sectionTitle}>{t('costs.projectCosts', 'Project costs')}</Text>
+        <Text style={styles.sectionSubtitle}>{t('costs.projectCount', '{{count}} projects', { count: PROJECTS.length })}</Text>
       </View>
 
       {/* Project Cost Cards */}
@@ -160,15 +162,15 @@ export default function CostsScreen() {
 
             <View style={styles.projectMetrics}>
               <View style={styles.projectMetric}>
-                <Text style={styles.metricLabel}>Budget</Text>
+                <Text style={styles.metricLabel}>{t('costs.budget', 'Budget')}</Text>
                 <Text style={styles.metricValue}>{formatCurrency(project.budget)}</Text>
               </View>
               <View style={styles.projectMetric}>
-                <Text style={styles.metricLabel}>Besteed</Text>
+                <Text style={styles.metricLabel}>{t('costs.spent', 'Spent')}</Text>
                 <Text style={styles.metricValue}>{formatCurrency(project.spent)}</Text>
               </View>
               <View style={styles.projectMetric}>
-                <Text style={styles.metricLabel}>CPI</Text>
+                <Text style={styles.metricLabel}>{t('costs.cpi', 'CPI')}</Text>
                 <Text style={[styles.metricValue, { color: cpiColor }]}>
                   {project.cpi.toFixed(2)}
                 </Text>
@@ -187,7 +189,7 @@ export default function CostsScreen() {
                 ]}
               />
             </View>
-            <Text style={styles.projectPercent}>{projectPercent}% van budget besteed</Text>
+            <Text style={styles.projectPercent}>{t('costs.percentSpent', '{{pct}}% of budget spent', { pct: projectPercent })}</Text>
           </View>
         );
       })}
@@ -195,29 +197,29 @@ export default function CostsScreen() {
       {/* Section Header - Contingency */}
       {contingencyTip && <InlineInsight icon={contingencyTip.icon as IconName} message={contingencyTip.message} />}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Contingency Tracker</Text>
+        <Text style={styles.sectionTitle}>{t('costs.contingencyTracker', 'Contingency tracker')}</Text>
       </View>
 
       {/* Contingency Card */}
       <View style={styles.contingencyCard}>
         <View style={styles.contingencyHeader}>
           <Ionicons name="umbrella-outline" size={18} color={Palette.hermesOrange} />
-          <Text style={styles.contingencyTitle}>Reservefonds</Text>
+          <Text style={styles.contingencyTitle}>{t('costs.reserveFund', 'Reserve fund')}</Text>
         </View>
 
         <View style={styles.contingencyMetrics}>
           <View style={styles.contingencyMetric}>
-            <Text style={styles.contingencyMetricLabel}>Totaal Contingency</Text>
+            <Text style={styles.contingencyMetricLabel}>{t('costs.totalContingency', 'Total contingency')}</Text>
             <Text style={styles.contingencyMetricValue}>{formatCurrency(CONTINGENCY.total)}</Text>
           </View>
           <View style={styles.contingencyMetric}>
-            <Text style={styles.contingencyMetricLabel}>Gebruikt</Text>
+            <Text style={styles.contingencyMetricLabel}>{t('costs.used', 'Used')}</Text>
             <Text style={[styles.contingencyMetricValue, { color: SemanticColors.feedbackWarning }]}>
               {formatCurrency(CONTINGENCY.used)}
             </Text>
           </View>
           <View style={styles.contingencyMetric}>
-            <Text style={styles.contingencyMetricLabel}>Resterend</Text>
+            <Text style={styles.contingencyMetricLabel}>{t('costs.remainingShort', 'Remaining')}</Text>
             <Text style={[styles.contingencyMetricValue, { color: SemanticColors.feedbackSuccess }]}>
               {formatCurrency(CONTINGENCY.remaining)}
             </Text>
