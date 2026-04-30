@@ -189,6 +189,28 @@ export type JobMaterialRow = {
   updated_at: string;
 };
 
+// R278: projects table (migration 20260501000001 — promoted from
+// AsyncStorage to BE-backed for aannemer multi-job grouping).
+export type ProjectRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  customer_id: string | null;
+  status: 'planning' | 'active' | 'completed' | 'on_hold' | 'cancelled';
+  start_date: string | null;
+  target_end_date: string | null;
+  actual_end_date: string | null;
+  total_budget: number | null;
+  total_quoted: number | null;
+  total_invoiced: number | null;
+  total_paid: number | null;
+  address: { street?: string; city?: string; postcode?: string; country?: string } | null;
+  milestones: unknown[];
+  created_at: string;
+  updated_at: string;
+};
+
 // ── Database interface (for Supabase client generic) ─────────
 
 export interface Database {
@@ -266,6 +288,14 @@ export interface Database {
           user_id: string;
         };
         Update: Partial<Omit<JobMaterialRow, 'id' | 'user_id' | 'created_at'>>;
+      };
+      projects: {
+        Row: ProjectRow;
+        Insert: Partial<ProjectRow> & {
+          name: string;
+          user_id: string;
+        };
+        Update: Partial<Omit<ProjectRow, 'id' | 'user_id' | 'created_at'>>;
       };
     };
     Functions: {

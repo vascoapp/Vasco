@@ -1,7 +1,7 @@
 import { supabase, isSupabaseConfigured } from './supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logWarn } from '../utils/errorHandler';
-import type { DocumentRow, LineItemRow, BusinessSettingsRow, CustomerRow, MaterialCatalogRow, SupplierRow, JobMaterialRow, PriceObservationRow } from './database.types';
+import type { DocumentRow, LineItemRow, BusinessSettingsRow, CustomerRow, MaterialCatalogRow, SupplierRow, JobMaterialRow, PriceObservationRow, ProjectRow } from './database.types';
 import { quotes as mockQuotes, invoices as mockInvoices } from '../data/mockDocuments';
 import { quoteLineItems as mockLineItems } from '../data/mockLineItems';
 import { businessProfile as mockBusinessProfile } from '../data/mockBusiness';
@@ -296,25 +296,7 @@ export async function deleteJob(id: string): Promise<void> {
 
 // ── Projects (R275 — promoted from AsyncStorage to BE-backed) ───────────────
 
-export interface ProjectRow {
-  id: string;
-  user_id: string;
-  name: string;
-  description: string | null;
-  customer_id: string | null;
-  status: 'planning' | 'active' | 'completed' | 'on_hold' | 'cancelled';
-  start_date: string | null;
-  target_end_date: string | null;
-  actual_end_date: string | null;
-  total_budget: number | null;
-  total_quoted: number | null;
-  total_invoiced: number | null;
-  total_paid: number | null;
-  address: { street?: string; city?: string; postcode?: string; country?: string } | null;
-  milestones: unknown[];
-  created_at: string;
-  updated_at: string;
-}
+export type { ProjectRow };
 
 export async function listProjects(): Promise<ProjectRow[]> {
   if (!isSupabaseConfigured) return [];

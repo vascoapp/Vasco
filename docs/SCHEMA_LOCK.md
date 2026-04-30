@@ -774,18 +774,14 @@ draft-customer-reply
   IN  { question: string, context?: string, tone?: string }
   OUT { ok: boolean, options?: ReplyOption[], error?: string }
 
-request-account-deletion (auth required)
-  IN  { userId: string, requestedAt: ISO8601, platform: string }
-  OUT { ok: boolean, requestId?: string }
-  -- FE-triggered enqueue. Drained server-side by drain-account-deletions cron.
-
-generate-embedding (auth required)
-  IN  { text: string }
-  OUT { embedding: number[] }
-
-export-invoice (auth required, called from offline-queue drain)
-  IN  invoice payload (full Invoice)
-  OUT { ok: boolean, externalId?: string }
+-- ⚠️ Phantom callers (FE invokes, NOT deployed) — fail-soft, drop in roadmap:
+--   request-account-deletion   (FE: accountDeletionService.ts:157 — fallback only;
+--                              primary path is INSERT into account_deletion_requests
+--                              table, which works. Drained by drain-account-deletions cron.)
+--   generate-embedding         (FE: semanticSearch.ts:50 — error returns null, callers
+--                              fall back to keyword search. embed-text is a different fn
+--                              that writes side-effects, not a drop-in.)
+--   export-invoice             (FE: syncService deferred — drops queued action gracefully)
 
 drain-account-deletions  (cron, service_role)
   IN  {}  OUT { processed: number }
@@ -831,6 +827,12 @@ train-extra-models  (cron, service_role)
 ## CHANGELOG
 
 - **1.0 (2026-05-01)** — Initial freeze. Added `projects` table. Documented `attribute_referral` returning uuid (FE wrapper exposes both boolean and uuid variants).
+- **1.4 (2026-05-01)** — Round 4 (R278):
+  - `addQuote` (createDocument + upsertLineItems) and `addInvoiceFromJob` (createDocument) now queue document insert on failure. Line items can't queue without BE-generated doc_id; cohort signal still flows via independent `pricing_intelligence` writes per-line.
+  - `flushQueue` confirmed wired in `app/_layout.tsx`: runs on mount + every `RNAppState` `'active'` transition (along with `flushScanQueue`, `flushPendingDeltas`, `flushPendingAffiliateClicks`, `notifyNewQueueItems`).
+  - Edge fn audit: 12 fns called from FE, 10 deployed. Phantoms `request-account-deletion`, `generate-embedding`, `export-invoice` documented as fail-soft (table-insert primary path / keyword-search fallback / queued-action drop). Roadmap items, not blockers.
+  - `database.types.ts` extended with `ProjectRow` + `Database['public']['Tables']['projects']` shape. `dataProvider` now re-exports the canonical `ProjectRow` from `database.types` (single source of truth).
+
 - **1.3 (2026-05-01)** — Offline queue coverage closed (R277):
   - New helper `persistOrQueue(table, op, fn, fallback)` in `offlineWriteQueue.ts` for one-line BE-write-with-fallback at AppState mutation sites.
   - Wired into `updateJobStatus`, `updateJob`, `removeJob`, `updateBusinessProfile`, `addMaterial`, `removeMaterial`, `addSupplier`, `removeSupplier`, `updateJobMaterialStatus`, `removeJobMaterial`, `updateQuote`. Coverage: 12 of 35 BE writes now have offline-queue fallback (was 3). Remaining 23 are derived/secondary writes (line_items upsert, document number generation, etc.) — log-only is acceptable.

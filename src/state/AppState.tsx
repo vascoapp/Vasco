@@ -899,29 +899,37 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setQuotes((prev) => [newQuote, ...prev]);
         setLineItems((prev) => ({ ...prev, [docNumber]: items }));
 
-        // Persist to Supabase
+        // Persist to Supabase — moat-critical (cohort signal). Offline → queue.
         if (isSupabaseConfigured) {
+          const docPayload = {
+            doc_type: 'quote' as const,
+            status: 'draft' as const,
+            document_number: docNumber,
+            customer_id: customer,
+            job_id: job,
+            total_amount: total,
+          };
+          const lineItemPayload = items.map((item, idx) => ({
+            description: item.description,
+            quantity: item.quantity,
+            unit_price: item.unitPrice,
+            total_price: item.unitPrice * item.quantity,
+            position: idx,
+          }));
           try {
-            const row = await withTimeout(createDocument({
-              doc_type: 'quote',
-              status: 'draft',
-              document_number: docNumber,
-              customer_id: customer,
-              job_id: job,
-              total_amount: total,
-            }), 3000, 'addQuote');
-            await withTimeout(upsertLineItems(
-              row.id,
-              items.map((item, idx) => ({
-                description: item.description,
-                quantity: item.quantity,
-                unit_price: item.unitPrice,
-                total_price: item.unitPrice * item.quantity,
-                position: idx,
-              })),
-            ), 3000, 'addQuote.lineItems');
+            const row = await withTimeout(createDocument(docPayload), 3000, 'addQuote');
+            await withTimeout(upsertLineItems(row.id, lineItemPayload), 3000, 'addQuote.lineItems');
           } catch (err) {
-            logWarn('AppState', `addQuote persist failed or timed out: ${err}`);
+            logWarn('AppState', `addQuote persist failed, queueing document: ${err}`);
+            try {
+              const { queueWrite } = await import('../services/offlineWriteQueue');
+              // Queue the document insert. Line items can't queue without the
+              // BE-generated doc_id; the moat signal lives in pricing_intelligence
+              // (per-line) which has its own write path below — no data loss for
+              // training. Customer-facing portal lines re-upsert next time the
+              // user opens the quote online.
+              await queueWrite({ table: 'documents', op: 'insert', payload: docPayload });
+            } catch {}
           }
         }
 
@@ -1329,18 +1337,23 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setInvoices((prev) => [newInvoice, ...prev]);
 
         if (isSupabaseConfigured) {
+          const invPayload = {
+            doc_type: 'invoice' as const,
+            status: 'draft' as const,
+            document_number: docNumber,
+            customer_id: job.customerId ?? undefined,
+            job_id: jobId,
+            total_amount: amount,
+            due_date: dueDate.toISOString(),
+          };
           try {
-            await withTimeout(createDocument({
-              doc_type: 'invoice',
-              status: 'draft',
-              document_number: docNumber,
-              customer_id: job.customerId ?? undefined,
-              job_id: jobId,
-              total_amount: amount,
-              due_date: dueDate.toISOString(),
-            }), 3000, 'addInvoiceFromJob');
+            await withTimeout(createDocument(invPayload), 3000, 'addInvoiceFromJob');
           } catch (err) {
-            logWarn('AppState', `addInvoiceFromJob persist failed: ${err}`);
+            logWarn('AppState', `addInvoiceFromJob persist failed, queueing: ${err}`);
+            try {
+              const { queueWrite } = await import('../services/offlineWriteQueue');
+              await queueWrite({ table: 'documents', op: 'insert', payload: invPayload });
+            } catch {}
           }
         }
         return docNumber;
