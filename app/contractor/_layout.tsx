@@ -25,7 +25,6 @@ export default function ContractorLayout() {
       <Stack.Screen name="timesheet" />
       <Stack.Screen name="purchase-orders" />
       <Stack.Screen name="permits" />
-      <Stack.Screen name="pipeline" />
       <Stack.Screen name="payroll" />
       <Stack.Screen name="quote-templates" />
       <Stack.Screen name="expenses" />

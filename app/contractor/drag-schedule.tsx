@@ -249,9 +249,9 @@ export default function DragScheduleScreen() {
         <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>{t('schedule.daySchedule', 'Dagplanning')}</Text>
-          <Text style={styles.headerSubtitle}>{today}</Text>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.headerTitle} numberOfLines={1} adjustsFontSizeToFit>{t('schedule.daySchedule', 'Day schedule')}</Text>
+          <Text style={styles.headerSubtitle} numberOfLines={1}>{today}</Text>
         </View>
         <Pressable
           onPress={async () => {
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PAGE_BG },
   header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingHorizontal: SafeArea.side, paddingTop: SafeArea.top, paddingBottom: Spacing.xs },
   backButton: { padding: 4 },
-  headerTitle: { fontSize: 24, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
+  headerTitle: { fontSize: 22, fontFamily: 'Archivo_900Black', color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
   headerSubtitle: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 2 },
   exportButton: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 4, backgroundColor: Palette.hermesOrange + '10', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   exportButtonText: { fontSize: 12, fontFamily: 'Archivo_700Bold', color: Palette.hermesOrange },

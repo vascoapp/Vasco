@@ -7,7 +7,6 @@
 
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { DK } from '../../src/theme/draftkings';
@@ -41,7 +40,7 @@ export default function SavingsHubScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
       <DKScreenHeader title={t('savings.title', 'AI BESPARINGEN').toUpperCase()} />
 
       <ScrollView
@@ -192,7 +191,7 @@ export default function SavingsHubScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -40,9 +40,7 @@ import { createPaymentLink as createStripePaymentLink } from '../../src/integrat
 import { SUPPORTED_METHODS } from '../../src/integrations/stripe';
 import { useAuth } from '../../src/context/AuthContext';
 import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
-import { useSavingsAggregation } from '../../src/services/savingsAggregatorService';
 import { calculateLatePaymentInterest } from '../../src/services/dutchComplianceService';
-import { useLaborCosts } from '../../src/services/laborCostService';
 import { useTranslation } from 'react-i18next';
 
 // P3: Collections Agent
@@ -376,8 +374,6 @@ export default function FacturenScreen() {
   const { jobs, addInvoiceFromJob, businessProfile } = useAppState();
   const { invoices, summary } = useCashFlow();
   const { findings: auditFindings } = useFinancialAuditFindings();
-  const savings = useSavingsAggregation();
-  const labor = useLaborCosts();
 
   // P3: Collections Agent
   const { summary: collectionsSummary, sequences: dunningSequences, alerts: cashGapAlerts, dso } = useCollectionsAgent();
@@ -821,30 +817,7 @@ export default function FacturenScreen() {
           </View>
         )}
 
-        {/* Financial Intelligence Strip — offertes/facturen tabs only */}
-        {activeTab !== 'incasso' && (
-          <View style={styles.finIntelStrip}>
-            <View style={styles.finIntelItem}>
-              <Text style={styles.finIntelValue}>{'\u20AC'}{labor.effectiveRate}/u</Text>
-              <Text style={styles.finIntelLabel}>{t('invoices.effectiveRate', 'Effectief tarief')}</Text>
-              <View style={styles.finIntelBadge}>
-                <Ionicons name="arrow-up" size={10} color={SemanticColors.feedbackSuccess} />
-                <Text style={styles.finIntelBadgeText}>+{labor.rateVsBenchmark}%</Text>
-              </View>
-            </View>
-            <View style={styles.finIntelDivider} />
-            <View style={styles.finIntelItem}>
-              <Text style={styles.finIntelValue}>{'\u20AC'}{savings.savingsPerJob}</Text>
-              <Text style={styles.finIntelLabel}>{t('invoices.savingsPerJob', 'Besparing/klus')}</Text>
-              <View style={styles.finIntelBadge}>
-                <Ionicons name="trending-up" size={10} color={SemanticColors.feedbackSuccess} />
-                <Text style={styles.finIntelBadgeText}>+{savings.savingsVsBenchmark}%</Text>
-              </View>
-            </View>
-          </View>
-        )}
-
-        <View style={{ height: 20 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
       )}
 
@@ -951,7 +924,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     borderRadius: 10,
-    backgroundColor: Palette.white,
+    backgroundColor: SemanticColors.surfacePrimary,
     alignItems: 'center',
   },
   tabActive: {
@@ -986,7 +959,7 @@ const styles = StyleSheet.create({
     paddingRight: Spacing.sm,
     paddingLeft: 0,
     gap: Spacing.sm,
-    backgroundColor: Palette.white,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -1033,7 +1006,7 @@ const styles = StyleSheet.create({
     paddingRight: Spacing.sm,
     paddingLeft: 0,
     gap: Spacing.sm,
-    backgroundColor: Palette.white,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -1138,7 +1111,7 @@ const styles = StyleSheet.create({
 
   // Incasso Tab Content (P3)
   dsoCard: {
-    backgroundColor: Palette.white,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 16,
     padding: Spacing.md,
     gap: Spacing.md,
@@ -1186,7 +1159,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xs,
   },
   dunningCard: {
-    backgroundColor: Palette.white,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 14,
     padding: Spacing.md,
     gap: Spacing.sm,
@@ -1267,7 +1240,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    backgroundColor: Palette.white,
+    backgroundColor: SemanticColors.surfacePrimary,
     borderRadius: 12,
     padding: Spacing.md,
     borderLeftWidth: 3,

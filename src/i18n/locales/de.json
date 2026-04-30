@@ -444,7 +444,24 @@
     "todSample": "Basierend auf {{count}} Rechnungen von Kollegen in {{country}}",
     "todHintWait": "Bis {{day}} {{part}} warten → ~{{days}} Tage schneller bezahlt",
     "todHintNow": "Guter Moment zum Senden — {{day}} {{part}} ist der Spitzenwert",
-    "invoicePrefix": "Invoice {{number}}"
+    "invoicePrefix": "Rechnung {{number}}",
+    "statusPaid": "Bezahlt",
+    "statusSent": "Versendet",
+    "statusViewed": "Angesehen",
+    "statusOverdue": "Überfällig",
+    "statusDraft": "Entwurf",
+    "quoteViewed": "Angesehen",
+    "quoteAccepted": "Angenommen",
+    "create": "Erstellen",
+    "send": "Senden",
+    "reject": "Ablehnen",
+    "cancel": "Abbrechen",
+    "remindersSentAll": "Erinnerungen an alle Kunden mit überfälligen Rechnungen gesendet.",
+    "reminderSentTo": "Erinnerung an {{name}} gesendet.",
+    "quoteSentDesc": "Ihr Angebot wurde erstellt und an den Kunden gesendet.",
+    "cashGapAlerts": "Liquiditätswarnungen",
+    "effectiveRate": "Effektiver Stundensatz",
+    "savingsPerJob": "Ersparnis/Auftrag"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -1669,7 +1686,8 @@
       "topPriority": "Höchste Priorität",
       "topDecision": "Top-Entscheidung",
       "topCustomer": "Top-Kunde",
-      "eveAnalyst": "EVE Analyst",
+      "eveAnalyst": "Vasco Analyst",
+      "vascoAnalyst": "Vasco Analyst",
       "eveFinance": "EVE Finance",
       "eveEngine": "EVE Engine",
       "eveQueue": "EVE Queue",
@@ -1956,6 +1974,7 @@
     "heroNext": "Nächste: {{title}} · {{days}}T"
   },
   "schedule": {
+    "daySchedule": "Tagesplan",
     "optimize": "Optimieren",
     "optimizeRoute": "Route optimieren",
     "optimizeNeedTwo": "Mindestens 2 Aufträge zum Optimieren",

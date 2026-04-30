@@ -13,16 +13,51 @@ export async function dispatchPaidSideEffects(
   supabaseUrl: string,
   serviceKey: string,
   invoiceId: string,
+  paidAt?: string,
 ): Promise<void> {
   const admin = createClient(supabaseUrl, serviceKey);
 
-  // Pull the invoice + customer email + contractor user id
+  // Pull the invoice + customer email + contractor user id.
+  // R275: also pull issue_date, due_date, sent_at to seed invoice_outcomes
+  // (the DSO training table).
   const { data: inv, error: invErr } = await admin
     .from('documents')
-    .select('id, user_id, customer_id, document_number, total_amount, currency')
+    .select('id, user_id, customer_id, document_number, total_amount, currency, issue_date, due_date, sent_at')
     .eq('id', invoiceId)
     .maybeSingle();
   if (invErr || !inv) return;
+
+  // ---------------------------------------------------------------------------
+  // 0. Seed invoice_outcomes for the DSO model (R275, P0-4 e2e fix)
+  //
+  // Without this row, predict_customer_dso has no training signal — every
+  // contractor stays at the global default. Fire-and-forget; insert errors
+  // are logged but don't block the receipt email / push.
+  // ---------------------------------------------------------------------------
+  try {
+    const issuedAt = (inv as any).sent_at || (inv as any).issue_date;
+    const dueAt = (inv as any).due_date;
+    const total = typeof (inv as any).total_amount === 'number' ? (inv as any).total_amount : 0;
+    if (issuedAt && dueAt) {
+      const issued = new Date(issuedAt).getTime();
+      const paid = new Date(paidAt || new Date().toISOString()).getTime();
+      const daysToPayment = Math.max(0, Math.round((paid - issued) / 86400000));
+      const isOverdue = paid > new Date(dueAt).getTime();
+      await admin.from('invoice_outcomes').insert({
+        user_id: inv.user_id,
+        invoice_id: invoiceId,
+        customer_id: inv.customer_id,
+        amount: total,
+        issued_at: new Date(issuedAt).toISOString(),
+        due_at: new Date(dueAt).toISOString(),
+        paid_at: new Date(paid).toISOString(),
+        days_to_payment: daysToPayment,
+        is_overdue: isOverdue,
+      });
+    }
+  } catch (err) {
+    console.warn('invoice_outcomes seed failed:', String(err));
+  }
 
   let customerEmail: string | null = null;
   let customerName: string | null = null;

@@ -298,6 +298,40 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         } catch (err) {
           logWarn('AppState', `loadExtractedDocs failed: ${err}`);
         }
+
+        // R275: load projects from BE (promoted from AsyncStorage-only)
+        try {
+          const { listProjects } = await import('../lib/dataProvider');
+          const projectRows = await listProjects();
+          if (projectRows.length > 0) {
+            const mapped: Project[] = projectRows.map((r: any) => ({
+              id: r.id,
+              title: r.name,
+              description: r.description ?? undefined,
+              customerId: r.customer_id ?? '',
+              customerName: undefined,
+              status: r.status,
+              address: r.address ?? undefined,
+              startDate: r.start_date ?? undefined,
+              targetEndDate: r.target_end_date ?? undefined,
+              actualEndDate: r.actual_end_date ?? undefined,
+              totalBudget: r.total_budget ?? 0,
+              totalQuoted: r.total_quoted ?? 0,
+              totalInvoiced: r.total_invoiced ?? 0,
+              totalPaid: r.total_paid ?? 0,
+              milestones: Array.isArray(r.milestones) ? r.milestones : [],
+              jobIds: [],
+              quoteIds: [],
+              invoiceIds: [],
+              subcontractorIds: [],
+              createdAt: r.created_at,
+              updatedAt: r.updated_at,
+            }));
+            setProjects(mapped);
+          }
+        } catch (err) {
+          logWarn('AppState', `loadProjects failed: ${err}`);
+        }
       }
     } catch (err) {
       logWarn('AppState', `refreshData failed: ${err}`);
@@ -1519,23 +1553,94 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
       projects,
       addProject: (project) => {
-        const id = `proj-${Date.now()}`;
+        // R275: BE-backed via projects table. Optimistic insert with temp id;
+        // dataProvider returns real uuid which replaces it. Offline → queued.
+        const tempId = `proj-${Date.now()}`;
         const now = new Date().toISOString();
         const newProject: Project = {
           ...project,
-          id,
+          id: tempId,
           totalInvoiced: 0,
           totalPaid: 0,
           createdAt: now,
           updatedAt: now,
         };
         setProjects(prev => [newProject, ...prev]);
-        return id;
+
+        if (isSupabaseConfigured) {
+          (async () => {
+            try {
+              const { createProject: dbCreateProject } = await import('../lib/dataProvider');
+              const row = await withTimeout(dbCreateProject({
+                name: project.title,
+                description: project.description,
+                customer_id: project.customerId || null,
+                status: project.status,
+                start_date: project.startDate ?? null,
+                target_end_date: project.targetEndDate ?? null,
+                total_budget: project.totalBudget,
+                address: project.address ?? null,
+                milestones: project.milestones ?? [],
+              }), 3000, 'addProject');
+              setProjects(prev => prev.map(p => p.id === tempId ? { ...p, id: (row as any).id } : p));
+            } catch (err) {
+              logWarn('AppState', `addProject persist failed or timed out: ${err}`);
+              try {
+                const { queueWrite } = await import('../services/offlineWriteQueue');
+                await queueWrite({
+                  table: 'projects',
+                  op: 'insert',
+                  payload: {
+                    id: tempId,
+                    name: project.title,
+                    description: project.description,
+                    customer_id: project.customerId || null,
+                    status: project.status,
+                    start_date: project.startDate ?? null,
+                    target_end_date: project.targetEndDate ?? null,
+                    total_budget: project.totalBudget,
+                    address: project.address ?? null,
+                    milestones: project.milestones ?? [],
+                  },
+                });
+              } catch {}
+            }
+          })();
+        }
+        return tempId;
       },
       updateProject: (id, updates) => {
         setProjects(prev => prev.map(p =>
           p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p
         ));
+
+        if (isSupabaseConfigured && !id.startsWith('proj-')) {
+          (async () => {
+            try {
+              const { updateProject: dbUpdateProject } = await import('../lib/dataProvider');
+              const patch: Record<string, unknown> = {};
+              if (updates.title !== undefined) patch.name = updates.title;
+              if (updates.description !== undefined) patch.description = updates.description;
+              if (updates.status !== undefined) patch.status = updates.status;
+              if (updates.startDate !== undefined) patch.start_date = updates.startDate;
+              if (updates.targetEndDate !== undefined) patch.target_end_date = updates.targetEndDate;
+              if (updates.actualEndDate !== undefined) patch.actual_end_date = updates.actualEndDate;
+              if (updates.totalBudget !== undefined) patch.total_budget = updates.totalBudget;
+              if (updates.address !== undefined) patch.address = updates.address;
+              if (updates.milestones !== undefined) patch.milestones = updates.milestones;
+              if (Object.keys(patch).length > 0) {
+                await withTimeout(dbUpdateProject(id, patch), 3000, 'updateProject');
+              }
+            } catch (err) {
+              logWarn('AppState', `updateProject persist failed: ${err}`);
+              try {
+                const { queueWrite } = await import('../services/offlineWriteQueue');
+                const { id: _omit, ...patch } = { id, ...updates } as Record<string, unknown>;
+                await queueWrite({ table: 'projects', op: 'update', rowId: id, payload: patch });
+              } catch {}
+            }
+          })();
+        }
       },
       addJobToProject: (projectId, jobId) => {
         setProjects(prev => prev.map(p =>

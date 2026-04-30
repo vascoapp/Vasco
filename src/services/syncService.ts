@@ -9,6 +9,7 @@
 
 import { offlineQueue, QueuedAction, QueuedActionType } from './offlineQueueService';
 import { isSupabaseConfigured } from '../lib/supabase';
+import * as dp from '../lib/dataProvider';
 
 const MAX_RETRIES = 3;
 
@@ -90,46 +91,87 @@ class SyncService {
   // ---------------------------------------------------------------------------
 
   private async executeAction(action: QueuedAction): Promise<void> {
-    // Map action types to Supabase calls.
-    // When Supabase is live, each case will call the appropriate dataProvider function.
-    // For now this is a routing skeleton — fill in real API calls when backend is active.
-    const handlers: Record<QueuedActionType, (payload: Record<string, unknown>) => Promise<void>> = {
-      create_invoice: async (p) => { await this.callApi('invoices', 'POST', p); },
-      update_invoice: async (p) => { await this.callApi(`invoices/${p.id}`, 'PATCH', p); },
-      send_invoice: async (p) => { await this.callApi(`invoices/${p.id}/send`, 'POST', p); },
-      mark_paid: async (p) => { await this.callApi(`invoices/${p.id}/mark-paid`, 'POST', p); },
-      create_quote: async (p) => { await this.callApi('quotes', 'POST', p); },
-      update_quote: async (p) => { await this.callApi(`quotes/${p.id}`, 'PATCH', p); },
-      send_quote: async (p) => { await this.callApi(`quotes/${p.id}/send`, 'POST', p); },
-      create_job: async (p) => { await this.callApi('jobs', 'POST', p); },
-      update_job: async (p) => { await this.callApi(`jobs/${p.id}`, 'PATCH', p); },
-      delete_job: async (p) => { await this.callApi(`jobs/${p.id}`, 'DELETE', p); },
-      create_customer: async (p) => { await this.callApi('customers', 'POST', p); },
-      update_customer: async (p) => { await this.callApi(`customers/${p.id}`, 'PATCH', p); },
-      update_business_profile: async (p) => { await this.callApi('business-profile', 'PATCH', p); },
-      add_material: async (p) => { await this.callApi('materials', 'POST', p); },
-      add_job_material: async (p) => { await this.callApi('job-materials', 'POST', p); },
-      update_job_material: async (p) => { await this.callApi(`job-materials/${p.id}`, 'PATCH', p); },
-      export_invoice: async (p) => { await this.callApi(`invoices/${p.id}/export`, 'POST', p); },
-    };
+    // R275: routes queued actions through dataProvider (the canonical write
+    // path) rather than a separate REST shim. Same Supabase calls AppState
+    // would have made if it weren't offline.
+    const p = action.payload;
+    const id = (p as { id?: string }).id ?? '';
 
-    const handler = handlers[action.type];
-    if (handler) {
-      await handler(action.payload);
-    } else {
-      throw new Error(`Unknown action type: ${action.type}`);
+    switch (action.type) {
+      case 'create_invoice':
+      case 'create_quote': {
+        await dp.createDocument(p as { doc_type: 'quote' | 'invoice'; status: 'draft' | 'sent' | 'paid' });
+        return;
+      }
+      case 'update_invoice':
+      case 'update_quote': {
+        if (!id) throw new Error(`${action.type} missing id`);
+        await dp.updateDocument(id, p);
+        return;
+      }
+      case 'send_invoice':
+      case 'send_quote': {
+        if (!id) throw new Error(`${action.type} missing id`);
+        await dp.updateDocument(id, { status: 'sent', sent_at: new Date().toISOString() });
+        return;
+      }
+      case 'mark_paid': {
+        if (!id) throw new Error('mark_paid missing id');
+        await dp.updateDocument(id, { status: 'paid', paid_at: new Date().toISOString() });
+        return;
+      }
+      case 'create_job': {
+        await dp.createJob(p as Parameters<typeof dp.createJob>[0]);
+        return;
+      }
+      case 'update_job': {
+        if (!id) throw new Error('update_job missing id');
+        await dp.updateJob(id, p);
+        return;
+      }
+      case 'delete_job': {
+        if (!id) throw new Error('delete_job missing id');
+        await dp.deleteJob(id);
+        return;
+      }
+      case 'create_customer': {
+        await dp.createCustomer(p as Parameters<typeof dp.createCustomer>[0]);
+        return;
+      }
+      case 'update_customer': {
+        if (!id) throw new Error('update_customer missing id');
+        await dp.updateCustomer(id, p as Parameters<typeof dp.updateCustomer>[1]);
+        return;
+      }
+      case 'update_business_profile': {
+        await dp.upsertBusinessSettings(p as Parameters<typeof dp.upsertBusinessSettings>[0]);
+        return;
+      }
+      case 'add_material': {
+        await dp.createMaterial(p as Parameters<typeof dp.createMaterial>[0]);
+        return;
+      }
+      case 'add_job_material': {
+        await dp.createJobMaterial(p as Parameters<typeof dp.createJobMaterial>[0]);
+        return;
+      }
+      case 'update_job_material': {
+        if (!id) throw new Error('update_job_material missing id');
+        await dp.updateJobMaterial(id, p as Parameters<typeof dp.updateJobMaterial>[1]);
+        return;
+      }
+      case 'export_invoice': {
+        // External-system export deferred — no edge fn deployed yet. Drop
+        // the queued action gracefully so the offline queue doesn't stall.
+        // Real export goes through the integrations layer (Moneybird etc.)
+        // directly when online; queued actions are best-effort retries.
+        return;
+      }
+      default: {
+        const exhaustive: never = action.type;
+        throw new Error(`Unknown action type: ${exhaustive}`);
+      }
     }
-  }
-
-  /**
-   * Placeholder for Supabase edge function / REST calls.
-   * Replace with real supabase client calls when backend is active.
-   */
-  private async callApi(_endpoint: string, _method: string, _payload: Record<string, unknown>): Promise<void> {
-    // TODO: Wire to Supabase when live
-    // Example:
-    // const { error } = await supabase.from(table).insert(payload);
-    // if (error) throw error;
   }
 
   // ---------------------------------------------------------------------------

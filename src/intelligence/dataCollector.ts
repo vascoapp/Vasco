@@ -227,26 +227,58 @@ export async function emitMaterialPurchased(userId: string, data: {
   // predictors read from material_price_history directly. Without a
   // direct insert here, those models get zero training data forever.
   if (isSupabaseConfigured) {
+    // R275: column-level audit found the previous insert wrote columns that
+    // don't exist on material_price_history (user_id, unit_price, quantity,
+    // total_price, delivery_days). Aligned to actual schema:
+    //   observed_by (FK→auth.users), price_excl_vat, lead_time_days, source.
+    // Per-purchase quantity/total are recorded in business_events.
     try {
-      await supabase.from('material_price_history').insert({
-        user_id: userId,
+      const { error } = await supabase.from('material_price_history').insert({
+        observed_by: userId,
         supplier_id: data.supplierId,
         supplier_name: data.supplierName,
         material_name: data.materialName,
         material_category: data.materialCategory ?? null,
-        unit_price: data.price,
-        quantity: data.quantity,
         unit: data.unit,
-        total_price: data.price * data.quantity,
+        price_excl_vat: data.price,
         trade: data.trade,
-        country: data.country ?? null,
-        delivery_days: data.deliveryDays ?? null,
+        country: data.country ?? 'NL',
+        lead_time_days: data.deliveryDays ?? null,
         postcode: data.postcode ?? null,
+        source: 'invoice_scan',
         observed_at: new Date().toISOString(),
       } as any);
-    } catch {
-      // Silent — business_events still has the event for fallback.
+      if (error) throw error;
+    } catch (err) {
+      await logIntelligenceWriteFailure('material_price_history.insert', userId, err);
     }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Observability — moat-layer write failures must leave a trail.
+// Routes through eve_telemetry (already wired, fire-and-forget).
+// ---------------------------------------------------------------------------
+
+async function logIntelligenceWriteFailure(
+  op: string,
+  userId: string,
+  err: unknown,
+): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  try {
+    const message = err instanceof Error ? err.message : String(err);
+    await supabase.from('eve_telemetry').insert({
+      id: `intel_fail_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      user_id: userId,
+      action_type: 'intelligence_write_failure',
+      agent_type: 'analyst',
+      entity_key: op,
+      outcome: 'rejected',
+      meta: { op, error: message.slice(0, 500) },
+    } as any);
+  } catch {
+    // If telemetry itself fails we have nowhere left to go.
   }
 }
 
@@ -290,9 +322,12 @@ export async function recordPricingData(userId: string, data: {
     };
     if (data.contractorSegment !== undefined) row.contractor_segment = data.contractorSegment;
     if (data.postcode !== undefined) row.postcode = data.postcode;
-    await supabase.from('pricing_intelligence').insert(row as any);
-  } catch {
-    // Silent fail — don't block the UI
+    const { error } = await supabase.from('pricing_intelligence').insert(row as any);
+    if (error) throw error;
+  } catch (err) {
+    // R275: don't block the UI, but DO leave a trail. Without observability
+    // here, the moat layer can silently regress (no rows = no cohort stats).
+    await logIntelligenceWriteFailure('pricing_intelligence.insert', userId, err);
   }
 }
 
@@ -406,11 +441,11 @@ export async function recordPricingOutcome(userId: string, quoteId: string, data
           p_weight: pairWeight,
         });
       }
-    } catch {
-      // Best-effort — training-pair write failures must not block the outcome.
+    } catch (err) {
+      await logIntelligenceWriteFailure('write_training_pair', userId, err);
     }
-  } catch {
-    // Silent fail
+  } catch (err) {
+    await logIntelligenceWriteFailure('pricing_intelligence.update', userId, err);
   }
 }
 

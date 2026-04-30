@@ -444,7 +444,24 @@
     "todSample": "Op basis van {{count}} facturen van collega's in {{country}}",
     "todHintWait": "Wachten tot {{day}} {{part}} → ~{{days}} dagen sneller betaald",
     "todHintNow": "Goed moment om te versturen — {{day}} {{part}} is het piekmoment",
-    "invoicePrefix": "Factuur {{number}}"
+    "invoicePrefix": "Factuur {{number}}",
+    "statusPaid": "Betaald",
+    "statusSent": "Verzonden",
+    "statusViewed": "Bekeken",
+    "statusOverdue": "Verlopen",
+    "statusDraft": "Concept",
+    "quoteViewed": "Bekeken",
+    "quoteAccepted": "Geaccepteerd",
+    "create": "Aanmaken",
+    "send": "Versturen",
+    "reject": "Afwijzen",
+    "cancel": "Annuleren",
+    "remindersSentAll": "Herinneringen zijn verstuurd naar alle klanten met verlopen facturen.",
+    "reminderSentTo": "Herinnering verstuurd naar {{name}}.",
+    "quoteSentDesc": "Je offerte is succesvol aangemaakt en verstuurd naar de klant.",
+    "cashGapAlerts": "Cashflow alerts",
+    "effectiveRate": "Effectief tarief",
+    "savingsPerJob": "Besparing/klus"
   },
   "expenses": {
     "title": "Uitgaven",
@@ -1669,7 +1686,8 @@
       "topPriority": "Top prioriteit",
       "topDecision": "Top beslissing",
       "topCustomer": "Top klant",
-      "eveAnalyst": "EVE Analyst",
+      "eveAnalyst": "Vasco Analyst",
+      "vascoAnalyst": "Vasco Analyst",
       "eveFinance": "EVE Finance",
       "eveEngine": "EVE Engine",
       "eveQueue": "EVE Queue",
@@ -1956,6 +1974,7 @@
     "heroNext": "Volgende: {{title}} · {{days}}d"
   },
   "schedule": {
+    "daySchedule": "Dagplanning",
     "optimize": "Optimaliseer",
     "optimizeRoute": "Route optimaliseren",
     "optimizeNeedTwo": "Minstens 2 klussen nodig om te optimaliseren",

@@ -443,7 +443,24 @@
     "todSample": "Su {{count}} fatture di colleghi in {{country}}",
     "todHintWait": "Aspettare fino a {{day}} {{part}} → pagato ~{{days}} giorni prima",
     "todHintNow": "Buon momento per inviare — {{day}} {{part}} è la fascia di picco",
-    "invoicePrefix": "Invoice {{number}}"
+    "invoicePrefix": "Fattura {{number}}",
+    "statusPaid": "Pagata",
+    "statusSent": "Inviata",
+    "statusViewed": "Vista",
+    "statusOverdue": "Scaduta",
+    "statusDraft": "Bozza",
+    "quoteViewed": "Visto",
+    "quoteAccepted": "Accettato",
+    "create": "Crea",
+    "send": "Invia",
+    "reject": "Rifiuta",
+    "cancel": "Annulla",
+    "remindersSentAll": "Promemoria inviati a tutti i clienti con fatture scadute.",
+    "reminderSentTo": "Promemoria inviato a {{name}}.",
+    "quoteSentDesc": "Il tuo preventivo è stato creato e inviato al cliente.",
+    "cashGapAlerts": "Avvisi di liquidità",
+    "effectiveRate": "Tariffa effettiva",
+    "savingsPerJob": "Risparmio/lavoro"
   },
   "expenses": {
     "title": "Spese",
@@ -1659,7 +1676,8 @@
       "topPriority": "Priorità alta",
       "topDecision": "Decisione chiave",
       "topCustomer": "Cliente top",
-      "eveAnalyst": "EVE Analyst",
+      "eveAnalyst": "Vasco Analyst",
+      "vascoAnalyst": "Vasco Analyst",
       "eveFinance": "EVE Finance",
       "eveEngine": "EVE Engine",
       "eveQueue": "EVE Queue",
@@ -1935,6 +1953,7 @@
     "empty": "— nessun lavoro pianificato —"
   },
   "schedule": {
+    "daySchedule": "Pianificazione giornaliera",
     "optimize": "Ottimizza",
     "optimizeRoute": "Ottimizza percorso",
     "optimizeNeedTwo": "Servono almeno 2 lavori",

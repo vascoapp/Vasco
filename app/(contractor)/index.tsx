@@ -138,18 +138,18 @@ export default function VandaagDK() {
             <View style={styles.heroGlowOverlay} />
             <View style={styles.heroChip}>
               <View style={styles.heroChipDot} />
-              <DKLabel style={styles.heroChipText}>{t('dk.hero.eveAnalyst', 'EVE Analyst')}</DKLabel>
+              <DKLabel style={styles.heroChipText}>{t('dk.hero.vascoAnalyst', 'Vasco Analyst')}</DKLabel>
             </View>
             {heroAction ? (
               <>
-                <Text style={styles.heroTitle}>{heroAction.title}</Text>
+                <Text style={styles.heroTitle} numberOfLines={2}>{heroAction.title}</Text>
                 <Text style={styles.heroBody} numberOfLines={2}>{heroAction.description}</Text>
                 <Pressable
                   style={({ pressed }) => [styles.heroCTA, pressed && { opacity: 0.9 }]}
                   onPress={() => handleApprove(heroAction.id)}
                 >
-                  <DKLabel style={styles.heroCTAText}>{heroAction.actionLabel}</DKLabel>
-                  <Text style={styles.heroCTAImpact}>· {heroAction.estimatedImpact}</Text>
+                  <DKLabel style={styles.heroCTAText} numberOfLines={1}>{heroAction.actionLabel}</DKLabel>
+                  <Text style={styles.heroCTAImpact} numberOfLines={1}>· {heroAction.estimatedImpact}</Text>
                 </Pressable>
               </>
             ) : (
@@ -233,7 +233,7 @@ export default function VandaagDK() {
           )}
         </View>
 
-        <View style={{ height: 120 }} />
+        <View style={{ height: 40 }} />
       </ScrollView>
     </View>
   );
@@ -252,15 +252,15 @@ function KpiTile({ label, value, tone, onPress }: { label: string; value: string
 function InlineQueueRow({ item, onApprove, onReject }: { item: QueueItem; onApprove: () => void; onReject: () => void }) {
   return (
     <View style={inlineStyles.row}>
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={inlineStyles.title} numberOfLines={1}>{item.title}</Text>
-        <Text style={inlineStyles.impact}>{item.estimatedImpact}</Text>
+        <Text style={inlineStyles.impact} numberOfLines={1}>{item.estimatedImpact}</Text>
       </View>
       <Pressable onPress={onReject} hitSlop={6} style={inlineStyles.rejectBtn}>
         <Ionicons name="close" size={14} color={DK.colors.textMuted} />
       </Pressable>
       <Pressable onPress={onApprove} style={({ pressed }) => [inlineStyles.approveBtn, pressed && { opacity: 0.85 }]}>
-        <DKLabel style={inlineStyles.approveText}>{item.actionLabel}</DKLabel>
+        <DKLabel style={inlineStyles.approveText} numberOfLines={1}>{item.actionLabel}</DKLabel>
       </Pressable>
     </View>
   );
@@ -291,7 +291,7 @@ function JobRow({ job, onPress }: { job: ScheduledJob; onPress: () => void }) {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: DK.colors.bg },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 20 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 120 },
 
   topBar: {
     flexDirection: 'row',
@@ -366,65 +366,67 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   hero: {
-    padding: 18,
+    padding: 14,
     overflow: 'hidden',
     position: 'relative',
   },
   heroGlowOverlay: {
     position: 'absolute',
-    top: -60, right: -60,
-    width: 180, height: 180,
-    borderRadius: 90,
+    top: -50, right: -50,
+    width: 140, height: 140,
+    borderRadius: 70,
     backgroundColor: DK.colors.highlight,
-    opacity: 0.18,
+    opacity: 0.15,
   },
   heroChip: {
     alignSelf: 'flex-start',
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingVertical: 4, paddingHorizontal: 10,
+    paddingVertical: 3, paddingHorizontal: 8,
     borderRadius: DK.radius.chip,
     backgroundColor: '#0B0E11AA',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   heroChipDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: DK.colors.highlight },
   heroChipText: {
     fontFamily: DK.type.display800,
-    fontSize: 10,
+    fontSize: 9,
     color: DK.colors.highlight,
-    letterSpacing: 1.5,
+    letterSpacing: 1.4,
   },
   heroTitle: {
     fontFamily: DK.type.display900,
-    fontSize: 22,
+    fontSize: 17,
     color: DK.colors.text,
-    letterSpacing: -0.5,
-    lineHeight: 26,
+    letterSpacing: -0.3,
+    lineHeight: 21,
   },
   heroBody: {
     fontFamily: DK.type.body500,
-    fontSize: 13,
+    fontSize: 12,
     color: '#FFFFFFCC',
-    lineHeight: 18,
-    marginTop: 8,
-    marginBottom: 14,
+    lineHeight: 16,
+    marginTop: 4,
+    marginBottom: 10,
   },
   heroCTA: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 13,
+    gap: 4,
+    paddingVertical: 10, paddingHorizontal: 8,
     borderRadius: DK.radius.button,
     backgroundColor: '#FFFFFF',
   },
   heroCTAText: {
     fontFamily: DK.type.display900,
-    fontSize: 13,
+    fontSize: 12,
     color: DK.colors.bg,
     letterSpacing: 1,
+    flexShrink: 1,
   },
   heroCTAImpact: {
     fontFamily: DK.type.body600,
-    fontSize: 12,
+    fontSize: 11,
     color: DK.colors.primary,
+    flexShrink: 1,
   },
 
   inlineQueue: {

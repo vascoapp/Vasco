@@ -482,8 +482,8 @@ function HeroActionCard({ action, editingId, editText, setEditingId, setEditText
             <DKLabel style={heroStyles.dismissText}>{t('ai.later')}</DKLabel>
           </Pressable>
           <Pressable style={({ pressed }) => [heroStyles.approveBtn, pressed && { opacity: 0.92 }]} onPress={onApprove}>
-            <DKLabel style={heroStyles.approveText}>{action.actionLabel}</DKLabel>
-            <Ionicons name={action.actionType === 'share' ? 'send' : action.actionType === 'navigate' ? 'arrow-forward' : 'checkmark'} size={14} color={DK.colors.bg} />
+            <DKLabel style={heroStyles.approveText} numberOfLines={1}>{action.actionLabel}</DKLabel>
+            <Ionicons name={action.actionType === 'share' ? 'send' : action.actionType === 'navigate' ? 'arrow-forward' : 'checkmark'} size={12} color={DK.colors.bg} />
           </Pressable>
           {action.actionType === 'share' && action.shareText && (
             <Pressable
@@ -723,33 +723,33 @@ const s = StyleSheet.create({
 const heroStyles = StyleSheet.create({
   wrap: {
     borderRadius: DK.radius.card,
-    shadowColor: DK.colors.accent, shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.45, shadowRadius: 28, elevation: 12,
+    shadowColor: DK.colors.accent, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 20, elevation: 8,
   },
   card: {
     borderRadius: DK.radius.card,
-    padding: 18,
+    padding: 14,
     overflow: 'hidden',
   },
   glow: {
     position: 'absolute',
-    top: -60, right: -60,
-    width: 180, height: 180,
-    borderRadius: 90,
+    top: -50, right: -50,
+    width: 140, height: 140,
+    borderRadius: 70,
     backgroundColor: DK.colors.highlight,
-    opacity: 0.18,
+    opacity: 0.15,
   },
   chip: {
     alignSelf: 'flex-start',
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingVertical: 4, paddingHorizontal: 10,
+    paddingVertical: 3, paddingHorizontal: 8,
     borderRadius: DK.radius.chip,
     backgroundColor: '#0B0E11AA',
     borderWidth: 1, borderColor: '#FFFFFF22',
-    marginBottom: 12,
+    marginBottom: 8,
   },
-  chipText: { fontFamily: DK.type.display900, fontSize: 10, color: DK.colors.highlight, letterSpacing: 1.5 },
-  title: { fontFamily: DK.type.display900, fontSize: 22, color: '#FFFFFF', letterSpacing: -0.5, lineHeight: 26 },
-  body: { fontFamily: DK.type.body500, fontSize: 13, color: '#FFFFFFCC', marginTop: 8, lineHeight: 18, marginBottom: 14 },
+  chipText: { fontFamily: DK.type.display900, fontSize: 9, color: DK.colors.highlight, letterSpacing: 1.4 },
+  title: { fontFamily: DK.type.display900, fontSize: 17, color: '#FFFFFF', letterSpacing: -0.3, lineHeight: 21 },
+  body: { fontFamily: DK.type.body500, fontSize: 12, color: '#FFFFFFCC', marginTop: 4, lineHeight: 16, marginBottom: 10 },
 
   editInput: {
     backgroundColor: '#0B0E1177',
@@ -759,20 +759,20 @@ const heroStyles = StyleSheet.create({
     fontSize: 12, fontFamily: DK.type.body400,
     color: '#FFFFFF',
     minHeight: 80, textAlignVertical: 'top',
-    marginBottom: 12,
+    marginBottom: 10,
   },
 
-  ctaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  ctaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   editBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingVertical: 12, paddingHorizontal: 16,
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingVertical: 9, paddingHorizontal: 10,
     borderRadius: DK.radius.button,
     backgroundColor: '#0B0E11AA',
-    borderWidth: 1.5, borderColor: '#FFFFFF55',
+    borderWidth: 1, borderColor: '#FFFFFF55',
   },
-  editBtnText: { fontFamily: DK.type.display900, fontSize: 12, color: '#FFFFFF', letterSpacing: 1.2 },
-  dismissBtn: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: DK.radius.button, backgroundColor: '#0B0E1177', borderWidth: 1, borderColor: '#FFFFFF22' },
-  dismissText: { fontFamily: DK.type.display800, fontSize: 11, color: '#FFFFFFCC', letterSpacing: 1.1 },
-  approveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: DK.radius.button, backgroundColor: '#FFFFFF' },
-  approveText: { fontFamily: DK.type.display900, fontSize: 12, color: DK.colors.bg, letterSpacing: 1.2 },
+  editBtnText: { fontFamily: DK.type.display900, fontSize: 10, color: '#FFFFFF', letterSpacing: 1 },
+  dismissBtn: { paddingVertical: 9, paddingHorizontal: 10, borderRadius: DK.radius.button, backgroundColor: '#0B0E1177', borderWidth: 1, borderColor: '#FFFFFF22' },
+  dismissText: { fontFamily: DK.type.display800, fontSize: 10, color: '#FFFFFFCC', letterSpacing: 1 },
+  approveBtn: { flex: 1, flexShrink: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 10, paddingHorizontal: 8, borderRadius: DK.radius.button, backgroundColor: '#FFFFFF', minWidth: 0 },
+  approveText: { fontFamily: DK.type.display900, fontSize: 11, color: DK.colors.bg, letterSpacing: 1, flexShrink: 1 },
 });

@@ -164,8 +164,8 @@ Deno.serve(async (req) => {
 
       console.log(`Invoice ${invoiceId} marked as paid (${paymentId})`);
 
-      // Fire-and-forget: receipt email + contractor push
-      await dispatchPaidSideEffects(supabaseUrl, supabaseServiceKey, invoiceId).catch((err) =>
+      // Fire-and-forget: receipt email + contractor push + invoice_outcomes seed
+      await dispatchPaidSideEffects(supabaseUrl, supabaseServiceKey, invoiceId, paidAt).catch((err) =>
         console.warn('paid side-effects failed:', String(err)),
       );
     }

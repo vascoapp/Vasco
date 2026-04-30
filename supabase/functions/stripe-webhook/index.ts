@@ -394,7 +394,7 @@ Deno.serve(async (req) => {
 
     console.log(`Invoice ${invoiceId} marked as paid via Stripe (${paymentId})`);
 
-    await dispatchPaidSideEffects(supabaseUrl, supabaseServiceKey, invoiceId).catch((err) =>
+    await dispatchPaidSideEffects(supabaseUrl, supabaseServiceKey, invoiceId, paidAt).catch((err) =>
       console.warn('paid side-effects failed:', String(err)),
     );
 

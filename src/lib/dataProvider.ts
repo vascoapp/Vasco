@@ -294,6 +294,84 @@ export async function deleteJob(id: string): Promise<void> {
   if (error) throw error;
 }
 
+// ── Projects (R275 — promoted from AsyncStorage to BE-backed) ───────────────
+
+export interface ProjectRow {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  customer_id: string | null;
+  status: 'planning' | 'active' | 'completed' | 'on_hold' | 'cancelled';
+  start_date: string | null;
+  target_end_date: string | null;
+  actual_end_date: string | null;
+  total_budget: number | null;
+  total_quoted: number | null;
+  total_invoiced: number | null;
+  total_paid: number | null;
+  address: { street?: string; city?: string; postcode?: string; country?: string } | null;
+  milestones: unknown[];
+  created_at: string;
+  updated_at: string;
+}
+
+export async function listProjects(): Promise<ProjectRow[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as ProjectRow[];
+}
+
+export async function createProject(
+  project: {
+    name: string;
+    description?: string | null;
+    customer_id?: string | null;
+    status?: 'planning' | 'active' | 'completed' | 'on_hold' | 'cancelled';
+    start_date?: string | null;
+    target_end_date?: string | null;
+    total_budget?: number | null;
+    address?: { street?: string; city?: string; postcode?: string; country?: string } | null;
+    milestones?: unknown[];
+  },
+): Promise<ProjectRow> {
+  const userId = await getUserId();
+  const { data, error } = await supabase
+    .from('projects')
+    .insert({
+      ...project,
+      status: project.status ?? 'planning',
+      user_id: userId,
+    } as any)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as ProjectRow;
+}
+
+export async function updateProject(
+  id: string,
+  updates: Record<string, unknown>,
+): Promise<ProjectRow> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from('projects') as any)
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as ProjectRow;
+}
+
+export async function deleteProject(id: string): Promise<void> {
+  const { error } = await supabase.from('projects').delete().eq('id', id);
+  if (error) throw error;
+}
+
 // ── Document Numbering ───────────────────────────────────────
 
 export async function nextDocumentNumber(docType: 'quote' | 'invoice'): Promise<string> {

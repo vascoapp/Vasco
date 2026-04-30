@@ -167,7 +167,7 @@ export default function WerkScreen() {
     return (
       <View style={styles.root}>
         <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
-          <View style={styles.topBar}><Text style={styles.title}>WERK</Text></View>
+          <View style={styles.topBar}><DKLabel style={styles.title}>{t('tabs.jobs', 'Jobs')}</DKLabel></View>
         </SafeAreaView>
         <View style={styles.fullEmpty}>
           <Ionicons name="briefcase-outline" size={48} color={DK.colors.textMuted} />
@@ -187,7 +187,7 @@ export default function WerkScreen() {
       {/* ─── TOP BAR ─── */}
       <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
         <View style={styles.topBar}>
-          <Text style={styles.title}>WERK</Text>
+          <DKLabel style={styles.title}>{t('tabs.jobs', 'Jobs')}</DKLabel>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {tab === 'active' && (
               <Pressable onPress={() => setSortBy(prev => prev === 'date' ? 'status' : 'date')} hitSlop={8} style={styles.sortChip}>
@@ -508,7 +508,7 @@ function TodayContent({ todayJobs, onOpenJob, onPlanCta, t }: { todayJobs: any[]
       <EmptyBlock
         icon="sunny-outline"
         title={t('dk.empty.noJobsToday', 'No jobs today').toUpperCase()}
-        desc={t('dashboard.noJobsTodayDesc', 'Jouw dag is vrij — plan volgende week.')}
+        desc={t('dashboard.noJobsTodayDesc', 'Your day is free — plan next week.')}
         ctaLabel={t('dk.fab.planSchedule', 'Plan your week').toUpperCase()}
         ctaIcon="calendar-outline"
         onCta={onPlanCta}
@@ -841,49 +841,49 @@ const heroStyles = StyleSheet.create({
   wrap: {
     borderRadius: DK.radius.card,
     shadowColor: DK.colors.accent,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.45,
-    shadowRadius: 28,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 8,
   },
   card: {
     borderRadius: DK.radius.card,
-    padding: 18,
+    padding: 14,
     overflow: 'hidden',
   },
   glow: {
     position: 'absolute',
-    top: -60, right: -60,
-    width: 180, height: 180,
-    borderRadius: 90,
-    opacity: 0.18,
+    top: -50, right: -50,
+    width: 140, height: 140,
+    borderRadius: 70,
+    opacity: 0.15,
   },
   chip: {
     alignSelf: 'flex-start',
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingVertical: 4, paddingHorizontal: 10,
+    paddingVertical: 3, paddingHorizontal: 8,
     borderRadius: DK.radius.chip,
     borderWidth: 1,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   pulse: { width: 6, height: 6, borderRadius: 3 },
-  chipText: { fontFamily: DK.type.display900, fontSize: 10, letterSpacing: 1.5 },
+  chipText: { fontFamily: DK.type.display900, fontSize: 9, letterSpacing: 1.4 },
   title: {
     fontFamily: DK.type.display900,
-    fontSize: 22,
+    fontSize: 17,
     color: '#FFFFFF',
-    letterSpacing: -0.5,
-    lineHeight: 26,
+    letterSpacing: -0.3,
+    lineHeight: 21,
   },
   customer: {
     fontFamily: DK.type.body500,
-    fontSize: 13,
+    fontSize: 12,
     color: '#FFFFFFCC',
-    marginTop: 4,
+    marginTop: 2,
   },
-  metaRow: { flexDirection: 'row', gap: 8, marginTop: 14, marginBottom: 16, flexWrap: 'wrap' },
+  metaRow: { flexDirection: 'row', gap: 6, marginTop: 10, marginBottom: 10, flexWrap: 'wrap' },
   metaChip: {
-    paddingVertical: 6, paddingHorizontal: 12,
+    paddingVertical: 5, paddingHorizontal: 10,
     borderRadius: DK.radius.chip,
     backgroundColor: '#0B0E1177',
     borderWidth: 1, borderColor: '#FFFFFF22',
@@ -892,20 +892,20 @@ const heroStyles = StyleSheet.create({
     fontFamily: DK.type.display800,
     fontSize: 9,
     color: '#FFFFFFAA',
-    letterSpacing: 1.5,
+    letterSpacing: 1.4,
   },
   metaValue: {
     fontFamily: DK.type.display900,
-    fontSize: 14,
+    fontSize: 13,
     color: DK.colors.highlight,
     marginTop: 1,
   },
   ctaRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 13,
+    gap: 6,
+    paddingVertical: 10,
     borderRadius: DK.radius.button,
     backgroundColor: '#FFFFFF',
   },
-  ctaText: { fontFamily: DK.type.display900, fontSize: 13, color: DK.colors.bg, letterSpacing: 1.2 },
+  ctaText: { fontFamily: DK.type.display900, fontSize: 12, color: DK.colors.bg, letterSpacing: 1.1 },
 });

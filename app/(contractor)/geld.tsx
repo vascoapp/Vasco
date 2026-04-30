@@ -174,7 +174,7 @@ export default function GeldScreen() {
       {/* ─── TOP BAR ─── */}
       <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
         <View style={s.topBar}>
-          <Text style={s.title}>GELD</Text>
+          <DKLabel style={s.title}>{t('tabs.money', 'Money')}</DKLabel>
         </View>
       </SafeAreaView>
 

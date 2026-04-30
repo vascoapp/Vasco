@@ -444,7 +444,24 @@
     "todSample": "Across {{count}} invoices from peers in {{country}}",
     "todHintWait": "Waiting until {{day}} {{part}} → paid ~{{days}} days faster",
     "todHintNow": "Good time to send — {{day}} {{part}} is the peak slot",
-    "invoicePrefix": "Invoice {{number}}"
+    "invoicePrefix": "Invoice {{number}}",
+    "statusPaid": "Paid",
+    "statusSent": "Sent",
+    "statusViewed": "Viewed",
+    "statusOverdue": "Overdue",
+    "statusDraft": "Draft",
+    "quoteViewed": "Viewed",
+    "quoteAccepted": "Accepted",
+    "create": "Create",
+    "send": "Send",
+    "reject": "Reject",
+    "cancel": "Cancel",
+    "remindersSentAll": "Reminders sent to all customers with overdue invoices.",
+    "reminderSentTo": "Reminder sent to {{name}}.",
+    "quoteSentDesc": "Your quote has been created and sent to the customer.",
+    "cashGapAlerts": "Cash gap alerts",
+    "effectiveRate": "Effective rate",
+    "savingsPerJob": "Savings/job"
   },
   "expenses": {
     "title": "Expenses",
@@ -1669,7 +1686,8 @@
       "topPriority": "Top priority",
       "topDecision": "Top decision",
       "topCustomer": "Top customer",
-      "eveAnalyst": "EVE Analyst",
+      "eveAnalyst": "Vasco Analyst",
+      "vascoAnalyst": "Vasco Analyst",
       "eveFinance": "EVE Finance",
       "eveEngine": "EVE Engine",
       "eveQueue": "EVE Queue",
@@ -1956,6 +1974,7 @@
     "heroNext": "Next: {{title}} · {{days}}d"
   },
   "schedule": {
+    "daySchedule": "Day schedule",
     "optimize": "Optimize",
     "optimizeRoute": "Optimize route",
     "optimizeNeedTwo": "Need at least 2 jobs to optimize",

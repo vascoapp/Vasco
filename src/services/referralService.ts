@@ -34,17 +34,34 @@ export async function getOrCreateReferralCode(userId: string): Promise<string | 
   }
 }
 
+/**
+ * Attempts to attribute a referral.
+ *
+ * RPC contract (locked in SCHEMA_LOCK.md v1.0):
+ *   - Returns the new attribution row's `uuid` on success
+ *   - Returns `null` when: code unknown, self-referral, or already attributed
+ *
+ * This wrapper coerces the uuid → boolean for the common "did it work?" path.
+ * If a caller needs the attribution id (e.g. to store with the user), use
+ * `attributeReferralWithId` below.
+ */
 export async function attributeReferral(code: string, newUserId: string): Promise<boolean> {
-  if (!isSupabaseConfigured) return false;
-  if (!code || code.length < 4) return false;
+  const id = await attributeReferralWithId(code, newUserId);
+  return id !== null;
+}
+
+export async function attributeReferralWithId(code: string, newUserId: string): Promise<string | null> {
+  if (!isSupabaseConfigured) return null;
+  if (!code || code.length < 4) return null;
   try {
     const { data, error } = await (supabase.rpc as any)('attribute_referral', {
       p_code: code.toUpperCase().trim(),
       p_new_user_id: newUserId,
     });
-    return !error && Boolean(data);
+    if (error || !data) return null;
+    return typeof data === 'string' ? data : String(data);
   } catch {
-    return false;
+    return null;
   }
 }
 

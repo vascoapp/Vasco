@@ -443,7 +443,24 @@
     "todSample": "Sur {{count}} factures de pairs en {{country}}",
     "todHintWait": "Attendre jusqu'à {{day}} {{part}} → payé ~{{days}} jours plus vite",
     "todHintNow": "Bon moment pour envoyer — {{day}} {{part}} est le pic",
-    "invoicePrefix": "Invoice {{number}}"
+    "invoicePrefix": "Facture {{number}}",
+    "statusPaid": "Payée",
+    "statusSent": "Envoyée",
+    "statusViewed": "Vue",
+    "statusOverdue": "En retard",
+    "statusDraft": "Brouillon",
+    "quoteViewed": "Vu",
+    "quoteAccepted": "Accepté",
+    "create": "Créer",
+    "send": "Envoyer",
+    "reject": "Refuser",
+    "cancel": "Annuler",
+    "remindersSentAll": "Rappels envoyés à tous les clients avec factures en retard.",
+    "reminderSentTo": "Rappel envoyé à {{name}}.",
+    "quoteSentDesc": "Votre devis a été créé et envoyé au client.",
+    "cashGapAlerts": "Alertes de trésorerie",
+    "effectiveRate": "Taux effectif",
+    "savingsPerJob": "Économies/mission"
   },
   "expenses": {
     "title": "Dépenses",
@@ -1659,7 +1676,8 @@
       "topPriority": "Priorité max",
       "topDecision": "Décision clé",
       "topCustomer": "Meilleur client",
-      "eveAnalyst": "EVE Analyst",
+      "eveAnalyst": "Vasco Analyst",
+      "vascoAnalyst": "Vasco Analyst",
       "eveFinance": "EVE Finance",
       "eveEngine": "EVE Engine",
       "eveQueue": "EVE Queue",
@@ -1935,6 +1953,7 @@
     "empty": "— aucun chantier prévu —"
   },
   "schedule": {
+    "daySchedule": "Planning du jour",
     "optimize": "Optimiser",
     "optimizeRoute": "Optimiser l'itinéraire",
     "optimizeNeedTwo": "Au moins 2 chantiers requis",
