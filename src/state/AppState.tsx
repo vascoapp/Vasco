@@ -623,9 +623,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           ),
         );
         if (isSupabaseConfigured) {
-          dbUpdateJob(id, { status }).catch((err) =>
-            logWarn('AppState', `updateJobStatus persist failed: ${err}`),
-          );
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('jobs', 'update', () => dbUpdateJob(id, { status }), { rowId: id, payload: { status } }),
+          ).catch(() => {});
         }
         // AI data collector — track job lifecycle events
         if (job && status === 'in-progress') {
@@ -712,10 +712,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
       removeJob: (id) => {
         setJobs((prev) => prev.filter((j) => j.id !== id));
-        if (isSupabaseConfigured) {
-          dbDeleteJob(id).catch((err) =>
-            logWarn('AppState', `removeJob persist failed: ${err}`),
-          );
+        if (isSupabaseConfigured && !id.startsWith('j-')) {
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('jobs', 'delete', () => dbDeleteJob(id), { rowId: id }),
+          ).catch(() => {});
         }
         // Remove from device calendar
         import('../services/calendarSyncService').then(({ removeJobFromCalendar }) => {
@@ -728,10 +728,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             j.id === id ? { ...j, ...updates, updatedAt: new Date().toISOString() } : j,
           ),
         );
-        if (isSupabaseConfigured) {
-          dbUpdateJob(id, updates as Record<string, unknown>).catch((err) =>
-            logWarn('AppState', `updateJob persist failed: ${err}`),
-          );
+        if (isSupabaseConfigured && !id.startsWith('j-')) {
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue(
+              'jobs',
+              'update',
+              () => dbUpdateJob(id, updates as Record<string, unknown>),
+              { rowId: id, payload: updates as Record<string, unknown> },
+            ),
+          ).catch(() => {});
         }
         if (updates.status === 'completed') {
           trackEvent('job_completed', { jobId: id }).catch(() => {});
@@ -1103,9 +1108,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           if (updates.address !== undefined) dbUpdates.address = updates.address || null;
           if (updates.email !== undefined) dbUpdates.email = updates.email || null;
           if (updates.phone !== undefined) dbUpdates.phone = updates.phone || null;
-          upsertBusinessSettings(dbUpdates).catch((err) =>
-            logWarn('AppState', `updateBusinessProfile persist failed: ${err}`)
-          );
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('business_settings', 'upsert', () => upsertBusinessSettings(dbUpdates), { payload: dbUpdates }),
+          ).catch(() => {});
         }
       },
       // ═════════════════════════════════════════════════════════════════════
@@ -1119,29 +1124,34 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setMaterials((prev) => [newMaterial, ...prev]);
 
         if (isSupabaseConfigured) {
+          const payload = {
+            name: material.name,
+            category: material.category,
+            brand: material.brand,
+            base_unit: material.baseUnit,
+          };
           try {
-            const row = await dbCreateMaterial({
-              name: material.name,
-              category: material.category,
-              brand: material.brand,
-              base_unit: material.baseUnit,
-            });
+            const row = await dbCreateMaterial(payload);
             setMaterials((prev) =>
               prev.map((m) => (m.id === tempId ? { ...m, id: (row as any).id } : m)),
             );
             return (row as any).id as string;
           } catch (err) {
             logWarn('AppState', `addMaterial persist failed: ${err}`);
+            try {
+              const { queueWrite } = await import('../services/offlineWriteQueue');
+              await queueWrite({ table: 'materials', op: 'insert', payload: { id: tempId, ...payload } });
+            } catch {}
           }
         }
         return tempId;
       },
       removeMaterial: (id) => {
         setMaterials((prev) => prev.filter((m) => m.id !== id));
-        if (isSupabaseConfigured) {
-          dbDeleteMaterial(id).catch((err) =>
-            logWarn('AppState', `removeMaterial persist failed: ${err}`),
-          );
+        if (isSupabaseConfigured && !id.startsWith('mat-')) {
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('materials', 'delete', () => dbDeleteMaterial(id), { rowId: id }),
+          ).catch(() => {});
         }
       },
       addSupplier: async (supplier) => {
@@ -1151,27 +1161,32 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setSuppliers((prev) => [newSupplier, ...prev]);
 
         if (isSupabaseConfigured) {
+          const payload = {
+            name: supplier.name,
+            account_status: supplier.accountStatus,
+          };
           try {
-            const row = await dbCreateSupplier({
-              name: supplier.name,
-              account_status: supplier.accountStatus,
-            });
+            const row = await dbCreateSupplier(payload);
             setSuppliers((prev) =>
               prev.map((s) => (s.id === tempId ? { ...s, id: (row as any).id } : s)),
             );
             return (row as any).id as string;
           } catch (err) {
             logWarn('AppState', `addSupplier persist failed: ${err}`);
+            try {
+              const { queueWrite } = await import('../services/offlineWriteQueue');
+              await queueWrite({ table: 'suppliers', op: 'insert', payload: { id: tempId, ...payload } });
+            } catch {}
           }
         }
         return tempId;
       },
       removeSupplier: (id) => {
         setSuppliers((prev) => prev.filter((s) => s.id !== id));
-        if (isSupabaseConfigured) {
-          dbDeleteSupplier(id).catch((err) =>
-            logWarn('AppState', `removeSupplier persist failed: ${err}`),
-          );
+        if (isSupabaseConfigured && !id.startsWith('sup-')) {
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('suppliers', 'delete', () => dbDeleteSupplier(id), { rowId: id }),
+          ).catch(() => {});
         }
       },
       addJobMaterial: async (jm) => {
@@ -1240,10 +1255,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             item.id === id ? { ...item, status, updatedAt: new Date().toISOString() } : item,
           ),
         }));
-        if (isSupabaseConfigured) {
-          dbUpdateJobMaterial(id, { status }).catch((err) =>
-            logWarn('AppState', `updateJobMaterialStatus persist failed: ${err}`),
-          );
+        if (isSupabaseConfigured && !id.startsWith('jm-')) {
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('job_materials', 'update', () => dbUpdateJobMaterial(id, { status }), { rowId: id, payload: { status } }),
+          ).catch(() => {});
         }
       },
       removeJobMaterial: (id, jobId) => {
@@ -1251,10 +1266,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           ...prev,
           [jobId]: (prev[jobId] ?? []).filter((item) => item.id !== id),
         }));
-        if (isSupabaseConfigured) {
-          dbDeleteJobMaterial(id).catch((err) =>
-            logWarn('AppState', `removeJobMaterial persist failed: ${err}`),
-          );
+        if (isSupabaseConfigured && !id.startsWith('jm-')) {
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('job_materials', 'delete', () => dbDeleteJobMaterial(id), { rowId: id }),
+          ).catch(() => {});
         }
       },
       // ═════════════════════════════════════════════════════════════════════
@@ -1433,15 +1448,17 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setQuotes((prev) =>
           prev.map((q) => (q.id === id ? { ...q, ...updates } : q)),
         );
-        if (isSupabaseConfigured) {
+        if (isSupabaseConfigured && !id.startsWith('q-')) {
           const dbUpdates: Record<string, unknown> = {};
           if (updates.amount !== undefined) dbUpdates.total_amount = updates.amount;
           if (updates.status !== undefined) dbUpdates.status = updates.status;
           if (updates.customer !== undefined) dbUpdates.customer_id = updates.customer;
           if (updates.job !== undefined) dbUpdates.job_id = updates.job;
-          updateDocument(id, dbUpdates).catch((err) =>
-            logWarn('AppState', `updateQuote persist failed: ${err}`),
-          );
+          if (Object.keys(dbUpdates).length > 0) {
+            import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+              persistOrQueue('documents', 'update', () => updateDocument(id, dbUpdates), { rowId: id, payload: dbUpdates }),
+            ).catch(() => {});
+          }
         }
         // Track quote sent
         if (updates.status === 'sent') {

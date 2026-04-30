@@ -831,12 +831,17 @@ train-extra-models  (cron, service_role)
 ## CHANGELOG
 
 - **1.0 (2026-05-01)** — Initial freeze. Added `projects` table. Documented `attribute_referral` returning uuid (FE wrapper exposes both boolean and uuid variants).
+- **1.3 (2026-05-01)** — Offline queue coverage closed (R277):
+  - New helper `persistOrQueue(table, op, fn, fallback)` in `offlineWriteQueue.ts` for one-line BE-write-with-fallback at AppState mutation sites.
+  - Wired into `updateJobStatus`, `updateJob`, `removeJob`, `updateBusinessProfile`, `addMaterial`, `removeMaterial`, `addSupplier`, `removeSupplier`, `updateJobMaterialStatus`, `removeJobMaterial`, `updateQuote`. Coverage: 12 of 35 BE writes now have offline-queue fallback (was 3). Remaining 23 are derived/secondary writes (line_items upsert, document number generation, etc.) — log-only is acceptable.
+  - **Temp ID hazard fixed:** `applyWrite` strips client-generated temp IDs (`c-*`, `j-*`, `mat-*`, `sup-*`, `jm-*`, `proj-*`, `q-*`, `inv-*`) from insert payloads so BE generates fresh uuids via column defaults. Update/delete entries targeting temp `rowId` are dropped quietly (BE never persisted the original create — local state remains source of truth until next online-create).
+  - 4 new offline queue unit tests (5/5 passing including the existing 2).
+
 - **1.2 (2026-05-01)** — Round 2 wiring:
   - `projects` migration extended with `description`, `target_end_date`, `actual_end_date`, `total_budget/quoted/invoiced/paid`, `address` (jsonb), `milestones` (jsonb).
   - `addProject` / `updateProject` in AppState now BE-persist via `dataProvider.createProject/updateProject` with offline queue fallback.
   - `refreshData` loads `projects` rows from BE into local state on app mount.
   - `export-invoice` removed from syncService action handler — no edge fn deployed; queued actions drop gracefully.
-  - **Known gap:** 35 BE-write call sites in AppState but only 3 enqueue to `offlineWriteQueue` on failure (customers, projects insert, projects update). Other entities (jobs, quotes, invoices, materials) persist locally but won't sync on reconnect. Refactor deferred — not blocking lock.
 
 - **1.1 (2026-05-01)** — Column-level audit (R275 second pass):
   - `pricing_intelligence`: documented moat-enrichment columns from migration 20260421000002 (decline_reason, time_to_decision_hours, reminder_count_before_decision, counter_offer_amount, contractor_segment).

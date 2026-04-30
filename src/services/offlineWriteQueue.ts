@@ -59,19 +59,47 @@ export async function queueWrite(entry: Omit<QueuedWrite, 'id' | 'createdAt' | '
   await saveQueue(queue);
 }
 
+// R277: temp IDs (c-{ts}, j-{ts}, mat-{ts}, sup-{ts}, jm-{ts}, proj-{ts})
+// are generated client-side for optimistic UI updates. They must NEVER be
+// sent to BE — Postgres rejects them as non-uuid. Strip on flush so the BE
+// generates a fresh uuid via the column default.
+const TEMP_ID_PATTERNS = [/^c-\d+$/, /^j-\d+$/, /^mat-\d+$/, /^sup-\d+$/, /^jm-\d+$/, /^proj-\d+$/, /^q-\d+$/, /^inv-\d+$/];
+
+function isTempId(id: unknown): boolean {
+  if (typeof id !== 'string') return false;
+  return TEMP_ID_PATTERNS.some((re) => re.test(id));
+}
+
+function stripTempId<T extends Record<string, any> | unknown>(payload: T): T {
+  if (!payload || typeof payload !== 'object') return payload;
+  const obj = payload as Record<string, any>;
+  if ('id' in obj && isTempId(obj.id)) {
+    const { id: _omit, ...rest } = obj;
+    return rest as T;
+  }
+  return payload;
+}
+
 async function applyWrite(entry: QueuedWrite): Promise<boolean> {
   const table = supabase.from(entry.table as any) as any;
+  // Drop entries that were enqueued with a temp rowId for update/delete —
+  // BE never persisted the original create, so updating by temp id would
+  // fail with no rows matched. Drop quietly; local state is the source of
+  // truth until the next reconnect-create.
+  if ((entry.op === 'update' || entry.op === 'delete') && isTempId(entry.rowId)) {
+    return true; // treat as processed so it leaves the queue
+  }
   try {
     if (entry.op === 'insert') {
-      const { error } = await table.insert(entry.payload);
+      const { error } = await table.insert(stripTempId(entry.payload));
       return !error;
     }
     if (entry.op === 'upsert') {
-      const { error } = await table.upsert(entry.payload);
+      const { error } = await table.upsert(stripTempId(entry.payload));
       return !error;
     }
     if (entry.op === 'update') {
-      let q = table.update(entry.payload);
+      let q = table.update(stripTempId(entry.payload));
       if (entry.rowId) q = q.eq('id', entry.rowId);
       if (entry.match) for (const [k, v] of Object.entries(entry.match)) q = q.eq(k, v);
       const { error } = await q;
@@ -128,4 +156,33 @@ export async function flushQueue(): Promise<{ processed: number; dropped: number
 
 export async function queueSize(): Promise<number> {
   return (await loadQueue()).length;
+}
+
+/**
+ * Run a BE write with offline-queue fallback. R277.
+ *
+ * Use as a one-line replacement for `await fn().catch(err => logWarn(...))`
+ * at AppState mutation sites:
+ *   await persistOrQueue('jobs', 'update', () => dbUpdateJob(id, updates), { rowId: id, payload: updates });
+ *
+ * If the BE call throws, we enqueue and return false. Caller can ignore the
+ * return — local state is already updated optimistically.
+ */
+export async function persistOrQueue(
+  table: string,
+  op: WriteOp,
+  fn: () => Promise<unknown>,
+  fallback: { rowId?: string; match?: Record<string, unknown>; payload?: unknown },
+): Promise<boolean> {
+  if (!isSupabaseConfigured) return false;
+  try {
+    await fn();
+    return true;
+  } catch (err) {
+    logWarn('persistOrQueue', `${table}.${op} failed, queueing: ${err instanceof Error ? err.message : String(err)}`);
+    try {
+      await queueWrite({ table, op, ...fallback });
+    } catch {}
+    return false;
+  }
 }
