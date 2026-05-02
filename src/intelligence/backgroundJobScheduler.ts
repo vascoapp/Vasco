@@ -742,6 +742,9 @@ export function startBackgroundJobScheduler(
             if (t === 'draft_invoice') return 'draft_invoice';
             if (t === 'compliance_gap') return 'late_payment_risk_alert';
             if (t === 'pricing_insight') return 'low_win_alert';
+            // R302: appointment reminders + quote follow-ups from R302 generators
+            if (t === 'progress_update') return 'progress_note';
+            if (t === 'draft_followup') return 'draft_followup';
             return 'low_win_alert'; // safe informational fallback
           };
           for (const a of actions) {

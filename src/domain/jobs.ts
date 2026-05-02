@@ -63,6 +63,12 @@ export type Job = {
     autoInvoice: boolean;
     templateJobId: string;
   };
+  // Customer-handover signature (R301).
+  // signatureSvg is base64-encoded PNG captured by SignaturePad at completion.
+  // customerSignoffAt timestamps when the customer accepted the work.
+  // Both persist to BE via migration 20260502000003_job_signature_columns.sql.
+  signatureSvg?: string;
+  customerSignoffAt?: string;
   // Timestamps
   completedAt?: string;
   createdAt: string;

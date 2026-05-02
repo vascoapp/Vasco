@@ -241,8 +241,12 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                   onPress={async () => {
                     // R287: validator gate — blocks reminders for paid/draft
                     // invoices and confirms when 5+ already sent.
+                    // R301: tag-aware. R302: reminder text now uses tag-keyed
+                    // tone variant (gentle/standard/firm) instead of the
+                    // long-form full-invoice share text.
                     const autoInv = invoiceAutomationService.getInvoice(invoice.id);
-                    const ok = await gateReminderSend(invoice, autoInv?.reminders?.length ?? 0, customerTagFor((invoice as any).customer));
+                    const tag = customerTagFor((invoice as any).customer);
+                    const ok = await gateReminderSend(invoice, autoInv?.reminders?.length ?? 0, tag);
                     if (!ok) return;
                     if (autoInv) {
                       const link = await createPaymentLink({
@@ -251,7 +255,15 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                         description: t('invoices.invoicePrefix', 'Invoice {{number}}', { number: autoInv.invoiceNumber }),
                       });
                       hapticSuccess();
-                      const text = buildInvoiceShareText(autoInv, businessProfile.businessName, link?.url);
+                      const { renderPaymentReminderForTag } = await import('../../src/services/whatsappTemplateService');
+                      const locale = ((businessProfile as any)?.language ?? 'en') as any;
+                      const text = renderPaymentReminderForTag(locale, {
+                        customer: autoInv.customerName ?? '',
+                        ref: autoInv.invoiceNumber,
+                        amount: `€${autoInv.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+                        link: link?.url ?? '',
+                        business: businessProfile.businessName ?? '',
+                      }, tag);
                       await Share.share({ message: text, title: t('invoices.sendReminder', 'Herinnering') + ` ${autoInv.invoiceNumber}` });
                     } else {
                       hapticSuccess();
@@ -273,7 +285,19 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                         amount: autoInv.total,
                         description: t('invoices.invoicePrefix', 'Invoice {{number}}', { number: autoInv.invoiceNumber }),
                       });
-                      await generateInvoicePdf(autoInv, businessProfile, link?.url);
+                      // R301: embed customer-handover signature on the invoice
+                      // PDF when the linked job has one captured.
+                      const linkedJob = (invoice as any).jobId
+                        ? jobs.find((j: any) => j.id === (invoice as any).jobId)
+                        : null;
+                      const customerSignature = linkedJob?.signatureSvg && linkedJob?.customerSignoffAt
+                        ? {
+                            svgDataUri: linkedJob.signatureSvg,
+                            signedAt: linkedJob.customerSignoffAt,
+                            signerName: linkedJob.customerId ?? 'Customer',
+                          }
+                        : undefined;
+                      await generateInvoicePdf(autoInv, businessProfile, link?.url, customerSignature ? { customerSignature } : undefined);
                     } else {
                       Alert.alert(t('invoices.downloadPdf', 'PDF'), t('invoices.invoiceNotFound', 'Factuur niet gevonden in automatiseringssysteem.'));
                     }
@@ -723,18 +747,27 @@ export default function FacturenScreen() {
                           closeBottomSheet();
                           let sent = 0;
                           let skipped = 0;
+                          // R302: import once outside the loop.
+                          const { renderPaymentReminderForTag } = await import('../../src/services/whatsappTemplateService');
+                          const bulkLocale = ((businessProfile as any)?.language ?? 'en') as any;
                           for (const inv of overdueInvoices) {
                             const autoInv = invoiceAutomationService.getInvoice(inv.id);
-                            const ok = await gateReminderSend(inv, autoInv?.reminders?.length ?? 0, customerTagFor((inv as any).customer));
+                            const tag = customerTagFor((inv as any).customer);
+                            const ok = await gateReminderSend(inv, autoInv?.reminders?.length ?? 0, tag);
                             if (!ok) { skipped++; continue; }
                             try {
-                              // Bulk path skips the per-invoice createPaymentLink
-                              // call (each Mollie/Stripe call is a network round
-                              // trip × N invoices = slow). Contractor can resend
-                              // an individual reminder via the per-row button to
-                              // get a fresh payment link.
+                              // R302: bulk path uses the same tag-keyed tone variant
+                              // as the per-row button — short, polite, no per-invoice
+                              // payment link (skipped for speed; contractor can re-share
+                              // individually for a fresh link).
                               const text = autoInv
-                                ? buildInvoiceShareText(autoInv, businessProfile.businessName, undefined)
+                                ? renderPaymentReminderForTag(bulkLocale, {
+                                    customer: autoInv.customerName ?? '',
+                                    ref: autoInv.invoiceNumber,
+                                    amount: `€${autoInv.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+                                    link: '',
+                                    business: businessProfile.businessName ?? '',
+                                  }, tag)
                                 : `Reminder for invoice ${inv.id}`;
                               await Share.share({ message: text, title: t('invoices.sendReminder', 'Herinnering') });
                               sent++;

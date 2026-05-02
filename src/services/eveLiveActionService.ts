@@ -107,5 +107,72 @@ export function buildLiveActions(input: Input): EveAction[] {
     });
   }
 
+  // ── Agent: 24h appointment reminders + 3-day quote follow-ups (R302) ────
+  // These are the two MessageTrigger events from customerCommunicationService
+  // that fit the daily-scheduler cadence. Other triggers (on_my_way,
+  // appointment_reminder_2h) are too time-sensitive or already covered.
+  // Each item ships a pre-rendered shareable template via preparedData.template
+  // so R286's executor opens the Share sheet directly.
+
+  // Appointment reminders — jobs scheduled in 18-30h window
+  const tomorrowStart = now.getTime() + 18 * 60 * 60 * 1000;
+  const tomorrowEnd = now.getTime() + 30 * 60 * 60 * 1000;
+  for (const j of (input.jobs ?? []).filter((x) =>
+    (x.status === 'scheduled' || x.status === 'ingepland' || x.status === 'accepted')
+      && x.scheduledDate
+      && new Date(x.scheduledDate).getTime() >= tomorrowStart
+      && new Date(x.scheduledDate).getTime() <= tomorrowEnd,
+  ).slice(0, 5)) {
+    out.push({
+      id: mkId('eve-appt'),
+      agentType: 'agent',
+      type: 'progress_update',
+      title: `Appointment tomorrow: ${j.title}`,
+      description: `Send ${j.customerId ?? 'the customer'} a courtesy reminder.`,
+      impact: 'Reduces no-shows',
+      priority: 'medium',
+      status: 'pending',
+      preparedData: {
+        jobId: j.id,
+        // Pre-render the appointment_reminder template so R286 executor's
+        // Share path uses tone-correct text.
+        template: `Hi ${j.customerId ?? ''}, just a reminder of our appointment tomorrow at ${j.scheduledStartTime ?? ''} for ${j.title}. Reply if you need to reschedule.`,
+        customerPhone: j.sitePhone,
+      },
+      actionLabel: 'Send reminder',
+      requiresApproval: true,
+      createdAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + 36 * 60 * 60 * 1000).toISOString(),
+    });
+  }
+
+  // Quote follow-ups — sent 3+ days ago, status still 'sent'
+  const threeDaysAgo = now.getTime() - 3 * MS_PER_DAY;
+  for (const q of (input.quotes ?? []).filter((x) =>
+    x.status === 'sent'
+      && (x.sentAt || x.lastUpdated)
+      && new Date(x.sentAt || x.lastUpdated).getTime() < threeDaysAgo,
+  ).slice(0, 3)) {
+    out.push({
+      id: mkId('eve-fu'),
+      agentType: 'agent',
+      type: 'draft_followup',
+      title: `Follow up on quote ${q.id}`,
+      description: `Quote was sent ${Math.round((now.getTime() - new Date(q.sentAt || q.lastUpdated).getTime()) / MS_PER_DAY)}d ago — silent customers convert when nudged.`,
+      impact: q.amount ? `€${Math.round(q.amount)} potential` : 'Conversion uplift',
+      priority: 'medium',
+      status: 'pending',
+      preparedData: {
+        quoteId: q.id,
+        customerId: q.customer,
+        template: `Hi ${q.customer ?? ''}, just following up on quote ${q.id} (€${q.amount ?? 0}). Any questions?`,
+      },
+      actionLabel: 'Follow up',
+      requiresApproval: true,
+      createdAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + 7 * MS_PER_DAY).toISOString(),
+    });
+  }
+
   return out;
 }

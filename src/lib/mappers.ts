@@ -114,6 +114,10 @@ export function jobRowToJob(row: JobRow): Job {
     notes: [],
     timeEntries: [],
     materials: [],
+    // R301: signature columns wired through after migration
+    // 20260502000003_job_signature_columns.sql
+    signatureSvg: (row as any).signature_svg ?? undefined,
+    customerSignoffAt: (row as any).customer_signoff_at ?? undefined,
     completedAt: row.completed_at ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

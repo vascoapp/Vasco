@@ -754,12 +754,25 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           ),
         );
         if (isSupabaseConfigured && !id.startsWith('j-')) {
+          // R301: explicit camelCase → snake_case mapping for BE-persisted
+          // fields. signatureSvg + customerSignoffAt are the new R301 columns;
+          // remaining fields use the same name in BE (status) or the existing
+          // (broader) updateJob FE→BE drift is left alone for this round.
+          const u: Record<string, unknown> = { ...(updates as Record<string, unknown>) };
+          if ('signatureSvg' in u) {
+            u.signature_svg = u.signatureSvg;
+            delete u.signatureSvg;
+          }
+          if ('customerSignoffAt' in u) {
+            u.customer_signoff_at = u.customerSignoffAt;
+            delete u.customerSignoffAt;
+          }
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue(
               'jobs',
               'update',
-              () => dbUpdateJob(id, updates as Record<string, unknown>),
-              { rowId: id, payload: updates as Record<string, unknown> },
+              () => dbUpdateJob(id, u),
+              { rowId: id, payload: u },
             ),
           ).catch(() => {});
         }

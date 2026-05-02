@@ -8,6 +8,7 @@
 import { pricingApi, PriceObservation } from '../api/pricingApi';
 import { trackUserAction } from './intelligenceEngine';
 import { logWarn, logInfo } from '../utils/errorHandler';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type {
   CustomerDecisionSubmission,
   DecisionIntelligenceData,
@@ -369,8 +370,7 @@ class DecisionIntelligenceService {
    * Update regional preference aggregations
    */
   private async updateRegionalPreferences(data: DecisionIntelligenceData): Promise<void> {
-    // In production, this would update a database aggregation
-    // For now, track via intelligence engine
+    // Local-only tracking event (kept for legacy intelligence engine).
     trackUserAction('regional_preference_recorded', {
       region: data.region,
       trade: data.trade,
@@ -380,25 +380,58 @@ class DecisionIntelligenceService {
       projectBudget: data.projectBudget,
       propertyType: data.propertyType,
     });
+    // R301: BE upsert. Closes R291 dormancy — `getRegionalPreferences`
+    // can now return real data once k-anonymity floor is hit.
+    if (!isSupabaseConfigured) return;
+    try {
+      await (supabase.rpc as any)('upsert_regional_preference', {
+        p_region: data.region,
+        p_trade: data.trade,
+        p_decision_type: data.decisionType,
+        p_chosen_value: data.chosenValue,
+        p_chosen_label: data.chosenLabel ?? null,
+      });
+    } catch {
+      // Best-effort. Local trackUserAction is the audit trail.
+    }
   }
 
   /**
    * Get regional preferences for a decision type.
-   * R291: was returning hardcoded mock (67% wall-hung toilet, etc.) for every
-   * (region, trade, decisionType) — same fake answer for every contractor.
-   * Returns null until a real aggregation RPC + table land. Caller must
-   * gracefully handle null (no data yet).
-   *
-   * Real fix needed: BE table `regional_preference_aggregates` with rollup
-   * cron, RPC `get_regional_preferences(region, trade, decisionType)` with
-   * k-anonymity ≥5.
+   * R291: was hardcoded mock; R301 wires the real aggregation pipeline
+   * (`regional_preference_aggregates` + `get_regional_preferences` RPC,
+   * migration `20260502000004_decision_aggregates.sql`). Returns null
+   * when total decision_count < 20 (k-anonymity floor enforced server-side).
    */
   async getRegionalPreferences(
-    _region: string,
-    _trade: string,
-    _decisionType: string
+    region: string,
+    trade: string,
+    decisionType: string
   ): Promise<RegionalPreference | null> {
-    return null;
+    if (!isSupabaseConfigured) return null;
+    try {
+      const { data, error } = await (supabase.rpc as any)('get_regional_preferences', {
+        p_region: region,
+        p_trade: trade,
+        p_decision_type: decisionType,
+      });
+      if (error || !Array.isArray(data) || data.length === 0) return null;
+      return {
+        region,
+        trade,
+        decisionType,
+        choices: (data as any[]).map((r) => ({
+          value: String(r.chosen_value),
+          label: String(r.chosen_label ?? r.chosen_value),
+          count: Number(r.count),
+          percentage: Number(r.percentage),
+        })),
+        totalDecisions: Number(data[0]?.total_decisions ?? 0),
+        lastUpdated: new Date().toISOString(),
+      };
+    } catch {
+      return null;
+    }
   }
 
   // -----------------------------------------
@@ -423,19 +456,44 @@ class DecisionIntelligenceService {
       reminderCount: item.remindersSent,
       priority: item.priority,
     });
+    // R301: BE upsert. `getDecisionTiming` reads the rolled-up table.
+    if (!isSupabaseConfigured) return;
+    try {
+      await (supabase.rpc as any)('upsert_decision_timing', {
+        p_decision_type: item.itemId || item.id,
+        p_days_to_decide: daysToDecide ?? null,
+        p_was_overdue: Boolean(item.isOverdue),
+        p_reminder_responsive: Boolean(item.isOverdue && (item.remindersSent ?? 0) > 0),
+      });
+    } catch {
+      // Best-effort.
+    }
   }
 
   /**
    * Get timing analytics for a decision type.
-   * R291: was returning hardcoded mock (5.2-day avg, 18% overdue) for every
-   * decisionType. Returns null until a real aggregation lands. Caller must
-   * gracefully handle null.
-   *
-   * Real fix needed: rollup over `decision_submissions.time_to_decide_seconds`
-   * + `decision_items.due_date` per-decisionType, RPC with k-anonymity gate.
+   * R291: hardcoded mock; R301 wires `get_decision_timing` RPC backed by
+   * `decision_timing_aggregates`. K-anonymity ≥20 submissions enforced
+   * server-side; below that returns null.
    */
-  async getDecisionTiming(_decisionType: string): Promise<DecisionTiming | null> {
-    return null;
+  async getDecisionTiming(decisionType: string): Promise<DecisionTiming | null> {
+    if (!isSupabaseConfigured) return null;
+    try {
+      const { data, error } = await (supabase.rpc as any)('get_decision_timing', {
+        p_decision_type: decisionType,
+      });
+      if (error || !Array.isArray(data) || data.length === 0) return null;
+      const row = data[0];
+      return {
+        decisionType,
+        avgDaysToDecide: Number(row.avg_days_to_decide ?? 0),
+        medianDaysToDecide: Number(row.median_days_to_decide ?? row.avg_days_to_decide ?? 0),
+        overdueRate: Number(row.overdue_rate ?? 0),
+        reminderEffectiveness: Number(row.reminder_effectiveness ?? 0),
+      };
+    } catch {
+      return null;
+    }
   }
 
   // -----------------------------------------

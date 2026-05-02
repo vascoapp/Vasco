@@ -98,6 +98,12 @@ function RootLayoutNav() {
       setErrorUser(user.id);
       startAutoSync(user.id, user.role ?? 'contractor', user.trade, user.country);
       startEventFlushing(user.id);
+      // R302: stale-ML probe — fires Sentry warning when predictor tables
+      // haven't refreshed in 14d (signals pg_cron not running on prod).
+      // Throttled to 1/24h per device.
+      import('../src/services/mlHealthCheck').then(({ maybeRunMlHealthCheck }) =>
+        maybeRunMlHealthCheck({ trade: user.trade, country: user.country }),
+      ).catch(() => {});
       registerForPushNotifications().catch(() => {});
       // Watch for payment webhooks (Mollie/Stripe → invoices.paid) in realtime
       const stopWatch = watchInvoicePayments(user.id);

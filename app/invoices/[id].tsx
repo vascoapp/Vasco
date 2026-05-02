@@ -81,6 +81,7 @@ export default function InvoiceDetailScreen() {
     lastMolliePayment,
     businessProfile,
     lineItems: appLineItems,
+    jobs,
   } = useAppState();
   const { user } = useAuth();
   const invoice = invoices.find((item) => item.id === id);
@@ -345,7 +346,19 @@ export default function InvoiceDetailScreen() {
     hapticSuccess();
     const autoInv = invoiceAutomationService.getInvoice(invoice.id);
     if (autoInv) {
-      await generateInvoicePdf(autoInv, businessProfile);
+      // R303: embed customer-handover signature when the linked job has one
+      // captured. Same pattern as facturen.tsx PDF button (R301).
+      const linkedJob = (invoice as any).jobId
+        ? jobs.find((j: any) => j.id === (invoice as any).jobId)
+        : null;
+      const customerSignature = linkedJob?.signatureSvg && linkedJob?.customerSignoffAt
+        ? {
+            svgDataUri: linkedJob.signatureSvg,
+            signedAt: linkedJob.customerSignoffAt,
+            signerName: linkedJob.customerId ?? 'Customer',
+          }
+        : undefined;
+      await generateInvoicePdf(autoInv, businessProfile, undefined, customerSignature ? { customerSignature } : undefined);
     }
   };
 
@@ -408,6 +421,153 @@ export default function InvoiceDetailScreen() {
       hapticSuccess();
     } catch {
       // Fallback: share XML as plain text if filesystem/share fails
+      await RNShare.share({ message: xml, title: filename });
+    }
+  };
+
+  // R302: ES Facturae 3.2.2 export. Mandatory in Spain for B2G + large B2B.
+  // EInvoiceData → FacturaeInvoice mapper. Many Spanish-specific fields
+  // (province, NIF, person type, regime fiscal) aren't on the businessProfile
+  // today — sensible defaults applied; user can extend businessProfile schema
+  // if they want richer XML.
+  const handleExportFacturae = async () => {
+    try {
+      const { loadSubscription } = await import('../../src/services/subscriptionService');
+      const { canUseEInvoiceFormat } = await import('../../src/services/complianceGatingService');
+      const sub = await loadSubscription();
+      const gate = canUseEInvoiceFormat(sub, 'facturae');
+      if (!gate.allowed) {
+        Alert.alert(
+          t('compliance.upgradeRequired', 'Upgrade required'),
+          gate.reason ?? t('compliance.upgradeRequiredDesc', 'This format needs the Contractor plan.'),
+          [
+            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+            { text: t('compliance.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+          ],
+        );
+        return;
+      }
+    } catch {}
+    const { generateFacturaeXml } = await import('../../src/integrations/einvoice-es');
+    const vatAmount = total * VAT_RATE;
+    const invoiceNumber = (invoice as any).reference ?? invoice.id;
+    const data = {
+      schemaVersion: '3.2.2' as const,
+      sellerName: (businessProfile as any)?.businessName ?? 'Vasco',
+      sellerNif: (businessProfile as any)?.vatId ?? (businessProfile as any)?.nifNumber ?? '',
+      sellerAddress: (businessProfile as any)?.address ?? '',
+      sellerCity: (businessProfile as any)?.city ?? '',
+      sellerPostalCode: (businessProfile as any)?.postcode ?? '',
+      sellerProvince: (businessProfile as any)?.province ?? '',
+      sellerCountry: 'ESP',
+      sellerPersonType: 'J' as const,           // Default to legal entity
+      sellerRegimeFiscal: '01' as const,         // General regime
+      buyerName: invoice.customer ?? '',
+      buyerNif: (invoice as any).customerVatId ?? '',
+      buyerAddress: (invoice as any).customerAddress ?? '',
+      buyerCity: '',
+      buyerPostalCode: '',
+      buyerProvince: '',
+      buyerCountry: 'ESP',
+      buyerPersonType: 'J' as const,
+      invoiceNumber,
+      invoiceDate: (invoice as any).issuedAt?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
+      dueDate: new Date(Date.now() + (invoice.dueInDays || 14) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      currency: 'EUR',
+      lineItems: localItems.map((li: EditableLineItem) => ({
+        description: li.description,
+        quantity: li.quantity,
+        unitPrice: li.unitPrice,
+        lineTotal: li.quantity * li.unitPrice,
+        ivaRate: VAT_RATE * 100,
+        ivaAmount: li.quantity * li.unitPrice * VAT_RATE,
+      })),
+      totalNet: total,
+      totalVat: vatAmount,
+      totalIrpf: 0,
+      totalGross: total + vatAmount,
+      iban: (businessProfile as any)?.iban,
+      bic: (businessProfile as any)?.bic,
+      paymentMethod: '04', // bank transfer
+    };
+    const xml = generateFacturaeXml(data);
+    const filename = `${invoiceNumber}-facturae.xml`;
+    try {
+      const file = new File(Paths.cache, filename);
+      file.write(xml);
+      await RNShare.share({ url: file.uri, title: filename });
+      hapticSuccess();
+    } catch {
+      await RNShare.share({ message: xml, title: filename });
+    }
+  };
+
+  // R302: IT FatturaPA via SDI export. MANDATORY for ALL Italian invoices
+  // (B2B + B2C) since 2019. The generator and types live in einvoice-it.ts.
+  const handleExportFatturaPA = async () => {
+    try {
+      const { loadSubscription } = await import('../../src/services/subscriptionService');
+      const { canUseEInvoiceFormat } = await import('../../src/services/complianceGatingService');
+      const sub = await loadSubscription();
+      const gate = canUseEInvoiceFormat(sub, 'fatturapa');
+      if (!gate.allowed) {
+        Alert.alert(
+          t('compliance.upgradeRequired', 'Upgrade required'),
+          gate.reason ?? t('compliance.upgradeRequiredDesc', 'This format needs the Contractor plan.'),
+          [
+            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+            { text: t('compliance.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+          ],
+        );
+        return;
+      }
+    } catch {}
+    const { generateFatturaPAXml } = await import('../../src/integrations/einvoice-it');
+    const vatAmount = total * VAT_RATE;
+    const invoiceNumber = (invoice as any).reference ?? invoice.id;
+    const data: any = {
+      sellerName: (businessProfile as any)?.businessName ?? 'Vasco',
+      sellerVatId: (businessProfile as any)?.vatId ?? '',
+      sellerCodiceFiscale: (businessProfile as any)?.codiceFiscale ?? (businessProfile as any)?.vatId ?? '',
+      sellerAddress: (businessProfile as any)?.address ?? '',
+      sellerCity: (businessProfile as any)?.city ?? '',
+      sellerPostalCode: (businessProfile as any)?.postcode ?? '',
+      sellerProvince: (businessProfile as any)?.province ?? '',
+      sellerCountry: 'IT',
+      buyerName: invoice.customer ?? '',
+      buyerVatId: (invoice as any).customerVatId,
+      buyerCodiceFiscale: (invoice as any).customerCodiceFiscale ?? '',
+      buyerAddress: (invoice as any).customerAddress ?? '',
+      buyerCity: '',
+      buyerPostalCode: '',
+      buyerProvince: '',
+      buyerCountry: 'IT',
+      invoiceNumber,
+      invoiceDate: (invoice as any).issuedAt?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
+      dueDate: new Date(Date.now() + (invoice.dueInDays || 14) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      currency: 'EUR',
+      lineItems: localItems.map((li: EditableLineItem) => ({
+        description: li.description,
+        quantity: li.quantity,
+        unitPrice: li.unitPrice,
+        lineTotal: li.quantity * li.unitPrice,
+        ivaRate: VAT_RATE * 100,
+        ivaAmount: li.quantity * li.unitPrice * VAT_RATE,
+      })),
+      totalNet: total,
+      totalVat: vatAmount,
+      totalGross: total + vatAmount,
+      iban: (businessProfile as any)?.iban,
+      paymentMethod: 'MP05', // SDI code for bank transfer
+    };
+    const xml = generateFatturaPAXml(data);
+    const filename = `${invoiceNumber}-fatturapa.xml`;
+    try {
+      const file = new File(Paths.cache, filename);
+      file.write(xml);
+      await RNShare.share({ url: file.uri, title: filename });
+      hapticSuccess();
+    } catch {
       await RNShare.share({ message: xml, title: filename });
     }
   };
@@ -725,6 +885,24 @@ export default function InvoiceDetailScreen() {
               icon="code-slash-outline"
               label={t('invoices.exportXRechnung', 'Export XRechnung (XML)')}
               onPress={() => handleExportEInvoice('XRechnung')}
+              border
+            />
+          )}
+          {/* R302: ES Facturae export — mandatory for B2G + large B2B in Spain. */}
+          {country === 'ES' && (
+            <ActionRow
+              icon="code-slash-outline"
+              label={t('invoices.exportFacturae', 'Export Facturae (XML)')}
+              onPress={handleExportFacturae}
+              border
+            />
+          )}
+          {/* R302: IT FatturaPA export — mandatory for ALL Italian invoices via SDI. */}
+          {country === 'IT' && (
+            <ActionRow
+              icon="code-slash-outline"
+              label={t('invoices.exportFatturaPA', 'Export FatturaPA (XML)')}
+              onPress={handleExportFatturaPA}
               border
             />
           )}

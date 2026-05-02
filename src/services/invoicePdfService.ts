@@ -451,9 +451,16 @@ export async function generateInvoicePdf(
   paymentUrl?: string,
   options?: {
     showPoweredBy?: boolean; // true for Gratis tier
+    // R301: optional customer-handover signature embed. When supplied,
+    // signatureHtmlBlock is appended to the invoice HTML.
+    customerSignature?: {
+      svgDataUri: string;
+      signedAt: string;
+      signerName: string;
+    };
   },
 ): Promise<void> {
-  const html = buildInvoiceHtml(
+  let html = buildInvoiceHtml(
     invoice,
     businessProfile?.businessName ?? '',
     businessProfile?.address ?? '',
@@ -467,6 +474,25 @@ export async function generateInvoicePdf(
     businessProfile?.insuranceRef,
     businessProfile?.vatScheme,
   );
+
+  // R301: embed signature when customer signed off on the linked job.
+  // Inserted before the closing </body> tag so it appears at the end of
+  // the document, after totals.
+  if (options?.customerSignature) {
+    const { signatureHtmlBlock } = await import('./signatureService');
+    const block = signatureHtmlBlock({
+      id: `sig_${Date.now()}`,
+      context: 'handover',
+      referenceId: invoice.id,
+      referenceType: 'invoice',
+      signerName: options.customerSignature.signerName,
+      signerRole: 'customer',
+      signatureDataUri: options.customerSignature.svgDataUri,
+      signedAt: options.customerSignature.signedAt,
+      legalText: '',
+    });
+    html = html.replace('</body>', `${block}</body>`);
+  }
 
   const { uri } = await Print.printToFileAsync({ html, base64: false });
 

@@ -34,6 +34,7 @@ import type {
 } from '../../types/customerPortal';
 import type { DecisionOption } from '../../types/decisions';
 import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../../config/paymentMethods';
+import { RegionalPreferencePanel } from './RegionalPreferencePanel';
 import type { Country } from '../../context/AuthContext';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -46,12 +47,19 @@ interface CustomerDecisionPortalProps {
   portalData: CustomerPortalData;
   onSubmitDecision: (submission: CustomerDecisionSubmission) => void;
   onActivityLog?: (action: string, metadata?: Record<string, unknown>) => void;
+  // R303: pass region + trade so DecisionItemCard can fetch
+  // getRegionalPreferences and surface "67% of customers chose X" hints
+  // when k-anonymity ≥20 (R301 aggregation pipeline).
+  region?: string;
+  trade?: string;
 }
 
 export function CustomerDecisionPortal({
   portalData,
   onSubmitDecision,
   onActivityLog,
+  region,
+  trade,
 }: CustomerDecisionPortalProps) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
@@ -79,6 +87,8 @@ export function CustomerDecisionPortal({
           onSubmitDecision={onSubmitDecision}
           onActivityLog={onActivityLog}
           accentColor={accentColor}
+          region={region}
+          trade={trade}
         />
       );
     }
@@ -496,6 +506,9 @@ interface CategoryDetailViewProps {
   onSubmitDecision: (submission: CustomerDecisionSubmission) => void;
   onActivityLog?: (action: string, metadata?: Record<string, unknown>) => void;
   accentColor: string;
+  // R303
+  region?: string;
+  trade?: string;
 }
 
 function CategoryDetailView({
@@ -507,6 +520,8 @@ function CategoryDetailView({
   onSubmitDecision,
   onActivityLog,
   accentColor,
+  region,
+  trade,
 }: CategoryDetailViewProps) {
   const pendingItems = category.items.filter((i) => i.status === 'pending');
   const completedItems = category.items.filter((i) => i.status === 'decided');
@@ -538,6 +553,8 @@ function CategoryDetailView({
               <DecisionItemCard
                 key={item.id}
                 item={item}
+                region={region}
+                trade={trade}
                 isExpanded={expandedItem === item.id}
                 onToggle={() => {
                   onExpandItem(expandedItem === item.id ? null : item.id);
@@ -769,6 +786,9 @@ interface DecisionItemCardProps {
   accentColor: string;
   contractorCountry?: string;
   accessToken?: string;
+  // R303
+  region?: string;
+  trade?: string;
 }
 
 function DecisionItemCard({
@@ -779,6 +799,8 @@ function DecisionItemCard({
   accentColor,
   contractorCountry,
   accessToken,
+  region,
+  trade,
 }: DecisionItemCardProps) {
   const [textValue, setTextValue] = useState('');
   const [customerPhotos, setCustomerPhotos] = useState<Array<{ uri: string; base64?: string }>>([]);
@@ -877,6 +899,14 @@ function DecisionItemCard({
 
       {isExpanded && (
         <View style={styles.itemExpanded}>
+          {/* R303: regional preferences hint — hidden when k-anonymity not met */}
+          <RegionalPreferencePanel
+            region={region}
+            trade={trade}
+            decisionType={(item as any).itemId ?? item.id}
+            accentColor={accentColor}
+          />
+
           {/* Help Text */}
           {item.helpText && (
             <View style={styles.helpBox}>

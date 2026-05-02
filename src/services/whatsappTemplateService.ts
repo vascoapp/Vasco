@@ -75,6 +75,68 @@ export function renderTemplate(id: TemplateId, locale: Locale, vars: Record<stri
   return tpl.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? '');
 }
 
+// ── R301: Tone variants for payment_reminder ────────────────────────────────
+// Customer-tag-keyed template variants. The contractor's customerTaggingService
+// scoreCustomer() returns vip/loyal/new/risky/inactive; map to gentle/standard/firm
+// before render. Without this layer the same text went to a VIP and a 4×-overdue
+// risky customer — R12 cosmetic-only finding.
+export type ReminderTone = 'gentle' | 'standard' | 'firm';
+
+const PAYMENT_REMINDER_VARIANTS: Record<ReminderTone, Record<Locale, string>> = {
+  gentle: {
+    en: `Hi {{customer}}, just a courtesy nudge — invoice {{ref}} ({{amount}}) is due. Whenever you have a moment: {{link}} — {{business}}`,
+    nl: `Hoi {{customer}}, gewoon even een vriendelijk seintje — factuur {{ref}} ({{amount}}) staat open. Wanneer het je uitkomt: {{link}} — {{business}}`,
+    de: `Hallo {{customer}}, nur ein freundlicher Hinweis — Rechnung {{ref}} ({{amount}}) ist fällig. Wenn es passt: {{link}} — {{business}}`,
+    fr: `Bonjour {{customer}}, juste un petit rappel amical — facture {{ref}} ({{amount}}) à régler. Quand vous avez un instant : {{link}} — {{business}}`,
+    es: `Hola {{customer}}, solo un recordatorio amistoso — factura {{ref}} ({{amount}}) pendiente. Cuando puedas: {{link}} — {{business}}`,
+    it: `Ciao {{customer}}, solo un promemoria amichevole — fattura {{ref}} ({{amount}}) da saldare. Quando puoi: {{link}} — {{business}}`,
+  },
+  // Default tone — same as the original payment_reminder template.
+  standard: {
+    en: `Hi {{customer}}, a friendly reminder — invoice {{ref}} of {{amount}} is due. Pay here: {{link}} — {{business}}`,
+    nl: `Hoi {{customer}}, vriendelijke herinnering — factuur {{ref}} van {{amount}} is vervallen. Betaal hier: {{link}} — {{business}}`,
+    de: `Hallo {{customer}}, freundliche Erinnerung — Rechnung {{ref}} über {{amount}} ist fällig. Bezahlen: {{link}} — {{business}}`,
+    fr: `Bonjour {{customer}}, rappel — facture {{ref}} de {{amount}} est à régler. Payer : {{link}} — {{business}}`,
+    es: `Hola {{customer}}, recordatorio — la factura {{ref}} de {{amount}} está pendiente. Paga: {{link}} — {{business}}`,
+    it: `Ciao {{customer}}, promemoria — fattura {{ref}} di {{amount}} è in scadenza. Paga: {{link}} — {{business}}`,
+  },
+  firm: {
+    en: `Hi {{customer}}, invoice {{ref}} of {{amount}} is overdue. Please settle this within 7 days: {{link}} — {{business}}`,
+    nl: `Hoi {{customer}}, factuur {{ref}} van {{amount}} is vervallen. Voldoe deze binnen 7 dagen: {{link}} — {{business}}`,
+    de: `Hallo {{customer}}, Rechnung {{ref}} über {{amount}} ist überfällig. Bitte innerhalb von 7 Tagen begleichen: {{link}} — {{business}}`,
+    fr: `Bonjour {{customer}}, la facture {{ref}} de {{amount}} est en retard. Merci de régler sous 7 jours : {{link}} — {{business}}`,
+    es: `Hola {{customer}}, la factura {{ref}} de {{amount}} está vencida. Por favor liquida en 7 días: {{link}} — {{business}}`,
+    it: `Ciao {{customer}}, la fattura {{ref}} di {{amount}} è scaduta. Si prega di saldare entro 7 giorni: {{link}} — {{business}}`,
+  },
+};
+
+/**
+ * Map a CustomerTag to the appropriate reminder tone.
+ * - vip / loyal       → gentle (preserve relationship)
+ * - new / undefined   → standard
+ * - risky / inactive  → firm
+ */
+export function toneForCustomerTag(tag?: 'vip' | 'loyal' | 'new' | 'risky' | 'inactive'): ReminderTone {
+  if (tag === 'vip' || tag === 'loyal') return 'gentle';
+  if (tag === 'risky' || tag === 'inactive') return 'firm';
+  return 'standard';
+}
+
+/**
+ * Render a payment-reminder with a tone selected by customer tag.
+ * Falls back to the standard `payment_reminder` template when called with
+ * no tag — preserves backward-compat with existing call sites.
+ */
+export function renderPaymentReminderForTag(
+  locale: Locale,
+  vars: Record<string, string>,
+  tag?: 'vip' | 'loyal' | 'new' | 'risky' | 'inactive',
+): string {
+  const tone = toneForCustomerTag(tag);
+  const tpl = PAYMENT_REMINDER_VARIANTS[tone]?.[locale] ?? PAYMENT_REMINDER_VARIANTS[tone]?.en ?? '';
+  return tpl.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? '');
+}
+
 // ── Consent ───────────────────────────────────────────────
 
 const CONSENT_KEY = '@vasco_whatsapp_consent';

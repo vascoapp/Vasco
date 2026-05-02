@@ -14,7 +14,7 @@ import { useAppState } from '../../src/state/AppState';
 export default function PdfModal() {
   const { source, id } = useLocalSearchParams<{ source?: string; id?: string }>();
   const router = useRouter();
-  const { businessProfile } = useAppState();
+  const { businessProfile, jobs } = useAppState();
   const [generating, setGenerating] = useState(false);
 
   const label = source === 'invoice' ? 'Factuur' : 'Offerte';
@@ -28,7 +28,18 @@ export default function PdfModal() {
       }
       setGenerating(true);
       try {
-        await generateInvoicePdf(invoice, businessProfile);
+        // R303: customer-handover signature embed when linked job has one
+        const linkedJob = (invoice as any).jobId
+          ? jobs.find((j: any) => j.id === (invoice as any).jobId)
+          : null;
+        const customerSignature = linkedJob?.signatureSvg && linkedJob?.customerSignoffAt
+          ? {
+              svgDataUri: linkedJob.signatureSvg,
+              signedAt: linkedJob.customerSignoffAt,
+              signerName: invoice.customerName ?? 'Customer',
+            }
+          : undefined;
+        await generateInvoicePdf(invoice, businessProfile, undefined, customerSignature ? { customerSignature } : undefined);
       } catch (err) {
         Alert.alert('Fout', 'PDF kon niet worden gegenereerd.');
       } finally {

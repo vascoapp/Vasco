@@ -343,6 +343,12 @@ export default function CustomerPortalScreen() {
         portalData={portalData}
         onSubmitDecision={handleSubmitDecision}
         onActivityLog={logActivity}
+        // R303: thread the same trade + region values used for
+        // processDecisionSubmission's intelligence context. The portal
+        // panel uses these to fetch getRegionalPreferences and surface
+        // "67% of customers chose X" hints when k-anonymity ≥20.
+        trade={inferTradeFromTemplate(portalData.projectName)}
+        region={portalData.contractorCountry === 'NL' ? 'noord-holland' : portalData.contractorCountry ?? 'unknown'}
       />
     </SafeAreaView>
   );

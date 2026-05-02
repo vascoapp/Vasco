@@ -848,7 +848,7 @@ export default function JobDetailPage() {
                   const result = evaluateCompletion({
                     job: job as any,
                     photos: photos as any,
-                    signedOff: Boolean((job as any).customerSignoffAt),
+                    signedOff: Boolean(job.customerSignoffAt),
                   });
                   if (!result.canComplete) {
                     const missing = result.items.filter((i) => i.required && !i.satisfied).map((i) => `• ${i.label}`).join('\n');
@@ -1003,7 +1003,8 @@ export default function JobDetailPage() {
               label={contact.name}
               onSave={(svg) => {
                 try {
-                  updateJob(job.id, { customerSignoffAt: new Date().toISOString(), signatureSvg: svg } as any);
+                  // R301: now properly typed — columns exist on BE jobs schema
+                  updateJob(job.id, { customerSignoffAt: new Date().toISOString(), signatureSvg: svg });
                 } catch {}
                 const cb = signatureModal.onSigned;
                 setSignatureModal({ visible: false });
