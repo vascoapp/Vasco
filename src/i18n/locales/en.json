@@ -2289,7 +2289,9 @@
     "all": "All",
     "tryDifferentSearch": "Try a different search",
     "importToBuild": "Import invoices or catalogs to build your material database",
-    "import": "Import"
+    "import": "Import",
+    "similarOthersUse": "Similar materials others use",
+    "switchTo": "Switch to {{name}}"
   },
   "suppliers": {
     "title": "Suppliers",

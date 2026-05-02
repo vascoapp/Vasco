@@ -10,7 +10,7 @@ import { emitBusinessEvent, emitMaterialPurchased } from '../intelligence/dataCo
 import { recordMetricSnapshot } from '../intelligence/learningStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getMaterialBaselines } from './cohortBenchmarkService';
-import { getCurrentUserId } from '../lib/currentUser';
+import { getCurrentUserId, getCurrentCountry, getCurrentTrade } from '../lib/currentUser';
 
 const SCAN_HISTORY_KEY = '@vasco_invoice_scans';
 const RATE_LIMIT_KEY = '@vasco_last_invoice_scan';
@@ -126,8 +126,17 @@ export async function scanInvoicePhoto(
 export async function feedPricingMoat(invoice: ScannedInvoice): Promise<void> {
   const userId = getCurrentUserId();
 
+  // R282: cohort attribution — fall back to user's profile when the OCR
+  // doesn't return a category (most invoices don't).
+  // R283: single-write path. Was previously duplicating the row via
+  // emitMaterialPurchased + a separate direct insert that carried the OCR
+  // enrichment fields (brand/ean/currency/vat_rate). Cohort sample sizes
+  // for OCR rows were 2x. Now feeds enrichment into the emitter and the
+  // dataCollector writes one row.
+  const userTrade = getCurrentTrade();
+  const userCountry = getCurrentCountry() || 'NL';
   for (const item of invoice.lineItems) {
-    // Emit material purchase event
+    const itemTrade = item.category || userTrade || 'general';
     emitMaterialPurchased(userId, {
       materialName: item.description,
       supplierId: invoice.supplierName.toLowerCase().replace(/\s+/g, '_'),
@@ -135,32 +144,16 @@ export async function feedPricingMoat(invoice: ScannedInvoice): Promise<void> {
       price: item.unitPrice,
       quantity: item.quantity,
       unit: item.unit,
-      trade: item.category || 'general',
+      trade: itemTrade,
+      country: userCountry,
+      materialCategory: item.category,
+      brand: item.brand,
+      eanCode: item.ean,
+      currency: 'EUR',
+      vatRate: item.vatRate,
+      observedAt: invoice.documentDate,
+      source: 'invoice_scan',
     }).catch(() => {});
-
-    // Record to material_price_history (if Supabase available)
-    if (isSupabaseConfigured) {
-      try {
-        await (supabase.from('material_price_history') as any).insert({
-          trade: item.category || 'general',
-          country: 'NL',
-          material_name: item.description,
-          material_category: item.category,
-          brand: item.brand,
-          ean_code: item.ean,
-          unit: item.unit,
-          supplier_id: invoice.supplierName.toLowerCase().replace(/\s+/g, '_'),
-          supplier_name: invoice.supplierName,
-          price_excl_vat: item.unitPrice,
-          currency: 'EUR',
-          vat_rate: item.vatRate,
-          source: 'invoice_scan',
-          observed_at: invoice.documentDate,
-        });
-      } catch {
-        // Silent fail
-      }
-    }
   }
 
   // Record total spend for metrics

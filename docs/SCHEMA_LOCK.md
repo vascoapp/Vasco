@@ -1,6 +1,6 @@
 # SCHEMA LOCK — VascoApp BE↔FE Contract
 
-**Version:** 1.0 — frozen 2026-05-01
+**Version:** 1.5 — updated 2026-05-02 (R279)
 **Owner:** changes require explicit version bump + sign-off from BE + FE leads
 **Scope:** the contract between mobile app (`src/`, `app/`) and Supabase (`supabase/`). Anything below is locked unless this doc is updated.
 
@@ -625,6 +625,22 @@ taken_at      timestamptz
 created_at    timestamptz NOT NULL default now()
 ```
 
+### `embeddings` (R279 — generic semantic search)
+*Backs `semanticSearch.ts` searchMaterials/searchSimilarJobs/searchRegulations. The specialized embedding tables (customer_embeddings, material_embeddings, quote_line_embeddings, job_embeddings) continue serving their per-feature loops — this generic table covers the type-agnostic search surface (e.g. `SimilarJobsSuggest`).*
+```
+id          text PK
+item_type   text NOT NULL check (material|job|regulation)
+title       text NOT NULL
+description text default ''
+embedding   vector(1536)
+metadata    jsonb default '{}'
+user_id     uuid FK→auth.users (cascade)  -- nullable for cohort-wide rows
+created_at  timestamptz NOT NULL default now()
+updated_at  timestamptz NOT NULL default now()
+```
+RLS: read/write where `user_id IS NULL OR user_id = auth.uid()`
+Idx: (item_type), (user_id), HNSW on embedding (vector_cosine_ops)
+
 ### `projects` (NEW — see P1-6)
 *Added in v1.0 to back the aannemer multi-job grouping currently held in AsyncStorage.*
 ```
@@ -677,6 +693,10 @@ match_similar_materials(p_query_key text, p_limit int DEFAULT 5)
   → [{ material_key text, similarity numeric }]
 match_similar_jobs(query_embedding vector(384), match_trade text, match_country text, match_threshold numeric, match_count int)
   → [{ job_id, job_description, job_type, actual_cost, actual_hours, margin_percent, similarity }]
+match_similar_items(query_embedding vector(1536), match_type text, match_count int DEFAULT 5)  -- R279
+  → [{ id text, item_type text, title text, description text, similarity real, metadata jsonb }]
+  -- Generic cosine-similarity search over public.embeddings, type-filtered.
+  -- Owner-scoped via RLS (user_id IS NULL OR user_id = auth.uid()).
 get_or_create_referral_code(p_user_id uuid) → text
 attribute_referral(p_code text, p_new_user_id uuid) → uuid (attribution id) | null
   -- FE wrapper `attributeReferral` coerces to boolean for the "did it work" path.
@@ -774,13 +794,18 @@ draft-customer-reply
   IN  { question: string, context?: string, tone?: string }
   OUT { ok: boolean, options?: ReplyOption[], error?: string }
 
+generate-embedding  (R279)
+  IN  { text: string }
+  OUT { ok: boolean, embedding?: number[], dimensions?: 1536, provider?: string, error?: string }
+  -- Read-only twin of embed-text. Returns 1536-d query embedding without
+  -- DB side effects. Used by semanticSearch.ts:50 to embed query strings
+  -- before calling match_similar_items. Activates the generic semantic
+  -- search loop (was phantom prior to R279).
+
 -- ⚠️ Phantom callers (FE invokes, NOT deployed) — fail-soft, drop in roadmap:
 --   request-account-deletion   (FE: accountDeletionService.ts:157 — fallback only;
 --                              primary path is INSERT into account_deletion_requests
 --                              table, which works. Drained by drain-account-deletions cron.)
---   generate-embedding         (FE: semanticSearch.ts:50 — error returns null, callers
---                              fall back to keyword search. embed-text is a different fn
---                              that writes side-effects, not a drop-in.)
 --   export-invoice             (FE: syncService deferred — drops queued action gracefully)
 
 drain-account-deletions  (cron, service_role)
@@ -825,6 +850,13 @@ train-extra-models  (cron, service_role)
 ---
 
 ## CHANGELOG
+
+- **1.5 (2026-05-02)** — Round 5 (R279) — semantic search activation:
+  - New edge fn `generate-embedding` deployed (read-only twin of embed-text). Removes one of three phantom-caller entries; `semanticSearch.ts:50` is now backed by a real fn.
+  - New table `public.embeddings` (1536-d, item_type-typed, owner-or-cohort RLS) + new RPC `match_similar_items(query_embedding, match_type, match_count)`. Backs the generic semanticSearch consumer chain (`searchMaterials` / `searchSimilarJobs` / `searchRegulations` → `SimilarJobsSuggest` etc.). Migration `20260502000001_generic_embeddings.sql`.
+  - `match_similar_materials` RPC (existed since R243, dormant per R266 audit) now consumed: new `findSimilarMaterials(materialKey, limit)` in `embeddingService.ts` + UI surface in `AddJobMaterialModal` configure step ("Similar materials others use" chip row, hidden when empty). Cohort signal flows once enough contractors have embedded materials.
+  - `addJobMaterial` in AppState: hardcoded `trade: 'general'` (R241 quality observation) replaced with `getCurrentTrade()`. Catalog lookup now resolves real material name (was using `materialId` as the name) and supplier name. Material-drift moat (R192) cohort slicing per-trade is now correct end-to-end.
+  - 2 new i18n keys × 6 locales (`materials.similarOthersUse`, `materials.switchTo`).
 
 - **1.0 (2026-05-01)** — Initial freeze. Added `projects` table. Documented `attribute_referral` returning uuid (FE wrapper exposes both boolean and uuid variants).
 - **1.4 (2026-05-01)** — Round 4 (R278):

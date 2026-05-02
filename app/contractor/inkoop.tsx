@@ -20,6 +20,7 @@ import { useInventory, useReorderSuggestions } from '../../src/services/reorderS
 import { ReceiptScanner } from '../../src/components/contractor/ReceiptScanner';
 import { feedPricingMoat, type ScannedInvoice } from '../../src/services/invoiceScanService';
 import { parseDateanormV4, parseDateanormV5, importDatanormToMoat } from '../../src/integrations/datanorm';
+import { getCurrentTrade, getCurrentCountry } from '../../src/lib/currentUser';
 
 export default function InkoopScreen() {
   const router = useRouter();
@@ -78,7 +79,8 @@ export default function InkoopScreen() {
 
       const { imported, skipped } = await importDatanormToMoat(articles, supplierId, {
         supplierName,
-        trade: 'general',
+        trade: getCurrentTrade() || 'general',
+        country: getCurrentCountry() || 'NL',
       });
 
       Alert.alert(

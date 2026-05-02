@@ -64,6 +64,27 @@ export async function embedQuoteLine(input: {
 // These call pgvector cosine similarity via the existing match_similar_jobs
 // pattern but for the new tables. Future-facing: not yet wired into UI.
 
+// Find similar materials given a known material key (trade|material_name).
+// The key must already exist in material_embeddings — this is cohort-wide so
+// any contractor's embedded materials are eligible.
+export async function findSimilarMaterials(materialKey: string, limit = 5): Promise<Array<{ materialKey: string; similarity: number }>> {
+  if (!isSupabaseConfigured) return [];
+  if (!materialKey) return [];
+  try {
+    const { data, error } = await (supabase.rpc as any)('match_similar_materials', {
+      p_query_key: materialKey,
+      p_limit: limit,
+    });
+    if (error || !Array.isArray(data)) return [];
+    return (data as any[]).map((r) => ({
+      materialKey: String(r.material_key),
+      similarity: Number(r.similarity),
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function findSimilarCustomersByText(text: string, limit = 5): Promise<Array<{ customerId: string; similarity: number }>> {
   if (!isSupabaseConfigured) return [];
   const userId = getCurrentUserId();

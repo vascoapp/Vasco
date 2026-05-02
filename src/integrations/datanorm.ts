@@ -287,12 +287,14 @@ export async function importDatanormToMoat(
   options?: {
     supplierName?: string;
     trade?: string;
+    country?: string;
     userId?: string;
   },
 ): Promise<{ imported: number; skipped: number }> {
   const userId = options?.userId ?? 'datanorm-import';
   const supplierName = options?.supplierName ?? supplierId;
   const trade = options?.trade ?? 'general';
+  const country = options?.country ?? 'NL';
 
   // Load previously imported article numbers for deduplication
   const alreadyImported = await loadImportedArticles();
@@ -324,6 +326,11 @@ export async function importDatanormToMoat(
         quantity: article.packageSize || 1,
         unit: article.unit,
         trade,
+        country,
+        // R283: catalog imports must self-attribute as 'catalog' (was
+        // previously falling through to the hardcoded 'invoice_scan'
+        // default in dataCollector, polluting OCR sample stats).
+        source: 'catalog',
       });
       alreadyImported.add(dedupeKey);
       imported++;

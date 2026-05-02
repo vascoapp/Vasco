@@ -1,5 +1,5 @@
 // Add Job Material Modal — Select material from catalog, set quantity, pick supplier
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Alert,
   FlatList,
@@ -20,6 +20,8 @@ import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import { useAppState } from '../../state/AppState';
 import type { Material } from '../../domain/materials';
+import { findSimilarMaterials } from '../../services/embeddingService';
+import { getCurrentTrade } from '../../lib/currentUser';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -43,6 +45,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
   const [selectedSupplierId, setSelectedSupplierId] = useState<string | undefined>();
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [similarMaterials, setSimilarMaterials] = useState<Material[]>([]);
 
   const filteredMaterials = useMemo(() => {
     if (!search.trim()) return materials;
@@ -55,6 +58,38 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
         m.aliases.some((a) => a.toLowerCase().includes(q)),
     );
   }, [materials, search]);
+
+  // Cohort-wide "similar materials" — driven by R243 material_embeddings + R279
+  // match_similar_materials RPC. Falls back to empty when cohort hasn't accrued
+  // enough data; UI hides itself in that case.
+  useEffect(() => {
+    if (step !== 'configure' || !selectedMaterial) {
+      setSimilarMaterials([]);
+      return;
+    }
+    const trade = getCurrentTrade();
+    if (!trade) return;
+    const key = `${trade}|${selectedMaterial.name.toLowerCase()}`;
+    let cancelled = false;
+    findSimilarMaterials(key, 5)
+      .then((rows) => {
+        if (cancelled) return;
+        // Map cohort keys back to local catalog entries by name match.
+        const matched: Material[] = [];
+        for (const row of rows) {
+          const parts = row.materialKey.split('|');
+          const candidateName = (parts[1] ?? '').toLowerCase();
+          if (!candidateName) continue;
+          const local = materials.find(
+            (m) => m.id !== selectedMaterial.id && m.name.toLowerCase() === candidateName,
+          );
+          if (local && !matched.some((m) => m.id === local.id)) matched.push(local);
+        }
+        setSimilarMaterials(matched.slice(0, 4));
+      })
+      .catch(() => { if (!cancelled) setSimilarMaterials([]); });
+    return () => { cancelled = true; };
+  }, [step, selectedMaterial, materials]);
 
   // Best price for selected material
   const bestPrice = useMemo(() => {
@@ -213,6 +248,28 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
                 </View>
               )}
             </View>
+
+            {similarMaterials.length > 0 && (
+              <View style={s.similarSection}>
+                <Text style={s.fieldLabel}>
+                  {t('materials.similarOthersUse', 'Similar materials others use')}
+                </Text>
+                <View style={s.similarList}>
+                  {similarMaterials.map((m) => (
+                    <Pressable
+                      key={m.id}
+                      style={s.similarChip}
+                      onPress={() => handleSelectMaterial(m)}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('materials.switchTo', 'Switch to {{name}}', { name: m.name })}
+                    >
+                      <Ionicons name="swap-horizontal" size={12} color={Palette.hermesOrange} />
+                      <Text style={s.similarChipText} numberOfLines={1}>{m.name}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            )}
 
             {/* Quantity row */}
             <View style={s.fieldRow}>
@@ -504,6 +561,32 @@ const s = StyleSheet.create({
     fontSize: TYPE.sectionSize,
     fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackSuccess,
+  },
+  similarSection: {
+    marginBottom: Spacing.md,
+  },
+  similarList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  similarChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.sm,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderWidth: 1,
+    borderColor: Palette.hermesOrange + '40',
+    maxWidth: '100%',
+  },
+  similarChipText: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textPrimary,
+    flexShrink: 1,
   },
   saveButton: {
     flexDirection: 'row',

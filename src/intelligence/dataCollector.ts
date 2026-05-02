@@ -7,6 +7,7 @@
 
 import { supabase as _supabase, isSupabaseConfigured } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getCurrentTrade, getCurrentCountry } from '../lib/currentUser';
 const supabase: any = _supabase;
 
 const LOCAL_QUEUE_KEY = '@vasco_event_queue';
@@ -41,8 +42,18 @@ export async function emitBusinessEvent(
   userId: string,
   event: BusinessEvent,
 ): Promise<void> {
+  // R281: every business_events row needs (trade, country) for cohort
+  // slicing — a painter in DE and FR are different markets entirely. Most
+  // convenience emitters pass trade but not country, and several pass
+  // neither. Default both from the currentUser ref so every emit, present
+  // and future, is automatically cohort-attributed without each call site
+  // having to thread it.
+  const trade = event.trade ?? getCurrentTrade() ?? undefined;
+  const country = event.country ?? getCurrentCountry() ?? undefined;
   const queuedEvent: QueuedEvent = {
     ...event,
+    trade,
+    country,
     id: `evt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     userId,
     timestamp: new Date().toISOString(),
@@ -213,6 +224,19 @@ export async function emitMaterialPurchased(userId: string, data: {
   materialCategory?: string;
   deliveryDays?: number;
   postcode?: string;
+  // R283: OCR-specific enrichment so feedPricingMoat can drop its
+  // direct material_price_history insert. Without these, OCR-derived
+  // rows would lose brand/ean/currency/vat data — the cohort statistics
+  // are richer when these are kept. Default `source: 'manual'` flips the
+  // R241 hardcode (which mis-tagged manual writes from addJobMaterial as
+  // 'invoice_scan') to truthful attribution; OCR callers pass
+  // `source: 'invoice_scan'` explicitly.
+  brand?: string;
+  eanCode?: string;
+  currency?: string;
+  vatRate?: number;
+  observedAt?: string;
+  source?: 'manual' | 'api' | 'invoice_scan' | 'catalog';
 }): Promise<void> {
   await emitBusinessEvent(userId, {
     eventType: 'material_purchased',
@@ -239,14 +263,18 @@ export async function emitMaterialPurchased(userId: string, data: {
         supplier_name: data.supplierName,
         material_name: data.materialName,
         material_category: data.materialCategory ?? null,
+        brand: data.brand ?? null,
+        ean_code: data.eanCode ?? null,
         unit: data.unit,
         price_excl_vat: data.price,
+        currency: data.currency ?? 'EUR',
+        vat_rate: data.vatRate ?? null,
         trade: data.trade,
-        country: data.country ?? 'NL',
+        country: data.country ?? getCurrentCountry() ?? 'NL',
         lead_time_days: data.deliveryDays ?? null,
         postcode: data.postcode ?? null,
-        source: 'invoice_scan',
-        observed_at: new Date().toISOString(),
+        source: data.source ?? 'manual',
+        observed_at: data.observedAt ?? new Date().toISOString(),
       } as any);
       if (error) throw error;
     } catch (err) {

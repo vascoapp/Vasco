@@ -39,7 +39,7 @@ import { buildPriceRiskSignals } from '../logic/priceRisk';
 import { ingestPdfStub } from '../ingestion/ingestionStub';
 import { rowToExtractedDocument } from '../ingestion/extractionBridge';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { getCurrentUserId, getCurrentCountry } from '../lib/currentUser';
+import { getCurrentUserId, getCurrentCountry, getCurrentTrade, setCurrentUser } from '../lib/currentUser';
 import { USE_SEED_DATA } from '../config/demo';
 import {
   loadQuotes,
@@ -578,11 +578,19 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             setJobs((prev) =>
               prev.map((j) => (j.id === tempId ? { ...j, id: row.id } : j)),
             );
+            // Fire-and-forget index for semantic search (R279 plumbing).
+            import('../intelligence/semanticSearch').then(({ indexJobForSearch }) =>
+              indexJobForSearch({ id: row.id, title, trade: extra?.trade, description: description ?? null }),
+            ).catch(() => {});
             return row.id;
           } catch (err) {
             logWarn('AppState', `addJob persist failed or timed out: ${err}`);
           }
         }
+        // Offline / unconfigured path: still index by tempId so keyword fallback works.
+        import('../intelligence/semanticSearch').then(({ indexJobForSearch }) =>
+          indexJobForSearch({ id: tempId, title, trade: extra?.trade, description: description ?? null }),
+        ).catch(() => {});
         // Ontology: create job entity + link to customer
         upsertEntity({ id: tempId, type: 'job', name: title, attributes: { trade: extra?.trade, status: 'lead' }, scores: { reliability: 50, quality: 50, value: extra?.quoted_amount ?? 0, frequency: 0 }, lastUpdated: new Date().toISOString() }).catch(() => {});
         if (customerId) {
@@ -1108,6 +1116,21 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             return !!(merged.businessName && merged.kvkNumber && merged.vatNumber && merged.address && merged.email && merged.phone);
           })(),
         }));
+        // R282: if the profile edit changes country or trade, sync the
+        // module-level currentUser ref so subsequent emit paths read the
+        // new specialty/market without waiting for a re-login. Without
+        // this, a contractor switching from NL → DE would keep tagging
+        // every business event and material write to the old market.
+        if (updates.country !== undefined || updates.trade !== undefined) {
+          const userId = getCurrentUserId();
+          if (userId) {
+            setCurrentUser({
+              id: userId,
+              country: updates.country ?? getCurrentCountry() ?? undefined,
+              trade: updates.trade ?? getCurrentTrade() ?? undefined,
+            });
+          }
+        }
         if (isSupabaseConfigured) {
           const dbUpdates: Record<string, string | null> = {};
           if (updates.businessName !== undefined) dbUpdates.business_name = updates.businessName || null;
@@ -1143,7 +1166,18 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             setMaterials((prev) =>
               prev.map((m) => (m.id === tempId ? { ...m, id: (row as any).id } : m)),
             );
-            return (row as any).id as string;
+            const persistedId = (row as any).id as string;
+            // Fire-and-forget cohort-wide index (R279). Materials write user_id=null
+            // inside indexItem so other contractors can match against them.
+            import('../intelligence/semanticSearch').then(({ indexMaterialForSearch }) =>
+              indexMaterialForSearch({
+                id: persistedId,
+                name: material.name,
+                category: material.category,
+                brand: material.brand,
+              }),
+            ).catch(() => {});
+            return persistedId;
           } catch (err) {
             logWarn('AppState', `addMaterial persist failed: ${err}`);
             try {
@@ -1152,6 +1186,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             } catch {}
           }
         }
+        // Offline path: index by tempId so keyword fallback works locally.
+        import('../intelligence/semanticSearch').then(({ indexMaterialForSearch }) =>
+          indexMaterialForSearch({
+            id: tempId,
+            name: material.name,
+            category: material.category,
+            brand: material.brand,
+          }),
+        ).catch(() => {});
         return tempId;
       },
       removeMaterial: (id) => {
@@ -1230,15 +1273,29 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             logWarn('AppState', `addJobMaterial persist failed: ${err}`);
           }
         }
+        // R279/R281: resolve real trade + country from currentUser (was
+        // hardcoded 'general'/'NL', collapsing all material data into a
+        // single bucket and breaking the material-drift moat's per-(trade,
+        // country) cohort slicing — a painter in DE and FR are different
+        // markets entirely). Falls through to 'general'/'NL' only when unset.
+        const trade = getCurrentTrade() || 'general';
+        const country = getCurrentCountry() || 'NL';
+        // R279: look up the actual material name + supplier name from the
+        // catalog so the moat ingests human-readable text instead of opaque
+        // IDs. Falls back to the ID if the catalog miss is somehow unresolved.
+        const matRow = materials.find((m) => m.id === jm.materialId);
+        const matName = (matRow?.name ?? String(jm.materialId ?? '')).trim();
+        const supRow = jm.supplierId ? suppliers.find((s) => s.id === jm.supplierId) : undefined;
         // AI data collector — material purchase event
         emitMaterialPurchased(aiUserId, {
-          materialName: jm.materialId ?? 'unknown',
+          materialName: matName || 'unknown',
           supplierId: jm.supplierId ?? 'unknown',
-          supplierName: jm.supplierId ?? 'unknown',
+          supplierName: supRow?.name ?? jm.supplierId ?? 'unknown',
           price: jm.unitPrice ?? 0,
           quantity: jm.quantity ?? 1,
           unit: jm.unit ?? 'stuk',
-          trade: 'general',
+          trade,
+          country,
           jobId: jm.jobId,
         }).catch(() => {});
         // R237: resolve calibration predictions tied to material/supplier signals.
@@ -1248,10 +1305,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           ).catch(() => {});
         }
         // R243: embed material so cohort-wide similarity search works
-        const matName = String(jm.materialId ?? '').trim();
         if (matName.length > 2) {
           import('../services/embeddingService').then((m) =>
-            m.embedMaterial({ trade: 'general', materialName: matName, text: matName }),
+            m.embedMaterial({ trade, materialName: matName, text: matName }),
           ).catch(() => {});
         }
         return tempId;

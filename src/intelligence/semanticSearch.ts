@@ -13,6 +13,7 @@
 // =============================================================================
 
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { getCurrentUserId } from '../lib/currentUser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const EMBEDDING_CACHE_KEY = '@vasco_embeddings';
@@ -174,6 +175,10 @@ export async function indexItem(entry: Omit<EmbeddingEntry, 'createdAt'>): Promi
     if (isSupabaseConfigured && !entry.vector) {
       const embedding = await generateEmbedding(entry.text);
       if (embedding) {
+        // Materials and regulations are cohort-shareable — write user_id=null so
+        // the RLS policy (user_id IS NULL OR = auth.uid()) lets every contractor
+        // read them. Jobs stay private to their owner.
+        const ownerId = entry.type === 'job' ? getCurrentUserId() : null;
         await (supabase.from('embeddings') as any).upsert({
           id: entry.id,
           item_type: entry.type,
@@ -181,6 +186,7 @@ export async function indexItem(entry: Omit<EmbeddingEntry, 'createdAt'>): Promi
           description: entry.metadata.category ?? '',
           embedding,
           metadata: entry.metadata,
+          user_id: ownerId,
         });
       }
     }

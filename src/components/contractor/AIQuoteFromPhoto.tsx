@@ -22,6 +22,7 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { formatCurrency } from '../../i18n/formatting';
 import { Spacing } from '../../theme/spacing';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
+import { getCurrentTrade, getCurrentCountry } from '../../lib/currentUser';
 import { hapticSuccess, hapticWarning } from '../../utils/haptics';
 
 // ---------------------------------------------------------------------------
@@ -188,13 +189,15 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
     }
 
     try {
+      const trade = getCurrentTrade() || 'general';
+      const country = getCurrentCountry() || 'NL';
       const { data, error: fnError } = await supabase.functions.invoke('analyze-photo', {
         body: {
           // New multi-photo path — Edge Function also falls back to legacy single imageBase64.
           imagesBase64: batch,
           imageBase64: batch[0],
-          trade: 'general', // Would come from user profile
-          country: 'NL',
+          trade,
+          country,
         },
       });
 
@@ -216,7 +219,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
         // R238: persist for cross-quote learning + future agent queries.
         import('../../services/intelligenceCaptureService').then((m) =>
           m.persistPhotoAnalysis({
-            trade: 'general',
+            trade,
             detectedRooms: data.detectedRooms ?? data.rooms ?? undefined,
             detectedMaterials: data.detectedItems ?? undefined,
             estimatedComplexity: data.estimatedComplexity ?? undefined,

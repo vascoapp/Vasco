@@ -7,7 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { emitBusinessEvent } from '../intelligence/dataCollector';
 import { recordMetricSnapshot } from '../intelligence/learningStorage';
-import { getCurrentUserId } from '../lib/currentUser';
+import { getCurrentUserId, getCurrentTrade, getCurrentCountry } from '../lib/currentUser';
 import { MS_PER_DAY } from '../utils/timeConstants';
 
 // =============================================================================
@@ -109,7 +109,8 @@ class ExpenseService {
       entityType: 'material',
       entityId: newExp.id,
       payload: { amount: newExp.amount, category: newExp.category, supplier: newExp.supplier, jobId: newExp.jobId, vatRate: newExp.vatRate },
-      trade: 'general',
+      trade: getCurrentTrade() || 'general',
+      country: getCurrentCountry() || 'NL',
     }).catch(() => {});
     // Track total expenses for calibration
     const yearTotal = this.expenses.reduce((s, e) => s + e.amount, 0);

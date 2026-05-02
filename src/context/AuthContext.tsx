@@ -406,13 +406,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Sync the module-level currentUser ref so non-hook consumers (schedulers,
   // dataCollector, reasonCodeService) attribute events to the real user id.
+  // R280: also start/stop the event-flush + cloud-sync background loops here.
+  // Was previously only wired in demo-login path — real Supabase auth (incl.
+  // email/password, OAuth, magic-link, session-restore on cold start) never
+  // started the loops, so business_events sat in AsyncStorage indefinitely.
   useEffect(() => {
     if (user?.id) {
-      setCurrentUser({ id: user.id, country: user.country, trade: (user as any).trade });
+      const country = user.country ?? 'NL';
+      const trade = (user as any).trade as string | undefined;
+      const role = user.role === 'site-lead' ? 'sitelead' : (user.role ?? 'contractor');
+      setCurrentUser({ id: user.id, country, trade });
+      startEventFlushing(user.id);
+      startAutoSync(user.id, role, trade, country);
     } else {
       setCurrentUser(null);
+      stopEventFlushing();
+      stopAutoSync();
     }
-  }, [user?.id, user?.country, (user as any)?.trade]);
+  }, [user?.id, user?.country, (user as any)?.trade, user?.role]);
 
   // Load intelligence learning profile when user role is known
   useEffect(() => {
@@ -498,11 +509,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await clearLockout(normalizedEmail);
       setUser(mockUser);
       setIsLoading(false);
-      // Start AI cloud sync + event-queue flusher (R241: was previously
-      // never started — events sat in AsyncStorage forever unless an
-      // emit happened to flush inline).
-      startAutoSync(normalizedEmail, mockUser.role ?? 'contractor', mockUser.trade, mockUser.country);
-      startEventFlushing(mockUser.id);
+      // R280: startAutoSync / startEventFlushing are now triggered uniformly
+      // by the user-change effect above so demo, real Supabase, OAuth, and
+      // session-restore paths all behave identically.
       // Analytics tracking
       const analyticsRole = mockUser.role === 'site-lead' ? 'sitelead' as const : (mockUser.role === 'contractor' ? 'contractor' as const : 'contractor' as const);
       initSession({ userId: mockUser.id, role: analyticsRole, country: mockUser.country ?? 'NL' }).catch(() => {});

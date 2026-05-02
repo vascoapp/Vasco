@@ -1,6 +1,6 @@
 # Vasco Launch Runbook
 
-Last updated: 2026-04-27 (after R258).
+Last updated: 2026-05-02 (after R284 — semantic search live).
 Single source of truth for everything that must be true before Vasco hits TestFlight + Play Store.
 
 Status legend: ✅ done · ⚠️ partial · ❌ not started · ⏸ waiting on user
@@ -9,11 +9,11 @@ Status legend: ✅ done · ⚠️ partial · ❌ not started · ⏸ waiting on u
 
 ## 0. Snapshot
 
-- Code: **45 commits** on `main` of `https://github.com/VascoBuild/vasco`
+- Code: **main** of `https://github.com/VascoBuild/vasco`
 - TypeScript: **0 errors**
-- Jest: **493 / 493 passing** across 43 suites
-- Supabase project: `gblhqhorkarocmputhte` (live, all migrations except `20260427000001_time_of_day_capture` and `20260427000002_invoice_payment_timing` pushed — push those when ready)
-- Edge functions deployed: 21 (analyze-photo, churn-winback-email, classify-customer-question, create-subscription-checkout, daily-push-digest, draft-customer-reply, drain-account-deletions, embed-text, grant-referral-credits, mollie-webhook, place-supplier-order, predict-duration, predict-price, send-invoice, send-push, sign-quote-token, stripe-webhook, train-extra-models, verify-quote-token, weekly-digest, weekly-retrain-models)
+- Jest: **596 / 596 passing** across 55 suites
+- Supabase project: `gblhqhorkarocmputhte` (live; **all migrations pushed** as of R284)
+- Edge functions deployed in repo: 22 (analyze-photo, churn-winback-email, classify-customer-question, create-subscription-checkout, daily-push-digest, draft-customer-reply, drain-account-deletions, embed-text, generate-embedding, grant-referral-credits, mollie-webhook, place-supplier-order, predict-duration, predict-price, send-invoice, send-push, sign-quote-token, stripe-webhook, train-extra-models, verify-quote-token, weekly-digest, weekly-retrain-models)
 - Cron jobs: 9 registered
 
 ---

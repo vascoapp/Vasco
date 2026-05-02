@@ -2289,7 +2289,9 @@
     "all": "Alles",
     "tryDifferentSearch": "Probeer een andere zoekopdracht",
     "importToBuild": "Importeer facturen of catalogi om je materialen-database op te bouwen",
-    "import": "Importeren"
+    "import": "Importeren",
+    "similarOthersUse": "Vergelijkbare materialen die anderen gebruiken",
+    "switchTo": "Wissel naar {{name}}"
   },
   "suppliers": {
     "title": "Leveranciers",
