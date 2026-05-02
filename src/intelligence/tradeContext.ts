@@ -672,6 +672,14 @@ export interface CustomerIntelligence {
   contextLine: string;
 }
 
+/**
+ * @deprecated R304: `customerTaggingService` is the canonical CRM surface
+ * (used by Klanten UI badges + CustomerTagBadge). This function is kept as
+ * a thin compatibility wrapper for the 4 aiActionQueueService call sites
+ * that produce VascoCard `customerContext` lines. New code should call
+ * `scoreCustomer({ customer, jobs, invoices })` directly and derive the
+ * contextLine from the returned `CustomerProfile`.
+ */
 export function getCustomerIntelligence(
   customerId: string,
   jobs: any[],

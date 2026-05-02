@@ -24,7 +24,7 @@ import { Typography } from '../../src/theme/typography';
 
 export default function NewQuoteScreen() {
   const router = useRouter();
-  const { addQuote, customers } = useAppState();
+  const { addQuote, customers, quotes } = useAppState();
 
   const [customer, setCustomer] = useState('');
   const [showCustomerPicker, setShowCustomerPicker] = useState(false);
@@ -105,6 +105,16 @@ export default function NewQuoteScreen() {
         return;
       }
     } catch {}
+
+    // R304: validator gate — checks for duplicate quotes (same customer + amount
+    // within 7 days), zero-priced items, missing VAT config. Errors show
+    // "Send anyway" override; warnings show "Continue".
+    const { gateQuoteValidation } = await import('../../src/services/quoteValidationGate');
+    const ok = await gateQuoteValidation(
+      { customer: customer.trim(), amount: itemTotal, lineItems: validItems },
+      quotes,
+    );
+    if (!ok) return;
 
     setSaving(true);
     try {

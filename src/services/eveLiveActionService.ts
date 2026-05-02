@@ -174,5 +174,143 @@ export function buildLiveActions(input: Input): EveAction[] {
     });
   }
 
+  // ── R304: 6 more auto-fire triggers from MessageTrigger taxonomy ────
+  // These complete the R3 dormancy fix. Each ships a pre-rendered template
+  // via preparedData so R286 executor's Share path uses correct copy.
+
+  // job_started — jobs flipped to 'in-progress' / 'bezig' in last 4h
+  const fourHoursAgo = now.getTime() - 4 * 60 * 60 * 1000;
+  for (const j of (input.jobs ?? []).filter((x) =>
+    (x.status === 'in-progress' || x.status === 'bezig')
+      && x.updatedAt
+      && new Date(x.updatedAt).getTime() >= fourHoursAgo,
+  ).slice(0, 3)) {
+    out.push({
+      id: mkId('eve-started'),
+      agentType: 'agent',
+      type: 'progress_update',
+      title: `Notify customer: ${j.title} started`,
+      description: 'Customer-facing "we have arrived" message.',
+      impact: 'Builds trust',
+      priority: 'medium',
+      status: 'pending',
+      preparedData: {
+        jobId: j.id,
+        template: `Hi ${j.customerId ?? ''}, we've started work on ${j.title}. We'll keep you posted on progress.`,
+      },
+      actionLabel: 'Send update',
+      requiresApproval: true,
+      createdAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + 12 * 60 * 60 * 1000).toISOString(),
+    });
+  }
+
+  // job_complete — jobs completed in last 24h, customer-facing thanks
+  const dayAgo = now.getTime() - MS_PER_DAY;
+  for (const j of (input.jobs ?? []).filter((x) =>
+    (x.status === 'completed' || x.status === 'gereed')
+      && (x as any).completedAt
+      && new Date((x as any).completedAt).getTime() >= dayAgo,
+  ).slice(0, 3)) {
+    out.push({
+      id: mkId('eve-complete'),
+      agentType: 'agent',
+      type: 'job_handover',
+      title: `Handover note: ${j.title}`,
+      description: 'Send the customer a wrap-up + invoice heads-up.',
+      impact: 'Smooth handover',
+      priority: 'medium',
+      status: 'pending',
+      preparedData: {
+        jobId: j.id,
+        template: `Hi ${j.customerId ?? ''}, ${j.title} is complete. Thanks for the trust — invoice on its way.`,
+      },
+      actionLabel: 'Send handover',
+      requiresApproval: true,
+      createdAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + 3 * MS_PER_DAY).toISOString(),
+    });
+  }
+
+  // payment_received — invoices flipped to 'paid' in last 24h, send thanks
+  for (const inv of (input.invoices ?? []).filter((x) =>
+    x.status === 'paid'
+      && (x as any).paidAt
+      && new Date((x as any).paidAt).getTime() >= dayAgo,
+  ).slice(0, 3)) {
+    out.push({
+      id: mkId('eve-paid'),
+      agentType: 'agent',
+      type: 'satisfaction_survey',  // closest queue type — shareable thanks
+      title: `Thank ${inv.customer ?? 'customer'} for payment`,
+      description: `Invoice ${inv.id} paid — quick thanks goes a long way.`,
+      impact: 'Builds repeat business',
+      priority: 'low',
+      status: 'pending',
+      preparedData: {
+        invoiceId: inv.id,
+        template: `Thanks ${inv.customer ?? ''} — payment received for invoice ${inv.id}. Receipt on its way.`,
+      },
+      actionLabel: 'Send thanks',
+      requiresApproval: true,
+      createdAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + 7 * MS_PER_DAY).toISOString(),
+    });
+  }
+
+  // quote_sent — quotes flipped to 'sent' in last 4h that don't have a
+  // confirmation sent yet (lightweight — no idempotency tracking, dedup
+  // happens at queue level via entityKey).
+  for (const q of (input.quotes ?? []).filter((x) =>
+    x.status === 'sent'
+      && x.sentAt
+      && new Date(x.sentAt).getTime() >= fourHoursAgo,
+  ).slice(0, 3)) {
+    out.push({
+      id: mkId('eve-quote-sent'),
+      agentType: 'agent',
+      type: 'progress_update',
+      title: `Confirm quote ${q.id} arrived`,
+      description: 'Quick "I just sent quote X — let me know if you need anything" — improves response rates.',
+      impact: 'Reduces silent quotes',
+      priority: 'low',
+      status: 'pending',
+      preparedData: {
+        quoteId: q.id,
+        template: `Hi ${q.customer ?? ''}, I just sent quote ${q.id}. Check your email — let me know if you have any questions.`,
+      },
+      actionLabel: 'Send confirmation',
+      requiresApproval: true,
+      createdAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+    });
+  }
+
+  // invoice_sent — invoices flipped to 'sent' in last 4h
+  for (const inv of (input.invoices ?? []).filter((x) =>
+    x.status === 'sent'
+      && (x as any).sentAt
+      && new Date((x as any).sentAt).getTime() >= fourHoursAgo,
+  ).slice(0, 3)) {
+    out.push({
+      id: mkId('eve-inv-sent'),
+      agentType: 'agent',
+      type: 'progress_update',
+      title: `Confirm invoice ${inv.id} arrived`,
+      description: 'Customer-facing "your invoice is ready" with payment link.',
+      impact: 'Faster payment',
+      priority: 'medium',
+      status: 'pending',
+      preparedData: {
+        invoiceId: inv.id,
+        template: `Hi ${inv.customer ?? ''}, invoice ${inv.id} is ready. Pay online or contact me if questions.`,
+      },
+      actionLabel: 'Send confirmation',
+      requiresApproval: true,
+      createdAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+    });
+  }
+
   return out;
 }

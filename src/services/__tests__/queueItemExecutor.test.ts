@@ -64,7 +64,9 @@ describe('classification helpers', () => {
 });
 
 describe('navigate paths', () => {
-  it('draft_invoice with jobId routes to job detail', async () => {
+  it('draft_invoice with jobId routes to job detail with create-invoice action', async () => {
+    // R304: was simple string path; now passes ?action=create-invoice so the
+    // job detail screen auto-fires addInvoiceFromJob on mount.
     const router = makeRouter();
     const result = await executeApprovedQueueItem(
       makeItem({ type: 'draft_invoice', preparedData: { jobId: 'j-1' } }),
@@ -72,7 +74,10 @@ describe('navigate paths', () => {
     );
     expect(result.executed).toBe(true);
     expect(result.via).toBe('navigate');
-    expect(router.push).toHaveBeenCalledWith('/contractor/job/j-1');
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/contractor/job/[id]',
+      params: { id: 'j-1', action: 'create-invoice' },
+    });
   });
 
   it('draft_invoice without jobId falls back to payments', async () => {

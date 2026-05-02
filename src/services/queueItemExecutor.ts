@@ -121,8 +121,15 @@ export async function executeApprovedQueueItem(
     case 'invoice_regenerate': {
       const jobId = data.jobId as string | undefined;
       if (jobId) {
-        router.push(`/contractor/job/${jobId}` as any);
-        return { executed: true, via: 'navigate', detail: `job/${jobId}` };
+        // R304: pass ?action=create-invoice so the job detail screen
+        // auto-fires addInvoiceFromJob on mount (R304 useEffect there).
+        // Approve → contractor lands on the new invoice in facturen,
+        // not the job detail screen, so the loop closes one tap shorter.
+        router.push({
+          pathname: '/contractor/job/[id]',
+          params: { id: jobId, action: 'create-invoice' },
+        } as any);
+        return { executed: true, via: 'navigate', detail: `job/${jobId}?action=create-invoice` };
       }
       router.push('/contractor/payments' as any);
       return { executed: true, via: 'navigate', detail: 'payments' };

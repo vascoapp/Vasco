@@ -529,8 +529,43 @@ class DecisionIntelligenceService {
     const activities = [...this.activityBuffer];
     this.activityBuffer = [];
 
-    logInfo('DecisionIntelligence', `Flushing ${activities.length} activities (local only — see R291)`);
+    logInfo('DecisionIntelligence', `Flushing ${activities.length} activities`);
 
+    // R304: bulk-insert into BE customer_portal_events. Closes R291 deferral
+    // (portal events were SCHEMA_LOCK Tier 3 with no FE writer). The BE
+    // event_type enum is quote-engagement-focused; we map decision-portal
+    // actions where they semantically align, drop those that don't.
+    const ACTION_TO_EVENT_TYPE: Partial<Record<CustomerPortalActivity['action'], string>> = {
+      portal_accessed: 'portal_opened',
+      item_viewed: 'line_clicked',
+      decision_made: 'accepted',          // rough approximation — value polarity not surfaced here
+      photo_uploaded: 'photo_viewed',     // customer interacting with photo content
+    };
+
+    if (isSupabaseConfigured) {
+      const beRows = activities
+        .filter((a) => ACTION_TO_EVENT_TYPE[a.action])
+        .map((a) => ({
+          portal_token: a.trackerId,
+          event_type: ACTION_TO_EVENT_TYPE[a.action],
+          decision_id: a.itemId ?? null,
+          metadata: {
+            customerId: a.customerId,
+            categoryId: a.categoryId,
+            deviceType: a.deviceType,
+            ...(a.metadata ?? {}),
+          },
+        }));
+      if (beRows.length > 0) {
+        try {
+          await (supabase.from('customer_portal_events') as any).insert(beRows);
+        } catch {
+          // Best-effort. Local trackUserAction below remains the audit trail.
+        }
+      }
+    }
+
+    // Local intelligence engine — kept for legacy and offline visibility.
     for (const activity of activities) {
       trackUserAction(`portal_${activity.action}`, {
         trackerId: activity.trackerId,
@@ -648,7 +683,12 @@ export const decisionIntelligence = new DecisionIntelligenceService();
 import { useState, useEffect, useCallback } from 'react';
 
 /**
- * Hook to get regional preferences for UI display
+ * Hook to get regional preferences for UI display.
+ * @deprecated R304: zero callers in production. The R303 RegionalPreferencePanel
+ * uses `decisionIntelligence.getRegionalPreferences()` directly (matches the
+ * customer-portal lifecycle better than a hook). Kept for parity with the
+ * 3-hook export shape but marked for removal once SCHEMA_LOCK confirms no
+ * lurking external consumers.
  */
 export function useRegionalPreferences(
   region: string,
@@ -670,7 +710,8 @@ export function useRegionalPreferences(
 }
 
 /**
- * Hook to get decision timing analytics
+ * Hook to get decision timing analytics.
+ * @deprecated R304: zero callers. Same status as `useRegionalPreferences`.
  */
 export function useDecisionTiming(decisionType: string) {
   const [timing, setTiming] = useState<DecisionTiming | null>(null);
@@ -688,7 +729,11 @@ export function useDecisionTiming(decisionType: string) {
 }
 
 /**
- * Hook to process a decision submission
+ * Hook to process a decision submission.
+ * @deprecated R304: zero callers. The customer portal calls
+ * `decisionIntelligence.processDecisionSubmission()` directly. Kept for
+ * parity but marked for removal once SCHEMA_LOCK confirms no external
+ * consumers.
  */
 export function useDecisionSubmission() {
   const [submitting, setSubmitting] = useState(false);

@@ -40,6 +40,7 @@ import { ingestPdfStub } from '../ingestion/ingestionStub';
 import { rowToExtractedDocument } from '../ingestion/extractionBridge';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { getCurrentUserId, getCurrentCountry, getCurrentTrade, setCurrentUser } from '../lib/currentUser';
+import { jobUpdatesToRowPayload } from '../lib/mappers';
 import { USE_SEED_DATA } from '../config/demo';
 import {
   loadQuotes,
@@ -754,25 +755,19 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           ),
         );
         if (isSupabaseConfigured && !id.startsWith('j-')) {
-          // R301: explicit camelCase → snake_case mapping for BE-persisted
-          // fields. signatureSvg + customerSignoffAt are the new R301 columns;
-          // remaining fields use the same name in BE (status) or the existing
-          // (broader) updateJob FE→BE drift is left alone for this round.
-          const u: Record<string, unknown> = { ...(updates as Record<string, unknown>) };
-          if ('signatureSvg' in u) {
-            u.signature_svg = u.signatureSvg;
-            delete u.signatureSvg;
-          }
-          if ('customerSignoffAt' in u) {
-            u.customer_signoff_at = u.customerSignoffAt;
-            delete u.customerSignoffAt;
-          }
+          // R304: full camelCase → snake_case mapping via jobUpdatesToRowPayload.
+          // Was inline R301 mapping which only covered signatureSvg +
+          // customerSignoffAt — every other field (scheduledDate,
+          // estimatedDuration, quotedAmount, agreedAmount, …) silently
+          // dropped on BE sync. Drag-schedule edits, timesheet completions,
+          // address changes — all silently lost. Now full mapping.
+          const payload = jobUpdatesToRowPayload(updates);
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue(
               'jobs',
               'update',
-              () => dbUpdateJob(id, u),
-              { rowId: id, payload: u },
+              () => dbUpdateJob(id, payload),
+              { rowId: id, payload },
             ),
           ).catch(() => {});
         }

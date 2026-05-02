@@ -1,0 +1,147 @@
+// =============================================================================
+// jobUpdatesToRowPayload tests (R304)
+// =============================================================================
+// Was the silent FE→BE drift bug. Schedule edits, signature captures, address
+// changes — all silently dropped before R304's mapper landed. These tests
+// pin the camelCase → snake_case translation so future updates can't reintroduce
+// the regression.
+// =============================================================================
+
+import { jobUpdatesToRowPayload } from '../mappers';
+
+describe('jobUpdatesToRowPayload', () => {
+  it('maps schedule edit fields', () => {
+    const out = jobUpdatesToRowPayload({
+      scheduledDate: '2026-05-10',
+      scheduledStartTime: '09:00',
+      scheduledEndTime: '12:00',
+      estimatedDuration: 3,
+    });
+    expect(out).toEqual({
+      scheduled_date: '2026-05-10',
+      scheduled_start_time: '09:00',
+      scheduled_end_time: '12:00',
+      estimated_duration: 3,
+    });
+  });
+
+  it('maps financial fields', () => {
+    const out = jobUpdatesToRowPayload({
+      quotedAmount: 1500,
+      agreedAmount: 1450,
+    });
+    expect(out).toEqual({
+      quoted_amount: 1500,
+      agreed_amount: 1450,
+    });
+  });
+
+  it('maps R301 signature fields', () => {
+    const out = jobUpdatesToRowPayload({
+      signatureSvg: 'data:image/png;base64,abc',
+      customerSignoffAt: '2026-05-02T12:00:00Z',
+    });
+    expect(out).toEqual({
+      signature_svg: 'data:image/png;base64,abc',
+      customer_signoff_at: '2026-05-02T12:00:00Z',
+    });
+  });
+
+  it('flattens nested address into address_*', () => {
+    const out = jobUpdatesToRowPayload({
+      address: {
+        street: 'Damrak 1',
+        city: 'Amsterdam',
+        postcode: '1012',
+        country: 'NL',
+        accessNotes: 'Side entrance',
+        parkingNotes: 'Free after 18:00',
+      },
+    });
+    expect(out).toEqual({
+      address_street: 'Damrak 1',
+      address_city: 'Amsterdam',
+      address_postcode: '1012',
+      address_country: 'NL',
+      address_access_notes: 'Side entrance',
+      address_parking_notes: 'Free after 18:00',
+    });
+  });
+
+  it('maps customer + status + trade + priority', () => {
+    const out = jobUpdatesToRowPayload({
+      customerId: 'cust-1',
+      status: 'completed',
+      trade: 'plumbing',
+      priority: 'high',
+    });
+    expect(out).toEqual({
+      customer_id: 'cust-1',
+      status: 'completed',
+      trade: 'plumbing',
+      priority: 'high',
+    });
+  });
+
+  it('maps site contact + completedAt', () => {
+    const out = jobUpdatesToRowPayload({
+      siteContact: 'Mark',
+      sitePhone: '+31612345678',
+      completedAt: '2026-05-02T15:00:00Z',
+    });
+    expect(out).toEqual({
+      site_contact: 'Mark',
+      site_phone: '+31612345678',
+      completed_at: '2026-05-02T15:00:00Z',
+    });
+  });
+
+  it('maps roomsAreas array + specifications text', () => {
+    const out = jobUpdatesToRowPayload({
+      roomsAreas: ['Bathroom', 'Kitchen'],
+      specifications: 'Tile + grout',
+    });
+    expect(out).toEqual({
+      rooms_areas: ['Bathroom', 'Kitchen'],
+      specifications: 'Tile + grout',
+    });
+  });
+
+  it('drops FE-only / separate-table fields silently', () => {
+    const out = jobUpdatesToRowPayload({
+      timeEntries: [] as any,
+      materials: [] as any,
+      photos: [] as any,
+      notes: [] as any,
+      quoteId: 'q-1',
+      invoiceId: 'inv-1',
+      actualHours: 5,
+      actualCost: 200,
+    } as any);
+    expect(out).toEqual({});
+  });
+
+  it('drops `undefined` keys but preserves explicit `null`', () => {
+    const out = jobUpdatesToRowPayload({
+      customerId: null as any,
+      title: 'Updated',
+    });
+    expect(out).toEqual({
+      customer_id: null,
+      title: 'Updated',
+    });
+  });
+
+  it('empty input → empty payload', () => {
+    expect(jobUpdatesToRowPayload({})).toEqual({});
+  });
+
+  it('partial address only sets the present sub-keys', () => {
+    const out = jobUpdatesToRowPayload({
+      address: { street: 'New street' } as any,
+    });
+    expect(out).toEqual({
+      address_street: 'New street',
+    });
+  });
+});

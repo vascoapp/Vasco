@@ -89,11 +89,14 @@ const EMPTY_UPSELLS: UpsellItem[] = [];
 
 export default function JobDetailPage() {
   const { t } = useTranslation();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, action } = useLocalSearchParams<{ id: string; action?: string }>();
   const router = useRouter();
   const [notes, setNotes] = useState('');
   const timer = useClockIn();
   const clockedIn = timer.active && timer.jobId === id;
+  // R304: when reached via R286 executor's draft_invoice route with
+  // ?action=create-invoice, auto-trigger the invoice creation flow on mount.
+  const autoTriggeredInvoiceRef = useRef(false);
   const [photoCount, setPhotoCount] = useState(0);
   const [jobPhotos, setJobPhotos] = useState<PhotoItem[]>([]);
 
@@ -124,6 +127,22 @@ export default function JobDetailPage() {
 
   const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, businessProfile, updateJob } = useAppState();
   const [signatureModal, setSignatureModal] = useState<{ visible: boolean; onSigned?: () => void }>({ visible: false });
+
+  // R304: auto-trigger invoice creation when reached via R286 executor with
+  // ?action=create-invoice (draft_invoice queue items). One-shot guarded by
+  // ref so the effect doesn't loop on re-renders.
+  useEffect(() => {
+    if (action !== 'create-invoice' || !id || autoTriggeredInvoiceRef.current) return;
+    autoTriggeredInvoiceRef.current = true;
+    (async () => {
+      try {
+        await addInvoiceFromJob(id);
+        router.replace('/(contractor)/facturen' as any);
+      } catch {
+        // Silent fail — contractor can tap the manual button at line ~926
+      }
+    })();
+  }, [action, id, addInvoiceFromJob, router]);
   const { advance, recordHours } = useJobLifecyclePipeline();
   const costVariance = useJobCostVariance(id || '');
   // R206: cohort cost-variance baseline for the contractor's trade/country.

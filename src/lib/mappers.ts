@@ -80,6 +80,54 @@ export function customerRowToCustomer(row: CustomerRow): Customer {
 
 // ── Jobs ────────────────────────────────────────────────────
 
+// R304: REVERSE direction — Job updates → BE row payload.
+// Before this mapper, `updateJob` cast the camelCase Partial<Job> directly to
+// Record<string,unknown> and pushed it to Supabase, which silently dropped
+// all unknown columns. Schedule edits (scheduledDate / scheduledStartTime /
+// estimatedDuration / quotedAmount / etc.) never reached BE — local state
+// updated, sync failed silently. Same bug class as R301 fixed for signatures.
+//
+// Skips fields stored in separate tables (timeEntries, materials, photos,
+// notes, recurringPattern) and FE-only derived fields (quoteId, invoiceId).
+export function jobUpdatesToRowPayload(updates: Partial<Job>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if ('customerId' in updates)         out.customer_id = updates.customerId;
+  if ('title' in updates)              out.title = updates.title;
+  if ('description' in updates)        out.description = updates.description;
+  if ('status' in updates)             out.status = updates.status;
+  if ('siteContact' in updates)        out.site_contact = updates.siteContact;
+  if ('sitePhone' in updates)          out.site_phone = updates.sitePhone;
+  if ('scheduledDate' in updates)      out.scheduled_date = updates.scheduledDate;
+  if ('scheduledStartTime' in updates) out.scheduled_start_time = updates.scheduledStartTime;
+  if ('scheduledEndTime' in updates)   out.scheduled_end_time = updates.scheduledEndTime;
+  if ('estimatedDuration' in updates)  out.estimated_duration = updates.estimatedDuration;
+  if ('quotedAmount' in updates)       out.quoted_amount = updates.quotedAmount;
+  if ('agreedAmount' in updates)       out.agreed_amount = updates.agreedAmount;
+  if ('trade' in updates)              out.trade = updates.trade;
+  if ('priority' in updates)           out.priority = updates.priority;
+  if ('roomsAreas' in updates)         out.rooms_areas = updates.roomsAreas;
+  if ('specifications' in updates)     out.specifications = updates.specifications;
+  if ('completedAt' in updates)        out.completed_at = updates.completedAt;
+  if ('signatureSvg' in updates)       out.signature_svg = updates.signatureSvg;
+  if ('customerSignoffAt' in updates)  out.customer_signoff_at = updates.customerSignoffAt;
+  // Address is a nested object on Job; flatten to address_*
+  if ('address' in updates && updates.address) {
+    if ('street' in updates.address)       out.address_street = updates.address.street;
+    if ('city' in updates.address)         out.address_city = updates.address.city;
+    if ('postcode' in updates.address)     out.address_postcode = updates.address.postcode;
+    if ('country' in updates.address)      out.address_country = updates.address.country;
+    if ('accessNotes' in updates.address)  out.address_access_notes = updates.address.accessNotes;
+    if ('parkingNotes' in updates.address) out.address_parking_notes = updates.address.parkingNotes;
+  }
+  // FE-only / separate-table fields are intentionally dropped:
+  //   quoteId, invoiceId         — derived
+  //   actualHours, actualCost    — derived from time/material entries
+  //   timeEntries, materials,    — separate tables
+  //   photos, notes              — separate tables
+  //   recurringPattern           — separate table (R254)
+  return out;
+}
+
 export function jobRowToJob(row: JobRow): Job {
   const hasAddress = row.address_street || row.address_city;
   return {

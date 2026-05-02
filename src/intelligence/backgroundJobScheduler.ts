@@ -742,9 +742,12 @@ export function startBackgroundJobScheduler(
             if (t === 'draft_invoice') return 'draft_invoice';
             if (t === 'compliance_gap') return 'late_payment_risk_alert';
             if (t === 'pricing_insight') return 'low_win_alert';
-            // R302: appointment reminders + quote follow-ups from R302 generators
+            // R302+R304: shareable trigger types — all map to existing queue
+            // types whose executor branch opens Share with preparedData.template.
             if (t === 'progress_update') return 'progress_note';
             if (t === 'draft_followup') return 'draft_followup';
+            if (t === 'job_handover') return 'job_handover';
+            if (t === 'satisfaction_survey') return 'satisfaction_survey';
             return 'low_win_alert'; // safe informational fallback
           };
           for (const a of actions) {

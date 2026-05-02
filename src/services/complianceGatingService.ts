@@ -210,17 +210,12 @@ export function getComplianceStatus(
   if (!pack) return null;
 
   const limits = getTierLimits(state.tier);
-  const now = new Date();
 
-  // Generate some demo deadlines
-  const deadlines = pack.taxReporting.slice(0, 3).map((label, i) => {
-    const date = new Date(now.getTime() + (15 + i * 30) * 86400000);
-    return {
-      label,
-      date: date.toISOString().slice(0, 10),
-      daysUntil: Math.ceil((date.getTime() - now.getTime()) / 86400000),
-    };
-  });
+  // R304: was generating fake "now + 15/45/75 days" deadlines pretending to
+  // be real BTW/IB/Gewerbe filing dates. No real deadline calculator exists
+  // yet. Empty array is the honest answer until per-country deadline rules
+  // ship (R4 follow-up).
+  const deadlines: ComplianceStatus['upcomingDeadlines'] = [];
 
   return {
     country,
@@ -229,7 +224,15 @@ export function getComplianceStatus(
     autoSubmissionEnabled: limits.hasFullEInvoicing,
     certificationsTracked: pack.certificationTracking.length,
     upcomingDeadlines: deadlines,
-    complianceScore: limits.hasEInvoicing ? 92 : 45, // Better score with paid
+    // R304: was hardcoded 92 (paid) / 45 (free) — pure tier-marketing fiction.
+    // Score now derives from concrete signals only: tier-gated e-invoicing
+    // capability + count of recognised certs in the pack. Range stays 0-100
+    // but reflects real platform readiness rather than a sales narrative.
+    complianceScore: Math.min(100,
+      (limits.hasEInvoicing ? 40 : 0)
+      + (limits.hasFullEInvoicing ? 20 : 0)
+      + Math.min(40, pack.certificationTracking.length * 5),
+    ),
   };
 }
 
