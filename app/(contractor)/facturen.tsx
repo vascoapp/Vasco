@@ -110,6 +110,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
   const { t } = useTranslation();
   const { businessProfile, customers, jobs } = useAppState();
   const { user } = useAuth();
+  const router = useRouter();
   // R300: customer tag drives gateReminderSend behavior — VIP gets a softer
   // confirm, INACTIVE gets a "are you sure?" prompt, others fall through.
   const customerTagFor = useCallback((customerId: string | undefined): import('../../src/services/customerTaggingService').CustomerTag | undefined => {
@@ -124,6 +125,27 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
   // Respect contractor's enabled payment methods from business settings
   // When a customer has a payment preference (from decision tracker), prioritize that method
   const createPaymentLink = useCallback(async (request: { invoiceId: string; amount: number; description: string; customerPreferredMethod?: string }) => {
+    // R305: tier gate — Mollie/Stripe payment links are paid-tier only.
+    // Was completely ungated; free users could mint unlimited paid links.
+    try {
+      const { loadSubscription, canUseFeature } = await import('../../src/services/subscriptionService');
+      const sub = await loadSubscription();
+      const gate = canUseFeature(sub, 'hasPaymentProcessing');
+      if (!gate.allowed) {
+        Alert.alert(
+          t('compliance.upgradeRequired', 'Upgrade required'),
+          gate.reason ?? t('payments.upgradeRequiredDesc', 'Online payment links require a paid plan.'),
+          [
+            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+            { text: t('compliance.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+          ],
+        );
+        return null;
+      }
+    } catch {
+      // If subscription read fails, fall through to existing behavior — don't
+      // hard-fail the payment link path.
+    }
     const country = user?.country ?? 'NL';
     const enabledMethods = businessProfile?.enabledPaymentMethods;
     const preferredMethod = request.customerPreferredMethod;

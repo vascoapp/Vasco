@@ -88,6 +88,25 @@ export default function CustomerPhonebookScreen() {
       return;
     }
 
+    // R305: tier gate — canAddClient was 0 callers despite the maxClients
+    // limit existing in TierLimits. Free users could add unlimited customers.
+    try {
+      const { loadSubscription, canAddClient } = await import('../../src/services/subscriptionService');
+      const sub = await loadSubscription();
+      const gate = canAddClient(sub);
+      if (!gate.allowed) {
+        Alert.alert(
+          t('compliance.upgradeRequired', 'Upgrade required'),
+          gate.reason ?? t('contractor.customers.limitReached', 'You have reached your client limit on this plan.'),
+          [
+            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+            { text: t('compliance.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+          ],
+        );
+        return;
+      }
+    } catch {}
+
     const dupes = findDuplicates(
       { name: cleanName, email: cleanEmail || undefined, phone: cleanPhone || undefined },
       customers as any,

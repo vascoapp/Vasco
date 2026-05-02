@@ -372,8 +372,10 @@ Deno.serve(async (req) => {
     // Determine payment method type from the PaymentIntent
     const paymentMethodType = paymentIntent.payment_method_types?.[0] || null;
 
+    // R305: same fix as mollie-webhook — was writing to non-existent
+    // `invoices` table; switched to `documents` filtered on doc_type='invoice'.
     const { error: updateError } = await supabase
-      .from('invoices')
+      .from('documents')
       .update({
         status: 'paid',
         paid_at: paidAt,
@@ -382,7 +384,8 @@ Deno.serve(async (req) => {
         payment_provider: 'stripe',
         updated_at: new Date().toISOString(),
       })
-      .eq('id', invoiceId);
+      .eq('id', invoiceId)
+      .eq('doc_type', 'invoice');
 
     if (updateError) {
       console.error('Failed to update invoice:', updateError.message);

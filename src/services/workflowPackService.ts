@@ -439,7 +439,75 @@ function matchTrigger(
       }
       break;
     }
-    // daily_17:00 and decision_pending handled by background scheduler
+    // R306: 3 more trigger types added to close R6 dormancy gap. Six packs
+    // had 0 firing triggers because their trigger types fell through this
+    // switch silently (welcome / permits / decisions / etc.).
+    case 'quote_accepted': {
+      const targetAge = step.delayDays * dayMs;
+      for (const q of ctx.quotes) {
+        if (!q || q.status !== 'accepted') continue;
+        const at = new Date((q as any).acceptedAt || q.lastUpdated || '').getTime();
+        if (!at || isNaN(at)) continue;
+        const age = now - at;
+        if (age >= targetAge && age < targetAge + windowMs) {
+          const cust = (ctx.customers ?? []).find((c: any) => c.id === q.customerId);
+          results.push({
+            label: cust?.name || q.customer || q.id || '',
+            customerId: q.customerId,
+            entityId: q.id,
+            customer: cust?.name || q.customer || '',
+            amount: q.amount || 0,
+            job: q.job || q.description || '',
+          });
+        }
+      }
+      break;
+    }
+    case 'job_started': {
+      const targetAge = step.delayDays * dayMs;
+      for (const job of ctx.jobs) {
+        if (!job || (job.status !== 'in-progress' && job.status !== 'bezig')) continue;
+        const startedAt = new Date(job.lastUpdated || '').getTime();
+        if (!startedAt || isNaN(startedAt)) continue;
+        const age = now - startedAt;
+        if (age >= targetAge && age < targetAge + windowMs) {
+          const cust = (ctx.customers ?? []).find((c: any) => c.id === job.customerId);
+          results.push({
+            label: cust?.name || job.title || '',
+            customerId: job.customerId ?? undefined,
+            entityId: job.id,
+            customer: cust?.name || '',
+            job: job.title || '',
+          });
+        }
+      }
+      break;
+    }
+    case 'job_created': {
+      // Permit-check pack — fires on newly-created jobs (created within 2d window).
+      const targetAge = step.delayDays * dayMs;
+      for (const job of ctx.jobs) {
+        if (!job) continue;
+        const createdAt = new Date((job as any).createdAt || job.lastUpdated || '').getTime();
+        if (!createdAt || isNaN(createdAt)) continue;
+        const age = now - createdAt;
+        if (age >= targetAge && age < targetAge + windowMs) {
+          const cust = (ctx.customers ?? []).find((c: any) => c.id === job.customerId);
+          results.push({
+            label: cust?.name || job.title || '',
+            customerId: job.customerId ?? undefined,
+            entityId: job.id,
+            customer: cust?.name || '',
+            job: job.title || '',
+          });
+        }
+      }
+      break;
+    }
+    // Triggers handled outside this matcher:
+    //  - daily_17:00 / decision_pending : background scheduler
+    //  - stock_low / price_drop / bulk_opportunity : purchasingAgent (R201/R202/R204)
+    //  - job_clockout : timesheet entry — too time-sensitive for daily window
   }
   return results;
 }

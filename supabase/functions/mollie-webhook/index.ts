@@ -142,8 +142,11 @@ Deno.serve(async (req) => {
 
       const paidAt = payment.paidAt || new Date().toISOString();
 
+      // R305: was writing to non-existent `invoices` table — every payment
+      // silently failed to mark the doc paid. Now writes to `documents`
+      // filtered on doc_type='invoice' (the actual schema since v1.0).
       const { error: updateError } = await supabase
-        .from('invoices')
+        .from('documents')
         .update({
           status: 'paid',
           paid_at: paidAt,
@@ -152,7 +155,8 @@ Deno.serve(async (req) => {
           payment_provider: 'mollie',
           updated_at: new Date().toISOString(),
         })
-        .eq('id', invoiceId);
+        .eq('id', invoiceId)
+        .eq('doc_type', 'invoice');
 
       if (updateError) {
         console.error('Failed to update invoice:', updateError.message);
