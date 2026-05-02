@@ -22,6 +22,7 @@ import { DK } from '../../src/theme/draftkings';
 import { useAppState } from '../../src/state/AppState';
 import { useDaySchedule, type ScheduledJob } from '../../src/services/smartSchedulerService';
 import { useAIQueue, type QueueItem } from '../../src/services/aiActionQueueService';
+import { executeApprovedQueueItem } from '../../src/services/queueItemExecutor';
 import { evaluateTriggers } from '../../src/services/workflowPackService';
 import { useSavingsAggregation } from '../../src/services/savingsAggregatorService';
 import { useClockIn } from '../../src/services/clockInService';
@@ -32,6 +33,7 @@ import { ActivationChecklist } from '../../src/components/contractor/ActivationC
 import { ProjectSwitcher } from '../../src/components/contractor/ProjectSwitcher';
 import { UpcomingRecurringWidget } from '../../src/components/contractor/UpcomingRecurringWidget';
 import { OptimizationStatsWidget } from '../../src/components/contractor/OptimizationStatsWidget';
+import { CapacityOverrunCard } from '../../src/components/contractor/CapacityOverrunCard';
 
 export default function VandaagDK() {
   const { t, i18n } = useTranslation();
@@ -67,9 +69,18 @@ export default function VandaagDK() {
   const inlineQueue = pendingQueue.slice(1, 4);
 
   const handleApprove = useCallback(async (id: string) => {
-    try { await aiQueue.approve(id); hapticSuccess(); }
-    catch (e) { hapticWarning(); Alert.alert(t('dk.empty.noExtraActions', 'Action failed'), String((e as Error).message ?? e)); }
-  }, [aiQueue]);
+    try {
+      const item = await aiQueue.approve(id);
+      hapticSuccess();
+      // R286: actually execute the action. InlineQueueRow doesn't render
+      // VascoCard's Share-sheet path, so shareable items wouldn't have
+      // dispatched yet — alreadyShared:false lets the executor fire Share.
+      if (item) await executeApprovedQueueItem(item, { router }, { alreadyShared: false });
+    } catch (e) {
+      hapticWarning();
+      Alert.alert(t('dk.empty.noExtraActions', 'Action failed'), String((e as Error).message ?? e));
+    }
+  }, [aiQueue, router, t]);
 
   const handleReject = useCallback(async (id: string) => {
     try { await aiQueue.reject(id); } catch {}
@@ -117,6 +128,9 @@ export default function VandaagDK() {
           <KpiTile label={t('dk.pill.appointments', 'Appointments').toUpperCase()} value={String(todayJobs.length)} tone={DK.colors.text} onPress={() => router.push('/contractor/drag-schedule' as any)} />
           <KpiTile label={t('dk.pill.quotes', 'Quotes').toUpperCase()} value={String(activeQuotes)} tone={DK.colors.highlight} onPress={() => router.push('/contractor/quote-list' as any)} />
         </View>
+
+        {/* R298: ML capacity-overrun prediction — hidden when probability low */}
+        <CapacityOverrunCard />
 
         {/* R248: Project switcher — only renders for aannemer with active projects */}
         <ProjectSwitcher />

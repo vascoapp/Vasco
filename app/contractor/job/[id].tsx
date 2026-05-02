@@ -800,17 +800,34 @@ export default function JobDetailPage() {
               accessibilityRole="button"
               accessibilityLabel={t('jobs.onMyWay', 'Send on-my-way to customer')}
               onPress={async () => {
-                try {
-                  const { renderTemplate } = await import('../../../src/services/whatsappTemplateService');
-                  const locale = ((businessProfile as any)?.language ?? 'en') as any;
-                  const text = renderTemplate('on_my_way', locale, {
-                    customer: contact.name || '',
-                    eta: '15 min',
-                    business: (businessProfile as any)?.businessName ?? 'Vasco',
-                  });
-                  await Share.share({ message: text, title: t('jobs.onMyWay', 'On my way') });
-                  hapticSuccess();
-                } catch {}
+                // R295: was hardcoded "15 min" ETA, sent to customer regardless
+                // of distance. No real GPS available (expo-location not
+                // installed). Prompt contractor for a realistic ETA window
+                // instead of lying.
+                const sendWithEta = async (etaLabel: string) => {
+                  try {
+                    const { renderTemplate } = await import('../../../src/services/whatsappTemplateService');
+                    const locale = ((businessProfile as any)?.language ?? 'en') as any;
+                    const text = renderTemplate('on_my_way', locale, {
+                      customer: contact.name || '',
+                      eta: etaLabel,
+                      business: (businessProfile as any)?.businessName ?? 'Vasco',
+                    });
+                    await Share.share({ message: text, title: t('jobs.onMyWay', 'On my way') });
+                    hapticSuccess();
+                  } catch {}
+                };
+                Alert.alert(
+                  t('jobs.onMyWay', 'On my way'),
+                  t('jobs.etaPrompt', 'When will you arrive?'),
+                  [
+                    { text: t('jobs.eta10', '10 min'), onPress: () => sendWithEta('10 min') },
+                    { text: t('jobs.eta20', '20 min'), onPress: () => sendWithEta('20 min') },
+                    { text: t('jobs.eta30', '30 min'), onPress: () => sendWithEta('30 min') },
+                    { text: t('jobs.eta45', '45 min'), onPress: () => sendWithEta('45 min') },
+                    { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+                  ],
+                );
               }}
             >
               <Ionicons name="navigate" size={18} color={Palette.hermesOrange} />

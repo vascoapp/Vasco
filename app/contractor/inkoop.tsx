@@ -21,6 +21,12 @@ import { ReceiptScanner } from '../../src/components/contractor/ReceiptScanner';
 import { feedPricingMoat, type ScannedInvoice } from '../../src/services/invoiceScanService';
 import { parseDateanormV4, parseDateanormV5, importDatanormToMoat } from '../../src/integrations/datanorm';
 import { getCurrentTrade, getCurrentCountry } from '../../src/lib/currentUser';
+import { MaterialDriftCard } from '../../src/components/contractor/MaterialDriftCard';
+import { PriceDropAlertCard } from '../../src/components/contractor/PriceDropAlertCard';
+import { SeasonalityBanner } from '../../src/components/contractor/SeasonalityBanner';
+import { MaterialPriceForecastCard } from '../../src/components/contractor/MaterialPriceForecastCard';
+import { SupplierLeadtimePredictionCard } from '../../src/components/contractor/SupplierLeadtimePredictionCard';
+import { useAppState } from '../../src/state/AppState';
 
 export default function InkoopScreen() {
   const router = useRouter();
@@ -29,6 +35,9 @@ export default function InkoopScreen() {
   const timeline = useSavingsTimeline();
   const { inventory, lowStockCount } = useInventory();
   const { suggestions, criticalCount, markOrdered, statistics } = useReorderSuggestions();
+  const { businessProfile } = useAppState();
+  const trade = businessProfile?.trade ?? 'general';
+  const country = businessProfile?.country ?? 'NL';
   const [showReceiptScanner, setShowReceiptScanner] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
@@ -130,6 +139,9 @@ export default function InkoopScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Seasonality nudge — peak-season material warning, hidden when no signal */}
+        <SeasonalityBanner trade={trade} country={country} />
+
         {/* ============================================ */}
         {/* 0. QUICK ACTIONS                            */}
         {/* ============================================ */}
@@ -210,6 +222,12 @@ export default function InkoopScreen() {
           </View>
         </View>
 
+        {/* Cohort intelligence — surfaces drift + price drops + ML forecasts, hidden when no signal */}
+        <MaterialDriftCard trade={trade} country={country} />
+        <MaterialPriceForecastCard trade={trade} country={country} />
+        <SupplierLeadtimePredictionCard />
+        <PriceDropAlertCard trade={trade} country={country} />
+
         {/* ============================================ */}
         {/* 2. LEVERANCIERS & VOORRAAD                  */}
         {/* ============================================ */}
@@ -288,6 +306,16 @@ export default function InkoopScreen() {
                 </View>
               );
             })
+          ) : inventory.length === 0 ? (
+            <View style={styles.emptyCard}>
+              <Ionicons name="cube-outline" size={28} color={SemanticColors.textTertiary} />
+              <Text style={styles.emptyText}>
+                {t('inkoop.noStockTracked', 'No stock tracked yet')}
+              </Text>
+              <Text style={[styles.emptyText, { fontSize: 12, marginTop: 4 }]}>
+                {t('inkoop.noStockTrackedSub', 'Scan a receipt or import DATANORM to start.')}
+              </Text>
+            </View>
           ) : (
             <View style={styles.emptyCard}>
               <Ionicons name="checkmark-circle" size={28} color={SemanticColors.feedbackSuccess} />
@@ -313,44 +341,55 @@ export default function InkoopScreen() {
         {/* ============================================ */}
         {/* 4. BESPARINGEN                              */}
         {/* ============================================ */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('inkoop.savings', 'Savings')}</Text>
+        {/* R285: breakdown widths now come from real category amounts.
+            Categories with amount=0 are filtered out instead of being faked.
+            YTD label dropped — month*5.5 projection was misleading. */}
+        {(() => {
+          const palette = [Palette.hermesOrange, Palette.hermesOrange + 'CC', Palette.pastelOrange, '#888'];
+          const realBreakdown = savings.breakdown
+            .filter(c => c.amount > 0)
+            .map((c, idx) => ({ ...c, color: palette[idx % palette.length] }));
+          const totalAmount = realBreakdown.reduce((s, c) => s + c.amount, 0);
+          if (realBreakdown.length === 0) return null;
+          return (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{t('inkoop.savings', 'Savings')}</Text>
 
-          {/* Savings breakdown */}
-          <View style={styles.card}>
-            <View style={styles.breakdownBar}>
-              <View style={{ flex: 45, backgroundColor: Palette.hermesOrange }} />
-              <View style={{ flex: 25, backgroundColor: Palette.hermesOrange + 'CC' }} />
-              <View style={{ flex: 20, backgroundColor: Palette.pastelOrange }} />
-              <View style={{ flex: 10, backgroundColor: '#DDD' }} />
-            </View>
-            {([
-              { label: t('inkoop.breakdown.materials', 'Materials'), amount: '€1.840', pct: '45%', color: Palette.hermesOrange },
-              { label: t('inkoop.breakdown.suppliers', 'Suppliers'), amount: '€1.020', pct: '25%', color: Palette.hermesOrange + 'CC' },
-              { label: t('inkoop.breakdown.efficiency', 'Efficiency'), amount: '€820', pct: '20%', color: Palette.pastelOrange },
-              { label: t('inkoop.breakdown.other', 'Other'), amount: '€410', pct: '10%', color: '#CCC' },
-            ] as const).map(r => (
-              <View key={r.label} style={styles.legendRow}>
-                <View style={[styles.legendDot, { backgroundColor: r.color }]} />
-                <Text style={styles.legendLabel}>{r.label}</Text>
-                <Text style={styles.legendAmount}>{r.amount}</Text>
-                <Text style={styles.legendPct}>{r.pct}</Text>
+              {/* Savings breakdown — widths recomputed from real amounts */}
+              <View style={styles.card}>
+                <View style={styles.breakdownBar}>
+                  {realBreakdown.map(c => (
+                    <View
+                      key={c.id}
+                      style={{ flex: c.amount, backgroundColor: c.color }}
+                    />
+                  ))}
+                </View>
+                {realBreakdown.map(c => {
+                  const pct = totalAmount > 0 ? Math.round((c.amount / totalAmount) * 100) : 0;
+                  return (
+                    <View key={c.id} style={styles.legendRow}>
+                      <View style={[styles.legendDot, { backgroundColor: c.color }]} />
+                      <Text style={styles.legendLabel}>{c.label}</Text>
+                      <Text style={styles.legendAmount}>€{c.amount.toLocaleString(undefined)}</Text>
+                      <Text style={styles.legendPct}>{pct}%</Text>
+                    </View>
+                  );
+                })}
               </View>
-            ))}
-          </View>
 
-          {/* Savings timeline */}
-          <View style={styles.card}>
-            <View style={styles.timelineTop}>
-              <View>
-                <Text style={styles.timelineLabel}>{t('inkoop.savedThisYear', 'Saved this year')}</Text>
-                <Text style={styles.timelineAmount}>€{savings.totalSavedThisYear.toLocaleString(undefined)}</Text>
-              </View>
-              <View style={styles.trendPill}>
-                <Ionicons name="arrow-up" size={12} color={SemanticColors.feedbackSuccess} />
-                <Text style={styles.trendText}>+{savings.trendPercent}%</Text>
-              </View>
-            </View>
+              {/* Savings timeline — labelled "this month" since the source is monthly */}
+              <View style={styles.card}>
+                <View style={styles.timelineTop}>
+                  <View>
+                    <Text style={styles.timelineLabel}>{t('inkoop.savedThisMonth', 'Saved this month')}</Text>
+                    <Text style={styles.timelineAmount}>€{savings.totalSavedThisMonth.toLocaleString(undefined)}</Text>
+                  </View>
+                  <View style={styles.trendPill}>
+                    <Ionicons name="arrow-up" size={12} color={SemanticColors.feedbackSuccess} />
+                    <Text style={styles.trendText}>+{savings.trendPercent}%</Text>
+                  </View>
+                </View>
             <View style={styles.chartRow}>
               {timeline.map((m, idx) => {
                 const maxVal = Math.max(...timeline.map(t => t.amount));
@@ -370,9 +409,11 @@ export default function InkoopScreen() {
                   </View>
                 );
               })}
+                </View>
+              </View>
             </View>
-          </View>
-        </View>
+          );
+        })()}
 
         <View style={{ height: 100 }} />
       </ScrollView>

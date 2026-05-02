@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { useRouter } from 'expo-router';
+import { useRef, useMemo } from 'react';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { TieredQuoteBuilder } from '../../src/components/contractor';
@@ -8,12 +8,22 @@ import { hapticSuccess } from '../../src/utils/haptics';
 
 export default function TieredQuoteScreen() {
   const router = useRouter();
-  const { addQuote } = useAppState();
+  const { addQuote, customers } = useAppState();
   const { t } = useTranslation();
   const sendingRef = useRef(false);
 
+  // R300: prefill customer when reached via R286 executor's draft_quote route
+  // (e.g. EVE analyst, customer-question handoff). Looks up by customerId
+  // param so the builder opens scoped to the right customer.
+  const params = useLocalSearchParams<{ customerId?: string; jobId?: string }>();
+  const prefillCustomer = useMemo(() => {
+    if (!params.customerId) return undefined;
+    return customers.find((c: any) => c.id === params.customerId) as any;
+  }, [params.customerId, customers]);
+
   return (
     <TieredQuoteBuilder
+      customer={prefillCustomer}
       onSend={async (quote) => {
         if (sendingRef.current) return;
         sendingRef.current = true;

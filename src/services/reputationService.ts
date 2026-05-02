@@ -5,7 +5,9 @@
 // Feeds into contractor matching and recommendation algorithms
 // =============================================================================
 
+import { Linking, Share } from 'react-native';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { renderTemplate, hasConsent, type Locale } from './whatsappTemplateService';
 
 // ============================================
 // TYPES
@@ -200,20 +202,80 @@ class ReputationService {
     }
   }
 
-  requestReview(projectId: string, customerEmail: string): ReviewRequest {
+  /**
+   * Request a customer review. R288: was a stub that built an in-memory
+   * object and emitted a tracking event — nothing reached the customer.
+   * Now actually delivers via WhatsApp (with consent), email (mailto), or
+   * Share sheet, in that priority order.
+   */
+  async requestReview(opts: {
+    projectId: string;
+    customerId?: string;
+    customerName?: string;
+    customerEmail?: string;
+    customerPhone?: string;
+    businessName?: string;
+    locale?: Locale;
+    reviewLink: string;
+  }): Promise<ReviewRequest & { delivered: boolean; channel: 'whatsapp' | 'email' | 'share' | 'none' }> {
+    const customerName = opts.customerName ?? 'Klant';
+    const businessName = opts.businessName ?? 'Vasco';
+    const locale = (opts.locale ?? 'nl') as Locale;
+    const text = renderTemplate('review_request', locale, {
+      customer: customerName,
+      link: opts.reviewLink,
+      business: businessName,
+    });
+
+    let channel: 'whatsapp' | 'email' | 'share' | 'none' = 'none';
+    let delivered = false;
+
+    // 1. WhatsApp first — only when consent recorded + phone present.
+    if (opts.customerPhone && opts.customerId && (await hasConsent(opts.customerId))) {
+      const phone = opts.customerPhone.replace(/[^\d]/g, '');
+      if (phone.length >= 8) {
+        const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+        try {
+          await Linking.openURL(url);
+          channel = 'whatsapp';
+          delivered = true;
+        } catch {}
+      }
+    }
+
+    // 2. Email fallback — mailto: link via Linking.
+    if (!delivered && opts.customerEmail) {
+      const subject = encodeURIComponent(`${businessName} — review`);
+      const body = encodeURIComponent(text);
+      try {
+        await Linking.openURL(`mailto:${opts.customerEmail}?subject=${subject}&body=${body}`);
+        channel = 'email';
+        delivered = true;
+      } catch {}
+    }
+
+    // 3. Share sheet last resort — contractor picks the channel.
+    if (!delivered) {
+      try {
+        await Share.share({ message: text, title: `${businessName} — review` });
+        channel = 'share';
+        delivered = true;
+      } catch {}
+    }
+
     const request: ReviewRequest = {
       id: `req_${Date.now()}`,
-      projectId,
-      customerName: 'Klant',
-      customerEmail,
+      projectId: opts.projectId,
+      customerName,
+      customerEmail: opts.customerEmail ?? '',
       projectType: 'Project',
       completedAt: new Date().toISOString(),
       requestedAt: new Date().toISOString(),
-      status: 'pending',
+      status: delivered ? 'pending' : 'pending', // pending until customer responds either way
       reminderCount: 0,
     };
-    trackUserAction('review_requested', { projectId });
-    return request;
+    trackUserAction('review_requested', { projectId: opts.projectId, channel, delivered });
+    return { ...request, delivered, channel };
   }
 
   // Reputation Score
@@ -274,6 +336,11 @@ export const reputationService = new ReputationService();
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
+/**
+ * @deprecated R300: zero UI consumers. Exported in `src/services/index.ts`
+ * but no screen imports it. Keep for the day a reputation dashboard ships;
+ * delete when sure that's not happening.
+ */
 export function useReviews(filter?: { rating?: number; projectType?: string }) {
   const [reviews, setReviews] = useState<Review[]>(() => reputationService.getReviews(filter));
 
@@ -293,6 +360,11 @@ export function useReviews(filter?: { rating?: number; projectType?: string }) {
   return { reviews, respondToReview, stats, requestReview: reputationService.requestReview };
 }
 
+/**
+ * @deprecated R300: zero UI consumers. Same caveat as `useReviews` — kept
+ * for a future reputation dashboard. The `requestReview` call from
+ * R288 is on `reputationService` directly, not via this hook.
+ */
 export function useReputation() {
   const score = useMemo(() => reputationService.getReputationScore(), []);
   const certifications = useMemo(() => reputationService.getCertifications(), []);

@@ -495,19 +495,33 @@ type ComplianceListener = () => void;
 class ComplianceService {
   private static instance: ComplianceService;
   private listeners: Set<ComplianceListener> = new Set();
-  private licenses: License[] = [...mockLicenses];
-  private certifications: Certification[] = [...mockCertifications];
+  // R289: was seeded with [...mockLicenses / Certifications / Insurance / Alerts]
+  // which meant complianceAgentService.scan() generated cert_renewal AI queue
+  // items for a 2024-expired KvK and a VCA cert the contractor never owned.
+  // Now starts empty in production; tests opt in via __seedMockData().
+  private licenses: License[] = [];
+  private certifications: Certification[] = [];
   private safetyChecklists: SafetyChecklist[] = [...mockSafetyChecklists];
   private checklistCompletions: SafetyChecklistCompletion[] = [];
-  private regulatoryUpdates: RegulatoryUpdate[] = [...mockRegulatoryUpdates];
-  private insurancePolicies: InsurancePolicy[] = [...mockInsurancePolicies];
-  private alerts: ComplianceAlert[] = [...mockAlerts];
+  private regulatoryUpdates: RegulatoryUpdate[] = [];
+  private insurancePolicies: InsurancePolicy[] = [];
+  private alerts: ComplianceAlert[] = [];
 
   static getInstance(): ComplianceService {
     if (!ComplianceService.instance) {
       ComplianceService.instance = new ComplianceService();
     }
     return ComplianceService.instance;
+  }
+
+  /** Test-only seed for the mock fixtures. Production must NEVER call this. */
+  __seedMockData(): void {
+    this.licenses = [...mockLicenses];
+    this.certifications = [...mockCertifications];
+    this.regulatoryUpdates = [...mockRegulatoryUpdates];
+    this.insurancePolicies = [...mockInsurancePolicies];
+    this.alerts = [...mockAlerts];
+    this.notify();
   }
 
   subscribe(listener: ComplianceListener): () => void {

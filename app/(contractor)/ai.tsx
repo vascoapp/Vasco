@@ -20,6 +20,7 @@ import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { useAuth } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
 import { useAIQueue } from '../../src/services/aiActionQueueService';
+import { executeApprovedQueueItem } from '../../src/services/queueItemExecutor';
 import { useVascoGuidance } from '../../src/services/vascoGuidanceService';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { useAutomations, type AutomationContext } from '../../src/services/automationService';
@@ -165,7 +166,9 @@ export default function VascoScreen() {
     } else if (action.actionType === 'navigate' && action.route) {
       router.push(action.route as any);
     } else if (action.actionType === 'approve') {
-      aiQueue.approve(action.id);
+      // R286: close the loop — actually execute the action after approval.
+      const item = await aiQueue.approve(action.id);
+      if (item) await executeApprovedQueueItem(item, { router }, { alreadyShared: false });
     }
     setActioned(prev => new Set(prev).add(action.id));
     setEditingId(null);

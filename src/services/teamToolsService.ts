@@ -1,8 +1,35 @@
 // =============================================================================
-// TEAM TOOLS SERVICE — Contractor & Team features
+// TEAM TOOLS SERVICE — DEPRECATED (R299)
 // =============================================================================
-// Worker scorecards, van stock/inventory, change orders, punch lists,
-// and membership enrollment. Available only for contractor and team roles.
+// Status: ORPHAN — all 14 exports below have zero call sites as of R299's
+// audit. The five claimed features are pure aspiration:
+//
+//   1. Worker scorecards     — `generateDemoScorecards` returns demo data,
+//                              `compareScorecards` exists, no screen consumes
+//   2. Van stock / inventory — `loadVanStock` / `saveVanStock` /
+//                              `useFromStock` / `getLowStockItems` —
+//                              0 callers (collides with reorderService's
+//                              own getLowStockItems which IS used)
+//   3. Change orders         — `createChangeOrder` / `loadChangeOrders` /
+//                              `saveChangeOrder` — 0 callers
+//   4. Punch lists           — `createPunchList` / `addPunchItem` /
+//                              `loadPunchList` / `savePunchList` /
+//                              `getPunchListProgress` — 0 callers
+//   5. Membership enrollment — `MembershipPlan` / `MembershipEnrollment`
+//                              types, no functions, 0 callers
+//
+// VascoApp is solo-contractor focused. Per LAUNCH.md §6: "Worker app
+// expansion beyond schedule + timesheet (only if multi-employee contractors
+// land)" — this entire service is enterprise-only and not on the path to
+// launch. Removing it tomorrow would break nothing.
+//
+// DO NOT EXTEND THIS FILE. If multi-employee contractors become a real
+// segment:
+//   1. Build the screens first; the service is already complete
+//   2. Add BE persistence — today everything writes to AsyncStorage only
+//   3. Add per-worker RLS so workers see their own scorecards but not peers'
+//   4. Wire `getLowStockItems(VanStock)` carefully to avoid name collision
+//      with `reorderService.getLowStockItems(): MaterialInventory[]`
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';

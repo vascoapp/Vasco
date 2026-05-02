@@ -13,6 +13,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getMaterialBaselinesForCountry, getAllMaterialBaselines } from '../services/cohortBenchmarkService';
 import { getScanHistory } from '../services/invoiceScanService';
+import { loadConfiguredClient } from './supplierLiveApi';
 
 const STORAGE_KEY = '@vasco_suppliers';
 
@@ -548,6 +549,18 @@ export function getSuppliersForTrade(trade: string, country?: string): SupplierI
 // ---------------------------------------------------------------------------
 
 export async function comparePrices(query: string, country?: string): Promise<PriceCheck | null> {
+  // R285: live supplier API takes precedence when configured. Returns null
+  // means "this provider can't help" — fall through to baselines.
+  const live = loadConfiguredClient();
+  if (live) {
+    try {
+      const result = await live.comparePrices(query, country);
+      if (result) return result;
+    } catch {
+      // Drop to baseline path on adapter failure — never block the UI.
+    }
+  }
+
   const q = query.toLowerCase().trim();
   const countries: Array<'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK'> = ['NL', 'DE', 'FR', 'ES', 'IT', 'UK'];
   const targetCountries = country ? [country as 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK'] : countries;
@@ -635,6 +648,17 @@ export async function searchCatalog(
   trade?: string,
   country?: string,
 ): Promise<CatalogItem[]> {
+  // R285: live supplier API takes precedence when configured.
+  const live = loadConfiguredClient();
+  if (live) {
+    try {
+      const result = await live.searchCatalog(query, trade, country);
+      if (result && result.length > 0) return result;
+    } catch {
+      // Drop to baseline path on adapter failure.
+    }
+  }
+
   const q = query.toLowerCase().trim();
   if (!q) return [];
 

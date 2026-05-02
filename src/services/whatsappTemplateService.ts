@@ -117,6 +117,14 @@ export interface SendArgs {
   vars: Record<string, string>;
 }
 
+/**
+ * @deprecated R300: zero call sites. Every caller of this module uses
+ * `renderTemplate` and hands the text to `Share.share` (RN system sheet)
+ * instead of going direct to WhatsApp. The consent-checked path remains
+ * exported for the day a contractor wants WhatsApp-only delivery, but
+ * `Share.share` covers the 95% case (contractor picks WhatsApp/iMessage/
+ * email from the share menu themselves).
+ */
 export async function sendWhatsapp(args: SendArgs): Promise<{ ok: boolean; error?: string }> {
   const consented = await hasConsent(args.customerId);
   if (!consented) return { ok: false, error: 'Customer has not consented to WhatsApp messages' };

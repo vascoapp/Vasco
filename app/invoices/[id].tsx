@@ -715,19 +715,26 @@ export default function InvoiceDetailScreen() {
             onPress={() => moneybirdConnected ? handleExportMoneybird() : router.push('/(modals)/moneybird' as any)}
             border
           />
-          {(country === 'DE' || country === 'FR') && (
+          {/* R289: FR Factur-X button removed until proper FacturXInvoice
+              mapping lands. Previously labelled "Factur-X" but called
+              generateZUGFeRDXML — produced legally wrong German XML for
+              French B2G/B2B. ES/IT formats also gap (Facturae, FatturaPA
+              generators exist but no UI mapper). See DORMANT_AUDIT.md R4. */}
+          {country === 'DE' && (
             <ActionRow
               icon="code-slash-outline"
-              label={country === 'DE'
-                ? t('invoices.exportXRechnung', 'Export XRechnung (XML)')
-                : t('invoices.exportFacturX', 'Export Factur-X (XML)')}
-              onPress={() => handleExportEInvoice(country === 'DE' ? 'XRechnung' : 'ZUGFeRD')}
+              label={t('invoices.exportXRechnung', 'Export XRechnung (XML)')}
+              onPress={() => handleExportEInvoice('XRechnung')}
               border
             />
           )}
+          {/* R300: was mislabeled "Send reminder" but onPress fires
+              handleMarkSent (marks the invoice as sent, no reminder).
+              Real reminder send lives on the facturen list per-row button
+              with R287's gateReminderSend gate. */}
           <ActionRow
             icon="send-outline"
-            label={t('invoices.sendReminder', 'Send reminder')}
+            label={t('invoices.markAsSent', 'Mark as sent')}
             onPress={handleMarkSent}
             border
           />

@@ -719,18 +719,34 @@ export function startBackgroundJobScheduler(
           // the generator-emitted items.
           const { buildLiveActions } = await import('../services/eveLiveActionService');
           const { addToQueue } = await import('../services/aiActionQueueService');
+          type QueueItemType = import('../services/aiActionQueueService').QueueItemType;
           const actions = buildLiveActions({
             jobs: context.jobs ?? [],
             quotes: context.quotes ?? [],
             invoices: context.invoices ?? [],
             customers: context.customers ?? [],
           });
+          // R294: type mapping fixes:
+          //   - compliance_gap (auditor on overdue invoice) was mapped to
+          //     draft_reminder which is SHAREABLE — Approve would open Share
+          //     sheet with contractor-internal text ("€450 outstanding —
+          //     final notice recommended") and send it to the customer.
+          //     Now maps to late_payment_risk_alert which deep-links to
+          //     /invoices/{id} via R286 executor — contractor uses the real
+          //     reminder flow with gateReminderSend (R287).
+          //   - pricing_insight (analyst on low win rate) was 'general' —
+          //     not a valid QueueItemType, fell through executor default
+          //     to no-op. Now low_win_alert (informational, also no-op when
+          //     no quoteId, but at least classifies correctly).
+          const mapType = (t: string): QueueItemType => {
+            if (t === 'draft_invoice') return 'draft_invoice';
+            if (t === 'compliance_gap') return 'late_payment_risk_alert';
+            if (t === 'pricing_insight') return 'low_win_alert';
+            return 'low_win_alert'; // safe informational fallback
+          };
           for (const a of actions) {
-            const mappedType: any = a.type === 'draft_invoice' ? 'draft_invoice'
-              : a.type === 'compliance_gap' ? 'draft_reminder'
-              : 'general';
             await addToQueue({
-              type: mappedType,
+              type: mapType(a.type),
               title: a.title,
               description: a.description,
               preparedData: a.preparedData,

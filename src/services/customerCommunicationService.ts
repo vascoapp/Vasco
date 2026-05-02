@@ -1,18 +1,23 @@
 // =============================================================================
-// CUSTOMER COMMUNICATION ENGINE — WhatsApp Business API + Email + SMS
+// CUSTOMER COMMUNICATION ENGINE — DEPRECATED (R288)
 // =============================================================================
-// Automated, event-triggered customer messaging across the job lifecycle.
-// Channels: WhatsApp Business API (primary EU), Email (fallback), SMS (optional).
+// Status: ORPHAN — every export below has zero call sites outside this file
+// as of R288's audit. The file describes "automated event-triggered messaging"
+// but no scheduler / no event-emit pipeline ever invokes it. Two services
+// duplicate parts of this surface and ARE used downstream:
+//   - `whatsappTemplateService.ts` — canonical (consent + multi-locale templates,
+//     used in app/contractor/job/[id].tsx for "on my way")
+//   - `whatsappService.ts` — thin wrapper, used in VascoCard (enterprise only)
 //
-// Triggers:
-// 1. "On my way" — sends ETA with live map link
-// 2. Appointment reminder — 24h + 2h before scheduled job
-// 3. Job started — "Your contractor has arrived"
-// 4. Job complete — summary + satisfaction prompt
-// 5. Invoice sent — with payment link
-// 6. Quote sent — with approval link
-// 7. Review request — routes happy→Google, unhappy→private feedback
-// 8. Payment received — thank you + receipt
+// DO NOT EXTEND THIS FILE. New customer-comm features should:
+//   1. Add the template to `whatsappTemplateService.ts` if it's new copy.
+//   2. Wire the event emitter (job-completed, invoice-paid, etc.) directly
+//      to a renderTemplate + Share.share or Linking.openURL call.
+//   3. Use `gateReminderSend` (from R287) for reminder-class sends.
+//
+// Removal is deferred — keeping the file in tree as a reference for the
+// MessageTrigger taxonomy (8 lifecycle events) which IS load-bearing
+// design intent. The implementations are not.
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';

@@ -33,15 +33,17 @@ export interface EInvoiceFormatConfig {
   autoSubmission: boolean;       // Can we auto-submit to government?
 }
 
+// R300: only formats with an actual generator. peppol / ubl / mtd were listed
+// here but no `generatePeppolXml` / `generateUblXml` / `generateMtdReturn`
+// exists anywhere in the repo — they were tier-pricing fiction. The
+// EInvoiceFormat type still includes them so downstream switches stay
+// exhaustive; add them back here once generators ship.
 export const E_INVOICE_FORMATS: EInvoiceFormatConfig[] = [
   { id: 'xrechnung', name: 'XRechnung', country: 'DE', mandatory: true, mandatoryFor: 'B2G invoices', description: 'German government e-invoicing standard (EN 16931)', requiredTier: 'contractor', autoSubmission: true },
   { id: 'zugferd', name: 'ZUGFeRD', country: 'DE', mandatory: false, mandatoryFor: 'Recommended for B2B', description: 'Structured PDF with embedded XML — readable by humans and machines', requiredTier: 'contractor', autoSubmission: false },
   { id: 'facturx', name: 'Factur-X', country: 'FR', mandatory: true, mandatoryFor: 'All B2B (from 2026)', description: 'French hybrid e-invoice standard — PDF/A-3 with XML', requiredTier: 'contractor', autoSubmission: true },
   { id: 'facturae', name: 'Facturae', country: 'ES', mandatory: true, mandatoryFor: 'B2G + large B2B', description: 'Spanish structured e-invoice format with SII reporting', requiredTier: 'contractor', autoSubmission: true },
   { id: 'fatturapa', name: 'FatturaPA / SDI', country: 'IT', mandatory: true, mandatoryFor: 'All invoices (B2B + B2C)', description: 'Italian mandatory e-invoicing via Sistema di Interscambio', requiredTier: 'contractor', autoSubmission: true },
-  { id: 'peppol', name: 'Peppol BIS', country: 'NL', mandatory: false, mandatoryFor: 'B2G recommended', description: 'Pan-European procurement network — growing adoption', requiredTier: 'contractor', autoSubmission: true },
-  { id: 'ubl', name: 'UBL-OEUF', country: 'NL', mandatory: true, mandatoryFor: 'B2G invoices', description: 'Dutch government e-invoicing standard', requiredTier: 'contractor', autoSubmission: true },
-  { id: 'mtd', name: 'Making Tax Digital', country: 'UK', mandatory: true, mandatoryFor: 'All VAT-registered', description: 'HMRC digital tax reporting — VAT returns via API', requiredTier: 'contractor', autoSubmission: true },
 ];
 
 // ─── Compliance Packs ──────────────────────────────────────────────────────

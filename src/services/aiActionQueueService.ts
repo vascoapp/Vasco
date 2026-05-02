@@ -57,7 +57,8 @@ export type QueueItemType =
   | 'einvoice_submit'      // Submit e-invoice in country-specific format
   | 'customer_question'    // High-stakes customer question from decision portal (R170)
   | 'low_win_alert'        // R209 — trained quote-win model flags a sent quote as low probability
-  | 'late_payment_risk_alert'; // R213 — predictPaymentTiming flags a sent invoice as high-risk-late
+  | 'late_payment_risk_alert' // R213 — predictPaymentTiming flags a sent invoice as high-risk-late
+  | 'job_quality_feedback'; // R300 — prompt contractor to rate completed job (paid_on_time / review / referral / rebook)
 
 export interface QueueItem {
   id: string;
@@ -176,6 +177,7 @@ const BASE_URGENCY: Record<QueueItemType, number> = {
   price_alert: 35,
   // Tier 5 — informational
   satisfaction_survey: 20,
+  job_quality_feedback: 25, // R300 — trains the moat but not time-sensitive
 };
 
 /** Parse estimatedImpact strings like "€450 omzet" / "5 min bespaard" → score boost */

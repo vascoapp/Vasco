@@ -14,7 +14,7 @@ Status legend: ✅ done · ⚠️ partial · ❌ not started · ⏸ waiting on u
 - Jest: **596 / 596 passing** across 55 suites
 - Supabase project: `gblhqhorkarocmputhte` (live; **all migrations pushed** as of R284)
 - Edge functions deployed in repo: 22 (analyze-photo, churn-winback-email, classify-customer-question, create-subscription-checkout, daily-push-digest, draft-customer-reply, drain-account-deletions, embed-text, generate-embedding, grant-referral-credits, mollie-webhook, place-supplier-order, predict-duration, predict-price, send-invoice, send-push, sign-quote-token, stripe-webhook, train-extra-models, verify-quote-token, weekly-digest, weekly-retrain-models)
-- Cron jobs: 9 registered
+- Cron jobs: **0 registered** in production as of R293. `supabase/cron.sql` documents 9 schedules but pg_cron extension wasn't installed. Migration `20260502000002_enable_pg_cron.sql` (R293) enables it; cron.sql still needs a manual one-time run with real `SUPABASE_URL` + service-role JWT to register the 9 schedules.
 
 ---
 
@@ -115,6 +115,17 @@ Items 2.1 through 2.6 must all be done before App Store / Play Store can accept 
 5. Deploy `public/.well-known/*` behind your domain root (same host as 2.4)
 6. **Verify:** `curl https://vasco.app/.well-known/apple-app-site-association` returns JSON with `application/json` content-type
 
+### 2.6.5 Register cron jobs (~5 min) — REQUIRED, not yet done
+
+Before submitting the app, register the 9 schedules so push digests, ML retrains, GDPR drain, churn winback, and referral credit grants actually fire:
+
+1. Push the latest migrations (`supabase db push --include-all`) so `pg_cron` + `pg_net` are enabled (migration `20260502000002_enable_pg_cron.sql` from R293).
+2. Open `supabase/cron.sql`, replace `<SUPABASE_URL>` (currently `https://gblhqhorkarocmputhte.supabase.co`) and `<SERVICE_ROLE_KEY>` (from Supabase dashboard → API → service_role).
+3. Run the patched cron.sql once via `supabase db query --linked` or psql. Idempotent — safe to re-run.
+4. Verify: `select jobid, schedule, jobname from cron.job order by jobname;` should return 9 rows.
+
+Without this step every documented cron-driven feature is dormant: no daily push digest, no ML retraining, no churn winback, no GDPR Art. 17 deletion drain, no referral credit grants, no stale-draft cleanup, no generator approval-rate refresh, no weekly digest. The contractor sees increasingly stale ML predictions and never receives any cron-triggered communication.
+
 ### 2.6 EAS build → TestFlight / Play Store (~2 hours first time)
 
 Prerequisites: Apple Developer account ($99/yr) + Google Play Console ($25 one-time).
@@ -201,6 +212,7 @@ In rough priority. Build only when justified by user feedback.
 - Per-country onboarding flow polish (auto-suggest VAT scheme from declared turnover)
 - Customer churn risk classifier (skipped twice; revisit when retention data accrues)
 - Worker app expansion beyond schedule + timesheet (only if multi-employee contractors land)
+- **R285 — wire a real supplier API.** Scaffold landed (`src/integrations/supplierLiveApi.ts`). To activate: implement a `LiveSupplierClient` adapter, register it in `loadConfiguredClient()`, set `EXPO_PUBLIC_LIVE_SUPPLIER_API=1` and the provider's API key. Best first targets: Bouwmaat (NL — contractor account required), Hornbach Pro (DE — contractor account required), Rexel (NL/FR — has B2B XML feed). Until activated, `searchCatalog`/`comparePrices` keep using cohort baselines + scan history — the cohort moat itself works; only the per-supplier live price feed is missing.
 
 ---
 

@@ -1,15 +1,33 @@
 // =============================================================================
-// LIVE TRACKING SERVICE — GPS, "On My Way" ETA, Team Map
+// LIVE TRACKING SERVICE — DEPRECATED (R295)
 // =============================================================================
-// Background location tracking with GDPR consent, live team map,
-// customer-facing ETA links, and GPS clock-in verification.
+// Status: ORPHAN — every export below has zero call sites as of R295's
+// audit. The CLAUDE.md claim "GPS tracking, On My Way ETA, team map, GDPR
+// consent" describes architecture only; no code path actually:
+//   - calls real GPS (expo-location not installed, no navigator.geolocation
+//     anywhere in the repo)
+//   - persists locations to BE (updateMyLocation only writes AsyncStorage)
+//   - serves the tracking URL (https://app.vasco.eu/track/{id} resolves to
+//     nothing — no edge fn or static page)
+//   - shows a team map (no UI screen consumes getTeamLocations)
+//   - verifies clock-in GPS (clockInService.ts doesn't pass through
+//     verifyClockInLocation)
 //
-// GDPR compliance:
-// - Explicit opt-in consent required before tracking starts
-// - Clear data retention policy (24h for live, 30 days for history)
-// - Right to delete location data
-// - Tracking only during work hours (configurable)
-// - Owner/admin sees team map; workers see only their own
+// The one customer-facing "On my way" button at app/contractor/job/[id].tsx
+// uses whatsappTemplateService.renderTemplate('on_my_way', locale, { eta:'15 min' })
+// — the ETA is hardcoded "15 min", not computed.
+//
+// DO NOT EXTEND THIS FILE. To make this real:
+//   1. `npx expo install expo-location` + add iOS/Android perms to app.json
+//   2. New BE table `team_locations` (user_id, lat, lng, status, ts) +
+//      `team_location_history` for the 30-day rollup
+//   3. Edge fn `serve-eta-tracking` to render the customer-facing tracking
+//      page (or static deeplink to a tracking screen)
+//   4. New screen `app/team-map.tsx` consuming getTeamLocations
+//   5. Wire `verifyClockInLocation` into clockInService for GPS-gated clock-in
+//
+// Until then, the GDPR consent + retention policy described below is purely
+// documentary — there's no data to consent about.
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';

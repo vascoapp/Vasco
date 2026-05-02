@@ -383,28 +383,22 @@ class DecisionIntelligenceService {
   }
 
   /**
-   * Get regional preferences for a decision type
-   * This powers "73% of customers in Amsterdam choose X" insights
+   * Get regional preferences for a decision type.
+   * R291: was returning hardcoded mock (67% wall-hung toilet, etc.) for every
+   * (region, trade, decisionType) — same fake answer for every contractor.
+   * Returns null until a real aggregation RPC + table land. Caller must
+   * gracefully handle null (no data yet).
+   *
+   * Real fix needed: BE table `regional_preference_aggregates` with rollup
+   * cron, RPC `get_regional_preferences(region, trade, decisionType)` with
+   * k-anonymity ≥5.
    */
   async getRegionalPreferences(
-    region: string,
-    trade: string,
-    decisionType: string
+    _region: string,
+    _trade: string,
+    _decisionType: string
   ): Promise<RegionalPreference | null> {
-    // In production, this would query aggregated data
-    // Mock implementation for now
-    return {
-      region,
-      trade,
-      decisionType,
-      choices: [
-        { value: 'wall_hung', label: 'Hangend toilet', count: 156, percentage: 67 },
-        { value: 'floor_standing', label: 'Staand toilet', count: 52, percentage: 22 },
-        { value: 'back_to_wall', label: 'Back-to-wall', count: 25, percentage: 11 },
-      ],
-      totalDecisions: 233,
-      lastUpdated: new Date().toISOString(),
-    };
+    return null;
   }
 
   // -----------------------------------------
@@ -432,17 +426,16 @@ class DecisionIntelligenceService {
   }
 
   /**
-   * Get timing analytics for a decision type
+   * Get timing analytics for a decision type.
+   * R291: was returning hardcoded mock (5.2-day avg, 18% overdue) for every
+   * decisionType. Returns null until a real aggregation lands. Caller must
+   * gracefully handle null.
+   *
+   * Real fix needed: rollup over `decision_submissions.time_to_decide_seconds`
+   * + `decision_items.due_date` per-decisionType, RPC with k-anonymity gate.
    */
-  async getDecisionTiming(decisionType: string): Promise<DecisionTiming | null> {
-    // In production, query aggregated data
-    return {
-      decisionType,
-      avgDaysToDecide: 5.2,
-      medianDaysToDecide: 3,
-      overdueRate: 0.18,
-      reminderEffectiveness: 0.42,
-    };
+  async getDecisionTiming(_decisionType: string): Promise<DecisionTiming | null> {
+    return null;
   }
 
   // -----------------------------------------
@@ -462,7 +455,15 @@ class DecisionIntelligenceService {
   }
 
   /**
-   * Flush buffered activities to backend
+   * Flush buffered activities to backend.
+   * R291: "batch send to backend" comment was aspirational. Today we only
+   * emit trackUserAction events — those go to the local intelligence engine,
+   * NOT to a server-side aggregation table. Portal activities never reach
+   * BE for cross-contractor cohort analysis.
+   *
+   * Real fix needed: BE table `customer_portal_events` (already in
+   * SCHEMA_LOCK Tier 3) + bulk insert here. Currently the table exists
+   * but nothing writes to it.
    */
   private async flushActivityBuffer(): Promise<void> {
     if (this.activityBuffer.length === 0) return;
@@ -470,8 +471,7 @@ class DecisionIntelligenceService {
     const activities = [...this.activityBuffer];
     this.activityBuffer = [];
 
-    // In production, batch send to backend
-    logInfo('DecisionIntelligence', `Flushing ${activities.length} activities`);
+    logInfo('DecisionIntelligence', `Flushing ${activities.length} activities (local only — see R291)`);
 
     for (const activity of activities) {
       trackUserAction(`portal_${activity.action}`, {

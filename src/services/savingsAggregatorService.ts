@@ -84,13 +84,17 @@ export function useSavingsAggregation(): SavingsAggregation {
       ? Math.round(dsoImprovement * collections.summary.totalOutstanding / 365 * 0.05) // 5% cost of capital
       : 0;
 
-    // 4. Conversion: proxy from quick quote follow-up (static estimate)
-    const conversionSavings = 2400;
+    // 4. Conversion: proxy from quick quote follow-up. R285: was hardcoded
+    // 2400 — now zero until a real conversion-uplift signal is wired
+    // (would need quote-followup-time × accept-rate-delta from cohort).
+    const conversionSavings = 0;
 
-    // 5. Audit: jobs where actual < estimated (under-budget savings)
+    // 5. Audit: jobs where actual < estimated (under-budget savings).
+    // R285: dropped 275 fallback — return zero when no negative variance
+    // exists, instead of inventing savings.
     const auditSavings = costSummary.topVarianceReasons
-      .filter(r => r.amount < 0) // negative amounts = savings
-      .reduce((sum, r) => sum + Math.abs(r.amount), 0) || 275;
+      .filter(r => r.amount < 0)
+      .reduce((sum, r) => sum + Math.abs(r.amount), 0);
 
     // 6. Materials: supplier negotiation quick wins (realized ~50%)
     const materialSavings = Math.round(
@@ -160,9 +164,13 @@ export function useSavingsAggregation(): SavingsAggregation {
     // Find top unrealized opportunity
     const topQuickWin = supplierNeg.quickWins[0];
 
+    // R285: totalSavedThisYear was Math.round(totalMonth * 5.5) — a
+    // projection passed off as "saved this year". Replaced with the same
+    // value as monthly until a real monthly-snapshot rollup lands.
+    // projectedAnnual still extrapolates but the field is honest about it.
     return {
       totalSavedThisMonth: totalMonth,
-      totalSavedThisYear: Math.round(totalMonth * 5.5), // ~5.5 months elapsed
+      totalSavedThisYear: totalMonth,
       projectedAnnual: Math.round(totalMonth * 12),
       breakdown,
       topOpportunity: {

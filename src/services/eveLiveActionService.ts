@@ -23,9 +23,21 @@ function mkId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+// R300: per-action expiry windows so stale insights don't accumulate.
+// Without this, the AI queue retains "Win rate at 25%" items from 6 weeks
+// ago. Bounded by the queue's 50-item cap + entityKey dedup, but still
+// surfaces dead context.
+const EXPIRY_DAYS_BY_TYPE = {
+  agent: 14,    // draft_invoice — stays relevant until billed
+  auditor: 14,  // overdue invoice — stays relevant until paid
+  analyst: 7,   // win-rate insight — refreshes weekly
+} as const;
+
 export function buildLiveActions(input: Input): EveAction[] {
   const out: EveAction[] = [];
   const now = new Date();
+  const expireFor = (agent: 'agent' | 'auditor' | 'analyst') =>
+    new Date(now.getTime() + EXPIRY_DAYS_BY_TYPE[agent] * MS_PER_DAY).toISOString();
 
   // ── Agent: work to draft (draft_invoice / draft_reminder) ────────
   for (const j of (input.jobs ?? []).filter((x) => x.status === 'completed').slice(0, 3)) {
@@ -43,6 +55,7 @@ export function buildLiveActions(input: Input): EveAction[] {
       actionLabel: 'Draft invoice',
       requiresApproval: true,
       createdAt: now.toISOString(),
+      expiresAt: expireFor('agent'),
     });
   }
 
@@ -66,6 +79,7 @@ export function buildLiveActions(input: Input): EveAction[] {
       actionLabel: 'Review',
       requiresApproval: false,
       createdAt: now.toISOString(),
+      expiresAt: expireFor('auditor'),
     });
   }
 
@@ -89,6 +103,7 @@ export function buildLiveActions(input: Input): EveAction[] {
       actionLabel: 'Review lost quotes',
       requiresApproval: false,
       createdAt: now.toISOString(),
+      expiresAt: expireFor('analyst'),
     });
   }
 

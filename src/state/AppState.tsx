@@ -660,6 +660,23 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             scopeChanges: 0,
             materialDelays: false,
           }).catch(() => {});
+          // R300: queue a job_quality_feedback prompt so the contractor
+          // captures paid_on_time / review / referral / rebook signals.
+          // Without this, get_customer_quality_weight defaults to 1.0 for
+          // every customer and the quote_win retrain trains uniformly.
+          import('../services/aiActionQueueService').then(({ addToQueue }) =>
+            addToQueue({
+              type: 'job_quality_feedback',
+              title: `${job.title} — quality feedback`,
+              description: `Capture paid-on-time, review, referral, and rebook signals so quote-win training picks them up.`,
+              preparedData: { jobId: id, customerId: job.customerId },
+              actionLabel: 'Rate job',
+              estimatedImpact: 'Improves model accuracy',
+              expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+              entityKey: `job_quality:${id}`,
+              sourceGeneratorId: 'job_completion',
+            }),
+          ).catch(() => {});
           // Calibrate the duration predictor: feed estimated vs actual hours
           // so future quotes get personalized coefficients.
           if (job.estimatedDuration && actualHours > 0) {
@@ -981,6 +998,25 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const docNumber = await nextDocumentNumber('invoice');
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 14);
+
+        // R287: validator-layer duplicate-invoice protection. Catches "same
+        // customer + same amount within 7 days" — a frequent source of
+        // double-billing, especially when a contractor accidentally taps
+        // "Create invoice" twice on the same quote.
+        const invValidation = validateInvoiceBeforeCreate(
+          { customer: sourceQuote.customer, amount: sourceQuote.amount, jobId: sourceQuote.job, dueDate: dueDate.toISOString() },
+          invoices,
+          jobs,
+        );
+        if (!invValidation.valid) {
+          // Hard block: the only way to land here is the duplicate detection
+          // (R287) — which is real money risk. Caller must surface this.
+          const summary = invValidation.errors.map(e => e.message).join(', ');
+          throw new Error(summary || 'Invoice validation failed');
+        }
+        if (invValidation.warnings.length > 0) {
+          logWarn('Validator', 'Invoice warnings: ' + invValidation.warnings.map(w => w.message).join(', '));
+        }
 
         const newInvoice: Invoice = {
           id: docNumber,
@@ -1380,6 +1416,21 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const docNumber = await nextDocumentNumber('invoice');
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 14);
+
+        // R287: same duplicate-protection as addInvoice. addInvoiceFromJob
+        // skips the validator-on-quote path so we re-run the invoice check.
+        const invValidation = validateInvoiceBeforeCreate(
+          { customer: job.customerId ?? '', amount, jobId, dueDate: dueDate.toISOString() },
+          invoices,
+          jobs,
+        );
+        if (!invValidation.valid) {
+          const summary = invValidation.errors.map(e => e.message).join(', ');
+          throw new Error(summary || 'Invoice validation failed');
+        }
+        if (invValidation.warnings.length > 0) {
+          logWarn('Validator', 'Invoice warnings: ' + invValidation.warnings.map(w => w.message).join(', '));
+        }
 
         const newInvoice: Invoice = {
           id: docNumber,

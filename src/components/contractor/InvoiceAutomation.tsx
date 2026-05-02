@@ -25,6 +25,7 @@ import {
   AutoInvoice,
   PaymentReminder,
 } from '../../services/invoiceAutomationService';
+import { gateReminderSend } from '../../services/reminderGate';
 
 // =============================================================================
 // TYPES
@@ -317,7 +318,15 @@ export const InvoiceAutomation: React.FC = () => {
     markPaid(invoiceId, 'bank_transfer');
   };
 
-  const handleSendReminder = (invoiceId: string, type: 'friendly' | 'reminder' | 'urgent' | 'final') => {
+  const handleSendReminder = async (invoiceId: string, type: 'friendly' | 'reminder' | 'urgent' | 'final') => {
+    // R287: gate via validateReminderBeforeSend — blocks reminders for paid /
+    // draft invoices and confirms when 5+ have already been sent.
+    const inv = invoices.find(i => i.id === invoiceId);
+    if (inv) {
+      const status = inv.status === 'reminded' || inv.status === 'overdue' ? 'sent' : inv.status;
+      const ok = await gateReminderSend({ status }, inv.reminders?.length ?? 0);
+      if (!ok) return;
+    }
     sendReminder(invoiceId, type);
   };
 

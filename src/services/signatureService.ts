@@ -1,4 +1,36 @@
 // =============================================================================
+// SIGNATURE SERVICE — DEPRECATED (R296)
+// =============================================================================
+// Status: ORPHAN — every export below has zero call sites as of R296's audit.
+// The "7 contexts × 6 langs" framework is documented but the ONLY actual
+// signature capture path (`app/contractor/job/[id].tsx` SignaturePad →
+// updateJob) bypasses this service entirely and writes the SVG directly to
+// the Job row's `signatureSvg` field via an `as any` cast.
+//
+// Reality of signatures in the codebase today:
+//   - `saveSignature` / `getSignaturesForReference` / `createSignatureRecord`
+//     / `signatureHtmlBlock` / `getLegalText` — 0 callers
+//   - The captured customer-handover signature lives in AppState's job row
+//     only. The field is NOT on the BE jobs schema, so `dbUpdateJob` drops
+//     it on sync. Effectively device-local.
+//   - PDF generators (`invoicePdfService`, `quotePdfService`) don't embed
+//     signatures. `signatureHtmlBlock` was authored for this but never wired.
+//   - No `signatures` BE table exists. Compliance gap: handover signatures
+//     are lost on app uninstall.
+//
+// To make this real:
+//   1. Migration: add `signature_svg` + `customer_signoff_at` columns to
+//      jobs OR a dedicated `signatures` table with proper RLS
+//   2. Whitelist the new columns in `dbUpdateJob` payload
+//   3. Pass the job (or its signatureSvg) through invoicePdfService /
+//      quotePdfService so `signatureHtmlBlock` actually fires
+//   4. Reach the other 6 contexts (quote-acceptance, invoice-acknowledge,
+//      etc.) — currently only job-handover is captured at all
+//
+// DO NOT EXTEND THIS FILE before #1-#3 land — the abstractions assume a
+// persistence model that doesn't exist yet.
+// =============================================================================
+// (Original header)
 // SIGNATURE SERVICE — In-app digital signature capture
 // =============================================================================
 // Captures customer/contractor signatures for quotes, invoices, job closeout,

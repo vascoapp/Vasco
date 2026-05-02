@@ -34,6 +34,7 @@ import { useFinancialAuditFindings } from '../../src/services/financialAuditorSe
 import { hapticSuccess } from '../../src/utils/haptics';
 import { Share } from 'react-native';
 import { invoiceAutomationService } from '../../src/services/invoiceAutomationService';
+import { gateReminderSend } from '../../src/services/reminderGate';
 import { generateInvoicePdf, buildInvoiceShareText } from '../../src/services/invoicePdfService';
 import { createPaymentLink as createMolliePaymentLink } from '../../src/integrations/mollie';
 import { createPaymentLink as createStripePaymentLink } from '../../src/integrations/stripe';
@@ -107,8 +108,17 @@ function DSOHint({ customerId, amount }: { customerId: string; amount?: number }
 
 function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoice[]; expandedId: string | null; onToggleExpand: (id: string) => void }) {
   const { t } = useTranslation();
-  const { businessProfile } = useAppState();
+  const { businessProfile, customers, jobs } = useAppState();
   const { user } = useAuth();
+  // R300: customer tag drives gateReminderSend behavior — VIP gets a softer
+  // confirm, INACTIVE gets a "are you sure?" prompt, others fall through.
+  const customerTagFor = useCallback((customerId: string | undefined): import('../../src/services/customerTaggingService').CustomerTag | undefined => {
+    if (!customerId) return undefined;
+    const c = customers.find((x: any) => x.id === customerId);
+    if (!c) return undefined;
+    const { scoreCustomer } = require('../../src/services/customerTaggingService');
+    return scoreCustomer({ customer: c, jobs: jobs as any, invoices: invoices as any }).tag;
+  }, [customers, jobs, invoices]);
 
   // Determine payment provider based on country (UK → Stripe, all others → Mollie)
   // Respect contractor's enabled payment methods from business settings
@@ -229,7 +239,11 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                 <Pressable
                   style={styles.invoiceActionBtn}
                   onPress={async () => {
+                    // R287: validator gate — blocks reminders for paid/draft
+                    // invoices and confirms when 5+ already sent.
                     const autoInv = invoiceAutomationService.getInvoice(invoice.id);
+                    const ok = await gateReminderSend(invoice, autoInv?.reminders?.length ?? 0, customerTagFor((invoice as any).customer));
+                    if (!ok) return;
                     if (autoInv) {
                       const link = await createPaymentLink({
                         invoiceId: invoice.id,
@@ -371,9 +385,19 @@ export default function FacturenScreen() {
   }, []);
 
   // Connect to services
-  const { jobs, addInvoiceFromJob, businessProfile } = useAppState();
+  const { jobs, addInvoiceFromJob, businessProfile, customers } = useAppState();
   const { invoices, summary } = useCashFlow();
   const { findings: auditFindings } = useFinancialAuditFindings();
+
+  // R300: tag-aware reminder gate (bulk path). InvoiceList has its own
+  // closure-scoped helper; this one serves the overdue-banner bulk send.
+  const customerTagFor = useCallback((customerId: string | undefined): import('../../src/services/customerTaggingService').CustomerTag | undefined => {
+    if (!customerId) return undefined;
+    const c = customers.find((x: any) => x.id === customerId);
+    if (!c) return undefined;
+    const { scoreCustomer } = require('../../src/services/customerTaggingService');
+    return scoreCustomer({ customer: c, jobs: jobs as any, invoices: invoices as any }).tag;
+  }, [customers, jobs, invoices]);
 
   // P3: Collections Agent
   const { summary: collectionsSummary, sequences: dunningSequences, alerts: cashGapAlerts, dso } = useCollectionsAgent();
@@ -679,7 +703,11 @@ export default function FacturenScreen() {
               </Pressable>
             )}
 
-            {/* Verlopen banner — below invoices */}
+            {/* Verlopen banner — below invoices.
+                R300: previously the "Versturen" action just showed a fake
+                "sent!" toast with zero actual sends. Now sequentially loops
+                overdue invoices, gates each via gateReminderSend (R287),
+                and awaits Share.share for each. Honest count surfaced after. */}
             {overdueValue > 0 && (
               <Pressable
                 style={styles.overdueBanner}
@@ -691,9 +719,33 @@ export default function FacturenScreen() {
                       {
                         label: t('invoices.send', 'Versturen'),
                         icon: 'paper-plane-outline',
-                        onPress: () => {
+                        onPress: async () => {
                           closeBottomSheet();
-                          setToast({ visible: true, message: t('invoices.remindersSentAll', 'Herinneringen zijn verstuurd naar alle klanten met verlopen facturen.') });
+                          let sent = 0;
+                          let skipped = 0;
+                          for (const inv of overdueInvoices) {
+                            const autoInv = invoiceAutomationService.getInvoice(inv.id);
+                            const ok = await gateReminderSend(inv, autoInv?.reminders?.length ?? 0, customerTagFor((inv as any).customer));
+                            if (!ok) { skipped++; continue; }
+                            try {
+                              // Bulk path skips the per-invoice createPaymentLink
+                              // call (each Mollie/Stripe call is a network round
+                              // trip × N invoices = slow). Contractor can resend
+                              // an individual reminder via the per-row button to
+                              // get a fresh payment link.
+                              const text = autoInv
+                                ? buildInvoiceShareText(autoInv, businessProfile.businessName, undefined)
+                                : `Reminder for invoice ${inv.id}`;
+                              await Share.share({ message: text, title: t('invoices.sendReminder', 'Herinnering') });
+                              sent++;
+                            } catch {
+                              skipped++;
+                            }
+                          }
+                          setToast({
+                            visible: true,
+                            message: t('invoices.remindersSentBulk', 'Sent {{sent}} reminders, {{skipped}} skipped.', { sent, skipped }),
+                          });
                         },
                       },
                       { label: t('invoices.cancel', 'Annuleren'), icon: 'close-outline', onPress: closeBottomSheet },

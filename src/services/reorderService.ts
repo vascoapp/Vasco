@@ -246,7 +246,17 @@ class ReorderService {
   private listeners: Set<() => void> = new Set();
 
   constructor() {
-    // Initialize with mock data
+    // R285: empty by default. The MOCK_INVENTORY fixtures stay in the file so
+    // tests can opt in via __seedMockInventory(), but production starts empty
+    // — the inkoop hero stats and reorder list now reflect real usage instead
+    // of fake "13 days of stock left" lines that no contractor ever entered.
+    this.generateSuggestions();
+  }
+
+  /**
+   * Test-only seed for the mock fixtures. Production must NEVER call this.
+   */
+  __seedMockInventory(): void {
     MOCK_INVENTORY.forEach((item) => this.inventory.set(item.id, item));
     this.generateSuggestions();
   }
@@ -412,10 +422,12 @@ class ReorderService {
   // -----------------------------------------
 
   /**
-   * Get available bundles
+   * Get available bundles. R285: returns empty until a real bundle source
+   * (supplier deals API) is wired. The MOCK_BUNDLES fixtures expired in
+   * Feb 2025 anyway — they were never refreshed.
    */
   getBundles(): ReorderBundle[] {
-    return MOCK_BUNDLES.filter((b) => new Date(b.validUntil) > new Date());
+    return [];
   }
 
   /**

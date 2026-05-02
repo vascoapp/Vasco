@@ -30,9 +30,11 @@ import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { Sparkline } from '../../src/components/shared/Sparkline';
 import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { CashFlowForecastCard } from '../../src/components/contractor/CashFlowForecastCard';
+import { CashflowGapPredictionCard } from '../../src/components/contractor/CashflowGapPredictionCard';
 import { MaterialDriftCard } from '../../src/components/contractor/MaterialDriftCard';
 import { MarketPulseCard } from '../../src/components/contractor/MarketPulseCard';
 import { useAIQueue } from '../../src/services/aiActionQueueService';
+import { executeApprovedQueueItem } from '../../src/services/queueItemExecutor';
 import { useVascoGuidance } from '../../src/services/vascoGuidanceService';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 
@@ -229,6 +231,8 @@ export default function GeldScreen() {
         </Pressable>
 
         {/* ─── CASHFLOW FORECAST (embedded self-styled component) ─── */}
+        {/* R300: ML cashflow-gap prediction banner — hidden when low confidence or small gap */}
+        <CashflowGapPredictionCard />
         <CashFlowForecastCard invoices={invoices as any} quotes={quotes as any} jobs={[] as any} />
 
         {/* ─── FINANCIAL AI QUEUE (was VascoCard) ─── */}
@@ -256,7 +260,17 @@ export default function GeldScreen() {
                 <Pressable hitSlop={6} onPress={() => aiQueue.reject(item.id)} style={s.vascoQueueReject}>
                   <Ionicons name="close" size={12} color={DK.colors.textMuted} />
                 </Pressable>
-                <Pressable onPress={() => { hapticSuccess(); aiQueue.approve(item.id); }} style={s.vascoQueueApprove}>
+                <Pressable
+                  onPress={async () => {
+                    hapticSuccess();
+                    // R286: actually fire the action after approval. Geld's
+                    // queue rows don't render VascoCard, so shareable items
+                    // need the executor to open the Share sheet too.
+                    const approved = await aiQueue.approve(item.id);
+                    if (approved) await executeApprovedQueueItem(approved, { router }, { alreadyShared: false });
+                  }}
+                  style={s.vascoQueueApprove}
+                >
                   <DKLabel style={s.vascoQueueApproveText}>{item.actionLabel}</DKLabel>
                 </Pressable>
               </View>
