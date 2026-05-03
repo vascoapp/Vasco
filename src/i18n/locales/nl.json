@@ -1865,7 +1865,11 @@
     "submit": "Bekijk mijn keuzes",
     "demo": "Demo modus",
     "privacy": "Geen account nodig. Uw keuzes worden veilig opgeslagen en direct doorgegeven aan uw aannemer.",
-    "invalidCode": "Voer een geldige toegangscode in."
+    "invalidCode": "Voer een geldige toegangscode in.",
+    "regional": {
+      "title": "Wat anderen in jouw regio kozen",
+      "basedOn": "Gebaseerd op {{count}} vergelijkbare keuzes"
+    }
   },
   "accept": {
     "processing": "Je goedkeuring wordt verwerkt...",

@@ -1865,7 +1865,11 @@
     "submit": "View my choices",
     "demo": "Demo mode",
     "privacy": "No account needed. Your choices are stored securely and sent directly to your contractor.",
-    "invalidCode": "Please enter a valid access code."
+    "invalidCode": "Please enter a valid access code.",
+    "regional": {
+      "title": "What others in your area chose",
+      "basedOn": "Based on {{count}} similar decisions"
+    }
   },
   "accept": {
     "processing": "Processing your approval...",

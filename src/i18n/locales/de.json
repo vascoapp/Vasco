@@ -1865,7 +1865,11 @@
     "submit": "Meine Auswahl ansehen",
     "demo": "Demo-Modus",
     "privacy": "Kein Konto nötig. Deine Auswahl wird sicher gespeichert und direkt an deinen Auftragnehmer übermittelt.",
-    "invalidCode": "Bitte gib einen gültigen Zugangscode ein."
+    "invalidCode": "Bitte gib einen gültigen Zugangscode ein.",
+    "regional": {
+      "title": "Was andere in deiner Region wählten",
+      "basedOn": "Basierend auf {{count}} ähnlichen Entscheidungen"
+    }
   },
   "accept": {
     "processing": "Deine Freigabe wird verarbeitet...",

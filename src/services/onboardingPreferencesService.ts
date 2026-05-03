@@ -5,7 +5,6 @@
 // selected plan) so the app can personalize views and feature gating.
 // =============================================================================
 
-import { useState, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Country, Language } from '../context/AuthContext';
 import type { SubscriptionTier } from './subscriptionService';
@@ -143,64 +142,10 @@ export function wantsTeamFeatures(prefs: OnboardingPreferences): boolean {
   return prefs.teamSize === 'small' || prefs.teamSize === 'medium' || prefs.teamSize === 'large';
 }
 
-/** Get prioritized section order for the dashboard based on goals */
-export function getDashboardSectionOrder(prefs: OnboardingPreferences): string[] {
-  const sections: string[] = ['schedule']; // Always first — today's jobs
-
-  // Prioritize based on goals/challenges
-  if (wantsPaymentFocus(prefs)) sections.push('payments');
-  if (wantsQuotingHelp(prefs)) sections.push('quotes');
-  if (wantsAutomationFocus(prefs)) sections.push('automation');
-  if (wantsGrowthFocus(prefs)) sections.push('leads');
-  if (wantsComplianceFocus(prefs)) sections.push('compliance');
-
-  // Add remaining sections in default order
-  const allSections = ['schedule', 'payments', 'quotes', 'automation', 'leads', 'compliance'];
-  for (const s of allSections) {
-    if (!sections.includes(s)) sections.push(s);
-  }
-
-  return sections;
-}
-
-/** Get which VascoCard insight types to prioritize */
-export function getPrioritizedInsightTypes(prefs: OnboardingPreferences): string[] {
-  const types: string[] = [];
-
-  if (wantsPaymentFocus(prefs)) types.push('cashflow', 'overdue_invoice', 'payment_reminder');
-  if (wantsQuotingHelp(prefs)) types.push('quote_followup', 'pricing_insight', 'quote_optimization');
-  if (wantsAutomationFocus(prefs)) types.push('automation_suggestion', 'time_saving', 'workflow');
-  if (wantsGrowthFocus(prefs)) types.push('lead_opportunity', 'market_insight', 'customer_retention');
-  if (wantsComplianceFocus(prefs)) types.push('compliance_alert', 'certificate_expiry', 'regulation_update');
-
-  // Team-specific insights
-  if (wantsTeamFeatures(prefs)) types.push('team_utilization', 'capacity_alert');
-
-  return types;
-}
-
-// ─── React Hook ─────────────────────────────────────────────────────────────
-
-export function useOnboardingPreferences(): {
-  prefs: OnboardingPreferences;
-  isLoading: boolean;
-  isSolo: boolean;
-  sectionOrder: string[];
-  prioritizedInsights: string[];
-} {
-  const [prefs, setPrefs] = useState<OnboardingPreferences>(DEFAULT_PREFERENCES);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    loadOnboardingPreferences().then((p) => {
-      setPrefs(p);
-      setIsLoading(false);
-    });
-  }, []);
-
-  const isSolo = useMemo(() => isSoloContractor(prefs), [prefs]);
-  const sectionOrder = useMemo(() => getDashboardSectionOrder(prefs), [prefs]);
-  const prioritizedInsights = useMemo(() => getPrioritizedInsightTypes(prefs), [prefs]);
-
-  return { prefs, isLoading, isSolo, sectionOrder, prioritizedInsights };
-}
+// R10.2: removed `getDashboardSectionOrder`, `getPrioritizedInsightTypes`,
+// and the `useOnboardingPreferences` hook (all three had zero callers).
+// They were written for a multi-section Vandaag dashboard that was replaced
+// by the DraftKings 2-section layout (hero + schedule). Insight prioritization
+// still happens, just at the queue level in aiActionQueueService.ts which
+// reads the wantsPaymentFocus / wantsQuotingHelp / wantsComplianceFocus /
+// wantsAutomationFocus / wantsGrowthFocus helpers directly.

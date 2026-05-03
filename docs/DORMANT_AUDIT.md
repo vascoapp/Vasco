@@ -725,3 +725,26 @@ Four-part audit on system primitives that R285-R307 didn't cover.
 - Plus: 7 hardcoded Dutch labels/descriptions on the breakdown categories — bypassed i18n entirely. Migrated to `savings.cat.*` keys (13 keys × 6 locales). i18n re-imported via `import i18n from '../i18n/i18n'` so the service can call `i18n.t()` outside React.
 
 R9 batch: 0 TS errors, all 6 locales valid.
+
+---
+
+# R10 — hub routing, prefs cleanup, decision-portal polish
+
+**R10.1 — hub screens**: enterprise mocks (`/hub/metrics`, `/hub/reports`, `/hub/costs` with fake £18M property data) reachable from contractor flow:
+- `/hub/costs` (fake Riverside Quarter / Oak Gardens / Harbour View) was the destination of geld tab's "Costs" pill — a contractor tapping their own expenses got fictional property-development figures. Re-routed to `/contractor/expenses` (real expense list).
+- `/hub/intelligence` was the "Projected next month" cashflow link in geld — wrong destination (it's the data-ingestion overview, not cashflow). Re-routed to `/contractor/cashflow` (real CashFlowDashboard).
+- `/hub/metrics` and `/hub/reports` are reachable only from DirectorDashboard — per R180 enterprise dashboards intentionally skipped.
+
+**R10.2 — onboarding state propagation**: prefs ARE wired correctly via `aiActionQueueService.ts` (uses `wantsPaymentFocus` / `wantsQuotingHelp` etc to give matching action types a +10 priority boost). But three helpers were dead — written for an older multi-section Vandaag dashboard:
+- `getDashboardSectionOrder` (zero callers)
+- `getPrioritizedInsightTypes` (zero callers)
+- `useOnboardingPreferences` hook (zero callers — its only use was wrapping the two helpers above)
+Removed all three. Pruned `useState/useEffect/useMemo` imports that became unused.
+
+**R10.3 — workflow packs**: clean. 10 packs (CLAUDE.md says 7 — doc drift, not a bug); `evaluateTriggers` fires from Vandaag mount + background scheduler tick; trigger matchers cover invoice_sent / invoice_overdue / quote_sent / quote_accepted / job_complete / customer_created etc with a 2-day catch-up window; mapActionToQueueType produces valid QueueItemType values; SHAREABLE_TYPES in queueItemExecutor covers progress_note / job_handover / satisfaction_survey / decision_reminder / reorder_materials. End-to-end loop closed.
+
+**R10.4 — RegionalPreferencePanel**: two real bugs in the customer-decision portal panel that surfaces "67% of customers in your area chose X":
+- All strings hardcoded English — "What others in your area chose" / "Based on N similar decisions" — bypassed i18n entirely. Customer portal supports 6 languages but the panel showed English regardless. Migrated to `customerPortal.regional.title` + `customerPortal.regional.basedOn` (2 keys × 6 locales).
+- All colors hardcoded light-theme hex (`#F9FAFB` panel, `#374151` text, etc) on a portal that's been DK-dark since R179. The panel rendered as a glaring white box in the middle of the dark portal. Swapped to `DK.colors.panel2` / `DK.colors.text` / `DK.colors.textMuted` / `DK.colors.panel`.
+
+R10 batch: 0 TS errors, all 6 locales valid.

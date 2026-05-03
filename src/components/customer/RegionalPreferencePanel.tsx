@@ -10,7 +10,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { decisionIntelligence } from '../../intelligence/decisionIntelligence';
+import { DK } from '../../theme/draftkings';
 
 interface RegionalPreference {
   region: string;
@@ -28,6 +30,7 @@ interface Props {
 }
 
 export function RegionalPreferencePanel({ region, trade, decisionType, accentColor }: Props) {
+  const { t } = useTranslation();
   const [data, setData] = useState<RegionalPreference | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -54,7 +57,7 @@ export function RegionalPreferencePanel({ region, trade, decisionType, accentCol
       <View style={styles.header}>
         <Ionicons name="people" size={14} color={accentColor} />
         <Text style={styles.headerText}>
-          What others in your area chose
+          {t('customerPortal.regional.title', 'What others in your area chose')}
         </Text>
       </View>
       <View style={styles.list}>
@@ -71,15 +74,17 @@ export function RegionalPreferencePanel({ region, trade, decisionType, accentCol
         ))}
       </View>
       <Text style={styles.footnote}>
-        Based on {data.totalDecisions} similar decisions
+        {t('customerPortal.regional.basedOn', 'Based on {{count}} similar decisions', { count: data.totalDecisions })}
       </Text>
     </View>
   );
 }
 
+// R10.4: theme tokens. Customer portal is dark DK; the previous light-gray
+// panel #F9FAFB stuck out as a white card on a dark background.
 const styles = StyleSheet.create({
   panel: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: DK.colors.panel2,
     borderLeftWidth: 3,
     borderRadius: 8,
     padding: 12,
@@ -94,7 +99,7 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 12,
     fontFamily: 'Inter_600SemiBold',
-    color: '#374151',
+    color: DK.colors.text,
   },
   list: { gap: 4 },
   row: {
@@ -105,28 +110,28 @@ const styles = StyleSheet.create({
   rank: {
     fontSize: 13,
     fontFamily: 'Inter_600SemiBold',
-    color: '#9CA3AF',
+    color: DK.colors.textMuted,
     minWidth: 16,
   },
   label: {
     flex: 1,
     fontSize: 13,
-    color: '#111827',
+    color: DK.colors.text,
   },
   pctChip: {
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: DK.colors.panel,
   },
   pctText: {
     fontSize: 12,
     fontFamily: 'Archivo_700Bold',
-    color: '#6B7280',
+    color: DK.colors.textMuted,
   },
   footnote: {
     fontSize: 10,
-    color: '#9CA3AF',
+    color: DK.colors.textMuted,
     fontStyle: 'italic',
   },
 });

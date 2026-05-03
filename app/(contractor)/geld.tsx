@@ -451,7 +451,7 @@ export default function GeldScreen() {
             <View style={s.cfDivider} />
             <Pressable
               style={({ pressed }) => [{ flex: 1 }, pressed && { opacity: 0.7 }]}
-              onPress={() => router.push('/hub/costs' as any)}
+              onPress={() => router.push('/contractor/expenses' as any)}
               accessibilityRole="button"
               accessibilityLabel={t('dk.money.costs', 'Costs')}
             >
@@ -502,10 +502,13 @@ export default function GeldScreen() {
               </View>
             </View>
           )}
-          {/* Projected next month → cashflow forecast hub */}
+          {/* Projected next month → real cashflow forecast (CashFlowDashboard).
+              R10.1: was routing to /hub/intelligence (the data-ingestion overview),
+              which had nothing to do with cashflow forecasting — title and
+              destination didn't match. */}
           <Pressable
             style={({ pressed }) => [s.projRow, pressed && { opacity: 0.7 }]}
-            onPress={() => router.push('/hub/intelligence' as any)}
+            onPress={() => router.push('/contractor/cashflow' as any)}
             accessibilityRole="button"
             accessibilityLabel={t('dk.money.projectedMonth', 'Projected next month')}
           >

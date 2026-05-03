@@ -1865,7 +1865,11 @@
     "submit": "Voir mes choix",
     "demo": "Mode démo",
     "privacy": "Pas de compte requis. Vos choix sont stockés en sécurité et transmis directement à votre artisan.",
-    "invalidCode": "Veuillez entrer un code d'accès valide."
+    "invalidCode": "Veuillez entrer un code d'accès valide.",
+    "regional": {
+      "title": "Ce que les autres dans votre région ont choisi",
+      "basedOn": "Basé sur {{count}} décisions similaires"
+    }
   },
   "accept": {
     "processing": "Traitement de votre approbation...",

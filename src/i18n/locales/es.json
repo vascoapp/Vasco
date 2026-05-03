@@ -1865,7 +1865,11 @@
     "submit": "Ver mis opciones",
     "demo": "Modo demo",
     "privacy": "No necesitas cuenta. Tus opciones se guardan de forma segura y se envían directamente a tu contratista.",
-    "invalidCode": "Introduce un código de acceso válido."
+    "invalidCode": "Introduce un código de acceso válido.",
+    "regional": {
+      "title": "Lo que otros en tu zona eligieron",
+      "basedOn": "Basado en {{count}} decisiones similares"
+    }
   },
   "accept": {
     "processing": "Procesando tu aprobación...",

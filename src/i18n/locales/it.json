@@ -1865,7 +1865,11 @@
     "submit": "Vedi le mie scelte",
     "demo": "Modalità demo",
     "privacy": "Non serve un account. Le tue scelte sono salvate in sicurezza e inviate direttamente al tuo artigiano.",
-    "invalidCode": "Inserisci un codice di accesso valido."
+    "invalidCode": "Inserisci un codice di accesso valido.",
+    "regional": {
+      "title": "Cosa hanno scelto altri nella tua zona",
+      "basedOn": "Basato su {{count}} decisioni simili"
+    }
   },
   "accept": {
     "processing": "Elaborazione della tua approvazione...",
