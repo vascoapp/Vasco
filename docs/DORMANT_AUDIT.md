@@ -748,3 +748,32 @@ Removed all three. Pruned `useState/useEffect/useMemo` imports that became unuse
 - All colors hardcoded light-theme hex (`#F9FAFB` panel, `#374151` text, etc) on a portal that's been DK-dark since R179. The panel rendered as a glaring white box in the middle of the dark portal. Swapped to `DK.colors.panel2` / `DK.colors.text` / `DK.colors.textMuted` / `DK.colors.panel`.
 
 R10 batch: 0 TS errors, all 6 locales valid.
+
+---
+
+# R11 — moat data integrity, multi-country VAT, mock data cleanup
+
+**R11.1 — receipt scanner double-feed bug**: real moat-corruption bug. `feedPricingMoat` was being called **twice** for every successful camera scan:
+1. Inside `scanInvoicePhoto` (`invoiceScanService.ts:98`) immediately after the analyze-photo edge fn returns
+2. Again in `inkoop.tsx`'s `<ReceiptScanner onComplete>` handler (which reconstructed the ScannedInvoice and re-fed it)
+
+Every OCR row was duplicated in `material_price_history`, **inflating cohort sample sizes by 2x for every camera scan**. Stripped the redundant call from inkoop.tsx (along with the unused `feedPricingMoat` + `ScannedInvoice` imports). The manual-text path through `invoiceExtractor.extractFromText` was dead weight (its private feedPricingMoat had no callers and supplier?.id was usually undefined).
+
+**R11.2 — VAT prep was Dutch-only despite supporting DE UStVA**: the screen at `app/contractor/vat-prep.tsx` switches between NL BTW and DE UStVA based on `businessProfile.country` — but `vatPrepExportService.ts` was hardcoded to:
+- Dutch labels (`BTW-aangifte`, `Rubrieken`, `Verschuldigde BTW`, etc) regardless of country
+- `nl-NL` locale for number formatting
+- DigiD URL — even for German contractors who file via ELSTER
+- Iterated only `rubriek_*` (NL) fields, ignoring DE's `kz_*` rollups → German contractors got a Dutch summary with €0 in every row
+
+Fixed by adding country-aware `stringsFor(country)` map (NL_STRINGS / DE_STRINGS), iterating the country-agnostic `draft.rollups` map, threading `country` to `fmtEur` (locale-aware), and switching the portal URL between Belastingdienst and ELSTER. `openDigiD(country)` now routes correctly. `vat-prep.tsx` button label flips to "Open ELSTER" for DE contractors. Existing tests still pass (7/7).
+
+**R11.3 — permits screen was hardcoded mock data**: `app/contractor/permits.tsx` initialized state with `mockPermits` containing 3 fake refs (`OV-2026-1234 — Bakkerij Jansen — Winkelstraat 12, Utrecht`, `BT-2026-0089 — Fam. de Groot — Hoofdstraat 45, Amsterdam`, `Airco — Kantoor Zuidas`). Every contractor opened the screen and saw someone else's permits in their state. Worse: created permits via the wizard were **only stored in local React state** — they evaporated on app close (no AsyncStorage, no Supabase persistence).
+
+Fixed:
+- Dropped the hardcoded mockPermits seed
+- Added AsyncStorage persistence: hydrate on mount, write on every state change, key `@vasco_contractor_permits`
+- Added empty-state UI ("No permits yet — tap + to draft one") with i18n keys
+
+**R11.4 — market-prices fake "stable" trend**: `getCohortBenchmarks` cloud path returned `priceChange30d: 0, priceChange90d: 0, trend: 'stable', volatility: 0` for **every** material because the underlying `get_material_cohort_stats` RPC doesn't compute trend deltas. The UI rendered a green-flat "stable" icon on every benchmark row, falsely implying a real reading of "no movement." Fixed in the UI: hide the trend chip when `priceChange30d === 0 && priceChange90d === 0 && volatility === 0` (the no-signal sentinel). When the BE eventually populates real trend data, the chip reappears automatically.
+
+R11 batch: 0 TS errors, 7/7 vatPrepExportService tests pass, all 6 locales valid.

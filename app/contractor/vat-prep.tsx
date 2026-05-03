@@ -86,13 +86,17 @@ export default function VatPrepScreen() {
           },
         },
         {
-          text: t('vatPrep.openDigiD', 'Open DigiD'),
+          // R11.2: button label + portal URL now country-aware. NL → DigiD/
+          // Belastingdienst, DE → ELSTER (BMF e-tax portal). Was always NL.
+          text: country === 'DE' ? t('vatPrep.openElster', 'Open ELSTER') : t('vatPrep.openDigiD', 'Open DigiD'),
           onPress: async () => {
-            const ok = await openDigiDPortal();
+            const ok = await openDigiDPortal(country);
             if (!ok) {
               Alert.alert(
                 t('vatPrep.cannotOpen', 'Cannot open portal'),
-                t('vatPrep.cannotOpenDesc', 'Could not open the Belastingdienst portal. Open belastingdienst.nl in your browser.'),
+                country === 'DE'
+                  ? t('vatPrep.cannotOpenElsterDesc', 'Could not open ELSTER. Open elster.de in your browser.')
+                  : t('vatPrep.cannotOpenDesc', 'Could not open the Belastingdienst portal. Open belastingdienst.nl in your browser.'),
               );
             }
           },

@@ -18,7 +18,8 @@ import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useSavingsAggregation, useSavingsTimeline } from '../../src/services/savingsAggregatorService';
 import { useInventory, useReorderSuggestions } from '../../src/services/reorderService';
 import { ReceiptScanner } from '../../src/components/contractor/ReceiptScanner';
-import { feedPricingMoat, type ScannedInvoice } from '../../src/services/invoiceScanService';
+// feedPricingMoat / ScannedInvoice imports removed in R11.1 — scanInvoicePhoto
+// in the ReceiptScanner is the single moat-feed entry point now.
 import { parseDateanormV4, parseDateanormV5, importDatanormToMoat } from '../../src/integrations/datanorm';
 import { getCurrentTrade, getCurrentCountry } from '../../src/lib/currentUser';
 import { MaterialDriftCard } from '../../src/components/contractor/MaterialDriftCard';
@@ -440,40 +441,15 @@ export default function InkoopScreen() {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Receipt Scanner Modal */}
+      {/* Receipt Scanner Modal — R11.1: removed redundant feedPricingMoat
+          call. scanInvoicePhoto already feeds the moat on every successful
+          OCR (invoiceScanService.ts:98). Calling feedPricingMoat again here
+          double-counted every camera scan in material_price_history,
+          inflating cohort sample sizes by 2x. */}
       <Modal visible={showReceiptScanner} animationType="slide" presentationStyle="fullScreen">
         <ReceiptScanner
           onClose={() => setShowReceiptScanner(false)}
-          onComplete={(result: any) => {
-            if (result?.success && result.invoice) {
-              const scanned: ScannedInvoice = {
-                id: `scan-${Date.now()}`,
-                documentType: result.invoice.type ?? 'invoice',
-                supplierName: result.invoice.supplier?.name ?? 'Onbekend',
-                documentNumber: result.invoice.header?.documentNumber,
-                documentDate: result.invoice.header?.date ?? new Date().toISOString().split('T')[0],
-                lineItems: (result.invoice.lineItems ?? []).map((li: any) => ({
-                  description: li.description ?? '',
-                  articleNumber: li.articleNumber,
-                  brand: li.brand,
-                  category: li.category ?? 'general',
-                  quantity: li.quantity ?? 1,
-                  unit: li.unit ?? 'stuk',
-                  unitPrice: li.unitPrice ?? 0,
-                  vatRate: li.vatRate ?? 21,
-                  totalPrice: li.totalPrice ?? 0,
-                  confidence: li.confidence ?? 70,
-                })),
-                subtotal: result.invoice.totals?.subtotal ?? 0,
-                vatAmount: result.invoice.totals?.vatAmount ?? 0,
-                total: result.invoice.totals?.total ?? 0,
-                confidence: result.confidence ?? 70,
-                scannedAt: new Date().toISOString(),
-              };
-              feedPricingMoat(scanned).catch(() => {});
-            }
-            setShowReceiptScanner(false);
-          }}
+          onComplete={() => setShowReceiptScanner(false)}
         />
       </Modal>
     </View>

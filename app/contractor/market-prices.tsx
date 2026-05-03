@@ -172,11 +172,21 @@ export default function MarketPricesScreen() {
         <FadeIn delay={200}>
           <Text style={styles.sectionTitle}>{t('market.materialPrices', 'Materiaalprijzen')}{topBenchmarks.length > 0 ? ` (${topBenchmarks.length})` : ''}</Text>
           {topBenchmarks.length > 0 ? (
-            topBenchmarks.map((bm, i) => (
+            topBenchmarks.map((bm, i) => {
+              // R11.4: hide the trend icon when there's no real signal.
+              // The cloud RPC currently doesn't populate priceChange30d/
+              // priceChange90d/volatility — they default to 0/'stable'.
+              // Showing a "stable" icon on every material falsely implied
+              // an actual trend reading of "flat". Until the RPC returns
+              // real trend deltas, we suppress the indicator.
+              const hasTrendSignal = bm.priceChange30d !== 0 || bm.priceChange90d !== 0 || bm.volatility > 0;
+              return (
               <View key={i} style={styles.bmCard}>
                 <View style={styles.bmHeader}>
                   <Text style={styles.bmName} numberOfLines={1}>{bm.materialName}</Text>
-                  <Ionicons name={TREND_ICONS[bm.trend].icon} size={14} color={TREND_ICONS[bm.trend].color} />
+                  {hasTrendSignal && (
+                    <Ionicons name={TREND_ICONS[bm.trend].icon} size={14} color={TREND_ICONS[bm.trend].color} />
+                  )}
                 </View>
                 <View style={styles.bmPrices}>
                   <View style={styles.bmPrice}>
@@ -194,7 +204,8 @@ export default function MarketPricesScreen() {
                 </View>
                 <Text style={styles.bmMeta}>{bm.sampleSize} {t('market.dataPoints', 'datapunten')} · {bm.category}</Text>
               </View>
-            ))
+              );
+            })
           ) : (
             <View style={styles.sectionEmpty}>
               <Ionicons name="analytics-outline" size={48} color={SemanticColors.textTertiary} />

@@ -4,8 +4,9 @@
 // View, create, and track permits for contractor jobs
 // =============================================================================
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, TextInput } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +15,8 @@ import { PAGE_BG } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import type { PermitStatus, PermitType } from '../../src/types/buildos';
+
+const PERMITS_STORAGE_KEY = '@vasco_contractor_permits';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type TabType = 'overzicht' | 'nieuw';
@@ -41,8 +44,12 @@ const getPermitTypes = (t: (key: string, defaultValue: string) => string): { id:
 ];
 
 // =============================================================================
-// MOCK DATA
+// PERMIT TYPES
 // =============================================================================
+// R11.3: dropped the hardcoded mockPermits array (3 fake refs incl. "Bakkerij
+// Jansen — Winkelstraat 12, Utrecht"). Every contractor opening this screen
+// saw someone else's permits seeded in their state. Permits now load from
+// AsyncStorage and start as an empty list for new users.
 
 interface ContractorPermit {
   id: string;
@@ -57,43 +64,6 @@ interface ContractorPermit {
   notes?: string;
   documents: string[];
 }
-
-const mockPermits: ContractorPermit[] = [
-  {
-    id: 'p-1',
-    type: 'omgevingsvergunning',
-    reference: 'OV-2026-1234',
-    authority: 'Gemeente Amsterdam',
-    status: 'under-review',
-    jobTitle: 'Warmtepomp installatie — Bakkerij Jansen',
-    address: 'Winkelstraat 12, Utrecht',
-    submissionDate: '2026-03-01',
-    targetDecisionDate: '2026-04-26',
-    documents: ['Bouwtekening', 'Constructieberekening'],
-  },
-  {
-    id: 'p-2',
-    type: 'building-control',
-    reference: 'BT-2026-0089',
-    authority: 'Gemeente Utrecht',
-    status: 'approved',
-    jobTitle: 'CV-ketel onderhoud — Fam. de Groot',
-    address: 'Hoofdstraat 45, Amsterdam',
-    submissionDate: '2026-02-15',
-    targetDecisionDate: '2026-03-15',
-    documents: ['Installatieschema', 'Veiligheidsrapport'],
-  },
-  {
-    id: 'p-3',
-    type: 'environmental',
-    reference: '',
-    authority: '',
-    status: 'not-submitted',
-    jobTitle: 'Airco installatie — Kantoor Zuidas',
-    address: 'Gustav Mahlerlaan 10, Amsterdam',
-    documents: [],
-  },
-];
 
 // =============================================================================
 // WIZARD STATE
@@ -119,8 +89,32 @@ export default function PermitsScreen() {
   const STATUS_CONFIG = getStatusConfig(t);
   const PERMIT_TYPES = getPermitTypes(t);
   const [activeTab, setActiveTab] = useState<TabType>('overzicht');
-  const [permits, setPermits] = useState<ContractorPermit[]>(mockPermits);
+  // R11.3: real persistence. Permits seed empty + hydrate from AsyncStorage.
+  // Any change is written back so created permits survive app restart.
+  const [permits, setPermits] = useState<ContractorPermit[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Load on mount
+  useEffect(() => {
+    let active = true;
+    AsyncStorage.getItem(PERMITS_STORAGE_KEY)
+      .then(raw => {
+        if (!active || !raw) return;
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) setPermits(parsed);
+        } catch {}
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  // Persist on change (skip the initial empty-state write — only save once
+  // we've either hydrated or the user has explicitly added a permit).
+  useEffect(() => {
+    if (permits.length === 0) return;
+    AsyncStorage.setItem(PERMITS_STORAGE_KEY, JSON.stringify(permits)).catch(() => {});
+  }, [permits]);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [wizard, setWizard] = useState<WizardState>({
     step: 1,
@@ -195,6 +189,13 @@ export default function PermitsScreen() {
         {activeTab === 'overzicht' ? (
           /* Overview Tab */
           <View style={{ gap: 6 }}>
+            {permits.length === 0 && (
+              <View style={styles.emptyState}>
+                <Ionicons name="document-text-outline" size={36} color={SemanticColors.textTertiary} />
+                <Text style={styles.emptyStateTitle}>{t('permits.emptyTitle', 'No permits yet')}</Text>
+                <Text style={styles.emptyStateDesc}>{t('permits.emptyDesc', 'Tap "+ New request" to draft a permit for one of your jobs.')}</Text>
+              </View>
+            )}
             {permits.map(permit => {
               const config = STATUS_CONFIG[permit.status];
               const isExpanded = expandedId === permit.id;
@@ -427,6 +428,25 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 13, fontFamily: 'Archivo_700Bold', color: SemanticColors.textTertiary },
   tabTextActive: { color: '#fff' },
   scrollView: { flex: 1, paddingHorizontal: SafeArea.side },
+  emptyState: {
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 48,
+    paddingHorizontal: 24,
+  },
+  emptyStateTitle: {
+    fontSize: 16,
+    fontFamily: 'Archivo_700Bold',
+    color: SemanticColors.textPrimary,
+    marginTop: 8,
+  },
+  emptyStateDesc: {
+    fontSize: 13,
+    color: SemanticColors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 19,
+    maxWidth: 280,
+  },
 
   // Permit cards
   permitCard: {
