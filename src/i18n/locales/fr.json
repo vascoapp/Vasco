@@ -1903,7 +1903,14 @@
     "processing": "Traitement de votre approbation...",
     "processingTitle": "Traitement...",
     "successTitle": "Accepté",
-    "errorTitle": "Erreur"
+    "errorTitle": "Erreur",
+    "invalidLink": "Lien invalide",
+    "invalidApprovalLink": "Lien d'approbation invalide.",
+    "rateLimited": "Trop de tentatives. Veuillez réessayer dans une minute.",
+    "quoteAccepted": "Devis accepté ! Votre artisan va planifier les travaux.",
+    "acceptedButFailed": "Devis accepté mais la création du chantier a échoué. Votre artisan a été notifié.",
+    "couldNotProcess": "Impossible de traiter l'approbation",
+    "somethingWentWrong": "Une erreur s'est produite. Veuillez réessayer."
   },
   "siteOps": {
     "dispatch": "Dispatch",

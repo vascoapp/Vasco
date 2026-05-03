@@ -1903,7 +1903,14 @@
     "processing": "Je goedkeuring wordt verwerkt...",
     "processingTitle": "Verwerken...",
     "successTitle": "Geaccepteerd",
-    "errorTitle": "Fout"
+    "errorTitle": "Fout",
+    "invalidLink": "Ongeldige link",
+    "invalidApprovalLink": "Ongeldige goedkeuringslink.",
+    "rateLimited": "Te veel pogingen. Probeer het over een minuut opnieuw.",
+    "quoteAccepted": "Offerte geaccepteerd! Je aannemer plant het werk in.",
+    "acceptedButFailed": "Offerte geaccepteerd, maar klusaanmaak mislukte. Je aannemer is op de hoogte gebracht.",
+    "couldNotProcess": "Goedkeuring kon niet verwerkt worden",
+    "somethingWentWrong": "Er ging iets mis. Probeer het opnieuw."
   },
   "siteOps": {
     "dispatch": "Dispatch",

@@ -40,7 +40,7 @@ export default function QuoteDetailScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { quotes, markQuoteSent, priceRisks, lineItems, applySuggestedPrice, convertQuoteToJob, businessProfile, updateQuote } = useAppState();
+  const { quotes, customers, markQuoteSent, priceRisks, lineItems, applySuggestedPrice, convertQuoteToJob, businessProfile, updateQuote } = useAppState();
   const { user } = useAuth();
   const country = businessProfile.country ?? user?.country ?? 'NL';
   const quote = quotes.find((item) => item.id === id);
@@ -70,6 +70,12 @@ export default function QuoteDetailScreen() {
   }
 
   const formatCurrency = (n: number) => fmtCurrency(n, country);
+
+  // R14.1: quote.customer holds the customer UUID, not the name. Was being
+  // rendered directly into the customer card and share-link payload, so the
+  // contractor saw "cust-001" instead of "Bakery Jansen". Resolve once.
+  const customerRecord = customers.find((c: any) => c.id === quote.customer);
+  const customerDisplayName = customerRecord?.name ?? quote.customer;
 
   const subtotal = quoteLineItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
   const vatRate = getVATRate(country);
@@ -143,7 +149,7 @@ export default function QuoteDetailScreen() {
               </Pressable>
             )}
           </View>
-          <Text style={styles.customerName}>{quote.customer}</Text>
+          <Text style={styles.customerName}>{customerDisplayName}</Text>
           <Text style={styles.customerJob}>{quote.job}</Text>
         </View>
 
@@ -160,7 +166,8 @@ export default function QuoteDetailScreen() {
                 [
                   { text: t('quotes.shareApprovalLink', 'Share approval link'), onPress: async () => {
                     try {
-                      await shareQuoteWithAcceptanceLink({ id: quote.id, customer: quote.customer, customerName: quote.customer, amount: quote.amount, job: quote.job });
+                      // R14.1: customer arg is the UUID, customerName needs the resolved name.
+                      await shareQuoteWithAcceptanceLink({ id: quote.id, customer: quote.customer, customerName: customerDisplayName, amount: quote.amount, job: quote.job });
                     } catch {}
                   }},
                   { text: t('common.close', 'Close') },
@@ -289,7 +296,7 @@ export default function QuoteDetailScreen() {
         {/* Actions */}
         <View style={styles.actionsBlock}>
           {quote.status === 'sent' && (
-            <ShareQuoteButton quoteId={quote.id} customerName={quote.customer} />
+            <ShareQuoteButton quoteId={quote.id} customerName={customerDisplayName} />
           )}
 
           <Pressable
@@ -302,7 +309,7 @@ export default function QuoteDetailScreen() {
               const vamt = Math.round(sub * vrate * 100) / 100;
               const pdfData: QuotePdfData = {
                 quoteNumber: quote.id,
-                customerName: quote.customer ?? t('jobs.client', 'Client'),
+                customerName: customerDisplayName ?? t('jobs.client', 'Client'),
                 jobTitle: quote.job ?? t('jobs.typeJob', 'Job'),
                 issueDate: new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }),
                 validUntil: validUntilLabel,
@@ -327,7 +334,7 @@ export default function QuoteDetailScreen() {
               onPress={async () => {
                 try {
                   await shareQuoteWithAcceptanceLink({
-                    id: quote.id, customer: quote.customer, customerName: quote.customer,
+                    id: quote.id, customer: quote.customer, customerName: customerDisplayName,
                     amount: quote.amount, job: quote.job,
                   });
                   if (isDemoMode) {

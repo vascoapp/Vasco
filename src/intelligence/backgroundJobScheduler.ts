@@ -657,8 +657,22 @@ export function startBackgroundJobScheduler(
   const ctx = getContext();
   generateMorningBriefing(ctx).catch(() => {});
 
+  // R14.4: also kick the gated tick once immediately on start. Without this,
+  // a contractor who opens the app briefly (< 30 min) never sees any of the
+  // 6-hourly / daily blocks fire — populateQueue, evaluateTriggers, EVE live
+  // actions, and ML calibration all wait for the first setInterval tick.
+  // The internal state.lastXRun gates ensure we don't re-run blocks that
+  // already ran recently.
+  runScheduledTick(getContext).catch(() => {});
+
   // Check every 30 minutes if any scheduled jobs are due
-  schedulerTimer = setInterval(async () => {
+  schedulerTimer = setInterval(() => { runScheduledTick(getContext).catch(() => {}); }, 30 * 60 * 1000);
+}
+
+// R14.4: extracted from the setInterval body so it can also fire once on start.
+async function runScheduledTick(
+  getContext: () => { invoices: any[]; quotes: any[]; jobs: any[]; customers?: any[]; country?: string },
+): Promise<void> {
     try {
       const raw = await AsyncStorage.getItem(SCHEDULER_KEY);
       const state: SchedulerState = raw ? JSON.parse(raw) : {
@@ -847,7 +861,6 @@ export function startBackgroundJobScheduler(
 
       await AsyncStorage.setItem(SCHEDULER_KEY, JSON.stringify(state));
     } catch {}
-  }, 30 * 60 * 1000); // Check every 30 minutes
 }
 
 export function stopBackgroundJobScheduler(): void {

@@ -1903,7 +1903,14 @@
     "processing": "Elaborazione della tua approvazione...",
     "processingTitle": "Elaborazione...",
     "successTitle": "Accettato",
-    "errorTitle": "Errore"
+    "errorTitle": "Errore",
+    "invalidLink": "Link non valido",
+    "invalidApprovalLink": "Link di approvazione non valido.",
+    "rateLimited": "Troppi tentativi. Riprova tra un minuto.",
+    "quoteAccepted": "Preventivo accettato! Il tuo professionista pianificherà il lavoro.",
+    "acceptedButFailed": "Preventivo accettato, ma la creazione del lavoro è fallita. Il tuo professionista è stato avvisato.",
+    "couldNotProcess": "Impossibile elaborare l'approvazione",
+    "somethingWentWrong": "Qualcosa è andato storto. Riprova."
   },
   "siteOps": {
     "dispatch": "Dispatch",

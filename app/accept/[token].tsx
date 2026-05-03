@@ -49,13 +49,17 @@ export default function AcceptQuoteScreen() {
   const [message, setMessage] = useState(t('accept.processing', 'Processing your approval...'));
 
   useEffect(() => {
-    if (!token) { setStatus('error'); setMessage('Invalid link'); return; }
+    // R14.3: was 6 hardcoded English error/success messages mid-flow
+    // ("Invalid link", "Quote accepted! …", etc) on a customer-facing screen
+    // that already used t() for titles. Customer in DE/FR/ES/IT got English
+    // mid-flow. Migrated to accept.* keys.
+    if (!token) { setStatus('error'); setMessage(t('accept.invalidLink', 'Invalid link')); return; }
 
     // Validate token format
     if (!isValidTokenFormat(token)) {
       logWarn('AcceptQuote', `Invalid token format: ${token.slice(0, 10)}...`);
       setStatus('error');
-      setMessage('Invalid approval link.');
+      setMessage(t('accept.invalidApprovalLink', 'Invalid approval link.'));
       return;
     }
 
@@ -64,7 +68,7 @@ export default function AcceptQuoteScreen() {
       if (limited) {
         logWarn('AcceptQuote', 'Rate limit exceeded for token validation');
         setStatus('error');
-        setMessage('Too many attempts. Please try again in a minute.');
+        setMessage(t('accept.rateLimited', 'Too many attempts. Please try again in a minute.'));
         return;
       }
 
@@ -77,20 +81,20 @@ export default function AcceptQuoteScreen() {
         try {
           updateQuote(result.link.quoteId, { status: 'accepted' });
           setStatus('success');
-          setMessage('Quote accepted! Your contractor will start scheduling the work.');
+          setMessage(t('accept.quoteAccepted', 'Quote accepted! Your contractor will start scheduling the work.'));
           // Navigate to home after delay
           setTimeout(() => router.replace('/'), 3000);
         } catch {
           setStatus('error');
-          setMessage('Quote accepted but job creation failed. Your contractor has been notified.');
+          setMessage(t('accept.acceptedButFailed', 'Quote accepted but job creation failed. Your contractor has been notified.'));
         }
       } else {
         setStatus('error');
-        setMessage(result.error || 'Could not process approval');
+        setMessage(result.error || t('accept.couldNotProcess', 'Could not process approval'));
       }
     }).catch(() => {
       setStatus('error');
-      setMessage('Something went wrong. Please try again.');
+      setMessage(t('accept.somethingWentWrong', 'Something went wrong. Please try again.'));
     });
     } // end processAcceptanceFlow
   }, [token]);

@@ -811,3 +811,17 @@ R12 batch: 0 TS errors, all 6 locales valid.
 **R13.4 — recurring contracts dormancy**: `recurringJobsService` (R246) stores templates locally but **nothing** materializes them into queue items or jobs when due. The aiActionQueueService had a maintenance_due generator — but it only checked **completed jobs from 10-12 months ago** (implicit annual detection). Contractors who explicitly set up monthly/quarterly maintenance contracts via `/contractor/recurring` saw their templates sit static; no job was ever spawned, no reminder ever fired. Added a parallel pass in `populateQueue` that reads `getRecurringInstances({ withinDays: 7 })` and queues `maintenance_due` items with `recurringTemplateId` in preparedData. The queue executor + R286 approve flow can pick up from there.
 
 R13 batch: 0 TS errors, all 6 locales valid.
+
+---
+
+# R14 — quote name resolution, accept-token i18n, scheduler cold-start
+
+**R14.1 — quote detail screen rendered customer UUIDs as names**: `app/quotes/[id].tsx` rendered `{quote.customer}` directly in the Customer card, ShareQuoteButton, PDF generator, and 2 acceptance-link calls. `quote.customer` holds the customer **UUID**, not the name — so contractors saw `cust-001` instead of "Bakery Jansen". Same root cause as R9.3 / R12.2. Resolved once via `customers.find(c => c.id === quote.customer)?.name` and threaded through 5 call sites.
+
+**R14.2 — auth + reset-password flows**: clean. Both `/auth/callback` (Supabase magic-link / recovery / signup) and `/auth/oauth-callback` (Moneybird OAuth) verify state, exchange tokens, route correctly with i18n. `/reset-password` validates length, mismatch, network errors. No bugs found.
+
+**R14.3 — customer accept-token screen 6 hardcoded English mid-flow strings**: `app/accept/[token].tsx` used `t()` for status titles but hardcoded English for every state message ("Invalid link", "Quote accepted! Your contractor will start scheduling the work.", "Too many attempts.", etc). Customer-facing screen — a Dutch contractor sends a quote link, customer taps it, sees Dutch UI initially but English mid-flow. Migrated 6 strings to `accept.*` keys (6 keys × 6 locales).
+
+**R14.4 — background scheduler 30-minute cold-start lag**: `startBackgroundJobScheduler` fired `generateMorningBriefing` immediately on start but the gated 6-hourly / daily blocks (populateQueue, evaluateTriggers, EVE live actions, ML calibration, purchasing agent) only ran inside the `setInterval` body — first tick happens **30 minutes** after app open. A contractor who opens the app for a few minutes never saw fresh AI queue items, fresh workflow-pack triggers, fresh EVE actions, etc. Extracted the tick body into a standalone `runScheduledTick(getContext)` and call it once on start in addition to the setInterval. The internal `lastXRun` state gates handle dedup, so calling immediately is safe.
+
+R14 batch: 0 TS errors, all 6 locales valid.

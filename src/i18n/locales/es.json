@@ -1903,7 +1903,14 @@
     "processing": "Procesando tu aprobación...",
     "processingTitle": "Procesando...",
     "successTitle": "Aceptado",
-    "errorTitle": "Error"
+    "errorTitle": "Error",
+    "invalidLink": "Enlace no válido",
+    "invalidApprovalLink": "Enlace de aprobación no válido.",
+    "rateLimited": "Demasiados intentos. Inténtalo de nuevo en un minuto.",
+    "quoteAccepted": "¡Presupuesto aceptado! Tu profesional empezará a programar el trabajo.",
+    "acceptedButFailed": "Presupuesto aceptado, pero falló la creación del trabajo. Tu profesional ha sido notificado.",
+    "couldNotProcess": "No se pudo procesar la aprobación",
+    "somethingWentWrong": "Algo salió mal. Inténtalo de nuevo."
   },
   "siteOps": {
     "dispatch": "Asignación",

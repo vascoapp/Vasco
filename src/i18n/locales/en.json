@@ -1903,7 +1903,14 @@
     "processing": "Processing your approval...",
     "processingTitle": "Processing...",
     "successTitle": "Accepted",
-    "errorTitle": "Error"
+    "errorTitle": "Error",
+    "invalidLink": "Invalid link",
+    "invalidApprovalLink": "Invalid approval link.",
+    "rateLimited": "Too many attempts. Please try again in a minute.",
+    "quoteAccepted": "Quote accepted! Your contractor will start scheduling the work.",
+    "acceptedButFailed": "Quote accepted but job creation failed. Your contractor has been notified.",
+    "couldNotProcess": "Could not process approval",
+    "somethingWentWrong": "Something went wrong. Please try again."
   },
   "siteOps": {
     "dispatch": "Dispatch",

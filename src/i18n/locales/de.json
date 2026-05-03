@@ -1903,7 +1903,14 @@
     "processing": "Deine Freigabe wird verarbeitet...",
     "processingTitle": "Verarbeitung...",
     "successTitle": "Akzeptiert",
-    "errorTitle": "Fehler"
+    "errorTitle": "Fehler",
+    "invalidLink": "Ungültiger Link",
+    "invalidApprovalLink": "Ungültiger Freigabe-Link.",
+    "rateLimited": "Zu viele Versuche. Bitte in einer Minute erneut versuchen.",
+    "quoteAccepted": "Angebot angenommen! Dein Handwerker wird die Arbeit einplanen.",
+    "acceptedButFailed": "Angebot angenommen, aber die Auftragserstellung ist fehlgeschlagen. Dein Handwerker wurde benachrichtigt.",
+    "couldNotProcess": "Freigabe konnte nicht verarbeitet werden",
+    "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte erneut versuchen."
   },
   "siteOps": {
     "dispatch": "Disposition",
