@@ -28,6 +28,10 @@ export function postcodePrefixLengthFor(country: string): number {
   }
 }
 
+/**
+ * @internal R24: direct export retained for the `usePostcodeCohort` hook
+ * and for non-React schedulers. UI code should consume the hook.
+ */
 export async function getPostcodeCohort(
   trade: string,
   country: string,

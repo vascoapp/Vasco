@@ -24,9 +24,8 @@
 //  4. Credential expiry → AI queue item (cert_renewal pattern from R286)
 //  5. Localize credentials and trade names
 //
-// Until then: do not import. Tagged for cleanup alongside teamToolsService
-// (R299). Both speculatively built for the multi-employee segment that hasn't
-// been validated.
+// Until then: do not import. Same speculative-multi-employee provenance as
+// teamToolsService (R299, deleted in R24).
 // =============================================================================
 
 import { useState, useEffect, useCallback } from 'react';

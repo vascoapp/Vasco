@@ -107,9 +107,9 @@ export function buildLiveActions(input: Input): EveAction[] {
     });
   }
 
+
   // ── Agent: 24h appointment reminders + 3-day quote follow-ups (R302) ────
-  // These are the two MessageTrigger events from customerCommunicationService
-  // that fit the daily-scheduler cadence. Other triggers (on_my_way,
+  // Two daily-scheduler-cadence triggers. Other triggers (on_my_way,
   // appointment_reminder_2h) are too time-sensitive or already covered.
   // Each item ships a pre-rendered shareable template via preparedData.template
   // so R286's executor opens the Share sheet directly.

@@ -203,6 +203,11 @@ async function computeLocalBenchmarks(trade: string, country: string): Promise<C
 // Main fetch with cache
 // ---------------------------------------------------------------------------
 
+/**
+ * @internal R24: direct export retained for the in-service cache flow and
+ * for the `useCohortBenchmarks` hook below. UI code should call the hook;
+ * non-React contexts (workers, schedulers) call this function directly.
+ */
 export async function getCohortBenchmarks(trade: string, country: string): Promise<CohortStats> {
   // Check cache
   try {

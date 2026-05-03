@@ -620,14 +620,12 @@ VascoApp is solo-contractor focused. LAUNCH.md §6 explicitly says: *"Worker app
 4. **Build ES + IT e-invoice export UI** (R4) — `generateFacturaeXml` and `generateFatturaPAXml` exist but no UI mapper. Launch-blocker for those markets.
 5. **Auto-prompt for job quality feedback** (R7) — queue a `job_quality_feedback` AI item when status flips to completed; without this, contractors won't tap the Feedback button.
 
-**Files retired (deprecated headers, kept in tree):**
-- `customerCommunicationService.ts` (R288)
-- `liveTrackingService.ts` (R295)
-- `signatureService.ts` (R296)
-- `teamToolsService.ts` (R299)
-- `whatsappTemplateService.sendWhatsapp` + `useReviews` + `useReputation` (R300, function-level)
-
-These four files can be deleted whenever someone wants to reclaim ~1,000 LoC. None of them is referenced by any consumer.
+**Files retired:**
+- ~~`customerCommunicationService.ts` (R288)~~ — DELETED in R24 (~416 LoC).
+- ~~`liveTrackingService.ts` (R295)~~ — DELETED in R24 (~342 LoC).
+- ~~`teamToolsService.ts` (R299)~~ — DELETED in R24 (~396 LoC).
+- `signatureService.ts` (R296) — RE-ACTIVATED in R301 via invoicePdfService embed; retained.
+- `whatsappTemplateService.sendWhatsapp` + `useReviews` + `useReputation` (R300, function-level) — still deprecated, still in tree.
 
 ---
 
@@ -974,3 +972,19 @@ R22 batch: 0 TS errors, all 6 locales unchanged at 2248 keys parity.
 - `signatureHtmlBlock` embed in `generateInvoicePdf` (R11 deferral) — R301 wired the `customerSignature?:{svgDataUri,signedAt,signerName}` option threaded through 3 callers (`/invoices/[id]`, `(contractor)/facturen`, `(modals)/pdf`); verified.
 
 R23 batch: 0 TS errors, all 6 locales unchanged at 2248 keys parity.
+
+---
+
+# R24 — delete confirmed-orphan deprecated services (~1,154 LoC reclaimed)
+
+The audit summary at line 624 listed 4 files as "deletable whenever someone wants to reclaim ~1,000 LoC". Verified each is truly orphan after the recent rounds and removed three. The fourth (`signatureService.ts`) was kept — R301 wired `signatureHtmlBlock` into the invoice PDF flow, so it's no longer dead.
+
+**R24.1 — `customerCommunicationService.ts` deleted (R3 deprecation, 416 LoC)**: confirmed zero importers in `app/` or `src/components/` or any other service. Only stale string ref was a comment in `eveLiveActionService.ts:111` ("These are the two MessageTrigger events from customerCommunicationService that fit the daily-scheduler cadence...") — rewritten to drop the dead-pointer. The canonical message templating surface remains `whatsappTemplateService.renderTemplate` per R288.
+
+**R24.2 — `liveTrackingService.ts` deleted (R10 deprecation, 342 LoC)**: confirmed zero importers anywhere. Per `feedback_gps_low_priority.md` GPS / live tracking is not load-bearing for VascoApp. Removed entirely; no comment refs to clean up.
+
+**R24.3 — `teamToolsService.ts` deleted (R14 deprecation, 396 LoC)**: confirmed zero importers anywhere. Per LAUNCH §6 worker-app expansion only happens if multi-employee contractors land — speculative pre-built infrastructure with no validated demand. Updated the comment in `subcontractorService.ts:27` to drop the "alongside teamToolsService" pointer (it's now alongside nothing).
+
+**R24.4 — `@internal` markers on cohort direct exports (R5 minor flag)**: `getCohortBenchmarks` (cohortBenchmarkService) and `getPostcodeCohort` (postcodeCohortService) — both exported but the architectural intent is hook-first consumption (`useCohortBenchmarks` / `usePostcodeCohort`). Direct exports retained for non-React contexts (workers, schedulers) and for the in-service cache flow itself, but now JSDoc-tagged `@internal` so contributors don't accidentally call them from a UI surface that should use the hook. Closes the R5 "minor flags" follow-up.
+
+R24 batch: ~1,154 LoC reclaimed. 0 TS errors, all 6 locales unchanged at 2248 keys parity. Audit-doc "Files retired" footnote at line 624 should be updated to reflect deletion (3 of 4 files now gone; signatureService.ts kept due to R301 wiring).
