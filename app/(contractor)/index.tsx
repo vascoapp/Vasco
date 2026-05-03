@@ -283,9 +283,31 @@ function KpiTile({ label, value, tone, onPress }: { label: string; value: string
   );
 }
 
+// R22: minimum EVE 3-agent UI surface (R9 deferral). EveLiveActions tag
+// queue items via `sourceGeneratorId: eve-${agentType}` (set in
+// backgroundJobScheduler.ts). Parse it and render a small colored dot +
+// agent letter so the contractor can see at a glance which EVE agent
+// (Agent / Auditor / Analyst) prepared each row. Pure visual; no data-flow
+// changes. Per-agent dashboard remains deferred (3-5 days, separate round).
+function eveAgentBadge(item: QueueItem): { letter: string; color: string } | null {
+  const src = item.sourceGeneratorId ?? '';
+  if (!src.startsWith('eve-')) return null;
+  const type = src.slice(4);
+  if (type === 'agent') return { letter: 'A', color: '#E35205' };       // sunset-orange
+  if (type === 'auditor') return { letter: 'U', color: '#1E3A8A' };     // deep blue
+  if (type === 'analyst') return { letter: 'L', color: '#10B981' };     // analyst green
+  return null;
+}
+
 function InlineQueueRow({ item, onApprove, onReject }: { item: QueueItem; onApprove: () => void; onReject: () => void }) {
+  const eve = eveAgentBadge(item);
   return (
     <View style={inlineStyles.row}>
+      {eve && (
+        <View style={[inlineStyles.eveBadge, { backgroundColor: eve.color + '22', borderColor: eve.color + '88' }]}>
+          <Text style={[inlineStyles.eveBadgeText, { color: eve.color }]}>{eve.letter}</Text>
+        </View>
+      )}
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={inlineStyles.title} numberOfLines={1}>{item.title}</Text>
         <Text style={inlineStyles.impact} numberOfLines={1}>{item.estimatedImpact}</Text>
@@ -568,6 +590,17 @@ const inlineStyles = StyleSheet.create({
     paddingVertical: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: DK.colors.border,
+  },
+  // R22: EVE agent attribution badge — A/U/L for Agent/Auditor/Analyst.
+  eveBadge: {
+    width: 22, height: 22, borderRadius: 11,
+    borderWidth: 1,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  eveBadgeText: {
+    fontFamily: DK.type.display800,
+    fontSize: 11,
+    letterSpacing: 0.5,
   },
   title: {
     fontFamily: DK.type.display700,

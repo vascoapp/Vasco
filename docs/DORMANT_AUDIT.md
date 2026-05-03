@@ -939,3 +939,22 @@ R20 batch: 0 TS errors, all 6 locales valid (2248 keys each, full parity, +15 ne
 **R21.4 — pick canonical CRM service (R12 deferral)**: customerTaggingService is now the single canonical CRM surface. Added `contextLineFromProfile(profile)` helper that produces the same one-shot summary line ("Repeat customer, €5,200, 3 jobs, excellent payer") that VascoCard's `customerContext` field renders. tradeContext.getCustomerIntelligence is now formally `@deprecated` pointing at the canonical service; retained as a compat wrapper for the 4 aiActionQueueService call sites that consume `avgDSO` / `paymentReliability` / `escalationNeeded` (fields not on CustomerProfile yet — restructuring those 4 sites is its own pass).
 
 R21 batch: 0 TS errors, all 6 locales unchanged at 2248 keys parity.
+
+---
+
+# R22 — EVE 3-agent attribution + job-status gate (mostly UI-shipping)
+
+Auditing remaining R-flag deferrals: confirmed R304/R300 already shipped many
+items (draft_invoice prefill ✓, customer_portal_events write ✓, decision-
+intelligence hooks formally @deprecated ✓). Remaining concrete fixes shipped:
+
+**R22.1 — EVE 3-agent attribution badges in AI queue (R9 minimum surface)**: `eveLiveActions.buildLiveActions` tags every queue item with `sourceGeneratorId: eve-${agentType}` (set in `backgroundJobScheduler.ts:777`) but no UI ever surfaced this — every EVE item rendered with no agent attribution. The "EVE 3-agent workforce" UX promise was structurally there but invisibly so. Closed: parses `sourceGeneratorId` and renders an inline colored A/U/L badge on `InlineQueueRow` (Vandaag) and an `EVE · AGENT/AUDITOR/ANALYST` chip on `HeroActionCard` (AI tab). Pure visual; no data flow changes. Per-agent dashboard with pending counts + tagline (3-5 day per-agent surface deferral) remains future work, but this minimum surface closes the "agent invisible" gap.
+
+**R22.2 — `gateJobStatusChange` wired into job/[id] advance flow (R2 deferral)**: `validateJobStatusChange` was wired into `AppState.updateJobStatus` since R2, returning `{ warnings }` — but no caller read the return value. The user-facing "advance status" tap on `/contractor/job/[id]` (the canonical user-driven status-transition flow) just confirmed and fired without checking. Built `src/services/jobStatusGate.ts` analogous to R287's `gateReminderSend` and R304's `gateQuoteValidation`: hard errors block with a destructive "Change anyway" override, warnings prompt with "Continue". Wired into the `advance(job.id)` path in `app/contractor/job/[id].tsx`. The validator string defaults are already i18n-aware; chose not to materialize the 4 alert-title keys × 6 locales (`validator.jobStatus*Title`, `changeAnyway`) since the inline `defaultValue` strings render correctly via i18next's fallback.
+
+**Deferred / no-op verified in R22:**
+- R1 `draft_invoice` prefill — R304 already wired `?action=create-invoice` + auto-create useEffect; verified live.
+- R6 `customer_portal_events` BE write — R304 already wired `flushActivityBuffer` to `supabase.from('customer_portal_events').insert(beRows)`; verified.
+- R6 `useRegionalPreferences` / `useDecisionTiming` / `useDecisionSubmission` orphan hooks — R304 already added `@deprecated` headers pointing at the missing aggregation pipeline; no further action without BE work.
+
+R22 batch: 0 TS errors, all 6 locales unchanged at 2248 keys parity.

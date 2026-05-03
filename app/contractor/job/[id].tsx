@@ -450,7 +450,14 @@ export default function JobDetailPage() {
                 t('jobs.updateStatusDesc', { defaultValue: 'Change status to "{{status}}"?', status: LIFECYCLE_LABELS[LIFECYCLE_ORDER[LIFECYCLE_ORDER.indexOf(job.lifecycleStatus) + 1]] }),
                 [
                   { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-                  { text: t('common.confirm', 'Confirm'), onPress: () => {
+                  { text: t('common.confirm', 'Confirm'), onPress: async () => {
+                    // R22: gate via validator (closes R2 deferral). Advance
+                    // is the user-driven status-transition path; warnings
+                    // here surface as a confirm alert before the change.
+                    const nextStatus = LIFECYCLE_ORDER[LIFECYCLE_ORDER.indexOf(job.lifecycleStatus as any) + 1];
+                    const { gateJobStatusChange } = await import('../../../src/services/jobStatusGate');
+                    const ok = await gateJobStatusChange(job.lifecycleStatus, nextStatus, job);
+                    if (!ok) return;
                     advance(job.id);
                     if (job.lifecycleStatus === 'gereed') {
                       router.push('/(contractor)/facturen' as any);

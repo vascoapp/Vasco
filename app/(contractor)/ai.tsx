@@ -42,6 +42,19 @@ interface ProactiveAction {
   shareText?: string;
   route?: string;
   priority: 'high' | 'medium' | 'low';
+  // R22: optional EVE attribution — present when sourceGeneratorId is
+  // `eve-${agentType}`. Drives the per-row badge on the hero card so the
+  // contractor sees which EVE agent (Agent / Auditor / Analyst) prepared
+  // the action. Closes R9 minimum surface deferral.
+  eveAgent?: 'agent' | 'auditor' | 'analyst';
+}
+
+// R22: parse `eve-{agentType}` source-generator id → agent type.
+function parseEveAgent(sourceGeneratorId?: string): ProactiveAction['eveAgent'] {
+  if (!sourceGeneratorId?.startsWith('eve-')) return undefined;
+  const t = sourceGeneratorId.slice(4);
+  if (t === 'agent' || t === 'auditor' || t === 'analyst') return t;
+  return undefined;
 }
 
 export default function VascoScreen() {
@@ -145,6 +158,7 @@ export default function VascoScreen() {
           title: item.title, reason: item.description,
           actionLabel: item.actionLabel || t('ai.approve'),
           actionType: 'approve', priority: 'medium',
+          eveAgent: parseEveAgent(item.sourceGeneratorId),
         });
       }
     });
@@ -463,9 +477,20 @@ function HeroActionCard({ action, editingId, editText, setEditingId, setEditText
         style={heroStyles.card}
       >
         <View style={heroStyles.glow} />
-        <View style={heroStyles.chip}>
-          <Ionicons name="flash" size={12} color={DK.colors.highlight} />
-          <Text style={heroStyles.chipText}>{(action.priority === 'high' ? t('dk.hero.topPriority', 'Top priority') : t('dk.hero.nextAction', 'Next action')).toUpperCase()}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={heroStyles.chip}>
+            <Ionicons name="flash" size={12} color={DK.colors.highlight} />
+            <Text style={heroStyles.chipText}>{(action.priority === 'high' ? t('dk.hero.topPriority', 'Top priority') : t('dk.hero.nextAction', 'Next action')).toUpperCase()}</Text>
+          </View>
+          {/* R22: EVE 3-agent attribution chip — shows which agent prepared
+              this action. Hidden when not an EVE-sourced item. */}
+          {action.eveAgent && (
+            <View style={[heroStyles.chip, { backgroundColor: '#FFFFFF22', borderColor: '#FFFFFF55' }]}>
+              <Text style={[heroStyles.chipText, { color: '#FFFFFF' }]}>
+                {action.eveAgent === 'agent' ? 'EVE · AGENT' : action.eveAgent === 'auditor' ? 'EVE · AUDITOR' : 'EVE · ANALYST'}
+              </Text>
+            </View>
+          )}
         </View>
         <Text style={heroStyles.title} numberOfLines={2}>{action.title}</Text>
         <Text style={heroStyles.body} numberOfLines={2}>{action.reason}</Text>
