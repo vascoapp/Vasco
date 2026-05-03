@@ -78,13 +78,25 @@ type ExpenseListener = () => void;
 class ExpenseService {
   private static instance: ExpenseService;
   private listeners: Set<ExpenseListener> = new Set();
-  private expenses: Expense[] = [...mockExpenses];
+  // R26: was seeded with 7 fake expenses (`Koperen buis 22mm` /
+  // `Accuboormachine Makita` / `VCA Herhalingsexamen` / etc.) — every
+  // contractor's vat-prep BTW return + cashflow card showed those phantom
+  // costs as their own. Now starts empty; real expenses flow in via
+  // addExpense (used by the receipt scanner pipeline + manual entry).
+  // The mockExpenses export below is kept for tests via __seedMockData.
+  private expenses: Expense[] = [];
 
   static getInstance(): ExpenseService {
     if (!ExpenseService.instance) {
       ExpenseService.instance = new ExpenseService();
     }
     return ExpenseService.instance;
+  }
+
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
+    this.expenses = [...mockExpenses];
+    this.notify();
   }
 
   subscribe(listener: ExpenseListener): () => void {

@@ -1006,3 +1006,22 @@ business event, not on the next scheduler tick:
 **R25.3 — `payment_received` instant thank-you on markInvoicePaid**: was R3 deferral "nothing" — eveLiveActionService daily scheduler queues a 24h-window thanks for catchup but missed contractors watching the app live when a payment lands (Mollie webhook fires `markInvoicePaid` realtime per R278 watchInvoicePayments). Now: `queuePaymentReceivedThanks({ invoiceId, customerId, customerName, amount })` fires from `AppState.markInvoicePaid`. EntityKey `paid_thanks:{invoiceId}` + the eve daily catchup's `eve-paid` mkId both target satisfaction_survey type so dedup at queue level prevents double-firing.
 
 R25 batch: 4 files touched (aiActionQueueService + 3 call sites), 3 new exports, 0 TS errors. Default i18n strings inline via `defaultValue` so locales unchanged at 2248×6 (i18n keys materialize automatically when locales next regenerate). Closes the last 3 R3 immediate-fire deferrals.
+
+---
+
+# R26 — wire 3 mock-backed services to real AppState (cashflow + expenses + collections)
+
+User direction: stop deprecating, start wiring. This round rewires three services that power live contractor surfaces but were quietly serving hardcoded mock data into the real UI.
+
+**R26.1 — `cashFlowService` mock invoices + expenses + currentBalance dropped (Geld tab)**: the singleton's constructor was seeding 4 fake invoices (`Familie de Vries / Bakkerij Jansen / Peter van den Berg / Sandra Bakker`) + 5 fake expenses (`Verf en primer / Brandstof / Bedrijfsverzekering / etc`) into every contractor's cashflow on app open. The `useCashFlow` hook already mapped real AppState invoices (good) but expenses fell through to `cashFlowService.getExpenses()` which returned the mock list. Plus `getCashFlowSummary()` hardcoded `currentBalance: 15000` regardless of real money. Fixes: (a) constructor no-op (no mock seed), `__seedMockData()` exposed for tests; (b) `useCashFlow` now reads expenses from canonical `useExpenses()` hook and maps `expenseService.Expense` shape → `cashFlowService.Expense`; (c) singleton `getCashFlowSummary().currentBalance` now sums paid invoices instead of returning 15000 fiction.
+
+**R26.2 — `expenseService` mock seed dropped (powers vat-prep + expenses screen)**: same pattern — constructor was seeding 7 fake expenses (`Koperen buis 22mm`, `VCA Herhalingsexamen`, `Bedrijfsverzekering Q1`) into every contractor's expense list. So a new contractor opening BTW VAT-prep saw €1,544 of phantom deductible costs they never paid → wrong VAT return draft, wrong cashflow, wrong material drift signal (anything reading expenses). Constructor now starts empty; mock seed exposed via `__seedMockData()` for tests.
+
+**R26.3 — `collectionsAgentService` mock DSO + dunning + cash-gap alerts replaced with real derivations (powers 3 AI generators)**: was returning `MOCK_DSO_METRICS = { currentDSO: 24, targetDSO: 21, trend: 'improving', previousDSO: 28 }` to **every** contractor regardless of their actual books. Plus 3 hardcoded dunning sequences (`Van der Berg Vastgoed / Janssen Bouw BV / De Groot Installaties`) and 2 hardcoded cash-gap alerts surfaced through `useCollectionsAgent` into `cashGapGenerator`, `dsoTrendGenerator`, `customerLifecycleGenerator` — three of the AI tab's insight cards. Three new pure derivations now compute from real `AppState.invoices`:
+- `deriveDSO(invoices)` — average days from `sentAt → paidAt` for last 90d paid invoices, with previous-period (30-90d window) for trend
+- `deriveDunningSequences(invoices)` — synthesizes the 5-step dunning plan (`vriendelijk → herinnering → urgent → aanmaning → incasso`) per overdue invoice, with past steps marked sent based on overdue duration
+- `deriveCashGapAlerts(invoices)` — generates an aggregate "N overdue invoices" alert when `overdueTotal > 0` and a longest-overdue alert when an invoice is >30d past due
+
+The cohort `industryAverage` still folds in via `primeCohortIndustryAverage` (R210). Hooks rewritten to depend on `useAppState().invoices` so they re-render on real data changes.
+
+R26 batch: 3 files touched, 0 TS errors, locales unchanged at 2248×6. Combined contractor-visible impact: Geld tab + AI tab insights + BTW prep all now reflect the contractor's actual books instead of seeded mock customers.

@@ -274,21 +274,135 @@ class CollectionsAgentService {
 }
 
 // ---------------------------------------------------------------------------
-// Hooks
+// Hooks — R26: real data from AppState (was MOCK_DSO_METRICS / MOCK_DUNNING /
+// MOCK_CASH_GAP_ALERTS — every contractor saw "Van der Berg Vastgoed",
+// "Janssen Bouw BV", "De Groot Installaties" mock customers regardless of
+// their own books). The 3 generators consuming these (cashGap, dsoTrend,
+// customerLifecycle) now reflect actual contractor cashflow.
 // ---------------------------------------------------------------------------
 
+import { useAppState } from '../state/AppState';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function deriveDSO(invoices: any[]): DSOMetrics {
+  const paid = invoices.filter((i) => i.status === 'paid' && (i.sentAt || i.createdAt) && (i.paidAt || i.lastUpdated));
+  // Average days from sent → paid for last 90 days of paid invoices
+  const recentPaid = paid.filter((i) => {
+    const paidAt = new Date(i.paidAt || i.lastUpdated).getTime();
+    return paidAt > Date.now() - 90 * DAY_MS;
+  });
+  const days = recentPaid.map((i) => {
+    const sent = new Date(i.sentAt || i.createdAt).getTime();
+    const paidAt = new Date(i.paidAt || i.lastUpdated).getTime();
+    return Math.max(0, (paidAt - sent) / DAY_MS);
+  });
+  const currentDSO = days.length > 0 ? Math.round(days.reduce((a, b) => a + b, 0) / days.length) : 0;
+  // Previous-period DSO: 30-90 day window
+  const previousPaid = paid.filter((i) => {
+    const paidAt = new Date(i.paidAt || i.lastUpdated).getTime();
+    return paidAt < Date.now() - 30 * DAY_MS && paidAt > Date.now() - 90 * DAY_MS;
+  });
+  const prevDays = previousPaid.map((i) => {
+    const sent = new Date(i.sentAt || i.createdAt).getTime();
+    const paidAt = new Date(i.paidAt || i.lastUpdated).getTime();
+    return Math.max(0, (paidAt - sent) / DAY_MS);
+  });
+  const previousDSO = prevDays.length > 0 ? Math.round(prevDays.reduce((a, b) => a + b, 0) / prevDays.length) : currentDSO;
+  const trend: DSOMetrics['trend'] = currentDSO < previousDSO ? 'improving' : currentDSO > previousDSO ? 'worsening' : 'stable';
+  return {
+    currentDSO,
+    targetDSO: 21,
+    trend,
+    previousDSO,
+    industryAverage: cohortIndustryAverage ?? 32,
+  };
+}
+
+function deriveDunningSequences(invoices: any[]): DunningSequence[] {
+  const now = Date.now();
+  return invoices
+    .filter((i) => i.status === 'overdue' || (i.status === 'sent' && i.dueInDays !== undefined && i.dueInDays < 0))
+    .map((inv) => {
+      const daysOverdue = Math.max(0, Math.abs(inv.dueInDays ?? 0));
+      // Step heuristic: 0-7d vriendelijk, 7-14d herinnering, 14-30d urgent,
+      // 30-60d aanmaning, 60+d incasso.
+      const currentStep: DunningStepType =
+        daysOverdue >= 60 ? 'incasso'
+        : daysOverdue >= 30 ? 'aanmaning'
+        : daysOverdue >= 14 ? 'urgent'
+        : daysOverdue >= 7 ? 'herinnering'
+        : 'vriendelijk';
+      // Synthesize the 5-step plan (sent for past steps, pending for future).
+      const stepOrder: DunningStepType[] = ['vriendelijk', 'herinnering', 'urgent', 'aanmaning', 'incasso'];
+      const dayOffsets: Record<DunningStepType, number> = {
+        vriendelijk: 0, herinnering: 7, urgent: 14, aanmaning: 30, incasso: 60,
+      };
+      const baseDue = inv.dueDate ? new Date(inv.dueDate).getTime() : now - daysOverdue * DAY_MS;
+      const steps: DunningStep[] = stepOrder.map((step) => {
+        const scheduledMs = baseDue + dayOffsets[step] * DAY_MS;
+        const isPast = scheduledMs < now && stepOrder.indexOf(step) <= stepOrder.indexOf(currentStep);
+        return {
+          step,
+          scheduledDate: new Date(scheduledMs).toISOString().slice(0, 10),
+          ...(isPast ? { sentDate: new Date(scheduledMs).toISOString().slice(0, 10), status: 'sent' as const } : { status: 'pending' as const }),
+        };
+      });
+      return {
+        id: `dun-${inv.id}`,
+        invoiceId: inv.id,
+        customerName: inv.customerName ?? inv.customer ?? '',
+        invoiceAmount: inv.amount ?? 0,
+        daysOverdue,
+        currentStep,
+        steps,
+        autoSendEnabled: false,
+      };
+    });
+}
+
+function deriveCashGapAlerts(invoices: any[]): CashGapAlert[] {
+  const overdue = invoices.filter((i) => i.status === 'overdue' || (i.status === 'sent' && (i.dueInDays ?? 0) < 0));
+  if (overdue.length === 0) return [];
+  const total = overdue.reduce((sum, i) => sum + (i.amount ?? 0), 0);
+  const longest = overdue.reduce((max, i) => {
+    const d = Math.abs(i.dueInDays ?? 0);
+    return d > max.days ? { days: d, inv: i } : max;
+  }, { days: 0, inv: null as any });
+  const out: CashGapAlert[] = [];
+  if (total > 0) {
+    out.push({
+      id: 'cga-overdue-total',
+      title: `${overdue.length} overdue invoice${overdue.length > 1 ? 's' : ''}`,
+      description: `€${Math.round(total)} outstanding past due date.`,
+      severity: total > 5000 ? 'kritiek' : 'waarschuwing',
+      gapAmount: total,
+      suggestedAction: 'Send reminders to overdue customers',
+      relatedInvoiceIds: overdue.map((i) => i.id),
+    });
+  }
+  if (longest.days >= 30 && longest.inv) {
+    out.push({
+      id: `cga-longest-${longest.inv.id}`,
+      title: `${longest.days}d overdue: ${longest.inv.customerName ?? longest.inv.customer ?? ''}`,
+      description: `Invoice ${longest.inv.id} (€${Math.round(longest.inv.amount ?? 0)}). Collections risk rising.`,
+      severity: 'kritiek',
+      gapAmount: longest.inv.amount ?? 0,
+      suggestedAction: 'Escalate to formal notice or call',
+      relatedInvoiceIds: [longest.inv.id],
+    });
+  }
+  return out;
+}
+
 export function useDSOMetrics(): DSOMetrics {
-  return useMemo(() => {
-    const service = CollectionsAgentService.getInstance();
-    return service.getDSOMetrics();
-  }, []);
+  const { invoices } = useAppState();
+  return useMemo(() => deriveDSO(invoices), [invoices]);
 }
 
 export function useDunningSequences(): DunningSequence[] {
-  return useMemo(() => {
-    const service = CollectionsAgentService.getInstance();
-    return service.getDunningSequences();
-  }, []);
+  const { invoices } = useAppState();
+  return useMemo(() => deriveDunningSequences(invoices), [invoices]);
 }
 
 export function useCollectionsAgent(): {
@@ -297,15 +411,27 @@ export function useCollectionsAgent(): {
   alerts: CashGapAlert[];
   dso: DSOMetrics;
 } {
+  const { invoices } = useAppState();
   return useMemo(() => {
-    const service = CollectionsAgentService.getInstance();
-    return {
-      summary: service.getSummary(),
-      sequences: service.getDunningSequences(),
-      alerts: service.getCashGapAlerts(),
-      dso: service.getDSOMetrics(),
+    const sequences = deriveDunningSequences(invoices);
+    const alerts = deriveCashGapAlerts(invoices);
+    const dso = deriveDSO(invoices);
+    const totalOutstanding = sequences.reduce((sum, s) => sum + s.invoiceAmount, 0);
+    const autoSendCount = sequences.filter((s) => s.autoSendEnabled).length;
+    const pendingDates = sequences
+      .flatMap((s) => s.steps)
+      .filter((st) => st.status === 'pending')
+      .map((st) => st.scheduledDate)
+      .sort();
+    const summary: CollectionsAgentSummary = {
+      totalOutstanding,
+      sequencesActive: sequences.length,
+      autoSendCount,
+      nextActionDate: pendingDates[0] ?? '',
+      estimatedRecovery: Math.round(totalOutstanding * 0.85),
     };
-  }, []);
+    return { summary, sequences, alerts, dso };
+  }, [invoices]);
 }
 
 // ---------------------------------------------------------------------------

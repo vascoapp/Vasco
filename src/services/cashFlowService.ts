@@ -186,6 +186,16 @@ class CashFlowService {
   private listeners: Set<() => void> = new Set();
 
   constructor() {
+    // R26: dropped MOCK_INVOICES + MOCK_EXPENSES seed (was injecting "Familie
+    // de Vries / Bakkerij Jansen / Peter van den Berg" fake customers + 5
+    // fake expenses into every contractor's cashflow). Real data flows in
+    // via the useCashFlow hook from AppState.invoices + useExpenses.
+    // The MOCK_* exports below are kept for tests and can be re-injected via
+    // __seedMockData() in test setups.
+  }
+
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
     MOCK_INVOICES.forEach((i) => this.invoices.set(i.id, i));
     MOCK_EXPENSES.forEach((e) => this.expenses.set(e.id, e));
   }
@@ -397,8 +407,14 @@ class CashFlowService {
       (projectedBalance30Days > 10000 ? 30 : projectedBalance30Days > 5000 ? 15 : 0)
     ));
 
+    // R26: was hardcoded 15000 — pure fiction for every contractor regardless
+    // of actual finances. Now sums paid invoices (cash that's actually landed).
+    const currentBalance = this.getInvoices()
+      .filter((i) => i.status === 'paid')
+      .reduce((sum, i) => sum + i.amount, 0);
+
     return {
-      currentBalance: 15000,
+      currentBalance,
       pendingIncome,
       pendingExpenses,
       projectedBalance30Days,
@@ -532,11 +548,15 @@ export const cashFlowService = new CashFlowService();
 // REACT HOOKS
 // ============================================
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAppState } from '../state/AppState';
+import { useExpenses } from './expenseService';
 
 export function useCashFlow() {
   const { invoices: appInvoices } = useAppState();
+  // R26: real expenses from canonical expenseService (was mock singleton).
+  // expenseService stores per-contractor in AsyncStorage + Supabase via R262.
+  const { expenses: appExpenses } = useExpenses();
 
   // Map AppState invoices → CashFlowService Invoice shape
   const invoices = useMemo<Invoice[]>(() =>
@@ -560,15 +580,30 @@ export function useCashFlow() {
     [appInvoices],
   );
 
-  // Expenses still come from singleton (no AppState equivalent yet)
-  const [expenses, setExpenses] = useState<Expense[]>(() => cashFlowService.getExpenses());
-
-  useEffect(() => {
-    const unsubscribe = cashFlowService.subscribe(() => {
-      setExpenses(cashFlowService.getExpenses());
-    });
-    return unsubscribe;
-  }, []);
+  // R26: real expenses from canonical expenseService (was MOCK_EXPENSES singleton).
+  // Map expenseService.Expense shape → cashFlowService.Expense shape.
+  const expenses = useMemo<Expense[]>(() => {
+    const catMap: Record<string, Expense['category']> = {
+      materiaal: 'materialen',
+      voertuig: 'voertuig',
+      gereedschap: 'gereedschap',
+      verzekering: 'verzekering',
+      kantoor: 'overig',
+      opleiding: 'overig',
+      reis: 'overig',
+      overig: 'overig',
+    };
+    return appExpenses.map((e) => ({
+      id: e.id,
+      category: catMap[e.category] ?? 'overig',
+      description: e.description,
+      amount: e.amount + (e.vatAmount ?? 0),
+      date: (e.date instanceof Date ? e.date : new Date(e.date)).toISOString().slice(0, 10),
+      projectId: e.jobId,
+      receiptUrl: e.receiptUrl,
+      recurring: false,
+    }));
+  }, [appExpenses]);
 
   // Build summary from real invoices
   const summary = useMemo<CashFlowSummary>(() => {
