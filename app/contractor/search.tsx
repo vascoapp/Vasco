@@ -4,7 +4,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../src/theme/colors';
@@ -39,7 +39,13 @@ export default function SearchScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { jobs, quotes, invoices, customers } = useAppState();
-  const [query, setQuery] = useState('');
+  // R15.1: accept ?q= initial query so the CRM customer-tap can route here
+  // pre-filled with the customer's name. Was previously hardcoded to '' and
+  // CRM was navigating to /contractor/customer-view which served the
+  // customer-portal DEMO_QUOTE instead of useful results.
+  const params = useLocalSearchParams<{ q?: string }>();
+  const initialQuery = typeof params.q === 'string' ? params.q : '';
+  const [query, setQuery] = useState(initialQuery);
 
   const results = useMemo((): SearchResult[] => {
     const q = query.toLowerCase().trim();

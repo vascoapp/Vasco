@@ -13,6 +13,7 @@ import { HandoverPackBuilder } from '../../../src/components/contractor/Handover
 import { SemanticColors } from '../../../src/theme/colors';
 import { Spacing } from '../../../src/theme/spacing';
 import { useAppState } from '../../../src/state/AppState';
+import { useAuth } from '../../../src/context/AuthContext';
 import type { HandoverPackage } from '../../../src/types/contractor';
 
 export default function HandoverScreen() {
@@ -20,8 +21,14 @@ export default function HandoverScreen() {
   const router = useRouter();
   const { jobId } = useLocalSearchParams<{ jobId: string }>();
   const { jobs, customers } = useAppState();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
-  const [job, setJob] = useState<{ id: string; title: string; customerName: string; customerEmail: string; address: string; agreedAmount: number; description: string } | null>(null);
+  // R15.3: thread real customerId so the evidence pack + handover record is
+  // attributed to the correct customer (was hardcoded "customer_1" passed
+  // to HandoverPackBuilder, which carries it into evidencePackService.
+  // assembleEvidencePack and createHandoverPackage — every contractor's
+  // evidence rows were stamped with the same fake id).
+  const [job, setJob] = useState<{ id: string; title: string; customerId: string; customerName: string; customerEmail: string; address: string; agreedAmount: number; description: string } | null>(null);
 
   useEffect(() => {
     const loadJob = async () => {
@@ -34,6 +41,7 @@ export default function HandoverScreen() {
         setJob({
           id: realJob.id,
           title: realJob.title || realJob.description || t('common.project', 'Project'),
+          customerId: realJob.customerId || customer?.id || '',
           customerName: customer?.name || realJob.customerId || t('common.customer', 'Customer'),
           customerEmail: customer?.email || '',
           address: (realJob as any).address?.street ? `${(realJob as any).address.street}, ${(realJob as any).address.city || ''}` : '',
@@ -44,6 +52,7 @@ export default function HandoverScreen() {
         setJob({
           id: jobId,
           title: t('common.project', 'Project'),
+          customerId: '',
           customerName: t('common.customer', 'Customer'),
           customerEmail: '',
           address: '',
@@ -90,8 +99,8 @@ export default function HandoverScreen() {
   return (
     <HandoverPackBuilder
       jobId={job.id}
-      contractorId="contractor_1"
-      customerId="customer_1"
+      contractorId={user?.id ?? ''}
+      customerId={job.customerId}
       job={{
         id: job.id,
         title: job.title,

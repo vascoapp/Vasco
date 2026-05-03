@@ -825,3 +825,17 @@ R13 batch: 0 TS errors, all 6 locales valid.
 **R14.4 — background scheduler 30-minute cold-start lag**: `startBackgroundJobScheduler` fired `generateMorningBriefing` immediately on start but the gated 6-hourly / daily blocks (populateQueue, evaluateTriggers, EVE live actions, ML calibration, purchasing agent) only ran inside the `setInterval` body — first tick happens **30 minutes** after app open. A contractor who opens the app for a few minutes never saw fresh AI queue items, fresh workflow-pack triggers, fresh EVE actions, etc. Extracted the tick body into a standalone `runScheduledTick(getContext)` and call it once on start in addition to the setInterval. The internal `lastXRun` state gates handle dedup, so calling immediately is safe.
 
 R14 batch: 0 TS errors, all 6 locales valid.
+
+---
+
+# R15 — CRM dead-end, handover real IDs, service-agreement spawning
+
+**R15.1 — CRM tap routed to a customer-portal demo screen**: `customer-crm.tsx` press handler navigated to `/contractor/customer-view?id=<UUID>`. But that screen serves the customer-facing quote portal — it reads `quoteId` and `t` (token) params, ignored `?id=`, and fell through to a hardcoded `DEMO_QUOTE` ("Familie de Groot — Warmtepomp €4340", "Van der Berg Installaties"). Contractor tapping a real customer saw fake demo data. Fix: the CRM tap now routes to `/contractor/search?q=<name>` which surfaces all the customer's real quotes/jobs/invoices via the R9.3 name-resolution lookup. Threaded `?q=` initial-query param into search.tsx via `useLocalSearchParams`.
+
+**R15.2 — insurance + legal screens**: clean. R289 already reset production seeds to empty for `licenses` / `certifications` / `insurancePolicies` / `alerts`; only `safetyChecklists` remains seeded, which is correct (trade-reference content, not user data). Legal screen has full per-country compliance text + governing-law per country.
+
+**R15.3 — handover pack builder hardcoded `contractor_1` / `customer_1` IDs**: `app/contractor/handover/[jobId].tsx` was passing literal placeholder strings as `contractorId` and `customerId` props to `HandoverPackBuilder`. Both flow into `evidencePackService.assembleEvidencePack()` and `createHandoverPackage()` — every contractor's evidence rows were stamped with the same fake user IDs. Multi-tenant data integrity bug. Fix: thread real `user.id` (from `useAuth`) and the resolved `realJob.customerId` through.
+
+**R15.4 — service agreements never spawned jobs**: `recurringJobService.checkAndGenerateDueJobs` and `generateNextOccurrence` were defined but had **zero callers**. Service agreements created via `/contractor/service-agreements` (Werk tab → "Recurring contract") sat in AsyncStorage indefinitely — nothing materialized them into real jobs. Same dormancy as R13.4 but in the parallel/older `recurringJobService` (vs the newer `recurringJobsService`). Wired `checkAndGenerateDueJobs` into the daily block of `runScheduledTick`, queueing a `maintenance_due` AI queue item per due agreement so the contractor approves the actual creation. Lead generation portion of R15.4 deferred per saved feedback (`feedback_no_lead_generation.md`) — solo contractors don't need a sales-pipeline CRM.
+
+R15 batch: 0 TS errors, all 6 locales valid.

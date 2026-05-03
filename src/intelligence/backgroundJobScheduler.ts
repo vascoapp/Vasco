@@ -855,6 +855,39 @@ async function runScheduledTick(
           }
         } catch {}
 
+        // R15.4: spawn jobs for due service agreements (recurringJobService —
+        // the older service powering /contractor/service-agreements). The
+        // service has had `checkAndGenerateDueJobs` since R246 but zero
+        // callers — agreements created via the Werk tab "Recurring contract"
+        // entry sat in AsyncStorage and never produced a real job. Now we
+        // run the check daily and queue a maintenance_due item per spawned
+        // job so the contractor approves the actual creation.
+        try {
+          const { checkAndGenerateDueJobs } = await import('../services/recurringJobService');
+          const { addToQueue } = await import('../services/aiActionQueueService');
+          const { dueAgreements, generatedJobs } = await checkAndGenerateDueJobs();
+          const tt = i18n.t.bind(i18n);
+          for (let i = 0; i < dueAgreements.length; i++) {
+            const ag = dueAgreements[i];
+            const jobData = generatedJobs[i];
+            await addToQueue({
+              type: 'maintenance_due',
+              title: tt('automation.serviceAgreementDue', { defaultValue: '{{title}} due — {{customer}}', title: ag.jobTitle, customer: ag.customerName }),
+              description: tt('automation.serviceAgreementSpawned', { defaultValue: 'Service agreement ({{frequency}}) spawned a new job. Approve to add it.', frequency: ag.frequency }),
+              preparedData: {
+                serviceAgreementId: ag.id,
+                spawnedJobData: jobData,
+                customerId: ag.customerId,
+                customerName: ag.customerName,
+              },
+              actionLabel: tt('automation.scheduleMaintenance', 'Schedule'),
+              estimatedImpact: tt('automation.recurringRevenue', 'Recurring revenue'),
+              expiresAt: new Date(Date.now() + 14 * MS_PER_DAY).toISOString(),
+              sourceGeneratorId: `service_agreement_${ag.id}`,
+            }).catch(() => {});
+          }
+        } catch {}
+
         state.lastDailyRun = now.toISOString();
         state.totalAuditsRun++;
       }
