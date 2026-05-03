@@ -198,10 +198,11 @@ export default function CustomerPhonebookScreen() {
                     const totalInvoiced = custInvoices.reduce((sum: number, inv: any) => sum + (inv.total || inv.amount || 0), 0);
                     const outstanding = custInvoices.filter((inv: any) => inv.status !== 'paid').reduce((sum: number, inv: any) => sum + (inv.total || inv.amount || 0), 0);
                     if (totalInvoiced === 0 && contact.jobCount === 0) return null;
+                    // R12.2: was hardcoded English "total" / "outstanding" labels.
                     return (
                       <Text style={s.contactFinancial} numberOfLines={1}>
-                        {totalInvoiced > 0 ? `€${totalInvoiced.toLocaleString(undefined, { maximumFractionDigits: 0 })} total` : ''}
-                        {outstanding > 0 ? ` · €${outstanding.toLocaleString(undefined, { maximumFractionDigits: 0 })} outstanding` : ''}
+                        {totalInvoiced > 0 ? t('contractor.customers.totalAmount', { defaultValue: '€{{amount}} total', amount: totalInvoiced.toLocaleString(undefined, { maximumFractionDigits: 0 }) }) : ''}
+                        {outstanding > 0 ? ` · ${t('contractor.customers.outstandingAmount', { defaultValue: '€{{amount}} outstanding', amount: outstanding.toLocaleString(undefined, { maximumFractionDigits: 0 }) })}` : ''}
                       </Text>
                     );
                   })()}

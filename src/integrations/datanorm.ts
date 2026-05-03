@@ -10,6 +10,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { emitMaterialPurchased } from '../intelligence/dataCollector';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 const IMPORTED_KEY = '@vasco_datanorm_imported';
 
@@ -281,6 +282,41 @@ async function saveImportedArticles(set: Set<string>): Promise<void> {
   }
 }
 
+// R12.3: write each imported article to material_catalog so it surfaces in
+// the AddJobMaterialModal picker. Idempotent: if the (user_id, manufacturer_code)
+// row already exists, swallow the unique-violation. Best-effort — failure here
+// doesn't abort the moat write.
+async function upsertMaterialCatalogRow(args: {
+  name: string;
+  manufacturerCode: string;
+  unit: string;
+  category: string;
+}): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    // Check existence first (manufacturer_code isn't a unique index, so we
+    // emulate upsert manually to keep this safe across users).
+    const { data: existing } = await (supabase
+      .from('material_catalog' as any) as any)
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('manufacturer_code', args.manufacturerCode)
+      .maybeSingle();
+    if (existing?.id) return; // already in catalog, skip
+    await (supabase.from('material_catalog' as any) as any).insert({
+      user_id: user.id,
+      name: args.name.slice(0, 200),
+      manufacturer_code: args.manufacturerCode,
+      base_unit: args.unit || 'piece',
+      category: args.category || 'general',
+    });
+  } catch {
+    // Non-critical — moat write already succeeded
+  }
+}
+
 export async function importDatanormToMoat(
   articles: DatanormArticle[],
   supplierId: string,
@@ -316,10 +352,11 @@ export async function importDatanormToMoat(
     }
 
     try {
+      const fullName = article.extendedDescription
+        ? `${article.description} — ${article.extendedDescription}`
+        : article.description;
       await emitMaterialPurchased(userId, {
-        materialName: article.extendedDescription
-          ? `${article.description} — ${article.extendedDescription}`
-          : article.description,
+        materialName: fullName,
         supplierId,
         supplierName,
         price: article.unitPrice,
@@ -331,6 +368,17 @@ export async function importDatanormToMoat(
         // previously falling through to the hardcoded 'invoice_scan'
         // default in dataCollector, polluting OCR sample stats).
         source: 'catalog',
+      });
+      // R12.3: also upsert into material_catalog so the imported article
+      // appears in AddJobMaterialModal's picker. Was previously writing
+      // only to material_price_history (the moat), so contractors saw a
+      // "X imported" toast but nothing in their picker — DATANORM imports
+      // were dormant for the German market they're built for.
+      await upsertMaterialCatalogRow({
+        name: fullName,
+        manufacturerCode: article.articleNumber,
+        unit: article.unit,
+        category: trade,
       });
       alreadyImported.add(dedupeKey);
       imported++;

@@ -312,7 +312,22 @@
     "requestSignature": "Vraag aan klant",
     "signatureRequestTitle": "Aftekenverzoek",
     "signatureRequestBody": "Hoi {{customer}}, teken het uitgevoerde werk voor \"{{job}}\" af: vasco.app/sign/{{ref}}",
-    "customer": "klant"
+    "customer": "klant",
+    "photos": {
+      "title": "Foto's",
+      "before": "Voor",
+      "during": "Tijdens",
+      "after": "Na",
+      "defect": "Gebrek",
+      "handover": "Oplevering",
+      "addKind": "{{kind}}-foto toevoegen",
+      "empty": "Nog geen foto's",
+      "emptyDesc": "Tik op een label hierboven om er een te maken.",
+      "uploadFailedTitle": "Upload mislukt",
+      "uploadFailedDesc": "Foto kon niet worden geüpload. Probeer het opnieuw zodra je online bent.",
+      "deleteTitle": "Foto verwijderen?",
+      "deleteDesc": "Dit kan niet ongedaan worden gemaakt."
+    }
   },
   "compliance": {
     "docRequirements": "Documentvereisten",
@@ -1529,7 +1544,10 @@
       "noResults": "Geen resultaten",
       "tryDifferentSearch": "Probeer een andere zoekterm",
       "possibleDuplicate": "Mogelijk duplicaat",
-      "addAnyway": "Toch toevoegen"
+      "addAnyway": "Toch toevoegen",
+      "totalAmount": "€{{amount}} totaal",
+      "outstandingAmount": "€{{amount}} openstaand",
+      "limitReached": "Je hebt de klantlimiet van dit abonnement bereikt."
     },
     "projects": {
       "title": "Projecten",
@@ -2414,5 +2432,23 @@
     "permits": {
       "check": "Vergunningscheck voor {{job}}: {{permitCount}} vereisten gevonden voor {{country}}."
     }
+  },
+  "mollie": {
+    "title": "Mollie betalingen",
+    "subtitle": "Ontvang betalingen via iDEAL, creditcard en meer",
+    "apiKeyLabel": "API-sleutel",
+    "apiKeyPlaceholder": "live_xxxx of test_xxxx",
+    "apiKeyHint": "Vind je API-key in Mollie Dashboard → Developers → API keys",
+    "connecting": "Verbinden…",
+    "connected": "Verbonden",
+    "connectAndTest": "Verbinden & testen",
+    "connectionFailed": "Verbinding mislukt — controleer je API-sleutel",
+    "paymentMethods": "Betaalmethoden",
+    "invalidKeyTitle": "Ongeldige sleutel",
+    "invalidKeyDesc": "Mollie API-keys beginnen met \"live_\" of \"test_\"",
+    "consentTitle": "Toestemming vereist",
+    "consentDesc": "Vasco verwerkt betalingsgegevens via Mollie. Door te verbinden ga je akkoord met het delen van factuurgegevens met Mollie voor betalingsverwerking.",
+    "consentAccept": "Akkoord & verbinden",
+    "pciCompliance": "Alle betalingen zijn PCI DSS-compliant via Mollie"
   }
 }

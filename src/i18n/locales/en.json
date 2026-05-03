@@ -312,7 +312,22 @@
     "requestSignature": "Request from customer",
     "signatureRequestTitle": "Sign-off request",
     "signatureRequestBody": "Hi {{customer}}, please sign off on the completed work for \"{{job}}\": vasco.app/sign/{{ref}}",
-    "customer": "customer"
+    "customer": "customer",
+    "photos": {
+      "title": "Photos",
+      "before": "Before",
+      "during": "During",
+      "after": "After",
+      "defect": "Defect",
+      "handover": "Handover",
+      "addKind": "Add {{kind}} photo",
+      "empty": "No photos yet",
+      "emptyDesc": "Tap a tag above to capture one.",
+      "uploadFailedTitle": "Upload failed",
+      "uploadFailedDesc": "Photo could not be uploaded. Try again when online.",
+      "deleteTitle": "Delete photo?",
+      "deleteDesc": "This cannot be undone."
+    }
   },
   "compliance": {
     "docRequirements": "Document requirements",
@@ -1529,7 +1544,10 @@
       "noResults": "No results",
       "tryDifferentSearch": "Try a different search term",
       "possibleDuplicate": "Possible duplicate",
-      "addAnyway": "Add anyway"
+      "addAnyway": "Add anyway",
+      "totalAmount": "€{{amount}} total",
+      "outstandingAmount": "€{{amount}} outstanding",
+      "limitReached": "You have reached your client limit on this plan."
     },
     "projects": {
       "title": "Projects",
@@ -2414,5 +2432,23 @@
     "permits": {
       "check": "Permit check for {{job}}: {{permitCount}} requirements found for {{country}}."
     }
+  },
+  "mollie": {
+    "title": "Mollie Payments",
+    "subtitle": "Receive payments via iDEAL, credit card and more",
+    "apiKeyLabel": "API key",
+    "apiKeyPlaceholder": "live_xxxx or test_xxxx",
+    "apiKeyHint": "Find your API key in Mollie Dashboard → Developers → API keys",
+    "connecting": "Connecting…",
+    "connected": "Connected",
+    "connectAndTest": "Connect & test",
+    "connectionFailed": "Connection failed — check your API key",
+    "paymentMethods": "Payment methods",
+    "invalidKeyTitle": "Invalid key",
+    "invalidKeyDesc": "Mollie API keys start with \"live_\" or \"test_\"",
+    "consentTitle": "Consent required",
+    "consentDesc": "Vasco processes payment data via Mollie. By connecting you agree to share invoice data with Mollie for payment processing.",
+    "consentAccept": "Agree & connect",
+    "pciCompliance": "All payments are PCI DSS compliant via Mollie"
   }
 }

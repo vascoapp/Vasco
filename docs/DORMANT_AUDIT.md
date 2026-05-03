@@ -777,3 +777,23 @@ Fixed:
 **R11.4 — market-prices fake "stable" trend**: `getCohortBenchmarks` cloud path returned `priceChange30d: 0, priceChange90d: 0, trend: 'stable', volatility: 0` for **every** material because the underlying `get_material_cohort_stats` RPC doesn't compute trend deltas. The UI rendered a green-flat "stable" icon on every benchmark row, falsely implying a real reading of "no movement." Fixed in the UI: hide the trend chip when `priceChange30d === 0 && priceChange90d === 0 && volatility === 0` (the no-signal sentinel). When the BE eventually populates real trend data, the chip reappears automatically.
 
 R11 batch: 0 TS errors, 7/7 vatPrepExportService tests pass, all 6 locales valid.
+
+---
+
+# R12 — i18n cleanup, theme consistency, DATANORM dual-write
+
+**R12.1 — job photo gallery hardcoded English + light theme**: `app/contractor/job/[id]/photos.tsx` had every string hardcoded in English (alerts, empty state, kind labels, Back/Delete) — non-English contractors got an English screen on a localized job. The header + photo cards used `Palette.white` (literal #FFFFFF) on a DK-dark page, rendering as glaring white bars/cards. Migrated 14 strings to `jobs.photos.*` (14 keys × 6 locales) and switched white surfaces to `SemanticColors.surfacePrimary`. Photo kind labels (before/during/after/defect/handover) now translated.
+
+**R12.2 — customer-crm hardcoded English suffix**: contact rows show `€{{amount}} total · €{{amount}} outstanding` — these last two words ("total", "outstanding") were hardcoded English in the JSX, ignoring i18n on the otherwise-localized screen. Migrated to `contractor.customers.totalAmount` / `outstandingAmount` (3 keys × 6 locales, also added `limitReached`).
+
+**R12.3 — DATANORM importer dormancy bug, German market launch-blocker**: `importDatanormToMoat` writes imported articles to `material_price_history` (the cohort moat) — but the material picker (`AddJobMaterialModal`) reads from `material_catalog`. **Different tables.** A German contractor would import their wholesaler's DATANORM file (Richter+Frenzel, Buderus, Thermaflex), get a "X materials imported" toast, then find **none** of those materials in their picker when adding to a job. DATANORM was the canonical use case for the German market and it was silently broken end-to-end.
+
+Fixed by adding `upsertMaterialCatalogRow()` helper that runs alongside `emitMaterialPurchased`. Each imported article now lands in both:
+- `material_price_history` — feeds the cohort moat (price intelligence)
+- `material_catalog` — populates the picker (immediate utility)
+
+Idempotent via existence check on `(user_id, manufacturer_code)`. Best-effort — failure on the catalog write doesn't abort the moat write.
+
+**R12.4 — Mollie modal hardcoded Dutch**: `app/(modals)/mollie.tsx` had all 14 user-facing strings hardcoded Dutch (title, subtitle, button labels, validation alert, consent dialog) — German/French/Spanish/Italian contractors connecting Mollie saw Dutch on the screen they need to trust with their payment-processing API key. Even the security footer was English (inconsistent). Migrated to `mollie.*` namespace (16 keys × 6 locales).
+
+R12 batch: 0 TS errors, all 6 locales valid.

@@ -312,7 +312,22 @@
     "requestSignature": "Richiedi al cliente",
     "signatureRequestTitle": "Richiesta firma",
     "signatureRequestBody": "Ciao {{customer}}, firma la ricezione del lavoro \"{{job}}\": vasco.app/sign/{{ref}}",
-    "customer": "cliente"
+    "customer": "cliente",
+    "photos": {
+      "title": "Foto",
+      "before": "Prima",
+      "during": "Durante",
+      "after": "Dopo",
+      "defect": "Difetto",
+      "handover": "Consegna",
+      "addKind": "Aggiungi foto {{kind}}",
+      "empty": "Nessuna foto ancora",
+      "emptyDesc": "Tocca un'etichetta sopra per scattarne una.",
+      "uploadFailedTitle": "Caricamento fallito",
+      "uploadFailedDesc": "Impossibile caricare la foto. Riprova quando sei online.",
+      "deleteTitle": "Eliminare la foto?",
+      "deleteDesc": "Questa operazione non può essere annullata."
+    }
   },
   "compliance": {
     "docRequirements": "Documenti richiesti",
@@ -1529,7 +1544,10 @@
       "noResults": "Nessun risultato",
       "tryDifferentSearch": "Prova con un altro termine di ricerca",
       "possibleDuplicate": "Possibile duplicato",
-      "addAnyway": "Aggiungi comunque"
+      "addAnyway": "Aggiungi comunque",
+      "totalAmount": "€{{amount}} totale",
+      "outstandingAmount": "€{{amount}} in sospeso",
+      "limitReached": "Hai raggiunto il limite di clienti di questo piano."
     },
     "projects": {
       "title": "Progetti",
@@ -2414,5 +2432,23 @@
     "permits": {
       "check": "Permit check for {{job}}: {{permitCount}} requirements found for {{country}}."
     }
+  },
+  "mollie": {
+    "title": "Pagamenti Mollie",
+    "subtitle": "Ricevi pagamenti via iDEAL, carta di credito e altro",
+    "apiKeyLabel": "Chiave API",
+    "apiKeyPlaceholder": "live_xxxx o test_xxxx",
+    "apiKeyHint": "Trova la tua chiave API nella Dashboard Mollie → Developers → API keys",
+    "connecting": "Connessione…",
+    "connected": "Connesso",
+    "connectAndTest": "Connetti e testa",
+    "connectionFailed": "Connessione fallita — controlla la chiave API",
+    "paymentMethods": "Metodi di pagamento",
+    "invalidKeyTitle": "Chiave non valida",
+    "invalidKeyDesc": "Le chiavi API Mollie iniziano con \"live_\" o \"test_\"",
+    "consentTitle": "Consenso richiesto",
+    "consentDesc": "Vasco elabora i dati di pagamento via Mollie. Connettendoti accetti di condividere i dati di fatturazione con Mollie per l'elaborazione dei pagamenti.",
+    "consentAccept": "Accetta e connetti",
+    "pciCompliance": "Tutti i pagamenti sono conformi PCI DSS via Mollie"
   }
 }

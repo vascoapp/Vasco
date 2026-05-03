@@ -25,7 +25,10 @@ export default function MollieConnectModal() {
 
   const handleTest = async () => {
     if (!apiKey.startsWith('live_') && !apiKey.startsWith('test_')) {
-      Alert.alert('Ongeldige sleutel', 'Mollie API keys beginnen met "live_" of "test_"');
+      Alert.alert(
+        t('mollie.invalidKeyTitle', 'Invalid key'),
+        t('mollie.invalidKeyDesc', 'Mollie API keys start with "live_" or "test_"'),
+      );
       return;
     }
 
@@ -33,12 +36,12 @@ export default function MollieConnectModal() {
     const hasConsent = await consentService.getConsent('mollie');
     if (!hasConsent) {
       Alert.alert(
-        'Toestemming vereist',
-        'Vasco verwerkt betalingsgegevens via Mollie. Door te verbinden ga je akkoord met het delen van factuurgegevens met Mollie voor betalingsverwerking.',
+        t('mollie.consentTitle', 'Consent required'),
+        t('mollie.consentDesc', 'Vasco processes payment data via Mollie. By connecting you agree to share invoice data with Mollie for payment processing.'),
         [
           { text: t('common.cancel', 'Cancel'), style: 'cancel' },
           {
-            text: 'Akkoord & Verbinden',
+            text: t('mollie.consentAccept', 'Agree & connect'),
             onPress: async () => {
               await consentService.setConsent('mollie', true);
               await consentService.setConsent('dataProcessing', true);
@@ -76,18 +79,18 @@ export default function MollieConnectModal() {
   return (
     <Screen backgroundColor={SemanticColors.surfacePrimary}>
       <View style={styles.container}>
-        <Text style={styles.title}>Mollie Betalingen</Text>
+        <Text style={styles.title}>{t('mollie.title', 'Mollie Payments')}</Text>
         <Text style={styles.subtitle}>
-          Ontvang betalingen via iDEAL, creditcard en meer
+          {t('mollie.subtitle', 'Receive payments via iDEAL, credit card and more')}
         </Text>
 
         {/* API Key Input */}
         <View style={styles.inputSection}>
-          <Text style={styles.label}>API Sleutel</Text>
+          <Text style={styles.label}>{t('mollie.apiKeyLabel', 'API key')}</Text>
           <View style={styles.inputRow}>
             <TextInput
               style={styles.input}
-              placeholder="live_xxxx of test_xxxx"
+              placeholder={t('mollie.apiKeyPlaceholder', 'live_xxxx or test_xxxx')}
               placeholderTextColor={SemanticColors.textTertiary}
               value={apiKey}
               onChangeText={setApiKey}
@@ -100,7 +103,7 @@ export default function MollieConnectModal() {
             )}
           </View>
           <Text style={styles.hint}>
-            Vind je API key in Mollie Dashboard → Developers → API keys
+            {t('mollie.apiKeyHint', 'Find your API key in Mollie Dashboard → Developers → API keys')}
           </Text>
         </View>
 
@@ -111,24 +114,24 @@ export default function MollieConnectModal() {
           disabled={testing || apiKey.length < 5}
         >
           {testing ? (
-            <Text style={styles.connectBtnText}>Verbinden...</Text>
+            <Text style={styles.connectBtnText}>{t('mollie.connecting', 'Connecting…')}</Text>
           ) : mollieConnected ? (
             <>
               <Ionicons name="checkmark-circle" size={18} color={SemanticColors.feedbackSuccess} />
-              <Text style={[styles.connectBtnText, { color: SemanticColors.feedbackSuccess }]}>Verbonden</Text>
+              <Text style={[styles.connectBtnText, { color: SemanticColors.feedbackSuccess }]}>{t('mollie.connected', 'Connected')}</Text>
             </>
           ) : (
-            <Text style={styles.connectBtnText}>Verbinden & Testen</Text>
+            <Text style={styles.connectBtnText}>{t('mollie.connectAndTest', 'Connect & test')}</Text>
           )}
         </Pressable>
 
         {testResult === 'error' && (
-          <Text style={styles.errorText}>Verbinding mislukt — controleer je API sleutel</Text>
+          <Text style={styles.errorText}>{t('mollie.connectionFailed', 'Connection failed — check your API key')}</Text>
         )}
 
         {/* Payment Methods */}
         <View style={styles.methodsSection}>
-          <Text style={styles.label}>Betaalmethoden</Text>
+          <Text style={styles.label}>{t('mollie.paymentMethods', 'Payment methods')}</Text>
           <View style={styles.methodsGrid}>
             {paymentMethods.map((m) => {
               const brandColor = getPaymentBrandColor(m.name);
@@ -151,7 +154,7 @@ export default function MollieConnectModal() {
           {mollieConnected && (
             <View style={styles.securityFooter}>
               <Ionicons name="shield-checkmark" size={14} color={SemanticColors.feedbackSuccess} />
-              <Text style={styles.securityFooterText}>All payments are PCI DSS compliant via Mollie</Text>
+              <Text style={styles.securityFooterText}>{t('mollie.pciCompliance', 'All payments are PCI DSS compliant via Mollie')}</Text>
             </View>
           )}
         </View>

@@ -8,6 +8,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Image, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { SafeArea } from '../../../../src/theme/spacing';
@@ -19,11 +20,23 @@ import { hapticSuccess } from '../../../../src/utils/haptics';
 const KINDS: PhotoKind[] = ['before', 'during', 'after', 'defect', 'handover'];
 
 export default function JobPhotosScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [photos, setPhotos] = useState<JobPhotoRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+
+  // R12.1: localized labels for the 5 photo kinds. Was rendering raw enum
+  // values ('before', 'during', 'after', 'defect', 'handover') in English
+  // even on Dutch/German/etc devices.
+  const KIND_LABELS: Record<PhotoKind, string> = {
+    before: t('jobs.photos.before', 'Before'),
+    during: t('jobs.photos.during', 'During'),
+    after: t('jobs.photos.after', 'After'),
+    defect: t('jobs.photos.defect', 'Defect'),
+    handover: t('jobs.photos.handover', 'Handover'),
+  };
 
   const refresh = useCallback(async () => {
     if (!id) return;
@@ -49,31 +62,38 @@ export default function JobPhotosScreen() {
       hapticSuccess();
       await refresh();
     } else {
-      Alert.alert('Upload failed', 'Photo could not be uploaded. Try again when online.');
+      Alert.alert(
+        t('jobs.photos.uploadFailedTitle', 'Upload failed'),
+        t('jobs.photos.uploadFailedDesc', 'Photo could not be uploaded. Try again when online.'),
+      );
     }
   };
 
   const handleDelete = (photo: JobPhotoRecord) => {
-    Alert.alert('Delete photo?', 'This cannot be undone.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await deleteJobPhoto(photo.id, photo.storagePath);
-          await refresh();
+    Alert.alert(
+      t('jobs.photos.deleteTitle', 'Delete photo?'),
+      t('jobs.photos.deleteDesc', 'This cannot be undone.'),
+      [
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+        {
+          text: t('common.delete', 'Delete'),
+          style: 'destructive',
+          onPress: async () => {
+            await deleteJobPhoto(photo.id, photo.storagePath);
+            await refresh();
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   return (
     <View style={s.container}>
       <View style={s.header}>
-        <Pressable onPress={() => router.back()} style={s.backBtn} accessibilityRole="button" accessibilityLabel="Back">
+        <Pressable onPress={() => router.back()} style={s.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
-        <Text style={s.title}>Photos</Text>
+        <Text style={s.title}>{t('jobs.photos.title', 'Photos')}</Text>
         <View style={{ width: 36 }} />
       </View>
 
@@ -85,10 +105,10 @@ export default function JobPhotosScreen() {
             style={s.kindBtn}
             disabled={uploading}
             accessibilityRole="button"
-            accessibilityLabel={`Add ${k} photo`}
+            accessibilityLabel={t('jobs.photos.addKind', { defaultValue: 'Add {{kind}} photo', kind: KIND_LABELS[k] })}
           >
             <Ionicons name="camera" size={16} color={Palette.hermesOrange} />
-            <Text style={s.kindText}>{k}</Text>
+            <Text style={s.kindText}>{KIND_LABELS[k]}</Text>
           </Pressable>
         ))}
       </View>
@@ -98,8 +118,8 @@ export default function JobPhotosScreen() {
       ) : photos.length === 0 ? (
         <View style={s.empty}>
           <Ionicons name="images-outline" size={48} color={SemanticColors.textTertiary} />
-          <Text style={s.emptyText}>No photos yet</Text>
-          <Text style={s.emptyDesc}>Tap a tag above to capture one.</Text>
+          <Text style={s.emptyText}>{t('jobs.photos.empty', 'No photos yet')}</Text>
+          <Text style={s.emptyDesc}>{t('jobs.photos.emptyDesc', 'Tap a tag above to capture one.')}</Text>
         </View>
       ) : (
         <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent}>
@@ -107,9 +127,9 @@ export default function JobPhotosScreen() {
             <View key={p.id} style={s.card}>
               {p.publicUrl ? <Image source={{ uri: p.publicUrl }} style={s.image} resizeMode="cover" /> : <View style={s.imagePlaceholder} />}
               <View style={s.cardFooter}>
-                <Text style={s.kindBadge}>{p.kind}</Text>
+                <Text style={s.kindBadge}>{KIND_LABELS[p.kind] ?? p.kind}</Text>
                 <Text style={s.takenAt}>{new Date(p.takenAt).toLocaleString()}</Text>
-                <Pressable onPress={() => handleDelete(p)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Delete photo">
+                <Pressable onPress={() => handleDelete(p)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('jobs.photos.deleteTitle', 'Delete photo?')}>
                   <Ionicons name="trash-outline" size={18} color={SemanticColors.feedbackError} />
                 </Pressable>
               </View>
@@ -123,11 +143,14 @@ export default function JobPhotosScreen() {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: PAGE_BG, paddingTop: SafeArea.top },
+  // R12.1: was `backgroundColor: Palette.white` (literal #FFFFFF) on a DK-dark
+  // page — rendered as a glaring white header bar above a dark scroll. Same
+  // for the photo cards below. Switched to surfacePrimary (DK panel color).
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: GRID.md, paddingVertical: GRID.sm,
-    backgroundColor: Palette.white,
-    borderBottomWidth: 1, borderBottomColor: SemanticColors.borderMuted,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderBottomWidth: 1, borderBottomColor: SemanticColors.borderDefault,
   },
   backBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: RADIUS.sm },
   title: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
@@ -140,7 +163,7 @@ const s = StyleSheet.create({
   kindText: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange, textTransform: 'capitalize' },
   scroll: { flex: 1 },
   scrollContent: { padding: GRID.md, gap: GRID.md },
-  card: { backgroundColor: Palette.white, borderRadius: RADIUS.lg, overflow: 'hidden' },
+  card: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, overflow: 'hidden' },
   image: { width: '100%', height: 220 },
   imagePlaceholder: { width: '100%', height: 220, backgroundColor: SemanticColors.surfaceSecondary },
   cardFooter: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, padding: GRID.sm + 2 },
