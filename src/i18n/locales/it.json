@@ -327,7 +327,11 @@
       "uploadFailedDesc": "Impossibile caricare la foto. Riprova quando sei online.",
       "deleteTitle": "Eliminare la foto?",
       "deleteDesc": "Questa operazione non può essere annullata."
-    }
+    },
+    "youLabel": "Tu",
+    "activityClockedIn": "Timbratura entrata",
+    "activityClockedOut": "Timbratura uscita ({{hours}}h)",
+    "activitySignatureRequested": "Link di firma inviato a {{customer}}"
   },
   "compliance": {
     "docRequirements": "Documenti richiesti",
@@ -2470,6 +2474,21 @@
     "consentDesc": "Vasco elabora i dati di pagamento via Mollie. Connettendoti accetti di condividere i dati di fatturazione con Mollie per l'elaborazione dei pagamenti.",
     "consentAccept": "Accetta e connetti",
     "pciCompliance": "Tutti i pagamenti sono conformi PCI DSS via Mollie"
+  },
+  "quoteNew": {
+    "customerAndJob": "Cliente e lavoro",
+    "customerName": "Nome cliente",
+    "pickerPlaceholder": "Digita o scegli un cliente",
+    "customerPlaceholder": "es. Rossi",
+    "missingCustomerTitle": "Cliente mancante",
+    "missingCustomerDesc": "Inserisci un nome cliente.",
+    "missingJobTitle": "Lavoro mancante",
+    "missingJobDesc": "Inserisci una descrizione del lavoro.",
+    "noItemsTitle": "Nessuna voce",
+    "noItemsDesc": "Aggiungi almeno una voce con descrizione.",
+    "invalidAmountTitle": "Importo non valido",
+    "invalidAmountDesc": "Il totale del preventivo deve essere maggiore di zero. Controlla i prezzi.",
+    "saveFailed": "Impossibile salvare il preventivo. Riprova."
   },
   "checklist": {
     "beforePhoto": "Foto prima",

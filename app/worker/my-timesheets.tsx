@@ -42,7 +42,10 @@ interface TimesheetWeek {
   submitted: boolean;
 }
 
-const TS_KEY = '@vasco_worker_timesheets';
+// R17.4: removed unused TS_KEY constant. The screen reconstructs weekly
+// timesheets from AppState job timeEntries on every render — there's no
+// separate "@vasco_worker_timesheets" persistence path. Only SUBMITTED_KEY
+// (which weeks the worker submitted to their boss) is actually persisted.
 const SUBMITTED_KEY = '@vasco_worker_ts_submitted';
 
 // ---------------------------------------------------------------------------

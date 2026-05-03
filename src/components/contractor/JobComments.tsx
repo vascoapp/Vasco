@@ -82,7 +82,10 @@ export default function JobComments({ jobId }: JobCommentsProps) {
   const renderItem = ({ item }: { item: FeedItem }) => {
     if (item.kind === 'comment') {
       const comment = item.data;
-      const initials = (comment.userName || 'U').charAt(0).toUpperCase();
+      // R17.1: localized "You" fallback. Service no longer stores the
+      // hardcoded English fallback — display layer resolves via t().
+      const displayName = comment.userName?.trim() || t('jobs.youLabel', 'You');
+      const initials = displayName.charAt(0).toUpperCase();
       return (
         <View style={s.commentRow}>
           <View style={s.commentAvatar}>
@@ -90,7 +93,7 @@ export default function JobComments({ jobId }: JobCommentsProps) {
           </View>
           <View style={s.commentBubble}>
             <View style={s.commentHeader}>
-              <Text style={s.commentAuthor}>{comment.userName}</Text>
+              <Text style={s.commentAuthor}>{displayName}</Text>
               <Text style={s.commentTime}>{formatTimeAgo(comment.createdAt)}</Text>
             </View>
             <Text style={s.commentText}>{comment.text}</Text>

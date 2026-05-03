@@ -327,7 +327,11 @@
       "uploadFailedDesc": "Foto kon niet worden geüpload. Probeer het opnieuw zodra je online bent.",
       "deleteTitle": "Foto verwijderen?",
       "deleteDesc": "Dit kan niet ongedaan worden gemaakt."
-    }
+    },
+    "youLabel": "Jij",
+    "activityClockedIn": "Ingeklokt",
+    "activityClockedOut": "Uitgeklokt ({{hours}}u)",
+    "activitySignatureRequested": "Aftekenlink verzonden naar {{customer}}"
   },
   "compliance": {
     "docRequirements": "Documentvereisten",
@@ -2470,6 +2474,21 @@
     "consentDesc": "Vasco verwerkt betalingsgegevens via Mollie. Door te verbinden ga je akkoord met het delen van factuurgegevens met Mollie voor betalingsverwerking.",
     "consentAccept": "Akkoord & verbinden",
     "pciCompliance": "Alle betalingen zijn PCI DSS-compliant via Mollie"
+  },
+  "quoteNew": {
+    "customerAndJob": "Klant & klus",
+    "customerName": "Klantnaam",
+    "pickerPlaceholder": "Typ of kies een klant",
+    "customerPlaceholder": "bijv. De Jong",
+    "missingCustomerTitle": "Klant ontbreekt",
+    "missingCustomerDesc": "Vul een klantnaam in.",
+    "missingJobTitle": "Klus ontbreekt",
+    "missingJobDesc": "Vul een klusbeschrijving in.",
+    "noItemsTitle": "Geen regels",
+    "noItemsDesc": "Voeg minstens één regel met omschrijving toe.",
+    "invalidAmountTitle": "Ongeldig bedrag",
+    "invalidAmountDesc": "Het totaalbedrag moet groter zijn dan nul. Controleer de prijzen.",
+    "saveFailed": "Offerte kon niet worden opgeslagen. Probeer het opnieuw."
   },
   "checklist": {
     "beforePhoto": "Foto vooraf",

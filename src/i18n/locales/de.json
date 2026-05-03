@@ -327,7 +327,11 @@
       "uploadFailedDesc": "Foto konnte nicht hochgeladen werden. Versuche es online erneut.",
       "deleteTitle": "Foto löschen?",
       "deleteDesc": "Dies kann nicht rückgängig gemacht werden."
-    }
+    },
+    "youLabel": "Du",
+    "activityClockedIn": "Eingestempelt",
+    "activityClockedOut": "Ausgestempelt ({{hours}}h)",
+    "activitySignatureRequested": "Unterschriftslink an {{customer}} gesendet"
   },
   "compliance": {
     "docRequirements": "Dokumentanforderungen",
@@ -2470,6 +2474,21 @@
     "consentDesc": "Vasco verarbeitet Zahlungsdaten über Mollie. Mit der Verbindung stimmst du zu, Rechnungsdaten zur Zahlungsabwicklung an Mollie weiterzugeben.",
     "consentAccept": "Zustimmen & verbinden",
     "pciCompliance": "Alle Zahlungen sind PCI-DSS-konform über Mollie"
+  },
+  "quoteNew": {
+    "customerAndJob": "Kunde & Auftrag",
+    "customerName": "Kundenname",
+    "pickerPlaceholder": "Tippen oder Kunden auswählen",
+    "customerPlaceholder": "z. B. Müller",
+    "missingCustomerTitle": "Kunde fehlt",
+    "missingCustomerDesc": "Bitte einen Kundennamen eingeben.",
+    "missingJobTitle": "Auftrag fehlt",
+    "missingJobDesc": "Bitte eine Auftragsbeschreibung eingeben.",
+    "noItemsTitle": "Keine Positionen",
+    "noItemsDesc": "Mindestens eine Position mit Beschreibung hinzufügen.",
+    "invalidAmountTitle": "Ungültiger Betrag",
+    "invalidAmountDesc": "Die Angebotssumme muss größer als null sein. Preise prüfen.",
+    "saveFailed": "Angebot konnte nicht gespeichert werden. Bitte erneut versuchen."
   },
   "checklist": {
     "beforePhoto": "Foto vorher",

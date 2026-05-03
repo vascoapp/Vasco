@@ -327,7 +327,11 @@
       "uploadFailedDesc": "Photo non envoyée. Réessayez une fois en ligne.",
       "deleteTitle": "Supprimer la photo ?",
       "deleteDesc": "Cette action est irréversible."
-    }
+    },
+    "youLabel": "Vous",
+    "activityClockedIn": "Pointé",
+    "activityClockedOut": "Sortie ({{hours}}h)",
+    "activitySignatureRequested": "Lien de signature envoyé à {{customer}}"
   },
   "compliance": {
     "docRequirements": "Documents requis",
@@ -2470,6 +2474,21 @@
     "consentDesc": "Vasco traite les données de paiement via Mollie. En connectant, vous acceptez de partager les données de facturation avec Mollie pour le traitement des paiements.",
     "consentAccept": "Accepter & connecter",
     "pciCompliance": "Tous les paiements sont conformes PCI DSS via Mollie"
+  },
+  "quoteNew": {
+    "customerAndJob": "Client & chantier",
+    "customerName": "Nom du client",
+    "pickerPlaceholder": "Tapez ou choisissez un client",
+    "customerPlaceholder": "p. ex. Dupont",
+    "missingCustomerTitle": "Client manquant",
+    "missingCustomerDesc": "Entrez un nom de client.",
+    "missingJobTitle": "Chantier manquant",
+    "missingJobDesc": "Entrez une description du chantier.",
+    "noItemsTitle": "Aucune ligne",
+    "noItemsDesc": "Ajoutez au moins une ligne avec description.",
+    "invalidAmountTitle": "Montant invalide",
+    "invalidAmountDesc": "Le total du devis doit être supérieur à zéro. Vérifiez vos prix.",
+    "saveFailed": "Impossible d'enregistrer le devis. Veuillez réessayer."
   },
   "checklist": {
     "beforePhoto": "Photo avant",

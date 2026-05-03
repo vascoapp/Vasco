@@ -327,7 +327,11 @@
       "uploadFailedDesc": "No se pudo subir la foto. Inténtalo de nuevo cuando estés en línea.",
       "deleteTitle": "¿Eliminar foto?",
       "deleteDesc": "Esta acción no se puede deshacer."
-    }
+    },
+    "youLabel": "Tú",
+    "activityClockedIn": "Fichaje entrada",
+    "activityClockedOut": "Fichaje salida ({{hours}}h)",
+    "activitySignatureRequested": "Enlace de firma enviado a {{customer}}"
   },
   "compliance": {
     "docRequirements": "Documentación requerida",
@@ -2470,6 +2474,21 @@
     "consentDesc": "Vasco procesa datos de pago vía Mollie. Al conectar aceptas compartir datos de facturación con Mollie para el procesamiento de pagos.",
     "consentAccept": "Aceptar y conectar",
     "pciCompliance": "Todos los pagos cumplen PCI DSS vía Mollie"
+  },
+  "quoteNew": {
+    "customerAndJob": "Cliente y trabajo",
+    "customerName": "Nombre del cliente",
+    "pickerPlaceholder": "Escribe o elige un cliente",
+    "customerPlaceholder": "p. ej. García",
+    "missingCustomerTitle": "Cliente requerido",
+    "missingCustomerDesc": "Introduce un nombre de cliente.",
+    "missingJobTitle": "Trabajo requerido",
+    "missingJobDesc": "Introduce una descripción del trabajo.",
+    "noItemsTitle": "Sin líneas",
+    "noItemsDesc": "Añade al menos una línea con descripción.",
+    "invalidAmountTitle": "Importe no válido",
+    "invalidAmountDesc": "El total del presupuesto debe ser mayor que cero. Revisa los precios.",
+    "saveFailed": "No se pudo guardar el presupuesto. Inténtalo de nuevo."
   },
   "checklist": {
     "beforePhoto": "Foto antes",

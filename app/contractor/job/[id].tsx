@@ -315,11 +315,14 @@ export default function JobDetailPage() {
               if (clockedIn) {
                 const { hours } = await timer.clockOut();
                 recordHours(job.id, Math.round(hours * 10) / 10);
-                addActivityEntry(id || '', 'timer_stopped', `Clocked out (${Math.round(hours * 10) / 10}h)`).catch(() => {});
+                // R17.1: was hardcoded English ("Clocked out (Nh)" / "Clocked in").
+                // Activity log entries get persisted as-is, so non-English
+                // contractors saw English in their job history. Now uses t().
+                addActivityEntry(id || '', 'timer_stopped', t('jobs.activityClockedOut', { defaultValue: 'Clocked out ({{hours}}h)', hours: Math.round(hours * 10) / 10 })).catch(() => {});
                 Alert.alert(t('jobs.clockedOut', 'Clocked out'), t('jobs.clockedOutDesc', 'You have been clocked out. Hours saved.'));
               } else {
                 await timer.clockIn(job.id, job.projectName || job.customerName || '');
-                addActivityEntry(id || '', 'timer_started', 'Clocked in').catch(() => {});
+                addActivityEntry(id || '', 'timer_started', t('jobs.activityClockedIn', 'Clocked in')).catch(() => {});
               }
             }}
           >
@@ -774,11 +777,11 @@ export default function JobDetailPage() {
                 if (clockedIn) {
                   const { hours } = await timer.clockOut();
                   recordHours(job.id, Math.round(hours * 10) / 10);
-                  addActivityEntry(id || '', 'timer_stopped', `Clocked out (${Math.round(hours * 10) / 10}h)`).catch(() => {});
+                  addActivityEntry(id || '', 'timer_stopped', t('jobs.activityClockedOut', { defaultValue: 'Clocked out ({{hours}}h)', hours: Math.round(hours * 10) / 10 })).catch(() => {});
                   Alert.alert(t('jobs.clockedOut', 'Clocked out'), t('jobs.clockedOutDesc', 'You have been clocked out. Hours saved.'));
                 } else {
                   await timer.clockIn(job.id, job.projectName || job.customerName || '');
-                  addActivityEntry(id || '', 'timer_started', 'Clocked in').catch(() => {});
+                  addActivityEntry(id || '', 'timer_started', t('jobs.activityClockedIn', 'Clocked in')).catch(() => {});
                   Alert.alert(t('jobs.clockedIn', 'Clocked in'), t('jobs.clockedInDesc', 'You are now clocked in on this job.'));
                 }
               }}
@@ -905,7 +908,7 @@ export default function JobDetailPage() {
                       message: messageBody,
                       title: t('jobs.signatureRequestTitle', 'Sign-off request'),
                     });
-                    addActivityEntry(id || '', 'signature_requested', `Sign-off link sent to ${customerLabel}`).catch(() => {});
+                    addActivityEntry(id || '', 'signature_requested', t('jobs.activitySignatureRequested', { defaultValue: 'Sign-off link sent to {{customer}}', customer: customerLabel })).catch(() => {});
                   } catch {}
                 };
                 Alert.alert(

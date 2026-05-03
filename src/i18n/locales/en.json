@@ -327,7 +327,11 @@
       "uploadFailedDesc": "Photo could not be uploaded. Try again when online.",
       "deleteTitle": "Delete photo?",
       "deleteDesc": "This cannot be undone."
-    }
+    },
+    "youLabel": "You",
+    "activityClockedIn": "Clocked in",
+    "activityClockedOut": "Clocked out ({{hours}}h)",
+    "activitySignatureRequested": "Sign-off link sent to {{customer}}"
   },
   "compliance": {
     "docRequirements": "Document requirements",
@@ -2470,6 +2474,21 @@
     "consentDesc": "Vasco processes payment data via Mollie. By connecting you agree to share invoice data with Mollie for payment processing.",
     "consentAccept": "Agree & connect",
     "pciCompliance": "All payments are PCI DSS compliant via Mollie"
+  },
+  "quoteNew": {
+    "customerAndJob": "Customer & job",
+    "customerName": "Customer name",
+    "pickerPlaceholder": "Type or pick a customer",
+    "customerPlaceholder": "e.g. De Jong",
+    "missingCustomerTitle": "Missing customer",
+    "missingCustomerDesc": "Enter a customer name.",
+    "missingJobTitle": "Missing job",
+    "missingJobDesc": "Enter a job description.",
+    "noItemsTitle": "No line items",
+    "noItemsDesc": "Add at least one line item with a description.",
+    "invalidAmountTitle": "Invalid amount",
+    "invalidAmountDesc": "Quote total must be greater than zero. Check your line item prices.",
+    "saveFailed": "Could not save quote. Please try again."
   },
   "checklist": {
     "beforePhoto": "Before photo",

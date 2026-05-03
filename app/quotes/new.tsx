@@ -11,6 +11,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
 import { Screen } from '../../src/components/Screen';
 import { InlineInsight, VascoInsightCard } from '../../src/components/shared/VascoInsightCard';
@@ -23,10 +24,16 @@ import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
 
 export default function NewQuoteScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { addQuote, customers, quotes } = useAppState();
 
+  // R17.2: track customer NAME for display + customer ID for addQuote.
+  // Was previously single-string state — picking a customer set the NAME and
+  // then addQuote stored that name as customer_id (same UUID/name confusion
+  // pattern fixed in R9.3 / R12.2 / R14.1).
   const [customer, setCustomer] = useState('');
+  const [customerId, setCustomerId] = useState<string | null>(null);
   const [showCustomerPicker, setShowCustomerPicker] = useState(false);
   const [job, setJob] = useState('');
 
@@ -70,21 +77,21 @@ export default function NewQuoteScreen() {
   const handleSave = useCallback(async () => {
     if (saving) return;
     if (!customer.trim()) {
-      Alert.alert('Missing customer', 'Enter a customer name.');
+      Alert.alert(t('quoteNew.missingCustomerTitle', 'Missing customer'), t('quoteNew.missingCustomerDesc', 'Enter a customer name.'));
       return;
     }
     if (!job.trim()) {
-      Alert.alert('Missing job', 'Enter a job description.');
+      Alert.alert(t('quoteNew.missingJobTitle', 'Missing job'), t('quoteNew.missingJobDesc', 'Enter a job description.'));
       return;
     }
     const validItems = items.filter((i) => i.description.trim());
     if (validItems.length === 0) {
-      Alert.alert('No line items', 'Add at least one line item with a description.');
+      Alert.alert(t('quoteNew.noItemsTitle', 'No line items'), t('quoteNew.noItemsDesc', 'Add at least one line item with a description.'));
       return;
     }
     const itemTotal = validItems.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
     if (itemTotal <= 0) {
-      Alert.alert('Invalid amount', 'Quote total must be greater than zero. Check your line item prices.');
+      Alert.alert(t('quoteNew.invalidAmountTitle', 'Invalid amount'), t('quoteNew.invalidAmountDesc', 'Quote total must be greater than zero. Check your line item prices.'));
       return;
     }
 
@@ -95,11 +102,11 @@ export default function NewQuoteScreen() {
       const gate = canCreateQuote(sub);
       if (!gate.allowed) {
         Alert.alert(
-          'Upgrade required',
+          t('compliance.upgradeRequired', 'Upgrade required'),
           gate.reason,
           [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'View plans', onPress: () => router.push('/contractor/profile' as any) },
+            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+            { text: t('compliance.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
           ],
         );
         return;
@@ -118,15 +125,19 @@ export default function NewQuoteScreen() {
 
     setSaving(true);
     try {
-      const quoteId = await addQuote(customer.trim(), job.trim(), validItems);
+      // R17.2: prefer the picked customer ID over the typed name. AppState.
+      // addQuote stores the first arg as customer_id; passing the raw name
+      // string broke quote → customer linkage everywhere.
+      const customerArg = customerId ?? customer.trim();
+      const quoteId = await addQuote(customerArg, job.trim(), validItems);
       router.replace(`/quotes/${quoteId}`);
     } catch (err) {
       console.warn('[NewQuote] Save failed:', err);
-      Alert.alert('Error', 'Could not save quote. Please try again.');
+      Alert.alert(t('common.error', 'Error'), t('quoteNew.saveFailed', 'Could not save quote. Please try again.'));
     } finally {
       setSaving(false);
     }
-  }, [customer, job, items, addQuote, router]);
+  }, [customer, customerId, job, items, addQuote, router, t, quotes, saving]);
 
   return (
     <Screen>
@@ -154,15 +165,17 @@ export default function NewQuoteScreen() {
 
           {/* Customer & Job */}
           <View style={styles.card}>
-            <Text style={Typography.subtitle}>Customer & job</Text>
+            <Text style={Typography.subtitle}>{t('quoteNew.customerAndJob', 'Customer & job')}</Text>
             <View style={styles.fieldColumn}>
-              <Text style={Typography.muted}>Customer name</Text>
+              <Text style={Typography.muted}>{t('quoteNew.customerName', 'Customer name')}</Text>
               <Pressable onPress={() => customers.length > 0 && setShowCustomerPicker(!showCustomerPicker)}>
                 <TextInput
                   style={styles.input}
                   value={customer}
-                  onChangeText={(v) => { setCustomer(v); setShowCustomerPicker(false); }}
-                  placeholder={customers.length > 0 ? 'Type or pick a customer' : 'e.g. De Jong'}
+                  // R17.2: typing in the field clears the picked-customer id —
+                  // user is editing freely, so we can't claim the row link any more.
+                  onChangeText={(v) => { setCustomer(v); setCustomerId(null); setShowCustomerPicker(false); }}
+                  placeholder={customers.length > 0 ? t('quoteNew.pickerPlaceholder', 'Type or pick a customer') : t('quoteNew.customerPlaceholder', 'e.g. De Jong')}
                   placeholderTextColor={SemanticColors.textSecondary}
                 />
               </Pressable>
@@ -175,7 +188,7 @@ export default function NewQuoteScreen() {
                       <Pressable
                         key={c.id}
                         style={styles.pickerOption}
-                        onPress={() => { setCustomer(c.name); setShowCustomerPicker(false); }}
+                        onPress={() => { setCustomer(c.name); setCustomerId(c.id); setShowCustomerPicker(false); }}
                       >
                         <Text style={Typography.body}>{c.name}</Text>
                         {c.email && <Text style={[Typography.muted, { fontSize: 11 }]}>{c.email}</Text>}

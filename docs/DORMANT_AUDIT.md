@@ -853,3 +853,17 @@ R15 batch: 0 TS errors, all 6 locales valid.
 **R16.4 — business-settings modal field labels were broken**: address and phone fields BOTH used the same i18n key `customers.contact` — whatever that key resolved to ("Contact" / "Contactgegevens") rendered as the label for both fields. Plus the email field's label was hardcoded English `'Email'`. Plus all 3 placeholder examples were Dutch-only ("Keizersgracht 100, Amsterdam" / "info@bedrijf.nl") shown to UK/DE/FR/ES/IT contractors. Migrated to dedicated `settings.address` / `settings.email` / `settings.phone` keys (3 keys × 6 locales) and country-aware placeholder examples for address + email + phone.
 
 R16 batch: 0 TS errors, all 6 locales valid.
+
+---
+
+# R17 — activity log i18n, quote-new UUID/name, hub-enterprise scope, worker dead constant
+
+**R17.1 — job activity log persisted English strings**: `addComment` defaulted `userName` to the literal English `'You'` string when none was passed — that string then got persisted into the comment record and rendered to non-English contractors as English. `addActivityEntry` was being called from job/[id].tsx with hardcoded English `description` strings (`"Clocked in"`, `"Clocked out (Nh)"`, `"Sign-off link sent to {customer}"`) — these get persisted as-is, so every contractor's job activity log was English regardless of language. Fix: removed the English `'You'` fallback from the service (renderer applies localized fallback via `t('jobs.youLabel')`), and threaded `t()` through the 5 `addActivityEntry` call sites in job/[id].tsx so new entries are written in the contractor's current language. 4 keys × 6 locales added.
+
+**R17.2 — quotes/new stored customer NAME as customer_id + 7 hardcoded English alerts**: same UUID/name confusion bug fixed in R9.3 / R12.2 / R14.1 — `addQuote(customer.trim(), …)` passed the typed/picked customer NAME string directly into AppState.addQuote, which stores its first arg as `customer_id`. Fix: split state into `customer` (display name) + `customerId` (the picked row's ID). When picker is used, both are set; when typing freely, customerId clears. addQuote now receives the id when present, else the typed name as fallback. Plus 7 hardcoded English alerts (`'Missing customer'` / `'No line items'` / etc) migrated to `quoteNew.*` (13 keys × 6 locales).
+
+**R17.3 — hub schedule / suppliers / projects screens**: not in scope. Reachable only from `DirectorDashboard` and the enterprise (tabs)/hub layout — both intentionally skipped per R180 ("CFO/COO/Director enterprise dashboards intentionally skipped per user instruction").
+
+**R17.4 — worker portal stub**: confirmed reasonable. `app/worker/my-schedule` and `my-timesheets` use real `AppState` data + AsyncStorage persistence, no mock. Reachable only when `user.role === 'worker'` which has no current path to be set (no admin UI to assign worker role). Per LAUNCH §6 solo focus, intentionally deferred. Cleaned up one dead constant: `TS_KEY = '@vasco_worker_timesheets'` was declared but never read or written anywhere — timesheets are reconstructed from `job.timeEntries` on every render. Removed.
+
+R17 batch: 0 TS errors, all 6 locales valid.

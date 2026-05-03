@@ -96,11 +96,15 @@ export async function addComment(
   userName?: string,
 ): Promise<JobComment> {
   const comments = await loadComments(jobId);
+  // R17.1: was hardcoding "You" as the userName fallback — that string then
+  // got persisted into the comment record and rendered to a Dutch/German
+  // contractor as English. Service stays language-agnostic now; renderer
+  // applies a localized "You" fallback at display time.
   const comment: JobComment = {
     id: `cmt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     jobId,
     userId,
-    userName: userName || 'You',
+    userName: userName ?? '',
     text,
     createdAt: new Date().toISOString(),
   };
