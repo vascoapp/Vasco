@@ -1603,3 +1603,119 @@ export function useAIQueue() {
 
   return { items, loading, approve, reject, snooze, refresh, count: items.length };
 }
+
+// =============================================================================
+// R25: business-event helpers — queue customer-facing message drafts when
+// real business events fire (clock-in, mark-invoice-sent, etc). Closes the
+// last R3 deferrals where these triggers were defined in the MessageTrigger
+// taxonomy but never auto-fired anywhere. Each helper queues a `progress_note`
+// or `draft_reminder` item with a pre-rendered template so R286's executor
+// opens the Share sheet directly on Approve.
+// =============================================================================
+
+/**
+ * Fired when contractor clocks in to a job. Queues a one-tap "On my way"
+ * customer-facing notice with the customer's name + ETA.
+ */
+export async function queueOnMyWay(args: {
+  jobId: string;
+  jobTitle: string;
+  customerId?: string;
+  customerName?: string;
+  customerPhone?: string;
+}): Promise<string> {
+  const t = i18n.t.bind(i18n);
+  const customerLabel = args.customerName?.trim() || args.customerId || '';
+  const template = t('messageTrigger.onMyWayBody', {
+    defaultValue: 'Hi {{customer}}, I\'m on my way to start work on {{title}} now. See you shortly.',
+    customer: customerLabel,
+    title: args.jobTitle,
+  });
+  return addToQueue({
+    type: 'progress_note',
+    title: t('messageTrigger.onMyWayTitle', {
+      defaultValue: 'Notify {{customer}}: on my way',
+      customer: customerLabel || t('messageTrigger.theCustomer', 'the customer'),
+    }),
+    description: t('messageTrigger.onMyWayDesc', { defaultValue: 'You just clocked in — quick courtesy heads-up.' }),
+    preparedData: { jobId: args.jobId, customerId: args.customerId, customerPhone: args.customerPhone, template },
+    actionLabel: t('common.send', 'Send'),
+    estimatedImpact: t('messageTrigger.onMyWayImpact', { defaultValue: 'Builds trust' }),
+    expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(), // 4h — beyond that the visit is stale
+    sourceGeneratorId: 'event_on_my_way',
+    entityKey: `on_my_way:${args.jobId}`,
+  });
+}
+
+/**
+ * Fired when an invoice flips to paid (manual mark-paid OR Mollie/Stripe
+ * webhook). Queues a same-day thank-you draft. The eveLiveActionService
+ * also sleeps a 24h-window thanks for daily-cadence catchup; this immediate
+ * one fires for contractors who watch the app.
+ */
+export async function queuePaymentReceivedThanks(args: {
+  invoiceId: string;
+  customerId?: string;
+  customerName?: string;
+  amount?: number;
+}): Promise<string> {
+  const t = i18n.t.bind(i18n);
+  const customerLabel = args.customerName?.trim() || args.customerId || '';
+  const template = t('messageTrigger.paidThanksBody', {
+    defaultValue: 'Thanks {{customer}} — payment received for invoice {{invoice}} (€{{amount}}). Receipt on its way.',
+    customer: customerLabel,
+    invoice: args.invoiceId,
+    amount: Math.round(args.amount ?? 0),
+  });
+  return addToQueue({
+    type: 'satisfaction_survey',
+    title: t('messageTrigger.paidThanksTitle', {
+      defaultValue: 'Thank {{customer}} for payment',
+      customer: customerLabel || t('messageTrigger.theCustomer', 'the customer'),
+    }),
+    description: t('messageTrigger.paidThanksDesc', { defaultValue: 'Payment received — quick thanks builds repeat business.' }),
+    preparedData: { invoiceId: args.invoiceId, customerId: args.customerId, template },
+    actionLabel: t('common.send', 'Send'),
+    estimatedImpact: t('messageTrigger.paidThanksImpact', { defaultValue: 'Builds repeat business' }),
+    expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    sourceGeneratorId: 'event_payment_received',
+    entityKey: `paid_thanks:${args.invoiceId}`,
+  });
+}
+
+/**
+ * Fired when contractor marks an invoice as sent. Queues a customer-facing
+ * "Invoice on its way" heads-up so the customer expects it. Sits alongside
+ * the existing `schedulePaymentReminder` push (contractor-side reminder).
+ */
+export async function queueInvoiceSentNotice(args: {
+  invoiceId: string;
+  customerId?: string;
+  customerName?: string;
+  amount?: number;
+  dueInDays?: number;
+}): Promise<string> {
+  const t = i18n.t.bind(i18n);
+  const customerLabel = args.customerName?.trim() || args.customerId || '';
+  const template = t('messageTrigger.invoiceSentBody', {
+    defaultValue: 'Hi {{customer}}, invoice {{invoice}} (€{{amount}}) is on its way. Payment terms: {{days}} days. Thanks!',
+    customer: customerLabel,
+    invoice: args.invoiceId,
+    amount: Math.round(args.amount ?? 0),
+    days: args.dueInDays ?? 14,
+  });
+  return addToQueue({
+    type: 'draft_reminder',
+    title: t('messageTrigger.invoiceSentTitle', {
+      defaultValue: 'Notify {{customer}}: invoice sent',
+      customer: customerLabel || t('messageTrigger.theCustomer', 'the customer'),
+    }),
+    description: t('messageTrigger.invoiceSentDesc', { defaultValue: 'Heads-up so the customer expects the invoice.' }),
+    preparedData: { invoiceId: args.invoiceId, customerId: args.customerId, template },
+    actionLabel: t('common.send', 'Send'),
+    estimatedImpact: t('messageTrigger.invoiceSentImpact', { defaultValue: 'Faster payment' }),
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24h — after that the invoice is no-longer-fresh
+    sourceGeneratorId: 'event_invoice_sent',
+    entityKey: `invoice_sent:${args.invoiceId}`,
+  });
+}

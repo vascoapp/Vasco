@@ -59,7 +59,7 @@ const todayStr = now.toISOString().split('T')[0];
 export default function TimesheetScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { jobs, updateJob } = useAppState();
+  const { jobs, updateJob, customers } = useAppState();
   const [activeTab, setActiveTab] = useState<TabType>('vandaag');
   const [entries, setEntries] = useState<SoloTimeEntry[]>([]);
 
@@ -115,7 +115,22 @@ export default function TimesheetScreen() {
     Alert.alert(t('timesheet.chooseJob', 'Klus kiezen'), t('timesheet.whichJob', 'Voor welke klus ga je werken?'), [
       ...activeJobs.slice(0, 5).map(job => ({
         text: job.title,
-        onPress: () => { timer.clockIn(job.id, job.title); },
+        onPress: async () => {
+          await timer.clockIn(job.id, job.title);
+          // R25: queue on_my_way customer-facing notice (closes R3 deferral).
+          const fullJob: any = jobs.find((j: any) => j.id === job.id);
+          if (fullJob?.customerId) {
+            const cust = customers.find((c: any) => c.id === fullJob.customerId);
+            const { queueOnMyWay } = await import('../../src/services/aiActionQueueService');
+            queueOnMyWay({
+              jobId: job.id,
+              jobTitle: job.title,
+              customerId: fullJob.customerId,
+              customerName: cust?.name,
+              customerPhone: cust?.phone,
+            }).catch(() => {});
+          }
+        },
       })),
       { text: t('timesheet.withoutJob', 'Zonder klus'), onPress: () => { timer.clockIn(); } },
       { text: t('common.cancel', 'Annuleren'), style: 'cancel' as const },

@@ -988,3 +988,21 @@ The audit summary at line 624 listed 4 files as "deletable whenever someone want
 **R24.4 — `@internal` markers on cohort direct exports (R5 minor flag)**: `getCohortBenchmarks` (cohortBenchmarkService) and `getPostcodeCohort` (postcodeCohortService) — both exported but the architectural intent is hook-first consumption (`useCohortBenchmarks` / `usePostcodeCohort`). Direct exports retained for non-React contexts (workers, schedulers) and for the in-service cache flow itself, but now JSDoc-tagged `@internal` so contributors don't accidentally call them from a UI surface that should use the hook. Closes the R5 "minor flags" follow-up.
 
 R24 batch: ~1,154 LoC reclaimed. 0 TS errors, all 6 locales unchanged at 2248 keys parity. Audit-doc "Files retired" footnote at line 624 should be updated to reflect deletion (3 of 4 files now gone; signatureService.ts kept due to R301 wiring).
+
+---
+
+# R25 — wire 3 immediate-fire message triggers (R3 deferrals)
+
+R304 already wired the daily-scheduler-cadence message triggers via
+eveLiveActionService (24h appointment reminders, 3-day quote follow-ups,
+job_started, job_complete, payment_received catchup, quote_sent). Three
+gaps remained where the trigger should fire **immediately** on a real
+business event, not on the next scheduler tick:
+
+**R25.1 — `on_my_way` auto-queue on clock-in**: was R3 deferral "manual button on job detail" — required the contractor to remember to tap Share. Now: `queueOnMyWay({ jobId, jobTitle, customerId, customerName, customerPhone })` exported from `aiActionQueueService.ts`. Fired from all 3 clock-in entry points (`app/contractor/job/[id].tsx` ×2 — timer-row button + actions-bar button — and `app/contractor/timesheet.tsx` Alert.alert "choose job" path). Item lands in queue with prefilled "Hi {{customer}}, I'm on my way to start work on {{title}} now" template; expires 4h. Approve → R286 executor opens Share sheet directly.
+
+**R25.2 — `invoice_sent` customer-facing notice on markInvoiceSent**: was R3 deferral "fires schedulePaymentReminder local notif only" — only the contractor got a push, customer got nothing until they spotted the invoice. Now: `queueInvoiceSentNotice({ invoiceId, customerId, customerName, amount, dueInDays })` fires from `AppState.markInvoiceSent` alongside the existing `schedulePaymentReminder` push. Item lands with "Hi {{customer}}, invoice {{invoice}} (€{{amount}}) is on its way. Payment terms: {{days}} days" template; 24h expiry; entityKey-deduped per invoice.
+
+**R25.3 — `payment_received` instant thank-you on markInvoicePaid**: was R3 deferral "nothing" — eveLiveActionService daily scheduler queues a 24h-window thanks for catchup but missed contractors watching the app live when a payment lands (Mollie webhook fires `markInvoicePaid` realtime per R278 watchInvoicePayments). Now: `queuePaymentReceivedThanks({ invoiceId, customerId, customerName, amount })` fires from `AppState.markInvoicePaid`. EntityKey `paid_thanks:{invoiceId}` + the eve daily catchup's `eve-paid` mkId both target satisfaction_survey type so dedup at queue level prevents double-firing.
+
+R25 batch: 4 files touched (aiActionQueueService + 3 call sites), 3 new exports, 0 TS errors. Default i18n strings inline via `defaultValue` so locales unchanged at 2248×6 (i18n keys materialize automatically when locales next regenerate). Closes the last 3 R3 immediate-fire deferrals.

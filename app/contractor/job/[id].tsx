@@ -323,6 +323,20 @@ export default function JobDetailPage() {
               } else {
                 await timer.clockIn(job.id, job.projectName || job.customerName || '');
                 addActivityEntry(id || '', 'timer_started', t('jobs.activityClockedIn', 'Clocked in')).catch(() => {});
+                // R25: queue on_my_way customer-facing notice (closes R3
+                // deferral — was manual-button only). Approve → opens Share
+                // sheet with prefilled WhatsApp/SMS-ready text.
+                if (appJob?.customerId) {
+                  const _cust = customers.find((c: any) => c.id === appJob.customerId);
+                  const { queueOnMyWay } = await import('../../../src/services/aiActionQueueService');
+                  queueOnMyWay({
+                    jobId: job.id,
+                    jobTitle: job.projectName || job.customerName || '',
+                    customerId: appJob.customerId,
+                    customerName: _cust?.name,
+                    customerPhone: _cust?.phone,
+                  }).catch(() => {});
+                }
               }
             }}
           >
@@ -789,6 +803,19 @@ export default function JobDetailPage() {
                 } else {
                   await timer.clockIn(job.id, job.projectName || job.customerName || '');
                   addActivityEntry(id || '', 'timer_started', t('jobs.activityClockedIn', 'Clocked in')).catch(() => {});
+                  // R25: queue on_my_way notice (closes R3 deferral). Same
+                  // pattern as the timer-row clock-in handler above.
+                  if (appJob?.customerId) {
+                    const _cust = customers.find((c: any) => c.id === appJob.customerId);
+                    const { queueOnMyWay } = await import('../../../src/services/aiActionQueueService');
+                    queueOnMyWay({
+                      jobId: job.id,
+                      jobTitle: job.projectName || job.customerName || '',
+                      customerId: appJob.customerId,
+                      customerName: _cust?.name,
+                      customerPhone: _cust?.phone,
+                    }).catch(() => {});
+                  }
                   Alert.alert(t('jobs.clockedIn', 'Clocked in'), t('jobs.clockedInDesc', 'You are now clocked in on this job.'));
                 }
               }}

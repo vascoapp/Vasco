@@ -855,6 +855,21 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           );
         }
         schedulePaymentReminder({ invoiceId: id, customerName: 'Klant', amount: invoice?.amount ?? 0, daysUntilDue: 14 }).catch(() => {});
+        // R25: queue customer-facing invoice_sent notice (closes R3 deferral —
+        // markInvoiceSent previously fired only the contractor-side push
+        // reminder, no draft for the customer). Approve → opens Share sheet.
+        if (invoice) {
+          const customerRow = customers.find((c) => c.id === invoice.customer);
+          import('../services/aiActionQueueService').then(({ queueInvoiceSentNotice }) =>
+            queueInvoiceSentNotice({
+              invoiceId: id,
+              customerId: invoice.customer,
+              customerName: customerRow?.name,
+              amount: invoice.amount ?? 0,
+              dueInDays: 14,
+            }),
+          ).catch(() => {});
+        }
         // AI data collector
         const sentDue = new Date();
         sentDue.setDate(sentDue.getDate() + 14);
@@ -904,6 +919,22 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         ).catch(() => {});
         // Ontology: propagate payment
         propagatePayment(id, 0).catch(() => {});
+        // R25: queue customer-facing thank-you (closes R3 deferral —
+        // payment_received was a defined MessageTrigger but never fired).
+        // The eveLiveActionService daily scheduler also queues this for
+        // catchup, but firing here gives instant feedback for contractors
+        // watching the app when a payment lands.
+        if (paidInv) {
+          const customerRow = customers.find((c) => c.id === paidInv.customer);
+          import('../services/aiActionQueueService').then(({ queuePaymentReceivedThanks }) =>
+            queuePaymentReceivedThanks({
+              invoiceId: id,
+              customerId: paidInv.customer,
+              customerName: customerRow?.name,
+              amount: paidInv.amount ?? 0,
+            }),
+          ).catch(() => {});
+        }
       },
       addQuote: async (customer, job, items) => {
         const total = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
