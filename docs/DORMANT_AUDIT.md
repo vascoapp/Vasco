@@ -1025,3 +1025,17 @@ User direction: stop deprecating, start wiring. This round rewires three service
 The cohort `industryAverage` still folds in via `primeCohortIndustryAverage` (R210). Hooks rewritten to depend on `useAppState().invoices` so they re-render on real data changes.
 
 R26 batch: 3 files touched, 0 TS errors, locales unchanged at 2248×6. Combined contractor-visible impact: Geld tab + AI tab insights + BTW prep all now reflect the contractor's actual books instead of seeded mock customers.
+
+---
+
+# R27 — wire `supplierNegotiationService` to real expenses (AI tab)
+
+`supplierNegotiationService.useSupplierNegotiation()` was returning hardcoded `Technische Unie / Bouwmaat / Verfwinkel.nl / Hornbach` to every contractor regardless of who they actually buy from — feeding fake supplier-leverage / spend-concentration / quick-wins data into `crossServiceIntelligenceService` (R20.2) which surfaces on the AI tab. Plus `savingsAggregatorService` consumed the same mock to compute "purchasing savings" so contractors saw fake savings opportunities ("Bundel Q2 bestellingen voor Gold-tier €480").
+
+Replaced the singleton-mock path with `deriveSupplierLeverage(expenses)` — aggregates per-supplier spend over the last 12 months from real `useExpenses()` data (canonical service after R26.2 dropped its own mock seed). Per-supplier loyalty tier (bronze→silver→gold→platinum) computed from spend thresholds, leverage score from share + tier-headroom + order-frequency blend, quickWins generated from suppliers with `potentialDiscount > currentDiscount` and >€200 annual spend. Returns empty arrays when no expenses exist (was returning fake data even for fresh contractors).
+
+Skipped during R27 verification:
+- `roiMetricsService` — `VascoSavedBanner` is no longer mounted (R175 rebuild dropped the actual mount, only a comment ref remains in (contractor)/index.tsx). `HoursSavedCard` mounts only on the enterprise `ContractorDashboard` (R180 enterprise-skip). `useROIDashboard` is therefore off the main contractor flow; rewriting to real data is no-op-equivalent.
+- `savingsAggregatorService` — already mostly-real per R9.4 + R285 cleanups (only `MOCK_TIMELINE` for 6-month historical chart remains; needs time-series BE table to fix properly).
+
+R27 batch: 1 file touched, 0 TS errors, locales unchanged at 2248×6. Combined R26+R27 contractor-visible impact: Geld tab cashflow card + BTW prep + AI tab cashGap/dsoTrend/customerLifecycle/crossService insights all now reflect actual contractor books and supplier mix instead of seeded mock customers and mock spend at Technische Unie.

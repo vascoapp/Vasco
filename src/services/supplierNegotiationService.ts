@@ -155,13 +155,136 @@ class SupplierNegotiationService {
 export const supplierNegotiationService = new SupplierNegotiationService();
 
 // =============================================================================
-// REACT HOOKS
+// REACT HOOKS — R27: derive from real contractor expenses
+// =============================================================================
+// Was returning hardcoded `Technische Unie / Bouwmaat / Verfwinkel.nl /
+// Hornbach` to every contractor regardless of who they actually buy from.
+// Now aggregates per-supplier spend from useExpenses() and computes loyalty
+// tiers + discount potential heuristically.
 // =============================================================================
 
-export function useSupplierNegotiation() {
-  return useMemo(() => supplierNegotiationService.getSummary(), []);
+import { useExpenses } from './expenseService';
+
+const TIER_THRESHOLDS: { tier: SupplierLeverage['loyaltyTier']; nextTierName: string; threshold: number; nextThreshold: number; discount: number; potential: number }[] = [
+  { tier: 'bronze',   nextTierName: 'Silver',   threshold: 0,     nextThreshold: 5000,  discount: 0,  potential: 5  },
+  { tier: 'silver',   nextTierName: 'Gold',     threshold: 5000,  nextThreshold: 10000, discount: 5,  potential: 10 },
+  { tier: 'gold',     nextTierName: 'Platinum', threshold: 10000, nextThreshold: 20000, discount: 10, potential: 12 },
+  { tier: 'platinum', nextTierName: 'Platinum', threshold: 20000, nextThreshold: 50000, discount: 12, potential: 15 },
+];
+
+function tierFor(annualSpend: number): typeof TIER_THRESHOLDS[number] {
+  for (let i = TIER_THRESHOLDS.length - 1; i >= 0; i--) {
+    if (annualSpend >= TIER_THRESHOLDS[i].threshold) return TIER_THRESHOLDS[i];
+  }
+  return TIER_THRESHOLDS[0];
 }
 
-export function useSupplierLeverage() {
-  return useMemo(() => supplierNegotiationService.getSupplierLeverage(), []);
+function deriveSupplierLeverage(expenses: any[]): SupplierLeverage[] {
+  // Aggregate per-supplier spend over the last 12 months.
+  const yearAgo = Date.now() - 365 * 24 * 60 * 60 * 1000;
+  const recent = expenses.filter((e) => {
+    const d = e.date instanceof Date ? e.date.getTime() : new Date(e.date).getTime();
+    return d >= yearAgo;
+  });
+  const bySupplier = new Map<string, { spend: number; orderCount: number }>();
+  for (const e of recent) {
+    const s = (e.supplier ?? '').trim();
+    if (!s) continue;
+    const cur = bySupplier.get(s) ?? { spend: 0, orderCount: 0 };
+    cur.spend += (e.amount ?? 0) + (e.vatAmount ?? 0);
+    cur.orderCount += 1;
+    bySupplier.set(s, cur);
+  }
+  const total = Array.from(bySupplier.values()).reduce((sum, x) => sum + x.spend, 0);
+  if (total === 0 || bySupplier.size === 0) return [];
+
+  return Array.from(bySupplier.entries())
+    .map(([name, { spend, orderCount }]) => {
+      const tier = tierFor(spend);
+      const spendShare = (spend / total) * 100;
+      // Leverage score: blend of share + tier headroom + order frequency
+      const tierHeadroom = Math.max(0, 1 - (spend - tier.threshold) / Math.max(1, tier.nextThreshold - tier.threshold));
+      const score = Math.round(
+        Math.min(100, spendShare * 1.2 + tierHeadroom * 30 + Math.min(orderCount, 20) * 1.5)
+      );
+      const factors: string[] = [];
+      if (spendShare > 30) factors.push('High spend share');
+      if (orderCount >= 6) factors.push('High order frequency');
+      if (tier.tier === 'bronze') factors.push('Tier upgrade available');
+      else if (tier.tier === 'gold' || tier.tier === 'platinum') factors.push('Loyal customer');
+      return {
+        supplierId: `sup_${name.toLowerCase().replace(/\s+/g, '_')}`,
+        supplierName: name,
+        annualSpend: Math.round(spend),
+        spendShare: Math.round(spendShare),
+        loyaltyTier: tier.tier,
+        nextTierThreshold: tier.nextThreshold,
+        nextTierName: tier.nextTierName,
+        currentDiscount: tier.discount,
+        potentialDiscount: tier.potential,
+        leverageScore: score,
+        leverageFactors: factors.length > 0 ? factors : ['Stable spend'],
+        negotiationTip: spend < tier.nextThreshold
+          ? `€${Math.round(tier.nextThreshold - spend)} more to reach ${tier.nextTierName} (${tier.potential}% discount)`
+          : `You're a top customer — ask for an exclusive price list.`,
+      };
+    })
+    .sort((a, b) => b.leverageScore - a.leverageScore);
+}
+
+export function useSupplierNegotiation(): NegotiationSummary {
+  const { expenses } = useExpenses();
+  return useMemo(() => {
+    const suppliers = deriveSupplierLeverage(expenses);
+    if (suppliers.length === 0) {
+      return {
+        totalDiscountPotential: 0,
+        topLeverage: {} as SupplierLeverage,
+        concentration: {
+          totalAnnualSpend: 0,
+          topSupplierShare: 0,
+          supplierCount: 0,
+          herfindahlIndex: 0,
+          diversificationAdvice: '',
+        },
+        suppliers: [],
+        quickWins: [],
+      };
+    }
+    const totalAnnualSpend = suppliers.reduce((s, l) => s + l.annualSpend, 0);
+    const shares = suppliers.map((l) => l.spendShare / 100);
+    const hhi = Math.round(shares.reduce((s, sh) => s + sh * sh, 0) * 10000);
+    const totalPotential = suppliers.reduce(
+      (s, l) => s + Math.round(l.annualSpend * (l.potentialDiscount - l.currentDiscount) / 100),
+      0,
+    );
+    const quickWins = suppliers
+      .filter((l) => l.potentialDiscount > l.currentDiscount && l.annualSpend > 200)
+      .slice(0, 3)
+      .map((l) => ({
+        supplier: l.supplierName,
+        action: l.negotiationTip,
+        saving: Math.round(l.annualSpend * (l.potentialDiscount - l.currentDiscount) / 100),
+      }));
+    return {
+      totalDiscountPotential: totalPotential,
+      topLeverage: suppliers[0],
+      concentration: {
+        totalAnnualSpend,
+        topSupplierShare: suppliers[0]?.spendShare ?? 0,
+        supplierCount: suppliers.length,
+        herfindahlIndex: hhi,
+        diversificationAdvice: hhi > 2500
+          ? 'High concentration — spread risk across more suppliers'
+          : 'Healthy supplier diversity',
+      },
+      suppliers,
+      quickWins,
+    };
+  }, [expenses]);
+}
+
+export function useSupplierLeverage(): SupplierLeverage[] {
+  const { expenses } = useExpenses();
+  return useMemo(() => deriveSupplierLeverage(expenses), [expenses]);
 }
