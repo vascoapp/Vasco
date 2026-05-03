@@ -2146,7 +2146,12 @@
   "customer": {
     "quote": "Devis",
     "call": "Appeler",
-    "email": "E-mail"
+    "email": "E-mail",
+    "notFound": "Client introuvable",
+    "spent": "Dépensé",
+    "jobs": "Chantiers",
+    "quotes": "Devis",
+    "invoices": "Factures"
   },
   "inbox": {
     "fromCustomer": "Du client",

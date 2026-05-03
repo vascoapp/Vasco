@@ -2146,7 +2146,12 @@
   "customer": {
     "quote": "Offerte",
     "call": "Bellen",
-    "email": "E-mail"
+    "email": "E-mail",
+    "notFound": "Klant niet gevonden",
+    "spent": "Besteed",
+    "jobs": "Klussen",
+    "quotes": "Offertes",
+    "invoices": "Facturen"
   },
   "inbox": {
     "fromCustomer": "Van klant",

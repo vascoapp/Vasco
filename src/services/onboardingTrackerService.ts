@@ -1,9 +1,28 @@
 // =============================================================================
-// ONBOARDING TRACKER SERVICE — Track setup completion progress
+// ONBOARDING TRACKER SERVICE — DEPRECATED — DO NOT EXTEND (R18 dormant audit)
 // =============================================================================
-// Tracks which onboarding steps a contractor has completed.
-// Persisted to AsyncStorage so progress survives app restarts.
-// Used by: Vandaag tab (progress indicator), VascoCard (next step suggestions).
+// Status as of R18: write-only service with no readers and a parallel canonical
+// implementation already wired to the UI.
+//
+//  - `markStepComplete` is fired from 5 places in AppState (`first_customer_added`,
+//    `first_job_created`, `first_quote_sent` ×2, `first_invoice_sent`).
+//  - The other reader-side exports (`getNextStep`, `isFullyOnboarded`,
+//    `getAllSteps`, `getProgress`) have ZERO callers anywhere in the codebase.
+//    The header comment claims "Used by: Vandaag tab (progress indicator),
+//    VascoCard (next step suggestions)" — neither surface exists.
+//  - 3 of 7 steps (`profile_complete`, `accounting_connected`,
+//    `payment_connected`) are never marked complete by any code path.
+//  - `activationMilestonesService` (R225) does the same job — derives the same
+//    state from AppState live + has the surfaced consumer
+//    `<ActivationChecklist />` mounted on `(contractor)/index.tsx`.
+//
+// AsyncStorage writes still happen (silent, no harm), so the existing
+// `markStepComplete` calls are kept for now to avoid touching AppState. New
+// code should read activation state via `evaluateMilestones()` from
+// `activationMilestonesService` instead.
+//
+// Cleanup path: remove `markStepComplete` calls from AppState.tsx (5 sites)
+// and delete this file.
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';

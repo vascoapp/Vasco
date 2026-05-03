@@ -2146,7 +2146,12 @@
   "customer": {
     "quote": "Presupuesto",
     "call": "Llamar",
-    "email": "Correo"
+    "email": "Correo",
+    "notFound": "Cliente no encontrado",
+    "spent": "Gastado",
+    "jobs": "Trabajos",
+    "quotes": "Presupuestos",
+    "invoices": "Facturas"
   },
   "inbox": {
     "fromCustomer": "Del cliente",

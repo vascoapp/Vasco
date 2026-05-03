@@ -1,7 +1,25 @@
 // =============================================================================
-// VASCO KARMA SERVICE - Todoist-inspired productivity & gamification
+// VASCO KARMA SERVICE — DEPRECATED — DO NOT EXTEND (R18 dormant audit)
 // =============================================================================
-// Tracks points, streaks, levels, and badges for guidance actions completed.
+// Status as of R18:
+//  - `useKarmaProfile` returns hardcoded MOCK_PROFILE_BASE (167 points, 7-day
+//    streak) and MOCK_ACTIONS frozen at 2026-02-07 timestamps. No persistence.
+//  - `useKarmaActions.awardPoints` mutates only local React state — points
+//    evaporate on unmount. No AsyncStorage / Supabase write.
+//  - All 8 badge labels (`Eerste Actie`, `5-Daagse Streak`, etc) and mock
+//    action labels are hardcoded NL — would render Dutch on EN/DE/FR/ES/IT
+//    contractors if anyone ever rendered them.
+//  - Sole consumer `VascoKarmaStrip` is exported from `src/components/shared/`
+//    but has ZERO callers anywhere in app/ or src/components/. Pure decoration.
+//
+// To make this real:
+//  1. Persist KarmaProfile to AsyncStorage + (optional) Supabase row per user
+//  2. Wire `awardPoints` from real business events (job_completed, quote_sent,
+//     invoice_paid) instead of relying on a per-render hook caller
+//  3. Localize badge + action labels via i18n
+//  4. Mount `VascoKarmaStrip` somewhere (e.g. Vandaag header) or delete it
+//
+// Until then: do not import from this module. Tagged for cleanup.
 // =============================================================================
 
 import { useState, useMemo, useCallback } from 'react';

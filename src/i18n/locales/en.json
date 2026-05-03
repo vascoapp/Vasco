@@ -2146,7 +2146,12 @@
   "customer": {
     "quote": "Quote",
     "call": "Call",
-    "email": "Email"
+    "email": "Email",
+    "notFound": "Customer not found",
+    "spent": "Spent",
+    "jobs": "Jobs",
+    "quotes": "Quotes",
+    "invoices": "Invoices"
   },
   "inbox": {
     "fromCustomer": "From customer",

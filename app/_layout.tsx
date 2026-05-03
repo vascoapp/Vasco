@@ -35,6 +35,7 @@ import { startAutoSync, stopAutoSync } from '../src/intelligence/cloudSync';
 import { startEventFlushing, stopEventFlushing } from '../src/intelligence/dataCollector';
 import { registerForPushNotifications, refreshPushTokenIfStale, syncBadgeWithUnread } from '../src/services/pushNotificationService';
 import { startBackgroundJobScheduler, stopBackgroundJobScheduler } from '../src/intelligence/backgroundJobScheduler';
+import { getWeatherForecast } from '../src/services/weatherService';
 import * as Notifications from 'expo-notifications';
 
 // Enterprise roles use the (tabs) layout
@@ -115,6 +116,10 @@ function RootLayoutNav() {
         maybeRunMlHealthCheck({ trade: user.trade, country: user.country }),
       ).catch(() => {});
       registerForPushNotifications().catch(() => {});
+      // R18: prefetch real weather (Open-Meteo) so the weatherScheduleGenerator
+      // can serve real rain/temperature alerts instead of falling through to
+      // its deterministic-mock fallback. The service self-caches for 6h.
+      getWeatherForecast(user.country ?? 'NL').catch(() => {});
 
       // R16.3: deep-link push notification taps to the right screen. Was
       // entirely dormant — every push (payment reminder / quote followup /

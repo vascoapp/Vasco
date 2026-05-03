@@ -2146,7 +2146,12 @@
   "customer": {
     "quote": "Preventivo",
     "call": "Chiamare",
-    "email": "E-mail"
+    "email": "E-mail",
+    "notFound": "Cliente non trovato",
+    "spent": "Speso",
+    "jobs": "Lavori",
+    "quotes": "Preventivi",
+    "invoices": "Fatture"
   },
   "inbox": {
     "fromCustomer": "Dal cliente",

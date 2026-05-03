@@ -118,7 +118,7 @@ export default function CustomerDetailScreen() {
           <Pressable onPress={() => router.back()} hitSlop={8}>
             <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
           </Pressable>
-          <Text style={s.headerTitle}>Klant niet gevonden</Text>
+          <Text style={s.headerTitle}>{t('customer.notFound', 'Customer not found')}</Text>
         </View>
       </View>
     );
@@ -142,22 +142,22 @@ export default function CustomerDetailScreen() {
           <View style={s.kpiRow}>
             <View style={s.kpi}>
               <Text style={s.kpiValue}>€{totalSpent.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
-              <Text style={s.kpiLabel}>Besteed</Text>
+              <Text style={s.kpiLabel}>{t('customer.spent', 'Spent')}</Text>
             </View>
             <View style={s.kpiDivider} />
             <View style={s.kpi}>
               <Text style={s.kpiValue}>{customerJobs.length}</Text>
-              <Text style={s.kpiLabel}>Klussen</Text>
+              <Text style={s.kpiLabel}>{t('customer.jobs', 'Jobs')}</Text>
             </View>
             <View style={s.kpiDivider} />
             <View style={s.kpi}>
               <Text style={s.kpiValue}>{customerQuotes.length}</Text>
-              <Text style={s.kpiLabel}>Offertes</Text>
+              <Text style={s.kpiLabel}>{t('customer.quotes', 'Quotes')}</Text>
             </View>
             <View style={s.kpiDivider} />
             <View style={s.kpi}>
               <Text style={s.kpiValue}>{customerInvoices.length}</Text>
-              <Text style={s.kpiLabel}>Facturen</Text>
+              <Text style={s.kpiLabel}>{t('customer.invoices', 'Invoices')}</Text>
             </View>
           </View>
         </FadeIn>
@@ -270,7 +270,7 @@ export default function CustomerDetailScreen() {
         {/* Jobs */}
         {customerJobs.length > 0 && (
           <FadeIn delay={100}>
-            <Text style={s.sectionTitle}>Klussen ({customerJobs.length})</Text>
+            <Text style={s.sectionTitle}>{t('customer.jobs', 'Jobs')} ({customerJobs.length})</Text>
             {customerJobs.map((job: any) => (
               <Pressable key={job.id} style={s.card} onPress={() => router.push(`/contractor/job/${job.id}` as any)}>
                 <View style={[s.accent, { backgroundColor: job.status === 'completed' ? SemanticColors.feedbackSuccess : Palette.hermesOrange }]} />
@@ -287,7 +287,7 @@ export default function CustomerDetailScreen() {
         {/* Quotes */}
         {customerQuotes.length > 0 && (
           <FadeIn delay={150}>
-            <Text style={s.sectionTitle}>Offertes ({customerQuotes.length})</Text>
+            <Text style={s.sectionTitle}>{t('customer.quotes', 'Quotes')} ({customerQuotes.length})</Text>
             {customerQuotes.map((q: any) => (
               <Pressable key={q.id} style={s.card} onPress={() => router.push(`/quotes/${q.id}` as any)}>
                 <View style={[s.accent, { backgroundColor: q.status === 'accepted' ? SemanticColors.feedbackSuccess : SemanticColors.textTertiary }]} />
@@ -304,7 +304,7 @@ export default function CustomerDetailScreen() {
         {/* Invoices */}
         {customerInvoices.length > 0 && (
           <FadeIn delay={200}>
-            <Text style={s.sectionTitle}>Facturen ({customerInvoices.length})</Text>
+            <Text style={s.sectionTitle}>{t('customer.invoices', 'Invoices')} ({customerInvoices.length})</Text>
             {customerInvoices.map((inv: any) => (
               <Pressable key={inv.id} style={s.card} onPress={() => router.push(`/invoices/${inv.id}` as any)}>
                 <View style={[s.accent, { backgroundColor: inv.status === 'paid' ? SemanticColors.feedbackSuccess : inv.status === 'overdue' ? SemanticColors.feedbackError : Palette.hermesOrange }]} />
