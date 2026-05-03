@@ -644,15 +644,70 @@ function round2(n: number): number {
 export const jobCostTrackingService = new JobCostTrackingService();
 
 // =============================================================================
-// REACT HOOKS
+// REACT HOOKS — R28: derive from real completed jobs
 // =============================================================================
+// `useJobCostSummary` was returning singleton.getSummary() which iterated
+// MOCK_ESTIMATES + MOCK_ACTUALS — every contractor's "Vasco Saved" card +
+// crossServiceIntelligence "labor efficiency" insights showed mock variances
+// for jobs they never had. Now derives from completed AppState jobs that
+// have BOTH quotedAmount AND actualCost — when none exist (fresh contractor)
+// returns empty-state summary (jobCount=0, accuracy=100, leakage=0).
+// Full BE-backed estimate-vs-actual tracking still future work (R7 partial).
+// =============================================================================
+
+import { useAppState } from '../state/AppState';
 
 export function useJobCostVariance(jobId: string) {
   return useMemo(() => jobCostTrackingService.getJobCostVariance(jobId), [jobId]);
 }
 
-export function useJobCostSummary() {
-  return useMemo(() => jobCostTrackingService.getSummary(), []);
+const EMPTY_SUMMARY: CostTrackingSummary = {
+  jobCount: 0, averageHoursAccuracy: 100, averageMaterialAccuracy: 100,
+  totalMarginLeakage: 0, netMarginDelta: 0,
+  estimationScore: 100, cpi: 1, topVarianceReasons: [],
+  totalMaterialPriceVariance: 0, totalMaterialQuantityVariance: 0,
+  totalMaterialMixVariance: 0, totalMaterialVariance: 0,
+  materialPriceVariancePercent: 0, totalLaborEfficiencyVariance: 0,
+  totalEstimatedMaterials: 0, totalEstimatedLabor: 0,
+  allSupplierOvercharges: [], allSupplierSavings: [],
+};
+
+export function useJobCostSummary(): CostTrackingSummary {
+  const { jobs } = useAppState();
+  return useMemo(() => {
+    const tracked = jobs.filter((j: any) =>
+      (j.status === 'completed' || j.status === 'gereed')
+      && (j.quotedAmount ?? 0) > 0
+      && (j.actualCost ?? 0) > 0,
+    );
+    if (tracked.length === 0) return EMPTY_SUMMARY;
+    // Lightweight derivation: per-job margin delta = actualCost - quoted-cost
+    // approximated as quoted * (1 - typical-margin). Without full estimate
+    // breakdown we focus on the headline cpi + estimationScore + jobCount.
+    const totalEstimated = tracked.reduce((s: number, j: any) => s + (j.quotedAmount ?? 0), 0);
+    const totalActual = tracked.reduce((s: number, j: any) => s + (j.actualCost ?? 0) + (j.actualHours ?? 0) * 75, 0);
+    const cpi = totalActual > 0 ? Math.round((totalEstimated / totalActual) * 100) / 100 : 1;
+    const accuracies = tracked.map((j: any) => {
+      const expected = (j.quotedAmount ?? 0) * 0.6; // assume 60% cost target
+      const actual = (j.actualCost ?? 0);
+      if (expected === 0) return 100;
+      const pct = ((actual - expected) / expected) * 100;
+      return Math.max(0, 100 - Math.abs(pct));
+    });
+    const estimationScore = Math.round(accuracies.reduce((s: number, a: number) => s + a, 0) / accuracies.length);
+    const overruns = tracked
+      .map((j: any) => ((j.actualCost ?? 0) - (j.quotedAmount ?? 0) * 0.6))
+      .filter((d: number) => d > 0);
+    const totalMarginLeakage = overruns.reduce((s: number, d: number) => s + d, 0);
+    return {
+      ...EMPTY_SUMMARY,
+      jobCount: tracked.length,
+      cpi,
+      estimationScore,
+      totalMarginLeakage: Math.round(totalMarginLeakage),
+      netMarginDelta: Math.round(totalActual - totalEstimated),
+    };
+  }, [jobs]);
 }
 
 export function useRecentVariances(limit?: number) {

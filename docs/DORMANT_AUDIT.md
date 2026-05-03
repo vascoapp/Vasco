@@ -1039,3 +1039,15 @@ Skipped during R27 verification:
 - `savingsAggregatorService` — already mostly-real per R9.4 + R285 cleanups (only `MOCK_TIMELINE` for 6-month historical chart remains; needs time-series BE table to fix properly).
 
 R27 batch: 1 file touched, 0 TS errors, locales unchanged at 2248×6. Combined R26+R27 contractor-visible impact: Geld tab cashflow card + BTW prep + AI tab cashGap/dsoTrend/customerLifecycle/crossService insights all now reflect actual contractor books and supplier mix instead of seeded mock customers and mock spend at Technische Unie.
+
+---
+
+# R28 — wire `laborCostService` + `jobCostTrackingService` to real jobs
+
+Both services were full mocks feeding `crossServiceIntelligenceService` (AI tab insights), `savingsAggregatorService` (Vandaag savings card), and `crossSellGenerator` — so a contractor with 0 completed jobs still saw "Loodgieterswerk €90/u, Schilderwerk €46/u recommendation" and "averageHoursAccuracy 78%".
+
+**R28.1 — `useLaborCosts` derives from completed jobs**: rewrote `useLaborCosts()` and `useJobTypeCosts()` to read `useAppState().jobs`, filter to completed, group by `trade`, and compute per-trade revenue / cost / hours / margin / effective-hourly-rate from real `agreedAmount` + `actualCost` + `actualHours` fields. Travel + idle analyses returned as empty (`clusteringPotential: 0`, `idleCost: 0`) — the R9.4 guard in savingsAggregator already correctly returns €0 for those categories when source data is empty, so this gracefully degrades the savings card instead of inventing route-clustering numbers without GPS data (per R10 GPS deferral).
+
+**R28.2 — `useJobCostSummary` derives from completed jobs with cost data**: rewrote to filter `jobs` to completed AND has `quotedAmount` AND `actualCost`. Returns `EMPTY_SUMMARY` (jobCount=0, accuracy=100, leakage=0) for fresh contractors — was previously returning singleton.getSummary() which iterated `MOCK_ESTIMATES + MOCK_ACTUALS` so every contractor saw fake variance reasons. Computes lightweight cpi + estimationScore + marginLeakage from real quoted-vs-actual deltas (assuming 60% cost target without full estimate breakdown). Full estimate-vs-actual decomposition (price/quantity/mix variance) still mock for jobs that DO have data — the BE doesn't yet store estimate breakdowns, so the mock decomposition fields stay zeroed in the new derivation; the headline summary numbers (cpi / score / leakage) are now real.
+
+R28 batch: 2 files touched, 0 TS errors, locales unchanged. Combined R26+R27+R28 impact: every consumer of `crossServiceIntelligenceService.useCrossServiceIntelligence()` (= 4 dependent services × multiple AI/Vandaag insights) now reflects the contractor's actual books — labor + materials + cashflow + collections + supplier mix.

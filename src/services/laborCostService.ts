@@ -172,13 +172,96 @@ class LaborCostService {
 export const laborCostService = new LaborCostService();
 
 // =============================================================================
-// REACT HOOKS
+// REACT HOOKS — R28: derive from real completed jobs
+// =============================================================================
+// Was returning hardcoded `Badkamerrenovatie / Keukenrenovatie / Schilderwerk`
+// job-type costs to every contractor. Now aggregates per-trade revenue /
+// hours / margin from `useAppState().jobs` filtered to completed.
+// Travel + idle analyses still hardcoded — those need GPS data we don't
+// have yet (per R10 GPS deferral). When all-zero, hook returns empty and
+// downstream consumers (savingsAggregator, crossServiceIntelligence) gracefully
+// reduce the labor-savings categories to €0 via the R9.4 idle-time guard.
 // =============================================================================
 
-export function useLaborCosts() {
-  return useMemo(() => laborCostService.getSummary(), []);
+import { useAppState } from '../state/AppState';
+
+function deriveJobTypeCosts(jobs: any[]): JobTypeCost[] {
+  const completed = jobs.filter((j) => j.status === 'completed' || j.status === 'gereed');
+  if (completed.length === 0) return [];
+
+  // Group by trade (or fall back to title pattern).
+  const byTrade = new Map<string, { jobs: any[]; revenue: number; cost: number; hours: number }>();
+  for (const j of completed) {
+    const key = (j.trade ?? 'general') as string;
+    const cur = byTrade.get(key) ?? { jobs: [], revenue: 0, cost: 0, hours: 0 };
+    cur.jobs.push(j);
+    cur.revenue += j.agreedAmount ?? j.quotedAmount ?? 0;
+    cur.cost += j.actualCost ?? 0;
+    cur.hours += j.actualHours ?? j.estimatedDuration ?? 0;
+    byTrade.set(key, cur);
+  }
+
+  return Array.from(byTrade.entries())
+    .map(([trade, agg]) => {
+      const profit = agg.revenue - agg.cost;
+      const margin = agg.revenue > 0 ? Math.round((profit / agg.revenue) * 100) : 0;
+      const effectiveHourlyRate = agg.hours > 0 ? Math.round(profit / agg.hours) : 0;
+      return {
+        jobType: trade,
+        jobsCompleted: agg.jobs.length,
+        avgRevenue: Math.round(agg.revenue / agg.jobs.length),
+        avgCost: Math.round(agg.cost / agg.jobs.length),
+        avgProfit: Math.round(profit / agg.jobs.length),
+        margin,
+        avgHours: Math.round((agg.hours / agg.jobs.length) * 10) / 10,
+        effectiveHourlyRate,
+        trend: 'stable' as const,
+        ...(effectiveHourlyRate > 0 && effectiveHourlyRate < 50 ? {
+          recommendation: 'Hourly rate below €50 — review pricing for this trade',
+        } : {}),
+      };
+    })
+    .sort((a, b) => b.effectiveHourlyRate - a.effectiveHourlyRate);
 }
 
-export function useJobTypeCosts() {
-  return useMemo(() => laborCostService.getJobTypeCosts(), []);
+export function useLaborCosts(): LaborCostSummary {
+  const { jobs } = useAppState();
+  return useMemo(() => {
+    const jobTypes = deriveJobTypeCosts(jobs);
+    const totalJobs = jobTypes.reduce((s, jt) => s + jt.jobsCompleted, 0);
+    const weightedRate = totalJobs > 0
+      ? jobTypes.reduce((sum, jt) => sum + jt.effectiveHourlyRate * jt.jobsCompleted, 0) / totalJobs
+      : 0;
+    // Travel + idle still empty (no GPS / shift-clocking data yet).
+    // Downstream savingsAggregator's R9.4 guard returns €0 when idleCost === 0,
+    // so this gracefully degrades the savings card instead of inventing numbers.
+    const emptyTravel: TravelCostAnalysis = {
+      totalTravelHours: 0,
+      totalTravelCost: 0,
+      avgTravelPerJob: 0,
+      avgKmPerJob: 0,
+      clusteringPotential: 0,
+      worstDay: { day: '', hours: 0, cost: 0 },
+    };
+    const emptyIdle: IdleTimeAnalysis = {
+      totalIdleHours: 0,
+      idleCost: 0,
+      idlePercent: 0,
+      mainCauses: [],
+      suggestion: '',
+    };
+    return {
+      effectiveRate: Math.round(weightedRate),
+      rateVsBenchmark: weightedRate > 0 ? Math.round(((weightedRate - 55) / 55) * 100) : 0,
+      jobTypeRanking: jobTypes,
+      travelAnalysis: emptyTravel,
+      idleTime: emptyIdle,
+      monthlyOptimizationPotential: 0,
+    };
+  }, [jobs]);
+}
+
+export function useJobTypeCosts(): JobTypeCost[] {
+  const { jobs } = useAppState();
+  return useMemo(() => deriveJobTypeCosts(jobs), [jobs]);
 }
