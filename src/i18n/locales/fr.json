@@ -1366,7 +1366,19 @@
     "auditTrail": "Piste d'audit",
     "auditTrailValue": "Conforme",
     "maintenanceContracts": "Contrats de maintenance",
-    "recurringValue": "Gérer"
+    "recurringValue": "Gérer",
+    "plan": "FORMULE",
+    "planFreeBadge": "GRATUIT",
+    "planActive": "ACTIF",
+    "billingMonthly": "Mensuel",
+    "billingAnnualSave": "Annuel · 25% d'économie",
+    "perMonth": "mois",
+    "popular": "PLUS POPULAIRE",
+    "upgradeTo": "Passer à {{name}}",
+    "opening": "Ouverture du paiement…",
+    "upgradeError": "Impossible de démarrer la mise à niveau",
+    "upgradeErrorDesc": "Veuillez réessayer ou contacter le support.",
+    "demoUpgradeBlocked": "Les mises à niveau sont désactivées en mode démo. Créez un vrai compte pour vous abonner."
   },
   "search": {
     "job": "Chantier",

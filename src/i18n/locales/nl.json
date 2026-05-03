@@ -1366,7 +1366,19 @@
     "auditTrail": "Audit-spoor",
     "auditTrailValue": "GoBD-conform",
     "maintenanceContracts": "Onderhoudscontracten",
-    "recurringValue": "Beheer"
+    "recurringValue": "Beheer",
+    "plan": "ABONNEMENT",
+    "planFreeBadge": "GRATIS",
+    "planActive": "ACTIEF",
+    "billingMonthly": "Maandelijks",
+    "billingAnnualSave": "Jaarlijks · 25% korting",
+    "perMonth": "mnd",
+    "popular": "MEEST GEKOZEN",
+    "upgradeTo": "Upgrade naar {{name}}",
+    "opening": "Checkout openen…",
+    "upgradeError": "Upgrade kon niet starten",
+    "upgradeErrorDesc": "Probeer het opnieuw of neem contact op met support.",
+    "demoUpgradeBlocked": "Upgrades zijn uitgeschakeld in demo-modus. Maak een echt account aan om te abonneren."
   },
   "search": {
     "job": "Klus",

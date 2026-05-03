@@ -1366,7 +1366,19 @@
     "auditTrail": "Registro de auditoría",
     "auditTrailValue": "Conforme",
     "maintenanceContracts": "Contratos de mantenimiento",
-    "recurringValue": "Gestionar"
+    "recurringValue": "Gestionar",
+    "plan": "PLAN",
+    "planFreeBadge": "GRATIS",
+    "planActive": "ACTIVO",
+    "billingMonthly": "Mensual",
+    "billingAnnualSave": "Anual · ahorra 25%",
+    "perMonth": "mes",
+    "popular": "MÁS POPULAR",
+    "upgradeTo": "Actualizar a {{name}}",
+    "opening": "Abriendo pago…",
+    "upgradeError": "No se pudo iniciar la actualización",
+    "upgradeErrorDesc": "Vuelve a intentarlo o contacta con soporte.",
+    "demoUpgradeBlocked": "Las actualizaciones están desactivadas en modo demo. Crea una cuenta real para suscribirte."
   },
   "search": {
     "job": "Trabajo",

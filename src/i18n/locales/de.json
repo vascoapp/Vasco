@@ -1366,7 +1366,19 @@
     "auditTrail": "Audit-Trail",
     "auditTrailValue": "GoBD-konform",
     "maintenanceContracts": "Wartungsverträge",
-    "recurringValue": "Verwalten"
+    "recurringValue": "Verwalten",
+    "plan": "ABO",
+    "planFreeBadge": "KOSTENLOS",
+    "planActive": "AKTIV",
+    "billingMonthly": "Monatlich",
+    "billingAnnualSave": "Jährlich · 25% sparen",
+    "perMonth": "Mo.",
+    "popular": "BELIEBTESTE",
+    "upgradeTo": "Upgrade auf {{name}}",
+    "opening": "Checkout wird geöffnet…",
+    "upgradeError": "Upgrade konnte nicht gestartet werden",
+    "upgradeErrorDesc": "Bitte erneut versuchen oder Support kontaktieren.",
+    "demoUpgradeBlocked": "Upgrades sind im Demo-Modus deaktiviert. Erstellen Sie ein echtes Konto, um zu abonnieren."
   },
   "search": {
     "job": "Auftrag",

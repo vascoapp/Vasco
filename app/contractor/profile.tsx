@@ -2,7 +2,7 @@
 // PROFIEL - Contractor Profile & Settings Page
 // =============================================================================
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Share } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +15,14 @@ import { useAuth } from '../../src/context/AuthContext';
 import { isDemoMode } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
 import { DKLabel } from '../../src/components/shared/DKLabel';
+import {
+  loadSubscription,
+  TIERS,
+  type SubscriptionState,
+  type SubscriptionTier,
+  type BillingCycle,
+} from '../../src/services/subscriptionService';
+import { startSubscriptionCheckout } from '../../src/services/billingService';
 
 const LANG_OPTIONS = [
   { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
@@ -55,6 +63,42 @@ export default function ProfileScreen() {
   const { user, updateUser, logout } = useAuth();
   const { jobs, customers, invoices, businessProfile, moneybirdConnected, mollieConnected } = useAppState();
   const currentLang = LANG_OPTIONS.find(l => l.code === i18n.language) ?? LANG_OPTIONS[0];
+
+  const [subscription, setSubscription] = useState<SubscriptionState | null>(null);
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>('annual');
+  const [checkoutLoading, setCheckoutLoading] = useState<SubscriptionTier | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    loadSubscription().then(s => { if (active) setSubscription(s); });
+    return () => { active = false; };
+  }, []);
+
+  const handleUpgrade = async (tier: SubscriptionTier) => {
+    if (tier === 'free') return;
+    if (isDemoMode) {
+      Alert.alert(
+        t('profile.demoMode', 'Demo mode'),
+        t('profile.demoUpgradeBlocked', 'Upgrades are disabled in demo mode. Sign up for a real account to subscribe.'),
+      );
+      return;
+    }
+    setCheckoutLoading(tier);
+    try {
+      const result = await startSubscriptionCheckout(tier, billingCycle === 'annual' ? 'yearly' : 'monthly');
+      if (!result.ok) {
+        Alert.alert(
+          t('profile.upgradeError', 'Could not start upgrade'),
+          result.error ?? t('profile.upgradeErrorDesc', 'Please try again or contact support.'),
+        );
+      } else {
+        const fresh = await loadSubscription();
+        setSubscription(fresh);
+      }
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
 
   // Contractor Score
   const contractorScore = useMemo(() => {
@@ -226,6 +270,98 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
+
+        {/* Plan Section — R8.2: was the missing upgrade UI for every tier-gate prompt */}
+        {subscription && (
+          <View style={styles.sectionWrap}>
+            <DKLabel style={styles.sectionLabel}>{t('profile.plan', 'PLAN')}</DKLabel>
+            <View style={styles.card}>
+              <View style={styles.planCurrentRow}>
+                <View style={styles.rowIcon}>
+                  <Ionicons name="star" size={18} color={Palette.hermesOrange} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowLabel}>{TIERS[subscription.tier].name}</Text>
+                  <Text style={styles.planTagline}>{TIERS[subscription.tier].tagline}</Text>
+                </View>
+                {subscription.tier === 'free' ? (
+                  <View style={styles.freeBadge}>
+                    <Text style={styles.freeBadgeText}>{t('profile.planFreeBadge', 'FREE')}</Text>
+                  </View>
+                ) : (
+                  <View style={styles.activeBadge}>
+                    <Text style={styles.activeBadgeText}>{t('profile.planActive', 'ACTIVE')}</Text>
+                  </View>
+                )}
+              </View>
+
+              {subscription.tier !== 'contractor' && (
+                <View style={styles.planUpgradeBlock}>
+                  <View style={styles.cycleToggle}>
+                    <Pressable
+                      style={[styles.cycleOption, billingCycle === 'monthly' && styles.cycleOptionActive]}
+                      onPress={() => setBillingCycle('monthly')}
+                    >
+                      <Text style={[styles.cycleOptionText, billingCycle === 'monthly' && styles.cycleOptionTextActive]}>
+                        {t('profile.billingMonthly', 'Monthly')}
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.cycleOption, billingCycle === 'annual' && styles.cycleOptionActive]}
+                      onPress={() => setBillingCycle('annual')}
+                    >
+                      <Text style={[styles.cycleOptionText, billingCycle === 'annual' && styles.cycleOptionTextActive]}>
+                        {t('profile.billingAnnualSave', 'Annual · save')}
+                      </Text>
+                    </Pressable>
+                  </View>
+
+                  {(['advanced', 'pro', 'contractor'] as SubscriptionTier[])
+                    .filter(t2 => t2 !== subscription.tier)
+                    .filter(t2 => {
+                      const order: SubscriptionTier[] = ['free', 'advanced', 'pro', 'contractor'];
+                      return order.indexOf(t2) > order.indexOf(subscription.tier);
+                    })
+                    .map(t2 => {
+                      const cfg = TIERS[t2];
+                      const price = billingCycle === 'annual' ? cfg.annualMonthlyPrice : cfg.monthlyPrice;
+                      const isPopular = t2 === 'pro';
+                      return (
+                        <Pressable
+                          key={t2}
+                          style={[styles.tierCard, isPopular && styles.tierCardPopular]}
+                          onPress={() => handleUpgrade(t2)}
+                          disabled={checkoutLoading !== null}
+                        >
+                          {isPopular && (
+                            <View style={styles.popularBadge}>
+                              <Text style={styles.popularBadgeText}>{t('profile.popular', 'MOST POPULAR')}</Text>
+                            </View>
+                          )}
+                          <View style={styles.tierCardHeader}>
+                            <Text style={styles.tierName}>{cfg.name}</Text>
+                            <Text style={styles.tierPrice}>
+                              €{price}
+                              <Text style={styles.tierPriceUnit}>/{t('profile.perMonth', 'mo')}</Text>
+                            </Text>
+                          </View>
+                          <Text style={styles.tierTagline}>{cfg.tagline}</Text>
+                          <View style={styles.tierCta}>
+                            <Text style={styles.tierCtaText}>
+                              {checkoutLoading === t2
+                                ? t('profile.opening', 'Opening checkout…')
+                                : t('profile.upgradeTo', 'Upgrade to {{name}}', { name: cfg.name })}
+                            </Text>
+                            <Ionicons name="arrow-forward" size={16} color={Palette.white} />
+                          </View>
+                        </Pressable>
+                      );
+                    })}
+                </View>
+              )}
+            </View>
+          </View>
+        )}
 
         {/* Account Section */}
         <View style={styles.sectionWrap}>
@@ -530,5 +666,144 @@ const styles = StyleSheet.create({
     fontFamily: TYPE.tinyFamily,
     color: SemanticColors.textTertiary,
     lineHeight: 16,
+  },
+  planCurrentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: GRID.sm + 4,
+  },
+  planTagline: {
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.tinyFamily,
+    color: SemanticColors.textTertiary,
+    marginTop: 2,
+  },
+  freeBadge: {
+    paddingHorizontal: GRID.sm,
+    paddingVertical: GRID.xs,
+    borderRadius: RADIUS.sm,
+    backgroundColor: SemanticColors.surfaceSecondary,
+  },
+  freeBadgeText: {
+    fontSize: TYPE.tinySize,
+    fontFamily: 'Archivo_800ExtraBold',
+    color: SemanticColors.textTertiary,
+    letterSpacing: 0.8,
+  },
+  activeBadge: {
+    paddingHorizontal: GRID.sm,
+    paddingVertical: GRID.xs,
+    borderRadius: RADIUS.sm,
+    backgroundColor: SemanticColors.feedbackSuccess + '15',
+  },
+  activeBadgeText: {
+    fontSize: TYPE.tinySize,
+    fontFamily: 'Archivo_800ExtraBold',
+    color: SemanticColors.feedbackSuccess,
+    letterSpacing: 0.8,
+  },
+  planUpgradeBlock: {
+    paddingHorizontal: 14,
+    paddingBottom: 14,
+    paddingTop: GRID.sm,
+    gap: GRID.sm + 4,
+    borderTopWidth: 1,
+    borderTopColor: SemanticColors.borderDefault,
+  },
+  cycleToggle: {
+    flexDirection: 'row',
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: RADIUS.md,
+    padding: 3,
+  },
+  cycleOption: {
+    flex: 1,
+    paddingVertical: GRID.sm,
+    alignItems: 'center',
+    borderRadius: RADIUS.sm,
+  },
+  cycleOptionActive: {
+    backgroundColor: SemanticColors.surfacePrimary,
+  },
+  cycleOptionText: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textTertiary,
+  },
+  cycleOptionTextActive: {
+    color: SemanticColors.textPrimary,
+    fontFamily: TYPE.titleFamily,
+  },
+  tierCard: {
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: RADIUS.lg,
+    padding: 14,
+    gap: GRID.sm,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  tierCardPopular: {
+    borderColor: Palette.hermesOrange,
+    shadowColor: Palette.hermesOrange,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  popularBadge: {
+    position: 'absolute',
+    top: -8,
+    right: 14,
+    paddingHorizontal: GRID.sm,
+    paddingVertical: 3,
+    borderRadius: RADIUS.sm,
+    backgroundColor: Palette.hermesOrange,
+  },
+  popularBadgeText: {
+    fontSize: TYPE.tinySize - 1,
+    fontFamily: 'Archivo_900Black',
+    color: Palette.white,
+    letterSpacing: 1,
+  },
+  tierCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+  },
+  tierName: {
+    fontSize: TYPE.titleSize,
+    fontFamily: 'Archivo_800ExtraBold',
+    color: SemanticColors.textPrimary,
+  },
+  tierPrice: {
+    fontSize: TYPE.titleSize + 2,
+    fontFamily: 'Archivo_900Black',
+    color: SemanticColors.textPrimary,
+  },
+  tierPriceUnit: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textTertiary,
+  },
+  tierTagline: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textSecondary,
+  },
+  tierCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: GRID.sm,
+    paddingVertical: GRID.sm + 2,
+    backgroundColor: Palette.hermesOrange,
+    borderRadius: RADIUS.md,
+    marginTop: GRID.xs,
+  },
+  tierCtaText: {
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.white,
   },
 });

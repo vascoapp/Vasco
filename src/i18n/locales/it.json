@@ -1366,7 +1366,19 @@
     "auditTrail": "Audit trail",
     "auditTrailValue": "Conforme",
     "maintenanceContracts": "Contratti di manutenzione",
-    "recurringValue": "Gestisci"
+    "recurringValue": "Gestisci",
+    "plan": "PIANO",
+    "planFreeBadge": "GRATIS",
+    "planActive": "ATTIVO",
+    "billingMonthly": "Mensile",
+    "billingAnnualSave": "Annuale · risparmia 25%",
+    "perMonth": "mese",
+    "popular": "PIÙ POPOLARE",
+    "upgradeTo": "Passa a {{name}}",
+    "opening": "Apertura checkout…",
+    "upgradeError": "Impossibile avviare l'upgrade",
+    "upgradeErrorDesc": "Riprova o contatta il supporto.",
+    "demoUpgradeBlocked": "Gli upgrade sono disabilitati in modalità demo. Crea un account reale per abbonarti."
   },
   "search": {
     "job": "Lavoro",

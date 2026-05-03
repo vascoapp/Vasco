@@ -15,6 +15,32 @@ const fmt = (n: number, locale?: string) =>
 const getCurrencySymbol = (country?: Country): string =>
   country === 'UK' ? '£' : '€';
 
+// Country-specific business registration label — must match invoicePdfService
+// so a contractor's quote and invoice show the same id under the same name.
+function registrationLabel(country?: Country): string {
+  switch (country) {
+    case 'DE': return 'HRB';
+    case 'FR': return 'SIRET';
+    case 'ES': return 'NIF';
+    case 'IT': return 'P.IVA';
+    case 'UK': return 'Co. no.';
+    case 'NL':
+    default:   return 'KvK';
+  }
+}
+
+function vatLabelFor(country?: Country, fallback = 'VAT'): string {
+  switch (country) {
+    case 'NL': return 'BTW';
+    case 'DE': return 'USt-IdNr';
+    case 'FR': return 'TVA';
+    case 'ES': return 'NIF-IVA';
+    case 'IT': return 'P.IVA';
+    case 'UK': return 'VAT';
+    default:   return fallback;
+  }
+}
+
 // ── Types ────────────────────────────────────────────────
 
 export interface QuotePdfData {
@@ -298,8 +324,8 @@ function buildQuoteHtml(
     <div class="brand-mark">V</div>
     <div class="brand-name">${businessName || 'Your Business'}</div>
     <div class="brand-detail">${businessAddress || ''}</div>
-    ${kvkNumber ? `<div class="brand-detail">${kvkNumber}</div>` : ''}
-    ${vatNumber ? `<div class="brand-detail">${L.vat}: ${vatNumber}</div>` : ''}
+    ${kvkNumber ? `<div class="brand-detail">${registrationLabel(country)}: ${kvkNumber}</div>` : ''}
+    ${vatNumber ? `<div class="brand-detail">${vatLabelFor(country, L.vat)}: ${vatNumber}</div>` : ''}
     ${phone ? `<div class="brand-detail">${phone}</div>` : ''}
     ${email ? `<div class="brand-detail">${email}</div>` : ''}
   </div>

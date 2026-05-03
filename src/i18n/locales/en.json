@@ -1366,7 +1366,19 @@
     "auditTrail": "Audit trail",
     "auditTrailValue": "GoBD-compliant",
     "maintenanceContracts": "Maintenance contracts",
-    "recurringValue": "Manage"
+    "recurringValue": "Manage",
+    "plan": "PLAN",
+    "planFreeBadge": "FREE",
+    "planActive": "ACTIVE",
+    "billingMonthly": "Monthly",
+    "billingAnnualSave": "Annual · save 25%",
+    "perMonth": "mo",
+    "popular": "MOST POPULAR",
+    "upgradeTo": "Upgrade to {{name}}",
+    "opening": "Opening checkout…",
+    "upgradeError": "Could not start upgrade",
+    "upgradeErrorDesc": "Please try again or contact support.",
+    "demoUpgradeBlocked": "Upgrades are disabled in demo mode. Sign up for a real account to subscribe."
   },
   "search": {
     "job": "Job",

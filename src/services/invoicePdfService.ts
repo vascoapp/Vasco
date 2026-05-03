@@ -21,6 +21,33 @@ const fmt = (n: number, locale?: string) =>
 const getCurrencySymbol = (country?: Country): string =>
   country === 'UK' ? '£' : '€';
 
+// Country-specific business registration number label (single source of truth
+// for both header and footer — earlier, header used 'KvK' fallback for UK
+// and 'P.IVA' for IT while footer used 'Co. no.' / 'C.F.' for the same id).
+function registrationLabel(country?: Country): string {
+  switch (country) {
+    case 'DE': return 'HRB';
+    case 'FR': return 'SIRET';
+    case 'ES': return 'NIF';
+    case 'IT': return 'P.IVA';
+    case 'UK': return 'Co. no.';
+    case 'NL':
+    default:   return 'KvK';
+  }
+}
+
+function vatLabel(country?: Country, fallback = 'VAT'): string {
+  switch (country) {
+    case 'NL': return 'BTW';
+    case 'DE': return 'USt-IdNr';
+    case 'FR': return 'TVA';
+    case 'ES': return 'NIF-IVA';
+    case 'IT': return 'P.IVA';
+    case 'UK': return 'VAT';
+    default:   return fallback;
+  }
+}
+
 // ── Multilingual labels ──────────────────────────────────
 
 interface DocLabels {
@@ -300,8 +327,8 @@ function buildInvoiceHtml(
     <div class="brand-mark">V</div>
     <div class="brand-name">${businessName || 'Your Business'}</div>
     <div class="brand-address">${businessAddress || ''}</div>
-    ${kvkNumber ? `<div class="brand-address">${country === 'DE' ? 'HRB' : country === 'FR' ? 'SIRET' : country === 'ES' ? 'NIF' : country === 'IT' ? 'P.IVA' : 'KvK'}: ${kvkNumber}</div>` : ''}
-    ${vatNumber ? `<div class="brand-address">${L.vat}: ${vatNumber}</div>` : ''}
+    ${kvkNumber ? `<div class="brand-address">${registrationLabel(country)}: ${kvkNumber}</div>` : ''}
+    ${vatNumber ? `<div class="brand-address">${vatLabel(country, L.vat)}: ${vatNumber}</div>` : ''}
     ${insuranceRef ? `<div class="insurance-ref">${insuranceRef}</div>` : ''}
   </div>
   <div class="doc-title-block">
@@ -387,19 +414,8 @@ ${exemptionNote ? `<!-- Small-business VAT exemption legal note (R251) -->
   <div>${businessName}${businessAddress ? ' · ' + businessAddress : ''}</div>
   ${(() => {
     const parts: string[] = [];
-    const kvk = kvkNumber;
-    const vat = vatNumber;
-    const footerCountry = country ?? 'NL';
-    if (footerCountry === 'NL' && kvk) parts.push(`KvK: ${kvk}`);
-    if (footerCountry === 'DE' && kvk) parts.push(`HRB: ${kvk}`);
-    if (footerCountry === 'FR' && kvk) parts.push(`SIRET: ${kvk}`);
-    if (footerCountry === 'ES' && kvk) parts.push(`NIF: ${kvk}`);
-    if (footerCountry === 'IT' && kvk) parts.push(`C.F.: ${kvk}`);
-    if (footerCountry === 'UK' && kvk) parts.push(`Co. no.: ${kvk}`);
-    if (vat) {
-      const vatLabel = country === 'NL' ? 'BTW' : country === 'DE' ? 'USt-IdNr' : country === 'FR' ? 'TVA' : country === 'ES' ? 'NIF-IVA' : country === 'IT' ? 'P.IVA' : 'VAT';
-      parts.push(`${vatLabel}: ${vat}`);
-    }
+    if (kvkNumber) parts.push(`${registrationLabel(country)}: ${kvkNumber}`);
+    if (vatNumber) parts.push(`${vatLabel(country, L.vat)}: ${vatNumber}`);
     return parts.length ? `<div style="margin-top:4px;font-size:10px;color:#6B7280">${parts.join(' · ')}</div>` : '';
   })()}
   <div>${showPoweredBy !== false ? `<a href="https://vasco.eu">${L.poweredBy}</a>` : ''}</div>

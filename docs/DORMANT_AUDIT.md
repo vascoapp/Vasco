@@ -673,3 +673,33 @@ Combined with R292 (MaterialPriceForecastCard) and R298 (CapacityOverrunCard), *
 | R12 template variants per tag | 30+ new strings × 6 locales + threading | 1-2 days |
 | R3 BE infra for auto-fired triggers | Notification scheduler + cron + WhatsApp Business API integration | 1-2 weeks |
 | R9 EVE 3-agent UI surface | Per-agent dashboard + workforce screen | 3-5 days |
+
+---
+
+# R8 (round 8) — high-leverage launch gaps
+
+A four-part audit pass focused on revenue + payment correctness.
+
+**R8.1 — admin dashboard audit**: scope-clean.
+
+**R8.2 — subscription checkout flow** [LAUNCH-CRITICAL]: discovered `startSubscriptionCheckout` had **zero callers**. Every R6.1/R7.3 tier-gate alert ("Upgrade required" → "View plans" → `/contractor/profile`) led to a dead end — no upgrade UI existed in profile.tsx. Fixed: new "Plan" section in `app/contractor/profile.tsx` between Performance and Account, showing current tier badge + monthly/annual toggle + tier cards (Advanced/Pro/Contractor) with "MOST POPULAR" badge on Pro. Tap → `startSubscriptionCheckout(tier, cycle)` opens Stripe Checkout via WebBrowser. Demo mode shows "demo blocked" alert. 13 new i18n keys × 6 locales (`profile.plan`, `profile.upgradeTo`, `profile.billingMonthly`, etc.). Without this fix, the entire freemium revenue model was unreachable from inside the app.
+
+**R8.3 — referral loop end-to-end**: verified all 9 stages wired and live:
+1. Mint via `get_or_create_referral_code` RPC ✓
+2. Native share via `useReferral` hook + `Share.share` ✓
+3. Universal link `/ref/CODE` → stash + redirect ✓
+4. Signup screen reads `?ref=CODE` ✓
+5. AsyncStorage stash `@vasco_pending_referral` ✓
+6. SIGNED_IN handler in AuthContext fires `applyPendingReferral` ✓
+7. `attribute_referral` RPC (PENDING status) ✓
+8. `trg_activate_referral` trigger flips PENDING → ACTIVATED on first invoice_sent ✓
+9. `vasco-grant-referral-credits` cron (04:00 UTC daily) flips ACTIVATED → CREDITED + inserts `subscription_credits` rows; Stripe + Mollie webhooks call `redeemCredits` to apply discount on next renewal ✓
+
+The only remaining gap is the cron itself being registered live — depends on R8 deferred operator action (run `register-crons.mjs`).
+
+**R8.4 — invoice/quote PDF country correctness**: 3 real bugs found and fixed:
+- Invoice brand-block: UK contractor's invoice falsely showed `KvK: 12345` (UK doesn't have a KvK; should say `Co. no.`). The conditional `country === 'IT' ? 'P.IVA' : 'KvK'` defaulted UK to KvK.
+- Invoice IT label inconsistency: brand-block said `P.IVA: ABC` but footer said `C.F.: ABC` for the **same field**. Codice Fiscale and Partita IVA are distinct numbers in Italy; using both labels for one value is wrong. Standardized to `P.IVA` (matches Italian invoice convention; CF is a personal tax code, not a business id).
+- Quote PDF: rendered `${kvkNumber}` with **no label at all** — a bare 8-digit number with no context. Quote and invoice now use shared `registrationLabel(country)` + `vatLabel(country)` helpers so a contractor's quote-then-invoice flow shows the same label under the same id.
+
+R8 batch: 0 TS errors, all 6 locales valid, 4/4 R8 tasks resolved.
