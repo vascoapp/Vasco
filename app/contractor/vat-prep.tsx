@@ -10,7 +10,7 @@
 import { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useAppState } from '../../src/state/AppState';
@@ -37,7 +37,11 @@ export default function VatPrepScreen() {
   const router = useRouter();
   const { invoices, businessProfile } = useAppState();
   const { expenses: rawExpenses } = useExpenses();
-  const [periodChoice, setPeriodChoice] = useState<PeriodChoice>('previous');
+  // R21: read `period` from queue executor when entered via tax_prep AI
+  // queue item. Defaults to 'previous' when not specified or invalid.
+  const { period: periodParam } = useLocalSearchParams<{ period?: string }>();
+  const initialPeriod: PeriodChoice = periodParam === 'current' ? 'current' : 'previous';
+  const [periodChoice, setPeriodChoice] = useState<PeriodChoice>(initialPeriod);
 
   // R221: country gate — NL BTW and DE UStVA both supported. Screen geld
   // already gates entry by businessProfile.country so by the time we land

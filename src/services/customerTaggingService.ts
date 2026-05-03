@@ -107,3 +107,31 @@ export function scoreAllCustomers(customers: Customer[], jobs: Job[], invoices: 
   }
   return out;
 }
+
+// ---------------------------------------------------------------------------
+// R21: contextLineFromProfile (canonical replacement for the contextLine
+// produced by tradeContext.getCustomerIntelligence). Used by VascoCard's
+// `customerContext` line — gives a one-shot summary like
+// "Repeat customer, €5,200, 3 jobs, excellent payer".
+//
+// Closes R12 deferral: customerTaggingService is now the single canonical
+// CRM surface. tradeContext.getCustomerIntelligence delegates here and is
+// scheduled for removal once aiActionQueueService call sites migrate.
+// ---------------------------------------------------------------------------
+
+export function contextLineFromProfile(profile: CustomerProfile): string {
+  const parts: string[] = [];
+  if (profile.jobsCompleted >= 2) parts.push('Repeat customer');
+  if (profile.lifetimeValue > 0) {
+    parts.push(`€${profile.lifetimeValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`);
+  }
+  if (profile.jobsCompleted > 0) {
+    parts.push(`${profile.jobsCompleted} job${profile.jobsCompleted !== 1 ? 's' : ''}`);
+  }
+  if (profile.tag === 'vip') parts.push('VIP');
+  else if (profile.tag === 'loyal') parts.push('loyal');
+  else if (profile.tag === 'risky') parts.push('risky payer');
+  else if (profile.tag === 'inactive') parts.push('inactive');
+  else if (profile.onTimeRate >= 0.95 && profile.jobsCompleted >= 3) parts.push('excellent payer');
+  return parts.join(', ');
+}

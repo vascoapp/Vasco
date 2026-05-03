@@ -8,7 +8,7 @@ import { hapticSuccess } from '../../src/utils/haptics';
 
 export default function TieredQuoteScreen() {
   const router = useRouter();
-  const { addQuote, customers } = useAppState();
+  const { addQuote, customers, quotes } = useAppState();
   const { t } = useTranslation();
   const sendingRef = useRef(false);
 
@@ -58,6 +58,17 @@ export default function TieredQuoteScreen() {
             // the actual customer — even when prefillCustomer (R300) was
             // loaded. Now thread the prefill customer id when present.
             const customerArg = prefillCustomer?.id ?? t('tieredQuote.customer');
+            // R21: also gate via R304's quoteValidationGate so the tiered-quote
+            // path gets the same warnings (zero-priced items, possible
+            // duplicate, unknown VAT) the /quotes/new path has had since R304.
+            // Was R2 deferral — the validator was wired in AppState.addQuote
+            // but always proceeded with `// Still allow creation`.
+            const { gateQuoteValidation } = await import('../../src/services/quoteValidationGate');
+            const ok = await gateQuoteValidation(
+              { customer: customerArg, amount: tierTotal, lineItems },
+              quotes,
+            );
+            if (!ok) return;
             const quoteId = await addQuote(
               customerArg,
               tier.name || t('tieredQuote.quoteLabel'),

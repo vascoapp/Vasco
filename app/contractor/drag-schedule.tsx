@@ -6,7 +6,7 @@
 
 import { useState, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Dimensions, PanResponder } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SemanticColors, Palette } from '../../src/theme/colors';
@@ -75,6 +75,10 @@ export default function DragScheduleScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { jobs, customers, updateJobStatus, updateJob } = useAppState();
+  // R21: when entered from queue executor with ?jobId=, highlight the
+  // suggested job in the unassigned pool so the contractor's eye lands on
+  // it instantly. Was R1 deferral (schedule_suggestion didn't pre-position).
+  const { jobId: focusJobId } = useLocalSearchParams<{ jobId?: string }>();
 
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -374,7 +378,7 @@ export default function DragScheduleScreen() {
           <Text style={styles.poolTitle}>{t('schedule.unscheduled', 'Niet ingepland')} ({unassigned.length})</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.poolContent}>
             {unassigned.map(job => (
-              <View key={job.jobId} style={styles.poolCard}>
+              <View key={job.jobId} style={[styles.poolCard, focusJobId && job.jobId === focusJobId && styles.poolCardFocus]}>
                 <Text style={styles.poolJobTitle} numberOfLines={1}>{job.title}</Text>
                 <Text style={styles.poolJobCustomer} numberOfLines={1}>{job.customerName}</Text>
                 <Text style={styles.poolJobHours}>{job.estimatedHours}u</Text>
@@ -469,6 +473,8 @@ const styles = StyleSheet.create({
   poolTitle: { fontSize: 13, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textSecondary, letterSpacing: 0.5, paddingHorizontal: SafeArea.side, marginBottom: 6 },
   poolContent: { paddingHorizontal: SafeArea.side, gap: 8 },
   poolCard: { width: 150, backgroundColor: SemanticColors.surfacePrimary, borderRadius: 12, padding: Spacing.sm, borderWidth: 1, borderColor: SemanticColors.borderDefault },
+  // R21: queue-suggested job highlight — orange ring + tinted bg
+  poolCardFocus: { borderColor: Palette.hermesOrange, borderWidth: 2, backgroundColor: Palette.hermesOrange + '14' },
   poolJobTitle: { fontSize: 13, fontFamily: 'Archivo_700Bold', color: SemanticColors.textPrimary },
   poolJobCustomer: { fontSize: 11, color: SemanticColors.textSecondary, marginTop: 2 },
   poolJobHours: { fontSize: 12, fontFamily: 'Archivo_800ExtraBold', color: Palette.hermesOrange, marginTop: 4 },

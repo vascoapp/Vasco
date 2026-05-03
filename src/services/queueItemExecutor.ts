@@ -170,6 +170,16 @@ export async function executeApprovedQueueItem(
       return { executed: true, via: 'navigate', detail: jobId ? `permits?jobId=${jobId}` : 'permits' };
     }
     case 'schedule_suggestion': {
+      // R21: pass jobId from preparedData so drag-schedule can highlight the
+      // suggested unassigned job (ring + scroll into view) instead of just
+      // dropping the contractor on the board with no orientation. Was R1
+      // deferral. Date axis stays today-only — multi-day support is a
+      // bigger lift than this round.
+      const jobId = data.jobId as string | undefined;
+      if (jobId) {
+        router.push({ pathname: '/contractor/drag-schedule', params: { jobId } } as any);
+        return { executed: true, via: 'navigate', detail: `drag-schedule?jobId=${jobId}` };
+      }
       router.push('/contractor/drag-schedule' as any);
       return { executed: true, via: 'navigate', detail: 'drag-schedule' };
     }
@@ -205,10 +215,27 @@ export async function executeApprovedQueueItem(
       return { executed: true, via: 'navigate', detail: 'recurring' };
     }
     case 'tax_prep': {
-      router.push('/contractor/vat-prep' as any);
-      return { executed: true, via: 'navigate', detail: 'vat-prep' };
+      // R21: pass `period=previous` — the queue fires in the last 11 days
+      // of each quarter end month with the just-ending quarter in mind.
+      // vat-prep already defaults to 'previous'; the explicit param means
+      // a contractor who toggled to 'current' previously gets re-pinned to
+      // 'previous' on this entry. Was R1 deferral.
+      router.push({ pathname: '/contractor/vat-prep', params: { period: 'previous' } } as any);
+      return { executed: true, via: 'navigate', detail: 'vat-prep?period=previous' };
     }
     case 'accounting_export': {
+      // R21: pass `format` + `period` if the queued item carried them in
+      // preparedData (today producers don't, but the executor is now
+      // ready when the upstream generator ships them). Was R1 deferral.
+      const format = data.format as string | undefined;
+      const period = data.period as string | undefined;
+      const params: Record<string, string> = {};
+      if (format) params.format = format;
+      if (period) params.period = period;
+      if (Object.keys(params).length > 0) {
+        router.push({ pathname: '/contractor/vat-and-audit', params } as any);
+        return { executed: true, via: 'navigate', detail: `vat-and-audit?${new URLSearchParams(params).toString()}` };
+      }
       router.push('/contractor/vat-and-audit' as any);
       return { executed: true, via: 'navigate', detail: 'vat-and-audit' };
     }

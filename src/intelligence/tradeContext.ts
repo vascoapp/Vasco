@@ -673,12 +673,16 @@ export interface CustomerIntelligence {
 }
 
 /**
- * @deprecated R304: `customerTaggingService` is the canonical CRM surface
- * (used by Klanten UI badges + CustomerTagBadge). This function is kept as
- * a thin compatibility wrapper for the 4 aiActionQueueService call sites
- * that produce VascoCard `customerContext` lines. New code should call
- * `scoreCustomer({ customer, jobs, invoices })` directly and derive the
- * contextLine from the returned `CustomerProfile`.
+ * @deprecated R21: `customerTaggingService` is now the single canonical CRM
+ * surface. New code should call `scoreCustomer({ customer, jobs, invoices })`
+ * directly and use `contextLineFromProfile(profile)` for the VascoCard
+ * `customerContext` line — both exported from `customerTaggingService.ts`.
+ *
+ * This function is retained as a compatibility wrapper for the 4 remaining
+ * aiActionQueueService call sites (R12 deferral). The fields it computes
+ * (avgDSO, paymentReliability, escalationNeeded) aren't surfaced in the
+ * canonical CustomerProfile — those four sites would need restructuring
+ * before this can be deleted.
  */
 export function getCustomerIntelligence(
   customerId: string,

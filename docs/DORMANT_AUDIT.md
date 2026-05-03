@@ -925,3 +925,17 @@ a gap explicitly flagged in an earlier round.
 **R20.4 — `einvoice_submit` queue prefill on /invoices/{id} (R1 deferral)**: queue executor now passes `?submit=einvoice` when routing to the invoice screen. Invoice screen reads the new `submit` param, and on mount auto-fires the country-default e-invoice export (`handleExportFacturae` for ES, `handleExportFatturaPA` for IT, `handleExportEInvoice('XRechnung')` for DE/NL/FR/UK/others). One-shot via `useRef` so re-renders don't re-fire; deferred 120ms so the screen mounts first. Was the most user-visible R1 prefill gap — contractor approved "submit e-invoice" in the AI queue, landed on the invoice, then had to scroll to the export button themselves.
 
 R20 batch: 0 TS errors, all 6 locales valid (2248 keys each, full parity, +15 new keys).
+
+---
+
+# R21 — drain 4 more deferred items (queue prefill + canonical CRM)
+
+**R21.1 — `tax_prep` quarter prefill on /contractor/vat-prep (R1 deferral)**: queue executor now passes `?period=previous` (matches the queue's intent — fires in the last 11 days of each quarter end month with the just-ending quarter in scope). vat-prep reads the param via `useLocalSearchParams` and seeds `periodChoice` accordingly. Future-proof: also added `format` + `period` query-param threading on `accounting_export` so when the upstream generator starts populating those preparedData fields, vat-and-audit will receive them automatically.
+
+**R21.2 — `schedule_suggestion` highlight on /contractor/drag-schedule (R1 deferral)**: queue executor passes `?jobId=` from preparedData. drag-schedule reads it and adds an orange-ringed `poolCardFocus` style on the matching unassigned card so the contractor's eye lands on the queue-suggested job instantly. Date axis kept today-only — the multi-day support needed for true gap-day pre-positioning is a bigger lift than this round (deferred). Adds 1 new style; no new i18n keys.
+
+**R21.3 — `gateQuoteValidation` wired into TieredQuoteBuilder path (R2 deferral)**: R304 already built the gate (analogous to R287's `gateReminderSend`) with hard-error / warning / "Send anyway" override UX, and wired it into `quotes/new`. But the canonical quote-creation surface — `tiered-quote.tsx` (used by EVE Analyst handoff, customer-question handoff, and TieredQuoteBuilder) — bypassed it. Now both quote-creation paths run the same validator gate. Pulls `quotes` from AppState, runs `gateQuoteValidation({ customer, amount, lineItems }, quotes)` before `addQuote`, returns silently on cancel. Same pattern as the /quotes/new wiring, no new keys (re-uses R304's `validator.*` namespace).
+
+**R21.4 — pick canonical CRM service (R12 deferral)**: customerTaggingService is now the single canonical CRM surface. Added `contextLineFromProfile(profile)` helper that produces the same one-shot summary line ("Repeat customer, €5,200, 3 jobs, excellent payer") that VascoCard's `customerContext` field renders. tradeContext.getCustomerIntelligence is now formally `@deprecated` pointing at the canonical service; retained as a compat wrapper for the 4 aiActionQueueService call sites that consume `avgDSO` / `paymentReliability` / `escalationNeeded` (fields not on CustomerProfile yet — restructuring those 4 sites is its own pass).
+
+R21 batch: 0 TS errors, all 6 locales unchanged at 2248 keys parity.
