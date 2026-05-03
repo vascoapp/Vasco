@@ -841,6 +841,45 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     if (id) added++;
   }
 
+  // ─── R13.4: explicit recurring-template maintenance (R246/R253 contracts) ───
+  // The block above auto-detects implicit annual maintenance from completed jobs
+  // 10-12 months old. But contractors who explicitly set up monthly/quarterly
+  // contracts via /contractor/recurring (AsyncStorage templates) had no path
+  // to the queue — their templates sat as a static list, with nothing
+  // materializing a job when one came due. Now reads the templates and surfaces
+  // maintenance_due items for any non-paused template due within 7 days.
+  try {
+    const { getRecurringInstances } = await import('./recurringJobsService');
+    const upcoming = await getRecurringInstances({ withinDays: 7 });
+    for (const inst of upcoming.slice(0, 3)) {
+      const t2 = inst.template;
+      const cust = (context.customers ?? []).find((c: any) => c.id === t2.customerId);
+      const id = await addToQueue({
+        type: 'maintenance_due',
+        title: t('automation.recurringDue', { defaultValue: '{{title}} due — {{customer}}', title: t2.title, customer: t2.customerName ?? cust?.name ?? '' }),
+        description: inst.overdue
+          ? t('automation.recurringOverdue', { defaultValue: 'Overdue by {{days}}d', days: Math.abs(inst.daysUntilDue) })
+          : t('automation.recurringDays', { defaultValue: 'Due in {{days}}d', days: inst.daysUntilDue }),
+        preparedData: {
+          recurringTemplateId: t2.id,
+          customerId: t2.customerId,
+          customerName: t2.customerName ?? cust?.name,
+          jobTitle: t2.title,
+          estimatedDuration: t2.estimatedDurationHours,
+          estimatedAmount: t2.estimatedAmount,
+          reasoning: `Recurring contract "${t2.title}" — cadence ${t2.cadence}. Approving creates the next job and bumps lastRunDate.`,
+        },
+        actionLabel: t('automation.scheduleMaintenance', 'Schedule'),
+        estimatedImpact: t('automation.recurringRevenue', 'Recurring revenue'),
+        expiresAt: new Date(now + 14 * dayMs).toISOString(),
+        sourceGeneratorId: `automation_recurring_${t2.id}`,
+      });
+      if (id) added++;
+    }
+  } catch {
+    // Non-critical — don't block the rest of the queue population
+  }
+
   // ─── NEW: Customer satisfaction ping (7 days after payment) ───
   const recentlyPaid = (context.allInvoices ?? []).filter((inv: any) => {
     if (inv.status !== 'paid') return false;

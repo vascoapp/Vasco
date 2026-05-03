@@ -778,6 +778,16 @@
       "delivery_update": "Actualizaciones de entrega",
       "credential_expiry": "Caducidad de certificado",
       "general": "General"
+    },
+    "types": {
+      "schedule": "Agenda",
+      "payment": "Pago",
+      "team": "Equipo",
+      "approval": "Aprobación",
+      "permit": "Permiso",
+      "delivery": "Entrega",
+      "cert": "Cert.",
+      "general": "General"
     }
   },
   "insurance": {

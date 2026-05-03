@@ -778,6 +778,16 @@
       "delivery_update": "Delivery updates",
       "credential_expiry": "Certificate expiry",
       "general": "General"
+    },
+    "types": {
+      "schedule": "Schedule",
+      "payment": "Payment",
+      "team": "Team",
+      "approval": "Approval",
+      "permit": "Permit",
+      "delivery": "Delivery",
+      "cert": "Cert",
+      "general": "General"
     }
   },
   "insurance": {

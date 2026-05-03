@@ -797,3 +797,17 @@ Idempotent via existence check on `(user_id, manufacturer_code)`. Best-effort �
 **R12.4 — Mollie modal hardcoded Dutch**: `app/(modals)/mollie.tsx` had all 14 user-facing strings hardcoded Dutch (title, subtitle, button labels, validation alert, consent dialog) — German/French/Spanish/Italian contractors connecting Mollie saw Dutch on the screen they need to trust with their payment-processing API key. Even the security footer was English (inconsistent). Migrated to `mollie.*` namespace (16 keys × 6 locales).
 
 R12 batch: 0 TS errors, all 6 locales valid.
+
+---
+
+# R13 — schedule persistence, quote routing, notification i18n, recurring activation
+
+**R13.1 — drag-schedule soft-conflict override silently dropped persistence**: in `app/contractor/drag-schedule.tsx` the visual `proceed()` callback was separate from the persistence block (`updateJob` / `updateJobStatus` / `maybePromptCalendarSync` / `scheduleJobReminder`). The persistence was placed AFTER the conflict checks at the top level, with `return` statements protecting the soft-conflict path. So when a contractor dropped on a soft-conflict slot and tapped "Schedule anyway", `proceed()` fired (visual update only) but the function returned before reaching persistence. Result: the job appeared in the schedule UI but didn't actually persist — next app open showed it back in the unassigned column. Folded all four persistence calls into `proceed()` so all three drop paths (no-conflict, soft-override, future) persist correctly.
+
+**R13.2 — tiered quote builder hardcoded "Customer" placeholder**: `app/contractor/tiered-quote.tsx` always called `addQuote(t('tieredQuote.customer'), ...)` — passing the literal i18n string ("Customer" / "Klant") as the customer arg. AppState.addQuote stores this as `customer_id`, so the resulting quote couldn't be linked back to the actual customer **even when** R300 had loaded `prefillCustomer` from the route param. Threaded `prefillCustomer?.id` through to `addQuote` so quotes minted from EVE Analyst / customer-question handoff carry the real customer ID.
+
+**R13.3 — notifications inbox 8 hardcoded English type labels**: `TYPE_CONFIG` in `app/contractor/notifications.tsx` carried a `label: string` field with English values ("Schedule" / "Payment" / "Team" / "Approval" / "Permit" / "Delivery" / "Cert" / "General") rendered into the type-pill chip on every notification card. Migrated to `labelKey: string` resolved via `t()` at render time, with `TYPE_FALLBACKS` for default English. 8 keys × 6 locales added under `notifications.types.*`.
+
+**R13.4 — recurring contracts dormancy**: `recurringJobsService` (R246) stores templates locally but **nothing** materializes them into queue items or jobs when due. The aiActionQueueService had a maintenance_due generator — but it only checked **completed jobs from 10-12 months ago** (implicit annual detection). Contractors who explicitly set up monthly/quarterly maintenance contracts via `/contractor/recurring` saw their templates sit static; no job was ever spawned, no reminder ever fired. Added a parallel pass in `populateQueue` that reads `getRecurringInstances({ withinDays: 7 })` and queues `maintenance_due` items with `recurringTemplateId` in preparedData. The queue executor + R286 approve flow can pick up from there.
+
+R13 batch: 0 TS errors, all 6 locales valid.

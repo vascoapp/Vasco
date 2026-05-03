@@ -129,6 +129,13 @@ export default function DragScheduleScreen() {
       schedule.map((s) => ({ jobId: s.jobId, title: s.title, startHour: s.startHour, durationHours: s.duration })),
     );
 
+    // R13.1: was a real-bug — visual `proceed` was separate from persistence,
+    // and persistence only ran on the no-conflict fallthrough path. When a
+    // contractor tapped "Schedule anyway" after a soft conflict, the visual
+    // schedule updated but updateJob / updateJobStatus / calendar sync /
+    // push reminder NEVER fired, so the job didn't actually get scheduled
+    // (next app open showed it back in the unassigned column). Folded the
+    // persistence calls into `proceed` so all three drop paths persist.
     const proceed = () => {
       const color = COLORS[schedule.length % COLORS.length];
       setSchedule(prev => [...prev, {
@@ -143,6 +150,31 @@ export default function DragScheduleScreen() {
       hapticSuccess();
       setDraggedJob(null);
       setDropTargetHour(null);
+
+      // PERSIST to AppState — update job with scheduled date/time and status
+      try {
+        const startTime = `${hour.toString().padStart(2, '0')}:00`;
+        const endTime = `${(hour + job.estimatedHours).toString().padStart(2, '0')}:00`;
+        updateJob(job.jobId, {
+          scheduledDate: todayStr,
+          scheduledStartTime: startTime,
+          scheduledEndTime: endTime,
+          estimatedDuration: job.estimatedHours,
+        });
+        updateJobStatus(job.jobId, 'scheduled');
+        // R269: contextual calendar prompt during scheduling — auto-sync if
+        // already enabled, else one-time prompt to enable.
+        maybePromptCalendarSync(
+          { id: job.jobId, title: job.title, scheduledDate: todayStr, scheduledStartTime: startTime, scheduledEndTime: endTime, estimatedDuration: job.estimatedHours },
+          router,
+          t,
+        );
+      } catch {}
+
+      // Fire-and-forget push notification reminder (1h before scheduled time)
+      const today = new Date();
+      const scheduledTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hour, 0, 0);
+      scheduleJobReminder({ jobId: job.jobId, jobTitle: job.title, scheduledTime }).catch(() => {});
     };
 
     if (report.hardConflict) {
@@ -169,31 +201,6 @@ export default function DragScheduleScreen() {
     }
 
     proceed();
-
-    // PERSIST to AppState — update job with scheduled date/time and status
-    try {
-      const startTime = `${hour.toString().padStart(2, '0')}:00`;
-      const endTime = `${(hour + job.estimatedHours).toString().padStart(2, '0')}:00`;
-      updateJob(job.jobId, {
-        scheduledDate: todayStr,
-        scheduledStartTime: startTime,
-        scheduledEndTime: endTime,
-        estimatedDuration: job.estimatedHours,
-      });
-      updateJobStatus(job.jobId, 'scheduled');
-      // R269: contextual calendar prompt during scheduling — auto-sync if
-      // already enabled, else one-time prompt to enable.
-      maybePromptCalendarSync(
-        { id: job.jobId, title: job.title, scheduledDate: todayStr, scheduledStartTime: startTime, scheduledEndTime: endTime, estimatedDuration: job.estimatedHours },
-        router,
-        t,
-      );
-    } catch {}
-
-    // Fire-and-forget push notification reminder (1h before scheduled time)
-    const today = new Date();
-    const scheduledTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hour, 0, 0);
-    scheduleJobReminder({ jobId: job.jobId, jobTitle: job.title, scheduledTime }).catch(() => {});
   };
 
   const handleExportCalendar = async () => {

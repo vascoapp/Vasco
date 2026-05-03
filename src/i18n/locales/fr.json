@@ -778,6 +778,16 @@
       "delivery_update": "Mises a jour livraisons",
       "credential_expiry": "Expiration certificat",
       "general": "General"
+    },
+    "types": {
+      "schedule": "Planning",
+      "payment": "Paiement",
+      "team": "Équipe",
+      "approval": "Approbation",
+      "permit": "Permis",
+      "delivery": "Livraison",
+      "cert": "Certif.",
+      "general": "Général"
     }
   },
   "insurance": {

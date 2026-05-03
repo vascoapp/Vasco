@@ -778,6 +778,16 @@
       "delivery_update": "Liefer-Updates",
       "credential_expiry": "Zertifikatsablauf",
       "general": "Allgemein"
+    },
+    "types": {
+      "schedule": "Termin",
+      "payment": "Zahlung",
+      "team": "Team",
+      "approval": "Freigabe",
+      "permit": "Genehmigung",
+      "delivery": "Lieferung",
+      "cert": "Zertifikat",
+      "general": "Allgemein"
     }
   },
   "insurance": {

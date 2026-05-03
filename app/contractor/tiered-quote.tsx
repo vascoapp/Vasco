@@ -52,8 +52,14 @@ export default function TieredQuoteScreen() {
             return;
           }
           try {
+            // R13.2: was always passing the literal i18n string "Customer" /
+            // "Klant" as the customer arg. AppState.addQuote stores this as
+            // customer_id, so the resulting quote couldn't be linked back to
+            // the actual customer — even when prefillCustomer (R300) was
+            // loaded. Now thread the prefill customer id when present.
+            const customerArg = prefillCustomer?.id ?? t('tieredQuote.customer');
             const quoteId = await addQuote(
-              t('tieredQuote.customer'),
+              customerArg,
               tier.name || t('tieredQuote.quoteLabel'),
               lineItems,
             );

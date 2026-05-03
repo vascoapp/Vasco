@@ -35,15 +35,30 @@ import { MS_PER_DAY, MS_PER_HOUR } from '../../src/utils/timeConstants';
 type IconName = keyof typeof Ionicons.glyphMap;
 type TabType = 'inbox' | 'settings';
 
-const TYPE_CONFIG: Record<NotificationType, { icon: IconName; color: string; label: string }> = {
-  schedule_change: { icon: 'calendar', color: SemanticColors.feedbackWarning, label: 'Schedule' },
-  overdue_invoice: { icon: 'alert-circle', color: SemanticColors.feedbackError, label: 'Payment' },
-  team_assignment: { icon: 'people', color: SemanticColors.feedbackInfo, label: 'Team' },
-  approval_request: { icon: 'shield-checkmark', color: Palette.hermesOrange, label: 'Approval' },
-  permit_update: { icon: 'document-text', color: Palette.hermesOrange, label: 'Permit' },
-  delivery_update: { icon: 'cube', color: SemanticColors.feedbackSuccess, label: 'Delivery' },
-  credential_expiry: { icon: 'ribbon', color: SemanticColors.feedbackWarning, label: 'Cert' },
-  general: { icon: 'notifications', color: SemanticColors.textSecondary, label: 'General' },
+// R13.3: was 8 hardcoded English `label` values rendered into `typePill`
+// chips on every notification card — non-English contractors saw English
+// chips on every row of an otherwise-localized inbox. Labels now resolve
+// via i18n at render time using `getTypeLabel(t, type)`.
+const TYPE_CONFIG: Record<NotificationType, { icon: IconName; color: string; labelKey: string }> = {
+  schedule_change: { icon: 'calendar', color: SemanticColors.feedbackWarning, labelKey: 'notifications.types.schedule' },
+  overdue_invoice: { icon: 'alert-circle', color: SemanticColors.feedbackError, labelKey: 'notifications.types.payment' },
+  team_assignment: { icon: 'people', color: SemanticColors.feedbackInfo, labelKey: 'notifications.types.team' },
+  approval_request: { icon: 'shield-checkmark', color: Palette.hermesOrange, labelKey: 'notifications.types.approval' },
+  permit_update: { icon: 'document-text', color: Palette.hermesOrange, labelKey: 'notifications.types.permit' },
+  delivery_update: { icon: 'cube', color: SemanticColors.feedbackSuccess, labelKey: 'notifications.types.delivery' },
+  credential_expiry: { icon: 'ribbon', color: SemanticColors.feedbackWarning, labelKey: 'notifications.types.cert' },
+  general: { icon: 'notifications', color: SemanticColors.textSecondary, labelKey: 'notifications.types.general' },
+};
+
+const TYPE_FALLBACKS: Record<NotificationType, string> = {
+  schedule_change: 'Schedule',
+  overdue_invoice: 'Payment',
+  team_assignment: 'Team',
+  approval_request: 'Approval',
+  permit_update: 'Permit',
+  delivery_update: 'Delivery',
+  credential_expiry: 'Cert',
+  general: 'General',
 };
 
 export default function NotificationsScreen() {
@@ -110,7 +125,7 @@ export default function NotificationsScreen() {
           <Text style={s.body} numberOfLines={2}>{notif.body}</Text>
           <View style={s.footer}>
             <View style={[s.typePill, { backgroundColor: conf.color + '10' }]}>
-              <Text style={[s.typeText, { color: conf.color }]}>{conf.label}</Text>
+              <Text style={[s.typeText, { color: conf.color }]}>{t(conf.labelKey, TYPE_FALLBACKS[notif.type])}</Text>
             </View>
             {notif.priority === 'urgent' && (
               <View style={s.urgentBadge}>

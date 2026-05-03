@@ -1030,6 +1030,16 @@
       "delivery_update": "Leveringsupdates",
       "credential_expiry": "Certificaat verlopen",
       "general": "Algemeen"
+    },
+    "types": {
+      "schedule": "Planning",
+      "payment": "Betaling",
+      "team": "Team",
+      "approval": "Goedkeuring",
+      "permit": "Vergunning",
+      "delivery": "Levering",
+      "cert": "Certificaat",
+      "general": "Algemeen"
     }
   },
   "insurance": {
