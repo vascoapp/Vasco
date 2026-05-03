@@ -155,8 +155,7 @@ export async function executeApprovedQueueItem(
     }
     case 'cert_renewal':
     case 'permit_check':
-    case 'permit_renewal':
-    case 'safety_checklist': {
+    case 'permit_renewal': {
       // R20: pass jobId through so permits screen can scope to the job
       // that triggered the queue item (was R1 deferral — destination
       // didn't read prefill, contractor landed on the full permits list
@@ -168,6 +167,20 @@ export async function executeApprovedQueueItem(
         router.push('/contractor/permits' as any);
       }
       return { executed: true, via: 'navigate', detail: jobId ? `permits?jobId=${jobId}` : 'permits' };
+    }
+    case 'safety_checklist': {
+      // R23: route safety_checklist to the job detail (per-job context)
+      // instead of the permits list. Was R1 deferral — the job-scoped
+      // safety checklist lives at /contractor/job/{id} (the closeout +
+      // safety blocks are sections of the job detail screen). Falls
+      // through to permits if no jobId in preparedData.
+      const jobId = data.jobId as string | undefined;
+      if (jobId) {
+        router.push({ pathname: '/contractor/job/[id]', params: { id: jobId, focus: 'safety' } } as any);
+        return { executed: true, via: 'navigate', detail: `job/${jobId}?focus=safety` };
+      }
+      router.push('/contractor/permits' as any);
+      return { executed: true, via: 'navigate', detail: 'permits' };
     }
     case 'schedule_suggestion': {
       // R21: pass jobId from preparedData so drag-schedule can highlight the

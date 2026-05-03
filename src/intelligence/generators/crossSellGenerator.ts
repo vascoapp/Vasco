@@ -6,7 +6,11 @@
 // targeted follow-up quote (e.g. roofing → solar, painting → flooring).
 // =============================================================================
 
-import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
+// R23: dropped the dead `crossSellGenerator: InsightGenerator` static export
+// (its `generate(ctx)` always returned null and zero consumers ever read it
+// — same dead-static pattern as crossServiceGenerator removed in R20.2). The
+// real surface is `useCrossSellInsight(ctx)`, rendered via generators/index.
+import type { ScoredInsight, GeneratorContext } from './types';
 import { useAppState } from '../../state/AppState';
 import { gt } from '../generatorTranslations';
 import { useCohortBenchmarks } from '../../services/cohortBenchmarkService';
@@ -27,15 +31,6 @@ const ADJACENT_TRADES: Record<string, Array<{ trade: string; pitch: string }>> =
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-export const crossSellGenerator: InsightGenerator = {
-  id: 'cross-sell',
-  screens: ['today', 'werk', 'jobs-list'],
-  roles: ['contractor'],
-  generate(_ctx: GeneratorContext): ScoredInsight | null {
-    return null;
-  },
-};
 
 export function useCrossSellInsight(ctx: GeneratorContext): ScoredInsight | null {
   const { jobs, businessProfile } = useAppState();

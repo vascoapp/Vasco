@@ -958,3 +958,19 @@ intelligence hooks formally @deprecated ✓). Remaining concrete fixes shipped:
 - R6 `useRegionalPreferences` / `useDecisionTiming` / `useDecisionSubmission` orphan hooks — R304 already added `@deprecated` headers pointing at the missing aggregation pipeline; no further action without BE work.
 
 R22 batch: 0 TS errors, all 6 locales unchanged at 2248 keys parity.
+
+---
+
+# R23 — wire `validateCertBeforeJobStart`, route safety_checklist, drop dead static
+
+**R23.1 — `safety_checklist` queue routes to job detail (R1 deferral)**: split out from the cert/permit handler. Was R1's "should arguably route to /contractor/job/{id}/safety (not yet a route)". safety_checklist queue items now route to `/contractor/job/{jobId}?focus=safety` (job detail screen — already has the safety/closeout sections). Falls through to permits when no jobId in preparedData. Cert/permit/permit_renewal still share the permits-list handler from R20.
+
+**R23.2 — `validateCertBeforeJobStart` wired into jobStatusGate (R2 deferral)**: was orphan code per R2 audit ("imported nowhere — could send reminders for already-paid invoices..." pattern). Now invoked inside `gateJobStatusChange` when transitioning into `in-progress` / `bezig` from any other state. Reads `complianceService.getCertifications()` (seeded empty per R289 production hardening, so no false alarms for empty-state contractors), filters to job's trade, surfaces `CERT_EXPIRED` as hard error and `CERT_EXPIRING_SOON` as warning. Errors merge into the existing `validation` payload so the gate's existing alert shows them through the same UX. Compliance-service throw → silently skips the cert gate (non-blocking).
+
+**R23.3 — `crossSellGenerator` dead static export removed (R5 minor flag)**: the `crossSellGenerator: InsightGenerator` const had `generate(ctx)` always returning `null` and zero consumers anywhere. The real surface is `useCrossSellInsight(ctx)`, rendered via `generators/index.ts:17`. Same dead-static pattern as `crossServiceGenerator` (cleaned in R20.2). Removed the unused `InsightGenerator` import too.
+
+**R23.4 — verified-and-skipped during round (R301 already shipped)**:
+- Signature persistence in jobs schema (R11 deferral) — R301 shipped migration 20260502000003 + jobUpdatesToRowPayload whitelist of `signature_svg` + `customer_signoff_at` + jobRowToJob reader; verified end-to-end during R23 audit.
+- `signatureHtmlBlock` embed in `generateInvoicePdf` (R11 deferral) — R301 wired the `customerSignature?:{svgDataUri,signedAt,signerName}` option threaded through 3 callers (`/invoices/[id]`, `(contractor)/facturen`, `(modals)/pdf`); verified.
+
+R23 batch: 0 TS errors, all 6 locales unchanged at 2248 keys parity.
