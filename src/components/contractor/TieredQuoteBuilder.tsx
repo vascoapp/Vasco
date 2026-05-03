@@ -723,7 +723,23 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
                 </Pressable>
               ) : null}
             </View>
-            <Pressable style={s.aiScanRow} onPress={() => setShowAIQuote(true)}>
+            <Pressable style={s.aiScanRow} onPress={async () => {
+              // R307: tier gate — photo-to-quote AI is paid-tier (same class
+              // as ReceiptScanner R307 gate on inkoop). Was completely ungated.
+              try {
+                const { loadSubscription, canUseFeature } = await import('../../services/subscriptionService');
+                const sub = await loadSubscription();
+                const gate = canUseFeature(sub, 'hasInvoiceScanning');
+                if (!gate.allowed) {
+                  Alert.alert(
+                    t('compliance.upgradeRequired', 'Upgrade required'),
+                    gate.reason ?? t('quotes.aiQuoteUpgradeRequired', 'AI photo-to-quote is part of the paid plan.'),
+                  );
+                  return;
+                }
+              } catch {}
+              setShowAIQuote(true);
+            }}>
               <Ionicons name="camera" size={16} color={Palette.hermesOrange} />
               <Text style={s.aiScanText}>{t('quotes.orScanPhoto', 'Or scan a photo')}</Text>
               <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />

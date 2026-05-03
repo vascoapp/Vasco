@@ -1386,6 +1386,19 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
       connectMoneybird: () => setMoneybirdConnected(true),
       exportInvoice: async (invoiceId) => {
+        // R307: tier gate — accounting integrations are paid-tier only.
+        // Was completely ungated; free users could export to Moneybird/etc
+        // unlimited times. Caller still gets a return value (success: false)
+        // so existing UI doesn't break.
+        try {
+          const { loadSubscription, canUseFeature } = await import('../services/subscriptionService');
+          const sub = await loadSubscription();
+          const gate = canUseFeature(sub, 'hasAccountingIntegrations');
+          if (!gate.allowed) {
+            logWarn('AppState', `exportInvoice blocked: ${gate.reason ?? 'tier gate'}`);
+            return;
+          }
+        } catch {}
         const inv = invoices.find((i) => i.id === invoiceId);
         const cust = customers.find((c) => c.id === inv?.customer);
         const invLineItems = (lineItems[invoiceId] ?? []) as QuoteLineItem[];

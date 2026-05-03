@@ -154,6 +154,15 @@ export async function getDeviceCalendars(): Promise<DeviceCalendar[]> {
 // =============================================================================
 
 export async function syncJobToCalendar(job: Job): Promise<boolean> {
+  // R307: tier gate — calendar sync is paid-tier only. Was completely
+  // ungated; free users could sync unlimited jobs to their device calendar.
+  try {
+    const { loadSubscription, canUseFeature } = await import('./subscriptionService');
+    const sub = await loadSubscription();
+    const gate = canUseFeature(sub, 'hasCalendarSync');
+    if (!gate.allowed) return false;
+  } catch {}
+
   const settings = await getCalendarSyncSettings();
   if (!settings.enabled || !settings.calendarId) return false;
 

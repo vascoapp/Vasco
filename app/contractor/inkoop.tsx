@@ -42,6 +42,28 @@ export default function InkoopScreen() {
   const [isImporting, setIsImporting] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
+  // R307: tier gate — receipt scanning is paid-tier only. Wraps both
+  // mount sites (quick-action chip + scanner card) so neither bypasses.
+  const openReceiptScanner = useCallback(async () => {
+    try {
+      const { loadSubscription, canUseFeature } = await import('../../src/services/subscriptionService');
+      const sub = await loadSubscription();
+      const gate = canUseFeature(sub, 'hasInvoiceScanning');
+      if (!gate.allowed) {
+        Alert.alert(
+          t('compliance.upgradeRequired', 'Upgrade required'),
+          gate.reason ?? t('inkoop.scannerUpgradeRequired', 'Receipt scanning is part of the paid plan.'),
+          [
+            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+            { text: t('compliance.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+          ],
+        );
+        return;
+      }
+    } catch {}
+    openReceiptScanner();
+  }, [t, router]);
+
   // -------------------------------------------------------
   // DATANORM file import
   // -------------------------------------------------------
@@ -146,7 +168,7 @@ export default function InkoopScreen() {
         {/* 0. QUICK ACTIONS                            */}
         {/* ============================================ */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickActions}>
-          <Pressable style={styles.quickChip} onPress={() => setShowReceiptScanner(true)}>
+          <Pressable style={styles.quickChip} onPress={() => openReceiptScanner()}>
             <Ionicons name="scan" size={16} color={Palette.hermesOrange} />
             <Text style={styles.quickChipText}>{t('inkoop.receiptScanner', 'Receipt scanner')}</Text>
           </Pressable>
@@ -327,7 +349,7 @@ export default function InkoopScreen() {
         {/* ============================================ */}
         {/* 3. BON SCANNER                              */}
         {/* ============================================ */}
-        <Pressable style={styles.scannerCard} onPress={() => setShowReceiptScanner(true)}>
+        <Pressable style={styles.scannerCard} onPress={() => openReceiptScanner()}>
           <View style={styles.scannerIcon}>
             <Ionicons name="scan" size={20} color={Palette.hermesOrange} />
           </View>

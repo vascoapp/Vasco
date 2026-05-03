@@ -133,7 +133,12 @@ export function wantsAutomationFocus(prefs: OnboardingPreferences): boolean {
   return prefs.goals.includes('less_admin') || prefs.challenges.includes('paperwork');
 }
 
-/** Does the user want team management features? */
+/**
+ * Does the user want team management features?
+ * @deprecated R307: zero callers. Helper still works but no UI gates on it.
+ * If multi-employee features ever ship (LAUNCH.md §6 condition), wire this
+ * into the worker/team route gates.
+ */
 export function wantsTeamFeatures(prefs: OnboardingPreferences): boolean {
   return prefs.teamSize === 'small' || prefs.teamSize === 'medium' || prefs.teamSize === 'large';
 }
