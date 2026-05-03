@@ -908,3 +908,20 @@ risk of breaking running flows.
 **Pattern across R19:** each of the four services represents speculative product surface that was built ahead of demand and never wired into a real screen. Combined dormant LoC: ~3,978 (services 2,012 + components 1,966). Total contractor-visible behavior change in R19: zero — these surfaces are silent today and stay silent. The deprecation headers are early-warning markers so future contributors don't pour effort into extending mock infrastructure that no contractor reaches.
 
 R19 batch: 0 TS errors, all 6 locales unchanged at 2233 keys parity.
+
+---
+
+# R20 — drain 4 deferred items already documented in this audit
+
+Working from the existing deferred-items inventory. Every fix here closes
+a gap explicitly flagged in an earlier round.
+
+**R20.1 — collapse 3 weather implementations (R18 deferral)**: `smartSchedulerService.getWeatherForecast` and `capacityPlanningService.getWeatherForecast` each had their own internal `MOCK_WEATHER` map / deterministic seasonal mock that powered `useWeatherAlerts` (used by `<SmartScheduler />`) and `getCapacitySlot` (used by `useCapacityForecast`). The smartScheduler `MOCK_WEATHER` only had Feb-2025 dates seeded, so for any current date `suitableForOutdoor` was always true → the entire weather-alert pipeline was silent; the hardcoded NL alert text `Ongeschikt weer verwacht (...)` never even fired. Plus the alert string was Dutch-only. Fix: both services now read from the canonical `weatherService.getLastFetchedForecast()` (Open-Meteo prefetched on app open per R18) for today/tomorrow, mapping the `DayForecast` (precipitationMm, tempMax) into each service's local `WeatherForecast` shape. Far-future dates fall through to the seeded mock (capacity planning often runs 7-14d out beyond Open-Meteo's 3-day horizon). Alert text now uses `weather.unsuitable` + `weather.cond.{condition}` keys (5 condition keys + 1 alert template × 6 locales = 36 new strings).
+
+**R20.2 — `crossServiceGenerator` dead static + 4 NL hardcodes + nl-NL locale (R18 deferral)**: removed the dead `crossServiceGenerator: InsightGenerator` const (its `generate(ctx)` always returned null and it had zero consumers — the real surface is `useCrossServiceInsight`). Also localized the four hardcoded NL reasoning strings (`Verband gevonden tussen…`, `Op basis van…`, `Geschatte impact:…`, `Bekijk de details voor meer informatie`) and replaced the hardcoded `nl-NL` number locale with a `localeFor(ctx.language)` mapper that returns the contractor's actual locale (nl-NL/de-DE/fr-FR/es-ES/it-IT/en-GB). New `crossService.*` namespace: 5 keys × 6 locales.
+
+**R20.3 — `permit_check` queue prefill on /contractor/permits (R1 deferral)**: queue executor now passes `?jobId=…` when the queued item carried a jobId in preparedData (covers `cert_renewal` / `permit_check` / `permit_renewal` / `safety_checklist` — same handler). Permits screen reads the param via `useLocalSearchParams`, scopes the rendered list to permits whose `jobTitle` matches the focused job, and auto-expands the first match. Adds a dismissable scope chip ("Scoped to: {{job}} ×") so the contractor can clear back to the full list. Empty-state copy is contextual ("No permits for this job" + tailored CTA). 4 new `permits.*` keys × 6 locales.
+
+**R20.4 — `einvoice_submit` queue prefill on /invoices/{id} (R1 deferral)**: queue executor now passes `?submit=einvoice` when routing to the invoice screen. Invoice screen reads the new `submit` param, and on mount auto-fires the country-default e-invoice export (`handleExportFacturae` for ES, `handleExportFatturaPA` for IT, `handleExportEInvoice('XRechnung')` for DE/NL/FR/UK/others). One-shot via `useRef` so re-renders don't re-fire; deferred 120ms so the screen mounts first. Was the most user-visible R1 prefill gap — contractor approved "submit e-invoice" in the AI queue, landed on the invoice, then had to scroll to the export button themselves.
+
+R20 batch: 0 TS errors, all 6 locales valid (2248 keys each, full parity, +15 new keys).

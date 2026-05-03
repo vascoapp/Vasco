@@ -2,7 +2,7 @@
 // INVOICE DETAIL — Pro-grade, fully editable invoice view
 // =============================================================================
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Alert, ScrollView, StyleSheet, Text, View, Pressable, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -66,7 +66,7 @@ const getStatusBg = (status: string) => {
 
 export default function InvoiceDetailScreen() {
   const { t } = useTranslation();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, submit } = useLocalSearchParams<{ id: string; submit?: string }>();
   const router = useRouter();
   const {
     invoices,
@@ -571,6 +571,35 @@ export default function InvoiceDetailScreen() {
       await RNShare.share({ message: xml, title: filename });
     }
   };
+
+  // R20: when launched from queue executor with `?submit=einvoice`, auto-fire
+  // the country-default e-invoice export. Was R1 deferral — destination
+  // didn't read prefill, so the contractor approved the queue item then had
+  // to find and tap the export button themselves. Country-routing matches
+  // the explicit buttons rendered later in the screen (XRechnung/ZUGFeRD
+  // for DE+others, Facturae for ES, FatturaPA for IT). One-shot via ref so
+  // re-renders don't re-fire.
+  const submitFiredRef = useRef(false);
+  useEffect(() => {
+    if (submitFiredRef.current) return;
+    if (submit !== 'einvoice') return;
+    if (!invoice) return;
+    submitFiredRef.current = true;
+    const fire = async () => {
+      try {
+        if (country === 'ES') return handleExportFacturae();
+        if (country === 'IT') return handleExportFatturaPA();
+        // DE / NL / FR / UK / others default to XRechnung (works for B2G;
+        // consumer can manually pick ZUGFeRD if they want hybrid PDF+XML).
+        return handleExportEInvoice('XRechnung');
+      } catch {
+        // Silent — surfaced via the in-flow alert/share sheet errors.
+      }
+    };
+    // Defer one tick so the screen is mounted + scroll-positioned first.
+    const timer = setTimeout(fire, 120);
+    return () => clearTimeout(timer);
+  }, [submit, invoice?.id, country]);
 
   return (
     <View style={styles.container}>

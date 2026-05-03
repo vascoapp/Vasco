@@ -157,8 +157,17 @@ export async function executeApprovedQueueItem(
     case 'permit_check':
     case 'permit_renewal':
     case 'safety_checklist': {
-      router.push('/contractor/permits' as any);
-      return { executed: true, via: 'navigate', detail: 'permits' };
+      // R20: pass jobId through so permits screen can scope to the job
+      // that triggered the queue item (was R1 deferral — destination
+      // didn't read prefill, contractor landed on the full permits list
+      // and had to find the relevant row themselves).
+      const jobId = data.jobId as string | undefined;
+      if (jobId) {
+        router.push({ pathname: '/contractor/permits', params: { jobId } } as any);
+      } else {
+        router.push('/contractor/permits' as any);
+      }
+      return { executed: true, via: 'navigate', detail: jobId ? `permits?jobId=${jobId}` : 'permits' };
     }
     case 'schedule_suggestion': {
       router.push('/contractor/drag-schedule' as any);
@@ -204,10 +213,14 @@ export async function executeApprovedQueueItem(
       return { executed: true, via: 'navigate', detail: 'vat-and-audit' };
     }
     case 'einvoice_submit': {
+      // R20: pass `submit=einvoice` query param so the invoice screen can
+      // auto-trigger the e-invoice export dialog on mount instead of just
+      // opening to the invoice and waiting for the contractor to find the
+      // export button. Was R1 deferral — destination didn't read prefill.
       const invoiceId = data.invoiceId as string | undefined;
       if (invoiceId) {
-        router.push(`/invoices/${invoiceId}` as any);
-        return { executed: true, via: 'navigate', detail: `invoices/${invoiceId}` };
+        router.push({ pathname: `/invoices/${invoiceId}` as any, params: { submit: 'einvoice' } } as any);
+        return { executed: true, via: 'navigate', detail: `invoices/${invoiceId}?submit=einvoice` };
       }
       router.push('/contractor/payments' as any);
       return { executed: true, via: 'navigate', detail: 'payments' };

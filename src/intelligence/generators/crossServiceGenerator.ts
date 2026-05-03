@@ -1,24 +1,34 @@
 // =============================================================================
 // CROSS SERVICE GENERATOR
 // =============================================================================
+// R20: removed the dead static `crossServiceGenerator: InsightGenerator`
+// export — its `generate(ctx)` always returned null and it had zero
+// consumers anywhere. The real surface is `useCrossServiceInsight(ctx)`,
+// rendered via generators/index.ts.
+// Also localized 4 hardcoded NL reasoning strings + the `nl-NL` number
+// formatting hardcode that ignored contractor's locale.
 
-import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
+import type { ScoredInsight, GeneratorContext } from './types';
 import type { VascoInsight } from '../../components/shared/VascoInsightCard';
 import { useCrossServiceIntelligence } from '../../services/crossServiceIntelligenceService';
 import { logPrediction } from '../calibration';
 import { gt } from '../generatorTranslations';
+import i18n from '../../i18n/i18n';
 
-export const crossServiceGenerator: InsightGenerator = {
-  id: 'cross-service',
-  screens: ['invoices', 'savings', 'decisions'],
-  roles: ['contractor'],
-  generate(ctx: GeneratorContext): ScoredInsight | null {
-    return null;
-  },
+const localeFor = (lang?: string) => {
+  switch (lang) {
+    case 'nl': return 'nl-NL';
+    case 'de': return 'de-DE';
+    case 'fr': return 'fr-FR';
+    case 'es': return 'es-ES';
+    case 'it': return 'it-IT';
+    default: return 'en-GB';
+  }
 };
 
 export function useCrossServiceInsight(ctx: GeneratorContext): ScoredInsight | null {
   const crossIntel = useCrossServiceIntelligence();
+  const t = i18n.t.bind(i18n);
 
   const relevantInsight = crossIntel.insights
     .filter(i => i.priority === 'high')
@@ -31,11 +41,13 @@ export function useCrossServiceInsight(ctx: GeneratorContext): ScoredInsight | n
 
   if (!relevantInsight) return null;
 
+  const locale = localeFor(ctx.language);
+
   // Log prediction for calibration
   logPrediction({
     generatorId: 'cross-service',
     predictedAt: new Date().toISOString(),
-    prediction: `Cross-service correlatie: ${relevantInsight.title} (impact €${relevantInsight.impact.value})`,
+    prediction: `Cross-service correlation: ${relevantInsight.title} (impact €${relevantInsight.impact.value})`,
     predictedValue: relevantInsight.impact.value,
   });
 
@@ -53,8 +65,8 @@ export function useCrossServiceInsight(ctx: GeneratorContext): ScoredInsight | n
     source: gt('source_cross_analysis', ctx.language),
     metric: hasMoneyImpact
       ? {
-          label: 'Impact',
-          value: `€${relevantInsight.impact.value.toLocaleString('nl-NL')}`,
+          label: t('crossService.impact', { defaultValue: 'Impact' }),
+          value: `€${relevantInsight.impact.value.toLocaleString(locale)}`,
           trend: relevantInsight.impact.direction === 'positive' ? 'up' : 'down',
         }
       : undefined,
@@ -62,12 +74,23 @@ export function useCrossServiceInsight(ctx: GeneratorContext): ScoredInsight | n
     rootCauseTags: ['cross-service', 'correlation'],
     rawScore: 0,
     reasoning: {
-      observation: `Verband gevonden tussen ${relevantInsight.sources.join(' en ')}`,
-      evidence: `Op basis van ${relevantInsight.sources.length} gekoppelde databronnen`,
+      observation: t('crossService.observation', {
+        defaultValue: 'Connection found between {{sources}}',
+        sources: relevantInsight.sources.join(', '),
+      }),
+      evidence: t('crossService.evidence', {
+        defaultValue: 'Based on {{count}} linked data sources',
+        count: relevantInsight.sources.length,
+      }),
       implication: hasMoneyImpact
-        ? `Geschatte impact: €${relevantInsight.impact.value.toLocaleString('nl-NL')}`
+        ? t('crossService.implication', {
+            defaultValue: 'Estimated impact: €{{amount}}',
+            amount: relevantInsight.impact.value.toLocaleString(locale),
+          })
         : relevantInsight.description,
-      suggestion: relevantInsight.actionLabel || 'Bekijk de details voor meer informatie',
+      suggestion: relevantInsight.actionLabel || t('crossService.viewDetails', {
+        defaultValue: 'See details for more information',
+      }),
     },
     dataPoints: relevantInsight.sources.length * 10,
     confidence: 0.65,

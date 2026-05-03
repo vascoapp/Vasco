@@ -584,7 +584,11 @@
     "authorityPlaceholder": "ex. Mairie",
     "notes": "Notes",
     "optional": "Facultatif",
-    "createPermit": "Créer l'autorisation"
+    "createPermit": "Créer l'autorisation",
+    "scopedTo": "Filtré sur: {{job}}",
+    "clearScope": "Afficher tous les permis",
+    "emptyForJob": "Aucun permis pour ce chantier",
+    "emptyForJobDesc": "Appuyez sur \"+ Nouvelle demande\" pour en créer un pour ce chantier."
   },
   "settings": {
     "title": "Paramètres",
@@ -2509,5 +2513,22 @@
     "customerSignoffHint": "Capturez une signature numérique pour clôturer le chantier",
     "certExpired": "{{name}} expiré le {{date}}. Renouvelez avant la clôture.",
     "certExpiringSoon": "{{name}} expire dans {{days}} jour(s) — à renouveler pour garder ce {{kind}} valide."
+  },
+  "weather": {
+    "unsuitable": "Météo défavorable prévue ({{condition}}, {{precipitation}}% précipitations)",
+    "cond": {
+      "sunny": "ensoleillé",
+      "cloudy": "nuageux",
+      "rainy": "pluie",
+      "stormy": "tempête",
+      "snow": "neige"
+    }
+  },
+  "crossService": {
+    "impact": "Impact",
+    "observation": "Lien trouvé entre {{sources}}",
+    "evidence": "Sur la base de {{count}} sources de données liées",
+    "implication": "Impact estimé: €{{amount}}",
+    "viewDetails": "Voir les détails pour plus d'informations"
   }
 }

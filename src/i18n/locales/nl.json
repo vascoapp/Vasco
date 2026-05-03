@@ -584,7 +584,11 @@
     "authorityPlaceholder": "bijv. Gemeente",
     "notes": "Notities",
     "optional": "Optioneel",
-    "createPermit": "Vergunning aanmaken"
+    "createPermit": "Vergunning aanmaken",
+    "scopedTo": "Beperkt tot: {{job}}",
+    "clearScope": "Toon alle vergunningen",
+    "emptyForJob": "Geen vergunningen voor deze klus",
+    "emptyForJobDesc": "Tik op \"+ Nieuwe aanvraag\" om er een aan te maken voor deze klus."
   },
   "settings": {
     "title": "Instellingen",
@@ -2509,5 +2513,22 @@
     "customerSignoffHint": "Vraag om een digitale handtekening om de klus af te sluiten",
     "certExpired": "{{name}} verlopen op {{date}}. Vernieuw vóór afsluiten.",
     "certExpiringSoon": "{{name}} verloopt over {{days}} dag(en) — vernieuw snel om dit {{kind}} geldig te houden."
+  },
+  "weather": {
+    "unsuitable": "Ongeschikt weer verwacht ({{condition}}, {{precipitation}}% neerslag)",
+    "cond": {
+      "sunny": "zonnig",
+      "cloudy": "bewolkt",
+      "rainy": "regen",
+      "stormy": "storm",
+      "snow": "sneeuw"
+    }
+  },
+  "crossService": {
+    "impact": "Impact",
+    "observation": "Verband gevonden tussen {{sources}}",
+    "evidence": "Op basis van {{count}} gekoppelde databronnen",
+    "implication": "Geschatte impact: €{{amount}}",
+    "viewDetails": "Bekijk de details voor meer informatie"
   }
 }

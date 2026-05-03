@@ -7,6 +7,8 @@
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { jobCostTrackingService } from './jobCostTrackingService';
+import { getLastFetchedForecast, type DayForecast } from './weatherService';
+import i18n from '../i18n/i18n';
 
 // ============================================
 // TYPES
@@ -448,6 +450,32 @@ class SmartSchedulerService {
   // -----------------------------------------
 
   getWeatherForecast(date: string): WeatherForecast {
+    // R20: read from the canonical weatherService (Open-Meteo, prefetched
+    // on app open per R18). Maps the today/tomorrow DayForecast into the
+    // local WeatherForecast shape. Far-future dates fall through to the
+    // historical MOCK_WEATHER seed (kept for backwards-compat with any
+    // demo-mode consumer) or a neutral default.
+    const real = getLastFetchedForecast();
+    if (real) {
+      const today = new Date().toISOString().slice(0, 10);
+      const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+      let day: DayForecast | null = null;
+      if (date === today) day = real.today;
+      else if (date === tomorrow) day = real.tomorrow;
+      if (day) {
+        const condition: WeatherForecast['condition'] = day.precipitationMm > 5
+          ? 'rainy'
+          : day.precipitationMm > 1 ? 'cloudy' : 'sunny';
+        const suitable = day.precipitationMm <= 5 && day.tempMax >= 2;
+        return {
+          condition,
+          temperature: Math.round(day.tempMax),
+          precipitation: Math.round(day.precipitationMm * 10), // mm → 0-100ish
+          windSpeed: 15,
+          suitableForOutdoor: suitable,
+        };
+      }
+    }
     return MOCK_WEATHER[date] || {
       condition: 'cloudy',
       temperature: 10,
@@ -459,6 +487,7 @@ class SmartSchedulerService {
 
   getWeatherAlerts(): Array<{ jobId: string; date: string; issue: string }> {
     const alerts: Array<{ jobId: string; date: string; issue: string }> = [];
+    const t = i18n.t.bind(i18n);
 
     this.jobs.forEach((job) => {
       if (job.weatherSensitive && job.status === 'scheduled') {
@@ -468,7 +497,12 @@ class SmartSchedulerService {
           alerts.push({
             jobId: job.id,
             date,
-            issue: `Ongeschikt weer verwacht (${weather.condition}, ${weather.precipitation}% neerslag)`,
+            // R20: was hardcoded NL `Ongeschikt weer verwacht (...)`.
+            issue: t('weather.unsuitable', {
+              defaultValue: 'Unsuitable weather expected ({{condition}}, {{precipitation}}% precipitation)',
+              condition: t(`weather.cond.${weather.condition}`, { defaultValue: weather.condition }),
+              precipitation: weather.precipitation,
+            }),
           });
         }
       }

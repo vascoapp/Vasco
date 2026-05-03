@@ -584,7 +584,11 @@
     "authorityPlaceholder": "es. Comune",
     "notes": "Note",
     "optional": "Facoltativo",
-    "createPermit": "Crea permesso"
+    "createPermit": "Crea permesso",
+    "scopedTo": "Filtrato a: {{job}}",
+    "clearScope": "Mostra tutti i permessi",
+    "emptyForJob": "Nessun permesso per questo lavoro",
+    "emptyForJobDesc": "Tocca \"+ Nuova richiesta\" per crearne uno per questo lavoro."
   },
   "settings": {
     "title": "Impostazioni",
@@ -2509,5 +2513,22 @@
     "customerSignoffHint": "Cattura una firma digitale per chiudere il lavoro",
     "certExpired": "{{name}} scaduto il {{date}}. Rinnova prima di chiudere.",
     "certExpiringSoon": "{{name}} scade tra {{days}} giorno/i — rinnova presto per mantenere valido questo {{kind}}."
+  },
+  "weather": {
+    "unsuitable": "Meteo sfavorevole previsto ({{condition}}, {{precipitation}}% precipitazioni)",
+    "cond": {
+      "sunny": "soleggiato",
+      "cloudy": "nuvoloso",
+      "rainy": "pioggia",
+      "stormy": "tempesta",
+      "snow": "neve"
+    }
+  },
+  "crossService": {
+    "impact": "Impatto",
+    "observation": "Connessione trovata tra {{sources}}",
+    "evidence": "In base a {{count}} fonti di dati collegate",
+    "implication": "Impatto stimato: €{{amount}}",
+    "viewDetails": "Vedi dettagli per maggiori informazioni"
   }
 }

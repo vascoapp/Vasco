@@ -4,11 +4,11 @@
 // View, create, and track permits for contractor jobs
 // =============================================================================
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG } from '../../src/theme/tabStyles';
@@ -86,6 +86,11 @@ export default function PermitsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { jobs } = useAppState();
+  // R20: route param from queueItemExecutor when an AI queue item like
+  // permit_check / cert_renewal carried a jobId in preparedData. Used to
+  // scope the permits list + auto-expand the matching permit so the
+  // contractor lands oriented instead of having to search the full list.
+  const { jobId: focusJobId } = useLocalSearchParams<{ jobId?: string }>();
   const STATUS_CONFIG = getStatusConfig(t);
   const PERMIT_TYPES = getPermitTypes(t);
   const [activeTab, setActiveTab] = useState<TabType>('overzicht');
@@ -93,6 +98,24 @@ export default function PermitsScreen() {
   // Any change is written back so created permits survive app restart.
   const [permits, setPermits] = useState<ContractorPermit[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  // R20: when launched via queue executor with ?jobId=, scope the rendered
+  // list to that job's permits and let the contractor explicitly clear
+  // the filter via a dismiss chip.
+  const [scopeJobId, setScopeJobId] = useState<string | null>(focusJobId ?? null);
+  const focusJob = useMemo(
+    () => (scopeJobId ? jobs.find((j: any) => j.id === scopeJobId) : null),
+    [scopeJobId, jobs],
+  );
+  const visiblePermits = useMemo(() => {
+    if (!focusJob) return permits;
+    const titleLower = (focusJob.title ?? '').toLowerCase();
+    return permits.filter((p) => p.jobTitle.toLowerCase().includes(titleLower));
+  }, [permits, focusJob]);
+  // Auto-expand the first matching permit on entry from the queue.
+  useEffect(() => {
+    if (!focusJob || expandedId) return;
+    if (visiblePermits.length > 0) setExpandedId(visiblePermits[0].id);
+  }, [focusJob, visiblePermits, expandedId]);
 
   // Load on mount
   useEffect(() => {
@@ -189,14 +212,33 @@ export default function PermitsScreen() {
         {activeTab === 'overzicht' ? (
           /* Overview Tab */
           <View style={{ gap: 6 }}>
-            {permits.length === 0 && (
+            {/* R20: scope chip — visible when launched from queue with ?jobId.
+                 Tap × to clear the filter and see all permits. */}
+            {focusJob && (
+              <Pressable style={styles.scopeChip} onPress={() => setScopeJobId(null)} accessibilityRole="button" accessibilityLabel={t('permits.clearScope', 'Show all permits')}>
+                <Ionicons name="filter" size={14} color={Palette.hermesOrange} />
+                <Text style={styles.scopeChipText} numberOfLines={1}>
+                  {t('permits.scopedTo', { defaultValue: 'Scoped to: {{job}}', job: focusJob.title ?? focusJob.id })}
+                </Text>
+                <Ionicons name="close" size={14} color={SemanticColors.textTertiary} />
+              </Pressable>
+            )}
+            {visiblePermits.length === 0 && (
               <View style={styles.emptyState}>
                 <Ionicons name="document-text-outline" size={36} color={SemanticColors.textTertiary} />
-                <Text style={styles.emptyStateTitle}>{t('permits.emptyTitle', 'No permits yet')}</Text>
-                <Text style={styles.emptyStateDesc}>{t('permits.emptyDesc', 'Tap "+ New request" to draft a permit for one of your jobs.')}</Text>
+                <Text style={styles.emptyStateTitle}>
+                  {focusJob
+                    ? t('permits.emptyForJob', 'No permits for this job')
+                    : t('permits.emptyTitle', 'No permits yet')}
+                </Text>
+                <Text style={styles.emptyStateDesc}>
+                  {focusJob
+                    ? t('permits.emptyForJobDesc', 'Tap "+ New request" to draft one for this job.')
+                    : t('permits.emptyDesc', 'Tap "+ New request" to draft a permit for one of your jobs.')}
+                </Text>
               </View>
             )}
-            {permits.map(permit => {
+            {visiblePermits.map(permit => {
               const config = STATUS_CONFIG[permit.status];
               const isExpanded = expandedId === permit.id;
 
@@ -428,6 +470,26 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 13, fontFamily: 'Archivo_700Bold', color: SemanticColors.textTertiary },
   tabTextActive: { color: '#fff' },
   scrollView: { flex: 1, paddingHorizontal: SafeArea.side },
+  // R20: scope chip rendered when entered via queue executor with ?jobId=
+  scopeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: Palette.hermesOrange + '14',
+    borderWidth: 1,
+    borderColor: Palette.hermesOrange + '40',
+    borderRadius: 999,
+    alignSelf: 'flex-start',
+    marginBottom: 4,
+  },
+  scopeChipText: {
+    fontSize: 12,
+    fontFamily: 'Archivo_700Bold',
+    color: SemanticColors.textPrimary,
+    maxWidth: 220,
+  },
   emptyState: {
     alignItems: 'center',
     gap: 8,

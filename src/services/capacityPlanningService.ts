@@ -34,6 +34,7 @@ import {
   ScheduledJobSummary,
   WeatherForecast,
 } from '../types/capacity-planning';
+import { getLastFetchedForecast, type DayForecast } from './weatherService';
 
 // ============================================
 // SERVICE CONFIGURATION
@@ -401,7 +402,34 @@ class CapacityPlanningService {
   }
 
   private getWeatherForecast(date: Date): WeatherForecast {
-    // Mock weather - in reality would call weather API
+    // R20: read from canonical weatherService (Open-Meteo, prefetched on
+    // app open per R18) for today/tomorrow. Far-future dates fall through
+    // to the deterministic seasonal mock (kept for forecast-horizon UX —
+    // Open-Meteo only gives 3 days, capacity planning often runs 7-14d).
+    const real = getLastFetchedForecast();
+    if (real) {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const target = new Date(date); target.setHours(0, 0, 0, 0);
+      const dayDiff = Math.round((target.getTime() - today.getTime()) / 86400000);
+      let day: DayForecast | null = null;
+      if (dayDiff === 0) day = real.today;
+      else if (dayDiff === 1) day = real.tomorrow;
+      if (day) {
+        const condition: WeatherForecast['condition'] = day.precipitationMm > 10
+          ? 'heavy-rain'
+          : day.precipitationMm > 5 ? 'rain'
+            : day.precipitationMm > 1 ? 'cloudy' : 'clear';
+        const suitable = day.precipitationMm <= 5 && day.tempMax >= 2;
+        return {
+          condition,
+          temperature: Math.round(day.tempMax),
+          precipitation: Math.round(day.precipitationMm),
+          windSpeed: 15,
+          suitableForOutdoor: suitable,
+        };
+      }
+    }
+    // Fallback for far-future dates (real forecast horizon is 3 days)
     const dayOfYear = Math.floor(
       (date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24)
     );

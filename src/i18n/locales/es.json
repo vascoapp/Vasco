@@ -584,7 +584,11 @@
     "authorityPlaceholder": "ej. Ayuntamiento",
     "notes": "Notas",
     "optional": "Opcional",
-    "createPermit": "Crear permiso"
+    "createPermit": "Crear permiso",
+    "scopedTo": "Filtrado por: {{job}}",
+    "clearScope": "Mostrar todos los permisos",
+    "emptyForJob": "No hay permisos para este trabajo",
+    "emptyForJobDesc": "Toca \"+ Nueva solicitud\" para crear uno para este trabajo."
   },
   "settings": {
     "title": "Ajustes",
@@ -2509,5 +2513,22 @@
     "customerSignoffHint": "Captura una firma digital para cerrar el trabajo",
     "certExpired": "{{name}} caducado el {{date}}. Renueva antes de cerrar.",
     "certExpiringSoon": "{{name}} caduca en {{days}} día(s) — renueva pronto para mantener este {{kind}} válido."
+  },
+  "weather": {
+    "unsuitable": "Tiempo desfavorable previsto ({{condition}}, {{precipitation}}% precipitación)",
+    "cond": {
+      "sunny": "soleado",
+      "cloudy": "nublado",
+      "rainy": "lluvia",
+      "stormy": "tormenta",
+      "snow": "nieve"
+    }
+  },
+  "crossService": {
+    "impact": "Impacto",
+    "observation": "Conexión encontrada entre {{sources}}",
+    "evidence": "Basado en {{count}} fuentes de datos vinculadas",
+    "implication": "Impacto estimado: €{{amount}}",
+    "viewDetails": "Ver detalles para más información"
   }
 }

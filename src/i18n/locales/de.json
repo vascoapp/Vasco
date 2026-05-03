@@ -584,7 +584,11 @@
     "authorityPlaceholder": "z.B. Bauamt",
     "notes": "Notizen",
     "optional": "Optional",
-    "createPermit": "Genehmigung erstellen"
+    "createPermit": "Genehmigung erstellen",
+    "scopedTo": "Eingeschränkt auf: {{job}}",
+    "clearScope": "Alle Genehmigungen anzeigen",
+    "emptyForJob": "Keine Genehmigungen für diesen Auftrag",
+    "emptyForJobDesc": "Tippen Sie auf \"+ Neuer Antrag\", um einen für diesen Auftrag zu erstellen."
   },
   "settings": {
     "title": "Einstellungen",
@@ -2509,5 +2513,22 @@
     "customerSignoffHint": "Digitale Unterschrift erfassen, um den Auftrag abzuschließen",
     "certExpired": "{{name}} abgelaufen am {{date}}. Vor Abschluss erneuern.",
     "certExpiringSoon": "{{name}} läuft in {{days}} Tag(en) ab — bald erneuern, damit dieses {{kind}} gültig bleibt."
+  },
+  "weather": {
+    "unsuitable": "Ungeeignetes Wetter erwartet ({{condition}}, {{precipitation}}% Niederschlag)",
+    "cond": {
+      "sunny": "sonnig",
+      "cloudy": "bewölkt",
+      "rainy": "Regen",
+      "stormy": "Sturm",
+      "snow": "Schnee"
+    }
+  },
+  "crossService": {
+    "impact": "Auswirkung",
+    "observation": "Verbindung gefunden zwischen {{sources}}",
+    "evidence": "Basierend auf {{count}} verknüpften Datenquellen",
+    "implication": "Geschätzte Auswirkung: €{{amount}}",
+    "viewDetails": "Details für weitere Informationen anzeigen"
   }
 }

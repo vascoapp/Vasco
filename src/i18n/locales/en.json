@@ -584,7 +584,11 @@
     "authorityPlaceholder": "e.g. Local council",
     "notes": "Notes",
     "optional": "Optional",
-    "createPermit": "Create permit"
+    "createPermit": "Create permit",
+    "scopedTo": "Scoped to: {{job}}",
+    "clearScope": "Show all permits",
+    "emptyForJob": "No permits for this job",
+    "emptyForJobDesc": "Tap \"+ New request\" to draft one for this job."
   },
   "settings": {
     "title": "Settings",
@@ -2509,5 +2513,22 @@
     "customerSignoffHint": "Capture a digital signature to close the job",
     "certExpired": "{{name}} expired on {{date}}. Renew before closing.",
     "certExpiringSoon": "{{name}} expires in {{days}} day(s) — renew soon to keep this {{kind}} valid."
+  },
+  "weather": {
+    "unsuitable": "Unsuitable weather expected ({{condition}}, {{precipitation}}% precipitation)",
+    "cond": {
+      "sunny": "sunny",
+      "cloudy": "cloudy",
+      "rainy": "rain",
+      "stormy": "stormy",
+      "snow": "snow"
+    }
+  },
+  "crossService": {
+    "impact": "Impact",
+    "observation": "Connection found between {{sources}}",
+    "evidence": "Based on {{count}} linked data sources",
+    "implication": "Estimated impact: €{{amount}}",
+    "viewDetails": "See details for more information"
   }
 }
