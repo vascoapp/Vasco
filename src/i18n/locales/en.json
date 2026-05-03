@@ -591,7 +591,10 @@
     "language": "Language",
     "country": "Country",
     "redoSetup": "Redo setup",
-    "logout": "Log out"
+    "logout": "Log out",
+    "address": "Address",
+    "email": "Email",
+    "phone": "Phone"
   },
   "financials": {
     "revenue": "Revenue",
@@ -2467,5 +2470,20 @@
     "consentDesc": "Vasco processes payment data via Mollie. By connecting you agree to share invoice data with Mollie for payment processing.",
     "consentAccept": "Agree & connect",
     "pciCompliance": "All payments are PCI DSS compliant via Mollie"
+  },
+  "checklist": {
+    "beforePhoto": "Before photo",
+    "afterPhoto": "After photo",
+    "handoverPhoto": "Handover photo",
+    "gasCert": "Gas safety / CW certificate",
+    "gasCertHint": "Upload Gaskeur / CW-attest before closing the job",
+    "electricalTest": "Electrical test report",
+    "electricalHint": "NEN 1010 / EICR report is required for handover",
+    "wasteNote": "Waste disposal note",
+    "warrantyInfo": "Warranty information sent",
+    "customerSignoff": "Customer sign-off",
+    "customerSignoffHint": "Capture a digital signature to close the job",
+    "certExpired": "{{name}} expired on {{date}}. Renew before closing.",
+    "certExpiringSoon": "{{name}} expires in {{days}} day(s) — renew soon to keep this {{kind}} valid."
   }
 }

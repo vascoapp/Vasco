@@ -591,7 +591,10 @@
     "language": "Sprache",
     "country": "Land",
     "redoSetup": "Einrichtung wiederholen",
-    "logout": "Abmelden"
+    "logout": "Abmelden",
+    "address": "Adresse",
+    "email": "E-Mail",
+    "phone": "Telefon"
   },
   "financials": {
     "revenue": "Umsatz",
@@ -2467,5 +2470,20 @@
     "consentDesc": "Vasco verarbeitet Zahlungsdaten über Mollie. Mit der Verbindung stimmst du zu, Rechnungsdaten zur Zahlungsabwicklung an Mollie weiterzugeben.",
     "consentAccept": "Zustimmen & verbinden",
     "pciCompliance": "Alle Zahlungen sind PCI-DSS-konform über Mollie"
+  },
+  "checklist": {
+    "beforePhoto": "Foto vorher",
+    "afterPhoto": "Foto nachher",
+    "handoverPhoto": "Übergabefoto",
+    "gasCert": "Gas-Sicherheitszertifikat",
+    "gasCertHint": "Gas-Zertifikat vor Abschluss hochladen",
+    "electricalTest": "Elektroprüfbericht",
+    "electricalHint": "NEN 1010 / EICR-Bericht ist für die Übergabe erforderlich",
+    "wasteNote": "Entsorgungsnachweis",
+    "warrantyInfo": "Garantieinformationen versendet",
+    "customerSignoff": "Kundenabnahme",
+    "customerSignoffHint": "Digitale Unterschrift erfassen, um den Auftrag abzuschließen",
+    "certExpired": "{{name}} abgelaufen am {{date}}. Vor Abschluss erneuern.",
+    "certExpiringSoon": "{{name}} läuft in {{days}} Tag(en) ab — bald erneuern, damit dieses {{kind}} gültig bleibt."
   }
 }

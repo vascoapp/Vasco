@@ -591,7 +591,10 @@
     "language": "Idioma",
     "country": "País",
     "redoSetup": "Repetir configuración",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesión",
+    "address": "Dirección",
+    "email": "Correo electrónico",
+    "phone": "Teléfono"
   },
   "financials": {
     "revenue": "Facturación",
@@ -2467,5 +2470,20 @@
     "consentDesc": "Vasco procesa datos de pago vía Mollie. Al conectar aceptas compartir datos de facturación con Mollie para el procesamiento de pagos.",
     "consentAccept": "Aceptar y conectar",
     "pciCompliance": "Todos los pagos cumplen PCI DSS vía Mollie"
+  },
+  "checklist": {
+    "beforePhoto": "Foto antes",
+    "afterPhoto": "Foto después",
+    "handoverPhoto": "Foto de entrega",
+    "gasCert": "Certificado de gas",
+    "gasCertHint": "Sube el certificado de gas antes de cerrar el trabajo",
+    "electricalTest": "Informe de prueba eléctrica",
+    "electricalHint": "Informe NEN 1010 / EICR requerido para la entrega",
+    "wasteNote": "Albarán de residuos",
+    "warrantyInfo": "Información de garantía enviada",
+    "customerSignoff": "Firma del cliente",
+    "customerSignoffHint": "Captura una firma digital para cerrar el trabajo",
+    "certExpired": "{{name}} caducado el {{date}}. Renueva antes de cerrar.",
+    "certExpiringSoon": "{{name}} caduca en {{days}} día(s) — renueva pronto para mantener este {{kind}} válido."
   }
 }

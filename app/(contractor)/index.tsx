@@ -150,9 +150,25 @@ export default function VandaagDK() {
             style={styles.hero}
           >
             <View style={styles.heroGlowOverlay} />
-            <View style={styles.heroChip}>
-              <View style={styles.heroChipDot} />
-              <DKLabel style={styles.heroChipText}>{t('dk.hero.vascoAnalyst', 'Vasco Analyst')}</DKLabel>
+            <View style={styles.heroChipRow}>
+              <View style={styles.heroChip}>
+                <View style={styles.heroChipDot} />
+                <DKLabel style={styles.heroChipText}>{t('dk.hero.vascoAnalyst', 'Vasco Analyst')}</DKLabel>
+              </View>
+              {/* R16.1: dismiss affordance on the hero. Was previously
+                  approve-only — a user stuck with an item they didn't want
+                  had no way to clear it. */}
+              {heroAction ? (
+                <Pressable
+                  hitSlop={10}
+                  style={styles.heroDismissBtn}
+                  onPress={() => handleReject(heroAction.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('common.dismiss', 'Dismiss')}
+                >
+                  <Ionicons name="close" size={16} color="rgba(255,255,255,0.75)" />
+                </Pressable>
+              ) : null}
             </View>
             {heroAction ? (
               <>
@@ -163,7 +179,11 @@ export default function VandaagDK() {
                   onPress={() => handleApprove(heroAction.id)}
                 >
                   <DKLabel style={styles.heroCTAText} numberOfLines={1}>{heroAction.actionLabel}</DKLabel>
-                  <Text style={styles.heroCTAImpact} numberOfLines={1}>· {heroAction.estimatedImpact}</Text>
+                  {/* R16.1: only render the "· {impact}" suffix when impact is non-empty.
+                      Was rendering a stranded " ·" prefix on items without an impact line. */}
+                  {heroAction.estimatedImpact ? (
+                    <Text style={styles.heroCTAImpact} numberOfLines={1}>· {heroAction.estimatedImpact}</Text>
+                  ) : null}
                 </Pressable>
               </>
             ) : (
@@ -392,13 +412,24 @@ const styles = StyleSheet.create({
     backgroundColor: DK.colors.highlight,
     opacity: 0.15,
   },
+  heroChipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
   heroChip: {
     alignSelf: 'flex-start',
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingVertical: 3, paddingHorizontal: 8,
     borderRadius: DK.radius.chip,
     backgroundColor: '#0B0E11AA',
-    marginBottom: 8,
+  },
+  heroDismissBtn: {
+    width: 28, height: 28,
+    alignItems: 'center', justifyContent: 'center',
+    borderRadius: 14,
+    backgroundColor: '#0B0E1166',
   },
   heroChipDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: DK.colors.highlight },
   heroChipText: {

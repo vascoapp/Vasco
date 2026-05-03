@@ -591,7 +591,10 @@
     "language": "Langue",
     "country": "Pays",
     "redoSetup": "Refaire la configuration",
-    "logout": "Se déconnecter"
+    "logout": "Se déconnecter",
+    "address": "Adresse",
+    "email": "E-mail",
+    "phone": "Téléphone"
   },
   "financials": {
     "revenue": "Chiffre d'affaires",
@@ -2467,5 +2470,20 @@
     "consentDesc": "Vasco traite les données de paiement via Mollie. En connectant, vous acceptez de partager les données de facturation avec Mollie pour le traitement des paiements.",
     "consentAccept": "Accepter & connecter",
     "pciCompliance": "Tous les paiements sont conformes PCI DSS via Mollie"
+  },
+  "checklist": {
+    "beforePhoto": "Photo avant",
+    "afterPhoto": "Photo après",
+    "handoverPhoto": "Photo de réception",
+    "gasCert": "Certificat sécurité gaz",
+    "gasCertHint": "Téléversez le certificat gaz avant la clôture",
+    "electricalTest": "Rapport de test électrique",
+    "electricalHint": "Rapport NEN 1010 / EICR requis pour la réception",
+    "wasteNote": "Bon d'évacuation des déchets",
+    "warrantyInfo": "Informations de garantie envoyées",
+    "customerSignoff": "Signature client",
+    "customerSignoffHint": "Capturez une signature numérique pour clôturer le chantier",
+    "certExpired": "{{name}} expiré le {{date}}. Renouvelez avant la clôture.",
+    "certExpiringSoon": "{{name}} expire dans {{days}} jour(s) — à renouveler pour garder ce {{kind}} valide."
   }
 }

@@ -870,7 +870,13 @@ export default function JobDetailPage() {
                     signedOff: Boolean(job.customerSignoffAt),
                   });
                   if (!result.canComplete) {
-                    const missing = result.items.filter((i) => i.required && !i.satisfied).map((i) => `• ${i.label}`).join('\n');
+                    // R16.2: render the localized labelKey instead of the
+                    // hardcoded English `label`. Was previously English-only
+                    // even for Dutch/German contractors closing a job.
+                    const missing = result.items
+                      .filter((i) => i.required && !i.satisfied)
+                      .map((i) => `• ${t(i.labelKey, i.label)}`)
+                      .join('\n');
                     checklistWarning = `\n\n${t('jobs.missingItems', 'Missing for trade compliance')}:\n${missing}`;
                     needsSignoff = result.items.some((i) => i.id === 'customer_signoff' && i.required && !i.satisfied);
                   }

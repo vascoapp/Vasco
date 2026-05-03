@@ -35,6 +35,7 @@ import { startAutoSync, stopAutoSync } from '../src/intelligence/cloudSync';
 import { startEventFlushing, stopEventFlushing } from '../src/intelligence/dataCollector';
 import { registerForPushNotifications, refreshPushTokenIfStale, syncBadgeWithUnread } from '../src/services/pushNotificationService';
 import { startBackgroundJobScheduler, stopBackgroundJobScheduler } from '../src/intelligence/backgroundJobScheduler';
+import * as Notifications from 'expo-notifications';
 
 // Enterprise roles use the (tabs) layout
 const ENTERPRISE_ROLES = ['cfo', 'coo', 'site-lead', 'director'];
@@ -114,6 +115,47 @@ function RootLayoutNav() {
         maybeRunMlHealthCheck({ trade: user.trade, country: user.country }),
       ).catch(() => {});
       registerForPushNotifications().catch(() => {});
+
+      // R16.3: deep-link push notification taps to the right screen. Was
+      // entirely dormant — every push (payment reminder / quote followup /
+      // job reminder / invoice paid / queue item) opened the app but
+      // dropped the user wherever they were last. Now reads
+      // notification.request.content.data and routes accordingly.
+      const routeFromPushData = (data: Record<string, any> | undefined) => {
+        if (!data) return;
+        const type = String(data.type ?? '');
+        if ((type === 'payment_reminder' || type === 'overdue_invoice' || type === 'invoice_paid') && data.invoiceId) {
+          router.push(`/invoices/${data.invoiceId}` as any);
+          return;
+        }
+        if (type === 'quote_followup' && data.quoteId) {
+          router.push(`/quotes/${data.quoteId}` as any);
+          return;
+        }
+        if (type === 'job_reminder' && data.jobId) {
+          router.push(`/contractor/job/${data.jobId}` as any);
+          return;
+        }
+        if (type === 'ai_queue_item') {
+          // Queue lives on Vandaag — the hero + inline rows render here.
+          router.push('/(contractor)' as any);
+          return;
+        }
+      };
+      // Cold-start: app launched by tapping a push.
+      Notifications.getLastNotificationResponseAsync()
+        .then((resp) => {
+          if (resp?.notification?.request?.content?.data) {
+            // Defer until navigationReady so the Stack is mounted first.
+            setTimeout(() => routeFromPushData(resp.notification.request.content.data as any), 200);
+          }
+        })
+        .catch(() => {});
+      // Warm-start: app already running when push tapped.
+      const pushSub = Notifications.addNotificationResponseReceivedListener((resp) => {
+        routeFromPushData(resp.notification?.request?.content?.data as any);
+      });
+
       // Watch for payment webhooks (Mollie/Stripe → invoices.paid) in realtime
       const stopWatch = watchInvoicePayments(user.id);
       // Multi-device realtime sync for jobs/quotes/customers/documents.
@@ -143,7 +185,7 @@ function RootLayoutNav() {
           country: user.country ?? snap.country,
         };
       });
-      return () => { setErrorUser(null); stopAutoSync(); stopEventFlushing(); stopWatch(); stopTables(); stopInteractions(); stopBackgroundJobScheduler(); };
+      return () => { setErrorUser(null); stopAutoSync(); stopEventFlushing(); stopWatch(); stopTables(); stopInteractions(); stopBackgroundJobScheduler(); pushSub.remove(); };
     }
   }, [isAuthenticated, user?.id]);
 

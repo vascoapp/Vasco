@@ -107,10 +107,31 @@ export default function BusinessSettingsScreen() {
       }
     })();
 
+    // R16.4: was using `customers.contact` for BOTH Address and Phone labels
+    // — that's a single i18n key that can't be both. The label that key
+    // resolved to ("Contact" / "Contactgegevens") rendered for both fields.
+    // Plus "Email" was hardcoded English. Plus the Dutch-only placeholders
+    // ("Keizersgracht 100, Amsterdam" / "info@bedrijf.nl") were shown to
+    // contractors in every country. Now uses dedicated keys + country-aware
+    // address example.
+    const addressPlaceholder =
+      country === 'UK' ? '10 Downing Street, London' :
+      country === 'DE' ? 'Hauptstr. 12, Berlin' :
+      country === 'FR' ? '12 Rue de Rivoli, Paris' :
+      country === 'ES' ? 'Calle Mayor 12, Madrid' :
+      country === 'IT' ? 'Via Roma 12, Milano' :
+      'Keizersgracht 100, Amsterdam';
+    const emailPlaceholder =
+      country === 'UK' ? 'info@business.co.uk' :
+      country === 'DE' ? 'info@firma.de' :
+      country === 'FR' ? 'info@entreprise.fr' :
+      country === 'ES' ? 'info@empresa.es' :
+      country === 'IT' ? 'info@azienda.it' :
+      'info@bedrijf.nl';
     const contactFields: FieldDef[] = [
-      { label: t('customers.contact', 'Adres'), value: address, onChange: setAddress, placeholder: 'Keizersgracht 100, Amsterdam', multiline: true },
-      { label: 'Email', value: email, onChange: setEmail, placeholder: 'info@bedrijf.nl', keyboardType: 'email-address' as const },
-      { label: t('customers.contact', 'Telefoon'), value: phone, onChange: setPhone, placeholder: country === 'UK' ? '+44 20 1234 5678' : country === 'DE' ? '+49 30 1234567' : '+31 6 12345678', keyboardType: 'phone-pad' as const },
+      { label: t('settings.address', 'Address'), value: address, onChange: setAddress, placeholder: addressPlaceholder, multiline: true },
+      { label: t('settings.email', 'Email'), value: email, onChange: setEmail, placeholder: emailPlaceholder, keyboardType: 'email-address' as const },
+      { label: t('settings.phone', 'Phone'), value: phone, onChange: setPhone, placeholder: country === 'UK' ? '+44 20 1234 5678' : country === 'DE' ? '+49 30 1234567' : country === 'FR' ? '+33 1 23 45 67 89' : country === 'ES' ? '+34 612 345 678' : country === 'IT' ? '+39 06 1234 5678' : '+31 6 12345678', keyboardType: 'phone-pad' as const },
     ];
 
     return [...common, ...countryFields, ...contactFields];

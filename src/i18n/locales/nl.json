@@ -591,7 +591,10 @@
     "language": "Taal",
     "country": "Land",
     "redoSetup": "Opnieuw instellen",
-    "logout": "Uitloggen"
+    "logout": "Uitloggen",
+    "address": "Adres",
+    "email": "E-mail",
+    "phone": "Telefoon"
   },
   "financials": {
     "revenue": "Omzet",
@@ -2467,5 +2470,20 @@
     "consentDesc": "Vasco verwerkt betalingsgegevens via Mollie. Door te verbinden ga je akkoord met het delen van factuurgegevens met Mollie voor betalingsverwerking.",
     "consentAccept": "Akkoord & verbinden",
     "pciCompliance": "Alle betalingen zijn PCI DSS-compliant via Mollie"
+  },
+  "checklist": {
+    "beforePhoto": "Foto vooraf",
+    "afterPhoto": "Foto achteraf",
+    "handoverPhoto": "Opleveringsfoto",
+    "gasCert": "Gas-/CW-certificaat",
+    "gasCertHint": "Upload Gaskeur / CW-attest vóór afronding van de klus",
+    "electricalTest": "Elektrische testrapportage",
+    "electricalHint": "NEN 1010 / EICR-rapport is vereist bij oplevering",
+    "wasteNote": "Afvalbon",
+    "warrantyInfo": "Garantie-informatie verstuurd",
+    "customerSignoff": "Aftekening klant",
+    "customerSignoffHint": "Vraag om een digitale handtekening om de klus af te sluiten",
+    "certExpired": "{{name}} verlopen op {{date}}. Vernieuw vóór afsluiten.",
+    "certExpiringSoon": "{{name}} verloopt over {{days}} dag(en) — vernieuw snel om dit {{kind}} geldig te houden."
   }
 }
