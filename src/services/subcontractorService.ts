@@ -1,7 +1,32 @@
 // =============================================================================
-// SUBCONTRACTOR SERVICE
+// SUBCONTRACTOR SERVICE — DEPRECATED — DO NOT EXTEND (R19 audit)
 // =============================================================================
-// Assignment, credential tracking, and work status for subcontractors
+// Status as of R19: pure orphan, no UI, mock-only roster.
+//
+//  - 278 LoC of subcontractor / assignment / credential / stats machinery,
+//    powered by 3 hardcoded mock subcontractors (`De Vries Elektra`,
+//    `Bakker Loodgieterij`, ...) with mock NL credentials (`NEN 1010`,
+//    `VCA Basis`).
+//  - ZERO imports anywhere in app/ or src/components/. Hooks
+//    `useSubcontractors` / `useSubcontractorAssignments` /
+//    `useSubcontractorStats` defined and exported, never called.
+//  - Assignments are created in-memory only — no AsyncStorage, no Supabase.
+//    `cancelAssignment` / `recordWorkUpdate` calls evaporate on unmount.
+//  - Aligned with LAUNCH §6 solo-contractor focus per
+//    `feedback_no_lead_generation.md` — multi-party orchestration is not
+//    in the load-bearing flow.
+//
+// To make this real:
+//  1. New BE tables `subcontractors`, `subcontractor_assignments`,
+//     `subcontractor_credentials` with per-contractor RLS
+//  2. RPCs for the three readers
+//  3. UI: /contractor/subcontractors route + assignment picker on job detail
+//  4. Credential expiry → AI queue item (cert_renewal pattern from R286)
+//  5. Localize credentials and trade names
+//
+// Until then: do not import. Tagged for cleanup alongside teamToolsService
+// (R299). Both speculatively built for the multi-employee segment that hasn't
+// been validated.
 // =============================================================================
 
 import { useState, useEffect, useCallback } from 'react';

@@ -1,8 +1,37 @@
 // =============================================================================
-// QUOTE OPTIMIZER SERVICE
+// QUOTE OPTIMIZER SERVICE — DORMANT — DO NOT EXTEND (R19 audit)
 // =============================================================================
-// Enhances quote creation with market intelligence
-// Suggests optimal pricing, competitive positioning, and upsell opportunities
+// Status as of R19: 647-LoC mock-driven optimizer, surfaced via the
+// `<QuoteOptimizer />` component (1,534 LoC) which is exported but **never
+// mounted** in any actual screen. Only `QuoteOptimizerDemo` mounts it,
+// itself an unrouted demo function with no entry point.
+//
+//  - `MOCK_MARKET_DATA` (lines ~96-135): hardcoded material prices, trends.
+//  - `MOCK_UPSELL_SUGGESTIONS`: 11 canned upsell objects.
+//  - `analyzeQuote` returns deterministic mock data — no Supabase RPC,
+//    no `cohortBenchmarkService` integration, no actual win-rate model.
+//  - **The learning loop is broken**: when a contractor accepts/rejects an
+//    optimization suggestion, no signal flows to a BE table, no
+//    `recordPricingOutcome` call, no retrain feedback.
+//  - The TieredQuoteBuilder flow (canonical quote-building UX since R148)
+//    uses `cohortBenchmarkService` + `quoteWinModelService` directly —
+//    it does NOT use QuoteOptimizer. So the mock here is contained but
+//    the infrastructure is dead weight.
+//
+// To make this real:
+//  1. Replace MOCK_MARKET_DATA with `cohortBenchmarkService.getMaterialBaselines`
+//     (already cohort-backed, k-anonymity ≥5)
+//  2. Replace MOCK_UPSELL_SUGGESTIONS with `crossSellGenerator` lookups
+//     (already wired into the AI tab via R290)
+//  3. Wire `recordPricingOutcome` on suggestion accept/reject to feed the
+//     quote_win training pair generator
+//  4. Either mount `<QuoteOptimizer />` somewhere meaningful, or delete the
+//     1,534-LoC component and 647-LoC service and route quote-builder users
+//     to the canonical TieredQuoteBuilder (which already has the cohort
+//     benchmarks + ML-prefill via R148-R152 + R300).
+//
+// Recommendation: delete on next dead-code sweep — TieredQuoteBuilder is the
+// canonical surface and has all of this functionality wired to real data.
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';

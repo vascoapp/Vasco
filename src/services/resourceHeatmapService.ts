@@ -1,8 +1,33 @@
 // =============================================================================
-// RESOURCE HEATMAP SERVICE - Productive-inspired capacity & scheduling
+// RESOURCE HEATMAP SERVICE — DEPRECATED — DO NOT EXTEND (R19 audit)
 // =============================================================================
-// Provides utilization heatmaps, zone-based budget burn tracking, and
-// modular schedule blocks for the Site Lead dashboard.
+// Status as of R19: 278 LoC of mock heatmap / zone-budget / schedule-block
+// data, plus three rendering primitives in src/components/shared/:
+//   - UtilizationHeatmapGrid.tsx (232 LoC)
+//   - ScheduleBlockBoard.tsx     (395 LoC)
+//   - BurnRateBar.tsx            (195 LoC)
+//
+// All three components are exported from `src/components/shared/index.ts`
+// but have **zero mount sites** anywhere in app/ or src/components/. The
+// header above claims "for the Site Lead dashboard" but SiteLeadDashboard
+// has never imported them.
+//
+// Service uses pure mock data (hardcoded WorkerHeatmapRow grid, zone budgets,
+// schedule blocks). No Supabase fetch. No persistence. No write-back when
+// blocks are dragged/reassigned via `onReassign`.
+//
+// Aligned with R180 enterprise-dashboard skip + R299 team-tools deprecation —
+// the multi-employee orchestration UX hasn't been validated.
+//
+// To make this real:
+//  1. New BE tables: `worker_utilization_snapshots`,
+//     `zone_budget_actuals`, `schedule_blocks` per project
+//  2. RPCs to roll up clock-in / time-tracking / job-cost actuals
+//  3. Mount the components on SiteLeadDashboard or a new
+//     /(tabs)/capacity route
+//  4. Wire `onReassign` and `onCellPress` to AppState mutations
+//
+// Until then: do not import. Same pattern as R288/R295/R296/R299/R18.
 // =============================================================================
 
 import { useMemo } from 'react';

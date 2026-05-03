@@ -885,3 +885,26 @@ Documented for follow-up — not fixed in R18:
 - `crossServiceGenerator.generate(ctx)` always returns `null` — the static method is dead code, the hook `useCrossServiceInsight` is the real consumer. Plus 4 hardcoded Dutch reasoning strings (`Verband gevonden tussen…`, `Op basis van…`, `Geschatte impact:…`, `Bekijk de details voor meer informatie`) and a hardcoded `nl-NL` locale in number formatting. Documented for a follow-up i18n round.
 
 R18 batch: 0 TS errors, all 6 locales valid (2233 keys each, full parity).
+
+---
+
+# R19 — four large mock-only services flagged dormant (no behavior changes)
+
+Same audit pass as R18 but on bigger surfaces. None of the four services in
+this round had any UI consumers — they're each a self-contained mock island
+that no contractor screen ever reaches. R19 adds explicit deprecation headers
+documenting the gap, the canonical alternative (where one exists), and the
+end-to-end work needed to make each real. No business logic changed, so no
+risk of breaking running flows.
+
+**R19.1 — `predictiveMaintenanceService.ts` (809 LoC, pure orphan)**: equipment-health / failure-prediction / maintenance-recommendation machinery, all powered by hardcoded mock data (`mockEquipmentHealth`, `mockPredictions`, `mockRecommendations`, `mockPartOrders`). Class constructor populates from mocks, no Supabase fetch ever runs, no equipment telemetry source exists in the BE schema. `schedulePreventiveMaintenance` returns in-memory objects — no persistence. ZERO consumers anywhere in app/ or src/components/. The only references in the codebase are (a) type re-exports in `services/index.ts`, (b) `cooRealEstateKPIService` declaring its own `PredictiveMaintenanceItem` type for the COO enterprise dashboard (separate concept, not this service). Hardcoded NL strings throughout failure-mode descriptions. To make real: BE table `equipment_health_observations`, RPC `get_equipment_health(user_id)`, /contractor/equipment route, ML failure-prediction model, i18n. Deferred indefinitely — solo contractors don't track owned-equipment health at the level this models.
+
+**R19.2 — `subcontractorService.ts` (278 LoC, pure orphan)**: subcontractor / assignment / credential / stats machinery with 3 hardcoded mock subcontractors (`De Vries Elektra`, `Bakker Loodgieterij`) + mock NL credentials (`NEN 1010`, `VCA Basis`). ZERO imports anywhere — hooks `useSubcontractors` / `useSubcontractorAssignments` / `useSubcontractorStats` are exported and never called. Assignments live in-memory only (no AsyncStorage, no Supabase). Aligned with LAUNCH §6 solo-contractor focus per `feedback_no_lead_generation.md` — multi-party orchestration is not in the load-bearing flow. To make real: BE tables for subcontractors / assignments / credentials with per-contractor RLS, three RPCs, /contractor/subcontractors route, credential-expiry → `cert_renewal` AI queue items (R286 pattern), localize. Deferred indefinitely alongside `teamToolsService` (R299).
+
+**R19.3 — `quoteOptimizerService.ts` (647 LoC) + `<QuoteOptimizer />` (1,534 LoC) wired-but-unmounted**: the component IS imported by an export barrel but **never mounted in any screen**. Only `QuoteOptimizerDemo` mounts it (an unrouted demo function). `MOCK_MARKET_DATA` (~96-135) hardcoded material prices + trends; `MOCK_UPSELL_SUGGESTIONS` 11 canned objects; `analyzeQuote` returns deterministic mock — no `cohortBenchmarkService` integration, no `quoteWinModelService` call, no `recordPricingOutcome` write-back when contractor accepts/rejects an optimization. The TieredQuoteBuilder flow (canonical since R148, used by every quote-creation entry point) reads `cohortBenchmarkService.getMaterialBaselines` + `useContractorCalibration` + `getLineEditDistribution` directly and does NOT use QuoteOptimizer — so this 2,181-LoC pile is contained but dead weight. Deprecation header documents the canonical replacement (TieredQuoteBuilder) and the recommendation to delete on next dead-code sweep.
+
+**R19.4 — `resourceHeatmapService.ts` (278 LoC) + 3 unmounted components (822 LoC)**: `UtilizationHeatmapGrid.tsx` (232) + `ScheduleBlockBoard.tsx` (395) + `BurnRateBar.tsx` (195) — all three exported from `src/components/shared/index.ts`, **zero mount sites** anywhere in app/ or src/components/. Service header claims "for the Site Lead dashboard" but SiteLeadDashboard has never imported them. Pure mock data (hardcoded WorkerHeatmapRow grid, zone budgets, schedule blocks); `onReassign` / `onCellPress` callbacks have nowhere to write back. Aligned with R180 enterprise-dashboard skip + R299 team-tools deprecation. Deprecation header documents BE tables + RPCs + mount-point work needed.
+
+**Pattern across R19:** each of the four services represents speculative product surface that was built ahead of demand and never wired into a real screen. Combined dormant LoC: ~3,978 (services 2,012 + components 1,966). Total contractor-visible behavior change in R19: zero — these surfaces are silent today and stay silent. The deprecation headers are early-warning markers so future contributors don't pour effort into extending mock infrastructure that no contractor reaches.
+
+R19 batch: 0 TS errors, all 6 locales unchanged at 2233 keys parity.

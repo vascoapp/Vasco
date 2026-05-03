@@ -1,7 +1,31 @@
 // =============================================================================
-// PREDICTIVE MAINTENANCE SERVICE
+// PREDICTIVE MAINTENANCE SERVICE — DEPRECATED — DO NOT EXTEND (R19 audit)
 // =============================================================================
-// AI-powered predictive maintenance for equipment health monitoring
+// Status as of R19: pure orphan + heavy mock state.
+//
+//  - 809 LoC of equipment-health / failure-prediction / maintenance-recommendation
+//    machinery, all powered by hardcoded mock data (`mockEquipmentHealth`,
+//    `mockPredictions`, `mockRecommendations`, `mockPartOrders`).
+//  - Class constructor populates from mocks; no Supabase fetch ever runs;
+//    no equipment telemetry source exists in the BE schema.
+//  - Methods like `schedulePreventiveMaintenance` write nothing — return
+//    in-memory objects only. No persistence, no AsyncStorage, no RPC.
+//  - ZERO consumers anywhere in app/ or src/components/. The only references
+//    in the codebase are: (a) the type re-exports in src/services/index.ts,
+//    (b) cooRealEstateKPIService declaring its own `PredictiveMaintenanceItem`
+//    type for the COO enterprise dashboard (a separate concept, not this
+//    service).
+//  - Hardcoded NL strings throughout failure-mode descriptions.
+//
+// To make this real:
+//  1. New BE table `equipment_health_observations` (one row per
+//     contractor-tracked tool/asset, with sensor or manual readings)
+//  2. RPC `get_equipment_health(user_id)` returning rolled-up scores
+//  3. UI: equipment list in compliance/permits or new /contractor/equipment route
+//  4. ML: actual failure-prediction model trained on observed-vs-predicted breaks
+//  5. Localize all failure-mode descriptions
+//
+// Until then: do not import. Tagged for cleanup. Same pattern as R288/R295/R296/R299/R18.
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
