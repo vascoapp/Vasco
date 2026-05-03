@@ -1378,7 +1378,8 @@
     "opening": "Ouverture du paiement…",
     "upgradeError": "Impossible de démarrer la mise à niveau",
     "upgradeErrorDesc": "Veuillez réessayer ou contacter le support.",
-    "demoUpgradeBlocked": "Les mises à niveau sont désactivées en mode démo. Créez un vrai compte pour vous abonner."
+    "demoUpgradeBlocked": "Les mises à niveau sont désactivées en mode démo. Créez un vrai compte pour vous abonner.",
+    "deviceCalendar": "Calendrier de l'appareil"
   },
   "search": {
     "job": "Chantier",
@@ -2044,7 +2045,22 @@
     "trendLine": "+{{trend}}% tendance · {{perJob}}/chantier · {{benchmark}}% au-dessus du secteur",
     "breakdownTitle": "RÉPARTITION PAR CATÉGORIE",
     "timelineTitle": "ÉCONOMIES DANS LE TEMPS",
-    "cumulative": "Cumulé"
+    "cumulative": "Cumulé",
+    "cat": {
+      "time": "Gain de temps",
+      "timeDesc": "Optimisation des trajets (€{{route}}) + moins de temps mort",
+      "purchasing": "Achats malins",
+      "purchasingDesc": "Potentiel de remise fournisseur : €{{total}} (40% réalisé)",
+      "fasterPayments": "Paiements plus rapides",
+      "fasterPaymentsDesc": "DSO {{dso}}j vs secteur {{industry}}j — {{delta}}j plus rapide",
+      "conversion": "Conversion plus rapide",
+      "conversionDesc": "Plus de chantiers grâce à un suivi de devis rapide",
+      "audit": "Prévention des erreurs",
+      "auditDesc": "Score d'estimation {{score}}/100 — moins de dépassements",
+      "materials": "Économies sur les matériaux",
+      "materialsDesc": "Quick wins : {{suppliers}}",
+      "materialsEmpty": "Pas encore de quick wins fournisseurs"
+    }
   },
   "smartReply": {
     "suggested": "Suggested replies",

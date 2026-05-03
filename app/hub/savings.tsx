@@ -169,25 +169,29 @@ export default function SavingsHubScreen() {
           </View>
         </View>
 
-        {/* Top Opportunity — tap to act */}
-        <Pressable
-          style={({ pressed }) => [styles.opportunityCard, pressed && { opacity: 0.9 }]}
-          onPress={() => router.push('/contractor/purchase-orders' as Href)}
-          accessibilityRole="button"
-          accessibilityLabel={`${savings.topOpportunity.label}. ${savings.topOpportunity.action}`}
-        >
-          <View style={styles.opportunityIcon}>
-            <Ionicons name="bulb" size={20} color={DK.colors.accent} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.opportunityTitle}>{savings.topOpportunity.label}</Text>
-            <Text style={styles.opportunityDesc}>{savings.topOpportunity.action}</Text>
-          </View>
-          <View style={styles.opportunityAmountWrap}>
-            <Text style={styles.opportunityAmount}>+{formatAmount(savings.topOpportunity.potentialAmount)}</Text>
-            <Text style={styles.opportunitySuffix}>/mo</Text>
-          </View>
-        </Pressable>
+        {/* Top Opportunity — tap to act. R9.4: only render when there's a
+            real supplier quick-win behind it (was always rendering with
+            fabricated "€540 saved by bundling orders" placeholder text). */}
+        {savings.topOpportunity.potentialAmount > 0 && savings.topOpportunity.label && (
+          <Pressable
+            style={({ pressed }) => [styles.opportunityCard, pressed && { opacity: 0.9 }]}
+            onPress={() => router.push('/contractor/purchase-orders' as Href)}
+            accessibilityRole="button"
+            accessibilityLabel={`${savings.topOpportunity.label}. ${savings.topOpportunity.action}`}
+          >
+            <View style={styles.opportunityIcon}>
+              <Ionicons name="bulb" size={20} color={DK.colors.accent} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.opportunityTitle}>{savings.topOpportunity.label}</Text>
+              <Text style={styles.opportunityDesc}>{savings.topOpportunity.action}</Text>
+            </View>
+            <View style={styles.opportunityAmountWrap}>
+              <Text style={styles.opportunityAmount}>+{formatAmount(savings.topOpportunity.potentialAmount)}</Text>
+              <Text style={styles.opportunitySuffix}>/mo</Text>
+            </View>
+          </Pressable>
+        )}
 
         <View style={{ height: 40 }} />
       </ScrollView>

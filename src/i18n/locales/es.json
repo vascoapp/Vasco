@@ -1378,7 +1378,8 @@
     "opening": "Abriendo pago…",
     "upgradeError": "No se pudo iniciar la actualización",
     "upgradeErrorDesc": "Vuelve a intentarlo o contacta con soporte.",
-    "demoUpgradeBlocked": "Las actualizaciones están desactivadas en modo demo. Crea una cuenta real para suscribirte."
+    "demoUpgradeBlocked": "Las actualizaciones están desactivadas en modo demo. Crea una cuenta real para suscribirte.",
+    "deviceCalendar": "Calendario del dispositivo"
   },
   "search": {
     "job": "Trabajo",
@@ -2044,7 +2045,22 @@
     "trendLine": "+{{trend}}% tendencia · {{perJob}}/trabajo · {{benchmark}}% sobre el sector",
     "breakdownTitle": "DESGLOSE POR CATEGORÍA",
     "timelineTitle": "AHORROS EN EL TIEMPO",
-    "cumulative": "Acumulado"
+    "cumulative": "Acumulado",
+    "cat": {
+      "time": "Ahorro de tiempo",
+      "timeDesc": "Optimización de rutas (€{{route}}) + menos tiempo inactivo",
+      "purchasing": "Compras inteligentes",
+      "purchasingDesc": "Potencial de descuento de proveedor: €{{total}} (40% realizado)",
+      "fasterPayments": "Pagos más rápidos",
+      "fasterPaymentsDesc": "DSO {{dso}}d vs sector {{industry}}d — {{delta}}d más rápido",
+      "conversion": "Conversión más rápida",
+      "conversionDesc": "Más trabajos gracias a un seguimiento más rápido de presupuestos",
+      "audit": "Prevención de errores",
+      "auditDesc": "Puntuación de estimación {{score}}/100 — menos desviaciones",
+      "materials": "Ahorro en materiales",
+      "materialsDesc": "Quick wins: {{suppliers}}",
+      "materialsEmpty": "Aún no hay quick wins de proveedores"
+    }
   },
   "smartReply": {
     "suggested": "Suggested replies",

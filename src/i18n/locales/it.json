@@ -1378,7 +1378,8 @@
     "opening": "Apertura checkout…",
     "upgradeError": "Impossibile avviare l'upgrade",
     "upgradeErrorDesc": "Riprova o contatta il supporto.",
-    "demoUpgradeBlocked": "Gli upgrade sono disabilitati in modalità demo. Crea un account reale per abbonarti."
+    "demoUpgradeBlocked": "Gli upgrade sono disabilitati in modalità demo. Crea un account reale per abbonarti.",
+    "deviceCalendar": "Calendario del dispositivo"
   },
   "search": {
     "job": "Lavoro",
@@ -2044,7 +2045,22 @@
     "trendLine": "+{{trend}}% trend · {{perJob}}/lavoro · {{benchmark}}% sopra il settore",
     "breakdownTitle": "SUDDIVISIONE PER CATEGORIA",
     "timelineTitle": "RISPARMI NEL TEMPO",
-    "cumulative": "Cumulativo"
+    "cumulative": "Cumulativo",
+    "cat": {
+      "time": "Risparmio di tempo",
+      "timeDesc": "Ottimizzazione percorsi (€{{route}}) + meno tempi morti",
+      "purchasing": "Acquisti intelligenti",
+      "purchasingDesc": "Potenziale sconto fornitore: €{{total}} (40% realizzato)",
+      "fasterPayments": "Pagamenti più rapidi",
+      "fasterPaymentsDesc": "DSO {{dso}}g vs settore {{industry}}g — {{delta}}g più veloce",
+      "conversion": "Conversione più rapida",
+      "conversionDesc": "Più lavori grazie a follow-up preventivi più rapidi",
+      "audit": "Prevenzione errori",
+      "auditDesc": "Punteggio stima {{score}}/100 — meno sforamenti",
+      "materials": "Risparmio sui materiali",
+      "materialsDesc": "Quick wins: {{suppliers}}",
+      "materialsEmpty": "Nessun quick win dai fornitori al momento"
+    }
   },
   "smartReply": {
     "suggested": "Suggested replies",

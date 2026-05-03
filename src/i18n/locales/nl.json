@@ -1378,7 +1378,8 @@
     "opening": "Checkout openen…",
     "upgradeError": "Upgrade kon niet starten",
     "upgradeErrorDesc": "Probeer het opnieuw of neem contact op met support.",
-    "demoUpgradeBlocked": "Upgrades zijn uitgeschakeld in demo-modus. Maak een echt account aan om te abonneren."
+    "demoUpgradeBlocked": "Upgrades zijn uitgeschakeld in demo-modus. Maak een echt account aan om te abonneren.",
+    "deviceCalendar": "Apparaat agenda"
   },
   "search": {
     "job": "Klus",
@@ -2044,7 +2045,22 @@
     "trendLine": "+{{trend}}% trend · {{perJob}}/klus · {{benchmark}}% boven branche",
     "breakdownTitle": "UITSPLITSING PER CATEGORIE",
     "timelineTitle": "BESPARINGSVERLOOP",
-    "cumulative": "Cumulatief"
+    "cumulative": "Cumulatief",
+    "cat": {
+      "time": "Tijdsbesparing",
+      "timeDesc": "Route-optimalisatie (€{{route}}) + minder idle-time",
+      "purchasing": "Slimmer inkopen",
+      "purchasingDesc": "Leverancierskorting potentieel: €{{total}} (40% gerealiseerd)",
+      "fasterPayments": "Snellere betalingen",
+      "fasterPaymentsDesc": "DSO {{dso}}d vs branche {{industry}}d — {{delta}}d sneller",
+      "conversion": "Snellere conversie",
+      "conversionDesc": "Extra klussen door snellere offerte-opvolging",
+      "audit": "Foutpreventie",
+      "auditDesc": "Inschattingscore {{score}}/100 — minder kostenoverschrijdingen",
+      "materials": "Materiaalbesparing",
+      "materialsDesc": "Quick wins: {{suppliers}}",
+      "materialsEmpty": "Nog geen quick wins bij leveranciers"
+    }
   },
   "smartReply": {
     "suggested": "Voorgestelde antwoorden",

@@ -33,7 +33,7 @@ import { AppState as RNAppState } from 'react-native';
 import { DemoBanner } from '../src/components/shared/DemoBanner';
 import { startAutoSync, stopAutoSync } from '../src/intelligence/cloudSync';
 import { startEventFlushing, stopEventFlushing } from '../src/intelligence/dataCollector';
-import { registerForPushNotifications } from '../src/services/pushNotificationService';
+import { registerForPushNotifications, refreshPushTokenIfStale, syncBadgeWithUnread } from '../src/services/pushNotificationService';
 import { startBackgroundJobScheduler, stopBackgroundJobScheduler } from '../src/intelligence/backgroundJobScheduler';
 
 // Enterprise roles use the (tabs) layout
@@ -71,6 +71,15 @@ function RootLayoutNav() {
         flushPendingDeltas().catch(() => {});
         flushPendingAffiliateClicks().catch(() => {});
         notifyNewQueueItems().catch(() => {});
+        // R9.1: weekly Expo push-token refresh on foreground. The function
+        // throttles internally (no-op when last refresh < 7 days) so this is
+        // safe to call on every foreground transition.
+        refreshPushTokenIfStale().catch(() => {});
+        // R9.1: refresh iOS app-icon badge to actual unread count.
+        // Was dormant — defined but no caller, so the badge never updated
+        // after a notification was read in-app.
+      } else if (state === 'background' || state === 'inactive') {
+        syncBadgeWithUnread().catch(() => {});
       }
     });
     return () => sub.remove();

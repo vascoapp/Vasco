@@ -9,6 +9,7 @@
 // =============================================================================
 
 import { useMemo } from 'react';
+import i18n from '../i18n/i18n';
 import { useLaborCosts } from './laborCostService';
 import { useSupplierNegotiation } from './supplierNegotiationService';
 import { useCollectionsAgent } from './collectionsAgentService';
@@ -70,10 +71,15 @@ export function useSavingsAggregation(): SavingsAggregation {
   const costSummary = useJobCostSummary();
 
   return useMemo(() => {
-    // 1. Time savings: idle time reduction + travel clustering potential
+    const t = (key: string, fallback: string, opts?: any) => i18n.t(key, { defaultValue: fallback, ...opts }) as string;
+
+    // 1. Time savings: idle time reduction + travel clustering potential.
+    // R9.4: dropped the 195 fallback — fabricating €195 of "savings" when
+    // a contractor has no labor cost data was a transparent lie. Now zero
+    // until real data exists.
     const timeSavings = laborCosts.idleTime.idleCost > 0
       ? Math.round(laborCosts.travelAnalysis.clusteringPotential + laborCosts.idleTime.idleCost * 0.3)
-      : 195;
+      : 0;
 
     // 2. Purchasing savings: supplier discount potential (realized portion ~40%)
     const purchasingSavings = Math.round(supplierNeg.totalDiscountPotential * 0.4);
@@ -104,55 +110,64 @@ export function useSavingsAggregation(): SavingsAggregation {
     const breakdown: SavingsCategory[] = [
       {
         id: 'time',
-        label: 'Tijdsbesparing',
+        label: t('savings.cat.time', 'Time savings'),
         icon: 'time',
         amount: timeSavings,
-        description: `Route-optimalisatie (€${laborCosts.travelAnalysis.clusteringPotential}) + minder idle-time`,
+        description: t('savings.cat.timeDesc', 'Route optimization (€{{route}}) + less idle time', { route: laborCosts.travelAnalysis.clusteringPotential }),
         trend: 'up',
         trendPercent: 15,
       },
       {
         id: 'purchasing',
-        label: 'Slimmer inkopen',
+        label: t('savings.cat.purchasing', 'Smart purchasing'),
         icon: 'cart',
         amount: purchasingSavings,
-        description: `Leverancierskorting potentieel: €${supplierNeg.totalDiscountPotential} (40% gerealiseerd)`,
+        description: t('savings.cat.purchasingDesc', 'Supplier discount potential: €{{total}} (40% realized)', { total: supplierNeg.totalDiscountPotential }),
         trend: 'up',
         trendPercent: 8,
       },
       {
         id: 'faster-payments',
-        label: 'Snellere betalingen',
+        label: t('savings.cat.fasterPayments', 'Faster payments'),
         icon: 'cash',
-        amount: Math.max(fasterPayments, 120),
-        description: `DSO ${collections.dso.currentDSO}d vs branche ${collections.dso.industryAverage}d — ${dsoImprovement}d sneller`,
+        // R9.4: dropped Math.max(fasterPayments, 120) — was inventing €120
+        // of working-capital savings when DSO data was missing or worse
+        // than industry average.
+        amount: fasterPayments,
+        description: t('savings.cat.fasterPaymentsDesc', 'DSO {{dso}}d vs industry {{industry}}d — {{delta}}d faster', {
+          dso: collections.dso.currentDSO,
+          industry: collections.dso.industryAverage,
+          delta: dsoImprovement,
+        }),
         trend: collections.dso.trend === 'improving' ? 'up' : 'stable',
         trendPercent: collections.dso.trend === 'improving' ? 5 : 0,
       },
       {
         id: 'conversion',
-        label: 'Snellere conversie',
+        label: t('savings.cat.conversion', 'Faster conversion'),
         icon: 'trending-up',
         amount: conversionSavings,
-        description: '3 extra klussen door snellere offerte-opvolging',
+        description: t('savings.cat.conversionDesc', 'Extra jobs from faster quote follow-up'),
         trend: 'up',
         trendPercent: 12,
       },
       {
         id: 'audit',
-        label: 'Foutpreventie',
+        label: t('savings.cat.audit', 'Error prevention'),
         icon: 'shield-checkmark',
         amount: auditSavings,
-        description: `Inschattingscore ${costSummary.estimationScore}/100 — minder kostenoverschrijdingen`,
+        description: t('savings.cat.auditDesc', 'Estimation score {{score}}/100 — fewer overruns', { score: costSummary.estimationScore }),
         trend: 'up',
         trendPercent: 20,
       },
       {
         id: 'materials',
-        label: 'Materiaalbesparing',
+        label: t('savings.cat.materials', 'Material savings'),
         icon: 'construct',
         amount: materialSavings,
-        description: `Quick wins: ${supplierNeg.quickWins.map(qw => qw.supplier).join(', ')}`,
+        description: supplierNeg.quickWins.length > 0
+          ? t('savings.cat.materialsDesc', 'Quick wins: {{suppliers}}', { suppliers: supplierNeg.quickWins.map(qw => qw.supplier).join(', ') })
+          : t('savings.cat.materialsEmpty', 'No supplier quick-wins yet'),
         trend: 'up',
         trendPercent: 5,
       },
@@ -173,11 +188,12 @@ export function useSavingsAggregation(): SavingsAggregation {
       totalSavedThisYear: totalMonth,
       projectedAnnual: Math.round(totalMonth * 12),
       breakdown,
-      topOpportunity: {
-        label: topQuickWin?.action || 'Bundel bestellingen',
-        potentialAmount: topQuickWin?.saving || 540,
-        action: topQuickWin?.action || 'Stel een wekelijkse besteldag in',
-      },
+      // R9.4: dropped fake fallbacks (label="Bundel bestellingen", amount=540).
+      // When there's no quickWin, return an empty opportunity so the UI can
+      // hide the card instead of fabricating one.
+      topOpportunity: topQuickWin
+        ? { label: topQuickWin.action, potentialAmount: topQuickWin.saving, action: topQuickWin.action }
+        : { label: '', potentialAmount: 0, action: '' },
       trend: 'up',
       trendPercent: 12,
       savingsPerJob: Math.round(totalMonth / totalJobs),

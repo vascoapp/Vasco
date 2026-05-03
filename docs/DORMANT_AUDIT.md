@@ -703,3 +703,25 @@ The only remaining gap is the cron itself being registered live — depends on R
 - Quote PDF: rendered `${kvkNumber}` with **no label at all** — a bare 8-digit number with no context. Quote and invoice now use shared `registrationLabel(country)` + `vatLabel(country)` helpers so a contractor's quote-then-invoice flow shows the same label under the same id.
 
 R8 batch: 0 TS errors, all 6 locales valid, 4/4 R8 tasks resolved.
+
+---
+
+# R9 — touch points the earlier rounds skipped
+
+Four-part audit on system primitives that R285-R307 didn't cover.
+
+**R9.1 — push notifications**: registered cleanly on auth (R285 verified). Two missing wires found:
+- `refreshPushTokenIfStale` — designed weekly token refresh on foreground, defined but **zero callers**. Without it, a contractor whose token rotated would silently stop getting pushes after 7 days. Wired into the existing `RNAppState.addEventListener('change')` foreground handler in `app/_layout.tsx`. The function self-throttles (no-op when last refresh < 7d), so calling on every foreground transition is safe.
+- `syncBadgeWithUnread` — sets the iOS app-icon badge to actual unread count. Defined but **zero callers** — the icon never reflected unread notifications. Wired to fire on `state === 'background'` so the badge updates as the user backgrounds the app.
+
+**R9.2 — calendar sync**: code paths fully wired (addJob/updateJob/removeJob → syncJobToCalendar/removeJobFromCalendar). One UX gap: the only entry to enable sync was a one-time prompt in `drag-schedule.tsx`. A user who tapped "later" lost the entry forever. Added "Device calendar" row to the profile integrations list with live connected-state, routing to `/contractor/calendar-settings`. 1 new key × 6 locales (`profile.deviceCalendar`).
+
+**R9.3 — global search**: real bug. `quote.customer` and `inv.customer` hold the customer **UUID**, not the name. Search code did `quote.customer?.toLowerCase().includes(q)` — searching "John Smith" silently missed every quote and invoice that customer was on. Built a `customerNameById` map at the top of the search memo, added `resolveCustomerName(idOrName)` lookup. Job/quote/invoice search now matches on customer name; subtitle adds the resolved name where present so results explain why they matched. Also extended jobs to search by customer name (was only matching on title/description).
+
+**R9.4 — hub/savings ROI screen**: mostly truthful (R285 already cleaned up the worst fabrications) but three remaining lies:
+- `timeSavings = ... : 195` — when a contractor had no labor cost data, the screen invented €195 of "savings". Now zero.
+- `Math.max(fasterPayments, 120)` — when DSO was equal to or worse than industry average, the screen still claimed €120 in working-capital savings. Now uses the real value (zero or positive).
+- `topOpportunity` fallback `{ label: 'Bundel bestellingen', potentialAmount: 540, action: 'Stel een wekelijkse besteldag in' }` — when no real supplier quick-win existed, the screen invented one in Dutch. Now returns an empty opportunity, and `app/hub/savings.tsx` only renders the card when `potentialAmount > 0 && label`.
+- Plus: 7 hardcoded Dutch labels/descriptions on the breakdown categories — bypassed i18n entirely. Migrated to `savings.cat.*` keys (13 keys × 6 locales). i18n re-imported via `import i18n from '../i18n/i18n'` so the service can call `i18n.t()` outside React.
+
+R9 batch: 0 TS errors, all 6 locales valid.

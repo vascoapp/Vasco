@@ -47,9 +47,26 @@ export default function SearchScreen() {
 
     const r: SearchResult[] = [];
 
+    // R9.3: customer.id → name map. quote.customer / inv.customer hold the
+    // customer UUID, not the name; without this lookup, searching by
+    // customer name silently misses every quote and invoice.
+    const customerNameById = new Map<string, string>();
+    for (const c of customers) {
+      if (c.id) customerNameById.set(c.id, c.name ?? '');
+    }
+    const resolveCustomerName = (idOrName?: string): string => {
+      if (!idOrName) return '';
+      return customerNameById.get(idOrName) ?? idOrName;
+    };
+
     // Search jobs
     for (const job of jobs) {
-      if (job.title?.toLowerCase().includes(q) || job.description?.toLowerCase().includes(q)) {
+      const custName = resolveCustomerName((job as any).customerId);
+      if (
+        job.title?.toLowerCase().includes(q) ||
+        job.description?.toLowerCase().includes(q) ||
+        custName.toLowerCase().includes(q)
+      ) {
         r.push({
           id: job.id,
           type: 'job',
@@ -65,12 +82,17 @@ export default function SearchScreen() {
     // Search quotes
     for (const quote of quotes) {
       const amt = `€${(quote.amount ?? 0).toLocaleString(undefined)}`;
-      if (quote.id?.toLowerCase().includes(q) || quote.customer?.toLowerCase().includes(q) || quote.job?.toLowerCase().includes(q)) {
+      const custName = resolveCustomerName(quote.customer);
+      if (
+        quote.id?.toLowerCase().includes(q) ||
+        custName.toLowerCase().includes(q) ||
+        quote.job?.toLowerCase().includes(q)
+      ) {
         r.push({
           id: quote.id,
           type: 'quote',
           title: `${quote.id} — ${quote.job || t('search.quote')}`,
-          subtitle: `${quote.status} · ${amt}`,
+          subtitle: `${quote.status} · ${amt}${custName ? ` · ${custName}` : ''}`,
           icon: 'document-text',
           color: Palette.hermesOrange,
           route: `/quotes/${quote.id}`,
@@ -82,12 +104,16 @@ export default function SearchScreen() {
     for (const inv of invoices) {
       const invAny = inv as any;
       const amt = `€${(invAny.amount ?? invAny.total ?? 0).toLocaleString(undefined)}`;
-      if (invAny.id?.toLowerCase().includes(q) || invAny.customer?.toLowerCase().includes(q)) {
+      const custName = resolveCustomerName(invAny.customer);
+      if (
+        invAny.id?.toLowerCase().includes(q) ||
+        custName.toLowerCase().includes(q)
+      ) {
         r.push({
           id: invAny.id,
           type: 'invoice',
           title: `${invAny.id}`,
-          subtitle: `${invAny.status} · ${amt}`,
+          subtitle: `${invAny.status} · ${amt}${custName ? ` · ${custName}` : ''}`,
           icon: 'receipt',
           color: SemanticColors.feedbackSuccess,
           route: `/invoices/${invAny.id}`,

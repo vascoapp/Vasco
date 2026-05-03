@@ -1378,7 +1378,8 @@
     "opening": "Checkout wird geöffnet…",
     "upgradeError": "Upgrade konnte nicht gestartet werden",
     "upgradeErrorDesc": "Bitte erneut versuchen oder Support kontaktieren.",
-    "demoUpgradeBlocked": "Upgrades sind im Demo-Modus deaktiviert. Erstellen Sie ein echtes Konto, um zu abonnieren."
+    "demoUpgradeBlocked": "Upgrades sind im Demo-Modus deaktiviert. Erstellen Sie ein echtes Konto, um zu abonnieren.",
+    "deviceCalendar": "Gerätekalender"
   },
   "search": {
     "job": "Auftrag",
@@ -2044,7 +2045,22 @@
     "trendLine": "+{{trend}}% Trend · {{perJob}}/Auftrag · {{benchmark}}% über Branche",
     "breakdownTitle": "AUFSCHLÜSSELUNG NACH KATEGORIE",
     "timelineTitle": "EINSPARUNGEN ÜBER ZEIT",
-    "cumulative": "Kumulativ"
+    "cumulative": "Kumulativ",
+    "cat": {
+      "time": "Zeitersparnis",
+      "timeDesc": "Routenoptimierung (€{{route}}) + weniger Leerlauf",
+      "purchasing": "Smarter Einkauf",
+      "purchasingDesc": "Lieferantenrabatt-Potenzial: €{{total}} (40% realisiert)",
+      "fasterPayments": "Schnellere Zahlungen",
+      "fasterPaymentsDesc": "DSO {{dso}}d vs Branche {{industry}}d — {{delta}}d schneller",
+      "conversion": "Schnellere Konversion",
+      "conversionDesc": "Mehr Aufträge durch schnelleres Angebots-Follow-up",
+      "audit": "Fehlerprävention",
+      "auditDesc": "Schätzscore {{score}}/100 — weniger Überschreitungen",
+      "materials": "Materialeinsparung",
+      "materialsDesc": "Quick Wins: {{suppliers}}",
+      "materialsEmpty": "Noch keine Lieferanten-Quick-Wins"
+    }
   },
   "smartReply": {
     "suggested": "Suggested replies",

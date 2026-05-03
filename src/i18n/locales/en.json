@@ -1378,7 +1378,8 @@
     "opening": "Opening checkout…",
     "upgradeError": "Could not start upgrade",
     "upgradeErrorDesc": "Please try again or contact support.",
-    "demoUpgradeBlocked": "Upgrades are disabled in demo mode. Sign up for a real account to subscribe."
+    "demoUpgradeBlocked": "Upgrades are disabled in demo mode. Sign up for a real account to subscribe.",
+    "deviceCalendar": "Device calendar"
   },
   "search": {
     "job": "Job",
@@ -2044,7 +2045,22 @@
     "trendLine": "+{{trend}}% trend · {{perJob}}/job · {{benchmark}}% above industry",
     "breakdownTitle": "BREAKDOWN BY CATEGORY",
     "timelineTitle": "SAVINGS OVER TIME",
-    "cumulative": "Cumulative"
+    "cumulative": "Cumulative",
+    "cat": {
+      "time": "Time savings",
+      "timeDesc": "Route optimization (€{{route}}) + less idle time",
+      "purchasing": "Smart purchasing",
+      "purchasingDesc": "Supplier discount potential: €{{total}} (40% realized)",
+      "fasterPayments": "Faster payments",
+      "fasterPaymentsDesc": "DSO {{dso}}d vs industry {{industry}}d — {{delta}}d faster",
+      "conversion": "Faster conversion",
+      "conversionDesc": "Extra jobs from faster quote follow-up",
+      "audit": "Error prevention",
+      "auditDesc": "Estimation score {{score}}/100 — fewer overruns",
+      "materials": "Material savings",
+      "materialsDesc": "Quick wins: {{suppliers}}",
+      "materialsEmpty": "No supplier quick-wins yet"
+    }
   },
   "smartReply": {
     "suggested": "Suggested replies",

@@ -132,10 +132,23 @@ export default function ProfileScreen() {
   const userTrade = user?.trade ? t(`onboarding.trades.${user.trade}`, user.trade) : t('profile.contractor', 'Contractor');
   const country = user?.country ?? 'NL';
 
+  // R9.2: surface device-calendar sync state. Was only reachable via a one-time
+  // prompt in drag-schedule.tsx — users who tapped "later" lost the entry forever.
+  const [calendarConnected, setCalendarConnected] = useState(false);
+  useEffect(() => {
+    let active = true;
+    import('../../src/services/calendarSyncService')
+      .then(({ getCalendarSyncSettings }) => getCalendarSyncSettings())
+      .then(s => { if (active) setCalendarConnected(!!s.enabled && !!s.calendarId); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
+
   // Integrations
   const integrations: IntegrationItem[] = [
     { id: 'mollie', name: 'Mollie', icon: 'card', connected: mollieConnected, route: '/(modals)/mollie' },
     { id: 'moneybird', name: 'Moneybird', icon: 'calculator', connected: moneybirdConnected, route: '/(modals)/moneybird' },
+    { id: 'calendar', name: t('profile.deviceCalendar', 'Device calendar'), icon: 'calendar', connected: calendarConnected, route: '/contractor/calendar-settings' },
     { id: 'xero', name: 'Xero', icon: 'cloud', connected: false },
     { id: 'stripe', name: 'Stripe', icon: 'card-outline', connected: false },
   ];
