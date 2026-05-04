@@ -155,7 +155,12 @@ export default function BedrijfScreen() {
             <DKLabel style={s.title}>{t('tabs.customers', 'Klanten')}</DKLabel>
             <Text style={s.subtitle}>{customers.length} {t('dk.tabs.contacts', 'Contacts').toUpperCase()} · {formatAmount(totalRevenue)}</Text>
           </View>
-          <Pressable style={({ pressed }) => [s.addBtn, pressed && { opacity: 0.9 }]} onPress={() => setShowAddModal(true)}>
+          <Pressable
+            style={({ pressed }) => [s.addBtn, pressed && { opacity: 0.9 }]}
+            onPress={() => setShowAddModal(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t('customers.addNew', 'Add new customer')}
+          >
             <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
             <Ionicons name="person-add" size={16} color="#FFFFFF" />
           </Pressable>
@@ -186,6 +191,9 @@ export default function BedrijfScreen() {
                 key={tb.key}
                 style={[s.tab, active && s.tabActive]}
                 onPress={() => setTab(tb.key)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={tb.label}
               >
                 <Text style={[s.tabText, active && s.tabTextActive]}>{tb.label}</Text>
                 {typeof tb.count === 'number' ? (
@@ -244,7 +252,12 @@ export default function BedrijfScreen() {
 
         {tab === 'decisions' && (
           activeTrackers.length === 0 && completedTrackers.length === 0 ? (
-            <Pressable style={s.emptyPanel} onPress={() => router.push('/(contractor)/decisions' as any)}>
+            <Pressable
+              style={s.emptyPanel}
+              onPress={() => router.push('/(contractor)/decisions' as any)}
+              accessibilityRole="button"
+              accessibilityLabel={t('customers.openDecisions', 'Open decisions')}
+            >
               <View style={s.emptyIcon}><Ionicons name="chatbubbles-outline" size={28} color={DK.colors.accent} /></View>
               <DKLabel style={s.emptyTitle}>{t('dk.empty.noTrackers', 'No trackers yet')}</DKLabel>
               <Text style={s.emptyDesc}>{t('customers.noTrackersDesc', 'Maak een tracker zodat klanten keuzes kunnen maken over materialen, afwerking en timing.')}</Text>
@@ -258,6 +271,8 @@ export default function BedrijfScreen() {
                     key={tracker.id}
                     style={({ pressed }) => [s.trackerCard, pressed && { opacity: 0.95 }]}
                     onPress={() => router.push('/(contractor)/decisions' as any)}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('customers.openTracker', { defaultValue: 'Open tracker for {{name}}', name: tracker.customerName })}
                   >
                     <View style={s.trackerHeader}>
                       <View style={s.trackerAvatar}>
@@ -287,7 +302,12 @@ export default function BedrijfScreen() {
                       ) : (
                         <DKLabel style={s.trackerTime}>{tracker.lastActivity}</DKLabel>
                       )}
-                      <Pressable style={s.reminderBtn} onPress={() => handleSendReminder(tracker.id)}>
+                      <Pressable
+                        style={s.reminderBtn}
+                        onPress={() => handleSendReminder(tracker.id)}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('customers.sendReminderTo', { defaultValue: 'Send reminder to {{name}}', name: tracker.customerName })}
+                      >
                         <Ionicons name="paper-plane-outline" size={12} color={DK.colors.accent} />
                         <DKLabel style={s.reminderText}>{t('dk.actions.remind', 'Remind')}</DKLabel>
                       </Pressable>
@@ -301,7 +321,12 @@ export default function BedrijfScreen() {
                   <Text style={s.completedBannerText}>{t('dk.money.completedCount', { count: completedTrackers.length, defaultValue: '{{count}} completed' }).toUpperCase()}</Text>
                 </View>
               )}
-              <Pressable style={s.manageLink} onPress={() => router.push('/(contractor)/decisions' as any)}>
+              <Pressable
+                style={s.manageLink}
+                onPress={() => router.push('/(contractor)/decisions' as any)}
+                accessibilityRole="link"
+                accessibilityLabel={`${t('dk.section.manageAll', 'Manage all')} ${t('dk.tabs.decisions', 'Decisions')}`}
+              >
                 <Text style={s.manageLinkText}>{t('dk.section.manageAll', 'Manage all').toUpperCase()} {t('dk.tabs.decisions', 'Decisions').toUpperCase()}</Text>
                 <Ionicons name="chevron-forward" size={14} color={DK.colors.accent} />
               </Pressable>
@@ -314,7 +339,12 @@ export default function BedrijfScreen() {
             <View style={s.emptyPanel}>
               <View style={s.emptyIcon}><Ionicons name="people-outline" size={28} color={DK.colors.accent} /></View>
               <DKLabel style={s.emptyTitle}>{t('dk.empty.noCustomers', 'No customers yet')}</DKLabel>
-              <Pressable style={({ pressed }) => [s.emptyCta, pressed && { opacity: 0.85 }]} onPress={() => setShowAddModal(true)}>
+              <Pressable
+                style={({ pressed }) => [s.emptyCta, pressed && { opacity: 0.85 }]}
+                onPress={() => setShowAddModal(true)}
+                accessibilityRole="button"
+                accessibilityLabel={t('customers.addNew', 'Add new customer')}
+              >
                 <DKLabel style={s.emptyCtaText}>{t('dk.actions.newCustomer', 'New customer')}</DKLabel>
               </Pressable>
             </View>

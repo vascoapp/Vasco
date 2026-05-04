@@ -480,7 +480,9 @@
     "quoteSentDesc": "Tu presupuesto se ha creado y enviado al cliente.",
     "cashGapAlerts": "Alertas de tesorería",
     "effectiveRate": "Tarifa efectiva",
-    "savingsPerJob": "Ahorro/trabajo"
+    "savingsPerJob": "Ahorro/trabajo",
+    "emptyInvoicesDesc": "Marca un trabajo como completado para generar una factura.",
+    "goToJobs": "Ir a trabajos"
   },
   "expenses": {
     "title": "Gastos",
@@ -529,7 +531,11 @@
     "reminderMessage": "Hola, aún hay decisiones pendientes para tu proyecto. Consúltalas aquí: https://vasco.app/c/demo",
     "reminderTitle": "Recordatorio",
     "revenue": "ingresos",
-    "overdue": "atrasado"
+    "overdue": "atrasado",
+    "addNew": "Añadir cliente",
+    "openDecisions": "Abrir decisiones",
+    "openTracker": "Abrir tracker de {{name}}",
+    "sendReminderTo": "Enviar recordatorio a {{name}}"
   },
   "team": {
     "title": "Equipo",

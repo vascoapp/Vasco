@@ -197,6 +197,20 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
       <View style={styles.emptyState}>
         <Ionicons name="receipt-outline" size={40} color={SemanticColors.textTertiary} />
         <Text style={styles.emptyStateText}>{t('invoices.emptyInvoices', 'Nog geen facturen')}</Text>
+        {/* R42: empty-state CTA — was just an icon + text leaving fresh
+            contractors to hunt for the FAB. Now points them straight to
+            the closeout flow which is where invoices come from. */}
+        <Text style={[styles.emptyStateText, { fontSize: 12, maxWidth: 280, textAlign: 'center' }]}>
+          {t('invoices.emptyInvoicesDesc', 'Markeer een klus als gereed om een factuur op te stellen.')}
+        </Text>
+        <Pressable
+          style={styles.emptyStateButton}
+          onPress={() => router.push('/(contractor)/werk' as any)}
+          accessibilityRole="button"
+          accessibilityLabel={t('invoices.goToJobs', 'Go to jobs')}
+        >
+          <Text style={styles.emptyStateButtonText}>{t('invoices.goToJobs', 'Naar klussen')}</Text>
+        </Pressable>
       </View>
     );
   }

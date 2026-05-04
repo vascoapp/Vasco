@@ -480,7 +480,9 @@
     "quoteSentDesc": "Votre devis a été créé et envoyé au client.",
     "cashGapAlerts": "Alertes de trésorerie",
     "effectiveRate": "Taux effectif",
-    "savingsPerJob": "Économies/mission"
+    "savingsPerJob": "Économies/mission",
+    "emptyInvoicesDesc": "Marquez un chantier comme terminé pour générer une facture.",
+    "goToJobs": "Voir les chantiers"
   },
   "expenses": {
     "title": "Dépenses",
@@ -529,7 +531,11 @@
     "reminderMessage": "Bonjour, il reste des choix en attente pour votre projet. Consultez-les ici : https://vasco.app/c/demo",
     "reminderTitle": "Rappel",
     "revenue": "chiffre d'affaires",
-    "overdue": "en retard"
+    "overdue": "en retard",
+    "addNew": "Ajouter un client",
+    "openDecisions": "Ouvrir les décisions",
+    "openTracker": "Ouvrir le tracker pour {{name}}",
+    "sendReminderTo": "Envoyer un rappel à {{name}}"
   },
   "team": {
     "title": "Équipe",

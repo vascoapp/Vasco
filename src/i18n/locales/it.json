@@ -480,7 +480,9 @@
     "quoteSentDesc": "Il tuo preventivo è stato creato e inviato al cliente.",
     "cashGapAlerts": "Avvisi di liquidità",
     "effectiveRate": "Tariffa effettiva",
-    "savingsPerJob": "Risparmio/lavoro"
+    "savingsPerJob": "Risparmio/lavoro",
+    "emptyInvoicesDesc": "Contrassegna un lavoro come completato per creare una fattura.",
+    "goToJobs": "Vai ai lavori"
   },
   "expenses": {
     "title": "Spese",
@@ -529,7 +531,11 @@
     "reminderMessage": "Ciao, ci sono ancora scelte aperte per il tuo progetto. Consultale qui: https://vasco.app/c/demo",
     "reminderTitle": "Promemoria",
     "revenue": "fatturato",
-    "overdue": "in ritardo"
+    "overdue": "in ritardo",
+    "addNew": "Aggiungi cliente",
+    "openDecisions": "Apri decisioni",
+    "openTracker": "Apri tracker per {{name}}",
+    "sendReminderTo": "Invia promemoria a {{name}}"
   },
   "team": {
     "title": "Squadra",

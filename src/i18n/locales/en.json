@@ -480,7 +480,9 @@
     "quoteSentDesc": "Your quote has been created and sent to the customer.",
     "cashGapAlerts": "Cash gap alerts",
     "effectiveRate": "Effective rate",
-    "savingsPerJob": "Savings/job"
+    "savingsPerJob": "Savings/job",
+    "emptyInvoicesDesc": "Mark a job as completed to draft an invoice.",
+    "goToJobs": "Go to jobs"
   },
   "expenses": {
     "title": "Expenses",
@@ -529,7 +531,11 @@
     "reminderMessage": "Hi, there are still open choices for your project. View them here: https://vasco.app/c/demo",
     "reminderTitle": "Reminder",
     "revenue": "revenue",
-    "overdue": "overdue"
+    "overdue": "overdue",
+    "addNew": "Add new customer",
+    "openDecisions": "Open decisions",
+    "openTracker": "Open tracker for {{name}}",
+    "sendReminderTo": "Send reminder to {{name}}"
   },
   "team": {
     "title": "Team",

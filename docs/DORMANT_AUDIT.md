@@ -1335,3 +1335,22 @@ Plus EVE deferrals from session status:
 - ✅ EVE-gap-2 per-agent dashboard (R40)
 
 All remaining items in the audit doc require external accounts (WhatsApp Business API, Companies House API, Gas Safe Register API), are explicitly skipped (FR/IT/ES per user direction), or are operator-side configuration (pg_cron, EAS build, live Mollie/Stripe keys, Sentry DSN, legal pages).
+
+---
+
+# R42 — empty-state CTAs + accessibility labels (polish round)
+
+Polish-tier gaps identified by post-audit scout. Not launch-blocking, but reduce quality / accessibility compliance.
+
+**R42.1 — `app/(contractor)/facturen.tsx` empty state**: was just an icon + "No invoices yet" text, leaving fresh contractors to hunt for a way to create one. Added a secondary description ("Mark a job as completed to draft an invoice") + a "Go to jobs" Pressable that routes to the werk tab. 2 new `invoices.*` keys × 6 locales.
+
+**R42.2 — `app/(contractor)/bedrijf.tsx` accessibility labels**: 7 Pressables (top-bar add-customer button, tab strip items, decisions empty-panel, tracker card, reminder button, manage-all link, empty-contacts CTA) had no `accessibilityRole` or `accessibilityLabel`. Screen readers couldn't identify any of them. Added semantic labels to all:
+- Add customer button → `customers.addNew`
+- Tab strip → `accessibilityRole="tab"` + `accessibilityState={{ selected }}`
+- Decisions empty-panel → `customers.openDecisions`
+- Tracker card → `customers.openTracker` (interpolated with customer name)
+- Reminder button → `customers.sendReminderTo` (interpolated)
+- Manage-all link → `accessibilityRole="link"` + composed label
+- Empty-contacts CTA → `customers.addNew`
+
+R42 batch: 2 files touched + 6 i18n keys × 6 locales (locale count 2248 → 2254). 0 TS errors.

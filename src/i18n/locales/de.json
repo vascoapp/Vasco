@@ -480,7 +480,9 @@
     "quoteSentDesc": "Ihr Angebot wurde erstellt und an den Kunden gesendet.",
     "cashGapAlerts": "Liquiditätswarnungen",
     "effectiveRate": "Effektiver Stundensatz",
-    "savingsPerJob": "Ersparnis/Auftrag"
+    "savingsPerJob": "Ersparnis/Auftrag",
+    "emptyInvoicesDesc": "Markieren Sie einen Auftrag als erledigt, um eine Rechnung zu erstellen.",
+    "goToJobs": "Zu Aufträgen"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -529,7 +531,11 @@
     "reminderMessage": "Hallo, es stehen noch offene Entscheidungen für Ihr Projekt aus. Hier ansehen: https://vasco.app/c/demo",
     "reminderTitle": "Erinnerung",
     "revenue": "Umsatz",
-    "overdue": "überfällig"
+    "overdue": "überfällig",
+    "addNew": "Neuen Kunden hinzufügen",
+    "openDecisions": "Entscheidungen öffnen",
+    "openTracker": "Tracker für {{name}} öffnen",
+    "sendReminderTo": "Erinnerung an {{name}} senden"
   },
   "team": {
     "title": "Team",

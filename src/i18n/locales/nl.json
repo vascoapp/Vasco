@@ -480,7 +480,9 @@
     "quoteSentDesc": "Je offerte is succesvol aangemaakt en verstuurd naar de klant.",
     "cashGapAlerts": "Cashflow alerts",
     "effectiveRate": "Effectief tarief",
-    "savingsPerJob": "Besparing/klus"
+    "savingsPerJob": "Besparing/klus",
+    "emptyInvoicesDesc": "Markeer een klus als gereed om een factuur op te stellen.",
+    "goToJobs": "Naar klussen"
   },
   "expenses": {
     "title": "Uitgaven",
@@ -529,7 +531,11 @@
     "reminderMessage": "Hoi, er staan nog open keuzes voor je project. Bekijk ze hier: https://vasco.app/c/demo",
     "reminderTitle": "Herinnering",
     "revenue": "omzet",
-    "overdue": "te laat"
+    "overdue": "te laat",
+    "addNew": "Nieuwe klant toevoegen",
+    "openDecisions": "Open beslissingen",
+    "openTracker": "Tracker openen voor {{name}}",
+    "sendReminderTo": "Stuur herinnering naar {{name}}"
   },
   "team": {
     "title": "Team",
