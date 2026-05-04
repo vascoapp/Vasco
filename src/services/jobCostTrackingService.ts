@@ -444,11 +444,24 @@ class JobCostTrackingService {
   }
 
   getAllVariances(): JobCostVariance[] {
-    return MOCK_ESTIMATES
-      .map(e => this.buildVariance(e.jobId))
-      .filter((v): v is JobCostVariance => v !== null)
-      .sort((a, b) => b.completedDate.localeCompare(a.completedDate));
+    // R30: was iterating MOCK_ESTIMATES — every contractor saw fixture
+    // variance rows in the supplier-price-anomaly generator + the (deferred)
+    // estimationFeedback fallbacks. Until the BE stores per-job estimate
+    // breakdowns we don't have real variance data; return empty so
+    // downstream graceful-degradation paths fire instead of mock content.
+    // Test setups can re-seed via jobCostTrackingService.__seedMockData().
+    if (this.useMockData) {
+      return MOCK_ESTIMATES
+        .map(e => this.buildVariance(e.jobId))
+        .filter((v): v is JobCostVariance => v !== null)
+        .sort((a, b) => b.completedDate.localeCompare(a.completedDate));
+    }
+    return [];
   }
+
+  /** @internal Test-only mock seeder. */
+  private useMockData = false;
+  __seedMockData(): void { this.useMockData = true; }
 
   getRecentVariances(limit: number = 5): JobCostVariance[] {
     return this.getAllVariances().slice(0, limit);
@@ -579,8 +592,14 @@ class JobCostTrackingService {
    * savings (same material, different suppliers, different prices).
    */
   getCrossSupplierPriceMap(): Map<string, MaterialPricePoint[]> {
+    // R30: was iterating MOCK_ACTUALS — supplier-price-anomaly generator
+    // surfaced fixture price comparisons to every contractor. Real cross-
+    // supplier price intelligence flows through `material_price_history`
+    // (R243+) and the cohort/postcode aggregations — those generators
+    // already work off the real path. Returning empty here so the legacy
+    // anomaly path quietly degrades instead of inventing comparisons.
+    if (!this.useMockData) return new Map();
     const priceMap = new Map<string, MaterialPricePoint[]>();
-
     for (const actual of MOCK_ACTUALS) {
       for (const entry of actual.materialEntries) {
         if (!entry.supplierName || entry.actualUnitPrice <= 0) continue;
@@ -596,7 +615,6 @@ class JobCostTrackingService {
         priceMap.set(key, points);
       }
     }
-
     return priceMap;
   }
 

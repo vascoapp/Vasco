@@ -247,17 +247,50 @@ export const DUTCH_GOVERNMENT_PORTALS = {
 // SERVICE CLASS
 // ============================================
 
+// R30: dropped MOCK_KVK / MOCK_BTW / MOCK_BTW_PERIODS / MOCK_CERTIFICATIONS /
+// MOCK_INSURANCE seeds — every Dutch contractor saw seeded "KvK 12345678" +
+// fake certs (VCA, BHV, etc.) + fake insurance policies regardless of their
+// real registration. Real data flows in via:
+//  - useKvKRegistration / useBtwRegistration hooks (consumed in certificaten
+//    tab) which now return null/empty for fresh contractors
+//  - createCertification / createInsurance from the certificaten tab UI
+// Test setups call __seedMockData.
+const EMPTY_KVK: KvKRegistration = {
+  kvkNumber: '', businessName: '', tradeName: '', legalForm: 'eenmanszaak',
+  visitingAddress: { street: '', houseNumber: '', postalCode: '', city: '', country: 'NL' },
+  status: 'active', registrationDate: '', lastVerified: '',
+  mainActivity: { code: '', description: '', isMain: true },
+  secondaryActivities: [],
+  authorizedRepresentatives: [],
+  verificationStatus: 'pending', alerts: [],
+};
+const EMPTY_BTW: BtwRegistration = {
+  btwNumber: '', isActive: false, registrationDate: '', lastVerified: '',
+  viesVerified: false,
+  filingFrequency: 'quarterly', nextFilingDeadline: '',
+  kleineOndernemersRegeling: false, icpReporting: false,
+};
+
 class DutchComplianceService {
-  private kvk: KvKRegistration = MOCK_KVK;
-  private btw: BtwRegistration = MOCK_BTW;
-  private btwPeriods: BtwPeriod[] = MOCK_BTW_PERIODS;
+  private kvk: KvKRegistration = EMPTY_KVK;
+  private btw: BtwRegistration = EMPTY_BTW;
+  private btwPeriods: BtwPeriod[] = [];
   private certifications: Map<string, DutchCertification> = new Map();
   private insurance: Map<string, DutchInsurance> = new Map();
   private listeners: Set<() => void> = new Set();
 
   constructor() {
+    // Empty by design — see R30 note above.
+  }
+
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
+    this.kvk = MOCK_KVK;
+    this.btw = MOCK_BTW;
+    this.btwPeriods = [...MOCK_BTW_PERIODS];
     MOCK_CERTIFICATIONS.forEach((c) => this.certifications.set(c.id, c));
     MOCK_INSURANCE.forEach((i) => this.insurance.set(i.id, i));
+    this.notifyListeners();
   }
 
   // -----------------------------------------

@@ -337,7 +337,15 @@ class SmartSchedulerService {
   private listeners: Set<() => void> = new Set();
 
   constructor() {
+    // R30: dropped MOCK_JOBS seed (was injecting fixture jobs into every
+    // contractor's smart scheduler on app open). Real jobs flow in via
+    // useScheduler() hooks reading AppState OR via direct addJob() calls
+    // from the screen-level UI. Test setups can re-seed via __seedMockData.
+  }
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
     MOCK_JOBS.forEach((j) => this.jobs.set(j.id, j));
+    this.notifyListeners();
   }
 
   // -----------------------------------------

@@ -14,6 +14,7 @@ import { useLaborCosts } from './laborCostService';
 import { useSupplierNegotiation } from './supplierNegotiationService';
 import { useCollectionsAgent } from './collectionsAgentService';
 import { useJobCostSummary } from './jobCostTrackingService';
+import { useAppState } from '../state/AppState';
 
 // =============================================================================
 // TYPES
@@ -48,17 +49,13 @@ export interface SavingsTimeline {
 }
 
 // =============================================================================
-// TIMELINE (still mock — requires time-series backend)
+// TIMELINE — R30: derive from real history rather than seeded mock
 // =============================================================================
-
-const MOCK_TIMELINE: SavingsTimeline[] = [
-  { month: 'Sep', amount: 2800, cumulative: 2800 },
-  { month: 'Okt', amount: 3200, cumulative: 6000 },
-  { month: 'Nov', amount: 3400, cumulative: 9400 },
-  { month: 'Dec', amount: 2900, cumulative: 12300 },
-  { month: 'Jan', amount: 3650, cumulative: 15950 },
-  // Feb will be computed from live data
-];
+// Was a hardcoded 5-month chart (Sep-Jan amounts adding to €15,950) shown
+// to every contractor regardless of when they signed up or how much they
+// actually saved. Real fix: derive monthly savings as proxy from paid-
+// invoice totals × estimated savings ratio per month. Empty array for
+// fresh contractors.
 
 // =============================================================================
 // REACT HOOKS — now pull from real services
@@ -203,17 +200,39 @@ export function useSavingsAggregation(): SavingsAggregation {
 }
 
 export function useSavingsTimeline(): SavingsTimeline[] {
+  const { invoices } = useAppState();
   const aggregation = useSavingsAggregation();
   return useMemo(() => {
-    // Append current month with live data
-    const lastCumulative = MOCK_TIMELINE[MOCK_TIMELINE.length - 1]?.cumulative || 0;
-    return [
-      ...MOCK_TIMELINE,
-      {
-        month: 'Feb',
-        amount: aggregation.totalSavedThisMonth,
-        cumulative: lastCumulative + aggregation.totalSavedThisMonth,
-      },
-    ];
-  }, [aggregation.totalSavedThisMonth]);
+    // R30: derive 6-month rolling history from paid invoices. Each month's
+    // savings ≈ current-month savings ratio × that month's paid total
+    // (proxy until BE stores real per-month savings snapshots). Empty when
+    // no paid invoices exist (fresh contractor).
+    const now = new Date();
+    const monthLabel = (d: Date) => d.toLocaleDateString('en', { month: 'short' });
+    const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    // Build buckets for last 6 months including current.
+    const buckets: { date: Date; key: string; label: string; paid: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      buckets.push({ date: d, key: monthKey(d), label: monthLabel(d), paid: 0 });
+    }
+    for (const inv of invoices) {
+      if (inv.status !== 'paid') continue;
+      const paidAt = (inv as any).paidAt || (inv as any).lastUpdated;
+      if (!paidAt) continue;
+      const k = monthKey(new Date(paidAt));
+      const bucket = buckets.find((b) => b.key === k);
+      if (bucket) bucket.paid += inv.amount ?? 0;
+    }
+    const totalPaidThisMonth = buckets[buckets.length - 1]?.paid ?? 0;
+    const savingsRatio = totalPaidThisMonth > 0 && aggregation.totalSavedThisMonth > 0
+      ? aggregation.totalSavedThisMonth / totalPaidThisMonth
+      : 0;
+    let cumulative = 0;
+    return buckets.map((b) => {
+      const amount = Math.round(b.paid * savingsRatio);
+      cumulative += amount;
+      return { month: b.label, amount, cumulative };
+    });
+  }, [invoices, aggregation.totalSavedThisMonth]);
 }

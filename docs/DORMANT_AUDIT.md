@@ -1070,3 +1070,26 @@ Rewrote 3 hooks to bypass the singleton entirely and derive directly from `useAp
 Material-side calibration (`materialQuantityMultiplier`, `materialPriceMultiplier`) returned as `1` since the BE doesn't yet store estimate breakdown — would need the full estimate-vs-actual table to compute.
 
 R29 batch: 1 file touched, 0 TS errors, locales unchanged at 2248×6. TieredQuoteBuilder calibration now driven by the contractor's own job history instead of fixture data.
+
+---
+
+# R30 — drop remaining mock seeds across 6 services (no more theater on app open)
+
+User direction: remove all mocks so everything can go live. R30 strips
+constructor-time mock seeds from every remaining live-consumed service
+identified during the re-audit. Each preserved as `__seedMockData()` for
+test setups.
+
+**R30.1 — `jobCostTrackingService.getAllVariances()` + `getCrossSupplierPriceMap()`**: were unconditionally iterating MOCK_ESTIMATES + MOCK_ACTUALS — surfaced fake variance rows to `supplierPriceAnomalyGenerator` (AI tab) and the (deferred) estimationFeedback fallbacks. Both now return empty (or empty Map) unless `__seedMockData()` was called. Cross-supplier price intelligence already flows through real `material_price_history` (R243+) so the anomaly generator gracefully degrades to that path.
+
+**R30.2 — `smartSchedulerService` MOCK_JOBS constructor seed**: every contractor's smartScheduler started with seeded fixture jobs. Constructor now no-op; jobs flow in via `useScheduler()` hooks reading real AppState OR direct `addJob()` calls.
+
+**R30.3 — `capacityPlanningService` MOCK_SCHEDULED_JOBS + generateInitialAlerts()**: every contractor saw 3 fake alerts on cold-start ("Kitchen Cabinet Repair behind 20%", "Rain expected Feb 8-9", "Schedule Opening Feb 14") and a fake scheduled-jobs roster. `scheduledJobs = []` + constructor no longer calls `generateInitialAlerts()`. Alerts now flow from real-time `analyzeCapacity()` against real job data.
+
+**R30.4 — `savingsAggregatorService.useSavingsTimeline` derived from real paid invoices**: was MOCK_TIMELINE 5-month chart (Sep €2,800 → Jan €3,650, cumulative €15,950) shown to every contractor regardless of signup date. Now derives 6-month rolling history from real `useAppState().invoices` filtered to paid, bucketed by `paidAt` month, savings-amount = bucket-paid-total × current-month-savings-ratio. Returns 6 buckets at €0 for fresh contractors instead of seeded €15,950 history.
+
+**R30.5 — `invoiceAutomationService` mockInvoices constructor seed**: was injecting fixture auto-invoices into every contractor's invoice automation singleton. `getInvoices()` consumers (FactoryAutomation card on facturen tab) saw fake rows. `invoices = []` + counter reset to 1; real invoices created via `createInvoice()` from screen layer.
+
+**R30.6 — `dutchComplianceService` MOCK_KVK + MOCK_BTW + MOCK_BTW_PERIODS + MOCK_CERTIFICATIONS + MOCK_INSURANCE constructor seeds**: every Dutch contractor saw seeded "KvK 12345678 / Van der Berg Schilderwerken" + fake BTW number + 3 fake certs (VCA/BHV/etc.) + insurance policies regardless of their actual registration. Replaced KvK/BTW fields with `EMPTY_KVK` + `EMPTY_BTW` defaults (typed-correct empty-state objects matching the schema). Certifications + insurance maps start empty. `useKvKRegistration` + `useBtwRegistration` (consumed in certificaten tab) now return empty for fresh contractors instead of fake "Van der Berg" data.
+
+R30 batch: 6 services touched, all preserve `__seedMockData()` for tests. 0 TS errors, locales unchanged at 2248×6. Combined R26→R30 contractor-visible impact: every cold-start screen now shows the contractor's actual data (or honest empty state) instead of seeded "Familie de Vries / Bakkerij Jansen / Van der Berg Schilders / Technische Unie / Janssen Bouw BV" mock-customer-soup. App is no longer theater on first open.

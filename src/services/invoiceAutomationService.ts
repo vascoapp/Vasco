@@ -129,14 +129,27 @@ type InvoiceListener = () => void;
 class InvoiceAutomationService {
   private static instance: InvoiceAutomationService;
   private listeners: Set<InvoiceListener> = new Set();
-  private invoices: AutoInvoice[] = [...mockInvoices];
-  private invoiceCounter = 125;
+  // R30: was seeded with mockInvoices (Familie de Vries / Bakkerij Jansen
+  // / etc.) — `invoices/[id].tsx` calls `invoiceAutomationService.getInvoice(id)`
+  // when generating PDFs from real invoices, so the mock auto-invoices
+  // wouldn't surface in normal flow, but `getInvoices()` consumers still
+  // saw fixture rows. Now starts empty; real invoices created via
+  // createInvoice() / addLineItem(). Test setups call __seedMockData.
+  private invoices: AutoInvoice[] = [];
+  private invoiceCounter = 1;
 
   static getInstance(): InvoiceAutomationService {
     if (!InvoiceAutomationService.instance) {
       InvoiceAutomationService.instance = new InvoiceAutomationService();
     }
     return InvoiceAutomationService.instance;
+  }
+
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
+    this.invoices = [...mockInvoices];
+    this.invoiceCounter = 125;
+    this.notify();
   }
 
   subscribe(listener: InvoiceListener): () => void {

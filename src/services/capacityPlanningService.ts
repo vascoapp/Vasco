@@ -294,7 +294,11 @@ class CapacityPlanningService {
   private listeners: Set<CapacityListener> = new Set();
 
   private config: CapacityPlanningConfig = DEFAULT_CONFIG;
-  private scheduledJobs: ScheduledJobSummary[] = MOCK_SCHEDULED_JOBS;
+  // R30: was seeded with MOCK_SCHEDULED_JOBS — every contractor's capacity
+  // forecast / cascading-delay generator showed fake jobs. Now starts empty;
+  // real jobs flow in via setScheduledJobs() from the screen layer when
+  // capacity-planning UI surfaces. Test setups call __seedMockData.
+  private scheduledJobs: ScheduledJobSummary[] = [];
   private alerts: CapacityAlert[] = [];
   private jobOutcomes: JobOutcome[] = [];
 
@@ -303,8 +307,12 @@ class CapacityPlanningService {
   private durationCache: Map<string, DurationEstimate> = new Map();
 
   private constructor() {
-    // Initialize with some alerts
-    this.generateInitialAlerts();
+    // R30: dropped generateInitialAlerts() seed call — was injecting 3 fake
+    // alerts ("Kitchen Cabinet Repair behind", "Rain expected Feb 8-9",
+    // "Schedule Opening Feb 14") into every contractor's capacity-alert
+    // pipeline regardless of their real schedule. Real alerts now flow
+    // from analyzeCapacity() at runtime against real job data.
+    // Test setups can re-seed via __seedMockData().
   }
 
   static getInstance(): CapacityPlanningService {
@@ -312,6 +320,13 @@ class CapacityPlanningService {
       CapacityPlanningService.instance = new CapacityPlanningService();
     }
     return CapacityPlanningService.instance;
+  }
+
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
+    this.scheduledJobs = [...MOCK_SCHEDULED_JOBS];
+    this.generateInitialAlerts();
+    this.notify();
   }
 
   subscribe(listener: CapacityListener): () => void {
