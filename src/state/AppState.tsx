@@ -39,7 +39,7 @@ import { buildPriceRiskSignals } from '../logic/priceRisk';
 import { ingestPdfStub } from '../ingestion/ingestionStub';
 import { rowToExtractedDocument } from '../ingestion/extractionBridge';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { getCurrentUserId, getCurrentCountry, getCurrentTrade, setCurrentUser } from '../lib/currentUser';
+import { getCurrentUserId, getCurrentCountry, getCurrentTrade, setCurrentUser, subscribeUserChange } from '../lib/currentUser';
 import { jobUpdatesToRowPayload } from '../lib/mappers';
 import { USE_SEED_DATA } from '../config/demo';
 import {
@@ -349,6 +349,39 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   // Load from Supabase on mount
   useEffect(() => {
     refreshData();
+  }, [refreshData]);
+
+  // R46: reset in-memory contractor state on logout so the next user signing
+  // in on the same device doesn't see the previous user's customers / jobs /
+  // quotes / invoices in the React tree until refreshData() re-hydrates.
+  // Listens to the currentUser pub/sub set by AuthContext.setCurrentUser.
+  useEffect(() => {
+    const unsub = subscribeUserChange((userId) => {
+      if (userId === null) {
+        // Logged out — wipe in-memory arrays. AsyncStorage already cleared
+        // by sessionCleanup.clearUserScopedStorage() in AuthContext.logout.
+        setQuotes([]);
+        setInvoices([]);
+        setJobs([]);
+        setCustomers([]);
+        setLineItems({});
+        setMaterials([]);
+        setSuppliers([]);
+        setJobMaterialsMap({});
+        setProjects([]);
+        setBusinessProfile({ isComplete: false, completenessPercent: 0 });
+        setExtractedDocs([]);
+        setPriceObsMap({});
+        setMoneybirdConnected(false);
+        setMollieConnected(false);
+        setLastMoneybirdExport({});
+        setLastMolliePayment({});
+      } else {
+        // New user signed in — re-hydrate from BE for the new auth context.
+        refreshData();
+      }
+    });
+    return unsub;
   }, [refreshData]);
 
   // Hydrate from AsyncStorage when offline (no Supabase)

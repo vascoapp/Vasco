@@ -574,6 +574,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isSupabaseConfigured) {
       await supabase.auth.signOut();
     }
+    // R46: wipe user-scoped AsyncStorage so the next contractor signing in
+    // on the same device doesn't inherit previous user's queued writes /
+    // AI queue / expenses / permits / inbox / clock-in state / etc.
+    // Multi-tenancy hazard on shared devices + demo accounts. Preserves
+    // device-level keys (device_id, seed_version, consents).
+    try {
+      const { clearUserScopedStorage } = await import('../services/sessionCleanup');
+      await clearUserScopedStorage();
+    } catch {}
     setUser(null);
     setSession(null);
   }, []);

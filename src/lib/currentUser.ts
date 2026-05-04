@@ -15,16 +15,36 @@ let currentUserId: string = 'current-user';
 let currentCountry: string | undefined;
 let currentTrade: string | undefined;
 
+// R46: tiny pub/sub so non-hook consumers (notably AppStateProvider holding
+// in-memory contractor data arrays) can react to login/logout transitions
+// and reset stale state — without a circular `useAuth` dep.
+type UserChangeListener = (userId: string | null) => void;
+const userChangeListeners = new Set<UserChangeListener>();
+
+export function subscribeUserChange(fn: UserChangeListener): () => void {
+  userChangeListeners.add(fn);
+  return () => { userChangeListeners.delete(fn); };
+}
+
+function notifyUserChange(): void {
+  const id = currentUserId === 'current-user' ? null : currentUserId;
+  userChangeListeners.forEach((fn) => {
+    try { fn(id); } catch {}
+  });
+}
+
 export function setCurrentUser(info: { id: string; country?: string; trade?: string } | null): void {
+  const prev = currentUserId;
   if (!info) {
     currentUserId = 'current-user';
     currentCountry = undefined;
     currentTrade = undefined;
-    return;
+  } else {
+    currentUserId = info.id || 'current-user';
+    currentCountry = info.country;
+    currentTrade = info.trade;
   }
-  currentUserId = info.id || 'current-user';
-  currentCountry = info.country;
-  currentTrade = info.trade;
+  if (prev !== currentUserId) notifyUserChange();
 }
 
 export function getCurrentUserId(): string {

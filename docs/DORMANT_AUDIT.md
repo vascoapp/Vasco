@@ -1409,3 +1409,24 @@ R44 batch: 2 files touched. 0 TS errors, locales unchanged at 2254×6.
 - `jobPhotoService.uploadJobPhoto` returns `null` on storage upload failure with no queue. Offline contractor capturing a job photo loses it. Lower priority: photos are large + AsyncStorage size-limited; `offlineScanQueue` already exists for receipt-scan photos with `MAX_QUEUE=20` FIFO eviction. Future fix: parallel bounded queue for job photos.
 
 R45 batch: 2 files touched (1 dataProvider, 1 AppState). 0 TS errors, locales unchanged at 2254×6.
+
+---
+
+# R46 — sign-out hygiene (multi-tenancy hazard on shared devices)
+
+**The bug**: `AuthContext.logout` only called `clearUserContext()` + `signOut()` + `setUser(null)`. Did NOT clear:
+1. **127 `@vasco_*` AsyncStorage keys** — `@vasco_offline_writes`, `@vasco_ai_queue`, `@vasco_offline_scans`, `@vasco_expenses`, `@vasco_contractor_permits`, `@vasco_customer_inbox`, `@vasco_unified_clock`, etc.
+2. **AppState in-memory arrays** — jobs / customers / quotes / invoices / line items / materials / suppliers / projects / business profile / extracted docs / price obs / accounting connection state.
+
+A contractor logging out + another logging in on the same device (shared field tablet, demo device, repaired device) saw the previous user's:
+- Pending offline writes firing under the new auth session (data leakage + corruption)
+- Queued AI items showing as "pending"
+- Expenses + permits + inbox + clock-in state + accounting integration toggles
+
+Real multi-tenancy hazard + privacy leak.
+
+**R46.1 — `src/services/sessionCleanup.ts` (new)**: `clearUserScopedStorage()` wipes all `@vasco_*` keys via `multiRemove`, except 3 device-level allow-listed keys (`@vasco_device_id`, `@vasco_seed_version`, `@vasco_consents`). Wired into `AuthContext.logout` after `signOut()`.
+
+**R46.2 — `subscribeUserChange()` pub/sub on `lib/currentUser.ts`**: module-level listener registry. Lets non-hook consumers react to login/logout without a circular `useAuth` dep. AppStateProvider subscribes — on `userId === null` (logout) wipes 13 in-memory state slots; on a new user id (login) re-fires `refreshData()` to hydrate fresh BE data.
+
+R46 batch: 3 files touched (new sessionCleanup service, AuthContext logout, AppState reset effect + currentUser pub/sub). 0 TS errors, locales unchanged at 2254×6.
