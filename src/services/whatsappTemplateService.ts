@@ -137,6 +137,90 @@ export function renderPaymentReminderForTag(
   return tpl.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? '');
 }
 
+// ── R36: Tone variants for quote_sent + review_request (R12 deferral) ───────
+// Closes the "30+ strings × 6 locales" R12 deferral for the two customer-
+// facing templates that benefit most from per-tag tone — the first contact
+// after a quote (where pacing matters for new vs returning customers) and
+// the post-job review ask (where loyal customers get warmer phrasing).
+
+const QUOTE_SENT_VARIANTS: Record<ReminderTone, Record<Locale, string>> = {
+  gentle: {
+    en: `Hi {{customer}}, here's quote {{ref}} as discussed — no rush, take your time: {{link}} — {{business}}`,
+    nl: `Hoi {{customer}}, hier is offerte {{ref}} zoals afgesproken — geen haast, neem je tijd: {{link}} — {{business}}`,
+    de: `Hallo {{customer}}, hier ist Angebot {{ref}} wie besprochen — kein Druck, lassen Sie sich Zeit: {{link}} — {{business}}`,
+    fr: `Bonjour {{customer}}, voici le devis {{ref}} comme convenu — pas de pression, prenez votre temps : {{link}} — {{business}}`,
+    es: `Hola {{customer}}, aquí está el presupuesto {{ref}} como hablamos — sin prisa, tómate tu tiempo: {{link}} — {{business}}`,
+    it: `Ciao {{customer}}, ecco il preventivo {{ref}} come discusso — nessuna fretta, prenditi il tempo: {{link}} — {{business}}`,
+  },
+  standard: {
+    en: `Hi {{customer}}, I've just sent you quote {{ref}}. Check your email or tap: {{link}} — {{business}}`,
+    nl: `Hoi {{customer}}, ik heb offerte {{ref}} net gestuurd. Check je mail of open: {{link}} — {{business}}`,
+    de: `Hallo {{customer}}, Angebot {{ref}} ist unterwegs. E-Mail prüfen oder direkt öffnen: {{link}} — {{business}}`,
+    fr: `Bonjour {{customer}}, je viens de vous envoyer le devis {{ref}}. Email ou lien direct : {{link}} — {{business}}`,
+    es: `Hola {{customer}}, te acabo de enviar el presupuesto {{ref}}. Email o enlace: {{link}} — {{business}}`,
+    it: `Ciao {{customer}}, ti ho appena inviato il preventivo {{ref}}. Email o link: {{link}} — {{business}}`,
+  },
+  firm: {
+    en: `Hi {{customer}}, quote {{ref}} is ready. Note: pricing valid for 14 days. {{link}} — {{business}}`,
+    nl: `Hoi {{customer}}, offerte {{ref}} staat klaar. Let op: prijzen geldig voor 14 dagen. {{link}} — {{business}}`,
+    de: `Hallo {{customer}}, Angebot {{ref}} liegt bereit. Hinweis: Preise 14 Tage gültig. {{link}} — {{business}}`,
+    fr: `Bonjour {{customer}}, le devis {{ref}} est prêt. À noter : prix valides 14 jours. {{link}} — {{business}}`,
+    es: `Hola {{customer}}, el presupuesto {{ref}} está listo. Aviso: precios válidos 14 días. {{link}} — {{business}}`,
+    it: `Ciao {{customer}}, il preventivo {{ref}} è pronto. Nota: prezzi validi 14 giorni. {{link}} — {{business}}`,
+  },
+};
+
+const REVIEW_REQUEST_VARIANTS: Record<ReminderTone, Record<Locale, string>> = {
+  gentle: {
+    en: `Hi {{customer}}, it's been a pleasure working with you again. If you have a minute, a short review would mean the world: {{link}} — {{business}}`,
+    nl: `Hoi {{customer}}, fijn dat we weer voor je mochten werken. Als je een minuutje hebt: een korte review betekent veel: {{link}} — {{business}}`,
+    de: `Hallo {{customer}}, schön, wieder für Sie gearbeitet zu haben. Eine kurze Bewertung würde uns sehr freuen: {{link}} — {{business}}`,
+    fr: `Bonjour {{customer}}, ravi d'avoir retravaillé avec vous. Un petit avis nous ferait grand plaisir : {{link}} — {{business}}`,
+    es: `Hola {{customer}}, encantados de volver a trabajar contigo. Una reseña breve significaría mucho: {{link}} — {{business}}`,
+    it: `Ciao {{customer}}, è stato un piacere lavorare di nuovo con te. Una breve recensione significherebbe molto: {{link}} — {{business}}`,
+  },
+  standard: {
+    en: `Hi {{customer}}, hope everything works well. Would you mind leaving a short review? {{link}} — {{business}}`,
+    nl: `Hoi {{customer}}, alles werkt naar wens? Een korte review helpt enorm: {{link}} — {{business}}`,
+    de: `Hallo {{customer}}, alles zu Ihrer Zufriedenheit? Eine kurze Bewertung hilft sehr: {{link}} — {{business}}`,
+    fr: `Bonjour {{customer}}, tout fonctionne bien ? Un petit avis nous aiderait beaucoup : {{link}} — {{business}}`,
+    es: `Hola {{customer}}, ¿todo funciona bien? Una reseña breve nos ayuda mucho: {{link}} — {{business}}`,
+    it: `Ciao {{customer}}, tutto ok? Una breve recensione aiuta molto: {{link}} — {{business}}`,
+  },
+  firm: {
+    // For risky/inactive — keep the ask but make it shorter + lower-pressure
+    // to avoid burning the relationship further.
+    en: `Hi {{customer}}, if the work was up to standard, a quick review would help: {{link}} — {{business}}`,
+    nl: `Hoi {{customer}}, als het werk naar wens was: een snelle review helpt ons: {{link}} — {{business}}`,
+    de: `Hallo {{customer}}, falls die Arbeit Ihren Erwartungen entsprach: eine kurze Bewertung hilft uns: {{link}} — {{business}}`,
+    fr: `Bonjour {{customer}}, si le travail vous a convenu, un avis rapide nous aiderait : {{link}} — {{business}}`,
+    es: `Hola {{customer}}, si el trabajo cumplió expectativas, una reseña rápida nos ayuda: {{link}} — {{business}}`,
+    it: `Ciao {{customer}}, se il lavoro è stato all'altezza, una recensione rapida ci aiuta: {{link}} — {{business}}`,
+  },
+};
+
+/** Render `quote_sent` with tone selected by customer tag. */
+export function renderQuoteSentForTag(
+  locale: Locale,
+  vars: Record<string, string>,
+  tag?: 'vip' | 'loyal' | 'new' | 'risky' | 'inactive',
+): string {
+  const tone = toneForCustomerTag(tag);
+  const tpl = QUOTE_SENT_VARIANTS[tone]?.[locale] ?? QUOTE_SENT_VARIANTS[tone]?.en ?? '';
+  return tpl.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? '');
+}
+
+/** Render `review_request` with tone selected by customer tag. */
+export function renderReviewRequestForTag(
+  locale: Locale,
+  vars: Record<string, string>,
+  tag?: 'vip' | 'loyal' | 'new' | 'risky' | 'inactive',
+): string {
+  const tone = toneForCustomerTag(tag);
+  const tpl = REVIEW_REQUEST_VARIANTS[tone]?.[locale] ?? REVIEW_REQUEST_VARIANTS[tone]?.en ?? '';
+  return tpl.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? '');
+}
+
 // ── Consent ───────────────────────────────────────────────
 
 const CONSENT_KEY = '@vasco_whatsapp_consent';

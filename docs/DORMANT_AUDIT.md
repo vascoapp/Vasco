@@ -1186,3 +1186,26 @@ Auditing the customer-facing flows: quote acceptance via signed token (`/accept/
 **R35.4 — `aiActionQueueService.recordOutcome` real**: writes to AsyncStorage outcomes log + emits real `business_events` row via dataCollector. Used by VascoCard's "Did the customer respond?" follow-up. The R1 deferral noted the new R286 executor doesn't fire `recordOutcome` automatically — that's a feature gap, not theater (the feedback loop just doesn't yet learn from executor approvals).
 
 R35 batch: 1 file touched. 0 TS errors, locales unchanged at 2248×6.
+
+---
+
+# R36 — extend tag-aware template variants (R12 deferral close)
+
+R301 already shipped tag-aware `payment_reminder` variants (gentle/standard/firm × 6 locales). R36 extends the same pattern to the two other heavy-touch customer-facing templates per the R12 audit deferral.
+
+**R36.1 — `quote_sent` tone variants**: VIPs/loyals get a "no rush, take your time" pacing. New/risky get the standard text. Risky/inactive gets a "pricing valid for 14 days" deadline note (firm). New `renderQuoteSentForTag(locale, vars, tag)` helper. 18 new strings (3 tones × 6 locales).
+
+**R36.2 — `review_request` tone variants**: VIPs/loyals get a warmer "ravi d'avoir retravaillé avec vous" / "schön, wieder für Sie gearbeitet zu haben" phrasing acknowledging the relationship. Standard for new. Risky/inactive gets a low-pressure "if the work was up to standard" hedge to avoid burning the relationship further. New `renderReviewRequestForTag(locale, vars, tag)` helper. 18 new strings.
+
+Combined with R301's payment_reminder variants, the three heaviest customer-facing templates now adapt to the customer's tag profile (vip/loyal/new/risky/inactive). Total: **3 templates × 3 tones × 6 locales = 54 tag-aware variants** vs the original "same text to VIP and risky payer" R12 finding.
+
+**R36.3 — audit-doc staleness corrected**: noted that "ES + IT mandatory formats orphan" is no longer accurate — `handleExportFacturae` + `handleExportFatturaPA` are wired live in `app/invoices/[id].tsx` (mounted via R302 era). The audit doc's "top remaining work" item #4 is stale.
+
+R36 batch: 1 file touched, 36 new template strings (no i18n key change since templates are inline string literals in the service). 0 TS errors, locales unchanged at 2248×6.
+
+**Audit doc top-priority list status (R615-621):**
+1. ~~Push pg_cron migration~~ — operator action, blocked outside code (5-min task)
+2. ~~Wire 2 still-orphan ML predictors~~ — DONE in R298 + R300
+3. ~~Make customer tags gate behavior~~ — payment_reminder DONE in R301, quote_sent + review_request DONE in R36
+4. ~~Build ES + IT e-invoice export UI~~ — DONE (audit-doc stale; verified live in R36)
+5. ~~Auto-prompt for job quality feedback~~ — DONE in R300 via `job_quality_feedback` queue type
