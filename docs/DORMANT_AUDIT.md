@@ -1268,3 +1268,15 @@ The R9 audit noted: "`eveAgentService.ts` (345 LoC) is mostly structural orphan�
 R40 batch: 3 files touched (1 new route, layout register, AI tab entry-point). 0 TS errors, locales unchanged at 2248×6.
 
 **Status: both R1+EVE-gap-1 and R9+EVE-gap-2 deferrals from the session status report are now closed.**
+
+---
+
+# R41 — final hardcoded-placeholder cleanup
+
+**R41.1 — `app/customer/[code].tsx` decision-intelligence context hardcodes**: every customer decision was being processed with `region: 'noord-holland', projectBudget: 'mid-range', propertyType: 'house'` regardless of where the customer or quote actually lived. The decisionIntelligence aggregator then bucketed real decisions under the same fake region/budget/type, polluting cohort signals. Now reads from `portalData.metadata?.{region,projectBudget,propertyType}` with `''` fallback (anonymous bucket) so the cohort aggregator doesn't double-count fake "noord-holland" data points.
+
+**R41.2 — `app/customer/[code].tsx` activity logging hardcodes**: `customerId: 'customer'` (string literal) and `deviceType: 'mobile'` (literal) on every portal activity event regardless of who logged in or what device they're on. Now reads `(portalData as any).customerId` (falls through to `''` for anonymous shared-link visits) and `Platform.OS === 'web' ? 'desktop' : 'mobile'` for honest device attribution.
+
+**R41.3 — `app/contractor/job/[id].tsx` stale TODO**: comment said "MOCK DATA for enriched job details — TODO: Replace with real data" but `EMPTY_UPSELLS = []` was already empty. Comment updated to reflect current state ("type definitions for future upsell engine; today no fake rows shown").
+
+R41 batch: 2 files touched. 0 TS errors, locales unchanged at 2248×6.

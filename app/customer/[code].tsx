@@ -7,7 +7,7 @@
 // =============================================================================
 
 import { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { Platform, View, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -199,9 +199,14 @@ export default function CustomerPortalScreen() {
         {
           trade: inferTradeFromTemplate(portalData.projectName),
           projectType: inferProjectType(portalData.projectName),
-          region: 'noord-holland', // Would come from contractor profile
-          projectBudget: 'mid-range', // Would come from quote data
-          propertyType: 'house', // Would come from job data
+          // R41: was hardcoded `'noord-holland' / 'mid-range' / 'house'` for
+          // every decision regardless of the actual quote/contractor. Real
+          // values flow via portalData.metadata when the BE ships them.
+          // Empty string when not yet available so the cohort aggregator
+          // doesn't double-count fake "noord-holland" data points.
+          region: (portalData as any).metadata?.region ?? '',
+          projectBudget: (portalData as any).metadata?.projectBudget ?? '',
+          propertyType: (portalData as any).metadata?.propertyType ?? '',
         }
       );
     } catch (err) {
@@ -286,12 +291,20 @@ export default function CustomerPortalScreen() {
     const activity: CustomerPortalActivity = {
       id: `activity_${Date.now()}`,
       trackerId: portalData.accessToken,
-      customerId: 'customer', // Would come from access token
+      // R41: was hardcoded 'customer' string for every event regardless of
+      // who actually opened the portal. portalData.customerId comes from
+      // the access-code lookup; falls through to '' (anonymous) when the
+      // BE token doesn't carry a customer id (e.g. shared-link visits).
+      customerId: (portalData as any).customerId ?? '',
       action: action as CustomerPortalActivity['action'],
       itemId: metadata?.itemId as string | undefined,
       categoryId: metadata?.categoryId as string | undefined,
       metadata,
-      deviceType: 'mobile', // Would detect from platform
+      // R41: was hardcoded 'mobile' for every event including web tablet/
+      // desktop visits. Real Platform.OS reading via expo-router runs on
+      // device so iOS/Android distinction lands; web uses 'web' branch
+      // since react-native-web reports 'web' from Platform.OS.
+      deviceType: Platform.OS === 'web' ? 'desktop' : 'mobile',
       timestamp: new Date().toISOString(),
     };
 

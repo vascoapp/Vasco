@@ -45,9 +45,10 @@ import { SignaturePad } from '../../../src/components/shared/SignaturePad';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 // ============================================
-// MOCK DATA for enriched job details
-// TODO: Replace with real data from API/AppState. Strings below are placeholder
-// Dutch text for demo purposes — will be replaced when connected to real backend.
+// R41: enrichment types — UpsellItem / MaterialPrediction below are kept
+// as type definitions for the day a real upsell engine ships. Today
+// EMPTY_UPSELLS = []  (no fake "Add scaffolding rental for €120" rows
+// shown to every contractor).
 // ============================================
 
 interface ClientContact {
