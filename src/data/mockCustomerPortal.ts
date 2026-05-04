@@ -344,15 +344,25 @@ export const MOCK_SHARE_SETTINGS: CustomerShareSettings = {
 // HELPER FUNCTIONS
 // ============================================
 
+// R35: was unconditionally returning the MOCK_CUSTOMER_PORTAL fixture for the
+// `VDB24A` magic access code in production. A real customer typing any other
+// code would get null (correct — no fake data). But the magic code surfaced
+// fake "Thomas de Vries / Badkamer Renovatie / Familie van den Berg" demo
+// content in production builds too. Now fenced behind DEMO_MODE so production
+// always returns null until a real `quote_access_tokens` BE lookup is wired
+// (publicQuotePortalService already exists for the signed-token /accept/
+// flow; the access-code portal needs a parallel BE table).
+import { DEMO_MODE } from '../config/demo';
+
 export function getPortalByAccessCode(code: string): CustomerPortalData | null {
-  // In real app, this would fetch from API
-  if (code.toUpperCase() === 'VDB24A') {
+  if (DEMO_MODE && code.toUpperCase() === 'VDB24A') {
     return MOCK_CUSTOMER_PORTAL;
   }
   return null;
 }
 
 export function validateAccessCode(code: string): boolean {
+  if (!DEMO_MODE) return false; // Production: no access codes resolve until BE wired
   const token = MOCK_ACCESS_TOKENS.find(
     (t) => t.accessCode.toUpperCase() === code.toUpperCase()
   );

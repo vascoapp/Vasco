@@ -1170,3 +1170,19 @@ Hunting `Math.random()` calls in non-ID-generation contexts in services consumed
 **R34.4 — `worker/my-timesheets.tsx` fake entries**: was generating "Kitchen renovation / Bathroom plumbing / Office repaint" with random hours for every past weekday. Worker portal has no real consumers today (R17.4 — no path sets `user.role === 'worker'`). Replaced with empty entries; real timesheets flow from `jobs[].timeEntries` clock-in/out path.
 
 R34 batch: 4 files touched. 0 TS errors, locales unchanged. Skipped (dead UI / off-flow): `upsellEngineService` / `serviceContractsService` / `projectPlannerService` Math.random — all have zero contractor-tab consumers.
+
+---
+
+# R35 — customer-facing flows audit (DEMO_MODE fence on access-code portal)
+
+Auditing the customer-facing flows: quote acceptance via signed token (`/accept/[token]`) vs decision portal via access code (`/customer/[code]`). Both can be hit by real customers from outside the app.
+
+**R35.1 — `/accept/[token]` flow audited clean**: calls real `processAcceptance(token)` (`customerQuoteAcceptanceService` → Supabase signed-token verify), updates quote in real AppState on success, surfaces honest errors on failure. Token format + rate-limited (5 per minute). i18n migrated R14.3. No theater.
+
+**R35.2 — `/customer/[code]` access-code portal fenced behind DEMO_MODE**: `getPortalByAccessCode` was unconditionally returning the `MOCK_CUSTOMER_PORTAL` fixture (Thomas de Vries / De Vries Bouw / "Badkamer Renovatie" / Familie van den Berg) for the magic code `VDB24A` even in production builds. Real customers typing other access codes already got null (correct empty), but anyone landing on the magic code in production saw fake portal data. Now both `getPortalByAccessCode` and `validateAccessCode` return `null` / `false` when `DEMO_MODE` is off — production customers never see fake data, demo accounts in dev still get the showcase. Until the `quote_access_tokens` BE table + RPC ships (parallel to publicQuotePortalService's signed-token pattern), the access-code portal is honest-empty in production.
+
+**R35.3 — AppState seed paths audited clean**: SEED_JOBS, SEED_CUSTOMERS, SEED_JOB_MATERIALS, SEED_PROJECTS all properly fenced behind `useSeedData = USE_SEED_DATA` (controlled by `__DEV__` or `EXPO_PUBLIC_DEMO_MODE=true`). Production cold-start has empty arrays.
+
+**R35.4 — `aiActionQueueService.recordOutcome` real**: writes to AsyncStorage outcomes log + emits real `business_events` row via dataCollector. Used by VascoCard's "Did the customer respond?" follow-up. The R1 deferral noted the new R286 executor doesn't fire `recordOutcome` automatically — that's a feature gap, not theater (the feedback loop just doesn't yet learn from executor approvals).
+
+R35 batch: 1 file touched. 0 TS errors, locales unchanged at 2248×6.
