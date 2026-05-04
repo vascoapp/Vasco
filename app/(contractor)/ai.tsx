@@ -6,10 +6,10 @@
 // content · gradient CTAs. Functions preserved from legacy screen.
 // =============================================================================
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Share, Platform, TextInput, Linking, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -84,6 +84,46 @@ export default function VascoScreen() {
   const { results: automationResults, timeSaved, config: autoConfig, updateConfig } = useAutomations(automationCtx);
 
   useEffect(() => { recordScreenVisit('vasco'); }, []);
+
+  // R39: outcome-followup prompt — fired when contractor lands here from a
+  // "Did the customer respond?" push (scheduled 4 days after a shareable
+  // approval per scheduleOutcomeFollowup). One-tap Yes/No → recordOutcome
+  // for high-quality positive/negative learning signal vs the broader
+  // approve/reject signal. Closes EVE gap 1 from the audit-doc minor-gaps
+  // list. One-shot via ref so re-renders don't re-prompt.
+  const outcomePromptedRef = useRef(false);
+  const { outcomeItemId, outcomeItemType } = useLocalSearchParams<{ outcomeItemId?: string; outcomeItemType?: string }>();
+  useEffect(() => {
+    if (outcomePromptedRef.current) return;
+    if (!outcomeItemId) return;
+    outcomePromptedRef.current = true;
+    const itemType = String(outcomeItemType ?? '').replace(/_/g, ' ') || 'message';
+    setTimeout(() => {
+      Alert.alert(
+        t('vasco.didCustomerRespond', 'Did the customer respond?'),
+        t('vasco.outcomePromptBody', { defaultValue: 'You sent a {{type}} 4 days ago. Did the customer reply?', type: itemType }),
+        [
+          { text: t('common.skip', 'Skip'), style: 'cancel' },
+          {
+            text: t('vasco.noResponse', 'No'),
+            onPress: () => {
+              import('../../src/services/aiActionQueueService').then(({ recordOutcome }) =>
+                recordOutcome(String(outcomeItemId), 'negative'),
+              ).catch(() => {});
+            },
+          },
+          {
+            text: t('vasco.yesResponded', 'Yes'),
+            onPress: () => {
+              import('../../src/services/aiActionQueueService').then(({ recordOutcome }) =>
+                recordOutcome(String(outcomeItemId), 'positive'),
+              ).catch(() => {});
+            },
+          },
+        ],
+      );
+    }, 400);
+  }, [outcomeItemId, outcomeItemType, t]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

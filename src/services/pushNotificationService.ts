@@ -195,6 +195,41 @@ export async function scheduleQuoteFollowUp(data: {
   }
 }
 
+/**
+ * R39: schedule a local push N days after the contractor approved a
+ * customer-facing shareable item ("Did your customer respond?"). Tap →
+ * routes the contractor to the AI tab where they confirm Yes/No → fires
+ * `recordOutcome(itemId, 'positive'|'negative')` so insightScorer learns
+ * from real-world outcomes (higher-quality signal than approve/reject).
+ */
+export async function scheduleOutcomeFollowup(data: {
+  itemId: string;
+  itemType: string;
+  customerName?: string;
+  daysAfter?: number;
+}): Promise<string | null> {
+  try {
+    const days = data.daysAfter ?? 4;
+    const customer = data.customerName ?? '';
+    const id = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Did the customer respond?',
+        body: customer
+          ? `Tap to log whether ${customer} responded to your ${data.itemType.replace(/_/g, ' ')}.`
+          : `Tap to log the outcome of your ${data.itemType.replace(/_/g, ' ')}.`,
+        data: { type: 'outcome_followup', itemId: data.itemId, itemType: data.itemType },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: days * 86400,
+      },
+    });
+    return id;
+  } catch {
+    return null;
+  }
+}
+
 export async function scheduleJobReminder(data: {
   jobId: string;
   jobTitle: string;

@@ -146,6 +146,18 @@ function RootLayoutNav() {
           router.push('/(contractor)' as any);
           return;
         }
+        if (type === 'outcome_followup' && data.itemId) {
+          // R39: push fired N days after a shareable approval. Routes to
+          // AI tab + opens an outcome alert (Yes/No → recordOutcome).
+          // Outcome alert handler lives in app/(contractor)/ai.tsx —
+          // reads `?outcomeItemId=` query param and shows the alert on
+          // mount. Closes the EVE-gap-1 high-quality outcome signal.
+          router.push({
+            pathname: '/(contractor)/ai',
+            params: { outcomeItemId: String(data.itemId), outcomeItemType: String(data.itemType ?? '') },
+          } as any);
+          return;
+        }
       };
       // Cold-start: app launched by tapping a push.
       Notifications.getLastNotificationResponseAsync()

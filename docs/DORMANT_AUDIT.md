@@ -1227,3 +1227,21 @@ R37 batch: 2 files touched. 0 TS errors, locales unchanged at 2248×6.
 **R38.1 — `app/contractor/customer-view.tsx` DEMO_QUOTE field-level fallbacks**: was using `DEMO_QUOTE` shape (`Van der Berg Installaties / Familie de Groot / Warmtepomp installatie`) as both (a) preview fixture when no quoteId param AND (b) field-level fallback when real quote rows lacked optional fields. Real customers in edge cases saw fixture pieces stitched into their real quote. Now: field-level fallbacks return `''` honestly so the UI renders empty / hides the field; full-quote fallback only fires in `DEMO_MODE`, otherwise `EMPTY_QUOTE` shape (typed-correct empty fields). Added `DEMO_MODE` import.
 
 R38 batch: 1 file touched. 0 TS errors, locales unchanged at 2248×6.
+
+---
+
+# R39 — EVE gap 1: outcome-followup signal close (R1 deferral)
+
+The R1 audit noted: "`recordOutcome(itemId, 'positive'|'negative')` — only fired by VascoCard's "Did the customer respond?" follow-up alert. The new executor path doesn't fire `recordOutcome`." VascoCard mounts only on enterprise SiteLeadDashboard so contractors never got the high-quality positive/negative outcome signal — only approve/reject.
+
+Wired the loop end-to-end:
+
+**1. `scheduleOutcomeFollowup(itemId, itemType, customerName, daysAfter=4)`** — new export in `pushNotificationService.ts`. Local push titled "Did the customer respond?" with body "Tap to log whether {customer} responded to your {itemType}." Push data carries `{ type: 'outcome_followup', itemId, itemType }`.
+
+**2. `queueItemExecutor.executeApprovedQueueItem`** — when item is shareable (draft_invoice / draft_reminder / progress_note / on_my_way / etc.), schedules the outcome-followup push 4 days out via fire-and-forget. Failure-tolerant — the share itself still proceeds even if push registration fails.
+
+**3. `app/_layout.tsx` push tap router** — extended `routeFromPushData` with a new `outcome_followup` case: routes contractor to `/(contractor)/ai?outcomeItemId=X&outcomeItemType=Y`.
+
+**4. `app/(contractor)/ai.tsx` outcome-prompt effect** — reads the two query params on mount (one-shot via `useRef` flag), shows a 3-button `Alert.alert`: Skip / No / Yes. No → `recordOutcome(itemId, 'negative')`. Yes → `recordOutcome(itemId, 'positive')`. The recordOutcome already emits `queue_outcome_positive`/`queue_outcome_negative` business events (line 442-451 of aiActionQueueService.ts) — so insightScorer's approval-rate cache learns from real-world customer responses, not just contractor approvals.
+
+R39 batch: 4 files touched. 0 TS errors, locales unchanged at 2248×6. Closes R1 deferral and EVE-gap-1 from session status.

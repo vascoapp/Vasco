@@ -93,6 +93,24 @@ export async function executeApprovedQueueItem(
   // Shareable types — VascoCard typically opens Share before approve. Vandaag's
   // InlineQueueRow does NOT, so we must fire it here when alreadyShared is false.
   if (isShareableQueueType(item.type)) {
+    // R39: schedule a "Did the customer respond?" follow-up push 4 days
+    // later. Tap → opens AI tab where contractor confirms Yes/No →
+    // recordOutcome fires. Was the EVE-gap-1 deferral: VascoCard's
+    // followup alert only mounted on enterprise SiteLeadDashboard so
+    // contractors never got the high-quality positive/negative outcome
+    // signal. Fire-and-forget — the push registration may fail silently
+    // (e.g. no push permission), the share itself still proceeds.
+    try {
+      const customerName = (data.customerName as string)
+        || (item.title.match(/:\s*(.+)$/)?.[1] ?? '');
+      const { scheduleOutcomeFollowup } = await import('./pushNotificationService');
+      scheduleOutcomeFollowup({
+        itemId: item.id,
+        itemType: item.type,
+        customerName,
+        daysAfter: 4,
+      }).catch(() => {});
+    } catch {}
     if (options.alreadyShared) {
       return { executed: true, via: 'noop', detail: 'share already fired upstream' };
     }
