@@ -1280,3 +1280,58 @@ R40 batch: 3 files touched (1 new route, layout register, AI tab entry-point). 0
 **R41.3 — `app/contractor/job/[id].tsx` stale TODO**: comment said "MOCK DATA for enriched job details — TODO: Replace with real data" but `EMPTY_UPSELLS = []` was already empty. Comment updated to reflect current state ("type definitions for future upsell engine; today no fake rows shown").
 
 R41 batch: 2 files touched. 0 TS errors, locales unchanged at 2248×6.
+
+---
+
+# Session R18→R41 — completion summary
+
+24 rounds shipped autonomously this session. Combined contractor-visible impact:
+
+**Theater-removal sweep (R18→R34):**
+- 17 services stripped of constructor mock seeds (R26-R32)
+- 8 singleton-getter mock returns rewired to real AppState (R26-R29)
+- 3 stub functions that lied to contractor stripped (R33)
+- 4 Math.random() shenanigans removed from live code paths (R34)
+- 3 deprecated orphan services deleted (~1,154 LoC reclaimed, R24)
+- 4 large mock-only orphan services flagged with deprecation headers (R19)
+
+**Wiring-to-real (R26-R29):**
+- cashFlowService → real AppState invoices + canonical useExpenses
+- expenseService → empty seed (was 7 fake "Koperen buis 22mm" rows)
+- collectionsAgentService → derived DSO/dunning/cashGap from real invoices
+- supplierNegotiationService → derived per-supplier leverage from real expenses
+- laborCostService → derived job-type cost from completed jobs
+- jobCostTrackingService → useJobCostSummary derives from completed jobs
+- estimationFeedbackService → 3 hooks bypass mock-laden singleton
+
+**Production data correctness (R35→R38, R41):**
+- Customer access-code portal fenced behind DEMO_MODE
+- Sitelead compliance counts fenced behind DEMO_MODE
+- DEMO_QUOTE field-level fallbacks dropped from customer-view
+- Decision-portal context (region/budget/property) reads real metadata
+- Activity events: customerId from token, deviceType from Platform.OS
+
+**EVE 3-agent workforce closed end-to-end (R39+R40):**
+- Outcome-followup push 4d after shareable approval → recordOutcome learning signal
+- Per-agent dashboard at /contractor/eve with 3 agent cards + filtered queue + about card
+- Entry-point: people-circle icon button on AI tab top bar
+
+**Customer-tag-aware messaging (R36+R37):**
+- 3 templates (payment_reminder, quote_sent, review_request) × 3 tones × 6 locales = 54 variants
+- VIPs no longer get same firm "settle within 7 days" text as risky payers
+- requestReview accepts customerTag for routing through tag-aware variants
+
+**Throughout: 0 TS errors, locales 2248×6 parity, atomic commits, audit doc + memory updated each round.**
+
+The audit doc's "top 5 remaining work" priority list now stands at:
+1. ⏸ pg_cron registration — 5-min operator action with service-role key (only remaining hard gate)
+2. ✅ ML predictors wired (R298+R300)
+3. ✅ Customer tags gate behavior (R301+R36+R37)
+4. ✅ ES + IT e-invoice export (R302 — audit doc noted as stale in R36)
+5. ✅ Job quality auto-prompt (R300)
+
+Plus EVE deferrals from session status:
+- ✅ EVE-gap-1 outcome-followup signal (R39)
+- ✅ EVE-gap-2 per-agent dashboard (R40)
+
+All remaining items in the audit doc require external accounts (WhatsApp Business API, Companies House API, Gas Safe Register API), are explicitly skipped (FR/IT/ES per user direction), or are operator-side configuration (pg_cron, EAS build, live Mollie/Stripe keys, Sentry DSN, legal pages).
