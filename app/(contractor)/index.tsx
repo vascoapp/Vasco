@@ -11,8 +11,8 @@
 // No new sections added. Only visual treatment swapped to DraftKings rhythm.
 // =============================================================================
 
-import { useMemo, useCallback, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, StatusBar, Alert } from 'react-native';
+import { useMemo, useCallback, useEffect, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, Pressable, StatusBar, Alert, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -68,6 +68,17 @@ export default function VandaagDK() {
   const heroAction = pendingQueue[0];
   const inlineQueue = pendingQueue.slice(1, 4);
 
+  // R43: pull-to-refresh on Vandaag (most-visited tab) — was missing the
+  // RefreshControl while every other contractor tab has one. Bumps the
+  // background-scheduler tick + force-refreshes useAIQueue cache so a
+  // contractor pulling down sees the freshest queue + KPIs.
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    aiQueue.refresh();
+    setTimeout(() => setRefreshing(false), 500);
+  }, [aiQueue]);
+
   const handleApprove = useCallback(async (id: string) => {
     try {
       const item = await aiQueue.approve(id);
@@ -110,7 +121,12 @@ export default function VandaagDK() {
         </View>
       </SafeAreaView>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={DK.colors.accent} />}
+      >
         {/* 2. CLOCK-IN STRIP (only when active) */}
         {clockIn.active ? (
           <View style={styles.clockStrip}>

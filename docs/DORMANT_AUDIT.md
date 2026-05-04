@@ -1354,3 +1354,14 @@ Polish-tier gaps identified by post-audit scout. Not launch-blocking, but reduce
 - Empty-contacts CTA → `customers.addNew`
 
 R42 batch: 2 files touched + 6 i18n keys × 6 locales (locale count 2248 → 2254). 0 TS errors.
+
+---
+
+# R43 — pull-to-refresh on Vandaag (most-visited tab)
+
+`app/(contractor)/index.tsx` (Vandaag) was the only main contractor tab without `RefreshControl` while werk / geld / klanten (bedrijf) / ai / certificaten / decisions all had it. Contractors trying to pull-down to refresh on the most-visited tab got nothing. Added:
+- `useState<boolean>(refreshing)` + `onRefresh` callback that calls `aiQueue.refresh()` and clears the spinner after 500ms
+- `RefreshControl` import from react-native
+- `refreshControl` prop on the main ScrollView with DK.colors.accent tint
+
+R43 batch: 1 file touched. 0 TS errors, locales unchanged at 2254×6.
