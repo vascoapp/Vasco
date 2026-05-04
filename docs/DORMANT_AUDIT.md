@@ -1142,3 +1142,15 @@ Skipped (verified zero contractor consumers):
 - `ukComplianceService` — 0 consumers; verifyCompaniesHouse-style RPC simulators only fire on user-action
 - `analyticsService` — AnalyticsDashboard component not mounted
 - All hub screens (intelligence/metrics/reports/etc.) are enterprise per R180 enterprise-skip
+
+---
+
+# R33 — strip stub functions that lie to the contractor
+
+Two services had functions that pretended to do work but were no-op or fake:
+
+**R33.1 — `feedbackService.APP_VERSION` hardcoded `'1.0.0'`**: every bug-report sent to Supabase carried the same fake version regardless of which build the user was on, so triaging by version was impossible. Now reads from `Constants.expoConfig?.version` (kept in sync by EAS build process), with `'unknown'` fallback.
+
+**R33.2 — `dutchComplianceService.verifyKvK()` fake "Simulate API call"**: was `await new Promise((resolve) => setTimeout(resolve, 1000))` then unconditionally setting `verificationStatus: 'verified'` and returning `success: true` regardless of the KvK number. The contractor's UI showed a confidence-inducing green checkmark from a no-op. Real KvK API integration needs the OpenSearch endpoint + API key (Nederlandse Kamer van Koophandel). Fix: returns `success: false` with `'pending-verification'` alert when no API integration is wired, and a separate `'unverified'` alert when no KvK number on file. Extended `KvKAlert.type` union to include those two categories. The UI now sees an honest "verification requires API integration — coming soon" instead of a fake confirmation.
+
+R33 batch: 2 files touched + 1 type extension. 0 TS errors, locales unchanged at 2248×6. Skipped (dead code or off-flow): `evidenceGraphService.computeHash` (zero callers); `ukComplianceService` simulateApiDelay paths (R32 verified zero consumers); `reasoningEngine` "would fetch actual data" comments (deferred — service not on contractor flow).

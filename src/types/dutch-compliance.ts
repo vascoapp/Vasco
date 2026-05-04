@@ -61,7 +61,8 @@ export interface KvKRepresentative {
 }
 
 export interface KvKAlert {
-  type: 'registration-changed' | 'address-changed' | 'status-changed' | 'representative-changed';
+  type: 'registration-changed' | 'address-changed' | 'status-changed' | 'representative-changed' | 'unverified' | 'pending-verification';
+  severity?: 'info' | 'warning' | 'critical';
   message: string;
   detectedAt: string;
   previousValue?: string;

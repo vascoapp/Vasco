@@ -302,14 +302,25 @@ class DutchComplianceService {
   }
 
   async verifyKvK(): Promise<{ success: boolean; alerts: KvKAlert[] }> {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
+    // R33: was a fake "Simulate API call" + setTimeout that lied to the
+    // contractor with `success: true` regardless of the KvK number. Real
+    // verification needs the KvK API (Nederlandse Kamer van Koophandel
+    // OpenSearch) which requires an API key. Until that's wired, mark the
+    // verification as pending instead of falsely confirming.
+    if (!this.kvk.kvkNumber) {
+      return { success: false, alerts: [{
+        type: 'unverified', severity: 'warning',
+        message: 'No KvK number on file', detectedAt: new Date().toISOString(),
+      } as KvKAlert] };
+    }
     this.kvk.lastVerified = new Date().toISOString();
-    this.kvk.verificationStatus = 'verified';
+    this.kvk.verificationStatus = 'pending'; // pending until real API integration
     this.notifyListeners();
-
-    return { success: true, alerts: [] };
+    return { success: false, alerts: [{
+      type: 'pending-verification', severity: 'info',
+      message: 'KvK verification requires API integration — coming soon',
+      detectedAt: new Date().toISOString(),
+    } as KvKAlert] };
   }
 
   // -----------------------------------------

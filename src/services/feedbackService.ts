@@ -8,10 +8,18 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
 const FEEDBACK_STORAGE_KEY = '@vasco_feedback_queue';
-const APP_VERSION = '1.0.0'; // TODO: read from app.json or Constants.expoConfig
+// R33: was hardcoded '1.0.0' — every bug-report sent to Supabase showed
+// the same fake version regardless of which build the user was on, so
+// triaging by version was impossible. Now reads from expoConfig set by
+// app.json (which the EAS build process keeps in sync).
+const APP_VERSION =
+  (Constants.expoConfig?.version as string | undefined)
+  ?? (Constants.manifest as any)?.version
+  ?? 'unknown';
 
 // ---------------------------------------------------------------------------
 // Types
