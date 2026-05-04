@@ -56,6 +56,8 @@ import {
   upsertBusinessSettings,
   loadCustomers,
   createCustomer as dbCreateCustomer,
+  updateCustomer as dbUpdateCustomer,
+  deleteCustomer as dbDeleteCustomer,
   createJob as dbCreateJob,
   updateJob as dbUpdateJob,
   deleteJob as dbDeleteJob,
@@ -114,6 +116,9 @@ type AppState = {
   jobMaterials: Record<string, JobMaterial[]>;
   priceObservations: Record<string, PriceObservation[]>;
   addCustomer: (name: string, email?: string, phone?: string, address?: string) => Promise<string>;
+  // R45: customer mutability — was a feature gap (no edit/delete path).
+  updateCustomer: (id: string, updates: { name?: string; email?: string; phone?: string; address?: string }) => Promise<void>;
+  removeCustomer: (id: string) => Promise<void>;
   addJob: (title: string, customerId?: string | null, description?: string | null, extra?: {
     address_street?: string;
     address_city?: string;
@@ -514,6 +519,34 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           ).catch(() => {});
         }
         return tempId;
+      },
+      // R45: customer mutability — was a feature gap. Both wrap persistOrQueue
+      // for offline durability + re-fire embeddings on edits so semantic
+      // search stays in sync.
+      updateCustomer: async (id, updates) => {
+        setCustomers((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
+        if (isSupabaseConfigured && !id.startsWith('c-')) {
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('customers', 'update', () => dbUpdateCustomer(id, updates), { rowId: id, payload: updates }),
+          ).catch((err) => logWarn('AppState', `updateCustomer persist failed: ${err}`));
+        }
+        // Re-embed on contact-change so semantic-search reflects the edit.
+        const merged = customers.find((c) => c.id === id);
+        const embedText = [updates.name ?? merged?.name, updates.email ?? merged?.email, updates.phone ?? merged?.phone, updates.address ?? merged?.address]
+          .filter(Boolean).join(' ');
+        if (embedText.length > 3) {
+          import('../services/embeddingService').then((m) =>
+            m.embedCustomer({ customerId: id, text: embedText }),
+          ).catch(() => {});
+        }
+      },
+      removeCustomer: async (id) => {
+        setCustomers((prev) => prev.filter((c) => c.id !== id));
+        if (isSupabaseConfigured && !id.startsWith('c-')) {
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('customers', 'delete', () => dbDeleteCustomer(id), { rowId: id }),
+          ).catch((err) => logWarn('AppState', `removeCustomer persist failed: ${err}`));
+        }
       },
       // ═════════════════════════════════════════════════════════════════════
       // SECTION: Job CRUD (addJob, updateJobStatus, updateJob, removeJob)

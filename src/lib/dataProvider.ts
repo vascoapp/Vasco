@@ -171,6 +171,14 @@ export async function updateCustomer(id: string, updates: { name?: string; email
   return data;
 }
 
+// R45: was missing — AppState had no path to delete a customer. RLS scopes
+// to user_id so a contractor can only delete rows they own.
+export async function deleteCustomer(id: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from('customers') as any).delete().eq('id', id);
+  if (error) throw error;
+}
+
 // ── Business Settings ────────────────────────────────────────
 
 export async function getBusinessSettings(): Promise<BusinessSettingsRow | null> {

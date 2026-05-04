@@ -1387,3 +1387,25 @@ Traced FE → AppState → Supabase loop for 7 critical flows (addCustomer / add
 **Documented as feature gap (not persistence bug)**: AppState exposes no `updateCustomer` / `deleteCustomer` mutator. Customers are write-once via `addCustomer`. Editing customer details requires BE-side support (e.g. dedupe tooling).
 
 R44 batch: 2 files touched. 0 TS errors, locales unchanged at 2254×6.
+
+---
+
+# R45 — customer update/delete + E2E rigor round 2
+
+**R45.1 — `updateCustomer` + `removeCustomer` AppState mutators (closes R44 feature gap)**:
+- `dataProvider.updateCustomer` already existed (just unused); `dataProvider.deleteCustomer` added
+- AppState type + impl: both wrap `persistOrQueue` for offline durability, gated on `!id.startsWith('c-')` so temp IDs (offline-created customers not yet synced) don't try to delete BE rows that don't exist yet
+- `updateCustomer` re-fires `embedCustomer` on edit so semantic-search reflects the change (mirroring R243's `addCustomer` embedding)
+
+**R45.2 — E2E rigor round 2: moat + file-upload + edge-fn paths**:
+
+✅ Verified clean:
+- 22 of 23 edge function invocations match `supabase/functions/`; `request-account-deletion` is dead-fallback (canonical path is `account_deletion_requests` table insert per R160).
+- `material_price_history.insert` failures log to `logIntelligenceWriteFailure` → `eve_telemetry`. Acceptable: cohort moat tolerates lost offline writes (same contractor's next online write refills).
+- `customerPhotoUploadService` skips failed uploads gracefully, falls back to local URIs on full-failure so submission still reaches the contractor.
+- 8 AppState mutators verified using `persistOrQueue`/`queueWrite`: `addCustomer`, `addJob`, `addQuote`, `addInvoiceFromJob`, `removeJob`, `updateBusinessProfile`, `updateJob`, `updateJobStatus`.
+
+⚠ Documented (deferred, non-blocking):
+- `jobPhotoService.uploadJobPhoto` returns `null` on storage upload failure with no queue. Offline contractor capturing a job photo loses it. Lower priority: photos are large + AsyncStorage size-limited; `offlineScanQueue` already exists for receipt-scan photos with `MAX_QUEUE=20` FIFO eviction. Future fix: parallel bounded queue for job photos.
+
+R45 batch: 2 files touched (1 dataProvider, 1 AppState). 0 TS errors, locales unchanged at 2254×6.
