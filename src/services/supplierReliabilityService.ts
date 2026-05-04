@@ -198,11 +198,16 @@ class SupplierReliabilityService {
   private weights: MetricWeights = DEFAULT_METRIC_WEIGHTS;
 
   constructor() {
+    // R31: dropped MOCK_SUPPLIERS + MOCK_DELIVERY_RECORDS + MOCK_ALERTS
+    // seeds (was injecting fake supplier reliability scores into every
+    // contractor's reliability cache). Test setups call __seedMockData.
+  }
+
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
     MOCK_SUPPLIERS.forEach(s => this.suppliers.set(s.id, s));
     this.deliveryRecords = [...MOCK_DELIVERY_RECORDS];
     MOCK_ALERTS.forEach(a => this.alerts.set(a.id, a));
-
-    // Calculate initial performance for all suppliers
     this.suppliers.forEach((_, id) => {
       this.performanceCache.set(id, this.calculatePerformance(id));
     });

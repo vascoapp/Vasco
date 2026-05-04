@@ -245,6 +245,12 @@ class WorkflowAgentsService {
   private listeners: Set<() => void> = new Set();
 
   constructor() {
+    // R31: dropped MOCK_WORKFLOWS seed (was injecting fake workflow runs
+    // into the singleton). Test setups call __seedMockData.
+  }
+
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
     MOCK_WORKFLOWS.forEach((wf) => this.workflows.set(wf.id, wf));
   }
 

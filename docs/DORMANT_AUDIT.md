@@ -1093,3 +1093,32 @@ test setups.
 **R30.6 — `dutchComplianceService` MOCK_KVK + MOCK_BTW + MOCK_BTW_PERIODS + MOCK_CERTIFICATIONS + MOCK_INSURANCE constructor seeds**: every Dutch contractor saw seeded "KvK 12345678 / Van der Berg Schilderwerken" + fake BTW number + 3 fake certs (VCA/BHV/etc.) + insurance policies regardless of their actual registration. Replaced KvK/BTW fields with `EMPTY_KVK` + `EMPTY_BTW` defaults (typed-correct empty-state objects matching the schema). Certifications + insurance maps start empty. `useKvKRegistration` + `useBtwRegistration` (consumed in certificaten tab) now return empty for fresh contractors instead of fake "Van der Berg" data.
 
 R30 batch: 6 services touched, all preserve `__seedMockData()` for tests. 0 TS errors, locales unchanged at 2248×6. Combined R26→R30 contractor-visible impact: every cold-start screen now shows the contractor's actual data (or honest empty state) instead of seeded "Familie de Vries / Bakkerij Jansen / Van der Berg Schilders / Technische Unie / Janssen Bouw BV" mock-customer-soup. App is no longer theater on first open.
+
+---
+
+# R31 — drop mock seeds in 8 more services (theater-removal sweep)
+
+User direction: finish items in audit md still in theater phase.
+
+R31 strips constructor-time mock seeds from 8 more services where the singleton was instantiated with fixture data on module load. All preserve `__seedMockData()` for tests.
+
+- **`scheduleFragilityService`** — was seeding MOCK_ACTIVITIES + MOCK_ALERTS into the fragility cache + alerts map on app open. Mostly enterprise-surface (COODashboard, WhatIfAnalysisModal — R180 enterprise-skip), but the singleton is exported so any future consumer would have inherited fake project data.
+- **`reputationService`** — was seeding MOCK_REVIEWS + MOCK_CERTIFICATIONS. Mostly off main flow today, but `requestReview` (R288) lands in the AI queue.
+- **`documentVaultService`** — was seeding MOCK_DOCUMENTS + MOCK_FOLDERS. DocumentVault component currently un-mounted but service is exported.
+- **`supplierReliabilityService`** — was seeding MOCK_SUPPLIERS + MOCK_DELIVERY_RECORDS + MOCK_ALERTS into the reliability cache + pre-computing performance scores for fake suppliers.
+- **`supplierIntegrationService`** — was seeding MOCK_SUPPLIERS + MOCK_PRODUCTS + MOCK_ORDERS.
+- **`workflowAgentsService`** — was seeding MOCK_WORKFLOWS into the singleton; consumed by WorkflowStatusCard component (currently un-mounted).
+- **`customerInsightsService`** — was `customers = [...mockCustomers] / segments = [...mockSegments]` so any consumer of useCustomerProfiles / useCustomerSegments saw "Familie de Groot / Familie Visser" fake customers. CustomerInsights component currently un-mounted but the singleton + hooks could leak fake data into any future consumer.
+- **`agentActionsService`** — was seeding MOCK_ACTIONS + MOCK_HOURS_SAVED.
+- **`customerPortalService`** — was seeding MOCK_PROJECTS + MOCK_QUOTES + MOCK_MESSAGES.
+- **`contractorNetworkService`** — was seeding MOCK_CONTRACTORS + MOCK_REFERRALS + MOCK_CONNECTION_REQUESTS AND `myConnections` was pre-seeded with `['contractor_1', 'contractor_4']` fake friend IDs. All cleared.
+
+R31 batch: 10 services touched in this round. 0 TS errors, locales unchanged at 2248×6.
+
+**Combined R26 → R31 impact**: every contractor-facing service that singleton-seeded fixture data on module load now starts empty unless a test calls `__seedMockData()`. Cold-start app no longer pre-populates fake customers, fake invoices, fake suppliers, fake quotes, fake permits, fake reviews, fake DSO metrics, fake KvK registrations, fake projects, or fake contractor network connections. Every metric, badge, banner, list, and forecast that contractors see is derived from their own data or shown as honest empty state.
+
+Skipped during R31 (real fix needs BE infra):
+- `ukComplianceService` MOCK_COMPANIES_HOUSE / MOCK_VAT_REGISTRATION / MOCK_GAS_SAFE — only spread into RPC-simulator return values when contractor explicitly verifies. Real fix needs Companies House + Gas Safe Register API integration.
+- `competitiveIntelligenceService` MOCK_RECORDS / MOCK_PRICE_ZONES / MOCK_SENSITIVITY / MOCK_FACTORS — singleton getters return mock arrays directly (not via constructor seed). Same defer pattern; needs cohort win-loss BE table.
+- `roiMetricsService` — VascoSavedBanner unmounted post-R175, HoursSavedCard only on enterprise dashboard (R27 verified).
+- `vascoKarmaService` / `predictiveMaintenanceService` / `subcontractorService` / `quoteOptimizerService` / `resourceHeatmapService` — already deprecated.

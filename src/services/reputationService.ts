@@ -162,8 +162,19 @@ class ReputationService {
   private listeners: Set<() => void> = new Set();
 
   constructor() {
+    // R31: dropped MOCK_REVIEWS + MOCK_CERTIFICATIONS seed (was injecting
+    // fake 5-star reviews + fake credentials into every contractor's
+    // reputation singleton). reputationService is mostly off the main
+    // contractor flow today, but `requestReview` (R288) does land in the
+    // queue, and any consumer reading reviews/certs would have seen
+    // someone else's fake reputation. Test setups call __seedMockData.
+  }
+
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
     MOCK_REVIEWS.forEach((r) => this.reviews.set(r.id, r));
     MOCK_CERTIFICATIONS.forEach((c) => this.certifications.set(c.id, c));
+    this.notifyListeners();
   }
 
   // Reviews

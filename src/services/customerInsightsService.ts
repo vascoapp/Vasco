@@ -146,14 +146,26 @@ type InsightsListener = () => void;
 class CustomerInsightsService {
   private static instance: CustomerInsightsService;
   private listeners: Set<InsightsListener> = new Set();
-  private customers: CustomerProfile[] = [...mockCustomers];
-  private segments: CustomerSegment[] = [...mockSegments];
+  // R31: was [...mockCustomers] / [...mockSegments] — every consumer of
+  // useCustomerProfiles / useCustomerSegments saw "Familie de Groot /
+  // Familie Visser" fake customers. CustomerInsights component is
+  // currently un-mounted but the singleton + hooks could leak fake data
+  // into any future consumer. Test setups call __seedMockData.
+  private customers: CustomerProfile[] = [];
+  private segments: CustomerSegment[] = [];
 
   static getInstance(): CustomerInsightsService {
     if (!CustomerInsightsService.instance) {
       CustomerInsightsService.instance = new CustomerInsightsService();
     }
     return CustomerInsightsService.instance;
+  }
+
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
+    this.customers = [...mockCustomers];
+    this.segments = [...mockSegments];
+    this.listeners.forEach((l) => l());
   }
 
   subscribe(listener: InsightsListener): () => void {

@@ -236,6 +236,12 @@ class CustomerPortalService {
   private listeners: Set<() => void> = new Set();
 
   constructor() {
+    // R31: dropped MOCK_PROJECTS + MOCK_QUOTES + MOCK_MESSAGES seeds.
+    // Test setups call __seedMockData.
+  }
+
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
     MOCK_PROJECTS.forEach((p) => this.projects.set(p.id, p));
     MOCK_QUOTES.forEach((q) => this.quotes.set(q.id, q));
     MOCK_MESSAGES.forEach((m) => this.messages.set(m.id, m));

@@ -323,13 +323,22 @@ class ContractorNetworkService {
   private contractors: Map<string, ContractorProfile> = new Map();
   private referrals: Map<string, Referral> = new Map();
   private connectionRequests: Map<string, ConnectionRequest> = new Map();
-  private myConnections: Set<string> = new Set(['contractor_1', 'contractor_4']);
+  private myConnections: Set<string> = new Set();
   private listeners: Set<() => void> = new Set();
 
   constructor() {
+    // R31: dropped MOCK_CONTRACTORS + MOCK_REFERRALS +
+    // MOCK_CONNECTION_REQUESTS seeds AND `myConnections` no longer
+    // pre-seeded with `contractor_1, contractor_4` fake IDs. Test
+    // setups call __seedMockData.
+  }
+
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
     MOCK_CONTRACTORS.forEach((c) => this.contractors.set(c.id, c));
     MOCK_REFERRALS.forEach((r) => this.referrals.set(r.id, r));
     MOCK_CONNECTION_REQUESTS.forEach((c) => this.connectionRequests.set(c.id, c));
+    this.myConnections = new Set(['contractor_1', 'contractor_4']);
   }
 
   // -----------------------------------------

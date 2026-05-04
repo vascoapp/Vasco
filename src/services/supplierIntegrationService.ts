@@ -385,6 +385,12 @@ class SupplierIntegrationService {
   private listeners: Set<() => void> = new Set();
 
   constructor() {
+    // R31: dropped MOCK_SUPPLIERS + MOCK_PRODUCTS + MOCK_ORDERS seeds.
+    // Test setups call __seedMockData.
+  }
+
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
     MOCK_SUPPLIERS.forEach((s) => this.suppliers.set(s.id, s));
     MOCK_PRODUCTS.forEach((p) => this.products.set(p.id, p));
     MOCK_ORDERS.forEach((o) => this.orders.set(o.id, o));

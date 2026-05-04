@@ -219,15 +219,12 @@ class ScheduleFragilityService {
   private weights: FragilityWeights = DEFAULT_FRAGILITY_WEIGHTS;
 
   constructor() {
-    MOCK_ACTIVITIES.forEach(a => this.activities.set(a.id, a));
-    MOCK_ALERTS.forEach(a => this.alerts.set(a.id, a));
-
-    // Calculate initial fragility for projects
-    const projectIds = [...new Set(MOCK_ACTIVITIES.map(a => a.projectId))];
-    projectIds.forEach(projectId => {
-      this.fragilityCache.set(projectId, this.calculateFragilityScore(projectId));
-      this.criticalPathCache.set(projectId, this.calculateCriticalPath(projectId));
-    });
+    // R31: dropped MOCK_ACTIVITIES + MOCK_ALERTS seed (was injecting fixture
+    // project activities + alerts into every contractor's schedule fragility
+    // singleton on app open). Real activities flow in via setActivities()
+    // from the project-screen layer when fragility analysis surfaces (today
+    // mounted on COODashboard + WhatIfAnalysisModal — both enterprise/CFO
+    // surfaces, R180 enterprise-skip applies). Test setups call __seedMockData.
   }
 
   static getInstance(): ScheduleFragilityService {
@@ -235,6 +232,17 @@ class ScheduleFragilityService {
       ScheduleFragilityService.instance = new ScheduleFragilityService();
     }
     return ScheduleFragilityService.instance;
+  }
+
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
+    MOCK_ACTIVITIES.forEach(a => this.activities.set(a.id, a));
+    MOCK_ALERTS.forEach(a => this.alerts.set(a.id, a));
+    const projectIds = [...new Set(MOCK_ACTIVITIES.map(a => a.projectId))];
+    projectIds.forEach(projectId => {
+      this.fragilityCache.set(projectId, this.calculateFragilityScore(projectId));
+      this.criticalPathCache.set(projectId, this.calculateCriticalPath(projectId));
+    });
   }
 
   subscribe(listener: FragilityListener): () => void {

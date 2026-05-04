@@ -276,6 +276,12 @@ class AgentActionsService {
   private listeners: Set<() => void> = new Set();
 
   constructor() {
+    // R31: dropped MOCK_ACTIONS + MOCK_HOURS_SAVED constructor seeds.
+    // Test setups call __seedMockData.
+  }
+
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
     MOCK_ACTIONS.forEach((a) => this.actions.set(a.id, a));
     MOCK_HOURS_SAVED.forEach((h) => this.hoursSaved.set(h.id, h));
   }

@@ -310,6 +310,14 @@ class DocumentVaultService {
   private listeners: Set<() => void> = new Set();
 
   constructor() {
+    // R31: dropped MOCK_DOCUMENTS + MOCK_FOLDERS seed (was injecting fake
+    // documents into every contractor's vault). DocumentVault component is
+    // currently un-mounted but the singleton is exported — any future
+    // consumer would inherit empty state. Test setups call __seedMockData.
+  }
+
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
     MOCK_DOCUMENTS.forEach((d) => this.documents.set(d.id, d));
     MOCK_FOLDERS.forEach((f) => this.folders.set(f.id, f));
   }
