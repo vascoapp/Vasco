@@ -1209,3 +1209,13 @@ R36 batch: 1 file touched, 36 new template strings (no i18n key change since tem
 3. ~~Make customer tags gate behavior~~ — payment_reminder DONE in R301, quote_sent + review_request DONE in R36
 4. ~~Build ES + IT e-invoice export UI~~ — DONE (audit-doc stale; verified live in R36)
 5. ~~Auto-prompt for job quality feedback~~ — DONE in R300 via `job_quality_feedback` queue type
+
+---
+
+# R37 — wire tag-aware helpers + DEMO_MODE-fence sitelead compliance mock
+
+**R37.1 — `requestReview` accepts `customerTag` and uses tag-aware variants**: extended `reputationService.requestReview` signature with optional `customerTag` field. When supplied, dispatch routes through `renderReviewRequestForTag` from R36; without it, falls back to standard `renderTemplate('review_request')` (preserves backward compat with the zero existing callers). Now ready for the day a screen wires up review-request tap.
+
+**R37.2 — sitelead compliance mock fenced behind DEMO_MODE**: `app/sitelead/compliance.tsx` had hardcoded `SITE_COMPLIANCE = { workerCerts: { total: 24, valid: 18, expiring: 4, expired: 2 }, sitePermits: { total: 6, active: 5, expiring: 1 }, insurance: { total: 3, valid: 2, expiring: 1 } }` shown to every site lead regardless of their actual roster. Real BE table for site-lead worker certs/permits/insurance doesn't exist yet. Now picks `DEMO_COMPLIANCE` (the fixture above) when `DEMO_MODE` is on, `EMPTY_COMPLIANCE` (all zeroes) in production. Sitelead users see honest empty state until that BE table ships.
+
+R37 batch: 2 files touched. 0 TS errors, locales unchanged at 2248×6.

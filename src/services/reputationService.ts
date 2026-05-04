@@ -228,15 +228,25 @@ class ReputationService {
     businessName?: string;
     locale?: Locale;
     reviewLink: string;
+    /** R37: customer tag — picks gentle/standard/firm tone variant. */
+    customerTag?: 'vip' | 'loyal' | 'new' | 'risky' | 'inactive';
   }): Promise<ReviewRequest & { delivered: boolean; channel: 'whatsapp' | 'email' | 'share' | 'none' }> {
     const customerName = opts.customerName ?? 'Klant';
     const businessName = opts.businessName ?? 'Vasco';
     const locale = (opts.locale ?? 'nl') as Locale;
-    const text = renderTemplate('review_request', locale, {
-      customer: customerName,
-      link: opts.reviewLink,
-      business: businessName,
-    });
+    // R37: use tag-aware variant when tag is supplied, falls back to standard
+    // template otherwise (preserves backward compat with existing callers).
+    const text = opts.customerTag
+      ? (await import('./whatsappTemplateService')).renderReviewRequestForTag(locale, {
+          customer: customerName,
+          link: opts.reviewLink,
+          business: businessName,
+        }, opts.customerTag)
+      : renderTemplate('review_request', locale, {
+          customer: customerName,
+          link: opts.reviewLink,
+          business: businessName,
+        });
 
     let channel: 'whatsapp' | 'email' | 'share' | 'none' = 'none';
     let delivered = false;

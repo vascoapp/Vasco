@@ -16,12 +16,24 @@ import { useInlineInsight } from '../../src/services/vascoGuidanceService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-// Mock compliance data for site leads
-const SITE_COMPLIANCE = {
+// R37: was hardcoded mock compliance counts ("24 worker certs, 18 valid, 4
+// expiring, 2 expired" / "6 site permits" / "3 insurance policies") shown
+// to every site lead regardless of their actual roster. Site lead has no BE
+// table for worker certs/permits/insurance yet — fenced behind DEMO_MODE so
+// production starts at honest zero until that lands.
+import { DEMO_MODE } from '../../src/config/demo';
+
+const EMPTY_COMPLIANCE = {
+  workerCerts: { total: 0, valid: 0, expiring: 0, expired: 0 },
+  sitePermits: { total: 0, active: 0, expiring: 0 },
+  insurance: { total: 0, valid: 0, expiring: 0 },
+};
+const DEMO_COMPLIANCE = {
   workerCerts: { total: 24, valid: 18, expiring: 4, expired: 2 },
   sitePermits: { total: 6, active: 5, expiring: 1 },
   insurance: { total: 3, valid: 2, expiring: 1 },
 };
+const SITE_COMPLIANCE = DEMO_MODE ? DEMO_COMPLIANCE : EMPTY_COMPLIANCE;
 
 interface ComplianceItem {
   icon: IconName;
