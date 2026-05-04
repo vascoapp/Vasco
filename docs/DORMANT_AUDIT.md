@@ -1051,3 +1051,22 @@ Both services were full mocks feeding `crossServiceIntelligenceService` (AI tab 
 **R28.2 — `useJobCostSummary` derives from completed jobs with cost data**: rewrote to filter `jobs` to completed AND has `quotedAmount` AND `actualCost`. Returns `EMPTY_SUMMARY` (jobCount=0, accuracy=100, leakage=0) for fresh contractors — was previously returning singleton.getSummary() which iterated `MOCK_ESTIMATES + MOCK_ACTUALS` so every contractor saw fake variance reasons. Computes lightweight cpi + estimationScore + marginLeakage from real quoted-vs-actual deltas (assuming 60% cost target without full estimate breakdown). Full estimate-vs-actual decomposition (price/quantity/mix variance) still mock for jobs that DO have data — the BE doesn't yet store estimate breakdowns, so the mock decomposition fields stay zeroed in the new derivation; the headline summary numbers (cpi / score / leakage) are now real.
 
 R28 batch: 2 files touched, 0 TS errors, locales unchanged. Combined R26+R27+R28 impact: every consumer of `crossServiceIntelligenceService.useCrossServiceIntelligence()` (= 4 dependent services × multiple AI/Vandaag insights) now reflects the contractor's actual books — labor + materials + cashflow + collections + supplier mix.
+
+---
+
+# R29 — wire `estimationFeedbackService` calibration hooks (TieredQuoteBuilder)
+
+`useQuoteCalibration` is consumed by `TieredQuoteBuilder.tsx` — actively mounted on `tiered-quote.tsx` + `(contractor)/facturen.tsx`. So every quote built via the canonical TieredQuoteBuilder was getting calibration suggestions based on `MOCK_CALIBRATIONS` (Badkamerrenovatie, Schilderwerk, Loodgieterswerk, Tegelen) — not the contractor's actual completed-job history. The chain was:
+
+`useQuoteCalibration` → `service.getQuoteCalibration()` → `service.getJobTypeCalibrations()` → `jobCostTrackingService.getAllVariances()` → `MOCK_ESTIMATES + MOCK_ACTUALS` (always 5 fixture rows)
+
+Even though `getJobTypeCalibrations()` had an `if (variances.length === 0) return MOCK_CALIBRATIONS` short-circuit, the underlying `getAllVariances()` was non-empty (mock-seeded), so the empty-state never triggered. Real calibration was always polluted with mock data.
+
+Rewrote 3 hooks to bypass the singleton entirely and derive directly from `useAppState().jobs`:
+- `useEstimationAccuracy` — filters jobs to (completed + estimatedDuration + actualHours), computes `averageHoursDeviation` from real estimate-vs-actual deltas, returns `overallScore: 100, totalJobsAnalyzed: 0` for fresh contractors (was returning MOCK_ACCURACY's 78).
+- `useJobTypeCalibrations` — `deriveCalibrations(jobs)` groups completed-and-tracked jobs by `trade`, computes per-trade `hoursMultiplier` from real `actualHours / estimatedDuration` ratio, generates plain-English `recommendation` (`Add 20% buffer to plumbing hours estimates` etc.). Returns `[]` for fresh contractors (was merging MOCK_CALIBRATIONS as "historical data").
+- `useQuoteCalibration(lineItems)` — matches each line item's description against derived calibration prefixes; suggests `calibrated = original × hoursMultiplier` when delta >5%. Returns `[]` when no calibrations OR no line items. `confidence` numeric (50 for `jobCount<3`, 80 for ≥3) per the type contract.
+
+Material-side calibration (`materialQuantityMultiplier`, `materialPriceMultiplier`) returned as `1` since the BE doesn't yet store estimate breakdown — would need the full estimate-vs-actual table to compute.
+
+R29 batch: 1 file touched, 0 TS errors, locales unchanged at 2248×6. TieredQuoteBuilder calibration now driven by the contractor's own job history instead of fixture data.

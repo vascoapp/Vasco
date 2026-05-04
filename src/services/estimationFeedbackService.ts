@@ -423,22 +423,136 @@ function pct(multiplier: number): number {
   return Math.round(Math.abs(multiplier - 1) * 100);
 }
 
-// ── Hooks ───────────────────────────────────────────────────────────────────
+// ── Hooks — R29: derive from real completed jobs ────────────────────────────
+// Was returning MOCK_ACCURACY / MOCK_CALIBRATIONS to every contractor because
+// the underlying jobCostTrackingService.getAllVariances() iterates
+// MOCK_ESTIMATES + MOCK_ACTUALS (fixture-only). The TieredQuoteBuilder
+// (used in tiered-quote + facturen tabs) consumes useQuoteCalibration so
+// every contractor's quote suggestions were calibrated against fake
+// Badkamerrenovatie / Schilderwerk variance data.
+//
+// Real fix: bypass the mock-laden singleton path; derive lightweight
+// hours-only calibration from completed AppState jobs that have BOTH
+// estimatedDuration AND actualHours. Material variance still requires the
+// full BE estimate-vs-actual breakdown which doesn't exist yet — those
+// hooks return empty arrays / 100% accuracy until that lands.
+// ─────────────────────────────────────────────────────────────────────────────
 
 const service = EstimationFeedbackService.getInstance();
+import { useAppState } from '../state/AppState';
+
+function deriveCalibrations(jobs: any[]): JobTypeCalibration[] {
+  const tracked = jobs.filter((j: any) =>
+    (j.status === 'completed' || j.status === 'gereed')
+    && (j.estimatedDuration ?? 0) > 0
+    && (j.actualHours ?? 0) > 0,
+  );
+  if (tracked.length === 0) return [];
+  const byTrade = new Map<string, any[]>();
+  for (const j of tracked) {
+    const key = (j.trade ?? 'general') as string;
+    const list = byTrade.get(key) ?? [];
+    list.push(j);
+    byTrade.set(key, list);
+  }
+  return Array.from(byTrade.entries()).map(([jobType, list]) => {
+    const hoursMultiplier = list.reduce((s: number, j: any) => s + j.actualHours / j.estimatedDuration, 0) / list.length;
+    const avgMarginDelta = list.reduce((s: number, j: any) => {
+      const expected = (j.quotedAmount ?? 0) * 0.6;
+      const actual = (j.actualCost ?? 0);
+      return s + (actual - expected);
+    }, 0) / list.length;
+    return {
+      jobType,
+      jobCount: list.length,
+      hoursMultiplier: Math.round(hoursMultiplier * 100) / 100,
+      materialMultiplier: 1,
+      materialQuantityMultiplier: 1,
+      materialPriceMultiplier: 1,
+      laborMaterialRatio: 0.6,
+      avgMarginDelta: Math.round(avgMarginDelta),
+      recommendation: hoursMultiplier > 1.15
+        ? `Add ${Math.round((hoursMultiplier - 1) * 100)}% buffer to ${jobType} hours estimates`
+        : hoursMultiplier < 0.85
+          ? `${jobType} hours estimates trend ${Math.round((1 - hoursMultiplier) * 100)}% high — tighten`
+          : 'Hours estimates well calibrated',
+    };
+  }).sort((a, b) => a.avgMarginDelta - b.avgMarginDelta);
+}
 
 export function useEstimationAccuracy(): EstimationAccuracy {
-  return useMemo(() => service.getEstimationAccuracy(), []);
+  const { jobs } = useAppState();
+  return useMemo(() => {
+    const tracked = jobs.filter((j: any) =>
+      (j.status === 'completed' || j.status === 'gereed')
+      && (j.estimatedDuration ?? 0) > 0
+      && (j.actualHours ?? 0) > 0,
+    );
+    if (tracked.length === 0) {
+      return {
+        overallScore: 100,
+        trend: 'stable',
+        trendDelta: 0,
+        totalJobsAnalyzed: 0,
+        averageHoursDeviation: 0,
+        averageMaterialDeviation: 0,
+        averageMaterialQuantityDeviation: 0,
+        averageMaterialPriceDeviation: 0,
+      };
+    }
+    const hoursDevs = tracked.map((j: any) =>
+      Math.abs(j.actualHours - j.estimatedDuration) / j.estimatedDuration * 100,
+    );
+    const avgHoursDev = hoursDevs.reduce((s: number, d: number) => s + d, 0) / hoursDevs.length;
+    return {
+      overallScore: Math.max(0, Math.round(100 - avgHoursDev * 0.6)),
+      trend: 'stable',
+      trendDelta: 0,
+      totalJobsAnalyzed: tracked.length,
+      averageHoursDeviation: Math.round(avgHoursDev * 10) / 10,
+      averageMaterialDeviation: 0,
+      averageMaterialQuantityDeviation: 0,
+      averageMaterialPriceDeviation: 0,
+    };
+  }, [jobs]);
 }
 
 export function useJobTypeCalibrations(): JobTypeCalibration[] {
-  return useMemo(() => service.getJobTypeCalibrations(), []);
+  const { jobs } = useAppState();
+  return useMemo(() => deriveCalibrations(jobs), [jobs]);
 }
 
 export function useQuoteCalibration(
   lineItems: { description: string; estimate: number }[]
 ): QuoteCalibrationSuggestion[] {
-  return useMemo(() => service.getQuoteCalibration(lineItems), [lineItems]);
+  const calibrations = useJobTypeCalibrations();
+  return useMemo(() => {
+    if (calibrations.length === 0 || lineItems.length === 0) return [];
+    // For each line item, find the closest calibration by description prefix.
+    const out: QuoteCalibrationSuggestion[] = [];
+    for (const item of lineItems) {
+      const lower = item.description.toLowerCase();
+      const match = calibrations.find((c) => lower.includes(c.jobType.toLowerCase()));
+      if (!match) continue;
+      const calibrated = Math.round(item.estimate * match.hoursMultiplier);
+      const delta = calibrated - item.estimate;
+      const deltaPct = item.estimate > 0 ? Math.abs(delta / item.estimate * 100) : 0;
+      if (deltaPct < 5) continue; // skip near-misses
+      out.push({
+        lineItemDescription: item.description,
+        originalEstimate: item.estimate,
+        suggestedEstimate: calibrated,
+        hoursMultiplier: match.hoursMultiplier,
+        materialQuantityMultiplier: 1,
+        materialPriceMultiplier: 1,
+        combinedMultiplier: match.hoursMultiplier,
+        laborMaterialRatio: match.laborMaterialRatio,
+        basedOnJobCount: match.jobCount,
+        confidence: match.jobCount >= 3 ? 80 : 50,
+      });
+    }
+    return out;
+  }, [calibrations, lineItems]);
 }
 
 export function useFeedbackLoopSummary(): FeedbackLoopSummary {
