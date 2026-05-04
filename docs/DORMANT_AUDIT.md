@@ -1245,3 +1245,26 @@ Wired the loop end-to-end:
 **4. `app/(contractor)/ai.tsx` outcome-prompt effect** — reads the two query params on mount (one-shot via `useRef` flag), shows a 3-button `Alert.alert`: Skip / No / Yes. No → `recordOutcome(itemId, 'negative')`. Yes → `recordOutcome(itemId, 'positive')`. The recordOutcome already emits `queue_outcome_positive`/`queue_outcome_negative` business events (line 442-451 of aiActionQueueService.ts) — so insightScorer's approval-rate cache learns from real-world customer responses, not just contractor approvals.
 
 R39 batch: 4 files touched. 0 TS errors, locales unchanged at 2248×6. Closes R1 deferral and EVE-gap-1 from session status.
+
+---
+
+# R40 — EVE gap 2: per-agent dashboard (R9 deferral)
+
+The R9 audit noted: "`eveAgentService.ts` (345 LoC) is mostly structural orphan… The agentType IS preserved on queue items but VascoCard renders a flat queue with no agent grouping or attribution. The 'EVE 3-agent workforce' UX promise is unfulfilled." R22 added per-row badges; R40 adds the dashboard surface.
+
+**`app/contractor/eve.tsx`** — new ~210 LoC route:
+- Top bar: "YOUR AI WORKFORCE / EVE" overline + display title
+- Three agent cards (Agent / Auditor / Analyst) each showing name, tagline, color-coded icon, pending count
+- Tap an agent → expands into filtered queue items below the card row (orange highlight on selected card via dynamic borderColor)
+- Each item supports the canonical Approve / Reject flow via `useAIQueue.approve` + `executeApprovedQueueItem` — same code path as Vandaag and AI tab
+- When no agent selected, shows an "ABOUT EVE" card with all 3 agent descriptions from `EVE_AGENTS` config (the 345-LoC `eveAgentService.ts` content that was previously dormant)
+- Empty-state per agent: "{name} is up to date — no pending actions."
+- Items without `eve-*` source-generator-id (workflow packs / customer questions / manual nudges) are intentionally NOT shown here — they remain on Vandaag + AI tab queue
+
+**Entry-point**: AI tab top-bar gets a new `people-circle-outline` icon button next to settings → `/contractor/eve`. Hit slop + accessibility label included.
+
+**Stack registration**: `app/contractor/_layout.tsx` adds `<Stack.Screen name="eve" />`.
+
+R40 batch: 3 files touched (1 new route, layout register, AI tab entry-point). 0 TS errors, locales unchanged at 2248×6.
+
+**Status: both R1+EVE-gap-1 and R9+EVE-gap-2 deferrals from the session status report are now closed.**

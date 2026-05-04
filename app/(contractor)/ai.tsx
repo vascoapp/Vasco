@@ -290,9 +290,22 @@ export default function VascoScreen() {
       <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
         <View style={s.topBar}>
           <DKLabel style={s.title}>{t('tabs.ai', 'Vasco')}</DKLabel>
-          <Pressable style={s.iconBtn} onPress={() => router.push('/contractor/profile' as any)} hitSlop={8}>
-            <Ionicons name="settings-outline" size={20} color={DK.colors.text} />
-          </Pressable>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {/* R40: EVE 3-agent dashboard entry point. Closes EVE-gap-2 from
+                session status. Tap → per-agent counts + filtered queue. */}
+            <Pressable
+              style={s.iconBtn}
+              onPress={() => router.push('/contractor/eve' as any)}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t('eve.workforceLabel', 'EVE workforce')}
+            >
+              <Ionicons name="people-circle-outline" size={20} color={DK.colors.text} />
+            </Pressable>
+            <Pressable style={s.iconBtn} onPress={() => router.push('/contractor/profile' as any)} hitSlop={8}>
+              <Ionicons name="settings-outline" size={20} color={DK.colors.text} />
+            </Pressable>
+          </View>
         </View>
       </SafeAreaView>
 

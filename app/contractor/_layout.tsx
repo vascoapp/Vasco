@@ -15,6 +15,7 @@ export default function ContractorLayout() {
       <Stack.Screen name="payments" />
       <Stack.Screen name="job/[id]" />
       <Stack.Screen name="ai-assistant" />
+      <Stack.Screen name="eve" />
       <Stack.Screen name="cashflow" />
       <Stack.Screen name="insurance" />
       <Stack.Screen name="inkoop" />
