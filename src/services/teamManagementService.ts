@@ -672,8 +672,11 @@ class TeamManagementService {
         const dayName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][date.getDay()];
         const dayAvailability = member.availability[dayName as keyof WeeklyAvailability];
 
-        // Calculate workload (mock)
-        const workload = Math.random() * 100;
+        // R34: was `Math.random() * 100` — every contractor running team
+        // assignment saw a different fake workload per render. Real
+        // workload would derive from scheduled job hours per member /
+        // capacity. Until that wire exists, return 0 (honest "unknown").
+        const workload = 0;
 
         return {
           memberId: member.id,

@@ -571,16 +571,12 @@ class ReorderService {
   private checkPriceOptimization(
     item: MaterialInventory
   ): ReorderSuggestion['priceOptimization'] | undefined {
-    // Mock price comparison - in production would check real supplier data
-    const mockBetterPrice = item.lastPrice * 0.92; // 8% cheaper
-    if (Math.random() > 0.5) {
-      return {
-        currentPrice: item.lastPrice,
-        betterPrice: mockBetterPrice,
-        betterSupplier: item.preferredSupplier === 'Bouwmaat' ? 'Hornbach' : 'Bouwmaat',
-        savings: item.lastPrice - mockBetterPrice,
-      };
-    }
+    // R34: was `if (Math.random() > 0.5) return mockBetterPrice` — half the
+    // time the contractor saw a fake "Hornbach is 8% cheaper" suggestion,
+    // the other half nothing, with no real supplier data backing it. Real
+    // cross-supplier price intelligence flows through cohortBenchmarkService
+    // + material_price_history (R243+). Until reorderService is wired to
+    // those, return undefined (no suggestion) instead of randomly fabricating.
     return undefined;
   }
 

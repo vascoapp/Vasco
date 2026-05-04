@@ -616,7 +616,13 @@ export function getTradeBaselines(trade?: string, country?: string): TradeBenchm
         trade: t,
         country: c,
         ...data,
-        sampleSize: 150 + Math.floor(Math.random() * 100), // Cohort size indicator
+        // R34: was `150 + Math.floor(Math.random() * 100)` — every call
+        // returned a different fake "sample size" (150-249) so the UI
+        // chart claimed "based on 187 contractors" then "based on 213"
+        // on next render. Real sample sizes flow from the cohort BE
+        // tables (R195+); for static baselines (no cohort data yet)
+        // return 0 to indicate honest "static baseline" provenance.
+        sampleSize: 0,
       });
     }
   }

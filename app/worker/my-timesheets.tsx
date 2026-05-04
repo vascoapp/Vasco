@@ -104,18 +104,14 @@ export default function MyTimesheetsScreen() {
       const isWeekend = d.getDay() === 0 || d.getDay() === 6;
       const isPast = d < new Date();
 
-      // Generate demo entries for past weekdays
+      // R34: was generating fake "Kitchen renovation / Bathroom plumbing /
+      // Office repaint" entries with random hours for every past weekday.
+      // Real timesheets flow from the AppState clock-in/clock-out path
+      // (jobs[].timeEntries). Worker portal has no real consumers today
+      // (R17.4 — no path sets user.role === 'worker'); empty entries here
+      // is the honest representation until that ships.
       const entries: { jobTitle: string; hours: number }[] = [];
-      if (!isWeekend && isPast && weekOffset <= 0) {
-        const demoJobs = ['Kitchen renovation', 'Bathroom plumbing', 'Office repaint'];
-        const jobCount = Math.min(2, 1 + Math.floor(Math.random() * 2));
-        for (let j = 0; j < jobCount; j++) {
-          entries.push({
-            jobTitle: demoJobs[j % demoJobs.length],
-            hours: Math.round((3 + Math.random() * 4) * 10) / 10,
-          });
-        }
-      }
+      void isPast; void isWeekend; void weekOffset;
 
       const totalHours = entries.reduce((sum, e) => sum + e.hours, 0);
       days.push({

@@ -1154,3 +1154,19 @@ Two services had functions that pretended to do work but were no-op or fake:
 **R33.2 — `dutchComplianceService.verifyKvK()` fake "Simulate API call"**: was `await new Promise((resolve) => setTimeout(resolve, 1000))` then unconditionally setting `verificationStatus: 'verified'` and returning `success: true` regardless of the KvK number. The contractor's UI showed a confidence-inducing green checkmark from a no-op. Real KvK API integration needs the OpenSearch endpoint + API key (Nederlandse Kamer van Koophandel). Fix: returns `success: false` with `'pending-verification'` alert when no API integration is wired, and a separate `'unverified'` alert when no KvK number on file. Extended `KvKAlert.type` union to include those two categories. The UI now sees an honest "verification requires API integration — coming soon" instead of a fake confirmation.
 
 R33 batch: 2 files touched + 1 type extension. 0 TS errors, locales unchanged at 2248×6. Skipped (dead code or off-flow): `evidenceGraphService.computeHash` (zero callers); `ukComplianceService` simulateApiDelay paths (R32 verified zero consumers); `reasoningEngine` "would fetch actual data" comments (deferred — service not on contractor flow).
+
+---
+
+# R34 — strip `Math.random()` shenanigans in live code paths
+
+Hunting `Math.random()` calls in non-ID-generation contexts in services consumed by real contractor surfaces.
+
+**R34.1 — `cohortBenchmarkService.getTradeBaselines` fake sample-size**: every call returned a different fake `sampleSize` (150-249) per render so the UI chart claimed "based on 187 contractors" then "based on 213" on next render. Real cohort sizes flow from R195+ BE tables. Now returns `0` for static-baseline rows so consumers can detect the no-cohort case honestly.
+
+**R34.2 — `reorderService.checkPriceOptimization` Math.random > 0.5**: half the time the inkoop tab showed a fake "Hornbach is 8% cheaper" suggestion, the other half nothing — pure coin-flip with no real supplier-price backing. Now returns `undefined` (no suggestion) until reorderService is wired to canonical `cohortBenchmarkService` + `material_price_history` (R243+).
+
+**R34.3 — `teamManagementService` workload field**: was `Math.random() * 100` so every team-assignment view showed different fake workload percentages per render. Now `0` (honest "unknown") until real workload derives from per-member scheduled-hours.
+
+**R34.4 — `worker/my-timesheets.tsx` fake entries**: was generating "Kitchen renovation / Bathroom plumbing / Office repaint" with random hours for every past weekday. Worker portal has no real consumers today (R17.4 — no path sets `user.role === 'worker'`). Replaced with empty entries; real timesheets flow from `jobs[].timeEntries` clock-in/out path.
+
+R34 batch: 4 files touched. 0 TS errors, locales unchanged. Skipped (dead UI / off-flow): `upsellEngineService` / `serviceContractsService` / `projectPlannerService` Math.random — all have zero contractor-tab consumers.
