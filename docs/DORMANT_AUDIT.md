@@ -1365,3 +1365,25 @@ R42 batch: 2 files touched + 6 i18n keys × 6 locales (locale count 2248 → 225
 - `refreshControl` prop on the main ScrollView with DK.colors.accent tint
 
 R43 batch: 1 file touched. 0 TS errors, locales unchanged at 2254×6.
+
+---
+
+# R44 — E2E persistence audit (offline-queue gaps + expense durability)
+
+Traced FE → AppState → Supabase loop for 7 critical flows (addCustomer / addJob / addQuote / addInvoice / addInvoiceFromJob / convertQuoteToJob / markInvoicePaid+Sent / removeQuote+Invoice / addExpense / updateBusinessProfile). Found 6 real persistence gaps:
+
+**R44.1 — `addInvoice` no offline queue**: Supabase persist failure was log-only. Offline contractor creating invoice from accepted quote got local row but BE never received the document insert. Now queues to `offlineWriteQueue` for retry. (`addInvoiceFromJob` was already correct per R278.)
+
+**R44.2 — `markInvoiceSent` + `markInvoicePaid` no offline queue**: both fire-and-forget catch on `updateDocument`. Offline contractor flipping invoice status saw local change but BE stayed `draft` / `sent` indefinitely → wrong cashflow + dunning + GoBD audit trail. Both now wrapped in `persistOrQueue`.
+
+**R44.3 — `convertQuoteToJob` no offline queue**: same pattern. Offline-converted quotes accepted locally never created a real job row in BE. Now queues both the job insert + the quote status update.
+
+**R44.4 — `removeQuote` + `removeInvoice` no offline queue**: same pattern. Local row gone, BE row stays. Both wrapped in `persistOrQueue`.
+
+**R44.5 — `expenseService` had ZERO persistence**: in-memory singleton only. Every contractor lost all receipt-scanned + manually-entered expenses on app restart, breaking VAT prep + cashflow + supplier-negotiation derivations. Added AsyncStorage hydration on `getInstance()` + write-through on `addExpense` / `deleteExpense`. Audit-doc note in R26 that claimed "AsyncStorage + Supabase via R262" was wrong — AsyncStorage now actually wired.
+
+**Verified clean (no fix needed)**: `addCustomer`, `addJob`, `addQuote`, `addInvoiceFromJob`, `removeJob`, `updateBusinessProfile`, `updateJob`, `updateJobStatus` — all already use `persistOrQueue` or `queueWrite` correctly per R278.
+
+**Documented as feature gap (not persistence bug)**: AppState exposes no `updateCustomer` / `deleteCustomer` mutator. Customers are write-once via `addCustomer`. Editing customer details requires BE-side support (e.g. dedupe tooling).
+
+R44 batch: 2 files touched. 0 TS errors, locales unchanged at 2254×6.

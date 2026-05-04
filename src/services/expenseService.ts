@@ -5,10 +5,42 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { emitBusinessEvent } from '../intelligence/dataCollector';
 import { recordMetricSnapshot } from '../intelligence/learningStorage';
 import { getCurrentUserId, getCurrentTrade, getCurrentCountry } from '../lib/currentUser';
 import { MS_PER_DAY } from '../utils/timeConstants';
+
+// R44: persistence — expenses are an in-memory singleton + now AsyncStorage
+// for cross-restart durability. Without this every contractor lost all
+// receipt-scanned + manually-entered expenses on app restart, breaking VAT
+// prep + cashflow + supplier-negotiation derivations.
+const EXPENSES_STORAGE_KEY = '@vasco_expenses';
+
+async function persistExpenses(expenses: Expense[]): Promise<void> {
+  try {
+    // Date objects need serialization
+    const serialized = expenses.map((e) => ({
+      ...e,
+      date: e.date instanceof Date ? e.date.toISOString() : e.date,
+    }));
+    await AsyncStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(serialized));
+  } catch {
+    // Silent — never block UI
+  }
+}
+
+async function loadPersistedExpenses(): Promise<Expense[]> {
+  try {
+    const raw = await AsyncStorage.getItem(EXPENSES_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((e: any) => ({ ...e, date: new Date(e.date) }));
+  } catch {
+    return [];
+  }
+}
 
 // =============================================================================
 // TYPES
@@ -85,12 +117,27 @@ class ExpenseService {
   // addExpense (used by the receipt scanner pipeline + manual entry).
   // The mockExpenses export below is kept for tests via __seedMockData.
   private expenses: Expense[] = [];
+  // R44: AsyncStorage hydration — expenses now survive app restart. Without
+  // this every contractor lost all receipt-scanned + manually-entered
+  // expenses on cold-start.
+  private hydrated = false;
 
   static getInstance(): ExpenseService {
     if (!ExpenseService.instance) {
       ExpenseService.instance = new ExpenseService();
+      ExpenseService.instance.hydrate();
     }
     return ExpenseService.instance;
+  }
+
+  private async hydrate(): Promise<void> {
+    if (this.hydrated) return;
+    const persisted = await loadPersistedExpenses();
+    if (persisted.length > 0) {
+      this.expenses = persisted;
+      this.notify();
+    }
+    this.hydrated = true;
   }
 
   /** @internal Test-only mock seeder. */
@@ -115,6 +162,7 @@ class ExpenseService {
     const newExp: Expense = { ...expense, id: `exp-${Date.now()}` };
     this.expenses.unshift(newExp);
     this.notify();
+    persistExpenses(this.expenses).catch(() => {});
     // AI data collector — expense event
     emitBusinessEvent(getCurrentUserId(), {
       eventType: 'expense_added',
@@ -132,6 +180,7 @@ class ExpenseService {
 
   deleteExpense(id: string): void {
     this.expenses = this.expenses.filter(e => e.id !== id);
+    persistExpenses(this.expenses).catch(() => {});
     this.notify();
   }
 

@@ -850,7 +850,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           )
         );
         if (isSupabaseConfigured) {
-          updateDocument(id, { status: 'sent', sent_at: new Date().toISOString() }).catch((err) =>
+          // R44: was fire-and-forget catch — offline contractors who marked an
+          // invoice sent saw status flip locally but BE never received it.
+          // Now queues for retry via offlineWriteQueue when offline.
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('documents', 'update', () => updateDocument(id, { status: 'sent', sent_at: new Date().toISOString() }), { rowId: id, payload: { status: 'sent' } }),
+          ).catch((err) =>
             logWarn('AppState', `markInvoiceSent persist failed: ${err}`)
           );
         }
@@ -890,7 +895,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           )
         );
         if (isSupabaseConfigured) {
-          updateDocument(id, { status: 'paid', paid_at: new Date().toISOString() }).catch((err) =>
+          // R44: was fire-and-forget catch — offline payments never reached BE.
+          // Mollie/Stripe webhooks fire markInvoicePaid in real-time, but
+          // manual mark-paid via the contractor UI was missing the queue path.
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('documents', 'update', () => updateDocument(id, { status: 'paid', paid_at: new Date().toISOString() }), { rowId: id, payload: { status: 'paid' } }),
+          ).catch((err) =>
             logWarn('AppState', `markInvoicePaid persist failed: ${err}`)
           );
         }
@@ -1110,7 +1120,27 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               );
             }
           } catch (err) {
-            logWarn('AppState', `addInvoice persist failed: ${err}`);
+            // R44: was fire-and-forget log — offline-created invoices never
+            // reached BE on reconnect. Now queue both the doc create + line
+            // items so the offlineWriteQueue drains on next online tick.
+            logWarn('AppState', `addInvoice persist failed, queueing: ${err}`);
+            try {
+              const { queueWrite } = await import('../services/offlineWriteQueue');
+              await queueWrite({
+                table: 'documents',
+                op: 'insert',
+                payload: {
+                  doc_type: 'invoice',
+                  status: 'draft',
+                  document_number: docNumber,
+                  customer_id: sourceQuote.customer,
+                  job_id: sourceQuote.job,
+                  total_amount: sourceQuote.amount,
+                  due_date: dueDate.toISOString(),
+                  source_quote_id: sourceQuoteId,
+                },
+              });
+            } catch {}
           }
         }
 
@@ -1128,7 +1158,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       removeQuote: (id) => {
         setQuotes((prev) => prev.filter((quote) => quote.id !== id));
         if (isSupabaseConfigured) {
-          deleteDocument(id).catch((err) =>
+          // R44: was fire-and-forget — offline deletes ghosted (local row gone,
+          // BE row still there). Now queues for retry.
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('documents', 'delete', () => deleteDocument(id), { rowId: id }),
+          ).catch((err) =>
             logWarn('AppState', `removeQuote persist failed: ${err}`)
           );
         }
@@ -1136,7 +1170,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       removeInvoice: (id) => {
         setInvoices((prev) => prev.filter((invoice) => invoice.id !== id));
         if (isSupabaseConfigured) {
-          deleteDocument(id).catch((err) =>
+          // R44: same offline-queue fix as removeQuote.
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('documents', 'delete', () => deleteDocument(id), { rowId: id }),
+          ).catch((err) =>
             logWarn('AppState', `removeInvoice persist failed: ${err}`)
           );
         }
@@ -1596,20 +1633,29 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         ).catch(() => {});
 
         if (isSupabaseConfigured) {
+          const jobPayload = {
+            title: newJob.title,
+            customer_id: quote.customer,
+            quoted_amount: quote.amount,
+            agreed_amount: quote.amount,
+          };
           try {
-            const row = await dbCreateJob({
-              title: newJob.title,
-              customer_id: quote.customer,
-              quoted_amount: quote.amount,
-              agreed_amount: quote.amount,
-            });
+            const row = await dbCreateJob(jobPayload);
             setJobs((prev) =>
               prev.map((j) => (j.id === tempId ? { ...j, id: row.id } : j)),
             );
             await updateDocument(quoteId, { status: 'accepted' }).catch(() => {});
             return row.id;
           } catch (err) {
-            logWarn('AppState', `convertQuoteToJob persist failed: ${err}`);
+            // R44: was fire-and-forget log — offline-converted quotes never
+            // reached BE. Now queues both the job insert + the quote
+            // status update for retry on reconnect.
+            logWarn('AppState', `convertQuoteToJob persist failed, queueing: ${err}`);
+            try {
+              const { queueWrite } = await import('../services/offlineWriteQueue');
+              await queueWrite({ table: 'jobs', op: 'insert', payload: jobPayload });
+              await queueWrite({ table: 'documents', op: 'update', rowId: quoteId, payload: { status: 'accepted' } });
+            } catch {}
           }
         }
         return tempId;
