@@ -17,6 +17,7 @@ import { SafeArea } from '../../src/theme/spacing';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { useAppState } from '../../src/state/AppState';
 import { isSupabaseConfigured, supabase } from '../../src/lib/supabase';
+import { DEMO_MODE } from '../../src/config/demo';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 // Data moat: every customer interaction captured → AsyncStorage + Supabase-ready
@@ -58,7 +59,17 @@ async function recordInteraction(interaction: Omit<CustomerInteraction, 'id' | '
   return entry;
 }
 
-// Fallback demo quote used only when no quoteId param is provided (preview mode)
+// R38: was used as preview fixture AND as field fallback when real quote
+// rows lacked optional fields (businessName, title, tiers). Field-level
+// fallback meant real customers in edge cases saw "Van der Berg Installaties"
+// / "Warmtepomp installatie" stitched into their actual quote. Now used
+// only as preview fixture in DEMO_MODE (no quoteId path); production builds
+// fall through to the empty-quote shape below.
+const EMPTY_QUOTE: typeof DEMO_QUOTE = {
+  id: '', reference: '', businessName: '', businessPhone: '', businessEmail: '',
+  customerId: '', customerName: '', title: '', validUntil: '',
+  tiers: [], decisions: [], paymentTerms: '', estimatedDuration: '',
+};
 const DEMO_QUOTE = {
   id: 'q-demo-001',
   reference: 'Q-2026-0055',
@@ -102,12 +113,16 @@ export default function CustomerViewScreen() {
       setRemoteQuote({
         id: q.id,
         reference: q.reference,
-        businessName: q.business?.business_name ?? DEMO_QUOTE.businessName,
+        // R38: was `?? DEMO_QUOTE.businessName` — real customers in edge
+        // cases saw "Van der Berg Installaties" stitched into their actual
+        // quote when the BE returned a row missing business_name. Now ''
+        // honestly so the UI renders empty / hides the field.
+        businessName: q.business?.business_name ?? '',
         businessPhone: q.business?.phone ?? '',
         businessEmail: q.business?.email ?? '',
         customerId: '',
         customerName: q.customer?.name ?? '',
-        title: (q.metadata as any)?.title ?? DEMO_QUOTE.title,
+        title: (q.metadata as any)?.title ?? '',
         validUntil: (q.metadata as any)?.validUntil ?? '',
         tiers: (q.metadata as any)?.tiers ?? [
           { id: 'only' as const, label: 'Offerte', description: '', total: q.total, features: q.lines.map((l) => l.description) },
@@ -120,7 +135,12 @@ export default function CustomerViewScreen() {
     return () => { cancelled = true; };
   }, [quoteId, tokenParam]);
 
-  // Load real quote from AppState if quoteId provided, else fall back to demo preview
+  // R38: load real quote from AppState if quoteId provided. Was returning
+  // DEMO_QUOTE as both field-fallback AND no-quoteId fallback so non-DEMO
+  // customers could see "Van der Berg Installaties / Familie de Groot /
+  // Warmtepomp installatie" pieces stitched into their real quote (or as
+  // the entire quote if quoteId was missing). Production now falls through
+  // to EMPTY_QUOTE; DEMO_MODE preserves the preview fixture for dev.
   const quote: typeof DEMO_QUOTE = (() => {
     if (remoteQuote) return remoteQuote;
     if (quoteId) {
@@ -130,21 +150,21 @@ export default function CustomerViewScreen() {
         return {
           id: real.id,
           reference: (real as any).reference ?? real.id,
-          businessName: (real as any).businessName ?? DEMO_QUOTE.businessName,
+          businessName: (real as any).businessName ?? '',
           businessPhone: (real as any).businessPhone ?? '',
           businessEmail: (real as any).businessEmail ?? '',
           customerId: real.customerId ?? '',
           customerName: cust?.name ?? (real as any).customerName ?? '',
           title: (real as any).title ?? (real as any).description ?? '',
           validUntil: (real as any).validUntil ?? '',
-          tiers: (real as any).tiers ?? DEMO_QUOTE.tiers,
+          tiers: (real as any).tiers ?? [],
           decisions: (real as any).decisions ?? [],
           paymentTerms: (real as any).paymentTerms ?? '',
           estimatedDuration: (real as any).estimatedDuration ?? '',
         };
       }
     }
-    return DEMO_QUOTE;
+    return DEMO_MODE ? DEMO_QUOTE : EMPTY_QUOTE;
   })();
 
   const [selectedTier, setSelectedTier] = useState<string | null>(null);

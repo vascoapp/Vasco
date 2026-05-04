@@ -1219,3 +1219,11 @@ R36 batch: 1 file touched, 36 new template strings (no i18n key change since tem
 **R37.2 — sitelead compliance mock fenced behind DEMO_MODE**: `app/sitelead/compliance.tsx` had hardcoded `SITE_COMPLIANCE = { workerCerts: { total: 24, valid: 18, expiring: 4, expired: 2 }, sitePermits: { total: 6, active: 5, expiring: 1 }, insurance: { total: 3, valid: 2, expiring: 1 } }` shown to every site lead regardless of their actual roster. Real BE table for site-lead worker certs/permits/insurance doesn't exist yet. Now picks `DEMO_COMPLIANCE` (the fixture above) when `DEMO_MODE` is on, `EMPTY_COMPLIANCE` (all zeroes) in production. Sitelead users see honest empty state until that BE table ships.
 
 R37 batch: 2 files touched. 0 TS errors, locales unchanged at 2248×6.
+
+---
+
+# R38 — final mock sweep across `app/`
+
+**R38.1 — `app/contractor/customer-view.tsx` DEMO_QUOTE field-level fallbacks**: was using `DEMO_QUOTE` shape (`Van der Berg Installaties / Familie de Groot / Warmtepomp installatie`) as both (a) preview fixture when no quoteId param AND (b) field-level fallback when real quote rows lacked optional fields. Real customers in edge cases saw fixture pieces stitched into their real quote. Now: field-level fallbacks return `''` honestly so the UI renders empty / hides the field; full-quote fallback only fires in `DEMO_MODE`, otherwise `EMPTY_QUOTE` shape (typed-correct empty fields). Added `DEMO_MODE` import.
+
+R38 batch: 1 file touched. 0 TS errors, locales unchanged at 2248×6.
