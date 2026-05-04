@@ -1122,3 +1122,23 @@ Skipped during R31 (real fix needs BE infra):
 - `competitiveIntelligenceService` MOCK_RECORDS / MOCK_PRICE_ZONES / MOCK_SENSITIVITY / MOCK_FACTORS — singleton getters return mock arrays directly (not via constructor seed). Same defer pattern; needs cohort win-loss BE table.
 - `roiMetricsService` — VascoSavedBanner unmounted post-R175, HoursSavedCard only on enterprise dashboard (R27 verified).
 - `vascoKarmaService` / `predictiveMaintenanceService` / `subcontractorService` / `quoteOptimizerService` / `resourceHeatmapService` — already deprecated.
+
+---
+
+# R32 — drop more singleton mocks (ai-assistant + besparen + handover)
+
+3 more services with live consumers were stripped of their MOCK seeds:
+
+**R32.1 — `aiAssistantService`**: dropped MOCK_INSIGHTS constructor seed AND `getBusinessSuggestions()` no longer returns MOCK_SUGGESTIONS to every contractor (`Verhoog je tarieven voor badkamerwerk +€2.400/maand` / `Win terugkerende klanten €4-8k` / `Batch je offertebezoeken`). Real proactive insights flow through `insightScorer + crossServiceIntelligenceService`. AIAssistant component (mounted on `app/contractor/ai-assistant.tsx`) now reads zero seeded suggestions.
+
+**R32.2 — `predictiveSavingsService`**: `getPredictions()` + `getSummary()` no longer return MOCK_PREDICTIONS to every besparen tab visitor. Returns empty when not test-seeded; real predictive savings flow via `purchasingAgentService + savingsAggregatorService` already wired.
+
+**R32.3 — `evidencePackService`**: dropped MOCK_EVIDENCE_PACKS + MOCK_HANDOVER_PACKAGES constructor seeds. HandoverPackBuilder (mounted on `app/contractor/handover/[jobId].tsx`) now sees the contractor's own evidence packs (built via `assembleEvidencePack()`) instead of fixture packs from "someone else's" jobs.
+
+R32 batch: 3 services touched, all preserve `__seedMockData()` for tests. 0 TS errors, locales unchanged at 2248×6.
+
+Skipped (verified zero contractor consumers):
+- `competitiveIntelligenceService` — useCompetitiveIntelligence has 0 consumers
+- `ukComplianceService` — 0 consumers; verifyCompaniesHouse-style RPC simulators only fire on user-action
+- `analyticsService` — AnalyticsDashboard component not mounted
+- All hub screens (intelligence/metrics/reports/etc.) are enterprise per R180 enterprise-skip

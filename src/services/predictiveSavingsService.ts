@@ -108,7 +108,16 @@ const MOCK_PREDICTIONS: PredictiveSaving[] = [
 // =============================================================================
 
 class PredictiveSavingsService {
+  // R32: was returning [...MOCK_PREDICTIONS] to every contractor on the
+  // besparen tab. Now returns empty unless test-seeded; real predictive
+  // savings should flow from purchasingAgentService + savingsAggregator
+  // through the besparen UI directly.
+  private useMockData = false;
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void { this.useMockData = true; }
+
   getPredictions(filter?: { type?: SavingType; urgency?: PredictiveSaving['urgency'] }): PredictiveSaving[] {
+    if (!this.useMockData) return [];
     let results = [...MOCK_PREDICTIONS];
     if (filter?.type) results = results.filter(p => p.type === filter.type);
     if (filter?.urgency) results = results.filter(p => p.urgency === filter.urgency);
@@ -117,6 +126,9 @@ class PredictiveSavingsService {
 
   getSummary(): PredictiveSummary {
     const predictions = this.getPredictions();
+    if (predictions.length === 0) {
+      return { totalPotential: 0, opportunities: [], topAction: '', confidenceAvg: 0 };
+    }
     const total = predictions.reduce((s, p) => s + p.potentialSaving, 0);
     const avgConf = Math.round(predictions.reduce((s, p) => s + p.confidence, 0) / predictions.length);
     return {

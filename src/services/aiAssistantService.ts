@@ -235,6 +235,17 @@ class AIAssistantService {
   private listeners: Set<() => void> = new Set();
 
   constructor() {
+    // R32: dropped MOCK_INSIGHTS seed (was injecting fixture proactive
+    // insights into every contractor's AI assistant on app open). Real
+    // insights flow from the generators pipeline via insightScorer +
+    // crossServiceIntelligenceService. Test setups call __seedMockData.
+  }
+
+  /** @internal Test-only mock-data flag. */
+  private useMockData = false;
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
+    this.useMockData = true;
     MOCK_INSIGHTS.forEach((i) => this.insights.set(i.id, i));
   }
 
@@ -393,7 +404,17 @@ class AIAssistantService {
   // Business Suggestions
   // -----------------------------------------
 
+  /**
+   * R32: was returning MOCK_SUGGESTIONS — fake "Verhoog je tarieven voor
+   * badkamerwerk +€2.400/maand" / "Win terugkerende klanten €4-8k" /
+   * "Batch je offertebezoeken" suggestions to every contractor regardless
+   * of trade or actual data. Real suggestions flow through the generator
+   * pipeline (insightScorer + crossServiceIntelligenceService) on the
+   * AI tab. Returns empty array; AIAssistant component surfaces real
+   * insights via separate useProactiveInsights hook.
+   */
   getBusinessSuggestions(): BusinessSuggestion[] {
+    if (!this.useMockData) return [];
     return MOCK_SUGGESTIONS;
   }
 

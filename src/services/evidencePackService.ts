@@ -261,6 +261,16 @@ class EvidencePackService {
   private handoverPackages: Map<string, HandoverPackage> = new Map();
 
   constructor() {
+    // R32: dropped MOCK_EVIDENCE_PACKS + MOCK_HANDOVER_PACKAGES seeds
+    // (was injecting fixture evidence packs into every contractor's
+    // handover singleton — would surface someone else's photos / hours /
+    // materials if a consumer iterated `evidencePacks`). Real packs flow
+    // in via `assembleEvidencePack()` from the handover wizard.
+    // Test setups call __seedMockData.
+  }
+
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
     MOCK_EVIDENCE_PACKS.forEach(pack => this.evidencePacks.set(pack.id, pack));
     MOCK_HANDOVER_PACKAGES.forEach(pkg => this.handoverPackages.set(pkg.id, pkg));
   }
