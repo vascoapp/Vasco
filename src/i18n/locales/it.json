@@ -363,7 +363,8 @@
   },
   "billing": {
     "upgradeRequired": "Aggiornamento richiesto",
-    "viewPlans": "Vedi piani"
+    "viewPlans": "Vedi piani",
+    "formatNeedsContractor": "Questo formato richiede il piano Contractor."
   },
   "reasonCode": {
     "title": "Perché l'hai cambiato?",
@@ -805,6 +806,37 @@
       "delivery": "Consegna",
       "cert": "Cert.",
       "general": "Generale"
+    },
+    "push": {
+      "paidTitle": "Pagamento ricevuto",
+      "paidBody": "Fattura {{ref}}{{amount}} contrassegnata come pagata.",
+      "amountSuffix": " (€{{amt}})",
+      "quoteAcceptedTitle": "Preventivo accettato",
+      "quoteAcceptedBody": "Preventivo {{ref}} accettato{{tier}}{{total}}.",
+      "quoteRejectedTitle": "Preventivo rifiutato",
+      "quoteRejectedBody": "Preventivo {{ref}} rifiutato.",
+      "changeRequestTitle": "Il cliente chiede modifiche",
+      "changeRequestFallback": "Il cliente ha chiesto di revisionare {{ref}}.",
+      "decisionTitle": "Il cliente ha deciso",
+      "decisionBody": "{{question}}: {{value}}",
+      "tierSelectTitle": "Il cliente ha scelto un'opzione",
+      "tierSelectBody": "Sta considerando {{tier}}.",
+      "genericTitle": "Aggiornamento cliente",
+      "genericBody": "Attività sul preventivo {{ref}}.",
+      "unknownDecision": "Decisione",
+      "unknownTier": "un'opzione",
+      "unknownValue": "—",
+      "eveTitle": "Vasco ha qualcosa per te",
+      "eveTapToReview": "Tocca per vedere",
+      "paymentReminderTitle": "Promemoria pagamento",
+      "paymentReminderBody": "Fattura per {{customer}} (€{{amount}}) scaduta da {{days}} giorni",
+      "quoteFollowupTitle": "Sollecita preventivo",
+      "quoteFollowupBody": "Preventivo per {{customer}} inviato {{days}} giorni fa — tempo di sollecitare",
+      "outcomeFollowupTitle": "Il cliente ha risposto?",
+      "outcomeFollowupBodyNamed": "Tocca per registrare se {{customer}} ha risposto al tuo {{itemType}}.",
+      "outcomeFollowupBody": "Tocca per registrare l'esito del tuo {{itemType}}.",
+      "jobReminderTitle": "Promemoria lavoro",
+      "jobReminderBody": "{{title}} inizia tra 1 ora"
     }
   },
   "insurance": {
@@ -2536,5 +2568,55 @@
     "evidence": "In base a {{count}} fonti di dati collegate",
     "implication": "Impatto stimato: €{{amount}}",
     "viewDetails": "Vedi dettagli per maggiori informazioni"
+  },
+  "tierGate": {
+    "jobLimitReached": "Limite lavori raggiunto ({{count}}). Esegui upgrade per altro.",
+    "quoteLimitReached": "Limite preventivi raggiunto ({{count}}/mese).",
+    "invoiceLimitReached": "Limite fatture raggiunto ({{count}}/mese).",
+    "aiInsightLimitReached": "Limite insight AI raggiunto ({{count}}/mese).",
+    "clientLimitReached": "Limite clienti raggiunto ({{count}}).",
+    "seatsInUse": "Tutti i {{count}} posti del team in uso.",
+    "featureRequiresTier": "{{feature}} richiede il piano {{tier}}."
+  },
+  "shareQuote": {
+    "failTitle": "Impossibile creare il link",
+    "failBody": "Riprova.",
+    "message": "{{greeting}}ecco il tuo preventivo: {{url}}",
+    "greeting": "Ciao {{name}}, ",
+    "shareTitle": "Preventivo",
+    "buttonLabel": "Condividi link preventivo"
+  },
+  "paymentAlerts": {
+    "linkCreatedTitle": "Riuscito",
+    "linkCreatedBody": "Link di pagamento creato e copiato!",
+    "reminderEmailTitle": "Inviato",
+    "reminderEmailBody": "Promemoria email inviato!",
+    "reminderWhatsappBody": "Promemoria WhatsApp inviato!",
+    "copiedTitle": "Copiato",
+    "copiedBody": "Link di pagamento copiato:\n{{url}}"
+  },
+  "quoteToInvoice": {
+    "notFound": "Preventivo {{id}} non trovato",
+    "header": "Fattura da {{ref}}",
+    "autoNumberDue": "Auto-numerata · Scadenza 14 giorni",
+    "quoteDetails": "Dettagli preventivo",
+    "customer": "Cliente",
+    "job": "Lavoro",
+    "amount": "Importo",
+    "lineItems": "Voci",
+    "invoiceCreated": "Fattura creata",
+    "invoiceRef": "Fattura #{{id}}",
+    "matchesQuote": "Corrisponde al preventivo per evitare contestazioni di pagamento.",
+    "createInvoice": "Crea fattura",
+    "creating": "Creazione…",
+    "generatePdf": "Genera PDF",
+    "markSent": "Segna come inviata",
+    "createFailed": "Impossibile creare la fattura. Riprova."
+  },
+  "whatsapp": {
+    "invoiceReminder": "Ciao {{name}},\n\nQuesto è un promemoria cordiale sulla fattura {{ref}} di €{{amount}}{{overdue}}.\n\nPotresti organizzare il pagamento al più presto?\n\nGrazie,\nInviato tramite Vasco",
+    "invoiceOverdue": " scaduta da {{days}} giorni",
+    "quoteFollowup": "Ciao {{name}},\n\nVolevo dare seguito al preventivo per \"{{job}}\" (€{{amount}}).\n\nHai domande o vuoi procedere?\n\nCordiali saluti,\nInviato tramite Vasco",
+    "progressUpdate": "Ciao {{name}},\n\nAggiornamento rapido su \"{{job}}\": oggi lavorate {{hours}}h. Tutto procede.\n\nInviato tramite Vasco"
   }
 }

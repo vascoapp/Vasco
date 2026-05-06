@@ -29,6 +29,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
 // TYPES
@@ -462,6 +463,14 @@ class PredictiveMaintenanceService {
   static getInstance(): PredictiveMaintenanceService {
     if (!PredictiveMaintenanceService.instance) {
       PredictiveMaintenanceService.instance = new PredictiveMaintenanceService();
+      registerSingletonReset(() => {
+        const inst = PredictiveMaintenanceService.instance;
+        inst.equipmentHealth = [...mockEquipmentHealth];
+        inst.predictions = [...mockPredictions];
+        inst.recommendations = [...mockRecommendations];
+        inst.partOrders = [...mockPartOrders];
+        inst.listeners.forEach((l) => l());
+      });
     }
     return PredictiveMaintenanceService.instance;
   }

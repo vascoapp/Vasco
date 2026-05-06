@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
 // TYPES
@@ -607,6 +608,11 @@ class QuoteTemplateService {
   static getInstance(): QuoteTemplateService {
     if (!QuoteTemplateService.instance) {
       QuoteTemplateService.instance = new QuoteTemplateService();
+      registerSingletonReset(() => {
+        const inst = QuoteTemplateService.instance;
+        inst.templates = [...mockTemplates];
+        inst.listeners.forEach((l) => l());
+      });
     }
     return QuoteTemplateService.instance;
   }

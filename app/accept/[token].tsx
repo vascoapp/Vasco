@@ -44,7 +44,7 @@ export default function AcceptQuoteScreen() {
   const { t } = useTranslation();
   const { token } = useLocalSearchParams<{ token: string }>();
   const router = useRouter();
-  const { updateQuote } = useAppState();
+  const { updateQuote, convertQuoteToJob } = useAppState();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [message, setMessage] = useState(t('accept.processing', 'Processing your approval...'));
 
@@ -79,12 +79,25 @@ export default function AcceptQuoteScreen() {
     processAcceptance(token!).then(async (result) => {
       if (result.success && result.link) {
         try {
-          updateQuote(result.link.quoteId, { status: 'accepted' });
+          // R56: was just `updateQuote(..., { status: 'accepted' })` — the
+          // quote turned green but no job was ever created. The success
+          // message ("Your contractor will start scheduling the work") and
+          // the explicit error string `acceptedButFailed` ("Quote accepted
+          // but job creation failed") show the original intent was to
+          // auto-create the job on customer acceptance via the link.
+          // convertQuoteToJob fires the full R52/R55 housekeeping path
+          // (markStepComplete, ontology, semanticIndex, calendar, emit).
+          await convertQuoteToJob(result.link.quoteId);
           setStatus('success');
           setMessage(t('accept.quoteAccepted', 'Quote accepted! Your contractor will start scheduling the work.'));
           // Navigate to home after delay
           setTimeout(() => router.replace('/'), 3000);
         } catch {
+          // Fall back to status-only update so the contractor at least sees
+          // the quote as accepted, even if the auto-job-creation failed
+          // (e.g. quote not in local AppState because customer device
+          // hadn't synced — accept-token is a customer-side surface).
+          try { updateQuote(result.link.quoteId, { status: 'accepted' }); } catch {}
           setStatus('error');
           setMessage(t('accept.acceptedButFailed', 'Quote accepted but job creation failed. Your contractor has been notified.'));
         }

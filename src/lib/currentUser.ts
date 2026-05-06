@@ -51,6 +51,18 @@ export function getCurrentUserId(): string {
   return currentUserId;
 }
 
+/**
+ * R58: returns the real authenticated user id (uuid), or null when no
+ * user is signed in (placeholder state). Use this at moat-write sites
+ * that should early-return when there's no real user. The legacy
+ * `getCurrentUserId()` returns the literal `'current-user'` string for
+ * back-compat with demo paths — that string is truthy, so naive
+ * `if (!userId) return` guards don't catch it.
+ */
+export function getAuthedUserId(): string | null {
+  return currentUserId === 'current-user' ? null : currentUserId;
+}
+
 export function getCurrentCountry(): string | undefined {
   return currentCountry;
 }

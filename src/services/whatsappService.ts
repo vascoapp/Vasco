@@ -30,17 +30,25 @@ export async function sendWhatsApp(phone: string, message: string): Promise<bool
   }
 }
 
+// R66 round 7: localize WhatsApp customer-facing message templates. NL
+// contractors heavily rely on WhatsApp for customer comms; sending an
+// English reminder to a Dutch customer is the kind of thing that erodes
+// trust on launch day.
+
 /** Send invoice reminder via WhatsApp */
 export function buildInvoiceReminderMessage(customerName: string, invoiceId: string, amount: number, daysOverdue: number): string {
-  return `Hi ${customerName},\n\nThis is a friendly reminder about invoice ${invoiceId} for €${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}${daysOverdue > 0 ? ` which is ${daysOverdue} days overdue` : ''}.\n\nCould you arrange payment at your earliest convenience?\n\nThank you,\nSent via Vasco`;
+  const amt = amount.toLocaleString(undefined, { minimumFractionDigits: 2 });
+  const overdue = daysOverdue > 0 ? i18n.t('whatsapp.invoiceOverdue', { days: daysOverdue }) : '';
+  return i18n.t('whatsapp.invoiceReminder', { name: customerName, ref: invoiceId, amount: amt, overdue });
 }
 
 /** Send quote follow-up via WhatsApp */
 export function buildQuoteFollowUpMessage(customerName: string, jobTitle: string, amount: number): string {
-  return `Hi ${customerName},\n\nI wanted to follow up on the quote for "${jobTitle}" (€${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}).\n\nDo you have any questions or would you like to proceed?\n\nBest regards,\nSent via Vasco`;
+  const amt = amount.toLocaleString(undefined, { minimumFractionDigits: 2 });
+  return i18n.t('whatsapp.quoteFollowup', { name: customerName, job: jobTitle, amount: amt });
 }
 
 /** Send progress update via WhatsApp */
 export function buildProgressMessage(customerName: string, jobTitle: string, hoursWorked: number): string {
-  return `Hi ${customerName},\n\nQuick update on "${jobTitle}": ${hoursWorked}h worked today. Everything is on track.\n\nSent via Vasco`;
+  return i18n.t('whatsapp.progressUpdate', { name: customerName, job: jobTitle, hours: hoursWorked });
 }

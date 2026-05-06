@@ -8,7 +8,7 @@ import { hapticSuccess } from '../../src/utils/haptics';
 
 export default function TieredQuoteScreen() {
   const router = useRouter();
-  const { addQuote, customers, quotes } = useAppState();
+  const { addQuote, updateQuote, customers, quotes } = useAppState();
   const { t } = useTranslation();
   const sendingRef = useRef(false);
 
@@ -74,6 +74,34 @@ export default function TieredQuoteScreen() {
               tier.name || t('tieredQuote.quoteLabel'),
               lineItems,
             );
+            // R62: persist the SOW narrative the contractor reviewed in the
+            // builder's preview step. Threaded through TieredQuote.description
+            // so we don't change addQuote's signature. updateDocument
+            // dual-routes uuid vs docNumber per R57; quoteId here is the
+            // FE docNumber form ("Q-260001") which BE matches via
+            // document_number. Fail-soft so quote send doesn't fail just
+            // because the SOW persist hit a flaky network.
+            // R64 (audit fix #1): also update the in-memory Quote in AppState
+            // so the immediately-following PDF share at /quotes/[id] sees
+            // the SOW without waiting for refreshData. The mapper at
+            // documentRowToQuote pulls scope_text → Quote.description on
+            // refresh; we mirror that here for the optimistic path.
+            const sow = (quote.description ?? '').trim();
+            if (sow) {
+              try {
+                const { updateDocument } = await import('../../src/lib/dataProvider');
+                await updateDocument(quoteId, { scope_text: sow });
+              } catch {
+                // Silent — local state still has it via TieredQuote.description.
+              }
+              // Local mirror: optimistic-update the FE Quote so the share-PDF
+              // happy path doesn't require a refresh round-trip. updateQuote
+              // is wired through R56's persistOrQueue, so this is also
+              // queued for any second BE write that wants to land.
+              try {
+                updateQuote(quoteId, { description: sow } as any);
+              } catch {}
+            }
             hapticSuccess();
             Alert.alert(t('tieredQuote.quoteCreated'), t('tieredQuote.quoteSaved', { id: quoteId }), [
               { text: t('tieredQuote.viewQuote'), onPress: () => router.replace(`/quotes/${quoteId}` as any) },

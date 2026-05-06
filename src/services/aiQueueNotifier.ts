@@ -9,6 +9,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getQueue, type QueueItem } from './aiActionQueueService';
 import { sendInstantNotification, isInQuietHours, shouldDeliver } from './pushNotificationService';
+import i18n from '../i18n/i18n';
 
 const SEEN_KEY = '@vasco_ai_queue_seen';
 const QUIET_GRACE_MS = 10 * 60 * 1000;
@@ -47,8 +48,8 @@ export async function notifyNewQueueItems(): Promise<number> {
       if (isInQuietHours() && !isUrgent) { seen.add(item.id); continue; }
       if (!shouldDeliver(mapToNotificationType(item))) { seen.add(item.id); continue; }
 
-      const body = item.description || item.actionLabel || 'Tap to review';
-      await sendInstantNotification('Vasco has something for you', `${truncate(item.title, 60)} — ${truncate(body, 80)}`, {
+      const body = item.description || item.actionLabel || i18n.t('notifications.push.eveTapToReview');
+      await sendInstantNotification(i18n.t('notifications.push.eveTitle'), `${truncate(item.title, 60)} — ${truncate(body, 80)}`, {
         type: 'ai_queue',
         itemId: item.id,
         itemType: item.type,

@@ -58,7 +58,7 @@ type IconName = keyof typeof Ionicons.glyphMap;
 type TabView = 'portfolio' | 'approvals' | 'risks' | 'performance';
 
 // Role color - matches theme roleDirector token (Hermes Orange)
-const DIRECTOR_COLOR = '#E35205';
+const DIRECTOR_COLOR = '#F97316';
 
 // =============================================================================
 // TAB CONFIGURATION

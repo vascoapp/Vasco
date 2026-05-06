@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { Pressable, Text, StyleSheet, Share, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { signQuoteLink } from '../../services/publicQuotePortalService';
 import { TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Palette } from '../../theme/colors';
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function ShareQuoteButton({ quoteId, customerName, label }: Props) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
   const handlePress = async () => {
@@ -24,14 +26,14 @@ export function ShareQuoteButton({ quoteId, customerName, label }: Props) {
     try {
       const result = await signQuoteLink(quoteId);
       if (!result.ok || !result.url) {
-        Alert.alert('Could not create link', result.error ?? 'Please try again.');
+        Alert.alert(t('shareQuote.failTitle'), result.error ?? t('shareQuote.failBody'));
         return;
       }
-      const greeting = customerName ? `Hi ${customerName}, ` : '';
+      const greeting = customerName ? t('shareQuote.greeting', { name: customerName }) : '';
       await Share.share({
-        message: `${greeting}here is your quote: ${result.url}`,
+        message: t('shareQuote.message', { greeting, url: result.url }),
         url: result.url,
-        title: 'Quote',
+        title: t('shareQuote.shareTitle'),
       });
     } finally {
       setBusy(false);
@@ -51,7 +53,7 @@ export function ShareQuoteButton({ quoteId, customerName, label }: Props) {
       ) : (
         <Ionicons name="share-outline" size={16} color={Palette.white} />
       )}
-      <Text style={styles.text}>{label ?? 'Share quote link'}</Text>
+      <Text style={styles.text}>{label ?? t('shareQuote.buttonLabel')}</Text>
     </Pressable>
   );
 }

@@ -133,11 +133,11 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
       const gate = canUseFeature(sub, 'hasPaymentProcessing');
       if (!gate.allowed) {
         Alert.alert(
-          t('compliance.upgradeRequired', 'Upgrade required'),
+          t('billing.upgradeRequired', 'Upgrade required'),
           gate.reason ?? t('payments.upgradeRequiredDesc', 'Online payment links require a paid plan.'),
           [
             { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-            { text: t('compliance.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+            { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
           ],
         );
         return null;

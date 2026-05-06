@@ -247,6 +247,20 @@ function RootLayoutNav() {
       } else {
         router.replace('/(contractor)');
       }
+    } else if (
+      // R66 round 3: a contractor who signs up but kills the app mid-onboarding
+      // will cold-start with isAuthenticated=true + onboardingComplete=false.
+      // Without this branch they land on / → (contractor) tabs and silently
+      // start sending quotes/invoices with no country/trade/IBAN configured.
+      // Only applies to contractors — workers + enterprise roles skip
+      // onboarding entirely.
+      isAuthenticated &&
+      user?.onboardingComplete === false &&
+      !inOnboarding &&
+      !isWorkerRole(user) &&
+      !(user?.role && ENTERPRISE_ROLES.includes(user.role))
+    ) {
+      router.replace('/onboarding');
     }
   }, [isAuthenticated, user, segments]);
 

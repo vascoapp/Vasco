@@ -8,6 +8,7 @@
 
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { sendInstantNotification } from './pushNotificationService';
+import i18n from '../i18n/i18n';
 
 type Unsubscribe = () => void;
 let active: ReturnType<typeof supabase.channel> | null = null;
@@ -52,14 +53,16 @@ export function watchCustomerInteractions(
 
 function surface(row: InteractionRow): void {
   if (row.type === 'view') return; // Don't buzz on every open
-  const titles: Record<string, string> = {
-    accept: 'Quote accepted',
-    reject: 'Quote rejected',
-    change_request: 'Customer requested changes',
-    decision: 'Customer made a decision',
-    tier_select: 'Customer selected a tier',
+  // R66 round 2: localized via i18n. Was hardcoded English, leaving a Dutch
+  // contractor with English push lines on the 5 most critical customer events.
+  const titleKey: Record<string, string> = {
+    accept: 'notifications.push.quoteAcceptedTitle',
+    reject: 'notifications.push.quoteRejectedTitle',
+    change_request: 'notifications.push.changeRequestTitle',
+    decision: 'notifications.push.decisionTitle',
+    tier_select: 'notifications.push.tierSelectTitle',
   };
-  const title = titles[row.type] ?? 'Customer update';
+  const title = i18n.t(titleKey[row.type] ?? 'notifications.push.genericTitle');
   const body = summarize(row);
   sendInstantNotification(title, body, {
     type: 'customer_interaction',
@@ -70,24 +73,34 @@ function surface(row: InteractionRow): void {
 
 function summarize(row: InteractionRow): string {
   const data = row.data ?? {};
+  const ref = row.quote_id;
   switch (row.type) {
     case 'accept': {
-      const tier = (data as any).tierId ?? '';
+      const tierId = (data as any).tierId ?? '';
       const total = (data as any).tierTotal;
-      return `Quote ${row.quote_id} accepted${tier ? ` (${tier})` : ''}${total ? ` — €${total}` : ''}`;
+      return i18n.t('notifications.push.quoteAcceptedBody', {
+        ref,
+        tier: tierId ? ` (${tierId})` : '',
+        total: total ? ` — €${total}` : '',
+      });
     }
     case 'change_request':
       return typeof (data as any).message === 'string'
         ? String((data as any).message).slice(0, 120)
-        : `Customer asked to revise ${row.quote_id}`;
+        : i18n.t('notifications.push.changeRequestFallback', { ref });
     case 'decision':
-      return `${(data as any).question ?? 'Decision'}: ${(data as any).value ?? '—'}`;
+      return i18n.t('notifications.push.decisionBody', {
+        question: (data as any).question ?? i18n.t('notifications.push.unknownDecision'),
+        value: (data as any).value ?? i18n.t('notifications.push.unknownValue'),
+      });
     case 'tier_select':
-      return `Considering ${(data as any).tierId ?? 'a tier'}`;
+      return i18n.t('notifications.push.tierSelectBody', {
+        tier: (data as any).tierId ?? i18n.t('notifications.push.unknownTier'),
+      });
     case 'reject':
-      return `Quote ${row.quote_id} declined`;
+      return i18n.t('notifications.push.quoteRejectedBody', { ref });
     default:
-      return `Event on quote ${row.quote_id}`;
+      return i18n.t('notifications.push.genericBody', { ref });
   }
 }
 

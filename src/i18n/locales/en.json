@@ -363,7 +363,8 @@
   },
   "billing": {
     "upgradeRequired": "Upgrade required",
-    "viewPlans": "View plans"
+    "viewPlans": "View plans",
+    "formatNeedsContractor": "This format needs the Contractor plan."
   },
   "reasonCode": {
     "title": "Why did you change this?",
@@ -805,6 +806,37 @@
       "delivery": "Delivery",
       "cert": "Cert",
       "general": "General"
+    },
+    "push": {
+      "paidTitle": "Payment received",
+      "paidBody": "Invoice {{ref}}{{amount}} marked as paid.",
+      "amountSuffix": " (€{{amt}})",
+      "quoteAcceptedTitle": "Quote accepted",
+      "quoteAcceptedBody": "Quote {{ref}} accepted{{tier}}{{total}}.",
+      "quoteRejectedTitle": "Quote rejected",
+      "quoteRejectedBody": "Quote {{ref}} declined.",
+      "changeRequestTitle": "Customer requested changes",
+      "changeRequestFallback": "Customer asked to revise {{ref}}.",
+      "decisionTitle": "Customer made a decision",
+      "decisionBody": "{{question}}: {{value}}",
+      "tierSelectTitle": "Customer selected a tier",
+      "tierSelectBody": "Considering {{tier}}.",
+      "genericTitle": "Customer update",
+      "genericBody": "Event on quote {{ref}}.",
+      "unknownDecision": "Decision",
+      "unknownTier": "a tier",
+      "unknownValue": "—",
+      "eveTitle": "Vasco has something for you",
+      "eveTapToReview": "Tap to review",
+      "paymentReminderTitle": "Payment reminder",
+      "paymentReminderBody": "Invoice for {{customer}} (€{{amount}}) is overdue by {{days}} days",
+      "quoteFollowupTitle": "Follow up on quote",
+      "quoteFollowupBody": "Quote for {{customer}} was sent {{days}} days ago — time to follow up",
+      "outcomeFollowupTitle": "Did the customer respond?",
+      "outcomeFollowupBodyNamed": "Tap to log whether {{customer}} responded to your {{itemType}}.",
+      "outcomeFollowupBody": "Tap to log the outcome of your {{itemType}}.",
+      "jobReminderTitle": "Job reminder",
+      "jobReminderBody": "{{title}} starts in 1 hour"
     }
   },
   "insurance": {
@@ -2536,5 +2568,55 @@
     "evidence": "Based on {{count}} linked data sources",
     "implication": "Estimated impact: €{{amount}}",
     "viewDetails": "See details for more information"
+  },
+  "tierGate": {
+    "jobLimitReached": "Job limit reached ({{count}}). Upgrade for more.",
+    "quoteLimitReached": "Quote limit reached ({{count}}/month).",
+    "invoiceLimitReached": "Invoice limit reached ({{count}}/month).",
+    "aiInsightLimitReached": "AI insight limit reached ({{count}}/month).",
+    "clientLimitReached": "Client limit reached ({{count}}).",
+    "seatsInUse": "All {{count}} team seats in use.",
+    "featureRequiresTier": "{{feature}} requires the {{tier}} plan."
+  },
+  "shareQuote": {
+    "failTitle": "Could not create link",
+    "failBody": "Please try again.",
+    "message": "{{greeting}}here is your quote: {{url}}",
+    "greeting": "Hi {{name}}, ",
+    "shareTitle": "Quote",
+    "buttonLabel": "Share quote link"
+  },
+  "paymentAlerts": {
+    "linkCreatedTitle": "Success",
+    "linkCreatedBody": "Payment link created and copied to clipboard!",
+    "reminderEmailTitle": "Sent",
+    "reminderEmailBody": "Email reminder sent!",
+    "reminderWhatsappBody": "WhatsApp reminder sent!",
+    "copiedTitle": "Copied",
+    "copiedBody": "Payment link copied to clipboard:\n{{url}}"
+  },
+  "quoteToInvoice": {
+    "notFound": "Quote {{id}} not found",
+    "header": "Invoice from {{ref}}",
+    "autoNumberDue": "Auto-numbered · Due in 14 days",
+    "quoteDetails": "Quote details",
+    "customer": "Customer",
+    "job": "Job",
+    "amount": "Amount",
+    "lineItems": "Line items",
+    "invoiceCreated": "Invoice created",
+    "invoiceRef": "Invoice #{{id}}",
+    "matchesQuote": "Matches quote language to reduce payment disputes.",
+    "createInvoice": "Create invoice",
+    "creating": "Creating…",
+    "generatePdf": "Generate PDF",
+    "markSent": "Mark sent",
+    "createFailed": "Could not create invoice. Please try again."
+  },
+  "whatsapp": {
+    "invoiceReminder": "Hi {{name}},\n\nThis is a friendly reminder about invoice {{ref}} for €{{amount}}{{overdue}}.\n\nCould you arrange payment at your earliest convenience?\n\nThank you,\nSent via Vasco",
+    "invoiceOverdue": " which is {{days}} days overdue",
+    "quoteFollowup": "Hi {{name}},\n\nI wanted to follow up on the quote for \"{{job}}\" (€{{amount}}).\n\nDo you have any questions or would you like to proceed?\n\nBest regards,\nSent via Vasco",
+    "progressUpdate": "Hi {{name}},\n\nQuick update on \"{{job}}\": {{hours}}h worked today. Everything is on track.\n\nSent via Vasco"
   }
 }

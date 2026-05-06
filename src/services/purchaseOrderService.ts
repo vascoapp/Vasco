@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
 // TYPES
@@ -135,6 +136,12 @@ class PurchaseOrderService {
   static getInstance(): PurchaseOrderService {
     if (!PurchaseOrderService.instance) {
       PurchaseOrderService.instance = new PurchaseOrderService();
+      registerSingletonReset(() => {
+        const inst = PurchaseOrderService.instance;
+        inst.orders = [...mockOrders];
+        inst.counter = 42;
+        inst.listeners.forEach((l) => l());
+      });
     }
     return PurchaseOrderService.instance;
   }

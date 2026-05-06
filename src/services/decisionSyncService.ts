@@ -9,6 +9,8 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState, useCallback } from 'react';
 import { logWarn } from '../utils/errorHandler';
+import { logIntelligenceWriteFailure } from '../intelligence/dataCollector';
+import { getCurrentUserId } from '../lib/currentUser';
 
 const LOCAL_KEY = '@vasco_decision_submissions';
 
@@ -127,8 +129,15 @@ export async function logActivity(trackerId: string, activityType: string, itemI
       item_id: itemId,
       metadata: metadata ?? {},
     });
-  } catch {
-    // Non-critical
+  } catch (err) {
+    // Non-critical write — but route to eve_telemetry so we can audit
+    // RLS / schema drift later. Customer portal callers may have no
+    // contractor uid; fall back to 'anon'.
+    await logIntelligenceWriteFailure(
+      'decision_activities.insert',
+      getCurrentUserId() ?? 'anon',
+      err,
+    );
   }
 }
 
@@ -163,18 +172,24 @@ export function useDecisionUpdates(trackerId: string | null): {
   useEffect(() => {
     if (!trackerId || !isSupabaseConfigured) return;
 
+    // R56: was filtering to `event: 'INSERT'` only — but `submitDecision`
+    // uses `upsert` with onConflict so a customer EDITING their decision
+    // fires UPDATE, not INSERT. Contractor's realtime listener missed
+    // every edit. Switched to '*' so both INSERT (first submission) and
+    // UPDATE (edited submission) propagate.
     const channel = supabase
       .channel(`decisions:${trackerId}`)
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'decision_submissions',
           filter: `tracker_id=eq.${trackerId}`,
         },
         (payload) => {
-          const row = payload.new as any;
+          const row = (payload.new ?? payload.old) as any;
+          if (!row) return;
           const submission: DecisionSubmission = {
             id: row.id,
             trackerId: row.tracker_id,
@@ -188,7 +203,9 @@ export function useDecisionUpdates(trackerId: string | null): {
             submittedAt: row.submitted_at,
           };
           setSubmissions(prev => [submission, ...prev.filter(s => s.itemId !== submission.itemId)]);
-          if (row.submitted_by === 'customer') {
+          // Only bump newCount on first INSERT — UPDATE means the
+          // contractor already saw it and the customer is revising.
+          if (row.submitted_by === 'customer' && payload.eventType === 'INSERT') {
             setNewCount(prev => prev + 1);
           }
         }

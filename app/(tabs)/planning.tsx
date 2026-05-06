@@ -13,7 +13,7 @@ export default function PlanningScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
       <Text style={styles.title}>{t('tabs.planning.title', 'Planning')}</Text>
       <Text style={styles.subtitle}>{t('tabs.planning.comingSoon', 'Coming soon')}</Text>
     </View>

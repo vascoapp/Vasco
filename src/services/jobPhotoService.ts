@@ -7,6 +7,7 @@
 // =============================================================================
 
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { isTempIdFast } from '../lib/idShape';
 
 export type PhotoKind = 'before' | 'during' | 'after' | 'defect' | 'handover';
 
@@ -39,6 +40,13 @@ function base64ToBytes(b64: string): Uint8Array {
 
 export async function uploadJobPhoto(input: UploadJobPhotoInput): Promise<JobPhotoRecord | null> {
   if (!isSupabaseConfigured) return null;
+  // R59: refuse to upload when jobId is a temp id. The storage path
+  // `${user.id}/${input.jobId}/${uuid}.jpg` would embed the temp id,
+  // and `job_photos.job_id` is a FK → jobs(id) so the metadata insert
+  // would fail with no row matched. Photo would land in the bucket
+  // orphaned forever. Caller should retry once the offline queue flushes
+  // the parent job and refreshData picks up the BE uuid.
+  if (isTempIdFast(input.jobId)) return null;
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;

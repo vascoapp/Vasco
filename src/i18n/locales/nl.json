@@ -363,7 +363,8 @@
   },
   "billing": {
     "upgradeRequired": "Upgrade nodig",
-    "viewPlans": "Bekijk abonnementen"
+    "viewPlans": "Bekijk abonnementen",
+    "formatNeedsContractor": "Dit formaat vereist het Contractor-abonnement."
   },
   "reasonCode": {
     "title": "Waarom pas je dit aan?",
@@ -1057,6 +1058,37 @@
       "delivery": "Levering",
       "cert": "Certificaat",
       "general": "Algemeen"
+    },
+    "push": {
+      "paidTitle": "Betaling ontvangen",
+      "paidBody": "Factuur {{ref}}{{amount}} gemarkeerd als betaald.",
+      "amountSuffix": " (€{{amt}})",
+      "quoteAcceptedTitle": "Offerte geaccepteerd",
+      "quoteAcceptedBody": "Offerte {{ref}} geaccepteerd{{tier}}{{total}}.",
+      "quoteRejectedTitle": "Offerte afgewezen",
+      "quoteRejectedBody": "Offerte {{ref}} afgewezen.",
+      "changeRequestTitle": "Klant vraagt wijzigingen",
+      "changeRequestFallback": "Klant vroeg om aanpassing van {{ref}}.",
+      "decisionTitle": "Klant heeft beslist",
+      "decisionBody": "{{question}}: {{value}}",
+      "tierSelectTitle": "Klant koos een variant",
+      "tierSelectBody": "Overweegt {{tier}}.",
+      "genericTitle": "Klantupdate",
+      "genericBody": "Activiteit op offerte {{ref}}.",
+      "unknownDecision": "Beslissing",
+      "unknownTier": "een variant",
+      "unknownValue": "—",
+      "eveTitle": "Vasco heeft iets voor je",
+      "eveTapToReview": "Tik om te bekijken",
+      "paymentReminderTitle": "Betaalherinnering",
+      "paymentReminderBody": "Factuur voor {{customer}} (€{{amount}}) is over {{days}} dagen verlopen",
+      "quoteFollowupTitle": "Offerte opvolgen",
+      "quoteFollowupBody": "Offerte voor {{customer}} is {{days}} dagen geleden verstuurd — tijd om op te volgen",
+      "outcomeFollowupTitle": "Reageerde de klant?",
+      "outcomeFollowupBodyNamed": "Tik om te loggen of {{customer}} heeft gereageerd op je {{itemType}}.",
+      "outcomeFollowupBody": "Tik om de uitkomst van je {{itemType}} te loggen.",
+      "jobReminderTitle": "Klus herinnering",
+      "jobReminderBody": "{{title}} begint over 1 uur"
     }
   },
   "insurance": {
@@ -2536,5 +2568,55 @@
     "evidence": "Op basis van {{count}} gekoppelde databronnen",
     "implication": "Geschatte impact: €{{amount}}",
     "viewDetails": "Bekijk de details voor meer informatie"
+  },
+  "tierGate": {
+    "jobLimitReached": "Klus-limiet bereikt ({{count}}). Upgrade voor meer.",
+    "quoteLimitReached": "Offerte-limiet bereikt ({{count}}/maand).",
+    "invoiceLimitReached": "Factuur-limiet bereikt ({{count}}/maand).",
+    "aiInsightLimitReached": "AI-inzicht-limiet bereikt ({{count}}/maand).",
+    "clientLimitReached": "Klant-limiet bereikt ({{count}}).",
+    "seatsInUse": "Alle {{count}} teamplekken in gebruik.",
+    "featureRequiresTier": "{{feature}} vereist het {{tier}}-abonnement."
+  },
+  "shareQuote": {
+    "failTitle": "Kan link niet aanmaken",
+    "failBody": "Probeer het opnieuw.",
+    "message": "{{greeting}}hier is uw offerte: {{url}}",
+    "greeting": "Hallo {{name}}, ",
+    "shareTitle": "Offerte",
+    "buttonLabel": "Offertelink delen"
+  },
+  "paymentAlerts": {
+    "linkCreatedTitle": "Gelukt",
+    "linkCreatedBody": "Betaallink aangemaakt en gekopieerd!",
+    "reminderEmailTitle": "Verzonden",
+    "reminderEmailBody": "E-mailherinnering verzonden!",
+    "reminderWhatsappBody": "WhatsApp-herinnering verzonden!",
+    "copiedTitle": "Gekopieerd",
+    "copiedBody": "Betaallink gekopieerd:\n{{url}}"
+  },
+  "quoteToInvoice": {
+    "notFound": "Offerte {{id}} niet gevonden",
+    "header": "Factuur van {{ref}}",
+    "autoNumberDue": "Auto-genummerd · 14 dagen betaaltermijn",
+    "quoteDetails": "Offertegegevens",
+    "customer": "Klant",
+    "job": "Klus",
+    "amount": "Bedrag",
+    "lineItems": "Regelitems",
+    "invoiceCreated": "Factuur aangemaakt",
+    "invoiceRef": "Factuur #{{id}}",
+    "matchesQuote": "Komt overeen met offerte om betalingsgeschillen te voorkomen.",
+    "createInvoice": "Factuur aanmaken",
+    "creating": "Aanmaken…",
+    "generatePdf": "PDF genereren",
+    "markSent": "Markeer als verzonden",
+    "createFailed": "Kan factuur niet aanmaken. Probeer opnieuw."
+  },
+  "whatsapp": {
+    "invoiceReminder": "Hallo {{name}},\n\nEen vriendelijke herinnering aan factuur {{ref}} voor €{{amount}}{{overdue}}.\n\nKunt u de betaling op korte termijn regelen?\n\nDank u,\nVerzonden via Vasco",
+    "invoiceOverdue": " die {{days}} dagen verlopen is",
+    "quoteFollowup": "Hallo {{name}},\n\nIk wilde even opvolgen op de offerte voor \"{{job}}\" (€{{amount}}).\n\nHeeft u nog vragen of wilt u doorgaan?\n\nMet vriendelijke groet,\nVerzonden via Vasco",
+    "progressUpdate": "Hallo {{name}},\n\nKorte update over \"{{job}}\": vandaag {{hours}}u gewerkt. Alles ligt op schema.\n\nVerzonden via Vasco"
   }
 }

@@ -96,17 +96,26 @@ export default function NewQuoteScreen() {
     }
 
     // Tier gate — free users see an upgrade prompt when they hit their monthly quote cap.
+    // R52: count quotes created this calendar month from real AppState
+    // (legacy `quotesUsedThisMonth` counter was never incremented).
     try {
       const { loadSubscription, canCreateQuote } = await import('../../src/services/subscriptionService');
       const sub = await loadSubscription();
-      const gate = canCreateQuote(sub);
+      const monthStart = new Date();
+      monthStart.setDate(1);
+      monthStart.setHours(0, 0, 0, 0);
+      const quotesThisMonth = quotes.filter((q: any) => {
+        const created = q.createdAt ? new Date(q.createdAt) : null;
+        return created && created >= monthStart;
+      }).length;
+      const gate = canCreateQuote(sub, quotesThisMonth);
       if (!gate.allowed) {
         Alert.alert(
-          t('compliance.upgradeRequired', 'Upgrade required'),
+          t('billing.upgradeRequired', 'Upgrade required'),
           gate.reason,
           [
             { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-            { text: t('compliance.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+            { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
           ],
         );
         return;

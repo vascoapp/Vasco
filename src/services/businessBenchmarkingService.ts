@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
 // TYPES
@@ -133,6 +134,13 @@ class BusinessBenchmarkingService {
   static getInstance(): BusinessBenchmarkingService {
     if (!BusinessBenchmarkingService.instance) {
       BusinessBenchmarkingService.instance = new BusinessBenchmarkingService();
+      registerSingletonReset(() => {
+        const inst = BusinessBenchmarkingService.instance;
+        inst.benchmarks = [...mockBenchmarks];
+        inst.goals = [...mockGoals];
+        inst.opportunities = [...mockOpportunities];
+        inst.listeners.forEach((l) => l());
+      });
     }
     return BusinessBenchmarkingService.instance;
   }

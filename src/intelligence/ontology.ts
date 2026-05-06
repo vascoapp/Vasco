@@ -11,6 +11,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { recordMetricSnapshot } from './learningStorage';
+import { subscribeIdRemap, type IdRemapEvent } from '../services/idRemapBus';
 
 const ONTOLOGY_KEY = '@vasco_ontology';
 
@@ -144,6 +145,77 @@ export async function addRelation(relation: Omit<OntologyRelation, 'id' | 'creat
     await saveOntology();
   }
 }
+
+// ---------------------------------------------------------------------------
+// R54: id-remap support
+// ---------------------------------------------------------------------------
+// When a temp-id-keyed entity / relation gets a real BE uuid via the
+// offline queue flush, rekey our local copies so future lookups by real
+// id resolve. Without this, addJob() offline + reconnect leaves the
+// ontology with `entities['j-1234567890']` while AppState + BE have
+// `id='job-uuid-abc'` — the entity becomes an orphan and any
+// `getEntity(realId)` call misses.
+
+/** Map BE table names → ontology entity types we manage. */
+const TABLE_TO_ENTITY_TYPE: Record<string, EntityType> = {
+  customers: 'customer',
+  jobs: 'job',
+  materials: 'material',
+  suppliers: 'supplier',
+  projects: 'project',
+  documents: 'invoice', // ambiguous (quote|invoice); the entity stays under
+                       // its original type — only id is rewritten.
+};
+
+/** Rewrite an entity id and all relations that reference it. Idempotent. */
+export async function remapEntityId(tempId: string, realId: string): Promise<void> {
+  if (!tempId || !realId || tempId === realId) return;
+  const graph = await loadOntology();
+  let touched = false;
+
+  const ent = graph.entities.get(tempId);
+  if (ent) {
+    graph.entities.delete(tempId);
+    // If a row already exists under realId (e.g. a refreshData() created it
+    // first), merge with the temp-id entity's attributes — the temp version
+    // is older but may have local-only fields.
+    const existing = graph.entities.get(realId);
+    graph.entities.set(realId, {
+      ...ent,
+      ...(existing ?? {}),
+      id: realId,
+      attributes: { ...ent.attributes, ...(existing?.attributes ?? {}) },
+      lastUpdated: new Date().toISOString(),
+    });
+    touched = true;
+  }
+
+  for (const rel of graph.relations) {
+    if (rel.fromId === tempId) {
+      rel.fromId = realId;
+      touched = true;
+    }
+    if (rel.toId === tempId) {
+      rel.toId = realId;
+      touched = true;
+    }
+  }
+
+  if (touched) await saveOntology();
+}
+
+let _remapInitialized = false;
+function initOntologyRemapListener(): void {
+  if (_remapInitialized) return;
+  _remapInitialized = true;
+  subscribeIdRemap((e: IdRemapEvent) => {
+    if (!TABLE_TO_ENTITY_TYPE[e.table]) return;
+    void remapEntityId(e.tempId, e.realId);
+  });
+}
+
+// Register at module load. Idempotent — multiple imports are safe.
+initOntologyRemapListener();
 
 // ---------------------------------------------------------------------------
 // Query

@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { registerSingletonReset } from './singletonReset';
 import type {
   Supplier,
   SupplierCategory,
@@ -216,6 +217,16 @@ class SupplierReliabilityService {
   static getInstance(): SupplierReliabilityService {
     if (!SupplierReliabilityService.instance) {
       SupplierReliabilityService.instance = new SupplierReliabilityService();
+      registerSingletonReset(() => {
+        const inst = SupplierReliabilityService.instance;
+        inst.suppliers.clear();
+        inst.deliveryRecords = [];
+        inst.alerts.clear();
+        inst.performanceCache.clear();
+        inst.thresholds = DEFAULT_RELIABILITY_THRESHOLDS;
+        inst.weights = DEFAULT_METRIC_WEIGHTS;
+        inst.listeners.forEach((l) => l());
+      });
     }
     return SupplierReliabilityService.instance;
   }

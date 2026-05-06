@@ -6,7 +6,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "runtimeVersion": {
       "policy": "appVersion"
@@ -14,7 +14,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0B0E11"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -84,9 +84,8 @@
       [
         "expo-notifications",
         {
-          "color": "#E35205",
+          "color": "#F97316",
           "defaultChannel": "default",
-          "icon": "./assets/notification-icon.png",
           "androidMode": "default",
           "androidCollapsedTitle": "Vasco"
         }

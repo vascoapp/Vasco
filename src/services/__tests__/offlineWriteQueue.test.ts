@@ -55,13 +55,22 @@ describe('offlineWriteQueue', () => {
   });
 
   // R277 — temp IDs must NEVER reach the BE.
+  // R49 — temp-id inserts now go through `.select('id').single()` so the
+  // BE-generated id can be captured for FK-rewriting child rows.
   test('strips temp ids from insert payloads on flush', async () => {
     let captured: any = null;
     jest.doMock('../../lib/supabase', () => ({
       isSupabaseConfigured: true,
       supabase: {
         from: () => ({
-          insert: async (payload: any) => { captured = payload; return { error: null }; },
+          insert: (payload: any) => {
+            captured = payload;
+            return {
+              select: () => ({
+                single: async () => ({ data: { id: 'real-uuid-1' }, error: null }),
+              }),
+            };
+          },
         }),
       },
     }));
@@ -103,6 +112,92 @@ describe('offlineWriteQueue', () => {
     expect(result.processed).toBe(1);
     expect(await queueSize()).toBe(0);
     expect(insertSpy).not.toHaveBeenCalled();
+  });
+
+  // R49 — temp-id FK rewriting on flush.
+  test('rewrites FK references in queued child rows after parent insert', async () => {
+    const inserts: { table: string; payload: any }[] = [];
+    jest.doMock('../../lib/supabase', () => ({
+      isSupabaseConfigured: true,
+      supabase: {
+        from: (table: string) => ({
+          insert: (payload: any) => {
+            inserts.push({ table, payload });
+            return {
+              select: () => ({
+                single: async () => ({ data: { id: 'real-customer-uuid' }, error: null }),
+              }),
+            };
+          },
+        }),
+      },
+    }));
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { queueWrite, flushQueue } = require('../offlineWriteQueue');
+    // Customer queued first with temp id, then a job referencing that temp id.
+    await queueWrite({
+      table: 'customers',
+      op: 'insert',
+      payload: { id: 'c-1234567890', name: 'Alice' },
+    });
+    await queueWrite({
+      table: 'jobs',
+      op: 'insert',
+      payload: { id: 'j-1234567891', customer_id: 'c-1234567890', title: 'Boiler repair' },
+    });
+    const result = await flushQueue();
+    expect(result.processed).toBe(2);
+    expect(inserts).toHaveLength(2);
+    // Customer inserted with temp id stripped
+    expect(inserts[0].table).toBe('customers');
+    expect(inserts[0].payload.id).toBeUndefined();
+    expect(inserts[0].payload.name).toBe('Alice');
+    // Job inserted with FK rewritten to the BE-generated customer id
+    expect(inserts[1].table).toBe('jobs');
+    expect(inserts[1].payload.id).toBeUndefined(); // own temp id stripped
+    expect(inserts[1].payload.customer_id).toBe('real-customer-uuid');
+    expect(inserts[1].payload.title).toBe('Boiler repair');
+  });
+
+  test('rewrites temp rowId on update entries when parent mapping is known', async () => {
+    const updates: { rowId: string; payload: any }[] = [];
+    jest.doMock('../../lib/supabase', () => ({
+      isSupabaseConfigured: true,
+      supabase: {
+        from: () => ({
+          insert: () => ({
+            select: () => ({
+              single: async () => ({ data: { id: 'real-job-uuid' }, error: null }),
+            }),
+          }),
+          update: (payload: any) => ({
+            eq: (_k: string, v: any) => {
+              updates.push({ rowId: v, payload });
+              return { error: null };
+            },
+          }),
+        }),
+      },
+    }));
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { queueWrite, flushQueue } = require('../offlineWriteQueue');
+    // Insert job with temp id, then update that same job by temp rowId.
+    await queueWrite({
+      table: 'jobs',
+      op: 'insert',
+      payload: { id: 'j-1234567890', title: 'Initial' },
+    });
+    await queueWrite({
+      table: 'jobs',
+      op: 'update',
+      rowId: 'j-1234567890',
+      payload: { status: 'in-progress' },
+    });
+    const result = await flushQueue();
+    expect(result.processed).toBe(2);
+    expect(updates).toHaveLength(1);
+    expect(updates[0].rowId).toBe('real-job-uuid'); // rewritten from temp id
+    expect(updates[0].payload).toEqual({ status: 'in-progress' });
   });
 
   test('preserves real uuid ids in update rowId', async () => {

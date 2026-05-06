@@ -264,7 +264,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     label: 'Director',
     title: 'Executive View',
     description: 'Full platform access with portfolio oversight and strategic controls',
-    primaryColor: '#E35205', // Hermes Orange for Director (per theme)
+    primaryColor: '#F97316', // Hermes Orange for Director (per theme)
     features: [
       'Portfolio Dashboard',
       'All Role Views',
@@ -284,7 +284,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     label: 'Contractor',
     title: 'Job Management',
     description: 'Manage jobs, quotes, invoices, and customers for your trade business',
-    primaryColor: '#E35205', // Hermes Orange for Contractor (per theme)
+    primaryColor: '#F97316', // Hermes Orange for Contractor (per theme)
     features: [
       'Job Scheduling',
       'Quote Builder',
@@ -304,7 +304,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     label: 'Worker',
     title: 'My Work',
     description: 'View schedule, clock in/out, and submit timesheets',
-    primaryColor: '#E35205', // Hermes Orange for Worker (per theme)
+    primaryColor: '#F97316', // Hermes Orange for Worker (per theme)
     features: [
       'My Schedule',
       'Clock In/Out',
@@ -445,6 +445,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const profile = JSON.parse(raw);
         if (profile && typeof profile === 'object') {
           setUser((prev) => prev ? { ...prev, ...profile } : null);
+          // R66 round 4: honor the saved language preference on cold-start.
+          // i18n.ts only reads device locale at boot — without this, a
+          // contractor whose phone is set to a different language than the
+          // one they picked in onboarding sees the wrong language.
+          const savedLang = (profile as { language?: string }).language;
+          if (savedLang && typeof savedLang === 'string') {
+            import('../i18n/i18n').then(({ default: i18n }) => {
+              if (i18n.language !== savedLang) {
+                i18n.changeLanguage(savedLang).catch(() => {});
+              }
+            }).catch(() => {});
+          }
         }
       } catch {}
     }).catch(() => {});

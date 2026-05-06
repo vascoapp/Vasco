@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
 // TYPES
@@ -157,6 +158,12 @@ class CustomerInsightsService {
   static getInstance(): CustomerInsightsService {
     if (!CustomerInsightsService.instance) {
       CustomerInsightsService.instance = new CustomerInsightsService();
+      registerSingletonReset(() => {
+        const inst = CustomerInsightsService.instance;
+        inst.customers = [];
+        inst.segments = [];
+        inst.listeners.forEach((l) => l());
+      });
     }
     return CustomerInsightsService.instance;
   }

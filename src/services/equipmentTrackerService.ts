@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
 // TYPES
@@ -392,6 +393,14 @@ class EquipmentTrackerService {
   static getInstance(): EquipmentTrackerService {
     if (!EquipmentTrackerService.instance) {
       EquipmentTrackerService.instance = new EquipmentTrackerService();
+      registerSingletonReset(() => {
+        const inst = EquipmentTrackerService.instance;
+        inst.equipment = [...mockEquipment];
+        inst.maintenanceRecords = [...mockMaintenanceRecords];
+        inst.checkouts = [...mockCheckouts];
+        inst.alerts = [...mockAlerts];
+        inst.listeners.forEach((l) => l());
+      });
     }
     return EquipmentTrackerService.instance;
   }

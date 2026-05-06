@@ -105,7 +105,7 @@ export const EVE_AGENTS: Record<EveAgentType, EveAgentConfig> = {
     tagline: 'Your tireless business assistant',
     description: 'Handles day-to-day execution: drafts invoices from completed jobs, sends payment reminders, follows up on stale quotes, suggests schedule optimizations, and prepares end-of-day updates. Works 24/7 so you can focus on the tools.',
     icon: 'flash',
-    color: '#E35205',
+    color: '#F97316',
     actionTypes: [
       'draft_invoice', 'draft_quote', 'draft_reminder', 'draft_followup',
       'schedule_suggestion', 'progress_update', 'batch_invoices',

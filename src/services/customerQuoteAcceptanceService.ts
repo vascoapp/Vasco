@@ -179,10 +179,18 @@ export async function shareQuoteWithAcceptanceLink(quote: {
   const t = i18n.t.bind(i18n);
   const { url } = await createAcceptanceLink(quote);
 
+  // R64: previously fell back to `quote.description` when job was empty.
+  // R62 repurposed `description` for the SOW prose (up to ~3 paragraphs),
+  // so this fallback would inject 600+ chars of scope text into the share
+  // message. Use a short trimmed first-line fallback when description is
+  // SOW-shaped, otherwise empty.
+  const firstLineFallback = quote.description
+    ? quote.description.split(/\n/)[0].slice(0, 80)
+    : '';
   const message = t('approval.shareMessage', {
     defaultValue: `Hi {{customer}},\n\nHere is your quote for {{job}} — €{{amount}}.\n\nAccept online: {{url}}\n\nValid for 30 days.\n\nKind regards`,
     customer: quote.customerName || quote.customer || '',
-    job: quote.job || quote.description || '',
+    job: quote.job || firstLineFallback,
     amount: quote.amount.toLocaleString(),
     url,
   });

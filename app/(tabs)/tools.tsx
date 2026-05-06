@@ -103,7 +103,7 @@ export default function ToolsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={Typography.title}>Tools</Text>
         <Text style={styles.subtitle}>Quick access to contractor tools</Text>

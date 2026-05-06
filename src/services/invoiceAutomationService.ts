@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
 // TYPES
@@ -141,6 +142,12 @@ class InvoiceAutomationService {
   static getInstance(): InvoiceAutomationService {
     if (!InvoiceAutomationService.instance) {
       InvoiceAutomationService.instance = new InvoiceAutomationService();
+      registerSingletonReset(() => {
+        const inst = InvoiceAutomationService.instance;
+        inst.invoices = [];
+        inst.invoiceCounter = 1;
+        inst.listeners.forEach((l) => l());
+      });
     }
     return InvoiceAutomationService.instance;
   }

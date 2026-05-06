@@ -6,6 +6,7 @@
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { complianceKnowledgeBase } from '../data/complianceKnowledgeBase';
+import { registerSingletonReset } from './singletonReset';
 import type {
   CountryCode,
   LanguageCode,
@@ -510,6 +511,17 @@ class ComplianceService {
   static getInstance(): ComplianceService {
     if (!ComplianceService.instance) {
       ComplianceService.instance = new ComplianceService();
+      registerSingletonReset(() => {
+        const inst = ComplianceService.instance;
+        inst.licenses = [];
+        inst.certifications = [];
+        inst.safetyChecklists = [...mockSafetyChecklists];
+        inst.checklistCompletions = [];
+        inst.regulatoryUpdates = [];
+        inst.insurancePolicies = [];
+        inst.alerts = [];
+        inst.listeners.forEach((l) => l());
+      });
     }
     return ComplianceService.instance;
   }

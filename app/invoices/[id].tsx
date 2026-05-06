@@ -372,11 +372,11 @@ export default function InvoiceDetailScreen() {
       const gate = canUseEInvoiceFormat(sub, formatId as any);
       if (!gate.allowed) {
         Alert.alert(
-          t('compliance.upgradeRequired', 'Upgrade required'),
-          gate.reason ?? t('compliance.upgradeRequiredDesc', 'This format needs the Contractor plan.'),
+          t('billing.upgradeRequired', 'Upgrade required'),
+          gate.reason ?? t('billing.formatNeedsContractor', 'This format needs the Contractor plan.'),
           [
             { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-            { text: t('compliance.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+            { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
           ],
         );
         return;
@@ -438,11 +438,11 @@ export default function InvoiceDetailScreen() {
       const gate = canUseEInvoiceFormat(sub, 'facturae');
       if (!gate.allowed) {
         Alert.alert(
-          t('compliance.upgradeRequired', 'Upgrade required'),
-          gate.reason ?? t('compliance.upgradeRequiredDesc', 'This format needs the Contractor plan.'),
+          t('billing.upgradeRequired', 'Upgrade required'),
+          gate.reason ?? t('billing.formatNeedsContractor', 'This format needs the Contractor plan.'),
           [
             { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-            { text: t('compliance.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+            { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
           ],
         );
         return;
@@ -512,11 +512,11 @@ export default function InvoiceDetailScreen() {
       const gate = canUseEInvoiceFormat(sub, 'fatturapa');
       if (!gate.allowed) {
         Alert.alert(
-          t('compliance.upgradeRequired', 'Upgrade required'),
-          gate.reason ?? t('compliance.upgradeRequiredDesc', 'This format needs the Contractor plan.'),
+          t('billing.upgradeRequired', 'Upgrade required'),
+          gate.reason ?? t('billing.formatNeedsContractor', 'This format needs the Contractor plan.'),
           [
             { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-            { text: t('compliance.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+            { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
           ],
         );
         return;

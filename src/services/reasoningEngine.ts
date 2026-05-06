@@ -1,9 +1,26 @@
 /**
- * Reasoning Engine Service
+ * Reasoning Engine Service — DORMANT — DO NOT EXTEND (R51 audit)
+ *
+ * Status as of R51: zero consumers anywhere in app/ or src/components/.
+ * The auditorService import that kept it alive in the bundle was removed
+ * (symbol was imported but never called). The class still contains:
+ *   - `gatherDataPoints` that fabricates DataPoint objects via
+ *     `generateMockDataPoint` instead of querying real BE state
+ *   - `evaluateStep` that returns Math.random()-jittered confidence scores
  *
  * Provides step-by-step explanations for AI decisions and recommendations.
- * Implements the Eve Legal AI "Reasoning Mode" pattern - every AI output
- * can explain its logic.
+ * Implements the Eve Legal AI "Reasoning Mode" pattern — every AI output
+ * can explain its logic. The pattern is sound; the implementation here is
+ * placeholder. To make real:
+ *   1. Replace `generateMockDataPoint` with reads from AppState +
+ *      `business_events` aggregations
+ *   2. Replace `evaluateStep`'s Math.random() with deterministic rules or
+ *      Claude Haiku Vision calls (the existing AI infra)
+ *   3. Mount via a "Why this suggestion?" affordance on AI queue items
+ *
+ * Recommendation: delete on next dead-code sweep unless the reasoning-mode
+ * UI is actively planned. The EVE Analyst pattern is currently delivered
+ * by `eveAgentService` + `eveLiveActionService` directly, without this layer.
  */
 
 import {

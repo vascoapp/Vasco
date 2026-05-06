@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
 // TYPES
@@ -200,6 +201,11 @@ class LeadGenerationService {
   static getInstance(): LeadGenerationService {
     if (!LeadGenerationService.instance) {
       LeadGenerationService.instance = new LeadGenerationService();
+      registerSingletonReset(() => {
+        const inst = LeadGenerationService.instance;
+        inst.leads = [...mockLeads];
+        inst.listeners.forEach((l) => l());
+      });
     }
     return LeadGenerationService.instance;
   }

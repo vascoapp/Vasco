@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
 // TYPES
@@ -467,6 +468,14 @@ class TeamManagementService {
   static getInstance(): TeamManagementService {
     if (!TeamManagementService.instance) {
       TeamManagementService.instance = new TeamManagementService();
+      registerSingletonReset(() => {
+        const inst = TeamManagementService.instance;
+        inst.teamMembers = [...mockTeamMembers];
+        inst.timeEntries = [...mockTimeEntries];
+        inst.leaveRequests = [...mockLeaveRequests];
+        inst.trainingRecords = [...mockTrainingRecords];
+        inst.listeners.forEach((l) => l());
+      });
     }
     return TeamManagementService.instance;
   }

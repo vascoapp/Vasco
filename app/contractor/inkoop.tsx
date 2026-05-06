@@ -52,11 +52,11 @@ export default function InkoopScreen() {
       const gate = canUseFeature(sub, 'hasInvoiceScanning');
       if (!gate.allowed) {
         Alert.alert(
-          t('compliance.upgradeRequired', 'Upgrade required'),
+          t('billing.upgradeRequired', 'Upgrade required'),
           gate.reason ?? t('inkoop.scannerUpgradeRequired', 'Receipt scanning is part of the paid plan.'),
           [
             { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-            { text: t('compliance.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+            { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
           ],
         );
         return;

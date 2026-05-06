@@ -17,6 +17,10 @@ export function documentRowToQuote(row: DocumentRow): Quote {
     amount: Number(row.total_amount),
     status: row.status as Quote['status'],
     lastUpdated: formatRelativeDate(row.updated_at),
+    // R63: pull the SOW narrative back from documents.scope_text so the
+    // PDF generator at app/quotes/[id].tsx can render it. Without this,
+    // the SOW lives only in BE — never reaches the customer.
+    description: row.scope_text ?? undefined,
   };
 }
 
@@ -50,7 +54,10 @@ export function lineItemRowToQuoteLineItem(row: LineItemRow): QuoteLineItem {
 export function businessSettingsToProfile(row: BusinessSettingsRow | null): BusinessProfile {
   if (!row) return { isComplete: false, completenessPercent: 0 };
 
-  const fields = [row.business_name, row.kvk_number, row.vat_number, row.address, row.email, row.phone];
+  // R66 NL launch: completeness now includes IBAN. Without it the
+  // invoice PDF renders no bank details — a NL customer can't pay.
+  // Adding it to the denominator makes the profile gauge tell the truth.
+  const fields = [row.business_name, row.kvk_number, row.vat_number, row.address, row.email, row.phone, row.iban];
   const filled = fields.filter(Boolean).length;
   const percent = Math.round((filled / fields.length) * 100);
 
@@ -63,6 +70,19 @@ export function businessSettingsToProfile(row: BusinessSettingsRow | null): Busi
     address: row.address ?? undefined,
     email: row.email ?? undefined,
     phone: row.phone ?? undefined,
+    // R66 NL launch: payment + locale columns. Migration
+    // 20260415000001_business_profiles.sql declared these but the
+    // mapper silently dropped them, leaving every NL invoice without
+    // bank details. Pulled through now.
+    iban: row.iban ?? undefined,
+    bic: row.bic ?? undefined,
+    country: (row.country as BusinessProfile['country']) ?? undefined,
+    postcode: row.postcode ?? undefined,
+    city: row.city ?? undefined,
+    website: row.website ?? undefined,
+    invoicePrefix: row.invoice_prefix ?? undefined,
+    quotePrefix: row.quote_prefix ?? undefined,
+    defaultPaymentTerms: row.default_payment_terms ?? undefined,
   };
 }
 

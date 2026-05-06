@@ -54,13 +54,27 @@ export default function CustomerPhonebookScreen() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [customers, jobs, invoices]);
 
-  const filtered = search
-    ? contacts.filter(c =>
-        c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.phone?.toLowerCase().includes(search.toLowerCase()) ||
-        c.email?.toLowerCase().includes(search.toLowerCase())
-      )
-    : contacts;
+  // R51: search now also matches the auto-tag (`vip`, `loyal`, `risky`,
+  // `inactive`, `new`) — was the R299 "tags don't gate behavior" gap.
+  // Typing "vip" surfaces all VIP-tagged customers; "risky" surfaces
+  // customers flagged late-payer / disputes by customerTaggingService.
+  // Localized tag labels are matched too so a Dutch user typing "trouw"
+  // finds "loyal" customers when the locale provides that translation.
+  const filtered = useMemo(() => {
+    if (!search) return contacts;
+    const q = search.toLowerCase().trim();
+    return contacts.filter((c) => {
+      if (c.name.toLowerCase().includes(q)) return true;
+      if (c.phone?.toLowerCase().includes(q)) return true;
+      if (c.email?.toLowerCase().includes(q)) return true;
+      if (c.tag && c.tag.toLowerCase().includes(q)) return true;
+      if (c.tag) {
+        const localized = t(`customerCrm.tags.${c.tag}`, { defaultValue: c.tag });
+        if (localized.toLowerCase().includes(q)) return true;
+      }
+      return false;
+    });
+  }, [contacts, search, t]);
 
   // Group alphabetically
   const grouped = useMemo(() => {
@@ -90,17 +104,19 @@ export default function CustomerPhonebookScreen() {
 
     // R305: tier gate — canAddClient was 0 callers despite the maxClients
     // limit existing in TierLimits. Free users could add unlimited customers.
+    // R52: pass live `customers.length` so the gate sees real usage; the
+    // legacy `state.clientCount` was never incremented anywhere.
     try {
       const { loadSubscription, canAddClient } = await import('../../src/services/subscriptionService');
       const sub = await loadSubscription();
-      const gate = canAddClient(sub);
+      const gate = canAddClient(sub, customers.length);
       if (!gate.allowed) {
         Alert.alert(
-          t('compliance.upgradeRequired', 'Upgrade required'),
+          t('billing.upgradeRequired', 'Upgrade required'),
           gate.reason ?? t('contractor.customers.limitReached', 'You have reached your client limit on this plan.'),
           [
             { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-            { text: t('compliance.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+            { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
           ],
         );
         return;

@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
 // TYPES
@@ -115,6 +116,12 @@ class WarrantyManagerService {
   static getInstance(): WarrantyManagerService {
     if (!WarrantyManagerService.instance) {
       WarrantyManagerService.instance = new WarrantyManagerService();
+      registerSingletonReset(() => {
+        const inst = WarrantyManagerService.instance;
+        inst.warranties = [...mockWarranties];
+        inst.claims = [...mockClaims];
+        inst.listeners.forEach((l) => l());
+      });
     }
     return WarrantyManagerService.instance;
   }

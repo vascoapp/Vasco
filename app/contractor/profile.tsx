@@ -23,6 +23,12 @@ import {
   type BillingCycle,
 } from '../../src/services/subscriptionService';
 import { startSubscriptionCheckout } from '../../src/services/billingService';
+import { useCreditsSummary } from '../../src/services/subscriptionCreditsService';
+import {
+  loadQuoteTonePreset,
+  saveQuoteTonePreset,
+  type QuoteTone,
+} from '../../src/services/sowGeneratorService';
 
 const LANG_OPTIONS = [
   { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
@@ -67,10 +73,20 @@ export default function ProfileScreen() {
   const [subscription, setSubscription] = useState<SubscriptionState | null>(null);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('annual');
   const [checkoutLoading, setCheckoutLoading] = useState<SubscriptionTier | null>(null);
+  // R62: tone preset for quote SOW generator. Cold-start is 'friendly'
+  // until the contractor picks otherwise; persisted on business_settings.
+  const [quoteTone, setQuoteTone] = useState<QuoteTone>('friendly');
+
+  // R18.1: surface available credits (months of free subscription earned via
+  // R8.3 referral activations) above the tier cards. Was visible only on
+  // /contractor/referrals — a contractor with credits going to upgrade had
+  // no way to know their charge would be offset.
+  const { summary: credits } = useCreditsSummary(user?.id ?? null);
 
   useEffect(() => {
     let active = true;
     loadSubscription().then(s => { if (active) setSubscription(s); });
+    loadQuoteTonePreset().then(t => { if (active) setQuoteTone(t); });
     return () => { active = false; };
   }, []);
 
@@ -152,6 +168,49 @@ export default function ProfileScreen() {
     { id: 'xero', name: 'Xero', icon: 'cloud', connected: false },
     { id: 'stripe', name: 'Stripe', icon: 'card-outline', connected: false },
   ];
+
+  // R62: tone preset picker. Backed by `business_settings.quote_tone`
+  // (column added in 20260505000001_sow_columns.sql). Saves on each pick;
+  // failure-soft so a Supabase miss leaves the local pick visible until
+  // next refresh.
+  const handleQuoteToneSwitch = () => {
+    const tones: { value: QuoteTone; label: string; subtitle: string }[] = [
+      {
+        value: 'friendly',
+        label: t('profile.quoteToneFriendly', 'Friendly'),
+        subtitle: t('profile.quoteToneFriendlyDesc', 'Warm, plain language. First-name basis.'),
+      },
+      {
+        value: 'formal',
+        label: t('profile.quoteToneFormal', 'Formal'),
+        subtitle: t('profile.quoteToneFormalDesc', 'Precise, no contractions. Full names.'),
+      },
+      {
+        value: 'detailed',
+        label: t('profile.quoteToneDetailed', 'Detailed'),
+        subtitle: t('profile.quoteToneDetailedDesc', 'Lists every assumption and step.'),
+      },
+      {
+        value: 'concise',
+        label: t('profile.quoteToneConcise', 'Concise'),
+        subtitle: t('profile.quoteToneConciseDesc', 'Tight prose. No filler.'),
+      },
+    ];
+    Alert.alert(
+      t('profile.quoteTone', 'Quote tone'),
+      t('profile.quoteToneDesc', 'How AI-generated scope text should sound.'),
+      [
+        ...tones.map(opt => ({
+          text: `${opt.label} — ${opt.subtitle}`,
+          onPress: () => {
+            setQuoteTone(opt.value);
+            saveQuoteTonePreset(opt.value).catch(() => {});
+          },
+        })),
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' as const },
+      ],
+    );
+  };
 
   const handleLanguageSwitch = () => {
     Alert.alert(
@@ -310,6 +369,21 @@ export default function ProfileScreen() {
 
               {subscription.tier !== 'contractor' && (
                 <View style={styles.planUpgradeBlock}>
+                  {/* R18.1: credits banner — visible when the contractor has
+                      earned R8.3 referral credits. The actual offset happens
+                      in the Stripe/Mollie webhook via redeemCredits, so this
+                      is a "your charge will be reduced" promise. */}
+                  {credits && credits.availableMonths > 0 && (
+                    <View style={styles.creditsBanner}>
+                      <Ionicons name="gift" size={16} color={Palette.hermesOrange} />
+                      <Text style={styles.creditsBannerText}>
+                        {t('profile.creditsAvailable', {
+                          defaultValue: '{{count}} month(s) of free subscription ready — applied automatically at checkout.',
+                          count: credits.availableMonths,
+                        })}
+                      </Text>
+                    </View>
+                  )}
                   <View style={styles.cycleToggle}>
                     <Pressable
                       style={[styles.cycleOption, billingCycle === 'monthly' && styles.cycleOptionActive]}
@@ -436,6 +510,19 @@ export default function ProfileScreen() {
               value={t('profile.auditTrailValue', 'GoBD-compliant')}
               border
               onPress={() => router.push('/contractor/vat-and-audit' as any)}
+            />
+            {/* R62: quote-tone preset for the SOW generator (Package D). */}
+            <SettingsRow
+              icon="create-outline"
+              label={t('profile.quoteTone', 'Quote tone')}
+              value={
+                quoteTone === 'formal' ? t('profile.quoteToneFormal', 'Formal')
+                : quoteTone === 'detailed' ? t('profile.quoteToneDetailed', 'Detailed')
+                : quoteTone === 'concise' ? t('profile.quoteToneConcise', 'Concise')
+                : t('profile.quoteToneFriendly', 'Friendly')
+              }
+              border
+              onPress={handleQuoteToneSwitch}
             />
             {/* R267: maintenance contracts moved to Werk tab → New job → "Recurring contract" */}
           </View>
@@ -715,6 +802,24 @@ const styles = StyleSheet.create({
     fontFamily: 'Archivo_800ExtraBold',
     color: SemanticColors.feedbackSuccess,
     letterSpacing: 0.8,
+  },
+  creditsBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.sm,
+    backgroundColor: Palette.hermesOrange + '14',
+    borderWidth: 1,
+    borderColor: Palette.hermesOrange + '40',
+    borderRadius: RADIUS.md,
+    paddingVertical: GRID.sm,
+    paddingHorizontal: GRID.md,
+  },
+  creditsBannerText: {
+    flex: 1,
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textPrimary,
+    lineHeight: 18,
   },
   planUpgradeBlock: {
     paddingHorizontal: 14,

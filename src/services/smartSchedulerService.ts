@@ -46,7 +46,7 @@ export const LIFECYCLE_COLORS: Record<JobLifecycleStatus, string> = {
   offerte: '#F59E0B',
   geaccepteerd: '#3B82F6',
   ingepland: '#8B5CF6',
-  bezig: '#E35205',
+  bezig: '#F97316',
   gereed: '#16A34A',
   gefactureerd: '#0EA5E9',
   betaald: '#059669',
@@ -319,13 +319,13 @@ const MOCK_JOBS: ScheduledJob[] = [
   },
 ];
 
-const MOCK_WEATHER: Record<string, WeatherForecast> = {
-  '2025-02-03': { condition: 'cloudy', temperature: 8, precipitation: 10, windSpeed: 15, suitableForOutdoor: true },
-  '2025-02-04': { condition: 'rainy', temperature: 6, precipitation: 80, windSpeed: 25, suitableForOutdoor: false },
-  '2025-02-05': { condition: 'sunny', temperature: 10, precipitation: 5, windSpeed: 10, suitableForOutdoor: true },
-  '2025-02-06': { condition: 'cloudy', temperature: 9, precipitation: 20, windSpeed: 12, suitableForOutdoor: true },
-  '2025-02-07': { condition: 'rainy', temperature: 5, precipitation: 70, windSpeed: 30, suitableForOutdoor: false },
-};
+// R51: dropped the MOCK_WEATHER seed — its dates (2025-02-03..2025-02-07)
+// were perpetually in the past, so the lookup never matched and the neutral
+// fallback below ran every time anyway. Keeping the literal misled future
+// readers into thinking weather had a meaningful seed. Today/tomorrow comes
+// from the canonical weatherService (Open-Meteo via getLastFetchedForecast);
+// further-out dates fall through to a neutral suitable-for-outdoor default
+// so the scheduler doesn't fabricate "rain expected" alerts.
 
 // ============================================
 // SERVICE CLASS
@@ -484,10 +484,13 @@ class SmartSchedulerService {
         };
       }
     }
-    return MOCK_WEATHER[date] || {
+    // R51: neutral fallback for future dates beyond Open-Meteo's 3d horizon.
+    // Marked suitableForOutdoor=true so we don't generate fake "Bad weather"
+    // alerts for unknown days.
+    return {
       condition: 'cloudy',
       temperature: 10,
-      precipitation: 30,
+      precipitation: 0,
       windSpeed: 15,
       suitableForOutdoor: true,
     };

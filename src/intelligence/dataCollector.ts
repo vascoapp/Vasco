@@ -8,6 +8,8 @@
 import { supabase as _supabase, isSupabaseConfigured } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentTrade, getCurrentCountry } from '../lib/currentUser';
+import { subscribeIdRemap, type IdRemapEvent } from '../services/idRemapBus';
+import { isTempIdFast } from '../lib/idShape';
 const supabase: any = _supabase;
 
 const LOCAL_QUEUE_KEY = '@vasco_event_queue';
@@ -38,10 +40,24 @@ interface QueuedEvent extends BusinessEvent {
 // Event emission — call from anywhere in the app
 // ---------------------------------------------------------------------------
 
+// R58: central gate against the legacy `'current-user'` placeholder. If
+// any caller threads it (race-condition before login, or a stale
+// closure that was missed in the audit), we drop the emit instead of
+// writing a corrupt cohort row to the moat. business_events.user_id
+// has a NOT NULL FK → auth.users(id) constraint anyway, so the BE
+// would reject the row — this just keeps the local AsyncStorage queue
+// from filling with permanently-rejected entries.
+const PLACEHOLDER_USER_ID = 'current-user';
+
+function isPlaceholderUserId(userId: string | null | undefined): boolean {
+  return !userId || userId === PLACEHOLDER_USER_ID;
+}
+
 export async function emitBusinessEvent(
   userId: string,
   event: BusinessEvent,
 ): Promise<void> {
+  if (isPlaceholderUserId(userId)) return;
   // R281: every business_events row needs (trade, country) for cohort
   // slicing — a painter in DE and FR are different markets entirely. Most
   // convenience emitters pass trade but not country, and several pass
@@ -250,7 +266,10 @@ export async function emitMaterialPurchased(userId: string, data: {
   // business_events; the material price spike + supplier lead-time
   // predictors read from material_price_history directly. Without a
   // direct insert here, those models get zero training data forever.
-  if (isSupabaseConfigured) {
+  // R58: gate against the placeholder uid — material_price_history.observed_by
+  // is a FK→auth.users(id), so writing 'current-user' would fail the FK
+  // constraint and corrupt the local-queue retry chain.
+  if (isSupabaseConfigured && !isPlaceholderUserId(userId)) {
     // R275: column-level audit found the previous insert wrote columns that
     // don't exist on material_price_history (user_id, unit_price, quantity,
     // total_price, delivery_days). Aligned to actual schema:
@@ -288,7 +307,12 @@ export async function emitMaterialPurchased(userId: string, data: {
 // Routes through eve_telemetry (already wired, fire-and-forget).
 // ---------------------------------------------------------------------------
 
-async function logIntelligenceWriteFailure(
+// R53: exported so the other AI-moat capture services
+// (intelligenceCaptureService, decisionSyncService, supplierBacklink, etc.)
+// can route their write failures through the same eve_telemetry trail
+// instead of swallowing silently. Single observability hook for the
+// whole moat.
+export async function logIntelligenceWriteFailure(
   op: string,
   userId: string,
   err: unknown,
@@ -331,6 +355,7 @@ export async function recordPricingData(userId: string, data: {
   postcode?: string;
 }): Promise<void> {
   if (!isSupabaseConfigured) return;
+  if (isPlaceholderUserId(userId)) return;
 
   const season = getSeason();
   try {
@@ -384,6 +409,7 @@ export async function recordPricingOutcome(userId: string, quoteId: string, data
   contractorSegment?: ContractorSegment;
 }): Promise<void> {
   if (!isSupabaseConfigured) return;
+  if (isPlaceholderUserId(userId)) return;
 
   try {
     const patch: Record<string, unknown> = {
@@ -481,6 +507,76 @@ export async function recordPricingOutcome(userId: string, quoteId: string, data
 // Local queue management (offline-first)
 // ---------------------------------------------------------------------------
 
+// R59: when offlineWriteQueue captures a temp→real id mapping (R49), rewrite
+// any queued business_events that reference the temp id in `entityId` or
+// in `payload.*Id` fields. Without this, an offline-created job that gets
+// `emitJobStarted(...)` fired before flush leaves business_events.entity_id
+// pinned to the temp id forever — cohort RPCs joining
+// business_events.entity_id ↔ jobs.id miss every event for offline-created
+// entities. Same hazard as R54's customer_embeddings rekey, applied to the
+// dataCollector's separate event queue.
+async function rewriteQueuedEventIds(tempId: string, realId: string): Promise<void> {
+  if (!tempId || !realId || tempId === realId) return;
+  try {
+    const raw = await AsyncStorage.getItem(LOCAL_QUEUE_KEY);
+    if (!raw) return;
+    const queue: QueuedEvent[] = JSON.parse(raw);
+    let touched = false;
+    const rewritten = queue.map((e) => {
+      let entityId = e.entityId;
+      let payload = e.payload;
+      if (entityId === tempId) {
+        entityId = realId;
+        touched = true;
+      }
+      // entityId for materials is `${supplierId}_${materialName}` — only
+      // rewrite if the supplierId portion matches the temp id.
+      if (typeof entityId === 'string' && entityId.startsWith(`${tempId}_`)) {
+        entityId = `${realId}_${entityId.slice(tempId.length + 1)}`;
+        touched = true;
+      }
+      // Recursively swap temp id within payload string fields (mirrors
+      // offlineWriteQueue's payload rewriter).
+      if (payload && typeof payload === 'object') {
+        const swap = (v: unknown): unknown => {
+          if (typeof v === 'string') return v === tempId ? realId : v;
+          if (Array.isArray(v)) return v.map(swap);
+          if (v && typeof v === 'object') {
+            const out: Record<string, unknown> = {};
+            for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+              out[k] = swap(val);
+            }
+            return out;
+          }
+          return v;
+        };
+        const newPayload = swap(payload) as Record<string, any>;
+        if (newPayload !== payload) {
+          payload = newPayload;
+          touched = true;
+        }
+      }
+      return touched ? { ...e, entityId, payload } : e;
+    });
+    if (touched) {
+      await AsyncStorage.setItem(LOCAL_QUEUE_KEY, JSON.stringify(rewritten));
+    }
+  } catch {
+    // Silent — queue rewrite is best-effort.
+  }
+}
+
+let _eventQueueRemapInit = false;
+function initEventQueueRemapListener(): void {
+  if (_eventQueueRemapInit) return;
+  _eventQueueRemapInit = true;
+  subscribeIdRemap((e: IdRemapEvent) => {
+    void rewriteQueuedEventIds(e.tempId, e.realId);
+  });
+}
+
+initEventQueueRemapListener();
+
 async function enqueueLocally(event: QueuedEvent): Promise<void> {
   try {
     const raw = await AsyncStorage.getItem(LOCAL_QUEUE_KEY);
@@ -505,8 +601,19 @@ async function flushToCloud(userId: string): Promise<void> {
     const queue: QueuedEvent[] = JSON.parse(raw);
     if (queue.length === 0) return;
 
+    // R58: drop placeholder-uid events sitting in the queue from before
+    // the gate was added — business_events.user_id is a NOT NULL FK to
+    // auth.users(id), so 'current-user' would fail the constraint and
+    // block the entire batch from advancing. Filter them out so real
+    // events behind them aren't permanently blocked.
+    const filtered = queue.filter((e) => !isPlaceholderUserId(e.userId));
+    if (filtered.length !== queue.length) {
+      await AsyncStorage.setItem(LOCAL_QUEUE_KEY, JSON.stringify(filtered));
+    }
+    if (filtered.length === 0) return;
+
     // Take a batch
-    const batch = queue.slice(0, BATCH_SIZE);
+    const batch = filtered.slice(0, BATCH_SIZE);
     const rows = batch.map(e => ({
       user_id: e.userId,
       event_type: e.eventType,
@@ -521,8 +628,11 @@ async function flushToCloud(userId: string): Promise<void> {
 
     const { error } = await supabase.from('business_events').insert(rows);
     if (!error) {
-      // Remove flushed events
-      const remaining = queue.slice(BATCH_SIZE);
+      // R58: was `queue.slice(BATCH_SIZE)` — but we already rewrote the
+      // queue to `filtered` above (placeholder uids dropped). Slicing
+      // the original `queue` would re-introduce dropped placeholders.
+      // Slice from `filtered` instead.
+      const remaining = filtered.slice(BATCH_SIZE);
       await AsyncStorage.setItem(LOCAL_QUEUE_KEY, JSON.stringify(remaining));
     }
   } catch {

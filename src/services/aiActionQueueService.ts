@@ -21,6 +21,7 @@ import {
   questionIdFromQueueItemId,
 } from './customerQuestionQueueBridge';
 import { computeLateFee, type LateFeeCountry } from './lateFeeService';
+import { emitBusinessEvent } from '../intelligence/dataCollector';
 
 const QUEUE_KEY = '@vasco_ai_queue';
 
@@ -438,8 +439,9 @@ export async function recordOutcome(
     // Emit to learning layer — customer-responded vs didn't-respond is a
     // higher-quality signal than mere approve/reject (contractor may approve
     // to dismiss, but customer reply proves the message worked).
+    // R50: switched from dynamic import to static for testability + perf
+    // (no circular dep — dataCollector doesn't reach back into the queue).
     try {
-      const { emitBusinessEvent } = await import('../intelligence/dataCollector');
       await emitBusinessEvent(getCurrentUserId(), {
         eventType: `queue_outcome_${outcome}`,
         entityType: 'job' as any,

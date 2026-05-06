@@ -245,7 +245,7 @@ function renderHtml(draft: VatReturnDraft, businessName: string): string {
   h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.3px; }
   h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.8px; color: #666; margin: 28px 0 10px; }
   .meta { color: #666; font-size: 12px; margin-bottom: 24px; }
-  .banner { background: #FFF7F0; border: 1px solid #E35205; border-radius: 10px; padding: 10px 14px; color: #8A3400; font-size: 12px; margin-bottom: 24px; }
+  .banner { background: #FFF7F0; border: 1px solid #F97316; border-radius: 10px; padding: 10px 14px; color: #8A3400; font-size: 12px; margin-bottom: 24px; }
   table { width: 100%; border-collapse: collapse; }
   th, td { padding: 8px 6px; border-bottom: 1px solid #EAEAEA; font-size: 12px; }
   th { text-align: left; color: #666; font-weight: 600; }

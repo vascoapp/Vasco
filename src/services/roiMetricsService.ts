@@ -19,6 +19,7 @@ import {
   HoursSavedDisplayData,
   DEFAULT_DUTCH_BENCHMARKS,
 } from '../types/roi-metrics';
+import { registerSingletonReset } from './singletonReset';
 
 // ============================================
 // MOCK DATA
@@ -222,6 +223,71 @@ const MOCK_METRICS: ContractorROIMetrics = {
   },
 };
 
+// R51: empty/zero state used as the real default. New contractor sees zeros
+// (which gate the banner UIs to "hidden") instead of fabricated saved-hours
+// numbers. MOCK_METRICS stays around for tests via __seedMockData below.
+const ZERO_METRIC = (unit: string): MetricValue => ({
+  value: 0,
+  unit,
+  trend: 'stable',
+  changePercent: 0,
+  isGood: false,
+});
+
+function makeEmptyMetrics(): ContractorROIMetrics {
+  return {
+    contractorId: '',
+    periodStart: '',
+    periodEnd: '',
+    periodType: 'month',
+    quoteToJobDays: ZERO_METRIC('dagen'),
+    jobToCashDays: ZERO_METRIC('dagen'),
+    quoteToCashDays: ZERO_METRIC('dagen'),
+    avgInvoicePaymentDays: ZERO_METRIC('dagen'),
+    effectiveHourlyRate: ZERO_METRIC('€/uur'),
+    billableHourlyRate: ZERO_METRIC('€/uur'),
+    revenuePerJob: ZERO_METRIC('€'),
+    materialMargin: ZERO_METRIC('%'),
+    quoteWinRate: ZERO_METRIC('%'),
+    winRateByTier: {
+      good: { rate: 0, count: 0, revenue: 0 },
+      better: { rate: 0, count: 0, revenue: 0 },
+      best: { rate: 0, count: 0, revenue: 0 },
+      noTier: { rate: 0, count: 0, revenue: 0 },
+      recommendedTier: 'better',
+      insight: '',
+    },
+    leadToQuoteRate: ZERO_METRIC('%'),
+    repeatCustomerRate: ZERO_METRIC('%'),
+    utilizationRate: ZERO_METRIC('%'),
+    scheduleAdherence: ZERO_METRIC('%'),
+    firstTimeFixRate: ZERO_METRIC('%'),
+    customerSatisfaction: ZERO_METRIC('sterren'),
+    hoursSaved: {
+      totalMinutesSaved: 0,
+      totalHoursSaved: 0,
+      byAutomationType: [],
+      vsManualEstimate: 0,
+      efficiencyGain: 0,
+      trend: 'stable',
+      projectedMonthlySavings: 0,
+      hourlyRateUsed: 55,
+      monetaryValue: 0,
+    },
+    automationROI: {
+      monthlyCost: 0,
+      hoursSavedValue: 0,
+      revenueFromFasterConversion: 0,
+      savingsFromSmartPurchasing: 0,
+      reducedOverdueInvoices: 0,
+      totalValue: 0,
+      netROI: 0,
+      roiMultiple: 0,
+      breakdown: [],
+    },
+  };
+}
+
 const MOCK_INSIGHTS: ROIInsight[] = [
   {
     id: 'insight_1',
@@ -312,10 +378,35 @@ const MOCK_GOALS: ROIGoal[] = [
 // ============================================
 
 class ROIMetricsService {
-  private metrics: ContractorROIMetrics = MOCK_METRICS;
-  private insights: ROIInsight[] = MOCK_INSIGHTS;
-  private goals: ROIGoal[] = MOCK_GOALS;
+  // R51: was MOCK_METRICS / MOCK_INSIGHTS / MOCK_GOALS — every consumer of
+  // useROIDashboard / useROIMetrics / useHoursSavedDisplay saw fake "12.1
+  // hours saved this week / 58% win rate / €665 monetary value" regardless
+  // of whether the contractor had actually used the app. Now starts empty;
+  // the singleton is wired into registerSingletonReset (R48 pattern) so a
+  // logout doesn't carry user A's metric overrides into user B. Tests can
+  // re-seed via __seedMockData.
+  private metrics: ContractorROIMetrics = makeEmptyMetrics();
+  private insights: ROIInsight[] = [];
+  private goals: ROIGoal[] = [];
   private listeners: Set<() => void> = new Set();
+
+  /** @internal Test-only mock seeder. */
+  __seedMockData(): void {
+    this.metrics = MOCK_METRICS;
+    this.insights = MOCK_INSIGHTS;
+    this.goals = MOCK_GOALS;
+    this.listeners.forEach((l) => l());
+  }
+
+  /**
+   * R51: callers (e.g. `useROIDashboard`) push live-computed values from
+   * AppState + queue outcomes here. Merges into the current metrics so
+   * partial updates (e.g. only quoteWinRate) preserve other zero fields.
+   */
+  setLiveMetrics(partial: Partial<ContractorROIMetrics>): void {
+    this.metrics = { ...this.metrics, ...partial };
+    this.listeners.forEach((l) => l());
+  }
 
   // -----------------------------------------
   // Metrics
@@ -326,21 +417,13 @@ class ROIMetricsService {
     return this.metrics;
   }
 
-  getMetricHistory(metricName: string, periods: number = 12): { period: string; value: number }[] {
-    // Mock historical data
-    const history: { period: string; value: number }[] = [];
-    const baseValue = (this.metrics as any)[metricName]?.value || 50;
-
-    for (let i = periods - 1; i >= 0; i--) {
-      const date = new Date();
-      date.setMonth(date.getMonth() - i);
-      history.push({
-        period: date.toISOString().slice(0, 7),
-        value: baseValue + (Math.random() - 0.5) * baseValue * 0.2,
-      });
-    }
-
-    return history;
+  getMetricHistory(_metricName: string, _periods: number = 12): { period: string; value: number }[] {
+    // R51: returned `baseValue + Math.random()` noise, surfacing fake
+    // jittery historical curves on any chart that mounted this. Real
+    // history requires `business_events` aggregation per-period — until
+    // that's wired, callers get an empty series and must render a
+    // "Not enough data yet" empty state.
+    return [];
   }
 
   // -----------------------------------------
@@ -552,6 +635,12 @@ class ROIMetricsService {
 }
 
 export const roiMetricsService = new ROIMetricsService();
+
+// R51: multi-tenancy reset — wipe live overrides on logout so user A's
+// computed quoteWinRate / hoursSaved doesn't leak to user B.
+registerSingletonReset(() => {
+  roiMetricsService.setLiveMetrics(makeEmptyMetrics());
+});
 
 // ============================================
 // REACT HOOKS

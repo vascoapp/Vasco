@@ -35,6 +35,7 @@ import {
   WeatherForecast,
 } from '../types/capacity-planning';
 import { getLastFetchedForecast, type DayForecast } from './weatherService';
+import { registerSingletonReset } from './singletonReset';
 
 // ============================================
 // SERVICE CONFIGURATION
@@ -318,6 +319,15 @@ class CapacityPlanningService {
   static getInstance(): CapacityPlanningService {
     if (!CapacityPlanningService.instance) {
       CapacityPlanningService.instance = new CapacityPlanningService();
+      registerSingletonReset(() => {
+        const inst = CapacityPlanningService.instance;
+        inst.scheduledJobs = [];
+        inst.alerts = [];
+        inst.jobOutcomes = [];
+        inst.capacityCache.clear();
+        inst.durationCache.clear();
+        inst.listeners.forEach((l) => l());
+      });
     }
     return CapacityPlanningService.instance;
   }

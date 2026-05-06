@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState, useCallback } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { PrimaryButton } from '../../../src/components/PrimaryButton';
 import { Screen } from '../../../src/components/Screen';
 import { InlineInsight } from '../../../src/components/shared/VascoInsightCard';
@@ -12,9 +13,10 @@ import { Typography } from '../../../src/theme/typography';
 import { useAppState } from '../../../src/state/AppState';
 
 export default function InvoiceFromQuoteScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { quotes, lineItems, addInvoice, markInvoiceSent } = useAppState();
+  const { quotes, lineItems, addInvoice, markInvoiceSent, invoices } = useAppState();
   const [creating, setCreating] = useState(false);
   const [invoiceId, setInvoiceId] = useState<string | null>(null);
 
@@ -27,17 +29,25 @@ export default function InvoiceFromQuoteScreen() {
   const handleCreateInvoice = useCallback(async () => {
     if (!id) return;
     // Tier gate — block monthly-cap users before we mint an invoice number.
+    // R52: count invoices created this calendar month from real AppState.
     try {
       const { loadSubscription, canCreateInvoice } = await import('../../../src/services/subscriptionService');
       const sub = await loadSubscription();
-      const gate = canCreateInvoice(sub);
+      const monthStart = new Date();
+      monthStart.setDate(1);
+      monthStart.setHours(0, 0, 0, 0);
+      const invoicesThisMonth = invoices.filter((inv: any) => {
+        const created = inv.createdAt ? new Date(inv.createdAt) : null;
+        return created && created >= monthStart;
+      }).length;
+      const gate = canCreateInvoice(sub, invoicesThisMonth);
       if (!gate.allowed) {
         Alert.alert(
-          'Upgrade required',
+          t('billing.upgradeRequired'),
           gate.reason,
           [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'View plans', onPress: () => router.push('/contractor/profile' as any) },
+            { text: t('common.cancel'), style: 'cancel' },
+            { text: t('billing.viewPlans'), onPress: () => router.push('/contractor/profile' as any) },
           ],
         );
         return;
@@ -49,11 +59,11 @@ export default function InvoiceFromQuoteScreen() {
       setInvoiceId(newId);
     } catch (err) {
       console.warn('[InvoiceFromQuote] Create failed:', err);
-      Alert.alert('Error', 'Could not create invoice. Please try again.');
+      Alert.alert(t('common.error'), t('quoteToInvoice.createFailed'));
     } finally {
       setCreating(false);
     }
-  }, [id, addInvoice, router]);
+  }, [id, addInvoice, router, t]);
 
   const handleMarkSent = useCallback(() => {
     if (invoiceId) {
@@ -66,7 +76,7 @@ export default function InvoiceFromQuoteScreen() {
     return (
       <Screen>
         <View style={[styles.container, { alignItems: 'center', justifyContent: 'center' }]}>
-          <Text style={Typography.muted}>Quote {id} not found</Text>
+          <Text style={Typography.muted}>{t('quoteToInvoice.notFound', { id })}</Text>
         </View>
       </Screen>
     );
@@ -76,8 +86,8 @@ export default function InvoiceFromQuoteScreen() {
     <Screen>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <Text style={Typography.title}>Invoice from {quote.id}</Text>
-          <Text style={Typography.muted}>Auto-numbered · Due in 14 days</Text>
+          <Text style={Typography.title}>{t('quoteToInvoice.header', { ref: quote.id })}</Text>
+          <Text style={Typography.muted}>{t('quoteToInvoice.autoNumberDue')}</Text>
         </View>
 
         {inlineInsight && (
@@ -91,17 +101,17 @@ export default function InvoiceFromQuoteScreen() {
 
         {/* Quote summary */}
         <View style={styles.card}>
-          <Text style={Typography.subtitle}>Quote details</Text>
+          <Text style={Typography.subtitle}>{t('quoteToInvoice.quoteDetails')}</Text>
           <View style={styles.row}>
-            <Text style={Typography.muted}>Customer</Text>
+            <Text style={Typography.muted}>{t('quoteToInvoice.customer')}</Text>
             <Text style={Typography.body}>{quote.customer}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={Typography.muted}>Job</Text>
+            <Text style={Typography.muted}>{t('quoteToInvoice.job')}</Text>
             <Text style={Typography.body}>{quote.job}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={Typography.muted}>Amount</Text>
+            <Text style={Typography.muted}>{t('quoteToInvoice.amount')}</Text>
             <Text style={[Typography.body, { fontWeight: '700' }]}>
               €{quote.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </Text>
@@ -111,7 +121,7 @@ export default function InvoiceFromQuoteScreen() {
         {/* Line items */}
         {quoteItems.length > 0 && (
           <View style={styles.card}>
-            <Text style={Typography.subtitle}>Line items</Text>
+            <Text style={Typography.subtitle}>{t('quoteToInvoice.lineItems')}</Text>
             {quoteItems.map((item) => (
               <View key={item.id} style={styles.row}>
                 <View style={{ flex: 1 }}>
@@ -131,15 +141,15 @@ export default function InvoiceFromQuoteScreen() {
         {/* Invoice preview (after creation) */}
         {invoiceId && (
           <View style={[styles.card, { borderColor: SemanticColors.actionPrimary }]}>
-            <Text style={[Typography.subtitle, { color: SemanticColors.actionPrimary }]}>Invoice created</Text>
+            <Text style={[Typography.subtitle, { color: SemanticColors.actionPrimary }]}>{t('quoteToInvoice.invoiceCreated')}</Text>
             <View style={styles.row}>
-              <Text style={Typography.body}>Invoice #{invoiceId}</Text>
+              <Text style={Typography.body}>{t('quoteToInvoice.invoiceRef', { id: invoiceId })}</Text>
               <Text style={Typography.body}>
                 €{quote.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </Text>
             </View>
             <Text style={Typography.muted}>
-              Matches quote language to reduce payment disputes.
+              {t('quoteToInvoice.matchesQuote')}
             </Text>
           </View>
         )}
@@ -148,16 +158,16 @@ export default function InvoiceFromQuoteScreen() {
         <View style={styles.actions}>
           {!invoiceId ? (
             <PrimaryButton
-              label={creating ? 'Creating...' : 'Create invoice'}
+              label={creating ? t('quoteToInvoice.creating') : t('quoteToInvoice.createInvoice')}
               onPress={handleCreateInvoice}
             />
           ) : (
             <>
               <PrimaryButton
-                label="Generate PDF"
+                label={t('quoteToInvoice.generatePdf')}
                 onPress={() => router.push('/(modals)/pdf?source=invoice')}
               />
-              <PrimaryButton label="Mark sent" onPress={handleMarkSent} />
+              <PrimaryButton label={t('quoteToInvoice.markSent')} onPress={handleMarkSent} />
             </>
           )}
         </View>

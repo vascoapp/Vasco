@@ -233,14 +233,14 @@ function buildInvoiceHtml(
   .brand-block {}
   .brand-mark {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 40px; height: 40px; background: #E35205; border-radius: 10px;
+    width: 40px; height: 40px; background: #F97316; border-radius: 10px;
     color: #fff; font-size: 20px; font-weight: 800; margin-bottom: 8px;
   }
   .brand-name { font-size: 16px; font-weight: 700; color: #111827; }
   .brand-address { font-size: 11px; color: #6B7280; margin-top: 2px; }
   .doc-title-block { text-align: right; }
   .doc-title { font-size: 32px; font-weight: 800; color: #111827; letter-spacing: -0.5px; text-transform: uppercase; }
-  .doc-number { font-size: 14px; font-weight: 600; color: #E35205; margin-top: 4px; }
+  .doc-number { font-size: 14px; font-weight: 600; color: #F97316; margin-top: 4px; }
   .doc-status {
     display: inline-block; margin-top: 8px; padding: 3px 14px; border-radius: 4px;
     font-size: 10px; font-weight: 800; letter-spacing: 1px; color: #fff; background: ${sColor};
@@ -298,7 +298,7 @@ function buildInvoiceHtml(
   .payment-detail strong { color: #111827; }
   .pay-btn {
     display: inline-block; margin-top: 16px; padding: 12px 36px;
-    background: #E35205; color: #fff; border-radius: 8px;
+    background: #F97316; color: #fff; border-radius: 8px;
     text-decoration: none; font-weight: 700; font-size: 14px; letter-spacing: 0.3px;
   }
 
@@ -307,7 +307,7 @@ function buildInvoiceHtml(
     margin-top: 40px; padding-top: 16px; border-top: 1px solid #E5E7EB;
     display: flex; justify-content: space-between; font-size: 10px; color: #9CA3AF;
   }
-  .doc-footer a { color: #E35205; text-decoration: none; font-weight: 600; }
+  .doc-footer a { color: #F97316; text-decoration: none; font-weight: 600; }
 
   /* ── Insurance (FR) ── */
   .insurance-ref { font-size: 11px; color: #6B7280; margin-top: 4px; }

@@ -199,7 +199,7 @@ export function getActivityIcon(type: ActivityType): { name: string; color: stri
     case 'invoice_created':
       return { name: 'receipt-outline', color: '#0EA5E9' };
     case 'timer_started':
-      return { name: 'play-circle-outline', color: '#E35205' };
+      return { name: 'play-circle-outline', color: '#F97316' };
     case 'timer_stopped':
       return { name: 'stop-circle-outline', color: '#EF4444' };
     case 'signature_requested':

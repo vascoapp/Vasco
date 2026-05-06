@@ -44,37 +44,37 @@ const BODY_BY_LOCALE: Record<string, (args: { ref: string; businessName: string;
   en: ({ ref, businessName, paymentUrl }) => `
     <p>Hi,</p>
     <p>Please find attached invoice <strong>${ref}</strong> from <strong>${businessName}</strong>.</p>
-    ${paymentUrl ? `<p><a href="${paymentUrl}" style="display:inline-block;padding:12px 20px;background:#E35205;color:#fff;border-radius:8px;text-decoration:none">Pay now</a></p>` : ''}
+    ${paymentUrl ? `<p><a href="${paymentUrl}" style="display:inline-block;padding:12px 20px;background:#F97316;color:#fff;border-radius:8px;text-decoration:none">Pay now</a></p>` : ''}
     <p>Thanks,<br/>${businessName}</p>
   `,
   nl: ({ ref, businessName, paymentUrl }) => `
     <p>Hallo,</p>
     <p>Hierbij de factuur <strong>${ref}</strong> van <strong>${businessName}</strong>.</p>
-    ${paymentUrl ? `<p><a href="${paymentUrl}" style="display:inline-block;padding:12px 20px;background:#E35205;color:#fff;border-radius:8px;text-decoration:none">Nu betalen</a></p>` : ''}
+    ${paymentUrl ? `<p><a href="${paymentUrl}" style="display:inline-block;padding:12px 20px;background:#F97316;color:#fff;border-radius:8px;text-decoration:none">Nu betalen</a></p>` : ''}
     <p>Met vriendelijke groet,<br/>${businessName}</p>
   `,
   de: ({ ref, businessName, paymentUrl }) => `
     <p>Guten Tag,</p>
     <p>anbei die Rechnung <strong>${ref}</strong> von <strong>${businessName}</strong>.</p>
-    ${paymentUrl ? `<p><a href="${paymentUrl}" style="display:inline-block;padding:12px 20px;background:#E35205;color:#fff;border-radius:8px;text-decoration:none">Jetzt bezahlen</a></p>` : ''}
+    ${paymentUrl ? `<p><a href="${paymentUrl}" style="display:inline-block;padding:12px 20px;background:#F97316;color:#fff;border-radius:8px;text-decoration:none">Jetzt bezahlen</a></p>` : ''}
     <p>Mit freundlichen Grüßen,<br/>${businessName}</p>
   `,
   fr: ({ ref, businessName, paymentUrl }) => `
     <p>Bonjour,</p>
     <p>Veuillez trouver ci-joint la facture <strong>${ref}</strong> de <strong>${businessName}</strong>.</p>
-    ${paymentUrl ? `<p><a href="${paymentUrl}" style="display:inline-block;padding:12px 20px;background:#E35205;color:#fff;border-radius:8px;text-decoration:none">Payer maintenant</a></p>` : ''}
+    ${paymentUrl ? `<p><a href="${paymentUrl}" style="display:inline-block;padding:12px 20px;background:#F97316;color:#fff;border-radius:8px;text-decoration:none">Payer maintenant</a></p>` : ''}
     <p>Cordialement,<br/>${businessName}</p>
   `,
   es: ({ ref, businessName, paymentUrl }) => `
     <p>Hola,</p>
     <p>Adjuntamos la factura <strong>${ref}</strong> de <strong>${businessName}</strong>.</p>
-    ${paymentUrl ? `<p><a href="${paymentUrl}" style="display:inline-block;padding:12px 20px;background:#E35205;color:#fff;border-radius:8px;text-decoration:none">Pagar ahora</a></p>` : ''}
+    ${paymentUrl ? `<p><a href="${paymentUrl}" style="display:inline-block;padding:12px 20px;background:#F97316;color:#fff;border-radius:8px;text-decoration:none">Pagar ahora</a></p>` : ''}
     <p>Un saludo,<br/>${businessName}</p>
   `,
   it: ({ ref, businessName, paymentUrl }) => `
     <p>Salve,</p>
     <p>In allegato la fattura <strong>${ref}</strong> da <strong>${businessName}</strong>.</p>
-    ${paymentUrl ? `<p><a href="${paymentUrl}" style="display:inline-block;padding:12px 20px;background:#E35205;color:#fff;border-radius:8px;text-decoration:none">Paga ora</a></p>` : ''}
+    ${paymentUrl ? `<p><a href="${paymentUrl}" style="display:inline-block;padding:12px 20px;background:#F97316;color:#fff;border-radius:8px;text-decoration:none">Paga ora</a></p>` : ''}
     <p>Cordiali saluti,<br/>${businessName}</p>
   `,
 };
@@ -154,13 +154,26 @@ Deno.serve(async (req) => {
     const subject = body.subject ?? (SUBJECT_BY_LOCALE[locale] ?? SUBJECT_BY_LOCALE.en)(ref);
     // bodyOverride (plain text with \n) → simple HTML paragraphs so the Resend
     // email renders the cadence copy + disclosure properly.
+    // R66 round 4: localize the dunning-cadence "Pay now" button to match
+    // the customer's locale. Was hardcoded English even when the rest of
+    // the override body (cadence copy + EU 2011/7 disclosure) is localized
+    // by the FE caller.
+    const PAY_NOW_BY_LOCALE: Record<string, string> = {
+      en: 'Pay now',
+      nl: 'Nu betalen',
+      de: 'Jetzt bezahlen',
+      fr: 'Payer maintenant',
+      es: 'Pagar ahora',
+      it: 'Paga ora',
+    };
+    const payNowLabel = PAY_NOW_BY_LOCALE[locale] ?? PAY_NOW_BY_LOCALE.en;
     const html = body.bodyOverride
       ? body.bodyOverride
           .split(/\n{2,}/)
           .map((p) => `<p>${p.replace(/\n/g, '<br/>')}</p>`)
           .join('\n') +
         (paymentUrl
-          ? `<p><a href="${paymentUrl}" style="display:inline-block;padding:12px 20px;background:#E35205;color:#fff;border-radius:8px;text-decoration:none">Pay now</a></p>`
+          ? `<p><a href="${paymentUrl}" style="display:inline-block;padding:12px 20px;background:#F97316;color:#fff;border-radius:8px;text-decoration:none">${payNowLabel}</a></p>`
           : '')
       : (BODY_BY_LOCALE[locale] ?? BODY_BY_LOCALE.en)({ ref, businessName, paymentUrl });
 

@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { registerSingletonReset } from './singletonReset';
 import type {
   EvidencePack,
   HandoverPackage,
@@ -278,6 +279,12 @@ class EvidencePackService {
   static getInstance(): EvidencePackService {
     if (!EvidencePackService.instance) {
       EvidencePackService.instance = new EvidencePackService();
+      registerSingletonReset(() => {
+        const inst = EvidencePackService.instance;
+        inst.evidencePacks.clear();
+        inst.handoverPackages.clear();
+        inst.listeners.forEach((l) => l());
+      });
     }
     return EvidencePackService.instance;
   }

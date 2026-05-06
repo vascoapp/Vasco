@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { registerSingletonReset } from './singletonReset';
 
 // ============================================
 // TYPES
@@ -518,6 +519,12 @@ class CrossRoleWorkflowService {
   static getInstance(): CrossRoleWorkflowService {
     if (!CrossRoleWorkflowService.instance) {
       CrossRoleWorkflowService.instance = new CrossRoleWorkflowService();
+      registerSingletonReset(() => {
+        const inst = CrossRoleWorkflowService.instance;
+        inst.workflows.clear();
+        MOCK_WORKFLOWS.forEach((wf) => inst.workflows.set(wf.id, wf));
+        inst.listeners.forEach((l) => l());
+      });
     }
     return CrossRoleWorkflowService.instance;
   }

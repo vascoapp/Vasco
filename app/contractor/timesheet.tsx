@@ -27,6 +27,7 @@ import { useClockIn } from '../../src/services/clockInService';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { emitBusinessEvent } from '../../src/intelligence/dataCollector';
 import { recordMetricSnapshot } from '../../src/intelligence/learningStorage';
+import { getCurrentUserId } from '../../src/lib/currentUser';
 
 // =============================================================================
 // TYPES
@@ -171,8 +172,10 @@ export default function TimesheetScreen() {
         }
       }
 
-      // AI data collector — timesheet clock-out
-      emitBusinessEvent('current-user', {
+      // R47: was passing literal 'current-user' string — clock-out events
+      // landed against the placeholder id instead of the real contractor.
+      // Now uses getCurrentUserId() from the canonical user ref.
+      emitBusinessEvent(getCurrentUserId(), {
         eventType: 'clock_out',
         entityType: 'job',
         entityId: prevState.jobId ?? newEntry.id,

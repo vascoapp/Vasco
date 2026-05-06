@@ -98,19 +98,29 @@ describe('navigate paths', () => {
     expect(router.push).toHaveBeenCalledWith('/contractor/drag-schedule');
   });
 
-  it('tax_prep opens vat-prep', async () => {
+  it('tax_prep opens vat-prep with previous-period prefill', async () => {
     const router = makeRouter();
     await executeApprovedQueueItem(makeItem({ type: 'tax_prep' }), { router });
-    expect(router.push).toHaveBeenCalledWith('/contractor/vat-prep');
+    // R-tax: route now carries `period: previous` so the screen lands on the
+    // last-completed quarter, not the empty current one.
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/contractor/vat-prep',
+      params: { period: 'previous' },
+    });
   });
 
-  it('einvoice_submit deep-links to invoice when id present', async () => {
+  it('einvoice_submit deep-links to invoice with submit prefill', async () => {
     const router = makeRouter();
     await executeApprovedQueueItem(
       makeItem({ type: 'einvoice_submit', preparedData: { invoiceId: 'inv-9' } }),
       { router },
     );
-    expect(router.push).toHaveBeenCalledWith('/invoices/inv-9');
+    // R20: pass submit=einvoice so the invoice screen auto-opens the e-invoice
+    // export dialog instead of waiting for the user to find the button.
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/invoices/inv-9',
+      params: { submit: 'einvoice' },
+    });
   });
 });
 

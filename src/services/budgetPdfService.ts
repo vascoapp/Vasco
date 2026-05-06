@@ -208,7 +208,7 @@ function buildHtml(
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a1a; padding: 32px; font-size: 13px; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; border-bottom: 3px solid #E35205; padding-bottom: 16px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; border-bottom: 3px solid #F97316; padding-bottom: 16px; }
     .header h1 { font-size: 22px; font-weight: 700; color: #1a1a1a; }
     .header .subtitle { font-size: 14px; color: #666; margin-top: 4px; }
     .header .date { font-size: 12px; color: #999; text-align: right; }
@@ -223,7 +223,7 @@ function buildHtml(
     td { padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 12px; }
     tr:last-child td { border-bottom: none; }
     .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #ddd; text-align: center; font-size: 11px; color: #999; }
-    .accent { color: #E35205; }
+    .accent { color: #F97316; }
   </style>
 </head>
 <body>

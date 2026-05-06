@@ -139,7 +139,7 @@ export async function getDeviceCalendars(): Promise<DeviceCalendar[]> {
       .map((c: any) => ({
         id: c.id,
         title: c.title || 'Unnamed',
-        color: c.color || '#E35205',
+        color: c.color || '#F97316',
         isPrimary: c.isPrimary ?? false,
         allowsModifications: c.allowsModifications ?? true,
         source: c.source?.name || '',

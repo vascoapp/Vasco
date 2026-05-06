@@ -343,6 +343,7 @@ interface IntegratedPaymentsProps {
 }
 
 export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'outstanding' | 'paid' | 'settings'>('outstanding');
   const [settings] = useState<PaymentSettings>(MOCK_PAYMENT_SETTINGS);
   const [invoices] = useState<ContractorInvoice[]>(MOCK_CONTRACTOR_INVOICES);
@@ -391,7 +392,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
                 { id: invoice.customerId, type: 'customer', name: `Customer ${invoice.customerId.slice(-3)}`, confidence: 0.9 },
               ] : [],
             });
-            Alert.alert('Success', 'Payment link created and copied to clipboard!');
+            Alert.alert(t('paymentAlerts.linkCreatedTitle'), t('paymentAlerts.linkCreatedBody'));
           },
         },
       ]
@@ -426,7 +427,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
                 { id: invoice.customerId, type: 'customer', name: `Customer ${invoice.customerId.slice(-3)}`, confidence: 0.9 },
               ] : [],
             });
-            Alert.alert('Sent', 'Email reminder sent!');
+            Alert.alert(t('paymentAlerts.reminderEmailTitle'), t('paymentAlerts.reminderEmailBody'));
           },
         },
         {
@@ -450,7 +451,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
                 { id: invoice.customerId, type: 'customer', name: `Customer ${invoice.customerId.slice(-3)}`, confidence: 0.9 },
               ] : [],
             });
-            Alert.alert('Sent', 'WhatsApp reminder sent!');
+            Alert.alert(t('paymentAlerts.reminderEmailTitle'), t('paymentAlerts.reminderWhatsappBody'));
           },
         },
       ]
@@ -458,7 +459,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
   };
 
   const handleCopyLink = (url: string) => {
-    Alert.alert('Copied', `Payment link copied to clipboard:\n${url}`);
+    Alert.alert(t('paymentAlerts.copiedTitle'), t('paymentAlerts.copiedBody', { url }));
   };
 
   const tabs = [

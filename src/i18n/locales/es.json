@@ -363,7 +363,8 @@
   },
   "billing": {
     "upgradeRequired": "Actualización necesaria",
-    "viewPlans": "Ver planes"
+    "viewPlans": "Ver planes",
+    "formatNeedsContractor": "Este formato requiere el plan Contractor."
   },
   "reasonCode": {
     "title": "¿Por qué lo cambiaste?",
@@ -805,6 +806,37 @@
       "delivery": "Entrega",
       "cert": "Cert.",
       "general": "General"
+    },
+    "push": {
+      "paidTitle": "Pago recibido",
+      "paidBody": "Factura {{ref}}{{amount}} marcada como pagada.",
+      "amountSuffix": " (€{{amt}})",
+      "quoteAcceptedTitle": "Presupuesto aceptado",
+      "quoteAcceptedBody": "Presupuesto {{ref}} aceptado{{tier}}{{total}}.",
+      "quoteRejectedTitle": "Presupuesto rechazado",
+      "quoteRejectedBody": "Presupuesto {{ref}} rechazado.",
+      "changeRequestTitle": "El cliente pide cambios",
+      "changeRequestFallback": "El cliente pidió revisar {{ref}}.",
+      "decisionTitle": "El cliente ha decidido",
+      "decisionBody": "{{question}}: {{value}}",
+      "tierSelectTitle": "El cliente eligió una opción",
+      "tierSelectBody": "Considera {{tier}}.",
+      "genericTitle": "Actividad del cliente",
+      "genericBody": "Actividad en el presupuesto {{ref}}.",
+      "unknownDecision": "Decisión",
+      "unknownTier": "una opción",
+      "unknownValue": "—",
+      "eveTitle": "Vasco tiene algo para ti",
+      "eveTapToReview": "Toca para ver",
+      "paymentReminderTitle": "Recordatorio de pago",
+      "paymentReminderBody": "Factura para {{customer}} (€{{amount}}) vencida hace {{days}} días",
+      "quoteFollowupTitle": "Seguir presupuesto",
+      "quoteFollowupBody": "Presupuesto para {{customer}} enviado hace {{days}} días — toca seguir",
+      "outcomeFollowupTitle": "¿Respondió el cliente?",
+      "outcomeFollowupBodyNamed": "Toca para registrar si {{customer}} respondió a tu {{itemType}}.",
+      "outcomeFollowupBody": "Toca para registrar el resultado de tu {{itemType}}.",
+      "jobReminderTitle": "Recordatorio de trabajo",
+      "jobReminderBody": "{{title}} comienza en 1 hora"
     }
   },
   "insurance": {
@@ -2536,5 +2568,55 @@
     "evidence": "Basado en {{count}} fuentes de datos vinculadas",
     "implication": "Impacto estimado: €{{amount}}",
     "viewDetails": "Ver detalles para más información"
+  },
+  "tierGate": {
+    "jobLimitReached": "Límite de trabajos alcanzado ({{count}}). Mejora para más.",
+    "quoteLimitReached": "Límite de presupuestos alcanzado ({{count}}/mes).",
+    "invoiceLimitReached": "Límite de facturas alcanzado ({{count}}/mes).",
+    "aiInsightLimitReached": "Límite de insights IA alcanzado ({{count}}/mes).",
+    "clientLimitReached": "Límite de clientes alcanzado ({{count}}).",
+    "seatsInUse": "Todos los {{count}} puestos del equipo en uso.",
+    "featureRequiresTier": "{{feature}} requiere el plan {{tier}}."
+  },
+  "shareQuote": {
+    "failTitle": "No se pudo crear el enlace",
+    "failBody": "Inténtalo de nuevo.",
+    "message": "{{greeting}}aquí está tu presupuesto: {{url}}",
+    "greeting": "Hola {{name}}, ",
+    "shareTitle": "Presupuesto",
+    "buttonLabel": "Compartir enlace del presupuesto"
+  },
+  "paymentAlerts": {
+    "linkCreatedTitle": "Éxito",
+    "linkCreatedBody": "¡Enlace de pago creado y copiado!",
+    "reminderEmailTitle": "Enviado",
+    "reminderEmailBody": "¡Recordatorio por email enviado!",
+    "reminderWhatsappBody": "¡Recordatorio WhatsApp enviado!",
+    "copiedTitle": "Copiado",
+    "copiedBody": "Enlace de pago copiado:\n{{url}}"
+  },
+  "quoteToInvoice": {
+    "notFound": "Presupuesto {{id}} no encontrado",
+    "header": "Factura desde {{ref}}",
+    "autoNumberDue": "Auto-numerado · Vence en 14 días",
+    "quoteDetails": "Detalles del presupuesto",
+    "customer": "Cliente",
+    "job": "Trabajo",
+    "amount": "Importe",
+    "lineItems": "Líneas",
+    "invoiceCreated": "Factura creada",
+    "invoiceRef": "Factura #{{id}}",
+    "matchesQuote": "Coincide con el presupuesto para evitar disputas de pago.",
+    "createInvoice": "Crear factura",
+    "creating": "Creando…",
+    "generatePdf": "Generar PDF",
+    "markSent": "Marcar enviada",
+    "createFailed": "No se pudo crear la factura. Inténtalo de nuevo."
+  },
+  "whatsapp": {
+    "invoiceReminder": "Hola {{name}},\n\nEste es un recordatorio amistoso sobre la factura {{ref}} por €{{amount}}{{overdue}}.\n\n¿Podrías organizar el pago lo antes posible?\n\nGracias,\nEnviado vía Vasco",
+    "invoiceOverdue": " que lleva {{days}} días vencida",
+    "quoteFollowup": "Hola {{name}},\n\nQuería hacer seguimiento del presupuesto para \"{{job}}\" (€{{amount}}).\n\n¿Tienes alguna pregunta o quieres continuar?\n\nUn saludo,\nEnviado vía Vasco",
+    "progressUpdate": "Hola {{name}},\n\nActualización rápida sobre \"{{job}}\": hoy se trabajaron {{hours}}h. Todo va según lo previsto.\n\nEnviado vía Vasco"
   }
 }

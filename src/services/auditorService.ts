@@ -22,7 +22,12 @@ import {
   AUDIT_CATEGORIES,
   DEFAULT_AUDITOR_CONFIG,
 } from '../types/auditor';
-import { reasoningEngine } from './reasoningEngine';
+// R51: dropped `import { reasoningEngine } from './reasoningEngine'` —
+// the symbol was never referenced, but the static import kept the entire
+// 600-LoC mock-data-fabricating reasoning chain in the bundle for no
+// reason. reasoningEngine has zero remaining consumers across app/ +
+// src/components/, so its `gatherDataPoints` / `evaluateStep` mocks no
+// longer leak into any user-visible surface.
 import { logWarn } from '../utils/errorHandler';
 
 // ============================================

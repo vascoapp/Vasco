@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
 // TYPES
@@ -87,6 +88,11 @@ class RouteOptimizerService {
   static getInstance(): RouteOptimizerService {
     if (!RouteOptimizerService.instance) {
       RouteOptimizerService.instance = new RouteOptimizerService();
+      registerSingletonReset(() => {
+        const inst = RouteOptimizerService.instance;
+        inst.routes = [...mockRoutes];
+        inst.listeners.forEach((l) => l());
+      });
     }
     return RouteOptimizerService.instance;
   }

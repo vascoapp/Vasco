@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { emitBusinessEvent } from '../intelligence/dataCollector';
 import { recordMetricSnapshot } from '../intelligence/learningStorage';
 import { getCurrentUserId, getCurrentTrade, getCurrentCountry } from '../lib/currentUser';
+import { registerSingletonReset } from './singletonReset';
 import { MS_PER_DAY } from '../utils/timeConstants';
 
 // R44: persistence — expenses are an in-memory singleton + now AsyncStorage
@@ -126,6 +127,16 @@ class ExpenseService {
     if (!ExpenseService.instance) {
       ExpenseService.instance = new ExpenseService();
       ExpenseService.instance.hydrate();
+      // R47/R48: clear in-memory expenses on logout + re-hydrate on user
+      // change. Singleton survives across sessions, so without this user A's
+      // expenses would leak into user B's view on the same device until B
+      // writes. Routed through registerSingletonReset for centralized wiring.
+      registerSingletonReset((userId) => {
+        ExpenseService.instance.expenses = [];
+        ExpenseService.instance.hydrated = false;
+        ExpenseService.instance.notify();
+        if (userId) ExpenseService.instance.hydrate();
+      });
     }
     return ExpenseService.instance;
   }

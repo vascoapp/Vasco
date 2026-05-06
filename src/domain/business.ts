@@ -30,6 +30,20 @@ export type BusinessProfile = {
   enabledPaymentMethods?: string[];
   // R250: VAT scheme — drives every invoice's VAT treatment.
   vatScheme?: VatScheme;
+  // R66 NL launch: payment + locale fields. Migration
+  // `20260415000001_business_profiles.sql` declared these on
+  // `business_settings` but the mapper + UI dropped them. Without `iban`,
+  // every NL invoice PDF rendered with no bank details — customers had no
+  // way to pay. Same shape covers DE Bezahldetails / FR coordonnées
+  // bancaires for the EU6 expansion.
+  iban?: string;
+  bic?: string;
+  postcode?: string;
+  city?: string;
+  website?: string;
+  invoicePrefix?: string;
+  quotePrefix?: string;
+  defaultPaymentTerms?: number;
 };
 
 export function isSmallBusinessExempt(profile: { vatScheme?: VatScheme }): boolean {

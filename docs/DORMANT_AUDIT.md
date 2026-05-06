@@ -1430,3 +1430,524 @@ Real multi-tenancy hazard + privacy leak.
 **R46.2 — `subscribeUserChange()` pub/sub on `lib/currentUser.ts`**: module-level listener registry. Lets non-hook consumers react to login/logout without a circular `useAuth` dep. AppStateProvider subscribes — on `userId === null` (logout) wipes 13 in-memory state slots; on a new user id (login) re-fires `refreshData()` to hydrate fresh BE data.
 
 R46 batch: 3 files touched (new sessionCleanup service, AuthContext logout, AppState reset effect + currentUser pub/sub). 0 TS errors, locales unchanged at 2254×6.
+
+---
+
+# R47 — singleton multi-tenancy leaks + currentUser threading
+
+**Context**: R46 wiped AsyncStorage on logout and reset AppState's in-memory arrays via `subscribeUserChange`. But module-level service singletons (`getInstance()` pattern) were missed — their state survives logout because the module never reloads. AsyncStorage gets wiped, but the in-memory copy + the `hydrated=true` flag stay set, so `hydrate()` short-circuits when the next user logs in and the previous user's data is what gets shown.
+
+**R47.1 — `expenseService` singleton leak**: in-memory `this.expenses` array + `hydrated` flag persist across user changes. User A's receipt-scanned + manually-entered expenses leak into user B's vat-prep view until B writes. Now subscribes to `subscribeUserChange`: on logout clears array + `hydrated=false` + notifies subscribers; on new user re-runs `hydrate()` from the (now wiped) AsyncStorage, returning to empty.
+
+**R47.2 — `notificationService` singleton leak**: same pattern. `this.notifications` + `this.preferences` (incl. push toggles) persist across users. Reset to `[]` + `[...defaultPreferences]` on logout, re-hydrate on login.
+
+**R47.3 — `timesheet.tsx` clock-out emit used `'current-user'` literal**: business event emitted on clock-out was tagged with the placeholder string, so the time-tracking signal couldn't be sliced per user. Replaced with `getCurrentUserId()` (added missing import). Last `'current-user'` literal in app/contractor/* — remaining occurrences in `customerQuestionQueueBridge.ts` are intentional guards (they early-return when the placeholder is detected).
+
+⚠ Documented (deferred):
+- ~20 other singletons via `getInstance()` (`equipmentTrackerService`, `purchaseOrderService`, `predictiveMaintenanceService`, `subcontractorService`, `complianceService`, etc.) may have similar leaks. Most are seeded with mock arrays not touched by per-user writes — lower priority. Fix when the service starts taking real per-user writes.
+- `offlineWriteQueue.applyWrite` insert path strips temp IDs (`c-{ts}` etc.) before BE write, but doesn't rewrite FK references in queued child rows. Customer created offline → quote referencing that customer queued → on flush, the customer gets a fresh BE uuid but the queued quote still references the temp id, breaking the FK. Needs an ID-mapping system; deferred.
+
+R47 batch: 3 files touched (expenseService singleton, notificationService singleton, timesheet.tsx). 0 TS errors, locales unchanged at 2254×6.
+
+---
+
+# R48 — singleton reset registry: close all 21 remaining leaks
+
+**Goal**: extend R47's two-singleton fix to every service that holds per-user state in memory across `getInstance()`. Same multi-tenancy hazard pattern: AsyncStorage gets wiped on logout, but the singleton's in-memory copy + `hydrated=true` flag survive, so user B inherits user A's state.
+
+**R48.1 — `src/services/singletonReset.ts` (new)**: centralized registry. One `subscribeUserChange` listener fans out to every registered resetter. Each singleton calls `registerSingletonReset(fn)` in its `getInstance()` once. Cleaner than 21 inlined `subscribeUserChange` calls — one subscription, one error-handling boundary, one place to audit.
+
+**R48.2 — refactored R47 fixes onto the registry**: `expenseService` + `notificationService` now use `registerSingletonReset` for consistency.
+
+**R48.3 — wired the registry into 19 more singletons**:
+1. `businessBenchmarkingService` — resets benchmarks/goals/opportunities to mock seeds
+2. `capacityPlanningService` — clears scheduledJobs/alerts/jobOutcomes/capacityCache/durationCache
+3. `complianceService` — clears licenses/certifications/checklistCompletions/regulatoryUpdates/insurancePolicies/alerts (mock safetyChecklists preserved)
+4. `crossRoleWorkflowService` — re-seeds Map from MOCK_WORKFLOWS
+5. `customerInsightsService` — clears customers/segments
+6. `equipmentTrackerService` — re-seeds equipment/maintenance/checkouts/alerts to mocks
+7. `evidencePackService` — clears Maps for evidencePacks/handoverPackages
+8. `invoiceAutomationService` — clears invoices, resets counter to 1
+9. `leadGenerationService` — re-seeds leads to mocks (dormant per user feedback, but consistent)
+10. `predictiveMaintenanceService` — re-seeds equipmentHealth/predictions/recommendations/partOrders to mocks
+11. `purchaseOrderService` — re-seeds orders to mocks, resets counter
+12. `quoteApprovalService` — re-seeds approvals/rules to mocks
+13. `quoteTemplateService` — re-seeds templates to mocks
+14. `routeOptimizerService` — re-seeds routes to mocks
+15. `scheduleFragilityService` — clears 5 Maps + resets thresholds/weights to defaults
+16. `serviceContractsService` — re-seeds contracts/templates/renewals to mocks
+17. `subcontractorService` — re-seeds subs/assignments to mocks
+18. `supplierReliabilityService` — clears 4 Maps + resets thresholds/weights
+19. `teamManagementService` — re-seeds teamMembers/timeEntries/leaveRequests/trainingRecords to mocks
+20. `upsellEngineService` — re-seeds recommendations to mocks, clears history
+21. `warrantyManagerService` — re-seeds warranties/claims to mocks
+
+**Skipped** (stateless, no per-user mutation):
+- `collectionsAgentService` — only returns mock constants, no instance state
+- `estimationFeedbackService` — pulls live from `jobCostTrackingService`, no own state
+
+R48 batch: 23 files touched (1 new helper, 19 singletons + 2 R47 refactors + audit doc). 0 TS errors, 641/643 jest tests pass (2 pre-existing queueItemExecutor router-shape mismatches from R39, unrelated). Locales unchanged at 2254×6.
+
+---
+
+# R49 — offline-queue temp-ID FK rewrite
+
+**The bug** (called out as deferred in R47 + R48): the offline write queue strips temp IDs (`c-{ts}`, `j-{ts}`, etc.) from insert payloads before sending to BE so Postgres can generate a fresh uuid via the column default. But it never captured the BE-generated id. Child rows queued behind the parent — e.g. a job referencing the customer's temp id, or an update by temp rowId — still carried the temp id in their FK fields. On flush:
+
+- Customer offline-create → insert succeeds, BE generates `cust-uuid-abc`. **Temp id discarded.**
+- Job offline-create with `customer_id: 'c-1234567890'` → insert fails because no customer with that id exists. FK constraint violation. Job sits in the queue forever (until 5-attempt cap drops it).
+- Update job by temp rowId → existing code drops update quietly (R277 behavior), so user A's local in-progress edit is lost on reconnect.
+
+**R49.1 — capture BE-generated id from insert**: when a payload's `id` matches a temp pattern, the insert now goes through `.select('id').single()` chain so we get back the BE-assigned uuid. Result is returned alongside the success flag as `mapping: { temp, real }`.
+
+**R49.2 — accumulate id mappings across the flush**: `flushQueue` now maintains a `Map<tempId, realId>` populated as inserts succeed. Iterating in queue order (FIFO) means parent rows insert first, child rows after — by the time a child's insert runs, its parent's mapping is in the map.
+
+**R49.3 — rewrite FK references on every queued entry**: before applying each entry, `remapEntry` rewrites `rowId`, `match` keys, and the entire `payload` (recursively, including nested objects + arrays) by substituting any string value found in the id-map. Conservative scan: any string that exactly matches a known temp id gets replaced with the real id. Non-matching strings (names, emails, descriptions) pass through untouched.
+
+**R49.4 — drops still apply when no mapping exists**: if an update/delete targets a temp rowId AND no mapping was captured (because the parent insert hadn't been queued or failed terminally), the entry is dropped quietly — same as R277's existing behavior, just now after the rewrite attempt.
+
+**Tests added** (2 new, 7 total in `offlineWriteQueue.test.ts`):
+- "rewrites FK references in queued child rows after parent insert" — customer + job, verifies `customer_id` on the job's insert is rewritten to the captured BE uuid
+- "rewrites temp rowId on update entries when parent mapping is known" — insert job with temp id, then update by that temp rowId; verifies the update's `rowId` is the captured real uuid by the time it hits BE
+
+R49 batch: 2 files touched (offlineWriteQueue.ts rewrite, offlineWriteQueue.test.ts +2 tests + 1 mock-shape update). 0 TS errors, 643/645 jest tests pass (2 unrelated pre-existing queueItemExecutor failures). Locales unchanged at 2254×6.
+
+---
+
+# R50 — e2e intelligence-loop coverage
+
+**Goal**: lock the 3 most load-bearing intelligence loops with e2e tests so silent regressions (emit fires but never lands; schema drift breaks dual-writes; calibration signal goes dark) get caught at CI.
+
+**R50.1 — funnel signal e2e** (`src/intelligence/__tests__/funnelE2e.test.ts`, 2 tests):
+- Walks the full contractor lifecycle: `signup_completed` → `onboarding_completed` → `quote_created` → `quote_accepted` → `invoice_sent` → `payment_received`. Verifies all 6 events queue locally then drain to `business_events` with uniform cohort attribution (user_id + trade + country) — the keys downstream funnel dashboards slice on.
+- Offline survival: first emit fails to reach BE → event sits in queue. Second emit retries the queue with both rows landing in one batch.
+
+**R50.2 — pricing-moat dual-write e2e** (`src/intelligence/__tests__/pricingMoatE2e.test.ts`, 3 tests):
+- `emitMaterialPurchased` is contract-bound to write BOTH `business_events` (cohort analytics) AND `material_price_history` (predictor training). Past regressions (R241 wrote columns the table didn't have; R275 realigned to schema; R283 fixed source mis-attribution) prove this contract is brittle. Test locks the full payload shape on both writes plus cross-table attribution agreement (observed_by ↔ user_id, trade ↔ trade, country ↔ country).
+- Manual path: defaults to `source: 'manual'`, `currency: 'EUR'`, country falls through to currentUser.
+- OCR path: passes `source: 'invoice_scan'` + brand/EAN/vat/observedAt enrichment — preserved on the write.
+- Country threading: caller-omitted country defaults from currentUser ref (not hardcoded `'NL'`) — locks R282's defense-in-depth fix.
+
+**R50.3 — EVE outcome-loop e2e** (`src/services/__tests__/eveOutcomeLoopE2e.test.ts`, 3 tests):
+- `recordOutcome` is the EVE Legal AI feedback signal. It must write both `@vasco_queue_outcomes` (local insightScorer calibration) AND a `queue_outcome_*` row in `business_events` (cross-cohort generator-trust learning). If either silently fails, generators keep firing the same dud suggestions because the feedback loop never closes.
+- Tests positive + negative + unknown-itemId paths. Verifies `entityKey` (not the queue id) is the cohort key on the BE row, and the `generatorId` attribution flows through so insightScorer can dampen/boost specific generators per the R269 trust multiplier.
+- **Required production fix**: converted `recordOutcome`'s dynamic `await import('../intelligence/dataCollector')` into a static import. There's no circular-dep reason for the dynamic form (verified — dataCollector doesn't reach back into the queue). Static import is also faster (no per-call resolve) and is testable under Jest's standard mock hoisting.
+
+R50 batch: 4 files touched (3 new e2e test files + aiActionQueueService static-import refactor). 0 TS errors, 651/653 jest pass (+8 new cases; 2 pre-existing R39 queueItemExecutor router-shape failures unchanged). Locales unchanged at 2254×6.
+
+⚠ Documented (deferred):
+- Other dynamic-import call sites in services may have the same testability issue. Audit when adding new e2e coverage; convert to static when no circular dep blocks it.
+
+---
+
+# R51 — punch-list defensive cleanup pass
+
+Continuing autonomous work after the user asked "what's next" + "do all these" on a 6-item punch list. Diagnosis revealed that **3 of 6 items were already dormant** (orphan components / unused services), so the user-visible scope shrank to fixes #2 (CRM tags), #3 (weather mocks in live path), and #6 (a dead static import keeping reasoningEngine in the bundle). #1 + #4 + #5 are defensive hardening / documentation.
+
+**R51.1 — `roiMetricsService` MOCK_METRICS leak (defensive)**: confirmed `<VascoSavedBanner />` and `<ROIDashboard />` are orphan components — Vandaag inlines its own savings block via real `useSavingsAggregation()`, and `<HoursSavedCard />` only mounts in `ContractorDashboard` (enterprise, skip per directive). But `roiMetricsService.ts` initialized state with `MOCK_METRICS` / `MOCK_INSIGHTS` / `MOCK_GOALS`, so any future mount would have surfaced fake "12.1 hours saved this week / 58% win rate / €665 saved" numbers regardless of real signal. Replaced default with `makeEmptyMetrics()` (zero-valued, factory-built so each user gets a fresh object). Mock data preserved as `__seedMockData()` test seeder. Added `setLiveMetrics(partial)` setter so the hook can push real-computed values without the singleton holding stale ones across users. Wired into R48's `registerSingletonReset` registry — logout wipes overrides back to zeros. Also nuked `getMetricHistory`'s `Math.random()`-jitter chart-noise generator; returns `[]` empty series until real period aggregation is wired (callers render "Not enough data yet" empty state).
+
+**R51.2 — weather: dropped stale `MOCK_WEATHER` seed in `smartSchedulerService`**: the seed had 5 entries dated `2025-02-03` to `2025-02-07` — all in the past since 2025-02-08 — so the `MOCK_WEATHER[date]` lookup never matched, and the neutral-default fallback ran every time anyway. Keeping the literal misled future readers into thinking weather data was seeded somewhere. Removed; the canonical `weatherService` (Open-Meteo, 3-day horizon) handles today/tomorrow; further-out dates hit a clearly-flagged neutral default with `suitableForOutdoor: true` so we don't fabricate "Bad weather expected" alerts for unknown days. `capacityPlanningService.getWeatherForecast` already had a deterministic-by-day-of-year 7-day rotation for far-future dates (R20 already fixed today/tomorrow there too); kept as-is — the rotation is deterministic (consistent across renders, not random) and capacity planning UX legitimately needs 7-14d horizon that Open-Meteo's 3d window doesn't cover. Real fix: extend `weatherService` to 14d. Documented.
+
+**R51.3 — customer-CRM tag gating** (R299 deferred → resolved): `customer-crm.tsx` rendered the `CustomerTagBadge` (vip/loyal/new/risky/inactive) computed by `customerTaggingService.scoreAllCustomers` but the search box only matched name/phone/email. Tag was visual-only; promised filtering it didn't deliver. Search now also matches the raw tag string (`"vip"` → all VIP-tagged customers, `"risky"` → all flagged late-payers, etc.) plus any localized version when `customerCrm.tags.<tag>` i18n keys exist. Localized labels gracefully fall back to the raw English tag when keys are absent, so the gating works in NL/DE/FR/ES/IT today and gets prettier when locales are filled in.
+
+**R51.4 — `reasoningEngine` orphan dead-import**: `auditorService.ts` imported `reasoningEngine` at module scope but never referenced the symbol. The static import alone kept the entire 600-LoC mock-fabricating reasoning chain (`gatherDataPoints` returns `generateMockDataPoint` objects; `evaluateStep` returns `Math.random()`-jittered confidence) in the bundle for every consumer of `auditorService` — which IS user-visible (`/contractor/certificaten`). Dropped the import. With zero remaining consumers across `app/` + `src/components/`, marked `reasoningEngine.ts` itself as DORMANT — DO NOT EXTEND with a header rewrite explaining what it'd take to make real and recommending deletion on the next dead-code sweep.
+
+**R51.5 — `quoteOptimizerService`**: skipped per its own existing R19-audit header that already says "DORMANT — DO NOT EXTEND" + "delete on next dead-code sweep". The canonical quote-builder is `TieredQuoteBuilder` (Good/Better/Best tier multipliers, working live, R148+ signal-backed). No changes.
+
+**R51.6 — `ukComplianceService` Companies House / HMRC CIS / Gas Safe stubs**: deferred. These are BE/integration work that requires real Companies House API credentials, HMRC CIS gateway access, and Gas Safe Register API onboarding — out of scope for an audit pass. NL/DE/FR/ES/IT can ship without it; UK launch is gated on this triplet of integrations regardless.
+
+**Upselling-in-quotations status (user asked)**:
+- ✅ **Tier-based upsell (LIVE)** — `TieredQuoteBuilder` shows Good/Better/Best columns with auto-scaled prices (1× / 1.25× / 1.55×) on every quote. Real, working.
+- 🟡 Per-quote add-on/bundle suggestions — `quoteOptimizerService` exists but its consumer `<QuoteOptimizer />` is unmounted (only used by `QuoteOptimizerDemo`, also unrouted). Mock-driven, dormant.
+- 🟡 Per-job post-completion cross-sell — `upsellEngineService` singleton is mock-seeded; not wired to any active screen.
+
+R51 batch: 5 files touched (`roiMetricsService` zero-out + setLiveMetrics + R48 reset wiring; `smartSchedulerService` MOCK_WEATHER drop; `customer-crm.tsx` tag-aware search; `auditorService` dead-import drop; `reasoningEngine` orphan header). 0 TS errors, 653/653 jest pass, locales unchanged at 2254×6.
+
+---
+
+# R52 — new-user first-session blocker fixes
+
+Trace of a brand-new contractor: signup → onboarding → add customer → create quote → mark sent → convert to job → mark complete → invoice → mark paid. Found 4 real blockers + 1 dormant-counter monetization gap.
+
+**R52.1 — tier-gate counters never incremented (monetization blocker)**: `subscriptionService.canAddClient` / `canCreateQuote` / `canCreateInvoice` / `canCreateJob` / `canUseAiInsight` all checked counter fields on the saved `SubscriptionState` (`clientCount`, `quotesUsedThisMonth`, `invoicesUsedThisMonth`, `activeJobCount`, `aiInsightsUsedThisMonth`). The counters were declared in the type, set to `0` in `defaultState()`, and **never incremented anywhere** — the recorder helpers (`recordQuoteUsage`, `recordInvoiceUsage`, `recordAiInsightUsage`) had zero callers. So Free-tier limits (5 jobs, 10 quotes/mo, 10 invoices/mo, 25 clients) were declared but completely toothless: a Free user could create unlimited everything. Fixed by extending each gate signature to accept an optional `liveCount` second arg derived from real AppState data (`customers.length`, `jobs.filter(active).length`, `quotes.filter(thisMonth).length`, etc.). Threaded the live count at all 4 call sites: `customer-crm.tsx`, `quotes/new.tsx`, `quotes/[id]/invoice.tsx`, `(contractor)/werk.tsx`. Single source of truth — no parallel counter to maintain. The legacy `state.xxxCount` fallback stays for callers without AppState handy (background jobs).
+
+**R52.2 — `addJob` BE-success branch skipped post-create housekeeping**: when Supabase persist succeeded the function returned `row.id` early, bypassing `markStepComplete('first_job_created')`, ontology entity creation, customer↔job relation, `trackEvent('job_created')`, AND calendar sync. Online users never got the activation milestone fired (the visual checkmark was still correct because milestones are derived from AppState in `evaluateMilestones`, but the per-step audit log went silent). Offline users got the housekeeping; online users didn't. Refactored to a single post-create block that runs regardless of BE outcome, using `finalId = row.id ?? tempId`.
+
+**R52.3 — `addCustomer` BE-success branch skipped milestone + embedding**: same bug class — early return on BE success skipped `markStepComplete('first_customer_added')` AND the customer embedding fired with the wrong id. The R243 embedding always used `tempId`, so when BE persisted the customer with a fresh uuid, semantic-search lookups by real id missed the embedding. Fixed: embedding now fires under `finalId` (real uuid when BE succeeded, tempId otherwise).
+
+**R52.4 — `markQuoteSent` fire-and-forget on offline**: was a `.catch(logWarn)` — offline contractors marking a quote sent saw the status flip locally but BE got nothing on reconnect. Now wraps `persistOrQueue` so the document update queues for next online tick.
+
+**R52.5 — `convertQuoteToJob` swallowed quote-status-update failure**: inside the try block, `await updateDocument(quoteId, { status: 'accepted' }).catch(() => {})` silenced any error. If the job insert succeeded but the quote-status-update failed, the quote stayed `draft` on BE while the job existed — inconsistent state across the moat. Replaced the bare catch with a queueWrite fallback so the status update flushes on reconnect.
+
+⚠ Documented (deferred):
+- `aiInsightsUsedThisMonth` counter is read by `eveAgentService.getWorkforceStatus` for the "X of Y insights used" display on the agent dashboard. Free-tier users always see "0/5 used" because no caller increments it. Fix: derive from queue-history items where `createdAt >= monthStart && status !== 'pending'`. Cosmetic on what's likely an enterprise/secondary surface; kept the gate-signature change ready (`canUseAiInsight(sub, liveCount?)`).
+
+R52 batch: 5 files touched (`subscriptionService` gate-signature + counter docs; `customer-crm.tsx` / `quotes/new.tsx` / `quotes/[id]/invoice.tsx` / `(contractor)/werk.tsx` live-count threading; `state/AppState.tsx` addJob + addCustomer post-create refactor + markQuoteSent persistOrQueue + convertQuoteToJob queue-on-fail). 0 TS errors, 653/653 jest pass, locales unchanged at 2254×6.
+
+---
+
+# R53 — hunt similar bug classes
+
+Same recurring patterns popping up across the codebase:
+
+**R53.1 — `addJobMaterial` BE-success early-return (critical moat regression)**: same R52 bug class. When BE persisted, returned `row.id` early, skipping the canonical pricing-moat emit (`emitMaterialPurchased` writes both `business_events` AND `material_price_history` per R241/R275/R283), calibration learning (`resolveOutcomesFromMaterialPurchase`), AND material embedding. Online users' material purchases simply did not feed the moat — every online contractor's material signal went to /dev/null until they happened to add a material offline. Refactored to the R52 finalId pattern.
+
+**R53.2 — `addJobMaterial` no offline-queue fallback**: when the parent `jm.jobId` is still a tempId (parent job offline-created and not yet flushed), the BE insert FAILs FK constraint. The catch logged but didn't queue, so the material insert was permanently lost. Now wraps queueWrite so R49's temp→real rewriter resolves the FK on flush.
+
+**R53.3 — `intelligenceCaptureService` 4 silent-catch insert paths**: `generator_dismissals`, `customer_portal_events`, `photo_analyses`, `job_quality_signals` all had `} catch { /* silent */ }`. Failures (RLS / schema drift) went to /dev/null with no audit trail. R241 had wired `logIntelligenceWriteFailure` for `material_price_history` only — exported it from `dataCollector.ts` and routed all 4 captures through the same hook so failures land in `eve_telemetry` for later forensics. Same fix applied to `decisionSyncService.logActivity` (the customer-portal-side `decision_activities` insert).
+
+**R53.4 — `dataProvider.createPriceObservation` fake material_id (dormant chain)**: `crypto.randomUUID()` generated a placeholder for `price_observations.material_id` because the call site doesn't carry the catalog link. The function + its only caller (`recordJobPriceObservations`) are zero-caller dormant; documented inline with R54 audit comment recommending the canonical `emitMaterialPurchased` path. No active impact.
+
+**R53.5 — AppState persist-effect deps inconsistency**: `customers` and `projects` persist effects watched only `[customers]` / `[projects]`, missing `persistReady` from deps. Other persist effects had it. Edge case — only matters if `persistReady` flips after the array changed but before the effect ran. Harmonized.
+
+R53 batch: 6 files touched (AppState addJobMaterial refactor; dataCollector exports logIntelligenceWriteFailure; intelligenceCaptureService + decisionSyncService route failures through it; dataProvider price_observation comment; AppState persist-effect deps). 0 TS errors, 657/657 jest pass.
+
+---
+
+# R54 — id-remap event bus + side-effect re-fire (R49 follow-on)
+
+R49 closed the FK rewrite gap for queued *operations* but not for synchronous side effects. When `addCustomer` ran offline, the embedding fired with tempId; on flush BE assigned a real uuid, but `customer_embeddings.customer_id` stayed under the discarded `c-{ts}`. Same for ontology entities, `@vasco_embeddings` AsyncStorage cache, Supabase `embeddings.id` (prefixed `job-{tempId}`/`mat-{tempId}`). Semantic search by real id missed forever; ontology relations dangled.
+
+**R54.1 — `src/services/idRemapBus.ts` (new)**: in-process pub/sub. `emitIdRemap({table, tempId, realId, payload})` fans out to listeners. `flushQueue` emits after every successful insert that captured a temp→real mapping, including the original payload so listeners derive embedding text without a BE round-trip.
+
+**R54.2 — Ontology listener (`intelligence/ontology.ts`)**: `remapEntityId(tempId, realId)` rekeys the entity in the entities Map (merging with any existing realId entry from a parallel `refreshData()` race), and rewrites every relation's `fromId`/`toId`. Wired for tables `customers`, `jobs`, `materials`, `suppliers`, `projects`, `documents` via `TABLE_TO_ENTITY_TYPE`.
+
+**R54.3 — Semantic search listener (`intelligence/semanticSearch.ts`)**: `remapIndexedItem` rewrites both layers. Local AsyncStorage `@vasco_embeddings` cache id is rekeyed (`job-{tempId}` → `job-{realId}`), and metadata.jobId / metadata.materialId rewrite too. Supabase `embeddings.id` gets a column UPDATE rather than DELETE+INSERT so the existing pgvector blob is preserved (no embed-text edge fn re-call burned). Wired for `jobs` + `materials` via `REMAP_PREFIX_BY_TABLE`.
+
+**R54.4 — Embedding listener (`services/embeddingService.ts`)**: on `customers` remap, re-fires `embedCustomer({customerId: realId, text})` derived from `payload.name/email/phone/address`. Old temp-keyed row stays orphaned in `customer_embeddings` (no RPC indexes by it; cleanup migration optional).
+
+**R54.5 — `src/services/__tests__/idRemapBusE2e.test.ts` (new, 4 tests)**: locks the contract end-to-end. (a) customer remap: re-embed under real uuid with payload-derived text; (b) ontology remap: entity + relations rekey from temp to real; (c) semanticSearch remap: local cache + Supabase UPDATE both fire; (d) listeners ignore tables they don't handle (documents → no embeddings update).
+
+**R54.6 — `docs/ID_COLUMN_MAP.md` (new)**: source of truth for FE↔BE↔Supabase id-column contracts. Per-entity tempId prefix table, moat-table FK invariants (`material_price_history.observed_by ↔ auth.uid()`, `customer_embeddings.customer_id ↔ customers.id`, `embeddings.id = {type}-{entity_id}`, `pricing_intelligence.quote_id ↔ documents.id`), R49 + R54 listener wiring map, and a checklist for adding new id-bearing entities.
+
+**R54.7 — `MEMORY.md` workflow rule + `learnings.md` #49**: "ID-keyed mutations follow R52/R54 contract" added as workflow rule #7 in MEMORY.md (loaded every conversation) so the pattern is enforced on all future entity-creation work, with detailed entry in learnings.md citing the recurring bug class.
+
+R54 batch: 7 files touched (1 new bus, 3 listeners wired into existing services, 1 e2e test file with 4 cases, 1 new docs/ID_COLUMN_MAP.md, MEMORY.md + learnings.md). 0 TS errors, 657/657 jest pass.
+
+---
+
+# R55 — post-completion full audit round (new-user flow blockers)
+
+Re-traced signup → onboarding → first customer → first quote → send → convert → complete → invoice → paid hunting for any remaining R52-class regression in code paths I hadn't covered yet.
+
+**R55.1 — `addInvoiceFromJob` missing emit + GoBD audit**: the quote-source variant (`addInvoice`) fired `emitInvoiceSent` + `trackEvent('invoice_created')` + GoBD audit-trail entry. The job-source variant (`addInvoiceFromJob`) skipped all three. Job→invoice creations were silently absent from the funnel signal in `business_events`, no GoBD audit row landed. Parity restored.
+
+**R55.2 — `convertQuoteToJob` skipped ALL job housekeeping (largest regression so far)**: same R52 early-return bug, but worse — when BE persisted the job row, returned `row.id` early skipping NOT JUST the housekeeping but also (a) `markStepComplete('first_job_created')` activation milestone, (b) ontology `upsertEntity` for the new job, (c) `addRelation(customer→job)` graph edge, (d) `indexJobForSearch` semantic indexing, (e) `trackEvent('job_created')`, (f) calendar sync. Online quote→job conversions silently bypassed the entire job-creation moat path while direct `addJob()` flowed through it. Now follows the R52 finalId contract uniformly across BE-success / offline / unconfigured branches; also writes the `sourceQuoteId` into the ontology entity attributes so the customer→quote→job lineage is queryable from the graph.
+
+**R55.3 — Ontology relations incomplete (documented, deferred)**: only 2 relation types are written today (`customer→owns→job`, both addJob + convertQuoteToJob). Missing: `quote→quoted_for→job`, `invoice→invoiced_for→job`, `material→used_in→job`, `material→supplied_by→supplier`, `job→part_of→project`. Compound AI's reasoning has fewer edges to traverse than the schema declares. Not a flow blocker (UI works without these); deferred.
+
+**R55.4 — Onboarding direct-AsyncStorage seed bypasses AppState mutators (documented, intentional)**: `app/onboarding.tsx` writes `j-seed-1` and `c-seed-1` directly to `@vasco_jobs` and `@vasco_customers` keys, bypassing `addJob`/`addCustomer` and therefore all post-create housekeeping (ontology, embeddings, milestones). The seed ids don't match R49 temp-id patterns (`^c-\d+$` requires digits, not `seed-N`) so they never get rewritten on flush. Edge case: if a contractor accepts a quote against the seed customer, the resulting FK references `c-seed-1` which doesn't exist in BE. Acceptable launch tradeoff — the seeds exist as visual examples for the user to delete or replace; documenting for future cleanup (either route through `addCustomer` or skip seeding entirely with an empty-state CTA).
+
+R55 batch: 1 file touched (state/AppState.tsx convertQuoteToJob + addInvoiceFromJob refactors). 0 TS errors, 657/657 jest pass, locales unchanged at 2254×6.
+
+---
+
+# R56 — round 2 of bug-class hunting
+
+**R56.1 — `updateInvoice` had ZERO BE persistence (critical data loss)**: only updated local state + GoBD audit log. Edits to invoice amount, due date, customer, status all lived in memory and got overwritten on the next `refreshData()`. No `dbUpdate*`, no `persistOrQueue`, nothing. Now wraps `persistOrQueue('documents', 'update', updateDocument(id, dbUpdates), ...)` with snake_case mapping (total_amount, status, customer_id, due_date, paid_at). Matches the `updateQuote` pattern.
+
+**R56.2 — temp-id skip-gates everywhere prevented offline-edit persistence**: 10 mutators (updateCustomer, removeCustomer, removeJob, updateJob, removeMaterial, removeSupplier, updateJobMaterialStatus, removeJobMaterial, updateQuote, updateProject) had `if (isSupabaseConfigured && !id.startsWith('temp-')) { ... persistOrQueue(...) ... }` gates. Pre-R49 the gates were defensive — updates by temp id couldn't resolve. Post-R49+R54 they became dead code that silently dropped offline-edit-then-flush. Sequence: contractor creates customer offline (`c-{ts}`) → edits the customer twice → flushes. The two edits never queued; only the original optimistic INSERT carried the original payload. Edits lost on cold-start refresh. Extended `persistOrQueue` with a temp-id fast path that queues the update directly (bypassing the doomed BE round-trip), then removed all 10 gates so updates flow uniformly.
+
+**R56.3 — `accept-token` customer-side acceptance didn't create job**: the customer-shareable accept link landed on `app/accept/[token].tsx`, fired `processAcceptance(token)` to the edge function, then ONLY called `updateQuote(id, { status: 'accepted' })`. No `convertQuoteToJob`, so quote turned green but no job materialized. Contractor saw the accepted quote but had to manually click "Convert to job" — silently inconsistent with the contractor-side accept-flow at `app/quotes/[id].tsx:366` which DID call `convertQuoteToJob`. The customer-facing success message ("Your contractor will start scheduling the work") and the explicit `acceptedButFailed` error string ("Quote accepted but job creation failed") prove the original intent was auto-create. Fixed: now calls `convertQuoteToJob(quoteId)` which fires the full R52/R55 housekeeping (markStepComplete, ontology, semantic index, calendar, emit). Status-only fallback retained for the case where the quote isn't in local AppState (customer's device hasn't synced).
+
+**R56.4 — `decisionSyncService` realtime listener filtered INSERT only**: customer portal submits decisions via `upsert` with `onConflict: 'tracker_id,item_id,submitted_by'`. The contractor-side realtime listener in `useDecisionUpdates` filtered to `event: 'INSERT'`. When a customer EDITED their decision (changed answer, added note), the upsert fired UPDATE, not INSERT — contractor's listener silently missed every edit. Switched filter to `'*'`, handle reads `payload.new ?? payload.old`, `newCount` only bumps on actual INSERTs (not edits the contractor already saw).
+
+**R56.5 — `invoicePaymentWatcher` subscribed to a phantom `invoices` table**: BE has polymorphic `documents` (with `doc_type='invoice'`) since R278 schema migration. The realtime listener filtered `table: 'invoices'` — non-existent. Supabase realtime accepts any table name, the channel subscribes happily, but no rows ever change in a non-existent table. Result: Mollie/Stripe webhook → BE → contractor lock-screen-notification chain was silently broken. Manual mark-paid fired its own local push (different code path), so this only broke paid-via-payment-link notifications. Switched to `documents`, filter `doc_type === 'invoice'` in the handler. Mapped column reads from `total` → `total_amount`, `reference` → `document_number ?? reference` to match the documents schema.
+
+**R56.6 — `watchUserTables` included phantom `quotes` table**: same R278 migration class. `quotes` doesn't exist on BE — `documents` covers both quote + invoice rows. The phantom `quotes` channel never fired (no harm) but wasted a realtime slot and misled future readers. Dropped from the list.
+
+⚠ Documented (deferred):
+- `recurringJobService.generateNextOccurrence` mints synthetic ids `j-rec-{ts}-{rand}` that don't match R49's `^j-\d+$` temp-id pattern. The agreement.generatedJobIds[] accumulates ghost ids; on contractor approve via `maintenance_due` queue item, `addJob` creates a fresh tempId — the agreement's tracking is stranded. Cosmetic; no functional impact.
+- `submitDecision` (customer portal anonymous side) has no offline-write-queue retry on BE failure. The local AsyncStorage save is the only fallback. Customer device has no contractor uid → no offline queue. If BE is down, the contractor never gets the signal until the customer re-submits. Constraint of the anon portal; deferred.
+- `deleteJobPhoto` in `app/contractor/job/[id]/photos.tsx` discards the boolean return; if delete fails, photo stays in BE silently with no UX feedback. Low priority — error case only.
+
+R56 batch: 5 files touched (state/AppState.tsx 10 gate removals + updateInvoice persist; offlineWriteQueue persistOrQueue temp-id fast-path; app/accept/[token].tsx auto-create-job; decisionSyncService realtime filter; invoicePaymentWatcher table corrections). 0 TS errors, 657/657 jest pass, locales unchanged at 2254×6.
+
+---
+
+# R57 — round 3 of bug-class hunting
+
+**R57.1 — `documents.id` ↔ FE quote/invoice id mismatch (LARGEST latent bug found in the audit)**: the FE addQuote / addInvoice mints `docNumber` from `nextDocumentNumber` (text like `Q-260001`) and stores it as the FE `Quote.id` / `Invoice.id`. But BE `documents.id` is a uuid (`gen_random_uuid()` default) — the FE id is the `document_number` column, not the primary key. **Every `updateDocument(id, updates).eq('id', id)` matched 0 rows on BE** because the docNumber doesn't match a uuid pattern. Affected: `markQuoteSent`, `markInvoiceSent`, `markInvoicePaid`, `updateQuote`, `updateInvoice` (R56-added), `convertQuoteToJob`'s quote-status-update, `removeQuote`, `removeInvoice`. Contractor's UI flipped status locally, refresh from BE wiped it back. Mollie/Stripe webhook → BE.documents → contractor app status sync also broken. **The longest-standing latent bug found** — has been silently breaking quote/invoice persistence since R278's documents migration. Fixed via dual-route in `dataProvider.updateDocument` / `deleteDocument`: if the value parses as a uuid, match by `id`; otherwise treat it as `document_number` and match by that (unique per `(user_id, doc_type)` under RLS, so the equality is safe). Backwards-compatible.
+
+**R57.2 — `refreshData` overwrote temp-id rows from local state**: `setCustomers(loadCustomers())` etc. wholesale-replaced the array. Offline-created customer (id `c-{ts}`) disappeared from the UI between refresh and the next `flushQueue` that promoted it to BE. Fixed: refreshData now merges, preserving any local rows whose id matches the temp-id pattern (`^(c|j|q|inv|mat|sup|jm|proj)-\d+$`). R49+R54 guarantee the temp row gets re-keyed on flush; until then we keep it visible. Quotes/invoices use docNumber (not temp-id pattern) and BE persists them by document_number, so wholesale-replace is correct for those.
+
+**R57.3 — `feedbackService` + `emailImportService` write to phantom BE tables**: `feedbackService` inserts to `feedback` (BE has only `feedback_weights`); `emailImportService` writes to `user_settings` + reads `email_imports` (neither exists on BE). Both services have ZERO functional consumers across `app/` + `src/components/`. Documented as dormant — same class as `quoteOptimizerService` (the canonical channel for user feedback today is `gobd_audit_log` + `eve_telemetry`; email import is genuinely unwired).
+
+⚠ Documented (deferred):
+- `dataProvider.createPriceObservation` `material_id: crypto.randomUUID() ?? userId` placeholder still in place (R54-flagged, dormant chain). `recordJobPriceObservations` reads `MOCK_ACTUALS`, has zero callers. The canonical pricing-moat path is `emitMaterialPurchased` → `material_price_history`, which IS user-id-keyed correctly. Cleanup on next dead-code sweep.
+- `request-account-deletion` edge fn invoked from `accountDeletionService.requestDeletionViaEdgeFunction` is not deployed in `supabase/functions/`. Already documented as fail-soft fallback in R278 — the canonical path is `account_deletion_requests` table insert which is wired.
+
+R57 batch: 2 files touched (`lib/dataProvider.ts` updateDocument/deleteDocument dual-route + UUID_RE shape detector; `state/AppState.tsx` refreshData merge-with-temp-rows). 0 TS errors, 657/657 jest pass, locales unchanged at 2254×6.
+
+---
+
+# R58 — uid hardening (placeholder leakage closure)
+
+The legacy `'current-user'` placeholder (`src/lib/currentUser.ts:14`) was bleeding into moat writes from multiple angles. Every `business_events` row tagged with `'current-user'` is rejected by BE (FK to `auth.users(id)`) and blocks the local queue from advancing. Every `material_price_history.observed_by = 'current-user'` similarly fails the FK. Cohort attribution corrupted at source.
+
+**R58.1 — AppState `aiUserId` stale-closure (silent corruption on first session)**: `const aiUserId = getCurrentUserId()` was captured at the top of `AppStateProvider` (line 216) and baked into the useMemo'd action functions. The useMemo deps array did NOT include `aiUserId`, so for accounts where the state arrays didn't mutate post-login (new account, empty data path, demo seed-once), the action closures retained `aiUserId = 'current-user'` for the entire session. Every `emitJobStarted`, `emitJobCompleted`, `emitInvoiceSent`, `emitPaymentReceived`, `emitQuoteCreated`, `emitQuoteAccepted`, `emitQuoteRejected`, `emitMaterialPurchased`, `recordPricingData`, `recordPricingOutcome`, plus the inline `(supabase.from('pricing_intelligence') as any).update(...).eq('user_id', aiUserId)` at line 957 — all silently fired with the placeholder string. Replaced all 17 references with inline `getCurrentUserId()` calls inside each action body so each invocation reads the live ref.
+
+**R58.2 — `app/(tabs)/hub/index.tsx` hardcoded `userId="current-user"`**: the `<AIRecommendations userId="current-user" ... />` prop was a literal placeholder string. Every AI insight surface fired by this hub fired under the placeholder, corrupting cohort attribution. Now reads live ref via `getCurrentUserId()`.
+
+**R58.3 — `dataCollector` central placeholder gate**: even after R58.1+R58.2, race conditions between cold-start and login could leak the placeholder. Added an `isPlaceholderUserId(userId)` helper at module scope and gates at all 4 emit/record entry points: `emitBusinessEvent` (root that all convenience emitters route through), `recordPricingData` (direct `pricing_intelligence` write), `recordPricingOutcome` (training-pair update), and `emitMaterialPurchased`'s direct `material_price_history` insert. Placeholder uids early-return without writing. Belt-and-suspenders: even if a stale closure is missed in a future audit, the moat layer drops the corrupt row instead of writing it.
+
+**R58.4 — `flushToCloud` queue draining**: pre-R58, queue events enqueued before login (under placeholder uid) blocked the entire batch flush forever — BE FK constraint rejected the row, the batch errored, the queue never advanced, real post-login events sat behind them. Added a filter that drops placeholder-uid events from the queue on each flush attempt; persists the cleaned queue back to AsyncStorage. Real events behind them flow.
+
+**R58.5 — `getAuthedUserId(): string | null` helper**: many services had `const userId = getCurrentUserId(); if (!userId) return;` guards that EXPECTED the function to return falsy when no user is signed in. But the function returns the `'current-user'` string — truthy. The guards never caught it. New `getAuthedUserId()` returns `null` for the placeholder, so existing `if (!userId) return` patterns work as the original authors intended. Wired into `intelligenceCaptureService` (7 sites: generator_dismissals, customer_portal_events, photo_analyses, job_quality_signals, ml_cashflow_gap_predictions, ml_capacity_overrun_predictions, ml_supplier_leadtime_predictions, query_daily_metrics) and `embeddingService` (3 sites: embedCustomer, embedQuoteLine, findSimilarCustomersByText).
+
+R58 batch: 6 files touched (`lib/currentUser.ts` getAuthedUserId helper; `state/AppState.tsx` aiUserId removal + 17 inline replacements; `app/(tabs)/hub/index.tsx` hardcoded prop; `intelligence/dataCollector.ts` 4 gate sites + queue filter; `services/intelligenceCaptureService.ts` getAuthedUserId; `services/embeddingService.ts` getAuthedUserId; `services/__tests__/idRemapBusE2e.test.ts` mock update). 0 TS errors, 657/657 jest pass, locales unchanged at 2254×6.
+
+---
+
+# R59 — id/uuid hardening (mirrors R58 for entity ids)
+
+R58 closed the placeholder uid leakage class. R59 does the same for entity ids — the moat-write equivalent of `getAuthedUserId`'s null-for-placeholder pattern. Where R58 stopped `'current-user'` from corrupting `business_events.user_id`, R59 stops `c-{ts}` / `j-{ts}` / etc. from corrupting `business_events.entity_id`, FK columns on cohort tables, storage paths, and pricing-intelligence references.
+
+**R59.1 — `src/lib/idShape.ts` (new) — single source of truth**: extracted `TEMP_ID_PATTERNS`, `UUID_RE`, and 4 typed helpers (`isTempId`, `isTempIdFast`, `isUuid`, `isMoatSafeId`). Pre-R59 the patterns lived inside `offlineWriteQueue.ts` as a private const, with copies inlined at `dataProvider.ts` (R57) and `AppState.tsx` (R57). Three modules drifting on the same regex was a recipe for the next bug. Hoisted to `lib/` so any module can import without circular-dep risk.
+
+**R59.2 — `dataCollector` event-queue id-remap listener (parallel to R54 idRemapBus)**: the dataCollector maintains its own AsyncStorage queue (`@vasco_event_queue`), separate from `offlineWriteQueue` (`@vasco_offline_writes`). R49+R54 covered offlineWriteQueue's flush. But when an offline-created job fired `emitJobStarted(getCurrentUserId(), tempId, ...)` BEFORE the queue flush, the business_events row landed with `entity_id = 'j-{ts}'` and stayed pinned forever — cohort RPCs joining `business_events.entity_id ↔ jobs.id` missed every offline-created job. Subscribed dataCollector to `idRemapBus`. On remap, scan the local event queue and rewrite (a) `entityId === tempId` matches, (b) material-style entity ids `${tempId}_*` (where supplierId is the prefix), (c) `payload.*Id` string fields recursively. 4 e2e tests lock the contract: simple entity_id rewrite, recursive payload swap, material composite-id rewrite, unrelated-remap pass-through.
+
+**R59.3 — `intelligenceCaptureService` direct-FK writes nullify temp ids**: `customer_portal_events.quote_id`, `photo_analyses.job_id`, `photo_analyses.quote_id` are FK columns. If a contractor takes a photo of an offline-created job (tempId), the photo_analyses insert was failing the FK constraint — losing the entire row including the analysis payload that has cohort value. `job_quality_signals.job_id` is the upsert key; null breaks identity, so dropped the write entirely with telemetry logging instead. New `nullifyTempId()` helper writes `null` for the FK so the row lands with the analysis payload, and downstream `customer_id` etc. fields also get the same treatment.
+
+**R59.4 — `cloudSync` outcome-table FK writes nullify temp ids**: same hazard as R59.3, but for `job_outcomes` / `invoice_outcomes` / `accounting_loops`. `job_outcomes.job_id` and `accounting_loops.job_id` are cohort keys (drop on temp); `customer_id` / `quote_id` / `invoice_id` / `payment_id` are descriptive FKs (nullify on temp).
+
+**R59.5 — `jobPhotoService.uploadJobPhoto` refuses temp jobIds**: the storage path `${user_id}/${jobId}/${uuid}.jpg` would embed the temp id; the metadata insert would fail the FK. Result was photos uploaded to a temp path then orphaned forever. Now early-returns null when jobId is temp; caller retries post-flush so the file lands under the real path.
+
+**R59.6 — `offlineWriteQueue` + `AppState.refreshData` + `dataProvider` use shared helpers**: refactored 3 sites that had inline regex copies to import from `idShape.ts`. Single source of truth — drift between modules is no longer possible.
+
+R59 batch: 6 files touched (`lib/idShape.ts` new + 4 helpers; `services/offlineWriteQueue.ts` use shared helper; `state/AppState.tsx` use isTempIdFast; `lib/dataProvider.ts` use isUuid; `intelligence/dataCollector.ts` event-queue remap listener + import; `services/intelligenceCaptureService.ts` nullifyTempId on 3 sites + drop on 1; `intelligence/cloudSync.ts` nullifyTempId on 3 sync fns; `services/jobPhotoService.ts` temp-id refusal; `intelligence/__tests__/eventQueueIdRemap.test.ts` new with 4 cases; `docs/ID_COLUMN_MAP.md` R59 update). 0 TS errors, 661/661 jest pass (+4 new), locales unchanged at 2254×6.
+
+---
+
+# R60 — deferred items: supplier-intelligence packages
+
+Triaged from the Harvey/Eve PDF ("Save money on inputs" section). User direction: solo contractors get the most value from admin-reduction features (Job Dossier, Quote/SOW generator). The supplier-side intelligence is more meaningful for established multi-supplier contractors and aannemers/site-leads with €5k+/month material spend. Deferring until those segments are explicitly targeted.
+
+**Deferred — Package 1 — Email-forwarding inbound for supplier invoices** (~5-7 days). Per-contractor forwarding address pattern (`<userid>@scan.vasco.app` → Postmark/SendGrid inbound webhook → existing `analyze-photo` edge fn). Avoids OAuth/IMAP complexity. **Why deferred**: solo contractor median has 1-2 suppliers; the moat-volume bump is concentrated in the >3-supplier segment. Setup friction is real (one-time Gmail filter).
+
+**Deferred — Package A — Per-supplier price-drift view (inkoop tab + Vandaag VascoCard)** (~4-6 days). Surfaces "Bouwmaat charged you 18% more than your last 5 buys for 22mm copper" using `material_price_history` cohort moat (already wired). **Why deferred**: gated on Package 1's email volume. Without the email layer, drift detection has too few rows per (supplier × material) to clear k-anonymity gates for solo contractors. Real cohort signal already feeds these tables (R241/R275/R283); the UI exists in primitive form on `inkoop.tsx`.
+
+**Deferred — Package B — Materials-list multi-supplier comparison agent** (~10-14 days minimum). Given a `JobMaterial[]`, batch-compare across wholesalers and rank by total landed cost (price × qty + delivery fee + lead-time penalty + warranty terms). **Why deferred**: needs a supplier-terms data layer (delivery fees, MOQ, warranty days per supplier) we don't have, plus PDF ingestion to populate it from supplier price lists. **More importantly**: this is the site-lead / aannemer use case (jobs with €10k+ materials where the comparison work pays back). Solo contractors typically have a primary supplier and don't switch per-material.
+
+**Foundation that already exists** (don't rebuild when picking these up):
+- `invoiceScanService.ts` — Claude Haiku Vision OCR → structured `ScannedLineItem[]` with EAN/SKU/qty/unit/price/VAT
+- `material_price_history` cohort moat with `(trade, country)` slicing + R241/R275/R283 schema
+- `comparePrices(query, country)` single-item compare in `integrations/suppliers.ts`
+- 36+ EU supplier catalog in `supplierBacklinkService`
+- `supplierLeadTimeMoatService` lead-time tracking
+- `priceAlertService` price-change alerts
+- `procurementAgentService` purchasing agent (Pro tier, per-trade scheduled runs)
+
+**Trigger to revisit**: when product targets aannemer / site-lead segment explicitly, OR when a contractor cohort with ≥3 active suppliers reaches critical mass (signal: 30%+ of paid contractors have ≥3 suppliers in `business_events.supplier_id` distinct values over 90d).
+
+---
+
+# R61–R62 — SOW (Scope-of-Work) generator (PDF Package D, D1+D2 shipped)
+
+User direction: build the Quote/SOW generator + Job Dossier from the Harvey/Eve PDF "Save time on repetitive tasks" section. The supplier-intelligence packages (1, A, B) are deferred to large-contractor segment per the R60 entry above.
+
+**R61 — D1: SOW foundation** (~1 day equivalent)
+- Migration `20260505000001_sow_columns.sql`: `documents.scope_text` text + `business_settings.quote_tone` enum-checked column with 'friendly' default. No new entity, no new tempId pattern — additive columns only.
+- Edge fn `supabase/functions/generate-sow/index.ts`: Claude Haiku call, 3-paragraph (Includes/Excludes/Warranty) output, tone-aware system prompt, language-aware (NL/EN/DE/FR/ES/IT), per-user auth, `{ ok, scopeText, error }` envelope (never throws to caller). Mirrors the `draft-customer-reply` pattern.
+- Service `src/services/sowGeneratorService.ts`: `generateScopeOfWork()` thin RPC wrapper, `loadQuoteTonePreset()` / `saveQuoteTonePreset()` for tone persistence on `business_settings.quote_tone`.
+- Tests `src/services/__tests__/sowGeneratorService.test.ts`: 7 cases — body shape, line-item cap (50), empty-input guard, throw-safe, error envelope, tone fallback, upsert-on-conflict.
+- `docs/ID_COLUMN_MAP.md` updated with R61 column-additions section (no new entity → no R52/R54 contract dance).
+
+**R62 — D2 + UI integration** (~1 day equivalent)
+- Tone preset picker on `app/contractor/profile.tsx` Business section. Alert.alert action sheet with formal/friendly/detailed/concise + subtitle descriptions. Reads via `loadQuoteTonePreset()`, writes via `saveQuoteTonePreset()`. Failure-soft.
+- TieredQuoteBuilder integration: `sowText` state separate from existing `scopeText` (which is the AI search keyword). "Generate scope" button below the line-items section in the preview step. Three states: idle (button), loading (spinner), result (editable TextInput with Regenerate / Clear actions). Plain-text editable, single Claude call per tap (no auto-fire on keystroke).
+- Persistence wired in `app/contractor/tiered-quote.tsx`: after `addQuote(...)` returns the quote id, calls `updateDocument(quoteId, { scope_text })`. R57's dual-route handles the docNumber-form id → matches by `document_number`. Fail-soft so the quote send doesn't fail when the SOW persist hits a flaky network.
+- Threaded `sowText` → `quote.description` in `handleSend` so the parent screen can pick it off without changing `addQuote`'s signature.
+
+**R63 — D4 (PDF export) + D3 (tone learning)** (~1 day equivalent)
+
+D4 — Quote PDF integration:
+- `QuotePdfData` interface gained `scopeText?: string`. `QuoteLabels` gained `scopeOfWork: string` translated across all 6 locales (Scope of Work / Werkomschrijving / Leistungsbeschreibung / Descriptif des travaux / Alcance del trabajo / Descrizione dei lavori).
+- New `<div class="scope-section">` block renders between the line-items table and the totals summary. CSS styled to be visually distinct from notes/terms (lighter gray panel, no left accent bar) so it reads as a structured section.
+- New `escapeHtml()` helper — the SOW prose comes from Claude and may contain stray angle brackets / ampersands / quotes. Paragraph splitting via `\n\n` → `<p>` tags, single newlines → `<br>`.
+- Threading: `documentRowToQuote` mapper in `lib/mappers.ts` now pulls `row.scope_text` into `Quote.description` (existing optional field). `DocumentRow` type gained `scope_text: string | null`. PDF data builder at `app/quotes/[id].tsx` passes `scopeText: quote.description` into `QuotePdfData`. Older quotes pre-D4 have null `scope_text` → mapper returns undefined → PDF renders without the section.
+
+D3 — Tone learning:
+- New `loadToneExamples()` in `sowGeneratorService.ts`: queries up to 20 most-recent accepted quotes with non-empty `scope_text`, filters to >50-char prose excerpts, returns up to 3 capped at 800 chars each. Threshold: needs 5+ accepted quotes before returning anything (cold start otherwise).
+- TieredQuoteBuilder's `handleGenerateSow` now does `Promise.all([loadQuoteTonePreset(), loadToneExamples()])` and threads both into `generateScopeOfWork(...)`. The edge fn already accepted `toneExamples` per R61's design — this just wires the source.
+- 5 new tests cover: below-threshold returns empty, 3-freshest-only on threshold met, short-scope filter, 800-char cap per example, RLS-error fallback.
+
+**Still pending — Package C (Job Dossier)**: per the user's sequencing call, builds after D ships and is validated with real prose output. The new `job_voice_notes` entity will follow the full R52/R54 + idShape contract: `vn-{ts}` prefix, `dbCreateJobVoiceNote` wrapper, ID_COLUMN_MAP update, R59 storage-path refusal for temp jobIds.
+
+R61–R63 batch: 8 files (1 new migration, 1 new edge fn, 1 service + extended tests, profile.tsx + TieredQuoteBuilder.tsx + tiered-quote.tsx + quotes/[id].tsx integrations, mappers.ts + database.types.ts schema additions, quotePdfService.ts SOW section + escape helper, ID_COLUMN_MAP update). 0 TS errors, 673/673 jest pass (+12 new), locales unchanged at 2254×6.
+
+---
+
+# R64 — audit fixes for Package D (14 findings)
+
+Self-audit of R61–R63 found 14 issues across critical/high/medium/low severity. R64 fixes all 14 in one round.
+
+**Critical (3 fixed)**:
+- **#1 In-memory Quote stale after send**: post `updateDocument(quoteId, { scope_text })`, the FE Quote in AppState lacked `description` until refreshData fired. Share-PDF immediately after send rendered without the SOW. Fix: `updateQuote(quoteId, { description: sow })` after the BE write — local mirror of what the mapper will eventually pull on refresh.
+- **#2 Regenerate overwrites edits silently**: contractor edits prose → taps Regenerate → all edits lost with no confirmation. Fix: `lastGeneratedSowRef` tracks pristine model output; on Regenerate, if `sowText !== lastGeneratedSowRef.current`, show Alert.alert confirm with destructive-style "Regenerate" button.
+- **#3 sowText not reset on send**: cross-quote contamination — quote A's SOW bled into quote B. Fix: `setSowText(''); setSowError(null)` in `handleSend` after `onSend(quote)`.
+
+**High (4 fixed)**:
+- **#4 escapeHtml only on scope_text**: pre-existing risk made worse by R63's introduction of the helper without applying it. Now applied to `businessName` / `businessAddress` / `quote.quoteNumber` / `customerName` / `customerAddress` / `customerEmail` / `quote.issueDate` / `quote.jobTitle` / `quote.validUntil` / `quote.notes` / `quote.terms` / line item `description` / tier `name` + `description` in the PDF template.
+- **#5 No rate limiting on generate-sow**: edge fn now uses `_shared/ratelimit.ts` — 30 calls/min/user (windowMs 60_000, max 30). Returns 429 with `Retry-After` header and `retryAfter` in JSON. Cheap protection against runaway loops or compromised tokens.
+- **#6 business_settings missing UNIQUE constraint on user_id**: `saveQuoteTonePreset`'s `upsert(..., { onConflict: 'user_id' })` silently fails without it. Fix: `do$$` block in the R61 migration adds `business_settings_user_id_key UNIQUE (user_id)` if not already present. Idempotent; safe re-run.
+- **#7 Tone learning invisible to user**: 5+ accepted quotes triggers the "in your voice" personalization but contractor has no signal. Fix: pre-load tone examples on TieredQuoteBuilder mount, render small "Trained on your last N quotes" badge under the Generate button when `toneExamplesRef.current.length > 0`.
+
+**Medium (4 fixed)**:
+- **#8 Generate button buried**: kept placement (below line items) but added the empty-state explainer (#9) so contractors who scroll see what tapping does. Auto-generate-on-step-entry deferred — burns Claude calls for contractors who tap Send fast.
+- **#9 Empty-state has no explainer**: 1-line subtitle now sits above the Generate button: "AI-drafted prose: what's included, what's excluded, warranty terms. Editable before sending."
+- **#10 Edit affordance always-on (vs plan)**: documented as the right call — TextInput is lower-friction than plain-text-with-Edit-toggle. Plan/build mismatch noted in this entry instead of refactoring back.
+- **#11 loadToneExamples on every generate**: cached in `toneExamplesRef` (ref, not state — no re-render churn). First Generate hits the DB; later taps reuse. Cleared on logout via component unmount + R48 AppState reset.
+
+**Low (3 fixed)**:
+- **#12 Migration + edge fn deployment**: still on the user.
+- **#13 Raw model output not exposed**: `GenerateSowResult` gained `raw?: string` + `retryAfter?: number` fields; service now passes them through from the edge fn payload on `ok: false`. __DEV__ telemetry can surface raw text for prompt iteration without server-log access. New test locks the contract.
+- **#14 Quote.description overloaded**: grep found 2 real consumers — `customerQuoteAcceptanceService.ts:185` was using `quote.description` as the share-message subject when `quote.job` was empty. With description now holding 3-paragraph prose, the share message would inject 600+ chars. Fix: trim to first line × 80 chars when description is SOW-shaped. The other consumer (line 72, stored as `quoteDescription` on the AcceptanceLink) has zero display sites, no fix needed.
+
+R64 batch: 6 files touched (`20260505000001_sow_columns.sql` UNIQUE constraint, `generate-sow/index.ts` ratelimit + import, `sowGeneratorService.ts` raw/retryAfter passthrough + interface, `TieredQuoteBuilder.tsx` regenerate confirm + sowText reset + tone-learning preload + badge + empty-state copy, `tiered-quote.tsx` updateQuote local mirror, `quotePdfService.ts` broad escapeHtml, `customerQuoteAcceptanceService.ts` description-truncate fallback, test extension). 0 TS errors, 674/674 jest pass (+1 new), locales unchanged at 2254×6.
+
+---
+
+# R66 (round 1) — NL launch readiness audit
+
+User direction: e2e audit specifically for Netherlands launch readiness. Critical blockers found and most fixed in this round. Severity tracked by user-impact: a contractor sending an invoice the customer can't pay = critical; a contractor missing 9% reduced VAT = real money loss; a missing edge fn = launch-blocker for B2G.
+
+**Critical (fixed in this round)**:
+
+**R66.1 — IBAN/BIC + 7 other payment/locale fields silently dropped by mapper (top NL launch blocker)**: migration `20260415000001_business_profiles.sql` declared `iban`, `bic`, `country`, `postcode`, `city`, `website`, `invoice_prefix`, `quote_prefix`, `default_payment_terms` columns on `business_settings`. The FE mapper `businessSettingsToProfile` in `lib/mappers.ts` only pulled 6 fields back. The settings UI never offered IBAN as an input. Result: every NL invoice PDF tried to render `businessProfile.iban` → always undefined → no bank details rendered → customer received the invoice with no IBAN to pay. Fix touches 5 files: `domain/business.ts` (extend `BusinessProfile` type), `lib/database.types.ts` (extend `BusinessSettingsRow`), `lib/mappers.ts` (read all 9 fields, factor IBAN into completeness denominator), `state/AppState.tsx` updateBusinessProfile (write all 9 fields to BE), `app/(modals)/business-settings.tsx` (IBAN + BIC inputs with country-specific placeholders).
+
+**R66.2 — `isValidIBAN` imported but never called**: `business-settings.tsx` imported `isValidIBAN` from `utils/validation.ts` per R66.1 but didn't gate the save behind it. A contractor pasting "asdf" as IBAN would persist garbage to BE → invoice PDF renders garbage in bank-details section. Fixed: now strips spaces (visual grouping in pasted IBANs) + uppercases + calls `isValidIBAN` before save; throws localized error if invalid.
+
+**R66.3 — Quote PDF doesn't handle KOR / Kleinunternehmer**: `invoicePdfService.buildInvoiceHtml` correctly zeroes VAT and adds the legal note ("BTW niet van toepassing — KOR" / "§19 UStG keine Umsatzsteuer") for small-business-exempt contractors. `quotePdfService.buildQuoteHtml` did not. A contractor on KOR sent a quote at 21% then an invoice at 0% — confusing the customer when the invoice arrived. Fix: ported the R251 exemption logic to quotePdfService (vatScheme parameter on buildQuoteHtml + generateQuotePdf options + 0%-line + skip-vat-rows + summary-uses-subtotal-not-total + render exemptionNote box). Threaded `businessProfile.vatScheme` from `app/quotes/[id].tsx` into the generator call.
+
+**Documented (deferred — non-blocking but real)**:
+
+**R66.4 — NL has 9% reduced VAT for renovation labor on homes >2 years old**: every plumbing/electrical/painting job on existing housing qualifies. Codebase only has 21% in `constants/taxRates.ts`; TieredQuoteBuilder hardcodes `vatRate: 21`. Real money issue (contractors over-charge customers VAT, accountant has to re-classify in Moneybird). Fix would need a per-line VAT picker in the quote builder + default by service category. **Deferred** — affects price competitiveness, not launch viability; NL accountants routinely reclassify line items in Moneybird as a workaround.
+
+**R66.5 — No Peppol / NLCIUS generator (e-invoicing)**: `getRequiredFormat('NL') === 'Peppol'` declares the requirement but no Peppol BIS 3.0 / NLCIUS XML generator exists. NL contractor's e-invoice export falls back to `handleExportEInvoice('XRechnung')` (German B2G format). Both XRechnung and NLCIUS are EN 16931-compliant UBL 2.1, so the output may pass NL Peppol validation, but the customizationID identifies it as the German format — some NL public-sector validators reject foreign customizationIDs. **Deferred** — affects NL B2G work (public-sector procurement) only; pure-B2C contractors (most solo plumbers) don't need e-invoicing for homeowners. Ship NL launch with B2C focus; add NLCIUS generator before targeting public-sector clients.
+
+**R66.6 — NL onboarding accepts any string for KvK/BTW**: regFields are persisted to `business_settings` without `isValidKvKNumber` / `isValidVATNumber` checks. Later flows that depend on a real KvK (Companies House lookup, e-invoicing customizationID, accountant export) silently miss-match. Business-settings modal validates correctly post-onboarding; this gap is in the onboarding step itself. **Deferred** — surfaces as a soft validation warning would hurt completion rate (contractors abandon if they can't find their KvK during signup); business-settings modal is the canonical correction point.
+
+R66 batch (round 1): 5 files touched (`domain/business.ts` BusinessProfile type extension, `lib/database.types.ts` BusinessSettingsRow extension + R61 quote_tone column, `lib/mappers.ts` businessSettingsToProfile pulls 9 columns + IBAN-aware completeness, `state/AppState.tsx` updateBusinessProfile writes 9 fields, `app/(modals)/business-settings.tsx` IBAN+BIC inputs + isValidIBAN gate + sanitize-strip-spaces, `app/quotes/[id].tsx` threads vatScheme into generateQuotePdf, `services/quotePdfService.ts` KOR exemption block + vatScheme parameter). 0 TS errors, 674/674 jest pass, locales unchanged at 2254×6.
+
+# R66 (round 2) — push notification i18n + scheduled-reminder i18n
+
+Round 2 focus: critical real-time and scheduled push paths, since lock-screen notifications are the highest-stakes contractor-facing surface (visible even when the app is closed) and were silently English-locked.
+
+**R66.7 — Realtime payment-received push hardcoded English (NL launch blocker)**: `services/invoicePaymentWatcher.ts` line 74-76 fired `sendInstantNotification('Payment received', 'Invoice X (€Y) marked as paid.', ...)` with literal English when a Mollie/Stripe webhook flipped `documents.status='paid'`. The R56-fixed realtime channel was finally working end-to-end (was broken until R56 because subscribed to a non-existent `invoices` table), but the payload it surfaced was English regardless of contractor locale. NL contractor sees an English push line on the single most important moment in the app — money landing. Fix: imported `i18n` from `'../i18n/i18n'`, routed title + body through `i18n.t('notifications.push.paidTitle' / 'paidBody', { ref, amount })`. Used 6-locale `notifications.push` namespace (added below).
+
+**R66.8 — 5 customer-interaction realtime push titles + 6 body summaries hardcoded English**: `services/customerInteractionWatcher.ts` `surface()` and `summarize()` had a `Record<string, string>` of hardcoded English titles (`'Quote accepted'`, `'Quote rejected'`, `'Customer requested changes'`, `'Customer made a decision'`, `'Customer selected a tier'`, `'Customer update'`) and English summaries with embedded interpolation (`Quote ${id} accepted (tier) — €total`). These fire when a customer interacts with the customer-decision portal — equally critical lock-screen moments after payment. Fixed: title map keyed on i18n key paths, `summarize()` switched to `i18n.t(..., {tier, total, ref})` with three fallback keys (`unknownDecision`, `unknownTier`, `unknownValue`) for missing data fields.
+
+**R66.9 — EVE AI queue notifier hardcoded English banner**: `services/aiQueueNotifier.ts` line 51 sent `sendInstantNotification('Vasco has something for you', 'Tap to review', ...)` for every new EVE Agent/Auditor/Analyst queue item. That's the second-highest-frequency push (any time the AI prepares a draft for one-tap approval). Fixed: routed through `i18n.t('notifications.push.eveTitle' / 'eveTapToReview')`.
+
+**R66.10 — 4 scheduled local-push functions: 3 NL-hardcoded, 1 EN-hardcoded**: `services/pushNotificationService.ts` contained `schedulePaymentReminder`, `scheduleQuoteFollowUp`, `scheduleJobReminder` with hardcoded NL strings (work for NL launch but break for the other 5 locales) and `scheduleOutcomeFollowup` with hardcoded EN strings (broken for NL launch — fires 4 days after EVE approval to capture customer-response signal for insightScorer). Asymmetric breakage: scheduled at-rest in OS notification queue, so the contractor's locale at *schedule time* determines text. Fix: imported `i18n`, routed all 4 through `notifications.push.{paymentReminder|quoteFollowup|outcomeFollowup|jobReminder}{Title|Body}` with template variables (`{{customer}}`, `{{amount}}`, `{{days}}`, `{{title}}`, `{{itemType}}`).
+
+**R66.11 — `notifications.push` namespace was empty**: 29 new keys × 6 locales (174 entries total) seeded into `notifications.push` covering both round-2 realtime watchers (paidTitle/Body, quoteAccepted/Rejected/changeRequest/decision/tierSelect titles + bodies, generic fallback, unknown* fallback strings, amountSuffix interpolation helper) and scheduled push (4 × title+body × locale). All 6 locales at parity (29 keys each). i18n placeholder convention `{{varName}}`.
+
+**R66.12 — Cosmetic: send-invoice email CTA color is legacy Wolt orange (`#E35205`), in-app brand is DK Sunset Slate (`#F97316`)**: `supabase/functions/send-invoice/index.ts` `BODY_BY_LOCALE` button-styling embeds the pre-R175 brand color across all 6 locales. Customer sees the email on a different orange than the contractor app. **Deferred** — pure cosmetic; doesn't affect launch viability or accessibility. Single-string find-replace + redeploy when convenient.
+
+R66 batch (round 2): 4 files touched (`services/invoicePaymentWatcher.ts`, `services/customerInteractionWatcher.ts`, `services/aiQueueNotifier.ts`, `services/pushNotificationService.ts`) + 6 locale JSONs (`notifications.push` seeded with 29 keys). 0 TS errors, 674/674 jest pass. NL contractor now sees Dutch text on every lock-screen notification including the two most critical ones (payment received, customer accepted quote). 1 deferral (round-2 cosmetic only).
+
+# R66 (round 3) — onboarding gate, validators, system theme
+
+Round 3 focus: cold-start state machine, NL data validators, and global system-level UI defaults that survived the R175 DK theme conversion as legacy white-mode vestiges.
+
+**R66.13 — Onboarding gate fires only from auth group (real launch blocker)**: `app/_layout.tsx` redirect effect had two branches: `(!isAuthenticated && !inAuthGroup) → /login` and `(isAuthenticated && inAuthGroup) → role-based routing`. The role-based branch correctly routed `onboardingComplete: false` users to `/onboarding`, but only when the user was *currently in /login or /signup*. Failure mode: contractor signs up, fills 3 of 14 onboarding steps, kills the app to take a phone call. Cold-start: session restored (`isAuthenticated=true`, `onboardingComplete=false`), root path is `/` which is `(contractor)/index.tsx`, segments[0] is empty → both branches no-op → contractor lands on Vandaag with `country=undefined`, `trade=undefined`, no IBAN. They start sending broken quotes. Fix: third branch — if authenticated + onboarding incomplete + not on `/onboarding` + not worker + not enterprise → `router.replace('/onboarding')`.
+
+**R66.14 — `isValidVATNumber` regex was too lax**: `/^[A-Z]{2}\w{2,12}$/i` accepted `NL12` (4 chars after country code minimum) — way short of any real EU VAT format. Real Dutch VAT is `NL` + 9 digits + `B` + 2 digits = 14 chars. Replaced with country-specific regex map for NL/DE/FR/ES/IT/GB/BE/AT, with permissive fallback for unenumerated countries so we don't block users in Cyprus, Greece, etc.
+
+**R66.15 — `isValidIBAN` was shape-only, no checksum**: `/^[A-Z]{2}\d{2}[A-Z0-9]{4,30}$/` accepted `NL12ABCD12345678901234` despite invalid mod-97 checksum and wrong length-for-NL. A contractor pasting a wrong IBAN past their bank's confirmation prompts would silently persist garbage; the customer's first transfer attempt would bounce. Implemented full ISO 13616 validation: country-specific length lookup (17 EU countries) + mod-97 checksum (chunked through 9-digit groups to avoid 64-bit overflow on JS numbers).
+
+**R66.16 — 14 new tests for validators**: `src/utils/__tests__/validation.test.ts` (was no test file). Covers the two known-invalid cases (`NL12` VAT, `NL12ABCD…` IBAN), 3 real IBAN examples (NL/DE/FR), space-stripping + lowercase normalization, country-specific length rejection, KvK 8-digit format. 14/14 pass. Suite count up from 66 → 67, tests 674 → 688.
+
+**R66.17 — `app.json` userInterfaceStyle: "light" forces system widgets to light mode despite DK dark theme (since R175)**: pre-R175 the app was Wolt-style light; setting was correct. R175 dark theme inherited the legacy "light" setting, so on iOS the system widgets (date pickers, action sheets, status bar tinting in some scenarios) get rendered in light mode against a `#0B0E11` panel. Flipped to `"dark"`.
+
+**R66.18 — Splash screen flashes white on cold-start of dark app**: `app.json` splash backgroundColor was `#ffffff` while every screen is `#0B0E11`. Tap app → blinding white flash → dark UI. Fixed: `#0B0E11`.
+
+**R66.19 — Notifications channel color is legacy Wolt orange**: `app.json` plugin config for expo-notifications had `color: "#E35205"` (pre-R175). Notification icons on Android tinted with old brand orange against in-app DK Sunset Slate. Flipped to `#F97316`.
+
+**R66.20 — 3 hardcoded `dark-content` StatusBar refs from before R175**: `app/(tabs)/planning.tsx`, `app/(tabs)/tools.tsx`, `app/sitelead/team/[id].tsx` had `barStyle="dark-content"` (correct on white bg, invisible-on-dark on DK theme). Other screens that set StatusBar style after R175 already use `light-content` (`(contractor)/index.tsx:102`, `Screen.tsx:12`). Fixed the 3 stragglers.
+
+**R66.21 — adaptiveIcon backgroundColor `#ffffff` (Android only)**: `app.json` line 56. Android's adaptive icon system masks the foreground asset on top of this color. Whether to flip depends on whether the foreground asset has its own dark background or transparent edges — without seeing the asset, I won't change blindly. **Deferred** — single value, assess at next icon-asset review.
+
+**R66.22 — Data export only reads AsyncStorage, never Supabase**: `services/dataExportService.ts` `collectAllData()` iterates `@vasco_*` keys. For a contractor whose phone was reinstalled, the AsyncStorage cache is empty until the FE re-fetches from BE. GDPR Article 20 (right to portability) compliant *only* for users who haven't reinstalled. **Deferred** — needs an `exportFromBackend` path that pulls Supabase tables (documents, customers, materials_used, photos, etc.), formats, merges with local cache. Too big for an audit round; document for separate work.
+
+**R66.23 — Push gating bypassed for invoice/customer realtime watchers**: `aiQueueNotifier` consults `shouldDeliver()` (which respects user prefs + quiet hours). `invoicePaymentWatcher` and `customerInteractionWatcher` skip both. A contractor who explicitly disables `payment_received` push in settings still gets pushed when a payment lands. Counterargument: payment landing is urgent enough to override the quiet-hours override anyway. **Deferred** — debatable UX call; revisit if user reports come in.
+
+R66 batch (round 3): 6 files touched (`app/_layout.tsx` third gate branch, `src/utils/validation.ts` country-specific VAT + ISO 13616 IBAN with mod-97, `src/utils/__tests__/validation.test.ts` new file, `app/(tabs)/planning.tsx`, `app/(tabs)/tools.tsx`, `app/sitelead/team/[id].tsx`) + `app.json` (3 single-value flips: userInterfaceStyle, splash bg, notifications color). 0 TS errors, 688/688 jest pass (was 674, +14 new for IBAN/VAT/KvK). 3 deferrals (adaptiveIcon backgroundColor, dataExport BE pull, realtime-watcher gating).
+
+# R66 (round 4) — broken asset, language preference, brand color sweep
+
+Round 4 focus: build-blocking asset references, post-onboarding language honoring on cold-start, and the legacy Wolt orange that R175 missed (PDFs, emails, calendar invites — all customer-facing surfaces).
+
+**R66.24 — Notification icon asset reference dangling (Android push UX broken)**: `app.json:89` referenced `./assets/notification-icon.png` but the file doesn't exist (only `icon.png`, `splash-icon.png`, `adaptive-icon.png`, `favicon.png` are present). On Android, push notification small icons MUST be a transparent monochrome PNG — without it Android shows a generic white square instead of the brand mark. Two failure modes: (a) EAS Build may fail with missing-asset error, (b) build succeeds but Android push notifications appear branded with white squares. Fixed by removing the dangling reference so Expo defaults to the app icon. Real fix needs a proper monochrome 96x96dp PNG asset designed by the brand team — not authorable here. Tracked as deferred.
+
+**R66.25 — i18n only reads device locale at boot, ignores saved user.language preference**: `src/i18n/i18n.ts` line 24 — `lng: supportedLangs.includes(deviceLanguage) ? deviceLanguage : fallbackLng`. Initial language is locked to `getLocales()[0]?.languageCode` at module-init time. `app/onboarding.tsx` and `app/contractor/profile.tsx` call `i18n.changeLanguage(language)` *while running*, but the saved `user.language` from AsyncStorage is never re-applied on subsequent cold-starts. Failure mode: NL contractor picks Dutch in onboarding → travels with phone in German locale → cold-start app → reads German device locale → user-profile restore loads `language: 'nl'` into AppState but i18n stays on German → all UI text in German until the contractor manually changes it again. Fix: in AuthContext profile-restore effect, after merging `profile` into `user`, lazy-import i18n and call `i18n.changeLanguage(profile.language)` if it differs from the current i18n language.
+
+**R66.26 — Bulk #E35205 → #F97316 sweep (26 occurrences across 14 files, all customer-facing)**: R175 flipped FE theme tokens in `src/theme/draftkings.ts` but the legacy hex was still embedded in PDF stylesheets, email HTML templates, calendar event description colors, and 2 dashboard components. NL contractor renders an invoice PDF with Wolt-orange brand stripe → emails it via Resend with a Wolt-orange "Pay now" CTA → customer sees a different orange than what's on the contractor's app screen. Files affected:
+- `src/theme/colors.ts` (2: roleDirector, roleContractor)
+- `src/context/AuthContext.tsx` (3: role primaryColor for director/contractor/worker)
+- `src/services/invoicePdfService.ts` (4)
+- `src/services/quotePdfService.ts` (8)
+- `src/services/budgetPdfService.ts` (2)
+- `src/services/receiptShareService.ts`, `calendarSyncService.ts`, `eveAgentService.ts`, `vatPrepExportService.ts`, `smartSchedulerService.ts`, `jobCommentsService.ts` (1 each)
+- `src/components/dashboards/DirectorDashboard.tsx` (1), `ReportsDashboard.tsx` (2)
+- `supabase/functions/send-invoice/index.ts` (1)
+
+**R66.27 — `Pay now` button in send-invoice bodyOverride path was hardcoded English**: when the dunning cadence sends a firm/final reminder via `bodyOverride`, the FE caller composes localized cadence copy + EU 2011/7/EU disclosure, but the trailing CTA button on line 163 was hardcoded `Pay now`. So a NL customer reading a Dutch dunning letter saw an English button. Added `PAY_NOW_BY_LOCALE` map (6 locales) inside the edge fn — same pattern as `SUBJECT_BY_LOCALE` and `BODY_BY_LOCALE` already present.
+
+**R66.28 — `app/contractor/legal.tsx` privacy policy + terms content has zero i18n coverage (NL launch concern)**: legal screen uses `t(headingKey, headingDefault)` pattern with English defaults. The `legal` namespace has only 4 keys in NL locale (section titles like termsOfService/privacyPolicy) — none of the `*Content` keys (platformUsage, contractorResponsibilities, paymentTerms, governingLaw, dataRetention, gdprRights, etc.) are translated. NL contractor on Dutch UI sees ≈1500 words of English privacy policy + terms. **Deferred** — translating legal text requires a Dutch lawyer, not a mechanical i18n pass; App Store accepts English legal text but Autoriteit Persoonsgegevens may flag GDPR notices as needing Dutch under Art. 12.
+
+**R66.29 — 86 hardcoded `€${amount.toFixed/toLocaleString}` patterns bypass `formatCurrency()`**: components/screens render currency directly instead of via `src/i18n/formatting.ts:formatCurrency(amount, country)`. UK contractors see `€` instead of `£`. NL contractors with English device locale see US-format `€1,234.56` instead of `€1.234,56`. **Deferred** — large mechanical refactor (86 sites), low impact for the NL launch (most NL contractors have NL device locale; the symbol is correct everywhere).
+
+R66 batch (round 4): 4 files touched (`app.json` notification-icon ref removed, `src/context/AuthContext.tsx` language-restore on cold-start, `supabase/functions/send-invoice/index.ts` localized Pay now CTA + #E35205→#F97316) + 13 more files for the brand-color sweep (theme/colors, 2 dashboards, 9 services). 0 TS errors, 688/688 jest pass. 3 deferrals (notification icon asset authoring, legal-text NL translation, 86 currency-formatter call sites).
+
+# R66 (round 5) — paywall + payment-link UX i18n
+
+Round 5 focus: user-facing strings on the freemium paywall and payment-link interactions, both of which fire frequently and were silently English-locked despite live in Dutch i18n elsewhere.
+
+**R66.30 — Tier-gate `reason` strings hardcoded English in subscriptionService**: 7 gate functions (`canCreateJob`, `canCreateQuote`, `canCreateInvoice`, `canUseAiInsight`, `canAddClient`, `canAddTeamMember`, `canUseFeature`) constructed `reason` via template literals like `Quote limit reached (10/month).`. Three of these (Job/Quote/Invoice) fire on the highest-touch contractor actions, and consumer call sites (`app/quotes/new.tsx:115`, `app/quotes/[id]/invoice.tsx`, `app/(contractor)/werk.tsx`) render `gate.reason` directly as `Alert.alert(localizedTitle, gate.reason)`. NL contractor on Free tier hits 11th quote → sees Dutch title "Upgrade vereist" but English body "Quote limit reached (10/month)." Fixed: `tierGate` namespace seeded with 7 keys × 6 locales (using `{{count}}`/`{{feature}}`/`{{tier}}` interpolation), `subscriptionService.ts` now imports i18n and routes all 7 reasons through `i18n.t()`. `upgradeFeature` field stays English internally — it's a routing key, not user-visible.
+
+**R66.31 — `ShareQuoteButton` hardcoded English on the highest-touch share action**: `src/components/contractor/ShareQuoteButton.tsx` had `Alert.alert('Could not create link', ...)` failure path, English `Hi {customerName}, here is your quote: {url}` share message, English `Share quote link` button label, English `Quote` share-sheet title. Every quote → customer share goes through this button, so a NL contractor sharing with a Dutch customer would emit an English share message. Fixed: imported `useTranslation`, added `shareQuote` namespace (6 keys × 6 locales) covering failTitle, failBody, message template, greeting prefix, share sheet title, button label.
+
+**R66.32 — IntegratedPayments component had 4 hardcoded English Alerts on the payment-link flow**: lines 394, 429, 453, 461 fired English Alerts after creating a payment link, sending an email reminder, sending a WhatsApp reminder, and copying a link. These are the most frequent payment-side interactions a NL contractor will have. Fixed: added `paymentAlerts` namespace (7 keys × 6 locales), wired `useTranslation` hook (was unused but already imported), routed all 4 Alerts through `t()`. The remaining 2 English Alerts in this file (`'Action'` and `'Create Invoice'` on lines 237/683) are demo placeholder buttons that don't trigger real flows — left for the broader cleanup.
+
+**R66.33 — 4 hardcoded Dutch Alerts in `app/customer/[code].tsx` access-code page**: lines 97, 106, 115, 155 contain Dutch error strings (`'Code ongeldig of verlopen'`, `'Te veel pogingen'`, `'Project niet gevonden'`). These work for NL launch (Dutch customers see Dutch errors) but break on cross-border B2C flows or DE/FR/ES/IT contractors sending portal codes to their customers. **Deferred** — locale needs to flow from contractor's country into the customer-portal URL (the customer hasn't logged in yet, so `i18n.language` defaults to device locale which may not match the contractor's market).
+
+**R66.34 — Multiple `IntegratedPayments` and `ShareDecisionTracker` placeholder Alerts**: `Alert.alert('Action', ...)`, `Alert.alert('Create Invoice', ...)`, `Alert.alert('Code', accessCode)`, `Alert.alert('Link', shareUrl)` — these are dev-stub Alerts for actions not yet wired to real flows. **Deferred** — when their underlying flows ship, those Alerts will be replaced anyway.
+
+R66 batch (round 5): 3 files touched (`src/services/subscriptionService.ts` 7 i18n.t() routings + i18n import, `src/components/contractor/ShareQuoteButton.tsx` 4 t() routings + useTranslation, `src/components/contractor/IntegratedPayments.tsx` 4 t() routings + useTranslation hook init) + 6 locale JSONs (3 new namespaces: `tierGate` 7 keys, `shareQuote` 6 keys, `paymentAlerts` 7 keys, total 20 keys × 6 locales = 120 entries). 0 TS errors, 688/688 jest pass. 2 deferrals (customer-portal Dutch-only error strings need locale-from-contractor threading; placeholder/dev-stub Alerts will be replaced when their flows ship).
+
+# R66 (round 6) — invoice-numbering format mismatch + quote→invoice screen + namespace unify
+
+Round 6 focus: bookkeeping-grade invoice-number consistency, full localization of the quote→invoice conversion screen (one of the highest-frequency NL contractor flows), and unifying two parallel i18n namespaces for the paywall prompt.
+
+**R66.35 — FE offline fallback mints inconsistent doc-numbering format vs. BE RPC**: `src/lib/dataProvider.ts:nextDocumentNumber` had two formats:
+- BE RPC (`004_base_schema.sql:next_document_number`): `Q0001` / `I0001` (single-letter prefix, no year suffix, 4-digit zero-pad)
+- FE offline fallback: `Q-260001` / `INV-260001` (3-letter `INV` prefix, year suffix, dash separator)
+
+Failure mode: contractor on flaky network mints quote 3 online (`Q0003`), goes underground for a job, mints quote 4 offline (`Q-260004`), reconnects, mints quote 5 online (`Q0005`). Customer-visible numbers are `Q0003 / Q-260004 / Q0005`. NL Belastingdienst Art. 35 wet OB 1968 + DE GoBD both require gap-free sequential invoice numbering — auditors flag the format inconsistency as evidence of bookkeeping system mismanagement. Fixed: unified the FE fallback to match the BE RPC shape exactly (`Q0001` / `I0001`), extracted to `localFallbackDocNumber()` helper, removed year suffix and 3-letter prefix entirely. Comment documents the contract — if year-prefixed numbering is desired in the future, the BE RPC has to lead and FE follows.
+
+**R66.36 — Cross-device offline collision risk (documented, not fixed)**: when two devices both go offline and mint counters from local AsyncStorage, both can produce `Q0008` independently. Reconnect → BE rejects one with 23505 → contractor sees a generic error. The BE RPC is the source of truth, and this round's format unification doesn't change that. **Deferred** — true fix needs a queued-but-unnumbered placeholder that the offline-write queue resolves at flush-time. Architectural change beyond an audit round.
+
+**R66.37 — `app/quotes/[id]/invoice.tsx` quote→invoice conversion screen 100% hardcoded English (top-3 NL contractor flow)**: 13 strings on a screen that fires every time a contractor turns a quote into an invoice — easily the most-frequently-traversed conversion path. Strings: header (`Invoice from {id}`, `Auto-numbered · Due in 14 days`), card titles (`Quote details`, `Customer`, `Job`, `Amount`, `Line items`), success card (`Invoice created`, `Invoice #{id}`, `Matches quote language to reduce payment disputes.`), buttons (`Create invoice`, `Creating...`, `Generate PDF`, `Mark sent`), error alerts (`Error`/`Could not create invoice. Please try again.`), upgrade gate (`Upgrade required` / `Cancel` / `View plans`), and not-found state (`Quote {id} not found`). Fixed: imported `useTranslation`, seeded new `quoteToInvoice` namespace (15 keys × 6 locales), routed all 13 strings through `t()`. Tier-gate alert now uses the canonical `billing.*` namespace (see R66.39).
+
+**R66.38 — Drift between `compliance.upgradeRequired` and `billing.upgradeRequired` (same string, two namespaces)**: existing call sites in `app/contractor/customer-crm.tsx`, `app/contractor/inkoop.tsx`, `app/invoices/[id].tsx`, `src/components/contractor/TieredQuoteBuilder.tsx`, `app/quotes/new.tsx` used `t('compliance.upgradeRequired', 'Upgrade required')`. The `compliance` namespace had NO matching key in any locale (it was always falling through to the English default). Round 5/6 newly-added `compliance.upgradeRequired` keys (which I momentarily seeded) duplicated the long-standing `billing.upgradeRequired` namespace which was already at full 6-locale parity. Fixed: bulk-replaced `compliance.upgradeRequired` / `compliance.viewPlans` / `compliance.upgradeRequiredDesc` → `billing.upgradeRequired` / `billing.viewPlans` / `billing.formatNeedsContractor` across 5 consumer files. Removed the duplicate `compliance.*` keys I had just added so there's a single canonical namespace. Added the missing `billing.formatNeedsContractor` (6 locales) for the format-tier-gate path used in invoice export.
+
+**R66.39 — `compliance.*` paywall keys never resolved**: this is a knock-on of R66.38 — every contractor seeing the paywall before this round saw the `t()` second-argument English fallback because the key didn't exist. Now resolves to the localized `billing.*` text.
+
+R66 batch (round 6): 7 files touched (`src/lib/dataProvider.ts` doc-number format unify + helper extraction, `app/quotes/[id]/invoice.tsx` 13 t() routings + useTranslation, `app/quotes/new.tsx` namespace migration, `app/invoices/[id].tsx` 3 namespace migrations, `app/contractor/customer-crm.tsx` namespace migration, `app/contractor/inkoop.tsx` namespace migration, `src/components/contractor/TieredQuoteBuilder.tsx` namespace migration) + 6 locale JSONs (new `quoteToInvoice` 15 keys, removed duplicate `compliance.upgradeRequired`/`viewPlans`, added `billing.formatNeedsContractor`). 0 TS errors, 688/688 jest pass. 1 deferral (cross-device offline doc-number collision needs queued-placeholder architectural change).
+
+# R66 (round 7) — WhatsApp templates customer-facing i18n
+
+Round 7 focus: customer-facing WhatsApp message templates — the dominant communication channel for NL solo contractors.
+
+**R66.40 — 3 WhatsApp customer message templates hardcoded English**: `src/services/whatsappService.ts` exported `buildInvoiceReminderMessage`, `buildQuoteFollowUpMessage`, `buildProgressMessage` with full English templates including greetings, sign-offs ("Best regards"), date phrasing ("which is X days overdue"), and the "Sent via Vasco" attribution. NL solo contractors do most customer comms via WhatsApp — sending an English reminder to a Dutch customer signals an unprofessional setup. Failure mode: contractor sends payment reminder via WhatsApp → customer sees full English message → trust erodes instantly. Fixed: imported i18n already present, added `whatsapp` namespace (4 keys × 6 locales = 24 entries) covering invoiceReminder, invoiceOverdue (interpolation suffix), quoteFollowup, progressUpdate. All three builder functions now route through `i18n.t()` with `{{name}}` / `{{ref}}` / `{{amount}}` / `{{job}}` / `{{hours}}` / `{{days}}` / `{{overdue}}` interpolation.
+
+**R66.41 — Audited but skipped: 20 ungated `console.*` calls in `src/` and `app/`**: most are catch-block error logging in `app/(modals)/customers.tsx`, `app/quotes/new.tsx`, `app/quotes/[id]/invoice.tsx`, `app/(modals)/business-settings.tsx`, `src/intelligence/pricingAgent.ts`, `src/api/pricingApi.ts`. None contain user PII (no phone/email/IBAN/KvK/customer-name in log lines — verified). Production noise but not a security issue. **Deferred** — broader cleanup pass on logging hygiene; the existing `errorHandler.ts` (`logError`/`logWarn`/`logInfo`) is properly `__DEV__`-gated and is the canonical replacement target.
+
+**R66.42 — Audited and verified clean: no hardcoded `localhost`/`127.0.0.1`/`192.168.*` URLs anywhere in `src/`, `app/`, `supabase/`**: occasional concern with React Native dev environments leaking dev URLs into prod builds — checked all 3 trees, zero hits. Supabase URL flows via `EXPO_PUBLIC_SUPABASE_URL` env var; no hardcoded prod hosts.
+
+**R66.43 — Audited and verified clean: onboarding completion persists language across cold-start**: `app/onboarding.tsx:400-407` writes `language` into both AppState (`updateUser({ language })`) and AsyncStorage (`@vasco_user_profile`). Round-3 fix in `AuthContext` profile-restore effect reads this on cold-start and re-applies via `i18n.changeLanguage`. End-to-end: contractor picks Dutch in onboarding → AsyncStorage has `language: 'nl'` → kills app → cold-starts on a phone in any locale → `i18n.changeLanguage('nl')` fires from AuthContext effect → app renders Dutch. Verified.
+
+R66 batch (round 7): 1 file touched (`src/services/whatsappService.ts` — 3 builder fns + 1 helper, routed through i18n) + 6 locale JSONs (new `whatsapp` namespace, 4 keys each). 0 TS errors, 688/688 jest pass. 1 deferral (broader console.* logging-hygiene cleanup); 2 verified-clean items.

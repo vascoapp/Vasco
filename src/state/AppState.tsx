@@ -40,6 +40,7 @@ import { ingestPdfStub } from '../ingestion/ingestionStub';
 import { rowToExtractedDocument } from '../ingestion/extractionBridge';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { getCurrentUserId, getCurrentCountry, getCurrentTrade, setCurrentUser, subscribeUserChange } from '../lib/currentUser';
+import { isTempIdFast } from '../lib/idShape';
 import { jobUpdatesToRowPayload } from '../lib/mappers';
 import { USE_SEED_DATA } from '../config/demo';
 import {
@@ -212,8 +213,15 @@ const SEED_JOB_MATERIALS: Record<string, JobMaterial[]> = {
 };
 
 export function AppStateProvider({ children }: PropsWithChildren) {
-  // Resolved at each render — currentUser ref is kept in sync by AuthContext.
-  const aiUserId = getCurrentUserId();
+  // R58: was `const aiUserId = getCurrentUserId()` captured at render-time
+  // and baked into the useMemo'd action functions. The useMemo deps array
+  // doesn't include aiUserId, so for accounts with no initial state arrays
+  // changing post-login, every emit fired under the stale 'current-user'
+  // placeholder forever — corrupting cohort attribution on the very first
+  // session. Replaced all 17 references with inline `getCurrentUserId()`
+  // calls inside each action body so each invocation reads the live ref.
+  // Module-level `currentUser.ts` is the source of truth, kept in sync by
+  // AuthContext on login/logout.
   const [isLoading, setIsLoading] = useState(isSupabaseConfigured);
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile>(
     useSeedData ? initialBusinessProfile : { isComplete: false, completenessPercent: 0 },
@@ -286,10 +294,33 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           .catch(() => {});
       }
       setLineItems(li);
-      setCustomers(cust);
-      setJobs(j);
-      setMaterials(mat);
-      setSuppliers(sup);
+      // R57: preserve temp-id rows on refresh — was overwriting wholesale
+      // which made offline-created entities (customer/job/etc. with
+      // `c-{ts}`/`j-{ts}` etc.) disappear from the UI between refresh and
+      // the next offlineWriteQueue.flushQueue() that promotes them to BE.
+      // R49+R54 guarantee the temp row will get re-keyed to its real BE
+      // uuid on flush; until then we keep it visible to the user.
+      // R59: shape predicate hoisted to src/lib/idShape.ts as `isTempIdFast`.
+      setCustomers((prev) => {
+        const tempRows = prev.filter((c) => isTempIdFast(c.id));
+        return [...tempRows, ...cust];
+      });
+      setJobs((prev) => {
+        const tempRows = prev.filter((row) => isTempIdFast(row.id));
+        return [...tempRows, ...j];
+      });
+      setMaterials((prev) => {
+        const tempRows = prev.filter((row) => isTempIdFast(row.id));
+        return [...tempRows, ...mat];
+      });
+      setSuppliers((prev) => {
+        const tempRows = prev.filter((row) => isTempIdFast(row.id));
+        return [...tempRows, ...sup];
+      });
+      // Quotes use docNumber as id (not a temp-id pattern), so wholesale
+      // replace at the top of refreshData is correct — addQuote already
+      // calls nextDocumentNumber() which produces a stable string the BE
+      // persists verbatim. No re-merge needed here.
       setJobMaterialsMap(jm);
       setPriceObsMap(po);
 
@@ -453,12 +484,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     if (useSeedData && persistReady) {
       AsyncStorage.setItem('@vasco_customers', JSON.stringify(customers)).catch(() => {});
     }
-  }, [customers]);
+  }, [customers, persistReady]);
   useEffect(() => {
     if (useSeedData && persistReady) {
       AsyncStorage.setItem('@vasco_projects', JSON.stringify(projects)).catch(() => {});
     }
-  }, [projects]);
+  }, [projects, persistReady]);
   useEffect(() => {
     if (useSeedData && persistReady) {
       AsyncStorage.setItem('@vasco_business_profile', JSON.stringify(businessProfile)).catch(() => {});
@@ -522,17 +553,22 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const newCustomer: Customer = { id: tempId, name, email, phone, address };
         setCustomers((prev) => [newCustomer, ...prev]);
 
+        // R52: split BE-persist from post-create housekeeping. Was a real
+        // bug — the BE-success branch returned the row id early, skipping
+        // markStepComplete('first_customer_added') AND the customer
+        // embedding for semantic search. Online users never got the
+        // first-customer activation milestone fired, and their first
+        // customer was never indexed cohort-wide.
+        let finalId = tempId;
         if (isSupabaseConfigured) {
           try {
             const row = await withTimeout(dbCreateCustomer({ name, email, phone, address }), 3000, 'addCustomer');
-            // Update temp ID with real DB ID
             setCustomers((prev) =>
               prev.map((c) => (c.id === tempId ? { ...c, id: (row as any).id } : c))
             );
-            return (row as any).id as string;
+            finalId = (row as any).id as string;
           } catch (err) {
             logWarn('AppState', `addCustomer persist failed or timed out: ${err}`);
-            // Offline-first: queue the insert so it flushes when we're back online
             try {
               const { queueWrite } = await import('../services/offlineWriteQueue');
               await queueWrite({
@@ -543,22 +579,33 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             } catch {}
           }
         }
+
+        // Post-create housekeeping — uniform across BE-success / offline /
+        // unconfigured paths.
         markStepComplete('first_customer_added').catch(() => {});
-        // R243: fire-and-forget embedding so semantic-customer-search works
+        // R243: fire-and-forget embedding under the FINAL id (real uuid
+        // when BE succeeded, tempId otherwise). Was always under tempId,
+        // which left BE-persisted customers with embeddings keyed to a
+        // throwaway id — semantic search by real id would miss.
         const embedText = [name, email, phone, address].filter(Boolean).join(' ');
         if (embedText.length > 3) {
           import('../services/embeddingService').then((m) =>
-            m.embedCustomer({ customerId: tempId, text: embedText }),
+            m.embedCustomer({ customerId: finalId, text: embedText }),
           ).catch(() => {});
         }
-        return tempId;
+        return finalId;
       },
       // R45: customer mutability — was a feature gap. Both wrap persistOrQueue
       // for offline durability + re-fire embeddings on edits so semantic
       // search stays in sync.
       updateCustomer: async (id, updates) => {
         setCustomers((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
-        if (isSupabaseConfigured && !id.startsWith('c-')) {
+        // R56: removed `!id.startsWith('c-')` gate. Pre-R56 it skipped BE
+        // calls for temp-id rows entirely, meaning offline-edit-then-flush
+        // silently lost the edit (the queued INSERT carried the original
+        // payload only). Now persistOrQueue's temp-id fast path queues the
+        // update directly; R49's rewriter resolves the rowId on flush.
+        if (isSupabaseConfigured) {
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue('customers', 'update', () => dbUpdateCustomer(id, updates), { rowId: id, payload: updates }),
           ).catch((err) => logWarn('AppState', `updateCustomer persist failed: ${err}`));
@@ -575,7 +622,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
       removeCustomer: async (id) => {
         setCustomers((prev) => prev.filter((c) => c.id !== id));
-        if (isSupabaseConfigured && !id.startsWith('c-')) {
+        // R56: gate removed — see updateCustomer note. persistOrQueue's
+        // temp-id path queues the delete; on flush R49 either drops it
+        // (parent insert never ran) or rewrites the rowId (parent did).
+        if (isSupabaseConfigured) {
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue('customers', 'delete', () => dbDeleteCustomer(id), { rowId: id }),
           ).catch((err) => logWarn('AppState', `removeCustomer persist failed: ${err}`));
@@ -633,6 +683,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           }).catch(() => {});
         }
 
+        // R52: split BE-persist from post-create housekeeping. Was a real
+        // bug — the BE-success branch returned early after id-rewrite,
+        // skipping ontology, trackEvent, markStepComplete('first_job_created'),
+        // and calendar sync. Online users never got the first-job activation
+        // milestone fired, so the activation/onboarding rail under-reported.
+        let finalId = tempId;
         if (isSupabaseConfigured) {
           try {
             // Hard 3s timeout: on flaky signal the UI button shouldn't appear hung
@@ -645,35 +701,32 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             setJobs((prev) =>
               prev.map((j) => (j.id === tempId ? { ...j, id: row.id } : j)),
             );
-            // Fire-and-forget index for semantic search (R279 plumbing).
-            import('../intelligence/semanticSearch').then(({ indexJobForSearch }) =>
-              indexJobForSearch({ id: row.id, title, trade: extra?.trade, description: description ?? null }),
-            ).catch(() => {});
-            return row.id;
+            finalId = row.id;
           } catch (err) {
             logWarn('AppState', `addJob persist failed or timed out: ${err}`);
           }
         }
-        // Offline / unconfigured path: still index by tempId so keyword fallback works.
+
+        // Post-create housekeeping — runs regardless of BE persistence so
+        // the activation milestone, ontology, and calendar sync stay
+        // consistent across online + offline contractors.
         import('../intelligence/semanticSearch').then(({ indexJobForSearch }) =>
-          indexJobForSearch({ id: tempId, title, trade: extra?.trade, description: description ?? null }),
+          indexJobForSearch({ id: finalId, title, trade: extra?.trade, description: description ?? null }),
         ).catch(() => {});
-        // Ontology: create job entity + link to customer
-        upsertEntity({ id: tempId, type: 'job', name: title, attributes: { trade: extra?.trade, status: 'lead' }, scores: { reliability: 50, quality: 50, value: extra?.quoted_amount ?? 0, frequency: 0 }, lastUpdated: new Date().toISOString() }).catch(() => {});
+        upsertEntity({ id: finalId, type: 'job', name: title, attributes: { trade: extra?.trade, status: 'lead' }, scores: { reliability: 50, quality: 50, value: extra?.quoted_amount ?? 0, frequency: 0 }, lastUpdated: new Date().toISOString() }).catch(() => {});
         if (customerId) {
-          addRelation({ fromId: customerId, fromType: 'customer', toId: tempId, toType: 'job', relationType: 'owns', metadata: {} }).catch(() => {});
+          addRelation({ fromId: customerId, fromType: 'customer', toId: finalId, toType: 'job', relationType: 'owns', metadata: {} }).catch(() => {});
         }
-        trackEvent('job_created', { jobId: tempId }).catch(() => {});
+        trackEvent('job_created', { jobId: finalId }).catch(() => {});
         markStepComplete('first_job_created').catch(() => {});
-        // Auto-sync to device calendar if scheduled
         if (extra?.scheduled_date) {
           import('../services/calendarSyncService').then(({ syncJobToCalendar, getCalendarSyncSettings }) => {
             getCalendarSyncSettings().then((settings) => {
-              if (settings.enabled) syncJobToCalendar(newJob).catch(() => {});
+              if (settings.enabled) syncJobToCalendar({ ...newJob, id: finalId }).catch(() => {});
             }).catch(() => {});
           }).catch(() => {});
         }
-        return tempId;
+        return finalId;
       },
       updateJobStatus: (id, status) => {
         const job = jobs.find(j => j.id === id);
@@ -704,7 +757,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }
         // AI data collector — track job lifecycle events
         if (job && status === 'in-progress') {
-          emitJobStarted(aiUserId, id, {
+          emitJobStarted(getCurrentUserId(), id, {
             trade: job.trade ?? 'general',
             jobType: job.title,
             estimatedHours: job.estimatedDuration ?? 0,
@@ -716,7 +769,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           const materialCost = (job as any).materials?.reduce((s: number, m: any) => s + (m.totalCost ?? 0), 0) ?? 0;
           const estimatedCost = job.quotedAmount ?? job.agreedAmount ?? 0;
           const actualCost = materialCost + (actualHours * 45); // rough labor estimate
-          emitJobCompleted(aiUserId, id, {
+          emitJobCompleted(getCurrentUserId(), id, {
             trade: job.trade ?? 'general',
             jobType: job.title,
             estimatedHours: job.estimatedDuration ?? 0,
@@ -762,7 +815,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           }).catch(() => {});
           // Record pricing outcome for calibration
           if (job.quoteId) {
-            recordPricingOutcome(aiUserId, job.quoteId, {
+            recordPricingOutcome(getCurrentUserId(), job.quoteId, {
               wasAccepted: true,
               actualCost,
               actualHours,
@@ -804,7 +857,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
       removeJob: (id) => {
         setJobs((prev) => prev.filter((j) => j.id !== id));
-        if (isSupabaseConfigured && !id.startsWith('j-')) {
+        // R56: gate removed — persistOrQueue handles temp ids.
+        if (isSupabaseConfigured) {
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue('jobs', 'delete', () => dbDeleteJob(id), { rowId: id }),
           ).catch(() => {});
@@ -820,7 +874,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             j.id === id ? { ...j, ...updates, updatedAt: new Date().toISOString() } : j,
           ),
         );
-        if (isSupabaseConfigured && !id.startsWith('j-')) {
+        // R56: gate removed — persistOrQueue handles temp ids.
+        if (isSupabaseConfigured) {
           // R304: full camelCase → snake_case mapping via jobUpdatesToRowPayload.
           // Was inline R301 mapping which only covered signatureSvg +
           // customerSignoffAt — every other field (scheduledDate,
@@ -884,8 +939,18 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         );
         const now = new Date();
         if (isSupabaseConfigured) {
-          updateDocument(id, { status: 'sent', sent_at: now.toISOString() }).catch((err) =>
-            logWarn('AppState', `markQuoteSent persist failed: ${err}`)
+          // R52: was fire-and-forget log — offline contractors marking a
+          // quote as sent saw it stuck in `draft` on BE forever. Now wraps
+          // persistOrQueue so the status update flushes on reconnect.
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue(
+              'documents',
+              'update',
+              () => updateDocument(id, { status: 'sent', sent_at: now.toISOString() }),
+              { rowId: id, payload: { status: 'sent', sent_at: now.toISOString() } },
+            ),
+          ).catch((err) =>
+            logWarn('AppState', `markQuoteSent persist failed: ${err}`),
           );
           // R255: time-of-day capture into pricing_intelligence so the
           // cohort RPC can slice acceptance rate by hour-of-day × day-of-week.
@@ -897,7 +962,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 sent_at_dow: now.getDay(),
               })
               .eq('quote_id', id)
-              .eq('user_id', aiUserId)
+              .eq('user_id', getCurrentUserId())
               .then(() => {})
               .catch(() => {});
           }).catch(() => {});
@@ -944,7 +1009,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // AI data collector
         const sentDue = new Date();
         sentDue.setDate(sentDue.getDate() + 14);
-        emitInvoiceSent(aiUserId, id, {
+        emitInvoiceSent(getCurrentUserId(), id, {
           customerId: invoice?.customer ?? '',
           amount: invoice?.amount ?? 0,
           dueDate: sentDue.toISOString(),
@@ -979,7 +1044,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           }),
         ).catch(() => {});
         // AI data collector
-        emitPaymentReceived(aiUserId, id, {
+        emitPaymentReceived(getCurrentUserId(), id, {
           customerId: paidInv?.customer ?? '',
           amount: paidInv?.amount ?? 0,
           daysToPayment: 0,
@@ -1084,14 +1149,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           ? (jobs.find((j) => j.id === job) as any)?.address?.postcode
             ?? (jobs.find((j) => j.id === job) as any)?.address_postcode
           : undefined;
-        emitQuoteCreated(aiUserId, docNumber, {
+        emitQuoteCreated(getCurrentUserId(), docNumber, {
           customerId: customer,
           totalAmount: total,
           lineItemCount: items.length,
           trade: profTrade,
         }).catch(() => {});
         for (const item of items) {
-          recordPricingData(aiUserId, {
+          recordPricingData(getCurrentUserId(), {
             trade: profTrade,
             country: profCountry,
             lineDescription: item.description,
@@ -1211,7 +1276,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }
 
         // AI data collector
-        emitInvoiceSent(aiUserId, docNumber, {
+        emitInvoiceSent(getCurrentUserId(), docNumber, {
           customerId: sourceQuote.customer,
           amount: sourceQuote.amount,
           dueDate: dueDate.toISOString(),
@@ -1249,6 +1314,24 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setInvoices((p) =>
           p.map((inv) => inv.id === id ? { ...inv, ...updates } : inv)
         );
+        // R56: was missing BE persistence entirely — invoice edits (amount,
+        // due date, customer, status) lived in memory only and were
+        // overwritten on the next refreshData(). Permanent data loss for
+        // anyone who edits an existing invoice. Now wraps persistOrQueue
+        // with snake_case mapping so the documents row stays in sync.
+        if (isSupabaseConfigured) {
+          const dbUpdates: Record<string, unknown> = {};
+          if (updates.amount !== undefined) dbUpdates.total_amount = updates.amount;
+          if (updates.status !== undefined) dbUpdates.status = updates.status;
+          if (updates.customer !== undefined) dbUpdates.customer_id = updates.customer;
+          if ((updates as any).dueDate !== undefined) dbUpdates.due_date = (updates as any).dueDate;
+          if ((updates as any).paidAt !== undefined) dbUpdates.paid_at = (updates as any).paidAt;
+          if (Object.keys(dbUpdates).length > 0) {
+            import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+              persistOrQueue('documents', 'update', () => updateDocument(id, dbUpdates), { rowId: id, payload: dbUpdates }),
+            ).catch((err) => logWarn('AppState', `updateInvoice persist failed: ${err}`));
+          }
+        }
         // R251: GoBD audit-trail — capture every status transition + edit.
         import('../services/gobdAuditTrailService').then((m) => {
           if (updates.status === 'sent' && prev?.status !== 'sent') {
@@ -1310,13 +1393,25 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           }
         }
         if (isSupabaseConfigured) {
-          const dbUpdates: Record<string, string | null> = {};
+          const dbUpdates: Record<string, string | number | null> = {};
           if (updates.businessName !== undefined) dbUpdates.business_name = updates.businessName || null;
           if (updates.kvkNumber !== undefined) dbUpdates.kvk_number = updates.kvkNumber || null;
           if (updates.vatNumber !== undefined) dbUpdates.vat_number = updates.vatNumber || null;
           if (updates.address !== undefined) dbUpdates.address = updates.address || null;
           if (updates.email !== undefined) dbUpdates.email = updates.email || null;
           if (updates.phone !== undefined) dbUpdates.phone = updates.phone || null;
+          // R66 NL launch: payment + locale fields written to BE so the
+          // invoice PDF can render bank details. Without these, the NL
+          // customer has no way to pay an invoice they receive.
+          if (updates.iban !== undefined) dbUpdates.iban = updates.iban || null;
+          if (updates.bic !== undefined) dbUpdates.bic = updates.bic || null;
+          if (updates.country !== undefined) dbUpdates.country = updates.country || null;
+          if (updates.postcode !== undefined) dbUpdates.postcode = updates.postcode || null;
+          if (updates.city !== undefined) dbUpdates.city = updates.city || null;
+          if (updates.website !== undefined) dbUpdates.website = updates.website || null;
+          if (updates.invoicePrefix !== undefined) dbUpdates.invoice_prefix = updates.invoicePrefix || null;
+          if (updates.quotePrefix !== undefined) dbUpdates.quote_prefix = updates.quotePrefix || null;
+          if (updates.defaultPaymentTerms !== undefined) dbUpdates.default_payment_terms = updates.defaultPaymentTerms ?? null;
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue('business_settings', 'upsert', () => upsertBusinessSettings(dbUpdates), { payload: dbUpdates }),
           ).catch(() => {});
@@ -1377,7 +1472,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
       removeMaterial: (id) => {
         setMaterials((prev) => prev.filter((m) => m.id !== id));
-        if (isSupabaseConfigured && !id.startsWith('mat-')) {
+        // R56: gate removed — persistOrQueue handles temp ids.
+        if (isSupabaseConfigured) {
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue('materials', 'delete', () => dbDeleteMaterial(id), { rowId: id }),
           ).catch(() => {});
@@ -1412,7 +1508,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
       removeSupplier: (id) => {
         setSuppliers((prev) => prev.filter((s) => s.id !== id));
-        if (isSupabaseConfigured && !id.startsWith('sup-')) {
+        // R56: gate removed — persistOrQueue handles temp ids.
+        if (isSupabaseConfigured) {
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue('suppliers', 'delete', () => dbDeleteSupplier(id), { rowId: id }),
           ).catch(() => {});
@@ -1427,6 +1524,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           [jm.jobId]: [...(prev[jm.jobId] ?? []), newJm],
         }));
 
+        // R52: split BE-persist from moat housekeeping. Was a real bug —
+        // the BE-success branch returned early, skipping emitMaterialPurchased
+        // (the load-bearing cohort pricing-moat signal that writes both
+        // business_events AND material_price_history per R241/R275/R283),
+        // resolveOutcomesFromMaterialPurchase (calibration learning), AND
+        // embedMaterial (semantic search). Online users' material purchases
+        // simply did not feed the moat — every online contractor's material
+        // signal went to /dev/null until they added a material offline.
+        let finalId = tempId;
         if (isSupabaseConfigured) {
           try {
             const row = await dbCreateJobMaterial({
@@ -1446,11 +1552,35 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 item.id === tempId ? { ...item, id: (row as any).id } : item,
               ),
             }));
-            return (row as any).id as string;
+            finalId = (row as any).id as string;
           } catch (err) {
             logWarn('AppState', `addJobMaterial persist failed: ${err}`);
+            // R54: was a bare log — material insert never reached BE if the
+            // parent job was still on a temp id (FK violation on offline-
+            // created job). Queue the insert so the offline queue's R49
+            // temp→real rewriter resolves the FK on flush.
+            try {
+              const { queueWrite } = await import('../services/offlineWriteQueue');
+              await queueWrite({
+                table: 'job_materials',
+                op: 'insert',
+                payload: {
+                  id: tempId,
+                  job_id: jm.jobId,
+                  material_id: jm.materialId,
+                  quantity: jm.quantity,
+                  unit: jm.unit,
+                  unit_price: jm.unitPrice,
+                  total_price: jm.totalPrice,
+                  supplier_id: jm.supplierId,
+                  status: jm.status,
+                  notes: jm.notes,
+                },
+              });
+            } catch {}
           }
         }
+
         // R279/R281: resolve real trade + country from currentUser (was
         // hardcoded 'general'/'NL', collapsing all material data into a
         // single bucket and breaking the material-drift moat's per-(trade,
@@ -1464,8 +1594,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const matRow = materials.find((m) => m.id === jm.materialId);
         const matName = (matRow?.name ?? String(jm.materialId ?? '')).trim();
         const supRow = jm.supplierId ? suppliers.find((s) => s.id === jm.supplierId) : undefined;
-        // AI data collector — material purchase event
-        emitMaterialPurchased(aiUserId, {
+        // AI data collector — material purchase event (runs for both online
+        // and offline-fallback paths now).
+        emitMaterialPurchased(getCurrentUserId(), {
           materialName: matName || 'unknown',
           supplierId: jm.supplierId ?? 'unknown',
           supplierName: supRow?.name ?? jm.supplierId ?? 'unknown',
@@ -1476,19 +1607,17 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           country,
           jobId: jm.jobId,
         }).catch(() => {});
-        // R237: resolve calibration predictions tied to material/supplier signals.
         if ((jm.unitPrice ?? 0) > 0) {
           import('../intelligence/learningStorage').then((m) =>
             m.resolveOutcomesFromMaterialPurchase(jm.unitPrice ?? 0),
           ).catch(() => {});
         }
-        // R243: embed material so cohort-wide similarity search works
         if (matName.length > 2) {
           import('../services/embeddingService').then((m) =>
             m.embedMaterial({ trade, materialName: matName, text: matName }),
           ).catch(() => {});
         }
-        return tempId;
+        return finalId;
       },
       updateJobMaterialStatus: (id, jobId, status) => {
         setJobMaterialsMap((prev) => ({
@@ -1497,7 +1626,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             item.id === id ? { ...item, status, updatedAt: new Date().toISOString() } : item,
           ),
         }));
-        if (isSupabaseConfigured && !id.startsWith('jm-')) {
+        // R56: gate removed — persistOrQueue handles temp ids.
+        if (isSupabaseConfigured) {
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue('job_materials', 'update', () => dbUpdateJobMaterial(id, { status }), { rowId: id, payload: { status } }),
           ).catch(() => {});
@@ -1508,7 +1638,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           ...prev,
           [jobId]: (prev[jobId] ?? []).filter((item) => item.id !== id),
         }));
-        if (isSupabaseConfigured && !id.startsWith('jm-')) {
+        // R56: gate removed — persistOrQueue handles temp ids.
+        if (isSupabaseConfigured) {
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue('job_materials', 'delete', () => dbDeleteJobMaterial(id), { rowId: id }),
           ).catch(() => {});
@@ -1618,6 +1749,25 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             } catch {}
           }
         }
+
+        // R55: was missing emitInvoiceSent + trackEvent — addInvoice() (the
+        // quote-source variant) fires both, but the job-source variant
+        // skipped them. Job→invoice creations were silently absent from
+        // the funnel signal in business_events. GoBD audit trail also
+        // missing here. Fix: parity with addInvoice's post-create block.
+        import('../services/gobdAuditTrailService').then((m) =>
+          m.appendAudit({
+            type: 'invoice_created',
+            ref: docNumber,
+            payload: { amount, customer: job.customerId ?? null, sourceJobId: jobId },
+          }),
+        ).catch(() => {});
+        emitInvoiceSent(getCurrentUserId(), docNumber, {
+          customerId: job.customerId ?? '',
+          amount,
+          dueDate: dueDate.toISOString(),
+        }).catch(() => {});
+        trackEvent('invoice_created', { invoiceId: docNumber }).catch(() => {});
         return docNumber;
       },
 
@@ -1676,13 +1826,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const ttdHoursAcc = sentAtMsAcc
           ? Math.max(0, Math.round((Date.now() - sentAtMsAcc) / (1000 * 60 * 60)))
           : undefined;
-        emitQuoteAccepted(aiUserId, quoteId, {
+        emitQuoteAccepted(getCurrentUserId(), quoteId, {
           customerId: quote.customer ?? '',
           quotedAmount: quote.amount,
           acceptedAmount: quote.amount,
           daysToAccept: ttdHoursAcc !== undefined ? Math.round(ttdHoursAcc / 24) : 0,
         }).catch(() => {});
-        recordPricingOutcome(aiUserId, quoteId, {
+        recordPricingOutcome(getCurrentUserId(), quoteId, {
           wasAccepted: true,
           acceptedPrice: quote.amount,
           timeToDecisionHours: ttdHoursAcc,
@@ -1698,6 +1848,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           m.resolveOutcomesFromQuoteOutcome(true, ttdHoursAcc !== undefined ? Math.round(ttdHoursAcc / 24) : undefined),
         ).catch(() => {});
 
+        // R55: split BE-persist from post-create housekeeping (R52 contract).
+        // Pre-R55 this had the SAME early-return bug as addJob — when BE
+        // succeeded it `return row.id`'d, skipping every job-side signal:
+        // ontology upsertEntity, customer↔job relation, semantic search
+        // index, trackEvent('job_created'), markStepComplete('first_job_created'),
+        // and calendar sync. Quote→job conversions silently bypassed the
+        // entire job-creation moat path while addJob() flowed through it.
+        let finalJobId = tempId;
         if (isSupabaseConfigured) {
           const jobPayload = {
             title: newJob.title,
@@ -1710,8 +1868,16 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             setJobs((prev) =>
               prev.map((j) => (j.id === tempId ? { ...j, id: row.id } : j)),
             );
-            await updateDocument(quoteId, { status: 'accepted' }).catch(() => {});
-            return row.id;
+            finalJobId = row.id;
+            // R52: was `.catch(() => {})` — silenced quote-status-update
+            // failures left the quote stuck in `draft` on BE while the job
+            // existed. Now queues the update on failure so reconnect drains.
+            try {
+              await updateDocument(quoteId, { status: 'accepted' });
+            } catch {
+              const { queueWrite } = await import('../services/offlineWriteQueue');
+              await queueWrite({ table: 'documents', op: 'update', rowId: quoteId, payload: { status: 'accepted' } }).catch(() => {});
+            }
           } catch (err) {
             // R44: was fire-and-forget log — offline-converted quotes never
             // reached BE. Now queues both the job insert + the quote
@@ -1719,12 +1885,45 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             logWarn('AppState', `convertQuoteToJob persist failed, queueing: ${err}`);
             try {
               const { queueWrite } = await import('../services/offlineWriteQueue');
-              await queueWrite({ table: 'jobs', op: 'insert', payload: jobPayload });
+              await queueWrite({ table: 'jobs', op: 'insert', payload: { id: tempId, ...jobPayload } });
               await queueWrite({ table: 'documents', op: 'update', rowId: quoteId, payload: { status: 'accepted' } });
             } catch {}
           }
         }
-        return tempId;
+
+        // Post-create housekeeping — uniform across BE-success / offline /
+        // unconfigured. Mirrors addJob's R52 block.
+        import('../intelligence/semanticSearch').then(({ indexJobForSearch }) =>
+          indexJobForSearch({ id: finalJobId, title: newJob.title, trade: undefined, description: null }),
+        ).catch(() => {});
+        upsertEntity({
+          id: finalJobId,
+          type: 'job',
+          name: newJob.title,
+          attributes: { status: 'scheduled', sourceQuoteId: quoteId },
+          scores: { reliability: 50, quality: 50, value: quote.amount, frequency: 0 },
+          lastUpdated: new Date().toISOString(),
+        }).catch(() => {});
+        if (quote.customer) {
+          addRelation({
+            fromId: quote.customer,
+            fromType: 'customer',
+            toId: finalJobId,
+            toType: 'job',
+            relationType: 'owns',
+            metadata: {},
+          }).catch(() => {});
+        }
+        trackEvent('job_created', { jobId: finalJobId, sourceQuoteId: quoteId }).catch(() => {});
+        markStepComplete('first_job_created').catch(() => {});
+        if (scheduledDate) {
+          import('../services/calendarSyncService').then(({ syncJobToCalendar, getCalendarSyncSettings }) => {
+            getCalendarSyncSettings().then((settings) => {
+              if (settings.enabled) syncJobToCalendar({ ...newJob, id: finalJobId }).catch(() => {});
+            }).catch(() => {});
+          }).catch(() => {});
+        }
+        return finalJobId;
       },
 
       updateQuote: (id, updates) => {
@@ -1732,7 +1931,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setQuotes((prev) =>
           prev.map((q) => (q.id === id ? { ...q, ...updates } : q)),
         );
-        if (isSupabaseConfigured && !id.startsWith('q-')) {
+        // R56: gate removed — persistOrQueue handles temp ids.
+        if (isSupabaseConfigured) {
           const dbUpdates: Record<string, unknown> = {};
           if (updates.amount !== undefined) dbUpdates.total_amount = updates.amount;
           if (updates.status !== undefined) dbUpdates.status = updates.status;
@@ -1798,13 +1998,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           const ttdHoursUp = sentAtMsUp
             ? Math.max(0, Math.round((Date.now() - sentAtMsUp) / (1000 * 60 * 60)))
             : undefined;
-          emitQuoteAccepted(aiUserId, id, {
+          emitQuoteAccepted(getCurrentUserId(), id, {
             customerId: quote.customer ?? '',
             quotedAmount: quote.amount,
             acceptedAmount: quote.amount,
             daysToAccept: ttdHoursUp !== undefined ? Math.round(ttdHoursUp / 24) : 0,
           }).catch(() => {});
-          recordPricingOutcome(aiUserId, id, {
+          recordPricingOutcome(getCurrentUserId(), id, {
             wasAccepted: true,
             acceptedPrice: quote.amount,
             timeToDecisionHours: ttdHoursUp,
@@ -1829,12 +2029,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           const timeToDecisionHours = sentAtMs
             ? Math.max(0, Math.round((Date.now() - sentAtMs) / (1000 * 60 * 60)))
             : undefined;
-          emitQuoteRejected(aiUserId, id, {
+          emitQuoteRejected(getCurrentUserId(), id, {
             customerId: quote.customer ?? '',
             quotedAmount: quote.amount,
             reason: declineReason,
           }).catch(() => {});
-          recordPricingOutcome(aiUserId, id, {
+          recordPricingOutcome(getCurrentUserId(), id, {
             wasAccepted: false,
             declineReason,
             counterOfferAmount: counterOffer,
@@ -1915,28 +2115,40 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p
         ));
 
-        if (isSupabaseConfigured && !id.startsWith('proj-')) {
+        // R56: was gated by `!id.startsWith('proj-')` — offline-created
+        // project edits silently lost. Now: build the patch first, then
+        // for temp ids queue directly (BE call would no-op since the row
+        // doesn't exist yet); for real ids try BE then queue on failure.
+        if (isSupabaseConfigured) {
           (async () => {
+            const patch: Record<string, unknown> = {};
+            if (updates.title !== undefined) patch.name = updates.title;
+            if (updates.description !== undefined) patch.description = updates.description;
+            if (updates.status !== undefined) patch.status = updates.status;
+            if (updates.startDate !== undefined) patch.start_date = updates.startDate;
+            if (updates.targetEndDate !== undefined) patch.target_end_date = updates.targetEndDate;
+            if (updates.actualEndDate !== undefined) patch.actual_end_date = updates.actualEndDate;
+            if (updates.totalBudget !== undefined) patch.total_budget = updates.totalBudget;
+            if (updates.address !== undefined) patch.address = updates.address;
+            if (updates.milestones !== undefined) patch.milestones = updates.milestones;
+            if (Object.keys(patch).length === 0) return;
+
+            if (id.startsWith('proj-')) {
+              // Temp id — queue directly. R49 will rewrite rowId on flush
+              // once the parent insert lands.
+              try {
+                const { queueWrite } = await import('../services/offlineWriteQueue');
+                await queueWrite({ table: 'projects', op: 'update', rowId: id, payload: patch });
+              } catch {}
+              return;
+            }
             try {
               const { updateProject: dbUpdateProject } = await import('../lib/dataProvider');
-              const patch: Record<string, unknown> = {};
-              if (updates.title !== undefined) patch.name = updates.title;
-              if (updates.description !== undefined) patch.description = updates.description;
-              if (updates.status !== undefined) patch.status = updates.status;
-              if (updates.startDate !== undefined) patch.start_date = updates.startDate;
-              if (updates.targetEndDate !== undefined) patch.target_end_date = updates.targetEndDate;
-              if (updates.actualEndDate !== undefined) patch.actual_end_date = updates.actualEndDate;
-              if (updates.totalBudget !== undefined) patch.total_budget = updates.totalBudget;
-              if (updates.address !== undefined) patch.address = updates.address;
-              if (updates.milestones !== undefined) patch.milestones = updates.milestones;
-              if (Object.keys(patch).length > 0) {
-                await withTimeout(dbUpdateProject(id, patch), 3000, 'updateProject');
-              }
+              await withTimeout(dbUpdateProject(id, patch), 3000, 'updateProject');
             } catch (err) {
               logWarn('AppState', `updateProject persist failed: ${err}`);
               try {
                 const { queueWrite } = await import('../services/offlineWriteQueue');
-                const { id: _omit, ...patch } = { id, ...updates } as Record<string, unknown>;
                 await queueWrite({ table: 'projects', op: 'update', rowId: id, payload: patch });
               } catch {}
             }

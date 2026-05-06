@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { MS_PER_DAY, MS_PER_HOUR } from '../utils/timeConstants';
+import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
 // TYPES
@@ -88,6 +89,12 @@ class QuoteApprovalService {
   static getInstance(): QuoteApprovalService {
     if (!QuoteApprovalService.instance) {
       QuoteApprovalService.instance = new QuoteApprovalService();
+      registerSingletonReset(() => {
+        const inst = QuoteApprovalService.instance;
+        inst.approvals = [...mockApprovals];
+        inst.rules = [...mockRules];
+        inst.listeners.forEach((l) => l());
+      });
     }
     return QuoteApprovalService.instance;
   }

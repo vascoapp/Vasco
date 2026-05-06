@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from './supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logWarn } from '../utils/errorHandler';
+import { isUuid } from './idShape';
 import type { DocumentRow, LineItemRow, BusinessSettingsRow, CustomerRow, MaterialCatalogRow, SupplierRow, JobMaterialRow, PriceObservationRow, ProjectRow } from './database.types';
 import { quotes as mockQuotes, invoices as mockInvoices } from '../data/mockDocuments';
 import { quoteLineItems as mockLineItems } from '../data/mockLineItems';
@@ -78,14 +79,32 @@ export async function createDocument(
   return data as DocumentRow;
 }
 
+// R57: shape-detect to route on the right column. addQuote / addInvoice
+// expose `docNumber` (e.g. `Q-260001`) as the FE id, but `documents.id` is
+// a uuid. Pre-R57 every `.eq('id', docNumber)` matched 0 rows on BE, so
+// markQuoteSent / markInvoiceSent / markInvoicePaid / updateQuote /
+// updateInvoice / removeQuote / removeInvoice / convertQuoteToJob silently
+// failed to persist. The contractor's UI showed the new status; refresh
+// from BE wiped it. This is the longest-standing latent bug in the audit.
+//
+// Dual-route is a non-breaking fix: if the value parses as a uuid, match
+// by `id`; otherwise treat it as `document_number` and match by that
+// (unique per (user_id, doc_type) under RLS, so the equality is safe).
+// R59: UUID_RE moved to src/lib/idShape.ts.
+
+function documentMatchColumn(idOrNumber: string): 'id' | 'document_number' {
+  return isUuid(idOrNumber) ? 'id' : 'document_number';
+}
+
 export async function updateDocument(
-  id: string,
+  idOrNumber: string,
   updates: Record<string, unknown>,
 ): Promise<DocumentRow> {
+  const col = documentMatchColumn(idOrNumber);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- types will be regenerated from Supabase CLI
   const { data, error } = await (supabase.from('documents') as any)
     .update(updates)
-    .eq('id', id)
+    .eq(col, idOrNumber)
     .select()
     .single();
 
@@ -93,8 +112,9 @@ export async function updateDocument(
   return data as DocumentRow;
 }
 
-export async function deleteDocument(id: string): Promise<void> {
-  const { error } = await supabase.from('documents').delete().eq('id', id);
+export async function deleteDocument(idOrNumber: string): Promise<void> {
+  const col = documentMatchColumn(idOrNumber);
+  const { error } = await supabase.from('documents').delete().eq(col, idOrNumber);
   if (error) throw error;
 }
 
@@ -364,20 +384,31 @@ export async function deleteProject(id: string): Promise<void> {
 
 // ── Document Numbering ───────────────────────────────────────
 
+// R66 round 6: prefix + format must match the BE RPC `next_document_number`
+// in `004_base_schema.sql` — `Q0001` for quotes, `I0001` for invoices, no
+// year suffix. Was producing `Q-260001` / `INV-260001` on the offline fallback
+// path, causing inconsistent numbering between online and offline mints
+// (Belastingdienst NL Art. 35 wet OB 1968 + DE GoBD both require gap-free
+// sequential numbering). Year suffix is stripped — if we want year-prefixed
+// numbering, the BE RPC has to lead and FE follows.
+function localFallbackDocNumber(docType: 'quote' | 'invoice', current: number): string {
+  const prefix = docType === 'quote' ? 'Q' : 'I';
+  return `${prefix}${String(current).padStart(4, '0')}`;
+}
+
 export async function nextDocumentNumber(docType: 'quote' | 'invoice'): Promise<string> {
+  const storageKey = `@vasco_doc_counter_${docType}`;
+
   if (!isSupabaseConfigured) {
-    const storageKey = `@vasco_doc_counter_${docType}`;
-    const prefix = docType === 'quote' ? 'Q' : 'INV';
-    const yearSuffix = new Date().getFullYear().toString().slice(-2);
     try {
       const raw = await AsyncStorage.getItem(storageKey);
       const current = raw ? parseInt(raw, 10) : 0;
       const next = current + 1;
       await AsyncStorage.setItem(storageKey, String(next));
-      return `${prefix}-${yearSuffix}${String(next).padStart(4, '0')}`;
+      return localFallbackDocNumber(docType, next);
     } catch {
-      // Fallback: use timestamp-based to avoid collisions
-      return `${prefix}-${yearSuffix}${String(Date.now()).slice(-6)}`;
+      // Last-resort timestamp-based — still uses BE prefix shape.
+      return localFallbackDocNumber(docType, Number(String(Date.now()).slice(-6)));
     }
   }
 
@@ -397,18 +428,15 @@ export async function nextDocumentNumber(docType: 'quote' | 'invoice'): Promise<
       break;
     }
   }
-  // Supabase unreachable (paused/offline) — fallback to local counter
-  const storageKey = `@vasco_doc_counter_${docType}`;
-  const prefix = docType === 'quote' ? 'Q' : 'INV';
-  const yearSuffix = new Date().getFullYear().toString().slice(-2);
+  // Supabase unreachable (paused/offline) — fallback to local counter.
   try {
     const raw = await AsyncStorage.getItem(storageKey);
     const current = raw ? parseInt(raw, 10) : 0;
     const next = current + 1;
     await AsyncStorage.setItem(storageKey, String(next));
-    return `${prefix}-${yearSuffix}${String(next).padStart(4, '0')}`;
+    return localFallbackDocNumber(docType, next);
   } catch {
-    return `${prefix}-${yearSuffix}${String(Date.now()).slice(-6)}`;
+    return localFallbackDocNumber(docType, Number(String(Date.now()).slice(-6)));
   }
 }
 
@@ -628,9 +656,16 @@ export async function createPriceObservation(
   const userId = await getUserId();
   const { data, error } = await supabase
     .from('price_observations')
+    // R54 audit: `material_id` here is a placeholder uuid generated client-side
+    // because callers don't pass a catalog link. This breaks any join from
+    // `price_observations.material_id ↔ materials.id`. The function is currently
+    // dormant (zero non-internal callers) — the canonical pricing-moat path is
+    // `emitMaterialPurchased` → `material_price_history` (R241/R275/R283). If
+    // resurrecting, accept material_id as input and surface a clear schema
+    // contract; do NOT keep the random-uuid fallback.
     .insert({
       user_id: userId,
-      material_id: crypto.randomUUID?.() ?? userId, // placeholder UUID — no catalog link yet
+      material_id: crypto.randomUUID?.() ?? userId,
       material_name: obs.material_name,
       supplier_name: obs.supplier_name ?? null,
       price: obs.price,

@@ -15,6 +15,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getCurrentUserId } from '../lib/currentUser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { subscribeIdRemap, type IdRemapEvent } from '../services/idRemapBus';
 
 const EMBEDDING_CACHE_KEY = '@vasco_embeddings';
 
@@ -274,3 +275,74 @@ export async function indexMaterialForSearch(material: {
     },
   });
 }
+
+// ---------------------------------------------------------------------------
+// R54: id-remap support
+// ---------------------------------------------------------------------------
+// indexJobForSearch / indexMaterialForSearch wrap the ids with a `job-` /
+// `mat-` prefix before storing in:
+//   1. Local AsyncStorage `@vasco_embeddings` keyed by the prefixed id
+//   2. Supabase `embeddings` table keyed by the prefixed id
+// When the original entity gets a real BE uuid via offline-queue flush,
+// both storage layers carry the now-stranded prefixed temp id. Future
+// vector-search hits won't link back to the canonical entity.
+//
+// On remap, rewrite both layers under the new prefixed real id. We
+// preserve the original `text` + `metadata` so we don't need to re-fetch.
+
+const REMAP_PREFIX_BY_TABLE: Record<string, 'job' | 'material'> = {
+  jobs: 'job',
+  materials: 'material',
+};
+
+async function remapIndexedItem(prefix: 'job' | 'material', tempId: string, realId: string): Promise<void> {
+  if (!tempId || !realId || tempId === realId) return;
+  const oldKey = `${prefix}-${tempId}`;
+  const newKey = `${prefix}-${realId}`;
+
+  // 1. Local AsyncStorage cache
+  try {
+    const raw = await AsyncStorage.getItem(EMBEDDING_CACHE_KEY);
+    if (raw) {
+      const index = JSON.parse(raw) as EmbeddingEntry[];
+      let touched = false;
+      const remapped = index.map((entry) => {
+        if (entry.id === oldKey) {
+          touched = true;
+          // Mirror the remap into metadata too — indexJobForSearch writes
+          // `metadata.jobId` which downstream consumers slice on.
+          const md = { ...entry.metadata };
+          if (prefix === 'job' && md.jobId === tempId) md.jobId = realId;
+          if (prefix === 'material' && md.materialId === tempId) md.materialId = realId;
+          return { ...entry, id: newKey, metadata: md };
+        }
+        return entry;
+      });
+      if (touched) await AsyncStorage.setItem(EMBEDDING_CACHE_KEY, JSON.stringify(remapped));
+    }
+  } catch {}
+
+  // 2. Supabase embeddings row — rewrite the primary key. Doing it as
+  //    UPDATE rather than DELETE+INSERT keeps the existing vector blob
+  //    so we don't burn an embed-text call.
+  if (isSupabaseConfigured) {
+    try {
+      await (supabase.from('embeddings') as any)
+        .update({ id: newKey })
+        .eq('id', oldKey);
+    } catch {}
+  }
+}
+
+let _remapInit = false;
+function initRemapListener(): void {
+  if (_remapInit) return;
+  _remapInit = true;
+  subscribeIdRemap((e: IdRemapEvent) => {
+    const prefix = REMAP_PREFIX_BY_TABLE[e.table];
+    if (!prefix) return;
+    void remapIndexedItem(prefix, e.tempId, e.realId);
+  });
+}
+
+initRemapListener();

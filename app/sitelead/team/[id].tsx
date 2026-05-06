@@ -189,7 +189,7 @@ export default function TeamPlanningScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
       <ScrollView style={styles.scrollView}>
         {/* Header */}
         <View style={styles.header}>

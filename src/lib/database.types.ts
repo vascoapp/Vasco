@@ -15,6 +15,21 @@ export type BusinessSettingsRow = {
   email: string | null;
   phone: string | null;
   logo_url: string | null;
+  // R66 NL launch: payment + locale columns from
+  // `20260415000001_business_profiles.sql` migration. Pre-R66 the FE
+  // type didn't declare these so the mapper dropped them on read and
+  // the UI couldn't write them. NL invoice PDFs went out with no IBAN.
+  iban: string | null;
+  bic: string | null;
+  country: string | null;
+  postcode: string | null;
+  city: string | null;
+  website: string | null;
+  invoice_prefix: string | null;
+  quote_prefix: string | null;
+  default_payment_terms: number | null;
+  // R61 SOW tone preset.
+  quote_tone: 'formal' | 'friendly' | 'detailed' | 'concise' | null;
   created_at: string;
   updated_at: string;
 };
@@ -79,6 +94,9 @@ export type DocumentRow = {
   sent_at: string | null;
   paid_at: string | null;
   total_amount: number;
+  // R63 / Package D4: AI-generated scope-of-work narrative. Column added
+  // in 20260505000001_sow_columns.sql.
+  scope_text: string | null;
   created_at: string;
   updated_at: string;
 };

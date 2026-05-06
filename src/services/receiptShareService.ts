@@ -46,7 +46,7 @@ function html(args: ReceiptArgs): string {
 
   return `<!doctype html><html><head><meta charset="utf-8"><style>
     body { font-family: -apple-system, Inter, sans-serif; color: #0D1B2A; padding: 40px; }
-    h1 { color: #E35205; margin: 0; font-size: 28px; }
+    h1 { color: #F97316; margin: 0; font-size: 28px; }
     .ref { color: #6B7280; font-size: 13px; margin-top: 2px; }
     .row { display: flex; justify-content: space-between; margin: 24px 0; padding: 16px 0; border-top: 1px solid #E5E7EB; border-bottom: 1px solid #E5E7EB; }
     .amount { font-size: 32px; font-weight: 700; color: #0D1B2A; }

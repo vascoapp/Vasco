@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SemanticColors, Palette } from '../../../src/theme/colors';
 import { Spacing } from '../../../src/theme/spacing';
 import { AIRecommendations } from '../../../src/components/intelligence/AIRecommendations';
+import { getCurrentUserId } from '../../../src/lib/currentUser';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 const { width } = Dimensions.get('window');
@@ -235,7 +236,10 @@ export default function HubScreen() {
 
         {/* AI Insights */}
         <View style={styles.section}>
-          <AIRecommendations userId="current-user" maxItems={3} showHeader />
+          {/* R58: was hardcoded `userId="current-user"` — every AI insight
+              fired by this surface was attributed to the placeholder string,
+              corrupting cohort attribution. Read live ref now. */}
+          <AIRecommendations userId={getCurrentUserId()} maxItems={3} showHeader />
         </View>
 
         {/* Today's Summary */}

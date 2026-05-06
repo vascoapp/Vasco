@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { registerSingletonReset } from './singletonReset';
 import type {
   Activity,
   ActivityStatus,
@@ -230,6 +231,17 @@ class ScheduleFragilityService {
   static getInstance(): ScheduleFragilityService {
     if (!ScheduleFragilityService.instance) {
       ScheduleFragilityService.instance = new ScheduleFragilityService();
+      registerSingletonReset(() => {
+        const inst = ScheduleFragilityService.instance;
+        inst.activities.clear();
+        inst.alerts.clear();
+        inst.scenarios.clear();
+        inst.fragilityCache.clear();
+        inst.criticalPathCache.clear();
+        inst.thresholds = DEFAULT_FRAGILITY_THRESHOLDS;
+        inst.weights = DEFAULT_FRAGILITY_WEIGHTS;
+        inst.listeners.forEach((l) => l());
+      });
     }
     return ScheduleFragilityService.instance;
   }

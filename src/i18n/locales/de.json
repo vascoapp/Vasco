@@ -363,7 +363,8 @@
   },
   "billing": {
     "upgradeRequired": "Upgrade erforderlich",
-    "viewPlans": "Abos ansehen"
+    "viewPlans": "Abos ansehen",
+    "formatNeedsContractor": "Dieses Format erfordert den Contractor-Plan."
   },
   "reasonCode": {
     "title": "Warum hast du das geändert?",
@@ -805,6 +806,37 @@
       "delivery": "Lieferung",
       "cert": "Zertifikat",
       "general": "Allgemein"
+    },
+    "push": {
+      "paidTitle": "Zahlung erhalten",
+      "paidBody": "Rechnung {{ref}}{{amount}} als bezahlt markiert.",
+      "amountSuffix": " (€{{amt}})",
+      "quoteAcceptedTitle": "Angebot angenommen",
+      "quoteAcceptedBody": "Angebot {{ref}} angenommen{{tier}}{{total}}.",
+      "quoteRejectedTitle": "Angebot abgelehnt",
+      "quoteRejectedBody": "Angebot {{ref}} abgelehnt.",
+      "changeRequestTitle": "Kunde wünscht Änderungen",
+      "changeRequestFallback": "Kunde bat um Überarbeitung von {{ref}}.",
+      "decisionTitle": "Kunde hat entschieden",
+      "decisionBody": "{{question}}: {{value}}",
+      "tierSelectTitle": "Kunde wählte eine Variante",
+      "tierSelectBody": "Erwägt {{tier}}.",
+      "genericTitle": "Kundenaktion",
+      "genericBody": "Aktivität auf Angebot {{ref}}.",
+      "unknownDecision": "Entscheidung",
+      "unknownTier": "eine Variante",
+      "unknownValue": "—",
+      "eveTitle": "Vasco hat etwas für dich",
+      "eveTapToReview": "Tippen zum Anzeigen",
+      "paymentReminderTitle": "Zahlungserinnerung",
+      "paymentReminderBody": "Rechnung für {{customer}} (€{{amount}}) ist seit {{days}} Tagen überfällig",
+      "quoteFollowupTitle": "Angebot nachfassen",
+      "quoteFollowupBody": "Angebot für {{customer}} wurde vor {{days}} Tagen gesendet — jetzt nachfassen",
+      "outcomeFollowupTitle": "Hat der Kunde reagiert?",
+      "outcomeFollowupBodyNamed": "Tippen, um zu erfassen, ob {{customer}} auf Ihr {{itemType}} reagiert hat.",
+      "outcomeFollowupBody": "Tippen, um das Ergebnis Ihres {{itemType}} zu erfassen.",
+      "jobReminderTitle": "Auftragserinnerung",
+      "jobReminderBody": "{{title}} beginnt in 1 Stunde"
     }
   },
   "insurance": {
@@ -2536,5 +2568,55 @@
     "evidence": "Basierend auf {{count}} verknüpften Datenquellen",
     "implication": "Geschätzte Auswirkung: €{{amount}}",
     "viewDetails": "Details für weitere Informationen anzeigen"
+  },
+  "tierGate": {
+    "jobLimitReached": "Auftrag-Limit erreicht ({{count}}). Für mehr upgraden.",
+    "quoteLimitReached": "Angebot-Limit erreicht ({{count}}/Monat).",
+    "invoiceLimitReached": "Rechnung-Limit erreicht ({{count}}/Monat).",
+    "aiInsightLimitReached": "KI-Insight-Limit erreicht ({{count}}/Monat).",
+    "clientLimitReached": "Kunden-Limit erreicht ({{count}}).",
+    "seatsInUse": "Alle {{count}} Team-Plätze belegt.",
+    "featureRequiresTier": "{{feature}} erfordert den {{tier}}-Plan."
+  },
+  "shareQuote": {
+    "failTitle": "Link konnte nicht erstellt werden",
+    "failBody": "Bitte erneut versuchen.",
+    "message": "{{greeting}}hier ist Ihr Angebot: {{url}}",
+    "greeting": "Hallo {{name}}, ",
+    "shareTitle": "Angebot",
+    "buttonLabel": "Angebot-Link teilen"
+  },
+  "paymentAlerts": {
+    "linkCreatedTitle": "Erfolg",
+    "linkCreatedBody": "Zahlungslink erstellt und kopiert!",
+    "reminderEmailTitle": "Gesendet",
+    "reminderEmailBody": "E-Mail-Erinnerung gesendet!",
+    "reminderWhatsappBody": "WhatsApp-Erinnerung gesendet!",
+    "copiedTitle": "Kopiert",
+    "copiedBody": "Zahlungslink in Zwischenablage:\n{{url}}"
+  },
+  "quoteToInvoice": {
+    "notFound": "Angebot {{id}} nicht gefunden",
+    "header": "Rechnung aus {{ref}}",
+    "autoNumberDue": "Auto-nummeriert · 14 Tage Zahlungsziel",
+    "quoteDetails": "Angebotsdetails",
+    "customer": "Kunde",
+    "job": "Auftrag",
+    "amount": "Betrag",
+    "lineItems": "Positionen",
+    "invoiceCreated": "Rechnung erstellt",
+    "invoiceRef": "Rechnung #{{id}}",
+    "matchesQuote": "Stimmt mit dem Angebot überein, um Zahlungsstreitigkeiten zu vermeiden.",
+    "createInvoice": "Rechnung erstellen",
+    "creating": "Erstellen…",
+    "generatePdf": "PDF erstellen",
+    "markSent": "Als gesendet markieren",
+    "createFailed": "Rechnung konnte nicht erstellt werden. Bitte erneut versuchen."
+  },
+  "whatsapp": {
+    "invoiceReminder": "Hallo {{name}},\n\nDies ist eine freundliche Erinnerung an Rechnung {{ref}} über €{{amount}}{{overdue}}.\n\nKönnten Sie die Zahlung zeitnah veranlassen?\n\nVielen Dank,\nGesendet über Vasco",
+    "invoiceOverdue": ", die seit {{days}} Tagen überfällig ist",
+    "quoteFollowup": "Hallo {{name}},\n\nIch wollte zum Angebot für \"{{job}}\" (€{{amount}}) nachfassen.\n\nHaben Sie Fragen oder möchten Sie fortfahren?\n\nMit freundlichen Grüßen,\nGesendet über Vasco",
+    "progressUpdate": "Hallo {{name}},\n\nKurzes Update zu \"{{job}}\": Heute {{hours}}h gearbeitet. Alles läuft nach Plan.\n\nGesendet über Vasco"
   }
 }

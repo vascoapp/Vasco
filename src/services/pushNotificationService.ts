@@ -12,6 +12,7 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MS_PER_HOUR } from '../utils/timeConstants';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import i18n from '../i18n/i18n';
 
 const TOKEN_KEY = '@vasco_push_token';
 const DEVICE_ID_KEY = '@vasco_device_id';
@@ -156,8 +157,12 @@ export async function schedulePaymentReminder(data: {
   try {
     const id = await Notifications.scheduleNotificationAsync({
       content: {
-        title: 'Betaalherinnering',
-        body: `Factuur voor ${data.customerName} (€${data.amount.toLocaleString(undefined)}) is over ${data.daysUntilDue} dagen verlopen`,
+        title: i18n.t('notifications.push.paymentReminderTitle'),
+        body: i18n.t('notifications.push.paymentReminderBody', {
+          customer: data.customerName,
+          amount: data.amount.toLocaleString(undefined),
+          days: data.daysUntilDue,
+        }),
         data: { type: 'payment_reminder', invoiceId: data.invoiceId },
       },
       trigger: {
@@ -180,8 +185,11 @@ export async function scheduleQuoteFollowUp(data: {
     const days = data.daysAfterSent ?? 3;
     const id = await Notifications.scheduleNotificationAsync({
       content: {
-        title: 'Offerte opvolgen',
-        body: `Offerte voor ${data.customerName} is ${days} dagen geleden verstuurd — tijd om op te volgen`,
+        title: i18n.t('notifications.push.quoteFollowupTitle'),
+        body: i18n.t('notifications.push.quoteFollowupBody', {
+          customer: data.customerName,
+          days,
+        }),
         data: { type: 'quote_followup', quoteId: data.quoteId },
       },
       trigger: {
@@ -211,12 +219,13 @@ export async function scheduleOutcomeFollowup(data: {
   try {
     const days = data.daysAfter ?? 4;
     const customer = data.customerName ?? '';
+    const itemType = data.itemType.replace(/_/g, ' ');
     const id = await Notifications.scheduleNotificationAsync({
       content: {
-        title: 'Did the customer respond?',
+        title: i18n.t('notifications.push.outcomeFollowupTitle'),
         body: customer
-          ? `Tap to log whether ${customer} responded to your ${data.itemType.replace(/_/g, ' ')}.`
-          : `Tap to log the outcome of your ${data.itemType.replace(/_/g, ' ')}.`,
+          ? i18n.t('notifications.push.outcomeFollowupBodyNamed', { customer, itemType })
+          : i18n.t('notifications.push.outcomeFollowupBody', { itemType }),
         data: { type: 'outcome_followup', itemId: data.itemId, itemType: data.itemType },
       },
       trigger: {
@@ -242,8 +251,8 @@ export async function scheduleJobReminder(data: {
 
     const id = await Notifications.scheduleNotificationAsync({
       content: {
-        title: 'Klus herinnering',
-        body: `${data.jobTitle} begint over 1 uur`,
+        title: i18n.t('notifications.push.jobReminderTitle'),
+        body: i18n.t('notifications.push.jobReminderBody', { title: data.jobTitle }),
         data: { type: 'job_reminder', jobId: data.jobId },
       },
       trigger: {

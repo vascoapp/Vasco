@@ -317,8 +317,25 @@ export default function QuoteDetailScreen() {
                 subtotal: sub,
                 vatAmount: vamt,
                 total: sub + vamt,
+                // R63 / Package D4: render the AI-generated SOW narrative in
+                // the PDF. Pulled from documents.scope_text via the R63
+                // mapper update; falls back to undefined for older quotes
+                // that pre-date the SOW feature.
+                scopeText: quote.description,
               };
-              await generateQuotePdf(pdfData, businessProfile.businessName, businessProfile.address, businessProfile.kvkNumber, businessProfile.vatNumber);
+              // R66 NL launch: thread vatScheme so KOR / Kleinunternehmer
+              // contractors get 0% VAT + the legal note on the quote PDF
+              // (matches the invoice PDF, R251). Pre-R66 the quote showed
+              // 21% even when the contractor was on KOR — confusing the
+              // customer when the invoice arrived showing 0%.
+              await generateQuotePdf(
+                pdfData,
+                businessProfile.businessName,
+                businessProfile.address,
+                businessProfile.kvkNumber,
+                businessProfile.vatNumber,
+                { vatScheme: businessProfile.vatScheme },
+              );
               markQuoteSent(quote.id);
             }}
             accessibilityRole="button"

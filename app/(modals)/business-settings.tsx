@@ -51,6 +51,10 @@ export default function BusinessSettingsScreen() {
   const [address, setAddress] = useState(businessProfile.address ?? '');
   const [email, setEmail] = useState(businessProfile.email ?? '');
   const [phone, setPhone] = useState(businessProfile.phone ?? '');
+  // R66 NL launch: payment fields. Without IBAN every NL invoice goes
+  // out with no bank details — customer can't pay.
+  const [iban, setIban] = useState(businessProfile.iban ?? '');
+  const [bic, setBic] = useState(businessProfile.bic ?? '');
   const [saving, setSaving] = useState(false);
 
   // Payment methods — get all available for the country, default all enabled
@@ -134,8 +138,23 @@ export default function BusinessSettingsScreen() {
       { label: t('settings.phone', 'Phone'), value: phone, onChange: setPhone, placeholder: country === 'UK' ? '+44 20 1234 5678' : country === 'DE' ? '+49 30 1234567' : country === 'FR' ? '+33 1 23 45 67 89' : country === 'ES' ? '+34 612 345 678' : country === 'IT' ? '+39 06 1234 5678' : '+31 6 12345678', keyboardType: 'phone-pad' as const },
     ];
 
-    return [...common, ...countryFields, ...contactFields];
-  }, [country, businessName, kvkNumber, vatNumber, registrationNumber, address, email, phone, t]);
+    // R66 NL launch: payment fields the migration declared but UI never
+    // exposed. NL contractors need IBAN; BIC is optional in EU SEPA.
+    // Country-specific IBAN format hint avoids "what do I type here".
+    const ibanPlaceholder =
+      country === 'UK' ? 'GB29 NWBK 6016 1331 9268 19' :
+      country === 'DE' ? 'DE89 3704 0044 0532 0130 00' :
+      country === 'FR' ? 'FR14 2004 1010 0505 0001 3M02 606' :
+      country === 'ES' ? 'ES91 2100 0418 4502 0005 1332' :
+      country === 'IT' ? 'IT60 X054 2811 1010 0000 0123 456' :
+      'NL91 ABNA 0417 1643 00';
+    const paymentFields: FieldDef[] = [
+      { label: t('settings.iban', 'IBAN'), value: iban, onChange: setIban, placeholder: ibanPlaceholder },
+      { label: t('settings.bic', 'BIC / SWIFT'), value: bic, onChange: setBic, placeholder: country === 'NL' ? 'ABNANL2A' : country === 'DE' ? 'COBADEFFXXX' : '' },
+    ];
+
+    return [...common, ...countryFields, ...contactFields, ...paymentFields];
+  }, [country, businessName, kvkNumber, vatNumber, registrationNumber, address, email, phone, iban, bic, t]);
 
   const handleSave = useCallback(async () => {
     // Sanitize all inputs
@@ -143,6 +162,10 @@ export default function BusinessSettingsScreen() {
     const cleanPhone = sanitizeInput(phone);
     const cleanKvk = sanitizeInput(kvkNumber);
     const cleanVat = sanitizeInput(vatNumber);
+    // R66: clean + validate IBAN/BIC. Strip spaces (visual grouping)
+    // before validating since users typically paste with spaces in.
+    const cleanIban = sanitizeInput(iban).replace(/\s/g, '').toUpperCase();
+    const cleanBic = sanitizeInput(bic).replace(/\s/g, '').toUpperCase();
 
     // Validate email if provided
     if (cleanEmail && !isValidEmail(cleanEmail)) {
@@ -164,6 +187,13 @@ export default function BusinessSettingsScreen() {
       Alert.alert(t('common.error', 'Error'), t('validation.invalidVAT', 'Please enter a valid VAT number (e.g. NL123456789B01)'));
       return;
     }
+    // R66 NL launch: validate IBAN — without this NL invoice PDFs
+    // render whatever string the contractor typed in the bank-details
+    // section. isValidIBAN was imported but never called pre-R66.
+    if (cleanIban && !isValidIBAN(cleanIban)) {
+      Alert.alert(t('common.error', 'Error'), t('validation.invalidIBAN', 'Please enter a valid IBAN (e.g. NL91 ABNA 0417 1643 00)'));
+      return;
+    }
 
     setSaving(true);
     try {
@@ -175,6 +205,11 @@ export default function BusinessSettingsScreen() {
         address: sanitizeInput(address).trim(),
         email: cleanEmail.trim(),
         phone: cleanPhone.trim(),
+        // R66 NL launch: persist IBAN + BIC so the invoice PDF can render
+        // them. updateBusinessProfile in AppState now writes these to
+        // business_settings.iban / .bic via the upsertBusinessSettings call.
+        iban: cleanIban,
+        bic: cleanBic,
         country,
         enabledPaymentMethods,
       });
@@ -185,7 +220,7 @@ export default function BusinessSettingsScreen() {
     } finally {
       setSaving(false);
     }
-  }, [businessName, kvkNumber, vatNumber, registrationNumber, address, email, phone, country, enabledPaymentMethods, updateBusinessProfile, router, t]);
+  }, [businessName, kvkNumber, vatNumber, registrationNumber, address, email, phone, iban, bic, country, enabledPaymentMethods, updateBusinessProfile, router, t]);
 
   const filled = fields.filter((f) => f.value.trim()).length;
   const percent = Math.round((filled / fields.length) * 100);

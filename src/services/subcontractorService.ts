@@ -30,6 +30,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
 // TYPES
@@ -190,6 +191,12 @@ class SubcontractorService {
   static getInstance(): SubcontractorService {
     if (!SubcontractorService.instance) {
       SubcontractorService.instance = new SubcontractorService();
+      registerSingletonReset(() => {
+        const inst = SubcontractorService.instance;
+        inst.subs = [...mockSubcontractors];
+        inst.assignments = [...mockAssignments];
+        inst.listeners.forEach((l) => l());
+      });
     }
     return SubcontractorService.instance;
   }

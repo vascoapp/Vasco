@@ -363,7 +363,8 @@
   },
   "billing": {
     "upgradeRequired": "Mise à niveau requise",
-    "viewPlans": "Voir les plans"
+    "viewPlans": "Voir les plans",
+    "formatNeedsContractor": "Ce format nécessite le plan Contractor."
   },
   "reasonCode": {
     "title": "Pourquoi avez-vous modifié ?",
@@ -805,6 +806,37 @@
       "delivery": "Livraison",
       "cert": "Certif.",
       "general": "Général"
+    },
+    "push": {
+      "paidTitle": "Paiement reçu",
+      "paidBody": "Facture {{ref}}{{amount}} marquée comme payée.",
+      "amountSuffix": " (€{{amt}})",
+      "quoteAcceptedTitle": "Devis accepté",
+      "quoteAcceptedBody": "Devis {{ref}} accepté{{tier}}{{total}}.",
+      "quoteRejectedTitle": "Devis refusé",
+      "quoteRejectedBody": "Devis {{ref}} refusé.",
+      "changeRequestTitle": "Le client demande des modifications",
+      "changeRequestFallback": "Le client a demandé de revoir {{ref}}.",
+      "decisionTitle": "Le client a décidé",
+      "decisionBody": "{{question}} : {{value}}",
+      "tierSelectTitle": "Le client a choisi une option",
+      "tierSelectBody": "Considère {{tier}}.",
+      "genericTitle": "Mise à jour client",
+      "genericBody": "Activité sur le devis {{ref}}.",
+      "unknownDecision": "Décision",
+      "unknownTier": "une option",
+      "unknownValue": "—",
+      "eveTitle": "Vasco a quelque chose pour vous",
+      "eveTapToReview": "Touchez pour voir",
+      "paymentReminderTitle": "Rappel de paiement",
+      "paymentReminderBody": "Facture pour {{customer}} (€{{amount}}) en retard de {{days}} jours",
+      "quoteFollowupTitle": "Relancer le devis",
+      "quoteFollowupBody": "Devis pour {{customer}} envoyé il y a {{days}} jours — à relancer",
+      "outcomeFollowupTitle": "Le client a-t-il répondu ?",
+      "outcomeFollowupBodyNamed": "Touchez pour noter si {{customer}} a répondu à votre {{itemType}}.",
+      "outcomeFollowupBody": "Touchez pour noter le résultat de votre {{itemType}}.",
+      "jobReminderTitle": "Rappel de chantier",
+      "jobReminderBody": "{{title}} commence dans 1 heure"
     }
   },
   "insurance": {
@@ -2536,5 +2568,55 @@
     "evidence": "Sur la base de {{count}} sources de données liées",
     "implication": "Impact estimé: €{{amount}}",
     "viewDetails": "Voir les détails pour plus d'informations"
+  },
+  "tierGate": {
+    "jobLimitReached": "Limite de chantiers atteinte ({{count}}). Upgrader pour plus.",
+    "quoteLimitReached": "Limite de devis atteinte ({{count}}/mois).",
+    "invoiceLimitReached": "Limite de factures atteinte ({{count}}/mois).",
+    "aiInsightLimitReached": "Limite d'insights IA atteinte ({{count}}/mois).",
+    "clientLimitReached": "Limite de clients atteinte ({{count}}).",
+    "seatsInUse": "Les {{count}} sièges d'équipe sont utilisés.",
+    "featureRequiresTier": "{{feature}} nécessite le plan {{tier}}."
+  },
+  "shareQuote": {
+    "failTitle": "Impossible de créer le lien",
+    "failBody": "Veuillez réessayer.",
+    "message": "{{greeting}}voici votre devis : {{url}}",
+    "greeting": "Bonjour {{name}}, ",
+    "shareTitle": "Devis",
+    "buttonLabel": "Partager le lien du devis"
+  },
+  "paymentAlerts": {
+    "linkCreatedTitle": "Succès",
+    "linkCreatedBody": "Lien de paiement créé et copié !",
+    "reminderEmailTitle": "Envoyé",
+    "reminderEmailBody": "Rappel par email envoyé !",
+    "reminderWhatsappBody": "Rappel WhatsApp envoyé !",
+    "copiedTitle": "Copié",
+    "copiedBody": "Lien de paiement copié :\n{{url}}"
+  },
+  "quoteToInvoice": {
+    "notFound": "Devis {{id}} introuvable",
+    "header": "Facture depuis {{ref}}",
+    "autoNumberDue": "Auto-numéroté · Échéance 14 jours",
+    "quoteDetails": "Détails du devis",
+    "customer": "Client",
+    "job": "Chantier",
+    "amount": "Montant",
+    "lineItems": "Lignes",
+    "invoiceCreated": "Facture créée",
+    "invoiceRef": "Facture #{{id}}",
+    "matchesQuote": "Correspond au devis pour éviter les litiges de paiement.",
+    "createInvoice": "Créer la facture",
+    "creating": "Création…",
+    "generatePdf": "Générer le PDF",
+    "markSent": "Marquer envoyée",
+    "createFailed": "Impossible de créer la facture. Veuillez réessayer."
+  },
+  "whatsapp": {
+    "invoiceReminder": "Bonjour {{name}},\n\nCeci est un rappel amical concernant la facture {{ref}} de €{{amount}}{{overdue}}.\n\nPourriez-vous organiser le paiement dans les meilleurs délais ?\n\nMerci,\nEnvoyé via Vasco",
+    "invoiceOverdue": " en retard de {{days}} jours",
+    "quoteFollowup": "Bonjour {{name}},\n\nJe voulais faire le suivi sur le devis pour \"{{job}}\" (€{{amount}}).\n\nAvez-vous des questions ou souhaitez-vous procéder ?\n\nCordialement,\nEnvoyé via Vasco",
+    "progressUpdate": "Bonjour {{name}},\n\nMise à jour rapide sur \"{{job}}\" : {{hours}}h travaillées aujourd'hui. Tout est en ordre.\n\nEnvoyé via Vasco"
   }
 }

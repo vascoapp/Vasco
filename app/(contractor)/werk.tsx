@@ -69,7 +69,9 @@ export default function WerkScreen() {
     try {
       const { loadSubscription, canCreateJob } = await import('../../src/services/subscriptionService');
       const sub = await loadSubscription();
-      const gate = canCreateJob(sub);
+      // R52: count active (scheduled/in-progress) jobs from real AppState.
+      const activeJobs = jobs.filter((j: any) => ['scheduled', 'in-progress', 'ingepland', 'bezig', 'accepted'].includes(j.status)).length;
+      const gate = canCreateJob(sub, activeJobs);
       if (!gate.allowed) {
         Alert.alert(
           t('billing.upgradeRequired', 'Upgrade required'),

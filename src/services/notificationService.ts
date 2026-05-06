@@ -9,6 +9,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MS_PER_DAY, MS_PER_HOUR } from '../utils/timeConstants';
+import { registerSingletonReset } from './singletonReset';
 
 const PERSIST_KEY = '@vasco_notifications_v2';
 
@@ -94,6 +95,17 @@ class NotificationService {
     if (!NotificationService.instance) {
       NotificationService.instance = new NotificationService();
       NotificationService.instance.hydrate();
+      // R47/R48: clear in-memory notifications + preferences on user
+      // change. Singleton survives logout, so without this user A's
+      // marked-read notifications + preference toggles would carry over to
+      // user B. Routed through registerSingletonReset for centralized wiring.
+      registerSingletonReset((userId) => {
+        NotificationService.instance.notifications = [];
+        NotificationService.instance.preferences = [...defaultPreferences];
+        NotificationService.instance.hydrated = false;
+        NotificationService.instance.notify();
+        if (userId) NotificationService.instance.hydrate();
+      });
     }
     return NotificationService.instance;
   }

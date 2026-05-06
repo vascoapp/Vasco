@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
 // TYPES
@@ -327,6 +328,13 @@ class ServiceContractsService {
   static getInstance(): ServiceContractsService {
     if (!ServiceContractsService.instance) {
       ServiceContractsService.instance = new ServiceContractsService();
+      registerSingletonReset(() => {
+        const inst = ServiceContractsService.instance;
+        inst.contracts = [...mockContracts];
+        inst.templates = [...mockTemplates];
+        inst.renewals = [...mockRenewals];
+        inst.listeners.forEach((l) => l());
+      });
     }
     return ServiceContractsService.instance;
   }

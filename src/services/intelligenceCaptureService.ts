@@ -11,7 +11,23 @@
 // =============================================================================
 
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { getCurrentUserId } from '../lib/currentUser';
+import { getAuthedUserId } from '../lib/currentUser';
+import { logIntelligenceWriteFailure } from '../intelligence/dataCollector';
+import { isTempIdFast } from '../lib/idShape';
+
+// R59: nullify temp ids before writing FK columns. The cohort tables
+// (photo_analyses.job_id, photo_analyses.quote_id, job_quality_signals.job_id,
+// customer_portal_events.quote_id) reference real BE uuids — writing a
+// `j-{ts}` tempId either fails the FK constraint (losing the cohort
+// signal entirely) or, if the column is plain text, writes a stale string
+// that no downstream cohort RPC can join against. Better to write `null`
+// for the FK and keep the rest of the signal so the moat row lands; the
+// caller can retry with the real id once the offline queue flushes if
+// they care about the linkage.
+function nullifyTempId(id: string | null | undefined): string | null {
+  if (!id) return null;
+  return isTempIdFast(id) ? null : id;
+}
 
 // ---------------------------------------------------------------------------
 // 1. Generator dismissals
@@ -24,7 +40,8 @@ export async function recordGeneratorDismissal(input: {
   reason?: string;
 }): Promise<void> {
   if (!isSupabaseConfigured) return;
-  const userId = getCurrentUserId();
+  // R58: getAuthedUserId returns null for placeholder; guard catches it.
+  const userId = getAuthedUserId();
   if (!userId) return;
   try {
     await (supabase.from as any)('generator_dismissals').insert({
@@ -34,8 +51,8 @@ export async function recordGeneratorDismissal(input: {
       screen: input.screen ?? null,
       reason: input.reason ?? null,
     });
-  } catch {
-    // silent
+  } catch (err) {
+    await logIntelligenceWriteFailure('generator_dismissals.insert', userId, err);
   }
 }
 
@@ -72,14 +89,21 @@ export async function recordPortalEvent(input: {
     await (supabase.from as any)('customer_portal_events').insert({
       portal_token: input.portalToken,
       contractor_user_id: input.contractorUserId ?? null,
-      quote_id: input.quoteId ?? null,
+      // R59: nullify temp ids — see helper comment.
+      quote_id: nullifyTempId(input.quoteId),
       decision_id: input.decisionId ?? null,
       event_type: input.eventType,
       duration_ms: input.durationMs ?? null,
       metadata: input.metadata ?? null,
     });
-  } catch {
-    // silent
+  } catch (err) {
+    // Anon write — no contractor uid available, route under contractorUserId
+    // when known so we can later slice telemetry by contractor.
+    await logIntelligenceWriteFailure(
+      'customer_portal_events.insert',
+      input.contractorUserId ?? 'anon',
+      err,
+    );
   }
 }
 
@@ -102,13 +126,17 @@ export interface PhotoAnalysisRow {
 
 export async function persistPhotoAnalysis(input: PhotoAnalysisRow): Promise<void> {
   if (!isSupabaseConfigured) return;
-  const userId = getCurrentUserId();
+  // R58: getAuthedUserId returns null for placeholder; guard catches it.
+  const userId = getAuthedUserId();
   if (!userId) return;
   try {
     await (supabase.from as any)('photo_analyses').insert({
       user_id: userId,
-      job_id: input.jobId ?? null,
-      quote_id: input.quoteId ?? null,
+      // R59: nullify temp ids — photo_analyses.job_id / quote_id are FK
+      // columns; writing `j-{ts}` would fail the constraint and lose the
+      // entire row including the analysis payload that has cohort value.
+      job_id: nullifyTempId(input.jobId),
+      quote_id: nullifyTempId(input.quoteId),
       storage_path: input.storagePath ?? null,
       trade: input.trade ?? null,
       detected_rooms: input.detectedRooms ?? null,
@@ -118,8 +146,8 @@ export async function persistPhotoAnalysis(input: PhotoAnalysisRow): Promise<voi
       estimated_cost_eur: input.estimatedCostEur ?? null,
       raw_response: input.rawResponse ?? null,
     });
-  } catch {
-    // silent
+  } catch (err) {
+    await logIntelligenceWriteFailure('photo_analyses.insert', userId, err);
   }
 }
 
@@ -139,21 +167,35 @@ export interface JobQualityInput {
 
 export async function upsertJobQualitySignal(input: JobQualityInput): Promise<void> {
   if (!isSupabaseConfigured) return;
-  const userId = getCurrentUserId();
+  // R58: getAuthedUserId returns null for placeholder; guard catches it.
+  const userId = getAuthedUserId();
   if (!userId) return;
+  // R59: job_id is the upsert key — can't be null. If the caller still
+  // holds a temp id (job hasn't flushed to BE yet), skip the write and
+  // log telemetry. The form-level UI should retry post-refresh, or we
+  // wire a queued-pending-write pattern in a follow-on round. Failing
+  // the BE call here would log a misleading FK error.
+  if (isTempIdFast(input.jobId)) {
+    await logIntelligenceWriteFailure(
+      'job_quality_signals.upsert',
+      userId,
+      new Error(`skipped: job_id is temp (${input.jobId}) — flush job first`),
+    );
+    return;
+  }
   try {
     await (supabase.from as any)('job_quality_signals').upsert({
       job_id: input.jobId,
       user_id: userId,
-      customer_id: input.customerId ?? null,
+      customer_id: nullifyTempId(input.customerId),
       paid_on_time: input.paidOnTime ?? null,
       customer_review_score: input.customerReviewScore ?? null,
       customer_review_text: input.customerReviewText ?? null,
       referral_generated: input.referralGenerated ?? false,
       rebook_within_180d: input.rebookWithin180d ?? false,
     });
-  } catch {
-    // silent
+  } catch (err) {
+    await logIntelligenceWriteFailure('job_quality_signals.upsert', userId, err);
   }
 }
 
@@ -170,7 +212,8 @@ export interface CashflowGapPrediction {
 
 export async function getCashflowGapPrediction(): Promise<CashflowGapPrediction | null> {
   if (!isSupabaseConfigured) return null;
-  const userId = getCurrentUserId();
+  // R58: getAuthedUserId returns null for placeholder; guard catches it.
+  const userId = getAuthedUserId();
   if (!userId) return null;
   try {
     const { data, error } = await (supabase.from as any)('ml_cashflow_gap_predictions')
@@ -198,7 +241,8 @@ export interface CapacityOverrunPrediction {
 
 export async function getCapacityOverrunPrediction(): Promise<CapacityOverrunPrediction | null> {
   if (!isSupabaseConfigured) return null;
-  const userId = getCurrentUserId();
+  // R58: getAuthedUserId returns null for placeholder; guard catches it.
+  const userId = getAuthedUserId();
   if (!userId) return null;
   try {
     const { data, error } = await (supabase.from as any)('ml_capacity_overrun_predictions')
@@ -226,7 +270,8 @@ export interface SupplierLeadtimePrediction {
 
 export async function getSupplierLeadtimePredictions(): Promise<SupplierLeadtimePrediction[]> {
   if (!isSupabaseConfigured) return [];
-  const userId = getCurrentUserId();
+  // R58: getAuthedUserId returns null for placeholder; guard catches it.
+  const userId = getAuthedUserId();
   if (!userId) return [];
   try {
     const { data, error } = await (supabase.from as any)('ml_supplier_leadtime_predictions')
@@ -421,7 +466,8 @@ export interface DailyMetricPoint {
 
 export async function getDailyMetrics(days = 90): Promise<DailyMetricPoint[]> {
   if (!isSupabaseConfigured) return [];
-  const userId = getCurrentUserId();
+  // R58: getAuthedUserId returns null for placeholder; guard catches it.
+  const userId = getAuthedUserId();
   if (!userId) return [];
   try {
     const { data, error } = await (supabase.rpc as any)('query_daily_metrics', {

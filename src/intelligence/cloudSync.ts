@@ -11,6 +11,18 @@ import { supabase as _supabase, isSupabaseConfigured } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ContractorLearningProfile } from './learningStorage';
 import { logWarn } from '../utils/errorHandler';
+import { isTempIdFast } from '../lib/idShape';
+
+// R59: nullify temp ids before writing FK columns. Same hazard as the
+// intelligenceCaptureService writes — `job_outcomes.job_id`, etc. are
+// FK to real BE rows. Writing a temp id either fails the FK or stores
+// a stale string that no cohort RPC can join. Better to write null so
+// the row at least lands with the analysis payload that has cohort
+// value; the caller can retry once flush completes.
+function nullifyTempId(id: string | null | undefined): string | null {
+  if (!id) return null;
+  return isTempIdFast(id) ? null : id;
+}
 
 // Cast to any so insert/select calls don't hit typegen drift while the real
 // Supabase schema lives server-side. Regenerate types post-launch to remove.
@@ -151,6 +163,9 @@ export async function syncJobOutcome(
 ): Promise<boolean> {
   if (!isSupabaseConfigured) return false;
 
+  // R59: skip if jobId is temp — job_outcomes.job_id is the cohort key,
+  // null isn't useful here. Caller retries post-flush.
+  if (isTempIdFast(outcome.jobId)) return false;
   try {
     const { error } = await supabase.from('job_outcomes').insert({
       user_id: userId,
@@ -162,7 +177,7 @@ export async function syncJobOutcome(
       estimated_cost: outcome.estimatedCost,
       actual_cost: outcome.actualCost,
       margin_percent: outcome.marginPercent,
-      customer_id: outcome.customerId,
+      customer_id: nullifyTempId(outcome.customerId),
       completed_at: outcome.completedAt,
     });
     return !error;
@@ -190,11 +205,15 @@ export async function syncInvoiceOutcome(
 ): Promise<boolean> {
   if (!isSupabaseConfigured) return false;
 
+  // R59: invoiceId is the cohort key — must be non-temp. The FE id for
+  // invoices is the docNumber (e.g. INV-260001) which is a stable string,
+  // not a temp pattern, so this guard normally passes; defensive only.
+  if (isTempIdFast(outcome.invoiceId)) return false;
   try {
     const { error } = await supabase.from('invoice_outcomes').insert({
       user_id: userId,
       invoice_id: outcome.invoiceId,
-      customer_id: outcome.customerId,
+      customer_id: nullifyTempId(outcome.customerId),
       amount: outcome.amount,
       issued_at: outcome.issuedAt,
       due_at: outcome.dueAt,
@@ -228,14 +247,16 @@ export async function syncAccountingLoop(
 ): Promise<boolean> {
   if (!isSupabaseConfigured) return false;
 
+  // R59: job_id is the upsert key — must be non-temp.
+  if (isTempIdFast(loop.jobId)) return false;
   try {
     const { error } = await supabase.from('accounting_loops').upsert({
       user_id: userId,
       job_id: loop.jobId,
-      customer_id: loop.customerId,
-      quote_id: loop.quoteId,
-      invoice_id: loop.invoiceId,
-      payment_id: loop.paymentId,
+      customer_id: nullifyTempId(loop.customerId),
+      quote_id: nullifyTempId(loop.quoteId),
+      invoice_id: nullifyTempId(loop.invoiceId),
+      payment_id: nullifyTempId(loop.paymentId),
       external_invoice_id: loop.externalInvoiceId,
       current_stage: loop.currentStage,
       amounts: loop.amounts,

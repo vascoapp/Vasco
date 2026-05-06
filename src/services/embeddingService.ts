@@ -9,7 +9,8 @@
 // =============================================================================
 
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { getCurrentUserId } from '../lib/currentUser';
+import { getAuthedUserId } from '../lib/currentUser';
+import { subscribeIdRemap, type IdRemapEvent } from './idRemapBus';
 
 interface EmbedResult {
   ok: boolean;
@@ -33,7 +34,7 @@ export async function embedCustomer(input: {
   customerId: string;
   text: string;
 }): Promise<void> {
-  const userId = getCurrentUserId();
+  const userId = getAuthedUserId();
   if (!userId || !input.customerId || !input.text) return;
   await callEmbed({ table: 'customer', key: input.customerId, text: input.text, userId });
 }
@@ -53,7 +54,7 @@ export async function embedQuoteLine(input: {
   text: string;
   quoteId?: string;
 }): Promise<void> {
-  const userId = getCurrentUserId();
+  const userId = getAuthedUserId();
   if (!userId || !input.lineId || !input.text) return;
   await callEmbed({ table: 'quote_line', key: input.lineId, text: input.text, userId, quoteId: input.quoteId });
 }
@@ -85,9 +86,37 @@ export async function findSimilarMaterials(materialKey: string, limit = 5): Prom
   }
 }
 
+// ---------------------------------------------------------------------------
+// R54: id-remap support
+// ---------------------------------------------------------------------------
+// Customer embeddings landed under tempIds when addCustomer ran offline.
+// After the offline queue flushes and BE assigns a real uuid, the
+// customer_embeddings row is keyed under the discarded temp id —
+// match_similar_customers by real id misses forever.
+//
+// On remap, re-fire the embed under the real id. The original payload
+// (name/email/phone/address) flows through the bus so we don't need a
+// BE round-trip to derive the embed text.
+
+let _customerRemapInit = false;
+function initCustomerRemapListener(): void {
+  if (_customerRemapInit) return;
+  _customerRemapInit = true;
+  subscribeIdRemap((e: IdRemapEvent) => {
+    if (e.table !== 'customers') return;
+    const p = (e.payload ?? {}) as { name?: string; email?: string; phone?: string; address?: string };
+    const text = [p.name, p.email, p.phone, p.address].filter(Boolean).join(' ');
+    if (text.length > 3) {
+      void embedCustomer({ customerId: e.realId, text });
+    }
+  });
+}
+
+initCustomerRemapListener();
+
 export async function findSimilarCustomersByText(text: string, limit = 5): Promise<Array<{ customerId: string; similarity: number }>> {
   if (!isSupabaseConfigured) return [];
-  const userId = getCurrentUserId();
+  const userId = getAuthedUserId();
   if (!userId) return [];
   // First embed the query text
   try {

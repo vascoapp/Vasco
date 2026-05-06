@@ -151,8 +151,8 @@ const DarkTheme = {
   roleCFO: '#2563EB',       // Blue for CFO
   roleCOO: '#7C3AED',       // Purple for COO
   roleSiteLead: '#D2691E',  // Terracotta for Site Lead
-  roleDirector: '#E35205',  // Hermes Orange for Director
-  roleContractor: '#E35205', // Hermes Orange for Contractor
+  roleDirector: '#F97316',  // Hermes Orange for Director
+  roleContractor: '#F97316', // Hermes Orange for Contractor
 
   // Chart/Data visualization
   chartPrimary: Palette.vascoPrimary,

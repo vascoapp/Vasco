@@ -26,8 +26,8 @@ const ROLE_COLORS: Record<string, string> = {
   cfo: '#2563EB',       // Blue for CFO
   coo: '#7C3AED',       // Purple for COO
   sitelead: '#D2691E',  // Terracotta for Site Lead
-  director: '#E35205',  // Hermes Orange for Director
-  contractor: '#E35205', // Hermes Orange for Contractor
+  director: '#F97316',  // Hermes Orange for Director
+  contractor: '#F97316', // Hermes Orange for Contractor
 };
 
 type ReportType = {

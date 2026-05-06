@@ -10,6 +10,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Country } from '../context/AuthContext';
+import i18n from '../i18n/i18n';
 
 // ─── Tier Definitions ──────────────────────────────────────────────────────
 
@@ -385,42 +386,60 @@ export type GateResult =
   | { allowed: true }
   | { allowed: false; reason: string; upgradeFeature: string; requiredTier: SubscriptionTier };
 
-export function canCreateJob(state: SubscriptionState): GateResult {
+// R52: gate functions now accept an optional `liveCount` derived from
+// AppState (jobs/quotes/invoices/customers arrays) — single source of
+// truth. The previous design read counters off `state` (clientCount,
+// quotesUsedThisMonth, etc.), but those counters were never incremented
+// anywhere in the codebase, so every gate trivially allowed unlimited
+// usage on every tier. Free-tier limits (5 jobs / 10 quotes / 25 clients
+// etc.) were declared but completely toothless.
+//
+// Call sites pass the relevant array length / monthly count from AppState
+// so the gates honor real usage. The legacy `state.xxxCount` / `xxxUsed`
+// fields stay as a fallback for callers that don't have AppState handy
+// (e.g. background jobs).
+
+export function canCreateJob(state: SubscriptionState, liveCount?: number): GateResult {
   const limits = getTierLimits(state.tier);
-  if (state.activeJobCount >= limits.maxActiveJobs) {
-    return { allowed: false, reason: `Job limit reached (${limits.maxActiveJobs}). Upgrade for more.`, upgradeFeature: 'More active jobs', requiredTier: 'advanced' };
+  const count = liveCount ?? state.activeJobCount;
+  if (count >= limits.maxActiveJobs) {
+    return { allowed: false, reason: i18n.t('tierGate.jobLimitReached', { count: limits.maxActiveJobs }), upgradeFeature: 'More active jobs', requiredTier: 'advanced' };
   }
   return { allowed: true };
 }
 
-export function canCreateQuote(state: SubscriptionState): GateResult {
+export function canCreateQuote(state: SubscriptionState, liveCount?: number): GateResult {
   const limits = getTierLimits(state.tier);
-  if (state.quotesUsedThisMonth >= limits.maxQuotesPerMonth) {
-    return { allowed: false, reason: `Quote limit reached (${limits.maxQuotesPerMonth}/month).`, upgradeFeature: 'More quotes', requiredTier: 'advanced' };
+  const count = liveCount ?? state.quotesUsedThisMonth;
+  if (count >= limits.maxQuotesPerMonth) {
+    return { allowed: false, reason: i18n.t('tierGate.quoteLimitReached', { count: limits.maxQuotesPerMonth }), upgradeFeature: 'More quotes', requiredTier: 'advanced' };
   }
   return { allowed: true };
 }
 
-export function canCreateInvoice(state: SubscriptionState): GateResult {
+export function canCreateInvoice(state: SubscriptionState, liveCount?: number): GateResult {
   const limits = getTierLimits(state.tier);
-  if (state.invoicesUsedThisMonth >= limits.maxInvoicesPerMonth) {
-    return { allowed: false, reason: `Invoice limit reached (${limits.maxInvoicesPerMonth}/month).`, upgradeFeature: 'More invoices', requiredTier: 'advanced' };
+  const count = liveCount ?? state.invoicesUsedThisMonth;
+  if (count >= limits.maxInvoicesPerMonth) {
+    return { allowed: false, reason: i18n.t('tierGate.invoiceLimitReached', { count: limits.maxInvoicesPerMonth }), upgradeFeature: 'More invoices', requiredTier: 'advanced' };
   }
   return { allowed: true };
 }
 
-export function canUseAiInsight(state: SubscriptionState): GateResult {
+export function canUseAiInsight(state: SubscriptionState, liveCount?: number): GateResult {
   const limits = getTierLimits(state.tier);
-  if (state.aiInsightsUsedThisMonth >= limits.maxAiInsightsPerMonth) {
-    return { allowed: false, reason: `AI insight limit reached (${limits.maxAiInsightsPerMonth}/month).`, upgradeFeature: 'More AI insights', requiredTier: 'pro' };
+  const count = liveCount ?? state.aiInsightsUsedThisMonth;
+  if (count >= limits.maxAiInsightsPerMonth) {
+    return { allowed: false, reason: i18n.t('tierGate.aiInsightLimitReached', { count: limits.maxAiInsightsPerMonth }), upgradeFeature: 'More AI insights', requiredTier: 'pro' };
   }
   return { allowed: true };
 }
 
-export function canAddClient(state: SubscriptionState): GateResult {
+export function canAddClient(state: SubscriptionState, liveCount?: number): GateResult {
   const limits = getTierLimits(state.tier);
-  if (state.clientCount >= limits.maxClients) {
-    return { allowed: false, reason: `Client limit reached (${limits.maxClients}).`, upgradeFeature: 'More clients', requiredTier: 'advanced' };
+  const count = liveCount ?? state.clientCount;
+  if (count >= limits.maxClients) {
+    return { allowed: false, reason: i18n.t('tierGate.clientLimitReached', { count: limits.maxClients }), upgradeFeature: 'More clients', requiredTier: 'advanced' };
   }
   return { allowed: true };
 }
@@ -429,7 +448,7 @@ export function canAddTeamMember(state: SubscriptionState): GateResult {
   const limits = getTierLimits(state.tier);
   const totalSeats = limits.maxTeamSeats + state.seatsPurchased;
   if (state.seatsUsed >= totalSeats) {
-    return { allowed: false, reason: `All ${totalSeats} team seats in use.`, upgradeFeature: 'More team seats', requiredTier: 'contractor' };
+    return { allowed: false, reason: i18n.t('tierGate.seatsInUse', { count: totalSeats }), upgradeFeature: 'More team seats', requiredTier: 'contractor' };
   }
   return { allowed: true };
 }
@@ -470,7 +489,7 @@ export function canUseFeature(state: SubscriptionState, feature: keyof TierLimit
     const info = featureInfo[feature];
     return {
       allowed: false,
-      reason: `${info?.name ?? feature} requires the ${info?.tier ?? 'pro'} plan.`,
+      reason: i18n.t('tierGate.featureRequiresTier', { feature: info?.name ?? feature, tier: info?.tier ?? 'pro' }),
       upgradeFeature: info?.name ?? String(feature),
       requiredTier: info?.tier ?? 'pro',
     };

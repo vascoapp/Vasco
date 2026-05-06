@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
 // TYPES
@@ -122,6 +123,12 @@ class UpsellEngineService {
   static getInstance(): UpsellEngineService {
     if (!UpsellEngineService.instance) {
       UpsellEngineService.instance = new UpsellEngineService();
+      registerSingletonReset(() => {
+        const inst = UpsellEngineService.instance;
+        inst.recommendations = [...mockActiveRecommendations];
+        inst.history = [];
+        inst.listeners.forEach((l) => l());
+      });
     }
     return UpsellEngineService.instance;
   }
