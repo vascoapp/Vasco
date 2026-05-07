@@ -40,7 +40,7 @@ import { ingestPdfStub } from '../ingestion/ingestionStub';
 import { rowToExtractedDocument } from '../ingestion/extractionBridge';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { getCurrentUserId, getCurrentCountry, getCurrentTrade, setCurrentUser, subscribeUserChange } from '../lib/currentUser';
-import { isTempIdFast } from '../lib/idShape';
+import { isTempIdFast, isUuid } from '../lib/idShape';
 import { jobUpdatesToRowPayload } from '../lib/mappers';
 import { USE_SEED_DATA } from '../config/demo';
 import {
@@ -1106,12 +1106,20 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
         // Persist to Supabase — moat-critical (cohort signal). Offline → queue.
         if (isSupabaseConfigured) {
+          // R66 round 18: customer + job arrive as FE display strings on the
+          // empty-state path (e.g. tiered-quote.tsx fallback to t('customer')
+          // localized "Klant"/"Customer"/"Kunde"). Both columns are uuid FKs.
+          // Without this guard the BE rejected every fresh-contractor quote
+          // (UUID format violation), the offline queue retried 5× and
+          // dropped, the cohort moat lost the signal, and on cold start the
+          // quote vanished. Now: null out non-UUIDs so the row lands; FE
+          // Quote.customer keeps the display string locally.
           const docPayload = {
             doc_type: 'quote' as const,
             status: 'draft' as const,
             document_number: docNumber,
-            customer_id: customer,
-            job_id: job,
+            customer_id: isUuid(customer) ? customer : null,
+            job_id: isUuid(job) ? job : null,
             total_amount: total,
           };
           const lineItemPayload = items.map((item, idx) => ({
@@ -1227,13 +1235,19 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
         // Persist to Supabase
         if (isSupabaseConfigured) {
+          // R66 round 18: same uuid guard as addQuote — sourceQuote.customer /
+          // .job are FE display strings when the quote was created via the
+          // empty-state path. customer_id / job_id are uuid FK columns; the
+          // BE rejected and the converted invoice was lost.
+          const safeCustomerId = isUuid(sourceQuote.customer) ? sourceQuote.customer : null;
+          const safeJobId = isUuid(sourceQuote.job) ? sourceQuote.job : null;
           try {
             const row = await createDocument({
               doc_type: 'invoice',
               status: 'draft',
               document_number: docNumber,
-              customer_id: sourceQuote.customer,
-              job_id: sourceQuote.job,
+              customer_id: safeCustomerId,
+              job_id: safeJobId,
               total_amount: sourceQuote.amount,
               due_date: dueDate.toISOString(),
               source_quote_id: sourceQuoteId,
@@ -1264,8 +1278,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                   doc_type: 'invoice',
                   status: 'draft',
                   document_number: docNumber,
-                  customer_id: sourceQuote.customer,
-                  job_id: sourceQuote.job,
+                  customer_id: safeCustomerId,
+                  job_id: safeJobId,
                   total_amount: sourceQuote.amount,
                   due_date: dueDate.toISOString(),
                   source_quote_id: sourceQuoteId,
@@ -1291,8 +1305,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         if (isSupabaseConfigured) {
           // R44: was fire-and-forget — offline deletes ghosted (local row gone,
           // BE row still there). Now queues for retry.
+          // R66 round 8: thread docType so deleteDocument hard-deletes the
+          // quote (pre-acceptance quotes aren't tax records).
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
-            persistOrQueue('documents', 'delete', () => deleteDocument(id), { rowId: id }),
+            persistOrQueue('documents', 'delete', () => deleteDocument(id, 'quote'), { rowId: id }),
           ).catch((err) =>
             logWarn('AppState', `removeQuote persist failed: ${err}`)
           );
@@ -1302,8 +1318,23 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setInvoices((prev) => prev.filter((invoice) => invoice.id !== id));
         if (isSupabaseConfigured) {
           // R44: same offline-queue fix as removeQuote.
+          // R66 round 8: docType='invoice' triggers soft-delete (Belastingdienst
+          // Art. 52 AWR + GoBD §147 HGB require 7-10y retention of tax records).
+          // Row stays in BE with deleted_at set; FE queries filter via RLS.
+          // R66 round 9: queue as 'update' with deleted_at payload (NOT 'delete')
+          // so the offline-then-flushed replay path also soft-deletes. The
+          // generic queue's op==='delete' branch hard-deletes; we don't want
+          // that for tax records. The live attempt still calls deleteDocument
+          // with docType='invoice' (which soft-deletes) — only the offline
+          // replay path needed the explicit op=update steering.
+          const deletedAt = new Date().toISOString();
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
-            persistOrQueue('documents', 'delete', () => deleteDocument(id), { rowId: id }),
+            persistOrQueue(
+              'documents',
+              'update',
+              () => deleteDocument(id, 'invoice'),
+              { rowId: id, payload: { deleted_at: deletedAt } },
+            ),
           ).catch((err) =>
             logWarn('AppState', `removeInvoice persist failed: ${err}`)
           );
@@ -1323,9 +1354,20 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           const dbUpdates: Record<string, unknown> = {};
           if (updates.amount !== undefined) dbUpdates.total_amount = updates.amount;
           if (updates.status !== undefined) dbUpdates.status = updates.status;
-          if (updates.customer !== undefined) dbUpdates.customer_id = updates.customer;
+          // R66 round 13: dropped `customer` mapping — caller passed the
+          // customer's display NAME (string) but the column is a UUID FK.
+          // The BE rejected every save with an FK / format violation,
+          // local React state retained a phantom `customer` field that
+          // reverted on next BE refresh. Customer-edit affordance on the
+          // invoice screen is removed in the same round; renaming a
+          // customer is a customer-record edit, not a per-invoice edit.
           if ((updates as any).dueDate !== undefined) dbUpdates.due_date = (updates as any).dueDate;
           if ((updates as any).paidAt !== undefined) dbUpdates.paid_at = (updates as any).paidAt;
+          // R66 round 13: persist internal notes (was the silent-loss bug
+          // matching the R12 timeEntries pattern — full UI flow, no DB
+          // column, no mapper coverage). Migration 20260507000003 adds
+          // documents.notes; mapper now wires it through.
+          if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
           if (Object.keys(dbUpdates).length > 0) {
             import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
               persistOrQueue('documents', 'update', () => updateDocument(id, dbUpdates), { rowId: id, payload: dbUpdates }),
@@ -1594,20 +1636,26 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const matRow = materials.find((m) => m.id === jm.materialId);
         const matName = (matRow?.name ?? String(jm.materialId ?? '')).trim();
         const supRow = jm.supplierId ? suppliers.find((s) => s.id === jm.supplierId) : undefined;
-        // AI data collector — material purchase event (runs for both online
-        // and offline-fallback paths now).
-        emitMaterialPurchased(getCurrentUserId(), {
-          materialName: matName || 'unknown',
-          supplierId: jm.supplierId ?? 'unknown',
-          supplierName: supRow?.name ?? jm.supplierId ?? 'unknown',
-          price: jm.unitPrice ?? 0,
-          quantity: jm.quantity ?? 1,
-          unit: jm.unit ?? 'stuk',
-          trade,
-          country,
-          jobId: jm.jobId,
-        }).catch(() => {});
+        // AI data collector — material purchase event. R66 round 23: only
+        // emit when there's a real price. Pre-R23 the `?? 0` fallback
+        // landed phantom price=0 rows in `material_price_history` (R241/R283
+        // single-write path) for every "contractor forgot the price field"
+        // entry, dragging the cohort price stats toward zero. The R22 price
+        // input made the contributing path explicit, so no-price entries
+        // should now stay out of the moat entirely. The qualityObservation
+        // resolution already gated on >0, just align the emit.
         if ((jm.unitPrice ?? 0) > 0) {
+          emitMaterialPurchased(getCurrentUserId(), {
+            materialName: matName || 'unknown',
+            supplierId: jm.supplierId ?? 'unknown',
+            supplierName: supRow?.name ?? jm.supplierId ?? 'unknown',
+            price: jm.unitPrice ?? 0,
+            quantity: jm.quantity ?? 1,
+            unit: jm.unit ?? 'stuk',
+            trade,
+            country,
+            jobId: jm.jobId,
+          }).catch(() => {});
           import('../intelligence/learningStorage').then((m) =>
             m.resolveOutcomesFromMaterialPurchase(jm.unitPrice ?? 0),
           ).catch(() => {});
@@ -1682,14 +1730,20 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             }
           : undefined;
         const result = await exportInvoiceToMoneybird(invoiceId, payload);
-        if (result.success) {
-          setLastMoneybirdExport((prev) => ({
-            ...prev,
-            [invoiceId]: result.exportedAt,
-          }));
-        } else if (result.error) {
-          logWarn('AppState', `Moneybird export failed: ${result.error}`);
+        if (!result.success) {
+          // R66 round 9: was logging the error and silently returning. Caller
+          // (`app/invoices/[id].tsx:handleExportMoneybird`) wraps in try/catch
+          // expecting a throw on failure — without it, contractor sees success
+          // haptic on a Moneybird auth/network failure. Same bug class as
+          // R66.45 (createPaymentLink). Now throws so the caller's error
+          // surface fires.
+          if (result.error) logWarn('AppState', `Moneybird export failed: ${result.error}`);
+          throw new Error(result.error ?? 'Moneybird export failed');
         }
+        setLastMoneybirdExport((prev) => ({
+          ...prev,
+          [invoiceId]: result.exportedAt,
+        }));
       },
       addInvoiceFromJob: async (jobId: string) => {
         const job = jobs.find((j) => j.id === jobId);
@@ -1857,9 +1911,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // entire job-creation moat path while addJob() flowed through it.
         let finalJobId = tempId;
         if (isSupabaseConfigured) {
+          // R66 round 18: same uuid guard — quote.customer is a FE display
+          // string when the source quote was created via the empty-state
+          // path (tiered-quote.tsx fallback to t('customer')). jobs.customer_id
+          // is a uuid FK; non-uuid value would reject the insert and the
+          // quote→job conversion would silently fail.
           const jobPayload = {
             title: newJob.title,
-            customer_id: quote.customer,
+            customer_id: isUuid(quote.customer) ? quote.customer : null,
             quoted_amount: quote.amount,
             agreed_amount: quote.amount,
           };
@@ -1936,8 +1995,19 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           const dbUpdates: Record<string, unknown> = {};
           if (updates.amount !== undefined) dbUpdates.total_amount = updates.amount;
           if (updates.status !== undefined) dbUpdates.status = updates.status;
-          if (updates.customer !== undefined) dbUpdates.customer_id = updates.customer;
-          if (updates.job !== undefined) dbUpdates.job_id = updates.job;
+          // R66 round 21: apply the R18 uuid guard. Quote.customer / Quote.job
+          // can hold the FE display string ("Klant"/"Customer") on the empty-
+          // state path; the BE columns are uuid FKs. Was latent today (no
+          // caller passed customer/job updates) but the guard prevents future
+          // bug reintroductions.
+          if (updates.customer !== undefined) dbUpdates.customer_id = isUuid(updates.customer) ? updates.customer : null;
+          if (updates.job !== undefined) dbUpdates.job_id = isUuid(updates.job) ? updates.job : null;
+          // R66 round 21: description → scope_text was missing — `tiered-quote.tsx`
+          // worked around it with a direct `updateDocument({ scope_text })` call
+          // and an `as any` updateQuote mirror. Now updateQuote persists SOW
+          // text directly via the standard mapper path. Quote.description is
+          // already a typed field on the domain type; no cast needed.
+          if (updates.description !== undefined) dbUpdates.scope_text = updates.description;
           if (Object.keys(dbUpdates).length > 0) {
             import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
               persistOrQueue('documents', 'update', () => updateDocument(id, dbUpdates), { rowId: id, payload: dbUpdates }),
@@ -2010,9 +2080,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             timeToDecisionHours: ttdHoursUp,
           }).catch(() => {});
           if (isSupabaseConfigured) {
+            // R66 round 18: same uuid guard — see updateQuote acceptance path.
             dbCreateJob({
               title: autoJob.title,
-              customer_id: quote.customer,
+              customer_id: isUuid(quote.customer) ? quote.customer : null,
               quoted_amount: quote.amount,
               agreed_amount: quote.amount,
             }).then((row) => {
@@ -2196,19 +2267,26 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       connectMollie: () => setMollieConnected(true),
       createPaymentLink: async (invoiceId, amount) => {
         // Route by contractor country — UK → Stripe (GBP), everyone else → Mollie (EUR).
+        // R66 round 8: was silently swallowing failures (`if result.success`
+        // with no `else`). Caller (`app/invoices/[id].tsx:handleCreatePayment`)
+        // wraps in try/catch and fires `hapticError` on throw, but nothing
+        // ever threw — contractor pressed button, got success haptic, no link.
+        // Now throws on provider failure so the caller's error path fires.
         const country = getCurrentCountry();
         if (country === 'UK') {
           const { createStripePayment } = await import('../integrations/stripe');
           const result = await createStripePayment(invoiceId, amount, 'UK');
-          if (result.success) {
-            setLastMolliePayment((prev) => ({ ...prev, [invoiceId]: result.paymentId ?? invoiceId }));
+          if (!result.success) {
+            throw new Error(result.error ?? 'Stripe payment link creation failed');
           }
+          setLastMolliePayment((prev) => ({ ...prev, [invoiceId]: result.paymentId ?? invoiceId }));
           return;
         }
         const result = await createMolliePayment(invoiceId, amount);
-        if (result.success) {
-          setLastMolliePayment((prev) => ({ ...prev, [invoiceId]: result.paymentId }));
+        if (!result.success) {
+          throw new Error(result.error ?? 'Mollie payment link creation failed');
         }
+        setLastMolliePayment((prev) => ({ ...prev, [invoiceId]: result.paymentId }));
       },
     }),
     [

@@ -35,7 +35,8 @@
     "and": "e",
     "thisJob": "questo lavoro",
     "apply": "Applica",
-    "ignore": "Ignora"
+    "ignore": "Ignora",
+    "ok": "OK"
   },
   "tabs": {
     "today": "Oggi",
@@ -483,7 +484,9 @@
     "effectiveRate": "Tariffa effettiva",
     "savingsPerJob": "Risparmio/lavoro",
     "emptyInvoicesDesc": "Contrassegna un lavoro come completato per creare una fattura.",
-    "goToJobs": "Vai ai lavori"
+    "goToJobs": "Vai ai lavori",
+    "invoiceCreateFailedTitle": "Impossibile creare la fattura",
+    "invoiceCreateFailedBody": "Riprova o apri il lavoro per completare i campi mancanti."
   },
   "expenses": {
     "title": "Spese",
@@ -1249,7 +1252,9 @@
     "inclVat": "incl. VAT",
     "upsellStat": "83% of customers pick Standard or Premium",
     "linesStandard": "Lines (standard)",
-    "sendQuote": "Send quote"
+    "sendQuote": "Send quote",
+    "shareFailedTitle": "Impossibile condividere il preventivo",
+    "shareFailedBody": "Riprova. Se persiste, il PDF non è stato generato su questo dispositivo."
   },
   "queue": {
     "lowWinTitle": "Bassa probabilità · {{customer}}",
@@ -2412,7 +2417,10 @@
     "importToBuild": "Importa fatture o cataloghi per costruire il tuo database materiali",
     "import": "Importa",
     "similarOthersUse": "Materiali simili usati da altri",
-    "switchTo": "Passa a {{name}}"
+    "switchTo": "Passa a {{name}}",
+    "unitPrice": "Prezzo unitario (€)",
+    "bestPriceHint": "precedente: €{{p}}",
+    "unitPricePlaceholder": "0,00"
   },
   "suppliers": {
     "title": "Suppliers",
@@ -2451,7 +2459,13 @@
     "noTemplates": "No templates in this category",
     "linesCount": "{{count}} lines",
     "usedCount": "{{count}}× used",
-    "useTemplate": "Use template"
+    "useTemplate": "Use template",
+    "missingFieldsTitle": "Compila tutti i campi",
+    "missingFieldsBody": "Il modello richiede un nome, una descrizione e un prezzo.",
+    "loadedTitle": "Modello caricato",
+    "loadedBody": "\"{{name}}\" caricato con {{count}} righe. Adatta il preventivo per il cliente.",
+    "deleteTitle": "Elimina modello",
+    "deleteBody": "Eliminare \"{{name}}\"?"
   },
   "decisions": {
     "title": "Customer decisions"
@@ -2593,7 +2607,11 @@
     "reminderEmailBody": "Promemoria email inviato!",
     "reminderWhatsappBody": "Promemoria WhatsApp inviato!",
     "copiedTitle": "Copiato",
-    "copiedBody": "Link di pagamento copiato:\n{{url}}"
+    "copiedBody": "Link di pagamento copiato:\n{{url}}",
+    "paymentLinkFailedTitle": "Errore link di pagamento",
+    "paymentLinkFailedBody": "Riprova o controlla le impostazioni del provider di pagamento.",
+    "moneybirdFailedTitle": "Errore export Moneybird",
+    "moneybirdFailedBody": "Riprova o controlla la connessione Moneybird."
   },
   "quoteToInvoice": {
     "notFound": "Preventivo {{id}} non trovato",
@@ -2618,5 +2636,10 @@
     "invoiceOverdue": " scaduta da {{days}} giorni",
     "quoteFollowup": "Ciao {{name}},\n\nVolevo dare seguito al preventivo per \"{{job}}\" (€{{amount}}).\n\nHai domande o vuoi procedere?\n\nCordiali saluti,\nInviato tramite Vasco",
     "progressUpdate": "Ciao {{name}},\n\nAggiornamento rapido su \"{{job}}\": oggi lavorate {{hours}}h. Tutto procede.\n\nInviato tramite Vasco"
+  },
+  "vatPrep": {
+    "lineInvoice": "Fattura",
+    "lineExpense": "Spesa",
+    "checkLine": "Verifica"
   }
 }

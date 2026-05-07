@@ -316,10 +316,12 @@ export default function DragScheduleScreen() {
               // R255: write optimized order back to AppState — persist scheduledStartTime per job
               for (const stop of optimized.stops) {
                 try {
+                  // R66 round 22: was `as any` — both fields are real on
+                  // Job (src/domain/jobs.ts). Same R21 cleanup pattern.
                   updateJob(stop.job.id, {
                     scheduledStartTime: stop.arrivalAt,
                     scheduledEndTime: stop.departureAt,
-                  } as any);
+                  });
                 } catch {
                   // continue with remaining stops
                 }

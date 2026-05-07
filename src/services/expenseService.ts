@@ -11,6 +11,9 @@ import { recordMetricSnapshot } from '../intelligence/learningStorage';
 import { getCurrentUserId, getCurrentTrade, getCurrentCountry } from '../lib/currentUser';
 import { registerSingletonReset } from './singletonReset';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { logWarn } from '../utils/errorHandler';
+import type { ExpenseRow } from '../lib/database.types';
 
 // R44: persistence — expenses are an in-memory singleton + now AsyncStorage
 // for cross-restart durability. Without this every contractor lost all
@@ -29,6 +32,48 @@ async function persistExpenses(expenses: Expense[]): Promise<void> {
   } catch {
     // Silent — never block UI
   }
+}
+
+// R66 round 14: BE persistence helpers. Expenses are tax records (NL
+// Belastingdienst Art. 52 AWR / DE GoBD §147 HGB) and AsyncStorage-only is
+// not durable enough — uninstall, OS migration, device swap = full data
+// loss. BE is now source of truth; AsyncStorage stays as offline cache.
+function expenseToRowPayload(expense: Expense): Omit<ExpenseRow, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { id?: string } {
+  return {
+    id: expense.id,
+    description: expense.description,
+    category: expense.category,
+    amount: expense.amount,
+    vat_amount: expense.vatAmount,
+    vat_rate: expense.vatRate,
+    expense_date: expense.date instanceof Date ? expense.date.toISOString() : expense.date,
+    supplier: expense.supplier ?? null,
+    receipt_url: expense.receiptUrl ?? null,
+    job_id: expense.jobId ?? null,
+    job_title: expense.jobTitle ?? null,
+    deductible: expense.deductible,
+    deduction_percentage: expense.deductionPercentage,
+    notes: expense.notes ?? null,
+  };
+}
+
+function expenseRowToExpense(row: ExpenseRow): Expense {
+  return {
+    id: row.id,
+    description: row.description,
+    category: row.category as ExpenseCategory,
+    amount: Number(row.amount),
+    vatAmount: Number(row.vat_amount),
+    vatRate: Number(row.vat_rate),
+    date: new Date(row.expense_date),
+    supplier: row.supplier ?? undefined,
+    receiptUrl: row.receipt_url ?? undefined,
+    jobId: row.job_id ?? undefined,
+    jobTitle: row.job_title ?? undefined,
+    deductible: row.deductible,
+    deductionPercentage: Number(row.deduction_percentage),
+    notes: row.notes ?? undefined,
+  };
 }
 
 async function loadPersistedExpenses(): Promise<Expense[]> {
@@ -143,6 +188,23 @@ class ExpenseService {
 
   private async hydrate(): Promise<void> {
     if (this.hydrated) return;
+    // R66 round 14: BE is the source of truth (tax-record retention). Try
+    // BE first; on failure or unconfigured Supabase, fall back to the
+    // AsyncStorage cache so offline cold starts still see expenses.
+    if (isSupabaseConfigured) {
+      try {
+        const { listExpenses } = await import('../lib/dataProvider');
+        const rows = await listExpenses();
+        this.expenses = rows.map(expenseRowToExpense);
+        this.hydrated = true;
+        this.notify();
+        // Refresh AsyncStorage cache from authoritative BE state.
+        persistExpenses(this.expenses).catch(() => {});
+        return;
+      } catch (err) {
+        logWarn('expenseService', `BE hydrate failed, falling back to AsyncStorage: ${err}`);
+      }
+    }
     const persisted = await loadPersistedExpenses();
     if (persisted.length > 0) {
       this.expenses = persisted;
@@ -170,11 +232,40 @@ class ExpenseService {
   }
 
   addExpense(expense: Omit<Expense, 'id'>): Expense {
-    const newExp: Expense = { ...expense, id: `exp-${Date.now()}` };
+    // R52 contract: optimistic temp id → swap to BE uuid on persist success;
+    // queue payload on persist fail. Post-create housekeeping runs on the
+    // FINAL id regardless of branch.
+    const tempId = `exp-${Date.now()}`;
+    const newExp: Expense = { ...expense, id: tempId };
     this.expenses.unshift(newExp);
     this.notify();
     persistExpenses(this.expenses).catch(() => {});
-    // AI data collector — expense event
+    // R66 round 14: BE persist with offline-queue fallback. Expenses are
+    // tax records — must reach BE for 7-year retention compliance.
+    if (isSupabaseConfigured) {
+      (async () => {
+        try {
+          const { createExpense } = await import('../lib/dataProvider');
+          const row = await createExpense(expenseToRowPayload(newExp));
+          // Swap temp id for BE-assigned uuid.
+          this.expenses = this.expenses.map((e) => (e.id === tempId ? { ...e, id: row.id } : e));
+          this.notify();
+          persistExpenses(this.expenses).catch(() => {});
+        } catch (err) {
+          logWarn('expenseService', `addExpense persist failed, queueing: ${err}`);
+          try {
+            const { queueWrite } = await import('./offlineWriteQueue');
+            await queueWrite({
+              table: 'expenses',
+              op: 'insert',
+              payload: { id: tempId, ...expenseToRowPayload(newExp) },
+            });
+          } catch {}
+        }
+      })();
+    }
+    // AI data collector — expense event (fires under tempId; the moat keys
+    // by event id, not expense id, so a later id swap doesn't desync it).
     emitBusinessEvent(getCurrentUserId(), {
       eventType: 'expense_added',
       entityType: 'material',
@@ -193,6 +284,21 @@ class ExpenseService {
     this.expenses = this.expenses.filter(e => e.id !== id);
     persistExpenses(this.expenses).catch(() => {});
     this.notify();
+    // R66 round 14: BE delete with offline-queue fallback.
+    if (isSupabaseConfigured) {
+      (async () => {
+        try {
+          const { deleteExpense: dbDeleteExpense } = await import('../lib/dataProvider');
+          await dbDeleteExpense(id);
+        } catch (err) {
+          logWarn('expenseService', `deleteExpense persist failed, queueing: ${err}`);
+          try {
+            const { queueWrite } = await import('./offlineWriteQueue');
+            await queueWrite({ table: 'expenses', op: 'delete', rowId: id });
+          } catch {}
+        }
+      })();
+    }
   }
 
   getStats(): ExpenseStats {

@@ -74,6 +74,10 @@ export type JobRow = {
   specifications: string | null;
   site_contact: string | null;
   site_phone: string | null;
+  // R66 round 12: time entries persisted as JSONB on jobs. Migration
+  // 20260507000002_jobs_time_entries.sql. Was previously dropped by the
+  // mapper (comment: "separate table") even though no such table existed.
+  time_entries: Array<{ id: string; date: string; hours: number; clockIn?: string; clockOut?: string }>;
   // Timestamps
   completed_at: string | null;
   created_at: string;
@@ -97,6 +101,14 @@ export type DocumentRow = {
   // R63 / Package D4: AI-generated scope-of-work narrative. Column added
   // in 20260505000001_sow_columns.sql.
   scope_text: string | null;
+  // R66 round 8: soft-delete column. Active rows have deleted_at=null;
+  // soft-deleted invoices keep the row for Belastingdienst Art. 52 AWR /
+  // GoBD §147 HGB retention. RLS hides deleted rows from FE SELECT.
+  deleted_at: string | null;
+  // R66 round 13: internal contractor notes. The invoice detail screen
+  // had a full notes UI with no backing column — every save was lost on
+  // cold start. Migration 20260507000003_documents_notes.sql.
+  notes: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -207,6 +219,64 @@ export type JobMaterialRow = {
   updated_at: string;
 };
 
+// R66 round 14: expenses table (migration 20260507000004 — promoted from
+// AsyncStorage to BE-backed for NL Belastingdienst Art. 52 AWR 7-year
+// retention compliance). Mirrors the FE Expense type.
+export type ExpenseRow = {
+  id: string;
+  user_id: string;
+  description: string;
+  category: string;
+  amount: number;
+  vat_amount: number;
+  vat_rate: number;
+  expense_date: string;
+  supplier: string | null;
+  receipt_url: string | null;
+  job_id: string | null;
+  job_title: string | null;
+  deductible: boolean;
+  deduction_percentage: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+// R66 round 19: quote_acceptance_links table — customer-facing approval
+// capability URLs (migration 20260507000006). Replaces the device-local
+// AsyncStorage flow that couldn't cross from contractor to customer device.
+// Anon role can SELECT by token + UPDATE pending → accepted/rejected.
+export type QuoteAcceptanceLinkRow = {
+  token: string;
+  user_id: string;
+  quote_id: string;
+  customer_id: string | null;
+  customer_name: string | null;
+  quote_amount: number;
+  quote_description: string | null;
+  status: 'pending' | 'accepted' | 'rejected' | 'expired';
+  decline_reason: string | null;
+  created_at: string;
+  responded_at: string | null;
+  expires_at: string;
+};
+
+// R66 round 15: gobd_audit_log table — append-only hash-chained audit
+// trail (migration 20260507000005). NL AWR Art. 52 + DE GoBD § 146
+// retention requirements. RLS: INSERT only, no UPDATE / DELETE policies.
+export type GobdAuditLogRow = {
+  id: string;
+  user_id: string;
+  entry_index: number;
+  type: string;
+  ref: string;
+  content_hash: string;
+  prev_hash: string;
+  signed_at: string;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+};
+
 // R278: projects table (migration 20260501000001 — promoted from
 // AsyncStorage to BE-backed for aannemer multi-job grouping).
 export type ProjectRow = {
@@ -314,6 +384,39 @@ export interface Database {
           user_id: string;
         };
         Update: Partial<Omit<ProjectRow, 'id' | 'user_id' | 'created_at'>>;
+      };
+      expenses: {
+        Row: ExpenseRow;
+        Insert: Partial<ExpenseRow> & {
+          description: string;
+          category: string;
+          amount: number;
+          user_id: string;
+        };
+        Update: Partial<Omit<ExpenseRow, 'id' | 'user_id' | 'created_at'>>;
+      };
+      gobd_audit_log: {
+        Row: GobdAuditLogRow;
+        Insert: Partial<GobdAuditLogRow> & {
+          id: string;
+          entry_index: number;
+          type: string;
+          ref: string;
+          content_hash: string;
+          prev_hash: string;
+          signed_at: string;
+        };
+        // No Update — append-only.
+        Update: never;
+      };
+      quote_acceptance_links: {
+        Row: QuoteAcceptanceLinkRow;
+        Insert: Partial<QuoteAcceptanceLinkRow> & {
+          token: string;
+          quote_id: string;
+          expires_at: string;
+        };
+        Update: Partial<Omit<QuoteAcceptanceLinkRow, 'token' | 'user_id' | 'created_at'>>;
       };
     };
     Functions: {

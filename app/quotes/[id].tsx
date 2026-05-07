@@ -328,15 +328,27 @@ export default function QuoteDetailScreen() {
               // (matches the invoice PDF, R251). Pre-R66 the quote showed
               // 21% even when the contractor was on KOR — confusing the
               // customer when the invoice arrived showing 0%.
-              await generateQuotePdf(
-                pdfData,
-                businessProfile.businessName,
-                businessProfile.address,
-                businessProfile.kvkNumber,
-                businessProfile.vatNumber,
-                { vatScheme: businessProfile.vatScheme },
-              );
-              markQuoteSent(quote.id);
+              // R66 round 11: wrap in try/catch — Print.printToFileAsync
+              // can throw (file system, permissions). Without a catch,
+              // the contractor saw the button press do nothing and the
+              // quote stayed in 'draft'. markQuoteSent only runs on a
+              // successful share.
+              try {
+                await generateQuotePdf(
+                  pdfData,
+                  businessProfile.businessName,
+                  businessProfile.address,
+                  businessProfile.kvkNumber,
+                  businessProfile.vatNumber,
+                  { vatScheme: businessProfile.vatScheme },
+                );
+                markQuoteSent(quote.id);
+              } catch (err: any) {
+                Alert.alert(
+                  t('quotes.shareFailedTitle', 'Could not share quote'),
+                  err?.message ?? t('quotes.shareFailedBody', 'Please retry. If this persists, the PDF could not be generated on this device.'),
+                );
+              }
             }}
             accessibilityRole="button"
             accessibilityLabel={t('quotes.sharePdf', 'Share quote as PDF')}

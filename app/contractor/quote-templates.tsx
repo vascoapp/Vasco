@@ -32,7 +32,16 @@ export default function QuoteTemplatesScreen() {
   const [newItemPrice, setNewItemPrice] = useState('');
 
   const handleCreate = () => {
-    if (!newName.trim() || !newItemDesc.trim() || !newItemPrice.trim()) return;
+    // R66 round 11: was a silent return — clicking "Save" with empty
+    // fields just dismissed without feedback. Now surfaces the missing
+    // field via localized alert.
+    if (!newName.trim() || !newItemDesc.trim() || !newItemPrice.trim()) {
+      Alert.alert(
+        t('quoteTemplates.missingFieldsTitle', 'Fill in all fields'),
+        t('quoteTemplates.missingFieldsBody', 'Template needs a name, an item description, and a price.'),
+      );
+      return;
+    }
     const item: QuoteTemplateItem = {
       description: newItemDesc.trim(),
       quantity: 1,
@@ -60,18 +69,24 @@ export default function QuoteTemplatesScreen() {
 
   const handleUseTemplate = (template: QuoteTemplate) => {
     use(template.id);
+    // R66 round 11: was hardcoded Dutch — every non-NL contractor saw
+    // Dutch alerts despite running the app in their language.
     Alert.alert(
-      'Sjabloon geladen',
-      `"${template.name}" is geladen met ${template.items.length} regels. Pas de offerte aan voor de klant.`,
-      [{ text: 'OK' }],
+      t('quoteTemplates.loadedTitle', 'Template loaded'),
+      t('quoteTemplates.loadedBody', '"{{name}}" loaded with {{count}} lines. Adjust the quote for the customer.', { name: template.name, count: template.items.length }),
+      [{ text: t('common.ok', 'OK') }],
     );
   };
 
   const handleDelete = (template: QuoteTemplate) => {
-    Alert.alert('Sjabloon verwijderen', `"${template.name}" verwijderen?`, [
-      { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-      { text: t('common.delete', 'Delete'), style: 'destructive', onPress: () => remove(template.id) },
-    ]);
+    Alert.alert(
+      t('quoteTemplates.deleteTitle', 'Delete template'),
+      t('quoteTemplates.deleteBody', 'Delete "{{name}}"?', { name: template.name }),
+      [
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+        { text: t('common.delete', 'Delete'), style: 'destructive', onPress: () => remove(template.id) },
+      ],
+    );
   };
 
   const fmt = (n: number) => `€${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;

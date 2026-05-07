@@ -35,7 +35,8 @@
     "and": "and",
     "thisJob": "this job",
     "apply": "Apply",
-    "ignore": "Ignore"
+    "ignore": "Ignore",
+    "ok": "OK"
   },
   "tabs": {
     "today": "Today",
@@ -483,7 +484,9 @@
     "effectiveRate": "Effective rate",
     "savingsPerJob": "Savings/job",
     "emptyInvoicesDesc": "Mark a job as completed to draft an invoice.",
-    "goToJobs": "Go to jobs"
+    "goToJobs": "Go to jobs",
+    "invoiceCreateFailedTitle": "Could not create invoice",
+    "invoiceCreateFailedBody": "Please retry or open the job to fix missing fields."
   },
   "expenses": {
     "title": "Expenses",
@@ -1249,7 +1252,9 @@
     "inclVat": "incl. VAT",
     "upsellStat": "83% of customers pick Standard or Premium",
     "linesStandard": "Lines (standard)",
-    "sendQuote": "Send quote"
+    "sendQuote": "Send quote",
+    "shareFailedTitle": "Could not share quote",
+    "shareFailedBody": "Please retry. If this persists, the PDF could not be generated on this device."
   },
   "queue": {
     "lowWinTitle": "Low win chance · {{customer}}",
@@ -2412,7 +2417,10 @@
     "importToBuild": "Import invoices or catalogs to build your material database",
     "import": "Import",
     "similarOthersUse": "Similar materials others use",
-    "switchTo": "Switch to {{name}}"
+    "switchTo": "Switch to {{name}}",
+    "unitPrice": "Unit price (€)",
+    "bestPriceHint": "cached: €{{p}}",
+    "unitPricePlaceholder": "0.00"
   },
   "suppliers": {
     "title": "Suppliers",
@@ -2451,7 +2459,13 @@
     "noTemplates": "No templates in this category",
     "linesCount": "{{count}} lines",
     "usedCount": "{{count}}× used",
-    "useTemplate": "Use template"
+    "useTemplate": "Use template",
+    "missingFieldsTitle": "Fill in all fields",
+    "missingFieldsBody": "Template needs a name, an item description, and a price.",
+    "loadedTitle": "Template loaded",
+    "loadedBody": "\"{{name}}\" loaded with {{count}} lines. Adjust the quote for the customer.",
+    "deleteTitle": "Delete template",
+    "deleteBody": "Delete \"{{name}}\"?"
   },
   "decisions": {
     "title": "Customer decisions"
@@ -2593,7 +2607,11 @@
     "reminderEmailBody": "Email reminder sent!",
     "reminderWhatsappBody": "WhatsApp reminder sent!",
     "copiedTitle": "Copied",
-    "copiedBody": "Payment link copied to clipboard:\n{{url}}"
+    "copiedBody": "Payment link copied to clipboard:\n{{url}}",
+    "paymentLinkFailedTitle": "Payment link failed",
+    "paymentLinkFailedBody": "Please retry or check your payment provider settings.",
+    "moneybirdFailedTitle": "Moneybird export failed",
+    "moneybirdFailedBody": "Please retry or check your Moneybird connection."
   },
   "quoteToInvoice": {
     "notFound": "Quote {{id}} not found",
@@ -2618,5 +2636,10 @@
     "invoiceOverdue": " which is {{days}} days overdue",
     "quoteFollowup": "Hi {{name}},\n\nI wanted to follow up on the quote for \"{{job}}\" (€{{amount}}).\n\nDo you have any questions or would you like to proceed?\n\nBest regards,\nSent via Vasco",
     "progressUpdate": "Hi {{name}},\n\nQuick update on \"{{job}}\": {{hours}}h worked today. Everything is on track.\n\nSent via Vasco"
+  },
+  "vatPrep": {
+    "lineInvoice": "Invoice",
+    "lineExpense": "Expense",
+    "checkLine": "Check"
   }
 }

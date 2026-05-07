@@ -2,7 +2,7 @@ import { supabase, isSupabaseConfigured } from './supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logWarn } from '../utils/errorHandler';
 import { isUuid } from './idShape';
-import type { DocumentRow, LineItemRow, BusinessSettingsRow, CustomerRow, MaterialCatalogRow, SupplierRow, JobMaterialRow, PriceObservationRow, ProjectRow } from './database.types';
+import type { DocumentRow, LineItemRow, BusinessSettingsRow, CustomerRow, MaterialCatalogRow, SupplierRow, JobMaterialRow, PriceObservationRow, ProjectRow, ExpenseRow, QuoteAcceptanceLinkRow } from './database.types';
 import { quotes as mockQuotes, invoices as mockInvoices } from '../data/mockDocuments';
 import { quoteLineItems as mockLineItems } from '../data/mockLineItems';
 import { businessProfile as mockBusinessProfile } from '../data/mockBusiness';
@@ -112,8 +112,39 @@ export async function updateDocument(
   return data as DocumentRow;
 }
 
-export async function deleteDocument(idOrNumber: string): Promise<void> {
+// R66 round 8: soft-delete for invoices (Belastingdienst Art. 52 AWR / GoBD
+// §147 HGB require 7-10 year retention of tax records). Quotes pre-acceptance
+// aren't tax records and may still be hard-deleted. Caller indicates intent
+// via the `docType` arg — when omitted, we look up the row first to decide.
+// Migration `20260507000001_documents_soft_delete.sql` adds `deleted_at` plus
+// updated RLS that filters soft-deleted rows from the SELECT policy.
+export async function deleteDocument(
+  idOrNumber: string,
+  docType?: 'quote' | 'invoice',
+): Promise<void> {
   const col = documentMatchColumn(idOrNumber);
+
+  // Resolve docType when caller didn't pass it.
+  let resolvedType = docType;
+  if (!resolvedType) {
+    const { data, error: lookupError } = await supabase
+      .from('documents')
+      .select('doc_type')
+      .eq(col, idOrNumber)
+      .maybeSingle();
+    if (lookupError) throw lookupError;
+    resolvedType = ((data as { doc_type?: 'quote' | 'invoice' } | null)?.doc_type) ?? 'quote';
+  }
+
+  if (resolvedType === 'invoice') {
+    // Soft delete: set deleted_at, leave row intact for audit / compliance.
+    const { error } = await (supabase.from('documents') as any)
+      .update({ deleted_at: new Date().toISOString() })
+      .eq(col, idOrNumber);
+    if (error) throw error;
+    return;
+  }
+  // Quotes: hard delete is fine.
   const { error } = await supabase.from('documents').delete().eq(col, idOrNumber);
   if (error) throw error;
 }
@@ -778,4 +809,111 @@ export async function loadPriceHistoryByMaterialSupplier(): Promise<
     result[key].push({ price: Number(row.price), observedAt: row.observed_at });
   }
   return result;
+}
+
+// ── Expenses ────────────────────────────────────────────────
+// R66 round 14: promoted from AsyncStorage-only to BE-backed for NL
+// Belastingdienst Art. 52 AWR 7-year retention compliance.
+
+export async function listExpenses(): Promise<ExpenseRow[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase
+    .from('expenses')
+    .select('*')
+    .order('expense_date', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as ExpenseRow[];
+}
+
+export async function createExpense(
+  expense: Omit<ExpenseRow, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { id?: string },
+): Promise<ExpenseRow> {
+  const userId = await getUserId();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from('expenses') as any)
+    .insert({ ...expense, user_id: userId })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as ExpenseRow;
+}
+
+export async function deleteExpense(id: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from('expenses') as any).delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ── Quote Acceptance Links ──────────────────────────────────
+// R66 round 20: capability-URL helpers backing customerQuoteAcceptanceService.
+// `getAcceptanceLinkByToken` is the only call the customer (anon) makes —
+// the rest are contractor-authenticated. Anon SELECT is enabled by RLS
+// `qal_select_by_token`; the token in the eq() filter is the bearer cred.
+
+export async function createAcceptanceLink(payload: {
+  token: string;
+  quote_id: string;
+  customer_id?: string | null;
+  customer_name?: string | null;
+  quote_amount: number;
+  quote_description?: string | null;
+  expires_at: string;
+}): Promise<QuoteAcceptanceLinkRow> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from('quote_acceptance_links') as any)
+    .insert(payload)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as QuoteAcceptanceLinkRow;
+}
+
+export async function getAcceptanceLinkByToken(token: string): Promise<QuoteAcceptanceLinkRow | null> {
+  const { data, error } = await supabase
+    .from('quote_acceptance_links')
+    .select('*')
+    .eq('token', token)
+    .maybeSingle();
+  if (error) {
+    logWarn('dataProvider', `getAcceptanceLinkByToken failed: ${error.message ?? error}`);
+    return null;
+  }
+  return (data as QuoteAcceptanceLinkRow | null) ?? null;
+}
+
+export async function getAcceptanceLinkByQuoteId(quoteId: string): Promise<QuoteAcceptanceLinkRow | null> {
+  // Contractor-side: returns the most recent link for a quote. RLS scopes
+  // to user_id automatically.
+  const { data, error } = await supabase
+    .from('quote_acceptance_links')
+    .select('*')
+    .eq('quote_id', quoteId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) return null;
+  return (data as QuoteAcceptanceLinkRow | null) ?? null;
+}
+
+export async function decideAcceptanceLink(
+  token: string,
+  decision: 'accepted' | 'rejected',
+  declineReason?: string,
+): Promise<QuoteAcceptanceLinkRow | null> {
+  const patch: Record<string, unknown> = {
+    status: decision,
+    responded_at: new Date().toISOString(),
+  };
+  if (decision === 'rejected' && declineReason) patch.decline_reason = declineReason;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from('quote_acceptance_links') as any)
+    .update(patch)
+    .eq('token', token)
+    .select()
+    .maybeSingle();
+  if (error) {
+    logWarn('dataProvider', `decideAcceptanceLink failed: ${error.message ?? error}`);
+    return null;
+  }
+  return (data as QuoteAcceptanceLinkRow | null) ?? null;
 }

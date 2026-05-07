@@ -108,9 +108,8 @@ export default function InvoiceDetailScreen() {
     return () => { cancelled = true; };
   }, [invoice?.id, invoice?.amount, invoice?.status, businessProfile?.country, country]);
 
-  // Editable state
-  const [editingCustomer, setEditingCustomer] = useState(false);
-  const [customerName, setCustomerName] = useState('');
+  // Editable state — R66 round 13: editingCustomer/customerName removed
+  // along with the broken inline rename feature.
   const [editingItems, setEditingItems] = useState(false);
   const [localItems, setLocalItems] = useState<EditableLineItem[]>([]);
   const [editingNotes, setEditingNotes] = useState(false);
@@ -121,8 +120,8 @@ export default function InvoiceDetailScreen() {
 
   useEffect(() => {
     if (invoice) {
-      setCustomerName(invoice.customer);
-      setNotes((invoice as any).notes ?? '');
+      // R66 round 13: notes is now a real Invoice field — no `as any` cast.
+      setNotes(invoice.notes ?? '');
       getCustomerPaymentPreference(invoice.id).then(setCustomerPreference);
       // Build line items from appLineItems or synthesize from amount
       const existing = appLineItems[invoice.id];
@@ -167,12 +166,11 @@ export default function InvoiceDetailScreen() {
   const vatAmount = subtotal * VAT_RATE;
   const total = subtotal + vatAmount;
 
-  // Handlers
-  const handleSaveCustomer = () => {
-    updateInvoice(invoice.id, { customer: customerName });
-    setEditingCustomer(false);
-    hapticSuccess();
-  };
+  // R66 round 13: handleSaveCustomer removed. The flow wrote the
+  // customer's display NAME into the documents.customer_id UUID FK
+  // column — every save was rejected by the BE and the local state
+  // retained a phantom field that reverted on next refresh. Renaming
+  // a customer belongs on the customer record, not on each invoice.
 
   const handleUpdateItem = (itemId: string, field: keyof EditableLineItem, value: string) => {
     setLocalItems(prev => prev.map(item => {
@@ -202,7 +200,9 @@ export default function InvoiceDetailScreen() {
   };
 
   const handleSaveNotes = () => {
-    updateInvoice(invoice.id, { notes } as any);
+    // R66 round 13: notes is now a real Invoice field + persisted column.
+    // The `as any` cast was masking the silent-loss bug.
+    updateInvoice(invoice.id, { notes });
     setEditingNotes(false);
     hapticSuccess();
   };
@@ -211,8 +211,14 @@ export default function InvoiceDetailScreen() {
     try {
       await createPaymentLink(invoice.id, invoice.amount);
       hapticSuccess();
-    } catch {
+    } catch (err) {
+      // R66 round 8: was silent (just a vibration). Now surfaces the reason
+      // so the contractor knows their payment-provider config needs attention.
       hapticError();
+      Alert.alert(
+        t('paymentAlerts.paymentLinkFailedTitle'),
+        err instanceof Error && err.message ? err.message : t('paymentAlerts.paymentLinkFailedBody'),
+      );
     }
   };
 
@@ -220,8 +226,15 @@ export default function InvoiceDetailScreen() {
     try {
       await exportInvoice(invoice.id);
       hapticSuccess();
-    } catch {
+    } catch (err) {
+      // R66 round 9: was silent (vibration only). Surface the reason so the
+      // contractor knows their Moneybird OAuth needs re-auth or a network
+      // hiccup happened.
       hapticError();
+      Alert.alert(
+        t('paymentAlerts.moneybirdFailedTitle'),
+        err instanceof Error && err.message ? err.message : t('paymentAlerts.moneybirdFailedBody'),
+      );
     }
   };
 
@@ -253,7 +266,7 @@ export default function InvoiceDetailScreen() {
           '\n\n' + readiness.missingLabels.map((l) => `• ${l}`).join('\n'),
         [
           { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-          { text: t('invoices.completeProfile', 'Complete profile'), onPress: () => router.push('/business-settings' as any) },
+          { text: t('invoices.completeProfile', 'Complete profile'), onPress: () => router.push('/(modals)/business-settings' as any) },
         ],
       );
       return;
@@ -690,34 +703,17 @@ export default function InvoiceDetailScreen() {
           );
         })()}
 
-        {/* Customer Section */}
+        {/* Customer Section — R66 round 13: pencil-edit removed.
+            Inline rename wrote the display name string into the customer_id
+            UUID FK column, BE rejected, local state reverted on refresh.
+            Customer-record edits live on the customer screen. */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Ionicons name="person" size={18} color={Palette.hermesOrange} />
             <Text style={styles.cardTitle}>{t('invoices.customer', 'Customer')}</Text>
-            <Pressable onPress={() => setEditingCustomer(!editingCustomer)} style={styles.editBtn}>
-              <Ionicons name={editingCustomer ? 'close' : 'pencil'} size={14} color={Palette.hermesOrange} />
-            </Pressable>
           </View>
-          {editingCustomer ? (
-            <View style={styles.editRow}>
-              <TextInput
-                style={styles.editInput}
-                value={customerName}
-                onChangeText={setCustomerName}
-                placeholder={t('invoices.customerName', 'Customer name')}
-                placeholderTextColor={SemanticColors.textTertiary}
-              />
-              <Pressable style={styles.saveBtn} onPress={handleSaveCustomer}>
-                <Ionicons name="checkmark" size={18} color={Palette.white} />
-              </Pressable>
-            </View>
-          ) : (
-            <>
-              <Text style={styles.customerName}>{invoice.customer}</Text>
-              <Text style={styles.customerJob}>{invoice.job}</Text>
-            </>
-          )}
+          <Text style={styles.customerName}>{invoice.customer}</Text>
+          <Text style={styles.customerJob}>{invoice.job}</Text>
         </View>
 
         {/* Line Items Section */}

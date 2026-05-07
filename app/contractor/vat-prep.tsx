@@ -209,6 +209,10 @@ export default function VatPrepScreen() {
 }
 
 function LineCard({ line, highlight }: { line: VatLine; highlight?: boolean }) {
+  // R66 round 17: was 3 hardcoded Dutch strings (Factuur / Uitgave / Controleer)
+  // baked into a render path that the screen otherwise localizes via t().
+  // Non-NL contractors (DE/FR/ES/IT/EN) saw Dutch words on a localized screen.
+  const { t } = useTranslation();
   return (
     <View style={[styles.lineCard, highlight && styles.lineCardHighlight]}>
       <View style={styles.lineHeader}>
@@ -217,12 +221,12 @@ function LineCard({ line, highlight }: { line: VatLine; highlight?: boolean }) {
       </View>
       <View style={styles.lineMeta}>
         <Text style={styles.lineMetaText}>
-          {line.sourceType === 'invoice_sent' ? 'Factuur' : 'Uitgave'} · {line.vatRate}% · {line.classification}
+          {line.sourceType === 'invoice_sent' ? t('vatPrep.lineInvoice', 'Invoice') : t('vatPrep.lineExpense', 'Expense')} · {line.vatRate}% · {line.classification}
         </Text>
         {line.confidence < 0.75 && (
           <View style={styles.confBadge}>
             <Ionicons name="help-circle" size={11} color={SemanticColors.feedbackWarning} />
-            <Text style={styles.confBadgeText}>Controleer</Text>
+            <Text style={styles.confBadgeText}>{t('vatPrep.checkLine', 'Check')}</Text>
           </View>
         )}
       </View>

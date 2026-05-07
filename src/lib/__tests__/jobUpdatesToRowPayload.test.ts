@@ -109,7 +109,6 @@ describe('jobUpdatesToRowPayload', () => {
 
   it('drops FE-only / separate-table fields silently', () => {
     const out = jobUpdatesToRowPayload({
-      timeEntries: [] as any,
       materials: [] as any,
       photos: [] as any,
       notes: [] as any,
@@ -119,6 +118,22 @@ describe('jobUpdatesToRowPayload', () => {
       actualCost: 200,
     } as any);
     expect(out).toEqual({});
+  });
+
+  // R66 round 12: timeEntries is no longer dropped — it persists as
+  // jobs.time_entries JSONB. The previous "drops" test was encoding the bug
+  // that lost every contractor's logged hours on cold start.
+  it('persists timeEntries as time_entries JSONB column', () => {
+    const entries = [{ id: 'te-1', date: '2026-05-07', hours: 4.5, clockIn: '08:00', clockOut: '12:30' }];
+    const out = jobUpdatesToRowPayload({
+      timeEntries: entries as any,
+    });
+    expect(out).toEqual({ time_entries: entries });
+  });
+
+  it('persists empty timeEntries array (clearing all hours)', () => {
+    const out = jobUpdatesToRowPayload({ timeEntries: [] as any });
+    expect(out).toEqual({ time_entries: [] });
   });
 
   it('drops `undefined` keys but preserves explicit `null`', () => {

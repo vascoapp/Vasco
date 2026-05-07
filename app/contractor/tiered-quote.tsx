@@ -99,7 +99,11 @@ export default function TieredQuoteScreen() {
               // is wired through R56's persistOrQueue, so this is also
               // queued for any second BE write that wants to land.
               try {
-                updateQuote(quoteId, { description: sow } as any);
+                // R66 round 21: was `as any` — Quote.description is a typed
+                // domain field. updateQuote now persists it via the standard
+                // mapper (description → scope_text), so the explicit
+                // updateDocument call above is now redundant defense-in-depth.
+                updateQuote(quoteId, { description: sow });
               } catch {}
             }
             hapticSuccess();

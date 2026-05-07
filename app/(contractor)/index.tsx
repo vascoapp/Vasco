@@ -142,7 +142,9 @@ export default function VandaagDK() {
         {/* 3. KPI ROW ─── 2 stats (Earned removed per R267 — duplicate of Geld tab) */}
         <View style={styles.kpiRow}>
           <KpiTile label={t('dk.pill.appointments', 'Appointments').toUpperCase()} value={String(todayJobs.length)} tone={DK.colors.text} onPress={() => router.push('/contractor/drag-schedule' as any)} />
-          <KpiTile label={t('dk.pill.quotes', 'Quotes').toUpperCase()} value={String(activeQuotes)} tone={DK.colors.highlight} onPress={() => router.push('/contractor/quote-list' as any)} />
+          {/* R66 round 16: was /contractor/quote-list (404) — quotes live on
+              the Geld tab alongside invoices since R-2025; route fixed. */}
+          <KpiTile label={t('dk.pill.quotes', 'Quotes').toUpperCase()} value={String(activeQuotes)} tone={DK.colors.highlight} onPress={() => router.push('/(contractor)/geld' as any)} />
         </View>
 
         {/* R298: ML capacity-overrun prediction — hidden when probability low */}
@@ -222,7 +224,8 @@ export default function VandaagDK() {
                   style={({ pressed }) => [styles.heroCTA, pressed && { opacity: 0.9 }]}
                   onPress={() => {
                     if (todayJobs.length > 0) router.push(`/contractor/job/${(todayJobs[0] as any).id}` as any);
-                    else if (activeQuotes > 0) router.push('/contractor/quote-list' as any);
+                    // R66 round 16: was /contractor/quote-list (404).
+                    else if (activeQuotes > 0) router.push('/(contractor)/geld' as any);
                     else router.push('/contractor/tiered-quote' as any);
                   }}
                 >

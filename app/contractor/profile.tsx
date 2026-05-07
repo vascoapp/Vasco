@@ -470,28 +470,28 @@ export default function ProfileScreen() {
               icon="document-text"
               label={getRegistrationLabel(country)}
               value={businessProfile.kvkNumber || businessProfile.registrationNumber || t('profile.notSet', 'Not set')}
-              onPress={() => router.push('/business-settings' as any)}
+              onPress={() => router.push('/(modals)/business-settings' as any)}
             />
             <SettingsRow
               icon="receipt"
               label={t('profile.vatNumber', 'VAT number')}
               value={businessProfile.vatNumber || t('profile.notSet', 'Not set')}
               border
-              onPress={() => router.push('/business-settings' as any)}
+              onPress={() => router.push('/(modals)/business-settings' as any)}
             />
             <SettingsRow
               icon="location"
               label={t('profile.address', 'Address')}
               value={businessProfile.address || t('profile.notSet', 'Not set')}
               border
-              onPress={() => router.push('/business-settings' as any)}
+              onPress={() => router.push('/(modals)/business-settings' as any)}
             />
             <SettingsRow
               icon="briefcase"
               label={t('profile.businessType', 'Business type')}
               value={businessProfile.businessType || t('profile.notSet', 'Not set')}
               border
-              onPress={() => router.push('/business-settings' as any)}
+              onPress={() => router.push('/(modals)/business-settings' as any)}
             />
             <SettingsRow
               icon="receipt-outline"

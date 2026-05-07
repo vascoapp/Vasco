@@ -19,6 +19,8 @@
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { logWarn } from '../utils/errorHandler';
 
 const STORAGE_KEY = '@vasco_gobd_audit_log';
 
@@ -101,6 +103,50 @@ export async function appendAudit(input: {
   };
   log.push(entry);
   await saveLog(log);
+  // R66 round 15: BE persistence — append-only `gobd_audit_log` table.
+  // AsyncStorage stays as the hot cache; BE is the durable, immutable
+  // (RLS: no UPDATE / no DELETE) ledger required for NL AWR Art. 52 +
+  // DE GoBD § 146. On failure, queue for replay so offline contractors
+  // still get their entries reach BE on reconnect.
+  if (isSupabaseConfigured) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await (supabase.from('gobd_audit_log') as any).insert({
+          id: entry.id,
+          user_id: user.id,
+          entry_index: entry.index,
+          type: entry.type,
+          ref: entry.ref,
+          content_hash: entry.contentHash,
+          prev_hash: entry.prevHash,
+          signed_at: entry.signedAt,
+          metadata: entry.metadata ?? null,
+        });
+        if (error) throw error;
+      }
+    } catch (err) {
+      logWarn('gobdAuditTrail', `BE append failed, queueing: ${err}`);
+      try {
+        const { queueWrite } = await import('./offlineWriteQueue');
+        await queueWrite({
+          table: 'gobd_audit_log',
+          op: 'insert',
+          payload: {
+            id: entry.id,
+            entry_index: entry.index,
+            type: entry.type,
+            ref: entry.ref,
+            content_hash: entry.contentHash,
+            prev_hash: entry.prevHash,
+            signed_at: entry.signedAt,
+            metadata: entry.metadata ?? null,
+          },
+        });
+      } catch {}
+    }
+  }
   return entry;
 }
 

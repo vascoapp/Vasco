@@ -285,11 +285,22 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                     const ok = await gateReminderSend(invoice, autoInv?.reminders?.length ?? 0, tag);
                     if (!ok) return;
                     if (autoInv) {
+                      // R66 round 10: createPaymentLink returns null on failure
+                      // (provider unconfigured, network error, tier gate). Sending a
+                      // WhatsApp reminder with an empty payment link is broken UX —
+                      // customer can't pay. Abort with localized alert.
                       const link = await createPaymentLink({
                         invoiceId: invoice.id,
                         amount: autoInv.total,
                         description: t('invoices.invoicePrefix', 'Invoice {{number}}', { number: autoInv.invoiceNumber }),
                       });
+                      if (!link?.url) {
+                        Alert.alert(
+                          t('paymentAlerts.paymentLinkFailedTitle', 'Payment link failed'),
+                          t('paymentAlerts.paymentLinkFailedBody', 'Please retry or check your payment provider settings.'),
+                        );
+                        return;
+                      }
                       hapticSuccess();
                       const { renderPaymentReminderForTag } = await import('../../src/services/whatsappTemplateService');
                       const locale = ((businessProfile as any)?.language ?? 'en') as any;
@@ -297,7 +308,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                         customer: autoInv.customerName ?? '',
                         ref: autoInv.invoiceNumber,
                         amount: `€${autoInv.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
-                        link: link?.url ?? '',
+                        link: link.url,
                         business: businessProfile.businessName ?? '',
                       }, tag);
                       await Share.share({ message: text, title: t('invoices.sendReminder', 'Herinnering') + ` ${autoInv.invoiceNumber}` });
@@ -723,9 +734,20 @@ export default function FacturenScreen() {
                           icon: 'receipt-outline',
                           onPress: async () => {
                             closeBottomSheet();
-                            await addInvoiceFromJob(job.id);
-                            hapticSuccess();
-                            setToast({ visible: true, message: `${t('invoices.invoiceCreated', 'Factuur aangemaakt')} — ${t('invoices.invoiceCreatedDesc', 'De factuur is aangemaakt als concept.')}` });
+                            // R66 round 10: addInvoiceFromJob throws on
+                            // missing job / €0 amount / validation failures.
+                            // Without this guard, contractor saw success
+                            // haptic + toast on a failed create.
+                            try {
+                              await addInvoiceFromJob(job.id);
+                              hapticSuccess();
+                              setToast({ visible: true, message: `${t('invoices.invoiceCreated', 'Factuur aangemaakt')} — ${t('invoices.invoiceCreatedDesc', 'De factuur is aangemaakt als concept.')}` });
+                            } catch (err: any) {
+                              Alert.alert(
+                                t('invoices.invoiceCreateFailedTitle', 'Could not create invoice'),
+                                err?.message ?? t('invoices.invoiceCreateFailedBody', 'Please retry or open the job to fix missing fields.'),
+                              );
+                            }
                           },
                         },
                         { label: t('invoices.cancel', 'Annuleren'), icon: 'close-outline', onPress: closeBottomSheet },
@@ -741,9 +763,17 @@ export default function FacturenScreen() {
                           icon: 'briefcase-outline' as const,
                           onPress: async () => {
                             closeBottomSheet();
-                            await addInvoiceFromJob(job.id);
-                            hapticSuccess();
-                            setToast({ visible: true, message: `${t('invoices.invoiceCreated', 'Factuur aangemaakt')} — ${t('invoices.invoiceCreatedDesc', 'De factuur is aangemaakt als concept.')}` });
+                            // R66 round 10: same try/catch as single-job branch above.
+                            try {
+                              await addInvoiceFromJob(job.id);
+                              hapticSuccess();
+                              setToast({ visible: true, message: `${t('invoices.invoiceCreated', 'Factuur aangemaakt')} — ${t('invoices.invoiceCreatedDesc', 'De factuur is aangemaakt als concept.')}` });
+                            } catch (err: any) {
+                              Alert.alert(
+                                t('invoices.invoiceCreateFailedTitle', 'Could not create invoice'),
+                                err?.message ?? t('invoices.invoiceCreateFailedBody', 'Please retry or open the job to fix missing fields.'),
+                              );
+                            }
                           },
                         })),
                         { label: t('invoices.cancel', 'Annuleren'), icon: 'close-outline' as const, onPress: closeBottomSheet },

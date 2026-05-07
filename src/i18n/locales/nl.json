@@ -35,7 +35,8 @@
     "and": "en",
     "thisJob": "deze klus",
     "apply": "Toepassen",
-    "ignore": "Negeren"
+    "ignore": "Negeren",
+    "ok": "OK"
   },
   "tabs": {
     "today": "Vandaag",
@@ -483,7 +484,9 @@
     "effectiveRate": "Effectief tarief",
     "savingsPerJob": "Besparing/klus",
     "emptyInvoicesDesc": "Markeer een klus als gereed om een factuur op te stellen.",
-    "goToJobs": "Naar klussen"
+    "goToJobs": "Naar klussen",
+    "invoiceCreateFailedTitle": "Kan factuur niet aanmaken",
+    "invoiceCreateFailedBody": "Probeer opnieuw of open de klus om ontbrekende velden in te vullen."
   },
   "expenses": {
     "title": "Uitgaven",
@@ -1249,7 +1252,9 @@
     "inclVat": "incl. btw",
     "upsellStat": "83% van klanten kiest Standaard of Premium",
     "linesStandard": "Regels (standaard)",
-    "sendQuote": "Offerte versturen"
+    "sendQuote": "Offerte versturen",
+    "shareFailedTitle": "Offerte kon niet worden gedeeld",
+    "shareFailedBody": "Probeer opnieuw. Als dit blijft gebeuren, kon de PDF niet worden aangemaakt op dit toestel."
   },
   "queue": {
     "lowWinTitle": "Lage winkans · {{customer}}",
@@ -2412,7 +2417,10 @@
     "importToBuild": "Importeer facturen of catalogi om je materialen-database op te bouwen",
     "import": "Importeren",
     "similarOthersUse": "Vergelijkbare materialen die anderen gebruiken",
-    "switchTo": "Wissel naar {{name}}"
+    "switchTo": "Wissel naar {{name}}",
+    "unitPrice": "Stuksprijs (€)",
+    "bestPriceHint": "eerder: €{{p}}",
+    "unitPricePlaceholder": "0,00"
   },
   "suppliers": {
     "title": "Leveranciers",
@@ -2451,7 +2459,13 @@
     "noTemplates": "Geen sjablonen in deze categorie",
     "linesCount": "{{count}} regels",
     "usedCount": "{{count}}× gebruikt",
-    "useTemplate": "Gebruik sjabloon"
+    "useTemplate": "Gebruik sjabloon",
+    "missingFieldsTitle": "Vul alle velden in",
+    "missingFieldsBody": "Sjabloon heeft een naam, een omschrijving en een prijs nodig.",
+    "loadedTitle": "Sjabloon geladen",
+    "loadedBody": "\"{{name}}\" is geladen met {{count}} regels. Pas de offerte aan voor de klant.",
+    "deleteTitle": "Sjabloon verwijderen",
+    "deleteBody": "\"{{name}}\" verwijderen?"
   },
   "decisions": {
     "title": "Klant Keuzes"
@@ -2593,7 +2607,11 @@
     "reminderEmailBody": "E-mailherinnering verzonden!",
     "reminderWhatsappBody": "WhatsApp-herinnering verzonden!",
     "copiedTitle": "Gekopieerd",
-    "copiedBody": "Betaallink gekopieerd:\n{{url}}"
+    "copiedBody": "Betaallink gekopieerd:\n{{url}}",
+    "paymentLinkFailedTitle": "Betaallink mislukt",
+    "paymentLinkFailedBody": "Probeer opnieuw of check je betaalprovider-instellingen.",
+    "moneybirdFailedTitle": "Moneybird-export mislukt",
+    "moneybirdFailedBody": "Probeer opnieuw of check je Moneybird-koppeling."
   },
   "quoteToInvoice": {
     "notFound": "Offerte {{id}} niet gevonden",
@@ -2618,5 +2636,10 @@
     "invoiceOverdue": " die {{days}} dagen verlopen is",
     "quoteFollowup": "Hallo {{name}},\n\nIk wilde even opvolgen op de offerte voor \"{{job}}\" (€{{amount}}).\n\nHeeft u nog vragen of wilt u doorgaan?\n\nMet vriendelijke groet,\nVerzonden via Vasco",
     "progressUpdate": "Hallo {{name}},\n\nKorte update over \"{{job}}\": vandaag {{hours}}u gewerkt. Alles ligt op schema.\n\nVerzonden via Vasco"
+  },
+  "vatPrep": {
+    "lineInvoice": "Factuur",
+    "lineExpense": "Uitgave",
+    "checkLine": "Controleer"
   }
 }

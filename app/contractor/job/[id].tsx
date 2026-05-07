@@ -189,27 +189,14 @@ export default function JobDetailPage() {
     } as any;
   }, [id, jobs, customers]);
 
-  // Build audit trail from real data
-  const auditTrail = useMemo(() => {
-    const appJob = jobs.find((j: any) => j.id === id);
-    if (!appJob) return [];
-    const events: { icon: IconName; label: string; date: string; color: string }[] = [];
-    if (appJob.createdAt) events.push({ icon: 'add-circle-outline', label: 'Job created', date: appJob.createdAt, color: '#94A3B8' });
-    if (appJob.quoteId) {
-      const q = quotes.find((qu: any) => qu.id === appJob.quoteId);
-      if (q?.lastUpdated) events.push({ icon: 'document-text-outline', label: 'Quote sent', date: q.lastUpdated, color: '#F59E0B' });
-    }
-    if (appJob.scheduledDate) events.push({ icon: 'calendar-outline', label: 'Scheduled', date: appJob.scheduledDate, color: '#8B5CF6' });
-    if (appJob.status === 'in-progress' || appJob.status === 'completed' || appJob.status === 'invoiced' || appJob.status === 'paid')
-      events.push({ icon: 'play-circle-outline', label: 'Work started', date: appJob.updatedAt || appJob.createdAt, color: '#E35205' });
-    if (appJob.completedAt) events.push({ icon: 'checkmark-circle-outline', label: 'Completed', date: appJob.completedAt, color: SemanticColors.feedbackSuccess });
-    if (appJob.invoiceId) {
-      const inv = invoices.find((i: any) => i.id === appJob.invoiceId || i.job === appJob.title);
-      if (inv) events.push({ icon: 'receipt-outline', label: `Invoiced €${(inv.amount || 0).toLocaleString()}`, date: inv.lastUpdated || inv.dueDate || '', color: '#0EA5E9' });
-      if (inv?.status === 'paid') events.push({ icon: 'cash-outline', label: 'Paid', date: inv.lastUpdated || '', color: '#059669' });
-    }
-    return events.sort((a, b) => a.date.localeCompare(b.date));
-  }, [id, jobs, invoices, quotes]);
+  // R66 round 17: removed dead `auditTrail` useMemo. Built a 6-event
+  // timeline (Job created / Quote sent / Scheduled / Work started /
+  // Completed / Invoiced / Paid) with hardcoded English labels — but the
+  // result was never read by the JSX render path (single-occurrence
+  // identifier in the file). Pure compute waste + 6 fake-localization-debt
+  // strings that misled audits. If a real audit-trail UI ships later, the
+  // labels need to flow through t() and the strings should target the
+  // gobd_audit_log entries (R15) rather than synthesizing from job state.
 
   // Show cost section for jobs that are bezig or later
   const showCostSection = job && ['bezig', 'gereed', 'gefactureerd', 'betaald'].includes(job.lifecycleStatus);

@@ -44,6 +44,10 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
   const [unit, setUnit] = useState('');
   const [selectedSupplierId, setSelectedSupplierId] = useState<string | undefined>();
   const [notes, setNotes] = useState('');
+  // R66 round 22: actual paid price (overrides bestPrice cached observation).
+  // Was missing entirely — first-time materials had unitPrice=undefined, so
+  // totalPrice + job cost + margin calculations were silently zero.
+  const [priceInput, setPriceInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [similarMaterials, setSimilarMaterials] = useState<Material[]>([]);
 
@@ -120,7 +124,12 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
 
     setSaving(true);
     try {
-      const unitPrice = bestPrice?.price;
+      // R66 round 22: prefer the contractor-typed price (the actual receipt
+      // amount) over the cached bestPrice observation. Falls back to
+      // bestPrice when the field is left empty (rare — most reflect a
+      // just-paid receipt).
+      const typedPrice = priceInput.trim() ? parseFloat(priceInput.replace(',', '.')) : NaN;
+      const unitPrice = !Number.isNaN(typedPrice) && typedPrice > 0 ? typedPrice : bestPrice?.price;
       await addJobMaterial({
         jobId,
         materialId: selectedMaterial.id,
@@ -148,6 +157,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
     setUnit('');
     setSelectedSupplierId(undefined);
     setNotes('');
+    setPriceInput('');
     onClose();
   };
 
@@ -294,6 +304,25 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
                   placeholderTextColor={SemanticColors.textTertiary}
                 />
               </View>
+            </View>
+
+            {/* R66 round 22: price input — was missing. Placeholder hints
+                the cached bestPrice when one exists, but the contractor's
+                typed value always wins (matches receipt). Decimal-pad with
+                comma support for NL/DE/FR/ES/IT keyboards. */}
+            <View style={s.fieldSection}>
+              <Text style={s.fieldLabel}>
+                {t('materials.unitPrice', 'Unit price (€)')}
+                {bestPrice?.price ? ` · ${t('materials.bestPriceHint', 'cached: €{{p}}', { p: bestPrice.price.toFixed(2) })}` : ''}
+              </Text>
+              <TextInput
+                style={s.fieldInput}
+                value={priceInput}
+                onChangeText={setPriceInput}
+                keyboardType="decimal-pad"
+                placeholder={bestPrice?.price ? bestPrice.price.toFixed(2) : t('materials.unitPricePlaceholder', '0.00')}
+                placeholderTextColor={SemanticColors.textTertiary}
+              />
             </View>
 
             {/* Supplier picker */}

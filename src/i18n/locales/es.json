@@ -35,7 +35,8 @@
     "and": "y",
     "thisJob": "este trabajo",
     "apply": "Aplicar",
-    "ignore": "Ignorar"
+    "ignore": "Ignorar",
+    "ok": "OK"
   },
   "tabs": {
     "today": "Hoy",
@@ -483,7 +484,9 @@
     "effectiveRate": "Tarifa efectiva",
     "savingsPerJob": "Ahorro/trabajo",
     "emptyInvoicesDesc": "Marca un trabajo como completado para generar una factura.",
-    "goToJobs": "Ir a trabajos"
+    "goToJobs": "Ir a trabajos",
+    "invoiceCreateFailedTitle": "No se pudo crear la factura",
+    "invoiceCreateFailedBody": "Inténtalo de nuevo o abre el trabajo para rellenar los campos que faltan."
   },
   "expenses": {
     "title": "Gastos",
@@ -1249,7 +1252,9 @@
     "inclVat": "incl. VAT",
     "upsellStat": "83% of customers pick Standard or Premium",
     "linesStandard": "Lines (standard)",
-    "sendQuote": "Send quote"
+    "sendQuote": "Send quote",
+    "shareFailedTitle": "No se pudo compartir el presupuesto",
+    "shareFailedBody": "Inténtalo de nuevo. Si persiste, el PDF no se pudo generar en este dispositivo."
   },
   "queue": {
     "lowWinTitle": "Baja probabilidad · {{customer}}",
@@ -2412,7 +2417,10 @@
     "importToBuild": "Importa facturas o catálogos para construir tu base de materiales",
     "import": "Importar",
     "similarOthersUse": "Materiales similares que otros usan",
-    "switchTo": "Cambiar a {{name}}"
+    "switchTo": "Cambiar a {{name}}",
+    "unitPrice": "Precio unitario (€)",
+    "bestPriceHint": "anterior: €{{p}}",
+    "unitPricePlaceholder": "0,00"
   },
   "suppliers": {
     "title": "Suppliers",
@@ -2451,7 +2459,13 @@
     "noTemplates": "No templates in this category",
     "linesCount": "{{count}} lines",
     "usedCount": "{{count}}× used",
-    "useTemplate": "Use template"
+    "useTemplate": "Use template",
+    "missingFieldsTitle": "Rellena todos los campos",
+    "missingFieldsBody": "La plantilla necesita un nombre, una descripción y un precio.",
+    "loadedTitle": "Plantilla cargada",
+    "loadedBody": "\"{{name}}\" cargada con {{count}} líneas. Ajusta el presupuesto para el cliente.",
+    "deleteTitle": "Eliminar plantilla",
+    "deleteBody": "¿Eliminar \"{{name}}\"?"
   },
   "decisions": {
     "title": "Customer decisions"
@@ -2593,7 +2607,11 @@
     "reminderEmailBody": "¡Recordatorio por email enviado!",
     "reminderWhatsappBody": "¡Recordatorio WhatsApp enviado!",
     "copiedTitle": "Copiado",
-    "copiedBody": "Enlace de pago copiado:\n{{url}}"
+    "copiedBody": "Enlace de pago copiado:\n{{url}}",
+    "paymentLinkFailedTitle": "Error al crear enlace de pago",
+    "paymentLinkFailedBody": "Inténtalo de nuevo o revisa la configuración del proveedor.",
+    "moneybirdFailedTitle": "Error de exportación a Moneybird",
+    "moneybirdFailedBody": "Inténtalo de nuevo o revisa tu conexión Moneybird."
   },
   "quoteToInvoice": {
     "notFound": "Presupuesto {{id}} no encontrado",
@@ -2618,5 +2636,10 @@
     "invoiceOverdue": " que lleva {{days}} días vencida",
     "quoteFollowup": "Hola {{name}},\n\nQuería hacer seguimiento del presupuesto para \"{{job}}\" (€{{amount}}).\n\n¿Tienes alguna pregunta o quieres continuar?\n\nUn saludo,\nEnviado vía Vasco",
     "progressUpdate": "Hola {{name}},\n\nActualización rápida sobre \"{{job}}\": hoy se trabajaron {{hours}}h. Todo va según lo previsto.\n\nEnviado vía Vasco"
+  },
+  "vatPrep": {
+    "lineInvoice": "Factura",
+    "lineExpense": "Gasto",
+    "checkLine": "Revisar"
   }
 }

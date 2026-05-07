@@ -35,6 +35,9 @@ export function documentRowToInvoice(row: DocumentRow): Invoice {
     amount: Number(row.total_amount),
     status: row.status as Invoice['status'],
     dueInDays: dueDays,
+    // R66 round 13: hydrate notes (was always undefined — UI lost notes
+    // on every cold start).
+    notes: row.notes ?? undefined,
   };
 }
 
@@ -130,6 +133,10 @@ export function jobUpdatesToRowPayload(updates: Partial<Job>): Record<string, un
   if ('completedAt' in updates)        out.completed_at = updates.completedAt;
   if ('signatureSvg' in updates)       out.signature_svg = updates.signatureSvg;
   if ('customerSignoffAt' in updates)  out.customer_signoff_at = updates.customerSignoffAt;
+  // R66 round 12: timeEntries was previously dropped here ("separate table")
+  // but no such table existed — every contractor's logged hours were lost
+  // on cold start. Now persisted as JSONB on jobs.time_entries.
+  if ('timeEntries' in updates)        out.time_entries = updates.timeEntries ?? [];
   // Address is a nested object on Job; flatten to address_*
   if ('address' in updates && updates.address) {
     if ('street' in updates.address)       out.address_street = updates.address.street;
@@ -142,9 +149,11 @@ export function jobUpdatesToRowPayload(updates: Partial<Job>): Record<string, un
   // FE-only / separate-table fields are intentionally dropped:
   //   quoteId, invoiceId         — derived
   //   actualHours, actualCost    — derived from time/material entries
-  //   timeEntries, materials,    — separate tables
-  //   photos, notes              — separate tables
+  //   materials                  — separate table (job_materials)
+  //   photos                     — separate table (job_photos)
+  //   notes                      — separate table
   //   recurringPattern           — separate table (R254)
+  // timeEntries: now persisted via jobs.time_entries JSONB (R66/R12 above).
   return out;
 }
 
@@ -180,7 +189,9 @@ export function jobRowToJob(row: JobRow): Job {
     specifications: row.specifications ?? undefined,
     photos: [],
     notes: [],
-    timeEntries: [],
+    // R66 round 12: hydrate from jobs.time_entries JSONB (was always [],
+    // throwing away every cross-device hour read).
+    timeEntries: Array.isArray(row.time_entries) ? (row.time_entries as any) : [],
     materials: [],
     // R301: signature columns wired through after migration
     // 20260502000003_job_signature_columns.sql

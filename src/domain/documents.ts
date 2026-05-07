@@ -48,4 +48,7 @@ export type Invoice = {
   customerName?: string;
   exportedAt?: string;
   einvoiceSubmitted?: string;
+  // R66 round 13: internal notes (free-text contractor memo, not
+  // customer-visible). Was UI-only — saving did nothing.
+  notes?: string;
 };
