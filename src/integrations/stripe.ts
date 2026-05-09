@@ -212,6 +212,16 @@ export async function createPaymentLink(request: StripePaymentRequest): Promise<
   const currency = (request.currency ?? 'GBP').toLowerCase();
   const amountInCents = Math.round(request.amount * 100);
 
+  // R66r49 #14: paymentMarginService.VASCO_PLATFORM_FEE_PERCENT (1%) wires
+  // here when Stripe Connect is set up. Add to the formData below:
+  //   'application_fee_amount': Math.round(amountInCents * 0.01),
+  //   'on_behalf_of': connectedAccountId,
+  // For now: contractor receives full amount, Vasco collects no fee.
+  // Operator action: enroll Vasco as Stripe Connect platform → contractor
+  // onboards their Stripe account → app reads connectedAccountId from
+  // stripeConfig and threads it through. Disclosure already shipped in
+  // mollie.tsx connect modal (R66r49 #14) so this is non-surprising.
+
   // Stripe Payment Links require a Price object inline via line_items
   const result = await apiCall<StripePaymentLink>('payment_links', {
     method: 'POST',

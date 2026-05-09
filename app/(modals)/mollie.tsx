@@ -10,7 +10,16 @@ import { hapticSuccess } from '../../src/utils/haptics';
 import { useAuth } from '../../src/context/AuthContext';
 import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../../src/config/paymentMethods';
 import { consentService } from '../../src/services/consentService';
+import { VASCO_FEE_DISCLOSURE } from '../../src/services/paymentMarginService';
+import i18n from '../../src/i18n/i18n';
 import { useTranslation } from 'react-i18next';
+
+type LocaleKey = keyof typeof VASCO_FEE_DISCLOSURE;
+function feeDisclosureForLocale(): string {
+  const lang = (i18n.language ?? 'en').slice(0, 2).toLowerCase();
+  const valid: LocaleKey[] = ['en', 'nl', 'de', 'fr', 'es', 'it'];
+  return VASCO_FEE_DISCLOSURE[(valid.includes(lang as LocaleKey) ? lang : 'en') as LocaleKey];
+}
 
 export default function MollieConnectModal() {
   const { connectMollie, mollieConnected } = useAppState();
@@ -83,6 +92,18 @@ export default function MollieConnectModal() {
         <Text style={styles.subtitle}>
           {t('mollie.subtitle', 'Receive payments via iDEAL, credit card and more')}
         </Text>
+
+        {/* R66r49 #14: Vasco platform-fee disclosure (1% on payments
+            received). Required to surface in plain language wherever the
+            contractor connects a payment provider. The fee itself is not
+            yet collected — Stripe Connect / Mollie partner setup needed
+            before paymentMarginService.application_fee flows. Disclosure
+            ships now so when the back-end flips on, contractors aren't
+            surprised. */}
+        <View style={styles.feeNotice}>
+          <Ionicons name="information-circle-outline" size={16} color={SemanticColors.textTertiary} />
+          <Text style={styles.feeNoticeText}>{feeDisclosureForLocale()}</Text>
+        </View>
 
         {/* API Key Input */}
         <View style={styles.inputSection}>
@@ -167,6 +188,24 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: Spacing.lg, gap: Spacing.md },
   title: { fontSize: 22, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary },
   subtitle: { fontSize: 14, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
+  feeNotice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 4,
+  },
+  feeNoticeText: {
+    flex: 1,
+    fontSize: 12,
+    fontFamily: 'Inter_400Regular',
+    color: SemanticColors.textSecondary,
+    lineHeight: 16,
+  },
   inputSection: { gap: 6 },
   label: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },

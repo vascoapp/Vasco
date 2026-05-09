@@ -145,6 +145,17 @@ export async function createPayment(req: MolliePaymentRequest): Promise<MolliePa
     return { success: false, paymentId: '', checkoutUrl: '', error: 'Mollie not connected — configure the integration before accepting payments.' };
   }
 
+  // R66r49 #14: paymentMarginService.VASCO_PLATFORM_FEE_PERCENT (1%) wires
+  // here when Mollie Partner / Connect is set up. Add to the body below:
+  //   applicationFee: {
+  //     amount: { currency: 'EUR', value: (req.amount * 0.01).toFixed(2) },
+  //     description: 'Vasco platform fee',
+  //   },
+  // For now: contractor receives full amount, Vasco collects no fee.
+  // Operator action: apply for Mollie Partner programme → contractor
+  // onboards under Vasco's partner account → app reads partnerAccessToken
+  // and threads it through. Disclosure already shipped in mollie.tsx
+  // connect modal (R66r49 #14) so this is non-surprising.
   const result = await apiCall<MolliePayment>('payments', {
     method: 'POST',
     body: JSON.stringify({
