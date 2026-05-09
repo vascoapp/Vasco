@@ -129,7 +129,8 @@ export async function suggestPackIfFirstTime(args: {
   return true;
 }
 
-function isMatchMuted(mutes: Record<string, PackMute>, packId: string, customerId?: string, entityId?: string): boolean {
+/** @internal exported for unit testing — see workflowPackHelpers.test.ts */
+export function isMatchMuted(mutes: Record<string, PackMute>, packId: string, customerId?: string, entityId?: string): boolean {
   // Check 4 increasingly-specific keys: any, by-customer, by-entity, by-both.
   const keys = [
     `*|*|*`,
@@ -819,7 +820,8 @@ const COUNTRY_DIAL: Record<string, string> = {
   UK: '44', NL: '31', DE: '49', FR: '33', ES: '34', IT: '39',
 };
 
-function toE164(phone: string | undefined, contractorCountry?: string): string | null {
+/** @internal exported for unit testing — see workflowPackHelpers.test.ts */
+export function toE164(phone: string | undefined, contractorCountry?: string): string | null {
   if (!phone) return null;
   let digits = phone.replace(/\D+/g, '');
   if (!digits) return null;
@@ -830,7 +832,8 @@ function toE164(phone: string | undefined, contractorCountry?: string): string |
   return digits;
 }
 
-function buildWhatsAppUrl(e164: string, message: string): string {
+/** @internal exported for unit testing — see workflowPackHelpers.test.ts */
+export function buildWhatsAppUrl(e164: string, message: string): string {
   return `https://wa.me/${e164}?text=${encodeURIComponent(message)}`;
 }
 
@@ -839,7 +842,8 @@ function getContractorLocale(): LocaleCode {
   return (['nl', 'en', 'de', 'fr', 'es', 'it'].includes(lang) ? lang : 'nl') as LocaleCode;
 }
 
-function pickTemplateForLocale(step: WorkflowStep, locale: LocaleCode): string {
+/** @internal exported for unit testing — see workflowPackHelpers.test.ts */
+export function pickTemplateForLocale(step: WorkflowStep, locale: LocaleCode): string {
   // R66r49 #5: priority is `defaults[locale] → i18nKey → step.template`.
   // The in-code `defaults` map wins over i18n because the i18n keys still
   // hold the pre-R49 templates (no {{currency}}, no EU 2011/7/EU text);
