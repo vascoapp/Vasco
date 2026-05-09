@@ -1,6 +1,6 @@
 # Acceptable Use Policy — Vasco
 
-**Last updated:** March 24, 2026
+**Last updated:** May 9, 2026
 
 This Acceptable Use Policy outlines prohibited uses of the Vasco application.
 
@@ -29,4 +29,4 @@ Violations may result in:
 
 ## Reporting
 
-Report violations to: **abuse@vasco.dev**
+Report violations to: **abuse@vasco.app**

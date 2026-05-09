@@ -1,6 +1,6 @@
 # End-User License Agreement (EULA) — Vasco
 
-**Last updated:** March 24, 2026
+**Last updated:** May 9, 2026
 
 This End-User License Agreement ("EULA") is a legal agreement between you ("User") and Vasco ("Licensor") for the use of the Vasco mobile application ("App").
 
@@ -27,7 +27,7 @@ The App and all related intellectual property rights are owned by Vasco. This EU
 
 ## 4. Third-Party Services
 
-The App integrates with third-party services (Mollie, Supabase, Anthropic, accounting providers). Your use of these services is subject to their respective terms and privacy policies.
+The App integrates with third-party services (Mollie, Stripe, Supabase, Anthropic, Resend, Sentry, Expo, and 19 supported accounting providers). Your use of these services is subject to their respective terms and privacy policies. A current list lives in our Privacy Policy.
 
 ## 5. Updates
 
@@ -51,4 +51,4 @@ This EULA is governed by the laws of the Netherlands. Disputes shall be resolved
 
 ## 10. Contact
 
-For questions about this EULA: **legal@vasco.dev**
+For questions about this EULA: **legal@vasco.app**

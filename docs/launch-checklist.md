@@ -2,6 +2,17 @@
 
 Tracks everything required to publish Vasco to App Store + Google Play and enable live Supabase for EU6 markets.
 
+## ✅ Done R66r49 (NL launch readiness, 2026-05-09 — autonomous)
+- [x] **EAS project linked** — `@collectai/VascoApp` (id `eebc2577-cbf8-4252-9b6c-f91119c17b7d`). `app.json:expo.extra.eas.projectId` populated. Production push tokens will work.
+- [x] **OTA updates URL** — `https://u.expo.dev/eebc2577-cbf8-4252-9b6c-f91119c17b7d`. Hotfix path open.
+- [x] **Migration `20260508000001` pushed** — `documents.delivery_date` + `line_items.vat_rate`. NL Belastingdienst Art. 35 + mixed-VAT quotes durable across cold start.
+- [x] **Sentry SDK installed** — `@sentry/react-native` + auto-registered config plugin. Wrapper at `src/lib/errorReporting.ts` lazy-requires the SDK at init.
+- [x] **Privacy Manifest moved to app.json** — was at `ios/PrivacyInfo.xcprivacy` but never registered in Xcode. Now at `expo.ios.privacyManifests`; expo prebuild regenerates and registers it correctly. Bonus: deduped `associatedDomains` (6→3) + `CFBundleLocalizations` (12→6).
+- [x] **`pack-trigger-tick` edge fn deployed** — server-side daily eval of Incasso (5 buckets) + Quote followup (2) + Handover-survey (1) + Maintenance (2). 10 server-side push touchpoints across 4 packs.
+- [x] **`send-automation-preview` edge fn deployed** — emails any pack/step preview to a target inbox. Blocked by missing `RESEND_API_KEY`.
+- [x] **Legal docs refreshed** (R66r49 #10): privacy-policy + terms-of-service + cookie-policy + AUP + EULA + DPA + GDPR DSR all updated 2026-05-09. Added Stripe + Resend + Sentry + Expo Push as sub-processors. Wa.me deep-link customer-data flow disclosed. EU 2011/7/EU disclosure on Incasso 14d/30d disclosed in ToS. Domain consistency across all docs (vasco.dev → vasco.app).
+- [x] **755 tests / 72 suites** + 0 TS errors at commit `89a5f50`.
+
 ## ✅ Done (autonomous — no credentials needed)
 - [x] Root `tsconfig.json` scoped so `npx tsc --noEmit | grep "^app/"` is a reliable gate (0 errors).
 - [x] Demo mode properly gated — `DEMO_MODE` false in prod blocks demo accounts.

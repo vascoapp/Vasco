@@ -1,6 +1,6 @@
 # Data Processing Agreement (DPA) — Vasco
 
-**Last updated:** March 24, 2026
+**Last updated:** May 9, 2026
 
 This Data Processing Agreement ("DPA") supplements the Vasco Terms of Service and Privacy Policy. It applies when Vasco processes personal data on behalf of its users under the General Data Protection Regulation (GDPR).
 
@@ -59,9 +59,13 @@ You provide general authorization for the following sub-processors:
 
 | Sub-Processor | Purpose | Location | Safeguards |
 |--------------|---------|----------|------------|
-| Supabase Inc. | Database hosting, authentication | EU (AWS Ireland) | SCCs, SOC 2 |
-| Mollie B.V. | Payment processing | Netherlands | PCI DSS, GDPR compliant |
+| Supabase Inc. | Database hosting, authentication, edge functions | EU (AWS Ireland) | SCCs, SOC 2 |
+| Mollie B.V. | Payment processing (EU contractors, EUR) | Netherlands | PCI DSS, GDPR compliant |
+| Stripe Payments Europe Ltd. | Payment processing (UK contractors, GBP) | Ireland | PCI DSS, GDPR compliant |
+| Resend Inc. | Transactional email (invoices, reminders) | USA + EU | SCCs, SOC 2 |
 | Anthropic PBC | Photo analysis (Claude Vision) | USA | SCCs, no data retention |
+| Functional Software Inc. (Sentry) | Error reporting (optional) | USA | SCCs, EU residency available |
+| Expo Inc. | Push notification delivery, OTA updates | USA | SCCs |
 | Amazon Web Services | Infrastructure (via Supabase) | EU (Ireland) | SCCs, ISO 27001 |
 
 We will notify you of any changes to sub-processors at least 30 days in advance. You may object to a new sub-processor by contacting us within 14 days.
@@ -128,5 +132,5 @@ This DPA remains in effect for the duration of our processing of personal data o
 
 ## 12. Contact
 
-**Data Protection Contact:** privacy@vasco.dev
-**Legal Contact:** legal@vasco.dev
+**Data Protection Contact:** privacy@vasco.app
+**Legal Contact:** legal@vasco.app

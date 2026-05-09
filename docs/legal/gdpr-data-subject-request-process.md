@@ -1,12 +1,12 @@
 # GDPR Data Subject Request Process — Vasco
 
-**Last updated:** March 24, 2026
+**Last updated:** May 9, 2026
 
 ## How to Submit a Request
 
 Data subjects (your customers, employees, contacts) can exercise their GDPR rights by contacting:
 
-**Email:** privacy@vasco.dev
+**Email:** privacy@vasco.app
 **Response time:** Within 30 days of receipt
 
 ## Request Types
@@ -21,9 +21,11 @@ Data subjects (your customers, employees, contacts) can exercise their GDPR righ
 - The contractor (data controller) will be notified of corrections
 
 ### Right to Erasure (Article 17)
-- Personal data will be deleted within 30 days
-- **Exceptions:** Data required for legal obligations (tax records: 7 years), ongoing disputes, or legitimate business interests
-- The contractor will be notified of deletion
+- In-app: Settings → Account → "Delete my account" inserts a row into `account_deletion_requests`. A background worker (`drain-account-deletions`, scheduled daily at 02:00 UTC) processes pending rows in batches of 50 — erases user-owned data, anonymises tax-retained rows (7-year retention per legal obligation), calls `auth.admin.deleteUser`, and marks the request `done`.
+- Out-of-band: email privacy@vasco.app — same SLA.
+- Personal data will be deleted within 30 days.
+- **Exceptions:** Data required for legal obligations (invoices/tax records: 7 years), ongoing disputes, or legitimate business interests. Anonymised tax records carry no identifying personal data.
+- The contractor (controller) will be notified of deletion.
 
 ### Right to Data Portability (Article 20)
 - Data provided in machine-readable format (JSON/CSV)
@@ -49,4 +51,4 @@ Data subjects (your customers, employees, contacts) can exercise their GDPR righ
 
 ## Contact
 
-**Data Protection Officer:** privacy@vasco.dev
+**Data Protection Officer:** privacy@vasco.app

@@ -1,7 +1,7 @@
 # Privacy Policy — Vasco
 
-**Last updated:** March 24, 2026
-**Effective date:** March 24, 2026
+**Last updated:** May 9, 2026
+**Effective date:** May 9, 2026
 
 Vasco ("we," "us," "our") operates the Vasco mobile application (the "App"). This Privacy Policy explains how we collect, use, disclose, and protect your personal information when you use our App.
 
@@ -37,6 +37,12 @@ When you manage customers through the App:
 - Job site locations (including GPS coordinates when provided)
 - Communication history and notes
 
+When a customer phone number is present, the App may build a WhatsApp deep-link
+(`https://wa.me/<E.164>?text=<message>`) so you can send pre-filled reminders to
+your customer's WhatsApp. The link is only opened when you tap "approve" on a
+queued automation. We do not transmit the phone number to WhatsApp ourselves —
+the deep-link is opened by your device's operating system.
+
 ### 1.4 Job and Financial Data
 - Job descriptions, schedules, and status
 - Quotes, invoices, and payment records
@@ -48,14 +54,22 @@ When you manage customers through the App:
 - App feature usage patterns
 - AI insight interactions (viewed, expanded, dismissed, acted upon)
 - Screen visit frequency
-- Automation approval/rejection patterns
+- Automation approval/rejection patterns (per workflow pack: queued, approved, dismissed, expired — used to compute pack health and improve template quality)
 - Performance metrics (job completion rates, estimation accuracy)
+- Cross-customer mute decisions you make on individual automations (stored
+  on-device only; not synced to the server)
 
 ### 1.6 Device Information
 - Device type and operating system version
 - App version
 - Language and locale settings
 - Timezone
+
+### 1.7 Push Notification Tokens
+When you enable push notifications, we store an Expo Push token tied to your
+device so we can deliver in-app reminders, payment receipts, and automation
+nudges. The token contains no personal information and is rotated weekly.
+You can revoke it at any time in your device settings.
 
 ---
 
@@ -131,12 +145,19 @@ We share data with the following third-party services only as necessary to provi
 - **Location:** EU (AWS eu-west-1)
 - **Privacy policy:** https://supabase.com/privacy
 
-### 4.2 Mollie (Payment Processing)
-- **Purpose:** Generate payment links for your invoices
+### 4.2 Mollie (Payment Processing — EU)
+- **Purpose:** Generate payment links for your invoices (EUR)
 - **Data shared:** Invoice amount, currency, customer email (when payment link is created)
 - **Location:** Netherlands (EU)
 - **Privacy policy:** https://www.mollie.com/privacy
-- **Note:** Mollie integration is optional. No payment data is shared unless you actively create a payment link.
+- **Note:** Mollie integration is optional. No payment data is shared unless you actively create a payment link. Mollie webhook signatures are verified server-side; replays are deduplicated via an idempotency table so duplicate emails or push notifications do not fire.
+
+### 4.2b Stripe (Payment Processing — UK)
+- **Purpose:** Generate payment links for your invoices (GBP). Used only when your contractor country is set to UK.
+- **Data shared:** Invoice amount, currency, customer email (when payment link is created)
+- **Location:** Ireland (EU/EEA region)
+- **Privacy policy:** https://stripe.com/privacy
+- **Note:** Stripe integration is optional. Same idempotency contract as Mollie above.
 
 ### 4.3 Anthropic (AI Photo Analysis)
 - **Purpose:** Analyze photos of invoices/receipts to extract line items and pricing
@@ -151,10 +172,24 @@ When you connect an accounting provider (Moneybird, DATEV, Lexoffice, etc.):
 - **Purpose:** Sync financial data with your accounting software
 - **Note:** You control which provider is connected. No data is shared until you explicitly connect and authorize.
 
-### 4.5 Expo (App Distribution)
-- **Purpose:** App updates and distribution
-- **Data shared:** Device type, app version (standard app store analytics)
+### 4.5 Expo (App Distribution + Push)
+- **Purpose:** App updates, OTA hotfixes, and push notification delivery via Expo Push Service
+- **Data shared:** Device type, app version, Expo push token
 - **Privacy policy:** https://expo.dev/privacy
+
+### 4.6 Resend (Email Delivery)
+- **Purpose:** Send invoices, payment reminders, and account emails to your customers
+- **Data shared:** Recipient email, invoice/quote PDF attachments, message body
+- **Location:** US-based with EU sub-processors
+- **Privacy policy:** https://resend.com/legal/privacy-policy
+- **Note:** Email content is queued for one-tap approval before sending. We do not auto-send emails on your behalf.
+
+### 4.7 Sentry (Error Reporting — Optional)
+- **Purpose:** Capture production crashes and runtime errors so we can fix them
+- **Data shared:** Stack traces, breadcrumbs (route trail + significant in-app actions like "invoice_sent", "invoice_paid"), user ID (anonymous UUID), device + OS
+- **Location:** US-based; EU data residency available
+- **Privacy policy:** https://sentry.io/privacy/
+- **Note:** Sentry runs only when an error occurs. We do not log message bodies, customer names, financial amounts, or PDF content in error reports.
 
 ---
 
@@ -192,7 +227,7 @@ File a complaint with your local data protection authority:
 - **Italy:** Garante per la protezione dei dati personali
 - **UK:** Information Commissioner's Office (ICO)
 
-To exercise any of these rights, contact us at **privacy@vasco.dev**.
+To exercise any of these rights, contact us at **privacy@vasco.app**.
 
 ---
 
@@ -242,9 +277,9 @@ We may update this Privacy Policy from time to time. We will notify you of mater
 
 For privacy-related questions, data access requests, or complaints:
 
-**Email:** privacy@vasco.dev
+**Email:** privacy@vasco.app
 **Address:** [Your registered business address]
 **Data Protection Officer:** [Name, if appointed]
 
-For general support: support@vasco.dev
-**Website:** https://vasco.dev
+For general support: support@vasco.app
+**Website:** https://vasco.app

@@ -1,7 +1,7 @@
 # Terms of Service — Vasco
 
-**Last updated:** March 24, 2026
-**Effective date:** March 24, 2026
+**Last updated:** May 9, 2026
+**Effective date:** May 9, 2026
 
 These Terms of Service ("Terms") govern your use of the Vasco mobile application ("App") operated by Vasco ("we," "us," "our"). By downloading, installing, or using the App, you agree to these Terms.
 
@@ -11,13 +11,14 @@ These Terms of Service ("Terms") govern your use of the Vasco mobile application
 
 Vasco is an AI-powered business management platform for construction trades professionals. The App provides:
 - Job scheduling and management
-- Quote and invoice creation with PDF generation
-- AI-powered business insights and automation
+- Quote and invoice creation with PDF generation (NL Belastingdienst Art. 35 compliant)
+- AI-powered business insights and automation, including 10 prebuilt workflow automation packs (overdue-invoice reminders, quote follow-up, customer-decision nudges, end-of-day routines, welcome flows, maintenance reminders, purchasing alerts, daily customer updates, handover packages, permit checks)
 - Time tracking and materials management
 - Customer relationship management
 - Compliance and certification tracking
-- Payment processing integration (via Mollie)
-- Accounting software integration
+- Payment processing integration (Mollie for EU contractors, Stripe for UK contractors)
+- Accounting software integration (19 supported providers across 6 EU countries)
+- E-invoicing (XRechnung, ZUGFeRD, Factur-X, Facturae, FatturaPA, Peppol)
 
 ---
 
@@ -54,7 +55,7 @@ You agree NOT to:
 The App provides AI-generated insights, predictions, and automation suggestions. These are advisory in nature and should not be relied upon as professional financial, legal, or business advice.
 
 ### 4.2 Human Approval Required
-All customer-facing actions (invoices, reminders, follow-ups, quotes) require your explicit approval before execution. The AI prepares work; you decide whether to proceed.
+All customer-facing actions (invoices, reminders, follow-ups, quotes) require your explicit approval before execution. The AI prepares work; you decide whether to proceed. This includes every workflow automation pack: triggers fire, drafts queue, but no message is sent to a customer until you tap approve.
 
 ### 4.3 Accuracy Disclaimer
 AI predictions (quote win probability, job duration estimates, payment timing) are based on historical data and statistical models. Actual outcomes may differ. We do not guarantee the accuracy of any AI-generated output.
@@ -73,7 +74,10 @@ The App helps you create and manage quotes and invoices. You are solely responsi
 - Proper record-keeping as required by tax authorities
 
 ### 5.2 Payment Processing
-Payment processing is provided by Mollie B.V. Use of payment features is subject to Mollie's terms of service (https://www.mollie.com/terms). We are not responsible for payment processing failures, chargebacks, or disputes.
+Payment processing is provided by Mollie B.V. for EU contractors (EUR) and Stripe Payments Europe Ltd. for UK contractors (GBP). Routing is automatic based on your country setting. Use of payment features is subject to the respective terms (Mollie: https://www.mollie.com/terms ; Stripe: https://stripe.com/legal/ssa). We are not responsible for payment processing failures, chargebacks, or disputes.
+
+### 5.2.1 Late-Payment Compliance (EU Directive 2011/7/EU)
+The Incasso automation pack includes statutory disclosure language at the +14d and +30d reminder stages, referencing EU Directive 2011/7/EU on combating late payment in commercial transactions (statutory interest + €40 recovery fee). Inclusion of this language in your reminders does NOT constitute legal advice and does not waive any rights. You remain responsible for confirming the disclosure applies under your contract with the customer.
 
 ### 5.3 Accounting Integrations
 When you connect third-party accounting software, data synchronization is provided on a best-effort basis. You are responsible for verifying data accuracy in your accounting system.
@@ -184,7 +188,7 @@ These Terms are governed by the laws of the Netherlands.
 Disputes shall be resolved in the courts of Amsterdam, the Netherlands, unless applicable consumer protection law provides otherwise.
 
 ### 12.3 Informal Resolution
-Before filing a formal complaint, you agree to contact us at support@vasco.dev to attempt informal resolution.
+Before filing a formal complaint, you agree to contact us at support@vasco.app to attempt informal resolution.
 
 ---
 
@@ -225,6 +229,6 @@ We may assign our rights under these Terms. You may not assign your rights witho
 
 For questions about these Terms:
 
-**Email:** support@vasco.dev
+**Email:** support@vasco.app
 **Address:** [Your registered business address]
-**Website:** https://vasco.dev
+**Website:** https://vasco.app

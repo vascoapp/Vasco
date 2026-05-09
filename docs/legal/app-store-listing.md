@@ -178,17 +178,18 @@ Download Vasco and run your trade like a pro.
 
 ### Pre-Submission Checklist
 
-- [ ] Update bundle ID from `com.anonymous.VascoApp` to real domain
-- [ ] Set up privacy@vasco.dev and support@vasco.dev email addresses
-- [ ] Host privacy policy at https://vasco.dev/privacy
-- [ ] Host terms of service at https://vasco.dev/terms
+- [x] ~~Update bundle ID~~ — already `com.vasco.app` (R66r49 #8)
+- [x] ~~Configure Expo EAS Build for production~~ — already linked: `@collectai/VascoApp` (R66r49 #8)
+- [x] ~~Set up Sentry SDK~~ — `@sentry/react-native` installed + auto-registered (R66r49 #8)
+- [ ] Set up privacy@vasco.app and support@vasco.app email addresses
+- [ ] Host privacy policy at https://vasco.app/privacy
+- [ ] Host terms of service at https://vasco.app/terms
 - [ ] Create app icon (1024×1024)
 - [ ] Take screenshots on iPhone 15 Pro Max + iPhone SE + iPad
 - [ ] Take screenshots on Pixel 8 + Samsung Galaxy S24
 - [ ] Create feature graphic for Google Play
 - [ ] Register Apple Developer account ($99/year)
 - [ ] Register Google Play Developer account ($25 one-time)
-- [ ] Configure Expo EAS Build for production
-- [ ] Set up Sentry or similar for crash reporting
+- [ ] Set Sentry DSN (`EXPO_PUBLIC_SENTRY_DSN`)
 - [ ] Test on physical devices (iOS + Android)
 - [ ] Run accessibility audit (VoiceOver, TalkBack)
