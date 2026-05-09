@@ -37,13 +37,13 @@ src/
     cohortBenchmarkService.ts # Cross-contractor benchmarks
     priceIndexService.ts      # EU6 construction cost indexes
     subscriptionService.ts    # Freemium tiers (Gratis/Contractor), feature gating, usage limits
-    paymentMarginService.ts   # Mollie fee pass-through + VascoApp margin (0.6%)
+    paymentMarginService.ts   # NOT WIRED (R66r49 #13) — fee-calc utility exists (1% flat, 6 locale disclosures), but no caller. Stripe Connect / Mollie partner setup needed before this collects revenue. Documented gap, not a code bug.
     supplierBacklinkService.ts # 16 EU suppliers, affiliate links, commission tracking
     complianceGatingService.ts # E-invoice format gating, 6 country compliance packs
     eveAgentService.ts        # EVE 3-agent model: Agent (execution), Auditor (compliance), Analyst (intelligence)
     customerCommunicationService.ts # WhatsApp Business + email + SMS automation, review requests
     liveTrackingService.ts    # GPS tracking, "On My Way" ETA, team map, GDPR consent
-    signatureService.ts       # Digital signature capture for quotes, invoices, handover (7 contexts, 6 langs)
+    signatureService.ts       # DEPRECATED (R296) — orphan; actual signature path writes SVG directly to Job.signatureSvg via app/contractor/job/[id].tsx
     teamToolsService.ts       # Worker scorecards, van stock, change orders, punch lists, membership enrollment
   integrations/       # Accounting, payments, e-invoicing, suppliers
   components/         # React components (shared, contractor, sitelead, dashboards)

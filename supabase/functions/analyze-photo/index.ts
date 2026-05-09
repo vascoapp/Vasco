@@ -6,15 +6,48 @@
 // API key stays server-side — never exposed to the app.
 // =============================================================================
 
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// R66r49 #13 audit: this function bills Anthropic per call (~$0.005/photo).
+// Without auth, anyone with the URL could loop calls and run up the bill.
+// Require a valid user JWT.
+async function requireAuth(req: Request): Promise<{ userId: string } | Response> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return new Response(JSON.stringify({ error: 'unauthorized — missing token' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const url = Deno.env.get('SUPABASE_URL');
+  const anon = Deno.env.get('SUPABASE_ANON_KEY');
+  if (!url || !anon) {
+    return new Response(JSON.stringify({ error: 'server config missing' }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const client = createClient(url, anon, { global: { headers: { Authorization: authHeader } } });
+  const { data: { user }, error } = await client.auth.getUser();
+  if (error || !user) {
+    return new Response(JSON.stringify({ error: 'unauthorized — invalid token' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  return { userId: user.id };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
+
+  // R66r49 #13: gate before paying for Anthropic call.
+  const auth = await requireAuth(req);
+  if (auth instanceof Response) return auth;
 
   try {
     const { imageBase64, imagesBase64, imageUrls, trade, country, mode } = await req.json();

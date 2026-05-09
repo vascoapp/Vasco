@@ -11,6 +11,36 @@
 // Returns: { ok: true, sent: [{ packId, stepIndex, subject, messageId }] }
 // =============================================================================
 
+// R66r49 #13 audit: this function bills Resend per email. Without auth a
+// bot with the URL could spam emails to arbitrary recipients. Require a
+// valid user JWT (any authenticated Vasco user — the preview is a dev
+// tool, not a customer feature, so per-user gating is enough).
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+async function requireAuth(req: Request): Promise<{ userId: string } | Response> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return new Response(JSON.stringify({ ok: false, error: 'unauthorized — missing token' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const url = Deno.env.get('SUPABASE_URL');
+  const anon = Deno.env.get('SUPABASE_ANON_KEY');
+  if (!url || !anon) {
+    return new Response(JSON.stringify({ ok: false, error: 'server config missing' }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const client = createClient(url, anon, { global: { headers: { Authorization: authHeader } } });
+  const { data: { user }, error } = await client.auth.getUser();
+  if (error || !user) {
+    return new Response(JSON.stringify({ ok: false, error: 'unauthorized — invalid token' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  return { userId: user.id };
+}
+
 interface PackStep {
   trigger: string;
   delayDays: number;
@@ -232,6 +262,10 @@ Deno.serve(async (req: Request) => {
       status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
+
+  // R66r49 #13: require authenticated caller.
+  const auth = await requireAuth(req);
+  if (auth instanceof Response) return auth;
 
   try {
     const body = (await req.json()) as RequestBody;

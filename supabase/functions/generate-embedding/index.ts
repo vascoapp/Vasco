@@ -13,10 +13,39 @@
 //         { ok: false, error }
 // =============================================================================
 
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// R66r49 #13 audit: this function bills OpenAI/Voyage per call. Without
+// auth, anyone with the URL can loop calls and run up the bill. Require
+// a valid user JWT.
+async function requireAuth(req: Request): Promise<{ userId: string } | Response> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return new Response(JSON.stringify({ ok: false, error: 'unauthorized — missing token' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const url = Deno.env.get('SUPABASE_URL');
+  const anon = Deno.env.get('SUPABASE_ANON_KEY');
+  if (!url || !anon) {
+    return new Response(JSON.stringify({ ok: false, error: 'server config missing' }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const client = createClient(url, anon, { global: { headers: { Authorization: authHeader } } });
+  const { data: { user }, error } = await client.auth.getUser();
+  if (error || !user) {
+    return new Response(JSON.stringify({ ok: false, error: 'unauthorized — invalid token' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  return { userId: user.id };
+}
 
 interface RequestBody {
   text: string;
@@ -70,6 +99,10 @@ async function embedWithVoyage(text: string, apiKey: string): Promise<number[] |
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  // R66r49 #13: gate before paying for embedding call.
+  const auth = await requireAuth(req);
+  if (auth instanceof Response) return auth;
 
   try {
     const body = (await req.json()) as RequestBody;
