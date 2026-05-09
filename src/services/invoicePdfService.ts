@@ -9,9 +9,11 @@
 
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import { File } from 'expo-file-system';
 import type { AutoInvoice } from './invoiceAutomationService';
 import { DEMO_MODE } from '../config/demo';
 import type { Country } from '../context/AuthContext';
+import { logWarn } from '../utils/errorHandler';
 
 // ── Number formatting ────────────────────────────────────
 
@@ -57,6 +59,8 @@ interface DocLabels {
   to: string;
   issueDate: string;
   dueDate: string;
+  // R66 round 34: leveringsdatum / service performance date.
+  deliveryDate: string;
   description: string;
   quantity: string;
   unitPrice: string;
@@ -77,7 +81,7 @@ interface DocLabels {
 const LABELS: Record<string, DocLabels> = {
   en: {
     title: 'Invoice', invoiceNumber: 'Invoice No.', from: 'From', to: 'Bill To',
-    issueDate: 'Issue Date', dueDate: 'Due Date',
+    issueDate: 'Issue Date', dueDate: 'Due Date', deliveryDate: 'Service Date',
     description: 'Description', quantity: 'Qty', unitPrice: 'Price', vat: 'VAT', amount: 'Amount',
     subtotal: 'Subtotal', vatAmount: 'VAT', total: 'Total Due',
     paymentInfo: 'Payment Information', paymentInstruction: 'Please pay within the due date.',
@@ -87,7 +91,7 @@ const LABELS: Record<string, DocLabels> = {
   },
   nl: {
     title: 'Factuur', invoiceNumber: 'Factuurnr.', from: 'Van', to: 'Aan',
-    issueDate: 'Factuurdatum', dueDate: 'Vervaldatum',
+    issueDate: 'Factuurdatum', dueDate: 'Vervaldatum', deliveryDate: 'Leveringsdatum',
     description: 'Omschrijving', quantity: 'Aantal', unitPrice: 'Prijs', vat: 'BTW', amount: 'Bedrag',
     subtotal: 'Subtotaal', vatAmount: 'BTW', total: 'Totaal',
     paymentInfo: 'Betalingsinformatie', paymentInstruction: 'Gelieve binnen de vervaldatum te betalen.',
@@ -97,7 +101,7 @@ const LABELS: Record<string, DocLabels> = {
   },
   de: {
     title: 'Rechnung', invoiceNumber: 'Rechnungsnr.', from: 'Von', to: 'An',
-    issueDate: 'Rechnungsdatum', dueDate: 'Falligkeitsdatum',
+    issueDate: 'Rechnungsdatum', dueDate: 'Falligkeitsdatum', deliveryDate: 'Leistungsdatum',
     description: 'Beschreibung', quantity: 'Menge', unitPrice: 'Preis', vat: 'USt', amount: 'Betrag',
     subtotal: 'Zwischensumme', vatAmount: 'USt', total: 'Gesamtbetrag',
     paymentInfo: 'Zahlungsinformationen', paymentInstruction: 'Bitte zahlen Sie bis zum Falligkeitsdatum.',
@@ -107,7 +111,7 @@ const LABELS: Record<string, DocLabels> = {
   },
   fr: {
     title: 'Facture', invoiceNumber: 'Facture n°', from: 'De', to: 'A',
-    issueDate: 'Date de facture', dueDate: 'Date d\'echeance',
+    issueDate: 'Date de facture', dueDate: 'Date d\'echeance', deliveryDate: 'Date de prestation',
     description: 'Description', quantity: 'Qte', unitPrice: 'Prix', vat: 'TVA', amount: 'Montant',
     subtotal: 'Sous-total', vatAmount: 'TVA', total: 'Total TTC',
     paymentInfo: 'Informations de paiement', paymentInstruction: 'Merci de regler avant la date d\'echeance.',
@@ -117,7 +121,7 @@ const LABELS: Record<string, DocLabels> = {
   },
   es: {
     title: 'Factura', invoiceNumber: 'Factura n°', from: 'De', to: 'Para',
-    issueDate: 'Fecha de factura', dueDate: 'Fecha de vencimiento',
+    issueDate: 'Fecha de factura', dueDate: 'Fecha de vencimiento', deliveryDate: 'Fecha de prestación',
     description: 'Descripcion', quantity: 'Cant.', unitPrice: 'Precio', vat: 'IVA', amount: 'Importe',
     subtotal: 'Subtotal', vatAmount: 'IVA', total: 'Total',
     paymentInfo: 'Informacion de pago', paymentInstruction: 'Por favor pague antes de la fecha de vencimiento.',
@@ -127,7 +131,7 @@ const LABELS: Record<string, DocLabels> = {
   },
   it: {
     title: 'Fattura', invoiceNumber: 'Fattura n°', from: 'Da', to: 'A',
-    issueDate: 'Data fattura', dueDate: 'Data di scadenza',
+    issueDate: 'Data fattura', dueDate: 'Data di scadenza', deliveryDate: 'Data della prestazione',
     description: 'Descrizione', quantity: 'Qta', unitPrice: 'Prezzo', vat: 'IVA', amount: 'Importo',
     subtotal: 'Subtotale', vatAmount: 'IVA', total: 'Totale',
     paymentInfo: 'Informazioni di pagamento', paymentInstruction: 'Si prega di pagare entro la data di scadenza.',
@@ -175,6 +179,16 @@ function buildInvoiceHtml(
 
   const issueDate = invoice.issueDate.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
   const dueDate = invoice.dueDate.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
+  // R66 round 34: leveringsdatum / service performance date. NL Belastingdienst
+  // Art. 35 lid 1.b mandates this on every invoice when it differs from the
+  // issue date. Comparison is on the calendar-day level — same-day jobs (most
+  // emergency call-outs) won't show a separate date; multi-day projects will.
+  const deliveryDate = invoice.deliveryDate;
+  const sameDay = deliveryDate
+    && deliveryDate.toDateString() === invoice.issueDate.toDateString();
+  const deliveryDateLabel = deliveryDate && !sameDay
+    ? deliveryDate.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' })
+    : null;
 
   // R251: small-business scheme zeroes VAT and adds a legal note row.
   const isSmallBusinessExempt = vatScheme === 'small_business_NL_KOR'
@@ -359,6 +373,10 @@ function buildInvoiceHtml(
     <div class="date-label">${L.issueDate}</div>
     <div class="date-value">${issueDate}</div>
   </div>
+  ${deliveryDateLabel ? `<div class="date-item">
+    <div class="date-label">${L.deliveryDate}</div>
+    <div class="date-value">${deliveryDateLabel}</div>
+  </div>` : ''}
   <div class="date-item">
     <div class="date-label">${L.dueDate}</div>
     <div class="date-value">${dueDate}</div>
@@ -518,5 +536,75 @@ export async function generateInvoicePdf(
       dialogTitle: `${invoice.invoiceNumber}`,
       UTI: 'com.adobe.pdf',
     });
+  }
+}
+
+// R66 round 36: PDF base64 builder for invoice email attachments. Pre-R36
+// `sendInvoiceEmail` was called without `pdfBase64`, so the customer email
+// went out with payment link only — no invoice document. NL Belastingdienst
+// requires the invoice itself for VAT reclaim; customers couldn't book
+// the cost or process the VAT until the contractor sent a separate PDF.
+//
+// Mirrors `generateInvoicePdf` (same HTML build, signature embed, etc.)
+// but returns the base64 instead of opening the share sheet. Caller is
+// the email-send path, not the share path. Returns null on any failure
+// so the email-send doesn't blow up — caller falls through to a
+// payment-link-only email rather than failing the whole send.
+export async function buildInvoicePdfBase64(
+  invoice: AutoInvoice,
+  businessProfile?: {
+    businessName?: string;
+    address?: string;
+    kvkNumber?: string;
+    vatNumber?: string;
+    iban?: string;
+    insuranceRef?: string;
+    country?: Country;
+    language?: string;
+    vatScheme?: 'standard' | 'small_business_NL_KOR' | 'small_business_DE_kleinunternehmer';
+  },
+  paymentUrl?: string,
+  options?: {
+    showPoweredBy?: boolean;
+    customerSignature?: { svgDataUri: string; signedAt: string; signerName: string };
+  },
+): Promise<string | null> {
+  try {
+    let html = buildInvoiceHtml(
+      invoice,
+      businessProfile?.businessName ?? '',
+      businessProfile?.address ?? '',
+      businessProfile?.kvkNumber ?? '',
+      businessProfile?.vatNumber ?? '',
+      paymentUrl,
+      businessProfile?.language,
+      businessProfile?.country,
+      businessProfile?.iban,
+      options?.showPoweredBy,
+      businessProfile?.insuranceRef,
+      businessProfile?.vatScheme,
+    );
+    if (options?.customerSignature) {
+      const { signatureHtmlBlock } = await import('./signatureService');
+      const block = signatureHtmlBlock({
+        id: `sig_${Date.now()}`,
+        context: 'handover',
+        referenceId: invoice.id,
+        referenceType: 'invoice',
+        signerName: options.customerSignature.signerName,
+        signerRole: 'customer',
+        signatureDataUri: options.customerSignature.svgDataUri,
+        signedAt: options.customerSignature.signedAt,
+        legalText: '',
+      });
+      html = html.replace('</body>', `${block}</body>`);
+    }
+    const { uri } = await Print.printToFileAsync({ html });
+    const file = new File(uri);
+    const base64 = await file.base64();
+    return base64;
+  } catch (err) {
+    logWarn('invoicePdfService', `buildInvoicePdfBase64 failed: ${err instanceof Error ? err.message : String(err)}`);
+    return null;
   }
 }

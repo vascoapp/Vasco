@@ -337,6 +337,12 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  // R66 round 42: cold-start session-restore is async. Pre-R42 the route
+  // guard ran with `isAuthenticated: false` during the ~50-200ms window
+  // before `getSession()` resolved → flashed `/login` → resolved → flashed
+  // back to `/(contractor)`. Visible flicker on every cold start with a
+  // persistent session. Guard now waits while `isAuthHydrating === true`.
+  isAuthHydrating: boolean;
   isDemoMode: boolean;
   session: Session | null;
   /**
@@ -358,25 +364,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  // R66 round 42: starts true, flips false after the first getSession
+  // resolves (or 5s timeout). In demo mode we skip the auth path entirely
+  // so flip immediately. Route guard reads this to avoid the cold-start
+  // login-flash bug.
+  const [isAuthHydrating, setIsAuthHydrating] = useState(isSupabaseConfigured);
 
   // Listen for Supabase auth changes when configured
   useEffect(() => {
     if (!isSupabaseConfigured) return;
 
+    // R66 round 42: hydration must always finish — even on network failure
+    // or `getSession` hang. Without the timeout the loading screen sticks
+    // forever and the user can't reach the login screen to retry.
+    let hydrationDone = false;
+    const finishHydration = () => {
+      if (hydrationDone) return;
+      hydrationDone = true;
+      setIsAuthHydrating(false);
+    };
+    const hydrationTimer = setTimeout(finishHydration, 5000);
+
     // Check existing session on mount
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      if (s?.user) {
-        setUser({
-          id: s.user.id,
-          email: s.user.email ?? '',
-          name: s.user.user_metadata?.name ?? s.user.email ?? '',
-          role: (s.user.user_metadata?.role as UserRole) ?? 'contractor',
-          company: s.user.user_metadata?.company ?? '',
-          projects: [],
-        });
-      }
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session: s } }) => {
+        setSession(s);
+        if (s?.user) {
+          setUser({
+            id: s.user.id,
+            email: s.user.email ?? '',
+            name: s.user.user_metadata?.name ?? s.user.email ?? '',
+            role: (s.user.user_metadata?.role as UserRole) ?? 'contractor',
+            company: s.user.user_metadata?.company ?? '',
+            projects: [],
+          });
+        }
+      })
+      .catch((err) => {
+        // Network outage / invalid stored session / Supabase unreachable —
+        // fall through to the unauthenticated branch rather than freezing.
+        if (__DEV__) console.warn('AuthContext: getSession failed:', err);
+      })
+      .finally(() => {
+        clearTimeout(hydrationTimer);
+        finishHydration();
+      });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
@@ -622,6 +654,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isAuthenticated: !!user,
         isLoading,
+        isAuthHydrating,
         isDemoMode,
         session,
         login,

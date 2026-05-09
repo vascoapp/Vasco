@@ -5,7 +5,7 @@ import { PropsWithChildren, createContext, useCallback, useContext, useEffect, u
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Domain types
-import { BusinessProfile } from '../domain/business';
+import { BusinessProfile, isSmallBusinessExempt } from '../domain/business';
 import { Customer } from '../domain/customers';
 import { Invoice, Quote } from '../domain/documents';
 import { Job, JobStatus, JobPriority } from '../domain/jobs';
@@ -33,6 +33,7 @@ import {
 } from '../intelligence/dataCollector';
 import { validateQuoteBeforeSend, validateInvoiceBeforeCreate, validateJobStatusChange } from '../services/workflowValidatorService';
 import { schedulePaymentReminder, scheduleQuoteFollowUp } from '../services/pushNotificationService';
+import { addBreadcrumb } from '../lib/errorReporting';
 import { exportInvoiceToMoneybird } from '../integrations/moneybird';
 import { createMolliePayment } from '../integrations/mollie';
 import { buildPriceRiskSignals } from '../logic/priceRisk';
@@ -1016,10 +1017,38 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }).catch(() => {});
         trackEvent('invoice_sent', { invoiceId: id }).catch(() => {});
         markStepComplete('first_invoice_sent').catch(() => {});
+        addBreadcrumb({ category: 'user', message: 'invoice_sent', data: { invoiceId: id, amount: invoice?.amount } });
+        // R66 round 49: ask for push permission *here* — this is the
+        // earliest clear value moment (contractor just sent their first
+        // invoice, the obvious benefit "get notified when X pays" is
+        // top-of-mind). Pre-R49 the prompt fired at app cold-start
+        // immediately after sign-in, before the user had seen any value;
+        // NL contractors deny strangers' notification asks. The helper
+        // is idempotent (gated by AsyncStorage flag) so subsequent
+        // markInvoiceSent calls no-op.
+        import('../services/pushNotificationService')
+          .then((m) => m.maybeAskForPushPermission())
+          .catch(() => {});
+        // R66r49 #6: pack discovery hook — first invoice sent is the
+        // moment to suggest the Incasso automation pack ("get auto-
+        // reminders when this customer goes 3/7/14/30 days overdue?").
+        // Idempotent — fires once per contractor.
+        Promise.all([
+          import('../services/workflowPackService'),
+          import('../i18n/i18n'),
+        ]).then(([m, i18nMod]) => {
+          const t = i18nMod.default.t.bind(i18nMod.default);
+          return m.suggestPackIfFirstTime({
+            packId: 'incasso_auto',
+            title: t('packDiscovery.incasso.title', 'Auto-remind overdue customers?'),
+            body: t('packDiscovery.incasso.body', 'Vasco can chase this invoice automatically at +3, +7, +14 and +30 days.'),
+          });
+        }).catch(() => {});
         fireNotification('overdue_invoice', 'medium', 'Invoice sent', `Invoice marked as sent. Share the PDF with your customer.`, `/(contractor)/facturen`);
       },
       markInvoicePaid: (id) => {
         const paidInv = invoices.find((i) => i.id === id);
+        addBreadcrumb({ category: 'user', message: 'invoice_paid', data: { invoiceId: id, amount: paidInv?.amount } });
         setInvoices((prev) =>
           prev.map((invoice) =>
             invoice.id === id ? { ...invoice, status: 'paid', dueInDays: 0 } : invoice
@@ -1122,12 +1151,18 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             job_id: isUuid(job) ? job : null,
             total_amount: total,
           };
+          // R66 round 47: persist per-line VAT rate. Closes the R38 deferred
+          // gap — pre-R47 only AutoInvoice in-memory carried the rate, mixed-
+          // rate quotes (NL plumbing 9% labor + 21% materials) lost the
+          // distinction across cold start. Honors KOR scheme uniformly.
+          const lineItemVatRate = isSmallBusinessExempt(businessProfile) ? 0 : 21;
           const lineItemPayload = items.map((item, idx) => ({
             description: item.description,
             quantity: item.quantity,
             unit_price: item.unitPrice,
             total_price: item.unitPrice * item.quantity,
             position: idx,
+            vat_rate: (item as any).vatRate ?? lineItemVatRate,
           }));
           try {
             const row = await withTimeout(createDocument(docPayload), 3000, 'addQuote');
@@ -1170,7 +1205,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             lineDescription: item.description,
             quotedUnitPrice: item.unitPrice,
             quotedQuantity: item.quantity,
-            vatRate: (item as any).vatRate ?? 21,
+            // R66 round 38: honor vatScheme. Pre-R38 hardcoded 21% even for
+            // KOR / Kleinunternehmer contractors → cohort moat ingested
+            // wrong vatRate metadata for the small-business segment.
+            vatRate: (item as any).vatRate ?? (isSmallBusinessExempt(businessProfile) ? 0 : 21),
             postcode: jobPostcode,
           }).catch(() => {});
         }
@@ -1253,6 +1291,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               source_quote_id: sourceQuoteId,
             });
             if (sourceItems.length > 0) {
+              // R66 round 47: persist per-line VAT on invoice line items
+              // (cloned from quote line items). KOR contractors get 0%;
+              // others 21% default unless caller explicitly set vatRate.
+              const invoiceLineVatRate = isSmallBusinessExempt(businessProfile) ? 0 : 21;
               await upsertLineItems(
                 row.id,
                 sourceItems.map((item, idx) => ({
@@ -1261,6 +1303,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                   unit_price: item.unitPrice,
                   total_price: item.unitPrice * item.quantity,
                   position: idx,
+                  vat_rate: (item as any).vatRate ?? invoiceLineVatRate,
                 })),
               );
             }
@@ -1454,6 +1497,17 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           if (updates.invoicePrefix !== undefined) dbUpdates.invoice_prefix = updates.invoicePrefix || null;
           if (updates.quotePrefix !== undefined) dbUpdates.quote_prefix = updates.quotePrefix || null;
           if (updates.defaultPaymentTerms !== undefined) dbUpdates.default_payment_terms = updates.defaultPaymentTerms ?? null;
+          // R66 round 24: 5 fields previously silent-dropped — onboarding
+          // wrote them into AppState but they never reached BE. Cold start
+          // → BE reload → fields revert to undefined. Specific impact:
+          // vatScheme reverting silently flipped KOR/Kleinunternehmer
+          // contractors back to 21% VAT on their first post-onboard invoice.
+          // Migration 20260507000007 adds the columns; mapper now persists.
+          if (updates.vatScheme !== undefined) dbUpdates.vat_scheme = updates.vatScheme || null;
+          if (updates.businessType !== undefined) dbUpdates.business_type = updates.businessType || null;
+          if (updates.teamSize !== undefined) dbUpdates.team_size = updates.teamSize || null;
+          if (updates.trade !== undefined) dbUpdates.trade = updates.trade || null;
+          if (updates.registrationNumber !== undefined) dbUpdates.registration_number = updates.registrationNumber || null;
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue('business_settings', 'upsert', () => upsertBusinessSettings(dbUpdates), { payload: dbUpdates }),
           ).catch(() => {});
@@ -1725,7 +1779,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 description: li.description,
                 price: li.unitPrice,
                 quantity: li.quantity,
-                vatRate: 21,
+                // R66 round 38: honor vatScheme on Moneybird export. KOR/
+                // Kleinunternehmer contractors must export at 0% VAT —
+                // hardcoded 21% would corrupt their bookkeeping the moment
+                // they exported their first invoice.
+                vatRate: isSmallBusinessExempt(businessProfile) ? 0 : 21,
               })),
             }
           : undefined;
@@ -1784,6 +1842,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setInvoices((prev) => [newInvoice, ...prev]);
 
         if (isSupabaseConfigured) {
+          // R66 round 47: persist leveringsdatum from the linked job's
+          // completedAt. Pre-R47 R34 derived this FE-side at PDF render
+          // time; if the job was deleted post-invoice the date was lost.
+          // Now: snapshot at invoice-create so it survives the linked-job
+          // lifecycle.
+          const deliveryDateIso = job.completedAt
+            ? new Date(job.completedAt).toISOString().slice(0, 10)
+            : null;
           const invPayload = {
             doc_type: 'invoice' as const,
             status: 'draft' as const,
@@ -1792,6 +1858,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             job_id: jobId,
             total_amount: amount,
             due_date: dueDate.toISOString(),
+            delivery_date: deliveryDateIso,
           };
           try {
             await withTimeout(createDocument(invPayload), 3000, 'addInvoiceFromJob');
@@ -2365,6 +2432,19 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       mod.setAppStateSnapshot({ jobs, quotes, invoices, customers });
     }).catch(() => {});
   }, [jobs, quotes, invoices, customers]);
+
+  // R66 round 37: expose the imperative mutators non-hook consumers need
+  // (realtime watchers in app/_layout.tsx) so webhook → BE update → realtime
+  // event → FE state refresh actually closes. Pre-R37 the watcher fired but
+  // the noop callback meant the UI stayed stale until manual pull-to-refresh.
+  useEffect(() => {
+    import('./appStateSnapshot').then((mod) => {
+      mod.setAppStateMutators({
+        markInvoicePaid: value.markInvoicePaid,
+        refreshData: value.refreshData,
+      });
+    }).catch(() => {});
+  }, [value.markInvoicePaid, value.refreshData]);
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
 }

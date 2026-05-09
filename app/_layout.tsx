@@ -20,7 +20,7 @@ import { AppStateProvider } from '../src/state/AppState';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { checkForUpdate } from '../src/services/versionCheckService';
 import ErrorBoundary from '../src/components/shared/ErrorBoundary';
-import { initErrorReporting, setUser as setErrorUser } from '../src/lib/errorReporting';
+import { initErrorReporting, setUser as setErrorUser, addBreadcrumb } from '../src/lib/errorReporting';
 import { ensureFlagsLoaded } from '../src/services/featureFlagService';
 import { watchInvoicePayments, watchUserTables } from '../src/services/invoicePaymentWatcher';
 import { watchCustomerInteractions } from '../src/services/customerInteractionWatcher';
@@ -33,7 +33,7 @@ import { AppState as RNAppState } from 'react-native';
 import { DemoBanner } from '../src/components/shared/DemoBanner';
 import { startAutoSync, stopAutoSync } from '../src/intelligence/cloudSync';
 import { startEventFlushing, stopEventFlushing } from '../src/intelligence/dataCollector';
-import { registerForPushNotifications, refreshPushTokenIfStale, syncBadgeWithUnread } from '../src/services/pushNotificationService';
+import { getPushTokenIfGranted, refreshPushTokenIfStale, syncBadgeWithUnread } from '../src/services/pushNotificationService';
 import { startBackgroundJobScheduler, stopBackgroundJobScheduler } from '../src/intelligence/backgroundJobScheduler';
 import { getWeatherForecast } from '../src/services/weatherService';
 import * as Notifications from 'expo-notifications';
@@ -48,7 +48,7 @@ function isWorkerRole(user: { role: string; isAannemer?: boolean } | null): bool
 }
 
 function RootLayoutNav() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isAuthHydrating } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -61,6 +61,10 @@ function RootLayoutNav() {
     flushScanQueue().catch(() => {});
     flushPendingDeltas().catch(() => {});
     flushPendingAffiliateClicks().catch(() => {});
+    // R66 round 27: photo offline queue flush on cold start.
+    import('../src/services/pendingJobPhotosQueue')
+      .then((m) => m.flushQueue())
+      .catch(() => {});
   }, []);
 
   // Flush the offline write queue whenever the app comes back to the foreground
@@ -72,6 +76,10 @@ function RootLayoutNav() {
         flushScanQueue().catch(() => {});
         flushPendingDeltas().catch(() => {});
         flushPendingAffiliateClicks().catch(() => {});
+        // R66 round 27: photo offline queue flush on foreground tick.
+        import('../src/services/pendingJobPhotosQueue')
+          .then((m) => m.flushQueue())
+          .catch(() => {});
         notifyNewQueueItems().catch(() => {});
         // R9.1: weekly Expo push-token refresh on foreground. The function
         // throttles internally (no-op when last refresh < 7 days) so this is
@@ -115,7 +123,11 @@ function RootLayoutNav() {
       import('../src/services/mlHealthCheck').then(({ maybeRunMlHealthCheck }) =>
         maybeRunMlHealthCheck({ trade: user.trade, country: user.country }),
       ).catch(() => {});
-      registerForPushNotifications().catch(() => {});
+      // R66 round 49: granted-only path — never triggers a cold-start
+      // permission prompt. The actual ask is deferred to the first
+      // invoice send (clear value moment) via maybeAskForPushPermission.
+      // Existing users who already granted still get their token persisted.
+      getPushTokenIfGranted().catch(() => {});
       // R18: prefetch real weather (Open-Meteo) so the weatherScheduleGenerator
       // can serve real rain/temperature alerts instead of falling through to
       // its deterministic-mock fallback. The service self-caches for 6h.
@@ -173,11 +185,36 @@ function RootLayoutNav() {
         routeFromPushData(resp.notification?.request?.content?.data as any);
       });
 
-      // Watch for payment webhooks (Mollie/Stripe → invoices.paid) in realtime
-      const stopWatch = watchInvoicePayments(user.id);
+      // Watch for payment webhooks (Mollie/Stripe → invoices.paid) in realtime.
+      // R66 round 37: route the realtime event into AppState via the mutator
+      // bus so the in-app UI reflects the paid status immediately. Pre-R37 the
+      // watcher fired but had no callback — push appeared on lock screen but
+      // tapping the app showed the invoice still 'sent' until manual refresh.
+      const stopWatch = watchInvoicePayments(user.id, (event) => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const { getAppStateMutators } = require('../src/state/appStateSnapshot');
+          const m = getAppStateMutators();
+          if (m && event.invoiceId) m.markInvoicePaid(event.invoiceId);
+        } catch {}
+      });
       // Multi-device realtime sync for jobs/quotes/customers/documents.
-      // Non-blocking — AppState will be nudged to refresh on any change.
-      const stopTables = watchUserTables(user.id, () => { /* triggers parent refreshes */ });
+      // R66 round 37: trigger refreshData on any cross-device change so the
+      // local UI stays consistent. Debounced via the watcher's per-event fire
+      // (lightweight; refreshData itself is the gate for re-fetch storms).
+      let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+      const stopTables = watchUserTables(user.id, () => {
+        if (refreshTimer) return;
+        refreshTimer = setTimeout(() => {
+          refreshTimer = null;
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const { getAppStateMutators } = require('../src/state/appStateSnapshot');
+            const m = getAppStateMutators();
+            if (m) m.refreshData();
+          } catch {}
+        }, 800);
+      });
       // Realtime customer portal events: scoped to the user's quote ids via
       // module snapshot so we never subscribe to foreign rows.
       const stopInteractions = (() => {
@@ -206,6 +243,21 @@ function RootLayoutNav() {
     }
   }, [isAuthenticated, user?.id]);
 
+  // R66 round 49: drop a Sentry breadcrumb on every route change. When a
+  // production crash arrives in week 1, the trail shows the contractor's
+  // navigation path leading up to the error ('login' → '(contractor)' →
+  // 'contractor/quote/abc' → crash) instead of a bare stack trace. No-op
+  // when EXPO_PUBLIC_SENTRY_DSN is unset.
+  useEffect(() => {
+    const path = (segments as string[]).join('/');
+    if (!path) return;
+    addBreadcrumb({
+      category: 'navigation',
+      message: path,
+      data: { authenticated: !!isAuthenticated, role: user?.role ?? null },
+    });
+  }, [segments, isAuthenticated, user?.role]);
+
   // Track if the navigator has mounted — navigation before mount crashes Expo Router
   const navigationReady = useRef(false);
   useEffect(() => {
@@ -216,6 +268,12 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (!navigationReady.current) return;
+    // R66 round 42: don't make routing decisions while auth is still
+    // hydrating — the cold-start getSession() takes 50-200ms and pre-R42
+    // we'd flash `/login` then redirect back to `/(contractor)` once the
+    // stored session resolved. Customer portal is public so it still
+    // routes immediately.
+    if (isAuthHydrating && segments[0] !== 'customer') return;
 
     const inAuthGroup =
       segments[0] === 'login' ||
@@ -235,14 +293,13 @@ function RootLayoutNav() {
       // Redirect to login if not authenticated
       router.replace('/login');
     } else if (isAuthenticated && inAuthGroup) {
-      // Route based on user role
-      const isEnterprise = user?.role && ENTERPRISE_ROLES.includes(user.role);
-
-      if (isWorkerRole(user)) {
-        router.replace('/worker/my-schedule' as any);
-      } else if (isEnterprise) {
-        router.replace('/(tabs)');
-      } else if (user?.onboardingComplete === false) {
+      // R66 round 47: NL launch suppresses every non-contractor view. Enterprise
+      // (CFO/COO/Director) + site lead + worker surfaces are partially built but
+      // not launch-ready. Routing them to /(contractor) is honest — they get
+      // the working flow rather than a half-finished dashboard. Demo accounts
+      // for those roles still resolve to contractor screens; real-account
+      // workers won't exist until invite flow ships post-launch.
+      if (user?.onboardingComplete === false) {
         router.replace('/onboarding');
       } else {
         router.replace('/(contractor)');
@@ -252,17 +309,21 @@ function RootLayoutNav() {
       // will cold-start with isAuthenticated=true + onboardingComplete=false.
       // Without this branch they land on / → (contractor) tabs and silently
       // start sending quotes/invoices with no country/trade/IBAN configured.
-      // Only applies to contractors — workers + enterprise roles skip
-      // onboarding entirely.
       isAuthenticated &&
       user?.onboardingComplete === false &&
-      !inOnboarding &&
-      !isWorkerRole(user) &&
-      !(user?.role && ENTERPRISE_ROLES.includes(user.role))
+      !inOnboarding
     ) {
       router.replace('/onboarding');
+    } else if (
+      // R66 round 47: prevent direct deep-links to /worker/* /(tabs)/*
+      // /sitelead/* from reaching half-finished surfaces post-auth. Forces
+      // contractor home regardless of how user arrived.
+      isAuthenticated &&
+      (segments[0] === 'worker' || segments[0] === '(tabs)' || segments[0] === 'sitelead')
+    ) {
+      router.replace('/(contractor)');
     }
-  }, [isAuthenticated, user, segments]);
+  }, [isAuthenticated, user, segments, isAuthHydrating]);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

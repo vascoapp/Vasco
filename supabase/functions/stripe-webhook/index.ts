@@ -397,9 +397,22 @@ Deno.serve(async (req) => {
 
     console.log(`Invoice ${invoiceId} marked as paid via Stripe (${paymentId})`);
 
-    await dispatchPaidSideEffects(supabaseUrl, supabaseServiceKey, invoiceId, paidAt).catch((err) =>
-      console.warn('paid side-effects failed:', String(err)),
+    // R66 round 41: idempotency gate. Stripe's signature check at line 103
+    // already prevents arbitrary replay from outside, but Stripe itself
+    // retries on non-2xx — without this gate we'd fire side effects every
+    // retry. event.id is the natural idempotency key (already used at
+    // lines 169 + 288 for upcoming-invoice + subscription-redemption
+    // branches).
+    const isFirstSeeingPaid = await claimWebhookEvent(
+      supabaseUrl, supabaseServiceKey, 'stripe', event.id,
     );
+    if (isFirstSeeingPaid) {
+      await dispatchPaidSideEffects(supabaseUrl, supabaseServiceKey, invoiceId, paidAt).catch((err) =>
+        console.warn('paid side-effects failed:', String(err)),
+      );
+    } else {
+      console.log(`Stripe event ${event.id} replay — side effects skipped`);
+    }
 
     // -------------------------------------------------------------------------
     // 4. Always return 200 — Stripe retries on non-2xx responses

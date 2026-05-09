@@ -17,18 +17,34 @@ import i18n from '../i18n/i18n';
 const TOKEN_KEY = '@vasco_push_token';
 const DEVICE_ID_KEY = '@vasco_device_id';
 const TOKEN_REFRESHED_AT_KEY = '@vasco_push_token_refreshed_at';
+const PERMISSION_ASKED_KEY = '@vasco_push_permission_asked';
 const TOKEN_REFRESH_MS = 7 * 24 * 60 * 60 * 1000; // Re-register weekly
 
 /** Call on app foreground — re-registers with Expo if the token is older than
- *  a week or missing. Fast no-op when recent. */
+ *  a week or missing. Fast no-op when recent. Only runs when permission has
+ *  already been granted so it never triggers a cold-start permission prompt. */
 export async function refreshPushTokenIfStale(): Promise<void> {
   try {
     const raw = await AsyncStorage.getItem(TOKEN_REFRESHED_AT_KEY);
     const last = raw ? Number(raw) : 0;
     if (Date.now() - last < TOKEN_REFRESH_MS) return;
-    const token = await registerForPushNotifications();
+    const token = await getPushTokenIfGranted();
     if (token) await AsyncStorage.setItem(TOKEN_REFRESHED_AT_KEY, String(Date.now()));
   } catch {}
+}
+
+/** Has the OS-level permission prompt already been shown to this user?
+ *  Used to gate value-moment triggers so we don't ask repeatedly. */
+export async function hasAskedForPushPermission(): Promise<boolean> {
+  try {
+    return (await AsyncStorage.getItem(PERMISSION_ASKED_KEY)) === '1';
+  } catch {
+    return false;
+  }
+}
+
+async function markPermissionAsked(): Promise<void> {
+  try { await AsyncStorage.setItem(PERMISSION_ASKED_KEY, '1'); } catch {}
 }
 
 async function getOrCreateDeviceId(): Promise<string> {
@@ -79,19 +95,8 @@ Notifications.setNotificationHandler({
 // Registration
 // ---------------------------------------------------------------------------
 
-export async function registerForPushNotifications(): Promise<string | null> {
+async function fetchAndPersistTokenIfGranted(): Promise<string | null> {
   try {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-
-    if (finalStatus !== 'granted') return null;
-
-    // Android channel
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {
         name: 'Vasco',
@@ -100,21 +105,78 @@ export async function registerForPushNotifications(): Promise<string | null> {
       });
     }
 
-    // EAS requires projectId for getExpoPushTokenAsync() outside the dev client.
     const projectId =
       (Constants.expoConfig?.extra as any)?.eas?.projectId ||
       (Constants as any).easConfig?.projectId;
-    if (!projectId) {
-      // No EAS project yet — skip remote token. Local notifications still work.
-      return null;
-    }
+    if (!projectId) return null;
 
     const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
     const token = tokenData.data;
     await AsyncStorage.setItem(TOKEN_KEY, token);
-    // Best-effort: register with backend for server-side fanout
     persistPushTokenToSupabase(token).catch(() => {});
     return token;
+  } catch {
+    return null;
+  }
+}
+
+/** Granted-only path. Never triggers an OS prompt — silently no-ops when
+ *  permission is undetermined or denied. Safe to call on every foreground
+ *  tick and on cold start. */
+export async function getPushTokenIfGranted(): Promise<string | null> {
+  try {
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== 'granted') return null;
+    return fetchAndPersistTokenIfGranted();
+  } catch {
+    return null;
+  }
+}
+
+/** Explicit OS-level permission ask. Use only at clear value moments
+ *  (e.g. after the first invoice is sent). Marks PERMISSION_ASKED_KEY
+ *  whether the user grants or denies so we don't ask again. */
+export async function registerForPushNotifications(): Promise<string | null> {
+  try {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+      // Whether they granted or denied, we asked — don't re-prompt.
+      await markPermissionAsked();
+    }
+
+    if (finalStatus !== 'granted') return null;
+    return fetchAndPersistTokenIfGranted();
+  } catch {
+    return null;
+  }
+}
+
+/** R66 round 49: value-moment permission ask. Called after the first
+ *  invoice is successfully sent — that's when the contractor has
+ *  experienced enough value that the prompt feels earned ("get notified
+ *  when this customer pays?"). Idempotent: skips silently if the prompt
+ *  was already shown, and skips if permission is already granted (token
+ *  refresh handles that path). */
+export async function maybeAskForPushPermission(): Promise<string | null> {
+  try {
+    if (await hasAskedForPushPermission()) return null;
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status === 'granted') {
+      // Permission already granted (e.g. user enabled in Settings) —
+      // mark asked so we don't queue this again, then refresh token.
+      await markPermissionAsked();
+      return fetchAndPersistTokenIfGranted();
+    }
+    if (status === 'denied') {
+      // OS won't re-prompt anyway. Mark asked + bail.
+      await markPermissionAsked();
+      return null;
+    }
+    return registerForPushNotifications();
   } catch {
     return null;
   }

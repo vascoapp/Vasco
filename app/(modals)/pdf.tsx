@@ -10,17 +10,30 @@ import { Typography } from '../../src/theme/typography';
 import { invoiceAutomationService } from '../../src/services/invoiceAutomationService';
 import { generateInvoicePdf } from '../../src/services/invoicePdfService';
 import { useAppState } from '../../src/state/AppState';
+import { checkInvoiceReadiness } from '../../src/utils/businessProfileValidation';
 
 export default function PdfModal() {
   const { source, id } = useLocalSearchParams<{ source?: string; id?: string }>();
   const router = useRouter();
-  const { businessProfile, jobs } = useAppState();
+  const { businessProfile, jobs, invoices } = useAppState();
   const [generating, setGenerating] = useState(false);
 
   const label = source === 'invoice' ? 'Factuur' : 'Offerte';
 
   const handleGenerate = async () => {
     if (source === 'invoice' && id) {
+      // R66 round 34: legal gate. Same Belastingdienst Art. 35 reasoning
+      // as the in-detail PDF button — block generation when KvK / BTW /
+      // business name are missing.
+      const readiness = checkInvoiceReadiness(businessProfile);
+      if (!readiness.ready) {
+        Alert.alert(
+          'Profiel onvolledig',
+          'Vul je bedrijfsgegevens aan voordat je een factuur deelt.\n\n' +
+            [...readiness.missingLabels, ...readiness.invalidLabels].map((l) => `• ${l}`).join('\n'),
+        );
+        return;
+      }
       const invoice = invoiceAutomationService.getInvoice(id);
       if (!invoice) {
         Alert.alert('Fout', 'Factuur niet gevonden.');
@@ -39,7 +52,22 @@ export default function PdfModal() {
               signerName: invoice.customerName ?? 'Customer',
             }
           : undefined;
-        await generateInvoicePdf(invoice, businessProfile, undefined, customerSignature ? { customerSignature } : undefined);
+        // R66 round 47: prefer persisted documents.delivery_date (hydrated
+        // into AppState invoice.deliveryDate via mapper) over FE-derive from
+        // linked job. AutoInvoice in-memory store doesn't hydrate from BE
+        // automatically — look up the AppState invoice by id to grab the
+        // persisted snapshot.
+        const appStateInvoice = invoices.find((inv: any) => inv.id === invoice.id || inv.id === invoice.invoiceNumber);
+        const persistedDeliveryDate = (appStateInvoice as any)?.deliveryDate as string | undefined;
+        const enriched: typeof invoice = {
+          ...invoice,
+          deliveryDate: persistedDeliveryDate
+            ? new Date(persistedDeliveryDate)
+            : linkedJob?.completedAt
+              ? new Date(linkedJob.completedAt)
+              : invoice.deliveryDate,
+        };
+        await generateInvoicePdf(enriched, businessProfile, undefined, customerSignature ? { customerSignature } : undefined);
       } catch (err) {
         Alert.alert('Fout', 'PDF kon niet worden gegenereerd.');
       } finally {

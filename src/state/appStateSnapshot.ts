@@ -37,3 +37,34 @@ export function setAppStateSnapshot(next: Omit<AppStateSnapshot, 'updatedAt'>): 
 export function getAppStateSnapshot(): AppStateSnapshot {
   return snapshot;
 }
+
+// ---------------------------------------------------------------------------
+// R66 round 37: mutator refs for realtime watchers
+// ---------------------------------------------------------------------------
+// `watchInvoicePayments` and `watchUserTables` (src/services/invoicePaymentWatcher.ts)
+// fire when Mollie/Stripe webhooks land or another device updates a row.
+// Pre-R37 the watcher in app/_layout.tsx passed `() => {}` as the onChange
+// callback — local push notifications fired but the in-app UI showed stale
+// data until manual pull-to-refresh or cold start. Customer pays via the
+// shared link → contractor sees push "Klant heeft betaald" → opens app →
+// invoice still shows 'sent' → confusion.
+//
+// AppStateProvider lives above _layout.tsx's effect, so we can't pass the
+// closure-bound mutators directly. Same pub-sub pattern as idRemapBus (R54):
+// AppStateProvider populates these refs on mount; watchers call them.
+export interface AppStateMutators {
+  /** Flip an invoice to paid status when a webhook lands. Idempotent. */
+  markInvoicePaid: (invoiceId: string) => void;
+  /** Re-fetch core tables from BE. Use after cross-device changes. */
+  refreshData: () => Promise<void> | void;
+}
+
+let mutators: AppStateMutators | null = null;
+
+export function setAppStateMutators(next: AppStateMutators): void {
+  mutators = next;
+}
+
+export function getAppStateMutators(): AppStateMutators | null {
+  return mutators;
+}

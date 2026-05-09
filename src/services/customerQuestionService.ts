@@ -38,7 +38,14 @@ export async function submitCustomerQuestion(args: {
   language?: 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
   context?: CustomerQuestionContext;
 }): Promise<QuestionSubmitResult> {
-  if (!isSupabaseConfigured) {
+  // R66 round 45: also fall through to the demo reply when the access token
+  // doesn't meet the edge function's 8-char minimum (e.g. the seeded demo
+  // code `VDB24A` is 6 chars). Pre-R45 the FE called the edge function with
+  // the short token, the function returned 400 "Invalid tracker token", and
+  // the portal surfaced "Edge Function returned a non-2xx status code" —
+  // confusing the customer with a server error on a demo flow.
+  const isDemoToken = args.trackerAccessToken.length < 8;
+  if (!isSupabaseConfigured || isDemoToken) {
     // Demo mode — fake a low-stakes auto-reply so the UX still works.
     return {
       ok: true,

@@ -472,12 +472,15 @@ export async function searchDeals(
       nearestDistance = 50; // Default estimate
     }
 
-    // Price estimation (varies by supplier tier)
-    const priceVariation = (Math.random() * 0.3) - 0.15; // ±15%
-    const supplierPrice = avgMarketPrice * (1 + priceVariation);
-    // Bigger suppliers tend to be cheaper for bulk, smaller for specialty
+    // R66 round 46: was `Math.random ±15%` — every call returned a different
+    // price for the same supplier × material. Statistical noise rendered as
+    // "price drop" alerts. Now uses the static MARKET_BASELINE avg price as
+    // the deterministic estimate, modulated only by supplier tier (real
+    // discount signal). Real cohort data flows through checkPriceDrops via
+    // get_material_cohort_stats; searchDeals is the fallback supplier-finder
+    // when no cohort data exists yet, NOT a price source.
     const bulkDiscount = supplier.avgOrderValue > 300 ? 0.95 : 1.0;
-    const estimatedPrice = Math.round(supplierPrice * bulkDiscount * 100) / 100;
+    const estimatedPrice = Math.round(avgMarketPrice * bulkDiscount * 100) / 100;
 
     // Delivery speed
     const deliveryMatch = supplier.deliveryDays.match(/(\d+)/);
@@ -649,15 +652,30 @@ function inferMaterialsFromTrade(trade: string): Array<{ name: string; quantity?
 }
 
 // =============================================================================
-// BEHAVIOR 2: Price Drop Alerts (scheduled daily at 6am)
+// BEHAVIOR 2: Price Drop Alerts (scheduled daily at 6am) — R66 round 46
 // =============================================================================
-// Compares current prices against recent price snapshots and purchase history.
-// Surfaces materials that have dropped significantly in price.
+// REWRITTEN: pre-R46 this called searchDeals which generated random ±15%
+// prices via Math.random — every "drop alert" was statistical noise. Three
+// random calls in a row could fabricate a 12% drop or hide a real 12% drop.
+// PriceDropAlertCard in the inkoop tab + the daily cron's AI queue items
+// were both fed by this fake stream. Same anti-pattern documented in
+// DORMANT_AUDIT.md R34.2.
+//
+// Now: compares the contractor's last actual purchase price against the
+// cohort median for the same material (k-anon ≥5 enforced server-side via
+// `get_material_cohort_stats`). The "drop" semantic shifts from "price
+// fell" (which we can't observe without a real-time feed) to "you're
+// paying X% above the cohort median" (which we CAN observe from
+// material_price_history).
+//
+// This is honest signal: every alert references a real purchase the
+// contractor actually made and a real cohort stat with a sample size.
+// =============================================================================
 
 export async function checkPriceDrops(
   trade: string,
   country: Country,
-  postcode: string,
+  _postcode: string,
 ): Promise<PriceDropAlert[]> {
   if (!(await hasAgentAccess())) return [];
 
@@ -665,73 +683,68 @@ export async function checkPriceDrops(
   const priceDropGate = canUseFeature(sub, 'hasPriceDropAlerts');
   if (!priceDropGate.allowed) return [];
 
-  const snapshots = await loadPriceSnapshots();
   const history = await getPurchaseHistory();
+  if (history.length === 0) return [];
+
+  // Pull cohort benchmarks once (one RPC call covers all materials in trade × country)
+  const { getCohortBenchmarks } = await import('./cohortBenchmarkService');
+  const cohort = await getCohortBenchmarks(trade, country);
+  if (!cohort || cohort.materialBenchmarks.length === 0) {
+    // No cohort data yet (k-anon below threshold) — return empty rather than
+    // fabricating. Honest beats wrong.
+    await markBehaviorRun('priceDrops');
+    return [];
+  }
+
   const alerts: PriceDropAlert[] = [];
 
-  // Gather unique materials from snapshots and purchase history
-  const trackedMaterials = new Set<string>();
-  for (const s of snapshots) trackedMaterials.add(s.materialName);
-  for (const h of history) trackedMaterials.add(h.materialName);
+  // For each unique material the contractor bought, compare against cohort median
+  const seenMaterials = new Set<string>();
+  for (const purchase of history) {
+    const matKey = purchase.materialName.toLowerCase();
+    if (seenMaterials.has(matKey)) continue;
+    seenMaterials.add(matKey);
 
-  // If no tracked materials, use trade defaults
-  if (trackedMaterials.size === 0) {
-    const defaults = TRADE_MATERIALS[trade.toLowerCase()] ?? TRADE_MATERIALS['general'] ?? [];
-    for (const d of defaults) trackedMaterials.add(d);
+    // Match cohort row by name (case-insensitive contains)
+    const benchmark = cohort.materialBenchmarks.find(
+      (m: { materialName: string }) => matKey.includes(m.materialName.toLowerCase()) || m.materialName.toLowerCase().includes(matKey),
+    );
+    if (!benchmark || benchmark.medianPrice <= 0 || benchmark.sampleSize < 5) continue;
+
+    const userPrice = purchase.unitPrice;
+    if (userPrice <= 0) continue;
+
+    // Contractor is paying ABOVE median = "drop available" if they switch
+    const overpayPct = Math.round(((userPrice - benchmark.medianPrice) / benchmark.medianPrice) * 100);
+    if (overpayPct < 5) continue; // Need a meaningful gap (≥5%)
+
+    alerts.push({
+      materialName: purchase.materialName,
+      supplier: {
+        // Synthesize a "cohort median" supplier marker — the UI surfaces this
+        // as "cohort median (X contractors)" rather than a single supplier
+        // since the cohort is anonymized.
+        id: 'cohort',
+        name: `Cohort median (${benchmark.sampleSize} contractors)`,
+        rating: 0,
+        deliveryDays: '—',
+        avgOrderValue: 0,
+      } as any,
+      previousPrice: Math.round(userPrice * 100) / 100,
+      currentPrice: Math.round(benchmark.medianPrice * 100) / 100,
+      dropPercent: overpayPct,
+      // R66r46: cohort signal has no single affiliate URL — set empty so
+      // PriceDropAlertCard's optional Linking.openURL call no-ops cleanly.
+      affiliateUrl: '',
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    });
   }
 
-  for (const materialName of trackedMaterials) {
-    // Get current price by searching
-    const result = await searchDeals({ query: materialName, trade }, country, postcode);
-    if (result.deals.length === 0) continue;
-
-    // Find previous price reference (from snapshots or purchase history)
-    const previousSnapshots = snapshots
-      .filter(s => s.materialName === materialName)
-      .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
-
-    const previousPurchases = history
-      .filter(h => h.materialName.toLowerCase().includes(materialName.toLowerCase()))
-      .sort((a, b) => b.orderedAt.localeCompare(a.orderedAt));
-
-    // Use most recent reference price (snapshot or purchase, whichever is newer)
-    let previousPrice: number | null = null;
-    if (previousSnapshots.length > 0) {
-      previousPrice = previousSnapshots[0].price;
-    }
-    if (previousPurchases.length > 0) {
-      const purchasePrice = previousPurchases[0].unitPrice;
-      if (!previousPrice || previousPurchases[0].orderedAt > (previousSnapshots[0]?.recordedAt ?? '')) {
-        previousPrice = purchasePrice;
-      }
-    }
-
-    if (!previousPrice) continue;
-
-    // Check each deal for price drops
-    for (const deal of result.deals.slice(0, 3)) {
-      const dropPercent = Math.round(((previousPrice - deal.estimatedPrice) / previousPrice) * 100);
-      if (dropPercent >= 5) { // At least 5% drop
-        // Estimate expiry — deals typically last 3-7 days
-        const expiresAt = new Date(Date.now() + (5 * 24 * 60 * 60 * 1000)).toISOString();
-        alerts.push({
-          materialName,
-          supplier: deal.supplier,
-          previousPrice: Math.round(previousPrice * 100) / 100,
-          currentPrice: deal.estimatedPrice,
-          dropPercent,
-          affiliateUrl: deal.affiliateUrl,
-          expiresAt,
-        });
-      }
-    }
-  }
-
-  // Sort by biggest drop first
+  // Biggest gap first
   alerts.sort((a, b) => b.dropPercent - a.dropPercent);
 
   await markBehaviorRun('priceDrops');
-  return alerts.slice(0, 10); // Max 10 alerts
+  return alerts.slice(0, 10);
 }
 
 // =============================================================================

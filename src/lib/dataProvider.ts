@@ -2,7 +2,7 @@ import { supabase, isSupabaseConfigured } from './supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logWarn } from '../utils/errorHandler';
 import { isUuid } from './idShape';
-import type { DocumentRow, LineItemRow, BusinessSettingsRow, CustomerRow, MaterialCatalogRow, SupplierRow, JobMaterialRow, PriceObservationRow, ProjectRow, ExpenseRow, QuoteAcceptanceLinkRow } from './database.types';
+import type { DocumentRow, LineItemRow, BusinessSettingsRow, CustomerRow, MaterialCatalogRow, SupplierRow, JobMaterialRow, PriceObservationRow, ProjectRow, ExpenseRow, QuoteAcceptanceLinkRow, DecisionTrackerRow, DecisionItemRow } from './database.types';
 import { quotes as mockQuotes, invoices as mockInvoices } from '../data/mockDocuments';
 import { quoteLineItems as mockLineItems } from '../data/mockLineItems';
 import { businessProfile as mockBusinessProfile } from '../data/mockBusiness';
@@ -916,4 +916,68 @@ export async function decideAcceptanceLink(
     return null;
   }
   return (data as QuoteAcceptanceLinkRow | null) ?? null;
+}
+
+// ── Decision Trackers (customer decision portal) ────────────
+// R66 round 32: capability-URL helpers backing decisionTrackerService.
+// `getPortalByAccessCode` is the only call the customer (anon) makes —
+// it routes through SECURITY DEFINER RPC so no table-level anon SELECT
+// is granted. Contractor-side create/list go through standard RLS
+// (auth.uid() = user_id).
+
+export async function createDecisionTracker(payload: {
+  user_id: string;
+  job_id: string;
+  customer_id: string;
+  access_code: string;
+  template_id?: string | null;
+  customer_name?: string | null;
+  customer_phone?: string | null;
+  customer_email?: string | null;
+  project_name?: string | null;
+  project_start_date?: string | null;
+  quote_amount?: number | null;
+  deposit_amount?: number | null;
+  expires_at?: string | null;
+}): Promise<DecisionTrackerRow> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from('decision_trackers') as any)
+    .insert(payload)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as DecisionTrackerRow;
+}
+
+export async function createDecisionItems(rows: Array<{
+  tracker_id: string;
+  category: string;
+  label: string;
+  help_text?: string | null;
+  input_type?: string | null;
+  options?: unknown;
+  is_required?: boolean | null;
+  due_date?: string | null;
+  sort_order?: number | null;
+}>): Promise<DecisionItemRow[]> {
+  if (rows.length === 0) return [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from('decision_items') as any)
+    .insert(rows)
+    .select();
+  if (error) throw error;
+  return (data ?? []) as DecisionItemRow[];
+}
+
+export async function getPortalByAccessCode(accessCode: string): Promise<unknown | null> {
+  if (!isSupabaseConfigured) return null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.rpc as any)('get_portal_by_access_code', {
+    p_access_code: accessCode,
+  });
+  if (error) {
+    logWarn('dataProvider', `getPortalByAccessCode failed: ${error.message ?? error}`);
+    return null;
+  }
+  return data ?? null;
 }

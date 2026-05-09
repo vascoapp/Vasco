@@ -86,3 +86,34 @@ export function setUser(userId: string | null): void {
     }
   } catch {}
 }
+
+// R66 round 49: breadcrumbs. When a Sentry crash report lands in week 1
+// of NL launch, we want to see the trail of screens + user actions that
+// led there. Pre-R49 the wrapper had no breadcrumb surface, so production
+// crashes arrived as bare stack traces with no route context. Now every
+// screen-mount + critical action (invoice send, quote create, etc.) drops
+// a breadcrumb. Categories follow Sentry conventions: 'navigation',
+// 'user', 'http', 'info'.
+export interface Breadcrumb {
+  category: 'navigation' | 'user' | 'http' | 'info';
+  message: string;
+  level?: 'info' | 'warning' | 'error';
+  data?: Record<string, unknown>;
+}
+
+export function addBreadcrumb(crumb: Breadcrumb): void {
+  try {
+    if (sentryModule?.addBreadcrumb) {
+      sentryModule.addBreadcrumb({
+        category: crumb.category,
+        message: crumb.message,
+        level: crumb.level ?? 'info',
+        data: crumb.data,
+        timestamp: Date.now() / 1000,
+      });
+    } else if (__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log(`[breadcrumb:${crumb.category}]`, crumb.message, crumb.data ?? '');
+    }
+  } catch {}
+}

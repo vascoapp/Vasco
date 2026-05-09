@@ -269,7 +269,14 @@ export default function ProfileScreen() {
                 if (authUser) {
                   const { error: insErr } = await (supabase.from('account_deletion_requests' as any) as any)
                     .insert({ user_id: authUser.id, status: 'pending' });
-                  if (insErr) submitted = false;
+                  if (insErr) {
+                    submitted = false;
+                  } else {
+                    // R66 round 41: fire-and-forget drain immediately so the
+                    // request processes within seconds (instead of waiting
+                    // for the daily cron). Same pattern as accountDeletionService.
+                    try { supabase.functions.invoke('drain-account-deletions', { body: {} }).catch(() => {}); } catch {}
+                  }
                 } else {
                   submitted = false;
                 }

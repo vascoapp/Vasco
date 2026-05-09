@@ -11,15 +11,18 @@ import { Platform, View, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
 import { SemanticColors } from '../../src/theme/colors';
 import {
   CustomerDecisionPortal,
   AccessCodeEntry,
 } from '../../src/components/customer/CustomerDecisionPortal';
 import {
-  getPortalByAccessCode,
-  validateAccessCode,
+  getPortalByAccessCode as getMockPortalByAccessCode,
+  validateAccessCode as validateMockAccessCode,
 } from '../../src/data/mockCustomerPortal';
+import { fetchPortalByAccessCode } from '../../src/services/decisionTrackerService';
+import { DEMO_MODE } from '../../src/config/demo';
 import { decisionIntelligence } from '../../src/intelligence/decisionIntelligence';
 import {
   submitDecision as syncSubmitDecision,
@@ -64,6 +67,7 @@ async function isAccessRateLimited(): Promise<boolean> {
 }
 
 export default function CustomerPortalScreen() {
+  const { t } = useTranslation();
   const { code } = useLocalSearchParams<{ code: string }>();
 
   const [portalData, setPortalData] = useState<CustomerPortalData | null>(null);
@@ -94,7 +98,7 @@ export default function CustomerPortalScreen() {
     // Validate format
     if (!isValidAccessCodeFormat(accessCode)) {
       logWarn('CustomerPortal', `Invalid access code format: ${accessCode.slice(0, 5)}...`);
-      setError('Code ongeldig of verlopen. Vraag uw aannemer om een nieuwe code.');
+      setError(t('customerPortal.codeInvalidOrExpired', 'Code is invalid or expired. Ask your contractor for a new one.'));
       setIsLoading(false);
       return;
     }
@@ -103,21 +107,20 @@ export default function CustomerPortalScreen() {
     const limited = await isAccessRateLimited();
     if (limited) {
       logWarn('CustomerPortal', 'Rate limit exceeded for access code validation');
-      setError('Te veel pogingen. Probeer het over een minuut opnieuw.');
+      setError(t('customerPortal.rateLimited', 'Too many attempts. Try again in a minute.'));
       setIsLoading(false);
       return;
     }
 
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    if (!validateAccessCode(accessCode)) {
-      setError('Code ongeldig of verlopen. Vraag uw aannemer om een nieuwe code.');
-      setIsLoading(false);
-      return;
+    // R66 round 32: BE-primary lookup via SECURITY DEFINER RPC
+    // (`get_portal_by_access_code`, migration 20260507000009). Pre-R32
+    // this hit `validateMockAccessCode` which always returned false in
+    // non-DEMO mode — the entire customer portal flow was dead in prod.
+    // Mock now serves only the DEMO_MODE 'VDB24A' fallback.
+    let data = await fetchPortalByAccessCode(accessCode);
+    if (!data && DEMO_MODE && validateMockAccessCode(accessCode)) {
+      data = getMockPortalByAccessCode(accessCode);
     }
-
-    const data = getPortalByAccessCode(accessCode);
     if (data) {
       setPortalData(data);
       hapticSuccess();
@@ -152,7 +155,7 @@ export default function CustomerPortalScreen() {
         }),
       ).catch(() => {});
     } else {
-      setError('Project niet gevonden. Controleer de code en probeer opnieuw.');
+      setError(t('customerPortal.projectNotFound', 'Project not found. Check the code and try again.'));
     }
 
     setIsLoading(false);
@@ -360,8 +363,14 @@ export default function CustomerPortalScreen() {
         // processDecisionSubmission's intelligence context. The portal
         // panel uses these to fetch getRegionalPreferences and surface
         // "67% of customers chose X" hints when k-anonymity ≥20.
+        // R66 round 32: was hardcoding 'noord-holland' for every NL
+        // contractor regardless of actual province — collapsed all NL
+        // contractors into a single bogus regional bucket and polluted
+        // the cohort signal. Now passes the country code as the region
+        // until the BE row carries a real province field; matches the
+        // empty-string fallback at line 207 (R41) for the same reason.
         trade={inferTradeFromTemplate(portalData.projectName)}
-        region={portalData.contractorCountry === 'NL' ? 'noord-holland' : portalData.contractorCountry ?? 'unknown'}
+        region={portalData.contractorCountry ?? ''}
       />
     </SafeAreaView>
   );

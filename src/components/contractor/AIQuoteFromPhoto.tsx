@@ -98,6 +98,13 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
   const [analysis, setAnalysis] = useState<AIAnalysisResult | null>(null);
   const [items, setItems] = useState<DetectedItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  // R66 round 35: photo cohort benchmark — closes the dormant
+  // get_photo_analysis_cohort RPC (R243 wired BE + FE wrapper, but no
+  // surface ever called it). Loads after the AI analysis lands so the
+  // contractor sees "Based on 12 similar projects: ~14h / €1,800 median"
+  // alongside their own AI-suggested estimate. RPC enforces k-anonymity
+  // at ≥5 contractors before returning real numbers.
+  const [photoCohort, setPhotoCohort] = useState<import('../../services/intelligenceCaptureService').PhotoAnalysisCohort | null>(null);
 
   // Derive a primary photo for legacy single-photo render paths.
   const photo = photos[0]?.uri ?? null;
@@ -226,6 +233,19 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
             estimatedDurationHours: data.estimatedDurationHours ?? undefined,
             estimatedCostEur: data.estimatedTotal ?? undefined,
             rawResponse: data,
+          }),
+        ).catch(() => {});
+        // R66 round 35: cohort benchmark lookup. The FE `complexity` enum
+        // is `simple|medium|complex` for legacy reasons but BE schema is
+        // `simple|moderate|complex`; remap before the RPC call so cohort
+        // rows actually match. When AI returns no complexity we send null
+        // and get the broader trade-level cohort.
+        const beComplexity = data.estimatedComplexity === 'medium'
+          ? 'moderate'
+          : (data.estimatedComplexity as 'simple' | 'moderate' | 'complex' | undefined);
+        import('../../services/intelligenceCaptureService').then((m) =>
+          m.getPhotoAnalysisCohort(trade, country, beComplexity).then((c) => {
+            if (c && c.contractorCount >= 5) setPhotoCohort(c);
           }),
         ).catch(() => {});
       }
@@ -415,6 +435,38 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
           </View>
         </View>
 
+        {/* R66 round 35: cohort benchmark — only renders when k-anonymity ≥5 */}
+        {photoCohort && photoCohort.contractorCount >= 5 && (
+          <View style={styles.cohortCard}>
+            <View style={styles.cohortHeader}>
+              <Ionicons name="people-outline" size={16} color={Palette.hermesOrange} />
+              <Text style={styles.cohortTitle}>
+                {t('aiQuote.cohortTitle', 'Based on {{count}} similar projects', { count: photoCohort.sampleSize })}
+              </Text>
+            </View>
+            <View style={styles.cohortRow}>
+              {photoCohort.avgDurationHours != null && (
+                <View style={styles.cohortItem}>
+                  <Text style={styles.cohortLabel}>{t('aiQuote.cohortAvgDuration', 'Avg hours')}</Text>
+                  <Text style={styles.cohortValue}>~{Math.round(photoCohort.avgDurationHours)}{t('aiQuote.hourShort', 'h')}</Text>
+                </View>
+              )}
+              {photoCohort.medianCostEur != null && (
+                <View style={styles.cohortItem}>
+                  <Text style={styles.cohortLabel}>{t('aiQuote.cohortMedianCost', 'Median cost')}</Text>
+                  <Text style={styles.cohortValue}>€{Math.round(photoCohort.medianCostEur).toLocaleString()}</Text>
+                </View>
+              )}
+              {photoCohort.avgCostEur != null && (
+                <View style={styles.cohortItem}>
+                  <Text style={styles.cohortLabel}>{t('aiQuote.cohortAvgCost', 'Avg cost')}</Text>
+                  <Text style={styles.cohortValue}>€{Math.round(photoCohort.avgCostEur).toLocaleString()}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
         {/* Detected items */}
         <Text style={styles.sectionTitle}>{t('aiQuote.detectedItems', 'Detected items')}</Text>
         {items.map(item => (
@@ -491,7 +543,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
 
         {/* Actions */}
         <View style={styles.actions}>
-          <Pressable style={styles.retakeBtn} onPress={() => { setPhotos([]); setAnalysis(null); setItems([]); setError(null); }}>
+          <Pressable style={styles.retakeBtn} onPress={() => { setPhotos([]); setAnalysis(null); setItems([]); setError(null); setPhotoCohort(null); }}>
             <Ionicons name="camera-reverse-outline" size={18} color={Palette.hermesOrange} />
             <Text style={styles.retakeBtnText}>{t('aiQuote.retake', 'Retake')}</Text>
           </Pressable>
@@ -555,6 +607,13 @@ const styles = StyleSheet.create({
   summaryItem: { flex: 1, alignItems: 'center' },
   summaryLabel: { fontSize: TYPE.labelSize, fontFamily: 'Inter_500Medium', color: SemanticColors.textSecondary },
   summaryValue: { fontSize: TYPE.titleSize, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary, marginTop: 4 },
+  cohortCard: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: Palette.hermesOrange + '30', padding: 14, marginBottom: 16 },
+  cohortHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
+  cohortTitle: { fontSize: TYPE.labelSize, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
+  cohortRow: { flexDirection: 'row', gap: 12 },
+  cohortItem: { flex: 1, alignItems: 'center' },
+  cohortLabel: { fontSize: 11, fontFamily: 'Inter_500Medium', color: SemanticColors.textTertiary, textTransform: 'uppercase', letterSpacing: 0.5 },
+  cohortValue: { fontSize: TYPE.titleSize, fontFamily: 'Archivo_800ExtraBold', color: Palette.hermesOrange, marginTop: 3 },
 
   sectionTitle: { fontSize: TYPE.titleSize, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary, marginBottom: 10 },
 

@@ -30,6 +30,15 @@ export type BusinessSettingsRow = {
   default_payment_terms: number | null;
   // R61 SOW tone preset.
   quote_tone: 'formal' | 'friendly' | 'detailed' | 'concise' | null;
+  // R66 round 24: onboarding-captured fields (migration 20260507000007).
+  // Pre-R24 these were silently dropped by updateBusinessProfile dbUpdates
+  // and the contractor's KOR/Kleinunternehmer status reverted to standard
+  // VAT after every cold start.
+  vat_scheme: string | null;
+  business_type: string | null;
+  team_size: string | null;
+  trade: string | null;
+  registration_number: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -109,6 +118,11 @@ export type DocumentRow = {
   // had a full notes UI with no backing column — every save was lost on
   // cold start. Migration 20260507000003_documents_notes.sql.
   notes: string | null;
+  // R66 round 47: NL Belastingdienst Art. 35 lid 1.b leveringsdatum.
+  // Migration 20260508000001 — closes R34 deferred. Persisted on invoice
+  // create from linked job's completed_at; PDF render reads from here
+  // (no longer joins jobs at render time).
+  delivery_date: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -122,6 +136,10 @@ export type LineItemRow = {
   unit_price: number;
   total_price: number;
   position: number;
+  // R66 round 47: per-line VAT rate. Migration 20260508000001 closes R38
+  // deferred — pre-R47 only the in-memory AutoInvoice carried the rate;
+  // mixed-rate NL plumbing/materials lost the distinction across cold start.
+  vat_rate: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -277,6 +295,60 @@ export type GobdAuditLogRow = {
   created_at: string;
 };
 
+// R66 round 31: decision_trackers — customer-decision portal access
+// (migrations 003 + 20260507000009). The access_code field is the
+// capability bearer credential; SECURITY DEFINER RPC
+// `get_portal_by_access_code` is the only anon read surface.
+export type DecisionTrackerRow = {
+  id: string;
+  user_id: string;
+  job_id: string;
+  customer_id: string;
+  access_code: string;
+  template_id: string | null;
+  status: 'active' | 'completed' | 'expired';
+  total_items: number;
+  completed_items: number;
+  // R66r31 additions — customer/project/payment metadata for portal UI.
+  customer_name: string | null;
+  customer_phone: string | null;
+  customer_email: string | null;
+  project_name: string | null;
+  project_start_date: string | null;
+  quote_amount: number | null;
+  deposit_amount: number | null;
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DecisionItemRow = {
+  id: string;
+  tracker_id: string;
+  category: string;
+  label: string;
+  help_text: string | null;
+  input_type: string;
+  options: unknown;
+  is_required: boolean | null;
+  due_date: string | null;
+  sort_order: number | null;
+  created_at: string;
+};
+
+export type DecisionSubmissionRow = {
+  id: string;
+  tracker_id: string;
+  item_id: string;
+  submitted_by: 'customer' | 'contractor';
+  value: string | null;
+  notes: string | null;
+  photos: string[] | null;
+  linked_product_url: string | null;
+  time_to_decide_seconds: number | null;
+  submitted_at: string;
+};
+
 // R278: projects table (migration 20260501000001 — promoted from
 // AsyncStorage to BE-backed for aannemer multi-job grouping).
 export type ProjectRow = {
@@ -418,11 +490,46 @@ export interface Database {
         };
         Update: Partial<Omit<QuoteAcceptanceLinkRow, 'token' | 'user_id' | 'created_at'>>;
       };
+      decision_trackers: {
+        Row: DecisionTrackerRow;
+        Insert: Partial<DecisionTrackerRow> & {
+          user_id: string;
+          job_id: string;
+          customer_id: string;
+          access_code: string;
+        };
+        Update: Partial<Omit<DecisionTrackerRow, 'id' | 'user_id' | 'created_at'>>;
+      };
+      decision_items: {
+        Row: DecisionItemRow;
+        Insert: Partial<DecisionItemRow> & {
+          tracker_id: string;
+          category: string;
+          label: string;
+        };
+        Update: Partial<Omit<DecisionItemRow, 'id' | 'tracker_id' | 'created_at'>>;
+      };
+      decision_submissions: {
+        Row: DecisionSubmissionRow;
+        Insert: Partial<DecisionSubmissionRow> & {
+          tracker_id: string;
+          item_id: string;
+        };
+        Update: Partial<Omit<DecisionSubmissionRow, 'id' | 'tracker_id' | 'item_id'>>;
+      };
     };
     Functions: {
       next_document_number: {
         Args: { p_doc_type: string };
         Returns: string;
+      };
+      get_portal_by_access_code: {
+        Args: { p_access_code: string };
+        // jsonb shape — see migration 20260507000009 for the exact
+        // structure the FE customer portal consumes. Typed as `unknown`
+        // here so callers explicitly cast to a domain type rather than
+        // sliding shape drift through the type system.
+        Returns: unknown;
       };
     };
     Enums: Record<string, never>;

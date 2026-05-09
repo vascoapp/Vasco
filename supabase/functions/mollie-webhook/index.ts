@@ -168,10 +168,24 @@ Deno.serve(async (req) => {
 
       console.log(`Invoice ${invoiceId} marked as paid (${paymentId})`);
 
-      // Fire-and-forget: receipt email + contractor push + invoice_outcomes seed
-      await dispatchPaidSideEffects(supabaseUrl, supabaseServiceKey, invoiceId, paidAt).catch((err) =>
-        console.warn('paid side-effects failed:', String(err)),
+      // R66 round 41: idempotency gate. Pre-R41 a replayed POST (Mollie's own
+      // retry on non-2xx, network duplication, or a malicious replay since the
+      // webhook itself isn't HMAC-signed by Mollie's design) fired the side
+      // effects every time → N receipt emails to the customer, N pushes to
+      // the contractor, N business_events rows. The DB UPDATE itself was
+      // idempotent (same row stays paid) but the side effects weren't gated.
+      // Pattern matches the subscription-renewal branch at line 192.
+      const isFirstSeeingPaid = await claimWebhookEvent(
+        supabaseUrl, supabaseServiceKey, 'mollie', paymentId,
       );
+      if (isFirstSeeingPaid) {
+        // Fire-and-forget: receipt email + contractor push + invoice_outcomes seed
+        await dispatchPaidSideEffects(supabaseUrl, supabaseServiceKey, invoiceId, paidAt).catch((err) =>
+          console.warn('paid side-effects failed:', String(err)),
+        );
+      } else {
+        console.log(`Mollie payment ${paymentId} replay — side effects skipped`);
+      }
     }
 
     // -------------------------------------------------------------------------

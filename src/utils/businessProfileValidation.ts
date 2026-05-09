@@ -7,6 +7,8 @@
 // =============================================================================
 
 import type { BusinessProfile } from '../domain/business';
+import { isValidVATNumber, isValidKvKNumber, isValidIBAN } from './validation';
+import i18n from '../i18n/i18n';
 
 type Country = 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK';
 
@@ -14,6 +16,12 @@ export interface ProfileReadiness {
   ready: boolean;
   missing: string[];        // Translation keys (use with i18n.t)
   missingLabels: string[];  // Fallback English labels
+  // R66 round 39: format errors are distinct from "missing". A contractor
+  // who typed "123.456.789.B.01" passed the non-empty check pre-R39 — but
+  // that BTW is malformed (correct: "NL123456789B01") and Belastingdienst
+  // rejects it. Same shape applies to KvK + IBAN.
+  invalid: string[];        // Translation keys for malformed entries
+  invalidLabels: string[];  // Fallback English labels with format hint
 }
 
 function has(value: string | undefined | null): boolean {
@@ -74,11 +82,56 @@ export function checkInvoiceReadiness(profile: BusinessProfile): ProfileReadines
   const fields = getRequiredFields(profile.country);
   const missing: string[] = [];
   const missingLabels: string[] = [];
+  const invalid: string[] = [];
+  const invalidLabels: string[] = [];
   for (const f of fields) {
     if (!has(f.get(profile))) {
       missing.push(f.key);
       missingLabels.push(f.label);
     }
   }
-  return { ready: missing.length === 0, missing, missingLabels };
+  // R66 round 39: format validation. Pre-R39 only checked non-empty —
+  // contractor could persist `123.456.789.B.01` (malformed BTW), pass the
+  // gate, ship a non-compliant invoice, and only learn it failed when the
+  // customer's accountant rejected the VAT reclaim. Same for IBAN (banks
+  // tolerate spaces but Mollie/SEPA require canonical form) and KvK.
+  // Country-specific format rules live in src/utils/validation.ts (R66r3
+  // mod-97 IBAN + per-country VAT regex).
+  const btw = profile.vatNumber?.trim();
+  if (btw && !isValidVATNumber(btw)) {
+    invalid.push('profile.vatFormatInvalid');
+    invalidLabels.push(i18n.t('profile.vatFormatInvalid', {
+      defaultValue: 'VAT number format invalid (expected e.g. {{example}})',
+      example: vatFormatExample(profile.country),
+    }));
+  }
+  const kvkOrReg = (profile.kvkNumber ?? profile.registrationNumber)?.trim();
+  if (kvkOrReg && profile.country === 'NL' && !isValidKvKNumber(kvkOrReg)) {
+    invalid.push('profile.kvkFormatInvalid');
+    invalidLabels.push(i18n.t('profile.kvkFormatInvalid', { defaultValue: 'KvK number must be 8 digits' }));
+  }
+  const iban = profile.iban?.trim();
+  if (iban && !isValidIBAN(iban)) {
+    invalid.push('profile.ibanFormatInvalid');
+    invalidLabels.push(i18n.t('profile.ibanFormatInvalid', { defaultValue: 'IBAN checksum invalid (check for typos)' }));
+  }
+  return {
+    ready: missing.length === 0 && invalid.length === 0,
+    missing,
+    missingLabels,
+    invalid,
+    invalidLabels,
+  };
+}
+
+function vatFormatExample(country: Country | undefined): string {
+  switch (country) {
+    case 'NL': return 'NL123456789B01';
+    case 'DE': return 'DE123456789';
+    case 'FR': return 'FR12345678901';
+    case 'ES': return 'ESA12345678';
+    case 'IT': return 'IT12345678901';
+    case 'UK': return 'GB123456789';
+    default:   return 'XX123456789';
+  }
 }

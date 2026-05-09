@@ -38,6 +38,11 @@ export function documentRowToInvoice(row: DocumentRow): Invoice {
     // R66 round 13: hydrate notes (was always undefined — UI lost notes
     // on every cold start).
     notes: row.notes ?? undefined,
+    // R66 round 47: hydrate persisted leveringsdatum so the PDF render
+    // path reads it back on cold start (was lost when linked job
+    // deleted post-invoice). Stored as a date string in BE; surface as
+    // ISO so callers can `new Date(...)` it.
+    deliveryDate: row.delivery_date ?? undefined,
   };
 }
 
@@ -49,6 +54,9 @@ export function lineItemRowToQuoteLineItem(row: LineItemRow): QuoteLineItem {
     description: row.description,
     quantity: Number(row.quantity),
     unitPrice: Number(row.unit_price),
+    // R66 round 47: hydrate per-line VAT rate from documents.line_items.vat_rate.
+    // Survives cold start so mixed-rate quotes don't lose the per-line distinction.
+    vatRate: row.vat_rate != null ? Number(row.vat_rate) : undefined,
   };
 }
 
@@ -86,6 +94,14 @@ export function businessSettingsToProfile(row: BusinessSettingsRow | null): Busi
     invoicePrefix: row.invoice_prefix ?? undefined,
     quotePrefix: row.quote_prefix ?? undefined,
     defaultPaymentTerms: row.default_payment_terms ?? undefined,
+    // R66 round 24: hydrate the 5 onboarding-captured fields. Pre-R24
+    // these were silently undefined on every cold start, reverting KOR /
+    // Kleinunternehmer contractors to standard VAT.
+    vatScheme: (row.vat_scheme as BusinessProfile['vatScheme']) ?? undefined,
+    businessType: row.business_type ?? undefined,
+    teamSize: (row.team_size as BusinessProfile['teamSize']) ?? undefined,
+    trade: row.trade ?? undefined,
+    registrationNumber: row.registration_number ?? undefined,
   };
 }
 

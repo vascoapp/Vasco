@@ -22,7 +22,7 @@ const BATCH_SIZE = 50;
 
 export interface BusinessEvent {
   eventType: string;
-  entityType: 'quote' | 'job' | 'invoice' | 'customer' | 'material' | 'payment' | 'user';
+  entityType: 'quote' | 'job' | 'invoice' | 'customer' | 'material' | 'payment' | 'user' | 'workflow_pack';
   entityId: string;
   payload: Record<string, any>;
   trade?: string;
@@ -223,6 +223,72 @@ export async function emitOnboardingCompleted(userId: string, data: {
     entityId: userId,
     payload: data,
     trade: data.trade,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Workflow pack telemetry (R66r49 #6) — closes the data-blind problem.
+// Pre-fix we had no way to tell which packs contractors actually used,
+// which templates got approved, which got dismissed. ROI was estimated
+// from a hardcoded 30%-recovery assumption. With these 4 events the
+// admin dashboard can compute real per-pack approve-rate, dismiss-rate,
+// expire-rate per locale + country.
+// ---------------------------------------------------------------------------
+
+export async function emitPackQueued(userId: string, queueItemId: string, data: {
+  packId: string;
+  stepIndex: number;
+  trigger: string;
+  channel: 'email' | 'sms' | 'push' | 'in_app';
+  locale: string;
+  customerId?: string;
+  entityId?: string;
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'pack_queued',
+    entityType: 'workflow_pack',
+    entityId: queueItemId,
+    payload: data,
+  });
+}
+
+export async function emitPackApproved(userId: string, queueItemId: string, data: {
+  packId: string;
+  stepIndex?: number;
+  via: 'share' | 'link' | 'navigate' | 'inform' | 'noop';
+  approvalLatencyMs?: number; // time from queue → approve
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'pack_approved',
+    entityType: 'workflow_pack',
+    entityId: queueItemId,
+    payload: data,
+  });
+}
+
+export async function emitPackDismissed(userId: string, queueItemId: string, data: {
+  packId: string;
+  stepIndex?: number;
+  reason?: 'manual_dismiss' | 'mute_customer' | 'mute_pack';
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'pack_dismissed',
+    entityType: 'workflow_pack',
+    entityId: queueItemId,
+    payload: data,
+  });
+}
+
+export async function emitPackExpired(userId: string, queueItemId: string, data: {
+  packId: string;
+  stepIndex?: number;
+  ageDays: number;
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'pack_expired',
+    entityType: 'workflow_pack',
+    entityId: queueItemId,
+    payload: data,
   });
 }
 

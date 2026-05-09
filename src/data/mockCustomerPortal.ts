@@ -126,11 +126,14 @@ export const MOCK_CUSTOMER_PORTAL: CustomerPortalData = {
           name: 'Wastafel Type',
           description: 'Kies het type wastafel',
           inputType: 'select',
+          // R66 round 45: enriched with stockStatus + leadTimeDays so the
+          // customer-portal UX shows real supply context (NL renovations
+          // queue 6-12 weeks out — delivery is real decision input).
           options: [
-            { value: 'pedestal', label: 'Op zuil', priceImpact: 0 },
-            { value: 'wall_mounted', label: 'Wandmontage', priceImpact: 50 },
-            { value: 'vanity_unit', label: 'Badkamermeubel met opbergruimte', priceImpact: 250 },
-            { value: 'countertop', label: 'Opzetwastafel', priceImpact: 150 },
+            { value: 'pedestal', label: 'Op zuil', priceImpact: 0, stockStatus: 'in_stock', leadTimeDays: 3, basePriceLabel: 'Inclusief' },
+            { value: 'wall_mounted', label: 'Wandmontage', priceImpact: 50, stockStatus: 'in_stock', leadTimeDays: 5 },
+            { value: 'vanity_unit', label: 'Badkamermeubel met opbergruimte', priceImpact: 250, stockStatus: 'low_stock', leadTimeDays: 14 },
+            { value: 'countertop', label: 'Opzetwastafel', priceImpact: 150, stockStatus: 'order_only', leadTimeDays: 21 },
           ],
           priority: 'critical',
           whyItMatters: 'Badkamermeubels hebben 2-3 weken levertijd.',
@@ -146,10 +149,10 @@ export const MOCK_CUSTOMER_PORTAL: CustomerPortalData = {
           description: 'Wilt u een douche, bad, of beide?',
           inputType: 'select',
           options: [
-            { value: 'shower_only', label: 'Alleen douche', priceImpact: 0 },
-            { value: 'bath_only', label: 'Alleen bad', priceImpact: 100 },
-            { value: 'bath_shower', label: 'Bad met douche erboven', priceImpact: 150 },
-            { value: 'separate', label: 'Apart bad en douche', priceImpact: 400 },
+            { value: 'shower_only', label: 'Alleen douche', priceImpact: 0, stockStatus: 'in_stock', leadTimeDays: 2, basePriceLabel: 'Standaard' },
+            { value: 'bath_only', label: 'Alleen bad', priceImpact: 100, stockStatus: 'in_stock', leadTimeDays: 7 },
+            { value: 'bath_shower', label: 'Bad met douche erboven', priceImpact: 150, stockStatus: 'low_stock', leadTimeDays: 10 },
+            { value: 'separate', label: 'Apart bad en douche', priceImpact: 400, stockStatus: 'special_order', leadTimeDays: 28 },
           ],
           priority: 'critical',
           whyItMatters: 'Dit bepaalt de hele indeling van de badkamer.',

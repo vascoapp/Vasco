@@ -6,14 +6,16 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Alert, ScrollView, StyleSheet, Text, View, Pressable, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { Palette, SemanticColors } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
+import { DK } from '../../src/theme/draftkings';
 import { SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
 import { hapticError, hapticSuccess } from '../../src/utils/haptics';
-import { generateInvoicePdf } from '../../src/services/invoicePdfService';
+import { generateInvoicePdf, buildInvoicePdfBase64 } from '../../src/services/invoicePdfService';
 import { invoiceAutomationService } from '../../src/services/invoiceAutomationService';
 import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../../src/config/paymentMethods';
 import { formatCurrency } from '../../src/i18n/formatting';
@@ -263,7 +265,7 @@ export default function InvoiceDetailScreen() {
       Alert.alert(
         t('invoices.profileIncomplete', 'Profile incomplete'),
         t('invoices.profileIncompleteDesc', 'Complete your business details before sending invoices.') +
-          '\n\n' + readiness.missingLabels.map((l) => `• ${l}`).join('\n'),
+          '\n\n' + [...readiness.missingLabels, ...readiness.invalidLabels].map((l) => `• ${l}`).join('\n'),
         [
           { text: t('common.cancel', 'Cancel'), style: 'cancel' },
           { text: t('invoices.completeProfile', 'Complete profile'), onPress: () => router.push('/(modals)/business-settings' as any) },
@@ -328,6 +330,38 @@ export default function InvoiceDetailScreen() {
       }
     }
 
+    // R66 round 36: attach the actual invoice PDF. Pre-R36 the customer
+    // received only a payment link in the email body — no invoice document.
+    // NL Belastingdienst requires the structured invoice for VAT reclaim;
+    // customers couldn't book the cost or process the VAT until the
+    // contractor sent a separate PDF via WhatsApp/Drive. Now we generate
+    // the same PDF the share-button produces and attach it.
+    let pdfBase64: string | undefined;
+    const autoInvForPdf = invoiceAutomationService.getInvoice(invoice.id);
+    if (autoInvForPdf) {
+      const linkedJob = (invoice as any).jobId
+        ? jobs.find((j: any) => j.id === (invoice as any).jobId)
+        : null;
+      const customerSignature = linkedJob?.signatureSvg && linkedJob?.customerSignoffAt
+        ? {
+            svgDataUri: linkedJob.signatureSvg,
+            signedAt: linkedJob.customerSignoffAt,
+            signerName: linkedJob.customerId ?? 'Customer',
+          }
+        : undefined;
+      const enriched: typeof autoInvForPdf = {
+        ...autoInvForPdf,
+        deliveryDate: linkedJob?.completedAt ? new Date(linkedJob.completedAt) : autoInvForPdf.deliveryDate,
+      };
+      const built = await buildInvoicePdfBase64(
+        enriched,
+        businessProfile,
+        paymentUrl,
+        customerSignature ? { customerSignature } : undefined,
+      );
+      pdfBase64 = built ?? undefined;
+    }
+
     const result = await sendInvoiceEmail({
       invoiceId: invoice.id,
       to: customerEmail,
@@ -335,6 +369,7 @@ export default function InvoiceDetailScreen() {
       locale: language,
       subject,
       bodyOverride,
+      pdfBase64,
     });
     if (result.ok) {
       Alert.alert(
@@ -356,6 +391,24 @@ export default function InvoiceDetailScreen() {
   };
 
   const handleViewPdf = async () => {
+    // R66 round 34: legal gate. Pre-R34 the PDF button generated a document
+    // even with empty businessName / KvK / BTW — that's a non-compliant
+    // invoice (Belastingdienst Art. 35) which the contractor could share
+    // before realizing the gap. The same gate already exists on handleMarkSent.
+    const readiness = checkInvoiceReadiness(businessProfile);
+    if (!readiness.ready) {
+      hapticError();
+      Alert.alert(
+        t('invoices.profileIncomplete', 'Profile incomplete'),
+        t('invoices.profileIncompleteDesc', 'Complete your business details before sending invoices.') +
+          '\n\n' + [...readiness.missingLabels, ...readiness.invalidLabels].map((l) => `• ${l}`).join('\n'),
+        [
+          { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+          { text: t('invoices.completeProfile', 'Complete profile'), onPress: () => router.push('/(modals)/business-settings' as any) },
+        ],
+      );
+      return;
+    }
     hapticSuccess();
     const autoInv = invoiceAutomationService.getInvoice(invoice.id);
     if (autoInv) {
@@ -371,7 +424,22 @@ export default function InvoiceDetailScreen() {
             signerName: linkedJob.customerId ?? 'Customer',
           }
         : undefined;
-      await generateInvoicePdf(autoInv, businessProfile, undefined, customerSignature ? { customerSignature } : undefined);
+      // R66 round 34: enrich with leveringsdatum from the linked job's
+      // completedAt. Cloned (not mutated) so the cached AutoInvoice in
+      // invoiceAutomationService stays untouched between renders.
+      const enriched: typeof autoInv = {
+        ...autoInv,
+        // R66 round 47: prefer the persisted documents.delivery_date (hydrated
+        // via mapper into invoice.deliveryDate) over FE-derived from the
+        // linked job. The persisted value is the snapshot at invoice-create
+        // time and survives if the linked job is later deleted.
+        deliveryDate: (invoice as any).deliveryDate
+          ? new Date((invoice as any).deliveryDate)
+          : linkedJob?.completedAt
+            ? new Date(linkedJob.completedAt)
+            : autoInv.deliveryDate,
+      };
+      await generateInvoicePdf(enriched, businessProfile, undefined, customerSignature ? { customerSignature } : undefined);
     }
   };
 
@@ -632,8 +700,21 @@ export default function InvoiceDetailScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Invoice Header Card */}
+        {/* R66r44 DK polish — invoice hero with gradient backdrop + amber glow */}
         <View style={styles.heroCard}>
+          <LinearGradient
+            colors={[DK.colors.panel2, DK.colors.panel]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <Text style={styles.heroLabel}>
+            {invoice.status === 'paid'
+              ? t('invoices.heroLabelPaid', 'Paid').toUpperCase()
+              : invoice.dueInDays < 0
+                ? t('invoices.heroLabelOverdue', 'Overdue').toUpperCase()
+                : t('invoices.heroLabelOutstanding', 'Outstanding').toUpperCase()}
+          </Text>
           <Text style={styles.heroAmount}>{formatCurrency(total, country)}</Text>
           <Text style={styles.heroDue}>
             {invoice.status === 'paid'
@@ -1115,12 +1196,29 @@ function ActionRow({ icon, label, onPress, border, accent }: {
   border?: boolean;
   accent?: boolean;
 }) {
+  // R66r44 DK polish — accent rows ("Mark as paid", primary CTAs) get the
+  // DK gradient + amber glow treatment so they read as load-bearing actions
+  // instead of one-of-N list items. Non-accent rows stay as quiet list rows.
+  if (accent) {
+    return (
+      <Pressable style={styles.actionRowAccent} onPress={onPress}>
+        <LinearGradient
+          colors={DK.effects.ctaGradient as unknown as readonly [string, string, ...string[]]}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <Ionicons name={icon} size={18} color="#fff" />
+        <Text style={styles.actionLabelAccent}>{label.toUpperCase()}</Text>
+        <Ionicons name="chevron-forward" size={16} color="#fff" />
+      </Pressable>
+    );
+  }
   return (
     <Pressable style={[styles.actionRow, border && styles.actionRowBorder]} onPress={onPress}>
-      <View style={[styles.actionIcon, accent && { backgroundColor: Palette.hermesOrange + '15' }]}>
-        <Ionicons name={icon} size={18} color={accent ? Palette.hermesOrange : SemanticColors.textSecondary} />
+      <View style={styles.actionIcon}>
+        <Ionicons name={icon} size={18} color={SemanticColors.textSecondary} />
       </View>
-      <Text style={[styles.actionLabel, accent && { color: Palette.hermesOrange, fontFamily: TYPE.titleFamily }]}>{label}</Text>
+      <Text style={styles.actionLabel}>{label}</Text>
       <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
     </Pressable>
   );
@@ -1162,9 +1260,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: GRID.md,
     paddingVertical: GRID.sm,
-    backgroundColor: "#14181F",
+    backgroundColor: DK.colors.panel,
     borderBottomWidth: 1,
-    borderBottomColor: SemanticColors.borderMuted,
+    borderBottomColor: DK.colors.border,
     gap: GRID.sm,
   },
   backBtn: {
@@ -1175,19 +1273,25 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
   },
   headerTitle: {
-    fontSize: TYPE.sectionSize,
-    fontFamily: TYPE.sectionFamily,
-    
-    color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
+    fontSize: 18,
+    fontFamily: DK.type.display900,
+    color: DK.colors.text,
+    textTransform: 'uppercase',
+    letterSpacing: 1.6,
+  },
+  // R66r44: status pill with subtle border separator + display800 weight
   statusBadge: {
     paddingHorizontal: GRID.sm + 2,
-    paddingVertical: GRID.xs,
-    borderRadius: RADIUS.sm,
+    paddingVertical: 4,
+    borderRadius: RADIUS.full,
+    borderWidth: 1,
+    borderColor: DK.colors.border,
   },
   statusText: {
-    fontSize: TYPE.labelSize,
-    fontFamily: TYPE.titleFamily,
-    textTransform: 'capitalize',
+    fontSize: 10,
+    fontFamily: DK.type.display800,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
   },
   scrollView: {
     flex: 1,
@@ -1197,24 +1301,35 @@ const styles = StyleSheet.create({
     paddingTop: GRID.md,
     gap: GRID.md,
   },
-  // Hero card
+  // R66r44 DK polish — Hero with gradient + amber glow + Archivo display
   heroCard: {
-    backgroundColor: "#14181F",
-    borderRadius: RADIUS.lg,
-    padding: GRID.lg,
+    borderRadius: DK.radius.card,
+    paddingVertical: GRID.lg + 8,
+    paddingHorizontal: GRID.lg,
     alignItems: 'center',
+    gap: 6,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: DK.colors.border,
+    ...DK.effects.heroGlow,
+  },
+  heroLabel: {
+    fontSize: 11,
+    fontFamily: DK.type.display800,
+    color: DK.colors.textMuted,
+    letterSpacing: 1.8,
   },
   heroAmount: {
-    fontSize: TYPE.displaySize + 4,
-    fontFamily: TYPE.displayFamily,
-    letterSpacing: TYPE.displayTracking,
-    color: SemanticColors.textPrimary,
+    fontSize: 38,
+    fontFamily: DK.type.display900,
+    color: DK.colors.text,
+    letterSpacing: -1,
   },
   heroDue: {
     fontSize: TYPE.captionSize,
     fontFamily: TYPE.captionFamily,
-    color: SemanticColors.textTertiary,
-    marginTop: GRID.xs,
+    color: DK.colors.textMuted,
+    marginTop: 2,
   },
   // Card
   card: {
@@ -1484,6 +1599,27 @@ const styles = StyleSheet.create({
     fontSize: TYPE.bodySize,
     fontFamily: TYPE.bodyFamily,
     color: SemanticColors.textPrimary,
+  },
+  // R66r44 DK polish — accent action row reads as a primary CTA pill.
+  // Used for "Mark as paid" + future high-priority actions.
+  actionRowAccent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.sm + 4,
+    marginTop: GRID.sm,
+    paddingVertical: GRID.md,
+    paddingHorizontal: GRID.md,
+    borderRadius: DK.radius.button,
+    overflow: 'hidden',
+    minHeight: 48,
+    ...DK.effects.ctaShadow,
+  },
+  actionLabelAccent: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: DK.type.display800,
+    color: '#fff',
+    letterSpacing: 1.2,
   },
   // Timeline
   timelineList: {

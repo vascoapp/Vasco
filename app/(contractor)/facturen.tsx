@@ -36,6 +36,7 @@ import { Share } from 'react-native';
 import { invoiceAutomationService } from '../../src/services/invoiceAutomationService';
 import { gateReminderSend } from '../../src/services/reminderGate';
 import { generateInvoicePdf, buildInvoiceShareText } from '../../src/services/invoicePdfService';
+import { checkInvoiceReadiness } from '../../src/utils/businessProfileValidation';
 import { createPaymentLink as createMolliePaymentLink } from '../../src/integrations/mollie';
 import { createPaymentLink as createStripePaymentLink } from '../../src/integrations/stripe';
 import { SUPPORTED_METHODS } from '../../src/integrations/stripe';
@@ -324,6 +325,23 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                 <Pressable
                   style={styles.invoiceActionBtn}
                   onPress={async () => {
+                    // R66 round 34: legal gate — Belastingdienst Art. 35
+                    // requires KvK + BTW + business name on every NL invoice.
+                    // Pre-R34 the share-PDF button generated a non-compliant
+                    // doc and shipped it without warning.
+                    const readiness = checkInvoiceReadiness(businessProfile);
+                    if (!readiness.ready) {
+                      Alert.alert(
+                        t('invoices.profileIncomplete', 'Profile incomplete'),
+                        t('invoices.profileIncompleteDesc', 'Complete your business details before sending invoices.') +
+                          '\n\n' + [...readiness.missingLabels, ...readiness.invalidLabels].map((l) => `• ${l}`).join('\n'),
+                        [
+                          { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+                          { text: t('invoices.completeProfile', 'Complete profile'), onPress: () => router.push('/(modals)/business-settings' as any) },
+                        ],
+                      );
+                      return;
+                    }
                     const autoInv = invoiceAutomationService.getInvoice(invoice.id);
                     if (autoInv) {
                       hapticSuccess();
@@ -344,7 +362,20 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                             signerName: linkedJob.customerId ?? 'Customer',
                           }
                         : undefined;
-                      await generateInvoicePdf(autoInv, businessProfile, link?.url, customerSignature ? { customerSignature } : undefined);
+                      // R66 round 34: leveringsdatum from linked job's
+                      // completedAt. Cloned, not mutated.
+                      const enriched: typeof autoInv = {
+                        ...autoInv,
+                        // R66 round 47: prefer persisted documents.delivery_date
+                        // (hydrated into invoice.deliveryDate via mapper) over
+                        // FE-derive from linked job — survives job deletion.
+                        deliveryDate: (invoice as any).deliveryDate
+                          ? new Date((invoice as any).deliveryDate)
+                          : linkedJob?.completedAt
+                            ? new Date(linkedJob.completedAt)
+                            : autoInv.deliveryDate,
+                      };
+                      await generateInvoicePdf(enriched, businessProfile, link?.url, customerSignature ? { customerSignature } : undefined);
                     } else {
                       Alert.alert(t('invoices.downloadPdf', 'PDF'), t('invoices.invoiceNotFound', 'Factuur niet gevonden in automatiseringssysteem.'));
                     }

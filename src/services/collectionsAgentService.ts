@@ -70,7 +70,13 @@ const MOCK_DSO_METRICS: DSOMetrics = {
 // R210: industryAverage is overridden from the cohort (R195 `get_cohort_dso`)
 // when available, so the DSO generator and related insights compare the
 // contractor against the real cohort median instead of a static 32.
+// R66 round 40: reset on user change so user B doesn't briefly see user A's
+// country median on the dashboard before primeCohortIndustryAverage refires
+// with B's profile. Module-level state isn't cleared by sessionCleanup
+// (AsyncStorage-only) — singleton-reset bus is the right place.
 let cohortIndustryAverage: number | null = null;
+import { registerSingletonReset } from './singletonReset';
+registerSingletonReset(() => { cohortIndustryAverage = null; });
 
 const MOCK_DUNNING_SEQUENCES: DunningSequence[] = [
   {

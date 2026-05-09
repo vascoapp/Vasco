@@ -335,14 +335,41 @@ function EmbeddedApproval({ item, onApprove, onReject, onSnooze }: {
     'draft_invoice', 'batch_invoices', 'invoice_regenerate', 'draft_reminder',
   ].includes(item.type);
 
+  // R66r49 #7: pack-sourced items get a "Stop reminding this customer"
+  // option in the snooze sheet. Without this escape valve, contractors
+  // disable the whole pack after one annoying repeat — losing the
+  // automation value on every other customer too. Mute is for 90 days
+  // and is per-customer/per-pack, not global.
+  const packId = (item.preparedData as any)?.packId as string | undefined;
+  const customerId = (item.preparedData as any)?.customerId as string | undefined;
+  const isPackSourced = Boolean(packId && customerId);
+
   const handleSnooze = () => {
+    const baseOptions = [
+      { text: t('vasco.snooze1h', '1 hour'), onPress: () => onSnooze(1) },
+      { text: t('vasco.snoozeTomorrow', 'Tomorrow'), onPress: () => onSnooze(24) },
+      { text: t('vasco.snooze3d', '3 days'), onPress: () => onSnooze(72) },
+    ];
+    const muteOption = isPackSourced
+      ? [{
+          text: t('vasco.muteCustomer', 'Stop reminding this customer'),
+          onPress: async () => {
+            try {
+              const { muteCustomerForPack } = await import('../../services/workflowPackService');
+              await muteCustomerForPack(packId!, customerId!);
+            } catch {}
+            // Reject the current item too — the next evaluation tick
+            // will skip this customer-pack pair for 90 days.
+            onReject();
+          },
+        }]
+      : [];
     Alert.alert(
       t('vasco.snooze', 'Remind later'),
       t('vasco.snoozeWhen', 'When should we remind you?'),
       [
-        { text: t('vasco.snooze1h', '1 hour'), onPress: () => onSnooze(1) },
-        { text: t('vasco.snoozeTomorrow', 'Tomorrow'), onPress: () => onSnooze(24) },
-        { text: t('vasco.snooze3d', '3 days'), onPress: () => onSnooze(72) },
+        ...baseOptions,
+        ...muteOption,
         { text: t('common.cancel', 'Cancel'), style: 'cancel' },
       ]
     );

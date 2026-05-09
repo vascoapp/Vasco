@@ -114,6 +114,19 @@ export async function executeApprovedQueueItem(
     if (options.alreadyShared) {
       return { executed: true, via: 'noop', detail: 'share already fired upstream' };
     }
+    // R66r49 #6: WhatsApp deep-link preferred when affiliateUrl is a wa.me URL.
+    // workflowPackService attaches `affiliateUrl: https://wa.me/{e164}?text=...`
+    // when customer phone is resolvable. 1-tap into WA Business chat with the
+    // text pre-filled — vs. 3 taps through the iOS share sheet.
+    const waUrl = data.affiliateUrl as string | undefined;
+    if (waUrl && waUrl.startsWith('https://wa.me/')) {
+      try {
+        await Linking.openURL(waUrl);
+        return { executed: true, via: 'link', detail: 'wa.me' };
+      } catch {
+        // Fall through to Share if WA isn't installed.
+      }
+    }
     const message = (data.template as string)
       || (data.draftReply as string)
       || item.description;

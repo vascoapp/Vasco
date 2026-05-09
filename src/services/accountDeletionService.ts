@@ -144,6 +144,18 @@ async function requestServerDeletion(userId: string): Promise<boolean> {
       return await requestDeletionViaEdgeFunction(userId);
     }
 
+    // R66 round 41: fire-and-forget the drain function immediately after
+    // inserting the request row. Pre-R41 the cron-only path meant up to 24h
+    // delay before processing — and silent failure if the operator forgot
+    // to run `supabase/cron.sql` (no automated verification of cron
+    // registration). The drain function locks each row via `pending →
+    // processing` transition so concurrent invocations from FE + cron are
+    // safe. We don't await it — the user gets immediate "request queued"
+    // success and processing happens in the background.
+    try {
+      supabase.functions.invoke('drain-account-deletions', { body: {} }).catch(() => {});
+    } catch {}
+
     return true;
   } catch (error) {
     logWarn('AccountDeletion', `Server deletion request failed: ${error}`);

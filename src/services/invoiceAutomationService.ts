@@ -21,6 +21,12 @@ export interface AutoInvoice {
   customerAddress: string;
   issueDate: Date;
   dueDate: Date;
+  // R66 round 34: leveringsdatum / service performance date. NL Belastingdienst
+  // Art. 35 lid 1.b requires this on every invoice when it differs from the
+  // issue date. Derived FE-side from the linked Job.completedAt at PDF render
+  // time. Optional because some invoices (advance payments, fresh tracker-less
+  // invoices) genuinely have no separable performance date.
+  deliveryDate?: Date;
   status: 'draft' | 'sent' | 'viewed' | 'paid' | 'overdue' | 'reminded' | 'collection';
   lineItems: InvoiceLineItem[];
   subtotal: number;

@@ -339,7 +339,7 @@ export async function approveItem(itemId: string, options?: { editedText?: strin
       // cache picks up the signal on next refresh + force-refresh now so the
       // next generator tick within this session sees it (not stuck on TTL).
       try {
-        const { emitBusinessEvent } = await import('../intelligence/dataCollector');
+        const { emitBusinessEvent, emitPackApproved } = await import('../intelligence/dataCollector');
         await emitBusinessEvent(getCurrentUserId(), {
           eventType: 'queue_item_approved',
           entityType: 'job' as any,
@@ -350,6 +350,20 @@ export async function approveItem(itemId: string, options?: { editedText?: strin
             count: item.count ?? 1,
           },
         });
+        // R66r49 #6: pack-specific approve telemetry. Only fires for
+        // workflow-pack-sourced items (sourceGeneratorId starts with
+        // `workflow_`). Lets the admin dashboard compute per-pack
+        // approve-rate without inferring from queue-type alone.
+        if (item.sourceGeneratorId?.startsWith('workflow_')) {
+          const packId = item.sourceGeneratorId.replace(/^workflow_/, '');
+          const createdMs = Date.parse(item.createdAt);
+          const latency = Number.isFinite(createdMs) ? Date.now() - createdMs : undefined;
+          emitPackApproved(getCurrentUserId(), itemId, {
+            packId,
+            via: 'navigate', // refined by queueItemExecutor when available
+            approvalLatencyMs: latency,
+          }).catch(() => {});
+        }
         const { refreshApprovalRateCache } = await import('../intelligence/insightScorer');
         refreshApprovalRateCache().catch(() => {});
       } catch {}
@@ -389,7 +403,7 @@ export async function rejectItem(itemId: string): Promise<void> {
       }
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
       try {
-        const { emitBusinessEvent } = await import('../intelligence/dataCollector');
+        const { emitBusinessEvent, emitPackDismissed } = await import('../intelligence/dataCollector');
         await emitBusinessEvent(getCurrentUserId(), {
           eventType: 'queue_item_rejected',
           entityType: 'job' as any,
@@ -399,6 +413,12 @@ export async function rejectItem(itemId: string): Promise<void> {
             generatorId: item.sourceGeneratorId,
           },
         });
+        if (item.sourceGeneratorId?.startsWith('workflow_')) {
+          emitPackDismissed(getCurrentUserId(), itemId, {
+            packId: item.sourceGeneratorId.replace(/^workflow_/, ''),
+            reason: 'manual_dismiss',
+          }).catch(() => {});
+        }
         const { refreshApprovalRateCache } = await import('../intelligence/insightScorer');
         refreshApprovalRateCache().catch(() => {});
       } catch {}

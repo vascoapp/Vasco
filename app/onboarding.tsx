@@ -33,6 +33,7 @@ import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../src/config
 import { FadeIn } from '../src/components/shared/FadeIn';
 import { GradientButton } from '../src/components/shared/GradientButton';
 import { hapticSuccess } from '../src/utils/haptics';
+import { isValidKvKNumber, isValidVATNumber } from '../src/utils/validation';
 import { GRID, RADIUS, TYPE } from '../src/theme/tabStyles';
 import { TIERS, type SubscriptionTier } from '../src/services/subscriptionService';
 import { emitOnboardingCompleted } from '../src/intelligence/dataCollector';
@@ -104,33 +105,54 @@ const BUSINESS_TYPES: Record<Country, { key: string; label: string }[]> = {
   ],
 };
 
-const REG_FIELDS: Record<Country, { key: string; i18nKey: string }[]> = {
+// R66 round 43: per-field input-time validators. Closes the deferred half
+// of R39 — pre-R43 onboarding accepted any string (`123.456.789.B.01` for
+// btw, `12345` for kvk, `BAD-VAT` for ustId), and the typo only surfaced
+// at first invoice attempt via R34/R39's readiness gate. Now caught at
+// onBlur so the user fixes it with full context. Validation is non-blocking
+// (Continue still works — the gate at invoice-send remains the hard stop).
+type RegFieldValidator = (value: string) => boolean;
+type RegFieldDef = { key: string; i18nKey: string; validate?: RegFieldValidator; errorKey?: string };
+
+const REG_FIELDS: Record<Country, RegFieldDef[]> = {
   NL: [
-    { key: 'kvk', i18nKey: 'onboarding.fields.kvk' },
-    { key: 'btw', i18nKey: 'onboarding.fields.btw' },
+    { key: 'kvk', i18nKey: 'onboarding.fields.kvk', validate: (v) => isValidKvKNumber(v.trim()), errorKey: 'profile.kvkFormatInvalid' },
+    { key: 'btw', i18nKey: 'onboarding.fields.btw', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid' },
   ],
   UK: [
     { key: 'companiesHouse', i18nKey: 'onboarding.fields.companiesHouse' },
-    { key: 'vatNumber', i18nKey: 'onboarding.fields.vatNumber' },
+    { key: 'vatNumber', i18nKey: 'onboarding.fields.vatNumber', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid' },
     { key: 'paye', i18nKey: 'onboarding.fields.paye' },
   ],
   DE: [
     { key: 'handelsregister', i18nKey: 'onboarding.fields.handelsregister' },
-    { key: 'ustId', i18nKey: 'onboarding.fields.ustId' },
+    { key: 'ustId', i18nKey: 'onboarding.fields.ustId', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid' },
     { key: 'steuernummer', i18nKey: 'onboarding.fields.steuernummer' },
   ],
   FR: [
     { key: 'siret', i18nKey: 'onboarding.fields.siret' },
-    { key: 'tvaIntra', i18nKey: 'onboarding.fields.tvaIntra' },
+    { key: 'tvaIntra', i18nKey: 'onboarding.fields.tvaIntra', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid' },
   ],
   ES: [
-    { key: 'nif', i18nKey: 'onboarding.fields.nif' },
+    { key: 'nif', i18nKey: 'onboarding.fields.nif', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid' },
     { key: 'iae', i18nKey: 'onboarding.fields.iae' },
   ],
   IT: [
-    { key: 'partitaIva', i18nKey: 'onboarding.fields.partitaIva' },
+    { key: 'partitaIva', i18nKey: 'onboarding.fields.partitaIva', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid' },
     { key: 'cameraCommercio', i18nKey: 'onboarding.fields.cameraCommercio' },
   ],
+};
+
+// VAT format hints surfaced in the error message — same shape as R39's
+// vatFormatExample helper but inlined here to avoid a circular import
+// chain (utils → onboarding → utils).
+const VAT_EXAMPLE: Record<Country, string> = {
+  NL: 'NL123456789B01',
+  DE: 'DE123456789',
+  FR: 'FR12345678901',
+  ES: 'ESA12345678',
+  IT: 'IT12345678901',
+  UK: 'GB123456789',
 };
 
 const CERTS: Record<string, Record<Country, string[]>> = {
@@ -219,6 +241,10 @@ export default function OnboardingScreen() {
   const [teamSize, setTeamSize] = useState<string | null>(null);
   const [businessType, setBusinessType] = useState<string | null>(null);
   const [regFields, setRegFields] = useState<Record<string, string>>({});
+  // R66 round 43: only show validation errors after the field is blurred
+  // — typing-time errors are noisy and dismissive while the user is mid-
+  // entry. Map of regField key → "user has finished typing this once".
+  const [regFieldsTouched, setRegFieldsTouched] = useState<Record<string, boolean>>({});
   const [selectedCerts, setSelectedCerts] = useState<string[]>([]);
   const [postcode, setPostcode] = useState('');
   const [radius, setRadius] = useState(25);
@@ -818,20 +844,37 @@ export default function OnboardingScreen() {
           <View style={styles.stepContent}>
             <Text style={styles.stepTitle}>{t('onboarding.registration')}</Text>
             <Text style={styles.stepSubtitle}>{t('onboarding.registrationDesc')}</Text>
-            {(REG_FIELDS[country!] || []).map((field) => (
-              <View key={field.key} style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>
-                  {t(field.i18nKey)} <Text style={styles.optionalTag}>({t('common.optional')})</Text>
-                </Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={regFields[field.key] || ''}
-                  onChangeText={(v) => setRegFields((prev) => ({ ...prev, [field.key]: v }))}
-                  placeholder="..."
-                  placeholderTextColor={SemanticColors.textTertiary}
-                />
-              </View>
-            ))}
+            {(REG_FIELDS[country!] || []).map((field) => {
+              // R66 round 47: input-time validation per R43 staged foundation.
+              // Only show error after onBlur so we don't nag mid-typing. Format
+              // hint surfaces the country-specific example (NL123456789B01,
+              // DE123456789, etc.) when the value is non-empty + malformed.
+              const value = regFields[field.key] || '';
+              const touched = regFieldsTouched[field.key] === true;
+              const hasError = touched && value.trim().length > 0 && field.validate ? !field.validate(value) : false;
+              const errorMsg = hasError && field.errorKey
+                ? field.errorKey === 'profile.vatFormatInvalid'
+                  ? t('profile.vatFormatInvalid', { defaultValue: 'VAT number format invalid (expected e.g. {{example}})', example: VAT_EXAMPLE[country!] })
+                  : t(field.errorKey, { defaultValue: 'Format invalid' })
+                : null;
+              return (
+                <View key={field.key} style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>
+                    {t(field.i18nKey)} <Text style={styles.optionalTag}>({t('common.optional')})</Text>
+                  </Text>
+                  <TextInput
+                    style={[styles.textInput, hasError && styles.textInputError]}
+                    value={value}
+                    onChangeText={(v) => setRegFields((prev) => ({ ...prev, [field.key]: v }))}
+                    onBlur={() => setRegFieldsTouched((prev) => ({ ...prev, [field.key]: true }))}
+                    placeholder="..."
+                    placeholderTextColor={SemanticColors.textTertiary}
+                    autoCapitalize="characters"
+                  />
+                  {errorMsg ? <Text style={styles.fieldError}>{errorMsg}</Text> : null}
+                </View>
+              );
+            })}
           </View>
         );
 
@@ -1703,6 +1746,16 @@ const styles = StyleSheet.create({
     fontSize: TYPE.bodySize,
     fontFamily: TYPE.bodyFamily,
     color: SemanticColors.textPrimary,
+  },
+  // R66 round 47: input-time validation states (R39 staged → wired)
+  textInputError: {
+    borderColor: SemanticColors.feedbackError,
+  },
+  fieldError: {
+    fontSize: 12,
+    color: SemanticColors.feedbackError,
+    fontFamily: TYPE.bodyFamily,
+    marginTop: 6,
   },
   radiusRow: {
     flexDirection: 'row',

@@ -10,10 +10,12 @@ import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { useTranslation } from 'react-i18next';
 import { Palette, SemanticColors } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
+import { DK } from '../../src/theme/draftkings';
 import { SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
@@ -110,15 +112,26 @@ export default function QuoteDetailScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Hero card — total + valid-until */}
+        {/* R66r44 DK polish — hero with gradient backdrop + amber glow */}
         <View style={styles.heroCard}>
+          <LinearGradient
+            colors={[DK.colors.panel2, DK.colors.panel]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <Text style={styles.heroLabel}>
+            {quote.status === 'accepted'
+              ? t('quotes.heroAccepted', 'Quote accepted').toUpperCase()
+              : quote.status === 'rejected'
+                ? t('quotes.heroRejected', 'Quote rejected').toUpperCase()
+                : t('quotes.totalLabel', 'Total').toUpperCase()}
+          </Text>
           <Text style={styles.heroAmount}>{formatCurrency(total)}</Text>
           <Text style={styles.heroDue}>
-            {quote.status === 'accepted'
-              ? t('quotes.heroAccepted', 'Quote accepted')
-              : quote.status === 'rejected'
-                ? t('quotes.heroRejected', 'Quote rejected')
-                : t('quotes.heroValidUntil', 'Valid until {{date}}', { date: validUntilLabel })}
+            {quote.status === 'accepted' || quote.status === 'rejected'
+              ? customerDisplayName
+              : t('quotes.heroValidUntil', 'Valid until {{date}}', { date: validUntilLabel })}
           </Text>
         </View>
 
@@ -307,6 +320,7 @@ export default function QuoteDetailScreen() {
               const vrate = getVATRate(country);
               const vpct = Math.round(vrate * 100);
               const vamt = Math.round(sub * vrate * 100) / 100;
+              // R66r44 — gradient backdrop is rendered by the inline View child below.
               const pdfData: QuotePdfData = {
                 quoteNumber: quote.id,
                 customerName: customerDisplayName ?? t('jobs.client', 'Client'),
@@ -353,13 +367,14 @@ export default function QuoteDetailScreen() {
             accessibilityRole="button"
             accessibilityLabel={t('quotes.sharePdf', 'Share quote as PDF')}
           >
+            <LinearGradient colors={DK.effects.ctaGradient as unknown as readonly [string, string, ...string[]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
             <Ionicons name="share-outline" size={18} color="#fff" />
-            <Text style={styles.primaryBtnText}>{t('quotes.sharePdf', 'Share quote as PDF')}</Text>
+            <Text style={styles.primaryBtnText}>{t('quotes.sharePdf', 'Share quote as PDF').toUpperCase()}</Text>
           </Pressable>
 
           {quote.status === 'sent' && (
             <Pressable
-              style={[styles.primaryBtn, { backgroundColor: Palette.hermesOrange }]}
+              style={styles.primaryBtn}
               onPress={async () => {
                 try {
                   await shareQuoteWithAcceptanceLink({
@@ -375,8 +390,9 @@ export default function QuoteDetailScreen() {
               }}
               accessibilityRole="button"
             >
+              <LinearGradient colors={DK.effects.ctaGradient as unknown as readonly [string, string, ...string[]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
               <Ionicons name="link" size={18} color="#fff" />
-              <Text style={styles.primaryBtnText}>{t('quotes.shareApprovalLink', 'Share approval link')}</Text>
+              <Text style={styles.primaryBtnText}>{t('quotes.shareApprovalLink', 'Share approval link').toUpperCase()}</Text>
             </Pressable>
           )}
 
@@ -417,12 +433,12 @@ export default function QuoteDetailScreen() {
             accessibilityLabel={t('quotes.acceptAndCreateJob', 'Accept and create job')}
           >
             <Ionicons name="checkmark-circle" size={20} color="#fff" />
-            <Text style={styles.primaryBtnText}>{t('quotes.acceptAndCreateJob', 'Accept & create job')}</Text>
+            <Text style={styles.primaryBtnText}>{t('quotes.acceptAndCreateJob', 'Accept & create job').toUpperCase()}</Text>
           </Pressable>
 
           <Link href={`/quotes/${id}/invoice`} asChild>
             <Pressable style={styles.secondaryBtn} accessibilityRole="button" accessibilityLabel={t('quotes.createInvoice', 'Create invoice')}>
-              <Text style={styles.secondaryBtnText}>{t('quotes.createInvoice', 'Create invoice')}</Text>
+              <Text style={styles.secondaryBtnText}>{t('quotes.createInvoice', 'Create invoice').toUpperCase()}</Text>
             </Pressable>
           </Link>
         </View>
@@ -444,28 +460,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: SafeArea.side, paddingVertical: GRID.sm,
   },
   backBtn: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 20, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
-  statusBadge: { paddingHorizontal: GRID.sm, paddingVertical: 4, borderRadius: RADIUS.full },
-  statusText: { fontSize: 10, fontFamily: TYPE.labelFamily, letterSpacing: 1.2, textTransform: 'uppercase' },
+  headerTitle: { fontSize: 18, fontFamily: DK.type.display900, color: DK.colors.text, textTransform: 'uppercase', letterSpacing: 1.6 },
+  // R66r44: status pill with subtle border for separation against the hero
+  statusBadge: { paddingHorizontal: GRID.sm + 2, paddingVertical: 4, borderRadius: RADIUS.full, borderWidth: 1, borderColor: DK.colors.border },
+  statusText: { fontSize: 10, fontFamily: DK.type.display800, letterSpacing: 1.4, textTransform: 'uppercase' },
 
   // Scroll
   scrollView: { flex: 1 },
-  scrollContent: { padding: GRID.md, gap: GRID.sm, paddingBottom: 80 },
+  scrollContent: { padding: GRID.md, gap: GRID.md, paddingBottom: 80 },
 
-  // Hero
+  // Hero — DK gradient backdrop + amber glow + Archivo display amount
   heroCard: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: RADIUS.lg,
-    padding: GRID.lg,
+    borderRadius: DK.radius.card,
+    paddingVertical: GRID.lg + 8, paddingHorizontal: GRID.lg,
     alignItems: 'center',
-    gap: 4,
-    borderWidth: 1, borderColor: SemanticColors.borderDefault,
+    gap: 6,
+    overflow: 'hidden',
+    borderWidth: 1, borderColor: DK.colors.border,
+    ...DK.effects.heroGlow,
+  },
+  heroLabel: {
+    fontSize: 11, fontFamily: DK.type.display800,
+    color: DK.colors.textMuted, letterSpacing: 1.8,
   },
   heroAmount: {
-    fontSize: 34, fontFamily: TYPE.titleFamily,
-    color: SemanticColors.textPrimary, letterSpacing: -0.8,
+    fontSize: 38, fontFamily: DK.type.display900,
+    color: DK.colors.text, letterSpacing: -1,
   },
-  heroDue: { fontSize: 13, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary, textAlign: 'center' },
+  heroDue: { fontSize: 13, fontFamily: TYPE.captionFamily, color: DK.colors.textMuted, textAlign: 'center' },
 
   // Cards
   card: {
@@ -546,30 +568,34 @@ const styles = StyleSheet.create({
   engagementSignals: { gap: 4, marginTop: GRID.xs },
   engagementSignal: { fontSize: 12, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
 
-  // Actions
+  // Actions — DK CTA treatment: gradient backdrop + amber glow shadow
   actionsBlock: { gap: GRID.sm, marginTop: GRID.xs },
   primaryBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: GRID.xs,
-    backgroundColor: Palette.hermesOrange,
-    borderRadius: RADIUS.md,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: GRID.sm,
+    borderRadius: DK.radius.button,
     paddingVertical: GRID.md,
-    minHeight: 44,
+    minHeight: 48,
+    overflow: 'hidden',
+    ...DK.effects.ctaShadow,
   },
-  primaryBtnText: { color: '#fff', fontFamily: TYPE.titleFamily, fontSize: 14 },
+  primaryBtnText: { color: '#fff', fontFamily: DK.type.display800, fontSize: 13, letterSpacing: 1.2 },
+  // Accept & create — DK success branch keeps green semantic but bumps weight
   successBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: GRID.xs,
-    backgroundColor: SemanticColors.feedbackSuccess,
-    borderRadius: RADIUS.md,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: GRID.sm,
+    backgroundColor: DK.colors.success,
+    borderRadius: DK.radius.button,
     paddingVertical: GRID.md,
-    minHeight: 44,
+    minHeight: 48,
+    shadowColor: DK.colors.success, shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35, shadowRadius: 14, elevation: 6,
   },
   secondaryBtn: {
     alignItems: 'center', justifyContent: 'center',
-    backgroundColor: SemanticColors.surfaceSecondary,
-    borderRadius: RADIUS.md,
+    backgroundColor: DK.colors.panel2,
+    borderRadius: DK.radius.button,
     paddingVertical: GRID.md,
-    minHeight: 44,
-    borderWidth: 1, borderColor: SemanticColors.borderDefault,
+    minHeight: 48,
+    borderWidth: 1, borderColor: DK.colors.border,
   },
-  secondaryBtnText: { color: SemanticColors.textPrimary, fontFamily: TYPE.titleFamily, fontSize: 14 },
+  secondaryBtnText: { color: DK.colors.text, fontFamily: DK.type.display700, fontSize: 13, letterSpacing: 1.2 },
 });

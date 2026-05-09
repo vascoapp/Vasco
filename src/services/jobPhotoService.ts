@@ -40,27 +40,68 @@ function base64ToBytes(b64: string): Uint8Array {
 
 export async function uploadJobPhoto(input: UploadJobPhotoInput): Promise<JobPhotoRecord | null> {
   if (!isSupabaseConfigured) return null;
-  // R59: refuse to upload when jobId is a temp id. The storage path
-  // `${user.id}/${input.jobId}/${uuid}.jpg` would embed the temp id,
-  // and `job_photos.job_id` is a FK → jobs(id) so the metadata insert
-  // would fail with no row matched. Photo would land in the bucket
-  // orphaned forever. Caller should retry once the offline queue flushes
-  // the parent job and refreshData picks up the BE uuid.
-  if (isTempIdFast(input.jobId)) return null;
+  // R66 round 27: temp-id case — queue the photo locally instead of
+  // dropping it. The R59 reasoning still holds (storage path + FK both
+  // need a real uuid), but discarding the bytes meant the contractor's
+  // before/after photos vanished if they took them on an offline-created
+  // job. Now: persist to FileSystem + AsyncStorage queue, replay on
+  // pendingJobPhotosQueue.flushQueue() once the parent job's temp id
+  // gets remapped via the offline queue's R49 idRemapBus.
+  if (isTempIdFast(input.jobId)) {
+    try {
+      const { queuePhoto } = await import('./pendingJobPhotosQueue');
+      const queued = await queuePhoto(input);
+      // Return a synthetic record so the caller's optimistic UI works —
+      // the real BE row + signed URL replace this on next replay tick.
+      return {
+        id: queued.id,
+        jobId: queued.jobId,
+        storagePath: queued.fileUri,
+        publicUrl: queued.fileUri, // local file:// URI for immediate display
+        kind: queued.kind,
+        caption: queued.caption,
+        takenAt: queued.queuedAt,
+      };
+    } catch {
+      return null;
+    }
+  }
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    const uuid = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    // R28 audit: was named `uuid` but it's not — it's just a unique
+    // storage-path suffix (timestamp + random). The actual uuid is
+    // `job_photos.id` which the BE generates via gen_random_uuid().
+    // Renaming to `pathSuffix` to stop misleading future readers.
+    const pathSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     const contentType = input.contentType ?? 'image/jpeg';
     const ext = contentType === 'image/png' ? 'png' : 'jpg';
-    const path = `${user.id}/${input.jobId}/${uuid}.${ext}`;
+    const path = `${user.id}/${input.jobId}/${pathSuffix}.${ext}`;
 
     const bytes = base64ToBytes(input.imageBase64);
     const { error: upErr } = await supabase.storage
       .from('job-photos')
       .upload(path, bytes, { contentType, upsert: false });
-    if (upErr) return null;
+    if (upErr) {
+      // R66 round 27: storage upload failed (network drop, bucket policy,
+      // quota). Queue locally; let the next foreground/online tick retry.
+      try {
+        const { queuePhoto } = await import('./pendingJobPhotosQueue');
+        const queued = await queuePhoto(input);
+        return {
+          id: queued.id,
+          jobId: queued.jobId,
+          storagePath: queued.fileUri,
+          publicUrl: queued.fileUri,
+          kind: queued.kind,
+          caption: queued.caption,
+          takenAt: queued.queuedAt,
+        };
+      } catch {
+        return null;
+      }
+    }
 
     const takenAt = new Date().toISOString();
     const { data: row, error: rowErr } = await (supabase.from('job_photos' as any) as any)
@@ -90,7 +131,24 @@ export async function uploadJobPhoto(input: UploadJobPhotoInput): Promise<JobPho
       takenAt,
     };
   } catch {
-    return null;
+    // R66 round 27: catch-all queue. Network exception, auth refresh issue,
+    // bucket-policy edge case — same answer: queue and retry rather than
+    // silently lose the bytes.
+    try {
+      const { queuePhoto } = await import('./pendingJobPhotosQueue');
+      const queued = await queuePhoto(input);
+      return {
+        id: queued.id,
+        jobId: queued.jobId,
+        storagePath: queued.fileUri,
+        publicUrl: queued.fileUri,
+        kind: queued.kind,
+        caption: queued.caption,
+        takenAt: queued.queuedAt,
+      };
+    } catch {
+      return null;
+    }
   }
 }
 

@@ -813,11 +813,13 @@ async function runScheduledTick(
             for (const drop of purchasingResults.priceDrops.slice(0, 3)) {
               await addToQueue({
                 type: 'price_alert',
-                title: t('purchasing.priceDrop', { defaultValue: '{{material}} — {{percent}}% cheaper', material: drop.materialName, percent: drop.dropPercent }),
-                description: t('purchasing.priceDropDesc', { defaultValue: '€{{old}} → €{{new}} at {{supplier}}', old: drop.previousPrice.toFixed(2), new: drop.currentPrice.toFixed(2), supplier: drop.supplier.name }),
-                preparedData: { type: 'price_drop', ...drop, affiliateUrl: drop.affiliateUrl },
-                actionLabel: t('purchasing.orderNow', 'Order now'),
-                estimatedImpact: `€${(drop.previousPrice - drop.currentPrice).toFixed(2)} ${t('purchasing.saved', 'saved')}`,
+                // R66r46: alert semantic shifted from "price fell" (Math.random
+                // noise pre-R46) to "you're paying X% above cohort median".
+                title: t('purchasing.cohortGap', { defaultValue: '{{material}} — {{percent}}% above cohort median', material: drop.materialName, percent: drop.dropPercent }),
+                description: t('purchasing.cohortGapDesc', { defaultValue: 'Your last buy €{{user}} · cohort median €{{median}} ({{cohort}})', user: drop.previousPrice.toFixed(2), median: drop.currentPrice.toFixed(2), cohort: drop.supplier.name }),
+                preparedData: { type: 'cohort_gap', ...drop, affiliateUrl: drop.affiliateUrl },
+                actionLabel: t('purchasing.findCheaper', 'Find a cheaper supplier'),
+                estimatedImpact: `€${(drop.previousPrice - drop.currentPrice).toFixed(2)} ${t('purchasing.savingPotential', 'saving potential per unit')}`,
                 expiresAt: drop.expiresAt,
                 sourceGeneratorId: `purchasing_drop_${drop.materialName}`,
               }).catch(() => {});

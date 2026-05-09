@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
-import { useWorkflowPacks, getPackROI } from '../../src/services/workflowPackService';
+import { useWorkflowPacks, getPackROI, getPackHealth, type PackHealth } from '../../src/services/workflowPackService';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { hapticSuccess } from '../../src/utils/haptics';
 
@@ -21,11 +21,17 @@ export default function AutomationsScreen() {
   const router = useRouter();
   const { packs, toggle, enabledCount } = useWorkflowPacks();
   const [packROIs, setPackROIs] = useState<Record<string, { actionsTriggered: number; actionsApproved: number; estimatedRevenue: number; estimatedTimeSaved: number }>>({});
+  // R66r49 #7: pack health from real telemetry. Surfaces approveRate +
+  // muted-customer count + 'new' / 'healthy' / 'low' status badge so
+  // contractors can see whether a pack is actually working for them
+  // (vs. the hardcoded 30%-recovery estimate in getPackROI).
+  const [packHealths, setPackHealths] = useState<Record<string, PackHealth>>({});
 
   useEffect(() => {
-    packs.filter(p => p.enabled).forEach(p =>
-      getPackROI(p.id).then(roi => setPackROIs(prev => ({ ...prev, [p.id]: roi })))
-    );
+    packs.filter(p => p.enabled).forEach(p => {
+      getPackROI(p.id).then(roi => setPackROIs(prev => ({ ...prev, [p.id]: roi })));
+      getPackHealth(p.id).then(h => setPackHealths(prev => ({ ...prev, [p.id]: h })));
+    });
   }, [packs]);
 
   return (
@@ -72,6 +78,40 @@ export default function AutomationsScreen() {
                   thumbColor={Palette.white}
                 />
               </View>
+
+              {/* R66r49 #7: pack health badge — 'new' (gray, <5 settled),
+                  'healthy' (green, ≥40% approve), 'low' (yellow, <40% approve).
+                  Surfaces real telemetry from the new pack_queued/approved/
+                  dismissed events, not the hardcoded 30%-recovery estimate. */}
+              {pack.enabled && packHealths[pack.id] && packHealths[pack.id].queued > 0 && (
+                <View style={s.healthRow}>
+                  <View style={[
+                    s.healthPill,
+                    packHealths[pack.id].status === 'healthy' && s.healthPillHealthy,
+                    packHealths[pack.id].status === 'low' && s.healthPillLow,
+                    packHealths[pack.id].status === 'new' && s.healthPillNew,
+                  ]}>
+                    <Text style={[
+                      s.healthPillText,
+                      packHealths[pack.id].status === 'healthy' && s.healthPillTextHealthy,
+                      packHealths[pack.id].status === 'low' && s.healthPillTextLow,
+                      packHealths[pack.id].status === 'new' && s.healthPillTextNew,
+                    ]}>
+                      {packHealths[pack.id].status === 'new'
+                        ? t('automations.healthNew', 'NEW')
+                        : packHealths[pack.id].status === 'healthy'
+                          ? t('automations.healthHealthy', 'HEALTHY')
+                          : t('automations.healthLow', 'NEEDS WORK')}
+                      {packHealths[pack.id].status !== 'new' && ` · ${Math.round(packHealths[pack.id].approveRate * 100)}%`}
+                    </Text>
+                  </View>
+                  {packHealths[pack.id].mutedCustomerCount > 0 && (
+                    <Text style={s.mutedText}>
+                      {t('automations.mutedCount', { defaultValue: '{{count}} muted', count: packHealths[pack.id].mutedCustomerCount })}
+                    </Text>
+                  )}
+                </View>
+              )}
 
               {/* ROI stats */}
               {pack.enabled && packROIs[pack.id] && (packROIs[pack.id].actionsTriggered > 0) && (
@@ -125,6 +165,16 @@ const s = StyleSheet.create({
   packName: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
   packDesc: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
   roiText: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: Palette.hermesOrange, paddingLeft: 56 },
+  healthRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 56 },
+  healthPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
+  healthPillNew: { backgroundColor: SemanticColors.surfaceSecondary, borderColor: SemanticColors.borderDefault },
+  healthPillHealthy: { backgroundColor: SemanticColors.feedbackSuccess + '18', borderColor: SemanticColors.feedbackSuccess + '55' },
+  healthPillLow: { backgroundColor: SemanticColors.feedbackWarning + '18', borderColor: SemanticColors.feedbackWarning + '55' },
+  healthPillText: { fontSize: 10, fontFamily: TYPE.displayFamily, letterSpacing: 1.0 },
+  healthPillTextNew: { color: SemanticColors.textTertiary },
+  healthPillTextHealthy: { color: SemanticColors.feedbackSuccess },
+  healthPillTextLow: { color: SemanticColors.feedbackWarning },
+  mutedText: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textTertiary },
   stepsPreview: { gap: 6, paddingLeft: 56 },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   stepDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Palette.hermesOrange },

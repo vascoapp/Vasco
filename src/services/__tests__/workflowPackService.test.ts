@@ -24,6 +24,13 @@ jest.mock('../aiActionQueueService', () => ({
   getQueueHistory: jest.fn(() => Promise.resolve([])),
 }));
 
+// R66r49 #5: tier gate added to evaluateTriggers — mock as paid tier so
+// the queueing path runs. `hasAutomationPacks: true` matches Advanced+.
+jest.mock('../subscriptionService', () => ({
+  loadSubscription: jest.fn(() => Promise.resolve({ tier: 'pro', billingCycle: 'monthly' })),
+  getTierLimits: jest.fn(() => ({ hasAutomationPacks: true })),
+}));
+
 const PACKS_KEY = '@vasco_workflow_packs';
 
 function clearStorage() {
@@ -40,8 +47,11 @@ describe('workflowPackService', () => {
   // ─── DEFAULT_PACKS ────────────────────────────────────────────────────────
 
   describe('DEFAULT_PACKS', () => {
-    it('should have at least 7 packs', () => {
-      expect(DEFAULT_PACKS.length).toBeGreaterThanOrEqual(7);
+    it('should have at least 10 packs', () => {
+      // R66r49 #5: floor bumped from 7 → 10 after dailyUpdate / handover /
+      // permits packs were added (R306-era). Tests at <10 silently passed
+      // while contractors couldn't see the newer packs in their UI.
+      expect(DEFAULT_PACKS.length).toBeGreaterThanOrEqual(10);
     });
 
     it('should have unique IDs', () => {
@@ -71,15 +81,25 @@ describe('workflowPackService', () => {
       expect(packs).toEqual(DEFAULT_PACKS);
     });
 
-    it('should return saved packs when available', async () => {
+    it('should preserve saved pack state and merge in missing packs', async () => {
+      // R66r49 #5: getWorkflowPacks now merges missing packs from
+      // DEFAULT_PACKS (by id). A storage list with only 1 pack now
+      // returns the user's customized pack + the other 9 defaults,
+      // not just the 1. Pre-fix, contractors who saved their pack
+      // list before R306 (which added 3 newer packs) had stale arrays
+      // missing those packs entirely and couldn't toggle them.
       const custom: WorkflowPack[] = [
         { ...DEFAULT_PACKS[0], enabled: false },
       ];
       await AsyncStorage.setItem(PACKS_KEY, JSON.stringify(custom));
 
       const packs = await getWorkflowPacks();
-      expect(packs).toHaveLength(1);
+      expect(packs).toHaveLength(DEFAULT_PACKS.length);
+      // The user's customization on pack 0 must persist.
+      expect(packs[0].id).toBe(DEFAULT_PACKS[0].id);
       expect(packs[0].enabled).toBe(false);
+      // The other 9 packs should be the defaults.
+      expect(packs[1].id).toBe(DEFAULT_PACKS[1].id);
     });
   });
 

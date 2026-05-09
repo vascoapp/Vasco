@@ -1,13 +1,18 @@
 // =============================================================================
-// PriceDropAlertCard (R285)
+// PriceDropAlertCard (R285, rewritten R66 round 46)
 // =============================================================================
-// Surfaces price-drop alerts on the inkoop screen. Same data the daily
-// scheduler queues into VascoCard, but rendered inline so contractors who
-// open inkoop directly see what's cheaper today.
+// Surfaces "you're paying X% above the cohort median" alerts on the inkoop
+// screen. Pre-R46 the underlying checkPriceDrops used Math.random ±15% to
+// fabricate "drop" prices — every alert was statistical noise. Now reads
+// from the real material_price_history cohort via get_material_cohort_stats
+// (k-anon ≥5 enforced server-side).
 //
-// Data: checkPriceDrops(trade, country, postcode) — internally tier-gated to
-// hasPriceDropAlerts (Pro+). 6h client cache to avoid re-running the search
-// on every screen mount.
+// Semantic shift: the "drop" used to mean "price fell" (impossible to
+// observe without real-time feeds). Now it means "you're paying above the
+// cohort median for this material" — actionable, verifiable, honest.
+//
+// Tier-gated to hasPriceDropAlerts (Pro+). 6h client cache to avoid
+// re-running the cohort fetch on every screen mount.
 // =============================================================================
 
 import { useEffect, useMemo, useState } from 'react';
@@ -95,12 +100,12 @@ export function PriceDropAlertCard({ trade, country, postcode }: Props) {
     <View style={styles.card}>
       <View style={styles.header}>
         <View style={styles.iconWrap}>
-          <Ionicons name="trending-down" size={16} color={DK.colors.success} />
+          <Ionicons name="analytics-outline" size={16} color={DK.colors.highlight} />
         </View>
         <View style={{ flex: 1 }}>
-          <DKLabel style={styles.title}>{t('inkoop.priceDropTitle', 'Prijsdalingen')}</DKLabel>
+          <DKLabel style={styles.title}>{t('inkoop.cohortGapTitle', 'Boven cohort-mediaan')}</DKLabel>
           <Text style={styles.sub}>
-            {t('inkoop.priceDropSub', '{{n}} materialen goedkoper · €{{saved}} besparing per eenheid', {
+            {t('inkoop.cohortGapSub', '{{n}} materialen waar je boven de mediaan zit · €{{saved}} potentiële besparing per eenheid', {
               n: top.length,
               saved: totalSavings.toFixed(2),
             })}
@@ -118,11 +123,15 @@ export function PriceDropAlertCard({ trade, country, postcode }: Props) {
             <View style={{ flex: 1 }}>
               <Text style={styles.rowName} numberOfLines={1}>{a.materialName}</Text>
               <Text style={styles.rowSub} numberOfLines={1}>
-                {a.supplier.name} · €{a.previousPrice.toFixed(2)} → €{a.currentPrice.toFixed(2)}
+                {t('inkoop.cohortGapRow', 'Jij €{{user}} · {{cohort}} €{{median}}', {
+                  user: a.previousPrice.toFixed(2),
+                  cohort: a.supplier.name,
+                  median: a.currentPrice.toFixed(2),
+                })}
               </Text>
             </View>
             <View style={styles.dropChip}>
-              <Text style={styles.dropChipText}>−{a.dropPercent}%</Text>
+              <Text style={styles.dropChipText}>+{a.dropPercent}%</Text>
             </View>
           </Pressable>
         ))}
@@ -149,7 +158,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: RADIUS.md,
-    backgroundColor: DK.colors.success + '14',
+    backgroundColor: DK.colors.highlight + '14',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -185,7 +194,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   dropChip: {
-    backgroundColor: DK.colors.success + '20',
+    backgroundColor: DK.colors.highlight + '20',
     paddingHorizontal: GRID.sm,
     paddingVertical: 4,
     borderRadius: RADIUS.sm,
@@ -193,6 +202,6 @@ const styles = StyleSheet.create({
   dropChipText: {
     fontSize: TYPE.captionSize,
     fontFamily: 'Archivo_800ExtraBold',
-    color: DK.colors.success,
+    color: DK.colors.highlight,
   },
 });

@@ -31,7 +31,7 @@ src/
     actionExecutor.ts # 13 action types with approval flows
     generatorTranslations.ts  # 116 keys × 6 languages
   services/           # 50+ business logic services
-    workflowPackService.ts    # 7 automation packs
+    workflowPackService.ts    # 10 automation packs
     aiActionQueueService.ts   # EVE-style proactive AI queue
     invoiceScanService.ts     # Photo → pricing moat pipeline
     cohortBenchmarkService.ts # Cross-contractor benchmarks
@@ -85,7 +85,7 @@ cd admin && npx tsc --noEmit     # Check admin TS errors
 - **3 user types:** Contractor (solo), Aannemer (`isAannemer: true`, multi-trade projects), Site Lead (uitvoerder)
 - **Compound AI:** 6 layers (data collection → ontology → semantic search → reasoning → action execution → ML models)
 - **EVE Legal AI pattern:** AI prepares work proactively → queues for one-tap approval → never auto-executes customer-facing actions
-- **7 automation packs:** Incasso, Quote follow-up, Maintenance, End-of-day, Welcome, Customer decisions, Purchasing
+- **10 automation packs:** Incasso (5-step billing), Quote follow-up, Maintenance, End-of-day, Welcome, Customer decisions, Purchasing, Daily customer update, Handover package, Permit check
 - **Pricing moat:** 8 data channels, invoice photo scanning, EU6 price indexes, cross-contractor benchmarks
 
 ## Design System — DraftKings Sunset Slate (active since 2026-04-18, R175)

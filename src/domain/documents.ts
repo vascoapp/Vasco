@@ -51,4 +51,9 @@ export type Invoice = {
   // R66 round 13: internal notes (free-text contractor memo, not
   // customer-visible). Was UI-only — saving did nothing.
   notes?: string;
+  // R66 round 47: leveringsdatum / NL Belastingdienst Art. 35 lid 1.b.
+  // Snapshotted at invoice-create from linked job.completedAt; persisted
+  // on documents.delivery_date. PDF render reads from here so the date
+  // survives if the linked job is later deleted.
+  deliveryDate?: string;
 };

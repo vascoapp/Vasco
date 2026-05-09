@@ -119,6 +119,43 @@ export async function getTrackerSubmissions(trackerId: string): Promise<Decision
 // Log portal activity
 // ---------------------------------------------------------------------------
 
+// R66 round 47: read-side for decision_activities — closes the dormancy
+// flagged in R35. Customer hesitation timeline (item_viewed, item_expanded,
+// help_clicked, etc.) was being written but no FE consumer read it. Now
+// the contractor's tracker detail screen surfaces the customer's hesitation
+// pattern: which items they viewed most, where they paused.
+export interface DecisionActivity {
+  id?: string;
+  trackerId: string;
+  activityType: string;
+  itemId?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export async function getTrackerActivities(trackerId: string): Promise<DecisionActivity[]> {
+  if (!isSupabaseConfigured) return [];
+  try {
+    const { data, error } = await (supabase as any)
+      .from('decision_activities')
+      .select('*')
+      .eq('tracker_id', trackerId)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error || !data) return [];
+    return (data as any[]).map((row) => ({
+      id: row.id,
+      trackerId: row.tracker_id,
+      activityType: row.activity_type,
+      itemId: row.item_id ?? undefined,
+      metadata: row.metadata ?? undefined,
+      createdAt: row.created_at,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function logActivity(trackerId: string, activityType: string, itemId?: string, metadata?: Record<string, any>): Promise<void> {
   if (!isSupabaseConfigured) return;
 

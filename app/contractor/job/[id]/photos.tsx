@@ -42,7 +42,32 @@ export default function JobPhotosScreen() {
     if (!id) return;
     setLoading(true);
     const list = await listJobPhotos(String(id));
-    setPhotos(list);
+    // R66 round 27: merge in pending offline-queued photos so the
+    // contractor sees them immediately (with a local file:// preview)
+    // instead of "where did my photo go?". Queued photos use a synthetic
+    // pp-* id; the next flushQueue tick replaces them with the real BE row.
+    try {
+      const { listPendingForJob } = await import('../../../../src/services/pendingJobPhotosQueue');
+      const pending = await listPendingForJob(String(id));
+      const pendingAsRecords: JobPhotoRecord[] = pending.map((p) => ({
+        id: p.id,
+        jobId: p.jobId,
+        storagePath: p.fileUri,
+        publicUrl: p.fileUri,
+        kind: p.kind,
+        caption: p.caption,
+        takenAt: p.queuedAt,
+      }));
+      // Pending first (newest) then server list. Filter dupes by id.
+      const seen = new Set(pendingAsRecords.map((p) => p.id));
+      const merged = [
+        ...pendingAsRecords,
+        ...list.filter((p) => !seen.has(p.id)),
+      ];
+      setPhotos(merged);
+    } catch {
+      setPhotos(list);
+    }
     setLoading(false);
   }, [id]);
 
@@ -61,7 +86,20 @@ export default function JobPhotosScreen() {
     if (upload) {
       hapticSuccess();
       await refresh();
+      // R66 round 27: when uploadJobPhoto returns a synthetic queued
+      // record (pp-* id prefix), the photo is held offline. Tell the
+      // contractor it'll sync rather than show success+silence; without
+      // this they wouldn't know to expect a delayed cloud copy.
+      if (upload.id.startsWith('pp-')) {
+        Alert.alert(
+          t('jobs.photos.queuedTitle', 'Photo saved offline'),
+          t('jobs.photos.queuedDesc', 'It will upload to the cloud as soon as you reconnect or the parent job syncs.'),
+        );
+      }
     } else {
+      // Note: with R27 the queue handles every legitimate failure path,
+      // so this branch only fires for fundamental issues (no Supabase
+      // configured, FileSystem write itself failed, etc).
       Alert.alert(
         t('jobs.photos.uploadFailedTitle', 'Upload failed'),
         t('jobs.photos.uploadFailedDesc', 'Photo could not be uploaded. Try again when online.'),

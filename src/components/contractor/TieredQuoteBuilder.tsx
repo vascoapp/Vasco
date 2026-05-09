@@ -49,6 +49,7 @@ import { useTranslation } from 'react-i18next';
 // contractors review the prose before tapping Send.
 import { generateScopeOfWork, loadQuoteTonePreset, loadToneExamples } from '../../services/sowGeneratorService';
 import { useAppState } from '../../state/AppState';
+import { isSmallBusinessExempt } from '../../domain/business';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 // =============================================================================
@@ -371,10 +372,16 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
         if (variant) variant.features.forEach(f => { if (!features.includes(f)) features.push(f); });
         return { pricebookItemId: service.item.id, description: service.item.name, quantity: service.quantity, unit: service.unit, unitPrice: price, total, includedInTier: true };
       });
-      const vatAmount = subtotal * 0.21;
+      // R66 round 38: honor vatScheme. Pre-R38 every tier was computed at
+      // 21% even for KOR / Kleinunternehmer contractors — quote totals went
+      // out 21% inflated and the customer expected to pay BTW that the
+      // contractor isn't legally allowed to charge.
+      const exempt = isSmallBusinessExempt(bp);
+      const effectiveVatRate = exempt ? 0 : 21;
+      const vatAmount = subtotal * (effectiveVatRate / 100);
       return {
         tier: tierKey, name: TIER_CONFIG[tierKey].name, tagline: TIER_CONFIG[tierKey].tagline,
-        lineItems, subtotal, vatRate: 21, vatAmount, total: subtotal + vatAmount,
+        lineItems, subtotal, vatRate: effectiveVatRate, vatAmount, total: subtotal + vatAmount,
         features: features.length > 0 ? features.slice(0, 5) : [
           tierKey === 'good' ? 'Standaard materiaal' : tierKey === 'better' ? 'Kwaliteitsmateriaal' : 'Premium materiaal',
           tierKey !== 'good' ? 'Garantie 2 jaar' : 'Garantie 1 jaar',
@@ -693,28 +700,50 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
 
   const handleSend = () => {
     if (selectedServices.length === 0) return;
-    const quote: Partial<TieredQuote> = {
-      reference: `TQ-${Date.now()}`, title: 'Offerte', tiers,
-      validUntil: new Date(Date.now() + 30 * MS_PER_DAY).toISOString().split('T')[0],
-      paymentTerms: '30% aanbetaling, 70% bij oplevering', status: 'sent',
-      // R62: SOW narrative threaded as the quote description. Parent
-      // screen persists this to documents.scope_text on save (R57's
-      // updateDocument dual-route handles both uuid + docNumber forms).
-      description: sowText.trim() || undefined,
+    // R66 round 26: soft customer prompt. R18 closed the data-corruption
+    // hole (non-uuid customer args now NULL out customer_id), but the UX
+    // gap remained — contractors could send a quote with no customer
+    // attached and end up with orphan rows that need manual association
+    // later. Prompt before sending if no customer is set; let them either
+    // back out or proceed knowingly.
+    const proceed = () => {
+      const quote: Partial<TieredQuote> = {
+        reference: `TQ-${Date.now()}`, title: 'Offerte', tiers,
+        validUntil: new Date(Date.now() + 30 * MS_PER_DAY).toISOString().split('T')[0],
+        paymentTerms: '30% aanbetaling, 70% bij oplevering', status: 'sent',
+        // R62: SOW narrative threaded as the quote description. Parent
+        // screen persists this to documents.scope_text on save (R57's
+        // updateDocument dual-route handles both uuid + docNumber forms).
+        description: sowText.trim() || undefined,
+      };
+      intelligence.trackEvent({
+        eventType: 'quote_sent', userId: getCurrentUserId(), sessionId: 'current',
+        context: { platform: 'ios', appVersion: '1.0.0', dayOfWeek: new Date().getDay(), hourOfDay: new Date().getHours(), isWeekend: [0, 6].includes(new Date().getDay()), season: 'winter' },
+        payload: { quoteReference: quote.reference, tierCount: 3, goodTotal: tiers[0].total, betterTotal: tiers[1].total, bestTotal: tiers[2].total, serviceCount: selectedServices.length, customerId: customer?.id },
+        entities: customer ? [{ id: customer.id, type: 'customer', name: customer.name, confidence: 1.0 }] : [],
+      });
+      onSend(quote);
+      // R64 (audit fix #3): reset SOW state — was bleeding across quotes
+      // (contractor sends quote A, starts quote B with A's SOW still in the
+      // builder). R66 round 26: moved into proceed() so both customer-attached
+      // and "Send anyway" paths do the cleanup; previously only the
+      // customer-attached path reset (Alert dispatched proceed asynchronously).
+      setSowText('');
+      setSowError(null);
     };
-    intelligence.trackEvent({
-      eventType: 'quote_sent', userId: getCurrentUserId(), sessionId: 'current',
-      context: { platform: 'ios', appVersion: '1.0.0', dayOfWeek: new Date().getDay(), hourOfDay: new Date().getHours(), isWeekend: [0, 6].includes(new Date().getDay()), season: 'winter' },
-      payload: { quoteReference: quote.reference, tierCount: 3, goodTotal: tiers[0].total, betterTotal: tiers[1].total, bestTotal: tiers[2].total, serviceCount: selectedServices.length, customerId: customer?.id },
-      entities: customer ? [{ id: customer.id, type: 'customer', name: customer.name, confidence: 1.0 }] : [],
-    });
-    onSend(quote);
-    // R64 (audit fix #3): reset SOW state — was bleeding across quotes
-    // (contractor sends quote A, starts quote B with A's SOW still in the
-    // builder). The Reset above clears `scopeText` (search keyword) but
-    // sowText/sowError were left dangling.
-    setSowText('');
-    setSowError(null);
+
+    if (!customer) {
+      Alert.alert(
+        t('tieredQuote.noCustomerTitle', 'No customer attached'),
+        t('tieredQuote.noCustomerBody', 'This quote will be saved without a customer link. You can attach one from the customer list later.'),
+        [
+          { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+          { text: t('tieredQuote.sendAnyway', 'Send anyway'), onPress: proceed },
+        ],
+      );
+      return;
+    }
+    proceed();
   };
 
   // =========================================================================

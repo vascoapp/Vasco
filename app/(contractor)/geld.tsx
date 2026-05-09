@@ -169,6 +169,29 @@ export default function GeldScreen() {
     );
   }
 
+  // R66 round 29: full-empty state when fresh contractor has no quotes
+  // OR invoices yet. Pre-R29 they hit an empty financial dashboard
+  // (zeroed cards + bare segmented tabs) with no orientation. Now points
+  // them at the "create your first quote" CTA, matching werk's pattern.
+  if (invoices.length === 0 && quotes.length === 0) {
+    return (
+      <View style={s.root}>
+        <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>
+          <View style={s.topBar}><DKLabel style={s.title}>{t('tabs.money', 'Money')}</DKLabel></View>
+        </SafeAreaView>
+        <View style={s.fullEmpty}>
+          <Ionicons name="cash-outline" size={48} color={DK.colors.textMuted} />
+          <DKLabel style={s.fullEmptyTitle}>{t('dk.empty.noFinancials', 'No quotes or invoices yet')}</DKLabel>
+          <Text style={s.fullEmptyDesc}>{t('dk.empty.noFinancialsDesc', 'Create your first quote to start tracking money in.')}</Text>
+          <Pressable style={s.fullEmptyBtn} onPress={() => router.push('/contractor/tiered-quote' as any)}>
+            <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+            <DKLabel style={s.fullEmptyBtnText}>{t('dk.actions.newQuote', 'New quote')}</DKLabel>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
   const financialQueue = aiQueue.items.filter(i => i.type === 'draft_invoice' || i.type === 'draft_reminder');
 
   return (
@@ -941,6 +964,20 @@ const s = StyleSheet.create({
   modalRowText: { fontFamily: DK.type.display800, fontSize: 12, color: DK.colors.textMuted, letterSpacing: 1.1 },
   modalRowTextActive: { color: DK.colors.accent },
   modalDivider: { height: StyleSheet.hairlineWidth, backgroundColor: DK.colors.border, marginVertical: 8 },
+
+  // Full empty
+  fullEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 24 },
+  fullEmptyTitle: { fontFamily: DK.type.display900, fontSize: 16, color: DK.colors.text, letterSpacing: 1.8, marginTop: 10 },
+  fullEmptyDesc: { fontFamily: DK.type.body400, fontSize: 13, color: DK.colors.textMuted, textAlign: 'center' },
+  fullEmptyBtn: {
+    marginTop: 14,
+    paddingVertical: 14, paddingHorizontal: 32,
+    borderRadius: DK.radius.button,
+    overflow: 'hidden',
+    alignItems: 'center',
+    shadowColor: DK.colors.accent, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.5, shadowRadius: 18, elevation: 10,
+  },
+  fullEmptyBtnText: { fontFamily: DK.type.display900, fontSize: 13, color: '#FFFFFF', letterSpacing: 1.4 },
 
   // FAB
   fab: {

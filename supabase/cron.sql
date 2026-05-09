@@ -166,5 +166,27 @@ select cron.schedule(
   $$ select public.refresh_generator_approval_rates(); $$
 );
 
+-- R66r49 #6 — Pack trigger tick. Daily 09:00 UTC. Server-side eval of the
+-- Incasso pack: scans contractors with push tokens, classifies their open
+-- invoices into pre_due/+3/+7/+14/+30d buckets, fires a pack-aware push
+-- per contractor (most-urgent bucket only). Closes the dormancy gap where
+-- contractors who didn't open the app for 4+ days missed Incasso reminder
+-- windows entirely. Other packs remain app-open-only until telemetry
+-- justifies the porting cost.
+select cron.schedule(
+  'vasco-pack-trigger-tick',
+  '0 9 * * *',
+  $$
+    select net.http_post(
+      url := '<SUPABASE_URL>/functions/v1/pack-trigger-tick',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
+      ),
+      body := '{}'::jsonb
+    );
+  $$
+);
+
 -- Listing live jobs (run in psql after setup to verify):
 -- select * from cron.job;

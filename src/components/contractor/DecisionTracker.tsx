@@ -12,10 +12,12 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, GRID, RADIUS } from '../../theme/tabStyles';
+import { DK } from '../../theme/draftkings';
 import type {
   CustomerDecisionTracker,
   CustomerDecisionCategory,
@@ -156,6 +158,55 @@ export function DecisionTrackerList({
     if (filter === 'pending') return t.pendingCount > 0;
     return true;
   });
+
+  // R66 round 49: fresh-contractor empty state. Pre-R49 the screen rendered
+  // a hollow stats row (all zeros), the "+ new checklist" button, and an
+  // empty "Active trackers" section header — leaving a fresh contractor
+  // staring at scaffolding with no explanation of what this tab is for.
+  // Now: hide the stats grid + section header when trackers is empty, show
+  // a DK panel hero with value prop + gradient CTA.
+  if (trackers.length === 0) {
+    return (
+      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+        <View style={styles.emptyHero}>
+          <View style={styles.emptyHeroIconWrap}>
+            <LinearGradient
+              colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <Ionicons name="checkmark-done" size={36} color="#FFFFFF" />
+          </View>
+          <Text style={styles.emptyHeroTitle}>
+            {t('decisions.emptyTitle', 'Stop chasing decisions').toUpperCase()}
+          </Text>
+          <Text style={styles.emptyHeroBody}>
+            {t(
+              'decisions.emptyBody',
+              'Create a checklist your customer fills in (paint colors, tile choices, fixtures). Vasco nudges them so you keep moving — and projects finish on time.',
+            )}
+          </Text>
+          <Pressable
+            style={styles.emptyHeroCta}
+            onPress={onCreateNew}
+            accessibilityLabel={t('decisions.emptyCta', 'Create your first checklist')}
+          >
+            <LinearGradient
+              colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <Ionicons name="add" size={18} color="#FFFFFF" />
+            <Text style={styles.emptyHeroCtaText}>
+              {t('decisions.emptyCta', 'Create your first checklist').toUpperCase()}
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    );
+  }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
@@ -1791,6 +1842,65 @@ const styles = StyleSheet.create({
     color: SemanticColors.textTertiary,
     fontSize: TYPE.captionSize + 1,
     fontFamily: TYPE.bodyFamily,
+  },
+  emptyHero: {
+    margin: GRID.md,
+    padding: GRID.xl,
+    backgroundColor: DK.colors.panel,
+    borderRadius: RADIUS.xl,
+    borderWidth: 1,
+    borderColor: DK.colors.border,
+    alignItems: 'center',
+    gap: GRID.md,
+  },
+  emptyHeroIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: DK.colors.accent,
+    shadowOpacity: 0.4,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  emptyHeroTitle: {
+    fontSize: 22,
+    fontFamily: TYPE.displayFamily,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    letterSpacing: 1.2,
+    marginTop: GRID.xs,
+  },
+  emptyHeroBody: {
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.bodyFamily,
+    color: DK.colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 21,
+  },
+  emptyHeroCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: GRID.xs,
+    paddingVertical: 14,
+    paddingHorizontal: GRID.lg,
+    borderRadius: RADIUS.full,
+    overflow: 'hidden',
+    alignSelf: 'stretch',
+    marginTop: GRID.sm,
+    shadowColor: DK.colors.accent,
+    shadowOpacity: 0.4,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  emptyHeroCtaText: {
+    color: '#FFFFFF',
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.displayFamily,
+    letterSpacing: 1.4,
   },
   sectionLabel: {
     fontSize: TYPE.captionSize,

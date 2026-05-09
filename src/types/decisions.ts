@@ -124,6 +124,18 @@ export interface DecisionOption {
   description?: string;
   imageUrl?: string;
   priceImpact?: number; // +/- from base price
+  // R66 round 45: customer-facing supply context. Pre-R45 customers saw
+  // only the option label + price impact (when non-zero) — no signal on
+  // whether the contractor could actually deliver it next week vs. in 4
+  // weeks. NL renovations queue 6-12 weeks ahead so this is real decision
+  // input. Contractor sets these on the template / per-tracker; portal
+  // surfaces them inline next to the price tag.
+  stockStatus?: 'in_stock' | 'low_stock' | 'order_only' | 'special_order';
+  leadTimeDays?: number;
+  // Optional explicit base-price label for "standard / no extra cost" — when
+  // priceImpact is 0 the customer historically saw nothing. Now we render
+  // this label so every option has visible price context.
+  basePriceLabel?: string;
 }
 
 // ============================================
@@ -165,6 +177,11 @@ export interface CustomerDecisionTracker {
 
   // Status
   status: 'active' | 'completed' | 'paused';
+  // R66 round 32: capability-URL for the customer-facing portal at
+  // /customer/[code]. Generated FE-side at create time (32 hex / 128 bits)
+  // and stored on decision_trackers.access_code. Optional because legacy
+  // local-only trackers from pre-R30 don't have one.
+  accessCode?: string;
   createdAt: string;
   updatedAt: string;
 }
