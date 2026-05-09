@@ -3,6 +3,35 @@
 End-to-end steps to ship Vasco from repo → App Store + Play Store. Assumes
 you have the credentials listed below.
 
+---
+
+## R66r49 launch-readiness state (2026-05-09)
+
+**Already done in repo** (no operator action needed):
+- ✅ EAS project linked: `@collectai/VascoApp` id `eebc2577-cbf8-4252-9b6c-f91119c17b7d`. Skip §1's `eas init`.
+- ✅ EAS Update URL: `https://u.expo.dev/eebc2577-cbf8-4252-9b6c-f91119c17b7d`. Already in `app.json:expo.updates.url`.
+- ✅ All 4 R66r49 migrations pushed to remote DB (20260507000007 / 8 / 9 + 20260508000001).
+- ✅ Edge functions deployed: 22 total as of R66r49 #8 (was 15 in R220), including the new `pack-trigger-tick` + `send-automation-preview`.
+- ✅ `@sentry/react-native` installed + auto-registered as a config plugin in app.json. Just needs `EXPO_PUBLIC_SENTRY_DSN` to fire.
+- ✅ Privacy manifest moved from un-registered `ios/PrivacyInfo.xcprivacy` to `app.json:expo.ios.privacyManifests` (Expo regenerates it on next prebuild and registers it correctly).
+- ✅ Webhook idempotency on Mollie + Stripe (R41) — redeployed at v2 dated 2026-05-02.
+- ✅ 749/749 tests across 72 suites + 0 TS errors at R66r49 #8 commit `2e4f312`.
+
+**Still gating on operator action** (each is independent; pick any order):
+1. Sign up Resend → `supabase secrets set RESEND_API_KEY=re_xxx`
+2. Get prod Mollie + Stripe keys → `supabase secrets set MOLLIE_API_KEY=live_... STRIPE_API_KEY=sk_live_... STRIPE_WEBHOOK_SECRET=whsec_... MOLLIE_WEBHOOK_SECRET=...`
+3. Sign up Sentry → set `EXPO_PUBLIC_SENTRY_DSN` in `.env`
+4. Apple Developer signup → fill `eas.json:submit.production.ios` with `appleId` / `ascAppId` / `appleTeamId`
+5. Play Console signup → drop service-account JSON at `secrets/play-service-account.json`
+6. App Store Connect + Play Console listings (icons, screenshots ×6 locales, descriptions ×6 — see `docs/store-listings.md`)
+7. Re-run `supabase/cron.sql` with substituted SUPABASE_URL + SERVICE_ROLE_KEY. **New entry in this round**: `vasco-pack-trigger-tick` (09:00 UTC daily — server-side eval of Incasso + Quote followup + Maintenance + Handover-survey packs)
+8. Run `npx expo prebuild --clean` (regenerates `ios/`/`android/` to pick up the moved privacy manifest + Sentry plugin) **before** the first `eas build`
+9. Live HTML for `vasco.app/privacy` + `vasco.app/terms` (URLs already in `.env` skeleton)
+
+After items 1-9 are done: jump to §5 (preview build) — §0-§4 are covered.
+
+---
+
 ## 0. Credentials you need
 
 | Item | Where to get | Where it goes |
@@ -45,7 +74,7 @@ supabase secrets set \
   RESEND_API_KEY=re_... \
   ANTHROPIC_API_KEY=sk-ant-...
 
-# Deploy all Edge Functions (15 total as of R220).
+# Deploy all Edge Functions (22 total as of R66r49 #8).
 # Safer than listing each one since the set grows over time.
 for fn in supabase/functions/*/; do
   name=$(basename "$fn")
@@ -99,7 +128,7 @@ pages live at `/legal/privacy-policy` and `/legal/terms-of-service`.
 ```bash
 npx tsc --noEmit                       # must be 0 errors project-wide
 (cd admin && npx tsc --noEmit)         # must be 0 errors
-npm test                               # full jest — all suites green (259+ tests as of R219)
+npm test                               # full jest — all suites green (749 tests / 72 suites as of R66r49 #8)
 npm run i18n:audit                     # all 6 locales aligned; exits non-zero if gaps
 ```
 

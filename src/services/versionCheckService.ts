@@ -111,7 +111,10 @@ async function fetchRemoteConfig(): Promise<VersionConfig | null> {
  * Get the current app version from Expo Constants.
  */
 export function getCurrentVersion(): string {
-  return Constants.expoConfig?.version ?? Constants.manifest?.version ?? '1.0.0';
+  // R66r49: `Constants.manifest` is deprecated + untyped in newer Expo
+  // SDKs. expoConfig is canonical; keep the manifest fallback via `any`
+  // for older dev clients without breaking TS strict.
+  return Constants.expoConfig?.version ?? (Constants as any).manifest?.version ?? '1.0.0';
 }
 
 /**

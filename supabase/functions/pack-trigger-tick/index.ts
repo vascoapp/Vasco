@@ -8,11 +8,12 @@
 // matches, deep-linking into the app where the client-side evaluator
 // does the actual queue insertion.
 //
-// Scope (R66r49 #7 round): Incasso pack + Quote followup pack.
-// Incasso (5 buckets) recovers real money. Quote followup (3d + 7d) is
-// the second-most load-bearing because every stale quote is potentially
-// a missed job. Other packs stay app-open-only until telemetry justifies
-// porting them server-side.
+// Scope (R66r49 #8 round): Incasso pack + Quote followup pack + Handover
+// survey + Maintenance pack. Server-side covers all packs whose triggers
+// fire days/months after a job event — contractors won't have the app
+// open on day 365 of a year-old completed job otherwise. Welcome pack
+// stays app-open-only because its triggers fire 0 days after quote_accepted
+// / job_started (contractor is already in the app at those moments).
 //
 // Architecture choice: this function does NOT insert into the AI Action
 // Queue directly (the queue lives in client AsyncStorage, not in DB).
@@ -41,6 +42,7 @@ const corsHeaders = {
 type Locale = 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
 type IncassoStep = 'pre_due' | 'overdue_3' | 'overdue_7' | 'overdue_14' | 'overdue_30';
 type QuoteStep = 'sent_3' | 'sent_7';
+type JobStep = 'survey_7' | 'maintenance_335' | 'maintenance_365';
 
 interface InvoiceRow {
   id: string;
@@ -138,6 +140,64 @@ const QUOTE_PUSH: Record<Locale, Record<QuoteStep, { title: string; body: (n: nu
     sent_7: { title: 'Preventivo in scadenza', body: (n) => `${n} preventiv${n > 1 ? 'i' : 'o'} inviato 7 giorni fa. Un sollecito spesso sblocca.` },
   },
 };
+
+// R66r49 #8: Job-completion-keyed push copy. Survey at +7d (Oplevering Pakket
+// pack), pre-maintenance reminder at +335d (Onderhoud Herinnering pack
+// step 0), maintenance followup at +365d (step 1). All three are
+// server-side because contractors won't have the app open on those days.
+const JOB_PUSH: Record<Locale, Record<JobStep, { title: string; body: (n: number) => string }>> = {
+  en: {
+    survey_7: { title: 'Satisfaction survey ready', body: (n) => `${n} job${n > 1 ? 's' : ''} completed a week ago. A short review request often unlocks a Google review.` },
+    maintenance_335: { title: 'Annual maintenance — pre-reminder', body: (n) => `${n} job${n > 1 ? 's' : ''} are nearly a year old. Vasco prepared a friendly maintenance check-in.` },
+    maintenance_365: { title: 'Annual maintenance follow-up', body: (n) => `${n} customer${n > 1 ? 's' : ''} you served a year ago — a maintenance reminder is ready to send.` },
+  },
+  nl: {
+    survey_7: { title: 'Tevredenheidsverzoek klaar', body: (n) => `${n} klus${n > 1 ? 'sen' : ''} een week geleden afgerond. Een korte review-vraag levert vaak een Google review op.` },
+    maintenance_335: { title: 'Jaarlijks onderhoud — vooraankondiging', body: (n) => `${n} klus${n > 1 ? 'sen' : ''} bijna een jaar oud. Vasco heeft een onderhoudsbericht klaarstaan.` },
+    maintenance_365: { title: 'Jaarlijks onderhoud — opvolger', body: (n) => `${n} klant${n > 1 ? 'en' : ''} van een jaar geleden — onderhoudsherinnering klaar om te sturen.` },
+  },
+  de: {
+    survey_7: { title: 'Bewertungsanfrage bereit', body: (n) => `${n} Auftrag${n > 1 ? 'aufträge' : ''} vor einer Woche abgeschlossen. Eine kurze Bewertungsbitte führt oft zu einer Google-Rezension.` },
+    maintenance_335: { title: 'Jahreswartung — Vorankündigung', body: (n) => `${n} Auftrag${n > 1 ? 'aufträge' : ''} fast ein Jahr alt. Wartungs-Check-in liegt bereit.` },
+    maintenance_365: { title: 'Jahreswartung — Nachfass', body: (n) => `${n} Kund${n > 1 ? 'en' : 'e'} von vor einem Jahr — Wartungserinnerung bereit.` },
+  },
+  fr: {
+    survey_7: { title: 'Demande d\'avis prête', body: (n) => `${n} chantier${n > 1 ? 's' : ''} terminé il y a une semaine. Une demande d\'avis débouche souvent sur un avis Google.` },
+    maintenance_335: { title: 'Entretien annuel — pré-rappel', body: (n) => `${n} chantier${n > 1 ? 's' : ''} a presque un an. Un message d\'entretien est prêt.` },
+    maintenance_365: { title: 'Entretien annuel — relance', body: (n) => `${n} client${n > 1 ? 's' : ''} d\'il y a un an — rappel d\'entretien prêt à envoyer.` },
+  },
+  es: {
+    survey_7: { title: 'Encuesta de satisfacción lista', body: (n) => `${n} trabajo${n > 1 ? 's' : ''} terminado hace una semana. Una pequeña petición de reseña suele conseguir una en Google.` },
+    maintenance_335: { title: 'Mantenimiento anual — pre-aviso', body: (n) => `${n} trabajo${n > 1 ? 's' : ''} casi cumplen un año. Mensaje de mantenimiento listo.` },
+    maintenance_365: { title: 'Mantenimiento anual — seguimiento', body: (n) => `${n} cliente${n > 1 ? 's' : ''} de hace un año — recordatorio de mantenimiento listo.` },
+  },
+  it: {
+    survey_7: { title: 'Richiesta recensione pronta', body: (n) => `${n} lavor${n > 1 ? 'i' : 'o'} completato una settimana fa. Una breve richiesta spesso porta a una recensione Google.` },
+    maintenance_335: { title: 'Manutenzione annuale — preavviso', body: (n) => `${n} lavor${n > 1 ? 'i' : 'o'} ha quasi un anno. Messaggio di manutenzione pronto.` },
+    maintenance_365: { title: 'Manutenzione annuale — sollecito', body: (n) => `${n} client${n > 1 ? 'i' : 'e'} di un anno fa — promemoria di manutenzione pronto.` },
+  },
+};
+
+interface JobRow {
+  id: string;
+  user_id: string;
+  status: string | null;
+  completed_at: string | null;
+  customer_id: string | null;
+}
+
+function classifyJob(job: JobRow, nowMs: number): JobStep | null {
+  const dayMs = 86_400_000;
+  if (job.status !== 'completed' && job.status !== 'gereed') return null;
+  const completedMs = job.completed_at ? Date.parse(job.completed_at) : NaN;
+  if (!Number.isFinite(completedMs)) return null;
+  const ageDays = Math.floor((nowMs - completedMs) / dayMs);
+  // ±1d windows so a daily cron lands in exactly one bucket.
+  if (ageDays >= 7 && ageDays < 9) return 'survey_7';
+  if (ageDays >= 335 && ageDays < 337) return 'maintenance_335';
+  if (ageDays >= 365 && ageDays < 367) return 'maintenance_365';
+  return null;
+}
 
 function classifyInvoice(inv: InvoiceRow, nowMs: number): IncassoStep | null {
   const dayMs = 86_400_000;
@@ -350,6 +410,75 @@ Deno.serve(async (req) => {
 
       if (qSendJson?.ok) pushed++;
       else errors.push({ userId, error: qSendJson?.error ?? 'quote send-push failed' });
+
+      // ─── Job-completion packs (R66r49 #8) ──────────────────────────────
+      // Handover-survey at +7d, maintenance pre-reminder at +335d,
+      // maintenance follow-up at +365d. Each step is independently
+      // rate-limited (different `notif_type` keys). All three derive from
+      // the same `jobs` table query so we fetch once.
+      const { data: jobs } = await admin
+        .from('jobs')
+        .select('id, user_id, status, completed_at, customer_id')
+        .eq('user_id', userId)
+        .in('status', ['completed', 'gereed']);
+
+      const jobStepCounts = new Map<JobStep, number>();
+      for (const job of (jobs as any[]) ?? []) {
+        const js = classifyJob(job as JobRow, nowMs);
+        if (js) jobStepCounts.set(js, (jobStepCounts.get(js) ?? 0) + 1);
+      }
+
+      // Loop through each step that has matches; each fires its own push.
+      // Older buckets push first (maintenance_365 > maintenance_335 > survey_7)
+      // so a contractor with 1-year + 1-week jobs still gets the older alert
+      // (less likely to fire again).
+      const jobOrder: JobStep[] = ['maintenance_365', 'maintenance_335', 'survey_7'];
+      for (const jStep of jobOrder) {
+        const jCount = jobStepCounts.get(jStep);
+        if (!jCount) continue;
+
+        // Per-step packId for telemetry attribution.
+        const jPackId = jStep.startsWith('maintenance') ? 'onderhoud_herinnering' : 'oplevering_pakket';
+        const jNotifType = `pack_job_${jStep}`;
+
+        const { data: jRecent } = await admin
+          .from('push_notification_log')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('notif_type', jNotifType)
+          .gte('sent_at', sinceIso)
+          .limit(1);
+        if (jRecent && jRecent.length > 0) continue;
+
+        const jCopy = JOB_PUSH[locale][jStep];
+        const jSend = await fetch(`${supabaseUrl}/functions/v1/send-push`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${serviceKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId,
+            title: jCopy.title,
+            body: jCopy.body(jCount),
+            data: { type: 'job_milestone', packId: jPackId, step: jStep, count: String(jCount) },
+          }),
+        });
+        const jSendJson = await jSend.json().catch(() => ({}));
+
+        await admin.from('push_notification_log').insert({
+          user_id: userId,
+          notif_type: jNotifType,
+          entity_key: jStep,
+          title: jCopy.title,
+          body: jCopy.body(jCount),
+          success: !!jSendJson?.ok,
+          error: jSendJson?.ok ? null : (jSendJson?.error ?? 'unknown'),
+        });
+
+        if (jSendJson?.ok) pushed++;
+        else errors.push({ userId, error: jSendJson?.error ?? `${jStep} send-push failed` });
+      }
     } catch (err) {
       errors.push({ userId, error: String(err) });
     }
