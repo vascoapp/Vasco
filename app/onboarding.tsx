@@ -361,10 +361,24 @@ export default function OnboardingScreen() {
       case 6: return selectedChallenges.length > 0;
       case 7: return teamSize !== null;
       case 8: return businessType !== null;
+      // R66r52: step 9 (registration fields) is optional overall, but if a
+      // contractor types anything in BTW/KvK/IBAN, the format must validate.
+      // Was soft-warning only (R47); the gate at first-invoice-send (R39)
+      // still catches everything, but blocking here too prevents the
+      // contractor walking into the rest of onboarding under the impression
+      // that their tax IDs are accepted.
+      case 9: {
+        const fields = REG_FIELDS[country!] || [];
+        for (const f of fields) {
+          const v = (regFields[f.key] || '').trim();
+          if (v.length > 0 && f.validate && !f.validate(v)) return false;
+        }
+        return true;
+      }
       case 10: return !needsCertification || selectedCerts.length > 0;
       default: return true;
     }
-  }, [step, country, selectedTrades, selectedGoals, selectedChallenges, teamSize, businessType, needsCertification, selectedCerts]);
+  }, [step, country, selectedTrades, selectedGoals, selectedChallenges, teamSize, businessType, regFields, needsCertification, selectedCerts]);
 
   const handleNext = () => {
     if (step < TOTAL_STEPS) {

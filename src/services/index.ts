@@ -50,13 +50,6 @@ export {
 } from './supplierIntegrationService';
 
 export {
-  customerPortalService,
-  useCustomerProjects,
-  useCustomerQuotes,
-  useCustomerMessages,
-} from './customerPortalService';
-
-export {
   analyticsService,
   useAnalytics,
   useBenchmarks,
