@@ -13,8 +13,10 @@ import {
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
+import { DK } from '../../src/theme/draftkings';
 import { SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
@@ -273,8 +275,15 @@ export default function CustomerPhonebookScreen() {
             <Ionicons name="people-outline" size={40} color={SemanticColors.textTertiary} />
             <Text style={s.emptyTitle}>{t('contractor.customers.emptyTitle', 'No customers yet')}</Text>
             <Text style={s.emptyDesc}>{t('contractor.customers.emptyDesc', 'Add your first customer')}</Text>
-            <Pressable style={s.emptyBtn} onPress={() => setShowAdd(true)}>
-              <Text style={s.emptyBtnText}>{t('contractor.customers.addCustomer', 'Add customer')}</Text>
+            <Pressable onPress={() => setShowAdd(true)} style={s.emptyBtnWrap}>
+              <LinearGradient
+                colors={DK.effects.ctaGradient as unknown as readonly [string, string, string]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={s.emptyBtn}
+              >
+                <Text style={s.emptyBtnText}>{t('contractor.customers.addCustomer', 'Add customer')}</Text>
+              </LinearGradient>
             </Pressable>
           </View>
         )}
@@ -361,15 +370,12 @@ const s = StyleSheet.create({
     fontFamily: TYPE.displayFamily,
     color: SemanticColors.textPrimary,
      textTransform: 'uppercase', letterSpacing: 1.2 },
+  // R66r53: align with DK CTA glow tokens
   addBtn: {
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: Palette.hermesOrange,
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: Palette.hermesOrange,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 14,
-    elevation: 6,
+    ...DK.effects.ctaShadow,
   },
 
   // Search
@@ -475,17 +481,16 @@ const s = StyleSheet.create({
     fontFamily: TYPE.bodyFamily,
     color: SemanticColors.textSecondary,
   },
+  // R66r53: DK canonical CTA gradient pill
+  emptyBtnWrap: {
+    borderRadius: RADIUS.full,
+    marginTop: 8,
+    ...DK.effects.ctaShadow,
+  },
   emptyBtn: {
-    backgroundColor: Palette.hermesOrange,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.full,
     paddingHorizontal: 20,
     paddingVertical: 12,
-    marginTop: 8,
-    shadowColor: Palette.hermesOrange,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 14,
-    elevation: 6,
   },
   emptyBtnText: {
     fontSize: TYPE.bodySize,

@@ -74,12 +74,6 @@ export {
   useReputation,
 } from './reputationService';
 
-export {
-  knowledgeBaseService,
-  useKnowledgeBase,
-  useIndustryUpdates,
-} from './knowledgeBaseService';
-
 // Phase 6: Financial Intelligence & Workflow Automation
 export {
   cashFlowService,
@@ -261,13 +255,6 @@ export {
   useWorkflowStats,
 } from './crossRoleWorkflowService';
 
-// Agent Actions Service
-export {
-  agentActionsService,
-  usePendingActions,
-  useActionStats,
-} from './agentActionsService';
-
 // Phase 10: Predictive Capacity Planning
 export {
   capacityPlanningService,
@@ -289,13 +276,6 @@ export {
   useROIDashboard,
   useAutomationROI,
 } from './roiMetricsService';
-
-// Workflow Agents
-export {
-  workflowAgentsService,
-  useActiveWorkflows,
-  useWorkflowActions,
-} from './workflowAgentsService';
 
 // Dutch Compliance
 export {

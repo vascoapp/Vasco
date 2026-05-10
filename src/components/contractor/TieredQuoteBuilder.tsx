@@ -8,8 +8,10 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
+import { DK } from '../../theme/draftkings';
 import { formatCurrency } from '../../i18n/formatting';
 import { Spacing, SafeArea } from '../../theme/spacing';
 import type { Customer } from '../../types/contractor';
@@ -1418,11 +1420,18 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
         </View>
       </ScrollView>
 
-      {/* Send */}
+      {/* Send — R66r53: canonical DK CTA gradient pill */}
       <View style={s.bottom}>
-        <Pressable style={s.sendBtn} onPress={handleSend}>
-          <Ionicons name="send" size={18} color={Palette.white} />
-          <Text style={s.sendBtnText}>{t('quotes.sendQuote', 'Send quote')}</Text>
+        <Pressable onPress={handleSend} style={s.sendBtnWrap}>
+          <LinearGradient
+            colors={DK.effects.ctaGradient as unknown as readonly [string, string, string]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={s.sendBtn}
+          >
+            <Ionicons name="send" size={18} color={Palette.white} />
+            <Text style={s.sendBtnText}>{t('quotes.sendQuote', 'Send quote')}</Text>
+          </LinearGradient>
         </Pressable>
       </View>
     </View>
@@ -1534,9 +1543,10 @@ const s = StyleSheet.create({
   },
   nextBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: Palette.white },
 
+  sendBtnWrap: { borderRadius: RADIUS.full, ...DK.effects.ctaShadow },
   sendBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.md, paddingVertical: 14,
+    borderRadius: RADIUS.full, paddingVertical: 14,
   },
   sendBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: Palette.white },
 
