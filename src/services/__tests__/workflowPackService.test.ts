@@ -42,6 +42,17 @@ describe('workflowPackService', () => {
   beforeEach(() => {
     clearStorage();
     jest.clearAllMocks();
+    // R66r51: pin wall-clock to a deterministic morning slot. The
+    // `daily_17:00` trigger fires when `new Date(now).getHours() >= 17`
+    // regardless of input data, so without pinning the system time the
+    // `einde_dag` pack's 3 steps fire spuriously after 17:00 local —
+    // breaking "should not queue when disabled / no triggers" assertions.
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-05-10T10:00:00Z'));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   // ─── DEFAULT_PACKS ────────────────────────────────────────────────────────

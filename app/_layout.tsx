@@ -65,6 +65,11 @@ function RootLayoutNav() {
     import('../src/services/pendingJobPhotosQueue')
       .then((m) => m.flushQueue())
       .catch(() => {});
+    // R66r51: poll connected accounting provider (Moneybird/Xero/etc) for
+    // invoices marked paid outside the app. Throttled to 1×/hour internally.
+    import('../src/services/accountingSyncService')
+      .then((m) => m.runAccountingPollIfDue())
+      .catch(() => {});
   }, []);
 
   // Flush the offline write queue whenever the app comes back to the foreground
@@ -81,6 +86,11 @@ function RootLayoutNav() {
           .then((m) => m.flushQueue())
           .catch(() => {});
         notifyNewQueueItems().catch(() => {});
+        // R66r51: poll connected accounting provider for paid invoices on
+        // foreground. Throttled 1×/hour internally.
+        import('../src/services/accountingSyncService')
+          .then((m) => m.runAccountingPollIfDue())
+          .catch(() => {});
         // R9.1: weekly Expo push-token refresh on foreground. The function
         // throttles internally (no-op when last refresh < 7 days) so this is
         // safe to call on every foreground transition.

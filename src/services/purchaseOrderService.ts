@@ -8,6 +8,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { registerSingletonReset } from './singletonReset';
+import { getCurrentCountry } from '../lib/currentUser';
+import { getStandardVatRate, type BusinessProfile } from '../domain/business';
 
 // =============================================================================
 // TYPES
@@ -177,7 +179,8 @@ class PurchaseOrderService {
       total: item.quantity * item.unitPrice,
     }));
     const subtotal = lineItems.reduce((sum, li) => sum + li.total, 0);
-    const vatRate = 21;
+    // R66r51: country-aware VAT (was NL 21% hardcoded).
+    const vatRate = getStandardVatRate((getCurrentCountry() as BusinessProfile['country']) ?? 'NL');
     const vatAmount = Math.round(subtotal * vatRate / 100 * 100) / 100;
 
     const order: PurchaseOrder = {

@@ -13,6 +13,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getMaterialBaselinesForCountry, getAllMaterialBaselines } from '../services/cohortBenchmarkService';
 import { getScanHistory } from '../services/invoiceScanService';
+import { getStandardVatRate, type BusinessProfile } from '../domain/business';
 import { loadConfiguredClient } from './supplierLiveApi';
 
 const STORAGE_KEY = '@vasco_suppliers';
@@ -719,7 +720,8 @@ export async function searchCatalog(
       description: scannedData ? `Real price from ${scannedData.supplier}` : `Market avg (${countryCode})`,
       category: (mat as any).trade || trade || 'general',
       priceExclVat: Math.round(price * 100) / 100,
-      vatRate: countryCode === 'UK' ? 20 : 21,
+      // R66r51: full EU6 VAT (was UK/NL only; DE 19, FR/UK 20, ES 21, IT 22).
+      vatRate: getStandardVatRate(countryCode as BusinessProfile['country']),
       unit: mat.unit,
       inStock: true,
     };

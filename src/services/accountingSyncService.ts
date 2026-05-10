@@ -117,3 +117,48 @@ async function saveLastSyncTime(): Promise<void> {
     // Non-critical
   }
 }
+
+// ---------------------------------------------------------------------------
+// R66r51: foreground/cold-start poll hook
+// ---------------------------------------------------------------------------
+// Closes the dormancy flagged in R66r50: every export above had no callers.
+// Mollie/Stripe → BE webhook → realtime watcher path was wired (R37), but
+// Moneybird/Xero/QuickBooks invoices marked paid in the external accounting
+// system never propagated. Contractors who reconcile in their accounting
+// tool first (older workflow, common with bookkeepers) saw "sent" status
+// indefinitely until manual mark-paid.
+//
+// Call from app/_layout.tsx on cold-start + foreground. Uses the mutator
+// bus (R37 pattern) since the AppStateProvider isn't reachable here.
+
+/**
+ * Poll the connected accounting provider for paid invoices and flip local
+ * state via the AppState mutator bus. Throttled to 1×/hour via shouldSync().
+ * Safe to call on every foreground tick — no-ops when nothing connected,
+ * when last sync was recent, or when no AppState is available.
+ */
+export async function runAccountingPollIfDue(): Promise<{ paidCount: number; error?: string }> {
+  try {
+    if (!(await shouldSync())) return { paidCount: 0 };
+
+    // Lazy-require the mutator bus to avoid circular import order issues
+    // (services/* imported from app/_layout.tsx via React tree).
+    const { getAppStateSnapshot, getAppStateMutators } = require('../state/appStateSnapshot');
+    const snap = getAppStateSnapshot();
+    const mutators = getAppStateMutators();
+    if (!mutators) return { paidCount: 0 };
+
+    const invoices = (snap?.invoices ?? []) as SyncableInvoice[];
+    if (invoices.length === 0) return { paidCount: 0 };
+
+    const result = await syncAccountingData(invoices);
+    if (result.error) return { paidCount: 0, error: result.error };
+
+    for (const inv of result.updatedInvoices) {
+      try { mutators.markInvoicePaid(inv.id); } catch {}
+    }
+    return { paidCount: result.updatedInvoices.length };
+  } catch (err) {
+    return { paidCount: 0, error: err instanceof Error ? err.message : 'poll failed' };
+  }
+}

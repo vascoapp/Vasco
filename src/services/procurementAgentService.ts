@@ -19,6 +19,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { recordPricingData } from '../intelligence/dataCollector';
 import { recordMetricSnapshot, loadProfile } from '../intelligence/learningStorage';
 import { getCurrentUserId, getCurrentCountry } from '../lib/currentUser';
+import { getStandardVatRate, type BusinessProfile } from '../domain/business';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -401,7 +402,8 @@ export function generatePurchaseOrder(results: SourcingResult[]): AutoPurchaseOr
     }));
 
     const totalExclVat = lineItems.reduce((s, li) => s + li.totalPrice, 0);
-    const vatRate = 21;
+    // R66r51: country-aware VAT (was NL 21% hardcoded).
+    const vatRate = getStandardVatRate((getCurrentCountry() as BusinessProfile['country']) ?? 'NL');
 
     return {
       supplierId,

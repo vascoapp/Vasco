@@ -18,6 +18,8 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { formatCurrency } from '../../i18n/formatting';
 import { Spacing } from '../../theme/spacing';
 import type { Quote, QuoteLineItem, Customer } from '../../types/contractor';
+import { getCurrentCountry } from '../../lib/currentUser';
+import { getStandardVatRate, type BusinessProfile } from '../../domain/business';
 
 interface QuoteBuilderProps {
   customer?: Customer;
@@ -49,7 +51,10 @@ export function QuoteBuilder({
   const [title, setTitle] = useState(existingQuote?.title || '');
   const [description, setDescription] = useState(existingQuote?.description || '');
   const [lineItems, setLineItems] = useState<QuoteLineItem[]>(existingQuote?.lineItems || []);
-  const [vatRate, setVatRate] = useState(existingQuote?.vatRate || 21);
+  // R66r51: country-aware VAT default (was NL 21% hardcoded).
+  const [vatRate, setVatRate] = useState(
+    existingQuote?.vatRate ?? getStandardVatRate((getCurrentCountry() as BusinessProfile['country']) ?? 'NL'),
+  );
   const [validDays, setValidDays] = useState(30);
   const [paymentTerms, setPaymentTerms] = useState(
     existingQuote?.paymentTerms || 'Payment on completion'

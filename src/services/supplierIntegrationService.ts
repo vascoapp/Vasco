@@ -6,6 +6,8 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { getCurrentCountry } from '../lib/currentUser';
+import { getStandardVatRate, type BusinessProfile } from '../domain/business';
 
 // ============================================
 // TYPES
@@ -704,8 +706,9 @@ class SupplierIntegrationService {
       })),
       subtotal: cart.subtotal,
       deliveryCost: cart.deliveryCost,
-      tax: cart.subtotal * 0.21,
-      total: cart.total * 1.21,
+      // R66r51: country-aware VAT (was NL 21% hardcoded).
+      tax: cart.subtotal * (getStandardVatRate((getCurrentCountry() as BusinessProfile['country']) ?? 'NL') / 100),
+      total: cart.total * (1 + getStandardVatRate((getCurrentCountry() as BusinessProfile['country']) ?? 'NL') / 100),
       createdAt: new Date().toISOString(),
       submittedAt: new Date().toISOString(),
       expectedDelivery: this.calculateExpectedDelivery(cart),
