@@ -2763,5 +2763,11 @@
     "lineInvoice": "Factura",
     "lineExpense": "Gasto",
     "checkLine": "Revisar"
+  },
+  "automations": {
+    "healthNew": "NUEVO",
+    "healthHealthy": "FUNCIONA",
+    "healthLow": "MEJORAR",
+    "mutedCount": "{{count}} silenciados"
   }
 }

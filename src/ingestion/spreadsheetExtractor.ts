@@ -6,6 +6,8 @@
 
 import type { ParsedSheet } from './spreadsheetParser';
 import type { ExtractedInvoice, ExtractedLineItem } from './invoiceExtractor';
+import { getCurrentCountry } from '../lib/currentUser';
+import { getStandardVatRate, type BusinessProfile } from '../domain/business';
 
 // ── Column Mapping ─────────────────────────────────────────
 
@@ -161,7 +163,12 @@ export function extractFromSpreadsheet(
 
   // Compute totals
   const subtotal = lineItems.reduce((s, i) => s + i.totalPrice, 0);
-  const vatRate = 21;
+  // R66r50: country-aware VAT fallback. Imported spreadsheets without an
+  // explicit VAT column previously assumed 21% (NL) for every contractor —
+  // wrong for DE 19% / FR/UK 20% / IT 22%. Suppliers issue invoices in their
+  // own jurisdiction's rate; using the contractor's country is a sane default
+  // since cross-border B2B invoices flip to 0% reverse-charge anyway.
+  const vatRate = getStandardVatRate((getCurrentCountry() as BusinessProfile['country']) ?? 'NL');
   const vatAmount = subtotal * (vatRate / 100);
   const total = subtotal + vatAmount;
 

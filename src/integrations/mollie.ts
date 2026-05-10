@@ -8,10 +8,32 @@
 
 import { getSecureItem, setSecureItem, deleteSecureItem, migrateToSecure } from '../lib/secureStorage';
 import { fetchWithRetry } from '../utils/retry';
+import { getCurrentCountry } from '../lib/currentUser';
 
 const STORAGE_KEY = 'vasco_mollie';
 const LEGACY_KEY = '@vasco_mollie'; // Old AsyncStorage key for migration
 const API_BASE = 'https://api.mollie.com/v2';
+
+// R66r50: country-aware payment-success redirects. Pre-R66r50 the fallback
+// hard-coded `app.vasco.nl` for every country — DE/FR/ES/IT/UK customers
+// landed on a NL domain after paying. Override via env when a country-
+// specific domain is provisioned; otherwise fall through to the .app TLD.
+const PAYMENT_REDIRECT_BASE_BY_COUNTRY: Record<string, string> = {
+  NL: 'https://app.vasco.nl',
+  DE: 'https://app.vasco.de',
+  FR: 'https://app.vasco.fr',
+  ES: 'https://app.vasco.es',
+  IT: 'https://app.vasco.it',
+  UK: 'https://app.vasco.app',
+};
+
+export function defaultPaymentSuccessUrl(): string {
+  const fromEnv = process.env.EXPO_PUBLIC_PAYMENT_SUCCESS_URL;
+  if (fromEnv) return fromEnv;
+  const country = getCurrentCountry();
+  const base = (country && PAYMENT_REDIRECT_BASE_BY_COUNTRY[country]) || 'https://app.vasco.app';
+  return `${base}/payment/success`;
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -258,6 +280,6 @@ export async function createMolliePayment(
     invoiceId,
     amount,
     description: `Factuur ${invoiceId}`,
-    redirectUrl: process.env.EXPO_PUBLIC_PAYMENT_SUCCESS_URL ?? 'https://app.vasco.nl/payment/success',
+    redirectUrl: defaultPaymentSuccessUrl(),
   });
 }

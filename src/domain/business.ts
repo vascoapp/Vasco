@@ -51,6 +51,22 @@ export function isSmallBusinessExempt(profile: { vatScheme?: VatScheme }): boole
       || profile.vatScheme === 'small_business_DE_kleinunternehmer';
 }
 
+// R66r50: country-aware standard VAT rates for EU6. Pre-R66r50 the codebase
+// hardcoded 21 (NL) across quote builder, photo-quote, invoice import, cohort
+// writes, and Moneybird export — DE/FR/ES/IT/UK contractors got NL rate.
+// Source of truth lives in `src/constants/taxRates.ts` (decimal: 0.21 etc).
+// We return percentages here (21 etc) to match existing call-site convention.
+import { getVATRate as getVATRateDecimal } from '../constants/taxRates';
+
+export function getStandardVatRate(country: BusinessProfile['country']): number {
+  return Math.round(getVATRateDecimal(country ?? 'NL') * 100);
+}
+
+export function getEffectiveVatRate(profile: { country?: BusinessProfile['country']; vatScheme?: VatScheme }): number {
+  if (isSmallBusinessExempt(profile)) return 0;
+  return getStandardVatRate(profile.country);
+}
+
 export function getVatExemptionNote(country: string | undefined, vatScheme: VatScheme | undefined): string | null {
   if (vatScheme === 'small_business_NL_KOR') {
     return 'BTW niet van toepassing — kleineondernemersregeling (KOR).';

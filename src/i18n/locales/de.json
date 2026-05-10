@@ -2763,5 +2763,11 @@
     "lineInvoice": "Rechnung",
     "lineExpense": "Ausgabe",
     "checkLine": "Prüfen"
+  },
+  "automations": {
+    "healthNew": "NEU",
+    "healthHealthy": "FUNKTIONIERT",
+    "healthLow": "ÜBERARBEITEN",
+    "mutedCount": "{{count}} stumm"
   }
 }

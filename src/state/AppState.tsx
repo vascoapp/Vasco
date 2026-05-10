@@ -5,7 +5,7 @@ import { PropsWithChildren, createContext, useCallback, useContext, useEffect, u
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Domain types
-import { BusinessProfile, isSmallBusinessExempt } from '../domain/business';
+import { BusinessProfile, isSmallBusinessExempt, getEffectiveVatRate } from '../domain/business';
 import { Customer } from '../domain/customers';
 import { Invoice, Quote } from '../domain/documents';
 import { Job, JobStatus, JobPriority } from '../domain/jobs';
@@ -286,6 +286,19 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       setQuotes(q);
       setInvoices(inv);
       setBusinessProfile(bp);
+      // R66r50: push vatScheme into currentUser ref so non-hook consumers
+      // (photo-quote preview, spreadsheet extractor) compute KOR-correct VAT.
+      if (bp?.vatScheme) {
+        const userId = getCurrentUserId();
+        if (userId) {
+          setCurrentUser({
+            id: userId,
+            country: getCurrentCountry() ?? bp.country,
+            trade: getCurrentTrade() ?? bp.trade,
+            vatScheme: bp.vatScheme,
+          });
+        }
+      }
       // R210: once businessProfile.country is known, prime the cohort DSO
       // so the DSO generator + collections insights see the real cohort
       // median instead of the hardcoded 32-day industry average.
@@ -1155,7 +1168,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // gap — pre-R47 only AutoInvoice in-memory carried the rate, mixed-
           // rate quotes (NL plumbing 9% labor + 21% materials) lost the
           // distinction across cold start. Honors KOR scheme uniformly.
-          const lineItemVatRate = isSmallBusinessExempt(businessProfile) ? 0 : 21;
+          const lineItemVatRate = getEffectiveVatRate(businessProfile);
           const lineItemPayload = items.map((item, idx) => ({
             description: item.description,
             quantity: item.quantity,
@@ -1208,7 +1221,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             // R66 round 38: honor vatScheme. Pre-R38 hardcoded 21% even for
             // KOR / Kleinunternehmer contractors → cohort moat ingested
             // wrong vatRate metadata for the small-business segment.
-            vatRate: (item as any).vatRate ?? (isSmallBusinessExempt(businessProfile) ? 0 : 21),
+            vatRate: (item as any).vatRate ?? (getEffectiveVatRate(businessProfile)),
             postcode: jobPostcode,
           }).catch(() => {});
         }
@@ -1294,7 +1307,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               // R66 round 47: persist per-line VAT on invoice line items
               // (cloned from quote line items). KOR contractors get 0%;
               // others 21% default unless caller explicitly set vatRate.
-              const invoiceLineVatRate = isSmallBusinessExempt(businessProfile) ? 0 : 21;
+              const invoiceLineVatRate = getEffectiveVatRate(businessProfile);
               await upsertLineItems(
                 row.id,
                 sourceItems.map((item, idx) => ({
@@ -1467,13 +1480,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // new specialty/market without waiting for a re-login. Without
         // this, a contractor switching from NL → DE would keep tagging
         // every business event and material write to the old market.
-        if (updates.country !== undefined || updates.trade !== undefined) {
+        if (updates.country !== undefined || updates.trade !== undefined || updates.vatScheme !== undefined) {
           const userId = getCurrentUserId();
           if (userId) {
             setCurrentUser({
               id: userId,
               country: updates.country ?? getCurrentCountry() ?? undefined,
               trade: updates.trade ?? getCurrentTrade() ?? undefined,
+              vatScheme: updates.vatScheme ?? businessProfile.vatScheme,
             });
           }
         }
@@ -1783,7 +1797,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 // Kleinunternehmer contractors must export at 0% VAT —
                 // hardcoded 21% would corrupt their bookkeeping the moment
                 // they exported their first invoice.
-                vatRate: isSmallBusinessExempt(businessProfile) ? 0 : 21,
+                vatRate: getEffectiveVatRate(businessProfile),
               })),
             }
           : undefined;

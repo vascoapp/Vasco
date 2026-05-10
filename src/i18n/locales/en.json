@@ -2763,5 +2763,11 @@
     "lineInvoice": "Invoice",
     "lineExpense": "Expense",
     "checkLine": "Check"
+  },
+  "automations": {
+    "healthNew": "NEW",
+    "healthHealthy": "WORKING",
+    "healthLow": "NEEDS WORK",
+    "mutedCount": "{{count}} muted"
   }
 }

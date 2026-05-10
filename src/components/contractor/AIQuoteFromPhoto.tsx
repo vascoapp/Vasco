@@ -22,7 +22,8 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { formatCurrency } from '../../i18n/formatting';
 import { Spacing } from '../../theme/spacing';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
-import { getCurrentTrade, getCurrentCountry } from '../../lib/currentUser';
+import { getCurrentTrade, getCurrentCountry, getCurrentVatScheme } from '../../lib/currentUser';
+import { getEffectiveVatRate, type VatScheme, type BusinessProfile } from '../../domain/business';
 import { hapticSuccess, hapticWarning } from '../../utils/haptics';
 
 // ---------------------------------------------------------------------------
@@ -273,7 +274,13 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
 
   const selectedItems = items.filter(i => i.selected);
   const subtotal = selectedItems.reduce((sum, i) => sum + (i.suggestedPrice * i.suggestedQuantity), 0);
-  const vat = subtotal * 0.21;
+  // R66r50: country-aware VAT + KOR exemption. Was hardcoded 21% (NL only) —
+  // DE 19% / FR/UK 20% / IT 22% / KOR 0% all rendered wrong.
+  const vatRate = getEffectiveVatRate({
+    country: (getCurrentCountry() as BusinessProfile['country']) ?? 'NL',
+    vatScheme: getCurrentVatScheme() as VatScheme | undefined,
+  });
+  const vat = subtotal * (vatRate / 100);
   const total = subtotal + vat;
 
   // ============================================
@@ -532,7 +539,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
             <Text style={styles.totalValue}>{formatCurrency(subtotal)}</Text>
           </View>
           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>{t('aiQuote.vat', 'VAT (21%)')}</Text>
+            <Text style={styles.totalLabel}>{t('aiQuote.vatRate', { defaultValue: 'VAT ({{rate}}%)', rate: vatRate })}</Text>
             <Text style={styles.totalValue}>{formatCurrency(vat)}</Text>
           </View>
           <View style={[styles.totalRow, styles.totalRowFinal]}>

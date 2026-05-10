@@ -85,6 +85,21 @@ Client: `src/services/materialDriftService.ts` with 6h AsyncStorage cache, sever
 
 **Schema-stability audit (R192)**: one new RPC, zero table changes, zero column changes, zero renames. Re-runnable.
 
+## 🚀 Pre-launch deploy sequence (operator actions)
+
+These must run once Supabase prod project is live. Migrations are file-system-staged and ready.
+
+1. **`supabase db push`** — pushes the launch-blocker migrations (idempotent if any are already deployed):
+   - `20260507000007_business_settings_extra.sql` — KOR/Kleinunternehmer fields. Without it, fresh contractors revert to standard VAT on cold start.
+   - `20260507000008_job_photos_id_fix.sql` — `job_id text→uuid` + FK CASCADE. Without it, orphan rows + temp-id corruption possible.
+   - `20260507000009_decision_portal_token_access.sql` — RPC + tracker columns. Without it, customer-portal anon lookup falls through to mock-only.
+   - `20260508000001_documents_delivery_date_lineitems_vat.sql` — `documents.delivery_date` + `line_items.vat_rate`. NL Art. 35 leveringsdatum survives job deletion; per-line mixed-rate VAT durable across cold start.
+2. **`supabase functions deploy mollie-webhook stripe-webhook`** — applies R66r41 webhook idempotency. Skipping leaves duplicate-receipt risk on payment-provider retries.
+3. **`supabase functions deploy analyze-photo generate-embedding send-automation-preview`** — applies R66r49#13 caller-auth gate (JWT requirement). Skipping leaves paid-API endpoints open to bot loops.
+4. **Set `EXPO_PUBLIC_PAYMENT_SUCCESS_URL`** per market or let the country-aware default (`app.vasco.{nl,de,fr,es,it,app}`) resolve from the contractor's country (R66r50).
+5. **Regenerate Supabase types** — `supabase gen types typescript --linked > src/types/supabase.ts`.
+6. **Verify cron jobs registered** — run `supabase/cron-health.sql` against prod. Should return 10 `vasco-*` rows, all `active=true`. Missing jobs = silent dormancy on daily digest, packs, account deletion drain, etc. The script also lists the last 24h of run results to confirm jobs aren't crashing.
+
 ## 🔐 User must provide credentials
 - [ ] Run `npx eas init` after `eas login` — fills `expo.extra.eas.projectId` in `app.json`.
 - [ ] Create live Supabase project (or unpause current). Provide URL + anon key in `.env`.

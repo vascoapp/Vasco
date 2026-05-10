@@ -2763,5 +2763,11 @@
     "lineInvoice": "Facture",
     "lineExpense": "Dépense",
     "checkLine": "Vérifier"
+  },
+  "automations": {
+    "healthNew": "NOUVEAU",
+    "healthHealthy": "FONCTIONNE",
+    "healthLow": "À AMÉLIORER",
+    "mutedCount": "{{count}} en sourdine"
   }
 }

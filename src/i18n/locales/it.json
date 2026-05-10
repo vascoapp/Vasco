@@ -2763,5 +2763,11 @@
     "lineInvoice": "Fattura",
     "lineExpense": "Spesa",
     "checkLine": "Verifica"
+  },
+  "automations": {
+    "healthNew": "NUOVO",
+    "healthHealthy": "FUNZIONA",
+    "healthLow": "DA MIGLIORARE",
+    "mutedCount": "{{count}} silenziati"
   }
 }

@@ -14,6 +14,9 @@
 let currentUserId: string = 'current-user';
 let currentCountry: string | undefined;
 let currentTrade: string | undefined;
+// R66r50: vatScheme accessor for non-hook consumers (photo-quote preview,
+// invoice/spreadsheet extractor, country-aware VAT helpers).
+let currentVatScheme: string | undefined;
 
 // R46: tiny pub/sub so non-hook consumers (notably AppStateProvider holding
 // in-memory contractor data arrays) can react to login/logout transitions
@@ -33,16 +36,18 @@ function notifyUserChange(): void {
   });
 }
 
-export function setCurrentUser(info: { id: string; country?: string; trade?: string } | null): void {
+export function setCurrentUser(info: { id: string; country?: string; trade?: string; vatScheme?: string } | null): void {
   const prev = currentUserId;
   if (!info) {
     currentUserId = 'current-user';
     currentCountry = undefined;
     currentTrade = undefined;
+    currentVatScheme = undefined;
   } else {
     currentUserId = info.id || 'current-user';
     currentCountry = info.country;
     currentTrade = info.trade;
+    currentVatScheme = info.vatScheme;
   }
   if (prev !== currentUserId) notifyUserChange();
 }
@@ -69,4 +74,8 @@ export function getCurrentCountry(): string | undefined {
 
 export function getCurrentTrade(): string | undefined {
   return currentTrade;
+}
+
+export function getCurrentVatScheme(): string | undefined {
+  return currentVatScheme;
 }

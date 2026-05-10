@@ -37,7 +37,7 @@ src/
     cohortBenchmarkService.ts # Cross-contractor benchmarks
     priceIndexService.ts      # EU6 construction cost indexes
     subscriptionService.ts    # Freemium tiers (Gratis/Contractor), feature gating, usage limits
-    paymentMarginService.ts   # NOT WIRED (R66r49 #13) — fee-calc utility exists (1% flat, 6 locale disclosures), but no caller. Stripe Connect / Mollie partner setup needed before this collects revenue. Documented gap, not a code bug.
+    paymentMarginService.ts   # FEE DISCLOSURE WIRED (R66r49 #14) / COLLECTION PENDING — 1% flat disclosure surfaces in Mollie connect modal in 6 locales. Actual fee collection (Stripe Connect / Mollie Partner config) is operator-side, not a code bug.
     supplierBacklinkService.ts # 16 EU suppliers, affiliate links, commission tracking
     complianceGatingService.ts # E-invoice format gating, 6 country compliance packs
     eveAgentService.ts        # EVE 3-agent model: Agent (execution), Auditor (compliance), Analyst (intelligence)
