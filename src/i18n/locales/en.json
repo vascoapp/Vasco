@@ -2025,7 +2025,17 @@
     "quoteAmount": "Quote amount",
     "deposit": "Deposit",
     "alreadyPaid": "Already paid",
-    "helpFooter": "Questions? Contact {{name}}"
+    "helpFooter": "Questions? Contact {{name}}",
+    "allChoicesSaved": "All your choices have been saved. You can now pay.",
+    "signAckCta": "Sign to confirm your choices",
+    "signedAck": "Signed by {{name}}",
+    "signModalTitle": "Confirm your choices",
+    "signModalSubtitle": "Type your name and sign below to acknowledge the choices you made.",
+    "signNamePlaceholder": "Your full name",
+    "signNameRequiredTitle": "Name required",
+    "signNameRequiredDesc": "Please type your name before signing.",
+    "signFailedTitle": "Could not sign",
+    "signFailedDesc": "Please try again. If the problem persists, contact your contractor."
   },
   "customerPortal": {
     "title": "Customer portal",

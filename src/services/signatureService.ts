@@ -56,7 +56,9 @@ export interface PortalSignatureInput {
   signerRole?: SignerRole;
   signatureSvg: string;
   userAgent?: string;
-  ipHash?: string;
+  // ip_hash is intentionally NOT a client-supplied field — the RPC
+  // derives it from inet_client_addr() server-side because customers'
+  // browsers can't reliably introspect their own IP.
 }
 
 // ---------------------------------------------------------------------------
@@ -122,7 +124,6 @@ export async function recordPortalSignature(
       p_signer_role: input.signerRole ?? 'customer',
       p_signature_svg: input.signatureSvg,
       p_user_agent: input.userAgent ?? null,
-      p_ip_hash: input.ipHash ?? null,
     } as never);
     if (error || typeof data !== 'string') return null;
     return data;

@@ -688,19 +688,19 @@ function getDemoDeveloperHubData(): DeveloperHubData {
     { version: "2.5.0-dev.47", environment: "development", deployedAt: "2026-03-28T11:02:00Z", status: "healthy", uptime: 98.2, lastIncident: "2026-03-28T06:30:00Z" },
   ];
 
-  // Demo cron data — production fills via get_cron_health() RPC. Mirrors
-  // the 10 schedules in supabase/cron.sql with sensible "all healthy" defaults.
+  // Demo cron data — production fills via get_cron_health() RPC.
+  // Names + schedules mirror supabase/cron.sql exactly (10 vasco-* jobs).
   const cron: CronJobHealth[] = [
     { jobName: "vasco-weekly-digest", schedule: "0 8 * * 1", active: true, lastStatus: "succeeded", lastStart: "2026-03-24T08:00:01Z", lastEnd: "2026-03-24T08:00:09Z", totalRuns: 12 },
     { jobName: "vasco-stale-draft-cleanup", schedule: "0 3 * * *", active: true, lastStatus: "succeeded", lastStart: "2026-03-28T03:00:00Z", lastEnd: "2026-03-28T03:00:03Z", totalRuns: 87 },
-    { jobName: "vasco-daily-push-digest", schedule: "0 17 * * *", active: true, lastStatus: "succeeded", lastStart: "2026-03-27T17:00:01Z", lastEnd: "2026-03-27T17:00:05Z", totalRuns: 87 },
-    { jobName: "vasco-train-extra-models", schedule: "0 4 * * 0", active: true, lastStatus: "succeeded", lastStart: "2026-03-23T04:00:01Z", lastEnd: "2026-03-23T04:08:22Z", totalRuns: 12 },
-    { jobName: "vasco-weekly-retrain-models", schedule: "0 5 * * 0", active: true, lastStatus: "succeeded", lastStart: "2026-03-23T05:00:01Z", lastEnd: "2026-03-23T05:12:14Z", totalRuns: 12 },
-    { jobName: "vasco-grant-referral-credits", schedule: "0 2 * * *", active: true, lastStatus: "succeeded", lastStart: "2026-03-28T02:00:00Z", lastEnd: "2026-03-28T02:00:04Z", totalRuns: 87 },
-    { jobName: "vasco-churn-winback", schedule: "0 9 * * 1", active: true, lastStatus: "succeeded", lastStart: "2026-03-24T09:00:01Z", lastEnd: "2026-03-24T09:00:11Z", totalRuns: 12 },
     { jobName: "vasco-drain-account-deletions", schedule: "0 1 * * *", active: true, lastStatus: "succeeded", lastStart: "2026-03-28T01:00:00Z", lastEnd: "2026-03-28T01:00:02Z", totalRuns: 87 },
-    { jobName: "vasco-ml-health-check", schedule: "0 6 * * *", active: true, lastStatus: "succeeded", lastStart: "2026-03-28T06:00:00Z", lastEnd: "2026-03-28T06:00:03Z", totalRuns: 87 },
-    { jobName: "vasco-embedding-refresh", schedule: "0 4 * * *", active: true, lastStatus: "succeeded", lastStart: "2026-03-28T04:00:00Z", lastEnd: "2026-03-28T04:01:42Z", totalRuns: 87 },
+    { jobName: "vasco-daily-push-digest", schedule: "0 17 * * *", active: true, lastStatus: "succeeded", lastStart: "2026-03-27T17:00:01Z", lastEnd: "2026-03-27T17:00:05Z", totalRuns: 87 },
+    { jobName: "vasco-churn-winback", schedule: "0 9 * * 1", active: true, lastStatus: "succeeded", lastStart: "2026-03-24T09:00:01Z", lastEnd: "2026-03-24T09:00:11Z", totalRuns: 12 },
+    { jobName: "vasco-grant-referral-credits", schedule: "0 2 * * *", active: true, lastStatus: "succeeded", lastStart: "2026-03-28T02:00:00Z", lastEnd: "2026-03-28T02:00:04Z", totalRuns: 87 },
+    { jobName: "vasco-weekly-retrain-models", schedule: "0 5 * * 0", active: true, lastStatus: "succeeded", lastStart: "2026-03-23T05:00:01Z", lastEnd: "2026-03-23T05:12:14Z", totalRuns: 12 },
+    { jobName: "vasco-train-extra-models", schedule: "0 4 * * 0", active: true, lastStatus: "succeeded", lastStart: "2026-03-23T04:00:01Z", lastEnd: "2026-03-23T04:08:22Z", totalRuns: 12 },
+    { jobName: "vasco-refresh-generator-approval-rates", schedule: "30 3 * * *", active: true, lastStatus: "succeeded", lastStart: "2026-03-28T03:30:00Z", lastEnd: "2026-03-28T03:30:02Z", totalRuns: 87 },
+    { jobName: "vasco-pack-trigger-tick", schedule: "0 9 * * *", active: true, lastStatus: "succeeded", lastStart: "2026-03-28T09:00:00Z", lastEnd: "2026-03-28T09:00:14Z", totalRuns: 87 },
   ];
 
   return {

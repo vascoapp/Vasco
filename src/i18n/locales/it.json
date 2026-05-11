@@ -2025,7 +2025,17 @@
     "quoteAmount": "Importo preventivo",
     "deposit": "Caparra",
     "alreadyPaid": "Già pagato",
-    "helpFooter": "Domande? Contatta {{name}}"
+    "helpFooter": "Domande? Contatta {{name}}",
+    "allChoicesSaved": "Tutte le tue scelte sono state salvate. Puoi pagare ora.",
+    "signAckCta": "Firma per confermare le tue scelte",
+    "signedAck": "Firmato da {{name}}",
+    "signModalTitle": "Conferma le tue scelte",
+    "signModalSubtitle": "Digita il tuo nome e firma sotto per confermare le scelte che hai fatto.",
+    "signNamePlaceholder": "Il tuo nome completo",
+    "signNameRequiredTitle": "Nome richiesto",
+    "signNameRequiredDesc": "Digita il tuo nome prima di firmare.",
+    "signFailedTitle": "Impossibile firmare",
+    "signFailedDesc": "Riprova. Se il problema persiste, contatta il tuo appaltatore."
   },
   "customerPortal": {
     "title": "Portale cliente",

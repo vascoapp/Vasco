@@ -2025,7 +2025,17 @@
     "quoteAmount": "Montant du devis",
     "deposit": "Acompte",
     "alreadyPaid": "Déjà payé",
-    "helpFooter": "Des questions ? Contactez {{name}}"
+    "helpFooter": "Des questions ? Contactez {{name}}",
+    "allChoicesSaved": "Tous vos choix ont été enregistrés. Vous pouvez maintenant payer.",
+    "signAckCta": "Signer pour confirmer vos choix",
+    "signedAck": "Signé par {{name}}",
+    "signModalTitle": "Confirmer vos choix",
+    "signModalSubtitle": "Tapez votre nom et signez ci-dessous pour confirmer les choix que vous avez faits.",
+    "signNamePlaceholder": "Votre nom complet",
+    "signNameRequiredTitle": "Nom requis",
+    "signNameRequiredDesc": "Veuillez taper votre nom avant de signer.",
+    "signFailedTitle": "Signature impossible",
+    "signFailedDesc": "Veuillez réessayer. Si le problème persiste, contactez votre artisan."
   },
   "customerPortal": {
     "title": "Portail client",

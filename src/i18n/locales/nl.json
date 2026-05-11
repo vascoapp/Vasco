@@ -2025,7 +2025,17 @@
     "quoteAmount": "Offertebedrag",
     "deposit": "Aanbetaling",
     "alreadyPaid": "Reeds betaald",
-    "helpFooter": "Heeft u vragen? Neem contact op met {{name}}"
+    "helpFooter": "Heeft u vragen? Neem contact op met {{name}}",
+    "allChoicesSaved": "Al uw keuzes zijn opgeslagen. U kunt nu betalen.",
+    "signAckCta": "Tekenen om uw keuzes te bevestigen",
+    "signedAck": "Ondertekend door {{name}}",
+    "signModalTitle": "Bevestig uw keuzes",
+    "signModalSubtitle": "Typ uw naam en zet hieronder uw handtekening om uw keuzes te bevestigen.",
+    "signNamePlaceholder": "Uw volledige naam",
+    "signNameRequiredTitle": "Naam vereist",
+    "signNameRequiredDesc": "Typ uw naam voordat u ondertekent.",
+    "signFailedTitle": "Ondertekenen niet gelukt",
+    "signFailedDesc": "Probeer het opnieuw. Lukt het niet, neem contact op met uw aannemer."
   },
   "customerPortal": {
     "title": "Klantportaal",

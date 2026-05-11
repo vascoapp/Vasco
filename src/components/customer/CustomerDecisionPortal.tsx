@@ -11,6 +11,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Linking,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -19,6 +20,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { SignaturePad } from '../shared/SignaturePad';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -332,6 +334,55 @@ function PaymentSection({ portalData, accentColor, onActivityLog }: PaymentSecti
   const allDecisionsComplete =
     portalData.completedDecisions >= portalData.totalDecisions;
 
+  // R66r56: customer-side acknowledgment signature. Only enabled once all
+  // decisions are complete and the customer hasn't already signed. Writes
+  // via write_signature_via_portal RPC (anon, server-derived ip_hash).
+  const [signModalOpen, setSignModalOpen] = useState(false);
+  const [signerName, setSignerName] = useState('');
+  const [signedAt, setSignedAt] = useState<string | null>(null);
+  const [signing, setSigning] = useState(false);
+
+  const handleSignatureSave = async (svgPath: string) => {
+    if (signing) return;
+    const trimmedName = signerName.trim();
+    if (!trimmedName) {
+      Alert.alert(
+        t('decisionPortal.signNameRequiredTitle', 'Name required'),
+        t('decisionPortal.signNameRequiredDesc', 'Please type your name before signing.'),
+      );
+      return;
+    }
+    setSigning(true);
+    try {
+      const { recordPortalSignature } = await import('../../services/signatureService');
+      const id = await recordPortalSignature({
+        accessCode: portalData.accessToken,
+        signerName: trimmedName,
+        signerRole: 'customer',
+        signatureSvg: svgPath,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      });
+      if (id) {
+        setSignedAt(new Date().toISOString());
+        setSignModalOpen(false);
+        onActivityLog?.('signature_recorded', { signatureId: id });
+        hapticSuccess();
+      } else {
+        Alert.alert(
+          t('decisionPortal.signFailedTitle', 'Could not sign'),
+          t('decisionPortal.signFailedDesc', 'Please try again. If the problem persists, contact your contractor.'),
+        );
+      }
+    } catch {
+      Alert.alert(
+        t('decisionPortal.signFailedTitle', 'Could not sign'),
+        t('decisionPortal.signFailedDesc', 'Please try again. If the problem persists, contact your contractor.'),
+      );
+    } finally {
+      setSigning(false);
+    }
+  };
+
   const fmtAmount = (n: number) =>
     formatCurrency(n, (portalData.contractorCountry ?? 'NL') as Country);
 
@@ -430,10 +481,80 @@ function PaymentSection({ portalData, accentColor, onActivityLog }: PaymentSecti
         <View style={styles.paymentReadyBanner}>
           <Ionicons name="checkmark-circle" size={18} color={SemanticColors.feedbackSuccess} />
           <Text style={styles.paymentReadyText}>
-            Al uw keuzes zijn opgeslagen. U kunt nu betalen.
+            {t('decisionPortal.allChoicesSaved', 'Al uw keuzes zijn opgeslagen. U kunt nu betalen.')}
           </Text>
         </View>
       )}
+
+      {/* R66r56: customer acknowledgment signature. Optional but encouraged —
+          gives the contractor a customer-side audit row separate from the
+          contractor's own job-handover signature. Hidden once signed. */}
+      {allDecisionsComplete && !signedAt && (
+        <Pressable
+          style={styles.signAckButton}
+          onPress={() => setSignModalOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel={t('decisionPortal.signAckCta', 'Sign to confirm your choices')}
+        >
+          <Ionicons name="create-outline" size={16} color={SemanticColors.textSecondary} />
+          <Text style={styles.signAckButtonText}>
+            {t('decisionPortal.signAckCta', 'Sign to confirm your choices')}
+          </Text>
+        </Pressable>
+      )}
+      {signedAt && (
+        <View style={styles.signedBadge}>
+          <Ionicons name="checkmark-done" size={16} color={SemanticColors.feedbackSuccess} />
+          <Text style={styles.signedBadgeText}>
+            {t('decisionPortal.signedAck', 'Signed by {{name}}', { name: signerName.trim() })}
+          </Text>
+        </View>
+      )}
+
+      {/* Signature modal */}
+      <Modal
+        visible={signModalOpen}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setSignModalOpen(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.signModalRoot}
+        >
+          <View style={styles.signModalCard}>
+            <Text style={styles.signModalTitle}>
+              {t('decisionPortal.signModalTitle', 'Confirm your choices')}
+            </Text>
+            <Text style={styles.signModalSubtitle}>
+              {t('decisionPortal.signModalSubtitle', 'Type your name and sign below to acknowledge the choices you made.')}
+            </Text>
+            <TextInput
+              style={styles.signModalInput}
+              placeholder={t('decisionPortal.signNamePlaceholder', 'Your full name')}
+              placeholderTextColor={SemanticColors.textTertiary}
+              value={signerName}
+              onChangeText={setSignerName}
+              autoCapitalize="words"
+              autoCorrect={false}
+              accessibilityLabel={t('decisionPortal.signNamePlaceholder', 'Your full name')}
+            />
+            <SignaturePad
+              label={signerName}
+              onSave={handleSignatureSave}
+            />
+            <Pressable
+              onPress={() => setSignModalOpen(false)}
+              style={styles.signModalCancel}
+              accessibilityRole="button"
+            >
+              <Text style={styles.signModalCancelText}>
+                {t('common.cancel', 'Cancel')}
+              </Text>
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
 
       {/* R66r48: Pay Now CTA — DK gradient + amber glow shadow. Was flat
           accentColor; gradient + shadow signals "primary action" in the
@@ -2284,6 +2405,81 @@ const styles = StyleSheet.create({
     fontFamily: DK.type.body500,
     color: DK.colors.success,
     flex: 1,
+  },
+  // R66r56: customer acknowledgment-signature UI
+  signAckButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    borderRadius: RADIUS.md,
+    paddingVertical: 12,
+  },
+  signAckButtonText: {
+    fontSize: 13,
+    fontFamily: DK.type.body600,
+    color: SemanticColors.textSecondary,
+  },
+  signedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: DK.colors.success + '15',
+    borderRadius: RADIUS.md,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  signedBadgeText: {
+    fontSize: 12,
+    fontFamily: DK.type.body500,
+    color: DK.colors.success,
+    flex: 1,
+  },
+  signModalRoot: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  signModalCard: {
+    backgroundColor: DK.colors.panel,
+    borderRadius: RADIUS.lg,
+    padding: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  signModalTitle: {
+    fontSize: 18,
+    fontFamily: 'Archivo_800ExtraBold',
+    color: SemanticColors.textPrimary,
+  },
+  signModalSubtitle: {
+    fontSize: 13,
+    fontFamily: 'Inter_400Regular',
+    color: SemanticColors.textSecondary,
+  },
+  signModalInput: {
+    backgroundColor: DK.colors.panel2,
+    borderRadius: RADIUS.md,
+    padding: 14,
+    fontSize: 15,
+    fontFamily: 'Inter_400Regular',
+    color: SemanticColors.textPrimary,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  signModalCancel: {
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  signModalCancelText: {
+    fontSize: 14,
+    fontFamily: 'Inter_500Medium',
+    color: SemanticColors.textTertiary,
   },
   // R66r48: Pay Now CTA — overflow:hidden + glow shadow + display800 label
   payNowButton: {

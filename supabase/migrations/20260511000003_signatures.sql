@@ -100,13 +100,19 @@ CREATE POLICY signatures_insert_own ON public.signatures
 -- signature row server-side with the contractor's user_id resolved
 -- from the tracker.
 
+-- ip_hash design: the customer's browser CAN'T compute its own IP, so the
+-- RPC derives it server-side from inet_client_addr(). Hashed with a
+-- daily-rotating salt (date-based) so the stored value isn't long-term
+-- PII but same-day repeat signers cluster. The contractor-authenticated
+-- INSERT path (RLS policy) intentionally leaves ip_hash NULL — that
+-- contractor's IP is their own, not evidence of who signed.
+
 CREATE OR REPLACE FUNCTION public.write_signature_via_portal(
   p_access_code  text,
   p_signer_name  text,
   p_signer_role  text,
   p_signature_svg text,
-  p_user_agent   text,
-  p_ip_hash      text
+  p_user_agent   text
 ) RETURNS uuid
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -118,6 +124,7 @@ DECLARE
   v_job_text       text;
   v_job_uuid       uuid;
   v_signature_id   uuid;
+  v_ip_hash        text;
 BEGIN
   -- 1) Resolve tracker → contractor + job. Column names match the
   --    decision_trackers schema (R31 added `expires_at`; `user_id` is
@@ -144,7 +151,7 @@ BEGIN
   -- 3) Best-effort cast job_id text → uuid. If the tracker still
   --    holds a tempId (job created offline, never flushed), store
   --    NULL on job_id and let the contractor's own subsequent signed
-  --    insert backfill once tempId resolves. The signer_name / ip_hash
+  --    insert backfill once tempId resolves. The signer_name + ip_hash
   --    still provide audit value even without a job FK.
   BEGIN
     v_job_uuid := v_job_text::uuid;
@@ -152,21 +159,34 @@ BEGIN
     v_job_uuid := NULL;
   END;
 
-  -- 4) Insert. signed_at default = now() server-stamped.
+  -- 4) Derive ip_hash server-side. inet_client_addr() is the connecting
+  --    client (Supabase pooler proxies through, so this is the customer's
+  --    IP not the pooler's). Salt with the current date so the hash
+  --    rotates daily — same-day repeat signers cluster, longer-term
+  --    re-identification is broken.
+  v_ip_hash := encode(
+    digest(coalesce(inet_client_addr()::text, '') || to_char(now(), 'YYYY-MM-DD'), 'sha256'),
+    'hex'
+  );
+
+  -- 5) Insert. signed_at default = now() server-stamped.
   INSERT INTO public.signatures (
     job_id, contractor_user_id, signer_name, signer_role,
     signature_svg, user_agent, ip_hash
   ) VALUES (
     v_job_uuid, v_contractor_id, p_signer_name, p_signer_role,
-    p_signature_svg, p_user_agent, p_ip_hash
+    p_signature_svg, p_user_agent, v_ip_hash
   ) RETURNING id INTO v_signature_id;
 
   RETURN v_signature_id;
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.write_signature_via_portal(text, text, text, text, text, text) FROM public;
-GRANT EXECUTE ON FUNCTION public.write_signature_via_portal(text, text, text, text, text, text) TO anon, authenticated, service_role;
+-- pgcrypto for digest(). Idempotent if already enabled.
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+REVOKE ALL ON FUNCTION public.write_signature_via_portal(text, text, text, text, text) FROM public;
+GRANT EXECUTE ON FUNCTION public.write_signature_via_portal(text, text, text, text, text) TO anon, authenticated, service_role;
 
 COMMENT ON TABLE public.signatures IS
   'R66r55: append-only signature audit trail. One row per signing event with server-stamped signed_at + provenance (user_agent, ip_hash). Closes the R296 GDPR gap.';

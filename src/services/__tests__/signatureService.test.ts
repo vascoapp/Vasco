@@ -109,7 +109,6 @@ describe('recordPortalSignature', () => {
       signerName: 'Marie Dubois',
       signatureSvg: '<svg></svg>',
       userAgent: 'Mozilla/5.0',
-      ipHash: 'abc123',
     });
     expect(id).toBe('sig-uuid-1');
     expect(mockState.rpcArgs).toMatchObject({
@@ -118,8 +117,9 @@ describe('recordPortalSignature', () => {
       p_signer_role: 'customer',
       p_signature_svg: '<svg></svg>',
       p_user_agent: 'Mozilla/5.0',
-      p_ip_hash: 'abc123',
     });
+    // ip_hash is server-derived — must NOT be in the RPC args.
+    expect(mockState.rpcArgs).not.toHaveProperty('p_ip_hash');
   });
 
   test('returns null on RPC error (invalid access code)', async () => {

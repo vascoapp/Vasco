@@ -2025,7 +2025,17 @@
     "quoteAmount": "Angebotsbetrag",
     "deposit": "Anzahlung",
     "alreadyPaid": "Bereits bezahlt",
-    "helpFooter": "Fragen? Kontaktiere {{name}}"
+    "helpFooter": "Fragen? Kontaktiere {{name}}",
+    "allChoicesSaved": "Alle Ihre Auswahlen wurden gespeichert. Sie können jetzt bezahlen.",
+    "signAckCta": "Unterschreiben, um Ihre Auswahl zu bestätigen",
+    "signedAck": "Unterschrieben von {{name}}",
+    "signModalTitle": "Auswahl bestätigen",
+    "signModalSubtitle": "Geben Sie Ihren Namen ein und unterschreiben Sie unten, um Ihre Auswahl zu bestätigen.",
+    "signNamePlaceholder": "Ihr vollständiger Name",
+    "signNameRequiredTitle": "Name erforderlich",
+    "signNameRequiredDesc": "Bitte geben Sie vor dem Unterschreiben Ihren Namen ein.",
+    "signFailedTitle": "Unterschrift fehlgeschlagen",
+    "signFailedDesc": "Bitte versuchen Sie es erneut. Wenn das Problem weiterhin besteht, wenden Sie sich an Ihren Auftragnehmer."
   },
   "customerPortal": {
     "title": "Kundenportal",

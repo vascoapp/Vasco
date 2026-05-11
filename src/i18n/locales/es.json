@@ -2025,7 +2025,17 @@
     "quoteAmount": "Importe del presupuesto",
     "deposit": "Anticipo",
     "alreadyPaid": "Ya pagado",
-    "helpFooter": "¿Preguntas? Contacta con {{name}}"
+    "helpFooter": "¿Preguntas? Contacta con {{name}}",
+    "allChoicesSaved": "Todas tus elecciones han sido guardadas. Ahora puedes pagar.",
+    "signAckCta": "Firma para confirmar tus elecciones",
+    "signedAck": "Firmado por {{name}}",
+    "signModalTitle": "Confirma tus elecciones",
+    "signModalSubtitle": "Escribe tu nombre y firma abajo para confirmar las elecciones que has hecho.",
+    "signNamePlaceholder": "Tu nombre completo",
+    "signNameRequiredTitle": "Nombre requerido",
+    "signNameRequiredDesc": "Por favor escribe tu nombre antes de firmar.",
+    "signFailedTitle": "No se pudo firmar",
+    "signFailedDesc": "Por favor inténtalo de nuevo. Si el problema continúa, contacta con tu contratista."
   },
   "customerPortal": {
     "title": "Portal cliente",
