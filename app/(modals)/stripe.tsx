@@ -5,7 +5,7 @@ import { Screen } from '../../src/components/Screen';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
-import { saveStripeConfig, isConnected as checkStripeConnected } from '../../src/integrations/stripe';
+import { saveStripeConfig, validateConnection as validateStripeConnection } from '../../src/integrations/stripe';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { useAuth } from '../../src/context/AuthContext';
 import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../../src/config/paymentMethods';
@@ -90,10 +90,11 @@ export default function StripeConnectModal() {
 
     try {
       await saveStripeConfig({ apiKey });
-      // Verify connection by hitting Stripe — isConnected() roundtrips the
-      // key against /v1/balance which fails fast on an invalid key.
-      const connected = await checkStripeConnected();
-      if (!connected) {
+      // R66r57: validateConnection() actually hits /v1/balance instead of
+      // just checking SecureStore. Pre-r57 a typo'd sk_live_xxx would
+      // show "Connected ✓" and fail at first payment-link mint.
+      const ok = await validateStripeConnection();
+      if (!ok) {
         setTestResult('error');
         return;
       }

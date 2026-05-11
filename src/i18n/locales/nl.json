@@ -308,6 +308,7 @@
     "captureSignature": "Handtekening vastleggen",
     "customerSignature": "Handtekening klant",
     "customerSignatureDesc": "Vraag de klant hieronder te tekenen om het werk af te ronden.",
+    "signaturesSectionLabel": "Handtekeningen",
     "qualityFeedback": "Feedback",
     "postcodeCohort": "Postcodegebied: €{{price}}/u mediaan · {{accept}}% acceptatie · {{n}} offertes",
     "requestSignature": "Vraag aan klant",
@@ -1033,6 +1034,8 @@
   },
   "notifications": {
     "title": "Meldingen",
+    "customerSignedTitle": "Klant heeft getekend",
+    "customerSignedBody": "{{name}} heeft een bevestiging ondertekend.",
     "priorityUrgent": "Urgent",
     "priorityHigh": "Hoog",
     "priorityMedium": "Normaal",

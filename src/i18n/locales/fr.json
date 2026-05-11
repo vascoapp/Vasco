@@ -308,6 +308,7 @@
     "captureSignature": "Capturer la signature",
     "customerSignature": "Signature du client",
     "customerSignatureDesc": "Demandez au client de signer ci-dessous pour confirmer la fin des travaux.",
+    "signaturesSectionLabel": "Signatures",
     "qualityFeedback": "Avis",
     "postcodeCohort": "Code postal : €{{price}}/h médian · {{accept}}% acceptation · {{n}} devis",
     "requestSignature": "Demander au client",
@@ -781,6 +782,8 @@
   },
   "notifications": {
     "title": "Notifications",
+    "customerSignedTitle": "Client a signé",
+    "customerSignedBody": "{{name}} a signé une confirmation.",
     "priorityUrgent": "Urgent",
     "priorityHigh": "Élevée",
     "priorityMedium": "Normale",

@@ -22,7 +22,7 @@ import { checkForUpdate } from '../src/services/versionCheckService';
 import ErrorBoundary from '../src/components/shared/ErrorBoundary';
 import { initErrorReporting, setUser as setErrorUser, addBreadcrumb } from '../src/lib/errorReporting';
 import { ensureFlagsLoaded } from '../src/services/featureFlagService';
-import { watchInvoicePayments, watchUserTables } from '../src/services/invoicePaymentWatcher';
+import { watchInvoicePayments, watchUserTables, watchSignatures } from '../src/services/invoicePaymentWatcher';
 import { watchCustomerInteractions } from '../src/services/customerInteractionWatcher';
 import { flushQueue as flushOfflineQueue } from '../src/services/offlineWriteQueue';
 import { notifyNewQueueItems } from '../src/services/aiQueueNotifier';
@@ -235,6 +235,11 @@ function RootLayoutNav() {
           return watchCustomerInteractions(user.id, quoteIds);
         } catch { return () => {}; }
       })();
+      // R66r57: watch the signatures table for portal-side customer signs.
+      // Fires a local push notification ("Customer signed") when a customer
+      // acknowledgment lands while the contractor is in the app. Closes
+      // the customer→contractor feedback loop opened in R66r56.
+      const stopSignatures = watchSignatures(user.id);
       // Start EVE-style background job scheduler (audits + morning briefing).
       // Pull fresh AppState each tick via the module-level snapshot so the
       // scheduler never runs over empty arrays.
@@ -249,7 +254,7 @@ function RootLayoutNav() {
           country: user.country ?? snap.country,
         };
       });
-      return () => { setErrorUser(null); stopAutoSync(); stopEventFlushing(); stopWatch(); stopTables(); stopInteractions(); stopBackgroundJobScheduler(); pushSub.remove(); };
+      return () => { setErrorUser(null); stopAutoSync(); stopEventFlushing(); stopWatch(); stopTables(); stopInteractions(); stopSignatures(); stopBackgroundJobScheduler(); pushSub.remove(); };
     }
   }, [isAuthenticated, user?.id]);
 

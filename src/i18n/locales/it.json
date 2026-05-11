@@ -308,6 +308,7 @@
     "captureSignature": "Cattura firma",
     "customerSignature": "Firma del cliente",
     "customerSignatureDesc": "Chiedi al cliente di firmare qui sotto per confermare il lavoro completato.",
+    "signaturesSectionLabel": "Firme",
     "qualityFeedback": "Feedback",
     "postcodeCohort": "CAP: €{{price}}/h mediana · {{accept}}% accettazione · {{n}} preventivi",
     "requestSignature": "Richiedi al cliente",
@@ -781,6 +782,8 @@
   },
   "notifications": {
     "title": "Notifiche",
+    "customerSignedTitle": "Cliente ha firmato",
+    "customerSignedBody": "{{name}} ha firmato una conferma.",
     "priorityUrgent": "Urgente",
     "priorityHigh": "Alta",
     "priorityMedium": "Normale",

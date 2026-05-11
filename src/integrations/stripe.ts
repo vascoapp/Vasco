@@ -130,6 +130,30 @@ export async function isConnected(): Promise<boolean> {
   return config !== null && config.apiKey.length > 0;
 }
 
+/**
+ * R66r57: roundtrip the stored key against Stripe to verify it actually
+ * works. `isConnected()` only checks SecureStore — a contractor pasting an
+ * invalid `sk_live_typo` would otherwise see "Connected ✓" and fail at
+ * first payment-link mint. `/v1/balance` is the canonical zero-cost auth
+ * probe: returns 200 with the connected account's balance for any valid
+ * key, 401 for an invalid one.
+ */
+export async function validateConnection(): Promise<boolean> {
+  const config = await getConfig();
+  if (!config?.apiKey) return false;
+  try {
+    const res = await fetch(`${API_BASE}/balance`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${config.apiKey}`,
+      },
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Helpers — form encoding (Stripe requires x-www-form-urlencoded)
 // ---------------------------------------------------------------------------

@@ -308,6 +308,7 @@
     "captureSignature": "Capturar firma",
     "customerSignature": "Firma del cliente",
     "customerSignatureDesc": "Pide al cliente que firme abajo para confirmar que el trabajo está finalizado.",
+    "signaturesSectionLabel": "Firmas",
     "qualityFeedback": "Comentarios",
     "postcodeCohort": "Código postal: €{{price}}/h mediana · {{accept}}% aceptación · {{n}} presupuestos",
     "requestSignature": "Pedir al cliente",
@@ -781,6 +782,8 @@
   },
   "notifications": {
     "title": "Notificaciones",
+    "customerSignedTitle": "Cliente ha firmado",
+    "customerSignedBody": "{{name}} ha firmado una confirmación.",
     "priorityUrgent": "Urgente",
     "priorityHigh": "Alta",
     "priorityMedium": "Normal",

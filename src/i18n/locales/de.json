@@ -308,6 +308,7 @@
     "captureSignature": "Unterschrift aufnehmen",
     "customerSignature": "Kundenunterschrift",
     "customerSignatureDesc": "Bitte den Kunden, unten zu unterschreiben, um die Arbeit zu bestätigen.",
+    "signaturesSectionLabel": "Unterschriften",
     "qualityFeedback": "Feedback",
     "postcodeCohort": "PLZ-Gebiet: €{{price}}/Std. Median · {{accept}}% Annahme · {{n}} Angebote",
     "requestSignature": "Vom Kunden anfordern",
@@ -781,6 +782,8 @@
   },
   "notifications": {
     "title": "Benachrichtigungen",
+    "customerSignedTitle": "Kunde hat unterschrieben",
+    "customerSignedBody": "{{name}} hat eine Bestätigung unterschrieben.",
     "priorityUrgent": "Dringend",
     "priorityHigh": "Hoch",
     "priorityMedium": "Normal",

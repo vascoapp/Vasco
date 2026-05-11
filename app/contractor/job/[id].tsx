@@ -129,6 +129,25 @@ export default function JobDetailPage() {
   const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, businessProfile, updateJob } = useAppState();
   const [signatureModal, setSignatureModal] = useState<{ visible: boolean; onSigned?: () => void }>({ visible: false });
 
+  // R66r57: fetch signature audit-trail rows. Refreshes whenever a new
+  // signature is captured (signatureModal closes after save).
+  const [signatureRows, setSignatureRows] = useState<Array<{
+    id: string;
+    signer_name: string;
+    signer_role: string;
+    signed_at: string;
+  }>>([]);
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    import('../../../src/services/signatureService').then(({ listSignaturesForJob }) =>
+      listSignaturesForJob(id).then((rows) => {
+        if (!cancelled) setSignatureRows(rows);
+      }).catch(() => {}),
+    ).catch(() => {});
+    return () => { cancelled = true; };
+  }, [id, signatureModal.visible]);
+
   // R304: auto-trigger invoice creation when reached via R286 executor with
   // ?action=create-invoice (draft_invoice queue items). One-shot guarded by
   // ref so the effect doesn't loop on re-renders.
@@ -716,6 +735,32 @@ export default function JobDetailPage() {
             }}
           />
         </View>
+
+        {/* ============================================ */}
+        {/* 5d. SIGNATURE AUDIT TRAIL (R66r57)            */}
+        {/* ============================================ */}
+        {/* Reads signatures table rows. Empty for jobs that haven't been
+            signed yet. Shows up to 5 most-recent (typically just 1, but
+            multi-signature handovers — site lead + customer + inspector —
+            stack). */}
+        {signatureRows.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>
+              {t('jobs.signaturesSectionLabel', 'Signatures')}
+            </Text>
+            {signatureRows.slice(0, 5).map((row) => (
+              <View key={row.id} style={styles.signatureRow}>
+                <Ionicons name="checkmark-done" size={16} color={SemanticColors.feedbackSuccess} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.signatureRowName}>{row.signer_name}</Text>
+                  <Text style={styles.signatureRowMeta}>
+                    {new Date(row.signed_at).toLocaleString()} · {row.signer_role}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* ============================================ */}
         {/* 6. UPSELL OPPORTUNITIES                     */}
@@ -1334,6 +1379,28 @@ const styles = StyleSheet.create({
     fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textPrimary,
     letterSpacing: TYPE.sectionTracking,
+  },
+
+  // R66r57: signature audit-trail row
+  signatureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.sm,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md,
+    padding: GRID.sm,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  signatureRowName: {
+    fontSize: 14,
+    fontFamily: 'Inter_600SemiBold',
+    color: SemanticColors.textPrimary,
+  },
+  signatureRowMeta: {
+    fontSize: 11,
+    fontFamily: 'Inter_400Regular',
+    color: SemanticColors.textTertiary,
   },
 
   // Card

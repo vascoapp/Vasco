@@ -308,6 +308,7 @@
     "captureSignature": "Capture signature",
     "customerSignature": "Customer signature",
     "customerSignatureDesc": "Ask the customer to sign below to confirm the work is completed.",
+    "signaturesSectionLabel": "Signatures",
     "qualityFeedback": "Feedback",
     "postcodeCohort": "Postcode area: €{{price}}/u median · {{accept}}% accept · {{n}} quotes",
     "requestSignature": "Request from customer",
@@ -781,6 +782,8 @@
   },
   "notifications": {
     "title": "Notifications",
+    "customerSignedTitle": "Customer signed",
+    "customerSignedBody": "{{name}} signed an acknowledgment.",
     "priorityUrgent": "Urgent",
     "priorityHigh": "High",
     "priorityMedium": "Normal",
