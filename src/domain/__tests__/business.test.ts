@@ -8,6 +8,7 @@ import {
   isSmallBusinessExempt,
   getStandardVatRate,
   getEffectiveVatRate,
+  getReducedVatRate,
   getVatExemptionNote,
 } from '../business';
 
@@ -49,6 +50,22 @@ describe('getEffectiveVatRate', () => {
   });
   it('falls back to NL 21 when country undefined and scheme standard', () => {
     expect(getEffectiveVatRate({ vatScheme: 'standard' })).toBe(21);
+  });
+});
+
+describe('getReducedVatRate', () => {
+  it('returns 9 for NL (renovation labor on homes >2 years old)', () => {
+    expect(getReducedVatRate('NL')).toBe(9);
+  });
+  it('returns null for DE/FR/ES/IT/UK — no relevant reduced bracket for trade labor', () => {
+    expect(getReducedVatRate('DE')).toBeNull();
+    expect(getReducedVatRate('FR')).toBeNull();
+    expect(getReducedVatRate('ES')).toBeNull();
+    expect(getReducedVatRate('IT')).toBeNull();
+    expect(getReducedVatRate('UK')).toBeNull();
+  });
+  it('returns null for undefined country', () => {
+    expect(getReducedVatRate(undefined)).toBeNull();
   });
 });
 

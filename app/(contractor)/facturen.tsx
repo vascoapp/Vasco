@@ -42,6 +42,8 @@ import { createPaymentLink as createStripePaymentLink } from '../../src/integrat
 import { SUPPORTED_METHODS } from '../../src/integrations/stripe';
 import { useAuth } from '../../src/context/AuthContext';
 import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
+import { formatCurrency } from '../../src/i18n/formatting';
+import type { Country } from '../../src/i18n/formatting';
 import { calculateLatePaymentInterest } from '../../src/services/dutchComplianceService';
 import { useTranslation } from 'react-i18next';
 
@@ -308,7 +310,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                       const text = renderPaymentReminderForTag(locale, {
                         customer: autoInv.customerName ?? '',
                         ref: autoInv.invoiceNumber,
-                        amount: `€${autoInv.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+                        amount: formatCurrency(autoInv.total, (user?.country ?? 'NL') as Country),
                         link: link.url,
                         business: businessProfile.businessName ?? '',
                       }, tag);
@@ -398,7 +400,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                         t('invoices.paymentLinkCreated', 'Payment link created'),
                         `${t('invoices.paymentLinkReady', 'Payment link is ready to share')}:\n${link.url}`,
                       );
-                      await Share.share({ message: `${t('invoices.paymentLink', 'Betaallink')}: €${invoice.amount.toLocaleString()}\n${link.url}`, title: t('invoices.paymentLink', 'Betaallink') });
+                      await Share.share({ message: `${t('invoices.paymentLink', 'Betaallink')}: ${formatCurrency(invoice.amount, (user?.country ?? 'NL') as Country)}\n${link.url}`, title: t('invoices.paymentLink', 'Betaallink') });
                     } else {
                       Alert.alert(t('invoices.error', 'Fout'), t('invoices.paymentLinkFailed', 'Betaallink kon niet worden aangemaakt.'));
                     }
@@ -458,6 +460,7 @@ type TabView = 'offertes' | 'facturen' | 'incasso';
 export default function FacturenScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabView>('offertes');
   const [showQuoteBuilder, setShowQuoteBuilder] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -557,7 +560,7 @@ export default function FacturenScreen() {
       <View style={{ paddingHorizontal: Spacing.md }}>
         <ContractorDashboardHeader
           kpis={[
-            { icon: 'receipt', value: `€${pendingValue.toLocaleString()}`, label: t('invoices.outstanding', 'Openstaand') },
+            { icon: 'receipt', value: formatCurrency(pendingValue, (user?.country ?? 'NL') as Country), label: t('invoices.outstanding', 'Openstaand') },
             { icon: 'timer', value: `${dso.currentDSO}d`, label: 'DSO', color: dso.trend === 'worsening' ? SemanticColors.feedbackError : dso.trend === 'improving' ? SemanticColors.feedbackSuccess : undefined },
             { icon: 'document-text', value: String(quotes.length), label: t('invoices.quotes', 'Offertes'), color: Palette.hermesOrange },
           ]}
@@ -861,7 +864,7 @@ export default function FacturenScreen() {
                                 ? renderPaymentReminderForTag(bulkLocale, {
                                     customer: autoInv.customerName ?? '',
                                     ref: autoInv.invoiceNumber,
-                                    amount: `€${autoInv.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+                                    amount: formatCurrency(autoInv.total, (user?.country ?? 'NL') as Country),
                                     link: '',
                                     business: businessProfile.businessName ?? '',
                                   }, tag)

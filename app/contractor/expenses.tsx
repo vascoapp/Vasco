@@ -11,7 +11,10 @@ import { PAGE_BG } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useExpenses, useExpenseStats, EXPENSE_CATEGORIES, type ExpenseCategory } from '../../src/services/expenseService';
 import { useAppState } from '../../src/state/AppState';
+import { useAuth } from '../../src/context/AuthContext';
 import { getVATRate } from '../../src/constants/taxRates';
+import { formatCurrency } from '../../src/i18n/formatting';
+import type { Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { EmptyState } from '../../src/components/shared/EmptyState';
@@ -23,6 +26,8 @@ export default function ExpensesScreen() {
   const { t } = useTranslation();
   const { expenses, remove, add } = useExpenses();
   const { businessProfile } = useAppState();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const vatRate = getVATRate(businessProfile.country ?? 'NL');
   const vatPct = Math.round(vatRate * 100);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -57,7 +62,7 @@ export default function ExpensesScreen() {
 
   const filtered = selectedCategory ? expenses.filter(e => e.category === selectedCategory) : expenses;
 
-  const fmt = (n: number) => `€${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  const fmt = (n: number) => formatCurrency(n, country);
 
   return (
     <View style={styles.container}>

@@ -312,7 +312,7 @@ function eveAgentBadge(item: QueueItem): { letter: string; color: string } | nul
   const src = item.sourceGeneratorId ?? '';
   if (!src.startsWith('eve-')) return null;
   const type = src.slice(4);
-  if (type === 'agent') return { letter: 'A', color: '#E35205' };       // sunset-orange
+  if (type === 'agent') return { letter: 'A', color: '#F97316' };       // DK sunset-orange (was legacy Wolt #E35205 pre-R175)
   if (type === 'auditor') return { letter: 'U', color: '#1E3A8A' };     // deep blue
   if (type === 'analyst') return { letter: 'L', color: '#10B981' };     // analyst green
   return null;

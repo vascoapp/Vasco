@@ -16,7 +16,10 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { useAppState } from '../../src/state/AppState';
+import { useAuth } from '../../src/context/AuthContext';
 import { isSupabaseConfigured, supabase } from '../../src/lib/supabase';
+import { formatCurrency } from '../../src/i18n/formatting';
+import type { Country } from '../../src/i18n/formatting';
 import { DEMO_MODE } from '../../src/config/demo';
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -174,7 +177,8 @@ export default function CustomerViewScreen() {
   const [accepted, setAccepted] = useState(false);
   const [viewRecorded, setViewRecorded] = useState(false);
 
-  const fmt = (n: number) => `€${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  const { user } = useAuth();
+  const fmt = (n: number) => formatCurrency(n, (user?.country ?? 'NL') as Country);
 
   // Record page view for data moat
   useEffect(() => {

@@ -67,6 +67,27 @@ export function getEffectiveVatRate(profile: { country?: BusinessProfile['countr
   return getStandardVatRate(profile.country);
 }
 
+// R66r59: country-specific reduced VAT rates for line-item-level overrides.
+// Returns the percent value when a reduced rate is legally applicable in
+// that country for trade-relevant categories, or null when the country
+// has no relevant reduced bracket.
+//
+// NL 9% — renovation + maintenance labor on residential homes >2 years
+//   old (Belastingdienst Verlaagd tarief, BTW-Tarievenregeling). Applies
+//   to plumbing/electrical/painting/tiling/etc — the bread-and-butter of
+//   solo contractors. Big real-money issue: at 21% the contractor either
+//   over-charges the customer or eats the difference at year-end VAT
+//   reconciliation. Source: belastingdienst.nl/wps/wcm/connect/bldcontentnl/
+//   belastingdienst/zakelijk/btw/tarieven_en_vrijstellingen/
+//   diensten_9_btw/diensten_aan_woningen_ouder_dan_2_jaar.
+// Other EU6: reduced rates exist (DE 7%, FR 5.5%/10%, ES 10%, IT 10%,
+//   UK 5%) but apply to food/books/energy/transport — not construction
+//   labor — so we return null for those until a real product case lands.
+export function getReducedVatRate(country: BusinessProfile['country']): number | null {
+  if (country === 'NL') return 9;
+  return null;
+}
+
 export function getVatExemptionNote(country: string | undefined, vatScheme: VatScheme | undefined): string | null {
   if (vatScheme === 'small_business_NL_KOR') {
     return 'BTW niet van toepassing — kleineondernemersregeling (KOR).';

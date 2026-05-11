@@ -29,6 +29,9 @@ import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { useProcurementAgent, type MaterialNeed } from '../../src/services/procurementAgentService';
 import { useAppState } from '../../src/state/AppState';
 import { searchCatalog, type CatalogItem, getSupplierConfigs } from '../../src/integrations/suppliers';
+import { useAuth } from '../../src/context/AuthContext';
+import { formatCurrency } from '../../src/i18n/formatting';
+import type { Country } from '../../src/i18n/formatting';
 import { getScanHistory } from '../../src/services/invoiceScanService';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 
@@ -84,6 +87,7 @@ export default function BesparenScreen() {
   // Services
   const savings = useSavingsAggregation();
   const predictive = usePredictiveSavings();
+  const { user } = useAuth();
 
   // Procurement agent
   const { jobs, jobMaterials, materials } = useAppState();
@@ -196,8 +200,9 @@ export default function BesparenScreen() {
   };
 
   const handleShare = async () => {
-    const lines = visibleActions.map(a => `• ${a.title}: €${a.saving.toLocaleString(undefined)} — ${a.reason}`);
-    const message = `${t('savings.foundByVasco', 'Bespaarkansen gevonden door Vasco')}:\n\n${lines.join('\n')}\n\n${t('savings.totalPotential', 'Totaal potentieel')}: €${totalPotential.toLocaleString(undefined)}`;
+    const country = (user?.country ?? 'NL') as Country;
+    const lines = visibleActions.map(a => `• ${a.title}: ${formatCurrency(a.saving, country)} — ${a.reason}`);
+    const message = `${t('savings.foundByVasco', 'Bespaarkansen gevonden door Vasco')}:\n\n${lines.join('\n')}\n\n${t('savings.totalPotential', 'Totaal potentieel')}: ${formatCurrency(totalPotential, country)}`;
     await Share.share({ message, title: t('savings.savingsOpportunities', 'Bespaarkansen') });
   };
 

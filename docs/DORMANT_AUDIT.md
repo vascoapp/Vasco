@@ -389,6 +389,11 @@ Three improvements for follow-up:
 
 These are operational improvements, not code-level. Logging for the day-of-launch checklist.
 
+**🟢 PARTIALLY CLOSED in R66r55** (2026-05-11):
+- ✅ #1 visibility: admin DeveloperHub now has a Cron tab. `get_cron_health()` SECURITY DEFINER RPC reads `cron.job` + `cron.job_run_details` filtered to `vasco-*` schedules; admin sees per-job status (last_status / last_start / last_end / total_runs) with ⚠ count on the tab label when missing or failed. Migration `20260511000002_cron_health_rpc.sql`.
+- ✅ #3 startup health check: `mlHealthCheck.ts` fires a Sentry warning with `cron_likely_dormant` tag when any of the 4 trained predictors are stale > 14d. Wired into `_layout.tsx` on auth-ready (R302 + R66r57 verified).
+- ⏸ #2 env-driven cron registration still requires operator action (run `supabase/cron.sql` with real `SUPABASE_URL` + service-role JWT substituted). Tracked in `docs/launch-checklist.md` "Pre-launch deploy sequence". CI smoke test (`scripts/check-cron-registered.mjs`) exists from R300.
+
 ---
 
 ## R9 — EVE live actions (R294)
@@ -501,6 +506,17 @@ The "7 contexts × 6 langs" framework documented in `signatureService.ts` (204 L
 4. Wire the other 6 contexts (most useful: quote-acceptance — capture customer signature on portal acceptance, embed on accepted-quote PDF)
 
 **Compliance note:** in the EU, customer-acknowledged work proof (signed handover) is a useful evidence trail for disputes. Today it exists in the contractor's app but never ends up on the invoice or in the BE — minimal evidentiary value.
+
+**🟢 CLOSED in R66r55–r57** (2026-05-11):
+- ✅ `public.signatures` table shipped — append-only audit trail with server-stamped `signed_at`, FK to jobs/documents, `signer_role` enum (customer/site_lead/inspector/subcontractor/other), `user_agent` + server-derived `ip_hash` (daily-rotating sha256 salt). Migration `20260511000003_signatures.sql`. RLS scoped to `contractor_user_id`.
+- ✅ Anonymous-customer write path: `write_signature_via_portal(p_access_code, p_signer_name, p_signer_role, p_signature_svg, p_user_agent)` SECURITY DEFINER RPC validates access_code against `decision_trackers`, resolves contractor_user_id server-side, derives ip_hash from `inet_client_addr()`. Mirrors R31 capability-URL pattern.
+- ✅ FE service rewritten from deprecated stub: `recordContractorSignature` (RLS-authed insert), `recordPortalSignature` (RPC wrapper), `listSignaturesForJob` reader, `getLegalText` (5 contexts × 6 langs), `signatureHtmlBlock` (PDF embed helper with HTML escaping).
+- ✅ `invoicePdfService.generateInvoicePdf` + `buildInvoicePdfBase64` updated to use the new `signatureHtmlBlock` shape; legal text resolved via `getLegalText('handover', language)` per contractor's locale.
+- ✅ `app/contractor/job/[id].tsx` SignaturePad onSave fires `recordContractorSignature` alongside the local Job update — BE audit row always lands.
+- ✅ Contractor-side audit panel: job detail screen surfaces all `listSignaturesForJob` rows with signer name + timestamp + role.
+- ✅ Customer-side portal flow: `CustomerDecisionPortal` shows a Sign-acknowledgment modal after all decisions complete; types name + draws signature → `recordPortalSignature`.
+- ✅ Realtime watcher: `watchSignatures(userId)` subscribes to INSERT events; fires `sendInstantNotification` ("Customer signed — Marie Dubois signed an acknowledgment") + the `_layout.tsx` cleanup unmounts it on logout.
+- ✅ 16 new unit tests across `signatureService` + `watchSignatures` + payment-disconnect + version-check.
 
 ---
 
@@ -1981,3 +1997,32 @@ Round 9 focus: a real bug introduced by round 8's soft-delete fix when crossed w
 **R66.49 — Audited and verified clean: KeyboardAvoidingView + SafeArea on auth + customer screens**: signup/login/forgot-password/reset-password all use `KeyboardAvoidingView` with iOS=`padding`, Android=`height`. Customer portal (`customer/index.tsx` + `customer/[code].tsx`) uses `SafeAreaView` from `react-native-safe-area-context` with explicit `edges`. No iOS small-phone CTA cutoffs.
 
 R66 batch (round 9): 3 files touched (`src/state/AppState.tsx` removeInvoice queue op + exportInvoice throws, `app/invoices/[id].tsx` handleExportMoneybird Alert) + 6 locale JSONs (2 new paymentAlerts keys). 0 TS errors, 688/688 jest pass. Round 8's soft-delete fix is now correct end-to-end (live + offline-replay).
+
+---
+
+# R66 rounds 54–59 (2026-05-11) — production hardening + open-item closures
+
+Major thread of work spanning 6 rounds. **Updates 4 audit entries from earlier rounds:**
+
+- **R11 signature service — CLOSED** end-to-end via r55-r57: BE table + RLS + 2 write paths (contractor RLS + portal SECURITY DEFINER RPC) + audit-trail reader + contractor-side display panel + customer-side portal modal + realtime watcher + push notification. PDF embed updated with per-language legal text.
+- **R8 cron jobs — PARTIALLY CLOSED** via r55: admin Cron tab visibility shipped (`get_cron_health()` RPC). Operator action (running `cron.sql`) still required pre-launch.
+- **R66.4 NL 9% reduced VAT — CLOSED** in r59: new `getReducedVatRate(country)` helper returns 9 for NL (null for other EU6), TieredQuoteBuilder shows an NL-only opt-in toggle, all three tier totals recalc. 3 new tests. Real money fix — pre-r59 NL renovation contractors over-charged 21% on labor for which Belastingdienst's verlaagd tarief mandates 9%.
+- **R66.12 send-invoice email CTA color — CLOSED**: was already `#F97316` upstream (audit entry was stale); fixed one stray `#E35205` in contractor index agent badge.
+- **R66.29 hardcoded €${...} sweep — PARTIALLY CLOSED**: 5 highest-traffic files migrated to `formatCurrency()` (werk / facturen / besparen tabs + expenses + customer-view drill-downs). UK contractors now see £ on every dashboard tab. Remaining ~12 sites in lower-traffic share-strings + alerts deferred.
+
+**New schema/RPC additions (per SCHEMA_LOCK v1.6):**
+- `public.signatures` table (R66r55)
+- `public.app_config` table (R66r54)
+- `write_signature_via_portal` RPC (R66r55/r56)
+- `get_cron_health` RPC (R66r55)
+- `get_portal_by_access_code` updated to discriminate expired vs not-found (R66r58)
+
+**FE additions:**
+- `versionCheckService` real Supabase fetch (R66r54)
+- Stripe modal `validateConnection()` actually hits `/v1/balance` (R66r57)
+- Portal expired-token UX with discriminated lookup result (R66r58)
+- Disconnect buttons for Mollie + Stripe modals; SecureStore wipe on userChange (R66r55)
+
+**Test status at end of r59:** 861/861 across 82 suites, 0 TS errors. All 6 locale JSONs valid.
+
+**8 pending migrations after r58** — 9 if r59 ships its tests with the round. No new operator action beyond what r54-r58 already documented.

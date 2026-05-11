@@ -24,6 +24,8 @@ import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { useAuth } from '../../src/context/AuthContext';
 import { DKLabel } from '../../src/components/shared/DKLabel';
+import { formatCurrency } from '../../src/i18n/formatting';
+import type { Country } from '../../src/i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -331,7 +333,7 @@ export default function WerkScreen() {
                 <JobRow
                   key={job.id}
                   title={job.title || job.description || ''}
-                  meta={[job.quotedAmount ? `€${job.quotedAmount.toLocaleString()}` : null, job.status].filter(Boolean).join(' · ')}
+                  meta={[job.quotedAmount ? formatCurrency(job.quotedAmount, (user?.country ?? 'NL') as Country) : null, job.status].filter(Boolean).join(' · ')}
                   accent={DK.colors.highlight}
                   onPress={() => router.push(`/contractor/job/${job.id}` as any)}
                   onLongPress={() => handleDeleteJob(job.id, job.title || job.description || '')}
@@ -350,7 +352,7 @@ export default function WerkScreen() {
                 <JobRow
                   key={project.id}
                   title={project.title}
-                  meta={`${project.jobIds.length} klussen · €${project.totalBudget.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                  meta={`${project.jobIds.length} klussen · ${formatCurrency(project.totalBudget, (user?.country ?? 'NL') as Country)}`}
                   accent={project.status === 'active' ? DK.colors.accent : DK.colors.textMuted}
                   onPress={() => router.push(`/contractor/projects/${project.id}` as any)}
                 />

@@ -51,7 +51,7 @@ import { useTranslation } from 'react-i18next';
 // contractors review the prose before tapping Send.
 import { generateScopeOfWork, loadQuoteTonePreset, loadToneExamples } from '../../services/sowGeneratorService';
 import { useAppState } from '../../state/AppState';
-import { isSmallBusinessExempt } from '../../domain/business';
+import { isSmallBusinessExempt, getStandardVatRate, getReducedVatRate } from '../../domain/business';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 // =============================================================================
@@ -132,6 +132,12 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
   const { user } = useAuth();
   const trade = user?.trade ?? 'general';
   const country = user?.country ?? 'NL';
+  // R66r59: NL contractors qualify for 9% reduced VAT on renovation/
+  // maintenance labor on residential homes >2 years old. Toggle is hidden
+  // for non-NL contractors (other EU6 countries don't have a relevant
+  // reduced bracket for construction labor).
+  const reducedRate = getReducedVatRate(country);
+  const [useReducedVat, setUseReducedVat] = useState(false);
   const [step, setStep] = useState<'select' | 'preview'>('select');
   const [selectedServices, setSelectedServices] = useState<{ item: PricebookItem; quantity: number; unit: string }[]>([]);
   const [showPricebook, setShowPricebook] = useState(false);
@@ -378,8 +384,13 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
       // 21% even for KOR / Kleinunternehmer contractors — quote totals went
       // out 21% inflated and the customer expected to pay BTW that the
       // contractor isn't legally allowed to charge.
+      // R66r50: country-aware standard rate (was NL-hardcoded 21).
+      // R66r59: contractor-opt-in reduced rate when applicable
+      //   (NL 9% for renovation labor on homes >2 years old).
       const exempt = isSmallBusinessExempt(bp);
-      const effectiveVatRate = exempt ? 0 : 21;
+      const effectiveVatRate = exempt
+        ? 0
+        : (useReducedVat && reducedRate !== null ? reducedRate : getStandardVatRate(country));
       const vatAmount = subtotal * (effectiveVatRate / 100);
       return {
         tier: tierKey, name: TIER_CONFIG[tierKey].name, tagline: TIER_CONFIG[tierKey].tagline,
@@ -1243,6 +1254,35 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
           })()}
         </View>
 
+        {/* R66r59: NL reduced VAT (9%) toggle. Visible only when the country
+            has a reduced rate (currently NL only). Affects all three tier
+            totals. Belastingdienst note shown when active. */}
+        {reducedRate !== null && !isSmallBusinessExempt(bp) && (
+          <Pressable
+            style={[s.vatToggleRow, useReducedVat && s.vatToggleRowActive]}
+            onPress={() => { setUseReducedVat(!useReducedVat); hapticSuccess(); }}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: useReducedVat }}
+            accessibilityLabel={t('quotes.reducedVatToggle', 'Use 9% reduced VAT for renovation labor on homes >2 years old')}
+          >
+            <View style={s.vatToggleIcon}>
+              <Ionicons
+                name={useReducedVat ? 'checkbox' : 'square-outline'}
+                size={20}
+                color={useReducedVat ? Palette.hermesOrange : SemanticColors.textTertiary}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.vatToggleTitle}>
+                {t('quotes.reducedVatTitle', '9% verlaagd BTW-tarief')}
+              </Text>
+              <Text style={s.vatToggleSubtitle}>
+                {t('quotes.reducedVatSubtitle', 'Verbouwing/onderhoud aan woning ouder dan 2 jaar')}
+              </Text>
+            </View>
+          </Pressable>
+        )}
+
         {/* Tier preview cards */}
         <Text style={s.sectionTitle}>{t('quotes.customerSeesOptions', 'Customer sees three options')}</Text>
         <View style={s.tiersRow}>
@@ -1647,4 +1687,25 @@ const s = StyleSheet.create({
 
   upsellRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: SemanticColors.feedbackSuccess + '10', borderRadius: RADIUS.md, padding: 10 },
   upsellText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.feedbackSuccess },
+
+  // R66r59: NL 9% reduced-VAT opt-in row
+  vatToggleRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md, padding: 12,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
+  },
+  vatToggleRowActive: {
+    backgroundColor: Palette.hermesOrange + '10',
+    borderColor: Palette.hermesOrange + '50',
+  },
+  vatToggleIcon: { width: 24, alignItems: 'center', justifyContent: 'center' },
+  vatToggleTitle: {
+    fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily,
+    color: SemanticColors.textPrimary,
+  },
+  vatToggleSubtitle: {
+    fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textSecondary, marginTop: 2,
+  },
 });
