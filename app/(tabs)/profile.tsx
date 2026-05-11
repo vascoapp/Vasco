@@ -13,7 +13,7 @@ import { Typography } from '../../src/theme/typography';
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { moneybirdConnected, mollieConnected, businessProfile, customers } = useAppState();
+  const { moneybirdConnected, mollieConnected, stripeConnected, businessProfile, customers } = useAppState();
   const { user, roleConfig, logout } = useAuth();
 
   const handleLogout = () => {
@@ -29,8 +29,8 @@ export default function ProfileScreen() {
       return {
         name: 'Stripe',
         description: t('tabs.profile.paymentProcessing', 'Payment processing'),
-        connected: false, // Stripe connection state managed via stripe config
-        route: '/(modals)/mollie' as const, // TODO: create dedicated Stripe modal
+        connected: stripeConnected,
+        route: '/(modals)/stripe' as const,
       };
     }
     return {

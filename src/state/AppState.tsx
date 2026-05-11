@@ -140,6 +140,8 @@ type AppState = {
   lastMoneybirdExport: Record<string, string>;
   mollieConnected: boolean;
   lastMolliePayment: Record<string, string>;
+  stripeConnected: boolean;
+  lastStripePayment: Record<string, string>;
   ingestPdfHistory: () => void;
   addExtractedDoc: (doc: ExtractedDocument) => void;
   applySuggestedPrice: (quoteId: string, description: string, unitPrice: number) => void;
@@ -162,6 +164,7 @@ type AppState = {
   updateJobMaterialStatus: (id: string, jobId: string, status: JobMaterialStatus) => void;
   removeJobMaterial: (id: string, jobId: string) => void;
   connectMollie: () => void;
+  connectStripe: () => void;
   createPaymentLink: (invoiceId: string, amount: number) => Promise<void>;
   addInvoiceFromJob: (jobId: string) => Promise<string>;
   convertQuoteToJob: (quoteId: string) => Promise<string>;
@@ -243,6 +246,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   const [lastMoneybirdExport, setLastMoneybirdExport] = useState<Record<string, string>>({});
   const [mollieConnected, setMollieConnected] = useState(false);
   const [lastMolliePayment, setLastMolliePayment] = useState<Record<string, string>>({});
+  const [stripeConnected, setStripeConnected] = useState(false);
+  const [lastStripePayment, setLastStripePayment] = useState<Record<string, string>>({});
   const [pendingBudgetExtraction, setPendingBudgetExtraction] = useState<BudgetExtractionResult | null>(null);
   // Seed projects for aannemer demo
   const SEED_PROJECTS: Project[] = [
@@ -926,6 +931,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       lastMoneybirdExport,
       mollieConnected,
       lastMolliePayment,
+      stripeConnected,
+      lastStripePayment,
       priceRisks: buildPriceRiskSignals(quotes, lineItems, extractedDocs),
       ingestPdfHistory: () => {
         setExtractedDocs((prev) => [...prev, ...ingestPdfStub()]);
@@ -2346,6 +2353,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       pendingBudgetExtraction,
       setPendingBudgetExtraction,
       connectMollie: () => setMollieConnected(true),
+      connectStripe: () => setStripeConnected(true),
       createPaymentLink: async (invoiceId, amount) => {
         // Route by contractor country — UK → Stripe (GBP), everyone else → Mollie (EUR).
         // R66 round 8: was silently swallowing failures (`if result.success`
@@ -2360,7 +2368,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           if (!result.success) {
             throw new Error(result.error ?? 'Stripe payment link creation failed');
           }
-          setLastMolliePayment((prev) => ({ ...prev, [invoiceId]: result.paymentId ?? invoiceId }));
+          setLastStripePayment((prev) => ({ ...prev, [invoiceId]: result.paymentId ?? invoiceId }));
           return;
         }
         const result = await createMolliePayment(invoiceId, amount);
@@ -2386,9 +2394,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       metrics,
       moneybirdConnected,
       mollieConnected,
+      stripeConnected,
       quotes,
       lastMoneybirdExport,
       lastMolliePayment,
+      lastStripePayment,
       pendingBudgetExtraction,
       projects,
     ]

@@ -2658,6 +2658,24 @@
     "consentAccept": "Accetta e connetti",
     "pciCompliance": "Tutti i pagamenti sono conformi PCI DSS via Mollie"
   },
+  "stripe": {
+    "title": "Stripe Payments",
+    "subtitle": "Ricevi pagamenti con carta, Apple Pay, Google Pay e altro",
+    "apiKeyLabel": "Chiave segreta",
+    "apiKeyPlaceholder": "sk_live_xxxx o sk_test_xxxx",
+    "apiKeyHint": "Trova la tua chiave segreta in Stripe Dashboard → Developers → API keys",
+    "connecting": "Connessione…",
+    "connected": "Connesso",
+    "connectAndTest": "Connetti e testa",
+    "connectionFailed": "Connessione fallita — controlla la tua chiave segreta",
+    "paymentMethods": "Metodi di pagamento",
+    "invalidKeyTitle": "Chiave non valida",
+    "invalidKeyDesc": "Le chiavi segrete Stripe iniziano con \"sk_live_\" o \"sk_test_\"",
+    "consentTitle": "Consenso richiesto",
+    "consentDesc": "Vasco elabora i dati di pagamento via Stripe. Connettendoti accetti di condividere i dati di fatturazione con Stripe per l'elaborazione dei pagamenti.",
+    "consentAccept": "Accetta e connetti",
+    "pciCompliance": "Tutti i pagamenti sono conformi PCI DSS via Stripe"
+  },
   "quoteNew": {
     "customerAndJob": "Cliente e lavoro",
     "customerName": "Nome cliente",

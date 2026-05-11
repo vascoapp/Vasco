@@ -2664,6 +2664,24 @@
     "consentAccept": "Akkoord & verbinden",
     "pciCompliance": "Alle betalingen zijn PCI DSS-compliant via Mollie"
   },
+  "stripe": {
+    "title": "Stripe Payments",
+    "subtitle": "Ontvang betalingen via creditcard, Apple Pay, Google Pay en meer",
+    "apiKeyLabel": "Secret key",
+    "apiKeyPlaceholder": "sk_live_xxxx of sk_test_xxxx",
+    "apiKeyHint": "Vind je secret key in Stripe Dashboard → Developers → API keys",
+    "connecting": "Verbinden…",
+    "connected": "Verbonden",
+    "connectAndTest": "Verbinden & testen",
+    "connectionFailed": "Verbinding mislukt — controleer je secret key",
+    "paymentMethods": "Betaalmethoden",
+    "invalidKeyTitle": "Ongeldige sleutel",
+    "invalidKeyDesc": "Stripe secret keys beginnen met \"sk_live_\" of \"sk_test_\"",
+    "consentTitle": "Toestemming vereist",
+    "consentDesc": "Vasco verwerkt betalingsgegevens via Stripe. Door te verbinden ga je akkoord met het delen van factuurgegevens met Stripe voor betalingsverwerking.",
+    "consentAccept": "Akkoord & verbinden",
+    "pciCompliance": "Alle betalingen zijn PCI DSS-compliant via Stripe"
+  },
   "quoteNew": {
     "customerAndJob": "Klant & klus",
     "customerName": "Klantnaam",

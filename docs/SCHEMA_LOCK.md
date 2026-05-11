@@ -790,10 +790,6 @@ classify-customer-question
   OUT { ok: boolean, classification?: string, stance?: 'positive'|'neutral'|'negative', error?: string }
   -- Token is required because portal is anon — token authorizes access to the tracker context.
 
-draft-customer-reply
-  IN  { question: string, context?: string, tone?: string }
-  OUT { ok: boolean, options?: ReplyOption[], error?: string }
-
 generate-embedding  (R279)
   IN  { text: string }
   OUT { ok: boolean, embedding?: number[], dimensions?: 1536, provider?: string, error?: string }

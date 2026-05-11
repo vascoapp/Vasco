@@ -13,7 +13,7 @@ Status legend: ✅ done · ⚠️ partial · ❌ not started · ⏸ waiting on u
 - TypeScript: **0 errors**
 - Jest: **596 / 596 passing** across 55 suites
 - Supabase project: `gblhqhorkarocmputhte` (live; **all migrations pushed** as of R284)
-- Edge functions deployed in repo: 22 (analyze-photo, churn-winback-email, classify-customer-question, create-subscription-checkout, daily-push-digest, draft-customer-reply, drain-account-deletions, embed-text, generate-embedding, grant-referral-credits, mollie-webhook, place-supplier-order, predict-duration, predict-price, send-invoice, send-push, sign-quote-token, stripe-webhook, train-extra-models, verify-quote-token, weekly-digest, weekly-retrain-models)
+- Edge functions deployed in repo: 21 (analyze-photo, churn-winback-email, classify-customer-question, create-subscription-checkout, daily-push-digest, drain-account-deletions, embed-text, generate-embedding, grant-referral-credits, mollie-webhook, place-supplier-order, predict-duration, predict-price, send-invoice, send-push, sign-quote-token, stripe-webhook, train-extra-models, verify-quote-token, weekly-digest, weekly-retrain-models) — `draft-customer-reply` removed in R66r54 after its FE wrapper was deleted in R66r52
 - Cron jobs: **0 registered** in production as of R293. `supabase/cron.sql` documents 9 schedules but pg_cron extension wasn't installed. Migration `20260502000002_enable_pg_cron.sql` (R293) enables it; cron.sql still needs a manual one-time run with real `SUPABASE_URL` + service-role JWT to register the 9 schedules.
 
 ---

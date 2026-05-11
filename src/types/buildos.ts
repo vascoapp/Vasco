@@ -1,6 +1,14 @@
 // BuildOS Europe - Core Type Definitions
 // Canonical schema: project → parcels → permits → contracts → budget → commitments → invoices → schedule → risks
 
+// NOTE: This Country type is intentionally narrower than the EU6 type in
+// AuthContext.tsx. The BuildOS module (enterprise CFO/COO dashboards,
+// property-development workflow) only ships permit clocks, transfer-tax
+// formulas, and compliance requirements for UK/NL/DE — see
+// src/modules/countryModules.ts (PERMIT_CLOCKS, calculateTransferTax,
+// COMPLIANCE_REQUIREMENTS). Do NOT widen without adding FR/ES/IT data
+// to all three of those — the switch exhaustiveness check will silently
+// break otherwise. The trades-contractor side uses the full EU6 type.
 export type Country = 'UK' | 'NL' | 'DE';
 
 export type Currency = 'GBP' | 'EUR';

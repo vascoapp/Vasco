@@ -8,8 +8,12 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
 const VERSION_CONFIG_KEY = '@vasco_version_config';
+const VERSION_CONFIG_FETCH_TS_KEY = '@vasco_version_config_fetched_at';
+// Throttle remote fetches to once per 6h. Cached value falls through.
+const REMOTE_FETCH_THROTTLE_MS = 6 * 60 * 60 * 1000;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -85,22 +89,63 @@ async function saveVersionConfig(config: VersionConfig): Promise<void> {
 // Remote fetch (Supabase app_config table)
 // ---------------------------------------------------------------------------
 
-async function fetchRemoteConfig(): Promise<VersionConfig | null> {
-  // TODO: When Supabase is active, fetch from app_config table:
-  //
-  // const { data } = await supabase
-  //   .from('app_config')
-  //   .select('value')
-  //   .eq('key', 'version_config')
-  //   .single();
-  //
-  // if (data?.value) {
-  //   const config = JSON.parse(data.value) as VersionConfig;
-  //   await saveVersionConfig(config);
-  //   return config;
-  // }
+function isVersionConfig(value: unknown): value is VersionConfig {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.minimumVersion === 'string' &&
+    typeof v.latestVersion === 'string' &&
+    typeof v.updateUrl === 'string' &&
+    typeof v.forceUpdateBelow === 'string'
+  );
+}
 
-  return null;
+async function shouldFetchRemote(): Promise<boolean> {
+  try {
+    const raw = await AsyncStorage.getItem(VERSION_CONFIG_FETCH_TS_KEY);
+    if (!raw) return true;
+    const ts = Number(raw);
+    if (!Number.isFinite(ts)) return true;
+    return Date.now() - ts > REMOTE_FETCH_THROTTLE_MS;
+  } catch {
+    return true;
+  }
+}
+
+async function fetchRemoteConfig(): Promise<VersionConfig | null> {
+  // Supabase not wired (dev / demo without env) — stay on cached/default.
+  if (!isSupabaseConfigured) return null;
+
+  // Throttle: avoid hitting Supabase on every cold start. checkForUpdate
+  // already falls back to the cached config when this returns null.
+  if (!(await shouldFetchRemote())) return null;
+
+  try {
+    // typegen drift: app_config landed in migration 20260511000001, not yet
+    // in the generated database.types until `supabase gen types` re-runs.
+    // Same `as any` pattern as feature_flags / cron / decision_aggregates.
+    const { data, error } = await (supabase.from('app_config' as any) as any)
+      .select('value')
+      .eq('key', 'version_config')
+      .maybeSingle();
+
+    // Record the attempt (success OR transient error) so we don't hammer
+    // Supabase if it's down. Real network failures fall through to cache.
+    await AsyncStorage.setItem(VERSION_CONFIG_FETCH_TS_KEY, String(Date.now())).catch(() => {});
+
+    if (error || !data?.value) return null;
+
+    // Migration seeds value as jsonb (object); old admin paths may have
+    // stored a JSON string — handle both.
+    const raw = data.value;
+    const parsed: unknown = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    if (!isVersionConfig(parsed)) return null;
+
+    await saveVersionConfig(parsed);
+    return parsed;
+  } catch {
+    return null;
+  }
 }
 
 // ---------------------------------------------------------------------------

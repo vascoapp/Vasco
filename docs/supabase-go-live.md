@@ -51,7 +51,6 @@ supabase functions deploy churn-winback-email
 supabase functions deploy classify-customer-question
 supabase functions deploy create-subscription-checkout
 supabase functions deploy daily-push-digest
-supabase functions deploy draft-customer-reply
 supabase functions deploy drain-account-deletions
 supabase functions deploy grant-referral-credits
 supabase functions deploy mollie-webhook --no-verify-jwt
