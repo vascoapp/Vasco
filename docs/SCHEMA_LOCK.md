@@ -1,6 +1,6 @@
 # SCHEMA LOCK — VascoApp BE↔FE Contract
 
-**Version:** 1.5 — updated 2026-05-02 (R279)
+**Version:** 1.6 — updated 2026-05-11 (R66r54-r57)
 **Owner:** changes require explicit version bump + sign-off from BE + FE leads
 **Scope:** the contract between mobile app (`src/`, `app/`) and Supabase (`supabase/`). Anything below is locked unless this doc is updated.
 
@@ -254,6 +254,35 @@ status          text NOT NULL default 'pending' check (pending|processing|done|c
 processed_at    timestamptz
 processor_notes text
 ```
+
+### `signatures` (R66r55, migration 20260511000003)
+PK: `id`. Append-only — no UPDATE/DELETE policies. Server-stamps `signed_at`.
+```
+id                   uuid PK default gen_random_uuid()
+job_id               uuid NULL FK→jobs(id) ON DELETE CASCADE
+quote_id             uuid NULL FK→documents(id) ON DELETE SET NULL
+invoice_id           uuid NULL FK→documents(id) ON DELETE SET NULL
+contractor_user_id   uuid NOT NULL FK→auth.users(id) ON DELETE CASCADE
+signer_name          text NOT NULL
+signer_role          text NOT NULL default 'customer' check (customer|site_lead|inspector|subcontractor|other)
+signature_svg        text NOT NULL
+user_agent           text
+ip_hash              text   -- daily-rotating-salt sha256(inet_client_addr() || YYYY-MM-DD)
+signed_at            timestamptz NOT NULL default now()
+created_at           timestamptz NOT NULL default now()
+```
+RLS: SELECT/INSERT scoped to `auth.uid() = contractor_user_id`. Customer (anon)
+inserts go through `write_signature_via_portal(...)` SECURITY DEFINER RPC.
+
+### `app_config` (R66r54, migration 20260511000001)
+PK: `key`. Public-read, service-write. Operator-managed config.
+```
+key         text PK
+value       jsonb NOT NULL
+description text
+updated_at  timestamptz NOT NULL default now()  -- trigger-maintained
+```
+Seeded keys: `version_config` (`{minimumVersion, latestVersion, updateUrl, forceUpdateBelow}`).
 
 ### `eve_telemetry`
 PK: `id` (text — non-uuid for external correlation)
@@ -744,6 +773,22 @@ describe_moat_schema()
 write_training_pair(...) → uuid  -- service_role only
 refresh_intelligence_aggregates() → void  -- service_role only
 refresh_generator_approval_rates() → void  -- service_role only
+
+-- R66r55
+write_signature_via_portal(
+  p_access_code text, p_signer_name text, p_signer_role text,
+  p_signature_svg text, p_user_agent text
+) → uuid  -- SECURITY DEFINER. Validates p_access_code against decision_trackers
+   (R31 capability-URL pattern), resolves contractor_user_id + job_id from the
+   tracker, derives ip_hash server-side from inet_client_addr() with daily
+   salt. Raises 'invalid_or_expired_access_code' or 'invalid_signer_role' on
+   bad input. Returns the new signatures.id.
+
+get_cron_health()  -- SECURITY DEFINER
+  → [{ jobname text, schedule text, active boolean, last_status text,
+       last_start timestamptz, last_end timestamptz, last_runs bigint }]
+  -- Filters cron.job to `jobname LIKE 'vasco-%'`. Read by the admin
+  -- DeveloperHub Cron tab. Returns no payloads / service-role JWTs.
 ```
 
 **K-anonymity invariant:** every cohort RPC returns `null`/empty when `contractor_count < 5` or `sample_size < 20`. FE must handle null gracefully.
@@ -846,6 +891,12 @@ train-extra-models  (cron, service_role)
 ---
 
 ## CHANGELOG
+
+- **1.6 (2026-05-11)** — Rounds R66r54–r57 — production hardening + audit-trail:
+  - **R66r54** new table `public.app_config` (public-read, service-write, jsonb value, key='version_config' seeded). `versionCheckService.fetchRemoteConfig` now real (6h-throttled). Migration `20260511000001_app_config.sql`. Edge fn `draft-customer-reply` deleted (FE wrapper gone in R66r52).
+  - **R66r55** new table `public.signatures` (append-only audit trail with server-stamped `signed_at`, FK to jobs/documents, `signer_role` enum). RLS scoped to contractor; anonymous-customer writes via new RPC `write_signature_via_portal(p_access_code, p_signer_name, p_signer_role, p_signature_svg, p_user_agent)` (SECURITY DEFINER). New RPC `get_cron_health()` reads cron.job + cron.job_run_details for `vasco-*` schedules — admin DeveloperHub Cron tab. Migrations `20260511000002_cron_health_rpc.sql` + `20260511000003_signatures.sql`. pgcrypto extension required (digest()).
+  - **R66r56** `write_signature_via_portal` signature simplified from 6→5 params: `p_ip_hash` removed (clients can't introspect their own IP), now server-derived via `digest(inet_client_addr() || YYYY-MM-DD-salt, sha256)`. Migration `20260511000003` updated in-place (still pre-deploy). Customer portal wired to call the RPC.
+  - **R66r57** `signatures` realtime watcher added (FE-only, no schema change). `validateConnection()` in `stripe.ts` (new FE helper, hits `/v1/balance`). No new tables/RPCs.
 
 - **1.5 (2026-05-02)** — Round 5 (R279) — semantic search activation:
   - New edge fn `generate-embedding` deployed (read-only twin of embed-text). Removes one of three phantom-caller entries; `semanticSearch.ts:50` is now backed by a real fn.

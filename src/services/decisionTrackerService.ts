@@ -197,14 +197,31 @@ export async function createTrackerWithBE(input: CreateTrackerInput): Promise<Cr
 
 // ---------------------------------------------------------------------------
 // Customer-side portal lookup — BE-primary via the SECURITY DEFINER RPC.
-// Returns null if the access code is invalid/expired or BE unreachable;
-// callers fall back to the mock data only when DEMO_MODE is enabled.
+// Returns one of three states:
+//   - { kind: 'ok', data }       → real portal payload
+//   - { kind: 'expired' }        → access code exists but past expires_at
+//   - { kind: 'not_found' }      → access code unknown or BE unreachable
+// Callers fall back to mock data only when DEMO_MODE is enabled AND
+// kind is 'not_found'.
 // ---------------------------------------------------------------------------
 
-export async function fetchPortalByAccessCode(accessCode: string): Promise<CustomerPortalData | null> {
+export type PortalLookupResult =
+  | { kind: 'ok'; data: CustomerPortalData }
+  | { kind: 'expired' }
+  | { kind: 'not_found' };
+
+export async function fetchPortalByAccessCode(accessCode: string): Promise<PortalLookupResult> {
   const raw = await getPortalByAccessCode(accessCode);
-  if (!raw || typeof raw !== 'object') return null;
-  return mapRpcResponseToPortalData(raw as Record<string, unknown>);
+  if (!raw || typeof raw !== 'object') return { kind: 'not_found' };
+
+  // R66r58: RPC now returns `{expired: true}` when the row exists but is
+  // past its expires_at (or status='expired'). Discriminate before
+  // trying to map — the expired payload has no accessToken/categories.
+  if ((raw as Record<string, unknown>).expired === true) {
+    return { kind: 'expired' };
+  }
+
+  return { kind: 'ok', data: mapRpcResponseToPortalData(raw as Record<string, unknown>) };
 }
 
 function mapRpcResponseToPortalData(raw: Record<string, unknown>): CustomerPortalData {

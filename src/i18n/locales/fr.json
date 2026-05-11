@@ -2053,6 +2053,7 @@
     "codeInvalidOrExpired": "Le code est invalide ou expiré. Demandez un nouveau code à votre artisan.",
     "rateLimited": "Trop de tentatives. Réessayez dans une minute.",
     "projectNotFound": "Projet introuvable. Vérifiez le code et réessayez.",
+    "linkExpired": "Ce lien a expiré. Veuillez demander un nouveau lien à votre artisan.",
     "regional": {
       "title": "Ce que les autres dans votre région ont choisi",
       "basedOn": "Basé sur {{count}} décisions similaires"

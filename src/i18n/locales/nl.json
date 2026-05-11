@@ -2053,6 +2053,7 @@
     "codeInvalidOrExpired": "Code is ongeldig of verlopen. Vraag uw aannemer om een nieuwe code.",
     "rateLimited": "Te veel pogingen. Probeer het over een minuut opnieuw.",
     "projectNotFound": "Project niet gevonden. Controleer de code en probeer opnieuw.",
+    "linkExpired": "Deze link is verlopen. Vraag uw aannemer om een nieuwe.",
     "regional": {
       "title": "Wat anderen in jouw regio kozen",
       "basedOn": "Gebaseerd op {{count}} vergelijkbare keuzes"

@@ -2053,6 +2053,7 @@
     "codeInvalidOrExpired": "Code is invalid or expired. Ask your contractor for a new one.",
     "rateLimited": "Too many attempts. Try again in a minute.",
     "projectNotFound": "Project not found. Check the code and try again.",
+    "linkExpired": "This link has expired. Please ask your contractor for a new one.",
     "regional": {
       "title": "What others in your area chose",
       "basedOn": "Based on {{count}} similar decisions"

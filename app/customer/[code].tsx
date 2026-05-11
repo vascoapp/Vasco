@@ -117,8 +117,19 @@ export default function CustomerPortalScreen() {
     // this hit `validateMockAccessCode` which always returned false in
     // non-DEMO mode — the entire customer portal flow was dead in prod.
     // Mock now serves only the DEMO_MODE 'VDB24A' fallback.
-    let data = await fetchPortalByAccessCode(accessCode);
-    if (!data && DEMO_MODE && validateMockAccessCode(accessCode)) {
+    // R66r58: RPC + service now return a discriminated union so we can
+    // distinguish "expired link" from "unknown code" — was one generic
+    // error before, leaving customers with a stale link unsure whether
+    // to retype or ask for a new one.
+    const result = await fetchPortalByAccessCode(accessCode);
+    let data: CustomerPortalData | null = null;
+    if (result.kind === 'ok') {
+      data = result.data;
+    } else if (result.kind === 'expired') {
+      setError(t('customerPortal.linkExpired', 'This link has expired. Please ask your contractor for a new one.'));
+      setIsLoading(false);
+      return;
+    } else if (DEMO_MODE && validateMockAccessCode(accessCode)) {
       data = getMockPortalByAccessCode(accessCode);
     }
     if (data) {

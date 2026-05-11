@@ -2053,6 +2053,7 @@
     "codeInvalidOrExpired": "El código no es válido o ha caducado. Pídele un código nuevo a tu contratista.",
     "rateLimited": "Demasiados intentos. Inténtalo de nuevo en un minuto.",
     "projectNotFound": "Proyecto no encontrado. Comprueba el código e inténtalo de nuevo.",
+    "linkExpired": "Este enlace ha caducado. Pide a tu contratista uno nuevo.",
     "regional": {
       "title": "Lo que otros en tu zona eligieron",
       "basedOn": "Basado en {{count}} decisiones similares"
