@@ -139,6 +139,16 @@ export interface DeployStatus {
   lastIncident: string;
 }
 
+export interface CronJobHealth {
+  jobName: string;
+  schedule: string;
+  active: boolean;
+  lastStatus: "succeeded" | "failed" | "running" | null;
+  lastStart: string | null;
+  lastEnd: string | null;
+  totalRuns: number;
+}
+
 export interface DeveloperHubData {
   bugs: BugReport[];
   latency: LatencyMetric[];
@@ -148,6 +158,8 @@ export interface DeveloperHubData {
   avgResponseTime: number;
   totalApiCalls24h: number;
   uptimePercent: number;
+  cron: CronJobHealth[];
+  cronExpected: number; // number of vasco-* schedules that should be registered
 }
 
 // ─── Monetization Metrics ───────────────────────────────────────────────────
@@ -676,6 +688,21 @@ function getDemoDeveloperHubData(): DeveloperHubData {
     { version: "2.5.0-dev.47", environment: "development", deployedAt: "2026-03-28T11:02:00Z", status: "healthy", uptime: 98.2, lastIncident: "2026-03-28T06:30:00Z" },
   ];
 
+  // Demo cron data — production fills via get_cron_health() RPC. Mirrors
+  // the 10 schedules in supabase/cron.sql with sensible "all healthy" defaults.
+  const cron: CronJobHealth[] = [
+    { jobName: "vasco-weekly-digest", schedule: "0 8 * * 1", active: true, lastStatus: "succeeded", lastStart: "2026-03-24T08:00:01Z", lastEnd: "2026-03-24T08:00:09Z", totalRuns: 12 },
+    { jobName: "vasco-stale-draft-cleanup", schedule: "0 3 * * *", active: true, lastStatus: "succeeded", lastStart: "2026-03-28T03:00:00Z", lastEnd: "2026-03-28T03:00:03Z", totalRuns: 87 },
+    { jobName: "vasco-daily-push-digest", schedule: "0 17 * * *", active: true, lastStatus: "succeeded", lastStart: "2026-03-27T17:00:01Z", lastEnd: "2026-03-27T17:00:05Z", totalRuns: 87 },
+    { jobName: "vasco-train-extra-models", schedule: "0 4 * * 0", active: true, lastStatus: "succeeded", lastStart: "2026-03-23T04:00:01Z", lastEnd: "2026-03-23T04:08:22Z", totalRuns: 12 },
+    { jobName: "vasco-weekly-retrain-models", schedule: "0 5 * * 0", active: true, lastStatus: "succeeded", lastStart: "2026-03-23T05:00:01Z", lastEnd: "2026-03-23T05:12:14Z", totalRuns: 12 },
+    { jobName: "vasco-grant-referral-credits", schedule: "0 2 * * *", active: true, lastStatus: "succeeded", lastStart: "2026-03-28T02:00:00Z", lastEnd: "2026-03-28T02:00:04Z", totalRuns: 87 },
+    { jobName: "vasco-churn-winback", schedule: "0 9 * * 1", active: true, lastStatus: "succeeded", lastStart: "2026-03-24T09:00:01Z", lastEnd: "2026-03-24T09:00:11Z", totalRuns: 12 },
+    { jobName: "vasco-drain-account-deletions", schedule: "0 1 * * *", active: true, lastStatus: "succeeded", lastStart: "2026-03-28T01:00:00Z", lastEnd: "2026-03-28T01:00:02Z", totalRuns: 87 },
+    { jobName: "vasco-ml-health-check", schedule: "0 6 * * *", active: true, lastStatus: "succeeded", lastStart: "2026-03-28T06:00:00Z", lastEnd: "2026-03-28T06:00:03Z", totalRuns: 87 },
+    { jobName: "vasco-embedding-refresh", schedule: "0 4 * * *", active: true, lastStatus: "succeeded", lastStart: "2026-03-28T04:00:00Z", lastEnd: "2026-03-28T04:01:42Z", totalRuns: 87 },
+  ];
+
   return {
     bugs,
     latency,
@@ -685,6 +712,8 @@ function getDemoDeveloperHubData(): DeveloperHubData {
     avgResponseTime: 186,
     totalApiCalls24h: 847200,
     uptimePercent: 99.94,
+    cron,
+    cronExpected: 10,
   };
 }
 
@@ -856,8 +885,40 @@ export async function fetchKPIDashboardData(days: number = 30): Promise<KPIDashb
 }
 
 export async function fetchDeveloperHubData(): Promise<DeveloperHubData> {
-  if (!isSupabaseConfigured()) return getDemoDeveloperHubData();
-  return getDemoDeveloperHubData();
+  const demo = getDemoDeveloperHubData();
+  if (!isSupabaseConfigured()) return demo;
+
+  // Overlay real cron health onto the demo scaffold. Bugs/latency/
+  // suggestions/deploys are still demo-fed until those backing tables ship.
+  try {
+    const supabase = getSupabase();
+    if (!supabase) return { ...demo, cron: [], cronExpected: 10 };
+    const { data, error } = await supabase.rpc('get_cron_health' as never);
+    if (error || !Array.isArray(data)) {
+      return { ...demo, cron: [], cronExpected: 10 };
+    }
+    type RpcRow = {
+      jobname: string;
+      schedule: string;
+      active: boolean;
+      last_status: string | null;
+      last_start: string | null;
+      last_end: string | null;
+      last_runs: number | string;
+    };
+    const cron: CronJobHealth[] = (data as RpcRow[]).map((row) => ({
+      jobName: row.jobname,
+      schedule: row.schedule,
+      active: row.active,
+      lastStatus: (row.last_status as CronJobHealth['lastStatus']) ?? null,
+      lastStart: row.last_start,
+      lastEnd: row.last_end,
+      totalRuns: typeof row.last_runs === 'string' ? parseInt(row.last_runs, 10) : row.last_runs,
+    }));
+    return { ...demo, cron, cronExpected: 10 };
+  } catch {
+    return { ...demo, cron: [], cronExpected: 10 };
+  }
 }
 
 export async function fetchUGCDashboardData(days: number = 30): Promise<UGCDashboardData> {

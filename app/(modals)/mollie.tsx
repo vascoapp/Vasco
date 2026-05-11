@@ -22,7 +22,7 @@ function feeDisclosureForLocale(): string {
 }
 
 export default function MollieConnectModal() {
-  const { connectMollie, mollieConnected } = useAppState();
+  const { connectMollie, disconnectMollie, mollieConnected } = useAppState();
   const { user } = useAuth();
   const { t } = useTranslation();
   const [apiKey, setApiKey] = useState('');
@@ -63,6 +63,25 @@ export default function MollieConnectModal() {
     }
 
     performConnection();
+  };
+
+  const handleDisconnect = () => {
+    Alert.alert(
+      t('mollie.disconnectConfirmTitle', 'Disconnect Mollie?'),
+      t('mollie.disconnectConfirmDesc', 'Your API key will be removed from this device. Existing payment links continue to work, but you won’t be able to create new ones until you reconnect.'),
+      [
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+        {
+          text: t('mollie.disconnect', 'Disconnect'),
+          style: 'destructive',
+          onPress: async () => {
+            await disconnectMollie();
+            setApiKey('');
+            setTestResult(null);
+          },
+        },
+      ],
+    );
   };
 
   const performConnection = async () => {
@@ -150,6 +169,13 @@ export default function MollieConnectModal() {
           <Text style={styles.errorText}>{t('mollie.connectionFailed', 'Connection failed — check your API key')}</Text>
         )}
 
+        {mollieConnected && (
+          <Pressable style={styles.disconnectBtn} onPress={handleDisconnect}>
+            <Ionicons name="log-out-outline" size={16} color={SemanticColors.feedbackError} />
+            <Text style={styles.disconnectBtnText}>{t('mollie.disconnect', 'Disconnect')}</Text>
+          </Pressable>
+        )}
+
         {/* Payment Methods */}
         <View style={styles.methodsSection}>
           <Text style={styles.label}>{t('mollie.paymentMethods', 'Payment methods')}</Text>
@@ -221,6 +247,13 @@ const styles = StyleSheet.create({
   },
   connectedBtn: { backgroundColor: SemanticColors.feedbackSuccess + '15' },
   connectBtnText: { fontSize: 16, fontFamily: 'Inter_600SemiBold', color: '#fff' },
+  disconnectBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    backgroundColor: 'transparent', borderWidth: 1,
+    borderColor: SemanticColors.feedbackError + '40',
+    borderRadius: 10, paddingVertical: 10, marginTop: -4,
+  },
+  disconnectBtnText: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: SemanticColors.feedbackError },
   errorText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: SemanticColors.feedbackError, textAlign: 'center' },
   methodsSection: { gap: 10 },
   methodsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

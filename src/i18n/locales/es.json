@@ -2656,7 +2656,10 @@
     "consentTitle": "Consentimiento necesario",
     "consentDesc": "Vasco procesa datos de pago vía Mollie. Al conectar aceptas compartir datos de facturación con Mollie para el procesamiento de pagos.",
     "consentAccept": "Aceptar y conectar",
-    "pciCompliance": "Todos los pagos cumplen PCI DSS vía Mollie"
+    "pciCompliance": "Todos los pagos cumplen PCI DSS vía Mollie",
+    "disconnect": "Desconectar",
+    "disconnectConfirmTitle": "¿Desconectar Mollie?",
+    "disconnectConfirmDesc": "Tu clave API se eliminará de este dispositivo. Los enlaces de pago existentes seguirán funcionando, pero no podrás crear nuevos hasta que te vuelvas a conectar."
   },
   "stripe": {
     "title": "Stripe Payments",
@@ -2674,7 +2677,10 @@
     "consentTitle": "Consentimiento necesario",
     "consentDesc": "Vasco procesa datos de pago vía Stripe. Al conectar aceptas compartir datos de facturación con Stripe para el procesamiento de pagos.",
     "consentAccept": "Aceptar y conectar",
-    "pciCompliance": "Todos los pagos cumplen PCI DSS vía Stripe"
+    "pciCompliance": "Todos los pagos cumplen PCI DSS vía Stripe",
+    "disconnect": "Desconectar",
+    "disconnectConfirmTitle": "¿Desconectar Stripe?",
+    "disconnectConfirmDesc": "Tu clave secreta se eliminará de este dispositivo. Los enlaces de pago existentes seguirán funcionando, pero no podrás crear nuevos hasta que te vuelvas a conectar."
   },
   "quoteNew": {
     "customerAndJob": "Cliente y trabajo",

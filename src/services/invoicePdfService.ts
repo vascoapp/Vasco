@@ -491,6 +491,7 @@ export async function generateInvoicePdf(
       svgDataUri: string;
       signedAt: string;
       signerName: string;
+      language?: string;
     };
   },
 ): Promise<void> {
@@ -511,19 +512,18 @@ export async function generateInvoicePdf(
 
   // R301: embed signature when customer signed off on the linked job.
   // Inserted before the closing </body> tag so it appears at the end of
-  // the document, after totals.
+  // the document, after totals. R66r55: shape updated to match the new
+  // signatureHtmlBlock signature (takes signatureSvg directly, no
+  // SignatureRecord wrapping). Legal text now resolved from the
+  // 'handover' context in the contractor's language.
   if (options?.customerSignature) {
-    const { signatureHtmlBlock } = await import('./signatureService');
+    const { signatureHtmlBlock, getLegalText } = await import('./signatureService');
     const block = signatureHtmlBlock({
-      id: `sig_${Date.now()}`,
-      context: 'handover',
-      referenceId: invoice.id,
-      referenceType: 'invoice',
+      signatureSvg: options.customerSignature.svgDataUri,
       signerName: options.customerSignature.signerName,
       signerRole: 'customer',
-      signatureDataUri: options.customerSignature.svgDataUri,
       signedAt: options.customerSignature.signedAt,
-      legalText: '',
+      legalText: getLegalText('handover', options.customerSignature.language ?? 'en'),
     });
     html = html.replace('</body>', `${block}</body>`);
   }
@@ -566,7 +566,7 @@ export async function buildInvoicePdfBase64(
   paymentUrl?: string,
   options?: {
     showPoweredBy?: boolean;
-    customerSignature?: { svgDataUri: string; signedAt: string; signerName: string };
+    customerSignature?: { svgDataUri: string; signedAt: string; signerName: string; language?: string };
   },
 ): Promise<string | null> {
   try {
@@ -585,17 +585,13 @@ export async function buildInvoicePdfBase64(
       businessProfile?.vatScheme,
     );
     if (options?.customerSignature) {
-      const { signatureHtmlBlock } = await import('./signatureService');
+      const { signatureHtmlBlock, getLegalText } = await import('./signatureService');
       const block = signatureHtmlBlock({
-        id: `sig_${Date.now()}`,
-        context: 'handover',
-        referenceId: invoice.id,
-        referenceType: 'invoice',
+        signatureSvg: options.customerSignature.svgDataUri,
         signerName: options.customerSignature.signerName,
         signerRole: 'customer',
-        signatureDataUri: options.customerSignature.svgDataUri,
         signedAt: options.customerSignature.signedAt,
-        legalText: '',
+        legalText: getLegalText('handover', options.customerSignature.language ?? 'en'),
       });
       html = html.replace('</body>', `${block}</body>`);
     }

@@ -94,6 +94,22 @@ export interface MolliePaymentRequest {
 // ---------------------------------------------------------------------------
 
 let migrated = false;
+
+// R66r55: on userChange (login/logout) wipe SecureStore + reset the
+// migration latch — mirrors stripe.ts. Stops a previous contractor's
+// Mollie API key from leaking into the next signed-in user's session.
+import { registerSingletonReset } from '../services/singletonReset';
+let resetRegistered = false;
+function ensureResetRegistered(): void {
+  if (resetRegistered) return;
+  resetRegistered = true;
+  registerSingletonReset(() => {
+    migrated = false;
+    void deleteSecureItem(STORAGE_KEY).catch(() => {});
+  });
+}
+ensureResetRegistered();
+
 async function getConfig(): Promise<MollieConfig | null> {
   try {
     // One-time migration from AsyncStorage to SecureStore

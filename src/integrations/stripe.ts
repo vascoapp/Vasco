@@ -89,6 +89,23 @@ export interface StripePaymentRequest {
 // ---------------------------------------------------------------------------
 
 let migrated = false;
+
+// R66r55: on userChange (login/logout) wipe SecureStore + reset the
+// one-time-migration latch so a new user's first read can't accidentally
+// inherit the previous user's stripe key. Fire-and-forget — failures
+// can't break the parent sign-out flow.
+import { registerSingletonReset } from '../services/singletonReset';
+let resetRegistered = false;
+function ensureResetRegistered(): void {
+  if (resetRegistered) return;
+  resetRegistered = true;
+  registerSingletonReset(() => {
+    migrated = false;
+    void deleteSecureItem(STORAGE_KEY).catch(() => {});
+  });
+}
+ensureResetRegistered();
+
 async function getConfig(): Promise<StripeConfig | null> {
   try {
     // One-time migration from AsyncStorage to SecureStore

@@ -1055,6 +1055,19 @@ export default function JobDetailPage() {
                 try {
                   // R301: now properly typed — columns exist on BE jobs schema
                   updateJob(job.id, { customerSignoffAt: new Date().toISOString(), signatureSvg: svg });
+                  // R66r55: also write a row to the signatures audit-trail
+                  // table. Async + fire-and-forget — the job-row write is
+                  // still the displayed signature, this is the immutable
+                  // legal record (server-stamped signed_at, signer name,
+                  // device user-agent). Failure here doesn't block the UI.
+                  import('../../../src/services/signatureService').then(({ recordContractorSignature }) =>
+                    recordContractorSignature({
+                      jobId: job.id,
+                      signerName: contact.name || 'Customer',
+                      signerRole: 'customer',
+                      signatureSvg: svg,
+                    }).catch(() => {}),
+                  ).catch(() => {});
                 } catch {}
                 const cb = signatureModal.onSigned;
                 setSignatureModal({ visible: false });

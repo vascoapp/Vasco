@@ -2662,7 +2662,10 @@
     "consentTitle": "Toestemming vereist",
     "consentDesc": "Vasco verwerkt betalingsgegevens via Mollie. Door te verbinden ga je akkoord met het delen van factuurgegevens met Mollie voor betalingsverwerking.",
     "consentAccept": "Akkoord & verbinden",
-    "pciCompliance": "Alle betalingen zijn PCI DSS-compliant via Mollie"
+    "pciCompliance": "Alle betalingen zijn PCI DSS-compliant via Mollie",
+    "disconnect": "Loskoppelen",
+    "disconnectConfirmTitle": "Mollie loskoppelen?",
+    "disconnectConfirmDesc": "Je API-sleutel wordt van dit apparaat verwijderd. Bestaande betaallinks blijven werken, maar je kunt geen nieuwe aanmaken totdat je opnieuw verbindt."
   },
   "stripe": {
     "title": "Stripe Payments",
@@ -2680,7 +2683,10 @@
     "consentTitle": "Toestemming vereist",
     "consentDesc": "Vasco verwerkt betalingsgegevens via Stripe. Door te verbinden ga je akkoord met het delen van factuurgegevens met Stripe voor betalingsverwerking.",
     "consentAccept": "Akkoord & verbinden",
-    "pciCompliance": "Alle betalingen zijn PCI DSS-compliant via Stripe"
+    "pciCompliance": "Alle betalingen zijn PCI DSS-compliant via Stripe",
+    "disconnect": "Loskoppelen",
+    "disconnectConfirmTitle": "Stripe loskoppelen?",
+    "disconnectConfirmDesc": "Je secret key wordt van dit apparaat verwijderd. Bestaande betaallinks blijven werken, maar je kunt geen nieuwe aanmaken totdat je opnieuw verbindt."
   },
   "quoteNew": {
     "customerAndJob": "Klant & klus",

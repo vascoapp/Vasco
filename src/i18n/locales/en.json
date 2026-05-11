@@ -2656,7 +2656,10 @@
     "consentTitle": "Consent required",
     "consentDesc": "Vasco processes payment data via Mollie. By connecting you agree to share invoice data with Mollie for payment processing.",
     "consentAccept": "Agree & connect",
-    "pciCompliance": "All payments are PCI DSS compliant via Mollie"
+    "pciCompliance": "All payments are PCI DSS compliant via Mollie",
+    "disconnect": "Disconnect",
+    "disconnectConfirmTitle": "Disconnect Mollie?",
+    "disconnectConfirmDesc": "Your API key will be removed from this device. Existing payment links continue to work, but you won’t be able to create new ones until you reconnect."
   },
   "stripe": {
     "title": "Stripe Payments",
@@ -2674,7 +2677,10 @@
     "consentTitle": "Consent required",
     "consentDesc": "Vasco processes payment data via Stripe. By connecting you agree to share invoice data with Stripe for payment processing.",
     "consentAccept": "Agree & connect",
-    "pciCompliance": "All payments are PCI DSS compliant via Stripe"
+    "pciCompliance": "All payments are PCI DSS compliant via Stripe",
+    "disconnect": "Disconnect",
+    "disconnectConfirmTitle": "Disconnect Stripe?",
+    "disconnectConfirmDesc": "Your secret key will be removed from this device. Existing payment links continue to work, but you won’t be able to create new ones until you reconnect."
   },
   "quoteNew": {
     "customerAndJob": "Customer & job",

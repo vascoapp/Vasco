@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchDeveloperHubData, type DeveloperHubData, type BugReport, type LatencyMetric, type UserSuggestion, type DeployStatus } from "@/lib/kpi";
+import { fetchDeveloperHubData, type DeveloperHubData, type BugReport, type LatencyMetric, type UserSuggestion, type DeployStatus, type CronJobHealth } from "@/lib/kpi";
 
 function StatCard({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color?: string }) {
   return (
@@ -42,7 +42,13 @@ const DEPLOY_STATUS_COLORS: Record<DeployStatus["status"], string> = {
   down: "bg-red-100 text-red-700",
 };
 
-type DevView = "overview" | "bugs" | "latency" | "suggestions" | "deploys";
+type DevView = "overview" | "bugs" | "latency" | "suggestions" | "deploys" | "cron";
+
+const CRON_STATUS_COLORS: Record<NonNullable<CronJobHealth["lastStatus"]>, string> = {
+  succeeded: "bg-emerald-100 text-emerald-700",
+  failed: "bg-red-100 text-red-700",
+  running: "bg-blue-100 text-blue-700",
+};
 
 export function DeveloperHub() {
   const [data, setData] = useState<DeveloperHubData | null>(null);
@@ -71,12 +77,17 @@ export function DeveloperHub() {
     suggestionSort === "votes" ? b.votes - a.votes : b.submittedAt.localeCompare(a.submittedAt)
   );
 
+  const cronMissing = Math.max(0, data.cronExpected - data.cron.length);
+  const cronFailed = data.cron.filter((c) => c.lastStatus === "failed").length;
+  const cronUnhealthy = cronMissing + cronFailed;
+
   const views: { id: DevView; label: string }[] = [
     { id: "overview", label: "Overview" },
     { id: "bugs", label: `Bugs (${openBugs.length})` },
     { id: "latency", label: "Latency" },
     { id: "suggestions", label: `Suggestions (${data.suggestions.length})` },
     { id: "deploys", label: "Deploys" },
+    { id: "cron", label: cronUnhealthy > 0 ? `Cron (${cronUnhealthy}⚠)` : "Cron" },
   ];
 
   return (
@@ -386,6 +397,76 @@ export function DeveloperHub() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* CRON */}
+      {view === "cron" && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <StatCard
+              label="Schedules registered"
+              value={`${data.cron.length} / ${data.cronExpected}`}
+              color={data.cron.length === data.cronExpected ? "text-emerald-600" : "text-red-500"}
+              sub={data.cron.length < data.cronExpected ? `${data.cronExpected - data.cron.length} missing — run supabase/cron.sql` : "all registered"}
+            />
+            <StatCard
+              label="Active"
+              value={data.cron.filter((c) => c.active).length}
+              color="text-emerald-600"
+              sub={data.cron.length - data.cron.filter((c) => c.active).length > 0 ? `${data.cron.length - data.cron.filter((c) => c.active).length} paused` : undefined}
+            />
+            <StatCard
+              label="Failed (last run)"
+              value={cronFailed}
+              color={cronFailed === 0 ? "text-emerald-600" : "text-red-500"}
+            />
+            <StatCard
+              label="Never run"
+              value={data.cron.filter((c) => c.lastStatus === null).length}
+              color={data.cron.filter((c) => c.lastStatus === null).length === 0 ? "text-emerald-600" : "text-amber-600"}
+            />
+          </div>
+
+          <div className="rounded-2xl bg-white shadow-sm overflow-hidden border border-gray-100">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="text-left text-[10px] font-bold uppercase tracking-wider text-gray-400 px-4 py-2">Job</th>
+                  <th className="text-left text-[10px] font-bold uppercase tracking-wider text-gray-400 px-4 py-2">Schedule</th>
+                  <th className="text-left text-[10px] font-bold uppercase tracking-wider text-gray-400 px-4 py-2">Last status</th>
+                  <th className="text-left text-[10px] font-bold uppercase tracking-wider text-gray-400 px-4 py-2">Last run</th>
+                  <th className="text-right text-[10px] font-bold uppercase tracking-wider text-gray-400 px-4 py-2">Total runs</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.cron.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-sm text-red-500">
+                      No vasco-* cron jobs registered. Run <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">supabase/cron.sql</code> with real <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">SUPABASE_URL</code> + service-role JWT.
+                    </td>
+                  </tr>
+                )}
+                {data.cron.map((c) => (
+                  <tr key={c.jobName} className="border-t border-gray-100">
+                    <td className="px-4 py-2 font-medium text-[#0D1B2A]">{c.jobName.replace(/^vasco-/, "")}</td>
+                    <td className="px-4 py-2 font-mono text-xs text-gray-500">{c.schedule}</td>
+                    <td className="px-4 py-2">
+                      {c.lastStatus === null ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">never run</span>
+                      ) : (
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${CRON_STATUS_COLORS[c.lastStatus]}`}>{c.lastStatus}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2 text-xs text-gray-500">
+                      {c.lastStart ? c.lastStart.slice(0, 16).replace("T", " ") : "—"}
+                    </td>
+                    <td className="px-4 py-2 text-right tabular-nums text-gray-700">{c.totalRuns}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

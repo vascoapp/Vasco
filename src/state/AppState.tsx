@@ -165,6 +165,8 @@ type AppState = {
   removeJobMaterial: (id: string, jobId: string) => void;
   connectMollie: () => void;
   connectStripe: () => void;
+  disconnectMollie: () => Promise<void>;
+  disconnectStripe: () => Promise<void>;
   createPaymentLink: (invoiceId: string, amount: number) => Promise<void>;
   addInvoiceFromJob: (jobId: string) => Promise<string>;
   convertQuoteToJob: (quoteId: string) => Promise<string>;
@@ -2354,6 +2356,21 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       setPendingBudgetExtraction,
       connectMollie: () => setMollieConnected(true),
       connectStripe: () => setStripeConnected(true),
+      disconnectMollie: async () => {
+        // SecureStore purge + state reset. Same pattern the sign-out flow
+        // will fire on logout via singletonReset, but exposed as a user-
+        // facing action in the Mollie modal too.
+        const { clearMollieConfig } = await import('../integrations/mollie');
+        await clearMollieConfig().catch(() => {});
+        setMollieConnected(false);
+        setLastMolliePayment({});
+      },
+      disconnectStripe: async () => {
+        const { clearStripeConfig } = await import('../integrations/stripe');
+        await clearStripeConfig().catch(() => {});
+        setStripeConnected(false);
+        setLastStripePayment({});
+      },
       createPaymentLink: async (invoiceId, amount) => {
         // Route by contractor country — UK → Stripe (GBP), everyone else → Mollie (EUR).
         // R66 round 8: was silently swallowing failures (`if result.success`
