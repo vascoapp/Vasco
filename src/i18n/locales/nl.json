@@ -2018,6 +2018,7 @@
     "demoPaymentBody": "In live modus opent dit de Mollie checkout van uw aannemer met de geconfigureerde betaalmethoden (iDEAL, kaart, Apple Pay, etc.).",
     "accessTitle": "Project Keuzes",
     "accessSubtitle": "Vul de code in die u van uw aannemer heeft ontvangen",
+    "accessHelp": "Geen code? Vraag uw aannemer om een toegangslink.",
     "loading": "Laden...",
     "continue": "Doorgaan",
     "paymentReceived": "Betaling ontvangen",

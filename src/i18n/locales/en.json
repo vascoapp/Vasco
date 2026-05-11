@@ -2018,6 +2018,7 @@
     "demoPaymentBody": "In live mode this opens your contractor's Mollie checkout with the configured payment methods (iDEAL, card, Apple Pay, etc.).",
     "accessTitle": "Project choices",
     "accessSubtitle": "Enter the code you received from your contractor",
+    "accessHelp": "No code? Ask your contractor for an access link.",
     "loading": "Loading...",
     "continue": "Continue",
     "paymentReceived": "Payment received",

@@ -11,6 +11,9 @@ import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
+import { useAuth } from '../../src/context/AuthContext';
+import { formatCurrency } from '../../src/i18n/formatting';
+import type { Country } from '../../src/i18n/formatting';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { trackEvent } from '../../src/services/eventTrackingService';
 import { hapticSuccess } from '../../src/utils/haptics';
@@ -39,6 +42,8 @@ export default function SearchScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { jobs, quotes, invoices, customers } = useAppState();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   // R15.1: accept ?q= initial query so the CRM customer-tap can route here
   // pre-filled with the customer's name. Was previously hardcoded to '' and
   // CRM was navigating to /contractor/customer-view which served the
@@ -87,7 +92,7 @@ export default function SearchScreen() {
 
     // Search quotes
     for (const quote of quotes) {
-      const amt = `€${(quote.amount ?? 0).toLocaleString(undefined)}`;
+      const amt = formatCurrency(quote.amount ?? 0, country);
       const custName = resolveCustomerName(quote.customer);
       if (
         quote.id?.toLowerCase().includes(q) ||
@@ -109,7 +114,7 @@ export default function SearchScreen() {
     // Search invoices
     for (const inv of invoices) {
       const invAny = inv as any;
-      const amt = `€${(invAny.amount ?? invAny.total ?? 0).toLocaleString(undefined)}`;
+      const amt = formatCurrency(invAny.amount ?? invAny.total ?? 0, country);
       const custName = resolveCustomerName(invAny.customer);
       if (
         invAny.id?.toLowerCase().includes(q) ||

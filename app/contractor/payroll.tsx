@@ -12,6 +12,9 @@ import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useTeamMembers, useTimeTracking } from '../../src/services/teamManagementService';
+import { useAuth } from '../../src/context/AuthContext';
+import { formatCurrency } from '../../src/i18n/formatting';
+import type { Country } from '../../src/i18n/formatting';
 
 type PeriodType = 'week' | 'maand';
 
@@ -32,6 +35,8 @@ export default function PayrollScreen() {
   const [period, setPeriod] = useState<PeriodType>('week');
   const { members } = useTeamMembers();
   const { entries } = useTimeTracking();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
 
   const roleNames: Record<string, string> = {
     owner: 'Eigenaar',
@@ -84,7 +89,7 @@ export default function PayrollScreen() {
     return { lines, totalRegular, totalOvertime, grandTotal, totalHours };
   }, [members, entries, period]);
 
-  const fmt = (n: number) => `€${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const fmt = (n: number) => formatCurrency(n, country);
 
   const handleExport = async () => {
     const header = 'Naam;Functie;Uurtarief;Regulier (u);Overwerk (u);Regulier (€);Overwerk (€);Totaal (€)';

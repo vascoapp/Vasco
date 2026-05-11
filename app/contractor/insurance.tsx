@@ -11,6 +11,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { Palette, SemanticColors } from '../../src/theme/colors';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useInsurancePolicies } from '../../src/services/complianceService';
+import { useAuth } from '../../src/context/AuthContext';
+import { formatCurrency } from '../../src/i18n/formatting';
+import type { Country } from '../../src/i18n/formatting';
 import { Toast } from '../../src/components/shared/Toast';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
@@ -44,6 +47,8 @@ export default function InsuranceScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { policies, loading } = useInsurancePolicies();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(() => { setRefreshing(true); setTimeout(() => setRefreshing(false), 600); }, []);
 
@@ -142,7 +147,7 @@ export default function InsuranceScreen() {
               style={styles.policyCard}
               onPress={() => Alert.alert(
                 policy.name,
-                `${t('insurance.insurer', 'Verzekeraar')}: ${policy.provider}\n${t('insurance.coverage', 'Dekking')}: €${policy.coverage?.toLocaleString(undefined) || t('insurance.notApplicable', 'n.v.t.')}\n${t('insurance.endDate', 'Einddatum')}: ${endDate.toLocaleDateString(undefined)}`,
+                `${t('insurance.insurer', 'Verzekeraar')}: ${policy.provider}\n${t('insurance.coverage', 'Dekking')}: ${policy.coverage ? formatCurrency(policy.coverage, country) : t('insurance.notApplicable', 'n.v.t.')}\n${t('insurance.endDate', 'Einddatum')}: ${endDate.toLocaleDateString(undefined)}`,
                 [
                   { text: t('insurance.cancel', 'Annuleren'), style: 'cancel' },
                   { text: t('insurance.fileClaim', 'Claim indienen'), onPress: () => openClaimForm(policy.id) },

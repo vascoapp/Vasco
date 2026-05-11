@@ -2018,6 +2018,7 @@
     "demoPaymentBody": "En modo live, esto abre el checkout de Mollie de tu contratista con los métodos de pago configurados (iDEAL, tarjeta, Apple Pay, etc.).",
     "accessTitle": "Opciones del proyecto",
     "accessSubtitle": "Introduce el código que recibiste de tu contratista",
+    "accessHelp": "¿No tienes código? Pídele a tu contratista un enlace de acceso.",
     "loading": "Cargando...",
     "continue": "Continuar",
     "paymentReceived": "Pago recibido",

@@ -1506,7 +1506,7 @@ export function AccessCodeEntry({ onSubmit, error, isLoading }: AccessCodeEntryP
         </Pressable>
 
         <Text style={styles.accessHelp}>
-          Geen code? Vraag uw aannemer om een toegangslink.
+          {t('decisionPortal.accessHelp', 'No code? Ask your contractor for an access link.')}
         </Text>
       </View>
     </View>

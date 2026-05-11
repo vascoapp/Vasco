@@ -2018,6 +2018,7 @@
     "demoPaymentBody": "En mode live, ceci ouvre le checkout Mollie de votre artisan avec les méthodes de paiement configurées (iDEAL, carte, Apple Pay, etc.).",
     "accessTitle": "Choix du projet",
     "accessSubtitle": "Entrez le code reçu de votre artisan",
+    "accessHelp": "Pas de code ? Demandez à votre artisan un lien d'accès.",
     "loading": "Chargement...",
     "continue": "Continuer",
     "paymentReceived": "Paiement reçu",

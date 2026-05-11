@@ -7,7 +7,7 @@
 // =============================================================================
 
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
-import { sendInstantNotification } from './pushNotificationService';
+import { sendInstantNotification, isInQuietHours } from './pushNotificationService';
 import i18n from '../i18n/i18n';
 
 type Unsubscribe = () => void;
@@ -80,7 +80,13 @@ export function watchInvoicePayments(
             : '';
           const title = i18n.t('notifications.push.paidTitle');
           const body = i18n.t('notifications.push.paidBody', { ref, amount: amountDisplay });
-          sendInstantNotification(title, body, { type: 'invoice_paid', invoiceId: event.invoiceId }).catch(() => {});
+          // R66r60: respect quiet hours. Payment landing is urgent but not so
+          // urgent it justifies overriding DND/sleep — the row still updates
+          // the in-app UI immediately via the mutator bus (R37), and the
+          // contractor sees the notification when they wake up.
+          if (!isInQuietHours()) {
+            sendInstantNotification(title, body, { type: 'invoice_paid', invoiceId: event.invoiceId }).catch(() => {});
+          }
 
           onPaid?.(event);
         } catch {
@@ -213,7 +219,10 @@ export function watchSignatures(
           });
           const pushData: Record<string, string> = { type: 'signature', signatureId: event.signatureId };
           if (event.jobId) pushData.jobId = event.jobId;
-          sendInstantNotification(title, body, pushData).catch(() => {});
+          // R66r60: respect quiet hours like the other watchers.
+          if (!isInQuietHours()) {
+            sendInstantNotification(title, body, pushData).catch(() => {});
+          }
           onInsert?.(event);
         } catch {}
       },

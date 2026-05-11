@@ -10,8 +10,11 @@ import { PAGE_BG, TYPE } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useQuoteTemplates, TEMPLATE_CATEGORIES, type QuoteTemplate, type QuoteTemplateItem, type TemplateCategory } from '../../src/services/quoteTemplateService';
 import { useAppState } from '../../src/state/AppState';
+import { useAuth } from '../../src/context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { getVATRate } from '../../src/constants/taxRates';
+import { formatCurrency } from '../../src/i18n/formatting';
+import type { Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 
@@ -22,6 +25,8 @@ export default function QuoteTemplatesScreen() {
   const { t } = useTranslation();
   const { templates, save, use, remove } = useQuoteTemplates();
   const { businessProfile } = useAppState();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const vatPct = Math.round(getVATRate(businessProfile.country ?? 'NL') * 100);
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -89,7 +94,7 @@ export default function QuoteTemplatesScreen() {
     );
   };
 
-  const fmt = (n: number) => `€${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  const fmt = (n: number) => formatCurrency(n, country);
 
   return (
     <View style={styles.container}>

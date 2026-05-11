@@ -7,7 +7,7 @@
 // =============================================================================
 
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
-import { sendInstantNotification } from './pushNotificationService';
+import { sendInstantNotification, isInQuietHours } from './pushNotificationService';
 import i18n from '../i18n/i18n';
 
 type Unsubscribe = () => void;
@@ -53,6 +53,12 @@ export function watchCustomerInteractions(
 
 function surface(row: InteractionRow): void {
   if (row.type === 'view') return; // Don't buzz on every open
+  // R66r60: respect quiet hours. Pre-r60 customer-interaction watcher pushed
+  // through DND/sleep windows because it skipped the shouldDeliver() gate
+  // that aiQueueNotifier honors. Customer event still lands in the
+  // notifications inbox (write-only, separate from delivery), the push
+  // itself just stays silent until quiet hours end.
+  if (isInQuietHours()) return;
   // R66 round 2: localized via i18n. Was hardcoded English, leaving a Dutch
   // contractor with English push lines on the 5 most critical customer events.
   const titleKey: Record<string, string> = {

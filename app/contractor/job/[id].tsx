@@ -41,6 +41,9 @@ import { addActivityEntry } from '../../../src/services/jobCommentsService';
 import { evaluateCompletion } from '../../../src/services/jobCompletionChecklist';
 import { listJobPhotos } from '../../../src/services/jobPhotoService';
 import { SignaturePad } from '../../../src/components/shared/SignaturePad';
+import { useAuth } from '../../../src/context/AuthContext';
+import { formatCurrency } from '../../../src/i18n/formatting';
+import type { Country } from '../../../src/i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -127,6 +130,8 @@ export default function JobDetailPage() {
   }, []);
 
   const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, businessProfile, updateJob } = useAppState();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const [signatureModal, setSignatureModal] = useState<{ visible: boolean; onSigned?: () => void }>({ visible: false });
 
   // R66r57: fetch signature audit-trail rows. Refreshes whenever a new
@@ -779,7 +784,7 @@ export default function JobDetailPage() {
                 style={styles.upsellCard}
                 onPress={() => Alert.alert(
                   item.title,
-                  `${item.description}\n\n${t('jobs.estRevenue', 'Est. revenue')}: €${item.potentialRevenue}\n${t('jobs.confidence', 'Confidence')}: ${item.confidence}%`,
+                  `${item.description}\n\n${t('jobs.estRevenue', 'Est. revenue')}: ${formatCurrency(item.potentialRevenue, country)}\n${t('jobs.confidence', 'Confidence')}: ${item.confidence}%`,
                   [
                     { text: t('common.cancel', 'Cancel'), style: 'cancel' },
                     { text: t('jobs.offer', 'Offer'), onPress: () => Alert.alert(t('jobs.offered', 'Offered'), t('jobs.offeredDesc', { defaultValue: '{{title}} has been noted as a suggestion.', title: item.title })) },

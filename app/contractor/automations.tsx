@@ -11,6 +11,9 @@ import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
 import { useWorkflowPacks, getPackROI, getPackHealth, type PackHealth } from '../../src/services/workflowPackService';
+import { useAuth } from '../../src/context/AuthContext';
+import { formatCurrency } from '../../src/i18n/formatting';
+import type { Country } from '../../src/i18n/formatting';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { hapticSuccess } from '../../src/utils/haptics';
 
@@ -19,6 +22,8 @@ type IconName = keyof typeof Ionicons.glyphMap;
 export default function AutomationsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const { packs, toggle, enabledCount } = useWorkflowPacks();
   const [packROIs, setPackROIs] = useState<Record<string, { actionsTriggered: number; actionsApproved: number; estimatedRevenue: number; estimatedTimeSaved: number }>>({});
   // R66r49 #7: pack health from real telemetry. Surfaces approveRate +
@@ -116,7 +121,7 @@ export default function AutomationsScreen() {
               {/* ROI stats */}
               {pack.enabled && packROIs[pack.id] && (packROIs[pack.id].actionsTriggered > 0) && (
                 <Text style={s.roiText}>
-                  {packROIs[pack.id].actionsTriggered} {t('automations.actions', 'actions')} · {packROIs[pack.id].actionsApproved} {t('automations.approved', 'approved')}{packROIs[pack.id].estimatedRevenue > 0 ? ` · €${packROIs[pack.id].estimatedRevenue.toLocaleString(undefined)} ${t('automations.recovered', 'recovered')}` : ''} · {packROIs[pack.id].estimatedTimeSaved} min {t('automations.saved', 'saved')}
+                  {packROIs[pack.id].actionsTriggered} {t('automations.actions', 'actions')} · {packROIs[pack.id].actionsApproved} {t('automations.approved', 'approved')}{packROIs[pack.id].estimatedRevenue > 0 ? ` · ${formatCurrency(packROIs[pack.id].estimatedRevenue, country)} ${t('automations.recovered', 'recovered')}` : ''} · {packROIs[pack.id].estimatedTimeSaved} min {t('automations.saved', 'saved')}
                 </Text>
               )}
 

@@ -35,9 +35,11 @@ jest.mock('../../lib/supabase', () => ({
 }));
 
 const mockSendInstant: jest.Mock = jest.fn(async () => undefined);
+const mockIsInQuietHours: jest.Mock = jest.fn(() => false);
 jest.mock('../pushNotificationService', () => ({
   sendInstantNotification: (title: string, body: string, data?: Record<string, string>) =>
     mockSendInstant(title, body, data),
+  isInQuietHours: () => mockIsInQuietHours(),
 }));
 
 jest.mock('../../i18n/i18n', () => ({
@@ -62,6 +64,8 @@ beforeEach(() => {
   channelState.callback = undefined;
   channelState.subscribed = false;
   mockSendInstant.mockClear();
+  mockIsInQuietHours.mockReset();
+  mockIsInQuietHours.mockReturnValue(false);
 });
 
 describe('watchSignatures', () => {
@@ -143,5 +147,16 @@ describe('watchSignatures', () => {
     stopSignaturesWatch();
     stopSignaturesWatch(); // should not throw
     expect(channelState.subscribed).toBe(false);
+  });
+
+  test('R66r60: quiet hours suppress the push but onInsert still fires', () => {
+    mockIsInQuietHours.mockReturnValue(true);
+    const onInsert = jest.fn();
+    watchSignatures('user-abc', onInsert);
+    channelState.callback?.({
+      new: { id: 'sig-5', signer_name: 'Pierre', signer_role: 'customer', job_id: 'job-2' },
+    });
+    expect(mockSendInstant).not.toHaveBeenCalled();
+    expect(onInsert).toHaveBeenCalledTimes(1);
   });
 });
