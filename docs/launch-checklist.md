@@ -2,6 +2,11 @@
 
 Tracks everything required to publish Vasco to App Store + Google Play and enable live Supabase for EU6 markets.
 
+> 📋 **For a single-page "what's still missing per milestone" view, see
+> [`SHIP-READINESS.md`](./SHIP-READINESS.md).** This file is mostly a
+> rolling log of work completed + the operator-action sequence; the
+> ship-readiness doc is the at-a-glance status.
+
 ## ✅ Done R66r49 (NL launch readiness, 2026-05-09 — autonomous)
 - [x] **EAS project linked** — `@collectai/VascoApp` (id `eebc2577-cbf8-4252-9b6c-f91119c17b7d`). `app.json:expo.extra.eas.projectId` populated. Production push tokens will work.
 - [x] **OTA updates URL** — `https://u.expo.dev/eebc2577-cbf8-4252-9b6c-f91119c17b7d`. Hotfix path open.

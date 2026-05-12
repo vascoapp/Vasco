@@ -1,20 +1,39 @@
 # Vasco Launch Runbook
 
-Last updated: 2026-05-02 (after R284 — semantic search live).
+Last updated: 2026-05-12 (after R66r66 — ship-readiness doc consolidation).
 Single source of truth for everything that must be true before Vasco hits TestFlight + Play Store.
+
+> 📋 **For a single-page "what's still missing per milestone" view see
+> [`docs/SHIP-READINESS.md`](./docs/SHIP-READINESS.md).** This file is
+> the rolling status snapshot — what's shipped, what's pending. For
+> TestFlight Internal specifically, see
+> [`docs/testflight-checklist.md`](./docs/testflight-checklist.md).
 
 Status legend: ✅ done · ⚠️ partial · ❌ not started · ⏸ waiting on user
 
 ---
 
-## 0. Snapshot
+## 0. Snapshot (R66r66, 2026-05-12)
 
 - Code: **main** of `https://github.com/VascoBuild/vasco`
 - TypeScript: **0 errors**
-- Jest: **596 / 596 passing** across 55 suites
-- Supabase project: `gblhqhorkarocmputhte` (live; **all migrations pushed** as of R284)
+- Jest: **871 / 871 passing** across 84 suites
+- Migrations in repo: **8 pending push** to prod Supabase
+  - `20260507000007_business_settings_extra.sql` (KOR/Kleinunternehmer fields)
+  - `20260507000008_job_photos_id_fix.sql` (job_id text→uuid + CASCADE FK)
+  - `20260507000009_decision_portal_token_access.sql` (portal RPC + tracker columns)
+  - `20260508000001_documents_delivery_date_lineitems_vat.sql` (NL Art. 35 + mixed-rate VAT)
+  - `20260511000001_app_config.sql` (R66r54 version_config table)
+  - `20260511000002_cron_health_rpc.sql` (R66r55 admin Cron tab)
+  - `20260511000003_signatures.sql` (R66r55 audit-trail table + RPC)
+  - `20260511000004_portal_rpc_expired_signal.sql` (R66r58 expired-vs-not-found)
+- Supabase project: `gblhqhorkarocmputhte` (live; **migrations through R284 pushed**, 8 above pending)
 - Edge functions deployed in repo: 21 (analyze-photo, churn-winback-email, classify-customer-question, create-subscription-checkout, daily-push-digest, drain-account-deletions, embed-text, generate-embedding, grant-referral-credits, mollie-webhook, place-supplier-order, predict-duration, predict-price, send-invoice, send-push, sign-quote-token, stripe-webhook, train-extra-models, verify-quote-token, weekly-digest, weekly-retrain-models) — `draft-customer-reply` removed in R66r54 after its FE wrapper was deleted in R66r52
-- Cron jobs: **0 registered** in production as of R293. `supabase/cron.sql` documents 9 schedules but pg_cron extension wasn't installed. Migration `20260502000002_enable_pg_cron.sql` (R293) enables it; cron.sql still needs a manual one-time run with real `SUPABASE_URL` + service-role JWT to register the 9 schedules.
+- Cron jobs: **0 registered** in production. `supabase/cron.sql` documents 10 schedules but pg_cron extension wasn't installed. Migration `20260502000002_enable_pg_cron.sql` (R293) enables it; cron.sql still needs a manual one-time run with real `SUPABASE_URL` + service-role JWT to register the schedules.
+- Brand assets: **placeholder Expo template** for icon.png + adaptive-icon.png + splash-icon.png + favicon.png — see [`docs/SHIP-READINESS.md`](./docs/SHIP-READINESS.md) §2
+- App Store screenshots: **zero captured** for any locale or device size — see SHIP-READINESS §3
+- Store-listing copy: **draft-only**, NL/DE/FR/ES/IT need native review — see [`docs/store-listings.md`](./docs/store-listings.md)
+- Live URLs (vasco.app, admin.vasco.app, support@vasco.dev): **❓ unverified** — see SHIP-READINESS §5
 
 ---
 

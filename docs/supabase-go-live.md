@@ -1,9 +1,13 @@
 # Supabase Go-Live — Step-by-Step
 
-Last updated: 2026-04-21 (R234)
+Last updated: 2026-05-12 (R66r66)
 
 Everything the app needs deployed on the Supabase side, in the exact order to
 run it. Assumes you already have a Supabase project created at https://supabase.com/dashboard.
+
+> 📋 For the cross-cutting "what's still missing per milestone" view see
+> [`SHIP-READINESS.md`](./SHIP-READINESS.md). This doc owns the
+> Supabase-side sequence only.
 
 ## 0. Prereqs (one-time, on your machine)
 

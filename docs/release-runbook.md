@@ -3,6 +3,11 @@
 End-to-end steps to ship Vasco from repo → App Store + Play Store. Assumes
 you have the credentials listed below.
 
+> 📋 For a single-page "what's still missing per milestone" view see
+> [`SHIP-READINESS.md`](./SHIP-READINESS.md). This runbook is the actual
+> step-by-step command sequence once the credentials + assets are ready.
+> For TestFlight Internal specifically, see [`testflight-checklist.md`](./testflight-checklist.md).
+
 ---
 
 ## R66r49 launch-readiness state (2026-05-09)

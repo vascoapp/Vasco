@@ -7,7 +7,17 @@ Draft copy for App Store Connect + Google Play Console. Each locale has:
 - **Long description** (4000 chars)
 - **Keywords** (App Store, 100 chars, comma-separated)
 
-Review before publishing — copy aims for plain-language construction-trade voice, not marketing gloss.
+> ⚠️ **DRAFT — needs native-speaker review before publishing.** Copy aims
+> for plain-language construction-trade voice, not marketing gloss. The
+> NL/DE/FR/ES/IT versions are machine-quality with some English-style
+> assumptions baked in. Get a native plumber/electrician to read each
+> section out loud before paste-into-ASC.
+>
+> **Also still missing** (tracked in [`SHIP-READINESS.md`](./SHIP-READINESS.md) §4):
+> - Promotional text (170 chars, App Store only, refreshable without resubmission)
+> - "What's New" / changelog for v1.0 launch — needed in 6 locales
+> - Keyword research validation — current keywords are educated guesses;
+>   run ASO tool (AppRadar / SearchMan) for each locale before publish
 
 ---
 

@@ -6,8 +6,10 @@ beta-distribution channel — apps in TestFlight don't go through full App
 Store review (just a quick automated check), so this is the fastest path
 from "code merged" to "running on a real device under a real Apple ID."
 
-R66r65 baseline. Cross-references `release-runbook.md` §5 (preview build)
-and `launch-checklist.md` (brand assets).
+R66r65 baseline. **For the consolidated "what's still missing per
+milestone" view see [`SHIP-READINESS.md`](./SHIP-READINESS.md)** — this
+doc is just the TestFlight Internal walk-through. Cross-references
+`release-runbook.md` §5 (preview build) and `launch-checklist.md`.
 
 ---
 
