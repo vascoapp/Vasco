@@ -1,0 +1,23 @@
+Vasco ist dein Büro-Copilot im Handwerk. Angebote schreiben, Termine planen, Rechnungen stellen, Geld kassieren — alles in einer App. Kein Excel, keine Abende voller Papierkram.
+
+WAS VASCO FÜR DICH TUT
+• Gestaffelte Angebote (Gut/Besser/Premium), die Kunden vom Handy annehmen
+• Beleg-Scanner mit KI: Positionen automatisch erkannt
+• Zahlungslinks via Mollie/Stripe — SEPA, Kreditkarte, Klarna, PayPal
+• Automatische Zahlungserinnerungen und Angebots-Follow-ups
+• Terminplanung mit "Ich bin unterwegs" ETA für Kunden
+• Eingebaute Konformität: GoBD, HGB §257, 10-Jahre-Aufbewahrung
+• E-Rechnung: XRechnung, ZUGFeRD, Factur-X, Peppol
+• Synchronisation mit DATEV, Lexoffice, SevDesk, sevDesk, Lexware
+
+KI, DIE ARBEIT ABNIMMT
+Vasco bereitet Kundennachrichten vor, mahnt offene Rechnungen, kalkuliert Materialmargen und findet Compliance-Lücken. Du bestätigst — Vasco handelt. Nichts geht an Kunden ohne deine Freigabe.
+
+FÜR DEIN GEWERK
+Sanitär, Elektro, Gas/Heizung, Tischler, Maler, Dachdecker, Fliesenleger, Putzer, Bodenleger, Dämmung, Solar, Glaser, Garten- und Landschaftsbau. Angepasst pro Gewerk × Land.
+
+DATENSCHUTZ ZUERST
+Daten in EU-Rechenzentren. Ende-zu-Ende-verschlüsselt. Volle DSGVO-Rechte in der App: exportieren, löschen, korrigieren. Wir verkaufen deine Daten nie.
+
+PREIS
+Kostenlos starten. Bezahltarife ab 14 €/Monat. Monatlich kündbar. Keine Kreditkarte für Test nötig.

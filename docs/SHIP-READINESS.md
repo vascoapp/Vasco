@@ -43,7 +43,7 @@ final art still recommended before App Store production launch.
 | `assets/splash-icon.png` (splash logo) | TF + Prod | 1242×2436+ PNG transparent, centered | 🟡 R66r67 branded placeholder |
 | `assets/favicon.png` (admin web) | admin dashboard | 48×48 / 192×192 | 🟡 R66r67 branded placeholder |
 | Notification small-icon (Android) | Prod push UX | 96×96 dp monochrome transparent PNG | ❌ removed in R66.24 (dangling ref) |
-| App Store **feature graphic** (Play) | Play Store | 1024×500 PNG | ❌ |
+| Play Store **feature graphic** | Play Store | 1024×500 PNG | 🟡 R66r69 branded placeholder |
 | App Store **preview video** (optional) | Bumps conversion | 15-30s vertical mp4 per locale | ❌ |
 
 **To swap in brand-team final art:** replace the SVG sources in

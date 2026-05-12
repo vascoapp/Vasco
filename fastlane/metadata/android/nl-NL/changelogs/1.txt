@@ -1,0 +1,11 @@
+Welkom bij Vasco — de AI-administratie-copiloot voor vakmannen.
+
+Deze eerste release bevat alles voor het offerte-naar-betaald traject:
+• Slimme offertes (Goed/Beter/Best) die klanten op hun telefoon accepteren
+• Bon-scannen met AI: regels automatisch ingelezen
+• Mollie + Stripe betaallinks voor 6 EU-landen
+• EVE — 3 AI-agents die je werk voorbereiden, jij keurt met één tap goed
+• Offline-first: werkt op locatie zonder bereik, synct bij reconnect
+• Volledige GDPR: in-app exporteren en verwijderen
+
+Tik "Test onboarding" op het demo-scherm om de eerste-gebruikerservaring te zien.

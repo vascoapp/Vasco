@@ -107,10 +107,34 @@ await render('favicon.svg', 'favicon.png', {
   // Favicon — solid bg already in the SVG.
 });
 
+// R66r69: Play Store feature graphic (1024×500). Flatten — Play
+// rejects transparent feature graphics. Mirror into each per-locale
+// fastlane/metadata/android/{locale}/images/featureGraphic/ dir so
+// `fastlane android release` picks them up automatically.
+const featureGraphicBuf = await sharp(readFileSync(join(sourceDir, 'feature-graphic.svg')), {
+  density: 200,
+})
+  .resize(1024, 500, { fit: 'contain', background: '#0B0E11' })
+  .flatten({ background: '#0B0E11' })
+  .png({ compressionLevel: 9 })
+  .toBuffer();
+
+await writeFile(join(outputDir, 'feature-graphic.png'), featureGraphicBuf);
+console.log('✓ feature-graphic.png (1024×500)');
+
+const { mkdir } = await import('node:fs/promises');
+const playLocales = ['en-US', 'nl-NL', 'de-DE', 'fr-FR', 'es-ES', 'it-IT'];
+for (const loc of playLocales) {
+  const dir = join(repoRoot, 'fastlane/metadata/android', loc, 'images/featureGraphic');
+  await mkdir(dir, { recursive: true });
+  await writeFile(join(dir, 'featureGraphic.png'), featureGraphicBuf);
+}
+console.log(`✓ feature graphic copied into ${playLocales.length} fastlane/metadata/android/{locale}/ dirs`);
+
 console.log(`
 ✓ Done. Run \`eas build --profile preview --platform ios\` to bundle.
 
-Reminder: these are R66r67 placeholders. Replace the SVGs in
+Reminder: these are R66r67/r69 placeholders. Replace the SVGs in
 assets/source/ with brand-team final art and re-run this script.
 Don't edit the PNG outputs by hand — they'll regenerate on next run.
 `);

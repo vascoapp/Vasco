@@ -17,6 +17,8 @@
     "capture:screenshots": "bash scripts/capture-screenshots.sh",
     "preflight": "node scripts/preflight.mjs",
     "preflight:quick": "node scripts/preflight.mjs --quick",
+    "sentry:upload:ios": "PLATFORM=ios bash scripts/sentry-upload.sh",
+    "sentry:upload:android": "PLATFORM=android bash scripts/sentry-upload.sh",
     "typecheck": "tsc --noEmit",
     "typecheck:app": "tsc --noEmit && echo done",
     "supabase:types": "supabase gen types typescript --linked > src/types/supabase.ts",

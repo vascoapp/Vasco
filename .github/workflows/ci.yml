@@ -93,3 +93,27 @@ jobs:
 
       - name: Run tests
         run: npm test -- --ci --passWithNoTests
+
+  preflight:
+    name: Preflight (build-readiness)
+    runs-on: ubuntu-latest
+    # R66r69: locale JSONs / icon presence / fastlane completeness / app.json
+    # sanity. Catches "submitted then realized we forgot X" before EAS build.
+    # --quick skips jest (the unit-tests job covers it in parallel).
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install admin dependencies
+        run: npm ci --no-audit --no-fund
+        working-directory: admin
+
+      - name: Run preflight checks
+        run: npm run preflight:quick

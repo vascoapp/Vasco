@@ -1,0 +1,23 @@
+Vasco is the admin co-pilot for self-employed trades and small contractors. Quote, schedule, invoice and get paid from one app — no spreadsheets, no late-night paperwork.
+
+WHAT VASCO DOES FOR YOU
+• Tiered quotes that customers can accept from their phone
+• Photo-to-invoice scanning with automatic line items
+• Payment links via Mollie (EU) and Stripe (UK) — iDEAL, Bancontact, SEPA, Bacs, cards
+• Automatic payment reminders and quote follow-ups
+• Job scheduling with customer "On my way" ETA
+• Built-in compliance for NL, DE, FR, ES, IT, UK
+• E-invoicing: XRechnung, ZUGFeRD, Factur-X, Facturae, FatturaPA, Peppol
+• Sync with Moneybird, DATEV, Lexoffice, SevDesk, Pennylane, Holded, Fatture in Cloud, Xero, QuickBooks
+
+AI THAT DOES WORK, NOT JUST ADVICE
+Vasco's AI prepares customer messages, chases late invoices, prices materials, and flags compliance gaps. You approve — it acts. Never sends anything to customers without your OK.
+
+MADE FOR YOUR TRADE
+Plumbing, electrical, gas, HVAC, carpentry, painting, roofing, tiling, plastering, flooring, insulation, solar, glazing, landscaping. Templates, certificates, and material libraries tuned per trade × country.
+
+PRIVACY FIRST
+Your data lives in EU datacenters. End-to-end encryption. Full GDPR rights in-app: export, delete, correct. We never sell your data.
+
+PRICING
+Free to start. Paid tiers from €14/month. Cancel anytime. No card required to try.

@@ -1,17 +1,23 @@
-# Vasco Fastfile — App Store Connect uploads
+# Vasco Fastfile — App Store Connect + Play Console uploads
 #
-# R66r68. One-command metadata + screenshot uploads to ASC so the operator
-# never has to paste-into-ASC by hand across 6 locales.
+# R66r68/r69. One-command metadata + screenshot uploads so the operator
+# never has to paste-into-ASC × 6 locales (or into Play Console × 6).
 #
 # Setup (one-time):
 #   brew install fastlane
-#   cd fastlane && fastlane init
-#   # When prompted, pick "1) Skip - I'm just here for the screenshots/metadata"
+#   cd fastlane && fastlane init       # iOS — pick option 1, just metadata
+#   cd fastlane && fastlane supply init # Android — generates fastlane/metadata/android/
 #
-# Usage:
-#   bundle exec fastlane metadata     # uploads only the txt files in fastlane/metadata/
-#   bundle exec fastlane screenshots  # uploads only the screenshots/ tree
-#   bundle exec fastlane release      # uploads both + submits a new build for review
+# iOS usage:
+#   bundle exec fastlane ios metadata     # txt files only
+#   bundle exec fastlane ios screenshots  # screenshots only
+#   bundle exec fastlane ios release      # both
+#
+# Android usage:
+#   bundle exec fastlane android metadata     # txt files only
+#   bundle exec fastlane android release      # txt + screenshots + listing
+#
+# Both lanes leave the binary alone — EAS owns app binaries.
 
 default_platform(:ios)
 
@@ -44,6 +50,32 @@ platform :ios do
       force: true,
       run_precheck_before_submit: false,
       submit_for_review: false,     # leave operator to click 'Submit' in ASC
+    )
+  end
+end
+
+platform :android do
+  desc "Upload Play Store listing metadata (no apk/aab)"
+  lane :metadata do
+    supply(
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      json_key: ENV["GOOGLE_PLAY_JSON_KEY_PATH"] || "../secrets/play-service-account.json",
+      package_name: "com.vasco.app",
+      track: "internal",
+    )
+  end
+
+  desc "Upload Play Store listing + feature graphic + screenshots (no apk/aab)"
+  lane :release do
+    supply(
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      json_key: ENV["GOOGLE_PLAY_JSON_KEY_PATH"] || "../secrets/play-service-account.json",
+      package_name: "com.vasco.app",
+      track: "internal",                # closed internal testing first
     )
   end
 end

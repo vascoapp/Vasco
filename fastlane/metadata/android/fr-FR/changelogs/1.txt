@@ -1,0 +1,11 @@
+Bienvenue sur Vasco — le copilote administratif IA pour les artisans.
+
+Cette première version contient tout pour le parcours devis-à-encaissement :
+• Devis à 3 niveaux acceptés depuis le téléphone du client
+• Scan de factures par IA : lignes extraites automatiquement
+• Liens de paiement Mollie + Stripe pour 6 pays UE
+• EVE — 3 agents IA préparent votre travail, vous validez en un tap
+• Hors ligne : fonctionne sans réseau, se synchronise à la reconnexion
+• Conformité RGPD complète : export et suppression dans l'app
+
+Touchez "Tester l'onboarding" sur l'écran démo pour voir l'expérience nouvel utilisateur.
