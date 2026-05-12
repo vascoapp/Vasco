@@ -27,16 +27,35 @@
 
 set -euo pipefail
 
-if ! command -v sentry-cli >/dev/null 2>&1; then
-  echo "✗ sentry-cli not installed."
-  echo "  brew install getsentry/tools/sentry-cli"
+# R66r71: when invoked as an EAS postBuildCommand, skip silently if
+# Sentry isn't yet configured rather than failing the whole build.
+if [[ -z "${SENTRY_AUTH_TOKEN:-}" ]]; then
+  if [[ -n "${EAS_BUILD:-}" ]]; then
+    echo "ℹ SENTRY_AUTH_TOKEN not set on EAS worker — skipping sourcemap upload."
+    echo "  Add it via \`eas secret:create --name SENTRY_AUTH_TOKEN --value ...\`"
+    exit 0
+  fi
+  echo "✗ SENTRY_AUTH_TOKEN env var required"
   exit 1
 fi
 
-: "${SENTRY_AUTH_TOKEN:?SENTRY_AUTH_TOKEN env var required}"
+if ! command -v sentry-cli >/dev/null 2>&1; then
+  # On EAS workers, install on the fly. Locally, ask the user to install.
+  if [[ -n "${EAS_BUILD:-}" ]]; then
+    echo "→ Installing sentry-cli on EAS worker…"
+    curl -sL https://sentry.io/get-cli/ | bash
+  else
+    echo "✗ sentry-cli not installed."
+    echo "  brew install getsentry/tools/sentry-cli"
+    exit 1
+  fi
+fi
+
 : "${SENTRY_ORG:?SENTRY_ORG env var required}"
 : "${SENTRY_PROJECT:?SENTRY_PROJECT env var required (e.g. vasco-mobile)}"
-PLATFORM="${PLATFORM:-ios}"
+# When invoked by EAS as a postBuildCommand, prefer EAS_BUILD_PLATFORM
+# over the manual PLATFORM env so the same script works for both flows.
+PLATFORM="${PLATFORM:-${EAS_BUILD_PLATFORM:-ios}}"
 
 # Read version + buildNumber from app.json so release name matches what
 # the SDK reports at runtime.

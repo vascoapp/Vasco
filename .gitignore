@@ -50,3 +50,6 @@ GoogleService-Info.plist
 
 # admin build output
 admin/.next/
+
+# bundle analyze artifacts (baselines are committed; intermediates aren't)
+.bundle-analyze/

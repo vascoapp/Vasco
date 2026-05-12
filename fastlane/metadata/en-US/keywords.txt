@@ -1,1 +1,1 @@
-contractor,invoice,quote,payment,trades,plumber,electrician,carpenter,builder,handyman,aannemer,factuur,offerte
+contractor,invoice,quote,payment,trades,plumber,electrician,carpenter,aannemer,factuur,offerte

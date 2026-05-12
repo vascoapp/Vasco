@@ -1,0 +1,129 @@
+name: Release
+
+# R66r71. Manual release pipeline: preflight gate → EAS build → Sentry
+# sourcemap upload. Triggered by pushing a `v*` tag, or via Actions UI.
+#
+# Required repository secrets:
+#   EXPO_TOKEN              — `eas whoami` token, see `eas login`
+#   SENTRY_AUTH_TOKEN       — Sentry API token with project:releases scope
+#   SENTRY_ORG              — Sentry org slug (e.g. "vasco-bv")
+#   SENTRY_PROJECT          — Sentry project slug (e.g. "vasco-mobile")
+#   EXPO_PUBLIC_SENTRY_DSN  — optional; only needed if not set as eas secret
+#
+# Note: actual ASC + Play submission is operator-side. This workflow only
+# runs the build + uploads sourcemaps. `eas submit` runs from a local
+# machine so the operator can sign off on the binary that goes to Apple.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'EAS build profile'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - preview
+          - production
+      platform:
+        description: 'Platform'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - ios
+          - android
+          - all
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false  # never cancel an in-flight release
+
+jobs:
+  preflight:
+    name: Preflight gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Run full preflight (includes jest)
+        run: npm run preflight
+      - name: Validate ASC + Play listings
+        run: npm run check:listings
+
+  eas-build:
+    name: EAS build (${{ github.event.inputs.profile || 'production' }})
+    needs: preflight
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history for Sentry release commit tracking
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Trigger EAS build
+        run: |
+          PROFILE="${{ github.event.inputs.profile || 'production' }}"
+          PLATFORM="${{ github.event.inputs.platform || 'all' }}"
+          eas build --non-interactive --no-wait \
+            --profile "$PROFILE" \
+            --platform "$PLATFORM"
+
+      - name: Print build queue URL
+        run: |
+          echo "EAS build queued — monitor at https://expo.dev/accounts/_/projects/vascoapp/builds"
+
+  sentry-sourcemaps:
+    name: Sentry sourcemaps
+    needs: preflight
+    runs-on: ubuntu-latest
+    if: ${{ env.SENTRY_AUTH_TOKEN != '' }}
+    env:
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install sentry-cli
+        run: curl -sL https://sentry.io/get-cli/ | bash
+
+      - name: Upload iOS sourcemaps
+        run: PLATFORM=ios bash scripts/sentry-upload.sh
+        env:
+          EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
+
+      - name: Upload Android sourcemaps
+        run: PLATFORM=android bash scripts/sentry-upload.sh
+        env:
+          EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}

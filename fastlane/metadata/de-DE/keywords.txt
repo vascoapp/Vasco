@@ -1,1 +1,1 @@
-handwerker,rechnung,angebot,sanitaer,elektriker,dachdecker,datev,lexoffice,xrechnung,zugferd,meisterpflicht
+handwerker,rechnung,angebot,sanitaer,elektriker,dachdecker,datev,xrechnung,zugferd

@@ -244,7 +244,25 @@ So you can plan: everything below is code-side done. No operator action.
 - ✅ Offline write queue with temp-id rewriting + doc-number swap (R66r62)
 - ✅ Signatures audit trail table + RPC + UI panel + realtime watcher
       (R66r55-r57)
-- ✅ 871/871 tests across 84 suites, 0 TS errors
+- ✅ PII scrubbing in errorReporting (email/IBAN/VAT/phone/JWT) + 21
+      regression tests so the privacy questionnaire's claim stays true
+      (R66r71)
+- ✅ AuthContext tests — login success / wrong password / network /
+      demo-bypass / logout cleanup, 9 cases (R66r71)
+- ✅ ASC + Play listing validator (`npm run check:listings`) wired into
+      `preflight` so ITMS-90000 char-limit overruns fail CI, not Apple
+      review (R66r71)
+- ✅ Bundle-size audit (`npm run analyze:bundle`) — heaviest modules +
+      per-package weights + suspicious-import detection +/-10%
+      baseline gate (R66r71)
+- ✅ Release workflow (`.github/workflows/release.yml`) triggered by
+      `v*` tags or manual dispatch; gates EAS build on full preflight +
+      uploads Sentry sourcemaps in parallel (R66r71)
+- ✅ EAS `postBuildCommand` wired to `sentry-upload.sh` for production
+      profile so sourcemaps upload automatically per build on EAS
+      workers, with graceful skip when `SENTRY_AUTH_TOKEN` not set
+      (R66r71)
+- ✅ 910/910 tests across 86 suites, 0 TS errors
 
 ---
 

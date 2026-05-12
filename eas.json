@@ -30,7 +30,13 @@
       "env": {
         "EXPO_PUBLIC_DEMO_MODE": "false"
       },
-      "autoIncrement": true
+      "autoIncrement": true,
+      "ios": {
+        "postBuildCommand": "bash scripts/sentry-upload.sh"
+      },
+      "android": {
+        "postBuildCommand": "bash scripts/sentry-upload.sh"
+      }
     }
   },
   "submit": {

@@ -152,6 +152,14 @@ for (const loc of fastLocales) {
   }
 }
 
+// ASC + Play length-limit gate (catches ITMS-90000 before upload)
+try {
+  execSync('node scripts/check-asc-listing.mjs', { cwd: repoRoot, stdio: 'pipe' });
+  ok('check-asc-listing — all field lengths within ASC + Play limits');
+} catch (e) {
+  fatal('check-asc-listing failed — run `npm run check:listings` for details');
+}
+
 // ─── 6. app.json sanity ────────────────────────────────────────────────────
 section('app.json');
 const appJson = JSON.parse(readFileSync(join(repoRoot, 'app.json'), 'utf8'));
