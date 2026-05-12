@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Web favicon for admin/ + customer portal. 192×192 canvas (rasterized
+  at 48×48 and 192×192 by the render script). Solid DK bg with the V mark.
+-->
+<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="vfill" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#F97316"/>
+      <stop offset="0.6" stop-color="#C2410C"/>
+      <stop offset="1" stop-color="#9A3412"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="192" height="192" rx="36" fill="#0B0E11"/>
+
+  <path d="
+    M 60 60
+    L 80 60
+    L 96 120
+    L 112 60
+    L 132 60
+    L 105 144
+    L 87 144
+    Z"
+    fill="url(#vfill)"/>
+</svg>

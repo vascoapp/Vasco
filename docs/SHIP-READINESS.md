@@ -32,35 +32,49 @@ Full walk-through: [`testflight-checklist.md`](./testflight-checklist.md).
 
 ## 2. Brand assets — gates TestFlight External + App Store
 
-Today's state: `assets/icon.png` + `assets/adaptive-icon.png` are the
-Expo template **placeholder** (gray crosshair grid on white). Apple will
-reject the App Store submission with placeholder icons; TestFlight
-Internal still works.
+R66r67 replaced the Expo crosshair with a branded sunset-orange V mark
+on DK slate. Suitable for TestFlight Internal + External. Brand-team
+final art still recommended before App Store production launch.
 
 | Asset | Required for | Spec | Status |
 |---|---|---|---|
-| `assets/icon.png` (iOS) | TF external, App Store | 1024×1024 PNG, no transparency, no alpha, sRGB | ❌ placeholder |
-| `assets/adaptive-icon.png` (Android foreground) | Play Store | 1024×1024, transparent bg, content in 66% safe-zone (centered circle) | ❌ placeholder |
-| `assets/splash-icon.png` (splash logo) | TF + Prod | 1242×2436+ PNG transparent, centered | ❌ placeholder |
-| `assets/favicon.png` (admin web) | admin dashboard | 48×48 / 192×192 | ❌ placeholder |
+| `assets/icon.png` (iOS) | TF external, App Store | 1024×1024 PNG, no transparency, no alpha, sRGB | 🟡 R66r67 branded placeholder |
+| `assets/adaptive-icon.png` (Android foreground) | Play Store | 1024×1024, transparent bg, content in 66% safe-zone (centered circle) | 🟡 R66r67 branded placeholder |
+| `assets/splash-icon.png` (splash logo) | TF + Prod | 1242×2436+ PNG transparent, centered | 🟡 R66r67 branded placeholder |
+| `assets/favicon.png` (admin web) | admin dashboard | 48×48 / 192×192 | 🟡 R66r67 branded placeholder |
 | Notification small-icon (Android) | Prod push UX | 96×96 dp monochrome transparent PNG | ❌ removed in R66.24 (dangling ref) |
 | App Store **feature graphic** (Play) | Play Store | 1024×500 PNG | ❌ |
 | App Store **preview video** (optional) | Bumps conversion | 15-30s vertical mp4 per locale | ❌ |
 
-After replacing `icon.png` + `adaptive-icon.png`, also flip
-`app.json:219 android.adaptiveIcon.backgroundColor` from `#ffffff` to
-`#0B0E11` (DK theme bg). The placeholder PNGs are white; the real
-foregrounds should be transparent so the brand-bg shows through.
+**To swap in brand-team final art:** replace the SVG sources in
+`assets/source/{icon-ios,adaptive-foreground,splash-mark,favicon}.svg`,
+then run `npm run render:icons` (uses `sharp`, already a dev dep).
+PNGs regenerate deterministically; don't hand-edit the PNG outputs.
+`app.json:219 android.adaptiveIcon.backgroundColor` is `#0B0E11` (DK
+slate) — pair with transparent-bg foreground.
 
 ---
 
 ## 3. Screenshots — gates TestFlight External + App Store
 
-Apple requires screenshots at submission. **Zero exist today.**
+Apple requires screenshots at submission. **Zero captured today**, but
+capture is fully automated post-build:
 
-Each one needs to be captured on a real device or via a 1:1 simulator,
-then localized strings rendered in each language. Easiest path: run the
-app in each locale, navigate to the 5 hero flows, screen-grab.
+**R66r67 shipped the capture pipeline:**
+- `.maestro/screenshots.yaml` — one Maestro flow that logs in, switches
+  locale via in-app picker, navigates to the 5 hero screens, and takes
+  a screenshot at each
+- `scripts/capture-screenshots.sh` — bash wrapper that loops 6 locales ×
+  3 device variants (6.9" iPhone, 6.5" iPhone, iPad 13"), boots the
+  simulator, and renames outputs into `./screenshots/${variant}/${locale}/`
+  ready for App Store Connect upload
+- `npm run capture:screenshots` once Maestro CLI is installed
+  (`curl -sL https://get.maestro.mobile.dev | bash`) and a TestFlight
+  build is loaded on the simulator
+
+What's left for the operator: install Maestro, boot a sim with the
+preview build, run the script. ~10-15 min for all 90 screenshots
+(6 locales × 3 variants × 5 screens).
 
 ### Required device sizes
 

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  iOS app icon — solid background (Apple does NOT support alpha for iOS).
+  1024×1024 square; iOS rounds the corners itself.
+  Brand: DK Sunset Slate (bg #0B0E11) with a sunset-orange "V" mark.
+
+  R66r67 placeholder. Replace with brand-team final art at the same path —
+  scripts/render-icons.mjs re-renders the PNGs from whatever SVG lands here.
+-->
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0F141B"/>
+      <stop offset="1" stop-color="#0B0E11"/>
+    </linearGradient>
+    <linearGradient id="vfill" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#F97316"/>
+      <stop offset="0.6" stop-color="#C2410C"/>
+      <stop offset="1" stop-color="#9A3412"/>
+    </linearGradient>
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="20" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Solid bg fills the whole 1024 frame; iOS applies its own rounded mask -->
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+
+  <!-- Vasco V mark: bold geometric chevron centered in the frame.
+       Drawn as a single polygon so it scales cleanly at small sizes.
+       Vertices chosen so the V occupies ~52% of the canvas (within
+       Apple HIG recommended 60% safe area for app marks). -->
+  <g filter="url(#glow)">
+    <path d="
+      M 280 320
+      L 392 320
+      L 512 624
+      L 632 320
+      L 744 320
+      L 568 760
+      L 456 760
+      Z"
+      fill="url(#vfill)"/>
+  </g>
+
+  <!-- Subtle amber accent dot — "the moment Vasco saves you" -->
+  <circle cx="512" cy="800" r="14" fill="#F59E0B" opacity="0.85"/>
+</svg>

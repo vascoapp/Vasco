@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Android adaptive icon FOREGROUND — transparent bg, content centered in
+  the 66% safe-zone (676×676 inside the 1024×1024 canvas).
+  Pair this with app.json android.adaptiveIcon.backgroundColor = "#0B0E11"
+  (DK theme bg) so the V floats on the slate.
+
+  Android OEMs mask this with circle / squircle / teardrop / square shapes
+  per launcher, so the content MUST stay inside the 66% safe-zone or get
+  clipped on some devices. The chevron points are well inside that box.
+
+  R66r67 placeholder. Replace with brand-team final art at the same path.
+-->
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="vfill" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#F97316"/>
+      <stop offset="0.6" stop-color="#C2410C"/>
+      <stop offset="1" stop-color="#9A3412"/>
+    </linearGradient>
+  </defs>
+
+  <!-- NO background rect — Android applies bg via app.json adaptiveIcon.backgroundColor.
+       Content sits in the 174..850 range (66% safe-zone centered on 512). -->
+
+  <g>
+    <!-- Same V geometry as icon-ios.svg but compressed into safe-zone -->
+    <path d="
+      M 360 380
+      L 440 380
+      L 512 580
+      L 584 380
+      L 664 380
+      L 552 700
+      L 472 700
+      Z"
+      fill="url(#vfill)"/>
+  </g>
+
+  <!-- Amber accent dot, also inside safe-zone -->
+  <circle cx="512" cy="740" r="12" fill="#F59E0B" opacity="0.85"/>
+</svg>

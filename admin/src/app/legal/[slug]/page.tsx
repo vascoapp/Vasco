@@ -50,7 +50,7 @@ export default async function LegalPage({
         </a>
       </nav>
       <article
-        className="prose prose-zinc max-w-none prose-headings:font-semibold prose-a:text-[#E35205]"
+        className="prose prose-zinc max-w-none prose-headings:font-semibold prose-a:text-[#F97316]"
         dangerouslySetInnerHTML={{ __html: html }}
       />
       <footer className="mt-16 border-t border-zinc-200 pt-6 text-xs text-zinc-500">

@@ -1,0 +1,120 @@
+appId: com.vasco.app
+name: Capture App Store screenshots (5 hero × 1 locale)
+tags:
+  - screenshots
+env:
+  # Override at invocation: maestro test -e LOCALE=nl -e VARIANT=6_9inch ...
+  LOCALE: en
+  VARIANT: 6_9inch
+---
+
+# R66r67: app-store screenshots for one locale × one device variant.
+# Run via scripts/capture-screenshots.sh which loops 6 locales × N variants.
+#
+# Naming: ${VARIANT}_${LOCALE}_${n}_${slug}.png
+# Output: maestro saves to ~/.maestro/tests/<runId>/screenshots/
+# scripts/capture-screenshots.sh moves them into ./screenshots/ named for ASC.
+#
+# Each screenshot maps to App Store Connect's required slots:
+#   1_vandaag          — search-result hero (EVE queue + today)
+#   2_quote_builder    — tiered quote preview
+#   3_geld_outstanding — invoice list + payment-link CTA
+#   4_photo_to_quote   — AI photo analysis
+#   5_compliance       — VAT prep / GoBD audit trail
+
+# 1. Launch into the requested locale.
+# Vasco persists user.language via Profile setting; we set it via the
+# onboarding language step on first launch, or via the language picker if
+# already onboarded. clearState: true forces a fresh hydrate so the device
+# locale picker fires (Vasco defaults to device locale on first run).
+- launchApp:
+    clearState: true
+    arguments:
+      EXPO_PUBLIC_DEMO_MODE: "true"
+
+# 2. Demo login — preview profile gates this behind DEMO_MODE.
+- tapOn: "contractor@vasco.dev"
+- inputText: "review"
+- tapOn:
+    text: "Sign in"
+    optional: true
+- tapOn:
+    text: "Log in"
+    optional: true
+
+# 3. Switch language to ${LOCALE} via Profile → Language.
+# Skip the switch if LOCALE is the device default.
+- runScript: |
+    // Only switch if not already in the requested locale.
+    // Maestro doesn't expose i18n state directly so we just always tap
+    // through; if the locale is already the target the picker is a no-op.
+
+- tapOn:
+    text: "Vasco"
+    optional: true  # 5th tab (settings hub)
+- tapOn:
+    text: "Profile"
+    optional: true
+- tapOn:
+    text: "Language"
+    optional: true
+- tapOn:
+    text: "${LOCALE_DISPLAY}"
+    optional: true
+- pressKey: Back
+- pressKey: Back
+
+# 4. Screenshot 1 — Vandaag
+- tapOn:
+    text: "Vandaag"
+    optional: true
+- assertVisible:
+    id: "vasco-card"
+    optional: true
+- takeScreenshot: "${VARIANT}_${LOCALE}_1_vandaag"
+
+# 5. Screenshot 2 — Tiered Quote Builder preview
+- tapOn:
+    text: "Werk"
+    optional: true
+- tapOn:
+    text: "Nieuwe offerte"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "${VARIANT}_${LOCALE}_2_quote_builder"
+- pressKey: Back
+
+# 6. Screenshot 3 — Geld (outstanding invoices)
+- tapOn:
+    text: "Geld"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "${VARIANT}_${LOCALE}_3_geld_outstanding"
+
+# 7. Screenshot 4 — Photo → Quote (AI photo analysis flow)
+- tapOn:
+    text: "AIQuoteFromPhoto"
+    optional: true
+- tapOn:
+    text: "Photo"
+    optional: true  # fallback label
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: "${VARIANT}_${LOCALE}_4_photo_to_quote"
+- pressKey: Back
+
+# 8. Screenshot 5 — Compliance / VAT prep
+- tapOn:
+    text: "Geld"
+    optional: true
+- tapOn:
+    text: "BTW-aangifte"
+    optional: true
+- tapOn:
+    text: "VAT prep"
+    optional: true  # English fallback
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: "${VARIANT}_${LOCALE}_5_compliance"

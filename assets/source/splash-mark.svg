@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Splash-screen logo. Transparent bg — splash backgroundColor in
+  app.json:expo.splash already #0B0E11 (DK slate).
+  Same V mark, slightly smaller (Expo's splash plugin centers it).
+
+  R66r67 placeholder.
+-->
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="vfill" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#F97316"/>
+      <stop offset="0.6" stop-color="#C2410C"/>
+      <stop offset="1" stop-color="#9A3412"/>
+    </linearGradient>
+  </defs>
+
+  <g>
+    <path d="
+      M 320 360
+      L 416 360
+      L 512 600
+      L 608 360
+      L 704 360
+      L 560 740
+      L 464 740
+      Z"
+      fill="url(#vfill)"/>
+  </g>
+
+  <!-- Wordmark below the mark -->
+  <text x="512" y="830"
+        font-family="Archivo, Inter, system-ui, sans-serif"
+        font-size="72"
+        font-weight="900"
+        letter-spacing="14"
+        text-anchor="middle"
+        fill="#FFFFFF">VASCO</text>
+</svg>
