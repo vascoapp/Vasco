@@ -10,7 +10,8 @@
 
 const getEnvVar = (key: string, fallback: string = ''): string => {
   const value = process.env[key] ?? fallback;
-  if (!value && !fallback) {
+  if (!value && !fallback && __DEV__) {
+    // eslint-disable-next-line no-console
     console.warn(`[env] Missing environment variable: ${key}`);
   }
   return value;

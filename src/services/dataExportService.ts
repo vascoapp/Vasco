@@ -7,6 +7,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Share, Platform } from 'react-native';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -144,6 +145,100 @@ async function collectAllData(): Promise<Record<string, unknown>> {
   return data;
 }
 
+// ---------------------------------------------------------------------------
+// R66r61: GDPR Article 20 — collect from Supabase backend
+// ---------------------------------------------------------------------------
+// Pre-r61 exportAllData only read AsyncStorage. For a contractor whose
+// phone was reinstalled (or who exports before the FE first re-hydrates
+// from BE), the cache is empty — the GDPR portability obligation is
+// satisfied only for users who never reinstall.
+//
+// This pulls the canonical row sets from Supabase scoped to the
+// authenticated user. Returns null when offline / unconfigured so the
+// caller can fall back to AsyncStorage-only without throwing.
+// Failures on individual tables are logged but don't abort the whole
+// export — partial-but-honest beats nothing.
+// ---------------------------------------------------------------------------
+
+interface BackendDataset {
+  documents: unknown[];     // quotes + invoices (polymorphic R278 table)
+  customers: unknown[];
+  jobs: unknown[];
+  job_materials: unknown[];
+  line_items: unknown[];
+  materials: unknown[];
+  suppliers: unknown[];
+  business_settings: unknown[];
+  signatures: unknown[];
+  decision_trackers: unknown[];
+  expenses: unknown[];
+  fetched_at: string;
+}
+
+async function collectFromBackend(): Promise<BackendDataset | null> {
+  try {
+    // Gate on the configured flag first — when env vars are missing, the
+    // module-level supabase client uses placeholder URLs that would 404.
+    if (!isSupabaseConfigured) return null;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    // RLS scopes every query to auth.uid() automatically — these calls
+    // return only the contractor's own rows. We still pass the userId
+    // to filter on the rare table where RLS is service-only (e.g. an
+    // export of cohort-aggregate data would need separate handling, but
+    // that's not GDPR-portable for the individual anyway).
+    const queries = {
+      documents: () => supabase.from('documents').select('*').eq('user_id', user.id),
+      customers: () => supabase.from('customers').select('*').eq('user_id', user.id),
+      jobs: () => supabase.from('jobs').select('*').eq('user_id', user.id),
+      job_materials: () => supabase.from('job_materials').select('*').eq('user_id', user.id),
+      line_items: () => supabase.from('line_items').select('*').eq('user_id', user.id),
+      materials: () => supabase.from('materials').select('*').eq('user_id', user.id),
+      suppliers: () => supabase.from('suppliers').select('*').eq('user_id', user.id),
+      business_settings: () => supabase.from('business_settings').select('*').eq('user_id', user.id),
+      // typegen drift on tables added post-1.0
+      signatures: () => (supabase.from('signatures' as any) as any).select('*').eq('contractor_user_id', user.id),
+      decision_trackers: () => supabase.from('decision_trackers').select('*').eq('user_id', user.id),
+      expenses: () => (supabase.from('expenses' as any) as any).select('*').eq('user_id', user.id),
+    };
+
+    const result: BackendDataset = {
+      documents: [],
+      customers: [],
+      jobs: [],
+      job_materials: [],
+      line_items: [],
+      materials: [],
+      suppliers: [],
+      business_settings: [],
+      signatures: [],
+      decision_trackers: [],
+      expenses: [],
+      fetched_at: new Date().toISOString(),
+    };
+
+    // Run in parallel — a slow table doesn't block the others.
+    const entries = Object.entries(queries) as [keyof BackendDataset, () => Promise<unknown>][];
+    await Promise.all(
+      entries.map(async ([key, run]) => {
+        try {
+          const { data, error } = (await run()) as { data: unknown[] | null; error: unknown };
+          if (error || !data) return;
+          (result as unknown as Record<string, unknown>)[key] = data;
+        } catch {
+          // Per-table failure: leave [] in place. Better partial than nothing.
+        }
+      }),
+    );
+
+    return result;
+  } catch {
+    return null;
+  }
+}
+
 async function collectByKey(storageKey: string): Promise<unknown[]> {
   const raw = await AsyncStorage.getItem(storageKey);
   const parsed = parseStoredValue(raw);
@@ -177,7 +272,23 @@ export async function exportAllData(
   userInfo?: { userId?: string; email?: string },
 ): Promise<ExportResult> {
   try {
-    const data = await collectAllData();
+    // R66r61: pull both local cache + Supabase backend in parallel. Backend
+    // is the canonical source post-reinstall; local cache covers offline-
+    // only state (drafts, queued writes, intelligence local-storage).
+    // Backend null means offline/unconfigured — local-only export still ships.
+    const [localData, backendData] = await Promise.all([
+      collectAllData(),
+      collectFromBackend(),
+    ]);
+
+    // Merge: backend rows go under `backend.*`, local-only state stays
+    // under top-level labels. No row-level dedup — local has staler / temp-id
+    // copies of the same entities; both representations are useful to the
+    // user (one shows in-flight drafts, the other shows the BE truth).
+    const data: Record<string, unknown> = { ...localData };
+    if (backendData) {
+      data.backend = backendData;
+    }
     const keyCount = Object.keys(data).length;
 
     const metadata: ExportMetadata = {

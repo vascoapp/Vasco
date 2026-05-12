@@ -18,6 +18,7 @@ import { InlineInsight, VascoInsightCard } from '../../src/components/shared/Vas
 import { useAppState } from '../../src/state/AppState';
 import { useInlineInsight, useVascoGuidance } from '../../src/services/vascoGuidanceService';
 import { QuoteLineItem } from '../../src/domain/lineItems';
+import { logError } from '../../src/utils/errorHandler';
 import { SemanticColors } from '../../src/theme/colors';
 import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
@@ -141,7 +142,7 @@ export default function NewQuoteScreen() {
       const quoteId = await addQuote(customerArg, job.trim(), validItems);
       router.replace(`/quotes/${quoteId}`);
     } catch (err) {
-      console.warn('[NewQuote] Save failed:', err);
+      logError('NewQuote', err);
       Alert.alert(t('common.error', 'Error'), t('quoteNew.saveFailed', 'Could not save quote. Please try again.'));
     } finally {
       setSaving(false);

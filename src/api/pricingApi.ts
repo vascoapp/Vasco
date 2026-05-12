@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { isSupabaseConfigured } from '../lib/supabase';
+import { logError } from '../utils/errorHandler';
 import {
   insertPriceObservation,
   bulkInsertPriceObservations,
@@ -712,7 +713,7 @@ export function useSupplierComparison(materialId: string | undefined) {
     setLoading(true);
     pricingApi.compareSupplierPrices(materialId)
       .then(setComparison)
-      .catch(console.error)
+      .catch((err) => logError('pricingApi.compareSupplierPrices', err))
       .finally(() => setLoading(false));
   }, [materialId]);
 

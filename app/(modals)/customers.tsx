@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
+import { logError } from '../../src/utils/errorHandler';
 import { Screen } from '../../src/components/Screen';
 import { useAppState } from '../../src/state/AppState';
 import { SemanticColors } from '../../src/theme/colors';
@@ -49,7 +50,7 @@ export default function CustomersScreen() {
       setAddress('');
       setShowForm(false);
     } catch (err) {
-      console.warn('[Customers] Save failed:', err);
+      logError('Customers', err);
       Alert.alert('Error', 'Could not save customer.');
     } finally {
       setSaving(false);

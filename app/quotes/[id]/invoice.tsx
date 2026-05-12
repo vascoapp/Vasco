@@ -11,6 +11,7 @@ import { Radius } from '../../../src/theme/radius';
 import { Spacing } from '../../../src/theme/spacing';
 import { Typography } from '../../../src/theme/typography';
 import { useAppState } from '../../../src/state/AppState';
+import { logError } from '../../../src/utils/errorHandler';
 
 export default function InvoiceFromQuoteScreen() {
   const { t } = useTranslation();
@@ -58,7 +59,7 @@ export default function InvoiceFromQuoteScreen() {
       const newId = await addInvoice(id);
       setInvoiceId(newId);
     } catch (err) {
-      console.warn('[InvoiceFromQuote] Create failed:', err);
+      logError('InvoiceFromQuote', err);
       Alert.alert(t('common.error'), t('quoteToInvoice.createFailed'));
     } finally {
       setCreating(false);

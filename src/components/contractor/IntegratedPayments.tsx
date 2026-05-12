@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import {
@@ -344,6 +345,7 @@ interface IntegratedPaymentsProps {
 
 export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose }) => {
   const { t } = useTranslation();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'outstanding' | 'paid' | 'settings'>('outstanding');
   const [settings] = useState<PaymentSettings>(MOCK_PAYMENT_SETTINGS);
   const [invoices] = useState<ContractorInvoice[]>(MOCK_CONTRACTOR_INVOICES);
@@ -677,11 +679,18 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
         )}
       </ScrollView>
 
-      {/* Quick Action FAB */}
+      {/* R66r61: FAB routes to /quotes/new — the canonical entry for new
+          business. The earlier Alert was a placeholder that confirmed
+          "Create a new invoice with payment link?" but didn't follow
+          through. Invoices in this app are minted from accepted quotes
+          (addInvoiceFromJob), so routing to the quote-create flow is the
+          correct shortcut from the outstanding-invoices view. */}
       {activeTab === 'outstanding' && (
         <Pressable
           style={styles.fab}
-          onPress={() => Alert.alert('Create Invoice', 'Create a new invoice with payment link?')}
+          accessibilityRole="button"
+          accessibilityLabel={t('payments.newQuoteFab', 'New quote')}
+          onPress={() => router.push('/quotes/new')}
         >
           <Ionicons name="add" size={24} color="#fff" />
         </Pressable>

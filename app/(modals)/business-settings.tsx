@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
+import { logError } from '../../src/utils/errorHandler';
 import { Screen } from '../../src/components/Screen';
 import { Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -215,7 +216,7 @@ export default function BusinessSettingsScreen() {
       });
       router.back();
     } catch (err) {
-      console.warn('[BusinessSettings] Save failed:', err);
+      logError('BusinessSettings', err);
       Alert.alert(t('common.error', 'Error'), t('common.retry', 'Probeer opnieuw'));
     } finally {
       setSaving(false);

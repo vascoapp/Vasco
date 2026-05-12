@@ -6,9 +6,10 @@ export default function PricebookScreen() {
 
   return (
     <Pricebook
-      onSelectItem={(item) => {
-        // Could navigate to item detail or add to quote
-        console.log('Selected pricebook item:', item.id);
+      onSelectItem={() => {
+        // Placeholder — selecting from this screen doesn't route anywhere
+        // (callers that want to add-to-quote use the embedded Pricebook
+        // inside TieredQuoteBuilder, which handles selection directly).
       }}
       onClose={() => router.back()}
     />

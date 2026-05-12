@@ -57,19 +57,29 @@ ${tracker.customerName ? 'Uw aannemer' : ''}`;
     try {
       await Share.share({ message: accessCode });
     } catch {
-      Alert.alert('Code', accessCode);
+      // R66r61: Share.share rarely fails on mobile but when it does (e.g.
+      // user cancels mid-flow on iOS, or Android share intent denied), the
+      // contractor still needs to see + manually copy the code. Localized
+      // title + value-in-body so VoiceOver reads "Access code, AB12CD".
+      Alert.alert(
+        t('share.accessCodeTitle', 'Access code'),
+        accessCode,
+      );
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  }, [accessCode]);
+  }, [accessCode, t]);
 
   const handleCopyLink = useCallback(async () => {
     try {
       await Share.share({ message: shareUrl });
     } catch {
-      Alert.alert('Link', shareUrl);
+      Alert.alert(
+        t('share.linkTitle', 'Share link'),
+        shareUrl,
+      );
     }
-  }, [shareUrl]);
+  }, [shareUrl, t]);
 
   const handleShareWhatsApp = () => {
     const phone = tracker.customerPhone?.replace(/\s/g, '') || '';

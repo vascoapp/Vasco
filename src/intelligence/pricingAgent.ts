@@ -7,7 +7,7 @@
 
 import { pricingApi, PriceObservation, PricingRecommendation, PriceReference } from '../api/pricingApi';
 import { intelligence, trackUserAction } from './intelligenceEngine';
-import { logWarn, logInfo } from '../utils/errorHandler';
+import { logWarn, logInfo, logError } from '../utils/errorHandler';
 
 // ============================================
 // AGENT CONFIGURATION
@@ -540,7 +540,7 @@ export function useMaterialPriceComparison(materialId: string | undefined) {
     setLoading(true);
     pricingAgent.compareSupplierPrices(materialId)
       .then(setComparison)
-      .catch(console.error)
+      .catch((err) => logError('pricingAgent.compareSupplierPrices', err))
       .finally(() => setLoading(false));
   }, [materialId]);
 
@@ -554,7 +554,7 @@ export function usePricingAnalytics(period: '7d' | '30d' | '90d' | '1y' = '30d')
   useEffect(() => {
     pricingAgent.getAnalytics(period)
       .then(setAnalytics)
-      .catch(console.error)
+      .catch((err) => logError('pricingAgent.getAnalytics', err))
       .finally(() => setLoading(false));
   }, [period]);
 
