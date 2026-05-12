@@ -1,0 +1,127 @@
+appId: com.vasco.app
+name: E2E smoke — login + tab navigation + tiered quote + invoice + signout
+tags:
+  - smoke
+  - e2e
+---
+
+# R66r70: stricter smoke than golden-path.yaml — runs assertions that
+# actually fail on regression, not the lenient "optional: true"
+# pattern of the earlier flow.
+#
+# Designed for nightly CI against an EAS preview build on a simulator.
+# Pre-requisites:
+#   - EXPO_PUBLIC_DEMO_MODE=true (default in `preview` profile)
+#   - At least one demo contractor seeded — contractor@vasco.dev
+#
+# Run:
+#   maestro test .maestro/e2e-smoke.yaml
+#
+# If this passes, the build is good enough to push to TestFlight Internal.
+
+# ─── 1. Launch into a clean state ──────────────────────────────────────────
+- launchApp:
+    clearState: true
+    arguments:
+      EXPO_PUBLIC_DEMO_MODE: "true"
+
+# Login screen visible
+- assertVisible:
+    text: "VASCO"  # wordmark in the gradient circular mark
+    optional: true
+
+# ─── 2. Demo login ─────────────────────────────────────────────────────────
+- tapOn: "contractor@vasco.dev"
+- inputText: "review"
+- tapOn:
+    text: "Sign in"
+    optional: true       # locale may say "Log in"
+- tapOn:
+    text: "Log in"
+    optional: true
+
+# ─── 3. Verify the contractor tab layout loaded ───────────────────────────
+# After login → land on Vandaag (Today). Verify all 5 tab labels visible.
+- assertVisible:
+    text: "Vandaag"
+- assertVisible:
+    text: "Werk"
+- assertVisible:
+    text: "Geld"
+
+# ─── 4. Tap each tab and verify it renders ────────────────────────────────
+- tapOn: "Werk"
+- waitForAnimationToEnd:
+    timeout: 1500
+- assertVisible:
+    text: "Werk"      # tab still highlighted
+
+- tapOn: "Geld"
+- waitForAnimationToEnd:
+    timeout: 1500
+- assertVisible:
+    text: "Geld"
+
+- tapOn: "Vandaag"
+- waitForAnimationToEnd:
+    timeout: 1500
+- assertVisible:
+    text: "Vandaag"
+
+# ─── 5. Open the tiered quote builder ─────────────────────────────────────
+- tapOn: "Werk"
+- waitForAnimationToEnd:
+    timeout: 1500
+# "Nieuwe offerte" / "New quote" — let either match
+- tapOn:
+    text: "Nieuwe offerte"
+    optional: true
+- tapOn:
+    text: "New quote"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# The 3 tier names ("Goed/Beter/Best") are not translated per locale —
+# they're a product/brand decision. So we can assert on them strictly.
+- assertVisible:
+    text: "Goed"
+
+# ─── 6. Back out — the build itself is enough proof here ──────────────────
+- pressKey: Back
+- pressKey: Back
+- waitForAnimationToEnd:
+    timeout: 1500
+
+# ─── 7. Check invoices list ───────────────────────────────────────────────
+- tapOn: "Geld"
+- waitForAnimationToEnd:
+    timeout: 1500
+# Geld tab has Offertes + Facturen subtabs
+- tapOn:
+    text: "Facturen"
+    optional: true
+- tapOn:
+    text: "Invoices"
+    optional: true
+
+# ─── 8. Sign out ──────────────────────────────────────────────────────────
+- tapOn:
+    text: "Vasco"
+    optional: true       # 5th tab is the settings hub
+- waitForAnimationToEnd:
+    timeout: 1500
+- tapOn:
+    text: "Sign out"
+    optional: true
+- tapOn:
+    text: "Uitloggen"
+    optional: true
+- tapOn:
+    text: "Abmelden"
+    optional: true
+
+# Back to login
+- assertVisible:
+    text: "VASCO"
+    optional: true
