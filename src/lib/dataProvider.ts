@@ -415,32 +415,38 @@ export async function deleteProject(id: string): Promise<void> {
 
 // ── Document Numbering ───────────────────────────────────────
 
-// R66 round 6: prefix + format must match the BE RPC `next_document_number`
-// in `004_base_schema.sql` — `Q0001` for quotes, `I0001` for invoices, no
-// year suffix. Was producing `Q-260001` / `INV-260001` on the offline fallback
-// path, causing inconsistent numbering between online and offline mints
-// (Belastingdienst NL Art. 35 wet OB 1968 + DE GoBD both require gap-free
-// sequential numbering). Year suffix is stripped — if we want year-prefixed
-// numbering, the BE RPC has to lead and FE follows.
-function localFallbackDocNumber(docType: 'quote' | 'invoice', current: number): string {
-  const prefix = docType === 'quote' ? 'Q' : 'I';
-  return `${prefix}${String(current).padStart(4, '0')}`;
+// R66r62: offline-mint placeholder prefix. When Supabase is unreachable we
+// can NO LONGER mint a Q0008-style canonical number locally — if two
+// devices both mint Q0008 while offline, the BE rejects one with 23505 on
+// reconnect (R66.36 audit finding). Instead we mint Q-OFF-<6 hex chars>
+// which is distinctly NOT in the BE sequence; the offline write queue
+// (offlineWriteQueue.applyWrite) detects this prefix at flush time, calls
+// the canonical next_document_number RPC, swaps the placeholder for the
+// real number, broadcasts via docNumberRemapBus so the local row updates,
+// and only then performs the insert. Net effect: no collision possible,
+// numbering stays gap-free + sequential, contractor sees the canonical
+// number once back online.
+export const OFFLINE_DOC_NUMBER_PREFIX = { quote: 'Q-OFF-', invoice: 'I-OFF-' } as const;
+
+export function isOfflineMintedDocNumber(num: string | undefined): boolean {
+  if (!num) return false;
+  return num.startsWith('Q-OFF-') || num.startsWith('I-OFF-');
+}
+
+function offlineMintedDocNumber(docType: 'quote' | 'invoice'): string {
+  // 6 hex chars (24 bits) is enough — collision probability for a single
+  // user across their per-device offline session is negligible.
+  const hex = Array.from({ length: 6 }, () =>
+    Math.floor(Math.random() * 16).toString(16),
+  ).join('').toUpperCase();
+  return `${OFFLINE_DOC_NUMBER_PREFIX[docType]}${hex}`;
 }
 
 export async function nextDocumentNumber(docType: 'quote' | 'invoice'): Promise<string> {
-  const storageKey = `@vasco_doc_counter_${docType}`;
-
   if (!isSupabaseConfigured) {
-    try {
-      const raw = await AsyncStorage.getItem(storageKey);
-      const current = raw ? parseInt(raw, 10) : 0;
-      const next = current + 1;
-      await AsyncStorage.setItem(storageKey, String(next));
-      return localFallbackDocNumber(docType, next);
-    } catch {
-      // Last-resort timestamp-based — still uses BE prefix shape.
-      return localFallbackDocNumber(docType, Number(String(Date.now()).slice(-6)));
-    }
+    // Demo / unconfigured — placeholder still distinct from BE sequence
+    // so a future BE migration sees these and can resolve.
+    return offlineMintedDocNumber(docType);
   }
 
   // Retry on 23505 (unique_violation) — brief races between two devices can
@@ -459,16 +465,13 @@ export async function nextDocumentNumber(docType: 'quote' | 'invoice'): Promise<
       break;
     }
   }
-  // Supabase unreachable (paused/offline) — fallback to local counter.
-  try {
-    const raw = await AsyncStorage.getItem(storageKey);
-    const current = raw ? parseInt(raw, 10) : 0;
-    const next = current + 1;
-    await AsyncStorage.setItem(storageKey, String(next));
-    return localFallbackDocNumber(docType, next);
-  } catch {
-    return localFallbackDocNumber(docType, Number(String(Date.now()).slice(-6)));
-  }
+  // Supabase unreachable (paused/offline) — return a Q-OFF-/I-OFF- placeholder.
+  // R66r62: pre-r62 we incremented a local @vasco_doc_counter and minted a
+  // canonical Q0008-style number; two offline devices could mint the same
+  // Q0008 → BE 23505 on reconnect → contractor saw a generic "could not save"
+  // error. Now: placeholder distinct from BE sequence; offlineWriteQueue
+  // swaps to real number at flush time via the RPC.
+  return offlineMintedDocNumber(docType);
 }
 
 // ── Aggregate loaders (for AppState) ─────────────────────────

@@ -88,6 +88,7 @@ import { withTimeout } from '../utils/withTimeout';
 import { trackEvent } from '../services/eventTrackingService';
 import { fireNotification } from '../services/notificationService';
 import { markStepComplete } from '../services/onboardingTrackerService';
+import { subscribeDocNumberRemap, type DocNumberRemapEvent } from '../services/docNumberRemapBus';
 import { businessProfile as initialBusinessProfile } from '../data/mockBusiness';
 import { invoices as initialInvoices, quotes as initialQuotes } from '../data/mockDocuments';
 import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
@@ -435,6 +436,35 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     });
     return unsub;
   }, [refreshData]);
+
+  // R66r62: subscribe to docNumberRemapBus. When the offline write queue
+  // flushes a document insert whose `document_number` was an offline
+  // placeholder (Q-OFF-XXXXXX), it calls the canonical RPC, swaps the
+  // payload, and emits a remap event here so the local Quote / Invoice
+  // row displayed in the UI updates to the canonical Q0008/I0008.
+  // Closes R66.36 cross-device counter collision.
+  useEffect(() => {
+    const unsub = subscribeDocNumberRemap((event: DocNumberRemapEvent) => {
+      if (event.docType === 'quote') {
+        setQuotes((prev) =>
+          prev.map((q) =>
+            q.id === event.placeholderNumber
+              ? { ...q, id: event.realNumber, updatedAt: new Date().toISOString() }
+              : q,
+          ),
+        );
+      } else {
+        setInvoices((prev) =>
+          prev.map((inv) =>
+            inv.id === event.placeholderNumber
+              ? { ...inv, id: event.realNumber, updatedAt: new Date().toISOString() }
+              : inv,
+          ),
+        );
+      }
+    });
+    return unsub;
+  }, []);
 
   // Hydrate from AsyncStorage when offline (no Supabase)
   // persistReady uses state (not ref) to trigger re-render and guard persist effects

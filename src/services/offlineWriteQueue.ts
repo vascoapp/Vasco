@@ -22,9 +22,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { logWarn } from '../utils/errorHandler';
 import { emitIdRemap } from './idRemapBus';
+import { emitDocNumberRemap } from './docNumberRemapBus';
 // R59: temp-id helpers moved to src/lib/idShape.ts so other modules
 // (moat emit gates, AppState refresh, etc.) share one source of truth.
 import { isTempId } from '../lib/idShape';
+import { isOfflineMintedDocNumber } from '../lib/dataProvider';
 
 const QUEUE_KEY = '@vasco_offline_writes';
 const MAX_QUEUE = 200;
@@ -148,7 +150,48 @@ async function applyWrite(entry: QueuedWrite, idMap: Map<string, string>): Promi
       const tempId = (remapped.payload && typeof remapped.payload === 'object'
         ? (remapped.payload as Record<string, any>).id
         : undefined) as string | undefined;
-      const stripped = stripTempId(remapped.payload);
+      let stripped = stripTempId(remapped.payload);
+
+      // R66r62: documents insert with offline-minted document_number.
+      // Swap Q-OFF-XXXXXX / I-OFF-XXXXXX for a fresh canonical number
+      // before insert, then emit on docNumberRemapBus so AppState row
+      // updates its displayed number. The BE RPC is the only source of
+      // truth for sequential numbering — no 23505 collision possible.
+      if (
+        remapped.table === 'documents' &&
+        stripped &&
+        typeof stripped === 'object'
+      ) {
+        const placeholderNum = (stripped as Record<string, any>).document_number;
+        const docType = (stripped as Record<string, any>).doc_type;
+        if (
+          typeof placeholderNum === 'string' &&
+          isOfflineMintedDocNumber(placeholderNum) &&
+          (docType === 'quote' || docType === 'invoice')
+        ) {
+          try {
+            const rpcResult = await supabase.rpc(
+              'next_document_number',
+              { p_doc_type: docType } as any,
+            ) as { data: unknown; error: unknown };
+            const realNum = rpcResult.data;
+            if (!rpcResult.error && typeof realNum === 'string' && realNum.length > 0) {
+              stripped = { ...(stripped as Record<string, any>), document_number: realNum };
+              emitDocNumberRemap({
+                docType,
+                placeholderNumber: placeholderNum,
+                realNumber: realNum,
+              });
+            }
+            // If RPC fails, fall through with the placeholder — likely BE
+            // rejects with 23505 or check-constraint, which surfaces as
+            // !ok and the entry stays queued for the next flush. Not silent.
+          } catch {
+            // Same fall-through — keep placeholder, let insert error out.
+          }
+        }
+      }
+
       if (typeof tempId === 'string' && isTempId(tempId)) {
         // R49: capture BE-generated id so child rows can rewrite their FKs.
         const { data, error } = await table.insert(stripped).select('id').single();
