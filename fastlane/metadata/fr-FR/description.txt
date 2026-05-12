@@ -1,0 +1,23 @@
+Vasco est le copilote administratif des artisans et petites entreprises du BTP. Devis, planning, factures, encaissement — le tout dans une app. Fini les tableurs et les soirées de paperasse.
+
+CE QUE VASCO FAIT POUR VOUS
+• Devis à 3 niveaux (Standard/Recommandé/Premium) acceptés depuis le téléphone du client
+• Scan de factures par IA : lignes extraites automatiquement
+• Liens de paiement via Stripe/Mollie — SEPA, carte, PayPal, Klarna
+• Relances automatiques de paiement et suivis de devis
+• Planning avec notification "J'arrive" pour le client
+• Conformité intégrée : SIRET, TVA, facturation électronique obligatoire B2B 2026
+• E-facturation : Factur-X, Peppol, Chorus Pro
+• Synchronisation avec Pennylane, Axonaut, Sage, Cegid
+
+L'IA QUI TRAVAILLE POUR VOUS
+Vasco prépare les messages client, relance les impayés, calcule les marges matériaux et signale les manques de conformité. Vous validez — Vasco exécute. Rien n'est envoyé au client sans votre accord.
+
+POUR VOTRE MÉTIER
+Plomberie, électricité, gaz/chauffage, menuiserie, peinture, couverture, carrelage, plâtrerie, revêtements, isolation, solaire, vitrerie, paysagisme. Adapté par métier × pays.
+
+VIE PRIVÉE D'ABORD
+Données hébergées en UE. Chiffrement de bout en bout. Droits RGPD complets dans l'app : export, suppression, correction. Nous ne vendons jamais vos données.
+
+TARIFS
+Gratuit pour commencer. Forfaits payants dès 14 €/mois. Résiliable chaque mois. Pas de CB pour tester.

@@ -1,0 +1,49 @@
+# Vasco Fastfile — App Store Connect uploads
+#
+# R66r68. One-command metadata + screenshot uploads to ASC so the operator
+# never has to paste-into-ASC by hand across 6 locales.
+#
+# Setup (one-time):
+#   brew install fastlane
+#   cd fastlane && fastlane init
+#   # When prompted, pick "1) Skip - I'm just here for the screenshots/metadata"
+#
+# Usage:
+#   bundle exec fastlane metadata     # uploads only the txt files in fastlane/metadata/
+#   bundle exec fastlane screenshots  # uploads only the screenshots/ tree
+#   bundle exec fastlane release      # uploads both + submits a new build for review
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Upload metadata to App Store Connect (no build)"
+  lane :metadata do
+    deliver(
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      force: true,                  # don't ask for confirmation
+      precheck_include_in_app_purchases: false,
+      run_precheck_before_submit: false,
+    )
+  end
+
+  desc "Upload screenshots to App Store Connect (no metadata, no binary)"
+  lane :screenshots do
+    deliver(
+      skip_binary_upload: true,
+      skip_metadata: true,
+      force: true,
+      run_precheck_before_submit: false,
+    )
+  end
+
+  desc "Upload metadata + screenshots, prepare for submission"
+  lane :release do
+    deliver(
+      skip_binary_upload: true,     # EAS handles the binary
+      force: true,
+      run_precheck_before_submit: false,
+      submit_for_review: false,     # leave operator to click 'Submit' in ASC
+    )
+  end
+end

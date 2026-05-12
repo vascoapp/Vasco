@@ -1,0 +1,23 @@
+Vasco es tu copiloto administrativo en oficios y reformas. Presupuestar, planificar, facturar y cobrar — todo en una app. Sin Excel ni noches de papeleo.
+
+LO QUE VASCO HACE POR TI
+• Presupuestos en tres niveles (Bueno/Mejor/Premium) que el cliente acepta desde el móvil
+• Escaneo de facturas con IA: líneas extraídas automáticamente
+• Enlaces de pago vía Mollie/Stripe — Bizum, SEPA, tarjeta, Klarna
+• Recordatorios de cobro y seguimiento de presupuestos automáticos
+• Planificación con aviso "Voy de camino" al cliente
+• Cumplimiento integrado: NIF/CIF, IVA, TicketBAI, Verifactu
+• E-facturación: Facturae, Peppol, FACe
+• Sincroniza con Holded, Contasimple, Sage 50, FacturaDirecta
+
+LA IA QUE TRABAJA POR TI
+Vasco prepara mensajes al cliente, persigue impagos, calcula márgenes de materiales y detecta huecos de cumplimiento. Tú apruebas — Vasco actúa. Nada sale al cliente sin tu OK.
+
+PARA TU GREMIO
+Fontanería, electricidad, gas/climatización, carpintería, pintura, tejados, alicatado, pladur, suelos, aislamiento, solar, cristalería, jardinería. Adaptado por oficio × país.
+
+PRIVACIDAD PRIMERO
+Datos alojados en la UE. Cifrado de extremo a extremo. Derechos RGPD completos en la app: exportar, borrar, corregir. Nunca vendemos tus datos.
+
+PRECIOS
+Gratis para empezar. Planes de pago desde 14 €/mes. Cancela cuando quieras. Sin tarjeta para probar.

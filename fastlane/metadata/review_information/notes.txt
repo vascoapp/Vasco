@@ -1,0 +1,31 @@
+Reviewer: please use demo mode (no real Mollie / Moneybird / Supabase
+connection required). The build was uploaded with EXPO_PUBLIC_DEMO_MODE=true,
+which seeds realistic data and gates the entire payment stack behind
+deterministic mock responses.
+
+DEMO ACCOUNTS (any non-empty password works in demo mode):
+  Email: contractor@vasco.dev
+  Password: review
+
+Alternative personas:
+  aannemer@vasco.dev — multi-trade renovation GC view
+  site@vasco.dev — site lead enterprise view
+  new@vasco.dev — fresh user, exercises onboarding
+
+3-MINUTE WALKTHROUGH:
+  1. Launch → tap "contractor@vasco.dev" → any password → Sign in
+  2. Vandaag (home) — scroll to see EVE AI card and today's jobs
+  3. Geld tab → Offertes → tap "Nieuwe offerte" → tiered quote builder loads
+  4. Any invoice row → View & share PDF → confirm PDF renders
+  5. Long-press invoice → Mark as paid → toast confirms
+
+Everything labeled "Connect Mollie", "Export to Moneybird", etc. opens an
+OAuth-style connection screen — reviewers can skip these; all payment
+flows simulate success in demo mode.
+
+PRIVACY: Vasco does not use third-party ad networks. No tracking
+frameworks (AppTrackingTransparency prompt not shown). Data lives in EU
+datacenters (Supabase Frankfurt). Full GDPR rights in-app: Profile →
+Legal → Export my data / Delete my account.
+
+CONTACT: review@vasco.dev for review-specific questions.

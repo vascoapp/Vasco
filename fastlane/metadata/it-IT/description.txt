@@ -1,0 +1,23 @@
+Vasco è il copilota amministrativo di artigiani e piccole imprese edili. Preventivi, pianificazione, fatturazione e incasso — tutto in un'app. Niente più Excel né serate di scartoffie.
+
+COSA FA VASCO PER TE
+• Preventivi a tre livelli (Base/Consigliato/Top) che il cliente accetta dallo smartphone
+• Scansione fatture con IA: righe estratte automaticamente
+• Link di pagamento via Mollie/Stripe — SEPA, carta, Satispay, PayPal
+• Solleciti automatici di pagamento e follow-up preventivi
+• Pianificazione con avviso "Sto arrivando" per il cliente
+• Conformità integrata: Partita IVA, Codice Fiscale, FatturaPA via SDI
+• E-fatturazione: FatturaPA, Peppol
+• Sincronizzazione con Fatture in Cloud, Aruba, TeamSystem
+
+L'IA CHE LAVORA PER TE
+Vasco prepara messaggi al cliente, insegue insoluti, calcola margini materiali e segnala lacune di conformità. Tu approvi — Vasco agisce. Nulla va al cliente senza il tuo OK.
+
+PER IL TUO MESTIERE
+Idraulico, elettricista, gas/termo, falegname, pittore, copertura tetti, piastrellista, intonacatore, pavimenti, isolamento, solare, vetraio, giardinaggio. Adattato per mestiere × paese.
+
+PRIVACY PRIMA DI TUTTO
+Dati ospitati in UE. Crittografia end-to-end. Diritti GDPR completi in-app: esportare, cancellare, correggere. Non vendiamo mai i tuoi dati.
+
+PREZZI
+Gratis per iniziare. Piani a pagamento da 14 €/mese. Disdicibile ogni mese. Niente carta per provare.

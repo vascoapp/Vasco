@@ -113,15 +113,25 @@ locales. Each has short-name, subtitle, short-description, long-description
 (<4000 chars), keywords (<100 chars). Voice is plain-language trade, not
 marketing gloss.
 
-**What still needs to happen:**
-- [ ] **Native-speaker review** of NL/DE/FR/ES/IT (current drafts are
-      machine-quality with some English assumptions baked in)
-- [ ] **Keyword research** — current keywords are educated guesses; ASO
-      tool (AppRadar / SearchMan) recommended to validate
-- [ ] **Promotional text** (170 chars, App Store only, refreshable
-      without resubmission) — not yet drafted
-- [ ] **What's New / changelog** — first release "Welcome to Vasco" copy
-      not yet drafted in 6 locales
+**R66r68 (2026-05-12) added:**
+- ✅ `fastlane/metadata/{locale}/` scaffolding — all 6 locales × 9 files
+  ready for `fastlane release` to upload in one command
+- ✅ `promotional_text.txt` × 6 locales (170-char one-liners) drafted
+- ✅ `release_notes.txt` × 6 locales (v1.0 launch "What's New") drafted
+- ✅ `review_information/` folder with reviewer demo creds + 3-min
+  walkthrough notes
+- ✅ `docs/beta-app-description.md` — paste-into-ASC for External
+  TestFlight Beta App Review form
+- ✅ `docs/app-privacy-questionnaire.md` — pre-filled answers for both
+  ASC App Privacy + Play Console Data Safety questionnaires
+
+**What still needs your input:**
+- [ ] **Native-speaker review** of NL/DE/FR/ES/IT descriptions +
+      promotional text + release notes (drafts are machine-quality)
+- [ ] **Keyword research** — current keywords are educated guesses;
+      run AppRadar / SearchMan for each locale before publish
+- [ ] **`fastlane/metadata/review_information/{first_name,last_name,phone_number}.txt`** —
+      operator's real contact info (placeholders today)
 
 ---
 
