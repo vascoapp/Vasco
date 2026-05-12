@@ -63,7 +63,12 @@ export default function ForgotPasswordScreen() {
           <Text style={styles.subtitle}>
             {t('auth.resetEmailSent', 'We sent a password reset link to {{email}}', { email })}
           </Text>
-          <Pressable style={styles.backBtn} onPress={() => router.back()}>
+          <Pressable
+            style={styles.backBtn}
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel={t('auth.backToLogin', 'Back to login')}
+          >
             <Text style={styles.backBtnText}>{t('auth.backToLogin', 'Back to login')}</Text>
           </Pressable>
         </View>
@@ -78,7 +83,12 @@ export default function ForgotPasswordScreen() {
         style={{ flex: 1 }}
       >
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.closeBtn}>
+          <Pressable
+            onPress={() => router.back()}
+            style={styles.closeBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.back', 'Back')}
+          >
             <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
           </Pressable>
         </View>

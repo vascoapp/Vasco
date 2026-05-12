@@ -167,6 +167,8 @@ export default function LoginScreen() {
                 <Pressable
                   style={styles.forgotBtn}
                   onPress={() => router.push('/forgot-password' as any)}
+                  accessibilityRole="link"
+                  accessibilityLabel={t('auth.forgotPassword', 'Forgot password?')}
                 >
                   <Text style={styles.forgotBtnText}>{t('auth.forgotPassword', 'Forgot password?')}</Text>
                 </Pressable>
@@ -174,6 +176,8 @@ export default function LoginScreen() {
                   <Pressable
                     style={styles.forgotBtn}
                     onPress={() => router.push('/signup' as any)}
+                    accessibilityRole="link"
+                    accessibilityLabel={t('auth.createAccount', 'Create account')}
                   >
                     <Text style={styles.forgotBtnText}>{t('auth.createAccount', 'Create account')}</Text>
                   </Pressable>
@@ -200,6 +204,8 @@ export default function LoginScreen() {
                         <Pressable
                           style={({ pressed }) => [styles.demoCard, pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 }]}
                           onPress={() => handleDemoLogin(account.email)}
+                          accessibilityRole="button"
+                          accessibilityLabel={`${t('auth.signInAs', 'Sign in as')} ${account.name}, ${config.label}`}
                         >
                           <View style={[styles.demoIcon, { backgroundColor: config.primaryColor + '15' }]}>
                             <Ionicons name={account.icon as keyof typeof Ionicons.glyphMap} size={18} color={config.primaryColor} />
@@ -220,6 +226,8 @@ export default function LoginScreen() {
                 {/* Onboarding demo — test the full onboarding flow */}
                 <Pressable
                   style={({ pressed }) => [styles.onboardingBtn, pressed && { opacity: 0.85 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('auth.testOnboarding', 'Test onboarding')}
                   onPress={async () => {
                     // Clear onboarding flag + AsyncStorage data to force fresh start
                     await AsyncStorage.removeItem('@vasco_onboarding').catch(() => {});
@@ -238,6 +246,8 @@ export default function LoginScreen() {
                 {/* Reset demo data */}
                 <Pressable
                   style={({ pressed }) => [styles.resetBtn, pressed && { opacity: 0.85 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('auth.resetDemoData', 'Reset demo data')}
                   onPress={() => {
                     Alert.alert(
                       t('auth.resetDemoData', 'Reset demo data'),
@@ -272,6 +282,8 @@ export default function LoginScreen() {
               {t('auth.legalNotice', 'By continuing you agree to our')}{' '}
               <Text
                 style={styles.legalLink}
+                accessibilityRole="link"
+                accessibilityLabel={t('legal.termsOfService', 'Terms')}
                 onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_TERMS_URL ?? 'https://vasco.app/terms')}
               >
                 {t('legal.termsOfService', 'Terms')}
@@ -279,6 +291,8 @@ export default function LoginScreen() {
               {' '}&{' '}
               <Text
                 style={styles.legalLink}
+                accessibilityRole="link"
+                accessibilityLabel={t('legal.privacyPolicy', 'Privacy Policy')}
                 onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://vasco.app/privacy')}
               >
                 {t('legal.privacyPolicy', 'Privacy Policy')}

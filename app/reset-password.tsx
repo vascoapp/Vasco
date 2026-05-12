@@ -70,7 +70,12 @@ export default function ResetPasswordScreen() {
           <Ionicons name="checkmark-circle" size={56} color={SemanticColors.feedbackSuccess} />
           <Text style={styles.doneTitle}>{t('resetPassword.done', 'Password updated')}</Text>
           <Text style={styles.doneDesc}>{t('resetPassword.doneDesc', 'You can now sign in with your new password.')}</Text>
-          <Pressable style={styles.backBtn} onPress={() => router.replace('/login' as any)} accessibilityRole="button">
+          <Pressable
+            style={styles.backBtn}
+            onPress={() => router.replace('/login' as any)}
+            accessibilityRole="button"
+            accessibilityLabel={t('auth.backToLogin', 'Back to login')}
+          >
             <Text style={styles.backBtnText}>{t('auth.backToLogin', 'Back to login')}</Text>
           </Pressable>
         </View>
