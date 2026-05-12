@@ -26,9 +26,10 @@ export {
 } from './pricingAgent';
 
 // Decision intelligence (customer portal → pricing moat)
-export {
-  decisionIntelligence,
-  useRegionalPreferences,
-  useDecisionTiming,
-  useDecisionSubmission,
-} from './decisionIntelligence';
+// R66r63: dropped useRegionalPreferences/useDecisionTiming/useDecisionSubmission
+// re-exports — all three were @deprecated R304 with zero callers + are still
+// callable directly from `./decisionIntelligence` for future surfaces, but
+// removing them from the barrel lets tree-shaking drop them from prod
+// bundles. Restore here once R6 aggregation pipeline ships and UI consumers
+// land.
+export { decisionIntelligence } from './decisionIntelligence';

@@ -100,6 +100,14 @@ These must run once Supabase prod project is live. Migrations are file-system-st
 5. **Regenerate Supabase types** — `supabase gen types typescript --linked > src/types/supabase.ts`.
 6. **Verify cron jobs registered** — run `supabase/cron-health.sql` against prod. Should return 10 `vasco-*` rows, all `active=true`. Missing jobs = silent dormancy on daily digest, packs, account deletion drain, etc. The script also lists the last 24h of run results to confirm jobs aren't crashing.
 
+## 🎨 Brand assets — placeholder Expo template, replace before App Store submission
+- [ ] **`assets/icon.png`** (1024×1024, iOS) — currently the Expo template crosshair grid on white. App Store will reject submission with a placeholder icon. Brand team to provide.
+- [ ] **`assets/adaptive-icon.png`** (1024×1024, Android adaptive icon foreground) — same placeholder. Android masks this with a system-applied shape (circle/squircle/teardrop per OEM). The asset MUST be designed for that — foreground content centered in the safe-zone (66% inner circle), transparent or solid-color background.
+- [ ] **`app.json:219` `android.adaptiveIcon.backgroundColor`** — currently `#ffffff` because the placeholder PNG has a white background. Once the real foreground asset ships with transparent edges, flip to `#0B0E11` (DK Sunset Slate bg, matches splash + iOS dark icon). R66.21 audit kept this at `#ffffff` so the placeholder stays visible during development.
+- [ ] **`assets/splash-icon.png`** (1242×2436+) — splash screen image, also Expo placeholder. Splash backgroundColor in `app.json:17` is already DK `#0B0E11`.
+- [ ] **`assets/favicon.png`** (48×48) — web favicon for `admin/` + customer portal. Currently Expo placeholder.
+- [ ] **Notification small-icon** (Android) — monochrome 96×96dp transparent PNG required. R66.24 confirmed the dangling reference was removed. Brand team to design.
+
 ## 🔐 User must provide credentials
 - [ ] Run `npx eas init` after `eas login` — fills `expo.extra.eas.projectId` in `app.json`.
 - [ ] Create live Supabase project (or unpause current). Provide URL + anon key in `.env`.

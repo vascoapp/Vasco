@@ -684,11 +684,12 @@ import { useState, useEffect, useCallback } from 'react';
 
 /**
  * Hook to get regional preferences for UI display.
- * @deprecated R304: zero callers in production. The R303 RegionalPreferencePanel
- * uses `decisionIntelligence.getRegionalPreferences()` directly (matches the
- * customer-portal lifecycle better than a hook). Kept for parity with the
- * 3-hook export shape but marked for removal once SCHEMA_LOCK confirms no
- * lurking external consumers.
+ * @deprecated R304 → R66r63: zero callers. R66r63 dropped this from the
+ * `src/intelligence/index.ts` barrel so tree-shaking removes it from prod
+ * bundles. Still callable via direct `./decisionIntelligence` import if
+ * needed — restore the barrel export once R6 aggregation pipeline ships
+ * and a UI consumer lands. `decisionIntelligence.getRegionalPreferences()`
+ * is the recommended call shape for the customer-portal lifecycle.
  */
 export function useRegionalPreferences(
   region: string,
