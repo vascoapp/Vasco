@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { ALL_PAGES } from "@/lib/aeo";
 
-const BASE_URL = "https://vasco.app";
+const BASE_URL = "https://vascobuild.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const answerPages: MetadataRoute.Sitemap = ALL_PAGES.map((page) => ({

@@ -48,7 +48,7 @@ export interface JobCalendarEvent {
 export function generateIcs(event: JobCalendarEvent): string {
   const dtstart = toIcsDate(event.startsAt);
   const dtend = toIcsDate(event.endsAt);
-  const uid = `${event.id}@vasco.app`;
+  const uid = `${event.id}@vascobuild.com`;
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',

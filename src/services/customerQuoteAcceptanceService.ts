@@ -27,7 +27,7 @@ import {
 const ACCEPTANCE_KEY = '@vasco_quote_acceptance_links';
 
 /** Base URL for customer-facing approval links. Override for staging/custom domains. */
-const APPROVAL_BASE_URL = 'https://app.vasco.dev';
+const APPROVAL_BASE_URL = 'https://app.vascobuild.com';
 
 // ---------------------------------------------------------------------------
 // Types

@@ -2,11 +2,10 @@
 // CREATE-SUBSCRIPTION-CHECKOUT — Stripe Checkout Session for tier upgrade
 // =============================================================================
 // POST /functions/v1/create-subscription-checkout
-// Body: { tier: 'advanced' | 'pro' | 'contractor', billingCycle: 'monthly' | 'yearly' }
+// Body: { tier: 'pro' | 'contractor', billingCycle: 'monthly' | 'yearly' }
 // Returns: { ok: true, url } | { ok: false, error }
 //
 // Requires secrets: STRIPE_SECRET_KEY, plus price IDs per tier × cycle:
-//   STRIPE_PRICE_ADVANCED_MONTHLY, STRIPE_PRICE_ADVANCED_YEARLY,
 //   STRIPE_PRICE_PRO_MONTHLY, STRIPE_PRICE_PRO_YEARLY,
 //   STRIPE_PRICE_CONTRACTOR_MONTHLY, STRIPE_PRICE_CONTRACTOR_YEARLY
 // =============================================================================
@@ -19,7 +18,7 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-type Tier = 'advanced' | 'pro' | 'contractor';
+type Tier = 'pro' | 'contractor';
 type Cycle = 'monthly' | 'yearly';
 
 function priceId(tier: Tier, cycle: Cycle): string | null {
@@ -44,8 +43,8 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseAnon = Deno.env.get('SUPABASE_ANON_KEY');
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-    const successUrl = Deno.env.get('STRIPE_SUCCESS_URL') ?? 'https://vasco.app/billing/success';
-    const cancelUrl = Deno.env.get('STRIPE_CANCEL_URL') ?? 'https://vasco.app/billing/cancel';
+    const successUrl = Deno.env.get('STRIPE_SUCCESS_URL') ?? 'https://vascobuild.com/billing/success';
+    const cancelUrl = Deno.env.get('STRIPE_CANCEL_URL') ?? 'https://vascobuild.com/billing/cancel';
 
     if (!supabaseUrl || !supabaseAnon || !stripeKey) {
       return new Response(JSON.stringify({ ok: false, error: 'Server misconfigured' }), {
@@ -64,7 +63,7 @@ Deno.serve(async (req) => {
     }
 
     const { tier, billingCycle } = (await req.json()) as { tier: Tier; billingCycle: Cycle };
-    if (!['advanced', 'pro', 'contractor'].includes(tier) || !['monthly', 'yearly'].includes(billingCycle)) {
+    if (!['pro', 'contractor'].includes(tier) || !['monthly', 'yearly'].includes(billingCycle)) {
       return new Response(JSON.stringify({ ok: false, error: 'Invalid tier or billingCycle' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });

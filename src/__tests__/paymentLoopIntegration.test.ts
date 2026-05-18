@@ -86,7 +86,7 @@ describe('Mollie createPayment — production code path', () => {
       amount: 2450.5,
       currency: 'EUR',
       description: 'Invoice F2026-0042',
-      redirectUrl: 'https://pay.vasco.app/success/inv-9001',
+      redirectUrl: 'https://pay.vascobuild.com/success/inv-9001',
       webhookUrl: 'https://gblhqhorkarocmputhte.supabase.co/functions/v1/mollie-webhook',
     });
 
@@ -109,7 +109,7 @@ describe('Mollie createPayment — production code path', () => {
     expect(body.description).toBe('Invoice F2026-0042');
     expect(body.metadata.invoiceId).toBe('inv-9001');
     expect(body.locale).toBe('nl_NL'); // default
-    expect(body.redirectUrl).toBe('https://pay.vasco.app/success/inv-9001');
+    expect(body.redirectUrl).toBe('https://pay.vascobuild.com/success/inv-9001');
     expect(body.webhookUrl).toContain('/functions/v1/mollie-webhook');
   });
 
@@ -221,7 +221,7 @@ describe('Stripe createPaymentLink — production code path', () => {
       description: 'Demo',
     });
     expect(result).not.toBeNull();
-    expect(result!.url).toBe('https://pay.vasco.app/demo/inv-demo-uk');
+    expect(result!.url).toBe('https://pay.vascobuild.com/demo/inv-demo-uk');
     expect(result!.id).toBe('plink_demo_inv-demo-uk');
     expect(lastFetchUrl).toBeNull(); // No real API call in demo mode.
   });

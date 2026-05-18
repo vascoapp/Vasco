@@ -313,7 +313,7 @@
     "postcodeCohort": "Code postal : €{{price}}/h médian · {{accept}}% acceptation · {{n}} devis",
     "requestSignature": "Demander au client",
     "signatureRequestTitle": "Demande de signature",
-    "signatureRequestBody": "Bonjour {{customer}}, signez la réception des travaux pour \"{{job}}\" : vasco.app/sign/{{ref}}",
+    "signatureRequestBody": "Bonjour {{customer}}, signez la réception des travaux pour \"{{job}}\" : vascobuild.com/sign/{{ref}}",
     "customer": "client",
     "photos": {
       "title": "Photos",
@@ -539,7 +539,7 @@
     "decisionsOverdue_one": "{{count}} décision en retard — rappeler le client",
     "decisionsOverdue_other": "{{count}} décisions en retard — rappeler le client",
     "reminder": "Rappel",
-    "reminderMessage": "Bonjour, il reste des choix en attente pour votre projet. Consultez-les ici : https://vasco.app/c/demo",
+    "reminderMessage": "Bonjour, il reste des choix en attente pour votre projet. Consultez-les ici : https://vascobuild.com/c/demo",
     "reminderTitle": "Rappel",
     "revenue": "chiffre d'affaires",
     "overdue": "en retard",

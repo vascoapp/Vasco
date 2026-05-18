@@ -174,7 +174,7 @@ Both routes exist in the app (`app/reset-password.tsx`, `app/auth/callback.tsx`)
 ## 9. Enable universal links
 
 Replace placeholder values in:
-- `public/.well-known/apple-app-site-association` → set `appID` to `<TEAMID>.com.vasco.app`
+- `public/.well-known/apple-app-site-association` → set `appID` to `<TEAMID>.com.vascobuild.app`
 - `public/.well-known/assetlinks.json` → set `sha256_cert_fingerprints` to your Play signing cert SHA-256
 
 Deploy `public/` behind `yourapp.com` (Cloudflare Pages / Netlify / whatever

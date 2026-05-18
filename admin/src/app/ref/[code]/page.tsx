@@ -1,7 +1,7 @@
 // =============================================================================
 // REFERRAL LANDING PAGE (R231)
 // =============================================================================
-// Served at https://admin.vasco.app/ref/{code}. Two roles:
+// Served at https://admin.vascobuild.com/ref/{code}. Two roles:
 //   1. Universal-link / App-link target — on a device where Vasco is
 //      installed and AASA/assetlinks verified, the OS opens the app
 //      directly and this page never renders.
@@ -24,7 +24,7 @@ interface PageProps {
 // When shipping, replace APPSTORE_ID with the numeric Apple ID and verify
 // the Play package name matches app.json's android.package.
 const APPSTORE_ID = "0000000000"; // e.g. from App Store Connect → App Info
-const PLAY_PACKAGE = "com.vasco.app";
+const PLAY_PACKAGE = "com.vascobuild.app";
 
 function normalizeCode(raw: string): string | null {
   const clean = raw.trim().toUpperCase();

@@ -463,7 +463,7 @@ export function buildInvoiceShareText(invoice: AutoInvoice, businessName?: strin
   ];
 
   if (paymentUrl) parts.push(``, `Pay online: ${paymentUrl}`);
-  if (invoice.customerId) parts.push(``, `Track your project: https://app.vasco.eu/customer/${invoice.customerId}`);
+  if (invoice.customerId) parts.push(``, `Track your project: https://app.vascobuild.com/customer/${invoice.customerId}`);
 
   return parts.join('\n');
 }

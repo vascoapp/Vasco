@@ -55,8 +55,8 @@ export default async function LegalPage({
       />
       <footer className="mt-16 border-t border-zinc-200 pt-6 text-xs text-zinc-500">
         © {new Date().getFullYear()} Vasco B.V. — Amsterdam, The Netherlands —{" "}
-        <a href="mailto:privacy@vasco.dev" className="underline">
-          privacy@vasco.dev
+        <a href="mailto:privacy@vascobuild.com" className="underline">
+          privacy@vascobuild.com
         </a>
       </footer>
     </main>

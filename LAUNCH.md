@@ -33,7 +33,7 @@ Status legend: ✅ done · ⚠️ partial · ❌ not started · ⏸ waiting on u
 - Brand assets: **placeholder Expo template** for icon.png + adaptive-icon.png + splash-icon.png + favicon.png — see [`docs/SHIP-READINESS.md`](./docs/SHIP-READINESS.md) §2
 - App Store screenshots: **zero captured** for any locale or device size — see SHIP-READINESS §3
 - Store-listing copy: **draft-only**, NL/DE/FR/ES/IT need native review — see [`docs/store-listings.md`](./docs/store-listings.md)
-- Live URLs (vasco.app, admin.vasco.app, support@vasco.dev): **❓ unverified** — see SHIP-READINESS §5
+- Live URLs (vascobuild.com, admin.vascobuild.com, support@vascobuild.com): **❓ unverified** — see SHIP-READINESS §5
 
 ---
 
@@ -115,7 +115,7 @@ Items 2.1 through 2.6 must all be done before App Store / Play Store can accept 
 1. Pick a host: Cloudflare Pages, Netlify, or Vercel (all free for static)
 2. Repo `docs/legal/` has `privacy.md` + `terms.md` (existing)
 3. Convert to HTML or use a markdown-rendering host
-4. Point a subdomain: `vasco.app/privacy` and `vasco.app/terms` (or whatever your domain is)
+4. Point a subdomain: `vascobuild.com/privacy` and `vascobuild.com/terms` (or whatever your domain is)
 5. Update App Store Connect listing with these URLs (required field)
 
 ### 2.5 Universal-link cert fingerprints (~15 min)
@@ -123,7 +123,7 @@ Items 2.1 through 2.6 must all be done before App Store / Play Store can accept 
 1. **iOS:** in Apple Developer portal → your App ID → copy the **Team ID** (10-char alphanumeric)
 2. Edit `public/.well-known/apple-app-site-association`:
    ```json
-   { "appID": "<TEAMID>.com.vasco.app" }
+   { "appID": "<TEAMID>.com.vascobuild.app" }
    ```
 3. **Android:** generate signing key SHA-256:
    ```bash
@@ -132,7 +132,7 @@ Items 2.1 through 2.6 must all be done before App Store / Play Store can accept 
    (Or use the EAS-managed cert; `eas credentials --platform android` shows it)
 4. Edit `public/.well-known/assetlinks.json` — replace placeholder SHA-256 with the real fingerprint
 5. Deploy `public/.well-known/*` behind your domain root (same host as 2.4)
-6. **Verify:** `curl https://vasco.app/.well-known/apple-app-site-association` returns JSON with `application/json` content-type
+6. **Verify:** `curl https://vascobuild.com/.well-known/apple-app-site-association` returns JSON with `application/json` content-type
 
 ### 2.6.5 Register cron jobs (~5 min) — REQUIRED, not yet done
 

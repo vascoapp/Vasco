@@ -88,7 +88,7 @@ export async function getReferralSummary(userId: string): Promise<ReferralSummar
 
 /** Build the public share URL for a referral code. */
 export function buildShareUrl(code: string): string {
-  return `https://admin.vasco.app/ref/${encodeURIComponent(code)}`;
+  return `https://admin.vascobuild.com/ref/${encodeURIComponent(code)}`;
 }
 
 /** React hook — mint code + load summary for the current user. */

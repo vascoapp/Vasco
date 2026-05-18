@@ -433,7 +433,7 @@ class DocumentVaultService {
     const shareLink: ShareLink = {
       id: `share_${Date.now()}`,
       documentId,
-      url: `https://vasco.app/share/${Date.now()}`,
+      url: `https://vascobuild.com/share/${Date.now()}`,
       expiresAt: expiresAt.toISOString(),
       accessCount: 0,
       maxAccess: options?.maxAccess,

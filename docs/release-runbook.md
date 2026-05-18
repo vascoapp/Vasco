@@ -31,7 +31,7 @@ you have the credentials listed below.
 6. App Store Connect + Play Console listings (icons, screenshots ×6 locales, descriptions ×6 — see `docs/store-listings.md`)
 7. Re-run `supabase/cron.sql` with substituted SUPABASE_URL + SERVICE_ROLE_KEY. **New entry in this round**: `vasco-pack-trigger-tick` (09:00 UTC daily — server-side eval of Incasso + Quote followup + Maintenance + Handover-survey packs)
 8. Run `npx expo prebuild --clean` (regenerates `ios/`/`android/` to pick up the moved privacy manifest + Sentry plugin) **before** the first `eas build`
-9. Live HTML for `vasco.app/privacy` + `vasco.app/terms` (URLs already in `.env` skeleton)
+9. Live HTML for `vascobuild.com/privacy` + `vascobuild.com/terms` (URLs already in `.env` skeleton)
 
 After items 1-9 are done: jump to §5 (preview build) — §0-§4 are covered.
 
@@ -98,8 +98,8 @@ Then copy project URL + anon key into `.env`:
 EXPO_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
 EXPO_PUBLIC_SENTRY_DSN=https://...@sentry.io/...
-EXPO_PUBLIC_PRIVACY_URL=https://admin.vasco.app/legal/privacy-policy
-EXPO_PUBLIC_TERMS_URL=https://admin.vasco.app/legal/terms-of-service
+EXPO_PUBLIC_PRIVACY_URL=https://admin.vascobuild.com/legal/privacy-policy
+EXPO_PUBLIC_TERMS_URL=https://admin.vascobuild.com/legal/terms-of-service
 EXPO_PUBLIC_DEMO_MODE=false
 ```
 
@@ -113,18 +113,18 @@ vercel env add NEXT_PUBLIC_ADMIN_PIN  # preview
 vercel --prod
 ```
 
-Point `admin.vasco.app` DNS CNAME at the Vercel project. Privacy + terms
+Point `admin.vascobuild.com` DNS CNAME at the Vercel project. Privacy + terms
 pages live at `/legal/privacy-policy` and `/legal/terms-of-service`.
 
 ## 4. Store listings (do once)
 
-- **App Store Connect:** create app record, bundle ID `com.vasco.app`, category
+- **App Store Connect:** create app record, bundle ID `com.vascobuild.app`, category
   "Business", age rating 4+. Paste copy from `docs/store-listings.md`.
 - **Play Console:** create app, set content rating questionnaire, data-safety
   form (we do NOT sell data; we DO collect: email, name, trade data). Paste copy.
 - Upload screenshots (user task — see `docs/launch-checklist.md`).
 - Upload app icon 1024×1024.
-- Add privacy-policy URL: `https://admin.vasco.app/legal/privacy-policy`.
+- Add privacy-policy URL: `https://admin.vascobuild.com/legal/privacy-policy`.
 - Fill Apple Team ID + ASC App ID in `eas.json` submit block.
 - Save Play service account JSON to `./secrets/play-service-account.json`.
 

@@ -254,7 +254,7 @@ Common Apple rejection reasons + how to address:
 | 2.1 Performance — crashes on launch | Sentry will catch it on first install; check there before resubmitting |
 | 4.8 Sign in with Apple required | Only if we add Google/Facebook login. Currently email-only → not required. |
 | 5.1.5 Location services | We don't use them. If rejected, re-verify `app.json` permissions list has no `LOCATION_*` permissions enabled |
-| Missing privacy URL | Verify https://admin.vasco.app/legal/privacy-policy returns 200 |
+| Missing privacy URL | Verify https://admin.vascobuild.com/legal/privacy-policy returns 200 |
 
 ---
 

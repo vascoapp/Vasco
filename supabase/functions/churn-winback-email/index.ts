@@ -87,7 +87,7 @@ async function sendResend(apiKey: string, to: string, subject: string, textBody:
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: 'Vasco <hello@vasco.app>',
+        from: 'Vasco <hello@vascobuild.com>',
         to,
         subject,
         text: textBody,

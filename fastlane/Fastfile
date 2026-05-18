@@ -63,7 +63,7 @@ platform :android do
       skip_upload_images: true,
       skip_upload_screenshots: true,
       json_key: ENV["GOOGLE_PLAY_JSON_KEY_PATH"] || "../secrets/play-service-account.json",
-      package_name: "com.vasco.app",
+      package_name: "com.vascobuild.app",
       track: "internal",
     )
   end
@@ -74,7 +74,7 @@ platform :android do
       skip_upload_apk: true,
       skip_upload_aab: true,
       json_key: ENV["GOOGLE_PLAY_JSON_KEY_PATH"] || "../secrets/play-service-account.json",
-      package_name: "com.vasco.app",
+      package_name: "com.vascobuild.app",
       track: "internal",                # closed internal testing first
     )
   end

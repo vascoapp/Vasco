@@ -1,8 +1,8 @@
 // =============================================================================
 // REFERRAL DEEP-LINK HANDLER (R231)
 // =============================================================================
-// Catches https://admin.vasco.app/ref/CODE universal links on iOS,
-// https://admin.vasco.app/ref/CODE app links on Android, and the
+// Catches https://admin.vascobuild.com/ref/CODE universal links on iOS,
+// https://admin.vascobuild.com/ref/CODE app links on Android, and the
 // vasco://ref/CODE custom scheme fallback.
 //
 // The route has no UI — it stashes the code via AsyncStorage and

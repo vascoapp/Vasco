@@ -313,7 +313,7 @@
     "postcodeCohort": "Código postal: €{{price}}/h mediana · {{accept}}% aceptación · {{n}} presupuestos",
     "requestSignature": "Pedir al cliente",
     "signatureRequestTitle": "Solicitud de firma",
-    "signatureRequestBody": "Hola {{customer}}, firma la recepción del trabajo \"{{job}}\": vasco.app/sign/{{ref}}",
+    "signatureRequestBody": "Hola {{customer}}, firma la recepción del trabajo \"{{job}}\": vascobuild.com/sign/{{ref}}",
     "customer": "cliente",
     "photos": {
       "title": "Fotos",
@@ -539,7 +539,7 @@
     "decisionsOverdue_one": "{{count}} decisión atrasada — recordar al cliente",
     "decisionsOverdue_other": "{{count}} decisiones atrasadas — recordar al cliente",
     "reminder": "Recordatorio",
-    "reminderMessage": "Hola, aún hay decisiones pendientes para tu proyecto. Consúltalas aquí: https://vasco.app/c/demo",
+    "reminderMessage": "Hola, aún hay decisiones pendientes para tu proyecto. Consúltalas aquí: https://vascobuild.com/c/demo",
     "reminderTitle": "Recordatorio",
     "revenue": "ingresos",
     "overdue": "atrasado",

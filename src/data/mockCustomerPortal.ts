@@ -20,7 +20,7 @@ export const MOCK_ACCESS_TOKENS: CustomerAccessToken[] = [
     trackerId: 'tracker_1',
     customerId: 'cust_vandenberg',
     accessCode: 'VDB24A',
-    accessUrl: 'https://vasco.app/c/VDB24A',
+    accessUrl: 'https://vascobuild.com/c/VDB24A',
     expiresAt: '2027-03-15T23:59:59Z',
     isActive: true,
     createdAt: '2026-01-15T09:00:00Z',

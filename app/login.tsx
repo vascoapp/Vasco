@@ -284,7 +284,7 @@ export default function LoginScreen() {
                 style={styles.legalLink}
                 accessibilityRole="link"
                 accessibilityLabel={t('legal.termsOfService', 'Terms')}
-                onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_TERMS_URL ?? 'https://vasco.app/terms')}
+                onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_TERMS_URL ?? 'https://vascobuild.com/terms')}
               >
                 {t('legal.termsOfService', 'Terms')}
               </Text>
@@ -293,7 +293,7 @@ export default function LoginScreen() {
                 style={styles.legalLink}
                 accessibilityRole="link"
                 accessibilityLabel={t('legal.privacyPolicy', 'Privacy Policy')}
-                onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://vasco.app/privacy')}
+                onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://vascobuild.com/privacy')}
               >
                 {t('legal.privacyPolicy', 'Privacy Policy')}
               </Text>

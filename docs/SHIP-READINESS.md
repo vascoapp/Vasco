@@ -142,13 +142,13 @@ references all of them but none are verified live.
 
 | URL | Status | Used by |
 |---|---|---|
-| https://vasco.app | ❓ unverified | Marketing URL field in ASC |
-| https://vasco.app/support | ❓ unverified | Support URL field in ASC |
-| https://admin.vasco.app/legal/privacy-policy | ❓ unverified | Privacy URL (legally required) |
-| https://admin.vasco.app/legal/eula | ❓ unverified | EULA URL |
-| https://admin.vasco.app/legal/terms-of-service | ❓ unverified | Terms URL |
-| support@vasco.dev | ❓ unverified | Support email |
-| review@vasco.dev | ❓ unverified | Reviewer contact email |
+| https://vascobuild.com | ❓ unverified | Marketing URL field in ASC |
+| https://vascobuild.com/support | ❓ unverified | Support URL field in ASC |
+| https://admin.vascobuild.com/legal/privacy-policy | ❓ unverified | Privacy URL (legally required) |
+| https://admin.vascobuild.com/legal/eula | ❓ unverified | EULA URL |
+| https://admin.vascobuild.com/legal/terms-of-service | ❓ unverified | Terms URL |
+| support@vascobuild.com | ❓ unverified | Support email |
+| support@vascobuild.com | ❓ unverified | Reviewer contact email |
 
 Note: `admin/src/app/legal/[slug]/page.tsx` exists and renders the legal
 markdown — verify it's deployed to Vercel + reachable at the URL above
@@ -193,7 +193,7 @@ For External TestFlight submission you'll need to fill in:
 - [ ] **Test account credentials** — already documented in
       [`app-review-info.md`](./app-review-info.md) — paste those into
       the ASC review-info form
-- [ ] **Beta feedback email** — `support@vasco.dev` or wherever you'll
+- [ ] **Beta feedback email** — `support@vascobuild.com` or wherever you'll
       triage bug reports
 - [ ] **Demo build URL or version** — auto-filled by EAS once submitted
 
@@ -228,7 +228,7 @@ After External TestFlight is comfortable, submit to App Store proper:
 So you can plan: everything below is code-side done. No operator action.
 
 - ✅ EAS project linked + production push tokens work
-- ✅ Bundle ID `com.vasco.app` + iOS scheme `vasco` + Android associations
+- ✅ Bundle ID `com.vascobuild.app` + iOS scheme `vasco` + Android associations
 - ✅ iOS privacy manifest declared (4 APIs + 9 collected data types)
 - ✅ `ITSAppUsesNonExemptEncryption: false` (skips export compliance)
 - ✅ Camera + photo + Face ID usage strings declared in 6 locales

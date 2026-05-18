@@ -973,7 +973,7 @@ export default function JobDetailPage() {
                     const customerLabel = job.customerName || t('jobs.customer', 'customer');
                     const messageBody = t(
                       'jobs.signatureRequestBody',
-                      'Hi {{customer}}, please sign off on the completed work for "{{job}}": vasco.app/sign/{{ref}}',
+                      'Hi {{customer}}, please sign off on the completed work for "{{job}}": vascobuild.com/sign/{{ref}}',
                       { customer: customerLabel, job: job.projectName || 'the project', ref: id },
                     );
                     await Share.share({

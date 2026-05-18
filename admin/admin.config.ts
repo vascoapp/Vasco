@@ -7,7 +7,7 @@ export const APP_CONFIG = {
   name: "VascoApp",
   shortName: "V",
   tagline: "AI-Native Construction Trades Platform",
-  domain: "app.vasco.eu",
+  domain: "app.vascobuild.com",
   contactEmail: "hello@vasco.eu",
 
   // ─── Colors ────────────────────────────────────────────────────────────

@@ -211,10 +211,10 @@ export default function SignupScreen() {
                 </View>
                 <Text style={styles.termsText}>
                   {t('signup.acceptLine', 'I accept the')}{' '}
-                  <Text style={styles.termsLink} onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_TERMS_URL ?? 'https://vasco.app/terms')}>
+                  <Text style={styles.termsLink} onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_TERMS_URL ?? 'https://vascobuild.com/terms')}>
                     {t('legal.termsOfService', 'Terms')}
                   </Text>{' '}{t('common.and', 'and')}{' '}
-                  <Text style={styles.termsLink} onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://vasco.app/privacy')}>
+                  <Text style={styles.termsLink} onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://vascobuild.com/privacy')}>
                     {t('legal.privacyPolicy', 'Privacy Policy')}
                   </Text>
                 </Text>

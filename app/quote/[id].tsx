@@ -1,7 +1,7 @@
 // =============================================================================
 // PUBLIC QUOTE LINK — deep link target for email CTAs
 // =============================================================================
-// vasco://quote/:id and https://vasco.app/quote/:id route here. Forwards to
+// vasco://quote/:id and https://vascobuild.com/quote/:id route here. Forwards to
 // the existing contractor customer-view which handles unauthenticated quote
 // access via the `quoteId` param.
 // =============================================================================

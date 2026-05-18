@@ -66,15 +66,15 @@ Vasco **does not use** any third-party ad networks. No tracking frameworks
 > All entries below are aspirational — none have been confirmed live as of
 > R66r65. The `admin/src/app/legal/[slug]/page.tsx` route renders the
 > legal markdown, but it needs to be deployed to Vercel + DNS pointed at
-> `admin.vasco.app` first. Same for `vasco.app/support` (no support
+> `admin.vascobuild.com` first. Same for `vascobuild.com/support` (no support
 > page exists in the repo yet — needs a marketing-site landing page).
 
-- Marketing URL: https://vasco.app **— ❓ unverified, no marketing site in repo**
-- Support URL: https://vasco.app/support **— ❓ unverified, no /support page yet**
-- Privacy policy: https://admin.vasco.app/legal/privacy-policy **— ❓ needs Vercel deploy of admin/**
-- EULA: https://admin.vasco.app/legal/eula **— ❓ needs Vercel deploy of admin/**
-- Terms of service: https://admin.vasco.app/legal/terms-of-service **— ❓ needs Vercel deploy of admin/**
-- Support email: support@vasco.dev **— ❓ unverified, set up MX records before submission**
-- Review question contact: review@vasco.dev **— ❓ unverified, same as above**
+- Marketing URL: https://vascobuild.com **— ❓ unverified, no marketing site in repo**
+- Support URL: https://vascobuild.com/support **— ❓ unverified, no /support page yet**
+- Privacy policy: https://admin.vascobuild.com/legal/privacy-policy **— ❓ needs Vercel deploy of admin/**
+- EULA: https://admin.vascobuild.com/legal/eula **— ❓ needs Vercel deploy of admin/**
+- Terms of service: https://admin.vascobuild.com/legal/terms-of-service **— ❓ needs Vercel deploy of admin/**
+- Support email: support@vascobuild.com **— ❓ unverified, set up MX records before submission**
+- Review question contact: support@vascobuild.com **— ❓ unverified, same as above**
 
 Tracked in [`SHIP-READINESS.md`](./SHIP-READINESS.md) §5.

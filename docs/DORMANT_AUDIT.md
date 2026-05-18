@@ -446,7 +446,7 @@ Real fix: build an EVE workforce surface — either a dedicated route showing 3 
 | On My Way ETA | Hardcoded "15 min" string in template, sent to customer regardless of distance |
 | Team map | No screen consumes `getTeamLocations` |
 | GDPR consent | `grantTrackingConsent` exists with 6-locale text, has 0 callers |
-| Customer tracking URL | `https://app.vasco.eu/track/{id}` — no edge fn or static page serves this |
+| Customer tracking URL | `https://app.vascobuild.com/track/{id}` — no edge fn or static page serves this |
 | GPS clock-in verification | `verifyClockInLocation` exists, `clockInService` doesn't pass through it |
 | Location persistence | `updateMyLocation` writes to AsyncStorage only — not shared across team devices |
 
@@ -1739,7 +1739,7 @@ R59 batch: 6 files touched (`lib/idShape.ts` new + 4 helpers; `services/offlineW
 
 Triaged from the Harvey/Eve PDF ("Save money on inputs" section). User direction: solo contractors get the most value from admin-reduction features (Job Dossier, Quote/SOW generator). The supplier-side intelligence is more meaningful for established multi-supplier contractors and aannemers/site-leads with €5k+/month material spend. Deferring until those segments are explicitly targeted.
 
-**Deferred — Package 1 — Email-forwarding inbound for supplier invoices** (~5-7 days). Per-contractor forwarding address pattern (`<userid>@scan.vasco.app` → Postmark/SendGrid inbound webhook → existing `analyze-photo` edge fn). Avoids OAuth/IMAP complexity. **Why deferred**: solo contractor median has 1-2 suppliers; the moat-volume bump is concentrated in the >3-supplier segment. Setup friction is real (one-time Gmail filter).
+**Deferred — Package 1 — Email-forwarding inbound for supplier invoices** (~5-7 days). Per-contractor forwarding address pattern (`<userid>@scan.vascobuild.com` → Postmark/SendGrid inbound webhook → existing `analyze-photo` edge fn). Avoids OAuth/IMAP complexity. **Why deferred**: solo contractor median has 1-2 suppliers; the moat-volume bump is concentrated in the >3-supplier segment. Setup friction is real (one-time Gmail filter).
 
 **Deferred — Package A — Per-supplier price-drift view (inkoop tab + Vandaag VascoCard)** (~4-6 days). Surfaces "Bouwmaat charged you 18% more than your last 5 buys for 22mm copper" using `material_price_history` cohort moat (already wired). **Why deferred**: gated on Package 1's email volume. Without the email layer, drift detection has too few rows per (supplier × material) to clear k-anonymity gates for solo contractors. Real cohort signal already feeds these tables (R241/R275/R283); the UI exists in primitive form on `inkoop.tsx`.
 

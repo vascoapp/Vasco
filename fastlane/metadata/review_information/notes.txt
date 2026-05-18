@@ -28,4 +28,4 @@ frameworks (AppTrackingTransparency prompt not shown). Data lives in EU
 datacenters (Supabase Frankfurt). Full GDPR rights in-app: Profile →
 Legal → Export my data / Delete my account.
 
-CONTACT: review@vasco.dev for review-specific questions.
+CONTACT: support@vascobuild.com for review-specific questions.

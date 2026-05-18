@@ -686,7 +686,7 @@ class EvidencePackService {
 
     // In a real implementation, this would use a PDF generation library
     // For now, we simulate the PDF generation
-    const pdfUri = `https://vasco.app/pdf/${packageId}-${Date.now()}.pdf`;
+    const pdfUri = `https://vascobuild.com/pdf/${packageId}-${Date.now()}.pdf`;
 
     // Update package with PDF URI
     pkg.pdfUri = pdfUri;
@@ -720,7 +720,7 @@ class EvidencePackService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + expiresInDays);
 
-    const portalLink = `https://vasco.app/handover/${packageId}?token=${Date.now().toString(36)}`;
+    const portalLink = `https://vascobuild.com/handover/${packageId}?token=${Date.now().toString(36)}`;
 
     pkg.portalLink = portalLink;
     pkg.portalLinkExpiresAt = expiresAt.toISOString();
@@ -780,7 +780,7 @@ class EvidencePackService {
       throw new Error('Handover package not found');
     }
 
-    const certificateUri = `https://vasco.app/certificates/${packageId}-${Date.now()}.pdf`;
+    const certificateUri = `https://vascobuild.com/certificates/${packageId}-${Date.now()}.pdf`;
 
     pkg.completionCertificate = {
       id: `cert-${Date.now()}`,

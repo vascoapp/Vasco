@@ -313,7 +313,7 @@
     "postcodeCohort": "PLZ-Gebiet: €{{price}}/Std. Median · {{accept}}% Annahme · {{n}} Angebote",
     "requestSignature": "Vom Kunden anfordern",
     "signatureRequestTitle": "Abnahmeanfrage",
-    "signatureRequestBody": "Hi {{customer}}, bitte die abgeschlossene Arbeit für \"{{job}}\" abnehmen: vasco.app/sign/{{ref}}",
+    "signatureRequestBody": "Hi {{customer}}, bitte die abgeschlossene Arbeit für \"{{job}}\" abnehmen: vascobuild.com/sign/{{ref}}",
     "customer": "Kunde",
     "photos": {
       "title": "Fotos",
@@ -539,7 +539,7 @@
     "decisionsOverdue_one": "{{count}} Entscheidung überfällig — Kunde erinnern",
     "decisionsOverdue_other": "{{count}} Entscheidungen überfällig — Kunde erinnern",
     "reminder": "Erinnerung",
-    "reminderMessage": "Hallo, es stehen noch offene Entscheidungen für Ihr Projekt aus. Hier ansehen: https://vasco.app/c/demo",
+    "reminderMessage": "Hallo, es stehen noch offene Entscheidungen für Ihr Projekt aus. Hier ansehen: https://vascobuild.com/c/demo",
     "reminderTitle": "Erinnerung",
     "revenue": "Umsatz",
     "overdue": "überfällig",

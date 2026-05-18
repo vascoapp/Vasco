@@ -410,10 +410,10 @@ export default function ProfileScreen() {
                     </Pressable>
                   </View>
 
-                  {(['advanced', 'pro', 'contractor'] as SubscriptionTier[])
+                  {(['pro', 'contractor'] as SubscriptionTier[])
                     .filter(t2 => t2 !== subscription.tier)
                     .filter(t2 => {
-                      const order: SubscriptionTier[] = ['free', 'advanced', 'pro', 'contractor'];
+                      const order: SubscriptionTier[] = ['free', 'pro', 'contractor'];
                       return order.indexOf(t2) > order.indexOf(subscription.tier);
                     })
                     .map(t2 => {

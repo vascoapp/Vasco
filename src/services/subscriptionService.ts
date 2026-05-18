@@ -1,11 +1,10 @@
 // =============================================================================
-// SUBSCRIPTION SERVICE — 4-tier freemium system for VascoApp
+// SUBSCRIPTION SERVICE — 3-tier hybrid (subscription + commission) for VascoApp
 // =============================================================================
-// Tiers: Free → Advanced → Pro → Contractor
-// Free: get started, limited jobs/quotes/invoices
-// Advanced: more capacity, basic AI, payment processing
-// Pro: full AI, purchasing agent, ML predictions, benchmarking
-// Contractor: team features, dedicated support, white-label, API
+// Tiers: Free → Pro → Contractor
+// Free: get started — 3.5% commission per paid invoice
+// Pro: €39/mo + 2% commission — full AI, ML, benchmarking, purchasing agent
+// Contractor: €69/mo + 1% commission — team features, API, white-label, support
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -14,7 +13,7 @@ import i18n from '../i18n/i18n';
 
 // ─── Tier Definitions ──────────────────────────────────────────────────────
 
-export type SubscriptionTier = 'free' | 'advanced' | 'pro' | 'contractor';
+export type SubscriptionTier = 'free' | 'pro' | 'contractor';
 export type BillingCycle = 'monthly' | 'annual';
 
 export interface TierLimits {
@@ -129,56 +128,6 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
       hasDedicatedSupport: false,
       hasOnboardingAssistance: false,
       complianceCountries: 1,
-    },
-  },
-
-  advanced: {
-    id: 'advanced',
-    name: 'Advanced',
-    tagline: 'More capacity, smarter tools',
-    monthlyPrice: 19,
-    annualMonthlyPrice: 14,
-    annualPrice: 168,
-    extraSeatPrice: 0,
-    badge: 'POPULAR',
-    limits: {
-      maxActiveJobs: 25,
-      maxQuotesPerMonth: 50,
-      maxInvoicesPerMonth: 50,
-      maxAiInsightsPerMonth: 25,
-      maxClients: 100,
-      maxPhotoStorageMB: 2000,
-      maxTeamSeats: 1,
-      hasPaymentProcessing: true,
-      hasAccountingIntegrations: true,
-      maxAccountingIntegrations: 3,
-      hasEInvoicing: true,
-      hasFullEInvoicing: false,
-      hasEveAI: true,                // Basic EVE Agent
-      hasEveAuditor: false,
-      hasEveAnalyst: false,
-      hasAutomationPacks: true,
-      maxAutomationPacks: 3,
-      hasMlPredictions: false,
-      hasBenchmarking: false,
-      hasPriceIndex: false,
-      hasInvoiceScanning: true,
-      hasPurchasingAgent: false,
-      hasBulkPurchaseOptimizer: false,
-      hasPriceDropAlerts: false,
-      hasSupplierScoring: false,
-      hasPdfExport: true,
-      hasClientPortal: false,
-      hasQuoteTemplates: true,
-      hasCustomerDecisions: false,
-      hasApiAccess: false,
-      hasWhiteLabel: false,
-      hasSubcontractorPortal: false,
-      hasWorkerPortal: false,
-      hasCalendarSync: true,
-      hasDedicatedSupport: false,
-      hasOnboardingAssistance: false,
-      complianceCountries: 2,
     },
   },
 
@@ -371,12 +320,12 @@ export function getPrice(tier: SubscriptionTier, cycle: BillingCycle): number {
 
 /** Returns ordered list of tiers for display */
 export function getAllTiers(): TierConfig[] {
-  return [TIERS.free, TIERS.advanced, TIERS.pro, TIERS.contractor];
+  return [TIERS.free, TIERS.pro, TIERS.contractor];
 }
 
 /** Check if a tier has access to a higher tier's features */
 export function tierAtLeast(current: SubscriptionTier, required: SubscriptionTier): boolean {
-  const order: SubscriptionTier[] = ['free', 'advanced', 'pro', 'contractor'];
+  const order: SubscriptionTier[] = ['free', 'pro', 'contractor'];
   return order.indexOf(current) >= order.indexOf(required);
 }
 
@@ -403,7 +352,7 @@ export function canCreateJob(state: SubscriptionState, liveCount?: number): Gate
   const limits = getTierLimits(state.tier);
   const count = liveCount ?? state.activeJobCount;
   if (count >= limits.maxActiveJobs) {
-    return { allowed: false, reason: i18n.t('tierGate.jobLimitReached', { count: limits.maxActiveJobs }), upgradeFeature: 'More active jobs', requiredTier: 'advanced' };
+    return { allowed: false, reason: i18n.t('tierGate.jobLimitReached', { count: limits.maxActiveJobs }), upgradeFeature: 'More active jobs', requiredTier: 'pro' };
   }
   return { allowed: true };
 }
@@ -412,7 +361,7 @@ export function canCreateQuote(state: SubscriptionState, liveCount?: number): Ga
   const limits = getTierLimits(state.tier);
   const count = liveCount ?? state.quotesUsedThisMonth;
   if (count >= limits.maxQuotesPerMonth) {
-    return { allowed: false, reason: i18n.t('tierGate.quoteLimitReached', { count: limits.maxQuotesPerMonth }), upgradeFeature: 'More quotes', requiredTier: 'advanced' };
+    return { allowed: false, reason: i18n.t('tierGate.quoteLimitReached', { count: limits.maxQuotesPerMonth }), upgradeFeature: 'More quotes', requiredTier: 'pro' };
   }
   return { allowed: true };
 }
@@ -421,7 +370,7 @@ export function canCreateInvoice(state: SubscriptionState, liveCount?: number): 
   const limits = getTierLimits(state.tier);
   const count = liveCount ?? state.invoicesUsedThisMonth;
   if (count >= limits.maxInvoicesPerMonth) {
-    return { allowed: false, reason: i18n.t('tierGate.invoiceLimitReached', { count: limits.maxInvoicesPerMonth }), upgradeFeature: 'More invoices', requiredTier: 'advanced' };
+    return { allowed: false, reason: i18n.t('tierGate.invoiceLimitReached', { count: limits.maxInvoicesPerMonth }), upgradeFeature: 'More invoices', requiredTier: 'pro' };
   }
   return { allowed: true };
 }
@@ -439,7 +388,7 @@ export function canAddClient(state: SubscriptionState, liveCount?: number): Gate
   const limits = getTierLimits(state.tier);
   const count = liveCount ?? state.clientCount;
   if (count >= limits.maxClients) {
-    return { allowed: false, reason: i18n.t('tierGate.clientLimitReached', { count: limits.maxClients }), upgradeFeature: 'More clients', requiredTier: 'advanced' };
+    return { allowed: false, reason: i18n.t('tierGate.clientLimitReached', { count: limits.maxClients }), upgradeFeature: 'More clients', requiredTier: 'pro' };
   }
   return { allowed: true };
 }
@@ -458,31 +407,31 @@ export function canUseFeature(state: SubscriptionState, feature: keyof TierLimit
   const value = limits[feature];
   if (typeof value === 'boolean' && !value) {
     const featureInfo: Record<string, { name: string; tier: SubscriptionTier }> = {
-      hasPaymentProcessing: { name: 'Payment processing', tier: 'advanced' },
-      hasAccountingIntegrations: { name: 'Accounting integrations', tier: 'advanced' },
-      hasEInvoicing: { name: 'E-invoicing', tier: 'advanced' },
+      hasPaymentProcessing: { name: 'Payment processing', tier: 'pro' },
+      hasAccountingIntegrations: { name: 'Accounting integrations', tier: 'pro' },
+      hasEInvoicing: { name: 'E-invoicing', tier: 'pro' },
       hasFullEInvoicing: { name: 'All e-invoice formats', tier: 'pro' },
-      hasEveAI: { name: 'EVE AI assistant', tier: 'advanced' },
+      hasEveAI: { name: 'EVE AI assistant', tier: 'pro' },
       hasEveAuditor: { name: 'EVE compliance monitoring', tier: 'pro' },
       hasEveAnalyst: { name: 'EVE business intelligence', tier: 'pro' },
-      hasAutomationPacks: { name: 'Automation packs', tier: 'advanced' },
+      hasAutomationPacks: { name: 'Automation packs', tier: 'pro' },
       hasMlPredictions: { name: 'ML predictions', tier: 'pro' },
       hasBenchmarking: { name: 'Contractor benchmarking', tier: 'pro' },
       hasPriceIndex: { name: 'EU price index', tier: 'pro' },
-      hasInvoiceScanning: { name: 'Invoice scanning', tier: 'advanced' },
+      hasInvoiceScanning: { name: 'Invoice scanning', tier: 'pro' },
       hasPurchasingAgent: { name: 'Purchasing agent', tier: 'pro' },
       hasBulkPurchaseOptimizer: { name: 'Bulk purchase optimizer', tier: 'pro' },
       hasPriceDropAlerts: { name: 'Price drop alerts', tier: 'pro' },
       hasSupplierScoring: { name: 'Supplier reliability scoring', tier: 'pro' },
-      hasPdfExport: { name: 'PDF/CSV export', tier: 'advanced' },
+      hasPdfExport: { name: 'PDF/CSV export', tier: 'pro' },
       hasClientPortal: { name: 'Client portal', tier: 'pro' },
-      hasQuoteTemplates: { name: 'Quote templates', tier: 'advanced' },
+      hasQuoteTemplates: { name: 'Quote templates', tier: 'pro' },
       hasCustomerDecisions: { name: 'Customer decision tracker', tier: 'pro' },
       hasApiAccess: { name: 'API access', tier: 'contractor' },
       hasWhiteLabel: { name: 'White-label documents', tier: 'contractor' },
       hasSubcontractorPortal: { name: 'Subcontractor portal', tier: 'contractor' },
       hasWorkerPortal: { name: 'Worker portal', tier: 'contractor' },
-      hasCalendarSync: { name: 'Calendar sync', tier: 'advanced' },
+      hasCalendarSync: { name: 'Calendar sync', tier: 'pro' },
       hasDedicatedSupport: { name: 'Dedicated support', tier: 'contractor' },
       hasOnboardingAssistance: { name: 'Onboarding assistance', tier: 'contractor' },
     };

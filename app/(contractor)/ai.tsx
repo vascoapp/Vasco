@@ -505,7 +505,7 @@ export default function VascoScreen() {
 
             <DKLabel style={s.subsectionLabel}>{t('dk.ai.accountPrivacy', 'Account & privacy')}</DKLabel>
             <View style={s.gdprList}>
-              <GdprRow icon="chatbox-ellipses-outline" label={t('profile.sendFeedback')} onPress={() => Linking.openURL('mailto:support@vasco.app?subject=Vasco Feedback')} />
+              <GdprRow icon="chatbox-ellipses-outline" label={t('profile.sendFeedback')} onPress={() => Linking.openURL('mailto:support@vascobuild.com?subject=Vasco Feedback')} />
               <GdprRow icon="document-text-outline" label={t('profile.legal')} onPress={() => router.push('/contractor/legal' as any)} />
               <GdprRow icon="download-outline" label={t('profile.exportData')} onPress={handleExportData} />
               <GdprRow icon="trash-outline" label={t('profile.deleteAccount')} onPress={handleDeleteAccount} tone={DK.colors.danger} last />

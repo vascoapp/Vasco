@@ -26,7 +26,7 @@ export function legalTitle(slug: LegalSlug): string {
 }
 
 export async function renderLegalPage(slug: LegalSlug): Promise<string> {
-  const filePath = path.join(process.cwd(), "..", "docs", "legal", `${slug}.md`);
+  const filePath = path.join(process.cwd(), "content", "legal", `${slug}.md`);
   const markdown = await readFile(filePath, "utf8");
   return marked.parse(markdown, { async: false }) as string;
 }

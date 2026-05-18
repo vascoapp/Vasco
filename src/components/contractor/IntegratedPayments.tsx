@@ -58,9 +58,9 @@ const MOCK_PAYMENT_LINKS: PaymentLink[] = [
   {
     id: 'pl-001',
     invoiceId: 'inv-003',
-    url: 'https://pay.vasco.dev/pl-001',
+    url: 'https://pay.vascobuild.comv/pl-001',
     shortUrl: 'vasco.pay/a1b2c3',
-    qrCodeUrl: 'https://api.vasco.dev/qr/pl-001',
+    qrCodeUrl: 'https://api.vascobuild.comv/qr/pl-001',
     amount: 450.12,
     currency: 'EUR',
     status: 'pending',
@@ -70,7 +70,7 @@ const MOCK_PAYMENT_LINKS: PaymentLink[] = [
   {
     id: 'pl-002',
     invoiceId: 'inv-002',
-    url: 'https://pay.vasco.dev/pl-002',
+    url: 'https://pay.vascobuild.comv/pl-002',
     shortUrl: 'vasco.pay/d4e5f6',
     amount: 1240.00,
     currency: 'EUR',

@@ -1,4 +1,4 @@
-appId: com.vasco.app
+appId: com.vascobuild.app
 name: E2E smoke — login + tab navigation + tiered quote + invoice + signout
 tags:
   - smoke

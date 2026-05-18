@@ -5,7 +5,7 @@
 
 import type { AeoPage } from "./data";
 
-const BASE_URL = "https://vasco.app";
+const BASE_URL = "https://vascobuild.com";
 
 // ─── FAQ PAGE SCHEMA ───────────────────────────────────────────────────────
 

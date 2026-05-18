@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     const secret = Deno.env.get('QUOTE_LINK_SECRET');
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-    const portalBase = Deno.env.get('QUOTE_PORTAL_BASE') ?? 'https://vasco.app/quote';
+    const portalBase = Deno.env.get('QUOTE_PORTAL_BASE') ?? 'https://vascobuild.com/quote';
     if (!secret || !supabaseUrl || !anonKey) {
       return new Response(JSON.stringify({ ok: false, error: 'Server misconfigured' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

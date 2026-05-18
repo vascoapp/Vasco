@@ -103,7 +103,7 @@ describe('Calendar sync', () => {
     });
     expect(ics).toContain('BEGIN:VCALENDAR');
     expect(ics).toContain('END:VCALENDAR');
-    expect(ics).toContain('UID:job-1@vasco.app');
+    expect(ics).toContain('UID:job-1@vascobuild.com');
     expect(ics).toContain('DTSTART:20260428T090000Z');
     expect(ics).toContain('DTEND:20260428T110000Z');
     expect(ics).toContain('SUMMARY:Plumbing repair — Smit');

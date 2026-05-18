@@ -5,7 +5,7 @@
 // Supabase email webhook → Edge Function → AI extraction → pricing moat.
 //
 // Setup: Each contractor gets a unique forwarding address:
-//   invoices+{userId}@ingest.vasco.app
+//   invoices+{userId}@ingest.vascobuild.com
 //
 // Flow:
 //   1. Contractor forwards invoice email from Technische Unie/Rexel/etc.
@@ -62,7 +62,7 @@ export async function getEmailImportConfig(userId: string): Promise<EmailImportC
   // Default config with generated forwarding address
   const config: EmailImportConfig = {
     enabled: false,
-    forwardingAddress: `invoices+${userId.replace(/[^a-z0-9]/gi, '')}@ingest.vasco.app`,
+    forwardingAddress: `invoices+${userId.replace(/[^a-z0-9]/gi, '')}@ingest.vascobuild.com`,
     autoImport: true,
     notifyOnImport: true,
     trustedSenders: [],

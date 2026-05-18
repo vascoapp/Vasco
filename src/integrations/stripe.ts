@@ -243,7 +243,7 @@ export async function createPaymentLink(request: StripePaymentRequest): Promise<
   if (!connected) {
     if (__DEV__ || process.env.EXPO_PUBLIC_DEMO_MODE === 'true') {
       return {
-        url: `https://pay.vasco.app/demo/${request.invoiceId}`,
+        url: `https://pay.vascobuild.com/demo/${request.invoiceId}`,
         id: `plink_demo_${request.invoiceId}`,
       };
     }

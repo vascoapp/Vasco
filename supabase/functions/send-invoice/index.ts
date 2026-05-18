@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
     const supabaseAnon = Deno.env.get('SUPABASE_ANON_KEY');
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const resendKey = Deno.env.get('RESEND_API_KEY');
-    const fromAddress = Deno.env.get('INVOICE_FROM_EMAIL') ?? 'invoices@vasco.app';
+    const fromAddress = Deno.env.get('INVOICE_FROM_EMAIL') ?? 'invoices@vascobuild.com';
 
     if (!supabaseUrl || !supabaseAnon || !serviceKey || !resendKey) {
       return new Response(JSON.stringify({ ok: false, error: 'Server misconfigured' }), {

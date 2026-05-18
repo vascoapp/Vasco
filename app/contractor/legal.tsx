@@ -130,7 +130,7 @@ const LEGAL_SECTIONS: LegalSection[] = [
           '\u2022 Right to data portability: Export all your data (jobs, invoices, quotes, customers) as structured data using the "Export my data" button below\n' +
           '\u2022 Right to erasure: Delete your account and all associated data using the "Delete my account" button below. Financial records subject to legal retention periods will be anonymized rather than deleted.\n' +
           '\u2022 Right to rectification: Edit any of your data directly in the app\n' +
-          '\u2022 Right to restrict processing: Contact us at privacy@vasco.dev\n' +
+          '\u2022 Right to restrict processing: Contact us at privacy@vascobuild.com\n' +
           '\u2022 Right to object: Opt out of analytics in your profile settings',
       },
       {
@@ -295,7 +295,7 @@ const LEGAL_SECTIONS: LegalSection[] = [
         contentKey: 'legal.contactDetailsContent',
         contentDefault:
           'For questions about these policies, your data, or to exercise your GDPR rights:\n\n' +
-          'Email: privacy@vasco.dev\nSupport: support@vasco.dev\n\nVasco B.V.\nAmsterdam, The Netherlands\nKvK: 12345678\nData Protection Officer: dpo@vasco.dev',
+          'Email: privacy@vascobuild.com\nSupport: support@vascobuild.com\n\nVasco B.V.\nAmsterdam, The Netherlands\nKvK: 12345678\nData Protection Officer: privacy@vascobuild.com',
       },
     ],
   },
@@ -345,7 +345,7 @@ export default function LegalScreen() {
   const handleExportData = () => {
     Share.share({
       message: t('legal.exportMessage', {
-        defaultValue: 'Vasco Data Export\n\nUser: {{name}} ({{email}})\nCompany: {{company}}\nInvoices: {{invoices}}\nJobs: {{jobs}}\nCustomers: {{customers}}\n\nFull data export available upon request at privacy@vasco.dev',
+        defaultValue: 'Vasco Data Export\n\nUser: {{name}} ({{email}})\nCompany: {{company}}\nInvoices: {{invoices}}\nJobs: {{jobs}}\nCustomers: {{customers}}\n\nFull data export available upon request at privacy@vascobuild.com',
         name: user?.name ?? '',
         email: user?.email ?? '',
         company: user?.company ?? '',

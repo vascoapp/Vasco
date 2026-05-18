@@ -53,7 +53,7 @@ WHAT TO REPORT
 - Buttons that don't do anything
 - Anything that looks unfinished or "demo-y"
 
-EMAIL bugs to support@vasco.dev. Include the build number from
+EMAIL bugs to support@vascobuild.com. Include the build number from
 Profile → About (top of the screen).
 
 DEMO MODE: this build runs with mock data so you can test without
@@ -73,10 +73,10 @@ integration screens open but every action simulates success.
 - **Notes for reviewer:** see `docs/app-review-info.md` §3-minute walkthrough
 
 ### Beta feedback email
-`support@vasco.dev`
+`support@vascobuild.com`
 
 ### Beta App Review submission contact
-(operator's real email — placeholder `review@vasco.dev`)
+(operator's real email — placeholder `support@vascobuild.com`)
 
 ### "Beta App Review notes" field (700 chars)
 
@@ -94,7 +94,7 @@ via Profile → Language. Default depends on device locale.
 If anything errors with "Could not connect", that's the demo mode
 catching itself — re-launch the app to retry.
 
-Privacy: vasco.dev/privacy. EU datacenters only.
+Privacy: vascobuild.com/privacy. EU datacenters only.
 ```
 
 ---
@@ -119,7 +119,7 @@ Known limitations:
 - Live Mollie/Stripe billing is gated behind real account keys
   (this build runs in demo mode — all payment flows simulate success)
 
-Bug reports + feedback: support@vasco.dev — please include the build
+Bug reports + feedback: support@vascobuild.com — please include the build
 number from Profile → About.
 ```
 

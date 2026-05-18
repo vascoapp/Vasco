@@ -24,7 +24,7 @@ These are one-time, blocking, no-code:
   for TestFlight while the Org enrollment lands.
 - [ ] **Create the app record in App Store Connect** at
   https://appstoreconnect.apple.com → My Apps → "+". Bundle ID must
-  match `app.json:expo.ios.bundleIdentifier` exactly → `com.vasco.app`.
+  match `app.json:expo.ios.bundleIdentifier` exactly → `com.vascobuild.app`.
   Name: "Vasco". Primary language: Dutch (or English, switchable later).
   This action returns the **ASC App ID** (10-digit number) — write it
   down.
@@ -39,12 +39,12 @@ These are one-time, blocking, no-code:
 These were finalized in earlier rounds and verified for R66r65:
 
 - ✅ EAS project linked: `@collectai/VascoApp` ID `eebc2577-cbf8-4252-9b6c-f91119c17b7d` (`app.json:280`).
-- ✅ Bundle ID `com.vasco.app` (`app.json:24`).
+- ✅ Bundle ID `com.vascobuild.app` (`app.json:24`).
 - ✅ iOS version `1.0.0`, buildNumber `1` (`app.json:6,26`). EAS `production` profile auto-increments buildNumber on each build (`eas.json:32`).
 - ✅ iOS privacy manifest declared (`app.json:47`, R66r49). 4 accessed-API reasons + 9 collected-data-types match what Vasco actually reads.
 - ✅ `ITSAppUsesNonExemptEncryption: false` (`app.json:33`) — skips Apple export-compliance prompt because we only use HTTPS/standard crypto.
 - ✅ Camera + photo-library + Face ID usage strings declared (Apple rejects builds that prompt without strings).
-- ✅ Associated domains for deep links (`vasco.app`, `pay.vasco.app`, `admin.vasco.app`).
+- ✅ Associated domains for deep links (`vascobuild.com`, `pay.vascobuild.com`, `admin.vascobuild.com`).
 - ✅ Sentry plugin auto-registered (activates when `EXPO_PUBLIC_SENTRY_DSN` is set; otherwise no-op).
 - ✅ `eas.json` submit block now has iOS section using `$EXPO_APPLE_ID` / `$EXPO_ASC_APP_ID` / `$EXPO_APPLE_TEAM_ID` env-var placeholders (R66r65).
 

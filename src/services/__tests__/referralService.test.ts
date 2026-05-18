@@ -100,9 +100,9 @@ describe('referralService', () => {
   });
 
   describe('buildShareUrl', () => {
-    test('encodes the code and points at admin.vasco.app/ref/', () => {
-      expect(__internal.buildShareUrl('ABC234')).toBe('https://admin.vasco.app/ref/ABC234');
-      expect(__internal.buildShareUrl('A B/C')).toBe('https://admin.vasco.app/ref/A%20B%2FC');
+    test('encodes the code and points at admin.vascobuild.com/ref/', () => {
+      expect(__internal.buildShareUrl('ABC234')).toBe('https://admin.vascobuild.com/ref/ABC234');
+      expect(__internal.buildShareUrl('A B/C')).toBe('https://admin.vascobuild.com/ref/A%20B%2FC');
     });
   });
 });

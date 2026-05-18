@@ -37,7 +37,7 @@ export function ShareDecisionTracker({ tracker, onClose }: ShareDecisionTrackerP
   const [accessCode] = useState(() => generateAccessCode());
   const [copied, setCopied] = useState(false);
 
-  const shareUrl = `https://vasco.app/c/${accessCode}`;
+  const shareUrl = `https://vascobuild.com/c/${accessCode}`;
   const appUrl = `/customer/${accessCode}`;
 
   const shareMessage = `Hallo ${tracker.customerName.split(' ')[0]},
@@ -168,7 +168,7 @@ ${tracker.customerName ? 'Uw aannemer' : ''}`;
           </Pressable>
         </View>
         <Text style={styles.codeHelp}>
-          De klant kan deze code invullen op vasco.app/c
+          De klant kan deze code invullen op vascobuild.com/c
         </Text>
       </View>
 

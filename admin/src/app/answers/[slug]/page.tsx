@@ -36,7 +36,7 @@ export async function generateMetadata({
     openGraph: {
       title: page.title,
       description: page.description,
-      url: `https://vasco.app/answers/${page.slug}`,
+      url: `https://vascobuild.com/answers/${page.slug}`,
       type: "article",
     },
   };

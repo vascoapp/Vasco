@@ -2,10 +2,10 @@
 // BILLING — client wrapper to start Stripe Checkout for tier upgrades
 // =============================================================================
 
-import * as WebBrowser from 'expo-web-browser';
+import { Linking } from 'react-native';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
-export type PaidTier = 'advanced' | 'pro' | 'contractor';
+export type PaidTier = 'pro' | 'contractor';
 export type BillingCycle = 'monthly' | 'yearly';
 
 export interface CheckoutResult {
@@ -30,7 +30,7 @@ export async function startSubscriptionCheckout(
     if (!payload?.ok || !payload.url) {
       return { ok: false, error: payload?.error ?? 'No checkout URL returned' };
     }
-    await WebBrowser.openAuthSessionAsync(payload.url, 'vasco://billing/success');
+    await Linking.openURL(payload.url);
     return payload;
   } catch (err) {
     return { ok: false, error: String(err) };

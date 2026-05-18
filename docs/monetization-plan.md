@@ -256,7 +256,7 @@ Multi-country contractors (NL+DE, FR+ES) MUST upgrade for multi-country complian
 - Creates powerful network effect: GCs pull entire subcontractor networks
 
 **"Powered by Vasco" Backlinks:**
-- Free tier: "Powered by Vasco" on all quotes/invoices with link to vasco.app
+- Free tier: "Powered by Vasco" on all quotes/invoices with link to vascobuild.com
 - Vakman+: can remove branding
 - Every document = organic SEO + brand exposure
 

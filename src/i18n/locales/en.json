@@ -313,7 +313,7 @@
     "postcodeCohort": "Postcode area: €{{price}}/u median · {{accept}}% accept · {{n}} quotes",
     "requestSignature": "Request from customer",
     "signatureRequestTitle": "Sign-off request",
-    "signatureRequestBody": "Hi {{customer}}, please sign off on the completed work for \"{{job}}\": vasco.app/sign/{{ref}}",
+    "signatureRequestBody": "Hi {{customer}}, please sign off on the completed work for \"{{job}}\": vascobuild.com/sign/{{ref}}",
     "customer": "customer",
     "photos": {
       "title": "Photos",
@@ -539,7 +539,7 @@
     "decisionsOverdue_one": "{{count}} decision overdue — remind customer",
     "decisionsOverdue_other": "{{count}} decisions overdue — remind customer",
     "reminder": "Reminder",
-    "reminderMessage": "Hi, there are still open choices for your project. View them here: https://vasco.app/c/demo",
+    "reminderMessage": "Hi, there are still open choices for your project. View them here: https://vascobuild.com/c/demo",
     "reminderTitle": "Reminder",
     "revenue": "revenue",
     "overdue": "overdue",

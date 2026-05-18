@@ -313,7 +313,7 @@
     "postcodeCohort": "Postcodegebied: €{{price}}/u mediaan · {{accept}}% acceptatie · {{n}} offertes",
     "requestSignature": "Vraag aan klant",
     "signatureRequestTitle": "Aftekenverzoek",
-    "signatureRequestBody": "Hoi {{customer}}, teken het uitgevoerde werk voor \"{{job}}\" af: vasco.app/sign/{{ref}}",
+    "signatureRequestBody": "Hoi {{customer}}, teken het uitgevoerde werk voor \"{{job}}\" af: vascobuild.com/sign/{{ref}}",
     "customer": "klant",
     "photos": {
       "title": "Foto's",
@@ -539,7 +539,7 @@
     "decisionsOverdue_one": "{{count}} beslissing achterstallig — klant herinneren",
     "decisionsOverdue_other": "{{count}} beslissingen achterstallig — klant herinneren",
     "reminder": "Herinnering",
-    "reminderMessage": "Hoi, er staan nog open keuzes voor je project. Bekijk ze hier: https://vasco.app/c/demo",
+    "reminderMessage": "Hoi, er staan nog open keuzes voor je project. Bekijk ze hier: https://vascobuild.com/c/demo",
     "reminderTitle": "Herinnering",
     "revenue": "omzet",
     "overdue": "te laat",

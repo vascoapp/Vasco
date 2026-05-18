@@ -5,10 +5,10 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: "/answers/",
-        disallow: "/admin/",
+        allow: ["/", "/legal/", "/answers/", "/support", "/privacy", "/terms", "/eula"],
+        disallow: ["/admin", "/admin/", "/billing/", "/api/"],
       },
     ],
-    sitemap: "https://vasco.app/sitemap.xml",
+    sitemap: "https://vascobuild.com/sitemap.xml",
   };
 }

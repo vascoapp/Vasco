@@ -15,7 +15,7 @@ Tracks everything required to publish Vasco to App Store + Google Play and enabl
 - [x] **Privacy Manifest moved to app.json** — was at `ios/PrivacyInfo.xcprivacy` but never registered in Xcode. Now at `expo.ios.privacyManifests`; expo prebuild regenerates and registers it correctly. Bonus: deduped `associatedDomains` (6→3) + `CFBundleLocalizations` (12→6).
 - [x] **`pack-trigger-tick` edge fn deployed** — server-side daily eval of Incasso (5 buckets) + Quote followup (2) + Handover-survey (1) + Maintenance (2). 10 server-side push touchpoints across 4 packs.
 - [x] **`send-automation-preview` edge fn deployed** — emails any pack/step preview to a target inbox. Blocked by missing `RESEND_API_KEY`.
-- [x] **Legal docs refreshed** (R66r49 #10): privacy-policy + terms-of-service + cookie-policy + AUP + EULA + DPA + GDPR DSR all updated 2026-05-09. Added Stripe + Resend + Sentry + Expo Push as sub-processors. Wa.me deep-link customer-data flow disclosed. EU 2011/7/EU disclosure on Incasso 14d/30d disclosed in ToS. Domain consistency across all docs (vasco.dev → vasco.app).
+- [x] **Legal docs refreshed** (R66r49 #10): privacy-policy + terms-of-service + cookie-policy + AUP + EULA + DPA + GDPR DSR all updated 2026-05-09. Added Stripe + Resend + Sentry + Expo Push as sub-processors. Wa.me deep-link customer-data flow disclosed. EU 2011/7/EU disclosure on Incasso 14d/30d disclosed in ToS. Domain consistency across all docs (vasco.dev → vascobuild.com).
 - [x] **755 tests / 72 suites** + 0 TS errors at commit `89a5f50`.
 
 ## ✅ Done (autonomous — no credentials needed)
@@ -121,7 +121,7 @@ These must run once Supabase prod project is live. Migrations are file-system-st
 - [ ] Stripe (UK market): publishable + secret keys, webhook secret. (Round 8 adds stub integration.)
 - [ ] Sentry: create org + project, paste DSN into `EXPO_PUBLIC_SENTRY_DSN`.
 - [ ] Push notifications: FCM server key (Android), APNs p8 key (iOS) — upload to Expo via `eas credentials`.
-- [ ] App Store Connect: create app record, set bundle ID `com.vasco.app`, provide Apple Team ID + ASC App ID into `eas.json` submit block.
+- [ ] App Store Connect: create app record, set bundle ID `com.vascobuild.app`, provide Apple Team ID + ASC App ID into `eas.json` submit block.
 - [ ] Google Play Console: create app, generate service account JSON, save as `./secrets/play-service-account.json`.
 
 ## ✅ Rounds 5-150 complete (autonomous)

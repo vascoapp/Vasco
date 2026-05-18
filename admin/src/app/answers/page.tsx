@@ -155,7 +155,7 @@ export default function AnswersHub() {
             name: "Vasco — Answers for Construction Contractors",
             description:
               "Practical guides for self-employed contractors across 6 European markets and 7 construction trades.",
-            url: "https://vasco.app/answers",
+            url: "https://vascobuild.com/answers",
             publisher: {
               "@type": "SoftwareApplication",
               name: "Vasco",

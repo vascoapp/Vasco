@@ -21,13 +21,13 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.vasco.app",
+      "bundleIdentifier": "com.vascobuild.app",
       "scheme": "vasco",
-      "buildNumber": "1",
+      "buildNumber": "3",
       "associatedDomains": [
-        "applinks:vasco.app",
-        "applinks:pay.vasco.app",
-        "applinks:admin.vasco.app"
+        "applinks:vascobuild.com",
+        "applinks:pay.vascobuild.com",
+        "applinks:admin.vascobuild.com"
       ],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -151,7 +151,7 @@
       }
     },
     "android": {
-      "package": "com.vasco.app",
+      "package": "com.vascobuild.app",
       "scheme": "vasco",
       "versionCode": 1,
       "intentFilters": [
@@ -161,21 +161,21 @@
           "data": [
             {
               "scheme": "https",
-              "host": "vasco.app",
+              "host": "vascobuild.com",
               "pathPrefix": "/quote"
             },
             {
               "scheme": "https",
-              "host": "vasco.app",
+              "host": "vascobuild.com",
               "pathPrefix": "/invoice"
             },
             {
               "scheme": "https",
-              "host": "pay.vasco.app"
+              "host": "pay.vascobuild.com"
             },
             {
               "scheme": "https",
-              "host": "admin.vasco.app",
+              "host": "admin.vascobuild.com",
               "pathPrefix": "/ref"
             }
           ],
@@ -190,21 +190,21 @@
           "data": [
             {
               "scheme": "https",
-              "host": "vasco.app",
+              "host": "vascobuild.com",
               "pathPrefix": "/quote"
             },
             {
               "scheme": "https",
-              "host": "vasco.app",
+              "host": "vascobuild.com",
               "pathPrefix": "/invoice"
             },
             {
               "scheme": "https",
-              "host": "pay.vasco.app"
+              "host": "pay.vascobuild.com"
             },
             {
               "scheme": "https",
-              "host": "admin.vasco.app",
+              "host": "admin.vascobuild.com",
               "pathPrefix": "/ref"
             }
           ],

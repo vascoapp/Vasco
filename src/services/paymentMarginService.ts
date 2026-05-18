@@ -1,17 +1,33 @@
 // =============================================================================
-// PAYMENT MARGIN SERVICE — Revenue from payment processing
+// PAYMENT MARGIN SERVICE — Hybrid pricing: subscription + tier-based commission
 // =============================================================================
-// VascoApp charges a flat 1% fee on all payments received through the platform.
-// This is communicated upfront during onboarding and in payment settings.
-// On top of the 1% Vasco fee, standard payment processor fees apply (Mollie/Stripe).
+// Vasco charges commission on every paid invoice. The rate depends on the
+// contractor's subscription tier:
+//   Free       → 3.5%
+//   Pro        → 2% (€39/mo)
+//   Contractor → 1% (€69/mo)
+// Plus standard payment processor fees (Mollie/Stripe), which apply on top.
 //
-// Transparency: "Vasco charges 1% on payments received. Payment provider fees
-// (iDEAL, credit card, etc.) are separate and shown before each transaction."
+// Transparency: the disclosure is surfaced during processor connect onboarding
+// and in payment settings, localized in 6 languages.
 // =============================================================================
 
 import type { Country } from '../context/AuthContext';
+import type { SubscriptionTier } from './subscriptionService';
 
-// ─── Fee Structure ─────────────────────────────────────────────────────────
+// ─── Tier → Commission Rate ────────────────────────────────────────────────
+
+export const COMMISSION_BY_TIER: Record<SubscriptionTier, number> = {
+  free: 3.5,
+  pro: 2.0,
+  contractor: 1.0,
+};
+
+export function getCommissionPercent(tier: SubscriptionTier): number {
+  return COMMISSION_BY_TIER[tier];
+}
+
+// ─── Payment Methods ───────────────────────────────────────────────────────
 
 export type PaymentMethod =
   | 'ideal'
@@ -23,74 +39,85 @@ export type PaymentMethod =
   | 'apple_pay'
   | 'paypal';
 
-// ─── Vasco Platform Fee ────────────────────────────────────────────────────
+/** Legacy export — represents the Free-tier baseline rate (3%) */
+export const VASCO_PLATFORM_FEE_PERCENT = COMMISSION_BY_TIER.free;
 
-/** Vasco takes a flat 1% on all payments received through the platform */
-export const VASCO_PLATFORM_FEE_PERCENT = 1.0;
+/**
+ * Tier-aware disclosure. Pass the user's current tier to get a specific
+ * message. Defaults to free-tier (3%) when tier is unknown.
+ */
+export function getFeeDisclosure(
+  locale: 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it',
+  tier: SubscriptionTier = 'free',
+): string {
+  const rate = COMMISSION_BY_TIER[tier];
+  const lc = locale as keyof typeof DISCLOSURE_TEMPLATES;
+  const tpl = DISCLOSURE_TEMPLATES[lc] ?? DISCLOSURE_TEMPLATES.en;
+  return tpl(rate, tier);
+}
 
-/** Displayed to users during onboarding and in payment settings */
-export const VASCO_FEE_DISCLOSURE = {
-  en: 'Vasco charges a 1% platform fee on payments received. Payment provider fees (iDEAL, credit card, etc.) apply separately.',
-  nl: 'Vasco rekent 1% platformkosten op ontvangen betalingen. Betaalproviderkosten (iDEAL, creditcard, etc.) worden apart berekend.',
-  de: 'Vasco berechnet 1% Plattformgebuhr auf erhaltene Zahlungen. Zahlungsanbietergebuhren (Kreditkarte usw.) fallen separat an.',
-  fr: 'Vasco facture 1% de frais de plateforme sur les paiements recus. Les frais du prestataire de paiement s\'appliquent separement.',
-  es: 'Vasco cobra un 1% de comision de plataforma sobre los pagos recibidos. Las comisiones del proveedor de pago se aplican por separado.',
-  it: 'Vasco addebita l\'1% di commissione piattaforma sui pagamenti ricevuti. Le commissioni del fornitore di pagamento si applicano separatamente.',
+const TIER_LABEL_BY_LOCALE: Record<string, Record<SubscriptionTier, string>> = {
+  en: { free: 'Free', pro: 'Pro', contractor: 'Contractor' },
+  nl: { free: 'Gratis', pro: 'Pro', contractor: 'Aannemer' },
+  de: { free: 'Free', pro: 'Pro', contractor: 'Contractor' },
+  fr: { free: 'Gratuit', pro: 'Pro', contractor: 'Contractor' },
+  es: { free: 'Gratis', pro: 'Pro', contractor: 'Contractor' },
+  it: { free: 'Gratis', pro: 'Pro', contractor: 'Contractor' },
 };
+
+const DISCLOSURE_TEMPLATES = {
+  en: (rate: number, tier: SubscriptionTier) =>
+    rate === 0
+      ? `You're on the ${TIER_LABEL_BY_LOCALE.en[tier]} plan — Vasco charges 0% commission. Payment provider fees (iDEAL, credit card, etc.) apply separately.`
+      : `Vasco charges ${rate}% commission on payments received (${TIER_LABEL_BY_LOCALE.en[tier]} plan). Upgrade to lower it. Payment provider fees apply separately.`,
+  nl: (rate: number, tier: SubscriptionTier) =>
+    rate === 0
+      ? `Je hebt het ${TIER_LABEL_BY_LOCALE.nl[tier]}-abonnement — Vasco rekent 0% commissie. Betaalproviderkosten (iDEAL, creditcard, enz.) worden apart berekend.`
+      : `Vasco rekent ${rate}% commissie op ontvangen betalingen (${TIER_LABEL_BY_LOCALE.nl[tier]}-abonnement). Upgrade om dit te verlagen. Betaalproviderkosten worden apart berekend.`,
+  de: (rate: number, tier: SubscriptionTier) =>
+    rate === 0
+      ? `Du nutzt den ${TIER_LABEL_BY_LOCALE.de[tier]}-Plan — Vasco berechnet 0% Provision. Zahlungsanbietergebühren (Kreditkarte usw.) fallen separat an.`
+      : `Vasco berechnet ${rate}% Provision auf erhaltene Zahlungen (${TIER_LABEL_BY_LOCALE.de[tier]}-Plan). Upgrade um diese zu senken. Zahlungsanbietergebühren fallen separat an.`,
+  fr: (rate: number, tier: SubscriptionTier) =>
+    rate === 0
+      ? `Vous êtes sur l'abonnement ${TIER_LABEL_BY_LOCALE.fr[tier]} — Vasco prélève 0% de commission. Les frais du prestataire de paiement s'appliquent séparément.`
+      : `Vasco prélève ${rate}% de commission sur les paiements reçus (abonnement ${TIER_LABEL_BY_LOCALE.fr[tier]}). Passez à un plan supérieur pour la réduire. Les frais du prestataire s'appliquent séparément.`,
+  es: (rate: number, tier: SubscriptionTier) =>
+    rate === 0
+      ? `Estás en el plan ${TIER_LABEL_BY_LOCALE.es[tier]} — Vasco cobra el 0% de comisión. Las comisiones del proveedor de pago se aplican por separado.`
+      : `Vasco cobra el ${rate}% de comisión sobre los pagos recibidos (plan ${TIER_LABEL_BY_LOCALE.es[tier]}). Mejora tu plan para reducirla. Las comisiones del proveedor se aplican por separado.`,
+  it: (rate: number, tier: SubscriptionTier) =>
+    rate === 0
+      ? `Sei sull'abbonamento ${TIER_LABEL_BY_LOCALE.it[tier]} — Vasco addebita lo 0% di commissione. Le commissioni del fornitore di pagamento si applicano separatamente.`
+      : `Vasco addebita il ${rate}% di commissione sui pagamenti ricevuti (piano ${TIER_LABEL_BY_LOCALE.it[tier]}). Aggiorna il tuo piano per ridurla. Le commissioni del fornitore si applicano separatamente.`,
+};
+
+/** Legacy export — defaults to free tier disclosure */
+export const VASCO_FEE_DISCLOSURE = {
+  en: getFeeDisclosure('en', 'free'),
+  nl: getFeeDisclosure('nl', 'free'),
+  de: getFeeDisclosure('de', 'free'),
+  fr: getFeeDisclosure('fr', 'free'),
+  es: getFeeDisclosure('es', 'free'),
+  it: getFeeDisclosure('it', 'free'),
+};
+
+// ─── Processor Fee Structure ───────────────────────────────────────────────
 
 interface FeeStructure {
   mollieFlatFee: number;         // EUR flat per transaction (processor fee)
   molliePercentageFee: number;   // % of transaction amount (processor fee)
-  vascoFlatFee: number;          // EUR flat — total charged to contractor
-  vascoPercentageFee: number;    // % — total charged (1% Vasco + processor %)
-  vascoMarginFlat: number;       // Vasco revenue per transaction
-  vascoMarginPercentage: number; // Vasco revenue as % (always 1%)
 }
 
-// Fee = processor fee + 1% Vasco platform fee
-// Contractor sees: "iDEAL: EUR 0.32 + 1% Vasco fee"
-// Vasco always earns 1% of the payment amount
 export const PAYMENT_FEES: Record<PaymentMethod, FeeStructure> = {
-  ideal: {
-    mollieFlatFee: 0.32, molliePercentageFee: 0,
-    vascoFlatFee: 0.32, vascoPercentageFee: 1.0,
-    vascoMarginFlat: 0, vascoMarginPercentage: 1.0,
-  },
-  sepa_direct_debit: {
-    mollieFlatFee: 0.30, molliePercentageFee: 0,
-    vascoFlatFee: 0.30, vascoPercentageFee: 1.0,
-    vascoMarginFlat: 0, vascoMarginPercentage: 1.0,
-  },
-  credit_card: {
-    mollieFlatFee: 0.25, molliePercentageFee: 1.8,
-    vascoFlatFee: 0.25, vascoPercentageFee: 2.8,  // 1.8% processor + 1% Vasco
-    vascoMarginFlat: 0, vascoMarginPercentage: 1.0,
-  },
-  bancontact: {
-    mollieFlatFee: 0.39, molliePercentageFee: 0,
-    vascoFlatFee: 0.39, vascoPercentageFee: 1.0,
-    vascoMarginFlat: 0, vascoMarginPercentage: 1.0,
-  },
-  sofort: {
-    mollieFlatFee: 0.30, molliePercentageFee: 0,
-    vascoFlatFee: 0.30, vascoPercentageFee: 1.0,
-    vascoMarginFlat: 0, vascoMarginPercentage: 1.0,
-  },
-  klarna: {
-    mollieFlatFee: 0.29, molliePercentageFee: 2.99,
-    vascoFlatFee: 0.29, vascoPercentageFee: 3.99,  // 2.99% processor + 1% Vasco
-    vascoMarginFlat: 0, vascoMarginPercentage: 1.0,
-  },
-  apple_pay: {
-    mollieFlatFee: 0.25, molliePercentageFee: 1.8,
-    vascoFlatFee: 0.25, vascoPercentageFee: 2.8,
-    vascoMarginFlat: 0, vascoMarginPercentage: 1.0,
-  },
-  paypal: {
-    mollieFlatFee: 0.35, molliePercentageFee: 2.49,
-    vascoFlatFee: 0.35, vascoPercentageFee: 3.49,  // 2.49% processor + 1% Vasco
-    vascoMarginFlat: 0, vascoMarginPercentage: 1.0,
-  },
+  ideal: { mollieFlatFee: 0.32, molliePercentageFee: 0 },
+  sepa_direct_debit: { mollieFlatFee: 0.30, molliePercentageFee: 0 },
+  credit_card: { mollieFlatFee: 0.25, molliePercentageFee: 1.8 },
+  bancontact: { mollieFlatFee: 0.39, molliePercentageFee: 0 },
+  sofort: { mollieFlatFee: 0.30, molliePercentageFee: 0 },
+  klarna: { mollieFlatFee: 0.29, molliePercentageFee: 2.99 },
+  apple_pay: { mollieFlatFee: 0.25, molliePercentageFee: 1.8 },
+  paypal: { mollieFlatFee: 0.35, molliePercentageFee: 2.49 },
 };
 
 // ─── Country → Default Methods ─────────────────────────────────────────────
@@ -110,28 +137,35 @@ export interface PaymentFeeBreakdown {
   method: PaymentMethod;
   amount: number;
   processorFee: number;           // What Mollie/Stripe charges
-  vascoFee: number;               // 1% platform fee
+  vascoFee: number;               // Tier-based Vasco commission
   totalFee: number;               // processor + Vasco combined
   contractorReceives: number;     // amount - totalFee
   displayProcessorFee: string;    // "EUR 0.32" or "1.8% + EUR 0.25"
-  displayVascoFee: string;        // "1% (EUR X.XX)"
+  displayVascoFee: string;        // "3% (EUR X.XX)" or "0% (Contractor plan)"
   displayTotalFee: string;        // Combined display
+  commissionPercent: number;      // The actual % charged for this calculation
 }
 
 export function calculatePaymentFees(
   amount: number,
   method: PaymentMethod,
+  tier: SubscriptionTier = 'free',
 ): PaymentFeeBreakdown {
   const fees = PAYMENT_FEES[method];
+  const commissionPercent = COMMISSION_BY_TIER[tier];
 
   const processorFee = fees.mollieFlatFee + (amount * fees.molliePercentageFee / 100);
-  const vascoFee = amount * (VASCO_PLATFORM_FEE_PERCENT / 100);
+  const vascoFee = amount * (commissionPercent / 100);
   const totalFee = processorFee + vascoFee;
   const contractorReceives = amount - totalFee;
 
   const displayProcessorFee = fees.molliePercentageFee > 0
     ? `${fees.molliePercentageFee}% + EUR ${fees.mollieFlatFee.toFixed(2)}`
     : `EUR ${fees.mollieFlatFee.toFixed(2)}`;
+
+  const displayVascoFee = commissionPercent === 0
+    ? `0% (your plan)`
+    : `${commissionPercent}% (EUR ${(Math.round(vascoFee * 100) / 100).toFixed(2)})`;
 
   return {
     method,
@@ -141,8 +175,9 @@ export function calculatePaymentFees(
     totalFee: Math.round(totalFee * 100) / 100,
     contractorReceives: Math.round(contractorReceives * 100) / 100,
     displayProcessorFee,
-    displayVascoFee: `1% (EUR ${(Math.round(vascoFee * 100) / 100).toFixed(2)})`,
+    displayVascoFee,
     displayTotalFee: `EUR ${(Math.round(totalFee * 100) / 100).toFixed(2)}`,
+    commissionPercent,
   };
 }
 
@@ -162,6 +197,7 @@ export function projectMonthlyRevenue(
   avgInvoiceSize: number,
   invoicesPerMonth: number,
   methodDistribution: Partial<Record<PaymentMethod, number>>, // % per method
+  tier: SubscriptionTier = 'free',
 ): MonthlyPaymentRevenue {
   const result: MonthlyPaymentRevenue = {
     totalTransactions: invoicesPerMonth,
@@ -177,7 +213,7 @@ export function projectMonthlyRevenue(
     const count = Math.round(invoicesPerMonth * ((pct as number) / 100));
     if (count === 0) continue;
 
-    const fees = calculatePaymentFees(avgInvoiceSize, method as PaymentMethod);
+    const fees = calculatePaymentFees(avgInvoiceSize, method as PaymentMethod, tier);
     const vascoRevenue = fees.vascoFee * count;
 
     result.totalMollieFees += fees.processorFee * count;

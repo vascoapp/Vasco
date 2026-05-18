@@ -35,36 +35,36 @@ describe('defaultPaymentSuccessUrl', () => {
   it('routes NL to .nl when env unset', () => {
     delete process.env.EXPO_PUBLIC_PAYMENT_SUCCESS_URL;
     setCurrentUser({ id: 'u1', country: 'NL' });
-    expect(defaultPaymentSuccessUrl()).toBe('https://app.vasco.nl/payment/success');
+    expect(defaultPaymentSuccessUrl()).toBe('https://app.vascobuild.com/payment/success');
   });
 
   it('routes DE to .de when env unset', () => {
     delete process.env.EXPO_PUBLIC_PAYMENT_SUCCESS_URL;
     setCurrentUser({ id: 'u1', country: 'DE' });
-    expect(defaultPaymentSuccessUrl()).toBe('https://app.vasco.de/payment/success');
+    expect(defaultPaymentSuccessUrl()).toBe('https://app.vascobuild.com/payment/success');
   });
 
   it('routes FR to .fr when env unset', () => {
     delete process.env.EXPO_PUBLIC_PAYMENT_SUCCESS_URL;
     setCurrentUser({ id: 'u1', country: 'FR' });
-    expect(defaultPaymentSuccessUrl()).toBe('https://app.vasco.fr/payment/success');
+    expect(defaultPaymentSuccessUrl()).toBe('https://app.vascobuild.com/payment/success');
   });
 
   it('routes IT to .it when env unset', () => {
     delete process.env.EXPO_PUBLIC_PAYMENT_SUCCESS_URL;
     setCurrentUser({ id: 'u1', country: 'IT' });
-    expect(defaultPaymentSuccessUrl()).toBe('https://app.vasco.it/payment/success');
+    expect(defaultPaymentSuccessUrl()).toBe('https://app.vascobuild.com/payment/success');
   });
 
   it('falls back to .app for UK', () => {
     delete process.env.EXPO_PUBLIC_PAYMENT_SUCCESS_URL;
     setCurrentUser({ id: 'u1', country: 'UK' });
-    expect(defaultPaymentSuccessUrl()).toBe('https://app.vasco.app/payment/success');
+    expect(defaultPaymentSuccessUrl()).toBe('https://app.vascobuild.com/payment/success');
   });
 
   it('falls back to .app when country unknown', () => {
     delete process.env.EXPO_PUBLIC_PAYMENT_SUCCESS_URL;
     setCurrentUser({ id: 'u1' });
-    expect(defaultPaymentSuccessUrl()).toBe('https://app.vasco.app/payment/success');
+    expect(defaultPaymentSuccessUrl()).toBe('https://app.vascobuild.com/payment/success');
   });
 });

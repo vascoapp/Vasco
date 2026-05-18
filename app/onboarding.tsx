@@ -1015,33 +1015,20 @@ export default function OnboardingScreen() {
       // ─── Step 13: Plan Selection ───────────────────────────────────
       case 13: {
         const freeTier = TIERS.free;
-        const advancedTier = TIERS.advanced;
         const proTier = TIERS.pro;
         const contractorTier = TIERS.contractor;
 
-        const plans: { id: SubscriptionTier; name: string; price: number; annualPrice: number; badge?: string; features: { text: string; highlight?: boolean }[] }[] = [
+        const plans: { id: SubscriptionTier; name: string; price: number; annualPrice: number; badge?: string; commission: string; features: { text: string; highlight?: boolean }[] }[] = [
           {
             id: 'free',
             name: 'Free',
             price: 0,
             annualPrice: 0,
+            commission: '3.5%',
             features: [
               { text: `${freeTier.limits.maxActiveJobs} ${t('common.jobs', 'jobs')}` },
               { text: `${freeTier.limits.maxQuotesPerMonth} ${t('common.quotesMonth', 'quotes/month')}` },
-              { text: `${freeTier.limits.maxAiInsightsPerMonth} AI ${t('common.insights', 'insights')}` },
-            ],
-          },
-          {
-            id: 'advanced',
-            name: 'Advanced',
-            price: advancedTier.monthlyPrice,
-            annualPrice: advancedTier.annualMonthlyPrice,
-            badge: 'POPULAR',
-            features: [
-              { text: `${advancedTier.limits.maxActiveJobs} ${t('common.jobs', 'jobs')}`, highlight: true },
-              { text: t('common.paymentProcessing', 'Payment processing'), highlight: true },
-              { text: 'EVE AI', highlight: true },
-              { text: t('common.quoteTemplates', 'Quote templates'), highlight: true },
+              { text: '3.5% ' + t('common.perInvoice', 'per paid invoice') },
             ],
           },
           {
@@ -1050,11 +1037,12 @@ export default function OnboardingScreen() {
             price: proTier.monthlyPrice,
             annualPrice: proTier.annualMonthlyPrice,
             badge: 'BEST VALUE',
+            commission: '2%',
             features: [
               { text: t('common.unlimited', 'Unlimited') + ' ' + t('common.jobs', 'jobs'), highlight: true },
               { text: t('common.fullAi', 'Full AI suite'), highlight: true },
               { text: t('common.purchasingAgent', 'Purchasing agent'), highlight: true },
-              { text: t('common.benchmarking', 'Benchmarking'), highlight: true },
+              { text: '2% ' + t('common.perInvoice', 'per paid invoice'), highlight: true },
             ],
           },
           {
@@ -1062,11 +1050,12 @@ export default function OnboardingScreen() {
             name: 'Contractor',
             price: contractorTier.monthlyPrice,
             annualPrice: contractorTier.annualMonthlyPrice,
+            commission: '1%',
             features: [
               { text: t('common.teamFeatures', 'Team features'), highlight: true },
               { text: `${contractorTier.limits.maxTeamSeats} ${t('common.seats', 'seats')}`, highlight: true },
-              { text: t('common.dedicatedSupport', 'Dedicated support'), highlight: true },
               { text: t('common.apiWhiteLabel', 'API + white-label'), highlight: true },
+              { text: '1% ' + t('common.perInvoice', 'per paid invoice'), highlight: true },
             ],
           },
         ];

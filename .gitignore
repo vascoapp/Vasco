@@ -53,3 +53,4 @@ admin/.next/
 
 # bundle analyze artifacts (baselines are committed; intermediates aren't)
 .bundle-analyze/
+.vercel

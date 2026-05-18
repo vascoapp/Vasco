@@ -313,7 +313,7 @@
     "postcodeCohort": "CAP: €{{price}}/h mediana · {{accept}}% accettazione · {{n}} preventivi",
     "requestSignature": "Richiedi al cliente",
     "signatureRequestTitle": "Richiesta firma",
-    "signatureRequestBody": "Ciao {{customer}}, firma la ricezione del lavoro \"{{job}}\": vasco.app/sign/{{ref}}",
+    "signatureRequestBody": "Ciao {{customer}}, firma la ricezione del lavoro \"{{job}}\": vascobuild.com/sign/{{ref}}",
     "customer": "cliente",
     "photos": {
       "title": "Foto",
@@ -539,7 +539,7 @@
     "decisionsOverdue_one": "{{count}} decisione in ritardo — ricordare al cliente",
     "decisionsOverdue_other": "{{count}} decisioni in ritardo — ricordare al cliente",
     "reminder": "Promemoria",
-    "reminderMessage": "Ciao, ci sono ancora scelte aperte per il tuo progetto. Consultale qui: https://vasco.app/c/demo",
+    "reminderMessage": "Ciao, ci sono ancora scelte aperte per il tuo progetto. Consultale qui: https://vascobuild.com/c/demo",
     "reminderTitle": "Promemoria",
     "revenue": "fatturato",
     "overdue": "in ritardo",

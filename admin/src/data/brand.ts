@@ -20,7 +20,7 @@ export const BRAND_IDENTITY = {
   platforms: ["iOS", "Android"],
   markets: ["NL", "DE", "FR", "ES", "IT", "UK"] as const,
   languages: ["nl", "de", "fr", "es", "it", "en"] as const,
-  domain: "app.vasco.eu",
+  domain: "app.vascobuild.com",
 };
 
 // ─── SECTION 2: VOICE & PERSONALITY ──────────────────────────────────────

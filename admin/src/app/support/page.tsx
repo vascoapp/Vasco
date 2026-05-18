@@ -32,7 +32,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Why isn't my payment link working?",
-    a: "Make sure you've connected Mollie (EU) or Stripe (UK) in Profile → Integrations. Use a real (live_) API key, not a test key, for live invoices. If the link still fails, contact support@vasco.dev with your invoice number.",
+    a: "Make sure you've connected Mollie (EU) or Stripe (UK) in Profile → Integrations. Use a real (live_) API key, not a test key, for live invoices. If the link still fails, contact support@vascobuild.com with your invoice number.",
   },
   {
     q: "My customer didn't receive the invoice email",
@@ -54,10 +54,10 @@ export default function SupportPage() {
         <p className="mt-2 text-zinc-600">
           Quick answers to common questions. For anything else, email{" "}
           <a
-            href="mailto:support@vasco.dev"
+            href="mailto:support@vascobuild.com"
             className="text-[#F97316] underline"
           >
-            support@vasco.dev
+            support@vascobuild.com
           </a>{" "}
           and a real person will reply within one business day.
         </p>
@@ -85,19 +85,19 @@ export default function SupportPage() {
           <li>
             <strong>Email:</strong>{" "}
             <a
-              href="mailto:support@vasco.dev"
+              href="mailto:support@vascobuild.com"
               className="text-[#F97316] underline"
             >
-              support@vasco.dev
+              support@vascobuild.com
             </a>
           </li>
           <li>
             <strong>Privacy questions:</strong>{" "}
             <a
-              href="mailto:privacy@vasco.dev"
+              href="mailto:privacy@vascobuild.com"
               className="text-[#F97316] underline"
             >
-              privacy@vasco.dev
+              privacy@vascobuild.com
             </a>
           </li>
           <li>
