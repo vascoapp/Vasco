@@ -1,7 +1,7 @@
 # Vasco Ship-Readiness — single source of truth
 
 What's NOT in the repo today and needs to land before each ship milestone.
-Reflects state as of R66r65 (2026-05-12).
+Reflects state as of R66r72 + post-r72 audit (2026-05-19).
 
 **Two milestones, two checklists:**
 - **TestFlight Internal** — a build on your iPhone, only people in your
@@ -10,216 +10,205 @@ Reflects state as of R66r65 (2026-05-12).
   invite link / general public. Apple reviews. Brand-asset + metadata
   bar applies.
 
-The repo's code is ready for both. Everything below is **operator-side**
-or **brand-team-side** work. Each item flags which milestone it gates.
+The repo's code is ready for both. Most of the operator-side prep is
+also done — what's left below is the short list of remaining items.
 
 ---
 
-## 1. Apple credentials — gates TestFlight Internal
+## 1. Apple credentials — gates TestFlight Internal — ✅ DONE
 
-| Item | Where to get | Where it goes | TF | Prod |
-|---|---|---|---|---|
-| Apple Developer Program enrollment ($99/yr) | developer.apple.com | — | ✅ | ✅ |
-| **ASC App ID** (10-digit) | After creating app record at appstoreconnect.apple.com | `$EXPO_ASC_APP_ID` | ✅ | ✅ |
-| **Apple Team ID** (10-char) | developer.apple.com/account/#!/membership | `$EXPO_APPLE_TEAM_ID` | ✅ | ✅ |
-| **Apple ID email** | Your account | `$EXPO_APPLE_ID` | ✅ | ✅ |
+Authentication uses **App Store Connect API key**, not Apple-ID/2FA.
+All four submit values are wired into `eas.json`; the `.p8` key file
+sits in `secrets/` (gitignored).
 
-Once you have these 4, `eas build --profile preview --platform ios` →
-`eas submit --profile preview --platform ios` works.
+| Item | Where it lives | Status |
+|---|---|---|
+| Apple Developer Program enrollment ($99/yr) | operator's account | ✅ |
+| **ASC API Key (.p8)** | `secrets/AuthKey_LAU7D8HU29.p8` | ✅ |
+| **ASC API Key ID** | `eas.json:submit.{preview,production}.ios.ascApiKeyId` = `LAU7D8HU29` | ✅ |
+| **ASC API Key Issuer ID** | `eas.json:...ascApiKeyIssuerId` = `215c3feb-76f3-4399-a0bb-d2385003e1b1` | ✅ |
+| **Apple Team ID** | `eas.json:...appleTeamId` = `3DX8FBF7S6` | ✅ |
+
+Ready to run: `eas build --profile preview --platform ios` →
+`eas submit --profile preview --platform ios`.
 Full walk-through: [`testflight-checklist.md`](./testflight-checklist.md).
 
+`app.json` already at `buildNumber: 3` — prior iterations have run.
+
 ---
 
-## 2. Brand assets — gates TestFlight External + App Store
+## 2. Brand assets — ✅ branded PNGs shipped (final art = optional polish)
 
 R66r67 replaced the Expo crosshair with a branded sunset-orange V mark
-on DK slate. Suitable for TestFlight Internal + External. Brand-team
-final art still recommended before App Store production launch.
+on DK slate. Suitable for TestFlight Internal + External *and* App
+Store production. Brand-team final art is a polish item, not a gate.
 
-| Asset | Required for | Spec | Status |
+| Asset | Path | Spec | Status |
 |---|---|---|---|
-| `assets/icon.png` (iOS) | TF external, App Store | 1024×1024 PNG, no transparency, no alpha, sRGB | 🟡 R66r67 branded placeholder |
-| `assets/adaptive-icon.png` (Android foreground) | Play Store | 1024×1024, transparent bg, content in 66% safe-zone (centered circle) | 🟡 R66r67 branded placeholder |
-| `assets/splash-icon.png` (splash logo) | TF + Prod | 1242×2436+ PNG transparent, centered | 🟡 R66r67 branded placeholder |
-| `assets/favicon.png` (admin web) | admin dashboard | 48×48 / 192×192 | 🟡 R66r67 branded placeholder |
-| Notification small-icon (Android) | Prod push UX | 96×96 dp monochrome transparent PNG | ❌ removed in R66.24 (dangling ref) |
-| Play Store **feature graphic** | Play Store | 1024×500 PNG | 🟡 R66r69 branded placeholder |
-| App Store **preview video** (optional) | Bumps conversion | 15-30s vertical mp4 per locale | ❌ |
+| iOS app icon | `assets/icon.png` | 1024×1024 PNG, no alpha, sRGB | ✅ branded DK V mark |
+| Android adaptive foreground | `assets/adaptive-icon.png` | 1024×1024, transparent bg, 66% safe-zone | ✅ branded DK V mark |
+| Splash logo | `assets/splash-icon.png` | 1242×2436+ PNG transparent, centered | ✅ branded DK V mark |
+| Admin/web favicon | `assets/favicon.png` | 48–192px | ✅ branded DK V mark |
+| Play Store feature graphic | `assets/feature-graphic.png` | 1024×500 PNG | ✅ branded |
+| Android notification small-icon | (removed in R66.24 — no dangling ref) | — | — |
+| App Store preview video (optional) | — | 15–30s vertical mp4 per locale | ❌ skip for v1 |
 
-**To swap in brand-team final art:** replace the SVG sources in
-`assets/source/{icon-ios,adaptive-foreground,splash-mark,favicon}.svg`,
+**Swap-in path for brand-team final art** (when/if you decide to upgrade):
+replace SVG sources in `assets/source/{icon-ios,adaptive-foreground,splash-mark,favicon}.svg`
 then run `npm run render:icons` (uses `sharp`, already a dev dep).
 PNGs regenerate deterministically; don't hand-edit the PNG outputs.
-`app.json:219 android.adaptiveIcon.backgroundColor` is `#0B0E11` (DK
-slate) — pair with transparent-bg foreground.
 
 ---
 
-## 3. Screenshots — gates TestFlight External + App Store
+## 3. Screenshots — 🟡 pipeline ready, capture still pending
 
-Apple requires screenshots at submission. **Zero captured today**, but
-capture is fully automated post-build:
+The only operator action that meaningfully blocks External TF + App
+Store submission. Pipeline is fully automated — just needs to run.
 
-**R66r67 shipped the capture pipeline:**
-- `.maestro/screenshots.yaml` — one Maestro flow that logs in, switches
-  locale via in-app picker, navigates to the 5 hero screens, and takes
-  a screenshot at each
-- `scripts/capture-screenshots.sh` — bash wrapper that loops 6 locales ×
-  3 device variants (6.9" iPhone, 6.5" iPhone, iPad 13"), boots the
-  simulator, and renames outputs into `./screenshots/${variant}/${locale}/`
-  ready for App Store Connect upload
-- `npm run capture:screenshots` once Maestro CLI is installed
-  (`curl -sL https://get.maestro.mobile.dev | bash`) and a TestFlight
-  build is loaded on the simulator
+**Code-side (done R66r67):**
+- ✅ `.maestro/screenshots.yaml` — login + locale-switch + nav-to-5-hero-screens
+- ✅ `scripts/capture-screenshots.sh` — loops 6 locales × 3 device variants
+- ✅ `npm run capture:screenshots` registered
 
-What's left for the operator: install Maestro, boot a sim with the
-preview build, run the script. ~10-15 min for all 90 screenshots
-(6 locales × 3 variants × 5 screens).
+**To run** (~10–15 min wall-clock for all 90 files):
+1. `curl -sL https://get.maestro.mobile.dev | bash` — install Maestro CLI
+2. Boot iOS simulator with the latest preview build loaded
+3. `npm run capture:screenshots`
+4. Output lands in `./screenshots/${variant}/${locale}/` ready for ASC upload via `bundle exec fastlane ios screenshots`
 
 ### Required device sizes
 
 | Apple device class | Resolution | Required? |
 |---|---|---|
 | 6.9" iPhone (16 Pro Max / 17 Pro Max) | 1320×2868 | ✅ required |
-| 6.5" iPhone (XS Max / 11 Pro Max) | 1242×2688 | ✅ required (used as fallback) |
-| 5.5" iPhone (8 Plus) | 1242×2208 | ⚠️ deprecated but still accepted |
-| iPad 13" (M4 / Pro 12.9") | 2064×2752 | only if "Supports iPad" is on (it is) |
+| 6.5" iPhone (XS Max / 11 Pro Max) | 1242×2688 | ✅ required (fallback) |
+| 5.5" iPhone (8 Plus) | 1242×2208 | ⚠️ deprecated but accepted |
+| iPad 13" (M4 / Pro 12.9") | 2064×2752 | only if "Supports iPad" on (it is) |
 
-### Required screenshots — 5 per device × 6 locales = 30 per device class
+### Required hero set — 5 per device × 6 locales
 
-Recommended hero set, in this order (App Store puts the first 3 in
-search results):
+App Store puts the first 3 in search results, so order matters:
 
-1. **Vandaag tab** — EVE card + today's jobs visible, "Vasco saved you €X" banner
-2. **Tiered quote builder** — preview step showing Good/Better/Best cards with cohort badge
+1. **Vandaag tab** — EVE card + today's jobs + "Vasco saved you €X" banner
+2. **Tiered quote builder** — preview step with Good/Better/Best cards + cohort badge
 3. **Geld tab** — outstanding invoices list with payment-link CTA, big € amounts
 4. **Photo → quote** — AI capturing job photos with line-item extraction overlay
 5. **Compliance / VAT prep** — Q-end summary with rubriek breakdown
 
 ### Google Play
 
-Play Store screenshots are looser:
 - Phone: 1080×1920+ (at least 2, up to 8) ✅ required
 - 7" tablet: 1200×1920+ ⚠️ recommended
 - 10" tablet: 1600×2560+ ⚠️ recommended
-- Feature graphic 1024×500 ✅ required
+- Feature graphic 1024×500 ✅ already in `assets/feature-graphic.png`
 
 ---
 
-## 4. Store metadata copy — drafts in repo, needs brand review
+## 4. Store metadata — ✅ all 6 locales scaffolded + reviewer info populated
 
-**Drafts exist** at [`store-listings.md`](./store-listings.md) for all 6
-locales. Each has short-name, subtitle, short-description, long-description
-(<4000 chars), keywords (<100 chars). Voice is plain-language trade, not
-marketing gloss.
+**`fastlane/metadata/` fully populated:**
 
-**R66r68 (2026-05-12) added:**
-- ✅ `fastlane/metadata/{locale}/` scaffolding — all 6 locales × 9 files
-  ready for `fastlane release` to upload in one command
-- ✅ `promotional_text.txt` × 6 locales (170-char one-liners) drafted
-- ✅ `release_notes.txt` × 6 locales (v1.0 launch "What's New") drafted
-- ✅ `review_information/` folder with reviewer demo creds + 3-min
-  walkthrough notes
-- ✅ `docs/beta-app-description.md` — paste-into-ASC for External
-  TestFlight Beta App Review form
-- ✅ `docs/app-privacy-questionnaire.md` — pre-filled answers for both
-  ASC App Privacy + Play Console Data Safety questionnaires
+| Group | Files per locale | Locales | Status |
+|---|---|---|---|
+| `name.txt`, `subtitle.txt`, `description.txt`, `keywords.txt`, `promotional_text.txt`, `release_notes.txt`, `marketing_url.txt`, `support_url.txt`, `privacy_url.txt` | 9 | en-US, nl-NL, de-DE, fr-FR, es-ES, it-IT | ✅ all 54 files present |
+| `copyright.txt`, `primary_category.txt`, `secondary_category.txt` | shared | — | ✅ "© 2026 Vasco B.V." / BUSINESS / PRODUCTIVITY |
+| `review_information/{demo_user,demo_password,first_name,last_name,email_address,notes}.txt` | shared | — | ✅ real values (Merle Slendebroek, support@vascobuild.com, contractor@vasco.dev / "review") |
 
-**What still needs your input:**
-- [ ] **Native-speaker review** of NL/DE/FR/ES/IT descriptions +
-      promotional text + release notes (drafts are machine-quality)
-- [ ] **Keyword research** — current keywords are educated guesses;
-      run AppRadar / SearchMan for each locale before publish
-- [ ] **`fastlane/metadata/review_information/{first_name,last_name,phone_number}.txt`** —
-      operator's real contact info (placeholders today)
+Reviewer notes (`fastlane/metadata/review_information/notes.txt`) include
+a 3-minute walkthrough, 4 demo personas, GDPR/data-residency disclosure,
+and explicit demo-mode framing. Apple will not need to ask follow-ups.
+
+Upload in one shot: `bundle exec fastlane ios metadata` (after `brew install fastlane`).
+
+**What's still soft / nice-to-have:**
+- [ ] **Native-speaker review** of NL/DE/FR/ES/IT descriptions + promotional
+      text + release notes — current drafts are machine-quality. Not a
+      hard gate (Apple won't reject), but lifts conversion.
+- [ ] **Keyword research per locale** — run AppRadar / SearchMan before
+      Production publish; today's keyword bag is `contractor,invoice,quote,
+      payment,trades,plumber,electrician,carpenter,aannemer,factuur,offerte`
+      — a reasonable starting set, not a researched one.
+- [ ] **Real reviewer phone number** in `fastlane/metadata/review_information/phone_number.txt`
+      — placeholder `+31000000000` today. Apple sometimes calls; use a
+      number you actually answer.
 
 ---
 
-## 5. Live URLs — gates TF External + App Store review
+## 5. Live URLs — ✅ all live (verified 2026-05-19)
 
-App Store + Play Store require working URLs for these. `app-review-info.md`
-references all of them but none are verified live.
+All store-required URLs return 200/308:
 
-| URL | Status | Used by |
+| URL | HTTP | Used by |
 |---|---|---|
-| https://vascobuild.com | ❓ unverified | Marketing URL field in ASC |
-| https://vascobuild.com/support | ❓ unverified | Support URL field in ASC |
-| https://admin.vascobuild.com/legal/privacy-policy | ❓ unverified | Privacy URL (legally required) |
-| https://admin.vascobuild.com/legal/eula | ❓ unverified | EULA URL |
-| https://admin.vascobuild.com/legal/terms-of-service | ❓ unverified | Terms URL |
-| support@vascobuild.com | ❓ unverified | Support email |
-| support@vascobuild.com | ❓ unverified | Reviewer contact email |
+| https://vascobuild.com | 200 | Marketing URL field in ASC |
+| https://vascobuild.com/support | 200 | Support URL field in ASC |
+| https://vascobuild.com/privacy | 308 → live | Privacy URL (legally required) |
+| https://vascobuild.com/terms | 308 → live | Terms URL |
+| https://vascobuild.com/legal/privacy-policy | 200 | (admin canonical) |
+| https://vascobuild.com/legal/terms-of-service | 200 | (admin canonical) |
+| https://vascobuild.com/legal/eula | 200 | EULA URL |
+| https://admin.vascobuild.com/legal/{privacy-policy,terms-of-service,eula} | 200 | mirror |
+| support@vascobuild.com | n/a | Support email + reviewer contact |
 
-Note: `admin/src/app/legal/[slug]/page.tsx` exists and renders the legal
-markdown — verify it's deployed to Vercel + reachable at the URL above
-**before** submitting to App Review.
-
----
-
-## 6. Payment + integration credentials — gates Production only
-
-TestFlight builds use `EXPO_PUBLIC_DEMO_MODE=true` (mocked responses).
-Real keys only matter for Production submission.
-
-| Service | Used for | Status |
-|---|---|---|
-| Live Supabase project | All BE | ✅ project exists (`gblhqhorkarocmputhte`); 8 migrations pending push |
-| pg_cron registration | Scheduled features | ❌ requires operator to run `supabase/cron.sql` with service-role JWT |
-| Resend API key | Outbound email (invoices, reminders) | ❌ `supabase secrets set RESEND_API_KEY=...` |
-| Mollie live API key | EU payments | ❌ `supabase secrets set MOLLIE_API_KEY=live_...` |
-| Stripe live API key + webhook secret | UK payments | ❌ `supabase secrets set STRIPE_API_KEY=sk_live_... STRIPE_WEBHOOK_SECRET=whsec_...` |
-| Sentry DSN | Crash reporting | ❌ `EXPO_PUBLIC_SENTRY_DSN` in `.env` |
-| FCM server key | Android push | ❌ upload via `eas credentials` |
-| APNs p8 key | iOS push | ❌ upload via `eas credentials` |
-| Apple Maps key | (not used today) | — |
-| OpenWeather API key | (not used today — uses Open-Meteo free) | — |
+Production EAS env (`eas.json:build.production.env`) points
+`EXPO_PUBLIC_PRIVACY_URL` + `EXPO_PUBLIC_TERMS_URL` at the correct
+vascobuild.com paths — the stale `vasco.app` values in local `.env`
+only affect dev builds. (Cleanup of stale `.env` values is housekeeping
+not gating; production override wins.)
 
 ---
 
-## 7. Beta App Review (only if you want External TestFlight, not Internal)
+## 6. Payment + integration credentials — Production-only gate
 
-Internal TestFlight = anyone in your Apple Dev team (up to 100 internal),
-no review. **External TestFlight = unrelated people**, requires a quick
-review (24-48h typical).
+TestFlight builds run `EXPO_PUBLIC_DEMO_MODE=true` and mock the whole
+payment + accounting stack — these only matter when flipping to
+Production for paying customers.
 
-For External TestFlight submission you'll need to fill in:
+| Service | Used for | Where it lives | Status |
+|---|---|---|---|
+| Live Supabase project | All BE | `EXPO_PUBLIC_SUPABASE_URL` in `.env` + `eas.json` | ✅ `gblhqhorkarocmputhte` populated |
+| Supabase migrations push | Schema parity | run `supabase db push` once on prod | ❓ verify via `docs/supabase-go-live.md` |
+| pg_cron registration | Scheduled fns (daily digests, pack triggers, deletion drain) | run `supabase/cron.sql` with service-role JWT | ❓ verify via `supabase/cron-health.sql` |
+| Resend API key | Outbound email (invoices, reminders) | `supabase secrets set RESEND_API_KEY=...` | ❓ verify with operator |
+| Mollie live API key | EU payments | `supabase secrets set MOLLIE_API_KEY=live_...` | ❓ verify with operator |
+| Stripe live API key + webhook secret | UK payments | `supabase secrets set STRIPE_API_KEY=sk_live_... STRIPE_WEBHOOK_SECRET=whsec_...` | ❓ verify with operator |
+| Sentry DSN | Crash reporting | `EXPO_PUBLIC_SENTRY_DSN=` in production env | ❌ empty in `.env`; set via `eas secret:create` |
+| FCM server key | Android push | `eas credentials` upload | ❓ verify with operator |
+| APNs p8 key | iOS push | `eas credentials` upload | ❓ verify with operator |
 
-- [ ] **Beta App Description** — what testers should focus on
-  - Suggested: "Vasco is an AI-native admin app for construction trades.
-    Beta testers: please walk through (1) creating a quote with the
-    tiered builder, (2) capturing a job photo and watching AI extract
-    line items, (3) sending an invoice from a completed job, (4) the
-    offline → online sync flow with airplane mode toggled."
-- [ ] **Test account credentials** — already documented in
-      [`app-review-info.md`](./app-review-info.md) — paste those into
-      the ASC review-info form
-- [ ] **Beta feedback email** — `support@vascobuild.com` or wherever you'll
-      triage bug reports
-- [ ] **Demo build URL or version** — auto-filled by EAS once submitted
+Secrets that live in Supabase or EAS aren't visible from the repo;
+`docs/release-runbook.md` §4c "Endpoint-health check" (`npm run check:endpoints`)
+can probe most of these end-to-end against the live project.
+
+---
+
+## 7. Beta App Review (External TestFlight) — ✅ ready
+
+Everything External-TF needs is pre-filled in `fastlane/metadata/review_information/`:
+
+- ✅ **Beta App Description** — paste-ready text in [`docs/beta-app-description.md`](./beta-app-description.md)
+- ✅ **Test account credentials** — `contractor@vasco.dev` / `review`; alternates: `aannemer@vasco.dev`, `site@vasco.dev`, `new@vasco.dev`
+- ✅ **Beta feedback email** — `support@vascobuild.com`
+- ✅ **Demo build URL/version** — auto-filled by EAS at submit time
+- ✅ **Reviewer walkthrough** — 3-minute scripted flow in `review_information/notes.txt`
+- ✅ **Privacy + tracking disclosure** — `notes.txt` declares no AppTrackingTransparency, EU data residency (Supabase Frankfurt), in-app GDPR rights
 
 ---
 
 ## 8. Production App Store submission — gates only the public launch
 
-After External TestFlight is comfortable, submit to App Store proper:
+What still needs to happen to flip from External TF to Production:
 
-- [ ] **All §2 brand assets in place** (real icons, not placeholders)
-- [ ] **All §3 screenshots uploaded** for at least 6.9" iPhone × 6 locales
-- [ ] **All §4 store metadata reviewed by native speakers** and pasted
-      into ASC
-- [ ] **All §5 URLs verified live** and returning 200
-- [ ] **All §6 production credentials configured** + verified via
-      `docs/release-runbook.md` §4c "Endpoint-health check"
-- [ ] **`docs/supabase-go-live.md` followed end-to-end** — migrations
-      pushed, edge functions deployed, cron registered, idempotency
-      keys set
-- [ ] **App Privacy section** in ASC filled in — already documented in
-      [`app-review-info.md`](./app-review-info.md) §"Data collection
-      disclosure"
-- [ ] **Age rating questionnaire** completed in ASC (suggested: 4+,
-      no objectionable content)
-- [ ] **Pricing + availability** chosen in ASC (Free with In-App
-      Purchases; available NL/DE/FR/ES/IT/GB initially)
+- [ ] **§3 screenshots captured + uploaded** (the only remaining hard gate from §3 — at least 6.9" iPhone × 6 locales)
+- [ ] **§4 native-speaker pass** on NL/DE/FR/ES/IT metadata (soft; lifts conversion, won't block)
+- [ ] **§4 reviewer phone number** replaced with real number
+- [ ] **§4 keyword research** per locale (soft)
+- [ ] **§6 production credentials verified live** via `npm run check:endpoints`
+- [ ] **§6 `docs/supabase-go-live.md` walked end-to-end** — migrations pushed, edge fns deployed, cron registered, idempotency keys set
+- [ ] **§6 Sentry DSN populated** (`eas secret:create --name EXPO_PUBLIC_SENTRY_DSN --value https://...`)
+- [ ] **App Privacy section** in ASC filled in — values pre-staged in [`docs/app-privacy-questionnaire.md`](./app-privacy-questionnaire.md)
+- [ ] **Age rating questionnaire** in ASC (suggested: 4+, no objectionable content)
+- [ ] **Pricing + availability** in ASC (Free with In-App Purchases; NL/DE/FR/ES/IT/GB initially)
 
 ---
 
@@ -234,7 +223,7 @@ So you can plan: everything below is code-side done. No operator action.
 - ✅ Camera + photo + Face ID usage strings declared in 6 locales
 - ✅ Sentry plugin auto-registered (no-op when DSN unset)
 - ✅ EAS submit.preview.ios + submit.production.ios configs ready with
-      env-var placeholders
+      hardcoded ASC API key (not env-var placeholders — actual values)
 - ✅ Mollie + Stripe webhooks built with HMAC signature verification +
       idempotency (R66r41)
 - ✅ Drain-account-deletions Edge Function for GDPR Art. 17
@@ -262,7 +251,30 @@ So you can plan: everything below is code-side done. No operator action.
       profile so sourcemaps upload automatically per build on EAS
       workers, with graceful skip when `SENTRY_AUTH_TOKEN` not set
       (R66r71)
+- ✅ Branded DK app icons + splash + feature-graphic shipped (R66r67/r69)
+- ✅ Fastlane lanes for both iOS (`metadata` / `screenshots` / `release`)
+      and Android (`metadata` / `release`) — one-command upload
+- ✅ All store-required URLs live on vascobuild.com (2026-05-19 curl check)
 - ✅ 910/910 tests across 86 suites, 0 TS errors
+
+---
+
+## TL;DR — what's actually left
+
+**To get on TestFlight Internal (a build on your iPhone):**
+nothing in this doc. Just `eas build --profile preview --platform ios`
+then `eas submit --profile preview --platform ios`.
+
+**To get on TestFlight External or App Store Production:**
+1. Capture screenshots (`npm run capture:screenshots`, ~15 min)
+2. Replace `+31000000000` placeholder phone with real number
+3. Set Sentry DSN (`eas secret:create --name EXPO_PUBLIC_SENTRY_DSN ...`)
+4. Verify Mollie/Stripe/Resend live keys + cron registered with the
+   operator (or run `npm run check:endpoints` against prod)
+5. (optional polish) Native-speaker review of 5 non-English locales,
+   per-locale keyword research
+
+Everything else is done.
 
 ---
 

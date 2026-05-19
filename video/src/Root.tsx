@@ -1,11 +1,16 @@
 import React from 'react';
 import { Composition } from 'remotion';
-import { VIDEO } from './data/theme';
+import { VIDEO, APP_STORE } from './data/theme';
 import { DidYouKnow, type DidYouKnowProps } from './compositions/DidYouKnow';
 import { PriceCheck, type PriceCheckProps } from './compositions/PriceCheck';
 import { BeforeAfter, type BeforeAfterProps } from './compositions/BeforeAfter';
 import { EveSays, type EveSaysProps } from './compositions/EveSays';
 import { ComplianceAlert, type ComplianceAlertProps } from './compositions/ComplianceAlert';
+import { AppStoreVandaag, type AppStoreVandaagProps } from './compositions/AppStoreVandaag';
+import { AppStoreQuote, type AppStoreQuoteProps } from './compositions/AppStoreQuote';
+import { AppStoreGeld, type AppStoreGeldProps } from './compositions/AppStoreGeld';
+import { AppStorePhoto, type AppStorePhotoProps } from './compositions/AppStorePhoto';
+import { AppStoreVat, type AppStoreVatProps } from './compositions/AppStoreVat';
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -106,6 +111,72 @@ export const RemotionRoot: React.FC = () => {
           ctaText: 'Never miss a deadline',
           language: 'EN',
         } satisfies ComplianceAlertProps}
+      />
+
+      {/* App Store screenshots — still frames at 6.9" iPhone (1320×2868) */}
+      <Composition
+        id="AppStoreVandaag"
+        component={AppStoreVandaag}
+        durationInFrames={APP_STORE.durationFrames}
+        fps={APP_STORE.fps}
+        width={APP_STORE.width}
+        height={APP_STORE.height}
+        defaultProps={{
+          tagline: 'AI doet je admin.\nJij doet je werk.',
+          subTagline: 'Offertes, planning, facturen — Vasco regelt de rest.',
+        } satisfies AppStoreVandaagProps}
+      />
+
+      <Composition
+        id="AppStoreQuote"
+        component={AppStoreQuote}
+        durationInFrames={APP_STORE.durationFrames}
+        fps={APP_STORE.fps}
+        width={APP_STORE.width}
+        height={APP_STORE.height}
+        defaultProps={{
+          tagline: 'Drie keuzes.\nKlant kiest.\nJij wint.',
+          subTagline: 'Tiered offertes met cohort-data: zien wat 67% van loodgieters kiest.',
+        } satisfies AppStoreQuoteProps}
+      />
+
+      <Composition
+        id="AppStoreGeld"
+        component={AppStoreGeld}
+        durationInFrames={APP_STORE.durationFrames}
+        fps={APP_STORE.fps}
+        width={APP_STORE.width}
+        height={APP_STORE.height}
+        defaultProps={{
+          tagline: 'Stop met\nachterna\nbellen.',
+          subTagline: 'Vasco stuurt herinneringen + escaleert automatisch. Jij krijgt betaald.',
+        } satisfies AppStoreGeldProps}
+      />
+
+      <Composition
+        id="AppStorePhoto"
+        component={AppStorePhoto}
+        durationInFrames={APP_STORE.durationFrames}
+        fps={APP_STORE.fps}
+        width={APP_STORE.width}
+        height={APP_STORE.height}
+        defaultProps={{
+          tagline: 'Foto in.\nOfferte uit.\n8 seconden.',
+          subTagline: 'Maak een foto van de klus. Vasco leest het materiaal + maakt regels.',
+        } satisfies AppStorePhotoProps}
+      />
+
+      <Composition
+        id="AppStoreVat"
+        component={AppStoreVat}
+        durationInFrames={APP_STORE.durationFrames}
+        fps={APP_STORE.fps}
+        width={APP_STORE.width}
+        height={APP_STORE.height}
+        defaultProps={{
+          tagline: 'BTW-aangifte.\nKlaar in\n3 minuten.',
+          subTagline: 'Vasco rangschikt per rubriek + exporteert naar Moneybird, DATEV, Pennylane.',
+        } satisfies AppStoreVatProps}
       />
     </>
   );

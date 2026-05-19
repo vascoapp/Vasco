@@ -54,3 +54,7 @@ admin/.next/
 # bundle analyze artifacts (baselines are committed; intermediates aren't)
 .bundle-analyze/
 .vercel
+
+# Remotion render outputs (regenerable from compositions)
+video/out/
+video/.remotion-cache/
