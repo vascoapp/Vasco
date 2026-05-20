@@ -30,7 +30,7 @@ export type TradeId =
   | "roofing"
   | "tiling";
 
-export type CountryId = "nl" | "de" | "fr" | "es" | "it" | "uk";
+export type CountryId = "nl" | "de" | "fr" | "es" | "it" | "uk" | "us";
 
 export type TopicId =
   | "pricing"
@@ -134,6 +134,23 @@ export const COUNTRIES: Record<
       tiling: "tiler",
     },
   },
+  // R77 US Phase 3: US AEO. Per us-market-research.md these pages target
+  // queries like "best app for [trade] in California / Texas / Florida" —
+  // initial cut is country-level (us), state-level granularity is a
+  // follow-up after we see which queries actually drive traffic.
+  us: {
+    name: "the United States",
+    demonym: "American",
+    localTrade: {
+      plumbing: "plumber",
+      electrical: "electrician",
+      gas: "HVAC technician",
+      painting: "painter",
+      carpentry: "carpenter",
+      roofing: "roofer",
+      tiling: "tile installer",
+    },
+  },
 };
 
 // ─── CERTIFICATIONS (from tradeContext.ts) ──────────────────────────────────
@@ -149,6 +166,7 @@ const CERTS: Partial<Record<TradeId, Record<CountryId, string[]>>> = {
       "Unvented hot water certificate",
       "Water Regulations (WRAS) compliance",
     ],
+    us: ["State master plumber license", "Backflow prevention certification"],
   },
   electrical: {
     nl: ["NEN 1010 certification", "STIPEL registration"],
@@ -160,6 +178,7 @@ const CERTS: Partial<Record<TradeId, Record<CountryId, string[]>>> = {
     ],
     it: ["DM 37/08 Lettera A", "CEI conformity"],
     uk: ["Part P competent person scheme", "NICEIC or ELECSA registration"],
+    us: ["State master electrician license", "NEC (National Electrical Code) certified"],
   },
   gas: {
     nl: ["Scios Scope 8", "F-gassen certificering"],
@@ -168,6 +187,7 @@ const CERTS: Partial<Record<TradeId, Record<CountryId, string[]>>> = {
     es: ["Instalador Gas Tipo A/B", "RITE certification"],
     it: ["DM 37/08 Lettera C", "Fire Prevention Certificate"],
     uk: ["Gas Safe registration (mandatory)", "OFTEC for oil"],
+    us: ["EPA 608 certification", "NATE (North American Technician Excellence)"],
   },
   roofing: {
     nl: ["VCA safety certificate", "Dakdekker vakdiploma"],
@@ -176,6 +196,7 @@ const CERTS: Partial<Record<TradeId, Record<CountryId, string[]>>> = {
     es: ["TPC construction safety", "Certificado profesionalidad"],
     it: ["SOA certification", "Safety attestation"],
     uk: ["NFRC membership", "CSCS card"],
+    us: ["GAF Master Elite", "CertainTeed SELECT ShingleMaster", "OSHA Fall Protection"],
   },
 };
 

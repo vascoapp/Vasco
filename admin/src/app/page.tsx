@@ -11,12 +11,13 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://vascobuild.com",
     locale: "en_GB",
-    alternateLocale: ["nl_NL"],
+    alternateLocale: ["nl_NL", "en_US"],
   },
   alternates: {
     canonical: "https://vascobuild.com",
     languages: {
       en: "https://vascobuild.com",
+      "en-US": "https://vascobuild.com/us",
       nl: "https://vascobuild.com/nl",
     },
   },

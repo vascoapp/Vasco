@@ -1,12 +1,29 @@
-import { content, MARKETS, type Locale } from "@/lib/marketing-content";
+import { content, MARKETS_EN, MARKETS_US, type Locale } from "@/lib/marketing-content";
 
 type Props = { locale: Locale };
 
+// R77 US Phase 3: locale-aware route map. 3-way switcher EN / NL / US.
+const LOCALE_ROUTES: Record<Locale, string> = {
+  en: "/",
+  nl: "/nl",
+  "en-US": "/us",
+};
+
+const LOCALE_LABELS: Record<Locale, string> = {
+  en: "EN",
+  nl: "NL",
+  "en-US": "US",
+};
+
 export default function MarketingHome({ locale }: Props) {
   const t = content[locale];
-  const altLocale: Locale = locale === "en" ? "nl" : "en";
-  const homeHref = locale === "en" ? "/" : "/nl";
-  const altHref = altLocale === "en" ? "/" : "/nl";
+  const homeHref = LOCALE_ROUTES[locale];
+  // R77: US locale shows US states in the "Working in" strip; others EU6.
+  const markets = locale === "en-US" ? MARKETS_US : MARKETS_EN;
+  // 3-way switcher: ordered list of locales other than current, for nav.
+  const otherLocales: Locale[] = (["en", "en-US", "nl"] as Locale[]).filter(
+    (l) => l !== locale,
+  );
 
   return (
     <main className="min-h-screen bg-[#0B0E11] text-white antialiased">
@@ -52,14 +69,17 @@ export default function MarketingHome({ locale }: Props) {
                   color: "white",
                 }}
               >
-                {locale.toUpperCase()}
+                {LOCALE_LABELS[locale]}
               </a>
-              <a
-                href={altHref}
-                className="rounded-md px-2 py-1 text-zinc-400 transition hover:text-white"
-              >
-                {altLocale.toUpperCase()}
-              </a>
+              {otherLocales.map((l) => (
+                <a
+                  key={l}
+                  href={LOCALE_ROUTES[l]}
+                  className="rounded-md px-2 py-1 text-zinc-400 transition hover:text-white"
+                >
+                  {LOCALE_LABELS[l]}
+                </a>
+              ))}
             </div>
             <a
               href="mailto:hello@vascobuild.com?subject=Vasco%20waitlist"
@@ -83,7 +103,7 @@ export default function MarketingHome({ locale }: Props) {
               {t.nav.support}
             </a>
 
-            {/* Locale switcher */}
+            {/* Locale switcher (3-way EN / US / NL) */}
             <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.02] p-0.5 text-xs font-bold uppercase tracking-[0.18em]">
               <a
                 href={homeHref}
@@ -94,14 +114,17 @@ export default function MarketingHome({ locale }: Props) {
                   color: "white",
                 }}
               >
-                {locale.toUpperCase()}
+                {LOCALE_LABELS[locale]}
               </a>
-              <a
-                href={altHref}
-                className="rounded-md px-2 py-1 text-zinc-400 transition hover:text-white"
-              >
-                {altLocale.toUpperCase()}
-              </a>
+              {otherLocales.map((l) => (
+                <a
+                  key={l}
+                  href={LOCALE_ROUTES[l]}
+                  className="rounded-md px-2 py-1 text-zinc-400 transition hover:text-white"
+                >
+                  {LOCALE_LABELS[l]}
+                </a>
+              ))}
             </div>
 
             <a
@@ -212,7 +235,7 @@ export default function MarketingHome({ locale }: Props) {
           {/* Markets row */}
           <div className="mt-24 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-white/5 pt-10 font-[family-name:var(--font-inter)] text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
             <span>{t.hero.marketsPrefix}</span>
-            {MARKETS.map((m) => (
+            {markets.map((m) => (
               <span key={m.code} className="text-zinc-300">
                 {m.code}
                 <span className="ml-2 hidden text-zinc-600 md:inline">
@@ -723,7 +746,7 @@ export default function MarketingHome({ locale }: Props) {
           <div className="mt-16 flex flex-col gap-4 border-t border-white/5 pt-8 font-[family-name:var(--font-inter)] text-xs text-zinc-600 md:flex-row md:items-center md:justify-between">
             <div>{t.footer.bottomCompliance}</div>
             <div className="flex gap-x-4">
-              {MARKETS.map((m) => (
+              {markets.map((m) => (
                 <span key={m.code}>{m.code}</span>
               ))}
             </div>

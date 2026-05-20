@@ -3,7 +3,7 @@
 // Dutch is native-Dutch, not literal-translated. NL is the lead market;
 // the in-app product is Dutch UI by default for NL contractors.
 
-export type Locale = "en" | "nl";
+export type Locale = "en" | "nl" | "en-US";
 
 export type MarketingContent = {
   meta: {
@@ -113,7 +113,21 @@ const MARKETS_EN = [
   { code: "UK", name: "United Kingdom" },
 ];
 
+// R77 US Phase 3: US states shown as the "Working in" strip on /us.
+// Top 5 launch states per the research report (CA/TX/FL/NY/IL) — these
+// are the largest contractor markets and also align with our AEO page
+// generation.
+const MARKETS_US = [
+  { code: "TX", name: "Texas" },
+  { code: "CA", name: "California" },
+  { code: "FL", name: "Florida" },
+  { code: "NY", name: "New York" },
+  { code: "IL", name: "Illinois" },
+  { code: "AZ", name: "Arizona" },
+];
+
 export const MARKETS = MARKETS_EN;
+export { MARKETS_EN, MARKETS_US };
 
 export const content: Record<Locale, MarketingContent> = {
   en: {
@@ -629,6 +643,274 @@ export const content: Record<Locale, MarketingContent> = {
         ],
       },
       bottomCompliance: "EU-datacenters · AVG-compliant · KvK 12345678",
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // en-US (R77 US Phase 3)
+  // Voice: growth + revenue ("close more jobs"), not admin/compliance.
+  // Per us-market-research.md Section A: US contractors think like small
+  // business owners chasing leads; lead with money, not paperwork.
+  // ─────────────────────────────────────────────────────────────────────
+  "en-US": {
+    meta: {
+      title: "Vasco — Close more jobs. Get paid faster.",
+      description:
+        "The AI back-office for HVAC, electrical, plumbing, roofing, and remodeling pros. Estimates, invoices, scheduling, payments — done. Free forever, 3.5% per paid invoice. Pro from $79/mo.",
+      ogDescription:
+        "Free forever — 3.5% per paid invoice. Pro from $79/mo. Built for US contractors across all 50 states.",
+    },
+    nav: {
+      how: "How it works",
+      pricing: "Pricing",
+      faq: "FAQ",
+      support: "Support",
+      cta: "Join waitlist",
+    },
+    hero: {
+      badge: "Coming 2026 — Join the waitlist",
+      title: "Stop losing profit",
+      titleAccent: "on every job.",
+      sub:
+        "Vasco runs your back-office so you can run the job. Estimates, scheduling, invoices, payments — automated. No more late-night paperwork. No more chasing checks.",
+      ctaPrimary: "Join waitlist",
+      ctaSecondary: "See how it works",
+      marketsPrefix: "Launching in",
+    },
+    stats: [
+      { value: "8h", label: "Saved per week" },
+      { value: "5", label: "Taps estimate → paid" },
+      { value: "50", label: "States" },
+      { value: "15", label: "Trades" },
+    ],
+    appStorePreview: {
+      eyebrow: "App Store preview",
+      titleLead: "Five screens.",
+      titleAccent: "One app that runs your business.",
+      footnote:
+        "Rendered at 1320×2868 (6.9\" iPhone). The screenshots queued for App Store Connect submission.",
+      screens: [
+        { src: "/screenshots/1-vandaag-en.png", label: "Today's plan" },
+        { src: "/screenshots/2-quote-en.png", label: "Good / Better / Best" },
+        { src: "/screenshots/3-geld-en.png", label: "Get paid" },
+        { src: "/screenshots/4-photo-en.png", label: "Photo → estimate" },
+        { src: "/screenshots/5-vat-en.png", label: "Sales tax prep" },
+      ],
+    },
+    guideThrough: {
+      eyebrow: "What Vasco does",
+      titleLead: "The stuff trade school",
+      titleAccent: "didn't teach you.",
+      items: [
+        {
+          no: "01",
+          label: "The admin pile",
+          title: "Off the laptop.\nBack on the tools.",
+          body:
+            "Estimates, jobs, invoices, payment chasers — Vasco runs the paperwork while you run the job. No more weeknights at the kitchen table catching up on books.",
+        },
+        {
+          no: "02",
+          label: "State licensing + tax",
+          title: "Sales tax.\nState license.\n1099s. Handled.",
+          body:
+            "Sales tax computed per state and city. State contractor license expiry tracked and warned 30 days out. Year-end 1099-NEC generation when you pay subs over $600.",
+        },
+        {
+          no: "03",
+          label: "Slow payers",
+          title: "Get paid.\nSame day.",
+          body:
+            "Tap-to-pay credit card at the job, ACH on the invoice, Buy-Now-Pay-Later for big tickets. Auto-reminders at 7 and 14 days. Vasco doesn't forget — your customers shouldn't either.",
+        },
+      ],
+    },
+    how: {
+      eyebrow: "How it works",
+      titleLead: "Three steps.",
+      titleAccent: "One day's work.",
+      steps: [
+        {
+          n: "1",
+          title: "Photo the job.",
+          body:
+            "Snap the AC unit, the leak, the wall. Vasco reads the photo, drafts the estimate with materials and labor hours priced for your market.",
+        },
+        {
+          n: "2",
+          title: "Send the estimate.",
+          body:
+            "Customer signs on their phone. Job auto-scheduled. Crew assigned. Materials ordered. Calendar blocked. No back-and-forth.",
+        },
+        {
+          n: "3",
+          title: "Get paid.",
+          body:
+            "Finish the job, tap done. Invoice goes out with a card/ACH/Apple Pay link. Money hits your bank — most contractors get paid before they pack up.",
+        },
+      ],
+    },
+    pricing: {
+      eyebrow: "Pricing",
+      titleLead: "You only pay",
+      titleAccent: "when you get paid.",
+      perInvoice: "per paid invoice",
+      badge: "MOST POPULAR",
+      closer: "Cancel anytime. No setup fees. No contracts.",
+      closerAccent: "You only pay when you get paid.",
+      plans: [
+        {
+          name: "Free",
+          price: "$0",
+          period: "/mo",
+          commission: "3.5%",
+          tagline: "Start free. Stay free.",
+          features: [
+            "5 active jobs",
+            "10 estimates/month",
+            "Card + ACH payments",
+            "1 state",
+          ],
+          cta: "Start free",
+          highlight: false,
+        },
+        {
+          name: "Pro",
+          price: "$79",
+          period: "/mo",
+          commission: "2%",
+          tagline: "Full AI. Pays for itself in one job.",
+          features: [
+            "Unlimited jobs, estimates, invoices",
+            "Full EVE AI (Photo-to-Estimate, auto-bids)",
+            "Cohort pricing intelligence",
+            "Buying agent (best supplier price)",
+            "All 50 states",
+          ],
+          cta: "Go Pro",
+          highlight: true,
+          badge: "MOST POPULAR",
+        },
+        {
+          name: "Contractor",
+          price: "$149",
+          period: "/mo",
+          commission: "1%",
+          tagline: "Crew. API. White-label.",
+          features: [
+            "Everything in Pro",
+            "15 crew seats",
+            "Dispatch + GPS tracking",
+            "API + white-label",
+            "Dedicated success manager",
+          ],
+          cta: "Talk to sales",
+          highlight: false,
+        },
+      ],
+    },
+    trades: {
+      eyebrow: "Built for the trades",
+      titleLead: "15 trades.",
+      titleAccent: "One toolbox.",
+      body:
+        "From solo electricians to multi-crew remodeling contractors — Vasco speaks your trade, knows your suppliers, and writes customer messages in plain English (or Spanish, if your customer prefers).",
+      list: [
+        "HVAC",
+        "Electrical",
+        "Plumbing",
+        "Roofing",
+        "Remodeling",
+        "Painting",
+        "Carpentry",
+        "Tile",
+        "Flooring",
+        "Insulation",
+        "Solar",
+        "Windows & Glass",
+        "Landscaping",
+        "Masonry",
+        "Demolition",
+      ],
+    },
+    manifesto: {
+      eyebrow: "Built by pros, for pros",
+      line1: "You didn't go into the trades to learn",
+      line1Accent: "QuickBooks.",
+      line2: "You went into the trades to",
+      line2Accent: "build things.",
+      closer: "Vasco handles the rest.",
+    },
+    faq: {
+      eyebrow: "FAQ",
+      titleLead: "Questions.",
+      titleAccent: "Straight answers.",
+      items: [
+        {
+          q: "When does Vasco launch in the US?",
+          a: "iOS rolls out state-by-state starting with Texas in 2026, then California, Florida, New York, and Illinois. Join the waitlist to lock in early access in your state.",
+        },
+        {
+          q: "Do I need to pay a subscription?",
+          a: "Free is forever free — 3.5% commission on every paid invoice, no monthly fee. Pro ($79/mo) drops it to 2% and unlocks unlimited jobs, full AI, cohort pricing intelligence, and the buying agent. Contractor ($149/mo) drops it to 1% and adds crew seats, dispatch, API, and white-label. Most active pros break even on Pro within their first invoice.",
+        },
+        {
+          q: "Does it work with QuickBooks?",
+          a: "Yes. Vasco syncs estimates, invoices, customers, and payments to QuickBooks Online. Xero, FreshBooks, and Wave coming Q3. Your accountant gets the books they expect — you stop double-entering everything.",
+        },
+        {
+          q: "How does the sales tax work?",
+          a: "Vasco computes sales tax per state and city based on the customer's address. State contractor license expiry is tracked and you get a warning 30 days out. We don't file your taxes — that's still you (or your CPA) — but we hand them a clean, audit-ready export.",
+        },
+        {
+          q: "Can I offer financing?",
+          a: "Yes — Affirm and Sunbit Buy-Now-Pay-Later integrations let your customers split big jobs (kitchen remodels, full HVAC swaps) into monthly payments. You get paid up-front; the lender carries the risk.",
+        },
+        {
+          q: "Who is Vasco for?",
+          a: "Solo pros (electricians, plumbers, HVAC techs, painters), small crews (2–5 person remodeling outfits, roofing teams), and growing service businesses ready to step off the legal pad. If you work with your hands and send invoices, Vasco is for you.",
+        },
+      ],
+    },
+    finalCta: {
+      titleLead: "Send one estimate today.",
+      titleAccent: "Get paid tomorrow.",
+      body:
+        "Join the waitlist. We'll email when Vasco goes live in your state.",
+      cta: "Join waitlist",
+    },
+    footer: {
+      tagline: "Your back-office on autopilot.",
+      address: "Amsterdam, NL · Texas HQ coming 2026",
+      product: {
+        title: "Product",
+        links: [
+          { href: "#how", label: "How it works" },
+          { href: "#pricing", label: "Pricing" },
+          { href: "#faq", label: "FAQ" },
+          { href: "/support", label: "Support" },
+        ],
+      },
+      legal: {
+        title: "Legal",
+        links: [
+          { href: "/legal/privacy-policy", label: "Privacy" },
+          { href: "/legal/terms-of-service", label: "Terms" },
+          { href: "/legal/eula", label: "EULA" },
+          { href: "/legal/cookie-policy", label: "Cookies" },
+          { href: "/legal/data-processing-agreement", label: "DPA" },
+          { href: "/legal/acceptable-use-policy", label: "Acceptable use" },
+        ],
+      },
+      contact: {
+        title: "Contact",
+        links: [
+          { href: "mailto:hello@vascobuild.com", label: "hello@vascobuild.com" },
+          { href: "mailto:support@vascobuild.com", label: "support@vascobuild.com" },
+          { href: "mailto:privacy@vascobuild.com", label: "privacy@vascobuild.com" },
+        ],
+      },
+      bottomCompliance: "US-East datacenter · CCPA-compliant · SOC 2 Type II coming 2026",
     },
   },
 };
