@@ -102,6 +102,17 @@ export function businessSettingsToProfile(row: BusinessSettingsRow | null): Busi
     teamSize: (row.team_size as BusinessProfile['teamSize']) ?? undefined,
     trade: row.trade ?? undefined,
     registrationNumber: row.registration_number ?? undefined,
+    // R83 US Phase 5 audit fix: hydrate the 4 US-specific fields. Pre-R83
+    // these were silently undefined on every cold start, breaking the US
+    // invoice PDF (empty Routing # / Account #) and the license-expiry
+    // warning (zero licenses loaded). Migration 20260520000003 added the
+    // state + ACH columns; 20260520000001 added licenses jsonb.
+    state: row.state ?? undefined,
+    routingNumber: row.routing_number ?? undefined,
+    bankAccountNumber: row.bank_account_number ?? undefined,
+    licenses: row.licenses
+      ? (row.licenses as unknown as BusinessProfile['licenses'])
+      : undefined,
   };
 }
 

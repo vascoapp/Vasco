@@ -39,6 +39,16 @@ export type BusinessSettingsRow = {
   team_size: string | null;
   trade: string | null;
   registration_number: string | null;
+  // R83 US Phase 5 audit fix: US-specific fields. Migration
+  // 20260520000003 widens country CHECK to include 'US' and adds the
+  // state + ACH-bank columns. Migration 20260520000001 adds licenses.
+  state: string | null;
+  routing_number: string | null;
+  bank_account_number: string | null;
+  // licenses is a JSONB array of { type, state, number, expiryDate,
+  // issueDate?, issuingAuthority? }. Type is intentionally loose here —
+  // the canonical ContractorLicense shape lives in src/domain/business.ts.
+  licenses: Array<Record<string, unknown>> | null;
   created_at: string;
   updated_at: string;
 };

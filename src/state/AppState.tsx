@@ -1702,7 +1702,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           }
         }
         if (isSupabaseConfigured) {
-          const dbUpdates: Record<string, string | number | null> = {};
+          // R83: widened from `Record<string, string | number | null>` so the
+          // JSONB `licenses` array can ride along without an `as any` cast.
+          const dbUpdates: Record<string, unknown> = {};
           if (updates.businessName !== undefined) dbUpdates.business_name = updates.businessName || null;
           if (updates.kvkNumber !== undefined) dbUpdates.kvk_number = updates.kvkNumber || null;
           if (updates.vatNumber !== undefined) dbUpdates.vat_number = updates.vatNumber || null;
@@ -1732,8 +1734,25 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           if (updates.teamSize !== undefined) dbUpdates.team_size = updates.teamSize || null;
           if (updates.trade !== undefined) dbUpdates.trade = updates.trade || null;
           if (updates.registrationNumber !== undefined) dbUpdates.registration_number = updates.registrationNumber || null;
+          // R83 US Phase 5 audit fix: 4 fields previously silent-dropped on
+          // the BE write. Same R66r24-class bug — onboarding writes them
+          // into AppState, cold start reloads from BE without them, US
+          // invoice PDFs ship with empty Routing # / Account # fields,
+          // license-expiry warning loses track of expired licenses. Migration
+          // 20260520000001 (licenses) + 20260520000003 (state/ACH columns +
+          // 'US' added to country CHECK) match the wire format here.
+          if (updates.state !== undefined) dbUpdates.state = updates.state || null;
+          if (updates.routingNumber !== undefined) dbUpdates.routing_number = updates.routingNumber || null;
+          if (updates.bankAccountNumber !== undefined) dbUpdates.bank_account_number = updates.bankAccountNumber || null;
+          if (updates.licenses !== undefined) dbUpdates.licenses = updates.licenses ?? [];
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
-            persistOrQueue('business_settings', 'upsert', () => upsertBusinessSettings(dbUpdates), { payload: dbUpdates }),
+            // R83: cast is to the BusinessSettingsRow Partial expected by
+            // upsertBusinessSettings — the row type now includes the 4
+            // new fields, so the licenses array doesn't need a structural
+            // override anymore. `Record<string, string | number | null>` is
+            // a soft compatibility shim from the original mapper; the cast
+            // satisfies it without sacrificing the real type contract above.
+            persistOrQueue('business_settings', 'upsert', () => upsertBusinessSettings(dbUpdates as Parameters<typeof upsertBusinessSettings>[0]), { payload: dbUpdates as Record<string, string | number | null> }),
           ).catch(() => {});
         }
       },
