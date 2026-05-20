@@ -1,6 +1,7 @@
 import React from 'react';
 import { AbsoluteFill } from 'remotion';
 import { DK } from '../data/theme';
+import { STRINGS, type ScreenshotLocale } from '../data/screenshotStrings';
 
 // Shared "App Store screenshot" frame used by all 5 hero screens.
 // Top tagline strip + dark phone-style panel beneath. Screen-specific
@@ -107,16 +108,18 @@ export const ScreenHeader: React.FC<{ title: string; subtitle?: string }> = ({
   </div>
 );
 
-export const TabBar: React.FC<{ active: 'Vandaag' | 'Werk' | 'Geld' | 'Klanten' | 'Vasco' }> = ({
-  active,
-}) => {
-  const tabs: Array<'Vandaag' | 'Werk' | 'Geld' | 'Klanten' | 'Vasco'> = [
-    'Vandaag',
-    'Werk',
-    'Geld',
-    'Klanten',
-    'Vasco',
-  ];
+// R88: tab labels now locale-aware via STRINGS[locale].tabs. The `active`
+// prop still uses the canonical NL key names so callers don't need to
+// change — we resolve to the locale-specific label at render time.
+type TabKey = 'vandaag' | 'werk' | 'geld' | 'klanten' | 'vasco';
+const TAB_KEYS: TabKey[] = ['vandaag', 'werk', 'geld', 'klanten', 'vasco'];
+
+export const TabBar: React.FC<{
+  active: 'Vandaag' | 'Werk' | 'Geld' | 'Klanten' | 'Vasco';
+  locale?: ScreenshotLocale;
+}> = ({ active, locale = 'nl' }) => {
+  const labels = STRINGS[locale].tabs as Record<TabKey, string>;
+  const activeKey = active.toLowerCase() as TabKey;
   return (
     <div
       style={{
@@ -132,11 +135,11 @@ export const TabBar: React.FC<{ active: 'Vandaag' | 'Werk' | 'Geld' | 'Klanten' 
         justifyContent: 'space-around',
       }}
     >
-      {tabs.map((t) => {
-        const isActive = t === active;
+      {TAB_KEYS.map((k) => {
+        const isActive = k === activeKey;
         return (
           <div
-            key={t}
+            key={k}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}
           >
             <div
@@ -154,7 +157,7 @@ export const TabBar: React.FC<{ active: 'Vandaag' | 'Werk' | 'Geld' | 'Klanten' 
                 fontWeight: isActive ? 700 : 500,
               }}
             >
-              {t}
+              {labels[k]}
             </div>
           </div>
         );

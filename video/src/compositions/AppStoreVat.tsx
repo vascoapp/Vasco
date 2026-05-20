@@ -1,17 +1,21 @@
 import React from 'react';
 import { DK } from '../data/theme';
 import { AppStoreShell, ScreenHeader, TabBar } from './appStoreShell';
+import { STRINGS, type ScreenshotLocale } from '../data/screenshotStrings';
 
 export type AppStoreVatProps = {
   tagline: string;
   subTagline: string;
+  locale?: ScreenshotLocale;
 };
 
-// App Store screenshot #5 — VAT-prep (NL BTW Q-end summary with rubriek breakdown).
-export const AppStoreVat: React.FC<AppStoreVatProps> = ({ tagline, subTagline }) => {
+// App Store screenshot #5 — VAT/Sales-tax prep. R88: locale-aware.
+// NL: BTW per-rubriek breakdown. US: per-state sales-tax breakdown.
+export const AppStoreVat: React.FC<AppStoreVatProps> = ({ tagline, subTagline, locale = 'nl' }) => {
+  const s = STRINGS[locale].vat;
   return (
     <AppStoreShell tagline={tagline} subTagline={subTagline}>
-      <ScreenHeader title="BTW Q1 2026" subtitle="01 jan — 31 mrt" />
+      <ScreenHeader title={s.title} subtitle={s.subtitle} />
 
       {/* Safety banner */}
       <div
@@ -28,7 +32,7 @@ export const AppStoreVat: React.FC<AppStoreVatProps> = ({ tagline, subTagline })
       >
         <div style={{ fontSize: 24 }}>🛡️</div>
         <div style={{ color: DK.highlight, fontSize: 22, fontWeight: 600, lineHeight: 1.35 }}>
-          Voorbereiding — Vasco dient niet zelf in. Controleer altijd zelf.
+          {s.safetyBanner}
         </div>
       </div>
 
@@ -51,7 +55,7 @@ export const AppStoreVat: React.FC<AppStoreVatProps> = ({ tagline, subTagline })
             textTransform: 'uppercase',
           }}
         >
-          Te betalen aan Belastingdienst
+          {s.bigLabel}
         </div>
         <div
           style={{
@@ -64,10 +68,10 @@ export const AppStoreVat: React.FC<AppStoreVatProps> = ({ tagline, subTagline })
             textShadow: `0 0 32px ${DK.highlight}55`,
           }}
         >
-          €3.847,20
+          {s.bigAmount}
         </div>
         <div style={{ color: DK.textMuted, fontSize: 22, marginTop: 4 }}>
-          Aangifte verwacht: 30 apr 2026
+          {s.bigSub}
         </div>
       </div>
 
@@ -84,11 +88,11 @@ export const AppStoreVat: React.FC<AppStoreVatProps> = ({ tagline, subTagline })
             marginBottom: 18,
           }}
         >
-          Rubriek-overzicht
+          {s.sectionTitle}
         </div>
-        <Rubriek code="1a" label="Leveringen 21%" amount="€18.420,00" vat="€3.868,20" />
-        <Rubriek code="1b" label="Leveringen 9%" amount="€420,00" vat="€37,80" />
-        <Rubriek code="5b" label="Voorbelasting" amount="—" vat="−€58,80" negative />
+        {s.rows.map((row, idx) => (
+          <Rubriek key={idx} code={row.code} label={row.label} amount={row.amount} vat={row.vat} negative={row.negative} />
+        ))}
       </div>
 
       {/* CTA bottom */}
@@ -116,10 +120,10 @@ export const AppStoreVat: React.FC<AppStoreVatProps> = ({ tagline, subTagline })
               fontSize: 26,
             }}
           >
-            Export naar Moneybird
+            {s.exportCardTitle}
           </div>
           <div style={{ color: DK.textMuted, fontSize: 20, marginTop: 4 }}>
-            of DATEV · Pennylane · 19 andere
+            {s.exportCardBody}
           </div>
         </div>
         <div
@@ -136,11 +140,11 @@ export const AppStoreVat: React.FC<AppStoreVatProps> = ({ tagline, subTagline })
             letterSpacing: 0.8,
           }}
         >
-          EXPORT →
+          {s.exportCta}
         </div>
       </div>
 
-      <TabBar active="Geld" />
+      <TabBar active="Geld" locale={locale} />
     </AppStoreShell>
   );
 };

@@ -1,17 +1,28 @@
 import React from 'react';
 import { DK } from '../data/theme';
 import { AppStoreShell, ScreenHeader, TabBar } from './appStoreShell';
+import { STRINGS, type ScreenshotLocale } from '../data/screenshotStrings';
 
 export type AppStoreGeldProps = {
   tagline: string;
   subTagline: string;
+  locale?: ScreenshotLocale;
 };
 
-// App Store screenshot #3 — Geld tab (outstanding invoices + payment-link CTA).
-export const AppStoreGeld: React.FC<AppStoreGeldProps> = ({ tagline, subTagline }) => {
+// App Store screenshot #3 — Money tab (outstanding invoices + payment-link CTA).
+// R88: locale-aware.
+export const AppStoreGeld: React.FC<AppStoreGeldProps> = ({ tagline, subTagline, locale = 'nl' }) => {
+  const s = STRINGS[locale].geld;
+  // Pick a tone per row by status string heuristic (overdue → error, due → highlight).
+  const toneFor = (status: string): string => {
+    const lower = status.toLowerCase();
+    if (lower.includes('overdue') || lower.includes('over tijd')) return DK.error;
+    if (lower.includes('due') || lower.includes('verlopen')) return DK.highlight;
+    return DK.textMuted;
+  };
   return (
     <AppStoreShell tagline={tagline} subTagline={subTagline}>
-      <ScreenHeader title="Geld" subtitle="3 facturen open  ·  €4.280 binnen" />
+      <ScreenHeader title={s.title} subtitle={s.subtitle} />
 
       {/* KPI strip */}
       <div
@@ -21,8 +32,8 @@ export const AppStoreGeld: React.FC<AppStoreGeldProps> = ({ tagline, subTagline 
           gap: 16,
         }}
       >
-        <Kpi label="Te ontvangen" value="€4.280" tone={DK.text} />
-        <Kpi label="Te laat" value="€890" tone={DK.error} />
+        <Kpi label={s.kpi1Label} value={s.kpi1Value} tone={DK.text} />
+        <Kpi label={s.kpi2Label} value={s.kpi2Value} tone={DK.error} />
       </div>
 
       {/* Invoice list */}
@@ -38,31 +49,19 @@ export const AppStoreGeld: React.FC<AppStoreGeldProps> = ({ tagline, subTagline 
             marginBottom: 20,
           }}
         >
-          Open facturen
+          {s.sectionTitle}
         </div>
-        <InvoiceRow
-          customer="De Jong"
-          invoiceRef="F-2026-041"
-          amount="€1.890"
-          status="14 dgn over tijd"
-          statusColor={DK.error}
-          cta="HERINNERING"
-        />
-        <InvoiceRow
-          customer="Bakker BV"
-          invoiceRef="F-2026-042"
-          amount="€1.520"
-          status="Vandaag verlopen"
-          statusColor={DK.highlight}
-          cta="BETAALLINK"
-        />
-        <InvoiceRow
-          customer="Mulder"
-          invoiceRef="F-2026-043"
-          amount="€870"
-          status="Verstuurd · 3 dagen"
-          statusColor={DK.textMuted}
-        />
+        {s.rows.map((row, idx) => (
+          <InvoiceRow
+            key={idx}
+            customer={row.customer}
+            invoiceRef={row.ref}
+            amount={row.amount}
+            status={row.status}
+            statusColor={toneFor(row.status)}
+            cta={row.cta}
+          />
+        ))}
       </div>
 
       {/* Bottom auto-incasso card */}
@@ -87,14 +86,14 @@ export const AppStoreGeld: React.FC<AppStoreGeldProps> = ({ tagline, subTagline 
             lineHeight: 1.2,
           }}
         >
-          Auto-incasso aan
+          {s.bottomCardTitle}
         </div>
         <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 24, marginTop: 8 }}>
-          Vasco stuurt herinneringen + escaleert na 14d / 30d / 60d. Jij doet niets.
+          {s.bottomCardBody}
         </div>
       </div>
 
-      <TabBar active="Geld" />
+      <TabBar active="Geld" locale={locale} />
     </AppStoreShell>
   );
 };

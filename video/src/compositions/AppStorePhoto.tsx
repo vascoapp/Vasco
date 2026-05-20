@@ -1,17 +1,21 @@
 import React from 'react';
 import { DK } from '../data/theme';
 import { AppStoreShell, ScreenHeader, TabBar } from './appStoreShell';
+import { STRINGS, type ScreenshotLocale } from '../data/screenshotStrings';
 
 export type AppStorePhotoProps = {
   tagline: string;
   subTagline: string;
+  locale?: ScreenshotLocale;
 };
 
 // App Store screenshot #4 — Photo → quote (AI line-item extraction).
-export const AppStorePhoto: React.FC<AppStorePhotoProps> = ({ tagline, subTagline }) => {
+// R88: locale-aware.
+export const AppStorePhoto: React.FC<AppStorePhotoProps> = ({ tagline, subTagline, locale = 'nl' }) => {
+  const s = STRINGS[locale].photo;
   return (
     <AppStoreShell tagline={tagline} subTagline={subTagline}>
-      <ScreenHeader title="AI Offerte" subtitle="Foto geanalyseerd in 8 sec" />
+      <ScreenHeader title={s.title} subtitle={s.subtitle} />
 
       {/* Mock job photo */}
       <div
@@ -81,7 +85,7 @@ export const AppStorePhoto: React.FC<AppStorePhotoProps> = ({ tagline, subTaglin
             letterSpacing: 0.5,
           }}
         >
-          ✨ Lekkage gedetecteerd
+          {s.detectedTag}
         </div>
 
         <div
@@ -93,9 +97,9 @@ export const AppStorePhoto: React.FC<AppStorePhotoProps> = ({ tagline, subTaglin
           }}
         >
           <div style={{ color: DK.text, fontWeight: 700, fontSize: 24 }}>
-            Badkamer · De Jong · Amstelveen
+            {s.captionTitle}
           </div>
-          <div style={{ color: DK.textMuted, fontSize: 20, marginTop: 4 }}>3 foto's geüpload</div>
+          <div style={{ color: DK.textMuted, fontSize: 20, marginTop: 4 }}>{s.captionSub}</div>
         </div>
       </div>
 
@@ -129,29 +133,12 @@ export const AppStorePhoto: React.FC<AppStorePhotoProps> = ({ tagline, subTaglin
               textTransform: 'uppercase',
             }}
           >
-            Vasco vond deze regels
+            {s.sectionTitle}
           </div>
         </div>
-        <LineItem
-          name="Lekkage stop kit"
-          qty="1 st"
-          price="€48,90"
-        />
-        <LineItem
-          name="PVC buis Ø32mm"
-          qty="2 m"
-          price="€18,40"
-        />
-        <LineItem
-          name="Sifon vervangen"
-          qty="1 st"
-          price="€34,50"
-        />
-        <LineItem
-          name="Arbeid (geschat)"
-          qty="2,5u"
-          price="€237,50"
-        />
+        {s.lines.map((line, idx) => (
+          <LineItem key={idx} name={line.name} qty={line.qty} price={line.price} />
+        ))}
       </div>
 
       {/* CTA bottom */}
@@ -172,7 +159,7 @@ export const AppStorePhoto: React.FC<AppStorePhotoProps> = ({ tagline, subTaglin
       >
         <div>
           <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 20, fontWeight: 600 }}>
-            Totaal
+            {s.totalLabel}
           </div>
           <div
             style={{
@@ -182,7 +169,7 @@ export const AppStorePhoto: React.FC<AppStorePhotoProps> = ({ tagline, subTaglin
               fontSize: 40,
             }}
           >
-            €339,30 + btw
+            {s.totalAmount}
           </div>
         </div>
         <div
@@ -194,11 +181,11 @@ export const AppStorePhoto: React.FC<AppStorePhotoProps> = ({ tagline, subTaglin
             letterSpacing: 1,
           }}
         >
-          MAAK OFFERTE →
+          {s.cta}
         </div>
       </div>
 
-      <TabBar active="Werk" />
+      <TabBar active="Werk" locale={locale} />
     </AppStoreShell>
   );
 };

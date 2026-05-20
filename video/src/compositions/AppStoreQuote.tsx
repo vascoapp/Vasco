@@ -1,18 +1,21 @@
 import React from 'react';
 import { DK } from '../data/theme';
 import { AppStoreShell, ScreenHeader, TabBar } from './appStoreShell';
+import { STRINGS, type ScreenshotLocale } from '../data/screenshotStrings';
 
 export type AppStoreQuoteProps = {
   tagline: string;
   subTagline: string;
+  locale?: ScreenshotLocale;
 };
 
 // App Store screenshot #2 — Tiered Quote Builder preview.
-// Good / Better / Best cards with cohort badge.
-export const AppStoreQuote: React.FC<AppStoreQuoteProps> = ({ tagline, subTagline }) => {
+// Good / Better / Best cards with cohort badge. R88: locale-aware.
+export const AppStoreQuote: React.FC<AppStoreQuoteProps> = ({ tagline, subTagline, locale = 'nl' }) => {
+  const s = STRINGS[locale].quote;
   return (
     <AppStoreShell tagline={tagline} subTagline={subTagline}>
-      <ScreenHeader title="Offerte" subtitle="Stap 3 — Voorbeeld" />
+      <ScreenHeader title={s.title} subtitle={s.subtitle} />
 
       {/* Cohort badge */}
       <div style={{ margin: '32px 60px 0 60px' }}>
@@ -29,7 +32,7 @@ export const AppStoreQuote: React.FC<AppStoreQuoteProps> = ({ tagline, subTaglin
         >
           <div style={{ fontSize: 22 }}>📊</div>
           <div style={{ color: DK.accent, fontSize: 22, fontWeight: 700, letterSpacing: 0.5 }}>
-            Vergelijkbare loodgieters in NL: 67% accepteert "Beter"
+            {s.cohortBadge}
           </div>
         </div>
       </div>
@@ -37,23 +40,23 @@ export const AppStoreQuote: React.FC<AppStoreQuoteProps> = ({ tagline, subTaglin
       {/* Three tier cards */}
       <div style={{ marginTop: 32, paddingLeft: 60, paddingRight: 60 }}>
         <TierCard
-          label="GOED"
-          price="€485"
-          subtitle="Reparatie nu — geen garantie op oud leidingwerk"
-          features={['Lekkage stoppen', 'Materiaal inbegrepen', '1u arbeid']}
+          label={s.tierGood}
+          price={s.tierGoodPrice}
+          subtitle={s.tierGoodSubtitle}
+          features={s.tierGoodFeatures}
         />
         <TierCard
-          label="BETER"
-          price="€890"
-          subtitle="Reparatie + leidingen vervangen (10 jaar garantie)"
-          features={['Volledige badkamer-leidingen', 'Druktest na werk', '10 jaar garantie']}
+          label={s.tierBetter}
+          price={s.tierBetterPrice}
+          subtitle={s.tierBetterSubtitle}
+          features={s.tierBetterFeatures}
           highlighted
         />
         <TierCard
-          label="BEST"
-          price="€1.450"
-          subtitle="Volledige modernisering — alles in één keer goed"
-          features={['Alle aanvoer + afvoer', 'Nieuwe shut-off kranen', '15 jaar garantie']}
+          label={s.tierBest}
+          price={s.tierBestPrice}
+          subtitle={s.tierBestSubtitle}
+          features={s.tierBestFeatures}
         />
       </div>
 
@@ -82,12 +85,12 @@ export const AppStoreQuote: React.FC<AppStoreQuoteProps> = ({ tagline, subTaglin
             letterSpacing: 1,
           }}
         >
-          VERSTUUR NAAR KLANT
+          {s.cta}
         </div>
         <div style={{ color: DK.text, fontSize: 32 }}>→</div>
       </div>
 
-      <TabBar active="Geld" />
+      <TabBar active="Geld" locale={locale} />
     </AppStoreShell>
   );
 };

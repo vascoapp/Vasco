@@ -690,11 +690,11 @@ export const content: Record<Locale, MarketingContent> = {
       footnote:
         "Rendered at 1320×2868 (6.9\" iPhone). The screenshots queued for App Store Connect submission.",
       screens: [
-        { src: "/screenshots/1-vandaag-en.png", label: "Today's plan" },
-        { src: "/screenshots/2-quote-en.png", label: "Good / Better / Best" },
-        { src: "/screenshots/3-geld-en.png", label: "Get paid" },
-        { src: "/screenshots/4-photo-en.png", label: "Photo → estimate" },
-        { src: "/screenshots/5-vat-en.png", label: "Sales tax prep" },
+        { src: "/screenshots/1-vandaag-us.png", label: "Today's plan" },
+        { src: "/screenshots/2-quote-us.png", label: "Good / Better / Best" },
+        { src: "/screenshots/3-geld-us.png", label: "Get paid" },
+        { src: "/screenshots/4-photo-us.png", label: "Photo → estimate" },
+        { src: "/screenshots/5-vat-us.png", label: "Sales tax prep" },
       ],
     },
     guideThrough: {

@@ -1,19 +1,25 @@
 import React from 'react';
 import { AbsoluteFill } from 'remotion';
 import { DK } from '../data/theme';
+import { STRINGS, type ScreenshotLocale } from '../data/screenshotStrings';
 
 export type AppStoreVandaagProps = {
   tagline: string;
   subTagline: string;
+  locale?: ScreenshotLocale;
 };
 
-// App Store screenshot #1 — Vandaag tab.
+// App Store screenshot #1 — Today tab.
 // 6.9" iPhone canvas (1320×2868). Designed to mimic the live app's
-// Vandaag tab + a top tagline strip (Notion/Linear-style App Store layout).
+// Today tab + a top tagline strip (Notion/Linear-style App Store layout).
+// R88: locale-aware. STRINGS[locale] provides interior copy + job rows.
 export const AppStoreVandaag: React.FC<AppStoreVandaagProps> = ({
   tagline,
   subTagline,
+  locale = 'nl',
 }) => {
+  const s = STRINGS[locale].vandaag;
+  const tabs = STRINGS[locale].tabs;
   return (
     <AbsoluteFill style={{ backgroundColor: DK.bg, fontFamily: 'Inter, sans-serif' }}>
       {/* Top marketing strip */}
@@ -98,7 +104,7 @@ export const AppStoreVandaag: React.FC<AppStoreVandaagProps> = ({
               textTransform: 'uppercase',
             }}
           >
-            Vandaag
+            {s.title}
           </div>
           <div
             style={{
@@ -108,7 +114,7 @@ export const AppStoreVandaag: React.FC<AppStoreVandaagProps> = ({
               fontWeight: 500,
             }}
           >
-            Woensdag 19 mei
+            {s.subtitle}
           </div>
         </div>
 
@@ -154,7 +160,7 @@ export const AppStoreVandaag: React.FC<AppStoreVandaagProps> = ({
                 textTransform: 'uppercase',
               }}
             >
-              Vasco voor jou
+              {s.aiHeaderLabel}
             </div>
           </div>
           <div
@@ -167,10 +173,10 @@ export const AppStoreVandaag: React.FC<AppStoreVandaagProps> = ({
               marginBottom: 12,
             }}
           >
-            3 offertes wachten om verstuurd te worden
+            {s.aiHeadline}
           </div>
           <div style={{ color: 'rgba(255,255,255,0.92)', fontSize: 26, lineHeight: 1.4 }}>
-            Binnen 24 uur versturen verdubbelt je acceptatie. Tik om alles in één keer te doen.
+            {s.aiBody}
           </div>
           <div
             style={{
@@ -184,7 +190,7 @@ export const AppStoreVandaag: React.FC<AppStoreVandaagProps> = ({
             }}
           >
             <div style={{ color: DK.text, fontWeight: 700, fontSize: 28, letterSpacing: 1 }}>
-              VERSTUUR ALLES
+              {s.aiCta}
             </div>
             <div style={{ color: DK.text, fontSize: 32 }}>→</div>
           </div>
@@ -206,7 +212,7 @@ export const AppStoreVandaag: React.FC<AppStoreVandaagProps> = ({
           <div style={{ fontSize: 36 }}>💰</div>
           <div style={{ flex: 1 }}>
             <div style={{ color: DK.textMuted, fontSize: 22, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
-              Vasco bespaarde je deze week
+              {s.savingsLabel}
             </div>
             <div
               style={{
@@ -218,7 +224,7 @@ export const AppStoreVandaag: React.FC<AppStoreVandaagProps> = ({
                 textShadow: `0 0 24px ${DK.highlight}40`,
               }}
             >
-              4u 23min  ·  €847
+              {s.savingsAmount}
             </div>
           </div>
         </div>
@@ -236,29 +242,18 @@ export const AppStoreVandaag: React.FC<AppStoreVandaagProps> = ({
               marginBottom: 20,
             }}
           >
-            Agenda vandaag
+            {s.sectionTitle}
           </div>
-          <JobRow
-            time="09:00"
-            title="Lekkage badkamer — De Jong"
-            address="Amstelveen"
-            status="ONDERWEG"
-            statusColor={DK.highlight}
-          />
-          <JobRow
-            time="11:30"
-            title="CV-ketel onderhoud — Bakker"
-            address="Hoofddorp"
-            status="GEPLAND"
-            statusColor={DK.textMuted}
-          />
-          <JobRow
-            time="14:00"
-            title="Riool ontstoppen — Mulder"
-            address="Amsterdam Zuid"
-            status="GEPLAND"
-            statusColor={DK.textMuted}
-          />
+          {s.rows.map((row, idx) => (
+            <JobRow
+              key={idx}
+              time={row.time}
+              title={row.title}
+              address={row.address}
+              status={row.status}
+              statusColor={row.status === s.statusOnRoute ? DK.highlight : DK.textMuted}
+            />
+          ))}
         </div>
 
         {/* Bottom tab bar */}
@@ -276,11 +271,11 @@ export const AppStoreVandaag: React.FC<AppStoreVandaagProps> = ({
             justifyContent: 'space-around',
           }}
         >
-          <Tab label="Vandaag" active />
-          <Tab label="Werk" />
-          <Tab label="Geld" />
-          <Tab label="Klanten" />
-          <Tab label="Vasco" />
+          <Tab label={tabs.vandaag} active />
+          <Tab label={tabs.werk} />
+          <Tab label={tabs.geld} />
+          <Tab label={tabs.klanten} />
+          <Tab label={tabs.vasco} />
         </div>
       </div>
     </AbsoluteFill>
