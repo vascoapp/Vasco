@@ -25,6 +25,7 @@ import { useAIQueue, type QueueItem } from '../../src/services/aiActionQueueServ
 import { executeApprovedQueueItem } from '../../src/services/queueItemExecutor';
 import { evaluateTriggers } from '../../src/services/workflowPackService';
 import { useSavingsAggregation } from '../../src/services/savingsAggregatorService';
+import { getExpiringLicenses } from '../../src/services/licenseExpiryService';
 import { useClockIn } from '../../src/services/clockInService';
 import { formatAmount } from '../../src/utils/formatAmount';
 import { hapticSuccess, hapticWarning } from '../../src/utils/haptics';
@@ -38,7 +39,7 @@ import { CapacityOverrunCard } from '../../src/components/contractor/CapacityOve
 export default function VandaagDK() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const { invoices, quotes, jobs, customers } = useAppState();
+  const { invoices, quotes, jobs, customers, businessProfile } = useAppState();
   const today = new Date().toISOString().split('T')[0];
 
   const daySchedule = useDaySchedule(today);
@@ -250,6 +251,16 @@ export default function VandaagDK() {
             </View>
           ) : null}
         </View>
+
+        {/* R80 US Phase 2: state-license expiry warning (US only, when any
+            license is within the 30-day window). Tap-through to /contractor/licenses
+            for renew/edit. */}
+        {businessProfile?.country === 'US' ? (
+          <LicenseExpiryWarning
+            businessProfile={businessProfile}
+            onPress={() => router.push('/contractor/licenses' as any)}
+          />
+        ) : null}
 
         {/* 5. SAVINGS BANNER ─── was VascoSavedBanner */}
         {savings && savings.totalSavedThisMonth > 0 ? (
@@ -575,6 +586,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: { fontFamily: DK.type.body500, fontSize: 13, color: DK.colors.textMuted },
+  // R80 US Phase 2: state-license expiry warning card
+  licenseWarn: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 14,
+    backgroundColor: `${DK.colors.highlight}15`,
+    borderWidth: 1,
+    borderColor: `${DK.colors.highlight}55`,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  licenseWarnIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: `${DK.colors.highlight}33`,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  licenseWarnTitle: {
+    fontFamily: DK.type.display700,
+    fontSize: 13,
+    color: DK.colors.highlight,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  licenseWarnBody: {
+    fontFamily: DK.type.body500,
+    fontSize: 14,
+    color: DK.colors.text,
+    marginTop: 2,
+  },
 });
 
 const kpiStyles = StyleSheet.create({
@@ -692,3 +737,45 @@ const jobStyles = StyleSheet.create({
     textTransform: 'uppercase',
   },
 });
+
+// R80 US Phase 2: amber warning when any state license expires within
+// 30 days. Tap-through to /contractor/licenses for renew/edit.
+function LicenseExpiryWarning({
+  businessProfile,
+  onPress,
+}: {
+  businessProfile: { licenses?: unknown };
+  onPress: () => void;
+}) {
+  const { t } = useTranslation();
+  const expiring = getExpiringLicenses(
+    businessProfile as Parameters<typeof getExpiringLicenses>[0],
+    30,
+  );
+  if (expiring.length === 0) return null;
+
+  const mostUrgent = expiring[0];
+  const days = Math.max(0, mostUrgent.daysUntilExpiry);
+  const summary = expiring.length === 1
+    ? `${mostUrgent.type.replace(/_/g, ' ')} (${mostUrgent.state}) expires in ${days} days`
+    : `${expiring.length} licenses expiring soon (next in ${days} days)`;
+
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.licenseWarn, pressed && { opacity: 0.9 }]}
+      onPress={onPress}
+      accessibilityRole="button"
+    >
+      <View style={styles.licenseWarnIcon}>
+        <Ionicons name="ribbon" size={18} color={DK.colors.highlight} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.licenseWarnTitle}>
+          {t('licenses.warnTitle', 'License expiring')}
+        </Text>
+        <Text style={styles.licenseWarnBody}>{summary}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color={DK.colors.highlight} />
+    </Pressable>
+  );
+}
