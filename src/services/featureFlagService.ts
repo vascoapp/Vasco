@@ -15,10 +15,12 @@ type Country = 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK' | 'US';
 export type FeatureKey =
   | 'payments_mollie'
   | 'payments_stripe_uk'
+  | 'payments_stripe_us'
   | 'eve_agent'
   | 'purchasing_agent'
   | 'whatsapp_business'
-  | 'live_tracking';
+  | 'live_tracking'
+  | 'sms_us';
 
 interface FlagRow {
   key: string;
@@ -34,9 +36,15 @@ const CACHE_TTL_MS = 30 * 60 * 1000; // 30 min
 const DEFAULTS: Record<FeatureKey, boolean> = {
   payments_mollie: true,
   payments_stripe_uk: true,
+  payments_stripe_us: true,
   eve_agent: true,
   purchasing_agent: true,
   whatsapp_business: false,
+  // R79 US Phase 2: SMS off by default. Operator flips it on after the
+  // Twilio account is provisioned and TWILIO_* secrets land in
+  // Supabase. Until then sendSms returns sms_disabled, callers fall
+  // through to email / WhatsApp / in-app push.
+  sms_us: false,
   live_tracking: false,
 };
 

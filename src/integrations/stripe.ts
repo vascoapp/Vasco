@@ -42,7 +42,11 @@ export type StripePaymentMethod =
   | 'bacs_debit'
   | 'ideal'
   | 'bancontact'
-  | 'klarna';
+  | 'klarna'
+  // R79 US: ACH debit + tap-to-pay (Apple Pay handled via 'card' on Stripe).
+  // Affirm is BNPL — Stripe-native, deferred until we wire Phase 5 BNPL UX.
+  | 'us_bank_account'
+  | 'affirm';
 
 export interface StripePayment {
   id: string;
@@ -363,6 +367,24 @@ export const SUPPORTED_METHODS: Record<string, StripePaymentMethod[]> = {
   ES: ['card', 'sepa_debit', 'klarna'],
   IT: ['card', 'sepa_debit', 'klarna'],
   BE: ['card', 'bancontact', 'sepa_debit', 'klarna'],
+  // R79 US: card covers tap-to-pay + Apple Pay + Google Pay on Stripe.
+  // us_bank_account is the ACH equivalent. Klarna available too but
+  // Affirm/Sunbit are the US-dominant BNPL — wired in Phase 5.
+  US: ['card', 'us_bank_account', 'klarna'],
+};
+
+// R79 US: currency mapping by country. Drives the Stripe createPayment
+// call so US contractors get USD-denominated payment intents and EU
+// contractors keep EUR/GBP.
+export const COUNTRY_CURRENCY: Record<string, StripeCurrency> = {
+  UK: 'GBP',
+  US: 'USD',
+  NL: 'EUR',
+  DE: 'EUR',
+  FR: 'EUR',
+  ES: 'EUR',
+  IT: 'EUR',
+  BE: 'EUR',
 };
 
 export const SUPPORTED_CURRENCIES: StripeCurrency[] = ['GBP', 'EUR', 'USD'];
@@ -376,11 +398,15 @@ export async function createStripePayment(
   amount: number,
   country: string = 'UK'
 ): Promise<StripePaymentResult> {
+  // R79 US: currency is country-derived (USD for US, GBP for UK, EUR
+  // otherwise). Pre-R79 hardcoded GBP for every country, so a US
+  // contractor would have minted a GBP payment link (Stripe would have
+  // accepted it but the customer would have paid in the wrong currency).
   return createPayment({
     invoiceId,
     amount,
     description: `Invoice ${invoiceId}`,
-    currency: 'GBP',
+    currency: COUNTRY_CURRENCY[country] ?? 'GBP',
     paymentMethods: SUPPORTED_METHODS[country] ?? SUPPORTED_METHODS.UK,
   });
 }

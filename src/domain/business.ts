@@ -9,6 +9,29 @@ export type VatScheme =
   | 'small_business_NL_KOR'
   | 'small_business_DE_kleinunternehmer';
 
+// R79 US Phase 2: per-state contractor license. Each entry stored as a row
+// in `BusinessProfile.licenses[]` and persisted to
+// `business_settings.licenses jsonb`.
+export type ContractorLicenseType =
+  | 'master_plumber'
+  | 'master_electrician'
+  | 'general_contractor'
+  | 'hvac'
+  | 'roofing'
+  | 'gas_fitter'
+  | 'epa_608'
+  | 'state_contractor'
+  | 'other';
+
+export interface ContractorLicense {
+  type: ContractorLicenseType;
+  state: string;            // 'TX', 'CA', etc.
+  number: string;           // license number as issued
+  expiryDate: string;       // ISO date (YYYY-MM-DD)
+  issueDate?: string;       // ISO date, optional
+  issuingAuthority?: string; // e.g. "Texas Department of Licensing and Regulation"
+}
+
 export type BusinessProfile = {
   isComplete: boolean;
   completenessPercent: number;
@@ -47,6 +70,12 @@ export type BusinessProfile = {
   // digits. Both rendered on US invoice PDFs in lieu of SEPA fields.
   routingNumber?: string;
   bankAccountNumber?: string;
+  // R79 US Phase 2: state-licensing array. Each entry tracks a per-state
+  // license that the contractor holds. Stored as JSONB on
+  // `business_settings.licenses` (migration 20260520000001). The
+  // 30-day-before-expiry warning fires from
+  // `complianceGatingService.checkLicenseExpiry()` (client-side).
+  licenses?: ContractorLicense[];
   postcode?: string;
   city?: string;
   website?: string;

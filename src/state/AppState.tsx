@@ -2434,16 +2434,19 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setLastStripePayment({});
       },
       createPaymentLink: async (invoiceId, amount) => {
-        // Route by contractor country — UK → Stripe (GBP), everyone else → Mollie (EUR).
+        // Route by contractor country:
+        //   UK → Stripe (GBP) — bacs_debit + card + klarna
+        //   US → Stripe (USD) — card + us_bank_account + klarna  (R79)
+        //   EU6 → Mollie (EUR) — iDEAL/Bancontact/SEPA/card
         // R66 round 8: was silently swallowing failures (`if result.success`
         // with no `else`). Caller (`app/invoices/[id].tsx:handleCreatePayment`)
         // wraps in try/catch and fires `hapticError` on throw, but nothing
         // ever threw — contractor pressed button, got success haptic, no link.
         // Now throws on provider failure so the caller's error path fires.
         const country = getCurrentCountry();
-        if (country === 'UK') {
+        if (country === 'UK' || country === 'US') {
           const { createStripePayment } = await import('../integrations/stripe');
-          const result = await createStripePayment(invoiceId, amount, 'UK');
+          const result = await createStripePayment(invoiceId, amount, country);
           if (!result.success) {
             throw new Error(result.error ?? 'Stripe payment link creation failed');
           }
