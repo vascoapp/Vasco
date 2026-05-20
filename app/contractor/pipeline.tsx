@@ -14,17 +14,21 @@
 // Empty state encourages either manual lead entry or web-form embed.
 // =============================================================================
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   Alert,
+  Animated,
   Modal,
+  PanResponder,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
+  type LayoutChangeEvent,
 } from 'react-native';
+import { hapticSuccess, hapticWarning } from '../../src/utils/haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -76,6 +80,16 @@ function formatUsd(n?: number): string {
   return `$${Math.round(n).toLocaleString('en-US')}`;
 }
 
+// R90: column bounds snapshot for drag hit-testing. Captured via onLayout
+// on each column View and stored by status key. Updated whenever the
+// horizontal scroll position changes (so the user can drop into a column
+// that wasn't visible when the drag started).
+interface ColumnBounds {
+  status: LeadStatus;
+  x: number;       // left edge in horizontal-ScrollView content space
+  width: number;
+}
+
 export default function PipelineScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -88,6 +102,57 @@ export default function PipelineScreen() {
   const [editing, setEditing] = useState<Lead | null>(null);
   const [showAdd, setShowAdd] = useState(false);
 
+  // R90: drag-to-move state. `dragging` holds the lead being dragged
+  // (null when not dragging). `hoverStatus` is the column currently
+  // under the finger — used to highlight the drop target.
+  const [dragging, setDragging] = useState<Lead | null>(null);
+  const [hoverStatus, setHoverStatus] = useState<LeadStatus | null>(null);
+  const dragPos = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  // Column bounds snapshot — populated by onLayout on each column. Bounds
+  // are in the horizontal-ScrollView's content coordinate space.
+  const columnBoundsRef = useRef<Record<LeadStatus, ColumnBounds | null>>({
+    new: null, contacted: null, estimate_sent: null, won: null, lost: null,
+  });
+  // Horizontal scroll offset of the Kanban container — needed to convert
+  // finger pageX into content-space X for hit testing.
+  const scrollXRef = useRef(0);
+
+  const handleDragStart = (lead: Lead, startPageX: number, startPageY: number) => {
+    setDragging(lead);
+    setHoverStatus(lead.status);
+    dragPos.setValue({ x: startPageX, y: startPageY });
+    hapticWarning(); // medium-impact feedback on pickup
+  };
+
+  const handleDragMove = (pageX: number, pageY: number) => {
+    dragPos.setValue({ x: pageX, y: pageY });
+    // Hit-test: which column is the finger over?
+    const contentX = pageX + scrollXRef.current;
+    let hit: LeadStatus | null = null;
+    for (const status of LEAD_STATUS_ORDER) {
+      const b = columnBoundsRef.current[status];
+      if (b && contentX >= b.x && contentX < b.x + b.width) {
+        hit = status;
+        break;
+      }
+    }
+    if (hit !== hoverStatus) setHoverStatus(hit);
+  };
+
+  const handleDragEnd = () => {
+    const lead = dragging;
+    const target = hoverStatus;
+    setDragging(null);
+    setHoverStatus(null);
+    if (lead && target && target !== lead.status) {
+      moveLeadStatus(lead.id, target).catch(() => {});
+      hapticSuccess();
+    }
+    dragPos.setValue({ x: 0, y: 0 });
+  };
+
+  // Fall-back Alert-based picker — fires when a user long-presses but
+  // doesn't drag (or the gesture fails). Same UX as pre-R90.
   const handleStatusMove = (lead: Lead) => {
     Alert.alert(
       t('pipeline.move', 'Move lead'),
@@ -139,39 +204,43 @@ export default function PipelineScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.kanban}
+          scrollEnabled={!dragging}
+          onScroll={(e) => { scrollXRef.current = e.nativeEvent.contentOffset.x; }}
+          scrollEventThrottle={16}
         >
           {LEAD_STATUS_ORDER.map((status) => {
             const items = grouped[status];
             const tone = TONE_COLOR[LEAD_STATUS_TONE[status]];
+            const isHover = hoverStatus === status && dragging !== null;
             return (
-              <View key={status} style={styles.column}>
+              <View
+                key={status}
+                style={[styles.column, isHover && styles.columnHover]}
+                onLayout={(e: LayoutChangeEvent) => {
+                  const { x, width } = e.nativeEvent.layout;
+                  columnBoundsRef.current[status] = { status, x, width };
+                }}
+              >
                 <View style={styles.columnHeader}>
                   <View style={[styles.statusDot, { backgroundColor: tone }]} />
                   <Text style={styles.columnTitle}>{LEAD_STATUS_LABELS[status]}</Text>
                   <Text style={styles.columnCount}>{items.length}</Text>
                 </View>
-                <ScrollView showsVerticalScrollIndicator={false}>
+                <ScrollView showsVerticalScrollIndicator={false} scrollEnabled={!dragging}>
                   {items.length === 0 ? (
                     <Text style={styles.columnEmpty}>—</Text>
                   ) : (
                     items.map((lead) => (
-                      <Pressable
+                      <LeadCard
                         key={lead.id}
-                        style={styles.card}
-                        onPress={() => setEditing(lead)}
-                        onLongPress={() => handleStatusMove(lead)}
-                      >
-                        <Text style={styles.cardName}>{lead.customerName}</Text>
-                        {lead.jobDescription ? (
-                          <Text style={styles.cardDesc} numberOfLines={2}>
-                            {lead.jobDescription}
-                          </Text>
-                        ) : null}
-                        <View style={styles.cardFoot}>
-                          <Text style={styles.cardValue}>{formatUsd(lead.estimatedValue)}</Text>
-                          <Text style={styles.cardAge}>{daysSince(lead.createdAt)}d</Text>
-                        </View>
-                      </Pressable>
+                        lead={lead}
+                        isDragging={dragging?.id === lead.id}
+                        onTap={() => setEditing(lead)}
+                        onDragStart={(x, y) => handleDragStart(lead, x, y)}
+                        onDragMove={handleDragMove}
+                        onDragEnd={handleDragEnd}
+                        onLongPressFallback={() => handleStatusMove(lead)}
+                      />
                     ))
                   )}
                 </ScrollView>
@@ -180,6 +249,34 @@ export default function PipelineScreen() {
           })}
         </ScrollView>
       )}
+
+      {/* R90: floating drag preview. Renders only while a card is being
+          dragged. Positioned at the finger via Animated.ValueXY. The card
+          underneath stays in place (greyed via isDragging prop) so the
+          source position is visible but distinct from the floating one. */}
+      {dragging ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.dragPreview,
+            {
+              transform: [
+                { translateX: Animated.subtract(dragPos.x, new Animated.Value(120)) },
+                { translateY: Animated.subtract(dragPos.y, new Animated.Value(50)) },
+              ],
+            },
+          ]}
+        >
+          <Text style={styles.cardName}>{dragging.customerName}</Text>
+          {dragging.jobDescription ? (
+            <Text style={styles.cardDesc} numberOfLines={2}>{dragging.jobDescription}</Text>
+          ) : null}
+          <View style={styles.cardFoot}>
+            <Text style={styles.cardValue}>{formatUsd(dragging.estimatedValue)}</Text>
+            <Text style={styles.cardAge}>{daysSince(dragging.createdAt)}d</Text>
+          </View>
+        </Animated.View>
+      ) : null}
 
       <LeadModal
         visible={showAdd || editing !== null}
@@ -225,6 +322,110 @@ export default function PipelineScreen() {
         } : undefined}
       />
     </SafeAreaView>
+  );
+}
+
+// R90: draggable lead card. Long-press triggers drag mode; PanResponder
+// then tracks finger position via the parent's callbacks. While dragging,
+// the source card stays in place but renders dimmed (the floating preview
+// follows the finger separately at the screen root).
+//
+// Why this shape: we want tap (edit lead) + long-press (start drag) on
+// the same surface without conflicting. The PanResponder responds only
+// after the long-press timer fires, so the surrounding ScrollView still
+// owns vertical swipe gestures until the user holds the card.
+function LeadCard({
+  lead,
+  isDragging,
+  onTap,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
+  onLongPressFallback,
+}: {
+  lead: Lead;
+  isDragging: boolean;
+  onTap: () => void;
+  onDragStart: (pageX: number, pageY: number) => void;
+  onDragMove: (pageX: number, pageY: number) => void;
+  onDragEnd: () => void;
+  onLongPressFallback: () => void;
+}) {
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dragStartedRef = useRef(false);
+  const movedRef = useRef(false);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      // Start owning gestures on touch, but only "activate" (capture from
+      // parent ScrollView) once the long-press timer has fired.
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => dragStartedRef.current,
+      onPanResponderGrant: (e) => {
+        dragStartedRef.current = false;
+        movedRef.current = false;
+        const { pageX, pageY } = e.nativeEvent;
+        longPressTimer.current = setTimeout(() => {
+          if (!movedRef.current) {
+            dragStartedRef.current = true;
+            onDragStart(pageX, pageY);
+          }
+        }, 300);
+      },
+      onPanResponderMove: (e, gesture) => {
+        // Tiny finger jitter before long-press → treat as a tap intent,
+        // cancel the drag timer. Threshold accommodates most users.
+        if (!dragStartedRef.current) {
+          if (Math.abs(gesture.dx) > 6 || Math.abs(gesture.dy) > 6) {
+            movedRef.current = true;
+            if (longPressTimer.current) clearTimeout(longPressTimer.current);
+          }
+          return;
+        }
+        onDragMove(e.nativeEvent.pageX, e.nativeEvent.pageY);
+      },
+      onPanResponderRelease: () => {
+        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+        if (dragStartedRef.current) {
+          onDragEnd();
+          dragStartedRef.current = false;
+        } else if (!movedRef.current) {
+          // No drag triggered + no jitter → treat as a tap.
+          onTap();
+        }
+      },
+      onPanResponderTerminate: () => {
+        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+        if (dragStartedRef.current) {
+          onDragEnd();
+          dragStartedRef.current = false;
+        }
+      },
+    })
+  ).current;
+
+  return (
+    <Animated.View
+      {...panResponder.panHandlers}
+      style={[styles.card, isDragging && styles.cardSourceDimmed]}
+      accessibilityRole="button"
+      accessibilityLabel={`${lead.customerName}, long-press to drag, tap to edit`}
+      accessibilityActions={[{ name: 'longpress', label: 'Move to another column' }]}
+      onAccessibilityAction={(e) => {
+        if (e.nativeEvent.actionName === 'longpress') onLongPressFallback();
+      }}
+    >
+      <Text style={styles.cardName}>{lead.customerName}</Text>
+      {lead.jobDescription ? (
+        <Text style={styles.cardDesc} numberOfLines={2}>
+          {lead.jobDescription}
+        </Text>
+      ) : null}
+      <View style={styles.cardFoot}>
+        <Text style={styles.cardValue}>{formatUsd(lead.estimatedValue)}</Text>
+        <Text style={styles.cardAge}>{daysSince(lead.createdAt)}d</Text>
+      </View>
+    </Animated.View>
   );
 }
 
@@ -398,6 +599,17 @@ const styles = StyleSheet.create({
     padding: GRID.sm,
     maxHeight: 600,
   },
+  // R90: highlight the column when the user's drag finger is over it.
+  // Amber-tinted border + bg matches the DK Sunset Slate accent system.
+  columnHover: {
+    borderColor: DK.colors.accent,
+    backgroundColor: `${DK.colors.accent}18`,
+    shadowColor: DK.colors.accent,
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 8,
+  },
   columnHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -435,6 +647,30 @@ const styles = StyleSheet.create({
     borderColor: SemanticColors.borderDefault,
     padding: GRID.sm,
     marginBottom: GRID.xs,
+  },
+  // R90: dimmed source-position card while a copy follows the finger.
+  cardSourceDimmed: {
+    opacity: 0.35,
+    borderStyle: 'dashed' as const,
+  },
+  // R90: floating clone that follows the finger during drag. Absolute-
+  // positioned at the screen root; transform is driven by Animated.ValueXY.
+  dragPreview: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: 240,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: DK.colors.accent,
+    padding: GRID.sm,
+    shadowColor: DK.colors.accent,
+    shadowOpacity: 0.5,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 16,
+    zIndex: 999,
   },
   cardName: {
     fontSize: 14,
