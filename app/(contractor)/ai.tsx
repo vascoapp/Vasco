@@ -519,15 +519,14 @@ export default function VascoScreen() {
                 <Ionicons name="shield-checkmark-outline" size={14} color={DK.colors.accent} />
                 <DKLabel style={s.chipText}>{t('ai.certificates', 'Certificates')}</DKLabel>
               </Pressable>
-              {/* US-only: state-issued operating licenses. EU contractors
-                  use the Certificates path above; their certs *are* their
-                  compliance proof, no separate license layer. */}
-              {businessProfile?.country === 'US' ? (
-                <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/licenses' as any)}>
-                  <Ionicons name="ribbon-outline" size={14} color={DK.colors.accent} />
-                  <DKLabel style={s.chipText}>{t('ai.licenses', 'Licenses')}</DKLabel>
-                </Pressable>
-              ) : null}
+              {/* R91: licenses now visible to all countries. US uses it
+                  for state contractor licenses; EU contractors use it for
+                  trade licenses (Gas Safe, Meisterbrief, RGE Qualibat,
+                  etc.) — complements Certificates rather than duplicates. */}
+              <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/licenses' as any)}>
+                <Ionicons name="ribbon-outline" size={14} color={DK.colors.accent} />
+                <DKLabel style={s.chipText}>{t('ai.licenses', 'Licenses')}</DKLabel>
+              </Pressable>
             </View>
 
             <DKLabel style={s.subsectionLabel}>{t('dk.ai.tools', 'Tools')}</DKLabel>

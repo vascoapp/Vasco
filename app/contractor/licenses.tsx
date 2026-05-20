@@ -66,7 +66,14 @@ export default function LicensesScreen() {
   const [editing, setEditing] = useState<ContractorLicense | null>(null);
   const [showAdd, setShowAdd] = useState(false);
 
+  // R91: licenses opened to EU contractors. State picker is US-only; for
+  // EU users the modal hides the state row + auto-fills with country code
+  // ("NL", "DE", etc.) so the type/number/expiry/authority fields are
+  // genuinely useful regardless of jurisdiction. EU contractors typically
+  // use this for trade-specific licenses (Gas Safe / Meisterbrief /
+  // RGE Qualibat) alongside the existing Certificates screen.
   const isUs = businessProfile?.country === 'US';
+  const defaultState = businessProfile?.country ?? '';
 
   const persist = async (next: ContractorLicense[]) => {
     await updateBusinessProfile({ licenses: next } as Partial<typeof businessProfile>);
@@ -103,19 +110,16 @@ export default function LicensesScreen() {
         <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button">
           <Ionicons name="chevron-back" size={26} color={SemanticColors.textPrimary} />
         </Pressable>
-        <Text style={styles.headerTitle}>{t('licenses.title', 'State licenses')}</Text>
+        <Text style={styles.headerTitle}>
+          {/* R91: generic "Licenses" — was "State licenses" (US-only). EU
+              contractors use the same UI for trade licenses (Gas Safe,
+              Meisterbrief, RGE Qualibat, etc.) */}
+          {t('licenses.title', 'Licenses')}
+        </Text>
         <View style={{ width: 26 }} />
       </View>
 
-      {!isUs ? (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="information-circle-outline" size={48} color={SemanticColors.textTertiary} />
-          <Text style={styles.emptyTitle}>{t('licenses.usOnly', 'US contractors only')}</Text>
-          <Text style={styles.emptyBody}>
-            {t('licenses.usOnlyBody', 'State licenses are tracked for US contractors. Switch your country in Profile to enable.')}
-          </Text>
-        </View>
-      ) : (
+      {(
         <ScrollView contentContainerStyle={{ padding: GRID.lg, paddingBottom: GRID.xl * 2 }}>
           {licenses.length === 0 ? (
             <View style={styles.emptyContainer}>
@@ -159,6 +163,8 @@ export default function LicensesScreen() {
       )}
 
       <LicenseModal
+        isUs={isUs}
+        defaultState={defaultState}
         visible={showAdd || editing !== null}
         original={editing ?? undefined}
         onClose={() => {
@@ -193,17 +199,27 @@ interface LicenseModalProps {
   onClose: () => void;
   onSave: (license: ContractorLicense, original?: ContractorLicense) => void;
   onDelete?: () => void;
+  // R91: US contractors get the state picker; EU contractors get an
+  // auto-filled country code in the `state` field instead so the
+  // license record still has a jurisdiction stamp.
+  isUs: boolean;
+  defaultState: string;
 }
 
-function LicenseModal({ visible, original, onClose, onSave, onDelete }: LicenseModalProps) {
+function LicenseModal({ visible, original, onClose, onSave, onDelete, isUs, defaultState }: LicenseModalProps) {
   const { t } = useTranslation();
   const [type, setType] = useState<ContractorLicenseType>(original?.type ?? 'hvac');
-  const [state, setState] = useState(original?.state ?? '');
+  const [state, setState] = useState(original?.state ?? (isUs ? '' : defaultState));
   const [number, setNumber] = useState(original?.number ?? '');
   const [expiryDate, setExpiryDate] = useState(original?.expiryDate ?? '');
   const [issuingAuthority, setIssuingAuthority] = useState(original?.issuingAuthority ?? '');
 
-  const canSave = state.length === 2 && number.trim().length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(expiryDate);
+  // R91: US requires a 2-letter state. EU contractors can save without it
+  // (jurisdiction is implicit in their country profile). Number + expiry
+  // are mandatory for both.
+  const canSave = (isUs ? state.length === 2 : true)
+    && number.trim().length > 0
+    && /^\d{4}-\d{2}-\d{2}$/.test(expiryDate);
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
@@ -245,24 +261,31 @@ function LicenseModal({ visible, original, onClose, onSave, onDelete }: LicenseM
             })}
           </View>
 
-          {/* State picker */}
-          <Text style={styles.label}>{t('licenses.state', 'State')}</Text>
-          <View style={styles.stateGrid}>
-            {US_STATES.map((s) => {
-              const selected = state.toUpperCase() === s.code;
-              return (
-                <Pressable
-                  key={s.code}
-                  onPress={() => setState(s.code)}
-                  style={[styles.stateChip, selected && styles.stateChipSelected]}
-                >
-                  <Text style={[styles.stateChipText, selected && styles.stateChipTextSelected]}>
-                    {s.code}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          {/* R91: state picker only for US — EU contractors get the
+              defaultState pre-filled (their country code) without a
+              picker UI. License-tracking screen is universal but the
+              50-state picker stays US-specific. */}
+          {isUs ? (
+            <>
+              <Text style={styles.label}>{t('licenses.state', 'State')}</Text>
+              <View style={styles.stateGrid}>
+                {US_STATES.map((s) => {
+                  const selected = state.toUpperCase() === s.code;
+                  return (
+                    <Pressable
+                      key={s.code}
+                      onPress={() => setState(s.code)}
+                      style={[styles.stateChip, selected && styles.stateChipSelected]}
+                    >
+                      <Text style={[styles.stateChipText, selected && styles.stateChipTextSelected]}>
+                        {s.code}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </>
+          ) : null}
 
           {/* License number */}
           <Text style={styles.label}>{t('licenses.number', 'License number')}</Text>

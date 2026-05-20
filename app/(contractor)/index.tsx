@@ -252,15 +252,15 @@ export default function VandaagDK() {
           ) : null}
         </View>
 
-        {/* R80 US Phase 2: state-license expiry warning (US only, when any
-            license is within the 30-day window). Tap-through to /contractor/licenses
-            for renew/edit. */}
-        {businessProfile?.country === 'US' ? (
-          <LicenseExpiryWarning
-            businessProfile={businessProfile}
-            onPress={() => router.push('/contractor/licenses' as any)}
-          />
-        ) : null}
+        {/* R80 + R91: license expiry warning. Now open to all countries
+            — EU contractors using the licenses screen for Gas Safe /
+            Meisterbrief / RGE Qualibat etc. get the same 30-day
+            heads-up. Renders nothing when there are no licenses or
+            none are near expiry. */}
+        <LicenseExpiryWarning
+          businessProfile={businessProfile}
+          onPress={() => router.push('/contractor/licenses' as any)}
+        />
 
         {/* 5. SAVINGS BANNER ─── was VascoSavedBanner */}
         {savings && savings.totalSavedThisMonth > 0 ? (
