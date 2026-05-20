@@ -294,10 +294,42 @@ export function getUkVatTaxCode(rate: number): string {
 
 /**
  * Map a numeric US sales tax rate to TaxCodeRef.
- * US QuickBooks uses TAX / NON for taxable / non-taxable.
+ *
+ * Modern QBO US uses Automated Sales Tax (AST) — QuickBooks calculates
+ * the rate automatically from the customer's BillAddr. The contractor's
+ * job (and Vasco's job pushing data) is just to mark each line as
+ * taxable or not. AST then routes the tax to the contractor's Sales Tax
+ * Liability account (account-type "Other Current Liability", default
+ * `Sales Tax Payable`, QBO account ID varies per company).
+ *
+ * Returns `TAX` for any taxable line; `NON` for explicit zero-rated
+ * lines. AST takes over from there. Some legacy QBO companies still
+ * use non-AST tax codes — in that case the contractor needs to
+ * manually map this code to their custom code in QBO Settings →
+ * Sales Tax.
+ *
+ * R82 US Phase 5.
  */
 export function getUsTaxCode(rate: number): string {
   return rate > 0 ? 'TAX' : 'NON';
+}
+
+// R82: country-routed tax code resolver. Saves every caller from
+// branching on country themselves.
+export function getTaxCodeForCountry(country: string, rate: number): string {
+  if (country === 'US') return getUsTaxCode(rate);
+  return getUkVatTaxCode(rate);
+}
+
+// R82: country → ISO currency code. Used as the createInvoice default
+// when the caller doesn't override. Mirrors the same map in
+// src/integrations/stripe.ts COUNTRY_CURRENCY.
+export function defaultCurrencyForCountry(country: string): string {
+  switch (country) {
+    case 'US': return 'USD';
+    case 'UK': case 'GB': return 'GBP';
+    default:   return 'EUR';
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -310,7 +342,13 @@ export async function createInvoice(invoice: {
   lineItems: { description: string; price: number; quantity: number; vatRate: number }[];
   dueDate?: string;
   currency?: string;
+  // R82 US Phase 5: caller passes contractor country so the tax-code
+  // routing (UK VAT vs US AST) and currency default (GBP vs USD vs EUR)
+  // resolve correctly. Defaults to 'UK' for backwards compat with the
+  // pre-R82 signature.
+  country?: string;
 }): Promise<QBExportResult> {
+  const country = invoice.country ?? 'UK';
   const lines: QBLineItem[] = invoice.lineItems.map(item => ({
     Amount: item.price * item.quantity,
     Description: item.description,
@@ -318,7 +356,7 @@ export async function createInvoice(invoice: {
     SalesItemLineDetail: {
       Qty: item.quantity,
       UnitPrice: item.price,
-      TaxCodeRef: { value: getUkVatTaxCode(item.vatRate) },
+      TaxCodeRef: { value: getTaxCodeForCountry(country, item.vatRate) },
     },
   }));
 
@@ -328,7 +366,7 @@ export async function createInvoice(invoice: {
     DueDate: invoice.dueDate,
     TxnDate: new Date().toISOString().split('T')[0],
     Line: lines,
-    CurrencyRef: { value: invoice.currency ?? 'GBP' },
+    CurrencyRef: { value: invoice.currency ?? defaultCurrencyForCountry(country) },
   };
 
   const result = await apiCall<{ Invoice: QBInvoice }>('invoice', {

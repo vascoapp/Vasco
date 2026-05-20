@@ -20,7 +20,8 @@ export type FeatureKey =
   | 'purchasing_agent'
   | 'whatsapp_business'
   | 'live_tracking'
-  | 'sms_us';
+  | 'sms_us'
+  | 'tax_real_lookup';
 
 interface FlagRow {
   key: string;
@@ -46,6 +47,11 @@ const DEFAULTS: Record<FeatureKey, boolean> = {
   // through to email / WhatsApp / in-app push.
   sms_us: false,
   live_tracking: false,
+  // R82 US Phase 5: TaxJar real-tax lookup. Off by default — getSalesTax
+  // returns the static state rate from usSalesTax.ts until the operator
+  // provisions a TaxJar account + sets TAXJAR_API_KEY. Pricing $50/mo at
+  // 1k invoices, so we hold off until contractors are billing actively.
+  tax_real_lookup: false,
 };
 
 let memo: Record<string, FlagRow> = {};
