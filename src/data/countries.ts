@@ -1,5 +1,5 @@
 // =============================================================================
-// COUNTRY REGISTRY (R249)
+// COUNTRY REGISTRY (R249 + R74 US foundation)
 // =============================================================================
 // Single source of truth for every country Vasco serves: EU5 + UK + Nordics.
 // Adding a new country = adding a row here + (later) per-country integration
@@ -7,17 +7,22 @@
 // country strings.
 // =============================================================================
 
+import { US_STATE_RATES } from './usSalesTax';
+
 export type CountryCode =
   // EU5 + UK — full integration depth (Tier 1)
   | 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK'
   // Nordics — registry foundation (R249)
-  | 'SE' | 'NO' | 'DK' | 'FI';
+  | 'SE' | 'NO' | 'DK' | 'FI'
+  // US — foundation (R74 US expansion). Sales-tax regime, ACH bank
+  // format, "Estimate" terminology. No Peppol / no VAT.
+  | 'US';
 
 export type CurrencyCode =
-  | 'EUR' | 'GBP' | 'SEK' | 'NOK' | 'DKK';
+  | 'EUR' | 'GBP' | 'SEK' | 'NOK' | 'DKK' | 'USD';
 
 export type LocaleCode =
-  | 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it' | 'sv' | 'no' | 'da' | 'fi';
+  | 'en' | 'en-US' | 'nl' | 'de' | 'fr' | 'es' | 'it' | 'sv' | 'no' | 'da' | 'fi';
 
 export interface BusinessIdFormat {
   label: string;
@@ -41,6 +46,34 @@ export interface EInvoiceConfig {
   peppolEndpointScheme?: string;
 }
 
+// US sales tax operates at state level (and often city/county). v1 stores
+// per-state base rates; multi-jurisdictional lookup later via TaxJar /
+// Avalara. See `src/data/usSalesTax.ts`.
+export interface SalesTaxConfig {
+  // Looked up at runtime by state code; rates live in `usSalesTax.ts`
+  // rather than this registry to keep this file readable.
+  ratesByStateCode: Record<string, number>;
+  defaultStateRate?: number;
+}
+
+// Bank-account input format. SEPA (IBAN+BIC) for EU; UK uses IBAN+sort-
+// code; US uses ACH (routing+account). Drives onboarding form + invoice
+// PDF rendering.
+export type BankAccountFormat = 'sepa' | 'sepa_uk' | 'ach';
+
+// US contractors say "Estimate"; everyone else says "Quote". US says
+// "Sales tax"; EU says "VAT". Surfaces label-only — feature behaviour
+// branches on `taxRegime`, not on these strings.
+export interface Terminology {
+  quoteLabel: string;    // "Quote" | "Estimate"
+  taxLabel: string;      // "VAT" | "Sales tax"
+  bankAccountLabel: string; // "IBAN" | "Bank account"
+}
+
+// Authoritative discriminator. Read this before touching `vat` /
+// `eInvoice` / `salesTax` so callers don't trip on absent fields.
+export type TaxRegime = 'vat' | 'sales_tax';
+
 export interface CountryConfig {
   code: CountryCode;
   name: string;
@@ -49,8 +82,15 @@ export interface CountryConfig {
   primaryLocale: LocaleCode;
   fallbackLocales: LocaleCode[];
   businessId: BusinessIdFormat;
-  vat: VatConfig;
-  eInvoice: EInvoiceConfig;
+  // R74: optional. US has no VAT — gated on `taxRegime === 'vat'`.
+  vat?: VatConfig;
+  // R74: optional. US has no Peppol equivalent.
+  eInvoice?: EInvoiceConfig;
+  // R74: present only when `taxRegime === 'sales_tax'`.
+  salesTax?: SalesTaxConfig;
+  taxRegime: TaxRegime;
+  bankAccountFormat: BankAccountFormat;
+  terminology: Terminology;
   commonCerts: string[];
   phonePrefix: string;
   tier: 1 | 2;
@@ -73,6 +113,9 @@ export const COUNTRIES: Record<CountryCode, CountryConfig> = {
       formats: ['peppol'], defaultFormat: 'peppol',
       b2gMandatory: true, b2bMandatory: false, peppolEndpointScheme: '0106',
     },
+    taxRegime: 'vat',
+    bankAccountFormat: 'sepa',
+    terminology: { quoteLabel: 'Quote', taxLabel: 'VAT', bankAccountLabel: 'IBAN' },
     commonCerts: ['VCA', 'VCA*', 'VCA**', 'BHV', 'NEN3140'],
     phonePrefix: '+31', tier: 1,
   },
@@ -91,6 +134,9 @@ export const COUNTRIES: Record<CountryCode, CountryConfig> = {
       formats: ['xrechnung', 'zugferd', 'peppol'], defaultFormat: 'xrechnung',
       b2gMandatory: true, b2bMandatory: true, peppolEndpointScheme: '0204',
     },
+    taxRegime: 'vat',
+    bankAccountFormat: 'sepa',
+    terminology: { quoteLabel: 'Quote', taxLabel: 'VAT', bankAccountLabel: 'IBAN' },
     commonCerts: ['Meisterbrief', 'SCC', 'TÜV', 'Sachkundenachweis'],
     phonePrefix: '+49', tier: 1,
   },
@@ -109,6 +155,9 @@ export const COUNTRIES: Record<CountryCode, CountryConfig> = {
       formats: ['facturx', 'peppol'], defaultFormat: 'facturx',
       b2gMandatory: true, b2bMandatory: false, peppolEndpointScheme: '0009',
     },
+    taxRegime: 'vat',
+    bankAccountFormat: 'sepa',
+    terminology: { quoteLabel: 'Quote', taxLabel: 'VAT', bankAccountLabel: 'IBAN' },
     commonCerts: ['RGE', 'Qualibat', 'Qualifelec'],
     phonePrefix: '+33', tier: 1,
   },
@@ -127,6 +176,9 @@ export const COUNTRIES: Record<CountryCode, CountryConfig> = {
       formats: ['facturae', 'peppol'], defaultFormat: 'facturae',
       b2gMandatory: true, b2bMandatory: false, peppolEndpointScheme: '0184',
     },
+    taxRegime: 'vat',
+    bankAccountFormat: 'sepa',
+    terminology: { quoteLabel: 'Quote', taxLabel: 'VAT', bankAccountLabel: 'IBAN' },
     commonCerts: ['REA', 'PRL', 'CAEM'],
     phonePrefix: '+34', tier: 1,
   },
@@ -145,6 +197,9 @@ export const COUNTRIES: Record<CountryCode, CountryConfig> = {
       formats: ['fatturapa', 'peppol'], defaultFormat: 'fatturapa',
       b2gMandatory: true, b2bMandatory: true, peppolEndpointScheme: '0211',
     },
+    taxRegime: 'vat',
+    bankAccountFormat: 'sepa',
+    terminology: { quoteLabel: 'Quote', taxLabel: 'VAT', bankAccountLabel: 'IBAN' },
     commonCerts: ['SOA', 'F-Gas', 'CAM'],
     phonePrefix: '+39', tier: 1,
   },
@@ -163,6 +218,9 @@ export const COUNTRIES: Record<CountryCode, CountryConfig> = {
       formats: ['peppol'], defaultFormat: 'peppol',
       b2gMandatory: false, b2bMandatory: false, peppolEndpointScheme: '0088',
     },
+    taxRegime: 'vat',
+    bankAccountFormat: 'sepa_uk',
+    terminology: { quoteLabel: 'Quote', taxLabel: 'VAT', bankAccountLabel: 'Sort code + Account' },
     commonCerts: ['Gas Safe', 'NICEIC', 'CSCS', 'CHAS'],
     phonePrefix: '+44', tier: 1,
   },
@@ -186,6 +244,9 @@ export const COUNTRIES: Record<CountryCode, CountryConfig> = {
       formats: ['peppol'], defaultFormat: 'peppol',
       b2gMandatory: true, b2bMandatory: false, peppolEndpointScheme: '0007',
     },
+    taxRegime: 'vat',
+    bankAccountFormat: 'sepa',
+    terminology: { quoteLabel: 'Quote', taxLabel: 'VAT', bankAccountLabel: 'IBAN' },
     commonCerts: ['BAS-U', 'BAS-P', 'Heta arbeten', 'Auktoriserad'],
     phonePrefix: '+46', tier: 2,
   },
@@ -204,6 +265,9 @@ export const COUNTRIES: Record<CountryCode, CountryConfig> = {
       formats: ['peppol'], defaultFormat: 'peppol',
       b2gMandatory: true, b2bMandatory: false, peppolEndpointScheme: '0192',
     },
+    taxRegime: 'vat',
+    bankAccountFormat: 'sepa',
+    terminology: { quoteLabel: 'Quote', taxLabel: 'VAT', bankAccountLabel: 'IBAN' },
     commonCerts: ['HMS-kort', 'StartBANK', 'Sentral godkjenning'],
     phonePrefix: '+47', tier: 2,
   },
@@ -222,6 +286,9 @@ export const COUNTRIES: Record<CountryCode, CountryConfig> = {
       formats: ['peppol'], defaultFormat: 'peppol',
       b2gMandatory: true, b2bMandatory: false, peppolEndpointScheme: '0184',
     },
+    taxRegime: 'vat',
+    bankAccountFormat: 'sepa',
+    terminology: { quoteLabel: 'Quote', taxLabel: 'VAT', bankAccountLabel: 'IBAN' },
     commonCerts: ['VVS-aut.', 'KS-aut.', 'EL-aut.', 'Byggeskadeforsikring'],
     phonePrefix: '+45', tier: 2,
   },
@@ -240,8 +307,44 @@ export const COUNTRIES: Record<CountryCode, CountryConfig> = {
       formats: ['peppol'], defaultFormat: 'peppol',
       b2gMandatory: true, b2bMandatory: true, peppolEndpointScheme: '0216',
     },
+    taxRegime: 'vat',
+    bankAccountFormat: 'sepa',
+    terminology: { quoteLabel: 'Quote', taxLabel: 'VAT', bankAccountLabel: 'IBAN' },
     commonCerts: ['Tilaajavastuu', 'RALA', 'SFS-EN'],
     phonePrefix: '+358', tier: 2,
+  },
+
+  // ─── United States — registry foundation (R74) ────────────────────────────
+  // No VAT (sales tax per state), no Peppol, ACH bank format, "Estimate"
+  // terminology. Most US contractors run as sole-proprietors or LLCs filing
+  // with an EIN (federal Employer Identification Number, format XX-XXXXXXX).
+  // Rates + per-state nexus rules live in `src/data/usSalesTax.ts`.
+  US: {
+    code: 'US', name: 'United States', flagEmoji: '🇺🇸',
+    currency: 'USD', primaryLocale: 'en-US', fallbackLocales: ['en'],
+    businessId: {
+      label: 'EIN',
+      pattern: /^\d{2}-?\d{7}$/,
+      example: '12-3456789',
+      registrationAuthority: 'IRS',
+    },
+    taxRegime: 'sales_tax',
+    bankAccountFormat: 'ach',
+    salesTax: { ratesByStateCode: US_STATE_RATES, defaultStateRate: 0 },
+    terminology: { quoteLabel: 'Estimate', taxLabel: 'Sales tax', bankAccountLabel: 'Bank account' },
+    commonCerts: [
+      // State licensing varies wildly; these are the most-mentioned national
+      // ones plus a few state-licensing umbrellas. Per-state lookup added
+      // in Phase 2 of the US expansion plan.
+      'EPA 608 (HVAC)',
+      'NATE (HVAC)',
+      'OSHA 10',
+      'OSHA 30',
+      'State Contractor License',
+      'EPA RRP (Lead-Safe)',
+    ],
+    phonePrefix: '+1',
+    tier: 2,
   },
 };
 
@@ -271,7 +374,7 @@ export function getDefaultCurrencyForCountry(code: string): CurrencyCode {
 }
 
 export function getDefaultEInvoiceFormat(code: string): EInvoiceConfig['defaultFormat'] | null {
-  return getCountryConfig(code)?.eInvoice.defaultFormat ?? null;
+  return getCountryConfig(code)?.eInvoice?.defaultFormat ?? null;
 }
 
 export function validateBusinessId(code: string, value: string): boolean {
@@ -282,6 +385,34 @@ export function validateBusinessId(code: string, value: string): boolean {
 
 export function validateVatNumber(code: string, value: string): boolean {
   const cfg = getCountryConfig(code);
-  if (!cfg) return false;
+  // VAT regime countries only — US returns false (no VAT number to validate).
+  if (!cfg || !cfg.vat) return false;
   return cfg.vat.vatNumberPattern.test(value.replace(/\s/g, '').toUpperCase());
+}
+
+// R74 US foundation helpers
+export function getTaxRegime(code: string): TaxRegime | null {
+  return getCountryConfig(code)?.taxRegime ?? null;
+}
+
+export function getTerminology(code: string): Terminology {
+  return (
+    getCountryConfig(code)?.terminology ?? {
+      quoteLabel: 'Quote',
+      taxLabel: 'VAT',
+      bankAccountLabel: 'IBAN',
+    }
+  );
+}
+
+export function getBankAccountFormat(code: string): BankAccountFormat | null {
+  return getCountryConfig(code)?.bankAccountFormat ?? null;
+}
+
+export function isVatCountry(code: string): boolean {
+  return getCountryConfig(code)?.taxRegime === 'vat';
+}
+
+export function isSalesTaxCountry(code: string): boolean {
+  return getCountryConfig(code)?.taxRegime === 'sales_tax';
 }

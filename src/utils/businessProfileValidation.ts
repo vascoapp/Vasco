@@ -10,7 +10,9 @@ import type { BusinessProfile } from '../domain/business';
 import { isValidVATNumber, isValidKvKNumber, isValidIBAN } from './validation';
 import i18n from '../i18n/i18n';
 
-type Country = 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK';
+// R74: US widened in. Country-specific validation rules (EIN format, no
+// VAT field, etc.) added incrementally per the US expansion plan.
+type Country = 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK' | 'US';
 
 export interface ProfileReadiness {
   ready: boolean;

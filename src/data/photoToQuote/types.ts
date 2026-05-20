@@ -6,7 +6,7 @@
 // =============================================================================
 
 export type Locale = 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
-export type Country = 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK';
+export type Country = 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK' | 'US';
 export type TradeId =
   | 'plumbing' | 'electrical' | 'painting' | 'tiling'
   | 'carpentry' | 'roofing' | 'gas-hvac' | 'plastering' | 'flooring';

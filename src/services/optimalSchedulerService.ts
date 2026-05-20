@@ -110,6 +110,9 @@ function postcodePrefixDistanceKm(a: string, b: string, country: CountryCode, fa
   // means same neighborhood; beyond, distance grows roughly linearly.
   const tightDepth: Record<CountryCode, number> = {
     NL: 4, DE: 3, FR: 3, ES: 3, IT: 3, UK: 4, SE: 3, NO: 3, DK: 3, FI: 3,
+    // US ZIP-5: first 3 digits = sectional center. Per ZIP table, 3 is a
+    // reasonable "tight" depth for neighborhood-level proximity heuristic.
+    US: 3,
   };
   const depth = tightDepth[country] ?? 3;
 

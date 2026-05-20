@@ -29,16 +29,17 @@ const FALLBACK_RATES: CachedRates = {
     SEK: 11.4,
     NOK: 11.5,
     DKK: 7.46,
+    USD: 1.08,
   },
   fetchedAt: 0,
 };
 
 const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = {
-  EUR: '€', GBP: '£', SEK: 'kr', NOK: 'kr', DKK: 'kr',
+  EUR: '€', GBP: '£', SEK: 'kr', NOK: 'kr', DKK: 'kr', USD: '$',
 };
 
 const CURRENCY_LOCALES: Record<CurrencyCode, string> = {
-  EUR: 'nl-NL', GBP: 'en-GB', SEK: 'sv-SE', NOK: 'nb-NO', DKK: 'da-DK',
+  EUR: 'nl-NL', GBP: 'en-GB', SEK: 'sv-SE', NOK: 'nb-NO', DKK: 'da-DK', USD: 'en-US',
 };
 
 export function currencySymbol(code: CurrencyCode): string {

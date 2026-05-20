@@ -1,7 +1,12 @@
 # Vasco Ship-Readiness — single source of truth
 
 What's NOT in the repo today and needs to land before each ship milestone.
-Reflects state as of R66r72 + post-r72 audit (2026-05-19).
+Reflects state as of R66r73 + R74 US foundation (2026-05-20).
+
+> **Scope note**: this doc is **EU6 launch readiness** only. US market
+> expansion is a separate workstream tracked in
+> [`us-expansion-plan.md`](./us-expansion-plan.md) — Phase 0 (foundation
+> primitives) landed in R74; Phase 1+ are operator-greenlight decisions.
 
 **Two milestones, two checklists:**
 - **TestFlight Internal** — a build on your iPhone, only people in your

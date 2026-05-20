@@ -103,6 +103,13 @@ const BUSINESS_TYPES: Record<Country, { key: string; label: string }[]> = {
     { key: 'srl', label: 'S.r.l.' },
     { key: 'snc', label: 'S.n.c.' },
   ],
+  // R74 US foundation: most US trades operate as sole proprietorships
+  // (no incorporation) or LLCs. S-corps are common for >$60k operators.
+  US: [
+    { key: 'soleProprietor', label: 'Sole Proprietor' },
+    { key: 'llc', label: 'LLC' },
+    { key: 'sCorp', label: 'S-Corp' },
+  ],
 };
 
 // R66 round 43: per-field input-time validators. Closes the deferred half
@@ -141,6 +148,14 @@ const REG_FIELDS: Record<Country, RegFieldDef[]> = {
     { key: 'partitaIva', i18nKey: 'onboarding.fields.partitaIva', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid' },
     { key: 'cameraCommercio', i18nKey: 'onboarding.fields.cameraCommercio' },
   ],
+  // R74 US foundation: EIN (federal Employer Identification Number) is the
+  // tax-side identifier for LLCs / S-corps; sole proprietors typically use
+  // their SSN but EIN is universal. State licensing handled separately in
+  // Phase 1 of the US expansion plan.
+  US: [
+    { key: 'ein', i18nKey: 'onboarding.fields.ein' },
+    { key: 'stateLicense', i18nKey: 'onboarding.fields.stateLicense' },
+  ],
 };
 
 // VAT format hints surfaced in the error message — same shape as R39's
@@ -153,24 +168,30 @@ const VAT_EXAMPLE: Record<Country, string> = {
   ES: 'ESA12345678',
   IT: 'IT12345678901',
   UK: 'GB123456789',
+  // R74 US foundation: no VAT — placeholder shown as EIN format hint when
+  // the validator path falls through for US.
+  US: '12-3456789',
 };
 
+// R74 US foundation: US certs are national bodies (NATE/EPA) + state
+// contractor licenses. Per-state license lookup added in Phase 2 of the
+// US expansion plan; for onboarding we surface the most-common ones.
 const CERTS: Record<string, Record<Country, string[]>> = {
-  plumbing: { NL: ['Uneto-VNI'], UK: ['CIPHE', 'WaterSafe'], DE: ['Meisterbrief Sanitär'], FR: ['Qualibat'], ES: ['Carnet instalador'], IT: ['Abilitazione idraulica'] },
-  electrical: { NL: ['Uneto-VNI', 'NEN 1010'], UK: ['NICEIC', 'Part P', 'NAPIT'], DE: ['Meisterbrief Elektro'], FR: ['Qualifelec'], ES: ['REBT autorizado'], IT: ['DM 37/08'] },
-  gas: { NL: ['STEK', 'F-gassen'], UK: ['Gas Safe'], DE: ['F-Gase Zertifikat'], FR: ['QualiPAC', 'RGE'], ES: ['Carnet gas'], IT: ['F-Gas cert.'] },
-  painting: { NL: ['BKB erkend'], UK: ['PDA'], DE: ['Meisterbrief Maler'], FR: ['Qualibat'], ES: ['Cualificación prof.'], IT: ['SOA'] },
-  carpentry: { NL: ['SKH'], UK: ['FIRA Gold'], DE: ['Meisterbrief Tischler'], FR: ['Qualibat'], ES: ['Cualificación prof.'], IT: ['SOA'] },
-  roofing: { NL: ['BIKUDAK', 'VEB erkend'], UK: ['NFRC', 'CSCS'], DE: ['Meisterbrief Dachdecker'], FR: ['Qualibat Couverture', 'RGE'], ES: ['TPC Cubiertas'], IT: ['SOA'] },
-  tiling: { NL: ['NOA erkend'], UK: ['TTA', 'NVQ Tiling'], DE: ['Meisterbrief Fliesen'], FR: ['Qualibat'], ES: ['Cualificación prof.'], IT: ['SOA'] },
-  plastering: { NL: ['NOA erkend'], UK: ['NVQ Plastering'], DE: ['Meisterbrief Stuckateur'], FR: ['Qualibat'], ES: ['Cualificación prof.'], IT: ['SOA'] },
-  flooring: { NL: ['KOMO', 'NOA erkend'], UK: ['NICF', 'FITA'], DE: ['Meisterbrief Bodenleger'], FR: ['Qualibat'], ES: ['Cualificación prof.'], IT: ['SOA'] },
-  insulation: { NL: ['KIWA BRL', 'ISOVER partner'], UK: ['NIA', 'PAS 2030', 'TrustMark'], DE: ['Energieberater'], FR: ['RGE Isolation', 'Qualibat'], ES: ['Certificación IDAE'], IT: ['Cert. Superbonus'] },
-  solar: { NL: ['SCIOS', 'NEN 1010', 'Zonnekeur'], UK: ['MCS', 'NAPIT', 'RECC'], DE: ['Elektrofachkraft Solar'], FR: ['QualiPV', 'RGE'], ES: ['REBT', 'Baja tensión'], IT: ['DM 37/08', 'CEI 0-21'] },
-  glazing: { NL: ['KIWA', 'NEN-EN 12150'], UK: ['GGF', 'FENSA'], DE: ['Meisterbrief Glaser'], FR: ['Qualibat Vitrerie'], ES: ['Cualificación prof.'], IT: ['SOA'] },
-  landscaping: { NL: ['VHG erkend', 'Groenkeur'], UK: ['BALI', 'City & Guilds'], DE: ['Meisterbrief Gärtner'], FR: ['Qualipaysage'], ES: ['Cualificación Jardinería'], IT: ['Albo Artigiani'] },
-  general: { NL: ['VCA'], UK: ['CSCS', 'CITB'], DE: ['SCC'], FR: ['CACES', 'Habilitation'], ES: ['TPC'], IT: ['DURC', 'SOA'] },
-  other: { NL: ['VCA'], UK: ['CSCS'], DE: ['SCC'], FR: ['CACES'], ES: ['TPC'], IT: ['DURC'] },
+  plumbing: { NL: ['Uneto-VNI'], UK: ['CIPHE', 'WaterSafe'], DE: ['Meisterbrief Sanitär'], FR: ['Qualibat'], ES: ['Carnet instalador'], IT: ['Abilitazione idraulica'], US: ['Master Plumber License', 'Backflow Cert', 'Medical Gas Cert'] },
+  electrical: { NL: ['Uneto-VNI', 'NEN 1010'], UK: ['NICEIC', 'Part P', 'NAPIT'], DE: ['Meisterbrief Elektro'], FR: ['Qualifelec'], ES: ['REBT autorizado'], IT: ['DM 37/08'], US: ['Master Electrician License', 'NEC certified', 'OSHA 30'] },
+  gas: { NL: ['STEK', 'F-gassen'], UK: ['Gas Safe'], DE: ['F-Gase Zertifikat'], FR: ['QualiPAC', 'RGE'], ES: ['Carnet gas'], IT: ['F-Gas cert.'], US: ['EPA 608', 'NATE', 'HVAC Excellence'] },
+  painting: { NL: ['BKB erkend'], UK: ['PDA'], DE: ['Meisterbrief Maler'], FR: ['Qualibat'], ES: ['Cualificación prof.'], IT: ['SOA'], US: ['EPA RRP (Lead-Safe)', 'PDCA'] },
+  carpentry: { NL: ['SKH'], UK: ['FIRA Gold'], DE: ['Meisterbrief Tischler'], FR: ['Qualibat'], ES: ['Cualificación prof.'], IT: ['SOA'], US: ['NAHB CGR', 'OSHA 10'] },
+  roofing: { NL: ['BIKUDAK', 'VEB erkend'], UK: ['NFRC', 'CSCS'], DE: ['Meisterbrief Dachdecker'], FR: ['Qualibat Couverture', 'RGE'], ES: ['TPC Cubiertas'], IT: ['SOA'], US: ['GAF Master Elite', 'CertainTeed SELECT ShingleMaster', 'OSHA Fall Protection'] },
+  tiling: { NL: ['NOA erkend'], UK: ['TTA', 'NVQ Tiling'], DE: ['Meisterbrief Fliesen'], FR: ['Qualibat'], ES: ['Cualificación prof.'], IT: ['SOA'], US: ['CTEF', 'NTCA'] },
+  plastering: { NL: ['NOA erkend'], UK: ['NVQ Plastering'], DE: ['Meisterbrief Stuckateur'], FR: ['Qualibat'], ES: ['Cualificación prof.'], IT: ['SOA'], US: ['EPA RRP (Lead-Safe)'] },
+  flooring: { NL: ['KOMO', 'NOA erkend'], UK: ['NICF', 'FITA'], DE: ['Meisterbrief Bodenleger'], FR: ['Qualibat'], ES: ['Cualificación prof.'], IT: ['SOA'], US: ['NWFA Certified', 'INSTALL'] },
+  insulation: { NL: ['KIWA BRL', 'ISOVER partner'], UK: ['NIA', 'PAS 2030', 'TrustMark'], DE: ['Energieberater'], FR: ['RGE Isolation', 'Qualibat'], ES: ['Certificación IDAE'], IT: ['Cert. Superbonus'], US: ['BPI', 'RESNET'] },
+  solar: { NL: ['SCIOS', 'NEN 1010', 'Zonnekeur'], UK: ['MCS', 'NAPIT', 'RECC'], DE: ['Elektrofachkraft Solar'], FR: ['QualiPV', 'RGE'], ES: ['REBT', 'Baja tensión'], IT: ['DM 37/08', 'CEI 0-21'], US: ['NABCEP', 'OSHA 10'] },
+  glazing: { NL: ['KIWA', 'NEN-EN 12150'], UK: ['GGF', 'FENSA'], DE: ['Meisterbrief Glaser'], FR: ['Qualibat Vitrerie'], ES: ['Cualificación prof.'], IT: ['SOA'], US: ['NACC', 'AAMA InstallationMasters'] },
+  landscaping: { NL: ['VHG erkend', 'Groenkeur'], UK: ['BALI', 'City & Guilds'], DE: ['Meisterbrief Gärtner'], FR: ['Qualipaysage'], ES: ['Cualificación Jardinería'], IT: ['Albo Artigiani'], US: ['NALP Landscape Industry Certified', 'EPA WaterSense'] },
+  general: { NL: ['VCA'], UK: ['CSCS', 'CITB'], DE: ['SCC'], FR: ['CACES', 'Habilitation'], ES: ['TPC'], IT: ['DURC', 'SOA'], US: ['State Contractor License', 'OSHA 30'] },
+  other: { NL: ['VCA'], UK: ['CSCS'], DE: ['SCC'], FR: ['CACES'], ES: ['TPC'], IT: ['DURC'], US: ['OSHA 10'] },
 };
 
 const LANGUAGES: { code: Language; flag: string; label: string }[] = [

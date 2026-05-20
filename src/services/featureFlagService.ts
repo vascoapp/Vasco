@@ -10,7 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
-type Country = 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK';
+type Country = 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK' | 'US';
 
 export type FeatureKey =
   | 'payments_mollie'

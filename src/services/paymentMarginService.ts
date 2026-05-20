@@ -129,6 +129,9 @@ export const COUNTRY_PAYMENT_METHODS: Record<Country, PaymentMethod[]> = {
   ES: ['credit_card', 'apple_pay', 'sepa_direct_debit', 'paypal'],
   IT: ['credit_card', 'apple_pay', 'sepa_direct_debit', 'paypal'],
   UK: ['credit_card', 'apple_pay', 'paypal', 'klarna'],
+  // R74 US foundation: ACH + cards via Stripe. No SEPA. Klarna available
+  // but seldom used by US trades vs. Affirm/Sunbit (Phase 5).
+  US: ['credit_card', 'apple_pay', 'paypal'],
 };
 
 // ─── Fee Calculation ───────────────────────────────────────────────────────

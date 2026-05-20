@@ -18,7 +18,11 @@ export type BusinessProfile = {
   address?: string;
   email?: string;
   phone?: string;
-  country?: 'UK' | 'NL' | 'DE' | 'FR' | 'ES' | 'IT';
+  country?: 'UK' | 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'US';
+  // R74 US foundation: state code (e.g. 'TX', 'CA') — required when
+  // country === 'US' for sales-tax lookup + state contractor license
+  // routing. Ignored for non-US countries.
+  state?: string;
   registrationNumber?: string;
   trade?: string;
   businessType?: string;
@@ -38,6 +42,11 @@ export type BusinessProfile = {
   // bancaires for the EU6 expansion.
   iban?: string;
   bic?: string;
+  // R74 US foundation: ACH bank details — used in place of IBAN/BIC when
+  // country === 'US'. Routing # is 9 digits (ABA), account # is 4-17
+  // digits. Both rendered on US invoice PDFs in lieu of SEPA fields.
+  routingNumber?: string;
+  bankAccountNumber?: string;
   postcode?: string;
   city?: string;
   website?: string;

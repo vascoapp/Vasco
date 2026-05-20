@@ -1,4 +1,4 @@
-export type Country = 'UK' | 'NL' | 'DE' | 'FR' | 'ES' | 'IT';
+export type Country = 'UK' | 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'US';
 
 const COUNTRY_CONFIG: Record<Country, { currency: string; locale: string }> = {
   UK: { currency: 'GBP', locale: 'en-GB' },
@@ -7,6 +7,7 @@ const COUNTRY_CONFIG: Record<Country, { currency: string; locale: string }> = {
   FR: { currency: 'EUR', locale: 'fr-FR' },
   ES: { currency: 'EUR', locale: 'es-ES' },
   IT: { currency: 'EUR', locale: 'it-IT' },
+  US: { currency: 'USD', locale: 'en-US' },
 };
 
 export function formatCurrency(amount: number, country: Country = 'NL'): string {
@@ -56,5 +57,6 @@ export function getDefaultLanguage(country: Country): 'en' | 'nl' | 'de' | 'fr' 
     case 'FR': return 'fr';
     case 'ES': return 'es';
     case 'IT': return 'it';
+    case 'US': return 'en';
   }
 }

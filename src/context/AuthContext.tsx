@@ -74,7 +74,7 @@ async function isLockedOut(email: string): Promise<boolean> {
 
 export type UserRole = 'cfo' | 'coo' | 'site-lead' | 'director' | 'contractor' | 'worker';
 
-export type Country = 'UK' | 'NL' | 'DE' | 'FR' | 'ES' | 'IT';
+export type Country = 'UK' | 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'US';
 export type Language = 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
 
 export interface User {
