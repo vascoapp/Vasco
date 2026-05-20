@@ -179,10 +179,17 @@ function buildInvoiceHtml(
   insuranceRef?: string,
   // R251: small-business VAT exemption (NL KOR / DE Kleinunternehmer §19)
   vatScheme?: 'standard' | 'small_business_NL_KOR' | 'small_business_DE_kleinunternehmer',
+  // R75 US foundation: ACH bank details — used in lieu of IBAN when
+  // country === 'US'. Routing # is 9 digits, account # is 4-17 digits.
+  routingNumber?: string,
+  bankAccountNumber?: string,
 ): string {
   const L = getLabels(language);
   const curr = getCurrencySymbol(country);
-  const locale = language || 'en';
+  // R75: US contractors get en-US date locale (MM/DD/YYYY); others stay on
+  // the contractor's language locale. Hardcoded fallback to 'en' was UK-
+  // flavoured (DD/MM/YYYY) — wrong for US.
+  const locale = country === 'US' ? 'en-US' : (language || 'en');
 
   const issueDate = invoice.issueDate.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
   const dueDate = invoice.dueDate.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
@@ -430,7 +437,12 @@ ${exemptionNote ? `<!-- Small-business VAT exemption legal note (R251) -->
   <div class="payment-detail">${L.paymentInstruction}</div>
   <div class="payment-detail"><strong>${L.total}: ${curr}${fmt(invoice.total, locale)}</strong></div>
   <div class="payment-detail">${L.paymentReference}: <strong>${invoice.invoiceNumber}</strong></div>
-  ${iban ? `<div class="payment-detail" style="margin-top:8px"><span style="color:#9CA3AF">${L.bankDetails}:</span> ${iban}</div>` : ''}
+  ${country === 'US'
+    ? (routingNumber || bankAccountNumber
+        ? `<div class="payment-detail" style="margin-top:8px"><span style="color:#9CA3AF">${L.bankDetails}:</span> ${routingNumber ? `Routing # ${routingNumber}` : ''}${routingNumber && bankAccountNumber ? ' · ' : ''}${bankAccountNumber ? `Account # ${bankAccountNumber}` : ''}</div>`
+        : '')
+    : (iban ? `<div class="payment-detail" style="margin-top:8px"><span style="color:#9CA3AF">${L.bankDetails}:</span> ${iban}</div>` : '')
+  }
   ${paymentUrl ? `<div style="text-align:center;margin-top:16px"><a href="${paymentUrl}" class="pay-btn">${L.payOnline}</a></div>` : ''}
 </div>
 
@@ -453,9 +465,21 @@ ${DEMO_MODE ? '<div class="demo-watermark">DEMO</div>' : ''}
 
 // ── Public API ────────────────────────────────────────────
 
-export function buildInvoiceShareText(invoice: AutoInvoice, businessName?: string, paymentUrl?: string): string {
+// R75 US foundation: country threaded so US shares use "$" / "Sales tax"
+// instead of "€" / "VAT". Caller passes businessProfile.country; defaults
+// to NL (EUR + VAT) for backwards compat.
+export function buildInvoiceShareText(
+  invoice: AutoInvoice,
+  businessName?: string,
+  paymentUrl?: string,
+  country?: Country,
+): string {
+  const curr = getCurrencySymbol(country);
+  const taxLabel = vatLabel(country);
+  const dateLocale = country === 'US' ? 'en-US' : undefined;
+
   const lines = invoice.lineItems.map(li =>
-    `• ${li.description}: ${li.quantity}x €${fmt(li.unitPrice)} = €${fmt(li.quantity * li.unitPrice)}`,
+    `• ${li.description}: ${li.quantity}x ${curr}${fmt(li.unitPrice)} = ${curr}${fmt(li.quantity * li.unitPrice)}`,
   ).join('\n');
 
   const parts = [
@@ -463,10 +487,10 @@ export function buildInvoiceShareText(invoice: AutoInvoice, businessName?: strin
     `From: ${businessName || 'Your business'}`,
     `To: ${invoice.customerName}`,
     ``, lines, ``,
-    `Subtotal: €${fmt(invoice.subtotal)}`,
-    `VAT: €${fmt(invoice.vatAmount)}`,
-    `Total: €${fmt(invoice.total)}`,
-    ``, `Due: ${invoice.dueDate.toLocaleDateString()}`,
+    `Subtotal: ${curr}${fmt(invoice.subtotal)}`,
+    `${taxLabel}: ${curr}${fmt(invoice.vatAmount)}`,
+    `Total: ${curr}${fmt(invoice.total)}`,
+    ``, `Due: ${invoice.dueDate.toLocaleDateString(dateLocale)}`,
   ];
 
   if (paymentUrl) parts.push(``, `Pay online: ${paymentUrl}`);
@@ -483,6 +507,9 @@ export async function generateInvoicePdf(
     kvkNumber?: string;
     vatNumber?: string;
     iban?: string;
+    // R75 US foundation: ACH details. Rendered in place of IBAN when country === 'US'.
+    routingNumber?: string;
+    bankAccountNumber?: string;
     insuranceRef?: string;
     country?: Country;
     language?: string;
@@ -515,6 +542,8 @@ export async function generateInvoicePdf(
     options?.showPoweredBy,
     businessProfile?.insuranceRef,
     businessProfile?.vatScheme,
+    businessProfile?.routingNumber,
+    businessProfile?.bankAccountNumber,
   );
 
   // R301: embed signature when customer signed off on the linked job.
@@ -565,6 +594,9 @@ export async function buildInvoicePdfBase64(
     kvkNumber?: string;
     vatNumber?: string;
     iban?: string;
+    // R75 US foundation: ACH details (Routing # / Account #).
+    routingNumber?: string;
+    bankAccountNumber?: string;
     insuranceRef?: string;
     country?: Country;
     language?: string;
@@ -590,6 +622,8 @@ export async function buildInvoicePdfBase64(
       options?.showPoweredBy,
       businessProfile?.insuranceRef,
       businessProfile?.vatScheme,
+      businessProfile?.routingNumber,
+      businessProfile?.bankAccountNumber,
     );
     if (options?.customerSignature) {
       const { signatureHtmlBlock, getLegalText } = await import('./signatureService');

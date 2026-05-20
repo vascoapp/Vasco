@@ -180,6 +180,22 @@ const MOCK_USERS: Record<string, User> = {
     trade: 'plumbing',
     onboardingComplete: false,
   },
+  // R75 US foundation: demo account for US contractor flow. Texas pilot
+  // per us-expansion-plan Section A — no statewide GC license required
+  // for most trades, large market. Trade = HVAC since the research
+  // singles it out as the highest-value US home-service vertical.
+  'contractor@vasco.us.dev': {
+    id: 'user-contractor-us-001',
+    email: 'contractor@vasco.us.dev',
+    name: 'Mike Reynolds',
+    role: 'contractor',
+    company: "Reynolds Heating & Cooling",
+    projects: [],
+    country: 'US',
+    language: 'en',
+    trade: 'gas-hvac',
+    onboardingComplete: true,
+  },
 };
 
 // ============================================

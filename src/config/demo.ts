@@ -31,6 +31,9 @@ export const DEMO_ACCOUNTS: DemoAccount[] = DEMO_MODE
       { email: 'coo@vasco.dev', role: 'coo', name: 'James Morrison', icon: 'speedometer-outline' },
       { email: 'director@vasco.dev', role: 'director', name: 'Alexandra Wright', icon: 'grid-outline' },
       { email: 'new@vasco.dev', role: 'contractor', name: 'New User (Onboarding)', icon: 'person-add-outline' },
+      // R75 US foundation: US demo contractor (Texas HVAC). Use to QA the
+      // en-US locale + US invoice PDF + state picker flow.
+      { email: 'contractor@vasco.us.dev', role: 'contractor', name: 'Mike Reynolds (US)', icon: 'flag-outline' },
     ]
   : [];
 
