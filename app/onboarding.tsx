@@ -30,6 +30,11 @@ import { DK } from '../src/theme/draftkings';
 import { SafeArea, Spacing } from '../src/theme/spacing';
 import { getDefaultLanguage } from '../src/i18n/formatting';
 import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../src/config/paymentMethods';
+import { listUsStates } from '../src/data/usSalesTax';
+
+// R74 US foundation: state picker options for onboarding step 9. Alphabetical
+// by full name (matches listUsStates default sort) so chips read predictably.
+const US_STATE_OPTIONS = listUsStates();
 import { FadeIn } from '../src/components/shared/FadeIn';
 import { GradientButton } from '../src/components/shared/GradientButton';
 import { hapticSuccess } from '../src/utils/haptics';
@@ -205,6 +210,7 @@ const LANGUAGES: { code: Language; flag: string; label: string }[] = [
 
 const COUNTRIES: { code: Country; flag: string; label: string }[] = [
   { code: 'UK', flag: '🇬🇧', label: 'United Kingdom' },
+  { code: 'US', flag: '🇺🇸', label: 'United States' },
   { code: 'NL', flag: '🇳🇱', label: 'Nederland' },
   { code: 'DE', flag: '🇩🇪', label: 'Deutschland' },
   { code: 'FR', flag: '🇫🇷', label: 'France' },
@@ -256,6 +262,9 @@ export default function OnboardingScreen() {
     (i18n.language as Language) || 'en'
   );
   const [country, setCountry] = useState<Country | null>(null);
+  // R74 US foundation: required when country === 'US' for sales-tax
+  // lookup + state-license routing. Ignored otherwise.
+  const [usState, setUsState] = useState<string | null>(null);
   const [selectedTrades, setSelectedTrades] = useState<string[]>([]);
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [selectedChallenges, setSelectedChallenges] = useState<string[]>([]);
@@ -284,6 +293,7 @@ export default function OnboardingScreen() {
         if (typeof saved.step === 'number' && saved.step > 1 && saved.step <= 14) setStep(saved.step);
         if (saved.language) setLanguage(saved.language);
         if (saved.country) setCountry(saved.country);
+        if (saved.usState) setUsState(saved.usState);
         if (saved.trades) setSelectedTrades(saved.trades);
         if (saved.goals) setSelectedGoals(saved.goals);
         if (saved.challenges) setSelectedChallenges(saved.challenges);
@@ -302,11 +312,11 @@ export default function OnboardingScreen() {
   // Persist progress on every step change so backgrounding never loses work
   useEffect(() => {
     AsyncStorage.setItem('@vasco_onboarding_progress', JSON.stringify({
-      step, language, country, trades: selectedTrades, goals: selectedGoals,
+      step, language, country, usState, trades: selectedTrades, goals: selectedGoals,
       challenges: selectedChallenges, teamSize, businessType, regFields,
       certs: selectedCerts, postcode, radius, plan: selectedPlan, billingCycle,
     })).catch(() => {});
-  }, [step, language, country, selectedTrades, selectedGoals, selectedChallenges,
+  }, [step, language, country, usState, selectedTrades, selectedGoals, selectedChallenges,
       teamSize, businessType, regFields, selectedCerts, postcode, radius, selectedPlan, billingCycle]);
 
   // Gate cert step for regulated trades (electrical/plumbing/gas). User cannot
@@ -389,6 +399,9 @@ export default function OnboardingScreen() {
       // contractor walking into the rest of onboarding under the impression
       // that their tax IDs are accepted.
       case 9: {
+        // R74: US contractors must pick their state before reg fields —
+        // gates EIN/state-license + downstream sales-tax routing.
+        if (country === 'US' && !usState) return false;
         const fields = REG_FIELDS[country!] || [];
         for (const f of fields) {
           const v = (regFields[f.key] || '').trim();
@@ -494,6 +507,9 @@ export default function OnboardingScreen() {
 
         await updateBusinessProfile({
           country: (country ?? undefined) as any,
+          // R74 US foundation: state code threaded for sales-tax lookup +
+          // state-license routing. Ignored for non-US countries.
+          state: country === 'US' ? (usState ?? undefined) : undefined,
           trade: selectedTrades[0],
           businessType: businessType ?? undefined,
           teamSize: (teamSize as any) ?? undefined,
@@ -879,6 +895,38 @@ export default function OnboardingScreen() {
           <View style={styles.stepContent}>
             <Text style={styles.stepTitle}>{t('onboarding.registration')}</Text>
             <Text style={styles.stepSubtitle}>{t('onboarding.registrationDesc')}</Text>
+            {/* R74: US state picker — sales-tax + state-license routing. */}
+            {country === 'US' ? (
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                  {t('onboarding.fields.state', { defaultValue: 'State' })}
+                </Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GRID.sm }}>
+                  {US_STATE_OPTIONS.map((s) => {
+                    const selected = usState === s.code;
+                    return (
+                      <Pressable
+                        key={s.code}
+                        onPress={() => setUsState(s.code)}
+                        style={[
+                          styles.stateChip,
+                          selected && styles.stateChipSelected,
+                        ]}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected }}
+                      >
+                        <Text style={[
+                          styles.stateChipText,
+                          selected && styles.stateChipTextSelected,
+                        ]}>
+                          {s.code}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            ) : null}
             {(REG_FIELDS[country!] || []).map((field) => {
               // R66 round 47: input-time validation per R43 staged foundation.
               // Only show error after onBlur so we don't nag mid-typing. Format
@@ -1454,6 +1502,38 @@ const styles = StyleSheet.create({
     fontSize: TYPE.bodySize,
     fontFamily: TYPE.labelFamily,
     color: SemanticColors.textPrimary,
+  },
+  // R74 US foundation: compact chip variant for the state picker — same
+  // selected-state treatment as tradeChip, but narrower since we render
+  // 51 of them (50 states + DC).
+  stateChip: {
+    minWidth: 56,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: RADIUS.md,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderWidth: 1.5,
+    borderColor: SemanticColors.borderDefault,
+    alignItems: 'center',
+  },
+  stateChipSelected: {
+    borderColor: Palette.hermesOrange,
+    backgroundColor: `${Palette.hermesOrange}22`,
+    shadowColor: Palette.hermesOrange,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  stateChipText: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textPrimary,
+    letterSpacing: 0.6,
+  },
+  stateChipTextSelected: {
+    color: Palette.hermesOrange,
+    fontFamily: TYPE.titleFamily,
   },
   tradeChipTextSelected: {
     color: Palette.hermesOrange,

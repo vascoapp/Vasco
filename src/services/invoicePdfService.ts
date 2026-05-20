@@ -20,8 +20,13 @@ import { logWarn } from '../utils/errorHandler';
 const fmt = (n: number, locale?: string) =>
   n.toLocaleString(locale || 'en', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const getCurrencySymbol = (country?: Country): string =>
-  country === 'UK' ? '£' : '€';
+const getCurrencySymbol = (country?: Country): string => {
+  switch (country) {
+    case 'UK': return '£';
+    case 'US': return '$';
+    default:   return '€';
+  }
+};
 
 // Country-specific business registration number label (single source of truth
 // for both header and footer — earlier, header used 'KvK' fallback for UK
@@ -33,6 +38,7 @@ function registrationLabel(country?: Country): string {
     case 'ES': return 'NIF';
     case 'IT': return 'P.IVA';
     case 'UK': return 'Co. no.';
+    case 'US': return 'EIN'; // R74 US foundation
     case 'NL':
     default:   return 'KvK';
   }
@@ -46,6 +52,7 @@ function vatLabel(country?: Country, fallback = 'VAT'): string {
     case 'ES': return 'NIF-IVA';
     case 'IT': return 'P.IVA';
     case 'UK': return 'VAT';
+    case 'US': return 'Sales tax'; // R74 US foundation
     default:   return fallback;
   }
 }

@@ -1,0 +1,320 @@
+{
+  "_meta": {
+    "note": "Auto-generated overrides from en.json. Only keys whose US-English form differs are present; everything else falls back to en at runtime. Re-generate via scripts/generate-en-us.mjs (R74).",
+    "regime": "sales_tax",
+    "currency": "USD"
+  },
+  "tabs": {
+    "quotes": {
+      "quotes": "Estimates",
+      "newQuote": "New estimate"
+    },
+    "work": {
+      "draftQuotes": "Draft estimates",
+      "newQuote": "New Estimate",
+      "quotesCount": "Estimates ({{count}})"
+    }
+  },
+  "onboarding": {
+    "fields": {
+      "vatNumber": "Sales tax Number",
+      "ustId": "Sales tax ID"
+    },
+    "goals.better_quotes": "Win more estimates",
+    "challenges.quoting": "Creating estimates takes too long",
+    "aiInsight.quotes": "Smart estimate pricing",
+    "complianceInfo": "Vasco monitors your certifications and warns on expiry. You also receive notifications for Sales tax deadlines and insurance.",
+    "valueProp1Desc": "Vasco prepares estimates, reminders, and invoices automatically",
+    "vatPresetTitle": "Sales tax scheme set",
+    "vatPresetKor": "Selected KOR — change in Settings if turnover will exceed $20.000.",
+    "vatPresetKlein": "Selected Kleinunternehmer — change in Settings if turnover will exceed $22.000."
+  },
+  "dashboard": {
+    "quotesAwaitingApproval": "{{count}} estimates awaiting approval",
+    "invoiceCount": "{{invoices}} invoices, {{estimates}} estimates"
+  },
+  "jobs": {
+    "cohortCostBaseline": "Cohort typical: {{ratio}}% of estimate · {{overrun}}% jobs overrun",
+    "status": {
+      "quote": "Estimate"
+    },
+    "leadsAndQuotes": "Leads & Estimates",
+    "postcodeCohort": "Postcode area: ${{price}}/u median · {{accept}}% accept · {{n}} estimates"
+  },
+  "photoSubmissions": {
+    "draftQuote": "Draft estimate"
+  },
+  "aiQuote": {
+    "title": "AI estimate",
+    "vat": "Sales tax (21%)"
+  },
+  "invoices": {
+    "totalExVat": "Total excl. Sales tax",
+    "vat": "Sales tax",
+    "totalIncVat": "Total incl. Sales tax",
+    "quoteSentDesc": "Your estimate has been created and sent to the customer."
+  },
+  "expenses": {
+    "vatReclaimable": "Sales tax reclaimable"
+  },
+  "settings": {
+    "quoteTemplates": "Estimate templates"
+  },
+  "financials": {
+    "revenueExVat": "Revenue (excl. Sales tax)",
+    "vatReceived": "Sales tax received",
+    "laborCosts": "Labor costs",
+    "vatOverview": "Sales tax Overview",
+    "vatPaidPurchase": "Sales tax paid (purchases)",
+    "vatDue": "Sales tax due"
+  },
+  "ai": {
+    "invoiceOverdue": "Invoice {{reference}} is {{days}} days overdue · ${{amount}}",
+    "reminderMessage": "Dear {{customer}},\n\nThis is a friendly reminder for invoice {{reference}} for the amount of ${{amount}}.\n\nCould you please settle this at your earliest convenience?\n\nKind regards",
+    "jobNotInvoiced": "Job completed but not yet invoiced · ${{amount}}",
+    "followUpQuote": "Follow up estimate {{customer}}",
+    "quoteSentNotAnswered": "Estimate for \"{{job}}\" sent but not yet answered · ${{amount}}",
+    "followUpMessage": "Dear {{customer}},\n\nI wanted to check if you had a chance to review the estimate for {{job}}.\n\nDo you have any questions or would you like to discuss changes? I'd love to hear from you.\n\nKind regards",
+    "quoteFollowUp": "Estimate follow-up"
+  },
+  "pipeline": {
+    "quotes": "Estimates",
+    "createQuote": "Create estimate"
+  },
+  "notifications": {
+    "push": {
+      "amountSuffix": " (${{amt}})",
+      "quoteAcceptedTitle": "Estimate accepted",
+      "quoteAcceptedBody": "Estimate {{ref}} accepted{{tier}}{{total}}.",
+      "quoteRejectedTitle": "Estimate rejected",
+      "quoteRejectedBody": "Estimate {{ref}} declined.",
+      "genericBody": "Event on estimate {{ref}}.",
+      "paymentReminderBody": "Invoice for {{customer}} (${{amount}}) is overdue by {{days}} days",
+      "quoteFollowupTitle": "Follow up on estimate",
+      "quoteFollowupBody": "Estimate for {{customer}} was sent {{days}} days ago — time to follow up"
+    }
+  },
+  "money": {
+    "invoicesAndQuotes": "Invoices & Estimates"
+  },
+  "quotes": {
+    "newQuote": "New estimate",
+    "quote": "Estimate",
+    "cohortSample": "Based on {{count}} estimates from {{contractors}} contractors",
+    "calibrationSample": "Based on your last {{count}} estimates (confidence {{conf}}%)",
+    "cohortRecommendationsDesc": "Lines other contractors added to similar estimates",
+    "todSample": "Across {{count}} estimates from peers in {{country}}",
+    "heroAccepted": "Estimate accepted",
+    "heroRejected": "Estimate rejected",
+    "reviewQuote": "Review estimate",
+    "checkQuote": "Check estimate",
+    "inclVat": "incl. Sales tax",
+    "reducedVatTitle": "9% reduced Sales tax rate",
+    "reducedVatToggle": "Use 9% reduced Sales tax for renovation labor on homes >2 years old",
+    "sendQuote": "Send estimate",
+    "shareFailedTitle": "Could not share estimate"
+  },
+  "queue": {
+    "lowWinImpact": "~${{value}} at stake",
+    "lateRiskImpact": "~${{value}} at risk of delay"
+  },
+  "activation": {
+    "firstQuote": "Send your first estimate"
+  },
+  "aiQueue": {
+    "quoteFollowUp": "Follow-up estimate {{id}}"
+  },
+  "tieredQuote": {
+    "noItems": "No items in the estimate.",
+    "quoteLabel": "Estimate",
+    "quoteCreated": "Estimate created",
+    "quoteSaved": "Estimate {{id}} has been saved.",
+    "couldNotSave": "Could not save the estimate.",
+    "noCustomerBody": "This estimate will be saved without a customer link. You can attach one from the customer list later."
+  },
+  "project": {
+    "labor": "Labor"
+  },
+  "automation": {
+    "daysOverdueWithFee": "{{days}} days overdue · +${{fee}} late fee",
+    "quoteExpiryMsg": "Hi {{customer}}, your estimate for {{job}} (${{amount}}) expires on {{date}}. Would you like to proceed?",
+    "quoteExpiring": "Estimate expiring: {{customer}}"
+  },
+  "profile": {
+    "vatNumber": "Sales tax number",
+    "ibanFormatInvalid": "Bank account checksum invalid (check for typos)",
+    "retention": "Retention: Invoices 7 years, estimates 5 years (tax law)",
+    "kvkNumber": "EIN Number",
+    "vatScheme": "Sales tax scheme"
+  },
+  "search": {
+    "quote": "Estimate",
+    "placeholder": "Search jobs, estimates, invoices and customers",
+    "typeQuote": "Estimate",
+    "hint": "Search jobs, estimates, invoices and customers"
+  },
+  "moneybird": {
+    "featurePrepareTax": "Prepare Sales tax returns"
+  },
+  "contractor": {
+    "customers": {
+      "totalAmount": "${{amount}} total",
+      "outstandingAmount": "${{amount}} outstanding"
+    }
+  },
+  "templates": {
+    "quoteFollowUp": "Estimate follow-up",
+    "quoteFollowUpBody": "Hi {{customer}},\n\nJust checking in on the estimate for \"{{jobTitle}}\" ({{amount}}). Any questions, or shall we get started?\n\nKind regards,\n{{contractorName}}"
+  },
+  "dk": {
+    "hero": {
+      "guideFollowup": "Follow up on {{count}} open estimate(s)",
+      "guideStart": "Start with your first estimate",
+      "guideStartDesc": "Take a photo of the work and Vasco will draft the estimate."
+    },
+    "pill": {
+      "quotes": "Estimates"
+    },
+    "actions": {
+      "newQuote": "New estimate",
+      "filterQuotes": "Filter estimates",
+      "viewQuotes": "View estimates"
+    },
+    "empty": {
+      "noJobsDesc": "Track jobs from estimate to paid invoice. Vasco follows up automatically when customers go quiet.",
+      "noLeadsDesc": "Request a estimate from customers or create one.",
+      "noCustomersDesc": "Customers fill in automatically when you send a estimate — or add one manually to track jobs and revenue per customer.",
+      "noQuotes": "No estimates yet"
+    },
+    "money": {
+      "vatPrep": "Prepare Sales tax return",
+      "affectedQuotes": "{{count}} open estimates",
+      "pulseLagSub": "{{contractors}} contractors, {{samples}} estimates"
+    }
+  },
+  "decisionPortal": {
+    "quoteAmount": "Estimate amount"
+  },
+  "accept": {
+    "quoteAccepted": "Estimate accepted! Your contractor will start scheduling the work.",
+    "acceptedButFailed": "Estimate accepted but job creation failed. Your contractor has been notified."
+  },
+  "moatInsights": {
+    "winRate": "Win-rate per estimate group"
+  },
+  "reconciliation": {
+    "reasonIban": "Bank account match"
+  },
+  "vatScheme": {
+    "standard": "Standard Sales tax",
+    "advisor": {
+      "applyA11y": "Apply suggested Sales tax scheme",
+      "standardTeam": "Standard Sales tax — small-business schemes only apply to solo contractors.",
+      "standardCountry": "Standard Sales tax — no small-business exemption available for your country/business type.",
+      "korNl": "Solo eenmanszaak — KOR fits if your annual turnover stays under $20.000.",
+      "kleinDe": "Solo Einzelunternehmen — Kleinunternehmer fits if previous-year turnover ≤ $22.000 and current-year ≤ $50.000."
+    }
+  },
+  "recurring": {
+    "amount": "Amount ($)"
+  },
+  "marketInsights": {
+    "emptyDesc": "Insights unlock when 5+ contractors in your trade × country bucket have logged enough estimates. Keep using the app — your own data also feeds in.",
+    "quotesSent": "Estimates sent"
+  },
+  "savings": {
+    "cat": {
+      "timeDesc": "Route optimization (${{route}}) + less idle time",
+      "purchasingDesc": "Supplier discount potential: ${{total}} (40% realized)",
+      "conversionDesc": "Extra jobs from faster estimate follow-up"
+    }
+  },
+  "smartReply": {
+    "inbound": {
+      "price": "I will send a written estimate within 24h."
+    },
+    "reason": {
+      "quoteAged": "Estimate sent {{days}}d ago, no decision",
+      "quoteFresh": "Estimate sent recently"
+    },
+    "quote": {
+      "followup": "Hi {{name}}, just checking in on the estimate — any questions?",
+      "thanks": "Thanks for reviewing the estimate, let me know if anything is unclear."
+    }
+  },
+  "customer": {
+    "quote": "Estimate",
+    "quotes": "Estimates"
+  },
+  "inkoop": {
+    "cohortGapSub": "{{n}} materials where you're above the median · ${{saved}} potential saving per unit",
+    "cohortGapRow": "You ${{user}} · {{cohort}} ${{median}}"
+  },
+  "customerView": {
+    "acceptedTitle": "Estimate accepted!",
+    "quote": "Estimate",
+    "quoteFor": "Our estimate for: {{title}}",
+    "acceptQuote": "Accept estimate"
+  },
+  "ingestion": {
+    "subtitle": "Add past estimates, invoices, emails, or PDFs. You choose what gets shared.",
+    "uploadPdfDesc": "Select an invoice, estimate, or receipt PDF to extract data from.",
+    "pasteDesc": "Paste the full text of an invoice, estimate, or receipt.",
+    "pastePlaceholder": "Paste invoice / estimate text here…",
+    "vat": "Sales tax"
+  },
+  "receipt": {
+    "docQuote": "Estimate",
+    "vat": "Sales tax"
+  },
+  "materials": {
+    "unitPrice": "Unit price ($)",
+    "bestPriceHint": "cached: ${{p}}"
+  },
+  "quoteTemplates": {
+    "title": "Estimate templates",
+    "pricePlaceholder": "Price ex. Sales tax",
+    "loadedBody": "\"{{name}}\" loaded with {{count}} lines. Adjust the estimate for the customer."
+  },
+  "workflowPacks": {
+    "incasso": {
+      "preReminder": "Dear {{customer}}, your invoice {{invoice}} of ${{amount}} is due in 3 days.",
+      "friendlyReminder": "Dear {{customer}}, this is a friendly reminder for invoice {{invoice}} of ${{amount}}.",
+      "reminder": "Dear {{customer}}, your invoice {{invoice}} of ${{amount}} is 7 days past due.",
+      "urgentReminder": "Reminder: invoice {{invoice}} ${{amount}} is 14 days overdue. Please pay immediately."
+    },
+    "quoteFollowup": {
+      "day3": "Dear {{customer}}, have you had a chance to look at the estimate for {{job}} of ${{amount}}? Looking forward to hearing from you.",
+      "day7": "Dear {{customer}}, reminder: the estimate for {{job}} is valid for another 7 days. Let us know if you have any questions."
+    },
+    "purchasing": {
+      "stockLow": "{{material}} almost out ({{stock}} left). Order from {{supplier}} for ${{price}}/unit.",
+      "priceDrop": "{{material}} is {{pct}}% cheaper at {{supplier}}. Save ${{savings}} per order.",
+      "bulk": "Combine orders for {{material}} across {{jobCount}} jobs — save ${{savings}} with bulk discount."
+    }
+  },
+  "quoteNew": {
+    "invalidAmountDesc": "Estimate total must be greater than zero. Check your line item prices.",
+    "saveFailed": "Could not save estimate. Please try again."
+  },
+  "crossService": {
+    "implication": "Estimated impact: ${{amount}}"
+  },
+  "tierGate": {
+    "quoteLimitReached": "Estimate limit reached ({{count}}/month)."
+  },
+  "shareQuote": {
+    "message": "{{greeting}}here is your estimate: {{url}}",
+    "shareTitle": "Estimate",
+    "buttonLabel": "Share estimate link"
+  },
+  "quoteToInvoice": {
+    "notFound": "Estimate {{id}} not found",
+    "quoteDetails": "Estimate details",
+    "matchesQuote": "Matches estimate language to reduce payment disputes."
+  },
+  "whatsapp": {
+    "invoiceReminder": "Hi {{name}},\n\nThis is a friendly reminder about invoice {{ref}} for ${{amount}}{{overdue}}.\n\nCould you arrange payment at your earliest convenience?\n\nThank you,\nSent via Vasco",
+    "quoteFollowup": "Hi {{name}},\n\nI wanted to follow up on the estimate for \"{{job}}\" (${{amount}}).\n\nDo you have any questions or would you like to proceed?\n\nBest regards,\nSent via Vasco"
+  }
+}
