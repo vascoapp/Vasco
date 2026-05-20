@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Domain types
 import { BusinessProfile, isSmallBusinessExempt, getEffectiveVatRate } from '../domain/business';
 import { Customer } from '../domain/customers';
+import type { Lead, LeadStatus } from '../domain/lead';
 import { Invoice, Quote } from '../domain/documents';
 import { Job, JobStatus, JobPriority } from '../domain/jobs';
 import { Material, JobMaterial, JobMaterialStatus, PriceObservation } from '../domain/materials';
@@ -114,6 +115,10 @@ type AppState = {
   extractedDocs: ExtractedDocument[];
   lineItems: Record<string, QuoteLineItem[]>;
   customers: Customer[];
+  // R81 US Phase 4: sales-pipeline leads. Pre-customer entities until
+  // status flips to 'won' (then a real Customer + Job is created and
+  // customerId is back-linked).
+  leads: Lead[];
   materials: Material[];
   suppliers: Supplier[];
   jobMaterials: Record<string, JobMaterial[]>;
@@ -122,6 +127,12 @@ type AppState = {
   // R45: customer mutability — was a feature gap (no edit/delete path).
   updateCustomer: (id: string, updates: { name?: string; email?: string; phone?: string; address?: string }) => Promise<void>;
   removeCustomer: (id: string) => Promise<void>;
+  // R81 US Phase 4: lead CRUD. Demo-mode persists to AsyncStorage only;
+  // production writes to the `leads` table (migration 20260520000002).
+  addLead: (input: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>;
+  updateLead: (id: string, updates: Partial<Lead>) => Promise<void>;
+  removeLead: (id: string) => Promise<void>;
+  moveLeadStatus: (id: string, status: LeadStatus) => Promise<void>;
   addJob: (title: string, customerId?: string | null, description?: string | null, extra?: {
     address_street?: string;
     address_city?: string;
@@ -262,6 +273,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     useSeedData ? initialLineItems : {},
   );
   const [customers, setCustomers] = useState(useSeedData ? SEED_CUSTOMERS : [] as Customer[]);
+  // R81 US Phase 4: lead pipeline. Empty by default — leads accumulate
+  // from auto-create on rejected quotes (R81b) + manual entry +
+  // lead-capture widget. Persisted to AsyncStorage and (in prod) to the
+  // `leads` table.
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [jobMaterialsMap, setJobMaterialsMap] = useState(useSeedData ? SEED_JOB_MATERIALS : {} as Record<string, JobMaterial[]>);
@@ -443,6 +459,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setSuppliers([]);
         setJobMaterialsMap({});
         setProjects([]);
+        setLeads([]);
         setBusinessProfile({ isComplete: false, completenessPercent: 0 });
         setExtractedDocs([]);
         setPriceObsMap({});
@@ -514,7 +531,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             await AsyncStorage.multiRemove([
               '@vasco_jobs', '@vasco_invoices', '@vasco_quotes',
               '@vasco_customers', '@vasco_projects', '@vasco_decision_trackers',
-              '@vasco_business_profile',
+              '@vasco_business_profile', '@vasco_leads',
             ]);
             await AsyncStorage.setItem('@vasco_seed_version', SEED_VERSION);
           } else {
@@ -522,7 +539,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             const pairs: [string, (v: any) => void][] = [
               ['@vasco_jobs', setJobs], ['@vasco_invoices', setInvoices],
               ['@vasco_quotes', setQuotes], ['@vasco_customers', setCustomers],
-              ['@vasco_projects', setProjects],
+              ['@vasco_projects', setProjects], ['@vasco_leads', setLeads],
             ];
             for (const [key, setter] of pairs) {
               const raw = await AsyncStorage.getItem(key);
@@ -573,6 +590,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       AsyncStorage.setItem('@vasco_projects', JSON.stringify(projects)).catch(() => {});
     }
   }, [projects, persistReady]);
+  // R81 US Phase 4: persist leads alongside the other entity arrays.
+  useEffect(() => {
+    if (useSeedData && persistReady) {
+      AsyncStorage.setItem('@vasco_leads', JSON.stringify(leads)).catch(() => {});
+    }
+  }, [leads, persistReady]);
   useEffect(() => {
     if (useSeedData && persistReady) {
       AsyncStorage.setItem('@vasco_business_profile', JSON.stringify(businessProfile)).catch(() => {});
@@ -714,6 +737,122 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           ).catch((err) => logWarn('AppState', `removeCustomer persist failed: ${err}`));
         }
       },
+
+      // ═════════════════════════════════════════════════════════════════════
+      // SECTION: Lead CRUD (R81 US Phase 4)
+      // Pre-customer pipeline entities. Demo mode: AsyncStorage only.
+      // Production: leads table (migration 20260520000002) + offline queue.
+      // ═════════════════════════════════════════════════════════════════════
+
+      leads,
+      addLead: async (input) => {
+        const tempId = `lead-${Date.now()}`;
+        const now = new Date().toISOString();
+        const newLead: Lead = { ...input, id: tempId, createdAt: now, updatedAt: now };
+        setLeads((prev) => [newLead, ...prev]);
+        if (isSupabaseConfigured) {
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('leads', 'insert', async () => {
+              // Direct supabase insert — no dedicated db wrapper yet, mirrors
+              // the customers/quotes pattern but inline since the table is
+              // brand new. Replace with src/integrations/db/leads.ts when
+              // that lands.
+              const { supabase } = await import('../lib/supabase');
+              // R81: `leads` table is brand new — supabase generated types
+              // don't include it yet. Cast through `as any` until
+              // `supabase gen types typescript --linked` runs in prod.
+              const { data, error } = await (supabase.from('leads') as any)
+                .insert({
+                  user_id: getCurrentUserId(),
+                  status: newLead.status,
+                  source: newLead.source,
+                  customer_name: newLead.customerName,
+                  customer_phone: newLead.customerPhone,
+                  customer_email: newLead.customerEmail,
+                  customer_id: newLead.customerId,
+                  job_description: newLead.jobDescription,
+                  estimated_value: newLead.estimatedValue,
+                  notes: newLead.notes,
+                  source_quote_id: newLead.sourceQuoteId,
+                })
+                .select('id')
+                .single();
+              if (error) throw error;
+              if (data?.id) {
+                setLeads((prev) =>
+                  prev.map((l) => (l.id === tempId ? { ...l, id: data.id as string } : l))
+                );
+              }
+              return data;
+            }, { rowId: tempId }),
+          ).catch((err) => logWarn('AppState', `addLead persist failed: ${err}`));
+        }
+        return tempId;
+      },
+      updateLead: async (id, updates) => {
+        const now = new Date().toISOString();
+        setLeads((prev) =>
+          prev.map((l) => (l.id === id ? { ...l, ...updates, updatedAt: now } : l))
+        );
+        if (isSupabaseConfigured) {
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('leads', 'update', async () => {
+              const { supabase } = await import('../lib/supabase');
+              const payload: Record<string, unknown> = {};
+              if (updates.status !== undefined) payload.status = updates.status;
+              if (updates.customerName !== undefined) payload.customer_name = updates.customerName;
+              if (updates.customerPhone !== undefined) payload.customer_phone = updates.customerPhone;
+              if (updates.customerEmail !== undefined) payload.customer_email = updates.customerEmail;
+              if (updates.jobDescription !== undefined) payload.job_description = updates.jobDescription;
+              if (updates.estimatedValue !== undefined) payload.estimated_value = updates.estimatedValue;
+              if (updates.notes !== undefined) payload.notes = updates.notes;
+              if (updates.customerId !== undefined) payload.customer_id = updates.customerId;
+              const { error } = await (supabase.from('leads') as any).update(payload).eq('id', id);
+              if (error) throw error;
+            }, { rowId: id }),
+          ).catch((err) => logWarn('AppState', `updateLead persist failed: ${err}`));
+        }
+      },
+      removeLead: async (id) => {
+        setLeads((prev) => prev.filter((l) => l.id !== id));
+        if (isSupabaseConfigured) {
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('leads', 'delete', async () => {
+              const { supabase } = await import('../lib/supabase');
+              const { error } = await (supabase.from('leads') as any).delete().eq('id', id);
+              if (error) throw error;
+            }, { rowId: id }),
+          ).catch((err) => logWarn('AppState', `removeLead persist failed: ${err}`));
+        }
+      },
+      moveLeadStatus: async (id, status) => {
+        const now = new Date().toISOString();
+        setLeads((prev) =>
+          prev.map((l) => {
+            if (l.id !== id) return l;
+            const updates: Partial<Lead> = { status, updatedAt: now };
+            // BE trigger handles converted_at/contacted_at; mirror client-side
+            // so the optimistic update matches what the server would write.
+            if ((status === 'won' || status === 'lost') && l.status !== 'won' && l.status !== 'lost') {
+              updates.convertedAt = now;
+            }
+            if (status !== 'new' && l.status === 'new' && !l.contactedAt) {
+              updates.contactedAt = now;
+            }
+            return { ...l, ...updates };
+          }),
+        );
+        if (isSupabaseConfigured) {
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('leads', 'update', async () => {
+              const { supabase } = await import('../lib/supabase');
+              const { error } = await (supabase.from('leads') as any).update({ status }).eq('id', id);
+              if (error) throw error;
+            }, { rowId: id }),
+          ).catch((err) => logWarn('AppState', `moveLeadStatus persist failed: ${err}`));
+        }
+      },
+
       // ═════════════════════════════════════════════════════════════════════
       // SECTION: Job CRUD (addJob, updateJobStatus, updateJob, removeJob)
       // ═════════════════════════════════════════════════════════════════════
@@ -2268,6 +2407,34 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           import('../intelligence/learningStorage').then((m) =>
             m.resolveOutcomesFromQuoteOutcome(false, timeToDecisionHours !== undefined ? Math.round(timeToDecisionHours / 24) : undefined),
           ).catch(() => {});
+
+          // R81 US Phase 4: auto-create a 'lost' lead so the rejected
+          // quote surfaces in the pipeline for re-engagement. Customer
+          // name resolved via the customers lookup (quote.customer is
+          // the customer id, not name). Skipped silently if name lookup
+          // fails — pipeline still works, just without an entry for
+          // this rejection.
+          const customer = customers.find((c) => c.id === quote.customer);
+          if (customer) {
+            const now = new Date().toISOString();
+            const newLead: Lead = {
+              id: `lead-rej-${Date.now()}`,
+              status: 'lost',
+              source: 'rejected_estimate',
+              customerName: customer.name,
+              customerPhone: customer.phone,
+              customerEmail: customer.email,
+              customerId: customer.id,
+              jobDescription: quote.job ?? quote.description ?? 'Rejected estimate',
+              estimatedValue: quote.amount,
+              notes: declineReason ? `Reason: ${declineReason}` : undefined,
+              sourceQuoteId: id,
+              createdAt: now,
+              updatedAt: now,
+              convertedAt: now,
+            };
+            setLeads((prev) => [newLead, ...prev]);
+          }
         }
       },
 
@@ -2483,6 +2650,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       lastStripePayment,
       pendingBudgetExtraction,
       projects,
+      leads,
     ]
   );
 
