@@ -89,7 +89,7 @@ import { trackEvent } from '../services/eventTrackingService';
 import { fireNotification } from '../services/notificationService';
 import { markStepComplete } from '../services/onboardingTrackerService';
 import { subscribeDocNumberRemap, type DocNumberRemapEvent } from '../services/docNumberRemapBus';
-import { businessProfile as initialBusinessProfile } from '../data/mockBusiness';
+import { businessProfile as initialBusinessProfile, US_BUSINESS_PROFILE } from '../data/mockBusiness';
 import { invoices as initialInvoices, quotes as initialQuotes } from '../data/mockDocuments';
 import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
 
@@ -218,6 +218,27 @@ const SEED_JOB_MATERIALS: Record<string, JobMaterial[]> = {
     { id: 'jm-s3-2', jobId: 'j-seed-3', materialId: 'mat-thermostaat', quantity: 3, unit: 'stuk', unitPrice: 42, totalPrice: 126, status: 'ordered', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
   ],
 };
+
+// R78 US foundation: US-flavoured seed jobs + customers for the US demo
+// contractor (Mike Reynolds, Reynolds Heating & Cooling). HVAC service
+// calls + remodel-adjacent retrofit work + a paid commercial RTU swap —
+// covers the lead / scheduled / in-progress / completed / invoiced
+// states so every screen demoes real data.
+const US_SEED_JOBS: Job[] = [
+  { id: 'j-us-1', customerId: 'cust-us-001', title: 'AC not cooling — Williams residence', description: null, status: 'lead', trade: 'gas-hvac', priority: 'high', quotedAmount: 385, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 1).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-us-2', customerId: 'cust-us-002', title: 'Annual HVAC service — Chen', description: null, status: 'scheduled', trade: 'gas-hvac', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], scheduledStartTime: '09:00', scheduledEndTime: '11:00', estimatedDuration: 2, quotedAmount: 295, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 3).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-us-3', customerId: 'cust-us-003', title: 'Full system replacement — Garcia kitchen remodel', description: null, status: 'in-progress', trade: 'gas-hvac', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], scheduledStartTime: '13:00', scheduledEndTime: '17:30', estimatedDuration: 32, quotedAmount: 8750, agreedAmount: 8750, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 7).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-us-4', customerId: 'cust-us-004', title: 'Capacitor replacement — Patel HOA clubhouse', description: null, status: 'completed', trade: 'gas-hvac', priority: 'normal', estimatedDuration: 1.5, quotedAmount: 240, agreedAmount: 240, actualHours: 1.25, actualCost: 65, completedAt: new Date(Date.now() - MS_PER_DAY * 9).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 11).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 9).toISOString() },
+  { id: 'j-us-5', customerId: 'cust-us-005', title: 'Commercial RTU swap — Lone Star Diner', description: null, status: 'invoiced', trade: 'gas-hvac', priority: 'normal', estimatedDuration: 12, quotedAmount: 4200, agreedAmount: 4200, invoiceId: 'inv-us-1', completedAt: new Date(Date.now() - MS_PER_DAY * 18).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 22).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 18).toISOString() },
+];
+
+const US_SEED_CUSTOMERS: Customer[] = [
+  { id: 'cust-us-001', name: 'Sarah Williams', email: 'swilliams@gmail.com', phone: '+1 512 555 0167' },
+  { id: 'cust-us-002', name: 'David Chen', email: 'dchen@gmail.com', phone: '+1 512 555 0148' },
+  { id: 'cust-us-003', name: 'Garcia Family', email: 'mgarcia@hotmail.com', phone: '+1 512 555 0193' },
+  { id: 'cust-us-004', name: 'Cedar Park HOA', email: 'manager@cedarparkhoa.com', phone: '+1 512 555 0211' },
+  { id: 'cust-us-005', name: 'Lone Star Diner', email: 'ops@lonestardiner.com', phone: '+1 512 555 0356' },
+];
 
 export function AppStateProvider({ children }: PropsWithChildren) {
   // R58: was `const aiUserId = getCurrentUserId()` captured at render-time
@@ -430,6 +451,17 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setLastMoneybirdExport({});
         setLastMolliePayment({});
       } else {
+        // R78 US foundation: when a US contractor logs in (demo or otherwise),
+        // seed business profile + customers + jobs with US-flavoured defaults
+        // (EIN, TX address, ACH bank details, Reynolds Heating & Cooling
+        // sample HVAC pipeline) so the invoice PDF + sales-tax + jobs/
+        // customers screens render real US data without a full onboarding
+        // redo. EU contractors still hit refreshData() unchanged.
+        if (getCurrentCountry() === 'US') {
+          setBusinessProfile(US_BUSINESS_PROFILE);
+          setCustomers(US_SEED_CUSTOMERS);
+          setJobs(US_SEED_JOBS);
+        }
         // New user signed in — re-hydrate from BE for the new auth context.
         refreshData();
       }
