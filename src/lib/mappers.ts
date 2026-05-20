@@ -160,6 +160,8 @@ export function jobUpdatesToRowPayload(updates: Partial<Job>): Record<string, un
   if ('completedAt' in updates)        out.completed_at = updates.completedAt;
   if ('signatureSvg' in updates)       out.signature_svg = updates.signatureSvg;
   if ('customerSignoffAt' in updates)  out.customer_signoff_at = updates.customerSignoffAt;
+  // R86 crew dispatch lite: write through worker assignment to BE.
+  if ('assignedWorkerId' in updates)   out.assigned_worker_id = updates.assignedWorkerId ?? null;
   // R66 round 12: timeEntries was previously dropped here ("separate table")
   // but no such table existed — every contractor's logged hours were lost
   // on cold start. Now persisted as JSONB on jobs.time_entries.
@@ -224,7 +226,30 @@ export function jobRowToJob(row: JobRow): Job {
     // 20260502000003_job_signature_columns.sql
     signatureSvg: (row as any).signature_svg ?? undefined,
     customerSignoffAt: (row as any).customer_signoff_at ?? undefined,
+    // R86 crew dispatch lite: hydrate worker assignment from
+    // jobs.assigned_worker_id (migration 20260520000004).
+    assignedWorkerId: row.assigned_worker_id ?? undefined,
     completedAt: row.completed_at ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+// R86 crew dispatch lite. workers row → domain Worker.
+import type { WorkerRow } from './database.types';
+import type { Worker } from '../domain/worker';
+
+export function workerRowToWorker(row: WorkerRow): Worker {
+  return {
+    id: row.id,
+    name: row.name,
+    role: row.role,
+    email: row.email ?? undefined,
+    phone: row.phone ?? undefined,
+    trade: row.trade ?? undefined,
+    hourlyCost: row.hourly_cost ?? undefined,
+    isActive: row.is_active,
+    color: row.color ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

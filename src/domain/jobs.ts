@@ -69,6 +69,10 @@ export type Job = {
   // Both persist to BE via migration 20260502000003_job_signature_columns.sql.
   signatureSvg?: string;
   customerSignoffAt?: string;
+  // R86 crew dispatch lite: worker assignment. References workers.id from
+  // migration 20260520000004. Optional — solo contractors don't need to
+  // touch this. Multi-tech crews use it to route the day's schedule.
+  assignedWorkerId?: string;
   // Timestamps
   completedAt?: string;
   createdAt: string;

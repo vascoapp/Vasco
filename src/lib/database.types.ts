@@ -97,8 +97,29 @@ export type JobRow = {
   // 20260507000002_jobs_time_entries.sql. Was previously dropped by the
   // mapper (comment: "separate table") even though no such table existed.
   time_entries: Array<{ id: string; date: string; hours: number; clockIn?: string; clockOut?: string }>;
+  // R86 crew dispatch lite: which Worker is on this job. NULL for solo
+  // contractors. Migration 20260520000004 adds the column + FK to
+  // workers(id) ON DELETE SET NULL.
+  assigned_worker_id: string | null;
   // Timestamps
   completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+// R86 crew dispatch lite. Mirrors the workers table from migration
+// 20260520000004 1:1. Domain shape lives in src/domain/worker.ts.
+export type WorkerRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  role: 'owner' | 'lead_tech' | 'tech' | 'apprentice' | 'subcontractor';
+  email: string | null;
+  phone: string | null;
+  trade: string | null;
+  hourly_cost: number | null;
+  is_active: boolean;
+  color: string | null;
   created_at: string;
   updated_at: string;
 };

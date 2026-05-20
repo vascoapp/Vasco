@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BusinessProfile, isSmallBusinessExempt, getEffectiveVatRate } from '../domain/business';
 import { Customer } from '../domain/customers';
 import type { Lead, LeadStatus } from '../domain/lead';
+import type { Worker, WorkerRole } from '../domain/worker';
 import { Invoice, Quote } from '../domain/documents';
 import { Job, JobStatus, JobPriority } from '../domain/jobs';
 import { Material, JobMaterial, JobMaterialStatus, PriceObservation } from '../domain/materials';
@@ -119,6 +120,10 @@ type AppState = {
   // status flips to 'won' (then a real Customer + Job is created and
   // customerId is back-linked).
   leads: Lead[];
+  // R86 crew dispatch lite: contractor's crew roster. Empty for solo
+  // contractors. Drives Job.assignedWorkerId assignment + per-tech
+  // swimlanes in the schedule view.
+  workers: Worker[];
   materials: Material[];
   suppliers: Supplier[];
   jobMaterials: Record<string, JobMaterial[]>;
@@ -133,6 +138,10 @@ type AppState = {
   updateLead: (id: string, updates: Partial<Lead>) => Promise<void>;
   removeLead: (id: string) => Promise<void>;
   moveLeadStatus: (id: string, status: LeadStatus) => Promise<void>;
+  // R86 crew dispatch lite: worker CRUD. Migration 20260520000004.
+  addWorker: (input: Omit<Worker, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>;
+  updateWorker: (id: string, updates: Partial<Worker>) => Promise<void>;
+  removeWorker: (id: string) => Promise<void>;
   addJob: (title: string, customerId?: string | null, description?: string | null, extra?: {
     address_street?: string;
     address_city?: string;
@@ -278,6 +287,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   // lead-capture widget. Persisted to AsyncStorage and (in prod) to the
   // `leads` table.
   const [leads, setLeads] = useState<Lead[]>([]);
+  // R86 crew dispatch lite: contractor's roster. Empty for solo
+  // contractors. Persisted to AsyncStorage and (in prod) to `workers`.
+  const [workers, setWorkers] = useState<Worker[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [jobMaterialsMap, setJobMaterialsMap] = useState(useSeedData ? SEED_JOB_MATERIALS : {} as Record<string, JobMaterial[]>);
@@ -460,6 +472,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setJobMaterialsMap({});
         setProjects([]);
         setLeads([]);
+        setWorkers([]);
         setBusinessProfile({ isComplete: false, completenessPercent: 0 });
         setExtractedDocs([]);
         setPriceObsMap({});
@@ -531,7 +544,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             await AsyncStorage.multiRemove([
               '@vasco_jobs', '@vasco_invoices', '@vasco_quotes',
               '@vasco_customers', '@vasco_projects', '@vasco_decision_trackers',
-              '@vasco_business_profile', '@vasco_leads',
+              '@vasco_business_profile', '@vasco_leads', '@vasco_workers',
             ]);
             await AsyncStorage.setItem('@vasco_seed_version', SEED_VERSION);
           } else {
@@ -540,6 +553,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               ['@vasco_jobs', setJobs], ['@vasco_invoices', setInvoices],
               ['@vasco_quotes', setQuotes], ['@vasco_customers', setCustomers],
               ['@vasco_projects', setProjects], ['@vasco_leads', setLeads],
+              ['@vasco_workers', setWorkers],
             ];
             for (const [key, setter] of pairs) {
               const raw = await AsyncStorage.getItem(key);
@@ -596,6 +610,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       AsyncStorage.setItem('@vasco_leads', JSON.stringify(leads)).catch(() => {});
     }
   }, [leads, persistReady]);
+  // R86 crew dispatch lite: persist workers.
+  useEffect(() => {
+    if (useSeedData && persistReady) {
+      AsyncStorage.setItem('@vasco_workers', JSON.stringify(workers)).catch(() => {});
+    }
+  }, [workers, persistReady]);
   useEffect(() => {
     if (useSeedData && persistReady) {
       AsyncStorage.setItem('@vasco_business_profile', JSON.stringify(businessProfile)).catch(() => {});
@@ -825,6 +845,90 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           ).catch((err) => logWarn('AppState', `removeLead persist failed: ${err}`));
         }
       },
+      // R86 crew dispatch lite — Worker CRUD. Same R52/R54 pattern as
+      // leads: optimistic tempId → BE id swap, offlineWriteQueue fallback.
+      workers,
+      addWorker: async (input) => {
+        const tempId = `worker-${Date.now()}`;
+        const now = new Date().toISOString();
+        const newWorker: Worker = { ...input, id: tempId, createdAt: now, updatedAt: now };
+        setWorkers((prev) => [newWorker, ...prev]);
+        if (isSupabaseConfigured) {
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('workers', 'insert', async () => {
+              const { supabase } = await import('../lib/supabase');
+              // R86: workers is brand new — generated types don't include
+              // it yet. Cast to any until `supabase gen types typescript
+              // --linked` runs in prod.
+              const { data, error } = await (supabase.from('workers') as any)
+                .insert({
+                  user_id: getCurrentUserId(),
+                  name: newWorker.name,
+                  role: newWorker.role,
+                  email: newWorker.email,
+                  phone: newWorker.phone,
+                  trade: newWorker.trade,
+                  hourly_cost: newWorker.hourlyCost,
+                  is_active: newWorker.isActive,
+                  color: newWorker.color,
+                })
+                .select('id')
+                .single();
+              if (error) throw error;
+              if (data?.id) {
+                setWorkers((prev) =>
+                  prev.map((w) => (w.id === tempId ? { ...w, id: data.id as string } : w))
+                );
+              }
+              return data;
+            }, { rowId: tempId }),
+          ).catch((err) => logWarn('AppState', `addWorker persist failed: ${err}`));
+        }
+        return tempId;
+      },
+      updateWorker: async (id, updates) => {
+        const now = new Date().toISOString();
+        setWorkers((prev) =>
+          prev.map((w) => (w.id === id ? { ...w, ...updates, updatedAt: now } : w))
+        );
+        if (isSupabaseConfigured) {
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('workers', 'update', async () => {
+              const { supabase } = await import('../lib/supabase');
+              const payload: Record<string, unknown> = {};
+              if (updates.name !== undefined) payload.name = updates.name;
+              if (updates.role !== undefined) payload.role = updates.role;
+              if (updates.email !== undefined) payload.email = updates.email;
+              if (updates.phone !== undefined) payload.phone = updates.phone;
+              if (updates.trade !== undefined) payload.trade = updates.trade;
+              if (updates.hourlyCost !== undefined) payload.hourly_cost = updates.hourlyCost;
+              if (updates.isActive !== undefined) payload.is_active = updates.isActive;
+              if (updates.color !== undefined) payload.color = updates.color;
+              const { error } = await (supabase.from('workers') as any).update(payload).eq('id', id);
+              if (error) throw error;
+            }, { rowId: id }),
+          ).catch((err) => logWarn('AppState', `updateWorker persist failed: ${err}`));
+        }
+      },
+      removeWorker: async (id) => {
+        setWorkers((prev) => prev.filter((w) => w.id !== id));
+        // Also unassign any jobs that pointed at this worker (FK cascade
+        // does this on the server; do it client-side too so the optimistic
+        // state stays consistent).
+        setJobs((prev) =>
+          prev.map((j) => (j.assignedWorkerId === id ? { ...j, assignedWorkerId: undefined } : j))
+        );
+        if (isSupabaseConfigured) {
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('workers', 'delete', async () => {
+              const { supabase } = await import('../lib/supabase');
+              const { error } = await (supabase.from('workers') as any).delete().eq('id', id);
+              if (error) throw error;
+            }, { rowId: id }),
+          ).catch((err) => logWarn('AppState', `removeWorker persist failed: ${err}`));
+        }
+      },
+
       moveLeadStatus: async (id, status) => {
         const now = new Date().toISOString();
         setLeads((prev) =>
@@ -2670,6 +2774,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       pendingBudgetExtraction,
       projects,
       leads,
+      workers,
     ]
   );
 
