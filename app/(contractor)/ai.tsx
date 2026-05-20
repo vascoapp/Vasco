@@ -61,7 +61,7 @@ export default function VascoScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { jobs, invoices, quotes, customers, isLoading } = useAppState();
+  const { jobs, invoices, quotes, customers, isLoading, businessProfile } = useAppState();
   const aiQueue = useAIQueue();
   const [refreshing, setRefreshing] = useState(false);
   const [actioned, setActioned] = useState<Set<string>>(new Set());
@@ -491,11 +491,50 @@ export default function VascoScreen() {
 
         {tab === 'more' && (
           <>
-            <DKLabel style={s.subsectionLabel}>{t('dk.ai.quickAccess', 'Quick access')}</DKLabel>
+            {/* R89: IA grouped by job-to-be-done, not a flat chip row.
+                Each subsection answers a different question: "what work
+                am I getting?" (Sales), "who's doing it?" (Team), "is
+                my license/cert about to expire?" (Compliance), "what
+                can the AI help me with?" (Tools). */}
+
+            <DKLabel style={s.subsectionLabel}>{t('dk.ai.sales', 'Sales')}</DKLabel>
+            <View style={s.chipRow}>
+              <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/pipeline' as any)}>
+                <Ionicons name="git-network-outline" size={14} color={DK.colors.accent} />
+                <DKLabel style={s.chipText}>{t('ai.pipeline', 'Pipeline')}</DKLabel>
+              </Pressable>
+            </View>
+
+            <DKLabel style={s.subsectionLabel}>{t('dk.ai.team', 'Team')}</DKLabel>
+            <View style={s.chipRow}>
+              <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/crew' as any)}>
+                <Ionicons name="people-outline" size={14} color={DK.colors.accent} />
+                <DKLabel style={s.chipText}>{t('ai.crew', 'Crew')}</DKLabel>
+              </Pressable>
+            </View>
+
+            <DKLabel style={s.subsectionLabel}>{t('dk.ai.compliance', 'Compliance')}</DKLabel>
             <View style={s.chipRow}>
               <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/(contractor)/certificaten' as any)}>
                 <Ionicons name="shield-checkmark-outline" size={14} color={DK.colors.accent} />
                 <DKLabel style={s.chipText}>{t('ai.certificates', 'Certificates')}</DKLabel>
+              </Pressable>
+              {/* US-only: state-issued operating licenses. EU contractors
+                  use the Certificates path above; their certs *are* their
+                  compliance proof, no separate license layer. */}
+              {businessProfile?.country === 'US' ? (
+                <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/licenses' as any)}>
+                  <Ionicons name="ribbon-outline" size={14} color={DK.colors.accent} />
+                  <DKLabel style={s.chipText}>{t('ai.licenses', 'Licenses')}</DKLabel>
+                </Pressable>
+              ) : null}
+            </View>
+
+            <DKLabel style={s.subsectionLabel}>{t('dk.ai.tools', 'Tools')}</DKLabel>
+            <View style={s.chipRow}>
+              <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/ai-chat' as any)}>
+                <Ionicons name="sparkles-outline" size={14} color={DK.colors.accent} />
+                <DKLabel style={s.chipText}>{t('ai.officeManager', 'Office bot')}</DKLabel>
               </Pressable>
               <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/(contractor)/besparen' as any)}>
                 <Ionicons name="wallet-outline" size={14} color={DK.colors.accent} />
