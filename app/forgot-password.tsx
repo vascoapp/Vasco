@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -95,14 +96,12 @@ export default function ForgotPasswordScreen() {
 
         <View style={styles.content}>
           <View style={styles.markWrap}>
-            <LinearGradient
-              colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+            {/* R92: official VascoBuild logo */}
+            <Image
+              source={require('../assets/icon.png')}
               style={styles.mark}
-            >
-              <Ionicons name="lock-closed" size={22} color="#FFFFFF" />
-            </LinearGradient>
+              accessibilityLabel="VascoBuild"
+            />
           </View>
           <DKLabel style={styles.title}>{t('auth.resetPassword', 'Reset password')}</DKLabel>
           <Text style={styles.subtitle}>

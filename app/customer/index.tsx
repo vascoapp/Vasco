@@ -5,7 +5,7 @@
 // =============================================================================
 
 import { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { Image, View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -41,17 +41,14 @@ export default function CustomerLandingScreen() {
           <Ionicons name="chevron-back" size={22} color={DK.colors.text} />
         </Pressable>
 
-        {/* Hero mark */}
+        {/* R92: official VascoBuild logo */}
         <View style={s.hero}>
           <View style={s.markWrap}>
-            <LinearGradient
-              colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+            <Image
+              source={require('../../assets/icon.png')}
               style={s.mark}
-            >
-              <Ionicons name="construct" size={34} color="#FFFFFF" />
-            </LinearGradient>
+              accessibilityLabel="VascoBuild"
+            />
           </View>
           <Text style={s.brand}>VASCO</Text>
           <DKLabel style={s.brandSub}>{t('customerPortal.title', 'Klantportaal')}</DKLabel>

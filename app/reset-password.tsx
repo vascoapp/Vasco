@@ -8,7 +8,7 @@
 
 import { useState } from 'react';
 import {
-  KeyboardAvoidingView, Platform, Pressable, ScrollView,
+  Image, KeyboardAvoidingView, Platform, Pressable, ScrollView,
   StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -89,14 +89,12 @@ export default function ResetPasswordScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <FadeIn delay={0}>
             <View style={styles.markWrap}>
-              <LinearGradient
-                colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
+              {/* R92: official VascoBuild logo */}
+              <Image
+                source={require('../assets/icon.png')}
                 style={styles.mark}
-              >
-                <Ionicons name="key" size={22} color="#FFFFFF" />
-              </LinearGradient>
+                accessibilityLabel="VascoBuild"
+              />
             </View>
             <DKLabel style={styles.title}>{t('resetPassword.title', 'Set a new password')}</DKLabel>
             <Text style={styles.subtitle}>{t('resetPassword.subtitle', 'Choose a password with at least 8 characters.')}</Text>

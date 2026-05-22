@@ -9,6 +9,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Alert,
+  Image,
   View,
   Text,
   StyleSheet,
@@ -604,14 +605,12 @@ export default function OnboardingScreen() {
         return (
           <View style={styles.centeredContent}>
             <View style={styles.logoWrap}>
-              <LinearGradient
-                colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
+              {/* R92: official VascoBuild logo */}
+              <Image
+                source={require('../assets/icon.png')}
                 style={styles.logoContainer}
-              >
-                <Text style={styles.logoText}>V</Text>
-              </LinearGradient>
+                accessibilityLabel="VascoBuild"
+              />
             </View>
             <Text style={styles.welcomeTitle}>{t('onboarding.welcome')}</Text>
             <Text style={styles.welcomeSubtitle}>{t('onboarding.subtitle')}</Text>

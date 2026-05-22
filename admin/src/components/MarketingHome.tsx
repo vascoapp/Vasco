@@ -42,19 +42,17 @@ export default function MarketingHome({ locale }: Props) {
       <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0B0E11]/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <a href={homeHref} className="flex items-center gap-3">
-            <div
-              className="flex h-10 w-10 items-center justify-center rounded-full font-[family-name:var(--font-archivo)] text-lg font-black"
-              style={{
-                background:
-                  "linear-gradient(135deg, #9A3412 0%, #C2410C 50%, #F97316 100%)",
-                boxShadow: "0 0 24px rgba(249,115,22,0.4)",
-              }}
-            >
-              V
-            </div>
-            <span className="font-[family-name:var(--font-archivo)] text-xl font-black uppercase tracking-[0.18em]">
-              Vasco
-            </span>
+            {/* R92: official VascoBuild logo with hard-hat tradesperson mark.
+                Replaces the inline gradient V-mark + wordmark from R66r72. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/vasco-logo.png"
+              alt="VascoBuild"
+              width={40}
+              height={40}
+              className="h-10 w-10 rounded-lg"
+              style={{ boxShadow: "0 0 24px rgba(249,115,22,0.4)" }}
+            />
           </a>
 
           {/* Mobile: locale toggle + waitlist CTA */}
@@ -714,19 +712,16 @@ export default function MarketingHome({ locale }: Props) {
         <div className="mx-auto max-w-7xl px-6 py-16">
           <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
             <div>
-              <div className="mb-4 flex items-center gap-3">
-                <div
-                  className="flex h-9 w-9 items-center justify-center rounded-full font-[family-name:var(--font-archivo)] text-sm font-black"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #9A3412 0%, #C2410C 50%, #F97316 100%)",
-                  }}
-                >
-                  V
-                </div>
-                <span className="font-[family-name:var(--font-archivo)] text-lg font-black uppercase tracking-[0.18em]">
-                  Vasco
-                </span>
+              <div className="mb-4">
+                {/* R92: official VascoBuild logo with hard-hat tradesperson */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/vasco-logo.png"
+                  alt="VascoBuild"
+                  width={48}
+                  height={48}
+                  className="h-12 w-12 rounded-lg"
+                />
               </div>
               <p className="max-w-sm font-[family-name:var(--font-inter)] text-sm leading-relaxed text-zinc-500">
                 {t.footer.tagline}

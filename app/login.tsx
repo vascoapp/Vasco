@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Linking,
   Platform,
@@ -107,20 +108,17 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Hero — DraftKings-style gradient mark */}
+          {/* R92: official VascoBuild logo. Replaces the gradient-flash
+              placeholder mark from R179. */}
           <FadeIn delay={0} duration={600}>
             <View style={styles.hero}>
               <View style={styles.markWrap}>
-                <LinearGradient
-                  colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
+                <Image
+                  source={require('../assets/icon.png')}
                   style={styles.mark}
-                >
-                  <Ionicons name="flash" size={40} color="#FFFFFF" />
-                </LinearGradient>
+                  accessibilityLabel="VascoBuild"
+                />
               </View>
-              <Text style={styles.brand}>VASCO</Text>
               <DKLabel style={styles.tagline}>{t('auth.tagline', 'Built for the trades')}</DKLabel>
             </View>
           </FadeIn>

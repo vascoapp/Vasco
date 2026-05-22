@@ -8,7 +8,7 @@
 
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator, KeyboardAvoidingView, Linking, Platform,
+  ActivityIndicator, Image, KeyboardAvoidingView, Linking, Platform,
   Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -151,14 +151,12 @@ export default function SignupScreen() {
                 <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
               </Pressable>
               <View style={styles.markWrap}>
-                <LinearGradient
-                  colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
+                {/* R92: official VascoBuild logo */}
+                <Image
+                  source={require('../assets/icon.png')}
                   style={styles.mark}
-                >
-                  <Ionicons name="flash" size={22} color="#FFFFFF" />
-                </LinearGradient>
+                  accessibilityLabel="VascoBuild"
+                />
               </View>
               <DKLabel style={styles.title}>{t('signup.title', 'Create your account')}</DKLabel>
               <Text style={styles.subtitle}>{t('signup.subtitle', 'Start your 14-day trial — no card required.')}</Text>
