@@ -12,7 +12,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { DK } from '../../theme/draftkings';
 import { TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { DKLabel } from '../shared/DKLabel';

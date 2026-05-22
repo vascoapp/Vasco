@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View, Modal } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { IntelligenceDashboard } from './IntelligenceDashboard';
 import { HoursSavedCard } from '../contractor/HoursSavedCard';
 import { Palette } from '../../theme/colors';

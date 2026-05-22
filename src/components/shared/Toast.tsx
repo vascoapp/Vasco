@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Text, StyleSheet, Animated, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { SafeArea } from '../../theme/spacing';
 import { RADIUS } from '../../theme/tabStyles';

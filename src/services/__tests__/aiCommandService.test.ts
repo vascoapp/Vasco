@@ -74,4 +74,86 @@ describe('aiCommandService demo-mode stub', () => {
     expect(resp.result.intent).toBe('unknown');
     expect(resp.result.humanResponse).toContain('invoice');
   });
+
+  // R95 — 4 new intents.
+
+  it('parses "cancel job for {name}" into cancel_job', async () => {
+    const resp = await sendAiCommand('cancel job for Anna');
+    expect(resp.ok).toBe(true);
+    if (!resp.ok) return;
+    expect(resp.result.intent).toBe('cancel_job');
+    expect(resp.result.action?.params.customerName).toBe('anna');
+  });
+
+  it('parses status queries into query_job_status with active-jobs list', async () => {
+    const resp = await sendAiCommand('status of active jobs', {
+      activeJobs: [
+        { id: 'j1', customer: 'Alice', status: 'in-progress' },
+        { id: 'j2', customer: 'Bob', status: 'scheduled' },
+      ],
+    });
+    expect(resp.ok).toBe(true);
+    if (!resp.ok) return;
+    expect(resp.result.intent).toBe('query_job_status');
+    expect(resp.result.humanResponse).toContain('Alice');
+    expect(resp.result.humanResponse).toContain('Bob');
+    expect(resp.result.humanResponse).toContain('2');
+  });
+
+  it('returns "no active jobs" when activeJobs is empty', async () => {
+    const resp = await sendAiCommand('status update', { activeJobs: [] });
+    expect(resp.ok).toBe(true);
+    if (!resp.ok) return;
+    expect(resp.result.intent).toBe('query_job_status');
+    expect(resp.result.humanResponse.toLowerCase()).toContain('no active');
+  });
+
+  it('parses "find {name}" into find_customer with matches', async () => {
+    const resp = await sendAiCommand('find Alice', {
+      customers: [
+        { id: 'c1', name: 'Alice Johnson' },
+        { id: 'c2', name: 'Bob Smith' },
+        { id: 'c3', name: 'Alice Roberts' },
+      ],
+    });
+    expect(resp.ok).toBe(true);
+    if (!resp.ok) return;
+    expect(resp.result.intent).toBe('find_customer');
+    expect(resp.result.action?.params.query).toBe('Alice');
+    expect(resp.result.humanResponse).toContain('Alice Johnson');
+    expect(resp.result.humanResponse).toContain('Alice Roberts');
+    expect(resp.result.humanResponse).not.toContain('Bob');
+  });
+
+  it('returns "no match" when find_customer has no hits', async () => {
+    const resp = await sendAiCommand('lookup Carol', {
+      customers: [{ id: 'c1', name: 'Alice' }],
+    });
+    expect(resp.ok).toBe(true);
+    if (!resp.ok) return;
+    expect(resp.result.intent).toBe('find_customer');
+    expect(resp.result.humanResponse.toLowerCase()).toContain('no customer');
+  });
+
+  it('parses weekly summary asks into weekly_summary intent', async () => {
+    const resp = await sendAiCommand('how was my week', {
+      weeklyRevenue: 3200,
+      weeklyJobsCompleted: 4,
+      weeklyQuotesSent: 7,
+    });
+    expect(resp.ok).toBe(true);
+    if (!resp.ok) return;
+    expect(resp.result.intent).toBe('weekly_summary');
+    expect(resp.result.humanResponse).toContain('3,200');
+    expect(resp.result.humanResponse).toContain('4');
+    expect(resp.result.humanResponse).toContain('7');
+  });
+
+  it('handles "recap" with zeros when no context', async () => {
+    const resp = await sendAiCommand('recap');
+    expect(resp.ok).toBe(true);
+    if (!resp.ok) return;
+    expect(resp.result.intent).toBe('weekly_summary');
+    expect(resp.result.humanResponse).toContain('0');
+  });
 });

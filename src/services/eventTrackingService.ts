@@ -37,7 +37,18 @@ export type EventName =
   | 'search_performed'
   | 'material_search'
   | 'material_added_to_cart'
-  | 'po_created_from_search';
+  | 'po_created_from_search'
+  // R95 — events for the R81-R87 screens. Used for funnel analytics
+  // + as Sentry breadcrumbs (lazy-loaded sentry-react-native wraps
+  // these into addBreadcrumb in src/lib/errorReporting.ts).
+  | 'lead_created'
+  | 'lead_status_changed'
+  | 'lead_deleted'
+  | 'worker_added'
+  | 'worker_removed'
+  | 'license_added'
+  | 'license_deleted'
+  | 'ai_command_sent';
 
 export interface EventProperties {
   [key: string]: string | number | boolean | null;

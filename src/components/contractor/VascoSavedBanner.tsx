@@ -7,7 +7,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Animated, LayoutAnimation, Platform, Pressable, StyleSheet, Text, UIManager, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Palette, SemanticColors } from '../../theme/colors';
 import { TYPE, RADIUS } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';

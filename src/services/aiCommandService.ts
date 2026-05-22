@@ -12,6 +12,7 @@
 
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { logWarn } from '../utils/errorHandler';
+import { trackEvent } from './eventTrackingService';
 
 export type AiIntent =
   | 'create_invoice'
@@ -19,6 +20,11 @@ export type AiIntent =
   | 'query_revenue'
   | 'list_overdue'
   | 'send_reminder'
+  // R95 — extended intent set covering common contractor asks.
+  | 'cancel_job'
+  | 'query_job_status'
+  | 'find_customer'
+  | 'weekly_summary'
   | 'unknown';
 
 export interface AiCommandContext {
@@ -26,6 +32,11 @@ export interface AiCommandContext {
   recentInvoiceTotal?: number;
   overdueCount?: number;
   locale?: string;
+  // R95 — added for the new intents. Optional so existing callers keep working.
+  activeJobs?: Array<{ id: string; customer: string; status: string }>;
+  weeklyRevenue?: number;
+  weeklyJobsCompleted?: number;
+  weeklyQuotesSent?: number;
 }
 
 export interface AiCommandResult {
@@ -52,6 +63,10 @@ export async function sendAiCommand(
   message: string,
   context?: AiCommandContext,
 ): Promise<AiCommandReturn> {
+  // R95 breadcrumb. Length only, never the message body — chat input is
+  // potentially PII and shouldn't land in event payloads.
+  trackEvent('ai_command_sent', { length: message.length }).catch(() => {});
+
   if (!isSupabaseConfigured) {
     // Demo mode — deterministic stub so the chat UI is testable without
     // a real Anthropic key. Pattern-matches a few common asks.
@@ -137,9 +152,69 @@ function stubResponse(message: string, ctx?: AiCommandContext): AiCommandResult 
     };
   }
 
+  // "cancel {job for X}" / "cancel job {N}". Eat "for"/"the" filler words
+  // so "cancel job for Anna" → "anna", not "for".
+  const cancelMatch = lower.match(/cancel\s+(?:job\s+)?(?:for\s+|the\s+)?(\w+)/);
+  if (cancelMatch) {
+    const target = cancelMatch[1];
+    return {
+      intent: 'cancel_job',
+      humanResponse: `OK — I'll cancel the job for ${target}. Confirm before I send the notification?`,
+      action: { type: 'cancel_job', params: { customerName: target } },
+    };
+  }
+
+  // "status {of X}" / "what's happening with {X}"
+  if (/(status|what.*happening|where.*at)/i.test(lower)) {
+    const jobs = ctx?.activeJobs ?? [];
+    if (jobs.length === 0) {
+      return {
+        intent: 'query_job_status',
+        humanResponse: `No active jobs right now.`,
+      };
+    }
+    const top = jobs.slice(0, 3).map((j) => `• ${j.customer}: ${j.status}`).join('\n');
+    return {
+      intent: 'query_job_status',
+      humanResponse: `${jobs.length} active job${jobs.length === 1 ? '' : 's'}:\n${top}`,
+    };
+  }
+
+  // "find {name}" / "lookup {name}" / "do I have a customer called {X}"
+  // Match on the original (cased) message so we preserve the user's casing
+  // in the action param. Some test fixtures rely on this round-trip.
+  const findMatch = message.match(/(?:find|lookup|customer.*called)\s+(\w+)/i);
+  if (findMatch) {
+    const needle = findMatch[1].toLowerCase();
+    const matches = (ctx?.customers ?? []).filter((c) => c.name.toLowerCase().includes(needle));
+    if (matches.length === 0) {
+      return {
+        intent: 'find_customer',
+        humanResponse: `No customer matching "${findMatch[1]}".`,
+      };
+    }
+    const list = matches.slice(0, 5).map((c) => `• ${c.name}`).join('\n');
+    return {
+      intent: 'find_customer',
+      humanResponse: `Found ${matches.length}:\n${list}`,
+      action: { type: 'find_customer', params: { query: findMatch[1], matches: matches.length } },
+    };
+  }
+
+  // "summary" / "how was my week" / "recap"
+  if (/(summary|recap|how.*week|how.*doing)/i.test(lower)) {
+    const rev = ctx?.weeklyRevenue ?? 0;
+    const jobs = ctx?.weeklyJobsCompleted ?? 0;
+    const quotes = ctx?.weeklyQuotesSent ?? 0;
+    return {
+      intent: 'weekly_summary',
+      humanResponse: `This week: $${rev.toLocaleString('en-US')} invoiced, ${jobs} job${jobs === 1 ? '' : 's'} completed, ${quotes} quote${quotes === 1 ? '' : 's'} sent.`,
+    };
+  }
+
   // Fallback
   return {
     intent: 'unknown',
-    humanResponse: 'I can help with invoices, scheduling, reminders, and revenue questions. Try "invoice John for $500" or "what did I make last month".',
+    humanResponse: 'I can help with invoices, scheduling, reminders, revenue, job status, customer lookups, and weekly summaries. Try "invoice John for $500", "status update", or "how was my week".',
   };
 }

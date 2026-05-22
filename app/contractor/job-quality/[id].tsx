@@ -17,7 +17,7 @@ import { useState } from 'react';
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { DK } from '../../../src/theme/draftkings';
 import { TYPE, GRID, RADIUS } from '../../../src/theme/tabStyles';
 import { DKScreenHeader } from '../../../src/components/shared/DKScreenHeader';

@@ -1,6 +1,6 @@
 // Hub: Metrics & KPIs - Platform performance and project metrics
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing } from '../../src/theme/spacing';
 import { InlineInsight, VascoInsightCard } from '../../src/components/shared/VascoInsightCard';

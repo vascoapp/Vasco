@@ -11,7 +11,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
 import { logError } from '../../src/utils/errorHandler';
 import { Screen } from '../../src/components/Screen';

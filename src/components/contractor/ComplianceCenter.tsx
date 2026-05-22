@@ -15,7 +15,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { scan as runComplianceScan, getLastRun, type ComplianceScanResult } from '../../services/complianceAgentService';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { formatCurrency } from '../../i18n/formatting';

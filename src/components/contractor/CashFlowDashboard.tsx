@@ -13,7 +13,7 @@ import {
   Pressable,
   Modal,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG } from '../../theme/tabStyles';
 import { TYPE, RADIUS } from '../../theme/tabStyles';

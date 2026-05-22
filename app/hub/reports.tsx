@@ -1,7 +1,7 @@
 // Hub: Reports - Report generation and recent report overview
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing } from '../../src/theme/spacing';
 import { InlineInsight } from '../../src/components/shared/VascoInsightCard';

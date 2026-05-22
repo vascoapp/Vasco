@@ -770,6 +770,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const now = new Date().toISOString();
         const newLead: Lead = { ...input, id: tempId, createdAt: now, updatedAt: now };
         setLeads((prev) => [newLead, ...prev]);
+        // R95 breadcrumb. Sentry no-ops when DSN unset; once activated
+        // we get session traces showing the lead-flow through.
+        trackEvent('lead_created', { source: input.source, hasValue: input.estimatedValue ? 1 : 0 }).catch(() => {});
         if (isSupabaseConfigured) {
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue('leads', 'insert', async () => {
@@ -853,6 +856,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const now = new Date().toISOString();
         const newWorker: Worker = { ...input, id: tempId, createdAt: now, updatedAt: now };
         setWorkers((prev) => [newWorker, ...prev]);
+        trackEvent('worker_added', { role: input.role }).catch(() => {});
         if (isSupabaseConfigured) {
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue('workers', 'insert', async () => {
@@ -930,6 +934,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
 
       moveLeadStatus: async (id, status) => {
+        trackEvent('lead_status_changed', { newStatus: status }).catch(() => {});
         const now = new Date().toISOString();
         setLeads((prev) =>
           prev.map((l) => {

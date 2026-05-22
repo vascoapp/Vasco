@@ -15,7 +15,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { Palette, SemanticColors } from '../../theme/colors';
 import { PAGE_BG, TYPE, GRID, RADIUS } from '../../theme/tabStyles';

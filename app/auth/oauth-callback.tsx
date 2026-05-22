@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { exchangeCodeForToken, verifyOAuthState } from '../../src/integrations/moneybird';
 import { saveAccountingConfig } from '../../src/integrations/accounting';
 import { logWarn } from '../../src/utils/errorHandler';

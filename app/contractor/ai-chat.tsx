@@ -6,8 +6,9 @@
 // human response. This screen dispatches actionable intents to AppState
 // mutators where possible.
 //
-// Lite scope: 6 intents (create_invoice, schedule_job, query_revenue,
-// list_overdue, send_reminder, unknown). Actionable ones don't auto-
+// Scope (R95): 10 intents (create_invoice, schedule_job, query_revenue,
+// list_overdue, send_reminder, cancel_job, query_job_status,
+// find_customer, weekly_summary, unknown). Actionable ones don't auto-
 // execute customer-facing things — they prep + route to the relevant
 // screen for review (EVE Legal AI pattern: AI prepares, contractor
 // approves).
@@ -26,7 +27,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { useAppState } from '../../src/state/AppState';
 import { sendAiCommand, type AiCommandResult } from '../../src/services/aiCommandService';
@@ -44,16 +45,16 @@ interface ChatMessage {
 }
 
 const SUGGESTIONS = [
-  'What did I make last month?',
+  'How was my week?',
   'Show overdue invoices',
   'Invoice John for $500',
-  'Schedule Sarah for Friday at 9am',
+  'Status of active jobs',
 ];
 
 export default function AiChatScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { customers, invoices } = useAppState();
+  const { customers, invoices, jobs, quotes } = useAppState();
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -67,18 +68,42 @@ export default function AiChatScreen() {
   const scrollRef = useRef<ScrollView>(null);
 
   // Light context bundle so Claude can reference real names + numbers.
-  // Sent on every call — small enough (top 20 customers, two scalars).
+  // Sent on every call — small enough (top 20 customers + a few scalars).
   const aiContext = useMemo(() => {
-    const cutoff = Date.now() - 90 * 24 * 60 * 60 * 1000;
-    const recent = invoices.filter((inv) => new Date(inv.lastUpdated ?? inv.createdAt ?? 0).getTime() >= cutoff);
+    const now = Date.now();
+    const cutoff90 = now - 90 * 24 * 60 * 60 * 1000;
+    const cutoff7 = now - 7 * 24 * 60 * 60 * 1000;
+    const recent = invoices.filter((inv) => new Date(inv.lastUpdated ?? inv.createdAt ?? 0).getTime() >= cutoff90);
     const recentInvoiceTotal = Math.round(recent.reduce((s, i) => s + (i.amount ?? 0), 0));
     const overdueCount = invoices.filter((inv) => inv.status === 'overdue').length;
+
+    // R95 — active jobs (in-progress / scheduled) + weekly rollup.
+    const activeJobs = jobs
+      .filter((j) => j.status !== 'completed' && j.status !== 'cancelled')
+      .slice(0, 10)
+      .map((j) => {
+        const cust = customers.find((c) => c.id === j.customerId);
+        return { id: j.id, customer: cust?.name ?? 'Unknown', status: j.status };
+      });
+    const weeklyInvoices = invoices.filter((inv) => new Date(inv.lastUpdated ?? inv.createdAt ?? 0).getTime() >= cutoff7);
+    const weeklyRevenue = Math.round(weeklyInvoices.reduce((s, i) => s + (i.amount ?? 0), 0));
+    const weeklyJobsCompleted = jobs.filter((j) =>
+      j.status === 'completed' && new Date(j.completedAt ?? j.updatedAt ?? 0).getTime() >= cutoff7,
+    ).length;
+    const weeklyQuotesSent = quotes.filter((q) =>
+      q.status === 'sent' && new Date(q.sentAt ?? q.lastUpdated ?? 0).getTime() >= cutoff7,
+    ).length;
+
     return {
       customers: customers.slice(0, 20).map((c) => ({ id: c.id, name: c.name })),
       recentInvoiceTotal,
       overdueCount,
+      activeJobs,
+      weeklyRevenue,
+      weeklyJobsCompleted,
+      weeklyQuotesSent,
     };
-  }, [customers, invoices]);
+  }, [customers, invoices, jobs, quotes]);
 
   const handleSend = async (override?: string) => {
     const text = (override ?? input).trim();
@@ -200,6 +225,14 @@ function routeForIntent(result: AiCommandResult): ChatMessage['routeOnTap'] | un
       return { path: '/hub/savings', label: 'See breakdown' };
     case 'send_reminder':
       return { path: '/(contractor)/geld', label: 'Open Money tab' };
+    case 'cancel_job':
+      return { path: '/(contractor)/werk', label: 'Open Work tab' };
+    case 'query_job_status':
+      return { path: '/(contractor)/werk', label: 'Open Work tab' };
+    case 'find_customer':
+      return { path: '/(contractor)/klanten', label: 'Open Customers' };
+    case 'weekly_summary':
+      return { path: '/hub/savings', label: 'See breakdown' };
     default:
       return undefined;
   }

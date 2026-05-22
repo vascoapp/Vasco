@@ -7,12 +7,16 @@
 // Client (app/contractor/ai-chat.tsx) renders the response + dispatches
 // the intent to AppState mutators.
 //
-// Lite scope: 6 intents.
+// Lite scope: 10 intents (R95 expanded from 6).
 //   - create_invoice
 //   - schedule_job
 //   - query_revenue
 //   - list_overdue
 //   - send_reminder
+//   - cancel_job
+//   - query_job_status
+//   - find_customer
+//   - weekly_summary
 //   - unknown    (chat-only fallback)
 //
 // All intents return a humanResponse for chat display. Actionable ones
@@ -40,6 +44,10 @@ interface AiCommandRequest {
     recentInvoiceTotal?: number;
     overdueCount?: number;
     locale?: string;
+    activeJobs?: Array<{ id: string; customer: string; status: string }>;
+    weeklyRevenue?: number;
+    weeklyJobsCompleted?: number;
+    weeklyQuotesSent?: number;
   };
 }
 
@@ -50,6 +58,10 @@ interface AiCommandResponse {
     | 'query_revenue'
     | 'list_overdue'
     | 'send_reminder'
+    | 'cancel_job'
+    | 'query_job_status'
+    | 'find_customer'
+    | 'weekly_summary'
     | 'unknown';
   humanResponse: string;
   action?: {
@@ -61,7 +73,7 @@ interface AiCommandResponse {
 const SYSTEM_PROMPT = `You are Vasco's office-manager assistant for contractors. Parse the contractor's natural-language command and return a JSON object with this exact shape:
 
 {
-  "intent": "create_invoice" | "schedule_job" | "query_revenue" | "list_overdue" | "send_reminder" | "unknown",
+  "intent": "create_invoice" | "schedule_job" | "query_revenue" | "list_overdue" | "send_reminder" | "cancel_job" | "query_job_status" | "find_customer" | "weekly_summary" | "unknown",
   "humanResponse": string,
   "action": optional { "type": string, "params": object }
 }
@@ -72,6 +84,10 @@ Intent guide:
 - query_revenue: "what did I make {period}" / "revenue {period}". No action — answer in humanResponse using context.recentInvoiceTotal.
 - list_overdue: "show overdue" / "who hasn't paid". No action — answer using context.overdueCount.
 - send_reminder: "remind {name}". action.params = { customerName }
+- cancel_job: "cancel job for {name}" / "cancel {jobId}". action.params = { customerName } or { jobId }
+- query_job_status: "status of {name}" / "where are we on {name}" / "what's happening". No action — list jobs from context.activeJobs in humanResponse.
+- find_customer: "find {name}" / "lookup {name}" / "do I have a customer called {name}". action.params = { query }. Match against context.customers and list matches in humanResponse.
+- weekly_summary: "how was my week" / "weekly summary" / "recap". No action — answer using context.weeklyRevenue, weeklyJobsCompleted, weeklyQuotesSent.
 - unknown: anything else / casual chat. humanResponse is conversational.
 
 Rules:
@@ -123,6 +139,14 @@ Deno.serve(async (req) => {
   }
   if (payload.context?.overdueCount != null) {
     contextLines.push(`Overdue invoice count: ${payload.context.overdueCount}`);
+  }
+  if (payload.context?.activeJobs?.length) {
+    const jobsSample = payload.context.activeJobs.slice(0, 10)
+      .map((j) => `${j.customer}: ${j.status}`).join('; ');
+    contextLines.push(`Active jobs (top 10): ${jobsSample}`);
+  }
+  if (payload.context?.weeklyRevenue != null) {
+    contextLines.push(`This week — revenue: $${payload.context.weeklyRevenue}, jobs completed: ${payload.context.weeklyJobsCompleted ?? 0}, quotes sent: ${payload.context.weeklyQuotesSent ?? 0}`);
   }
   const userMessage = contextLines.length > 0
     ? `${contextLines.join('\n')}\n\nCommand: ${payload.message}`

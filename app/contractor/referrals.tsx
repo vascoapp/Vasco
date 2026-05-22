@@ -7,7 +7,7 @@
 // =============================================================================
 
 import { View, Text, StyleSheet, Pressable, ScrollView, Share, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/context/AuthContext';

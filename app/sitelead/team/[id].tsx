@@ -9,7 +9,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../../src/theme/colors';
 import { Spacing, SafeArea } from '../../../src/theme/spacing';
 import { hapticSuccess } from '../../../src/utils/haptics';

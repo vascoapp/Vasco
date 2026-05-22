@@ -280,9 +280,11 @@ describe('country registry validators', () => {
     expect(validateVatNumber('NL', 'NL123')).toBe(false);
   });
 
-  test('listSupportedCountries returns 10', () => {
+  test('listSupportedCountries returns 11 (EU6 + Nordics + US)', () => {
     const { listSupportedCountries } = require('../../data/countries');
-    expect(listSupportedCountries()).toHaveLength(10);
+    // R72 added US to the registry; this test was originally written
+    // for the 10-country (EU6 + 4 Nordics) world.
+    expect(listSupportedCountries()).toHaveLength(11);
   });
 
   test('listNordicCountries returns SE NO DK FI', () => {

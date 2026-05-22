@@ -1,7 +1,7 @@
 // Hub: Kosten Tools — Benchmarking, leveranciers, onderhandelingen & TCO
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors } from '../../src/theme/colors';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useSupplierNegotiation } from '../../src/services/supplierNegotiationService';

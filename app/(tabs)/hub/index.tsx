@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../../src/theme/colors';
 import { Spacing } from '../../../src/theme/spacing';
 import { AIRecommendations } from '../../../src/components/intelligence/AIRecommendations';

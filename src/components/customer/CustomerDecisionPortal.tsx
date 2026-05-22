@@ -21,7 +21,7 @@ import {
   View,
 } from 'react-native';
 import { SignaturePad } from '../shared/SignaturePad';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';

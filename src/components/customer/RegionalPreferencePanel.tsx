@@ -9,7 +9,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { decisionIntelligence } from '../../intelligence/decisionIntelligence';
 import { DK } from '../../theme/draftkings';

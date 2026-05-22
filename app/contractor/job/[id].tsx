@@ -21,7 +21,7 @@ import {
   Modal,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { Palette, SemanticColors } from '../../../src/theme/colors';
 import { SafeArea } from '../../../src/theme/spacing';
@@ -129,7 +129,7 @@ export default function JobDetailPage() {
     }, 800);
   }, []);
 
-  const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, businessProfile, updateJob } = useAppState();
+  const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, businessProfile, updateJob, workers } = useAppState();
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
   const [signatureModal, setSignatureModal] = useState<{ visible: boolean; onSigned?: () => void }>({ visible: false });
@@ -409,6 +409,51 @@ export default function JobDetailPage() {
                 </View>
                 <Text style={styles.heroDetailText}>{job.travelTime} {t('jobs.minTravelTime', 'min travel')}</Text>
               </View>
+            )}
+
+            {/* R94: worker assignment row. Hidden when crew is empty
+                (solo contractors don't see clutter). Tap opens an
+                Alert picker with active workers + "Unassigned".
+                Closes the R86 crew dispatch loop — workers were
+                CRUD-only before this, no way to attach them to jobs
+                from the job-detail UI. */}
+            {workers.filter((w) => w.isActive).length > 0 && (
+              <Pressable
+                style={styles.heroDetailItem}
+                onPress={() => {
+                  const activeCrew = workers.filter((w) => w.isActive);
+                  Alert.alert(
+                    t('jobs.assignTo', 'Assign to'),
+                    job.customer,
+                    [
+                      ...(appJob?.assignedWorkerId
+                        ? [{
+                            text: t('jobs.unassign', 'Unassign'),
+                            style: 'destructive' as const,
+                            onPress: () => updateJob(id as string, { assignedWorkerId: undefined }),
+                          }]
+                        : []),
+                      ...activeCrew.map((w) => ({
+                        text: w.name,
+                        onPress: () => updateJob(id as string, { assignedWorkerId: w.id }),
+                      })),
+                      { text: t('common.cancel', 'Cancel'), style: 'cancel' as const },
+                    ],
+                  );
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={t('jobs.assignToLabel', 'Assign job to a crew member')}
+              >
+                <View style={styles.heroDetailIcon}>
+                  <Ionicons name="person" size={14} color={Palette.hermesOrange} />
+                </View>
+                <Text style={styles.heroDetailText}>
+                  {appJob?.assignedWorkerId
+                    ? (workers.find((w) => w.id === appJob.assignedWorkerId)?.name ?? t('jobs.unknownWorker', 'Unknown worker'))
+                    : t('jobs.unassigned', 'Unassigned — tap to assign')}
+                </Text>
+                <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
+              </Pressable>
             )}
           </View>
 

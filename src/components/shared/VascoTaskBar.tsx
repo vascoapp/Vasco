@@ -4,7 +4,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable, Keyboard } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { Spacing } from '../../theme/spacing';
 import { TYPE, RADIUS } from '../../theme/tabStyles';

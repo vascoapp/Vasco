@@ -15,7 +15,7 @@ import {
   Modal,
   Dimensions,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors } from '../../theme/colors';
 import { formatCurrency } from '../../i18n/formatting';
 import {
