@@ -39,7 +39,7 @@ import { CapacityOverrunCard } from '../../src/components/contractor/CapacityOve
 export default function VandaagDK() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const { invoices, quotes, jobs, customers, businessProfile } = useAppState();
+  const { invoices, quotes, jobs, customers, businessProfile, updateQuote } = useAppState();
   const today = new Date().toISOString().split('T')[0];
 
   const daySchedule = useDaySchedule(today);
@@ -52,6 +52,25 @@ export default function VandaagDK() {
     evaluateTriggers({ invoices, quotes, jobs, customers })
       .then(() => aiQueue.refresh())
       .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // R94: sweep stale quotes (sent + 30 days no response) → auto-reject.
+  // updateQuote's status='rejected' branch auto-creates the R81 'lost'
+  // lead with sourceQuoteId backlink, so the loss surfaces in the
+  // pipeline for re-engagement instead of disappearing into the void.
+  // Sweep runs once per cold start (no debounce — idempotent because
+  // findStaleQuotes only matches status==='sent').
+  useEffect(() => {
+    import('../../src/services/staleQuoteService').then(({ findStaleQuotes }) => {
+      const { staleIds } = findStaleQuotes(quotes);
+      for (const id of staleIds) {
+        updateQuote(id, { status: 'rejected', declineReason: 'no_response' });
+      }
+    }).catch(() => {});
+    // Only on mount — subsequent quote changes don't need re-sweeping
+    // since the in-process flip from sent→rejected fires its own
+    // optimistic update + R81 lead creation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

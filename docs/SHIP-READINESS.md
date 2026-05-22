@@ -1,12 +1,31 @@
 # Vasco Ship-Readiness — single source of truth
 
 What's NOT in the repo today and needs to land before each ship milestone.
-Reflects state as of R66r73 + R74 US foundation (2026-05-20).
+Reflects state as of R93 (2026-05-22).
 
-> **Scope note**: this doc is **EU6 launch readiness** only. US market
-> expansion is a separate workstream tracked in
-> [`us-expansion-plan.md`](./us-expansion-plan.md) — Phase 0 (foundation
-> primitives) landed in R74; Phase 1+ are operator-greenlight decisions.
+> **Scope note**: this doc covers **TestFlight Internal** readiness for
+> any market. EU6 launch + US expansion are largely complete on the code
+> side; what remains is operator-side activation. See
+> [`us-expansion-plan.md`](./us-expansion-plan.md) for the US phase
+> tracker and [`e2e-audit-r88-2026-05-20.md`](./e2e-audit-r88-2026-05-20.md)
+> for the latest FE↔BE↔DB audit.
+
+## Fastest path to TestFlight Internal
+
+```bash
+# 1. Verify with the preflight script
+npm run preflight:tf
+
+# 2. Apply pending migrations (operator's Supabase)
+supabase db push
+
+# 3. Build + submit
+eas build --profile preview --platform ios
+eas submit --profile preview --platform ios
+```
+
+Internal TF is live immediately after Apple finishes binary processing
+(5–15 min). No App Review needed for internal team distribution.
 
 **Two milestones, two checklists:**
 - **TestFlight Internal** — a build on your iPhone, only people in your

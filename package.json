@@ -19,6 +19,8 @@
     "analyze:bundle": "node scripts/analyze-bundle.mjs",
     "preflight": "node scripts/preflight.mjs",
     "preflight:quick": "node scripts/preflight.mjs --quick",
+    "preflight:tf": "node scripts/preflight-testflight.mjs",
+    "preflight:tf:quick": "node scripts/preflight-testflight.mjs --quick",
     "sentry:upload:ios": "PLATFORM=ios bash scripts/sentry-upload.sh",
     "sentry:upload:android": "PLATFORM=android bash scripts/sentry-upload.sh",
     "typecheck": "tsc --noEmit",
