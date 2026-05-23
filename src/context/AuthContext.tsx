@@ -7,6 +7,7 @@ import { trackEvent, initSession, setUserContext, clearUserContext, flushEvents 
 import { DEMO_MODE } from '../config/demo';
 import { logWarn } from '../utils/errorHandler';
 import { setCurrentUser } from '../lib/currentUser';
+import { addBreadcrumb } from '../lib/errorReporting';
 import type { Session } from '@supabase/supabase-js';
 
 // ---------------------------------------------------------------------------
@@ -427,15 +428,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+      // R102: log every auth event as a Sentry breadcrumb so we can trace
+      // unexpected sign-outs (TF reports of "tap a tab → logged out"). The
+      // breadcrumb captures the event name and whether a session/user is
+      // present, which lets us tell SIGNED_OUT from spurious non-session
+      // events.
+      addBreadcrumb({
+        category: 'auth',
+        message: `auth-event: ${event}`,
+        data: { hasSession: !!s, hasUser: !!s?.user },
+      });
       setSession(s);
       if (s?.user) {
-        setUser({
-          id: s.user.id,
-          email: s.user.email ?? '',
-          name: s.user.user_metadata?.name ?? s.user.email ?? '',
-          role: (s.user.user_metadata?.role as UserRole) ?? 'contractor',
-          company: s.user.user_metadata?.company ?? '',
-          projects: [],
+        // R102: preserve fields that come from local context (onboardingComplete,
+        // country, language, trade, isAannemer). The supabase event payload
+        // only carries user_metadata, so rebuilding from scratch on every
+        // TOKEN_REFRESHED stripped those locally-merged fields and made
+        // user.onboardingComplete flip to undefined mid-session. Merge over
+        // the prior user object instead, but only when the user id matches —
+        // a different id means a different user, in which case we must
+        // rebuild cleanly.
+        setUser((prev) => {
+          const sameUser = prev?.id === s.user.id;
+          const base: User = sameUser && prev ? prev : {
+            id: s.user.id,
+            email: '',
+            name: '',
+            role: 'contractor',
+            company: '',
+            projects: [],
+          };
+          return {
+            ...base,
+            id: s.user.id,
+            email: s.user.email ?? base.email,
+            name: s.user.user_metadata?.name ?? base.name ?? s.user.email ?? '',
+            role: (s.user.user_metadata?.role as UserRole) ?? base.role ?? 'contractor',
+            company: s.user.user_metadata?.company ?? base.company ?? '',
+          };
         });
         // R230: if the user had a pending referral code stashed before
         // email confirmation, apply it now on first SIGNED_IN event.
@@ -444,7 +474,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .then((mod) => mod.applyPendingReferral(s.user.id))
             .catch(() => {});
         }
-      } else {
+      } else if (event === 'SIGNED_OUT') {
+        // R102: ONLY clear user on the explicit SIGNED_OUT event. Other
+        // events with a null session (notably INITIAL_SESSION at startup
+        // when no session is persisted, or any spurious payload) should
+        // not tear down an already-authenticated user. Pre-R102 this
+        // branch fired for any event with !s?.user, which appeared to
+        // be the cause of TF "tap a tab → logged out" reports.
         setUser(null);
       }
     });

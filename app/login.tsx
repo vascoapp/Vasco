@@ -116,6 +116,7 @@ export default function LoginScreen() {
                 <Image
                   source={require('../assets/icon.png')}
                   style={styles.mark}
+                  resizeMode="contain"
                   accessibilityLabel="VascoBuild"
                 />
               </View>
@@ -461,9 +462,8 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   mark: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 96,
+    height: 96,
     alignItems: 'center',
     justifyContent: 'center',
   },
