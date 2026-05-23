@@ -42,54 +42,14 @@ interface WorkerProfile {
   certs: WorkerCert[];
 }
 
-const SEED_WORKERS: WorkerProfile[] = [
-  {
-    id: 'w-1', name: 'Mohammed Al-Rashid', trade: 'Elektricien', tradeIcon: 'flash', team: 'Elektra Team A',
-    certs: [
-      { name: 'VCA Basis', type: 'Veiligheid', expiryDate: '2027-03-15', status: 'valid' },
-      { name: 'NEN 1010', type: 'Vakbekwaam', expiryDate: '2026-11-30', status: 'valid' },
-      { name: 'BHV', type: 'EHBO', expiryDate: '2026-04-10', status: 'expiring' },
-    ],
-  },
-  {
-    id: 'w-2', name: 'Pieter de Groot', trade: 'Loodgieter', tradeIcon: 'water', team: 'Loodgieter Team',
-    certs: [
-      { name: 'VCA Basis', type: 'Veiligheid', expiryDate: '2026-08-20', status: 'valid' },
-      { name: 'Uneto-VNI', type: 'Vakbekwaam', expiryDate: '2026-12-31', status: 'valid' },
-      { name: 'F-gassen (STEK)', type: 'Milieu', expiryDate: '2026-02-01', status: 'expired' },
-    ],
-  },
-  {
-    id: 'w-3', name: 'Erik Jansen', trade: 'Timmerman', tradeIcon: 'hammer', team: 'Timmerwerk',
-    certs: [
-      { name: 'VCA Vol', type: 'Veiligheid', expiryDate: '2027-01-15', status: 'valid' },
-      { name: 'Steigerbouwer', type: 'Vakbekwaam', expiryDate: '2026-06-30', status: 'valid' },
-      { name: 'BHV', type: 'EHBO', expiryDate: '2025-12-01', status: 'expired' },
-    ],
-  },
-  {
-    id: 'w-4', name: 'Lisa Bakker', trade: 'Schilder', tradeIcon: 'color-palette', team: 'Schilders',
-    certs: [
-      { name: 'VCA Basis', type: 'Veiligheid', expiryDate: '2026-09-15', status: 'valid' },
-      { name: 'Hoogwerker', type: 'Machine', expiryDate: '2026-05-20', status: 'expiring' },
-    ],
-  },
-  {
-    id: 'w-5', name: 'Jan van Bergen', trade: 'Metselaar', tradeIcon: 'cube', team: 'Metselwerk',
-    certs: [
-      { name: 'VCA Basis', type: 'Veiligheid', expiryDate: '2026-07-01', status: 'valid' },
-      { name: 'Steigerkeuring', type: 'Vakbekwaam', expiryDate: '2026-04-01', status: 'expiring' },
-      { name: 'Heftruckcertificaat', type: 'Machine', expiryDate: '2027-02-28', status: 'valid' },
-    ],
-  },
-  {
-    id: 'w-6', name: 'Ahmed Khalil', trade: 'Elektricien', tradeIcon: 'flash', team: 'Elektra Team A',
-    certs: [
-      { name: 'VCA Basis', type: 'Veiligheid', expiryDate: '2026-10-10', status: 'valid' },
-      { name: 'NEN 3140', type: 'Vakbekwaam', expiryDate: '2026-03-25', status: 'expiring' },
-    ],
-  },
-];
+// R114: same bug class as R113 (bedrijf.tsx). This array was previously
+// six hardcoded fake workers (Mohammed Al-Rashid, Pieter de Groot,
+// Erik Jansen, Lisa Bakker, Jan van Bergen, Ahmed Khalil) seeded into
+// AsyncStorage on first load — without DEMO_MODE gating, so any real
+// site lead would see them. /sitelead is currently redirected to
+// /(contractor) per R66r47 so the leak isn't hitting users today,
+// but the bug stays latent until site-lead views ship for real users.
+const SEED_WORKERS: WorkerProfile[] = [];
 
 const STATUS_CONFIG: Record<CertStatus, { labelKey: string; color: string; bg: string; icon: IconName }> = {
   valid: { labelKey: 'workerCerts.valid', color: SemanticColors.feedbackSuccess, bg: SemanticColors.feedbackSuccessBg, icon: 'checkmark-circle' },
@@ -108,14 +68,17 @@ export default function WorkerCertsScreen() {
   const [expandedWorker, setExpandedWorker] = useState<string | null>(null);
   const [workers, setWorkers] = useState<WorkerProfile[]>([]);
 
-  // Load from AsyncStorage, seed if empty
+  // Load from AsyncStorage, seed if empty.
+  // R114: versioned storage key (@vasco_sl_workers → _v2) so users who
+  // got the previous build's seed data persisted in AsyncStorage start
+  // fresh. The v1 key gets cleaned up by sessionCleanup on next logout.
   useEffect(() => {
-    AsyncStorage.getItem('@vasco_sl_workers').then(raw => {
+    AsyncStorage.getItem('@vasco_sl_workers_v2').then(raw => {
       if (raw) {
         setWorkers(JSON.parse(raw));
       } else {
         setWorkers(SEED_WORKERS);
-        AsyncStorage.setItem('@vasco_sl_workers', JSON.stringify(SEED_WORKERS)).catch(() => {});
+        AsyncStorage.setItem('@vasco_sl_workers_v2', JSON.stringify(SEED_WORKERS)).catch(() => {});
       }
     }).catch(() => setWorkers(SEED_WORKERS));
   }, []);
