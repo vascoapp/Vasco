@@ -13,6 +13,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { DK } from '../../src/theme/draftkings';
 import { DKLabel } from '../../src/components/shared/DKLabel';
+import { DEMO_MODE } from '../../src/config/demo';
 
 export default function CustomerLandingScreen() {
   const { t } = useTranslation();
@@ -44,9 +45,14 @@ export default function CustomerLandingScreen() {
         {/* R92: official VascoBuild logo */}
         <View style={s.hero}>
           <View style={s.markWrap}>
+            {/* R115: same crop fix as login/signup (R107). VascoBuild icon
+                artwork extends to its corners; the circular borderRadius
+                chopped it. Use resizeMode="contain" so the full icon
+                renders. */}
             <Image
               source={require('../../assets/icon.png')}
               style={s.mark}
+              resizeMode="contain"
               accessibilityLabel="VascoBuild"
             />
           </View>
@@ -96,11 +102,19 @@ export default function CustomerLandingScreen() {
           <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
         </Pressable>
 
-        {/* Demo secondary */}
-        <Pressable style={({ pressed }) => [s.demoBtn, pressed && { opacity: 0.85 }]} onPress={handleDemo}>
-          <Ionicons name="play-circle-outline" size={18} color={DK.colors.accent} />
-          <DKLabel style={s.demoBtnText}>{t('customerPortal.demo', 'Demo modus')}</DKLabel>
-        </Pressable>
+        {/* R115: demo secondary button only shows in DEMO_MODE. Pre-R115
+            it was unconditional, so a real customer landing on
+            /customer/ saw a tempting "Demo modus" button that, when
+            tapped in prod, called the access-code endpoint with the
+            hardcoded 'VDB24A' fixture — which doesn't exist on the
+            real BE → "Project not found" error. Confusing for actual
+            customers; safe to hide outside dev. */}
+        {DEMO_MODE ? (
+          <Pressable style={({ pressed }) => [s.demoBtn, pressed && { opacity: 0.85 }]} onPress={handleDemo}>
+            <Ionicons name="play-circle-outline" size={18} color={DK.colors.accent} />
+            <DKLabel style={s.demoBtnText}>{t('customerPortal.demo', 'Demo modus')}</DKLabel>
+          </Pressable>
+        ) : null}
 
         {/* Footer */}
         <View style={s.footer}>
@@ -135,7 +149,7 @@ const s = StyleSheet.create({
     marginBottom: 8,
   },
   mark: {
-    width: 72, height: 72, borderRadius: 36,
+    width: 80, height: 80,
     alignItems: 'center', justifyContent: 'center',
   },
   brand: {
