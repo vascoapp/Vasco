@@ -151,10 +151,13 @@ export default function SignupScreen() {
                 <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
               </Pressable>
               <View style={styles.markWrap}>
-                {/* R92: official VascoBuild logo */}
+                {/* R92: official VascoBuild logo. R105 — no circular crop;
+                    icon.png artwork extends to its corners and was being
+                    chopped by borderRadius. */}
                 <Image
                   source={require('../assets/icon.png')}
                   style={styles.mark}
+                  resizeMode="contain"
                   accessibilityLabel="VascoBuild"
                 />
               </View>
@@ -264,7 +267,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   mark: {
-    width: 48, height: 48, borderRadius: 24,
+    width: 56, height: 56,
     alignItems: 'center', justifyContent: 'center',
   },
   title: { fontSize: 30, fontFamily: 'Archivo_900Black', color: SemanticColors.textPrimary, marginTop: 4, letterSpacing: -0.8 },

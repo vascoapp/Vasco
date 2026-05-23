@@ -96,10 +96,11 @@ export default function ForgotPasswordScreen() {
 
         <View style={styles.content}>
           <View style={styles.markWrap}>
-            {/* R92: official VascoBuild logo */}
+            {/* R92: official VascoBuild logo. R105 — no circular crop. */}
             <Image
               source={require('../assets/icon.png')}
               style={styles.mark}
+              resizeMode="contain"
               accessibilityLabel="VascoBuild"
             />
           </View>
@@ -175,7 +176,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   mark: {
-    width: 56, height: 56, borderRadius: 28,
+    width: 64, height: 64,
     alignItems: 'center', justifyContent: 'center',
   },
   title: {

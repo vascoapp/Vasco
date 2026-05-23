@@ -89,10 +89,11 @@ export default function ResetPasswordScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <FadeIn delay={0}>
             <View style={styles.markWrap}>
-              {/* R92: official VascoBuild logo */}
+              {/* R92: official VascoBuild logo. R105 — no circular crop. */}
               <Image
                 source={require('../assets/icon.png')}
                 style={styles.mark}
+                resizeMode="contain"
                 accessibilityLabel="VascoBuild"
               />
             </View>
@@ -157,7 +158,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   mark: {
-    width: 48, height: 48, borderRadius: 24,
+    width: 56, height: 56,
     alignItems: 'center', justifyContent: 'center',
   },
   title: { fontSize: 28, fontFamily: 'Archivo_900Black', color: SemanticColors.textPrimary, letterSpacing: -0.8 },
