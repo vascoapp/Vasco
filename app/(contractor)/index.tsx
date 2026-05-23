@@ -258,7 +258,6 @@ export default function VandaagDK() {
                       measure the actual rendered width. */}
                   <Text
                     style={styles.heroCTAText}
-                    numberOfLines={1}
                     accessibilityLabel={
                       todayJobs.length > 0
                         ? t('dk.actions.openJob', 'Open job')

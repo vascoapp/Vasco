@@ -662,7 +662,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, error: 'Supabase not configured – running in demo mode' };
     }
     setIsLoading(true);
-    const { error } = await supabase.auth.signUp({ email, password });
+    // R107: tell Supabase where to redirect the user after they click the
+    // confirmation link in the signup email. Without this, Supabase falls
+    // back to its dashboard Site URL (defaults to localhost or an unset
+    // value), so the "Confirm" button in the email lands on a 404 / blank
+    // page instead of returning to the app. The `vasco://` scheme is
+    // declared in app.json ios.scheme, and app/auth/callback.tsx handles
+    // the resulting access_token+refresh_token query params.
+    //
+    // REQUIRED Supabase Dashboard config: Authentication → URL
+    // Configuration → Redirect URLs must whitelist `vasco://auth/callback`
+    // (and optionally `https://vascobuild.com/auth/callback` for universal
+    // link fallback). Otherwise Supabase rejects the redirect.
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: 'vasco://auth/callback' },
+    });
     setIsLoading(false);
     if (error) return { success: false, error: error.message };
     return { success: true };

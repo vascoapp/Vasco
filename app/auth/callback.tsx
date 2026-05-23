@@ -1,9 +1,13 @@
 // =============================================================================
 // AUTH CALLBACK — handles Supabase magic-link, reset-password, email-confirm
 // =============================================================================
-// Deep-linked as vasco://auth/callback?type=recovery|signup|magiclink&...
-// Supabase client picks up the params from the URL and fires auth listeners.
-// We just surface a friendly status and forward to the right screen.
+// Deep-linked as vasco://auth/callback#access_token=...&refresh_token=...&type=...
+//
+// R107: Supabase puts auth tokens in the URL FRAGMENT (#), not the query
+// string. useLocalSearchParams() only reads ?query params, so tokens were
+// invisible to the callback — making the email "Confirm" button land here
+// without authenticating the user. We now read the raw initial URL via
+// expo-linking and parse the fragment manually.
 // =============================================================================
 
 import { useEffect, useState } from 'react';
@@ -11,41 +15,82 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import * as Linking from 'expo-linking';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { supabase } from '../../src/lib/supabase';
+
+interface AuthHashParams {
+  access_token?: string;
+  refresh_token?: string;
+  type?: string;
+  error_description?: string;
+}
+
+function parseHashParams(url: string | null): AuthHashParams {
+  if (!url) return {};
+  const hashIdx = url.indexOf('#');
+  if (hashIdx === -1) return {};
+  const fragment = url.slice(hashIdx + 1);
+  const out: AuthHashParams = {};
+  for (const piece of fragment.split('&')) {
+    const eq = piece.indexOf('=');
+    if (eq === -1) continue;
+    const key = decodeURIComponent(piece.slice(0, eq));
+    const value = decodeURIComponent(piece.slice(eq + 1));
+    if (key === 'access_token' || key === 'refresh_token' || key === 'type' || key === 'error_description') {
+      out[key] = value;
+    }
+  }
+  return out;
+}
 
 export default function AuthCallbackScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const params = useLocalSearchParams<{ type?: string; access_token?: string; refresh_token?: string; error_description?: string }>();
+  // Query-string params are still useful as a fallback for older Supabase
+  // flows that put params on `?` instead of `#`.
+  const queryParams = useLocalSearchParams<{ type?: string; access_token?: string; refresh_token?: string; error_description?: string }>();
   const [status, setStatus] = useState<'processing' | 'done' | 'error'>('processing');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
     (async () => {
-      if (params.error_description) {
+      // Get the raw URL the app was opened with — the only way to access
+      // the fragment portion in React Native (Expo Router strips it).
+      const initialUrl = await Linking.getInitialURL().catch(() => null);
+      const hashParams = parseHashParams(initialUrl);
+
+      // Hash params take precedence; query is fallback.
+      const access_token = hashParams.access_token ?? (queryParams.access_token ? String(queryParams.access_token) : undefined);
+      const refresh_token = hashParams.refresh_token ?? (queryParams.refresh_token ? String(queryParams.refresh_token) : undefined);
+      const type = hashParams.type ?? (queryParams.type ? String(queryParams.type) : undefined);
+      const error_description = hashParams.error_description ?? (queryParams.error_description ? String(queryParams.error_description) : undefined);
+
+      if (error_description) {
         setStatus('error');
-        setMessage(String(params.error_description));
+        setMessage(error_description);
         return;
       }
-      // The Supabase client picks up the session from the URL automatically in
-      // most cases; we additionally handle explicit access/refresh tokens.
-      if (params.access_token && params.refresh_token) {
+
+      if (access_token && refresh_token) {
         try {
-          await supabase.auth.setSession({
-            access_token: String(params.access_token),
-            refresh_token: String(params.refresh_token),
-          });
-        } catch {}
+          await supabase.auth.setSession({ access_token, refresh_token });
+        } catch {
+          setStatus('error');
+          setMessage(t('auth.confirmFailed', 'We could not confirm this link.'));
+          return;
+        }
       }
+
       setStatus('done');
-      // Route based on type
       setTimeout(() => {
-        if (params.type === 'recovery') router.replace('/reset-password');
+        if (type === 'recovery') router.replace('/reset-password');
         else router.replace('/');
       }, 400);
     })();
-  }, [params.type, params.access_token, params.refresh_token, params.error_description]);
+    // Run once on mount — URL is read from Linking.getInitialURL().
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
