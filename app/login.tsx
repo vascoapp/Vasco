@@ -51,23 +51,44 @@ export default function LoginScreen() {
 
   const showAuthEventLog = async () => {
     try {
+      // R106: also expose env state. The "no API key found" report on TF
+      // suggests R105's env.ts fix to use direct process.env references
+      // may not have inlined the SUPABASE_ANON_KEY — Metro can be fussy
+      // about long string env vars. Showing presence + length here lets
+      // us verify what actually shipped in the JS bundle.
+      const { ENV, isSupabaseConfigured } = await import('../src/config/env');
+      const { DEMO_MODE } = await import('../src/config/demo');
+      const urlPreview = ENV.SUPABASE_URL ? `${ENV.SUPABASE_URL.slice(0, 30)}…(${ENV.SUPABASE_URL.length})` : '(empty)';
+      const keyPreview = ENV.SUPABASE_ANON_KEY
+        ? `${ENV.SUPABASE_ANON_KEY.slice(0, 12)}…${ENV.SUPABASE_ANON_KEY.slice(-6)} (${ENV.SUPABASE_ANON_KEY.length})`
+        : '(empty)';
+
       const raw = await AsyncStorage.getItem('@vasco_auth_event_log');
       const log: Array<{ t: number; event: string; hasSession: boolean; hasUser: boolean }> = raw ? JSON.parse(raw) : [];
-      if (log.length === 0) {
-        Alert.alert('Auth diagnostic', 'No auth events logged yet.');
-        return;
-      }
-      const lines = log.slice(-15).map((e) => {
-        const dt = new Date(e.t);
-        const hh = String(dt.getHours()).padStart(2, '0');
-        const mm = String(dt.getMinutes()).padStart(2, '0');
-        const ss = String(dt.getSeconds()).padStart(2, '0');
-        const flags = `${e.hasSession ? 'S' : '-'}${e.hasUser ? 'U' : '-'}`;
-        return `${hh}:${mm}:${ss}  ${e.event}  [${flags}]`;
-      }).join('\n');
-      Alert.alert('Auth events (last 15)', lines);
+      const eventLines = log.length === 0
+        ? '(no auth events yet)'
+        : log.slice(-10).map((e) => {
+            const dt = new Date(e.t);
+            const hh = String(dt.getHours()).padStart(2, '0');
+            const mm = String(dt.getMinutes()).padStart(2, '0');
+            const ss = String(dt.getSeconds()).padStart(2, '0');
+            const flags = `${e.hasSession ? 'S' : '-'}${e.hasUser ? 'U' : '-'}`;
+            return `${hh}:${mm}:${ss}  ${e.event} [${flags}]`;
+          }).join('\n');
+
+      const body = [
+        `URL: ${urlPreview}`,
+        `KEY: ${keyPreview}`,
+        `configured: ${isSupabaseConfigured}`,
+        `demoMode: ${DEMO_MODE}`,
+        `__DEV__: ${__DEV__}`,
+        '',
+        '— recent auth events —',
+        eventLines,
+      ].join('\n');
+      Alert.alert('Vasco diagnostic', body);
     } catch (err) {
-      Alert.alert('Auth diagnostic', `Could not read log: ${String(err)}`);
+      Alert.alert('Vasco diagnostic', `Could not read state: ${String(err)}`);
     }
   };
 

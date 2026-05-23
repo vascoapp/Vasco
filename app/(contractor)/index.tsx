@@ -404,7 +404,7 @@ function JobRow({ job, onPress }: { job: ScheduledJob; onPress: () => void }) {
         <Text style={jobStyles.customer} numberOfLines={1}>{job.customerName}</Text>
       </View>
       <View style={[jobStyles.statusChip, { borderColor: statusColor + '55', backgroundColor: statusColor + '1A' }]}>
-        <Text style={[jobStyles.statusChipText, { color: statusColor }]}>{status}</Text>
+        <Text style={[jobStyles.statusChipText, { color: statusColor }]} numberOfLines={1}>{status.toUpperCase()}</Text>
       </View>
     </Pressable>
   );
@@ -649,7 +649,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: DK.colors.highlight,
     letterSpacing: 1,
-    textTransform: 'uppercase',
   },
   licenseWarnBody: {
     fontFamily: DK.type.body500,
@@ -771,7 +770,6 @@ const jobStyles = StyleSheet.create({
     fontFamily: DK.type.display700,
     fontSize: 10,
     letterSpacing: 1.3,
-    textTransform: 'uppercase',
   },
 });
 
@@ -807,8 +805,8 @@ function LicenseExpiryWarning({
         <Ionicons name="ribbon" size={18} color={DK.colors.highlight} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={styles.licenseWarnTitle}>
-          {t('licenses.warnTitle', 'License expiring')}
+        <Text style={styles.licenseWarnTitle} numberOfLines={1}>
+          {t('licenses.warnTitle', 'License expiring').toUpperCase()}
         </Text>
         <Text style={styles.licenseWarnBody}>{summary}</Text>
       </View>
