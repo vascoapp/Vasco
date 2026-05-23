@@ -124,6 +124,31 @@ export type WorkerRow = {
   updated_at: string;
 };
 
+// R81 leads table. Mirrors migration 20260520000002 1:1. Domain shape in
+// src/domain/lead.ts. Added in R96 — previously the leads table existed
+// in DB but had no Row type, so cold-start hydration couldn't be wired.
+export type LeadRow = {
+  id: string;
+  user_id: string;
+  status: 'new' | 'contacted' | 'estimate_sent' | 'won' | 'lost';
+  source:
+    | 'website_form' | 'phone_inbound' | 'referral' | 'social'
+    | 'google_lsa' | 'angi' | 'thumbtack' | 'manual'
+    | 'rejected_estimate' | 'other';
+  customer_name: string;
+  customer_phone: string | null;
+  customer_email: string | null;
+  customer_id: string | null;
+  job_description: string | null;
+  estimated_value: number | null;
+  notes: string | null;
+  source_quote_id: string | null;
+  created_at: string;
+  updated_at: string;
+  contacted_at: string | null;
+  converted_at: string | null;
+};
+
 export type DocumentRow = {
   id: string;
   user_id: string;

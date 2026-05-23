@@ -49,6 +49,8 @@ import { USE_SEED_DATA } from '../config/demo';
 import {
   loadQuotes,
   loadInvoices,
+  loadLeads,
+  loadWorkers,
   loadBusinessProfile,
   loadLineItems,
   loadJobs,
@@ -328,7 +330,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   const refreshData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [q, inv, bp, li, cust, j, mat, sup, jm, po] = await Promise.all([
+      const [q, inv, bp, li, cust, j, mat, sup, jm, po, ld, wk] = await Promise.all([
         loadQuotes(),
         loadInvoices(),
         loadBusinessProfile(),
@@ -339,9 +341,17 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         loadSuppliers(),
         loadJobMaterials(),
         loadPriceObservations(),
+        loadLeads(),
+        loadWorkers(),
       ]);
       setQuotes(q);
       setInvoices(inv);
+      // R96 — hydrate leads + workers (rule #8 gap fix). Previously these
+      // were write-only from the client's perspective; the entity tables
+      // existed but nothing READ from them, so every cold-start the
+      // pipeline + crew screens looked empty even if rows existed in BE.
+      setLeads(ld);
+      setWorkers(wk);
       setBusinessProfile(bp);
       // R66r50: push vatScheme into currentUser ref so non-hook consumers
       // (photo-quote preview, spreadsheet extractor) compute KOR-correct VAT.

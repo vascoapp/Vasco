@@ -1,4 +1,4 @@
-import type { DocumentRow, LineItemRow, BusinessSettingsRow, CustomerRow, JobRow, MaterialCatalogRow, SupplierRow, JobMaterialRow, PriceObservationRow } from './database.types';
+import type { DocumentRow, LineItemRow, BusinessSettingsRow, CustomerRow, JobRow, MaterialCatalogRow, SupplierRow, JobMaterialRow, PriceObservationRow, LeadRow } from './database.types';
 import type { Quote, Invoice } from '../domain/documents';
 import type { QuoteLineItem } from '../domain/lineItems';
 import type { BusinessProfile } from '../domain/business';
@@ -6,6 +6,7 @@ import type { Customer } from '../domain/customers';
 import type { Job, JobStatus, JobPriority } from '../domain/jobs';
 import type { Material, DemandPattern, JobMaterial, JobMaterialStatus, PriceObservation } from '../domain/materials';
 import type { Supplier, SupplierStatus } from '../domain/suppliers';
+import type { Lead } from '../domain/lead';
 
 // ── Documents ────────────────────────────────────────────────
 
@@ -238,6 +239,29 @@ export function jobRowToJob(row: JobRow): Job {
 // R86 crew dispatch lite. workers row → domain Worker.
 import type { WorkerRow } from './database.types';
 import type { Worker } from '../domain/worker';
+
+// R96 — leads cold-start hydration. Without this, the leads table is
+// write-only from the client's perspective — a contractor's lead pipeline
+// resets to empty every cold-start.
+export function leadRowToLead(row: LeadRow): Lead {
+  return {
+    id: row.id,
+    status: row.status,
+    source: row.source,
+    customerName: row.customer_name,
+    customerPhone: row.customer_phone ?? undefined,
+    customerEmail: row.customer_email ?? undefined,
+    customerId: row.customer_id ?? undefined,
+    jobDescription: row.job_description ?? undefined,
+    estimatedValue: row.estimated_value ?? undefined,
+    notes: row.notes ?? undefined,
+    sourceQuoteId: row.source_quote_id ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    contactedAt: row.contacted_at ?? undefined,
+    convertedAt: row.converted_at ?? undefined,
+  };
+}
 
 export function workerRowToWorker(row: WorkerRow): Worker {
   return {

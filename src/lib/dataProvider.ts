@@ -2,7 +2,7 @@ import { supabase, isSupabaseConfigured } from './supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logWarn } from '../utils/errorHandler';
 import { isUuid } from './idShape';
-import type { DocumentRow, LineItemRow, BusinessSettingsRow, CustomerRow, MaterialCatalogRow, SupplierRow, JobMaterialRow, PriceObservationRow, ProjectRow, ExpenseRow, QuoteAcceptanceLinkRow, DecisionTrackerRow, DecisionItemRow } from './database.types';
+import type { DocumentRow, LineItemRow, BusinessSettingsRow, CustomerRow, MaterialCatalogRow, SupplierRow, JobMaterialRow, PriceObservationRow, ProjectRow, ExpenseRow, QuoteAcceptanceLinkRow, DecisionTrackerRow, DecisionItemRow, LeadRow, WorkerRow } from './database.types';
 import { quotes as mockQuotes, invoices as mockInvoices } from '../data/mockDocuments';
 import { quoteLineItems as mockLineItems } from '../data/mockLineItems';
 import { businessProfile as mockBusinessProfile } from '../data/mockBusiness';
@@ -22,6 +22,8 @@ import {
   supplierRowToSupplier,
   jobMaterialRowToJobMaterial,
   priceObservationRowToPriceObservation,
+  leadRowToLead,
+  workerRowToWorker,
 } from './mappers';
 import type { Quote, Invoice } from '../domain/documents';
 import type { QuoteLineItem } from '../domain/lineItems';
@@ -30,6 +32,8 @@ import type { Customer } from '../domain/customers';
 import type { Job } from '../domain/jobs';
 import type { Material, JobMaterial, PriceObservation } from '../domain/materials';
 import type { Supplier } from '../domain/suppliers';
+import type { Lead } from '../domain/lead';
+import type { Worker } from '../domain/worker';
 import type { JobRow } from './database.types';
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -531,6 +535,35 @@ export async function loadJobs(): Promise<Job[]> {
   if (!isSupabaseConfigured) return mockJobs;
   const rows = await listJobs();
   return (rows as JobRow[]).map(jobRowToJob);
+}
+
+// R96 — leads cold-start hydration. Mirror loadCustomers; demo mode
+// returns empty since there's no mockLeads fixture (R81 didn't add one).
+export async function loadLeads(): Promise<Lead[]> {
+  if (!isSupabaseConfigured) return [];
+  // Brand-new table — supabase typegen hasn't picked it up yet, so cast.
+  const { data, error } = await (supabase.from('leads') as any)
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) {
+    logWarn('loadLeads', `failed: ${error.message}`);
+    return [];
+  }
+  return (data ?? []).map((row: LeadRow) => leadRowToLead(row));
+}
+
+// R96 — workers cold-start hydration. Same shape as leads — RLS handles
+// the user_id filter so the SELECT is unfiltered client-side.
+export async function loadWorkers(): Promise<Worker[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await (supabase.from('workers') as any)
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) {
+    logWarn('loadWorkers', `failed: ${error.message}`);
+    return [];
+  }
+  return (data ?? []).map((row: WorkerRow) => workerRowToWorker(row));
 }
 
 // ── Materials ───────────────────────────────────────────────
