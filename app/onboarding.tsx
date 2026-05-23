@@ -472,11 +472,23 @@ export default function OnboardingScreen() {
         // Non-blocking: local AsyncStorage copy is still the source of truth in demo mode
       }
 
+      // R109: derive isAannemer from multi-trade selection. CLAUDE.md
+      // defines aannemer as "coordinates multiple trades per project
+      // (renovation GC)". If the user picked 2+ trades in onboarding,
+      // they're an aannemer and should see the Projects tab + multi-trade
+      // quote builder. Single-trade contractors see the streamlined
+      // (contractor) view. Was previously NEVER set for real signups
+      // — only the demo aannemer@vasco.dev account had it true —
+      // meaning every werk.tsx `!!user?.isAannemer` gate evaluated false
+      // for every real user.
+      const isAannemer = selectedTrades.length > 1;
+
       const userUpdates = {
         trade: selectedTrades[0],
         country: country ?? undefined,
         language,
         onboardingComplete: true,
+        isAannemer,
       };
       updateUser(userUpdates);
       await AsyncStorage.setItem('@vasco_user_profile', JSON.stringify(userUpdates)).catch(() => {});
@@ -498,6 +510,10 @@ export default function OnboardingScreen() {
               country: country ?? undefined,
               trade: selectedTrades[0],
               language,
+              is_aannemer: isAannemer,
+              // R109: teamSize captured so downstream UI can hide
+              // worker/crew/payroll surfaces for solo contractors.
+              team_size: teamSize ?? 'solo',
             },
           });
         }

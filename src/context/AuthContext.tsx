@@ -411,6 +411,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // onboardingComplete + country/trade/language from
           // user_metadata so cold-start users get the same correct
           // redirect target as warm-start ones.
+          // R109: also read is_aannemer so the (contractor) view can
+          // show the Projects tab + multi-trade quote builder for
+          // renovation GCs.
           const md = s.user.user_metadata ?? {};
           setUser({
             id: s.user.id,
@@ -423,6 +426,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             country: md.country as Country | undefined,
             trade: md.trade as string | undefined,
             language: md.language as Language | undefined,
+            isAannemer: md.is_aannemer === true,
           });
         }
       })
@@ -481,6 +485,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const metaCountry = md.country as Country | undefined;
         const metaTrade = md.trade as string | undefined;
         const metaLanguage = md.language as Language | undefined;
+        // R109: is_aannemer (renovation GC) determines whether the
+        // contractor sees the Projects tab + multi-trade quote builder.
+        const metaIsAannemer = md.is_aannemer === true;
 
         setUser((prev) => {
           const sameUser = prev?.id === s.user.id;
@@ -509,6 +516,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             country: metaCountry ?? base.country,
             trade: metaTrade ?? base.trade,
             language: metaLanguage ?? base.language,
+            isAannemer: metaIsAannemer || base.isAannemer === true,
           };
         });
         // R230: if the user had a pending referral code stashed before

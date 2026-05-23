@@ -505,13 +505,23 @@ export default function VascoScreen() {
               </Pressable>
             </View>
 
-            <DKLabel style={s.subsectionLabel}>{t('dk.ai.team', 'Team')}</DKLabel>
-            <View style={s.chipRow}>
-              <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/crew' as any)}>
-                <Ionicons name="people-outline" size={14} color={DK.colors.accent} />
-                <DKLabel style={s.chipText}>{t('ai.crew', 'Crew')}</DKLabel>
-              </Pressable>
-            </View>
+            {/* R109: only show the Team subsection to contractors who
+                actually have a team (teamSize !== 'solo') OR coordinate
+                multiple trades (isAannemer). Solo single-trade contractors
+                (e.g., a one-man plumber) never need worker assignment,
+                crew dispatch, or subcontractor management — surfacing
+                these chips just creates feature-overreach noise. */}
+            {(user?.isAannemer || (businessProfile?.teamSize && businessProfile.teamSize !== 'solo')) ? (
+              <>
+                <DKLabel style={s.subsectionLabel}>{t('dk.ai.team', 'Team')}</DKLabel>
+                <View style={s.chipRow}>
+                  <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/crew' as any)}>
+                    <Ionicons name="people-outline" size={14} color={DK.colors.accent} />
+                    <DKLabel style={s.chipText}>{t('ai.crew', 'Crew')}</DKLabel>
+                  </Pressable>
+                </View>
+              </>
+            ) : null}
 
             <DKLabel style={s.subsectionLabel}>{t('dk.ai.compliance', 'Compliance')}</DKLabel>
             <View style={s.chipRow}>

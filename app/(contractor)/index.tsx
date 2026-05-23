@@ -18,6 +18,7 @@ import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { DK } from '../../src/theme/draftkings';
 import { useAppState } from '../../src/state/AppState';
 import { useDaySchedule, type ScheduledJob } from '../../src/services/smartSchedulerService';
@@ -42,7 +43,7 @@ import { CapacityOverrunCard } from '../../src/components/contractor/CapacityOve
 // social-greeting boundaries (5am, 12pm, 6pm). Each locale's
 // common.goodMorning / .goodAfternoon / .goodEvening keys already exist
 // across all six languages (nl/de/fr/es/it/en).
-function getGreeting(t: (key: string, fallback?: string) => string): string {
+function getGreeting(t: TFunction): string {
   const hour = new Date().getHours();
   if (hour >= 5 && hour < 12) return t('dk.common.goodMorning', 'Good morning');
   if (hour >= 12 && hour < 18) return t('dk.common.goodAfternoon', 'Good afternoon');
