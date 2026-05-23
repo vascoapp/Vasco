@@ -36,7 +36,8 @@
     "thisJob": "este trabajo",
     "apply": "Aplicar",
     "ignore": "Ignorar",
-    "ok": "OK"
+    "ok": "OK",
+    "info": "Información"
   },
   "tabs": {
     "today": "Hoy",
@@ -2851,5 +2852,19 @@
     "noBenchmarksDesc": "Se necesitan más datos para los benchmarks",
     "noDataYet": "Aún no hay datos de mercado",
     "noDataDesc": "Escanee facturas de proveedores o cree presupuestos para construir su inteligencia de precios."
+  },
+  "pdfModal": {
+    "labelInvoice": "Factura",
+    "labelQuote": "Presupuesto",
+    "profileIncomplete": "Perfil incompleto",
+    "profileIncompleteBody": "Completa los datos de tu empresa antes de compartir una factura.",
+    "invoiceNotFound": "Factura no encontrada.",
+    "generateFailed": "No se pudo generar el PDF.",
+    "quotePdfComingSoon": "El soporte para PDF de {{label}} llegará pronto.",
+    "intro": "Genera un PDF profesional y compártelo por correo, WhatsApp o guárdalo.",
+    "whatHappens": "Qué sucede",
+    "whatHappensBody": "Vasco crea un PDF con tu marca, con los datos de tu empresa, líneas, cálculo del IVA e información de pago. Puedes compartir o guardar el PDF directamente.",
+    "generating": "Generando…",
+    "generateLabel": "Generar PDF de {{label}}"
   }
 }

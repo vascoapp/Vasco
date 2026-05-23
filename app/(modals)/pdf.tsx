@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
 import { Screen } from '../../src/components/Screen';
 import { SemanticColors } from '../../src/theme/colors';
@@ -12,13 +13,22 @@ import { generateInvoicePdf } from '../../src/services/invoicePdfService';
 import { useAppState } from '../../src/state/AppState';
 import { checkInvoiceReadiness } from '../../src/utils/businessProfileValidation';
 
+// R116: full i18n pass. Pre-R116 every label, alert title, alert body,
+// section header, and button caption in this modal was hardcoded Dutch
+// ("Factuur" / "Profiel onvolledig" / "Vul je bedrijfsgegevens..." /
+// "Wat gebeurt er" / "Genereren..."). Visible to ALL contractors
+// regardless of locale — the PDF share flow is hit on every quote /
+// invoice send.
 export default function PdfModal() {
+  const { t } = useTranslation();
   const { source, id } = useLocalSearchParams<{ source?: string; id?: string }>();
   const router = useRouter();
   const { businessProfile, jobs, invoices } = useAppState();
   const [generating, setGenerating] = useState(false);
 
-  const label = source === 'invoice' ? 'Factuur' : 'Offerte';
+  const label = source === 'invoice'
+    ? t('pdfModal.labelInvoice', 'Invoice')
+    : t('pdfModal.labelQuote', 'Quote');
 
   const handleGenerate = async () => {
     if (source === 'invoice' && id) {
@@ -28,15 +38,18 @@ export default function PdfModal() {
       const readiness = checkInvoiceReadiness(businessProfile);
       if (!readiness.ready) {
         Alert.alert(
-          'Profiel onvolledig',
-          'Vul je bedrijfsgegevens aan voordat je een factuur deelt.\n\n' +
+          t('pdfModal.profileIncomplete', 'Profile incomplete'),
+          t('pdfModal.profileIncompleteBody', 'Fill in your business details before sharing an invoice.') + '\n\n' +
             [...readiness.missingLabels, ...readiness.invalidLabels].map((l) => `• ${l}`).join('\n'),
         );
         return;
       }
       const invoice = invoiceAutomationService.getInvoice(id);
       if (!invoice) {
-        Alert.alert('Fout', 'Factuur niet gevonden.');
+        Alert.alert(
+          t('common.error', 'Error'),
+          t('pdfModal.invoiceNotFound', 'Invoice not found.'),
+        );
         return;
       }
       setGenerating(true);
@@ -69,12 +82,18 @@ export default function PdfModal() {
         };
         await generateInvoicePdf(enriched, businessProfile, undefined, customerSignature ? { customerSignature } : undefined);
       } catch (err) {
-        Alert.alert('Fout', 'PDF kon niet worden gegenereerd.');
+        Alert.alert(
+          t('common.error', 'Error'),
+          t('pdfModal.generateFailed', 'PDF could not be generated.'),
+        );
       } finally {
         setGenerating(false);
       }
     } else {
-      Alert.alert('Info', `${label} PDF wordt binnenkort ondersteund.`);
+      Alert.alert(
+        t('common.info', 'Info'),
+        t('pdfModal.quotePdfComingSoon', '{{label}} PDF support is coming soon.', { label }),
+      );
     }
   };
 
@@ -83,16 +102,18 @@ export default function PdfModal() {
       <View style={styles.container}>
         <Text style={Typography.title}>{label} PDF</Text>
         <Text style={Typography.muted}>
-          Genereer een professionele PDF en deel deze via e-mail, WhatsApp of sla op.
+          {t('pdfModal.intro', 'Generate a professional PDF and share it via email, WhatsApp, or save it.')}
         </Text>
         <View style={styles.card}>
-          <Text style={Typography.subtitle}>Wat gebeurt er</Text>
+          <Text style={Typography.subtitle}>{t('pdfModal.whatHappens', 'What happens')}</Text>
           <Text style={Typography.muted}>
-            Vasco maakt een merk-PDF aan met uw bedrijfsgegevens, regelitems, BTW-berekening en betalingsinformatie. U kunt de PDF direct delen of opslaan.
+            {t('pdfModal.whatHappensBody', 'Vasco creates a branded PDF with your business details, line items, VAT calculation, and payment information. You can share or save the PDF directly.')}
           </Text>
         </View>
         <PrimaryButton
-          label={generating ? 'Genereren...' : `${label} PDF genereren`}
+          label={generating
+            ? t('pdfModal.generating', 'Generating…')
+            : t('pdfModal.generateLabel', 'Generate {{label}} PDF', { label })}
           onPress={handleGenerate}
         />
       </View>

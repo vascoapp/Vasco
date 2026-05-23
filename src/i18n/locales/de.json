@@ -36,7 +36,8 @@
     "thisJob": "diesen Auftrag",
     "apply": "Anwenden",
     "ignore": "Ignorieren",
-    "ok": "OK"
+    "ok": "OK",
+    "info": "Info"
   },
   "tabs": {
     "today": "Heute",
@@ -2851,5 +2852,19 @@
     "noBenchmarksDesc": "Mehr Daten für Benchmarks nötig",
     "noDataYet": "Noch keine Marktdaten",
     "noDataDesc": "Scannen Sie Lieferantenrechnungen oder erstellen Sie Angebote, um Ihre Preisintelligenz aufzubauen."
+  },
+  "pdfModal": {
+    "labelInvoice": "Rechnung",
+    "labelQuote": "Angebot",
+    "profileIncomplete": "Profil unvollständig",
+    "profileIncompleteBody": "Füllen Sie Ihre Firmendaten aus, bevor Sie eine Rechnung teilen.",
+    "invoiceNotFound": "Rechnung nicht gefunden.",
+    "generateFailed": "PDF konnte nicht generiert werden.",
+    "quotePdfComingSoon": "{{label}}-PDF-Unterstützung folgt in Kürze.",
+    "intro": "Erstellen Sie ein professionelles PDF und teilen Sie es per E-Mail, WhatsApp oder speichern Sie es.",
+    "whatHappens": "Was passiert",
+    "whatHappensBody": "Vasco erstellt ein Marken-PDF mit Ihren Firmendaten, Posten, Umsatzsteuerberechnung und Zahlungsinformationen. Sie können das PDF direkt teilen oder speichern.",
+    "generating": "Wird generiert…",
+    "generateLabel": "{{label}}-PDF generieren"
   }
 }

@@ -36,7 +36,8 @@
     "thisJob": "deze klus",
     "apply": "Toepassen",
     "ignore": "Negeren",
-    "ok": "OK"
+    "ok": "OK",
+    "info": "Info"
   },
   "tabs": {
     "today": "Vandaag",
@@ -2851,5 +2852,19 @@
     "noBenchmarksDesc": "Meer data nodig voor benchmarks",
     "noDataYet": "Nog geen marktdata",
     "noDataDesc": "Scan leveranciersfacturen of maak offertes aan om je prijsintelligentie op te bouwen."
+  },
+  "pdfModal": {
+    "labelInvoice": "Factuur",
+    "labelQuote": "Offerte",
+    "profileIncomplete": "Profiel onvolledig",
+    "profileIncompleteBody": "Vul je bedrijfsgegevens aan voordat je een factuur deelt.",
+    "invoiceNotFound": "Factuur niet gevonden.",
+    "generateFailed": "PDF kon niet worden gegenereerd.",
+    "quotePdfComingSoon": "{{label}} PDF wordt binnenkort ondersteund.",
+    "intro": "Genereer een professionele PDF en deel deze via e-mail, WhatsApp of sla op.",
+    "whatHappens": "Wat gebeurt er",
+    "whatHappensBody": "Vasco maakt een merk-PDF aan met uw bedrijfsgegevens, regelitems, BTW-berekening en betalingsinformatie. U kunt de PDF direct delen of opslaan.",
+    "generating": "Genereren…",
+    "generateLabel": "{{label}} PDF genereren"
   }
 }

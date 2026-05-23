@@ -36,7 +36,8 @@
     "thisJob": "cette mission",
     "apply": "Appliquer",
     "ignore": "Ignorer",
-    "ok": "OK"
+    "ok": "OK",
+    "info": "Info"
   },
   "tabs": {
     "today": "Aujourd'hui",
@@ -2851,5 +2852,19 @@
     "noBenchmarksDesc": "Plus de données nécessaires pour les benchmarks",
     "noDataYet": "Pas encore de données de marché",
     "noDataDesc": "Scannez les factures fournisseurs ou créez des devis pour construire votre intelligence des prix."
+  },
+  "pdfModal": {
+    "labelInvoice": "Facture",
+    "labelQuote": "Devis",
+    "profileIncomplete": "Profil incomplet",
+    "profileIncompleteBody": "Complétez les informations de votre entreprise avant de partager une facture.",
+    "invoiceNotFound": "Facture introuvable.",
+    "generateFailed": "Le PDF n'a pas pu être généré.",
+    "quotePdfComingSoon": "La prise en charge du PDF {{label}} arrive bientôt.",
+    "intro": "Générez un PDF professionnel et partagez-le par e-mail, WhatsApp ou enregistrez-le.",
+    "whatHappens": "Ce qui se passe",
+    "whatHappensBody": "Vasco crée un PDF de marque avec les informations de votre entreprise, les lignes, le calcul de la TVA et les informations de paiement. Vous pouvez partager ou enregistrer le PDF directement.",
+    "generating": "Génération en cours…",
+    "generateLabel": "Générer le PDF {{label}}"
   }
 }

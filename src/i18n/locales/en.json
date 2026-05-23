@@ -36,7 +36,8 @@
     "thisJob": "this job",
     "apply": "Apply",
     "ignore": "Ignore",
-    "ok": "OK"
+    "ok": "OK",
+    "info": "Info"
   },
   "tabs": {
     "today": "Today",
@@ -2851,5 +2852,19 @@
     "noBenchmarksDesc": "More data needed for benchmarks",
     "noDataYet": "No market data yet",
     "noDataDesc": "Scan supplier invoices or create quotes to build your price intelligence."
+  },
+  "pdfModal": {
+    "labelInvoice": "Invoice",
+    "labelQuote": "Quote",
+    "profileIncomplete": "Profile incomplete",
+    "profileIncompleteBody": "Fill in your business details before sharing an invoice.",
+    "invoiceNotFound": "Invoice not found.",
+    "generateFailed": "PDF could not be generated.",
+    "quotePdfComingSoon": "{{label}} PDF support is coming soon.",
+    "intro": "Generate a professional PDF and share it via email, WhatsApp, or save it.",
+    "whatHappens": "What happens",
+    "whatHappensBody": "Vasco creates a branded PDF with your business details, line items, VAT calculation, and payment information. You can share or save the PDF directly.",
+    "generating": "Generating…",
+    "generateLabel": "Generate {{label}} PDF"
   }
 }
