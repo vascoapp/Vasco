@@ -493,7 +493,20 @@
     "emptyInvoicesDesc": "Markieren Sie einen Auftrag als erledigt, um eine Rechnung zu erstellen.",
     "goToJobs": "Zu Aufträgen",
     "invoiceCreateFailedTitle": "Rechnung konnte nicht erstellt werden",
-    "invoiceCreateFailedBody": "Erneut versuchen oder den Auftrag öffnen, um fehlende Felder zu ergänzen."
+    "invoiceCreateFailedBody": "Erneut versuchen oder den Auftrag öffnen, um fehlende Felder zu ergänzen.",
+    "emptyInvoices": "Noch keine Rechnungen",
+    "invoiceNotFound": "Rechnung im Automatisierungssystem nicht gefunden.",
+    "paymentLinkFailed": "Zahlungslink konnte nicht erstellt werden.",
+    "quoteSent": "Gesendet",
+    "invoices": "Rechnungen",
+    "quotes": "Angebote",
+    "newQuote": "Neues Angebot",
+    "pendingApproval": "Angebot(e) warten auf Genehmigung",
+    "emptyQuotes": "Keine aktiven Angebote",
+    "createInvoiceFor": "Rechnung erstellen für",
+    "invoiceCreated": "Rechnung erstellt",
+    "invoiceCreatedDesc": "Die Rechnung wurde als Entwurf erstellt.",
+    "sendNow": "Jetzt senden"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -546,7 +559,8 @@
     "addNew": "Neuen Kunden hinzufügen",
     "openDecisions": "Entscheidungen öffnen",
     "openTracker": "Tracker für {{name}} öffnen",
-    "sendReminderTo": "Erinnerung an {{name}} senden"
+    "sendReminderTo": "Erinnerung an {{name}} senden",
+    "noTrackersDesc": "Erstellen Sie einen Tracker, damit Kunden Auswahl zu Materialien, Ausführung und Zeitplan treffen können."
   },
   "team": {
     "title": "Team",
@@ -2265,7 +2279,8 @@
       "materials": "Materialeinsparung",
       "materialsDesc": "Quick Wins: {{suppliers}}",
       "materialsEmpty": "Noch keine Lieferanten-Quick-Wins"
-    }
+    },
+    "scanFirstInvoice": "Scannen Sie Ihre erste Lieferantenrechnung, um die Preisintelligenz zu starten."
   },
   "smartReply": {
     "suggested": "Suggested replies",
@@ -2806,12 +2821,20 @@
   "vatPrep": {
     "lineInvoice": "Rechnung",
     "lineExpense": "Ausgabe",
-    "checkLine": "Prüfen"
+    "checkLine": "Prüfen",
+    "title": "Umsatzsteuer-Voranmeldung",
+    "safetyBanner": "Vasco bereitet Ihre Erklärung vor. Sie reichen sie selbst über Ihr Steuerportal ein — Vasco übermittelt nie in Ihrem Namen.",
+    "export": "Für Einreichung exportieren"
   },
   "automations": {
     "healthNew": "NEU",
     "healthHealthy": "FUNKTIONIERT",
     "healthLow": "ÜBERARBEITEN",
     "mutedCount": "{{count}} stumm"
+  },
+  "market": {
+    "noBenchmarksDesc": "Mehr Daten für Benchmarks nötig",
+    "noDataYet": "Noch keine Marktdaten",
+    "noDataDesc": "Scannen Sie Lieferantenrechnungen oder erstellen Sie Angebote, um Ihre Preisintelligenz aufzubauen."
   }
 }

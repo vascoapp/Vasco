@@ -493,7 +493,20 @@
     "emptyInvoicesDesc": "Marquez un chantier comme terminé pour générer une facture.",
     "goToJobs": "Voir les chantiers",
     "invoiceCreateFailedTitle": "Impossible de créer la facture",
-    "invoiceCreateFailedBody": "Réessayez ou ouvrez la mission pour compléter les champs manquants."
+    "invoiceCreateFailedBody": "Réessayez ou ouvrez la mission pour compléter les champs manquants.",
+    "emptyInvoices": "Aucune facture pour le moment",
+    "invoiceNotFound": "Facture introuvable dans le système d'automatisation.",
+    "paymentLinkFailed": "Le lien de paiement n'a pas pu être créé.",
+    "quoteSent": "Envoyé",
+    "invoices": "factures",
+    "quotes": "devis",
+    "newQuote": "Nouveau devis",
+    "pendingApproval": "devis en attente d'approbation",
+    "emptyQuotes": "Aucun devis actif",
+    "createInvoiceFor": "Créer une facture pour",
+    "invoiceCreated": "Facture créée",
+    "invoiceCreatedDesc": "La facture a été créée comme brouillon.",
+    "sendNow": "Envoyer maintenant"
   },
   "expenses": {
     "title": "Dépenses",
@@ -546,7 +559,8 @@
     "addNew": "Ajouter un client",
     "openDecisions": "Ouvrir les décisions",
     "openTracker": "Ouvrir le tracker pour {{name}}",
-    "sendReminderTo": "Envoyer un rappel à {{name}}"
+    "sendReminderTo": "Envoyer un rappel à {{name}}",
+    "noTrackersDesc": "Créez un tracker pour que les clients puissent choisir les matériaux, la finition et le calendrier."
   },
   "team": {
     "title": "Équipe",
@@ -2265,7 +2279,8 @@
       "materials": "Économies sur les matériaux",
       "materialsDesc": "Quick wins : {{suppliers}}",
       "materialsEmpty": "Pas encore de quick wins fournisseurs"
-    }
+    },
+    "scanFirstInvoice": "Scannez votre première facture fournisseur pour démarrer l'intelligence des prix."
   },
   "smartReply": {
     "suggested": "Suggested replies",
@@ -2806,12 +2821,20 @@
   "vatPrep": {
     "lineInvoice": "Facture",
     "lineExpense": "Dépense",
-    "checkLine": "Vérifier"
+    "checkLine": "Vérifier",
+    "title": "Préparation de déclaration TVA",
+    "safetyBanner": "Vasco prépare votre déclaration. Vous la déposez vous-même via le portail fiscal — Vasco ne soumet jamais en votre nom.",
+    "export": "Exporter pour déclaration"
   },
   "automations": {
     "healthNew": "NOUVEAU",
     "healthHealthy": "FONCTIONNE",
     "healthLow": "À AMÉLIORER",
     "mutedCount": "{{count}} en sourdine"
+  },
+  "market": {
+    "noBenchmarksDesc": "Plus de données nécessaires pour les benchmarks",
+    "noDataYet": "Pas encore de données de marché",
+    "noDataDesc": "Scannez les factures fournisseurs ou créez des devis pour construire votre intelligence des prix."
   }
 }

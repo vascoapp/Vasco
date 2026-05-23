@@ -493,7 +493,20 @@
     "emptyInvoicesDesc": "Marca un trabajo como completado para generar una factura.",
     "goToJobs": "Ir a trabajos",
     "invoiceCreateFailedTitle": "No se pudo crear la factura",
-    "invoiceCreateFailedBody": "Inténtalo de nuevo o abre el trabajo para rellenar los campos que faltan."
+    "invoiceCreateFailedBody": "Inténtalo de nuevo o abre el trabajo para rellenar los campos que faltan.",
+    "emptyInvoices": "Aún no hay facturas",
+    "invoiceNotFound": "Factura no encontrada en el sistema de automatización.",
+    "paymentLinkFailed": "No se pudo crear el enlace de pago.",
+    "quoteSent": "Enviado",
+    "invoices": "facturas",
+    "quotes": "presupuestos",
+    "newQuote": "Nuevo presupuesto",
+    "pendingApproval": "presupuesto(s) en espera de aprobación",
+    "emptyQuotes": "Sin presupuestos activos",
+    "createInvoiceFor": "Crear factura para",
+    "invoiceCreated": "Factura creada",
+    "invoiceCreatedDesc": "La factura se ha creado como borrador.",
+    "sendNow": "Enviar ahora"
   },
   "expenses": {
     "title": "Gastos",
@@ -546,7 +559,8 @@
     "addNew": "Añadir cliente",
     "openDecisions": "Abrir decisiones",
     "openTracker": "Abrir tracker de {{name}}",
-    "sendReminderTo": "Enviar recordatorio a {{name}}"
+    "sendReminderTo": "Enviar recordatorio a {{name}}",
+    "noTrackersDesc": "Crea un tracker para que los clientes puedan elegir materiales, acabado y plazos."
   },
   "team": {
     "title": "Equipo",
@@ -2265,7 +2279,8 @@
       "materials": "Ahorro en materiales",
       "materialsDesc": "Quick wins: {{suppliers}}",
       "materialsEmpty": "Aún no hay quick wins de proveedores"
-    }
+    },
+    "scanFirstInvoice": "Escanee su primera factura de proveedor para iniciar la inteligencia de precios."
   },
   "smartReply": {
     "suggested": "Suggested replies",
@@ -2806,12 +2821,20 @@
   "vatPrep": {
     "lineInvoice": "Factura",
     "lineExpense": "Gasto",
-    "checkLine": "Revisar"
+    "checkLine": "Revisar",
+    "title": "Preparación de declaración del IVA",
+    "safetyBanner": "Vasco prepara su declaración. Usted la presenta a través del portal de Hacienda — Vasco nunca envía en su nombre.",
+    "export": "Exportar para presentación"
   },
   "automations": {
     "healthNew": "NUEVO",
     "healthHealthy": "FUNCIONA",
     "healthLow": "MEJORAR",
     "mutedCount": "{{count}} silenciados"
+  },
+  "market": {
+    "noBenchmarksDesc": "Se necesitan más datos para los benchmarks",
+    "noDataYet": "Aún no hay datos de mercado",
+    "noDataDesc": "Escanee facturas de proveedores o cree presupuestos para construir su inteligencia de precios."
   }
 }

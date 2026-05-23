@@ -493,7 +493,20 @@
     "emptyInvoicesDesc": "Mark a job as completed to draft an invoice.",
     "goToJobs": "Go to jobs",
     "invoiceCreateFailedTitle": "Could not create invoice",
-    "invoiceCreateFailedBody": "Please retry or open the job to fix missing fields."
+    "invoiceCreateFailedBody": "Please retry or open the job to fix missing fields.",
+    "emptyInvoices": "No invoices yet",
+    "invoiceNotFound": "Invoice not found in automation system.",
+    "paymentLinkFailed": "Payment link could not be created.",
+    "quoteSent": "Sent",
+    "invoices": "invoices",
+    "quotes": "quotes",
+    "newQuote": "New quote",
+    "pendingApproval": "quote(s) awaiting approval",
+    "emptyQuotes": "No active quotes",
+    "createInvoiceFor": "Create invoice for",
+    "invoiceCreated": "Invoice created",
+    "invoiceCreatedDesc": "The invoice has been created as a draft.",
+    "sendNow": "Send now"
   },
   "expenses": {
     "title": "Expenses",
@@ -546,7 +559,8 @@
     "addNew": "Add new customer",
     "openDecisions": "Open decisions",
     "openTracker": "Open tracker for {{name}}",
-    "sendReminderTo": "Send reminder to {{name}}"
+    "sendReminderTo": "Send reminder to {{name}}",
+    "noTrackersDesc": "Create a tracker so customers can make choices about materials, finish, and timing."
   },
   "team": {
     "title": "Team",
@@ -2265,7 +2279,8 @@
       "materials": "Material savings",
       "materialsDesc": "Quick wins: {{suppliers}}",
       "materialsEmpty": "No supplier quick-wins yet"
-    }
+    },
+    "scanFirstInvoice": "Scan your first supplier invoice to start price intelligence."
   },
   "smartReply": {
     "suggested": "Suggested replies",
@@ -2806,12 +2821,20 @@
   "vatPrep": {
     "lineInvoice": "Invoice",
     "lineExpense": "Expense",
-    "checkLine": "Check"
+    "checkLine": "Check",
+    "title": "VAT return preparation",
+    "safetyBanner": "Vasco prepares your return. You file it yourself via your tax authority's portal — Vasco never submits on your behalf.",
+    "export": "Export for filing"
   },
   "automations": {
     "healthNew": "NEW",
     "healthHealthy": "WORKING",
     "healthLow": "NEEDS WORK",
     "mutedCount": "{{count}} muted"
+  },
+  "market": {
+    "noBenchmarksDesc": "More data needed for benchmarks",
+    "noDataYet": "No market data yet",
+    "noDataDesc": "Scan supplier invoices or create quotes to build your price intelligence."
   }
 }

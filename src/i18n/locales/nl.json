@@ -493,7 +493,20 @@
     "emptyInvoicesDesc": "Markeer een klus als gereed om een factuur op te stellen.",
     "goToJobs": "Naar klussen",
     "invoiceCreateFailedTitle": "Kan factuur niet aanmaken",
-    "invoiceCreateFailedBody": "Probeer opnieuw of open de klus om ontbrekende velden in te vullen."
+    "invoiceCreateFailedBody": "Probeer opnieuw of open de klus om ontbrekende velden in te vullen.",
+    "emptyInvoices": "Nog geen facturen",
+    "invoiceNotFound": "Factuur niet gevonden in automatiseringssysteem.",
+    "paymentLinkFailed": "Betaallink kon niet worden aangemaakt.",
+    "quoteSent": "Verstuurd",
+    "invoices": "facturen",
+    "quotes": "offertes",
+    "newQuote": "Nieuwe offerte",
+    "pendingApproval": "offerte(s) wacht op goedkeuring",
+    "emptyQuotes": "Geen actieve offertes",
+    "createInvoiceFor": "Factuur maken voor",
+    "invoiceCreated": "Factuur aangemaakt",
+    "invoiceCreatedDesc": "De factuur is aangemaakt als concept.",
+    "sendNow": "Verstuur nu"
   },
   "expenses": {
     "title": "Uitgaven",
@@ -546,7 +559,8 @@
     "addNew": "Nieuwe klant toevoegen",
     "openDecisions": "Open beslissingen",
     "openTracker": "Tracker openen voor {{name}}",
-    "sendReminderTo": "Stuur herinnering naar {{name}}"
+    "sendReminderTo": "Stuur herinnering naar {{name}}",
+    "noTrackersDesc": "Maak een tracker zodat klanten keuzes kunnen maken over materialen, afwerking en timing."
   },
   "team": {
     "title": "Team",
@@ -2265,7 +2279,8 @@
       "materials": "Materiaalbesparing",
       "materialsDesc": "Quick wins: {{suppliers}}",
       "materialsEmpty": "Nog geen quick wins bij leveranciers"
-    }
+    },
+    "scanFirstInvoice": "Scan je eerste leveranciersfactuur om prijsintelligentie te starten."
   },
   "smartReply": {
     "suggested": "Voorgestelde antwoorden",
@@ -2812,6 +2827,14 @@
   "vatPrep": {
     "lineInvoice": "Factuur",
     "lineExpense": "Uitgave",
-    "checkLine": "Controleer"
+    "checkLine": "Controleer",
+    "title": "BTW-aangifte voorbereiding",
+    "safetyBanner": "Vasco bereidt je aangifte voor. Je dient zelf in via DigiD — Vasco doet dit nooit voor jou.",
+    "export": "Exporteer voor aangifte"
+  },
+  "market": {
+    "noBenchmarksDesc": "Meer data nodig voor benchmarks",
+    "noDataYet": "Nog geen marktdata",
+    "noDataDesc": "Scan leveranciersfacturen of maak offertes aan om je prijsintelligentie op te bouwen."
   }
 }
