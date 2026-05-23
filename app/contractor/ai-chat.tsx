@@ -30,7 +30,8 @@ import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { useAppState } from '../../src/state/AppState';
-import { sendAiCommand, type AiCommandResult } from '../../src/services/aiCommandService';
+import { sendAiCommand } from '../../src/services/aiCommandService';
+import { routeForIntent } from '../../src/services/aiCommandRouter';
 import { SemanticColors } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { DK } from '../../src/theme/draftkings';
@@ -213,32 +214,6 @@ export default function AiChatScreen() {
   );
 }
 
-function routeForIntent(result: AiCommandResult): ChatMessage['routeOnTap'] | undefined {
-  switch (result.intent) {
-    case 'create_invoice':
-      return { path: '/(contractor)/geld', label: 'Open Money tab' };
-    case 'schedule_job':
-      return { path: '/contractor/drag-schedule', label: 'Open scheduler' };
-    case 'list_overdue':
-      return { path: '/(contractor)/geld', label: 'View overdue' };
-    case 'query_revenue':
-      return { path: '/hub/savings', label: 'See breakdown' };
-    case 'send_reminder':
-      return { path: '/(contractor)/geld', label: 'Open Money tab' };
-    case 'cancel_job':
-      return { path: '/(contractor)/werk', label: 'Open Work tab' };
-    case 'query_job_status':
-      return { path: '/(contractor)/werk', label: 'Open Work tab' };
-    case 'find_customer':
-      // customer-crm is the real customer list screen — there's no
-      // /(contractor)/klanten tab; customers live under the drill-down.
-      return { path: '/contractor/customer-crm', label: 'Open Customers' };
-    case 'weekly_summary':
-      return { path: '/hub/savings', label: 'See breakdown' };
-    default:
-      return undefined;
-  }
-}
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PAGE_BG },

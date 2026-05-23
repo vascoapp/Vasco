@@ -10,7 +10,7 @@ import {
   View, Text, StyleSheet, ScrollView, Pressable,
   Alert, Linking, Modal, TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -32,7 +32,11 @@ export default function CustomerPhonebookScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const { customers, jobs, invoices, addCustomer } = useAppState();
-  const [search, setSearch] = useState('');
+  // R98 — `q` query param seeds the search filter so the AI bot's
+  // find_customer intent lands here with the right list already
+  // narrowed. Wired from app/contractor/ai-chat.tsx routeForIntent.
+  const { q: aiSearchPrefill } = useLocalSearchParams<{ q?: string }>();
+  const [search, setSearch] = useState(aiSearchPrefill ?? '');
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
