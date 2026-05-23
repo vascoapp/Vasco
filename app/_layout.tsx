@@ -347,9 +347,11 @@ function RootLayoutNav() {
           logoutRedirectTimer.current = null;
           // Only redirect if STILL unauthenticated after the debounce.
           // Read from the closure — if isAuthenticated recovered, the
-          // earlier branch above cleared this timer.
+          // earlier branch above cleared this timer. R104: extended
+          // from 2s to 5s to give slow networks / retry storms a wider
+          // window to recover before tearing down the contractor view.
           router.replace('/login');
-        }, 2000);
+        }, 5000);
       } else if (!wasAuthenticated.current) {
         // No prior auth (cold-start unauthenticated) — redirect immediately.
         router.replace('/login');

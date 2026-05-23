@@ -44,6 +44,41 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockoutUntil, setLockoutUntil] = useState(0);
+  // R104: hidden diagnostic — tap the logo 5 times to read the last 20
+  // supabase auth events from AsyncStorage. Used to trace mid-session
+  // sign-outs ("tap a tab → logged out") without needing Sentry telemetry.
+  const [logoTapCount, setLogoTapCount] = useState(0);
+
+  const showAuthEventLog = async () => {
+    try {
+      const raw = await AsyncStorage.getItem('@vasco_auth_event_log');
+      const log: Array<{ t: number; event: string; hasSession: boolean; hasUser: boolean }> = raw ? JSON.parse(raw) : [];
+      if (log.length === 0) {
+        Alert.alert('Auth diagnostic', 'No auth events logged yet.');
+        return;
+      }
+      const lines = log.slice(-15).map((e) => {
+        const dt = new Date(e.t);
+        const hh = String(dt.getHours()).padStart(2, '0');
+        const mm = String(dt.getMinutes()).padStart(2, '0');
+        const ss = String(dt.getSeconds()).padStart(2, '0');
+        const flags = `${e.hasSession ? 'S' : '-'}${e.hasUser ? 'U' : '-'}`;
+        return `${hh}:${mm}:${ss}  ${e.event}  [${flags}]`;
+      }).join('\n');
+      Alert.alert('Auth events (last 15)', lines);
+    } catch (err) {
+      Alert.alert('Auth diagnostic', `Could not read log: ${String(err)}`);
+    }
+  };
+
+  const handleLogoTap = () => {
+    const next = logoTapCount + 1;
+    setLogoTapCount(next);
+    if (next >= 5) {
+      setLogoTapCount(0);
+      showAuthEventLog();
+    }
+  };
   const { login, isLoading } = useAuth();
   const router = useRouter();
 
@@ -112,14 +147,17 @@ export default function LoginScreen() {
               placeholder mark from R179. */}
           <FadeIn delay={0} duration={600}>
             <View style={styles.hero}>
-              <View style={styles.markWrap}>
+              <Pressable
+                onPress={handleLogoTap}
+                style={styles.markWrap}
+                accessibilityLabel="VascoBuild"
+              >
                 <Image
                   source={require('../assets/icon.png')}
                   style={styles.mark}
                   resizeMode="contain"
-                  accessibilityLabel="VascoBuild"
                 />
-              </View>
+              </Pressable>
               <DKLabel style={styles.tagline}>{t('auth.tagline', 'Built for the trades')}</DKLabel>
             </View>
           </FadeIn>

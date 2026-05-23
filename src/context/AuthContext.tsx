@@ -438,6 +438,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         message: `auth-event: ${event}`,
         data: { hasSession: !!s, hasUser: !!s?.user },
       });
+      // R104: also persist the last 20 events to AsyncStorage. Sentry DSN
+      // isn't configured yet so breadcrumbs don't reach telemetry — the
+      // login screen exposes a tap-the-logo-5x gesture that reads this
+      // log and shows the recent event sequence in an Alert, giving us
+      // visibility into mid-session sign-outs on TestFlight.
+      void AsyncStorage.getItem('@vasco_auth_event_log').then((raw) => {
+        let log: Array<{ t: number; event: string; hasSession: boolean; hasUser: boolean }> = [];
+        try { log = raw ? JSON.parse(raw) : []; } catch { log = []; }
+        log.push({ t: Date.now(), event, hasSession: !!s, hasUser: !!s?.user });
+        if (log.length > 20) log = log.slice(-20);
+        return AsyncStorage.setItem('@vasco_auth_event_log', JSON.stringify(log));
+      }).catch(() => {});
       setSession(s);
       if (s?.user) {
         // R102: preserve fields that come from local context (onboardingComplete,
@@ -657,6 +669,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    // R104: record the explicit-logout entry into the event log so we can
+    // distinguish "user tapped Logout" from "supabase emitted SIGNED_OUT
+    // for unknown reasons" when reading the diagnostic.
+    void AsyncStorage.getItem('@vasco_auth_event_log').then((raw) => {
+      let log: Array<{ t: number; event: string; hasSession: boolean; hasUser: boolean }> = [];
+      try { log = raw ? JSON.parse(raw) : []; } catch { log = []; }
+      log.push({ t: Date.now(), event: 'EXPLICIT_LOGOUT', hasSession: false, hasUser: false });
+      if (log.length > 20) log = log.slice(-20);
+      return AsyncStorage.setItem('@vasco_auth_event_log', JSON.stringify(log));
+    }).catch(() => {});
     trackEvent('logout').catch(() => {});
     await flushEvents().catch(() => {});
     // Remove push token for this device before signing out (auth.uid() required)
