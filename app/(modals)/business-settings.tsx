@@ -20,7 +20,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
 import { SemanticColors, Palette } from '../../src/theme/colors';
-import { PROVIDERS, type AccountingProvider } from '../../src/integrations/accounting';
+import { PROVIDERS, getProvidersForCountry, type AccountingProvider } from '../../src/integrations/accounting';
 import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
@@ -267,7 +267,10 @@ export default function BusinessSettingsScreen() {
           {/* Accounting provider selection */}
           <View style={styles.card}>
             <Text style={[Typography.title, { marginBottom: 8 }]}>{t('settings.accounting', 'Boekhouding')}</Text>
-            {PROVIDERS.filter(p => p.id !== 'none').slice(0, 6).map(provider => (
+            {/* R110: country-filter so US contractors don't see Moneybird/
+                Lexoffice/Pennylane and EU contractors don't see QuickBooks/
+                FreeAgent. getProvidersForCountry already excludes 'none'. */}
+            {getProvidersForCountry(country).filter(p => p.id !== 'none').slice(0, 6).map(provider => (
               <Pressable
                 key={provider.id}
                 style={styles.providerRow}

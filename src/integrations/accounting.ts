@@ -106,6 +106,55 @@ export interface ProviderInfo {
   features: string[];
 }
 
+// R110: country availability map. Used by the settings UI to only
+// surface accounting providers that actually operate in the contractor's
+// market. Before R110, a Texas HVAC contractor saw Moneybird +
+// e-Boekhouden + Lexoffice listed alongside QuickBooks — useless noise.
+// Source: provider-website signup geo-restrictions as of 2026-04.
+const PROVIDER_COUNTRIES: Partial<Record<AccountingProvider, readonly string[]>> = {
+  // Netherlands / Benelux
+  moneybird: ['NL', 'DE'],
+  exact_online: ['NL', 'DE'],
+  eboekhouden: ['NL'],
+  snelstart: ['NL'],
+  jortt: ['NL'],
+  twinfield: ['NL', 'UK'],
+  // Germany / DACH
+  datev: ['DE'],
+  lexoffice: ['DE'],
+  sevdesk: ['DE'],
+  // France
+  pennylane: ['FR'],
+  indy: ['FR'],
+  // Spain
+  holded: ['ES'],
+  quipu: ['ES'],
+  anfix: ['ES'],
+  // Italy
+  fattureincloud: ['IT'],
+  aruba_fe: ['IT'],
+  // UK / Anglo
+  xero: ['UK', 'US'],
+  quickbooks: ['US', 'UK'],
+  freeagent: ['UK', 'US'],
+};
+
+/**
+ * R110: filter PROVIDERS by the contractor's country so the settings UI
+ * only shows providers that actually operate in their market. Falls back
+ * to the full list when country is unknown so onboarding-incomplete
+ * users still see options.
+ */
+export function getProvidersForCountry(country: string | undefined | null): ProviderInfo[] {
+  if (!country) return PROVIDERS;
+  return PROVIDERS.filter((p) => {
+    if (p.id === 'none') return true;
+    const supported = PROVIDER_COUNTRIES[p.id];
+    if (!supported) return true; // unknown geo data → show by default
+    return supported.includes(country);
+  });
+}
+
 export const PROVIDERS: ProviderInfo[] = [
   {
     id: 'moneybird',

@@ -161,13 +161,26 @@ export default function ProfileScreen() {
   }, []);
 
   // Integrations
-  const integrations: IntegrationItem[] = [
-    { id: 'mollie', name: 'Mollie', icon: 'card', connected: mollieConnected, route: '/(modals)/mollie' },
-    { id: 'moneybird', name: 'Moneybird', icon: 'calculator', connected: moneybirdConnected, route: '/(modals)/moneybird' },
-    { id: 'calendar', name: t('profile.deviceCalendar', 'Device calendar'), icon: 'calendar', connected: calendarConnected, route: '/contractor/calendar-settings' },
-    { id: 'xero', name: 'Xero', icon: 'cloud', connected: false },
-    { id: 'stripe', name: 'Stripe', icon: 'card-outline', connected: false },
-  ];
+  // R110: country-aware. Pre-R110 a Texas HVAC contractor saw "Mollie"
+  // and "Moneybird" listed as connectable integrations even though both
+  // reject US bank accounts at OAuth time. Mollie is EU/UK only;
+  // Moneybird is NL/DE only. US contractors see QuickBooks + Stripe;
+  // EU contractors keep Mollie + Moneybird + Xero.
+  const isUS = country === 'US';
+  const integrations: IntegrationItem[] = isUS
+    ? [
+        { id: 'stripe', name: 'Stripe', icon: 'card', connected: false },
+        { id: 'quickbooks', name: 'QuickBooks', icon: 'calculator', connected: false },
+        { id: 'xero', name: 'Xero', icon: 'cloud', connected: false },
+        { id: 'calendar', name: t('profile.deviceCalendar', 'Device calendar'), icon: 'calendar', connected: calendarConnected, route: '/contractor/calendar-settings' },
+      ]
+    : [
+        { id: 'mollie', name: 'Mollie', icon: 'card', connected: mollieConnected, route: '/(modals)/mollie' },
+        { id: 'moneybird', name: 'Moneybird', icon: 'calculator', connected: moneybirdConnected, route: '/(modals)/moneybird' },
+        { id: 'xero', name: 'Xero', icon: 'cloud', connected: false },
+        { id: 'stripe', name: 'Stripe', icon: 'card-outline', connected: false },
+        { id: 'calendar', name: t('profile.deviceCalendar', 'Device calendar'), icon: 'calendar', connected: calendarConnected, route: '/contractor/calendar-settings' },
+      ];
 
   // R62: tone preset picker. Backed by `business_settings.quote_tone`
   // (column added in 20260505000001_sow_columns.sql). Saves on each pick;

@@ -428,36 +428,48 @@ export default function GeldScreen() {
         </Pressable>
 
         {/* R273: purchasing hub — receipt scanner, reorders, DATANORM imports.
-             Was reachable only via AI action route. Now a Geld section link
-             since purchasing/spend tracking is part of money management. */}
-        <Pressable
-          onPress={() => router.push('/contractor/inkoop' as any)}
-          style={({ pressed }) => [s.vatCard, pressed && { opacity: 0.92 }]}
-          accessibilityRole="button"
-          accessibilityLabel={t('dk.money.purchasing', 'Purchasing')}
-        >
-          <View style={s.vatIconWrap}>
-            <Ionicons name="cart-outline" size={20} color={DK.colors.accent} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <DKLabel style={s.vatTitle}>{t('dk.money.purchasing', 'Purchasing')}</DKLabel>
-            <Text style={s.vatSub}>{t('dk.money.purchasingSub', 'Receipt scanner, reorders, supplier prices.')}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={DK.colors.textMuted} />
-        </Pressable>
+             R110: gated EU-only. DATANORM is the German/Dutch supplier-spec
+             format; reorder feeds run against the EU6 supplier registry
+             (Gamma/Praxis/Hornbach/Bauhaus/Leroy Merlin/Würth/etc.). US
+             contractors have no supplier index here, so this card would
+             open to an empty screen. */}
+        {businessProfile?.country !== 'US' ? (
+          <Pressable
+            onPress={() => router.push('/contractor/inkoop' as any)}
+            style={({ pressed }) => [s.vatCard, pressed && { opacity: 0.92 }]}
+            accessibilityRole="button"
+            accessibilityLabel={t('dk.money.purchasing', 'Purchasing')}
+          >
+            <View style={s.vatIconWrap}>
+              <Ionicons name="cart-outline" size={20} color={DK.colors.accent} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <DKLabel style={s.vatTitle}>{t('dk.money.purchasing', 'Purchasing')}</DKLabel>
+              <Text style={s.vatSub}>{t('dk.money.purchasingSub', 'Receipt scanner, reorders, supplier prices.')}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={DK.colors.textMuted} />
+          </Pressable>
+        ) : null}
 
-        {/* ─── MATERIAL DRIFT (R192) — cohort-observed supplier price moves ─── */}
-        <MaterialDriftCard
-          trade={businessProfile?.trade ?? 'general'}
-          country={businessProfile?.country ?? 'NL'}
-          onPress={() => router.push('/contractor/market-prices' as any)}
-        />
+        {/* ─── MATERIAL DRIFT (R192) — cohort-observed supplier price moves ───
+             R110: EU-only. Pricing-moat data is sourced from EU6 supplier
+             cohorts; US has no equivalent feed yet. */}
+        {businessProfile?.country !== 'US' ? (
+          <MaterialDriftCard
+            trade={businessProfile?.trade ?? 'general'}
+            country={businessProfile?.country ?? 'NL'}
+            onPress={() => router.push('/contractor/market-prices' as any)}
+          />
+        ) : null}
 
-        {/* ─── MARKET PULSE (R205) — margin drift + customer risk + accept lag ─── */}
-        <MarketPulseCard
-          trade={businessProfile?.trade ?? 'general'}
-          country={businessProfile?.country ?? 'NL'}
-        />
+        {/* ─── MARKET PULSE (R205) — margin drift + customer risk + accept lag ───
+             R110: EU-only — same EU6 cohort source as MaterialDrift. */}
+        {businessProfile?.country !== 'US' ? (
+          <MarketPulseCard
+            trade={businessProfile?.trade ?? 'general'}
+            country={businessProfile?.country ?? 'NL'}
+          />
+        ) : null}
 
         {/* ─── CASHFLOW DEEP-DIVE ─── (R267: each section now wired) */}
         <SectionHeader title={t('dk.money.cashflow', 'Cashflow').toUpperCase()} />
