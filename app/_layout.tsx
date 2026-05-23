@@ -281,6 +281,17 @@ function RootLayoutNav() {
     return () => clearTimeout(timer);
   }, []);
 
+  // R103: tracks the previously observed isAuthenticated value so we can
+  // detect true→false transitions and apply a short debounce before
+  // redirecting to /login. Pre-R103 TF reports showed contractors landing
+  // on /login after tapping any tab; root cause not yet captured in
+  // Sentry, but a transient null-user state would fire the redirect
+  // immediately. Debouncing gives downstream effects (token refresh,
+  // realtime auth, AsyncStorage hydration) a window to settle before
+  // we tear down the contractor view.
+  const wasAuthenticated = useRef(false);
+  const logoutRedirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (!navigationReady.current) return;
     // R66 round 42: don't make routing decisions while auth is still
@@ -304,9 +315,45 @@ function RootLayoutNav() {
       return;
     }
 
+    // R103: if a previously-authenticated user just flipped to not
+    // authenticated, debounce the /login redirect for 2s. If the auth
+    // state recovers within that window (e.g., onAuthStateChange fires
+    // with the same session again after a transient null), cancel the
+    // redirect and stay on the contractor view. Also captures a Sentry
+    // breadcrumb so we can trace which event caused the flip.
+    if (isAuthenticated) {
+      wasAuthenticated.current = true;
+      if (logoutRedirectTimer.current) {
+        clearTimeout(logoutRedirectTimer.current);
+        logoutRedirectTimer.current = null;
+        addBreadcrumb({
+          category: 'auth',
+          message: 'auth-recovered-before-redirect',
+          data: { route: segments.join('/') },
+        });
+      }
+    }
+
     if (!isAuthenticated && !inAuthGroup) {
-      // Redirect to login if not authenticated
-      router.replace('/login');
+      // Was authenticated a moment ago — debounce the redirect to absorb
+      // transient null-user blips.
+      if (wasAuthenticated.current && !logoutRedirectTimer.current) {
+        addBreadcrumb({
+          category: 'auth',
+          message: 'auth-lost-debouncing-redirect',
+          data: { route: segments.join('/') },
+        });
+        logoutRedirectTimer.current = setTimeout(() => {
+          logoutRedirectTimer.current = null;
+          // Only redirect if STILL unauthenticated after the debounce.
+          // Read from the closure — if isAuthenticated recovered, the
+          // earlier branch above cleared this timer.
+          router.replace('/login');
+        }, 2000);
+      } else if (!wasAuthenticated.current) {
+        // No prior auth (cold-start unauthenticated) — redirect immediately.
+        router.replace('/login');
+      }
     } else if (isAuthenticated && inAuthGroup) {
       // R66 round 47: NL launch suppresses every non-contractor view. Enterprise
       // (CFO/COO/Director) + site lead + worker surfaces are partially built but

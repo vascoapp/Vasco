@@ -249,13 +249,31 @@ export default function VandaagDK() {
                     else router.push('/contractor/tiered-quote' as any);
                   }}
                 >
-                  <DKLabel style={styles.heroCTAText}>
-                    {todayJobs.length > 0
+                  {/* R103: replaced DKLabel + textTransform with pre-uppercased
+                      plain Text. RN's text layout on iOS measures glyphs
+                      BEFORE applying textTransform with Archivo_900Black, so
+                      "Open job" measured narrower than the rendered "OPEN JOB"
+                      and the trailing "B" rendered past the clip box. Passing
+                      the already-uppercased string lets the layout engine
+                      measure the actual rendered width. */}
+                  <Text
+                    style={styles.heroCTAText}
+                    numberOfLines={1}
+                    accessibilityLabel={
+                      todayJobs.length > 0
+                        ? t('dk.actions.openJob', 'Open job')
+                        : activeQuotes > 0
+                          ? t('dk.actions.viewQuotes', 'View quotes')
+                          : t('dk.actions.newQuote', 'New quote')
+                    }
+                  >
+                    {(todayJobs.length > 0
                       ? t('dk.actions.openJob', 'Open job')
                       : activeQuotes > 0
                         ? t('dk.actions.viewQuotes', 'View quotes')
-                        : t('dk.actions.newQuote', 'New quote')}
-                  </DKLabel>
+                        : t('dk.actions.newQuote', 'New quote')
+                    ).toUpperCase()}
+                  </Text>
                 </Pressable>
               </>
             )}
@@ -536,7 +554,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: DK.colors.bg,
     letterSpacing: 0.6,
-    flexShrink: 1,
   },
   heroCTAImpact: {
     fontFamily: DK.type.body600,
