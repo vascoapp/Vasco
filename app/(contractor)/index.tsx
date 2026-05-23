@@ -380,7 +380,7 @@ function JobRow({ job, onPress }: { job: ScheduledJob; onPress: () => void }) {
     DK.colors.highlight;
   return (
     <Pressable style={({ pressed }) => [jobStyles.row, pressed && { opacity: 0.9 }]} onPress={onPress}>
-      <Text style={jobStyles.time}>{job.startTime?.slice(0, 5) || '--:--'}</Text>
+      <Text style={jobStyles.time}>{job.startTime?.slice(11, 16) || '--:--'}</Text>
       <View style={{ flex: 1 }}>
         <Text style={jobStyles.title} numberOfLines={1}>{job.projectName}</Text>
         <Text style={jobStyles.customer} numberOfLines={1}>{job.customerName}</Text>
@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
   heroCTA: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 4,
-    paddingVertical: 10, paddingHorizontal: 8,
+    paddingVertical: 10, paddingHorizontal: 16,
     borderRadius: DK.radius.button,
     backgroundColor: '#FFFFFF',
   },
@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
     fontFamily: DK.type.display900,
     fontSize: 12,
     color: DK.colors.bg,
-    letterSpacing: 1,
+    letterSpacing: 0.6,
     flexShrink: 1,
   },
   heroCTAImpact: {
@@ -586,7 +586,8 @@ const styles = StyleSheet.create({
     fontFamily: DK.type.display900,
     fontSize: 13,
     color: DK.colors.text,
-    letterSpacing: 1.2,
+    letterSpacing: 0.8,
+    paddingRight: 4,
     flexShrink: 1,
   },
   sectionLink: {

@@ -50,8 +50,12 @@ export function OfflineBanner() {
   // banner variant ends up rendering.
   const safeTop = { paddingTop: insets.top };
 
-  // Demo mode banner
-  if (!isSupabaseConfigured) {
+  // Demo mode banner — __DEV__ only. In a production EAS build, a missing
+  // Supabase config is a deploy issue (env vars not inlined into the JS
+  // bundle), not user-facing context. Showing "Demo mode" on TestFlight
+  // looks like a half-finished app; silently skip in prod so the underlying
+  // env bug surfaces via missing data instead.
+  if (!isSupabaseConfigured && __DEV__) {
     return (
       <View style={[styles.banner, safeTop]}>
         <Ionicons name="cloud-offline-outline" size={13} color={SemanticColors.feedbackWarning} />
