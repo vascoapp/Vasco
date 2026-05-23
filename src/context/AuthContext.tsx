@@ -407,13 +407,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then(({ data: { session: s } }) => {
         setSession(s);
         if (s?.user) {
+          // R108: mirror the onAuthStateChange handler — derive
+          // onboardingComplete + country/trade/language from
+          // user_metadata so cold-start users get the same correct
+          // redirect target as warm-start ones.
+          const md = s.user.user_metadata ?? {};
           setUser({
             id: s.user.id,
             email: s.user.email ?? '',
-            name: s.user.user_metadata?.name ?? s.user.email ?? '',
-            role: (s.user.user_metadata?.role as UserRole) ?? 'contractor',
-            company: s.user.user_metadata?.company ?? '',
+            name: md.name ?? s.user.email ?? '',
+            role: (md.role as UserRole) ?? 'contractor',
+            company: md.company ?? '',
             projects: [],
+            onboardingComplete: md.onboarding_complete === true,
+            country: md.country as Country | undefined,
+            trade: md.trade as string | undefined,
+            language: md.language as Language | undefined,
           });
         }
       })
@@ -460,6 +469,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // the prior user object instead, but only when the user id matches —
         // a different id means a different user, in which case we must
         // rebuild cleanly.
+        //
+        // R108: derive onboardingComplete + country/trade/language from
+        // user_metadata (server source of truth) with sensible defaults
+        // for fresh signups. Before R108 these fields were undefined for
+        // new accounts, so the redirect check `=== false` failed silently
+        // and contractors landed on Vandaag without ever picking
+        // country/language/trade — leaving the app in mixed-locale state.
+        const md = s.user.user_metadata ?? {};
+        const metaOnboardingComplete = md.onboarding_complete === true;
+        const metaCountry = md.country as Country | undefined;
+        const metaTrade = md.trade as string | undefined;
+        const metaLanguage = md.language as Language | undefined;
+
         setUser((prev) => {
           const sameUser = prev?.id === s.user.id;
           const base: User = sameUser && prev ? prev : {
@@ -469,14 +491,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             role: 'contractor',
             company: '',
             projects: [],
+            // R108: default to NOT onboarded for fresh sessions; the
+            // metadata read below overrides to true if the user has
+            // actually finished onboarding on any device.
+            onboardingComplete: false,
           };
           return {
             ...base,
             id: s.user.id,
             email: s.user.email ?? base.email,
-            name: s.user.user_metadata?.name ?? base.name ?? s.user.email ?? '',
-            role: (s.user.user_metadata?.role as UserRole) ?? base.role ?? 'contractor',
-            company: s.user.user_metadata?.company ?? base.company ?? '',
+            name: md.name ?? base.name ?? s.user.email ?? '',
+            role: (md.role as UserRole) ?? base.role ?? 'contractor',
+            company: md.company ?? base.company ?? '',
+            // metadata wins when present, otherwise keep the previously
+            // merged values from local AsyncStorage.
+            onboardingComplete: metaOnboardingComplete || base.onboardingComplete === true,
+            country: metaCountry ?? base.country,
+            trade: metaTrade ?? base.trade,
+            language: metaLanguage ?? base.language,
           };
         });
         // R230: if the user had a pending referral code stashed before

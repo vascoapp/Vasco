@@ -1955,7 +1955,9 @@
       "actionsExecutedWeek": "{{count}} acties uitgevoerd deze week"
     },
     "common": {
-      "goodMorning": "Goeiemorgen"
+      "goodMorning": "Goeiemorgen",
+      "goodAfternoon": "Goedemiddag",
+      "goodEvening": "Goedenavond"
     }
   },
   "decisionPortal": {

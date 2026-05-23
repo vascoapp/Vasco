@@ -36,6 +36,19 @@ import { UpcomingRecurringWidget } from '../../src/components/contractor/Upcomin
 import { OptimizationStatsWidget } from '../../src/components/contractor/OptimizationStatsWidget';
 import { CapacityOverrunCard } from '../../src/components/contractor/CapacityOverrunCard';
 
+// R108: time-of-day-aware greeting. Pre-R108 "dk.common.goodMorning" was
+// hardcoded, so contractors opening the app in the evening saw "Good
+// morning" — minor but obviously broken. Splits at the standard
+// social-greeting boundaries (5am, 12pm, 6pm). Each locale's
+// common.goodMorning / .goodAfternoon / .goodEvening keys already exist
+// across all six languages (nl/de/fr/es/it/en).
+function getGreeting(t: (key: string, fallback?: string) => string): string {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return t('dk.common.goodMorning', 'Good morning');
+  if (hour >= 12 && hour < 18) return t('dk.common.goodAfternoon', 'Good afternoon');
+  return t('dk.common.goodEvening', 'Good evening');
+}
+
 export default function VandaagDK() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
@@ -128,7 +141,7 @@ export default function VandaagDK() {
             <Text style={styles.overline}>
               {new Date().toLocaleDateString(i18n.language, { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase()}
             </Text>
-            <Text style={styles.greeting}>{t('dk.common.goodMorning', 'Good morning')}.</Text>
+            <Text style={styles.greeting}>{getGreeting(t)}.</Text>
           </View>
           <Pressable style={styles.bellBtn} onPress={() => router.push('/contractor/notifications' as any)} hitSlop={8}>
             <Ionicons name="notifications-outline" size={20} color={DK.colors.text} />
@@ -553,6 +566,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: DK.colors.bg,
     letterSpacing: 0.6,
+    // R108: Archivo Black's E/B/D/R have horizontal strokes that extend
+    // a few pixels past the character's typographic advance width on
+    // iOS. Without trailing padding the parent's overflow:hidden chops
+    // the last glyph — "OPEN JOB" rendered "OPEN JOI", "NEW QUOTE"
+    // rendered "NEW QUOT!". 6pt is enough to clear any heavy character.
+    paddingRight: 6,
   },
   heroCTAImpact: {
     fontFamily: DK.type.body600,
@@ -603,7 +622,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: DK.colors.text,
     letterSpacing: 0.8,
-    paddingRight: 4,
+    // R108: padding-right bumped 4 → 8 to clear Archivo Black's right
+    // glyph overflow (E/B/D/R). "SCHEDULE" was rendering "SCHEDULI".
+    paddingRight: 8,
     flexShrink: 1,
   },
   sectionLink: {

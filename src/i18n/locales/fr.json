@@ -1955,7 +1955,9 @@
       "actionsExecutedWeek": "{{count}} actions exécutées cette semaine"
     },
     "common": {
-      "goodMorning": "Bonjour"
+      "goodMorning": "Bonjour",
+      "goodAfternoon": "Bon après-midi",
+      "goodEvening": "Bonsoir"
     }
   },
   "decisionPortal": {

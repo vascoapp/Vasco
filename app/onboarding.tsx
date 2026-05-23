@@ -482,6 +482,29 @@ export default function OnboardingScreen() {
       await AsyncStorage.setItem('@vasco_user_profile', JSON.stringify(userUpdates)).catch(() => {});
       AsyncStorage.removeItem('@vasco_onboarding_progress').catch(() => {});
 
+      // R108: persist onboarding completion + country/trade/language to
+      // Supabase user_metadata. Local AsyncStorage alone is per-device —
+      // if the contractor reinstalls or signs in on a second device the
+      // onboarding flow would otherwise re-fire. user_metadata travels
+      // with the auth session, so the cold-start AuthContext.getSession
+      // resolver picks it up and the redirect lands on /(contractor)
+      // instead of /onboarding.
+      try {
+        const { isSupabaseConfigured: cfg, supabase: sb } = await import('../src/lib/supabase');
+        if (cfg) {
+          await sb.auth.updateUser({
+            data: {
+              onboarding_complete: true,
+              country: country ?? undefined,
+              trade: selectedTrades[0],
+              language,
+            },
+          });
+        }
+      } catch {
+        // Non-fatal: local AsyncStorage still has the flag.
+      }
+
       // Push captured registration fields into AppState.businessProfile so
       // the invoice-send legal gate (R145) sees the real values on day one.
       try {
