@@ -10,6 +10,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { addBreadcrumb } from '../lib/errorReporting';
 import { consentService } from './consentService';
 
 const EVENTS_STORAGE_KEY = '@vasco_analytics_events';
@@ -206,12 +207,38 @@ export async function trackEvent(
   events.push(event);
   await saveEvents(events);
 
+  // R96 — mirror to Sentry breadcrumbs so crashes include the recent
+  // event trail. `addBreadcrumb` scrubs PII + no-ops when Sentry DSN
+  // unset, so this is always safe to call.
+  addBreadcrumb({
+    category: breadcrumbCategoryFor(name),
+    message: name,
+    data: properties,
+    level: 'info',
+  });
+
   // Auto-flush when threshold reached
   const unflushedCount = events.filter((e) => !e.flushed).length;
   if (unflushedCount >= AUTO_FLUSH_THRESHOLD && isSupabaseConfigured) {
     // Fire and forget — don't block the caller
     flushEvents().catch(() => {});
   }
+}
+
+// Map event names to Sentry breadcrumb categories so the trail in a
+// crash report groups sensibly. Conservative defaults — when in doubt,
+// 'user' (the broadest category).
+function breadcrumbCategoryFor(name: EventName): string {
+  if (name === 'login' || name === 'logout') return 'auth';
+  if (name.startsWith('invoice_') || name.startsWith('quote_') || name === 'payment_received') return 'transaction';
+  if (name.startsWith('job_')) return 'job';
+  if (name.startsWith('lead_')) return 'lead';
+  if (name.startsWith('worker_')) return 'crew';
+  if (name.startsWith('license_')) return 'compliance';
+  if (name === 'ai_command_sent') return 'ai';
+  if (name === 'onboarding_step') return 'onboarding';
+  if (name.startsWith('material_') || name === 'po_created_from_search' || name === 'search_performed') return 'commerce';
+  return 'user';
 }
 
 /**

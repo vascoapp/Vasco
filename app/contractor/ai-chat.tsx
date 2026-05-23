@@ -230,7 +230,9 @@ function routeForIntent(result: AiCommandResult): ChatMessage['routeOnTap'] | un
     case 'query_job_status':
       return { path: '/(contractor)/werk', label: 'Open Work tab' };
     case 'find_customer':
-      return { path: '/(contractor)/klanten', label: 'Open Customers' };
+      // customer-crm is the real customer list screen — there's no
+      // /(contractor)/klanten tab; customers live under the drill-down.
+      return { path: '/contractor/customer-crm', label: 'Open Customers' };
     case 'weekly_summary':
       return { path: '/hub/savings', label: 'See breakdown' };
     default:

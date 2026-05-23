@@ -838,6 +838,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
       removeLead: async (id) => {
         setLeads((prev) => prev.filter((l) => l.id !== id));
+        trackEvent('lead_deleted', {}).catch(() => {});
         if (isSupabaseConfigured) {
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue('leads', 'delete', async () => {
@@ -916,6 +917,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
       removeWorker: async (id) => {
         setWorkers((prev) => prev.filter((w) => w.id !== id));
+        trackEvent('worker_removed', {}).catch(() => {});
         // Also unassign any jobs that pointed at this worker (FK cascade
         // does this on the server; do it client-side too so the optimistic
         // state stays consistent).
@@ -2542,11 +2544,17 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // the customer id, not name). Skipped silently if name lookup
           // fails — pipeline still works, just without an entry for
           // this rejection.
+          //
+          // R96: previously did a raw setLeads with no BE persist, so
+          // the auto-created lead disappeared on cold-start (rule #8
+          // violation). Now mirrors the full addLead path — optimistic
+          // insert + BE persist via offlineWriteQueue + temp-id remap.
           const customer = customers.find((c) => c.id === quote.customer);
           if (customer) {
+            const tempId = `lead-rej-${Date.now()}`;
             const now = new Date().toISOString();
             const newLead: Lead = {
-              id: `lead-rej-${Date.now()}`,
+              id: tempId,
               status: 'lost',
               source: 'rejected_estimate',
               customerName: customer.name,
@@ -2562,6 +2570,37 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               convertedAt: now,
             };
             setLeads((prev) => [newLead, ...prev]);
+            trackEvent('lead_created', { source: 'rejected_estimate', hasValue: newLead.estimatedValue ? 1 : 0 }).catch(() => {});
+            if (isSupabaseConfigured) {
+              import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+                persistOrQueue('leads', 'insert', async () => {
+                  const { supabase } = await import('../lib/supabase');
+                  const { data, error } = await (supabase.from('leads') as any)
+                    .insert({
+                      user_id: getCurrentUserId(),
+                      status: newLead.status,
+                      source: newLead.source,
+                      customer_name: newLead.customerName,
+                      customer_phone: newLead.customerPhone,
+                      customer_email: newLead.customerEmail,
+                      customer_id: newLead.customerId,
+                      job_description: newLead.jobDescription,
+                      estimated_value: newLead.estimatedValue,
+                      notes: newLead.notes,
+                      source_quote_id: newLead.sourceQuoteId,
+                    })
+                    .select('id')
+                    .single();
+                  if (error) throw error;
+                  if (data?.id) {
+                    setLeads((prev) =>
+                      prev.map((l) => (l.id === tempId ? { ...l, id: data.id as string } : l))
+                    );
+                  }
+                  return data;
+                }, { rowId: tempId }),
+              ).catch((err) => logWarn('AppState', `auto-lead-on-reject persist failed: ${err}`));
+            }
           }
         }
       },

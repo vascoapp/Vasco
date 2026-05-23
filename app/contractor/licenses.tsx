@@ -29,6 +29,7 @@ import { useAppState } from '../../src/state/AppState';
 import { listUsStates } from '../../src/data/usSalesTax';
 import type { ContractorLicense, ContractorLicenseType } from '../../src/domain/business';
 import { getExpiringLicenses } from '../../src/services/licenseExpiryService';
+import { trackEvent } from '../../src/services/eventTrackingService';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { DK } from '../../src/theme/draftkings';
@@ -84,6 +85,12 @@ export default function LicensesScreen() {
       ? licenses.map((l) => (l === original ? license : l))
       : [...licenses, license];
     await persist(next);
+    // R96 — breadcrumb for compliance trail. `type` is a low-cardinality
+    // enum (master_plumber, hvac, etc.) so safe to log; never the number
+    // or authority (potentially identifying).
+    if (!original) {
+      trackEvent('license_added', { type: license.type }).catch(() => {});
+    }
     setEditing(null);
     setShowAdd(false);
   };
@@ -97,7 +104,10 @@ export default function LicensesScreen() {
         {
           text: t('common.delete', 'Delete'),
           style: 'destructive',
-          onPress: () => persist(licenses.filter((l) => l !== license)),
+          onPress: () => {
+            trackEvent('license_deleted', { type: license.type }).catch(() => {});
+            persist(licenses.filter((l) => l !== license));
+          },
         },
       ],
     );

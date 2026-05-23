@@ -161,10 +161,12 @@ export function setUser(userId: string | null): void {
 // led there. Pre-R49 the wrapper had no breadcrumb surface, so production
 // crashes arrived as bare stack traces with no route context. Now every
 // screen-mount + critical action (invoice send, quote create, etc.) drops
-// a breadcrumb. Categories follow Sentry conventions: 'navigation',
-// 'user', 'http', 'info'.
+// a breadcrumb. Categories follow Sentry conventions — the SDK accepts
+// any string, so we keep the type open and use convention-by-naming
+// (auth, transaction, job, lead, crew, compliance, ai, onboarding,
+// commerce, navigation, user, http, info).
 export interface Breadcrumb {
-  category: 'navigation' | 'user' | 'http' | 'info';
+  category: string;
   message: string;
   level?: 'info' | 'warning' | 'error';
   data?: Record<string, unknown>;
