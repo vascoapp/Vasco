@@ -4,6 +4,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../theme/colors';
@@ -13,6 +14,12 @@ import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 export function OfflineBanner() {
   const { t } = useTranslation();
   const { isOnline, syncStatus, queueSize } = useNetworkStatus();
+  const insets = useSafeAreaInsets();
+  // R99: banner is rendered as a sibling of <Tabs> at the top of the
+  // contractor/tabs layouts, with no SafeAreaView wrapper. On iPhones
+  // with a notch the 28-px banner was rendering BEHIND the status bar
+  // (bleed into clock + battery). Add top inset as padding so the
+  // banner sits below the system UI.
   const spinAnim = useRef(new Animated.Value(0)).current;
 
   // Spin animation for sync icon
@@ -38,10 +45,15 @@ export function OfflineBanner() {
     outputRange: ['0deg', '360deg'],
   });
 
+  // R99 — top inset prevents banner content from sitting behind the
+  // status bar on notched devices. Applied as paddingTop to whichever
+  // banner variant ends up rendering.
+  const safeTop = { paddingTop: insets.top };
+
   // Demo mode banner
   if (!isSupabaseConfigured) {
     return (
-      <View style={styles.banner}>
+      <View style={[styles.banner, safeTop]}>
         <Ionicons name="cloud-offline-outline" size={13} color={SemanticColors.feedbackWarning} />
         <Text style={styles.text}>{t('common.demoMode', 'Demo mode — data saved locally')}</Text>
       </View>
@@ -51,7 +63,7 @@ export function OfflineBanner() {
   // Syncing state — processing queued actions
   if (syncStatus === 'syncing') {
     return (
-      <View style={[styles.banner, styles.syncingBanner]}>
+      <View style={[styles.banner, styles.syncingBanner, safeTop]}>
         <Animated.View style={{ transform: [{ rotate: spin }] }}>
           <Ionicons name="sync-outline" size={13} color={Palette.white} />
         </Animated.View>
@@ -65,7 +77,7 @@ export function OfflineBanner() {
   // Just finished syncing — brief confirmation
   if (syncStatus === 'synced') {
     return (
-      <View style={[styles.banner, styles.syncedBanner]}>
+      <View style={[styles.banner, styles.syncedBanner, safeTop]}>
         <Ionicons name="checkmark-circle-outline" size={13} color={SemanticColors.feedbackSuccess} />
         <Text style={[styles.text, styles.syncedText]}>
           {t('common.allSynced', 'All changes synced')}
@@ -77,7 +89,7 @@ export function OfflineBanner() {
   // Sync error — some actions failed
   if (syncStatus === 'error') {
     return (
-      <View style={[styles.banner, styles.offlineBanner]}>
+      <View style={[styles.banner, styles.offlineBanner, safeTop]}>
         <Ionicons name="alert-circle-outline" size={13} color={Palette.white} />
         <Text style={[styles.text, styles.offlineText]}>
           {t('common.syncError', 'Sync error — {{count}} pending', { count: queueSize })}
@@ -92,7 +104,7 @@ export function OfflineBanner() {
       ? t('common.offlineQueued', 'Offline — {{count}} changes queued', { count: queueSize })
       : t('common.offline', 'No connection — changes saved locally');
     return (
-      <View style={[styles.banner, styles.offlineBanner]}>
+      <View style={[styles.banner, styles.offlineBanner, safeTop]}>
         <Ionicons name="wifi-outline" size={13} color={Palette.white} />
         <Text style={[styles.text, styles.offlineText]}>{message}</Text>
       </View>
