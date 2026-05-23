@@ -338,7 +338,22 @@ export default function VandaagDK() {
         <View style={styles.scheduleList}>
           {todayJobs.length === 0 ? (
             <View style={styles.emptyCard}>
+              <Ionicons name="calendar-outline" size={28} color={DK.colors.textMuted} style={{ marginBottom: 8 }} />
               <Text style={styles.emptyText}>{t('dk.empty.noJobsToday', 'No jobs today')}</Text>
+              {/* R112: fresh contractors with no entities need a path INTO
+                  the app, not just a "nothing here" message. When the
+                  user has zero jobs across the board, surface a Schedule
+                  CTA that opens drag-schedule. */}
+              {jobs.length === 0 ? (
+                <Pressable
+                  style={({ pressed }) => [styles.emptyCta, pressed && { opacity: 0.85 }]}
+                  onPress={() => router.push('/contractor/drag-schedule' as any)}
+                  accessibilityRole="button"
+                >
+                  <Ionicons name="add" size={16} color={DK.colors.bg} />
+                  <DKLabel style={styles.emptyCtaText}>{t('dk.empty.scheduleAJob', 'Schedule a job')}</DKLabel>
+                </Pressable>
+              ) : null}
             </View>
           ) : (
             todayJobs.map((job) => (
@@ -644,6 +659,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: { fontFamily: DK.type.body500, fontSize: 13, color: DK.colors.textMuted },
+  // R112: empty-state CTA that surfaces only when the contractor has zero
+  // entities at all — gives a clear path INTO the app from the first
+  // empty card a fresh user sees.
+  emptyCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: DK.radius.button,
+    backgroundColor: DK.colors.accent,
+  },
+  emptyCtaText: {
+    fontFamily: DK.type.display800,
+    fontSize: 11,
+    color: DK.colors.bg,
+    letterSpacing: 0.6,
+    paddingRight: 4,
+  },
   // R80 US Phase 2: state-license expiry warning card
   licenseWarn: {
     marginHorizontal: 16,

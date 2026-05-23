@@ -1904,7 +1904,8 @@
       "noExtraActionsDesc": "L'action ci-dessus est votre seul élément ouvert.",
       "allUpToDate": "Tout est clair",
       "allUpToDateDesc": "Aucune action IA en attente.",
-      "firstJob": "premier chantier"
+      "firstJob": "premier chantier",
+      "scheduleAJob": "Planifier un chantier"
     },
     "fab": {
       "planSchedule": "Planifiez votre semaine",

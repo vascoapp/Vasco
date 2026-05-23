@@ -1904,7 +1904,8 @@
       "noExtraActionsDesc": "La acción de arriba es tu único pendiente.",
       "allUpToDate": "Todo en orden",
       "allUpToDateDesc": "Sin acciones IA pendientes.",
-      "firstJob": "primer trabajo"
+      "firstJob": "primer trabajo",
+      "scheduleAJob": "Programar un trabajo"
     },
     "fab": {
       "planSchedule": "Planifica tu semana",

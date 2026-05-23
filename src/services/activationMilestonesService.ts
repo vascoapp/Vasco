@@ -13,7 +13,13 @@
 import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const DISMISSED_KEY = '@vasco_activation_dismissed';
+// R112: version the dismissed-key so each major activation-flow rework
+// re-shows the checklist to users who'd dismissed the previous version.
+// Bump this whenever the checklist content/route mapping meaningfully
+// changes. Pre-R112 builds used the un-versioned key; users who
+// dismissed there now see the checklist again as intended.
+const ACTIVATION_VERSION = 'v2';
+const DISMISSED_KEY = `@vasco_activation_dismissed_${ACTIVATION_VERSION}`;
 
 export type MilestoneId =
   | 'profile_complete'

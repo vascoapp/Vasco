@@ -1904,7 +1904,8 @@
       "noExtraActionsDesc": "Die Aktion oben ist dein einziger offener Punkt.",
       "allUpToDate": "Alles im Griff",
       "allUpToDateDesc": "Keine offenen KI-Aktionen.",
-      "firstJob": "erster Auftrag"
+      "firstJob": "erster Auftrag",
+      "scheduleAJob": "Auftrag planen"
     },
     "fab": {
       "planSchedule": "Plane deine Woche",

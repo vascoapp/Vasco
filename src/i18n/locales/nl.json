@@ -1904,7 +1904,8 @@
       "noExtraActionsDesc": "De feature actie hierboven is je enige openstaande item.",
       "allUpToDate": "Alles onder controle",
       "allUpToDateDesc": "Geen openstaande AI-acties.",
-      "firstJob": "eerste klus"
+      "firstJob": "eerste klus",
+      "scheduleAJob": "Plan een klus"
     },
     "fab": {
       "planSchedule": "Plan je week",

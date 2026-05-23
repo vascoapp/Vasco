@@ -1904,7 +1904,8 @@
       "noExtraActionsDesc": "The featured action above is your only open item.",
       "allUpToDate": "All clear",
       "allUpToDateDesc": "No open AI actions.",
-      "firstJob": "first job"
+      "firstJob": "first job",
+      "scheduleAJob": "Schedule a job"
     },
     "fab": {
       "planSchedule": "Plan your week",

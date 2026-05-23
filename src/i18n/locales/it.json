@@ -1904,7 +1904,8 @@
       "noExtraActionsDesc": "L'azione sopra è l'unico elemento aperto.",
       "allUpToDate": "Tutto a posto",
       "allUpToDateDesc": "Nessuna azione AI aperta.",
-      "firstJob": "primo lavoro"
+      "firstJob": "primo lavoro",
+      "scheduleAJob": "Pianifica un lavoro"
     },
     "fab": {
       "planSchedule": "Pianifica la settimana",
