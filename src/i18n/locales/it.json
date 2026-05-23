@@ -363,7 +363,8 @@
     "legislation": "Legislazione",
     "standard": "Standard",
     "guideline": "Linea guida",
-    "industryNews": "Notizie"
+    "industryNews": "Notizie",
+    "addLicense": "Aggiungi permesso"
   },
   "billing": {
     "upgradeRequired": "Aggiornamento richiesto",
@@ -619,7 +620,8 @@
     "scopedTo": "Filtrato a: {{job}}",
     "clearScope": "Mostra tutti i permessi",
     "emptyForJob": "Nessun permesso per questo lavoro",
-    "emptyForJobDesc": "Tocca \"+ Nuova richiesta\" per crearne uno per questo lavoro."
+    "emptyForJobDesc": "Tocca \"+ Nuova richiesta\" per crearne uno per questo lavoro.",
+    "selectJob": "Collega al lavoro"
   },
   "settings": {
     "title": "Impostazioni",
@@ -897,7 +899,8 @@
     "noEntries": "Nessuna registrazione",
     "chooseJob": "Scegli cantiere",
     "whichJob": "Su quale cantiere stai lavorando?",
-    "withoutJob": "Senza cantiere"
+    "withoutJob": "Senza cantiere",
+    "exportPayroll": "Esporta per paghe"
   },
   "sitelead": {
     "overview": "Panoramica",
@@ -1137,7 +1140,12 @@
     "shipped": "Spedito",
     "delivered": "Consegnato",
     "invoiced": "Fatturato",
-    "cancelled": "Annullato"
+    "cancelled": "Annullato",
+    "submitOrder": "Invia ordine",
+    "submitTo": "invia a",
+    "deliveryReceived": "Consegna ricevuta",
+    "materialsReceived": "Materiali per",
+    "received": "ricevuto"
   },
   "workerCerts": {
     "title": "Certificati dei lavoratori",
@@ -2210,7 +2218,10 @@
     "calendarPromptEnable": "Attiva",
     "softConflictTitle": "Attenzione",
     "softCancel": "Scegli altro slot",
-    "softOverride": "Pianifica comunque"
+    "softOverride": "Pianifica comunque",
+    "removeJob": "Rimuovi lavoro",
+    "removeFromSchedule": "rimuovi dal calendario",
+    "longPressToRemove": "Tieni premuto per rimuovere"
   },
   "marketInsights": {
     "title": "INSIGHT DI MERCATO",
@@ -2281,7 +2292,8 @@
       "materialsDesc": "Quick wins: {{suppliers}}",
       "materialsEmpty": "Nessun quick win dai fornitori al momento"
     },
-    "scanFirstInvoice": "Scansiona la tua prima fattura fornitore per avviare l'intelligence sui prezzi."
+    "scanFirstInvoice": "Scansiona la tua prima fattura fornitore per avviare l'intelligence sui prezzi.",
+    "allGoodDesc": "Vasco analizza in continuazione le tue spese e i prezzi di mercato. Quando c'è qualcosa da risparmiare, lo vedrai qui."
   },
   "smartReply": {
     "suggested": "Suggested replies",
@@ -2831,7 +2843,9 @@
     "healthNew": "NUOVO",
     "healthHealthy": "FUNZIONA",
     "healthLow": "DA MIGLIORARE",
-    "mutedCount": "{{count}} silenziati"
+    "mutedCount": "{{count}} silenziati",
+    "heroTitle": "Risparmia tempo con le automazioni",
+    "heroDesc": "Attiva i workflow e Vasco fa il lavoro. Mantieni sempre il controllo."
   },
   "market": {
     "noBenchmarksDesc": "Servono più dati per i benchmark",

@@ -363,7 +363,8 @@
     "legislation": "Gesetzgebung",
     "standard": "Norm",
     "guideline": "Richtlinie",
-    "industryNews": "Branchennews"
+    "industryNews": "Branchennews",
+    "addLicense": "Genehmigung hinzufügen"
   },
   "billing": {
     "upgradeRequired": "Upgrade erforderlich",
@@ -619,7 +620,8 @@
     "scopedTo": "Eingeschränkt auf: {{job}}",
     "clearScope": "Alle Genehmigungen anzeigen",
     "emptyForJob": "Keine Genehmigungen für diesen Auftrag",
-    "emptyForJobDesc": "Tippen Sie auf \"+ Neuer Antrag\", um einen für diesen Auftrag zu erstellen."
+    "emptyForJobDesc": "Tippen Sie auf \"+ Neuer Antrag\", um einen für diesen Auftrag zu erstellen.",
+    "selectJob": "Mit Auftrag verknüpfen"
   },
   "settings": {
     "title": "Einstellungen",
@@ -897,7 +899,8 @@
     "noEntries": "Keine Einträge",
     "chooseJob": "Auftrag wählen",
     "whichJob": "An welchem Auftrag arbeiten Sie?",
-    "withoutJob": "Ohne Auftrag"
+    "withoutJob": "Ohne Auftrag",
+    "exportPayroll": "Für Lohnabrechnung exportieren"
   },
   "sitelead": {
     "overview": "Übersicht",
@@ -1137,7 +1140,12 @@
     "shipped": "Unterwegs",
     "delivered": "Geliefert",
     "invoiced": "Fakturiert",
-    "cancelled": "Storniert"
+    "cancelled": "Storniert",
+    "submitOrder": "Bestellung senden",
+    "submitTo": "senden an",
+    "deliveryReceived": "Lieferung erhalten",
+    "materialsReceived": "Materialien für",
+    "received": "erhalten"
   },
   "workerCerts": {
     "title": "Mitarbeiterzertifikate",
@@ -2221,7 +2229,10 @@
     "calendarPromptEnable": "Aktivieren",
     "softConflictTitle": "Achtung",
     "softCancel": "Anderen Slot wahlen",
-    "softOverride": "Trotzdem planen"
+    "softOverride": "Trotzdem planen",
+    "removeJob": "Auftrag entfernen",
+    "removeFromSchedule": "aus dem Zeitplan entfernen",
+    "longPressToRemove": "Halten Sie gedrückt zum Entfernen"
   },
   "weekly": {
     "title": "WOCHENÜBERSICHT",
@@ -2281,7 +2292,8 @@
       "materialsDesc": "Quick Wins: {{suppliers}}",
       "materialsEmpty": "Noch keine Lieferanten-Quick-Wins"
     },
-    "scanFirstInvoice": "Scannen Sie Ihre erste Lieferantenrechnung, um die Preisintelligenz zu starten."
+    "scanFirstInvoice": "Scannen Sie Ihre erste Lieferantenrechnung, um die Preisintelligenz zu starten.",
+    "allGoodDesc": "Vasco scannt kontinuierlich Ihre Ausgaben und Marktpreise. Sobald es etwas zu sparen gibt, sehen Sie es hier."
   },
   "smartReply": {
     "suggested": "Suggested replies",
@@ -2831,7 +2843,9 @@
     "healthNew": "NEU",
     "healthHealthy": "FUNKTIONIERT",
     "healthLow": "ÜBERARBEITEN",
-    "mutedCount": "{{count}} stumm"
+    "mutedCount": "{{count}} stumm",
+    "heroTitle": "Sparen Sie Zeit mit Automatisierungen",
+    "heroDesc": "Aktivieren Sie Workflows und Vasco erledigt die Arbeit. Sie behalten immer die Kontrolle."
   },
   "market": {
     "noBenchmarksDesc": "Mehr Daten für Benchmarks nötig",

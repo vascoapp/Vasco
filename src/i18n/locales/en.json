@@ -363,7 +363,8 @@
     "legislation": "Legislation",
     "standard": "Standard",
     "guideline": "Guideline",
-    "industryNews": "Industry news"
+    "industryNews": "Industry news",
+    "addLicense": "Add permit"
   },
   "billing": {
     "upgradeRequired": "Upgrade required",
@@ -619,7 +620,8 @@
     "scopedTo": "Scoped to: {{job}}",
     "clearScope": "Show all permits",
     "emptyForJob": "No permits for this job",
-    "emptyForJobDesc": "Tap \"+ New request\" to draft one for this job."
+    "emptyForJobDesc": "Tap \"+ New request\" to draft one for this job.",
+    "selectJob": "Link to job"
   },
   "settings": {
     "title": "Settings",
@@ -897,7 +899,8 @@
     "noEntries": "No entries",
     "chooseJob": "Choose job",
     "whichJob": "Which job are you working on?",
-    "withoutJob": "Without job"
+    "withoutJob": "Without job",
+    "exportPayroll": "Export for payroll"
   },
   "sitelead": {
     "overview": "Overview",
@@ -1137,7 +1140,12 @@
     "shipped": "Shipped",
     "delivered": "Delivered",
     "invoiced": "Invoiced",
-    "cancelled": "Cancelled"
+    "cancelled": "Cancelled",
+    "submitOrder": "Send order",
+    "submitTo": "send to",
+    "deliveryReceived": "Delivery received",
+    "materialsReceived": "Materials for",
+    "received": "received"
   },
   "workerCerts": {
     "title": "Worker Certificates",
@@ -2221,7 +2229,10 @@
     "calendarPromptEnable": "Enable",
     "softConflictTitle": "Heads up",
     "softCancel": "Pick another slot",
-    "softOverride": "Schedule anyway"
+    "softOverride": "Schedule anyway",
+    "removeJob": "Remove job",
+    "removeFromSchedule": "remove from schedule",
+    "longPressToRemove": "Hold to remove"
   },
   "weekly": {
     "title": "WEEK OVERVIEW",
@@ -2281,7 +2292,8 @@
       "materialsDesc": "Quick wins: {{suppliers}}",
       "materialsEmpty": "No supplier quick-wins yet"
     },
-    "scanFirstInvoice": "Scan your first supplier invoice to start price intelligence."
+    "scanFirstInvoice": "Scan your first supplier invoice to start price intelligence.",
+    "allGoodDesc": "Vasco continuously scans your spend and market prices. When there's something to save, you'll see it here."
   },
   "smartReply": {
     "suggested": "Suggested replies",
@@ -2831,7 +2843,9 @@
     "healthNew": "NEW",
     "healthHealthy": "WORKING",
     "healthLow": "NEEDS WORK",
-    "mutedCount": "{{count}} muted"
+    "mutedCount": "{{count}} muted",
+    "heroTitle": "Save time with automations",
+    "heroDesc": "Enable workflows and Vasco does the work. You always stay in control."
   },
   "market": {
     "noBenchmarksDesc": "More data needed for benchmarks",

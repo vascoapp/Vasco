@@ -22,7 +22,11 @@ import { formatAmount } from '../../src/utils/formatAmount';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 
-const TRACKER_STORAGE_KEY = '@vasco_decision_trackers';
+// R113: versioned to v2 so users who had the previous build (which
+// auto-seeded fake "Fam. de Vries"/"Bakkerij Jansen"/"Van Dam Advocaten"
+// trackers into AsyncStorage) start fresh. The v1 key persists orphaned
+// until next logout (sessionCleanup wipes all @vasco_* keys).
+const TRACKER_STORAGE_KEY = '@vasco_decision_trackers_v2';
 
 type TabKey = 'overview' | 'decisions' | 'contacts';
 
@@ -36,11 +40,19 @@ interface TrackerData {
   lastActivity: string;
 }
 
-const SEED_TRACKERS: TrackerData[] = [
-  { id: 'tr-1', customerName: 'Fam. de Vries', project: 'Badkamer renovatie', totalDecisions: 15, decided: 9, overdue: 2, lastActivity: '2h ago' },
-  { id: 'tr-2', customerName: 'Bakkerij Jansen', project: 'Elektra kantoor', totalDecisions: 8, decided: 3, overdue: 0, lastActivity: '1d ago' },
-  { id: 'tr-3', customerName: 'Van Dam Advocaten', project: 'Schilderwerk', totalDecisions: 6, decided: 6, overdue: 0, lastActivity: '3d ago' },
-];
+// R113: seed trackers (Fam. de Vries / Bakkerij Jansen / Van Dam Advocaten)
+// used to be loaded into every fresh user's Customers tab as a "preview"
+// of what decision trackers look like. That preview survived
+// AsyncStorage hydration so even after R105 fixed the Supabase env-var
+// inlining (and the rest of the app stopped showing mock data), the
+// Klanten tab still displayed three fake customers. Real users on TF
+// saw "Fam. de Vries" with a Badkamer renovatie they never sold.
+//
+// We now start with an empty array. The empty-state already renders a
+// proper "No trackers yet" panel with a CTA (per bedrijf.tsx:262), so
+// the previewing-via-seed approach was strictly worse than the empty
+// state we built later.
+const SEED_TRACKERS: TrackerData[] = [];
 
 export default function BedrijfScreen() {
   const { t } = useTranslation();

@@ -363,7 +363,8 @@
     "legislation": "Wetgeving",
     "standard": "Norm",
     "guideline": "Richtlijn",
-    "industryNews": "Nieuws"
+    "industryNews": "Nieuws",
+    "addLicense": "Vergunning toevoegen"
   },
   "billing": {
     "upgradeRequired": "Upgrade nodig",
@@ -619,7 +620,8 @@
     "scopedTo": "Beperkt tot: {{job}}",
     "clearScope": "Toon alle vergunningen",
     "emptyForJob": "Geen vergunningen voor deze klus",
-    "emptyForJobDesc": "Tik op \"+ Nieuwe aanvraag\" om er een aan te maken voor deze klus."
+    "emptyForJobDesc": "Tik op \"+ Nieuwe aanvraag\" om er een aan te maken voor deze klus.",
+    "selectJob": "Koppel aan klus"
   },
   "settings": {
     "title": "Instellingen",
@@ -967,7 +969,12 @@
     "shipped": "Onderweg",
     "delivered": "Geleverd",
     "invoiced": "Gefactureerd",
-    "cancelled": "Geannuleerd"
+    "cancelled": "Geannuleerd",
+    "submitOrder": "Bestelling versturen",
+    "submitTo": "versturen naar",
+    "deliveryReceived": "Levering ontvangen",
+    "materialsReceived": "Materialen voor",
+    "received": "ontvangen"
   },
   "workerCerts": {
     "title": "Certificaten Medewerkers",
@@ -1149,7 +1156,8 @@
     "noEntries": "Geen registraties",
     "chooseJob": "Klus kiezen",
     "whichJob": "Voor welke klus ga je werken?",
-    "withoutJob": "Zonder klus"
+    "withoutJob": "Zonder klus",
+    "exportPayroll": "Exporteer voor verloning"
   },
   "money": {
     "outstanding": "Uitstaand",
@@ -2221,7 +2229,10 @@
     "calendarPromptEnable": "Inschakelen",
     "softConflictTitle": "Let op",
     "softCancel": "Kies ander tijdstip",
-    "softOverride": "Toch inplannen"
+    "softOverride": "Toch inplannen",
+    "removeJob": "Klus verwijderen",
+    "removeFromSchedule": "uit planning verwijderen",
+    "longPressToRemove": "Houd ingedrukt om te verwijderen"
   },
   "weekly": {
     "title": "WEEKOVERZICHT",
@@ -2281,7 +2292,8 @@
       "materialsDesc": "Quick wins: {{suppliers}}",
       "materialsEmpty": "Nog geen quick wins bij leveranciers"
     },
-    "scanFirstInvoice": "Scan je eerste leveranciersfactuur om prijsintelligentie te starten."
+    "scanFirstInvoice": "Scan je eerste leveranciersfactuur om prijsintelligentie te starten.",
+    "allGoodDesc": "Vasco scant continu je uitgaven en marktprijzen. Zodra er iets te besparen valt, zie je het hier."
   },
   "smartReply": {
     "suggested": "Voorgestelde antwoorden",
@@ -2625,7 +2637,9 @@
     "healthNew": "NIEUW",
     "healthHealthy": "WERKT",
     "healthLow": "NEEDS WORK",
-    "mutedCount": "{{count}} gedempt"
+    "mutedCount": "{{count}} gedempt",
+    "heroTitle": "Bespaar tijd met automatiseringen",
+    "heroDesc": "Activeer workflows en Vasco doet het werk. Je behoudt altijd controle."
   },
   "packDiscovery": {
     "incasso": {
