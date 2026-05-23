@@ -37,7 +37,9 @@
     "apply": "Aplicar",
     "ignore": "Ignorar",
     "ok": "OK",
-    "info": "Información"
+    "info": "Información",
+    "km": "km",
+    "miles": "mi"
   },
   "tabs": {
     "today": "Hoy",
@@ -164,7 +166,19 @@
       "paye": "Referencia PAYE",
       "handelsregister": "N.º Registro Mercantil",
       "ustId": "NIF-IVA",
-      "steuernummer": "Número fiscal"
+      "steuernummer": "Número fiscal",
+      "hrb": "HRB",
+      "ustIdNr": "USt-IdNr.",
+      "siret": "SIRET",
+      "tvaIntra": "IVA intracomunitario",
+      "nif": "NIF",
+      "iae": "IAE",
+      "partitaIva": "Partita IVA",
+      "cameraCommercio": "Nº Cámara de Comercio",
+      "companyNumber": "Nº empresa UK",
+      "ein": "EIN",
+      "stateLicense": "Licencia estatal",
+      "codiceFiscale": "Código Fiscal italiano"
     },
     "selectLanguage": "Elige tu idioma",
     "goals": "Que quieres lograr?",
@@ -240,7 +254,8 @@
     "valueProp3Desc": "Permisos, certificados, regulaciones UE — todo controlado",
     "vatPresetTitle": "Régimen de IVA configurado",
     "vatPresetKor": "KOR seleccionado — cámbialo en Ajustes si tu facturación supera €20.000.",
-    "vatPresetKlein": "Kleinunternehmer seleccionado — cámbialo en Ajustes si supera €22.000."
+    "vatPresetKlein": "Kleinunternehmer seleccionado — cámbialo en Ajustes si supera €22.000.",
+    "perMonth": "/mes"
   },
   "dashboard": {
     "goodMorning": "Buenos días",

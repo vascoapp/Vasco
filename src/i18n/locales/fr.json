@@ -37,7 +37,9 @@
     "apply": "Appliquer",
     "ignore": "Ignorer",
     "ok": "OK",
-    "info": "Info"
+    "info": "Info",
+    "km": "km",
+    "miles": "mi"
   },
   "tabs": {
     "today": "Aujourd'hui",
@@ -164,7 +166,19 @@
       "paye": "Référence PAYE",
       "handelsregister": "N° Registre du Commerce",
       "ustId": "N° de TVA intracommunautaire",
-      "steuernummer": "Numéro fiscal"
+      "steuernummer": "Numéro fiscal",
+      "hrb": "HRB",
+      "ustIdNr": "Numéro TVA DE",
+      "siret": "SIRET",
+      "tvaIntra": "TVA intracommunautaire",
+      "nif": "NIF",
+      "iae": "IAE",
+      "partitaIva": "Partita IVA",
+      "cameraCommercio": "Chambre de Commerce",
+      "companyNumber": "N° entreprise UK",
+      "ein": "EIN",
+      "stateLicense": "Licence d'État",
+      "codiceFiscale": "Code fiscal italien"
     },
     "selectLanguage": "Choisissez votre langue",
     "goals": "Que voulez-vous accomplir ?",
@@ -240,7 +254,8 @@
     "valueProp3Desc": "Permis, certificats, réglementations UE — tout suivi",
     "vatPresetTitle": "Régime de TVA défini",
     "vatPresetKor": "KOR sélectionné — modifiez dans Paramètres si votre CA dépasse €20.000.",
-    "vatPresetKlein": "Kleinunternehmer sélectionné — modifiez dans Paramètres si CA > €22.000."
+    "vatPresetKlein": "Kleinunternehmer sélectionné — modifiez dans Paramètres si CA > €22.000.",
+    "perMonth": "/mois"
   },
   "dashboard": {
     "goodMorning": "Bonjour",

@@ -37,7 +37,9 @@
     "apply": "Toepassen",
     "ignore": "Negeren",
     "ok": "OK",
-    "info": "Info"
+    "info": "Info",
+    "km": "km",
+    "miles": "mi"
   },
   "tabs": {
     "today": "Vandaag",
@@ -164,7 +166,19 @@
       "paye": "PAYE-referentie",
       "handelsregister": "Handelsregisternr.",
       "ustId": "USt-IdNr.",
-      "steuernummer": "Steuernummer"
+      "steuernummer": "Steuernummer",
+      "hrb": "HRB",
+      "ustIdNr": "USt-IdNr.",
+      "siret": "SIRET",
+      "tvaIntra": "BTW (intra)",
+      "nif": "NIF",
+      "iae": "IAE",
+      "partitaIva": "Partita IVA",
+      "cameraCommercio": "Camera di Commercio",
+      "companyNumber": "Companies House",
+      "ein": "EIN",
+      "stateLicense": "State license #",
+      "codiceFiscale": "Codice Fiscale"
     },
     "selectLanguage": "Kies je taal",
     "goals": "Wat wil je bereiken?",
@@ -240,7 +254,8 @@
     "valueProp3Desc": "Vergunningen, certificaten, EU-regelgeving — alles bijgehouden",
     "vatPresetTitle": "BTW-regeling ingesteld",
     "vatPresetKor": "KOR geselecteerd — wijzig in Instellingen als je omzet boven €20.000 uitkomt.",
-    "vatPresetKlein": "Kleinunternehmer geselecteerd — wijzig in Instellingen als omzet boven €22.000 komt."
+    "vatPresetKlein": "Kleinunternehmer geselecteerd — wijzig in Instellingen als omzet boven €22.000 komt.",
+    "perMonth": "/mnd"
   },
   "dashboard": {
     "goodMorning": "Goedemorgen",

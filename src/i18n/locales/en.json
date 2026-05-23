@@ -37,7 +37,9 @@
     "apply": "Apply",
     "ignore": "Ignore",
     "ok": "OK",
-    "info": "Info"
+    "info": "Info",
+    "km": "km",
+    "miles": "mi"
   },
   "tabs": {
     "today": "Today",
@@ -164,7 +166,19 @@
       "paye": "PAYE Reference",
       "handelsregister": "Commercial Register No.",
       "ustId": "VAT ID",
-      "steuernummer": "Tax Number"
+      "steuernummer": "Tax Number",
+      "hrb": "HRB",
+      "ustIdNr": "USt-IdNr.",
+      "siret": "SIRET",
+      "tvaIntra": "VAT (intracommunity)",
+      "nif": "NIF",
+      "iae": "IAE (activity code)",
+      "partitaIva": "Partita IVA",
+      "cameraCommercio": "Chamber of Commerce no.",
+      "companyNumber": "Company number",
+      "ein": "EIN",
+      "stateLicense": "State license #",
+      "codiceFiscale": "Codice Fiscale"
     },
     "selectLanguage": "Choose your language",
     "goals": "What do you want to achieve?",
@@ -240,7 +254,8 @@
     "valueProp3Desc": "Permits, certificates, EU regulations — all tracked",
     "vatPresetTitle": "VAT scheme set",
     "vatPresetKor": "Selected KOR — change in Settings if turnover will exceed €20.000.",
-    "vatPresetKlein": "Selected Kleinunternehmer — change in Settings if turnover will exceed €22.000."
+    "vatPresetKlein": "Selected Kleinunternehmer — change in Settings if turnover will exceed €22.000.",
+    "perMonth": "/mo"
   },
   "dashboard": {
     "goodMorning": "Good morning",

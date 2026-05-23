@@ -1054,14 +1054,16 @@ export default function OnboardingScreen() {
                 style={styles.textInput}
                 value={postcode}
                 onChangeText={setPostcode}
-                placeholder="1234 AB"
+                placeholder={country === 'US' ? '90210' : country === 'UK' ? 'SW1A 1AA' : country === 'DE' ? '10115' : country === 'FR' ? '75001' : country === 'ES' ? '28013' : country === 'IT' ? '00184' : '1234 AB'}
                 placeholderTextColor={SemanticColors.textTertiary}
                 autoCapitalize="characters"
               />
             </View>
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>
-                {t('onboarding.radius')}: {radius} km
+                {/* R117: country-aware distance unit. US contractors think
+                    in miles; everyone else in km. */}
+                {t('onboarding.radius')}: {radius} {country === 'US' ? t('common.miles', 'mi') : t('common.km', 'km')}
               </Text>
               <View style={styles.radiusRow}>
                 {[10, 25, 50, 75, 100].map((r) => (
@@ -1074,7 +1076,7 @@ export default function OnboardingScreen() {
                     <Text
                       style={[styles.radiusChipText, radius === r && styles.radiusChipTextSelected]}
                     >
-                      {r} km
+                      {r} {country === 'US' ? t('common.miles', 'mi') : t('common.km', 'km')}
                     </Text>
                   </Pressable>
                 ))}
@@ -1217,12 +1219,16 @@ export default function OnboardingScreen() {
                   )}
                   <View style={styles.planHeader}>
                     <Text style={styles.planName}>{plan.name}</Text>
+                    {/* R117: country-aware currency. US contractors see $;
+                        UK contractors see £; rest of EU sees €. Pricing
+                        figures are still defined in EUR by subscriptionService
+                        — converting numeric values is out of scope here. */}
                     {displayPrice === 0 ? (
-                      <Text style={styles.planPrice}>€0</Text>
+                      <Text style={styles.planPrice}>{country === 'US' ? '$0' : country === 'UK' ? '£0' : '€0'}</Text>
                     ) : (
                       <View style={styles.planPriceRow}>
-                        <Text style={styles.planPriceLarge}>€{displayPrice}</Text>
-                        <Text style={styles.planPricePeriod}>/mo</Text>
+                        <Text style={styles.planPriceLarge}>{country === 'US' ? '$' : country === 'UK' ? '£' : '€'}{displayPrice}</Text>
+                        <Text style={styles.planPricePeriod}>{t('onboarding.perMonth', '/mo')}</Text>
                       </View>
                     )}
                   </View>
@@ -1252,10 +1258,11 @@ export default function OnboardingScreen() {
           { label: t('onboarding.selectTrade', 'Trade'), value: selectedTrades.map(tr => t(`onboarding.trades.${tr}`)).join(', ') || '-' },
           { label: t('onboarding.businessType', 'Business type'), value: businessType ? t(`onboarding.businessTypes.${businessType}`) : '-' },
           { label: t('onboarding.teamSize', 'Team size'), value: teamSize ? t(`onboarding.teamSizes.${teamSize}`) : '-' },
-          { label: t('onboarding.serviceArea', 'Service area'), value: postcode ? `${postcode} (${radius} km)` : '-' },
+          // R117: country-aware unit + currency in the review summary.
+          { label: t('onboarding.serviceArea', 'Service area'), value: postcode ? `${postcode} (${radius} ${country === 'US' ? t('common.miles', 'mi') : t('common.km', 'km')})` : '-' },
           { label: t('onboarding.certifications', 'Certifications'), value: selectedCerts.length > 0 ? selectedCerts.join(', ') : '-' },
           { label: t('onboarding.language', 'Language'), value: langLabel ? `${langLabel.flag} ${langLabel.label}` : '-' },
-          { label: t('onboarding.choosePlan', 'Plan'), value: selectedPlan === 'free' ? 'Free' : `${TIERS[selectedPlan].name} (€${billingCycle === 'annual' ? TIERS[selectedPlan].annualMonthlyPrice : TIERS[selectedPlan].monthlyPrice}/mo)` },
+          { label: t('onboarding.choosePlan', 'Plan'), value: selectedPlan === 'free' ? 'Free' : `${TIERS[selectedPlan].name} (${country === 'US' ? '$' : country === 'UK' ? '£' : '€'}${billingCycle === 'annual' ? TIERS[selectedPlan].annualMonthlyPrice : TIERS[selectedPlan].monthlyPrice}${t('onboarding.perMonth', '/mo')})` },
         ];
         return (
           <View style={styles.stepContent}>

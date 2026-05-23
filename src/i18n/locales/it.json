@@ -37,7 +37,9 @@
     "apply": "Applica",
     "ignore": "Ignora",
     "ok": "OK",
-    "info": "Info"
+    "info": "Info",
+    "km": "km",
+    "miles": "mi"
   },
   "tabs": {
     "today": "Oggi",
@@ -164,7 +166,19 @@
       "paye": "Riferimento PAYE",
       "handelsregister": "N. Registro delle Imprese",
       "ustId": "Partita IVA UE",
-      "steuernummer": "Codice fiscale"
+      "steuernummer": "Codice fiscale",
+      "hrb": "HRB",
+      "ustIdNr": "USt-IdNr.",
+      "siret": "SIRET",
+      "tvaIntra": "IVA intracomunitaria",
+      "nif": "NIF",
+      "iae": "IAE",
+      "partitaIva": "Partita IVA",
+      "cameraCommercio": "Camera di Commercio",
+      "companyNumber": "N. società UK",
+      "ein": "EIN",
+      "stateLicense": "Licenza statale",
+      "codiceFiscale": "Codice Fiscale"
     },
     "selectLanguage": "Scegli la tua lingua",
     "goals": "Cosa vuoi raggiungere?",
@@ -240,7 +254,8 @@
     "valueProp3Desc": "Permessi, certificati, normative UE — tutto tracciato",
     "vatPresetTitle": "Regime IVA impostato",
     "vatPresetKor": "KOR selezionato — cambia in Impostazioni se il fatturato supera €20.000.",
-    "vatPresetKlein": "Kleinunternehmer selezionato — cambia in Impostazioni se supera €22.000."
+    "vatPresetKlein": "Kleinunternehmer selezionato — cambia in Impostazioni se supera €22.000.",
+    "perMonth": "/mese"
   },
   "dashboard": {
     "goodMorning": "Buongiorno",

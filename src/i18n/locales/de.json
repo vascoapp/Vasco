@@ -37,7 +37,9 @@
     "apply": "Anwenden",
     "ignore": "Ignorieren",
     "ok": "OK",
-    "info": "Info"
+    "info": "Info",
+    "km": "km",
+    "miles": "mi"
   },
   "tabs": {
     "today": "Heute",
@@ -164,7 +166,19 @@
       "paye": "PAYE-Referenz",
       "handelsregister": "Handelsregisternr.",
       "ustId": "USt-IdNr.",
-      "steuernummer": "Steuernummer"
+      "steuernummer": "Steuernummer",
+      "hrb": "HRB",
+      "ustIdNr": "USt-IdNr.",
+      "siret": "SIRET",
+      "tvaIntra": "USt (innergemeinschaftlich)",
+      "nif": "NIF",
+      "iae": "IAE",
+      "partitaIva": "Partita IVA",
+      "cameraCommercio": "Handelskammer-Nr.",
+      "companyNumber": "Companies House",
+      "ein": "EIN",
+      "stateLicense": "Bundesstaat-Lizenz",
+      "codiceFiscale": "Steuernummer (IT)"
     },
     "selectLanguage": "Sprache wahlen",
     "goals": "Was mochtest du erreichen?",
@@ -240,7 +254,8 @@
     "valueProp3Desc": "Genehmigungen, Zertifikate, EU-Vorschriften — alles im Blick",
     "vatPresetTitle": "USt-Regelung gesetzt",
     "vatPresetKor": "KOR ausgewählt — in den Einstellungen ändern, falls Umsatz über €20.000.",
-    "vatPresetKlein": "Kleinunternehmer ausgewählt — in Einstellungen ändern, falls Umsatz über €22.000."
+    "vatPresetKlein": "Kleinunternehmer ausgewählt — in Einstellungen ändern, falls Umsatz über €22.000.",
+    "perMonth": "/Mon."
   },
   "dashboard": {
     "goodMorning": "Guten Morgen",
