@@ -71,10 +71,15 @@ export interface CountryPaymentConfig {
 export const MOLLIE_METHODS_PER_COUNTRY: Record<string, CountryPaymentConfig> = {
   NL: {
     methods: ['ideal', 'bancontact', 'creditcard', 'paypal', 'klarna', 'applepay'],
+    // R119: display.length MUST match methods.length, otherwise the
+    // settings UI ".map((m, idx) => display[idx] ?? m)" falls back to
+    // the raw method string at the trailing index and the user sees
+    // an extra "applepay" (lowercase) row next to the proper "Apple Pay".
     display: [
       { name: 'iDEAL', icon: 'card-outline' },
-      { name: 'PayPal', icon: 'logo-paypal' },
+      { name: 'Bancontact', icon: 'card-outline' },
       { name: 'Credit Card', icon: 'card-outline' },
+      { name: 'PayPal', icon: 'logo-paypal' },
       { name: 'Klarna', icon: 'pricetag-outline' },
       { name: 'Apple Pay', icon: 'logo-apple' },
     ],
@@ -84,9 +89,10 @@ export const MOLLIE_METHODS_PER_COUNTRY: Record<string, CountryPaymentConfig> = 
     display: [
       { name: 'PayPal', icon: 'logo-paypal' },
       { name: 'giropay', icon: 'card-outline' },
-      { name: 'Sofort/Klarna', icon: 'pricetag-outline' },
-      { name: 'SEPA', icon: 'swap-horizontal-outline' },
+      { name: 'Sofort', icon: 'card-outline' },
       { name: 'Credit Card', icon: 'card-outline' },
+      { name: 'Klarna', icon: 'pricetag-outline' },
+      { name: 'SEPA', icon: 'swap-horizontal-outline' },
       { name: 'Apple Pay', icon: 'logo-apple' },
     ],
   },
@@ -96,6 +102,7 @@ export const MOLLIE_METHODS_PER_COUNTRY: Record<string, CountryPaymentConfig> = 
       { name: 'Carte Bancaire', icon: 'card-outline' },
       { name: 'PayPal', icon: 'logo-paypal' },
       { name: 'Credit Card', icon: 'card-outline' },
+      { name: 'Klarna', icon: 'pricetag-outline' },
       { name: 'SEPA', icon: 'swap-horizontal-outline' },
       { name: 'Apple Pay', icon: 'logo-apple' },
     ],
@@ -136,6 +143,19 @@ export const STRIPE_DISPLAY_UK: PaymentMethodDisplay[] = [
   { name: 'PayPal', icon: 'logo-paypal' },
 ];
 
+// R119: US Stripe Connect payment methods. Pre-R119 US contractors
+// fell through to NL Mollie config and saw "iDEAL / Bancontact" —
+// irrelevant rails not available in the US market.
+export const STRIPE_METHODS_US = ['card', 'us_bank_account', 'apple_pay', 'klarna', 'link'] as const;
+
+export const STRIPE_DISPLAY_US: PaymentMethodDisplay[] = [
+  { name: 'Card', icon: 'card-outline' },
+  { name: 'ACH Direct Debit', icon: 'swap-horizontal-outline' },
+  { name: 'Apple Pay', icon: 'logo-apple' },
+  { name: 'Klarna', icon: 'pricetag-outline' },
+  { name: 'Link', icon: 'flash-outline' },
+];
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -148,5 +168,7 @@ export function getMollieMethodsForCountry(country?: string): CountryPaymentConf
 /** Get display-friendly payment methods for any country (Mollie or Stripe) */
 export function getPaymentDisplayForCountry(country?: Country): PaymentMethodDisplay[] {
   if (country === 'UK') return STRIPE_DISPLAY_UK;
+  // R119: US routes to Stripe Connect with US-appropriate rails.
+  if (country === 'US') return STRIPE_DISPLAY_US;
   return getMollieMethodsForCountry(country).display;
 }

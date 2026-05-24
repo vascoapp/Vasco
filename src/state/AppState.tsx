@@ -491,13 +491,17 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setLastMoneybirdExport({});
         setLastMolliePayment({});
       } else {
-        // R78 US foundation: when a US contractor logs in (demo or otherwise),
-        // seed business profile + customers + jobs with US-flavoured defaults
-        // (EIN, TX address, ACH bank details, Reynolds Heating & Cooling
-        // sample HVAC pipeline) so the invoice PDF + sales-tax + jobs/
-        // customers screens render real US data without a full onboarding
-        // redo. EU contractors still hit refreshData() unchanged.
-        if (getCurrentCountry() === 'US') {
+        // R78 US foundation, R119 fix: when a US contractor logs in
+        // SEED them with the Reynolds HVAC sample pipeline ONLY in
+        // demo mode (DEV builds + EXPO_PUBLIC_DEMO_MODE=true). Pre-R119
+        // this branch said "demo or otherwise" with no gate, so every
+        // real US contractor's first sign-in clobbered their empty
+        // BE-hydrated state with "Reynolds Heating & Cooling /
+        // 2847 Burnet Road, Austin TX / mike@reynoldshvac.com" +
+        // Garcia Family + David Chen customers + 32-hour HVAC jobs.
+        // Multiple TF reports showed this leaking into the Werk tab,
+        // Profile, Business Details, and Notifications.
+        if (useSeedData && getCurrentCountry() === 'US') {
           setBusinessProfile(US_BUSINESS_PROFILE);
           setCustomers(US_SEED_CUSTOMERS);
           setJobs(US_SEED_JOBS);

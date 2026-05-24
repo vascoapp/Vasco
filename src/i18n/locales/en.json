@@ -156,7 +156,19 @@
       "bv": "Private Limited",
       "einzelunternehmen": "Sole Proprietorship",
       "gbr": "Civil Partnership",
-      "gmbh": "Limited Liability"
+      "gmbh": "Limited Liability",
+      "autoEntrepreneur": "Auto-entrepreneur",
+      "eirl": "EIRL",
+      "sarl": "SARL",
+      "autonomo": "Autónomo (self-employed)",
+      "sl": "S.L.",
+      "sa": "S.A.",
+      "dittaIndividuale": "Sole proprietorship (Ditta individuale)",
+      "srl": "S.r.l.",
+      "snc": "S.n.c.",
+      "soleProprietor": "Sole proprietor",
+      "llc": "LLC",
+      "sCorp": "S-Corp"
     },
     "fields": {
       "kvk": "Chamber of Commerce No.",
@@ -351,7 +363,9 @@
     "youLabel": "You",
     "activityClockedIn": "Clocked in",
     "activityClockedOut": "Clocked out ({{hours}}h)",
-    "activitySignatureRequested": "Sign-off link sent to {{customer}}"
+    "activitySignatureRequested": "Sign-off link sent to {{customer}}",
+    "hours": "Hours",
+    "customers": "Customers"
   },
   "compliance": {
     "docRequirements": "Document requirements",
@@ -651,7 +665,10 @@
     "logout": "Log out",
     "address": "Address",
     "email": "Email",
-    "phone": "Phone"
+    "phone": "Phone",
+    "accounting": "Accounting",
+    "routingNumber": "Routing number",
+    "bankAccountNumber": "Account number"
   },
   "financials": {
     "revenue": "Revenue",
@@ -820,9 +837,9 @@
     "priorityHigh": "High",
     "priorityMedium": "Normal",
     "priorityLow": "Low",
-    "minutesAgo": "{{mins}}m ago",
-    "hoursAgo": "{{hours}}h ago",
-    "daysAgo": "{{days}}d ago",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago",
     "unreadCount": "{{count}} unread",
     "noNew": "No new notifications",
     "inbox": "Inbox",
@@ -881,7 +898,8 @@
       "outcomeFollowupBody": "Tap to log the outcome of your {{itemType}}.",
       "jobReminderTitle": "Job reminder",
       "jobReminderBody": "{{title}} starts in 1 hour"
-    }
+    },
+    "justNow": "Just now"
   },
   "insurance": {
     "title": "Insurance",
@@ -2248,7 +2266,16 @@
     "softOverride": "Schedule anyway",
     "removeJob": "Remove job",
     "removeFromSchedule": "remove from schedule",
-    "longPressToRemove": "Hold to remove"
+    "longPressToRemove": "Hold to remove",
+    "conflict": "Conflict",
+    "cancel": "Cancel",
+    "remove": "Remove",
+    "export": "Export",
+    "utilization": "Utilization",
+    "unscheduled": "Unscheduled",
+    "chooseSlot": "Choose a time slot",
+    "whenSchedule": "When do you want to schedule {{job}}?",
+    "schedule": "Schedule"
   },
   "weekly": {
     "title": "WEEK OVERVIEW",
@@ -2881,5 +2908,26 @@
     "whatHappensBody": "Vasco creates a branded PDF with your business details, line items, VAT calculation, and payment information. You can share or save the PDF directly.",
     "generating": "Generating…",
     "generateLabel": "Generate {{label}} PDF"
+  },
+  "customersModal": {
+    "title": "Customers",
+    "count": "{{count}} customers",
+    "emptyState": "No customers yet. Add your first customer below.",
+    "newCustomer": "New customer",
+    "fieldName": "Name *",
+    "namePlaceholder": "e.g. De Jong",
+    "fieldEmail": "Email",
+    "fieldPhone": "Phone",
+    "fieldAddress": "Address",
+    "saving": "Saving…",
+    "saveCustomer": "Save customer",
+    "addCustomer": "Add customer",
+    "missingName": "Missing name",
+    "missingNameBody": "Enter a customer name.",
+    "saveFailed": "Could not save customer."
+  },
+  "aiChat": {
+    "welcome": "Hi! I'm your office manager. Ask me to invoice a customer, schedule a job, or check your numbers.",
+    "parseError": "Sorry — I had trouble parsing that. Try rephrasing."
   }
 }

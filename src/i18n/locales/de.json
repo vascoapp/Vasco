@@ -156,7 +156,19 @@
       "bv": "GmbH",
       "einzelunternehmen": "Einzelunternehmen",
       "gbr": "GbR",
-      "gmbh": "GmbH"
+      "gmbh": "GmbH",
+      "autoEntrepreneur": "Auto-entrepreneur (FR)",
+      "eirl": "EIRL",
+      "sarl": "SARL",
+      "autonomo": "Autónomo (ES)",
+      "sl": "S.L.",
+      "sa": "S.A.",
+      "dittaIndividuale": "Ditta individuale (IT)",
+      "srl": "S.r.l.",
+      "snc": "S.n.c.",
+      "soleProprietor": "Einzelunternehmer (US)",
+      "llc": "LLC",
+      "sCorp": "S-Corp"
     },
     "fields": {
       "kvk": "KvK-Nummer",
@@ -351,7 +363,9 @@
     "youLabel": "Du",
     "activityClockedIn": "Eingestempelt",
     "activityClockedOut": "Ausgestempelt ({{hours}}h)",
-    "activitySignatureRequested": "Unterschriftslink an {{customer}} gesendet"
+    "activitySignatureRequested": "Unterschriftslink an {{customer}} gesendet",
+    "hours": "Stunden",
+    "customers": "Kunden"
   },
   "compliance": {
     "docRequirements": "Dokumentanforderungen",
@@ -651,7 +665,10 @@
     "logout": "Abmelden",
     "address": "Adresse",
     "email": "E-Mail",
-    "phone": "Telefon"
+    "phone": "Telefon",
+    "accounting": "Buchhaltung",
+    "routingNumber": "Routing number",
+    "bankAccountNumber": "Kontonummer"
   },
   "financials": {
     "revenue": "Umsatz",
@@ -820,9 +837,9 @@
     "priorityHigh": "Hoch",
     "priorityMedium": "Normal",
     "priorityLow": "Niedrig",
-    "minutesAgo": "vor {{mins}} Min.",
-    "hoursAgo": "vor {{hours}} Std.",
-    "daysAgo": "vor {{days}} T.",
+    "minutesAgo": "vor {{count}} Min.",
+    "hoursAgo": "vor {{count}} Std.",
+    "daysAgo": "vor {{count}} T.",
     "unreadCount": "{{count}} ungelesen",
     "noNew": "Keine neuen Benachrichtigungen",
     "inbox": "Posteingang",
@@ -881,7 +898,8 @@
       "outcomeFollowupBody": "Tippen, um das Ergebnis Ihres {{itemType}} zu erfassen.",
       "jobReminderTitle": "Auftragserinnerung",
       "jobReminderBody": "{{title}} beginnt in 1 Stunde"
-    }
+    },
+    "justNow": "Gerade eben"
   },
   "insurance": {
     "title": "Versicherungen",
@@ -2248,7 +2266,16 @@
     "softOverride": "Trotzdem planen",
     "removeJob": "Auftrag entfernen",
     "removeFromSchedule": "aus dem Zeitplan entfernen",
-    "longPressToRemove": "Halten Sie gedrückt zum Entfernen"
+    "longPressToRemove": "Halten Sie gedrückt zum Entfernen",
+    "conflict": "Konflikt",
+    "cancel": "Abbrechen",
+    "remove": "Entfernen",
+    "export": "Exportieren",
+    "utilization": "Auslastung",
+    "unscheduled": "Nicht eingeplant",
+    "chooseSlot": "Zeitfenster wählen",
+    "whenSchedule": "Wann möchten Sie {{job}} einplanen?",
+    "schedule": "Einplanen"
   },
   "weekly": {
     "title": "WOCHENÜBERSICHT",
@@ -2881,5 +2908,26 @@
     "whatHappensBody": "Vasco erstellt ein Marken-PDF mit Ihren Firmendaten, Posten, Umsatzsteuerberechnung und Zahlungsinformationen. Sie können das PDF direkt teilen oder speichern.",
     "generating": "Wird generiert…",
     "generateLabel": "{{label}}-PDF generieren"
+  },
+  "customersModal": {
+    "title": "Kunden",
+    "count": "{{count}} Kunden",
+    "emptyState": "Noch keine Kunden. Fügen Sie unten Ihren ersten Kunden hinzu.",
+    "newCustomer": "Neuer Kunde",
+    "fieldName": "Name *",
+    "namePlaceholder": "z.B. Müller",
+    "fieldEmail": "E-Mail",
+    "fieldPhone": "Telefon",
+    "fieldAddress": "Adresse",
+    "saving": "Speichert…",
+    "saveCustomer": "Kunden speichern",
+    "addCustomer": "Kunden hinzufügen",
+    "missingName": "Name fehlt",
+    "missingNameBody": "Geben Sie einen Kundennamen ein.",
+    "saveFailed": "Kunde konnte nicht gespeichert werden."
+  },
+  "aiChat": {
+    "welcome": "Hi! Ich bin Ihre Büroassistenz. Bitten Sie mich, eine Rechnung zu erstellen, einen Auftrag zu planen oder Zahlen zu prüfen.",
+    "parseError": "Entschuldigung — ich konnte das nicht verarbeiten. Bitte umformulieren."
   }
 }

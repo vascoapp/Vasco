@@ -57,11 +57,14 @@ export default function AiChatScreen() {
   const router = useRouter();
   const { customers, invoices, jobs, quotes } = useAppState();
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  // R118: welcome greeting now i18n-wired. Lazy initial state captures
+  // the t() value at first render — chat history won't retroactively
+  // re-translate, which is the desired behaviour for spoken messages.
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [
     {
       id: 'welcome',
       role: 'assistant',
-      text: 'Hi! I\'m your office manager. Ask me to invoice a customer, schedule a job, or check your numbers.',
+      text: t('aiChat.welcome', "Hi! I'm your office manager. Ask me to invoice a customer, schedule a job, or check your numbers."),
     },
   ]);
   const [input, setInput] = useState('');
@@ -125,7 +128,7 @@ export default function AiChatScreen() {
         {
           id: `m-${Date.now()}-err`,
           role: 'assistant',
-          text: 'Sorry — I had trouble parsing that. Try rephrasing.',
+          text: t('aiChat.parseError', "Sorry — I had trouble parsing that. Try rephrasing."),
         },
       ]);
       return;

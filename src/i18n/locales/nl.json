@@ -156,7 +156,19 @@
       "bv": "BV",
       "einzelunternehmen": "Eenmanszaak",
       "gbr": "VOF",
-      "gmbh": "BV"
+      "gmbh": "BV",
+      "autoEntrepreneur": "Auto-entrepreneur (FR)",
+      "eirl": "EIRL",
+      "sarl": "SARL",
+      "autonomo": "Autónomo (ES)",
+      "sl": "S.L.",
+      "sa": "S.A.",
+      "dittaIndividuale": "Ditta individuale (IT)",
+      "srl": "S.r.l.",
+      "snc": "S.n.c.",
+      "soleProprietor": "Eenmanszaak (US)",
+      "llc": "LLC",
+      "sCorp": "S-Corp"
     },
     "fields": {
       "kvk": "KvK-nummer",
@@ -351,7 +363,9 @@
     "youLabel": "Jij",
     "activityClockedIn": "Ingeklokt",
     "activityClockedOut": "Uitgeklokt ({{hours}}u)",
-    "activitySignatureRequested": "Aftekenlink verzonden naar {{customer}}"
+    "activitySignatureRequested": "Aftekenlink verzonden naar {{customer}}",
+    "hours": "Uren",
+    "customers": "Klanten"
   },
   "compliance": {
     "docRequirements": "Documentvereisten",
@@ -651,7 +665,10 @@
     "logout": "Uitloggen",
     "address": "Adres",
     "email": "E-mail",
-    "phone": "Telefoon"
+    "phone": "Telefoon",
+    "accounting": "Boekhouding",
+    "routingNumber": "Routing number",
+    "bankAccountNumber": "Rekeningnummer"
   },
   "financials": {
     "revenue": "Omzet",
@@ -1077,9 +1094,9 @@
     "priorityHigh": "Hoog",
     "priorityMedium": "Normaal",
     "priorityLow": "Laag",
-    "minutesAgo": "{{mins}}m geleden",
-    "hoursAgo": "{{hours}}u geleden",
-    "daysAgo": "{{days}}d geleden",
+    "minutesAgo": "{{count}}m geleden",
+    "hoursAgo": "{{count}}u geleden",
+    "daysAgo": "{{count}}d geleden",
     "unreadCount": "{{count}} ongelezen",
     "noNew": "Geen nieuwe meldingen",
     "inbox": "Inbox",
@@ -1138,7 +1155,8 @@
       "outcomeFollowupBody": "Tik om de uitkomst van je {{itemType}} te loggen.",
       "jobReminderTitle": "Klus herinnering",
       "jobReminderBody": "{{title}} begint over 1 uur"
-    }
+    },
+    "justNow": "Zojuist"
   },
   "insurance": {
     "title": "Verzekeringen",
@@ -2248,7 +2266,16 @@
     "softOverride": "Toch inplannen",
     "removeJob": "Klus verwijderen",
     "removeFromSchedule": "uit planning verwijderen",
-    "longPressToRemove": "Houd ingedrukt om te verwijderen"
+    "longPressToRemove": "Houd ingedrukt om te verwijderen",
+    "conflict": "Conflict",
+    "cancel": "Annuleren",
+    "remove": "Verwijderen",
+    "export": "Exporteer",
+    "utilization": "Bezetting",
+    "unscheduled": "Niet ingepland",
+    "chooseSlot": "Tijdslot kiezen",
+    "whenSchedule": "Wanneer wil je {{job}} inplannen?",
+    "schedule": "Inplannen"
   },
   "weekly": {
     "title": "WEEKOVERZICHT",
@@ -2881,5 +2908,26 @@
     "whatHappensBody": "Vasco maakt een merk-PDF aan met uw bedrijfsgegevens, regelitems, BTW-berekening en betalingsinformatie. U kunt de PDF direct delen of opslaan.",
     "generating": "Genereren…",
     "generateLabel": "{{label}} PDF genereren"
+  },
+  "customersModal": {
+    "title": "Klanten",
+    "count": "{{count}} klanten",
+    "emptyState": "Nog geen klanten. Voeg hieronder je eerste klant toe.",
+    "newCustomer": "Nieuwe klant",
+    "fieldName": "Naam *",
+    "namePlaceholder": "bijv. De Jong",
+    "fieldEmail": "Email",
+    "fieldPhone": "Telefoon",
+    "fieldAddress": "Adres",
+    "saving": "Opslaan…",
+    "saveCustomer": "Klant opslaan",
+    "addCustomer": "Klant toevoegen",
+    "missingName": "Naam ontbreekt",
+    "missingNameBody": "Voer een klantnaam in.",
+    "saveFailed": "Klant kon niet worden opgeslagen."
+  },
+  "aiChat": {
+    "welcome": "Hallo! Ik ben je kantoorhulp. Vraag me om een klant te factureren, een klus in te plannen of cijfers te checken.",
+    "parseError": "Sorry — ik kon dat niet begrijpen. Probeer het anders te formuleren."
   }
 }

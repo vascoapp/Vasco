@@ -17,6 +17,8 @@ import {
   Pressable,
   TextInput,
   Dimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,6 +28,7 @@ import { useTranslation } from 'react-i18next';
 import i18n from '../src/i18n/i18n';
 import { useAuth, type Country, type Language } from '../src/context/AuthContext';
 import { useAppState } from '../src/state/AppState';
+import { DEMO_MODE } from '../src/config/demo';
 import { SemanticColors, Palette } from '../src/theme/colors';
 import { DK } from '../src/theme/draftkings';
 import { SafeArea, Spacing } from '../src/theme/spacing';
@@ -125,42 +128,44 @@ const BUSINESS_TYPES: Record<Country, { key: string; label: string }[]> = {
 // onBlur so the user fixes it with full context. Validation is non-blocking
 // (Continue still works — the gate at invoice-send remains the hard stop).
 type RegFieldValidator = (value: string) => boolean;
-type RegFieldDef = { key: string; i18nKey: string; validate?: RegFieldValidator; errorKey?: string };
+// R119: added optional `placeholder` (literal example) so the reg-field
+// inputs stop showing the placeholder "..." which testers couldn't parse.
+type RegFieldDef = { key: string; i18nKey: string; validate?: RegFieldValidator; errorKey?: string; placeholder?: string };
 
 const REG_FIELDS: Record<Country, RegFieldDef[]> = {
   NL: [
-    { key: 'kvk', i18nKey: 'onboarding.fields.kvk', validate: (v) => isValidKvKNumber(v.trim()), errorKey: 'profile.kvkFormatInvalid' },
-    { key: 'btw', i18nKey: 'onboarding.fields.btw', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid' },
+    { key: 'kvk', i18nKey: 'onboarding.fields.kvk', validate: (v) => isValidKvKNumber(v.trim()), errorKey: 'profile.kvkFormatInvalid', placeholder: '12345678' },
+    { key: 'btw', i18nKey: 'onboarding.fields.btw', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid', placeholder: 'NL123456789B01' },
   ],
   UK: [
-    { key: 'companiesHouse', i18nKey: 'onboarding.fields.companiesHouse' },
-    { key: 'vatNumber', i18nKey: 'onboarding.fields.vatNumber', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid' },
-    { key: 'paye', i18nKey: 'onboarding.fields.paye' },
+    { key: 'companiesHouse', i18nKey: 'onboarding.fields.companiesHouse', placeholder: '01234567' },
+    { key: 'vatNumber', i18nKey: 'onboarding.fields.vatNumber', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid', placeholder: 'GB123456789' },
+    { key: 'paye', i18nKey: 'onboarding.fields.paye', placeholder: '123/AB12345' },
   ],
   DE: [
-    { key: 'handelsregister', i18nKey: 'onboarding.fields.handelsregister' },
-    { key: 'ustId', i18nKey: 'onboarding.fields.ustId', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid' },
-    { key: 'steuernummer', i18nKey: 'onboarding.fields.steuernummer' },
+    { key: 'handelsregister', i18nKey: 'onboarding.fields.handelsregister', placeholder: 'HRB 12345' },
+    { key: 'ustId', i18nKey: 'onboarding.fields.ustId', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid', placeholder: 'DE123456789' },
+    { key: 'steuernummer', i18nKey: 'onboarding.fields.steuernummer', placeholder: '12/345/67890' },
   ],
   FR: [
-    { key: 'siret', i18nKey: 'onboarding.fields.siret' },
-    { key: 'tvaIntra', i18nKey: 'onboarding.fields.tvaIntra', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid' },
+    { key: 'siret', i18nKey: 'onboarding.fields.siret', placeholder: '123 456 789 00012' },
+    { key: 'tvaIntra', i18nKey: 'onboarding.fields.tvaIntra', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid', placeholder: 'FR12345678901' },
   ],
   ES: [
-    { key: 'nif', i18nKey: 'onboarding.fields.nif', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid' },
-    { key: 'iae', i18nKey: 'onboarding.fields.iae' },
+    { key: 'nif', i18nKey: 'onboarding.fields.nif', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid', placeholder: 'ES12345678A' },
+    { key: 'iae', i18nKey: 'onboarding.fields.iae', placeholder: '5045' },
   ],
   IT: [
-    { key: 'partitaIva', i18nKey: 'onboarding.fields.partitaIva', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid' },
-    { key: 'cameraCommercio', i18nKey: 'onboarding.fields.cameraCommercio' },
+    { key: 'partitaIva', i18nKey: 'onboarding.fields.partitaIva', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid', placeholder: 'IT12345678901' },
+    { key: 'cameraCommercio', i18nKey: 'onboarding.fields.cameraCommercio', placeholder: 'MI-1234567' },
   ],
   // R74 US foundation: EIN (federal Employer Identification Number) is the
   // tax-side identifier for LLCs / S-corps; sole proprietors typically use
   // their SSN but EIN is universal. State licensing handled separately in
   // Phase 1 of the US expansion plan.
   US: [
-    { key: 'ein', i18nKey: 'onboarding.fields.ein' },
-    { key: 'stateLicense', i18nKey: 'onboarding.fields.stateLicense' },
+    { key: 'ein', i18nKey: 'onboarding.fields.ein', placeholder: '12-3456789' },
+    { key: 'stateLicense', i18nKey: 'onboarding.fields.stateLicense', placeholder: 'TX-12345' },
   ],
 };
 
@@ -644,10 +649,12 @@ export default function OnboardingScreen() {
         return (
           <View style={styles.centeredContent}>
             <View style={styles.logoWrap}>
-              {/* R92: official VascoBuild logo */}
+              {/* R92: official VascoBuild logo. R119: resizeMode="contain"
+                  so the icon's "VascoBuild" wordmark renders fully. */}
               <Image
                 source={require('../assets/icon.png')}
                 style={styles.logoContainer}
+                resizeMode="contain"
                 accessibilityLabel="VascoBuild"
               />
             </View>
@@ -691,15 +698,23 @@ export default function OnboardingScreen() {
             >
               <Text style={styles.primaryButtonText}>{t('onboarding.getStarted')}</Text>
             </Pressable>
-            <Pressable
-              style={({ pressed }) => [styles.demoButton, pressed && styles.pressed]}
-              onPress={handleDemoMode}
-              accessibilityRole="button"
-              accessibilityLabel={t('onboarding.tryDemo', 'Try with Demo Data')}
-            >
-              <Ionicons name="play-circle-outline" size={18} color={Palette.hermesOrange} />
-              <Text style={styles.demoButtonText}>{t('onboarding.tryDemo', 'Try with Demo Data')}</Text>
-            </Pressable>
+            {/* R119: gated behind DEMO_MODE so real signups don't see
+                "Try with Demo Data". In production this button bypassed
+                onboarding entirely and dumped the user straight into
+                Vandaag with pre-seeded NL/plumbing context — a real
+                contractor who tapped it ended up with someone else's
+                trade and country. */}
+            {DEMO_MODE ? (
+              <Pressable
+                style={({ pressed }) => [styles.demoButton, pressed && styles.pressed]}
+                onPress={handleDemoMode}
+                accessibilityRole="button"
+                accessibilityLabel={t('onboarding.tryDemo', 'Try with Demo Data')}
+              >
+                <Ionicons name="play-circle-outline" size={18} color={Palette.hermesOrange} />
+                <Text style={styles.demoButtonText}>{t('onboarding.tryDemo', 'Try with Demo Data')}</Text>
+              </Pressable>
+            ) : null}
           </View>
         );
 
@@ -933,11 +948,15 @@ export default function OnboardingScreen() {
           <View style={styles.stepContent}>
             <Text style={styles.stepTitle}>{t('onboarding.registration')}</Text>
             <Text style={styles.stepSubtitle}>{t('onboarding.registrationDesc')}</Text>
-            {/* R74: US state picker — sales-tax + state-license routing. */}
+            {/* R74: US state picker — sales-tax + state-license routing.
+                R119: explicitly flag the state as required since the
+                "(Optional)" tag on the EIN/state-license fields below
+                made testers assume the whole step was skippable.
+                canProceed() blocks Next when no state is selected. */}
             {country === 'US' ? (
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>
-                  {t('onboarding.fields.state', { defaultValue: 'State' })}
+                  {t('onboarding.fields.state', { defaultValue: 'State' })} <Text style={styles.requiredTag}>({t('common.required', 'Required')})</Text>
                 </Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GRID.sm }}>
                   {US_STATE_OPTIONS.map((s) => {
@@ -988,7 +1007,7 @@ export default function OnboardingScreen() {
                     value={value}
                     onChangeText={(v) => setRegFields((prev) => ({ ...prev, [field.key]: v }))}
                     onBlur={() => setRegFieldsTouched((prev) => ({ ...prev, [field.key]: true }))}
-                    placeholder="..."
+                    placeholder={field.placeholder ?? ''}
                     placeholderTextColor={SemanticColors.textTertiary}
                     autoCapitalize="characters"
                   />
@@ -1319,15 +1338,28 @@ export default function OnboardingScreen() {
 
       {step > 1 && renderStepIndicator()}
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      {/* R119: wrap the scroll in KeyboardAvoidingView so steps with
+          TextInputs (step 9 reg fields, step 11 postcode) push above the
+          keyboard. Pre-R119 the iOS keyboard covered the inputs entirely
+          — users couldn't see what they were typing. iOS uses 'padding'
+          behavior; Android relies on android:windowSoftInputMode in
+          AndroidManifest which Expo sets to adjustResize by default. */}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
-        <FadeIn key={step} delay={0} duration={300}>
-          {renderStep()}
-        </FadeIn>
-      </ScrollView>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          showsVerticalScrollIndicator={false}
+        >
+          <FadeIn key={step} delay={0} duration={300}>
+            {renderStep()}
+          </FadeIn>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {step > 1 && (
         <View style={styles.footer}>
@@ -1445,9 +1477,11 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    // R119: borderRadius removed (was circular-clipping the VascoBuild
+    // icon corners). R107 fixed this on login/signup/forgot/reset but
+    // missed the welcome step of the onboarding flow.
+    width: 96,
+    height: 96,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1884,6 +1918,10 @@ const styles = StyleSheet.create({
   },
   optionalTag: {
     color: SemanticColors.textTertiary,
+    fontFamily: TYPE.bodyFamily,
+  },
+  requiredTag: {
+    color: Palette.hermesOrange,
     fontFamily: TYPE.bodyFamily,
   },
   textInput: {

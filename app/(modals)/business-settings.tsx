@@ -27,7 +27,7 @@ import { Typography } from '../../src/theme/typography';
 import { isValidEmail, isValidPhone, isValidKvKNumber, isValidVATNumber, isValidIBAN, sanitizeInput } from '../../src/utils/validation';
 import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../../src/config/paymentMethods';
 import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
-import { STRIPE_METHODS_UK } from '../../src/config/paymentMethods';
+import { STRIPE_METHODS_UK, STRIPE_METHODS_US } from '../../src/config/paymentMethods';
 
 type FieldDef = {
   label: string;
@@ -56,11 +56,19 @@ export default function BusinessSettingsScreen() {
   // out with no bank details — customer can't pay.
   const [iban, setIban] = useState(businessProfile.iban ?? '');
   const [bic, setBic] = useState(businessProfile.bic ?? '');
+  // R119: US users get routing number + bank account number instead
+  // of IBAN/BIC (US doesn't use SEPA — ACH transfers route by
+  // 9-digit ABA routing number + account number).
+  const [routingNumber, setRoutingNumber] = useState(businessProfile.routingNumber ?? '');
+  const [bankAccountNumber, setBankAccountNumber] = useState(businessProfile.bankAccountNumber ?? '');
   const [saving, setSaving] = useState(false);
 
   // Payment methods — get all available for the country, default all enabled
   const allPaymentMethods = useMemo(() => {
     if (country === 'UK') return STRIPE_METHODS_UK.map(m => String(m));
+    // R119: US uses Stripe Connect; pre-R119 fell through to NL Mollie
+    // (showed iDEAL / Bancontact to US users which they can't accept).
+    if (country === 'US') return STRIPE_METHODS_US.map(m => String(m));
     return getMollieMethodsForCountry(country).methods;
   }, [country]);
   const paymentDisplay = useMemo(() => getPaymentDisplayForCountry(country), [country]);
@@ -142,6 +150,10 @@ export default function BusinessSettingsScreen() {
     // R66 NL launch: payment fields the migration declared but UI never
     // exposed. NL contractors need IBAN; BIC is optional in EU SEPA.
     // Country-specific IBAN format hint avoids "what do I type here".
+    // R119: US gets routing number + account number (ACH) instead of
+    // IBAN/BIC. Was hardcoded to NL/EU format — US contractors saw
+    // a prefilled Dutch IBAN they couldn't relate to and no path to
+    // enter their actual ACH routing.
     const ibanPlaceholder =
       country === 'UK' ? 'GB29 NWBK 6016 1331 9268 19' :
       country === 'DE' ? 'DE89 3704 0044 0532 0130 00' :
@@ -149,13 +161,18 @@ export default function BusinessSettingsScreen() {
       country === 'ES' ? 'ES91 2100 0418 4502 0005 1332' :
       country === 'IT' ? 'IT60 X054 2811 1010 0000 0123 456' :
       'NL91 ABNA 0417 1643 00';
-    const paymentFields: FieldDef[] = [
-      { label: t('settings.iban', 'IBAN'), value: iban, onChange: setIban, placeholder: ibanPlaceholder },
-      { label: t('settings.bic', 'BIC / SWIFT'), value: bic, onChange: setBic, placeholder: country === 'NL' ? 'ABNANL2A' : country === 'DE' ? 'COBADEFFXXX' : '' },
-    ];
+    const paymentFields: FieldDef[] = country === 'US'
+      ? [
+          { label: t('settings.routingNumber', 'Routing number'), value: routingNumber, onChange: setRoutingNumber, placeholder: '123456789' },
+          { label: t('settings.bankAccountNumber', 'Account number'), value: bankAccountNumber, onChange: setBankAccountNumber, placeholder: '000123456789' },
+        ]
+      : [
+          { label: t('settings.iban', 'IBAN'), value: iban, onChange: setIban, placeholder: ibanPlaceholder },
+          { label: t('settings.bic', 'BIC / SWIFT'), value: bic, onChange: setBic, placeholder: country === 'NL' ? 'ABNANL2A' : country === 'DE' ? 'COBADEFFXXX' : '' },
+        ];
 
     return [...common, ...countryFields, ...contactFields, ...paymentFields];
-  }, [country, businessName, kvkNumber, vatNumber, registrationNumber, address, email, phone, iban, bic, t]);
+  }, [country, businessName, kvkNumber, vatNumber, registrationNumber, address, email, phone, iban, bic, routingNumber, bankAccountNumber, t]);
 
   const handleSave = useCallback(async () => {
     // Sanitize all inputs
@@ -209,8 +226,11 @@ export default function BusinessSettingsScreen() {
         // R66 NL launch: persist IBAN + BIC so the invoice PDF can render
         // them. updateBusinessProfile in AppState now writes these to
         // business_settings.iban / .bic via the upsertBusinessSettings call.
-        iban: cleanIban,
-        bic: cleanBic,
+        // R119: routing_number / bank_account_number for US (ACH).
+        iban: country === 'US' ? '' : cleanIban,
+        bic: country === 'US' ? '' : cleanBic,
+        routingNumber: country === 'US' ? sanitizeInput(routingNumber).replace(/\s/g, '').trim() : undefined,
+        bankAccountNumber: country === 'US' ? sanitizeInput(bankAccountNumber).replace(/\s/g, '').trim() : undefined,
         country,
         enabledPaymentMethods,
       });
@@ -221,7 +241,7 @@ export default function BusinessSettingsScreen() {
     } finally {
       setSaving(false);
     }
-  }, [businessName, kvkNumber, vatNumber, registrationNumber, address, email, phone, iban, bic, country, enabledPaymentMethods, updateBusinessProfile, router, t]);
+  }, [businessName, kvkNumber, vatNumber, registrationNumber, address, email, phone, iban, bic, routingNumber, bankAccountNumber, country, enabledPaymentMethods, updateBusinessProfile, router, t]);
 
   const filled = fields.filter((f) => f.value.trim()).length;
   const percent = Math.round((filled / fields.length) * 100);
@@ -233,11 +253,26 @@ export default function BusinessSettingsScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          <View style={styles.header}>
-            <Text style={Typography.title}>{t('settings.business', 'Bedrijfsgegevens')}</Text>
-            <Text style={Typography.muted}>
-              {percent}% · {filled}/{fields.length}
-            </Text>
+          {/* R119: explicit back chevron — this screen is presented as a
+              modal but had no in-screen back affordance, so users on
+              devices without a swipe-down gesture (or after a deep-link
+              from a push) were stuck. */}
+          <View style={styles.headerRow}>
+            <Pressable
+              onPress={() => router.back()}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.back', 'Back')}
+              style={styles.backBtn}
+            >
+              <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
+            </Pressable>
+            <View style={{ flex: 1 }}>
+              <Text style={Typography.title}>{t('settings.business', 'Business details')}</Text>
+              <Text style={Typography.muted}>
+                {percent}% · {filled}/{fields.length}
+              </Text>
+            </View>
           </View>
 
           {/* Progress bar */}
@@ -355,6 +390,19 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: Spacing.xs,
+  },
+  // R119: new headerRow + backBtn for the modal close affordance.
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: -8,
   },
   progressBg: {
     height: 6,

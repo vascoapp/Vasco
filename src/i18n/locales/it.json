@@ -156,7 +156,19 @@
       "bv": "S.r.l.",
       "einzelunternehmen": "Ditta individuale",
       "gbr": "Società semplice",
-      "gmbh": "S.r.l."
+      "gmbh": "S.r.l.",
+      "autoEntrepreneur": "Auto-entrepreneur (FR)",
+      "eirl": "EIRL",
+      "sarl": "SARL",
+      "autonomo": "Autónomo (ES)",
+      "sl": "S.L.",
+      "sa": "S.A.",
+      "dittaIndividuale": "Ditta individuale",
+      "srl": "S.r.l.",
+      "snc": "S.n.c.",
+      "soleProprietor": "Ditta individuale (US)",
+      "llc": "LLC",
+      "sCorp": "S-Corp"
     },
     "fields": {
       "kvk": "N. Camera di Commercio",
@@ -351,7 +363,9 @@
     "youLabel": "Tu",
     "activityClockedIn": "Timbratura entrata",
     "activityClockedOut": "Timbratura uscita ({{hours}}h)",
-    "activitySignatureRequested": "Link di firma inviato a {{customer}}"
+    "activitySignatureRequested": "Link di firma inviato a {{customer}}",
+    "hours": "Ore",
+    "customers": "Clienti"
   },
   "compliance": {
     "docRequirements": "Documenti richiesti",
@@ -651,7 +665,10 @@
     "logout": "Esci",
     "address": "Indirizzo",
     "email": "Email",
-    "phone": "Telefono"
+    "phone": "Telefono",
+    "accounting": "Contabilità",
+    "routingNumber": "Routing number",
+    "bankAccountNumber": "Numero di conto"
   },
   "financials": {
     "revenue": "Fatturato",
@@ -820,9 +837,9 @@
     "priorityHigh": "Alta",
     "priorityMedium": "Normale",
     "priorityLow": "Bassa",
-    "minutesAgo": "{{mins}} min fa",
-    "hoursAgo": "{{hours}} h fa",
-    "daysAgo": "{{days}} g fa",
+    "minutesAgo": "{{count}} min fa",
+    "hoursAgo": "{{count}} h fa",
+    "daysAgo": "{{count}} g fa",
     "unreadCount": "{{count}} non lette",
     "noNew": "Nessuna nuova notifica",
     "inbox": "Posta in arrivo",
@@ -881,7 +898,8 @@
       "outcomeFollowupBody": "Tocca per registrare l'esito del tuo {{itemType}}.",
       "jobReminderTitle": "Promemoria lavoro",
       "jobReminderBody": "{{title}} inizia tra 1 ora"
-    }
+    },
+    "justNow": "Adesso"
   },
   "insurance": {
     "title": "Assicurazione",
@@ -2237,7 +2255,16 @@
     "softOverride": "Pianifica comunque",
     "removeJob": "Rimuovi lavoro",
     "removeFromSchedule": "rimuovi dal calendario",
-    "longPressToRemove": "Tieni premuto per rimuovere"
+    "longPressToRemove": "Tieni premuto per rimuovere",
+    "conflict": "Conflitto",
+    "cancel": "Annulla",
+    "remove": "Rimuovi",
+    "export": "Esporta",
+    "utilization": "Utilizzo",
+    "unscheduled": "Non pianificato",
+    "chooseSlot": "Scegli fascia oraria",
+    "whenSchedule": "Quando vuoi pianificare {{job}}?",
+    "schedule": "Pianifica"
   },
   "marketInsights": {
     "title": "INSIGHT DI MERCATO",
@@ -2881,5 +2908,26 @@
     "whatHappensBody": "Vasco crea un PDF brandizzato con i dati della tua azienda, voci, calcolo IVA e informazioni di pagamento. Puoi condividere o salvare il PDF direttamente.",
     "generating": "Generazione in corso…",
     "generateLabel": "Genera PDF {{label}}"
+  },
+  "customersModal": {
+    "title": "Clienti",
+    "count": "{{count}} clienti",
+    "emptyState": "Nessun cliente ancora. Aggiungi il tuo primo cliente qui sotto.",
+    "newCustomer": "Nuovo cliente",
+    "fieldName": "Nome *",
+    "namePlaceholder": "es. Rossi",
+    "fieldEmail": "Email",
+    "fieldPhone": "Telefono",
+    "fieldAddress": "Indirizzo",
+    "saving": "Salvataggio…",
+    "saveCustomer": "Salva cliente",
+    "addCustomer": "Aggiungi cliente",
+    "missingName": "Nome mancante",
+    "missingNameBody": "Inserisci un nome cliente.",
+    "saveFailed": "Impossibile salvare il cliente."
+  },
+  "aiChat": {
+    "welcome": "Ciao! Sono il tuo assistente d'ufficio. Chiedimi di fatturare un cliente, pianificare un lavoro o controllare i tuoi numeri.",
+    "parseError": "Mi spiace, non sono riuscito a interpretarlo. Prova a riformulare."
   }
 }

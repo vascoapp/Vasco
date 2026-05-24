@@ -23,7 +23,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.vascobuild.app",
       "scheme": "vasco",
-      "buildNumber": "25",
+      "buildNumber": "26",
       "associatedDomains": [
         "applinks:vascobuild.com",
         "applinks:pay.vascobuild.com",
