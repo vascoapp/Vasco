@@ -8,7 +8,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
-import { useQuoteTemplates, TEMPLATE_CATEGORIES, type QuoteTemplate, type QuoteTemplateItem, type TemplateCategory } from '../../src/services/quoteTemplateService';
+import { useQuoteTemplates, TEMPLATE_CATEGORIES, localizeTemplate, localizeCategory, type QuoteTemplate, type QuoteTemplateItem, type TemplateCategory } from '../../src/services/quoteTemplateService';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -74,19 +74,21 @@ export default function QuoteTemplatesScreen() {
 
   const handleUseTemplate = (template: QuoteTemplate) => {
     use(template.id);
+    const localized = localizeTemplate(template, t);
     // R66 round 11: was hardcoded Dutch — every non-NL contractor saw
     // Dutch alerts despite running the app in their language.
     Alert.alert(
       t('quoteTemplates.loadedTitle', 'Template loaded'),
-      t('quoteTemplates.loadedBody', '"{{name}}" loaded with {{count}} lines. Adjust the quote for the customer.', { name: template.name, count: template.items.length }),
+      t('quoteTemplates.loadedBody', '"{{name}}" loaded with {{count}} lines. Adjust the quote for the customer.', { name: localized.displayName, count: template.items.length }),
       [{ text: t('common.ok', 'OK') }],
     );
   };
 
   const handleDelete = (template: QuoteTemplate) => {
+    const localized = localizeTemplate(template, t);
     Alert.alert(
       t('quoteTemplates.deleteTitle', 'Delete template'),
-      t('quoteTemplates.deleteBody', 'Delete "{{name}}"?', { name: template.name }),
+      t('quoteTemplates.deleteBody', 'Delete "{{name}}"?', { name: localized.displayName }),
       [
         { text: t('common.cancel', 'Cancel'), style: 'cancel' },
         { text: t('common.delete', 'Delete'), style: 'destructive', onPress: () => remove(template.id) },
@@ -132,7 +134,7 @@ export default function QuoteTemplatesScreen() {
               color={selectedCategory === cat.id ? Palette.white : SemanticColors.textSecondary}
             />
             <Text style={[styles.categoryText, selectedCategory === cat.id && styles.categoryTextActive]}>
-              {cat.label}
+              {localizeCategory(cat.id, cat.label, t)}
             </Text>
           </Pressable>
         ))}
@@ -159,7 +161,7 @@ export default function QuoteTemplatesScreen() {
                   onPress={() => setNewCategory(cat.id)}
                 >
                   <Text style={[styles.catChipText, newCategory === cat.id && styles.catChipTextActive]}>
-                    {cat.label}
+                    {localizeCategory(cat.id, cat.label, t)}
                   </Text>
                 </Pressable>
               ))}
@@ -203,6 +205,8 @@ export default function QuoteTemplatesScreen() {
           filtered.map(template => {
             const isExpanded = expandedId === template.id;
             const catConfig = TEMPLATE_CATEGORIES.find(c => c.id === template.category);
+            const localized = localizeTemplate(template, t);
+            const catLabel = catConfig ? localizeCategory(catConfig.id, catConfig.label, t) : '';
 
             return (
               <View key={template.id}>
@@ -214,9 +218,9 @@ export default function QuoteTemplatesScreen() {
                     <Ionicons name={(catConfig?.icon ?? 'document-outline') as IconName} size={22} color={Palette.hermesOrange} />
                   </View>
                   <View style={styles.templateInfo}>
-                    <Text style={styles.templateName}>{template.name}</Text>
+                    <Text style={styles.templateName}>{localized.displayName}</Text>
                     <Text style={styles.templateMeta}>
-                      {catConfig?.label} · {t('quoteTemplates.linesCount', '{{count}} lines', { count: template.items.length })} · {fmt(template.subtotal)}
+                      {catLabel} · {t('quoteTemplates.linesCount', '{{count}} lines', { count: template.items.length })} · {fmt(template.subtotal)}
                     </Text>
                     <View style={styles.usageBadge}>
                       <Ionicons name="repeat-outline" size={12} color={SemanticColors.textTertiary} />
@@ -228,12 +232,12 @@ export default function QuoteTemplatesScreen() {
 
                 {isExpanded && (
                   <View style={styles.expandedContent}>
-                    {template.description && (
-                      <Text style={styles.expandedDesc}>{template.description}</Text>
+                    {localized.displayDescription && (
+                      <Text style={styles.expandedDesc}>{localized.displayDescription}</Text>
                     )}
 
                     {/* Line items */}
-                    {template.items.map((item, idx) => (
+                    {localized.displayItems.map((item, idx) => (
                       <View key={idx} style={styles.itemRow}>
                         <Text style={styles.itemDesc} numberOfLines={1}>{item.description}</Text>
                         <Text style={styles.itemQty}>{item.quantity} {item.unit}</Text>
@@ -242,15 +246,15 @@ export default function QuoteTemplatesScreen() {
                     ))}
 
                     <View style={styles.expandedMeta}>
-                      {template.estimatedDuration && (
+                      {localized.displayDuration && (
                         <View style={styles.metaRow}>
                           <Ionicons name="time-outline" size={14} color={SemanticColors.textSecondary} />
-                          <Text style={styles.metaText}>{template.estimatedDuration}</Text>
+                          <Text style={styles.metaText}>{localized.displayDuration}</Text>
                         </View>
                       )}
                       <View style={styles.metaRow}>
                         <Ionicons name="card-outline" size={14} color={SemanticColors.textSecondary} />
-                        <Text style={styles.metaText}>{template.defaultPaymentTerms}</Text>
+                        <Text style={styles.metaText}>{localized.displayPaymentTerms}</Text>
                       </View>
                     </View>
 

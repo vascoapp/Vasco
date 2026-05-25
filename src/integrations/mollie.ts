@@ -14,24 +14,27 @@ const STORAGE_KEY = 'vasco_mollie';
 const LEGACY_KEY = '@vasco_mollie'; // Old AsyncStorage key for migration
 const API_BASE = 'https://api.mollie.com/v2';
 
-// R66r50: country-aware payment-success redirects. Pre-R66r50 the fallback
-// hard-coded `app.vascobuild.com` for every country — DE/FR/ES/IT/UK customers
-// landed on a NL domain after paying. Override via env when a country-
-// specific domain is provisioned; otherwise fall through to the .app TLD.
+// R66r50: country-aware payment-success redirects.
+// R191: was hard-coded `app.vascobuild.com` for every country — that host
+// was never deployed, so every customer who paid via Mollie landed on a
+// DNS error. Universal-link landing lives at admin.vascobuild.com; the
+// per-country map is preserved so country-specific TLDs (e.g. vasco.de)
+// can override via env once they exist. Override via
+// EXPO_PUBLIC_PAYMENT_SUCCESS_URL when a country domain is provisioned.
 const PAYMENT_REDIRECT_BASE_BY_COUNTRY: Record<string, string> = {
-  NL: 'https://app.vascobuild.com',
-  DE: 'https://app.vascobuild.com',
-  FR: 'https://app.vascobuild.com',
-  ES: 'https://app.vascobuild.com',
-  IT: 'https://app.vascobuild.com',
-  UK: 'https://app.vascobuild.com',
+  NL: 'https://admin.vascobuild.com',
+  DE: 'https://admin.vascobuild.com',
+  FR: 'https://admin.vascobuild.com',
+  ES: 'https://admin.vascobuild.com',
+  IT: 'https://admin.vascobuild.com',
+  UK: 'https://admin.vascobuild.com',
 };
 
 export function defaultPaymentSuccessUrl(): string {
   const fromEnv = process.env.EXPO_PUBLIC_PAYMENT_SUCCESS_URL;
   if (fromEnv) return fromEnv;
   const country = getCurrentCountry();
-  const base = (country && PAYMENT_REDIRECT_BASE_BY_COUNTRY[country]) || 'https://app.vascobuild.com';
+  const base = (country && PAYMENT_REDIRECT_BASE_BY_COUNTRY[country]) || 'https://admin.vascobuild.com';
   return `${base}/payment/success`;
 }
 

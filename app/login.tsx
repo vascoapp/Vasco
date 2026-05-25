@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -39,7 +39,15 @@ const getRouteForEmail = (email: string) => {
 
 export default function LoginScreen() {
   const { t } = useTranslation();
-  const [email, setEmail] = useState('');
+  // R188: prefill from `?email=` so /signup → "Sign in instead" lands on this
+  // screen with the email already typed. Saves users a re-entry on the most
+  // common confused-signup path.
+  const searchParams = useLocalSearchParams<{ email?: string | string[] }>();
+  const initialEmail = (() => {
+    const raw = Array.isArray(searchParams.email) ? searchParams.email[0] : searchParams.email;
+    return typeof raw === 'string' ? raw : '';
+  })();
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [failedAttempts, setFailedAttempts] = useState(0);
@@ -241,6 +249,24 @@ export default function LoginScreen() {
                   </Pressable>
                 )}
               </View>
+
+              {/* R190: customer entry. Real customers who downloaded Vasco because
+                  their contractor told them to "review your quote" had nowhere
+                  to start — the login screen is contractor-only. This secondary
+                  outline button routes to /customer where they type their
+                  access code. Kept visually distinct from the primary auth flow
+                  so contractors don't tap it by accident. */}
+              <Pressable
+                style={styles.customerEntryBtn}
+                onPress={() => router.push('/customer' as any)}
+                accessibilityRole="button"
+                accessibilityLabel={t('auth.haveAccessCode', 'I have an access code')}
+              >
+                <Ionicons name="key-outline" size={16} color={DK.colors.accent} />
+                <Text style={styles.customerEntryBtnText}>
+                  {t('auth.haveAccessCode', 'I have an access code')}
+                </Text>
+              </Pressable>
             </View>
           </FadeIn>
 
@@ -571,6 +597,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   authLinksRow: { flexDirection: 'row', justifyContent: 'center', gap: 24 },
+  // R190 — customer-portal entry. Outlined to read as "different lane" vs
+  // the contractor login primary CTA above.
+  customerEntryBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    marginTop: Spacing.md,
+    borderWidth: 1, borderColor: DK.colors.accent + '55',
+    borderRadius: 14, paddingVertical: 12, paddingHorizontal: 18,
+    backgroundColor: DK.colors.accent + '0E',
+  },
+  customerEntryBtnText: {
+    fontSize: 13, fontFamily: 'Archivo_700Bold', color: DK.colors.accent,
+    letterSpacing: 0.6, textTransform: 'uppercase',
+  },
   forgotBtn: { alignSelf: 'center', paddingVertical: 8 },
   forgotBtnText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: Palette.hermesOrange },
   // Demo

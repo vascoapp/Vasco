@@ -26,8 +26,14 @@ import {
 
 const ACCEPTANCE_KEY = '@vasco_quote_acceptance_links';
 
-/** Base URL for customer-facing approval links. Override for staging/custom domains. */
-const APPROVAL_BASE_URL = 'https://app.vascobuild.com';
+/** Base URL for customer-facing approval links. Override for staging/custom domains.
+ *
+ * R190: was `https://app.vascobuild.com` which has never been deployed —
+ * every acceptance link shared pre-R190 pointed at a DNS error. The admin
+ * Next.js project at admin.vascobuild.com hosts the universal-link landing
+ * at /accept/[token]/page.tsx, which deep-links into the app when installed
+ * and falls back to a polished web page otherwise. */
+const APPROVAL_BASE_URL = 'https://admin.vascobuild.com';
 
 // ---------------------------------------------------------------------------
 // Types

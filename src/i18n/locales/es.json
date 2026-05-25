@@ -583,7 +583,7 @@
     "decisionsOverdue_one": "{{count}} decisión atrasada — recordar al cliente",
     "decisionsOverdue_other": "{{count}} decisiones atrasadas — recordar al cliente",
     "reminder": "Recordatorio",
-    "reminderMessage": "Hola, aún hay decisiones pendientes para tu proyecto. Consúltalas aquí: https://vascobuild.com/c/demo",
+    "reminderMessage": "Hola, aún hay decisiones pendientes para tu proyecto. Consúltalas aquí: https://admin.vascobuild.com/customer",
     "reminderTitle": "Recordatorio",
     "revenue": "ingresos",
     "overdue": "atrasado",
@@ -1595,7 +1595,8 @@
     "createAccount": "Crear cuenta",
     "confirming": "Confirmando tu inicio de sesión…",
     "confirmed": "Listo. Redirigiendo…",
-    "confirmFailed": "No pudimos confirmar este enlace."
+    "confirmFailed": "No pudimos confirmar este enlace.",
+    "haveAccessCode": "Tengo un código de acceso"
   },
   "resetPassword": {
     "title": "Establece una nueva contraseña",
@@ -1625,7 +1626,11 @@
     "alreadyExists": "Ya existe una cuenta con este correo. Intenta iniciar sesión.",
     "failed": "No se pudo crear la cuenta. Inténtalo de nuevo.",
     "checkEmail": "Revisa tu correo",
-    "checkEmailDesc": "Hemos enviado un enlace de confirmación a {{email}}. Toca para activar tu cuenta y vuelve aquí para iniciar sesión."
+    "checkEmailDesc": "Hemos enviado un enlace de confirmación a {{email}}. Toca para activar tu cuenta y vuelve aquí para iniciar sesión.",
+    "emailExistsTitle": "Ya tienes una cuenta",
+    "emailExistsBody": "{{email}} ya está registrada. Inicia sesión, o restablece tu contraseña si la has olvidado.",
+    "signInInstead": "Iniciar sesión",
+    "resetPasswordCta": "Restablecer contraseña"
   },
   "moneybird": {
     "title": "Conectar Moneybird",
@@ -2651,7 +2656,497 @@
     "loadedTitle": "Plantilla cargada",
     "loadedBody": "\"{{name}}\" cargada con {{count}} líneas. Ajusta el presupuesto para el cliente.",
     "deleteTitle": "Eliminar plantilla",
-    "deleteBody": "¿Eliminar \"{{name}}\"?"
+    "deleteBody": "¿Eliminar \"{{name}}\"?",
+    "categories": {
+      "cv-onderhoud": "Mantenimiento caldera",
+      "warmtepomp": "Bomba de calor",
+      "airco": "Aire acondicionado",
+      "leidingwerk": "Fontanería",
+      "badkamer": "Baño",
+      "keuken": "Cocina",
+      "elektra": "Electricidad",
+      "dakwerk": "Tejados",
+      "tegelwerk": "Alicatado",
+      "stucwerk": "Enlucido",
+      "vloeren": "Suelos",
+      "isolatie": "Aislamiento",
+      "zonnepanelen": "Paneles solares",
+      "glaswerk": "Acristalamiento",
+      "tuinaanleg": "Jardinería",
+      "overig": "Otros"
+    },
+    "paymentTerms": {
+      "onCompletion": "Pago a la entrega",
+      "within14Days": "Pago en 14 días",
+      "deposit50_50": "Anticipo 50%, 50% al finalizar",
+      "deposit40_60": "Anticipo 40%, 60% al finalizar",
+      "deposit30_70": "Anticipo 30%, 70% al finalizar"
+    },
+    "builtins": {
+      "qt-1": {
+        "name": "Mantenimiento anual caldera",
+        "items": {
+          "0": "Mantenimiento caldera (mano de obra)",
+          "1": "Kit de limpieza",
+          "2": "Análisis de combustión"
+        },
+        "units": {
+          "0": "ud",
+          "1": "kit",
+          "2": "ud"
+        },
+        "desc": "Mantenimiento anual estándar con limpieza e inspección",
+        "duration": "1,5 h"
+      },
+      "qt-2": {
+        "name": "Instalación bomba de calor (básica)",
+        "items": {
+          "0": "Unidad bomba de calor",
+          "1": "Mano de obra instalación",
+          "2": "Material de conexión",
+          "3": "Puesta en marcha"
+        },
+        "units": {
+          "0": "ud",
+          "1": "h",
+          "2": "kit",
+          "3": "ud"
+        },
+        "desc": "Bomba de calor aire-agua con conexión",
+        "duration": "2 días"
+      },
+      "qt-3": {
+        "name": "Instalación aire acondicionado split",
+        "items": {
+          "0": "Aire acondicionado split 3,5kW",
+          "1": "Instalación + tuberías",
+          "2": "Soporte + fijaciones"
+        },
+        "units": {
+          "0": "ud",
+          "1": "h",
+          "2": "kit"
+        },
+        "duration": "1 día"
+      },
+      "qt-roofing-1": {
+        "name": "Sustitución tejas (100m²)",
+        "items": {
+          "0": "Tejas (hormigón)",
+          "1": "Listones y rastreles",
+          "2": "Mano de obra techador",
+          "3": "Alquiler andamio (1 sem)"
+        },
+        "units": {
+          "0": "m²",
+          "1": "ml",
+          "2": "h",
+          "3": "ud"
+        },
+        "desc": "Retirar tejas viejas, revisar listones, colocar tejas nuevas",
+        "duration": "4-5 días"
+      },
+      "qt-roofing-2": {
+        "name": "Renovación cubierta plana EPDM",
+        "items": {
+          "0": "Lámina EPDM",
+          "1": "Paneles PIR (Rc 6,0)",
+          "2": "Mano de obra",
+          "3": "Remate perimetral"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "h",
+          "3": "ml"
+        },
+        "desc": "Impermeabilización EPDM en cubierta plana con aislamiento",
+        "duration": "3 días"
+      },
+      "qt-tiling-1": {
+        "name": "Alicatado baño (pared + suelo)",
+        "items": {
+          "0": "Azulejos pared 30x60",
+          "1": "Baldosas suelo 60x60",
+          "2": "Cemento cola + lechada",
+          "3": "Lámina impermeable",
+          "4": "Mano de obra alicatador"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "kit",
+          "3": "m²",
+          "4": "h"
+        },
+        "desc": "Alicatado y solado de baño con impermeabilización",
+        "duration": "3 días"
+      },
+      "qt-plastering-1": {
+        "name": "Enlucido paredes (salón)",
+        "items": {
+          "0": "Mortero de enlucido",
+          "1": "Imprimación + sellador",
+          "2": "Mano de obra yesero"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "h"
+        },
+        "desc": "Enlucido liso sobre paredes de bloques de yeso",
+        "duration": "2 días"
+      },
+      "qt-flooring-1": {
+        "name": "Colocación laminado (40m²)",
+        "items": {
+          "0": "Laminado (clic)",
+          "1": "Base aislante",
+          "2": "Rodapiés",
+          "3": "Mano de obra"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "ml",
+          "3": "h"
+        },
+        "desc": "Suelo laminado con base aislante y rodapiés",
+        "duration": "1 día"
+      },
+      "qt-insulation-1": {
+        "name": "Aislamiento cámara muros (100m²)",
+        "items": {
+          "0": "Perlas lana de vidrio",
+          "1": "Perforación + sellado",
+          "2": "Mano de obra aislante"
+        },
+        "units": {
+          "0": "m²",
+          "1": "ud",
+          "2": "h"
+        },
+        "desc": "Aislamiento de cámara con perlas de lana de vidrio",
+        "duration": "1 día"
+      },
+      "qt-solar-1": {
+        "name": "Instalación paneles solares (10 paneles)",
+        "items": {
+          "0": "Paneles solares 420Wp (full black)",
+          "1": "Micro-inversores",
+          "2": "Sistema de montaje + soportes",
+          "3": "Cableado + conexión",
+          "4": "Mano de obra instalación",
+          "5": "Sistema de monitorización"
+        },
+        "units": {
+          "0": "ud",
+          "1": "ud",
+          "2": "kit",
+          "3": "kit",
+          "4": "h",
+          "5": "ud"
+        },
+        "desc": "10 paneles solares con inversor en cubierta inclinada",
+        "duration": "1 día"
+      },
+      "qt-glazing-1": {
+        "name": "Instalación vidrio HR++ (ventana)",
+        "items": {
+          "0": "Vidrio HR++ a medida",
+          "1": "Sellador + junquillos",
+          "2": "Mano de obra cristalero"
+        },
+        "units": {
+          "0": "ud",
+          "1": "kit",
+          "2": "h"
+        },
+        "desc": "Sustituir vidrio simple/doble por vidrio HR++ aislante",
+        "duration": "1 día"
+      },
+      "qt-landscaping-1": {
+        "name": "Diseño jardín (50m²)",
+        "items": {
+          "0": "Pavimento terraza (30x30)",
+          "1": "Tierra + compost",
+          "2": "Plantación",
+          "3": "Semilla/tepe césped",
+          "4": "Mano de obra jardinero",
+          "5": "Retirada tierra/escombro"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m³",
+          "2": "lote",
+          "3": "m²",
+          "4": "h",
+          "5": "contenedor"
+        },
+        "desc": "Jardinería completa con terraza, plantación y césped",
+        "duration": "3-4 días"
+      },
+      "qt-plumbing-1": {
+        "name": "Fontanería completa baño",
+        "items": {
+          "0": "Tubo cobre 15mm",
+          "1": "Tubo PVC desagüe 40mm",
+          "2": "Accesorios + codos",
+          "3": "Placas y fijaciones",
+          "4": "Mano de obra fontanero"
+        },
+        "units": {
+          "0": "ml",
+          "1": "ml",
+          "2": "kit",
+          "3": "ud",
+          "4": "h"
+        },
+        "desc": "Nueva fontanería de baño (agua caliente/fría y desagüe)",
+        "duration": "2 días"
+      },
+      "qt-plumbing-2": {
+        "name": "Detección + reparación fuga",
+        "items": {
+          "0": "Detección fuga (mano de obra)",
+          "1": "Inspección cámara desagüe",
+          "2": "Material de reparación",
+          "3": "Mano de obra reparación"
+        },
+        "units": {
+          "0": "h",
+          "1": "ud",
+          "2": "kit",
+          "3": "h"
+        },
+        "desc": "Localizar fuga con inspección por cámara y reparar",
+        "duration": "0,5-1 día"
+      },
+      "qt-electrical-1": {
+        "name": "Sustitución cuadro eléctrico",
+        "items": {
+          "0": "Cuadro 12 circuitos",
+          "1": "Diferenciales 30mA",
+          "2": "Magnetotérmicos",
+          "3": "Cable de conexión + carril",
+          "4": "Mano de obra electricista",
+          "5": "Informe NEN 1010"
+        },
+        "units": {
+          "0": "ud",
+          "1": "ud",
+          "2": "ud",
+          "3": "kit",
+          "4": "h",
+          "5": "ud"
+        },
+        "desc": "Cuadro de 12 circuitos con diferenciales",
+        "duration": "1 día"
+      },
+      "qt-electrical-2": {
+        "name": "Renovación enchufes + interruptores",
+        "items": {
+          "0": "Enchufes Berker/Busch-Jaeger",
+          "1": "Interruptores",
+          "2": "Marcos embellecedores",
+          "3": "Mano de obra electricista"
+        },
+        "units": {
+          "0": "ud",
+          "1": "ud",
+          "2": "ud",
+          "3": "h"
+        },
+        "desc": "Sustitución de enchufes e interruptores en la vivienda",
+        "duration": "1 día"
+      },
+      "qt-electrical-3": {
+        "name": "Instalación cargador VE",
+        "items": {
+          "0": "Cargador 11kW (Alfen Eve)",
+          "1": "Cable instalación 5G6",
+          "2": "Diferencial tipo B",
+          "3": "Mano de obra instalación",
+          "4": "Activación + config app"
+        },
+        "units": {
+          "0": "ud",
+          "1": "ml",
+          "2": "ud",
+          "3": "h",
+          "4": "ud"
+        },
+        "desc": "Cargador doméstico 11kW con circuito dedicado",
+        "duration": "0,5 día"
+      },
+      "qt-painting-1": {
+        "name": "Pintura interior (salón)",
+        "items": {
+          "0": "Pintura plástica (Flexa)",
+          "1": "Pintura techo",
+          "2": "Imprimación + masilla",
+          "3": "Cinta + plásticos protección",
+          "4": "Mano de obra pintor"
+        },
+        "units": {
+          "0": "litro",
+          "1": "litro",
+          "2": "kit",
+          "3": "kit",
+          "4": "h"
+        },
+        "desc": "Pintar paredes y techo con preparación",
+        "duration": "2 días"
+      },
+      "qt-painting-2": {
+        "name": "Pintura exterior (carpintería)",
+        "items": {
+          "0": "Esmalte exterior (Sikkens Rubbol)",
+          "1": "Imprimación exterior",
+          "2": "Lija + masilla",
+          "3": "Mano de obra pintor",
+          "4": "Alquiler escalera/andamio"
+        },
+        "units": {
+          "0": "litro",
+          "1": "litro",
+          "2": "kit",
+          "3": "h",
+          "4": "día"
+        },
+        "desc": "Lijar, imprimar y pintar carpintería de madera",
+        "duration": "3 días"
+      },
+      "qt-carpentry-1": {
+        "name": "Colocación suelo madera (40m²)",
+        "items": {
+          "0": "Parquet roble (clic)",
+          "1": "Base aislante",
+          "2": "Rodapié roble",
+          "3": "Mano de obra carpintero"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "ml",
+          "3": "h"
+        },
+        "desc": "Parquet roble con base aislante y rodapiés",
+        "duration": "1,5 días"
+      },
+      "qt-carpentry-2": {
+        "name": "Instalación buhardilla",
+        "items": {
+          "0": "Buhardilla prefab. 3m",
+          "1": "Revestimiento zinc",
+          "2": "Aislamiento + barrera vapor",
+          "3": "Mano de obra carpintero",
+          "4": "Alquiler grúa (medio día)"
+        },
+        "units": {
+          "0": "ud",
+          "1": "m²",
+          "2": "m²",
+          "3": "h",
+          "4": "ud"
+        },
+        "desc": "Colocar buhardilla prefabricada con carpintería y acabado",
+        "duration": "2-3 días"
+      },
+      "qt-tiling-2": {
+        "name": "Colocación baldosas terraza (30m²)",
+        "items": {
+          "0": "Baldosa cerámica terraza 60x60",
+          "1": "Mortero drenante + cama arena",
+          "2": "Remate perimetral",
+          "3": "Mano de obra alicatador"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "ml",
+          "3": "h"
+        },
+        "desc": "Baldosas exteriores sobre cama de arena estabilizada",
+        "duration": "2 días"
+      },
+      "qt-insulation-2": {
+        "name": "Aislamiento cubierta interior (PIR)",
+        "items": {
+          "0": "Paneles PIR 120mm",
+          "1": "Barrera vapor + cinta",
+          "2": "Rastreles + fijaciones",
+          "3": "Mano de obra aislante"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "ml",
+          "3": "h"
+        },
+        "desc": "Aislamiento PIR por interior de cubierta inclinada (Rc 6,0)",
+        "duration": "2 días"
+      },
+      "qt-solar-2": {
+        "name": "Paneles solares + batería doméstica",
+        "items": {
+          "0": "Paneles solares 420Wp",
+          "1": "Inversor híbrido",
+          "2": "Batería doméstica 10kWh",
+          "3": "Sistema de montaje",
+          "4": "Cableado + conexión",
+          "5": "Mano de obra instalación"
+        },
+        "units": {
+          "0": "ud",
+          "1": "ud",
+          "2": "ud",
+          "3": "kit",
+          "4": "kit",
+          "5": "h"
+        },
+        "desc": "16 paneles con batería 10kWh para autoconsumo máximo",
+        "duration": "2 días"
+      },
+      "qt-landscaping-2": {
+        "name": "Instalación valla (15m)",
+        "items": {
+          "0": "Dados hormigón",
+          "1": "Postes (tratados)",
+          "2": "Tablas valla 180cm",
+          "3": "Separadores hormigón",
+          "4": "Mano de obra jardinero"
+        },
+        "units": {
+          "0": "ud",
+          "1": "ud",
+          "2": "ud",
+          "3": "ud",
+          "4": "h"
+        },
+        "desc": "Valla de madera sobre dados de hormigón con postes y tablas",
+        "duration": "1 día"
+      },
+      "qt-gas-1": {
+        "name": "Suelo radiante (50m²)",
+        "items": {
+          "0": "Sistema tetones",
+          "1": "Tubo PE-RT 16mm",
+          "2": "Colector 6 vías",
+          "3": "Centralita + termostato",
+          "4": "Mano de obra instalador"
+        },
+        "units": {
+          "0": "m²",
+          "1": "ml",
+          "2": "ud",
+          "3": "kit",
+          "4": "h"
+        },
+        "desc": "Suelo radiante sobre suelo existente con sistema de tetones",
+        "duration": "2 días"
+      }
+    }
   },
   "decisions": {
     "title": "Decisiones del cliente",
@@ -2929,5 +3424,25 @@
   "aiChat": {
     "welcome": "¡Hola! Soy tu asistente de oficina. Pídeme que facture a un cliente, programe un trabajo o revise tus números.",
     "parseError": "Lo siento, no pude interpretar eso. Intenta reformular."
+  },
+  "share": {
+    "shareWithCustomer": "Compartir con cliente",
+    "shareTitle": "Compartir formulario",
+    "accessCode": "Código de acceso",
+    "accessCodeTitle": "Código de acceso",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "codeHelp": "Tu cliente puede introducir este código en admin.vascobuild.com/customer",
+    "orShareLink": "O comparte el enlace",
+    "linkTitle": "Compartir enlace",
+    "sendVia": "Enviar por",
+    "email": "Correo",
+    "more": "Más",
+    "couldNotOpenWhatsApp": "No se pudo abrir WhatsApp",
+    "couldNotOpenSMS": "No se pudo abrir SMS",
+    "couldNotOpenEmail": "No se pudo abrir el correo",
+    "noAccountNeeded": "Tu cliente puede enviar elecciones sin cuenta. Recibirás una notificación con cada decisión.",
+    "message": "Hola {{name}},\n\nAquí tienes el enlace para enviar tus elecciones para {{project}}:\n\n{{url}}\n\nO usa el código: {{code}}\n\nPor favor rellénalo lo antes posible para evitar retrasos.\n\nUn saludo,\nTu contratista",
+    "submitChoices": "Enviar elecciones"
   }
 }

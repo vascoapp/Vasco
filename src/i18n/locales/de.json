@@ -583,7 +583,7 @@
     "decisionsOverdue_one": "{{count}} Entscheidung überfällig — Kunde erinnern",
     "decisionsOverdue_other": "{{count}} Entscheidungen überfällig — Kunde erinnern",
     "reminder": "Erinnerung",
-    "reminderMessage": "Hallo, es stehen noch offene Entscheidungen für Ihr Projekt aus. Hier ansehen: https://vascobuild.com/c/demo",
+    "reminderMessage": "Hallo, es stehen noch offene Entscheidungen für Ihr Projekt aus. Hier ansehen: https://admin.vascobuild.com/customer",
     "reminderTitle": "Erinnerung",
     "revenue": "Umsatz",
     "overdue": "überfällig",
@@ -1595,7 +1595,8 @@
     "createAccount": "Konto erstellen",
     "confirming": "Anmeldung wird bestätigt…",
     "confirmed": "Fertig. Weiterleitung…",
-    "confirmFailed": "Link konnte nicht bestätigt werden."
+    "confirmFailed": "Link konnte nicht bestätigt werden.",
+    "haveAccessCode": "Ich habe einen Zugangscode"
   },
   "resetPassword": {
     "title": "Neues Passwort festlegen",
@@ -1625,7 +1626,11 @@
     "alreadyExists": "Ein Konto mit dieser E-Mail existiert bereits. Versuche dich einzuloggen.",
     "failed": "Konto konnte nicht erstellt werden. Bitte erneut versuchen.",
     "checkEmail": "Prüfe deine E-Mails",
-    "checkEmailDesc": "Wir haben einen Bestätigungslink an {{email}} gesendet. Tippe darauf, um dein Konto zu aktivieren, und kehre hierher zurück, um dich einzuloggen."
+    "checkEmailDesc": "Wir haben einen Bestätigungslink an {{email}} gesendet. Tippe darauf, um dein Konto zu aktivieren, und kehre hierher zurück, um dich einzuloggen.",
+    "emailExistsTitle": "Du hast bereits ein Konto",
+    "emailExistsBody": "{{email}} ist bereits registriert. Melde dich an oder setze dein Passwort zurück, falls du es vergessen hast.",
+    "signInInstead": "Anmelden",
+    "resetPasswordCta": "Passwort zurücksetzen"
   },
   "moneybird": {
     "title": "Moneybird verbinden",
@@ -2651,7 +2656,497 @@
     "loadedTitle": "Vorlage geladen",
     "loadedBody": "\"{{name}}\" wurde mit {{count}} Zeilen geladen. Passe das Angebot für den Kunden an.",
     "deleteTitle": "Vorlage löschen",
-    "deleteBody": "\"{{name}}\" löschen?"
+    "deleteBody": "\"{{name}}\" löschen?",
+    "categories": {
+      "cv-onderhoud": "Heizungswartung",
+      "warmtepomp": "Wärmepumpe",
+      "airco": "Klimaanlage",
+      "leidingwerk": "Sanitärinstallation",
+      "badkamer": "Badezimmer",
+      "keuken": "Küche",
+      "elektra": "Elektrik",
+      "dakwerk": "Dacharbeiten",
+      "tegelwerk": "Fliesenarbeiten",
+      "stucwerk": "Verputzarbeiten",
+      "vloeren": "Bodenbeläge",
+      "isolatie": "Dämmung",
+      "zonnepanelen": "Solaranlagen",
+      "glaswerk": "Verglasung",
+      "tuinaanleg": "Gartenbau",
+      "overig": "Sonstiges"
+    },
+    "paymentTerms": {
+      "onCompletion": "Zahlung bei Fertigstellung",
+      "within14Days": "Zahlung innerhalb 14 Tagen",
+      "deposit50_50": "50% Anzahlung, 50% bei Fertigstellung",
+      "deposit40_60": "40% Anzahlung, 60% bei Fertigstellung",
+      "deposit30_70": "30% Anzahlung, 70% bei Fertigstellung"
+    },
+    "builtins": {
+      "qt-1": {
+        "name": "Heizkessel Jahreswartung",
+        "items": {
+          "0": "Heizkesselwartung (Arbeit)",
+          "1": "Reinigungsset",
+          "2": "Abgasanalyse"
+        },
+        "units": {
+          "0": "Stk",
+          "1": "Set",
+          "2": "Stk"
+        },
+        "desc": "Standardmäßige Jahreswartung inkl. Reinigung und Prüfung",
+        "duration": "1,5 Std"
+      },
+      "qt-2": {
+        "name": "Wärmepumpe Basisinstallation",
+        "items": {
+          "0": "Wärmepumpeneinheit",
+          "1": "Installationsarbeit",
+          "2": "Anschlussmaterial",
+          "3": "Inbetriebnahme"
+        },
+        "units": {
+          "0": "Stk",
+          "1": "Std",
+          "2": "Set",
+          "3": "Stk"
+        },
+        "desc": "Luft-Wasser-Wärmepumpe inkl. Anschlussarbeiten",
+        "duration": "2 Tage"
+      },
+      "qt-3": {
+        "name": "Split-Klimagerät Installation",
+        "items": {
+          "0": "Split-Klimagerät 3,5kW",
+          "1": "Installation + Leitungen",
+          "2": "Montagewinkel + Befestigung"
+        },
+        "units": {
+          "0": "Stk",
+          "1": "Std",
+          "2": "Set"
+        },
+        "duration": "1 Tag"
+      },
+      "qt-roofing-1": {
+        "name": "Dachziegel ersetzen (100m²)",
+        "items": {
+          "0": "Dachziegel (Beton)",
+          "1": "Trag- und Konterlatten",
+          "2": "Dachdecker Arbeit",
+          "3": "Gerüstmiete (1 Woche)"
+        },
+        "units": {
+          "0": "m²",
+          "1": "lfm",
+          "2": "Std",
+          "3": "Stk"
+        },
+        "desc": "Alte Ziegel entfernen, Lattung prüfen, neue Ziegel verlegen",
+        "duration": "4-5 Tage"
+      },
+      "qt-roofing-2": {
+        "name": "Flachdach EPDM Sanierung",
+        "items": {
+          "0": "EPDM-Dachhaut",
+          "1": "PIR-Dämmplatten (Rc 6.0)",
+          "2": "Arbeit",
+          "3": "Dachrandprofil"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "Std",
+          "3": "lfm"
+        },
+        "desc": "EPDM-Dachhaut auf Flachdach inkl. Dämmung",
+        "duration": "3 Tage"
+      },
+      "qt-tiling-1": {
+        "name": "Badezimmer fliesen (Wand + Boden)",
+        "items": {
+          "0": "Wandfliesen 30x60",
+          "1": "Bodenfliesen 60x60",
+          "2": "Fliesenkleber + Fugenmörtel",
+          "3": "Abdichtungsbahn",
+          "4": "Fliesenleger Arbeit"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "Set",
+          "3": "m²",
+          "4": "Std"
+        },
+        "desc": "Wand- und Bodenfliesen im Bad inkl. Abdichtung",
+        "duration": "3 Tage"
+      },
+      "qt-plastering-1": {
+        "name": "Wände verputzen (Wohnzimmer)",
+        "items": {
+          "0": "Putzmörtel",
+          "1": "Grundierung",
+          "2": "Putzer Arbeit"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "Std"
+        },
+        "desc": "Glatter Putz auf Gipsblockwänden",
+        "duration": "2 Tage"
+      },
+      "qt-flooring-1": {
+        "name": "Laminat verlegen (40m²)",
+        "items": {
+          "0": "Laminat (Klick)",
+          "1": "Trittschalldämmung",
+          "2": "Sockelleisten",
+          "3": "Arbeit"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "lfm",
+          "3": "Std"
+        },
+        "desc": "Laminatboden inkl. Trittschall und Sockelleisten",
+        "duration": "1 Tag"
+      },
+      "qt-insulation-1": {
+        "name": "Kerndämmung (100m²)",
+        "items": {
+          "0": "Glaswolle Hohlraumfüllung",
+          "1": "Bohrlöcher + Verschluss",
+          "2": "Dämmer Arbeit"
+        },
+        "units": {
+          "0": "m²",
+          "1": "Stk",
+          "2": "Std"
+        },
+        "desc": "Kerndämmung mit Glaswolle-Granulat",
+        "duration": "1 Tag"
+      },
+      "qt-solar-1": {
+        "name": "PV-Anlage Installation (10 Module)",
+        "items": {
+          "0": "Solarmodule 420Wp (Full Black)",
+          "1": "Mikro-Wechselrichter",
+          "2": "Montagesystem + Dachhaken",
+          "3": "Verkabelung + Anschluss",
+          "4": "Installationsarbeit",
+          "5": "Monitoring-System"
+        },
+        "units": {
+          "0": "Stk",
+          "1": "Stk",
+          "2": "Set",
+          "3": "Set",
+          "4": "Std",
+          "5": "Stk"
+        },
+        "desc": "10 Solarmodule mit Wechselrichter auf Schrägdach",
+        "duration": "1 Tag"
+      },
+      "qt-glazing-1": {
+        "name": "HR++ Verglasung einsetzen (Fenster)",
+        "items": {
+          "0": "HR++ Glas auf Maß",
+          "1": "Dichtmasse + Glasleisten",
+          "2": "Glaser Arbeit"
+        },
+        "units": {
+          "0": "Stk",
+          "1": "Set",
+          "2": "Std"
+        },
+        "desc": "Einfach-/Zweifachglas durch HR++ Isolierglas ersetzen",
+        "duration": "1 Tag"
+      },
+      "qt-landscaping-1": {
+        "name": "Gartenanlage (50m²)",
+        "items": {
+          "0": "Terrassenpflaster (30x30 Platten)",
+          "1": "Erde + Kompost",
+          "2": "Bepflanzung",
+          "3": "Rasensamen/Rollrasen",
+          "4": "Gärtner Arbeit",
+          "5": "Erd-/Bauschuttabfuhr"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m³",
+          "2": "Pos",
+          "3": "m²",
+          "4": "Std",
+          "5": "Container"
+        },
+        "desc": "Komplette Gartengestaltung mit Terrasse, Bepflanzung und Rasen",
+        "duration": "3-4 Tage"
+      },
+      "qt-plumbing-1": {
+        "name": "Komplette Badezimmer-Installation",
+        "items": {
+          "0": "Kupferrohr 15mm",
+          "1": "PVC-Abflussrohr 40mm",
+          "2": "Fittings + Bögen Set",
+          "3": "Wandscheiben und Befestigung",
+          "4": "Installateur Arbeit"
+        },
+        "units": {
+          "0": "lfm",
+          "1": "lfm",
+          "2": "Set",
+          "3": "Stk",
+          "4": "Std"
+        },
+        "desc": "Neue Rohrleitungen für Bad inkl. Warm-/Kaltwasser und Abfluss",
+        "duration": "2 Tage"
+      },
+      "qt-plumbing-2": {
+        "name": "Leckortung + Reparatur",
+        "items": {
+          "0": "Leckortung (Arbeit)",
+          "1": "Abwasser-Kamerainspektion",
+          "2": "Reparaturmaterial",
+          "3": "Reparaturarbeit"
+        },
+        "units": {
+          "0": "Std",
+          "1": "Stk",
+          "2": "Set",
+          "3": "Std"
+        },
+        "desc": "Leck mit Kamerainspektion lokalisieren und reparieren",
+        "duration": "0,5-1 Tag"
+      },
+      "qt-electrical-1": {
+        "name": "Sicherungskasten ersetzen",
+        "items": {
+          "0": "Verteilerkasten 12-Gruppen",
+          "1": "FI-Schalter 30mA",
+          "2": "Leitungsschutzschalter",
+          "3": "Anschlusskabel + Schiene",
+          "4": "Elektriker Arbeit",
+          "5": "NEN 1010 Prüfbericht"
+        },
+        "units": {
+          "0": "Stk",
+          "1": "Stk",
+          "2": "Stk",
+          "3": "Set",
+          "4": "Std",
+          "5": "Stk"
+        },
+        "desc": "Verteilerkasten ersetzen auf 12 Gruppen mit FI-Schaltern",
+        "duration": "1 Tag"
+      },
+      "qt-electrical-2": {
+        "name": "Steckdosen + Schalter erneuern",
+        "items": {
+          "0": "Steckdosen Berker/Busch-Jaeger",
+          "1": "Schalter",
+          "2": "Abdeckrahmen",
+          "3": "Elektriker Arbeit"
+        },
+        "units": {
+          "0": "Stk",
+          "1": "Stk",
+          "2": "Stk",
+          "3": "Std"
+        },
+        "desc": "Austausch Steckdosen und Schalter im Haus",
+        "duration": "1 Tag"
+      },
+      "qt-electrical-3": {
+        "name": "Wallbox Installation",
+        "items": {
+          "0": "Wallbox 11kW (Alfen Eve)",
+          "1": "Installationskabel 5G6",
+          "2": "FI-Schalter Typ B",
+          "3": "Installationsarbeit",
+          "4": "Aktivierung + App-Konfiguration"
+        },
+        "units": {
+          "0": "Stk",
+          "1": "lfm",
+          "2": "Stk",
+          "3": "Std",
+          "4": "Stk"
+        },
+        "desc": "Heim-Wallbox 11kW Installation mit eigenem Stromkreis",
+        "duration": "0,5 Tag"
+      },
+      "qt-painting-1": {
+        "name": "Innenmalerarbeit (Wohnzimmer)",
+        "items": {
+          "0": "Latex-Wandfarbe (Flexa)",
+          "1": "Deckenfarbe",
+          "2": "Grundierung + Spachtel",
+          "3": "Abklebeband + Abdeckfolie",
+          "4": "Maler Arbeit"
+        },
+        "units": {
+          "0": "Liter",
+          "1": "Liter",
+          "2": "Set",
+          "3": "Set",
+          "4": "Std"
+        },
+        "desc": "Wände und Decke streichen inkl. Vorbereitung",
+        "duration": "2 Tage"
+      },
+      "qt-painting-2": {
+        "name": "Außenmalerarbeit (Fensterrahmen)",
+        "items": {
+          "0": "Außenlack (Sikkens Rubbol)",
+          "1": "Außengrundierung",
+          "2": "Schleifpapier + Spachtel",
+          "3": "Maler Arbeit",
+          "4": "Leiter-/Gerüstmiete"
+        },
+        "units": {
+          "0": "Liter",
+          "1": "Liter",
+          "2": "Set",
+          "3": "Std",
+          "4": "Tag"
+        },
+        "desc": "Holzrahmen schleifen, grundieren und lackieren",
+        "duration": "3 Tage"
+      },
+      "qt-carpentry-1": {
+        "name": "Holzboden verlegen (40m²)",
+        "items": {
+          "0": "Eichenparkett (Klick)",
+          "1": "Trittschalldämmung",
+          "2": "Eichen-Sockelleisten",
+          "3": "Tischler Arbeit"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "lfm",
+          "3": "Std"
+        },
+        "desc": "Eichenparkett inkl. Trittschall und Sockelleisten",
+        "duration": "1,5 Tage"
+      },
+      "qt-carpentry-2": {
+        "name": "Dachgaube einbauen",
+        "items": {
+          "0": "Fertig-Dachgaube 3m",
+          "1": "Zinkverkleidung",
+          "2": "Dämmung + Dampfsperre",
+          "3": "Tischler Arbeit",
+          "4": "Kranmiete (halber Tag)"
+        },
+        "units": {
+          "0": "Stk",
+          "1": "m²",
+          "2": "m²",
+          "3": "Std",
+          "4": "Stk"
+        },
+        "desc": "Fertig-Dachgaube einbauen inkl. Zimmerei und Ausbau",
+        "duration": "2-3 Tage"
+      },
+      "qt-tiling-2": {
+        "name": "Terrassenplatten verlegen (30m²)",
+        "items": {
+          "0": "Keramik-Terrassenplatten 60x60",
+          "1": "Drainagemörtel + Sandbett",
+          "2": "Randprofil",
+          "3": "Fliesenleger Arbeit"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "lfm",
+          "3": "Std"
+        },
+        "desc": "Außenplatten auf stabilisiertem Sandbett",
+        "duration": "2 Tage"
+      },
+      "qt-insulation-2": {
+        "name": "Dachdämmung innen (PIR)",
+        "items": {
+          "0": "PIR-Platten 120mm",
+          "1": "Dampfsperre + Klebeband",
+          "2": "Lattung + Befestigung",
+          "3": "Dämmer Arbeit"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "lfm",
+          "3": "Std"
+        },
+        "desc": "PIR-Dämmung auf Innenseite Schrägdach (Rc 6.0)",
+        "duration": "2 Tage"
+      },
+      "qt-solar-2": {
+        "name": "PV-Anlage + Heimspeicher",
+        "items": {
+          "0": "Solarmodule 420Wp",
+          "1": "Hybrid-Wechselrichter",
+          "2": "Heimspeicher 10kWh",
+          "3": "Montagesystem",
+          "4": "Verkabelung + Anschluss",
+          "5": "Installationsarbeit"
+        },
+        "units": {
+          "0": "Stk",
+          "1": "Stk",
+          "2": "Stk",
+          "3": "Set",
+          "4": "Set",
+          "5": "Std"
+        },
+        "desc": "16 Module mit 10kWh Heimspeicher für maximalen Eigenverbrauch",
+        "duration": "2 Tage"
+      },
+      "qt-landscaping-2": {
+        "name": "Zaun aufstellen (15m)",
+        "items": {
+          "0": "Betonsockel",
+          "1": "Pfosten (imprägniert)",
+          "2": "Zaunbretter 180cm",
+          "3": "Beton-Zwischenstücke",
+          "4": "Gärtner Arbeit"
+        },
+        "units": {
+          "0": "Stk",
+          "1": "Stk",
+          "2": "Stk",
+          "3": "Stk",
+          "4": "Std"
+        },
+        "desc": "Holzzaun auf Betonsockel inkl. Pfosten und Bretter",
+        "duration": "1 Tag"
+      },
+      "qt-gas-1": {
+        "name": "Fußbodenheizung verlegen (50m²)",
+        "items": {
+          "0": "Noppenplattensystem",
+          "1": "PE-RT-Rohr 16mm",
+          "2": "Verteiler 6-fach",
+          "3": "Regler + Thermostat",
+          "4": "Installateur Arbeit"
+        },
+        "units": {
+          "0": "m²",
+          "1": "lfm",
+          "2": "Stk",
+          "3": "Set",
+          "4": "Std"
+        },
+        "desc": "Fußbodenheizung auf vorhandenem Boden mit Noppenplattensystem",
+        "duration": "2 Tage"
+      }
+    }
   },
   "decisions": {
     "title": "Kundenentscheidungen",
@@ -2929,5 +3424,25 @@
   "aiChat": {
     "welcome": "Hi! Ich bin Ihre Büroassistenz. Bitten Sie mich, eine Rechnung zu erstellen, einen Auftrag zu planen oder Zahlen zu prüfen.",
     "parseError": "Entschuldigung — ich konnte das nicht verarbeiten. Bitte umformulieren."
+  },
+  "share": {
+    "shareWithCustomer": "Mit Kunden teilen",
+    "shareTitle": "Entscheidungsformular teilen",
+    "accessCode": "Zugangscode",
+    "accessCodeTitle": "Zugangscode",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "codeHelp": "Dein Kunde kann diesen Code unter admin.vascobuild.com/customer eingeben",
+    "orShareLink": "Oder Link teilen",
+    "linkTitle": "Link teilen",
+    "sendVia": "Senden via",
+    "email": "E-Mail",
+    "more": "Mehr",
+    "couldNotOpenWhatsApp": "WhatsApp konnte nicht geöffnet werden",
+    "couldNotOpenSMS": "SMS konnte nicht geöffnet werden",
+    "couldNotOpenEmail": "E-Mail konnte nicht geöffnet werden",
+    "noAccountNeeded": "Dein Kunde kann Entscheidungen ohne Konto übermitteln. Du wirst über jede Entscheidung benachrichtigt.",
+    "message": "Hallo {{name}},\n\nHier ist der Link zur Übermittlung deiner Auswahl für {{project}}:\n\n{{url}}\n\nOder verwende den Code: {{code}}\n\nBitte so bald wie möglich ausfüllen, um Verzögerungen zu vermeiden.\n\nMit freundlichen Grüßen,\nDein Handwerker",
+    "submitChoices": "Auswahl übermitteln"
   }
 }

@@ -11,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -25,7 +25,14 @@ import { DKLabel } from '../src/components/shared/DKLabel';
 export default function ForgotPasswordScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  // R188: prefill from `?email=` so signup's "Reset password" CTA lands here
+  // with the email already typed.
+  const searchParams = useLocalSearchParams<{ email?: string | string[] }>();
+  const initialEmail = (() => {
+    const raw = Array.isArray(searchParams.email) ? searchParams.email[0] : searchParams.email;
+    return typeof raw === 'string' ? raw : '';
+  })();
+  const [email, setEmail] = useState(initialEmail);
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -41,8 +48,12 @@ export default function ForgotPasswordScreen() {
     }
 
     setLoading(true);
+    // R189: same fix as signup — universal-link landing instead of raw
+    // vasco:// scheme so the reset email link works in Gmail/Outlook web.
+    // app/auth/callback.tsx detects `type=recovery` and routes to
+    // /reset-password after setting the session.
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: 'vasco://auth/reset-callback',
+      redirectTo: 'https://admin.vascobuild.com/auth/callback',
     });
     setLoading(false);
 

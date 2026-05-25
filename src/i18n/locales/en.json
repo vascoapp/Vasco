@@ -583,7 +583,7 @@
     "decisionsOverdue_one": "{{count}} decision overdue — remind customer",
     "decisionsOverdue_other": "{{count}} decisions overdue — remind customer",
     "reminder": "Reminder",
-    "reminderMessage": "Hi, there are still open choices for your project. View them here: https://vascobuild.com/c/demo",
+    "reminderMessage": "Hi, there are still open choices for your project. View them here: https://admin.vascobuild.com/customer",
     "reminderTitle": "Reminder",
     "revenue": "revenue",
     "overdue": "overdue",
@@ -1595,7 +1595,8 @@
     "createAccount": "Create account",
     "confirming": "Confirming your sign-in…",
     "confirmed": "Done. Redirecting…",
-    "confirmFailed": "We could not confirm this link."
+    "confirmFailed": "We could not confirm this link.",
+    "haveAccessCode": "I have an access code"
   },
   "resetPassword": {
     "title": "Set a new password",
@@ -1625,7 +1626,11 @@
     "alreadyExists": "An account with this email already exists. Try signing in.",
     "failed": "Could not create account. Try again.",
     "checkEmail": "Check your email",
-    "checkEmailDesc": "We sent a confirmation link to {{email}}. Tap it to activate your account, then return here to log in."
+    "checkEmailDesc": "We sent a confirmation link to {{email}}. Tap it to activate your account, then return here to log in.",
+    "emailExistsTitle": "You already have an account",
+    "emailExistsBody": "{{email}} is already registered. Sign in instead, or reset your password if you forgot it.",
+    "signInInstead": "Sign in",
+    "resetPasswordCta": "Reset password"
   },
   "moneybird": {
     "title": "Connect Moneybird",
@@ -2651,7 +2656,497 @@
     "loadedTitle": "Template loaded",
     "loadedBody": "\"{{name}}\" loaded with {{count}} lines. Adjust the quote for the customer.",
     "deleteTitle": "Delete template",
-    "deleteBody": "Delete \"{{name}}\"?"
+    "deleteBody": "Delete \"{{name}}\"?",
+    "categories": {
+      "cv-onderhoud": "Boiler maintenance",
+      "warmtepomp": "Heat pump",
+      "airco": "Air conditioning",
+      "leidingwerk": "Plumbing",
+      "badkamer": "Bathroom",
+      "keuken": "Kitchen",
+      "elektra": "Electrical",
+      "dakwerk": "Roofing",
+      "tegelwerk": "Tiling",
+      "stucwerk": "Plastering",
+      "vloeren": "Flooring",
+      "isolatie": "Insulation",
+      "zonnepanelen": "Solar panels",
+      "glaswerk": "Glazing",
+      "tuinaanleg": "Landscaping",
+      "overig": "Other"
+    },
+    "paymentTerms": {
+      "onCompletion": "Payment on completion",
+      "within14Days": "Payment within 14 days",
+      "deposit50_50": "50% deposit, 50% on completion",
+      "deposit40_60": "40% deposit, 60% on completion",
+      "deposit30_70": "30% deposit, 70% on completion"
+    },
+    "builtins": {
+      "qt-1": {
+        "name": "Annual boiler maintenance",
+        "items": {
+          "0": "Boiler maintenance (labour)",
+          "1": "Cleaning kit",
+          "2": "Flue gas analysis"
+        },
+        "units": {
+          "0": "pcs",
+          "1": "set",
+          "2": "pcs"
+        },
+        "desc": "Standard annual maintenance including cleaning and inspection",
+        "duration": "1.5 hrs"
+      },
+      "qt-2": {
+        "name": "Heat pump installation (basic)",
+        "items": {
+          "0": "Heat pump unit",
+          "1": "Installation labour",
+          "2": "Connection materials",
+          "3": "Commissioning"
+        },
+        "units": {
+          "0": "pcs",
+          "1": "hrs",
+          "2": "set",
+          "3": "pcs"
+        },
+        "desc": "Air-to-water heat pump including connection work",
+        "duration": "2 days"
+      },
+      "qt-3": {
+        "name": "Split-unit AC installation",
+        "items": {
+          "0": "Split-unit AC 3.5kW",
+          "1": "Installation + piping",
+          "2": "Mounting bracket + fixings"
+        },
+        "units": {
+          "0": "pcs",
+          "1": "hrs",
+          "2": "set"
+        },
+        "duration": "1 day"
+      },
+      "qt-roofing-1": {
+        "name": "Replace roof tiles (100m²)",
+        "items": {
+          "0": "Roof tiles (concrete)",
+          "1": "Battens and counter-battens",
+          "2": "Roofer labour",
+          "3": "Scaffold hire (1 week)"
+        },
+        "units": {
+          "0": "m²",
+          "1": "lm",
+          "2": "hrs",
+          "3": "pcs"
+        },
+        "desc": "Remove old tiles, check battens, lay new tiles",
+        "duration": "4-5 days"
+      },
+      "qt-roofing-2": {
+        "name": "Flat roof EPDM renovation",
+        "items": {
+          "0": "EPDM roofing",
+          "1": "PIR insulation panels (Rc 6.0)",
+          "2": "Labour",
+          "3": "Edge trim"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "hrs",
+          "3": "lm"
+        },
+        "desc": "EPDM roofing on flat roof including insulation",
+        "duration": "3 days"
+      },
+      "qt-tiling-1": {
+        "name": "Bathroom tiling (wall + floor)",
+        "items": {
+          "0": "Wall tiles 30x60",
+          "1": "Floor tiles 60x60",
+          "2": "Tile adhesive + grout",
+          "3": "Waterproofing membrane",
+          "4": "Tiler labour"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "set",
+          "3": "m²",
+          "4": "hrs"
+        },
+        "desc": "Wall and floor tiles in bathroom including waterproofing",
+        "duration": "3 days"
+      },
+      "qt-plastering-1": {
+        "name": "Plaster walls (living room)",
+        "items": {
+          "0": "Plaster mortar",
+          "1": "Primer + sealer",
+          "2": "Plasterer labour"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "hrs"
+        },
+        "desc": "Smooth plasterwork on gypsum-block walls",
+        "duration": "2 days"
+      },
+      "qt-flooring-1": {
+        "name": "Lay laminate flooring (40m²)",
+        "items": {
+          "0": "Laminate (click)",
+          "1": "Underlay",
+          "2": "Skirting boards",
+          "3": "Labour"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "lm",
+          "3": "hrs"
+        },
+        "desc": "Laminate flooring including underlay and skirting",
+        "duration": "1 day"
+      },
+      "qt-insulation-1": {
+        "name": "Cavity wall insulation (100m²)",
+        "items": {
+          "0": "Glass-wool cavity fill",
+          "1": "Drill holes + finishing",
+          "2": "Insulation fitter labour"
+        },
+        "units": {
+          "0": "m²",
+          "1": "pcs",
+          "2": "hrs"
+        },
+        "desc": "Cavity wall insulation with glass-wool beads",
+        "duration": "1 day"
+      },
+      "qt-solar-1": {
+        "name": "Solar panels installation (10 panels)",
+        "items": {
+          "0": "Solar panels 420Wp (full black)",
+          "1": "Micro-inverters",
+          "2": "Mounting system + roof brackets",
+          "3": "Cabling + connection",
+          "4": "Installation labour",
+          "5": "Monitoring system"
+        },
+        "units": {
+          "0": "pcs",
+          "1": "pcs",
+          "2": "set",
+          "3": "set",
+          "4": "hrs",
+          "5": "pcs"
+        },
+        "desc": "10 solar panels with inverter on pitched roof",
+        "duration": "1 day"
+      },
+      "qt-glazing-1": {
+        "name": "Install HR++ glazing (window)",
+        "items": {
+          "0": "HR++ glass panel (custom)",
+          "1": "Sealant + glazing beads",
+          "2": "Glazier labour"
+        },
+        "units": {
+          "0": "pcs",
+          "1": "set",
+          "2": "hrs"
+        },
+        "desc": "Replace single/double glazing with HR++ insulating glass",
+        "duration": "1 day"
+      },
+      "qt-landscaping-1": {
+        "name": "Garden landscaping (50m²)",
+        "items": {
+          "0": "Patio paving (30x30 tiles)",
+          "1": "Soil + compost",
+          "2": "Planting",
+          "3": "Grass seed/turf",
+          "4": "Gardener labour",
+          "5": "Soil/rubble removal"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m³",
+          "2": "lot",
+          "3": "m²",
+          "4": "hrs",
+          "5": "container"
+        },
+        "desc": "Complete garden layout with patio, planting and lawn",
+        "duration": "3-4 days"
+      },
+      "qt-plumbing-1": {
+        "name": "Complete bathroom plumbing",
+        "items": {
+          "0": "Copper pipe 15mm",
+          "1": "PVC waste pipe 40mm",
+          "2": "Fittings + bends set",
+          "3": "Wall plates and fixings",
+          "4": "Plumber labour"
+        },
+        "units": {
+          "0": "lm",
+          "1": "lm",
+          "2": "set",
+          "3": "pcs",
+          "4": "hrs"
+        },
+        "desc": "New plumbing for bathroom incl. hot/cold water and drainage",
+        "duration": "2 days"
+      },
+      "qt-plumbing-2": {
+        "name": "Leak detection + repair",
+        "items": {
+          "0": "Leak detection (labour)",
+          "1": "Drain camera inspection",
+          "2": "Repair materials",
+          "3": "Repair labour"
+        },
+        "units": {
+          "0": "hrs",
+          "1": "pcs",
+          "2": "set",
+          "3": "hrs"
+        },
+        "desc": "Locate leak with camera inspection and repair",
+        "duration": "0.5-1 day"
+      },
+      "qt-electrical-1": {
+        "name": "Replace fuse box",
+        "items": {
+          "0": "Consumer unit 12-circuit",
+          "1": "RCDs 30mA",
+          "2": "MCBs",
+          "3": "Connection cable + DIN rail",
+          "4": "Electrician labour",
+          "5": "NEN 1010 inspection report"
+        },
+        "units": {
+          "0": "pcs",
+          "1": "pcs",
+          "2": "pcs",
+          "3": "set",
+          "4": "hrs",
+          "5": "pcs"
+        },
+        "desc": "Replace consumer unit with 12-circuit board with RCDs",
+        "duration": "1 day"
+      },
+      "qt-electrical-2": {
+        "name": "Replace sockets + switches",
+        "items": {
+          "0": "Sockets Berker/Busch-Jaeger",
+          "1": "Switches",
+          "2": "Cover frames",
+          "3": "Electrician labour"
+        },
+        "units": {
+          "0": "pcs",
+          "1": "pcs",
+          "2": "pcs",
+          "3": "hrs"
+        },
+        "desc": "Replace sockets and switches throughout home",
+        "duration": "1 day"
+      },
+      "qt-electrical-3": {
+        "name": "EV charger installation",
+        "items": {
+          "0": "EV charger 11kW (Alfen Eve)",
+          "1": "Installation cable 5G6",
+          "2": "Type B RCD",
+          "3": "Installation labour",
+          "4": "Activation + app config"
+        },
+        "units": {
+          "0": "pcs",
+          "1": "lm",
+          "2": "pcs",
+          "3": "hrs",
+          "4": "pcs"
+        },
+        "desc": "Home 11kW EV charger installation with dedicated circuit",
+        "duration": "0.5 day"
+      },
+      "qt-painting-1": {
+        "name": "Interior painting (living room)",
+        "items": {
+          "0": "Latex wall paint (Flexa)",
+          "1": "Ceiling paint",
+          "2": "Primer + filler",
+          "3": "Masking + dust sheets",
+          "4": "Painter labour"
+        },
+        "units": {
+          "0": "litre",
+          "1": "litre",
+          "2": "set",
+          "3": "set",
+          "4": "hrs"
+        },
+        "desc": "Paint walls and ceiling including preparation",
+        "duration": "2 days"
+      },
+      "qt-painting-2": {
+        "name": "Exterior painting (frames)",
+        "items": {
+          "0": "Exterior topcoat (Sikkens Rubbol)",
+          "1": "Exterior primer",
+          "2": "Sandpaper + filler",
+          "3": "Painter labour",
+          "4": "Ladder/scaffold hire"
+        },
+        "units": {
+          "0": "litre",
+          "1": "litre",
+          "2": "set",
+          "3": "hrs",
+          "4": "day"
+        },
+        "desc": "Sand, prime and top-coat wooden frames",
+        "duration": "3 days"
+      },
+      "qt-carpentry-1": {
+        "name": "Lay wooden floor (40m²)",
+        "items": {
+          "0": "Oak parquet (click)",
+          "1": "Underlay",
+          "2": "Oak skirting",
+          "3": "Carpenter labour"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "lm",
+          "3": "hrs"
+        },
+        "desc": "Oak parquet flooring including underlay and skirting",
+        "duration": "1.5 days"
+      },
+      "qt-carpentry-2": {
+        "name": "Install dormer",
+        "items": {
+          "0": "Prefab dormer 3m",
+          "1": "Zinc cladding",
+          "2": "Insulation + vapour barrier",
+          "3": "Carpenter labour",
+          "4": "Crane hire (half day)"
+        },
+        "units": {
+          "0": "pcs",
+          "1": "m²",
+          "2": "m²",
+          "3": "hrs",
+          "4": "pcs"
+        },
+        "desc": "Place prefab dormer including carpentry and finishing",
+        "duration": "2-3 days"
+      },
+      "qt-tiling-2": {
+        "name": "Lay patio tiles (30m²)",
+        "items": {
+          "0": "Ceramic patio tiles 60x60",
+          "1": "Drainage mortar + sand bed",
+          "2": "Edge trim",
+          "3": "Tiler labour"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "lm",
+          "3": "hrs"
+        },
+        "desc": "Outdoor tiles on stabilised sand bed",
+        "duration": "2 days"
+      },
+      "qt-insulation-2": {
+        "name": "Internal roof insulation (PIR)",
+        "items": {
+          "0": "PIR panels 120mm",
+          "1": "Vapour barrier + tape",
+          "2": "Battens + fixings",
+          "3": "Insulation fitter labour"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "lm",
+          "3": "hrs"
+        },
+        "desc": "PIR insulation on inside of pitched roof (Rc 6.0)",
+        "duration": "2 days"
+      },
+      "qt-solar-2": {
+        "name": "Solar panels + home battery",
+        "items": {
+          "0": "Solar panels 420Wp",
+          "1": "Hybrid inverter",
+          "2": "Home battery 10kWh",
+          "3": "Mounting system",
+          "4": "Cabling + connection",
+          "5": "Installation labour"
+        },
+        "units": {
+          "0": "pcs",
+          "1": "pcs",
+          "2": "pcs",
+          "3": "set",
+          "4": "set",
+          "5": "hrs"
+        },
+        "desc": "16 panels with 10kWh home battery for max self-consumption",
+        "duration": "2 days"
+      },
+      "qt-landscaping-2": {
+        "name": "Install fence (15m)",
+        "items": {
+          "0": "Concrete footings",
+          "1": "Posts (treated)",
+          "2": "Fence planks 180cm",
+          "3": "Concrete spacers",
+          "4": "Gardener labour"
+        },
+        "units": {
+          "0": "pcs",
+          "1": "pcs",
+          "2": "pcs",
+          "3": "pcs",
+          "4": "hrs"
+        },
+        "desc": "Wooden fence on concrete footings with posts and planks",
+        "duration": "1 day"
+      },
+      "qt-gas-1": {
+        "name": "Install underfloor heating (50m²)",
+        "items": {
+          "0": "Nub plate system",
+          "1": "PE-RT pipe 16mm",
+          "2": "6-port manifold",
+          "3": "Control unit + thermostat",
+          "4": "Installer labour"
+        },
+        "units": {
+          "0": "m²",
+          "1": "lm",
+          "2": "pcs",
+          "3": "set",
+          "4": "hrs"
+        },
+        "desc": "Underfloor heating on existing floor with nub plate system",
+        "duration": "2 days"
+      }
+    }
   },
   "decisions": {
     "title": "Customer decisions",
@@ -2929,5 +3424,25 @@
   "aiChat": {
     "welcome": "Hi! I'm your office manager. Ask me to invoice a customer, schedule a job, or check your numbers.",
     "parseError": "Sorry — I had trouble parsing that. Try rephrasing."
+  },
+  "share": {
+    "shareWithCustomer": "Share with customer",
+    "shareTitle": "Share decision form",
+    "accessCode": "Access code",
+    "accessCodeTitle": "Access code",
+    "copy": "Copy",
+    "copied": "Copied",
+    "codeHelp": "Your customer can enter this code at admin.vascobuild.com/customer",
+    "orShareLink": "Or share the link",
+    "linkTitle": "Share link",
+    "sendVia": "Send via",
+    "email": "Email",
+    "more": "More",
+    "couldNotOpenWhatsApp": "Could not open WhatsApp",
+    "couldNotOpenSMS": "Could not open SMS",
+    "couldNotOpenEmail": "Could not open email",
+    "noAccountNeeded": "Your customer can submit choices without an account. You will be notified of each decision.",
+    "message": "Hello {{name}},\n\nHere is the link to submit your choices for {{project}}:\n\n{{url}}\n\nOr use code: {{code}}\n\nPlease fill it out as soon as possible to avoid delays.\n\nBest regards,\nYour contractor",
+    "submitChoices": "Submit choices"
   }
 }

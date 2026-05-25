@@ -258,6 +258,105 @@ export function useDecisionUpdates(trackerId: string | null): {
 }
 
 // ---------------------------------------------------------------------------
+// R191: contractor-side aggregator across ALL their trackers.
+// Pre-R191 the only reader was `useDecisionUpdates(trackerId)` — contractor
+// had to OPEN each tracker manually to see if a customer submitted. There
+// was no surface that said "X customers submitted decisions across N
+// projects" so submissions sat unread.
+//
+// Returns a count of new submissions since the contractor last marked them
+// seen (stored in AsyncStorage). Used by bedrijf.tsx to badge the Decisions
+// tab.
+// ---------------------------------------------------------------------------
+
+const LAST_SEEN_KEY = '@vasco_decisions_last_seen';
+
+export interface ContractorInboxItem {
+  submissionId: string;
+  trackerId: string;
+  itemId: string;
+  customerName?: string;
+  value: unknown;
+  submittedAt: string;
+}
+
+export function useContractorDecisionInbox(userId: string | null | undefined): {
+  newCount: number;
+  recent: ContractorInboxItem[];
+  markAllSeen: () => Promise<void>;
+} {
+  const [recent, setRecent] = useState<ContractorInboxItem[]>([]);
+  const [lastSeenIso, setLastSeenIso] = useState<string>('');
+
+  // Load last-seen marker once
+  useEffect(() => {
+    AsyncStorage.getItem(LAST_SEEN_KEY).then((v) => setLastSeenIso(v ?? '')).catch(() => {});
+  }, []);
+
+  // Initial fetch + realtime subscription
+  useEffect(() => {
+    if (!userId || !isSupabaseConfigured) return;
+    let cancelled = false;
+
+    const fetchRecent = async () => {
+      try {
+        // PostgREST nested filter — join to decision_trackers WHERE user_id = $userId.
+        // !inner forces an inner join so non-owned submissions are excluded.
+        const { data, error } = await (supabase as any)
+          .from('decision_submissions')
+          .select('id, tracker_id, item_id, value, submitted_at, submitted_by, tracker:decision_trackers!inner(user_id, customer_name)')
+          .eq('tracker.user_id', userId)
+          .eq('submitted_by', 'customer')
+          .order('submitted_at', { ascending: false })
+          .limit(50);
+        if (error || cancelled) return;
+        const mapped: ContractorInboxItem[] = (data as any[]).map((row) => ({
+          submissionId: row.id,
+          trackerId: row.tracker_id,
+          itemId: row.item_id,
+          customerName: row.tracker?.customer_name ?? undefined,
+          value: row.value,
+          submittedAt: row.submitted_at,
+        }));
+        setRecent(mapped);
+      } catch {
+        // Silent — UI degrades to "no new" rather than blocking the page
+      }
+    };
+
+    fetchRecent();
+
+    // Realtime: any customer submission across the contractor's trackers
+    // bumps the inbox. We can't filter on a JOIN field in PostgREST realtime
+    // (it filters only on the table's own columns), so we subscribe to ALL
+    // decision_submissions and re-fetch on event — small list, infrequent.
+    const channel = supabase
+      .channel(`contractor-inbox:${userId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'decision_submissions' },
+        () => { fetchRecent(); },
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
+  const newCount = recent.filter((r) => r.submittedAt > lastSeenIso).length;
+
+  const markAllSeen = useCallback(async () => {
+    const now = new Date().toISOString();
+    setLastSeenIso(now);
+    try { await AsyncStorage.setItem(LAST_SEEN_KEY, now); } catch { /* silent */ }
+  }, []);
+
+  return { newCount, recent, markAllSeen };
+}
+
+// ---------------------------------------------------------------------------
 // Local storage fallback
 // ---------------------------------------------------------------------------
 

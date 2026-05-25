@@ -15,6 +15,8 @@ import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DK } from '../../src/theme/draftkings';
 import { useAppState } from '../../src/state/AppState';
+import { useAuth } from '../../src/context/AuthContext';
+import { useContractorDecisionInbox } from '../../src/services/decisionSyncService';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { SkeletonList } from '../../src/components/shared/SkeletonList';
@@ -63,8 +65,20 @@ export default function BedrijfScreen() {
   const [newEmail, setNewEmail] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const { customers, invoices, jobs, addCustomer, isLoading } = useAppState();
+  const { user } = useAuth();
   const [trackers, setTrackers] = useState<TrackerData[]>([]);
   const [tab, setTab] = useState<TabKey>('overview');
+  // R191: aggregate customer-submitted decisions across ALL of this
+  // contractor's trackers. Pre-R191 submissions sat unread because there
+  // was no top-level surface — contractor had to open each tracker
+  // individually to check. Badge appears on the Decisions tab; clearing
+  // happens when contractor switches TO the Decisions tab.
+  const { newCount: newDecisionsCount, markAllSeen: markDecisionsSeen } = useContractorDecisionInbox(user?.id);
+  useEffect(() => {
+    if (tab === 'decisions' && newDecisionsCount > 0) {
+      markDecisionsSeen().catch(() => {});
+    }
+  }, [tab, newDecisionsCount, markDecisionsSeen]);
 
   useEffect(() => { recordScreenVisit('klanten'); }, []);
 
@@ -143,7 +157,10 @@ export default function BedrijfScreen() {
 
   const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: 'overview', label: t('dk.tabs.overview', 'Overview').toUpperCase() },
-    { key: 'decisions', label: t('dk.tabs.decisions', 'Decisions').toUpperCase(), count: activeTrackers.length },
+    // R191: count badge prefers "new from customer" when there are unseen
+    // submissions, otherwise falls back to "active trackers" so the tab
+    // always has useful context.
+    { key: 'decisions', label: t('dk.tabs.decisions', 'Decisions').toUpperCase(), count: newDecisionsCount > 0 ? newDecisionsCount : activeTrackers.length },
     { key: 'contacts', label: t('dk.tabs.contacts', 'Contacts').toUpperCase(), count: customers.length },
   ];
 

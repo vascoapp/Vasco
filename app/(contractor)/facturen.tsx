@@ -124,9 +124,15 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
     return scoreCustomer({ customer: c, jobs: jobs as any, invoices: invoices as any }).tag;
   }, [customers, jobs, invoices]);
 
-  // Determine payment provider based on country (UK → Stripe, all others → Mollie)
-  // Respect contractor's enabled payment methods from business settings
-  // When a customer has a payment preference (from decision tracker), prioritize that method
+  // Determine payment provider based on country.
+  // R192: was UK → Stripe, all others → Mollie. US contractors fell through
+  // to Mollie which has no US operations — every US invoice payment failed.
+  // R79 already ships Stripe US support (USD + us_bank_account + klarna +
+  // card) but the routing here was never updated. AppState.createPaymentLink
+  // (the offline-queue path at src/state/AppState.tsx:2795) already routes
+  // both UK and US to Stripe; this local function now mirrors that.
+  // Respect contractor's enabled payment methods from business settings.
+  // When a customer has a payment preference (from decision tracker), prioritize that method.
   const createPaymentLink = useCallback(async (request: { invoiceId: string; amount: number; description: string; customerPreferredMethod?: string }) => {
     // R305: tier gate — Mollie/Stripe payment links are paid-tier only.
     // Was completely ungated; free users could mint unlimited paid links.
@@ -153,7 +159,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
     const enabledMethods = businessProfile?.enabledPaymentMethods;
     const preferredMethod = request.customerPreferredMethod;
 
-    if (country === 'UK') {
+    if (country === 'UK' || country === 'US') {
       const allMethods = SUPPORTED_METHODS[country] ?? SUPPORTED_METHODS.UK;
       let paymentMethods = enabledMethods
         ? allMethods.filter((m: string) => enabledMethods.includes(m))
@@ -165,7 +171,8 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
           paymentMethods = [preferred, ...paymentMethods.filter((m: string) => m !== preferred)];
         }
       }
-      return createStripePaymentLink({ ...request, currency: 'GBP', paymentMethods });
+      const currency = country === 'US' ? 'USD' : 'GBP';
+      return createStripePaymentLink({ ...request, currency, paymentMethods });
     }
     const countryMethods = getMollieMethodsForCountry(country).methods;
     let methods = enabledMethods

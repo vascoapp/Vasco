@@ -494,7 +494,10 @@ export function buildInvoiceShareText(
   ];
 
   if (paymentUrl) parts.push(``, `Pay online: ${paymentUrl}`);
-  if (invoice.customerId) parts.push(``, `Track your project: https://app.vascobuild.com/customer/${invoice.customerId}`);
+  // R192: was https://app.vascobuild.com/customer/{id} — host was never
+  // deployed, so every PDF that ever shipped to a customer pointed at a
+  // DNS error. Now uses the live R190 universal-link host.
+  if (invoice.customerId) parts.push(``, `Track your project: https://admin.vascobuild.com/customer/${invoice.customerId}`);
 
   return parts.join('\n');
 }

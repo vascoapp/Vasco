@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
+import type { TFunction } from 'i18next';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { registerSingletonReset } from './singletonReset';
 
@@ -21,8 +22,22 @@ export interface QuoteTemplateItem {
   type: 'labour' | 'materials' | 'equipment' | 'other';
 }
 
+// R187: shared payment-terms keys so builtin templates can be translated
+// without duplicating the same German/French/etc. strings 25 times.
+export type PaymentTermsKey =
+  | 'onCompletion'
+  | 'within14Days'
+  | 'deposit50_50'
+  | 'deposit40_60'
+  | 'deposit30_70';
+
 export interface QuoteTemplate {
   id: string;
+  // R187: builtin templates set i18nId so consumers can resolve
+  // quoteTemplates.builtins.{i18nId}.{name|desc|duration|items[i]}.
+  // User-created templates omit it and fall back to .name/.description directly.
+  i18nId?: string;
+  paymentTermsKey?: PaymentTermsKey;
   name: string;
   category: TemplateCategory;
   description?: string;
@@ -80,6 +95,8 @@ export const TEMPLATE_CATEGORIES: { id: TemplateCategory; label: string; icon: s
 const mockTemplates: QuoteTemplate[] = [
   {
     id: 'qt-1',
+    i18nId: 'qt-1',
+    paymentTermsKey: 'onCompletion',
     name: 'CV-ketel jaarlijks onderhoud',
     category: 'cv-onderhoud',
     description: 'Standaard jaarlijks onderhoud inclusief reiniging en controle',
@@ -98,6 +115,8 @@ const mockTemplates: QuoteTemplate[] = [
   },
   {
     id: 'qt-2',
+    i18nId: 'qt-2',
+    paymentTermsKey: 'deposit50_50',
     name: 'Warmtepomp installatie basis',
     category: 'warmtepomp',
     description: 'Lucht-water warmtepomp inclusief aansluitwerk',
@@ -117,6 +136,8 @@ const mockTemplates: QuoteTemplate[] = [
   },
   {
     id: 'qt-3',
+    i18nId: 'qt-3',
+    paymentTermsKey: 'within14Days',
     name: 'Airco split-unit installatie',
     category: 'airco',
     items: [
@@ -135,6 +156,8 @@ const mockTemplates: QuoteTemplate[] = [
   // ─── Roofing ─────────────────────────────────────────
   {
     id: 'qt-roofing-1',
+    i18nId: 'qt-roofing-1',
+    paymentTermsKey: 'deposit40_60',
     name: 'Dakpannen vervangen (100m²)',
     category: 'dakwerk' as TemplateCategory,
     description: 'Verwijderen oude dakpannen, lattwerk controleren, nieuwe pannen leggen',
@@ -153,6 +176,8 @@ const mockTemplates: QuoteTemplate[] = [
   },
   {
     id: 'qt-roofing-2',
+    i18nId: 'qt-roofing-2',
+    paymentTermsKey: 'deposit50_50',
     name: 'Plat dak renovatie EPDM',
     category: 'dakwerk' as TemplateCategory,
     description: 'EPDM dakbedekking op plat dak inclusief isolatie',
@@ -173,6 +198,8 @@ const mockTemplates: QuoteTemplate[] = [
   // ─── Tiling ──────────────────────────────────────────
   {
     id: 'qt-tiling-1',
+    i18nId: 'qt-tiling-1',
+    paymentTermsKey: 'within14Days',
     name: 'Badkamer betegelen (wand + vloer)',
     category: 'tegelwerk' as TemplateCategory,
     description: 'Wandtegels en vloertegels in badkamer inclusief waterdichting',
@@ -194,6 +221,8 @@ const mockTemplates: QuoteTemplate[] = [
   // ─── Plastering ──────────────────────────────────────
   {
     id: 'qt-plastering-1',
+    i18nId: 'qt-plastering-1',
+    paymentTermsKey: 'onCompletion',
     name: 'Muren stuken (woonkamer)',
     category: 'stucwerk' as TemplateCategory,
     description: 'Glad stucwerk op gipsblokken wanden',
@@ -213,6 +242,8 @@ const mockTemplates: QuoteTemplate[] = [
   // ─── Flooring ────────────────────────────────────────
   {
     id: 'qt-flooring-1',
+    i18nId: 'qt-flooring-1',
+    paymentTermsKey: 'onCompletion',
     name: 'Laminaat leggen (40m²)',
     category: 'vloeren' as TemplateCategory,
     description: 'Laminaatvloer inclusief ondervloer en plinten',
@@ -233,6 +264,8 @@ const mockTemplates: QuoteTemplate[] = [
   // ─── Insulation ──────────────────────────────────────
   {
     id: 'qt-insulation-1',
+    i18nId: 'qt-insulation-1',
+    paymentTermsKey: 'within14Days',
     name: 'Spouwmuurisolatie (100m²)',
     category: 'isolatie' as TemplateCategory,
     description: 'Spouwmuur isolatie met glaswolparels',
@@ -252,6 +285,8 @@ const mockTemplates: QuoteTemplate[] = [
   // ─── Solar ───────────────────────────────────────────
   {
     id: 'qt-solar-1',
+    i18nId: 'qt-solar-1',
+    paymentTermsKey: 'deposit30_70',
     name: 'Zonnepanelen installatie (10 panelen)',
     category: 'zonnepanelen' as TemplateCategory,
     description: '10 zonnepanelen met omvormer op schuin dak',
@@ -274,6 +309,8 @@ const mockTemplates: QuoteTemplate[] = [
   // ─── Glazing ─────────────────────────────────────────
   {
     id: 'qt-glazing-1',
+    i18nId: 'qt-glazing-1',
+    paymentTermsKey: 'onCompletion',
     name: 'HR++ glas plaatsen (raam)',
     category: 'glaswerk' as TemplateCategory,
     description: 'Vervangen enkel/dubbel glas door HR++ isolatieglas',
@@ -293,6 +330,8 @@ const mockTemplates: QuoteTemplate[] = [
   // ─── Landscaping ─────────────────────────────────────
   {
     id: 'qt-landscaping-1',
+    i18nId: 'qt-landscaping-1',
+    paymentTermsKey: 'deposit30_70',
     name: 'Tuin aanleggen (50m²)',
     category: 'tuinaanleg' as TemplateCategory,
     description: 'Complete tuinaanleg met terras, beplanting en gazon',
@@ -315,6 +354,8 @@ const mockTemplates: QuoteTemplate[] = [
   // ─── Plumbing ──────────────────────────────────────────────
   {
     id: 'qt-plumbing-1',
+    i18nId: 'qt-plumbing-1',
+    paymentTermsKey: 'within14Days',
     name: 'Badkamer leidingwerk compleet',
     category: 'leidingwerk' as TemplateCategory,
     description: 'Nieuw leidingwerk voor badkamer inclusief warm/koud water en afvoer',
@@ -334,6 +375,8 @@ const mockTemplates: QuoteTemplate[] = [
   },
   {
     id: 'qt-plumbing-2',
+    i18nId: 'qt-plumbing-2',
+    paymentTermsKey: 'onCompletion',
     name: 'Lekkage opsporing + reparatie',
     category: 'leidingwerk' as TemplateCategory,
     description: 'Lekkage opsporen met camera-inspectie en reparatie',
@@ -354,6 +397,8 @@ const mockTemplates: QuoteTemplate[] = [
   // ─── Electrical ────────────────────────────────────────────
   {
     id: 'qt-electrical-1',
+    i18nId: 'qt-electrical-1',
+    paymentTermsKey: 'within14Days',
     name: 'Meterkast vervangen',
     category: 'elektra' as TemplateCategory,
     description: 'Groepenkast vervangen naar 12-groepen met aardlekschakelaars',
@@ -374,6 +419,8 @@ const mockTemplates: QuoteTemplate[] = [
   },
   {
     id: 'qt-electrical-2',
+    i18nId: 'qt-electrical-2',
+    paymentTermsKey: 'onCompletion',
     name: 'Stopcontacten + schakelaars vernieuwen',
     category: 'elektra' as TemplateCategory,
     description: 'Vervanging stopcontacten en schakelaars in woning',
@@ -392,6 +439,8 @@ const mockTemplates: QuoteTemplate[] = [
   },
   {
     id: 'qt-electrical-3',
+    i18nId: 'qt-electrical-3',
+    paymentTermsKey: 'deposit50_50',
     name: 'Laadpaal installatie',
     category: 'elektra' as TemplateCategory,
     description: 'Thuislaadpaal 11kW installatie met aparte groep',
@@ -413,6 +462,8 @@ const mockTemplates: QuoteTemplate[] = [
   // ─── Painting ──────────────────────────────────────────────
   {
     id: 'qt-painting-1',
+    i18nId: 'qt-painting-1',
+    paymentTermsKey: 'onCompletion',
     name: 'Binnenschilderwerk woonkamer',
     category: 'overig' as TemplateCategory,
     description: 'Muren en plafond schilderen inclusief voorbehandeling',
@@ -432,6 +483,8 @@ const mockTemplates: QuoteTemplate[] = [
   },
   {
     id: 'qt-painting-2',
+    i18nId: 'qt-painting-2',
+    paymentTermsKey: 'within14Days',
     name: 'Buitenschilderwerk kozijnen',
     category: 'overig' as TemplateCategory,
     description: 'Houten kozijnen schuren, gronden en aflakken',
@@ -453,6 +506,8 @@ const mockTemplates: QuoteTemplate[] = [
   // ─── Carpentry ─────────────────────────────────────────────
   {
     id: 'qt-carpentry-1',
+    i18nId: 'qt-carpentry-1',
+    paymentTermsKey: 'onCompletion',
     name: 'Houten vloer leggen (40m²)',
     category: 'overig' as TemplateCategory,
     description: 'Eiken parketvloer inclusief ondervloer en plinten',
@@ -471,6 +526,8 @@ const mockTemplates: QuoteTemplate[] = [
   },
   {
     id: 'qt-carpentry-2',
+    i18nId: 'qt-carpentry-2',
+    paymentTermsKey: 'deposit40_60',
     name: 'Dakkapel plaatsen',
     category: 'overig' as TemplateCategory,
     description: 'Prefab dakkapel plaatsen inclusief timmering en afwerking',
@@ -492,6 +549,8 @@ const mockTemplates: QuoteTemplate[] = [
   // ─── Additional Tiling ─────────────────────────────────────
   {
     id: 'qt-tiling-2',
+    i18nId: 'qt-tiling-2',
+    paymentTermsKey: 'onCompletion',
     name: 'Terrastegels leggen (30m²)',
     category: 'tegelwerk' as TemplateCategory,
     description: 'Buitentegels op gestabiliseerd zandbed',
@@ -512,6 +571,8 @@ const mockTemplates: QuoteTemplate[] = [
   // ─── Additional Insulation ─────────────────────────────────
   {
     id: 'qt-insulation-2',
+    i18nId: 'qt-insulation-2',
+    paymentTermsKey: 'within14Days',
     name: 'Dakisolatie binnenzijde (PIR)',
     category: 'isolatie' as TemplateCategory,
     description: 'PIR isolatie aan binnenzijde schuin dak (Rc 6.0)',
@@ -532,6 +593,8 @@ const mockTemplates: QuoteTemplate[] = [
   // ─── Additional Solar ──────────────────────────────────────
   {
     id: 'qt-solar-2',
+    i18nId: 'qt-solar-2',
+    paymentTermsKey: 'deposit30_70',
     name: 'Zonnepanelen + thuisbatterij',
     category: 'zonnepanelen' as TemplateCategory,
     description: '16 panelen met 10kWh thuisbatterij voor maximale zelfconsumptie',
@@ -554,6 +617,8 @@ const mockTemplates: QuoteTemplate[] = [
   // ─── Additional Landscaping ────────────────────────────────
   {
     id: 'qt-landscaping-2',
+    i18nId: 'qt-landscaping-2',
+    paymentTermsKey: 'onCompletion',
     name: 'Schutting plaatsen (15m)',
     category: 'tuinaanleg' as TemplateCategory,
     description: 'Houten schutting op betonpoeren inclusief palen en planken',
@@ -575,6 +640,8 @@ const mockTemplates: QuoteTemplate[] = [
   // ─── Gas/HVAC additional ───────────────────────────────────
   {
     id: 'qt-gas-1',
+    i18nId: 'qt-gas-1',
+    paymentTermsKey: 'deposit50_50',
     name: 'Vloerverwarming aanleggen (50m²)',
     category: 'leidingwerk' as TemplateCategory,
     description: 'Vloerverwarming op bestaande vloer met noppenplaat systeem',
@@ -675,6 +742,61 @@ class QuoteTemplateService {
 }
 
 export const quoteTemplateService = QuoteTemplateService.getInstance();
+
+// =============================================================================
+// LOCALIZATION HELPERS (R187)
+// =============================================================================
+// Builtin templates carry an i18nId. localizeTemplate() resolves the
+// per-template name/description/duration/items via i18n and the shared
+// paymentTermsKey via quoteTemplates.paymentTerms.{key}. Anything missing
+// falls back to the seed (Dutch) string so user-created templates and
+// missing translations both still render.
+
+export interface LocalizedQuoteTemplate extends QuoteTemplate {
+  // Display strings already resolved against the active locale.
+  displayName: string;
+  displayDescription?: string;
+  displayDuration?: string;
+  displayPaymentTerms: string;
+  displayItems: { description: string; quantity: number; unit: string; unitPrice: number; vatRate: number; type: QuoteTemplateItem['type'] }[];
+}
+
+export function localizeTemplate(template: QuoteTemplate, t: TFunction): LocalizedQuoteTemplate {
+  const base = template.i18nId ? `quoteTemplates.builtins.${template.i18nId}` : null;
+
+  const displayName = base ? t(`${base}.name`, { defaultValue: template.name }) : template.name;
+  const displayDescription = template.description
+    ? (base ? t(`${base}.desc`, { defaultValue: template.description }) : template.description)
+    : undefined;
+  const displayDuration = template.estimatedDuration
+    ? (base ? t(`${base}.duration`, { defaultValue: template.estimatedDuration }) : template.estimatedDuration)
+    : undefined;
+  const displayPaymentTerms = template.paymentTermsKey
+    ? t(`quoteTemplates.paymentTerms.${template.paymentTermsKey}`, { defaultValue: template.defaultPaymentTerms })
+    : template.defaultPaymentTerms;
+
+  const displayItems = template.items.map((item, idx) => ({
+    description: base ? t(`${base}.items.${idx}`, { defaultValue: item.description }) : item.description,
+    quantity: item.quantity,
+    unit: base ? t(`${base}.units.${idx}`, { defaultValue: item.unit }) : item.unit,
+    unitPrice: item.unitPrice,
+    vatRate: item.vatRate,
+    type: item.type,
+  }));
+
+  return {
+    ...template,
+    displayName,
+    displayDescription,
+    displayDuration,
+    displayPaymentTerms,
+    displayItems,
+  };
+}
+
+export function localizeCategory(catId: TemplateCategory, fallbackLabel: string, t: TFunction): string {
+  return t(`quoteTemplates.categories.${catId}`, { defaultValue: fallbackLabel });
+}
 
 // =============================================================================
 // HOOKS

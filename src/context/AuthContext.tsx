@@ -702,22 +702,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, error: 'Supabase not configured – running in demo mode' };
     }
     setIsLoading(true);
-    // R107: tell Supabase where to redirect the user after they click the
-    // confirmation link in the signup email. Without this, Supabase falls
-    // back to its dashboard Site URL (defaults to localhost or an unset
-    // value), so the "Confirm" button in the email lands on a 404 / blank
-    // page instead of returning to the app. The `vasco://` scheme is
-    // declared in app.json ios.scheme, and app/auth/callback.tsx handles
-    // the resulting access_token+refresh_token query params.
+    // R189: use the https universal-link landing instead of the raw
+    // `vasco://` scheme. Gmail/Outlook web clients refuse to open non-http(s)
+    // URLs from emails for security — pointing emails at vasco:// produced
+    // a "page not found" 404 in every browser. The new flow:
     //
-    // REQUIRED Supabase Dashboard config: Authentication → URL
-    // Configuration → Redirect URLs must whitelist `vasco://auth/callback`
-    // (and optionally `https://vascobuild.com/auth/callback` for universal
-    // link fallback). Otherwise Supabase rejects the redirect.
+    //   1. Supabase email contains https://admin.vascobuild.com/auth/callback#...
+    //   2. User taps in email → on iOS/Android with the app installed +
+    //      AASA/assetlinks verified, the OS opens the app directly at
+    //      app/auth/callback.tsx (hash forwarded intact via expo-linking).
+    //   3. If app not installed OR on desktop, the admin Next.js page at
+    //      admin/src/app/auth/callback/page.tsx renders a polished "Email
+    //      confirmed → Open Vasco" landing with App Store / Play Store
+    //      fallback buttons.
+    //
+    // REQUIRED Supabase Dashboard config: Authentication → URL Configuration:
+    //   - Site URL: https://admin.vascobuild.com/auth/callback
+    //   - Redirect URLs (allowlist): add
+    //       https://admin.vascobuild.com/auth/callback
+    //       https://admin.vascobuild.com/auth/callback**
+    //       vasco://auth/callback  (legacy fallback, can be removed post-launch)
+    //
+    // The /auth/callback* path is also added to apple-app-site-association
+    // and assetlinks.json so iOS/Android auto-open the app.
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: 'vasco://auth/callback' },
+      options: { emailRedirectTo: 'https://admin.vascobuild.com/auth/callback' },
     });
     setIsLoading(false);
     if (error) return { success: false, error: error.message };

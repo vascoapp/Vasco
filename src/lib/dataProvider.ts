@@ -1005,15 +1005,34 @@ export async function createDecisionItems(rows: Array<{
   return (data ?? []) as DecisionItemRow[];
 }
 
-export async function getPortalByAccessCode(accessCode: string): Promise<unknown | null> {
-  if (!isSupabaseConfigured) return null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase.rpc as any)('get_portal_by_access_code', {
-    p_access_code: accessCode,
-  });
-  if (error) {
-    logWarn('dataProvider', `getPortalByAccessCode failed: ${error.message ?? error}`);
-    return null;
+// R191: return type tagged so the caller can distinguish "no row" from
+// "network error". Pre-R191 both collapsed to null and the customer saw
+// "Project not found" even when the actual issue was a dropped wifi
+// signal — confusing dead-end UX.
+export type PortalRpcResult =
+  | { ok: true; data: unknown | null }
+  | { ok: false; reason: 'network' | 'unknown'; message?: string };
+
+export async function getPortalByAccessCode(accessCode: string): Promise<PortalRpcResult> {
+  if (!isSupabaseConfigured) return { ok: true, data: null };
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.rpc as any)('get_portal_by_access_code', {
+      p_access_code: accessCode,
+    });
+    if (error) {
+      const msg = String(error.message ?? error);
+      logWarn('dataProvider', `getPortalByAccessCode failed: ${msg}`);
+      // Supabase-js surfaces network failures as fetch errors with message
+      // "Failed to fetch" / "Network request failed" / TypeError etc.
+      const isNetwork = /fetch|network|timeout|abort|offline/i.test(msg);
+      return { ok: false, reason: isNetwork ? 'network' : 'unknown', message: msg };
+    }
+    return { ok: true, data: data ?? null };
+  } catch (e) {
+    const msg = String((e as Error)?.message ?? e);
+    const isNetwork = /fetch|network|timeout|abort|offline/i.test(msg);
+    logWarn('dataProvider', `getPortalByAccessCode threw: ${msg}`);
+    return { ok: false, reason: isNetwork ? 'network' : 'unknown', message: msg };
   }
-  return data ?? null;
 }

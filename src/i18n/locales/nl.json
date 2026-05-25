@@ -583,7 +583,7 @@
     "decisionsOverdue_one": "{{count}} beslissing achterstallig — klant herinneren",
     "decisionsOverdue_other": "{{count}} beslissingen achterstallig — klant herinneren",
     "reminder": "Herinnering",
-    "reminderMessage": "Hoi, er staan nog open keuzes voor je project. Bekijk ze hier: https://vascobuild.com/c/demo",
+    "reminderMessage": "Hoi, er staan nog open keuzes voor je project. Bekijk ze hier: https://admin.vascobuild.com/customer",
     "reminderTitle": "Herinnering",
     "revenue": "omzet",
     "overdue": "te laat",
@@ -1595,7 +1595,8 @@
     "createAccount": "Account aanmaken",
     "confirming": "Je aanmelding wordt bevestigd…",
     "confirmed": "Klaar. Doorsturen…",
-    "confirmFailed": "We konden deze link niet bevestigen."
+    "confirmFailed": "We konden deze link niet bevestigen.",
+    "haveAccessCode": "Ik heb een toegangscode"
   },
   "resetPassword": {
     "title": "Kies een nieuw wachtwoord",
@@ -1625,7 +1626,11 @@
     "alreadyExists": "Er bestaat al een account met dit e-mailadres. Probeer in te loggen.",
     "failed": "Account kon niet aangemaakt worden. Probeer het opnieuw.",
     "checkEmail": "Check je e-mail",
-    "checkEmailDesc": "We hebben een bevestigingslink gestuurd naar {{email}}. Tik erop om je account te activeren en kom dan terug om in te loggen."
+    "checkEmailDesc": "We hebben een bevestigingslink gestuurd naar {{email}}. Tik erop om je account te activeren en kom dan terug om in te loggen.",
+    "emailExistsTitle": "Je hebt al een account",
+    "emailExistsBody": "{{email}} is al geregistreerd. Log in, of reset je wachtwoord als je het vergeten bent.",
+    "signInInstead": "Inloggen",
+    "resetPasswordCta": "Wachtwoord resetten"
   },
   "moneybird": {
     "title": "Moneybird koppelen",
@@ -2651,7 +2656,497 @@
     "loadedTitle": "Sjabloon geladen",
     "loadedBody": "\"{{name}}\" is geladen met {{count}} regels. Pas de offerte aan voor de klant.",
     "deleteTitle": "Sjabloon verwijderen",
-    "deleteBody": "\"{{name}}\" verwijderen?"
+    "deleteBody": "\"{{name}}\" verwijderen?",
+    "categories": {
+      "cv-onderhoud": "CV Onderhoud",
+      "warmtepomp": "Warmtepomp",
+      "airco": "Airco",
+      "leidingwerk": "Leidingwerk",
+      "badkamer": "Badkamer",
+      "keuken": "Keuken",
+      "elektra": "Elektra",
+      "dakwerk": "Dakwerk",
+      "tegelwerk": "Tegelwerk",
+      "stucwerk": "Stucwerk",
+      "vloeren": "Vloeren",
+      "isolatie": "Isolatie",
+      "zonnepanelen": "Zonnepanelen",
+      "glaswerk": "Glaswerk",
+      "tuinaanleg": "Tuinaanleg",
+      "overig": "Overig"
+    },
+    "paymentTerms": {
+      "onCompletion": "Betaling bij oplevering",
+      "within14Days": "Betaling binnen 14 dagen",
+      "deposit50_50": "50% aanbetaling, 50% bij oplevering",
+      "deposit40_60": "40% aanbetaling, 60% bij oplevering",
+      "deposit30_70": "30% aanbetaling, 70% bij oplevering"
+    },
+    "builtins": {
+      "qt-1": {
+        "name": "CV-ketel jaarlijks onderhoud",
+        "items": {
+          "0": "Onderhoud CV-ketel (arbeid)",
+          "1": "Reinigingsset",
+          "2": "Rookgasanalyse"
+        },
+        "units": {
+          "0": "stuk",
+          "1": "set",
+          "2": "stuk"
+        },
+        "desc": "Standaard jaarlijks onderhoud inclusief reiniging en controle",
+        "duration": "1.5 uur"
+      },
+      "qt-2": {
+        "name": "Warmtepomp installatie basis",
+        "items": {
+          "0": "Warmtepomp unit",
+          "1": "Installatie arbeid",
+          "2": "Aansluitmateriaal",
+          "3": "Inbedrijfstelling"
+        },
+        "units": {
+          "0": "stuk",
+          "1": "uur",
+          "2": "set",
+          "3": "stuk"
+        },
+        "desc": "Lucht-water warmtepomp inclusief aansluitwerk",
+        "duration": "2 dagen"
+      },
+      "qt-3": {
+        "name": "Airco split-unit installatie",
+        "items": {
+          "0": "Split-unit airco 3.5kW",
+          "1": "Installatie + leidingwerk",
+          "2": "Montagebeugel + bevestiging"
+        },
+        "units": {
+          "0": "stuk",
+          "1": "uur",
+          "2": "set"
+        },
+        "duration": "1 dag"
+      },
+      "qt-roofing-1": {
+        "name": "Dakpannen vervangen (100m²)",
+        "items": {
+          "0": "Dakpannen (betonnen)",
+          "1": "Tengels en panlatten",
+          "2": "Arbeid dakdekker",
+          "3": "Steiger huur (1 week)"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m¹",
+          "2": "uur",
+          "3": "stuk"
+        },
+        "desc": "Verwijderen oude dakpannen, lattwerk controleren, nieuwe pannen leggen",
+        "duration": "4-5 dagen"
+      },
+      "qt-roofing-2": {
+        "name": "Plat dak renovatie EPDM",
+        "items": {
+          "0": "EPDM dakbedekking",
+          "1": "PIR isolatieplaten (Rc 6.0)",
+          "2": "Arbeid",
+          "3": "Dakrandafwerking"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "uur",
+          "3": "m¹"
+        },
+        "desc": "EPDM dakbedekking op plat dak inclusief isolatie",
+        "duration": "3 dagen"
+      },
+      "qt-tiling-1": {
+        "name": "Badkamer betegelen (wand + vloer)",
+        "items": {
+          "0": "Wandtegels 30x60",
+          "1": "Vloertegels 60x60",
+          "2": "Tegellijm + voegmortel",
+          "3": "Waterdichtingsmembraan",
+          "4": "Arbeid tegelzetter"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "set",
+          "3": "m²",
+          "4": "uur"
+        },
+        "desc": "Wandtegels en vloertegels in badkamer inclusief waterdichting",
+        "duration": "3 dagen"
+      },
+      "qt-plastering-1": {
+        "name": "Muren stuken (woonkamer)",
+        "items": {
+          "0": "Stucmortel",
+          "1": "Primer + voorstrijkmiddel",
+          "2": "Arbeid stukadoor"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "uur"
+        },
+        "desc": "Glad stucwerk op gipsblokken wanden",
+        "duration": "2 dagen"
+      },
+      "qt-flooring-1": {
+        "name": "Laminaat leggen (40m²)",
+        "items": {
+          "0": "Laminaat (click)",
+          "1": "Ondervloer",
+          "2": "Plinten",
+          "3": "Arbeid"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "m¹",
+          "3": "uur"
+        },
+        "desc": "Laminaatvloer inclusief ondervloer en plinten",
+        "duration": "1 dag"
+      },
+      "qt-insulation-1": {
+        "name": "Spouwmuurisolatie (100m²)",
+        "items": {
+          "0": "Glaswolparels spouwvulling",
+          "1": "Boorgaten + afwerking",
+          "2": "Arbeid isolatiemonteur"
+        },
+        "units": {
+          "0": "m²",
+          "1": "stuk",
+          "2": "uur"
+        },
+        "desc": "Spouwmuur isolatie met glaswolparels",
+        "duration": "1 dag"
+      },
+      "qt-solar-1": {
+        "name": "Zonnepanelen installatie (10 panelen)",
+        "items": {
+          "0": "Zonnepanelen 420Wp (full black)",
+          "1": "Micro-omvormers",
+          "2": "Montagesysteem + dakbevestiging",
+          "3": "Bekabeling + aansluitwerk",
+          "4": "Installatie arbeid",
+          "5": "Monitoring systeem"
+        },
+        "units": {
+          "0": "stuk",
+          "1": "stuk",
+          "2": "set",
+          "3": "set",
+          "4": "uur",
+          "5": "stuk"
+        },
+        "desc": "10 zonnepanelen met omvormer op schuin dak",
+        "duration": "1 dag"
+      },
+      "qt-glazing-1": {
+        "name": "HR++ glas plaatsen (raam)",
+        "items": {
+          "0": "HR++ glasplaat op maat",
+          "1": "Kit + glaslatten",
+          "2": "Arbeid glaszetter"
+        },
+        "units": {
+          "0": "stuk",
+          "1": "set",
+          "2": "uur"
+        },
+        "desc": "Vervangen enkel/dubbel glas door HR++ isolatieglas",
+        "duration": "1 dag"
+      },
+      "qt-landscaping-1": {
+        "name": "Tuin aanleggen (50m²)",
+        "items": {
+          "0": "Bestrating terras (30x30 tegels)",
+          "1": "Grond + compost",
+          "2": "Beplanting",
+          "3": "Graszaad/graszoden",
+          "4": "Arbeid hovenier",
+          "5": "Afvoer grond/puin"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m³",
+          "2": "partij",
+          "3": "m²",
+          "4": "uur",
+          "5": "container"
+        },
+        "desc": "Complete tuinaanleg met terras, beplanting en gazon",
+        "duration": "3-4 dagen"
+      },
+      "qt-plumbing-1": {
+        "name": "Badkamer leidingwerk compleet",
+        "items": {
+          "0": "Koperen buis 15mm",
+          "1": "PVC afvoerbuis 40mm",
+          "2": "Koppelingen + bochten set",
+          "3": "Muurplaten en bevestiging",
+          "4": "Arbeid loodgieter"
+        },
+        "units": {
+          "0": "m¹",
+          "1": "m¹",
+          "2": "set",
+          "3": "stuk",
+          "4": "uur"
+        },
+        "desc": "Nieuw leidingwerk voor badkamer inclusief warm/koud water en afvoer",
+        "duration": "2 dagen"
+      },
+      "qt-plumbing-2": {
+        "name": "Lekkage opsporing + reparatie",
+        "items": {
+          "0": "Lekkage detectie (arbeid)",
+          "1": "Camera-inspectie riolering",
+          "2": "Reparatie materiaal",
+          "3": "Reparatie arbeid"
+        },
+        "units": {
+          "0": "uur",
+          "1": "stuk",
+          "2": "set",
+          "3": "uur"
+        },
+        "desc": "Lekkage opsporen met camera-inspectie en reparatie",
+        "duration": "0.5-1 dag"
+      },
+      "qt-electrical-1": {
+        "name": "Meterkast vervangen",
+        "items": {
+          "0": "Groepenkast 12-groepen",
+          "1": "Aardlekschakelaars 30mA",
+          "2": "Installatieautomaten",
+          "3": "Aansluitkabel + rail",
+          "4": "Arbeid elektricien",
+          "5": "NEN 1010 keuringsrapport"
+        },
+        "units": {
+          "0": "stuk",
+          "1": "stuk",
+          "2": "stuk",
+          "3": "set",
+          "4": "uur",
+          "5": "stuk"
+        },
+        "desc": "Groepenkast vervangen naar 12-groepen met aardlekschakelaars",
+        "duration": "1 dag"
+      },
+      "qt-electrical-2": {
+        "name": "Stopcontacten + schakelaars vernieuwen",
+        "items": {
+          "0": "Stopcontacten Berker/Busch-Jaeger",
+          "1": "Schakelaars",
+          "2": "Afdekramen",
+          "3": "Arbeid elektricien"
+        },
+        "units": {
+          "0": "stuk",
+          "1": "stuk",
+          "2": "stuk",
+          "3": "uur"
+        },
+        "desc": "Vervanging stopcontacten en schakelaars in woning",
+        "duration": "1 dag"
+      },
+      "qt-electrical-3": {
+        "name": "Laadpaal installatie",
+        "items": {
+          "0": "Laadpaal 11kW (Alfen Eve)",
+          "1": "Installatiekabel 5G6",
+          "2": "Aardlekschakelaar B-type",
+          "3": "Installatiearbeid",
+          "4": "Activatie + app configuratie"
+        },
+        "units": {
+          "0": "stuk",
+          "1": "m¹",
+          "2": "stuk",
+          "3": "uur",
+          "4": "stuk"
+        },
+        "desc": "Thuislaadpaal 11kW installatie met aparte groep",
+        "duration": "0.5 dag"
+      },
+      "qt-painting-1": {
+        "name": "Binnenschilderwerk woonkamer",
+        "items": {
+          "0": "Latex muurverf (Flexa)",
+          "1": "Plafondverf",
+          "2": "Grondverf + vulpasta",
+          "3": "Afplakmateriaal + afdekfolie",
+          "4": "Arbeid schilder"
+        },
+        "units": {
+          "0": "liter",
+          "1": "liter",
+          "2": "set",
+          "3": "set",
+          "4": "uur"
+        },
+        "desc": "Muren en plafond schilderen inclusief voorbehandeling",
+        "duration": "2 dagen"
+      },
+      "qt-painting-2": {
+        "name": "Buitenschilderwerk kozijnen",
+        "items": {
+          "0": "Buitenlak (Sikkens Rubbol)",
+          "1": "Grondverf buiten",
+          "2": "Schuurpapier + plamuur",
+          "3": "Arbeid schilder",
+          "4": "Ladder/steiger huur"
+        },
+        "units": {
+          "0": "liter",
+          "1": "liter",
+          "2": "set",
+          "3": "uur",
+          "4": "dag"
+        },
+        "desc": "Houten kozijnen schuren, gronden en aflakken",
+        "duration": "3 dagen"
+      },
+      "qt-carpentry-1": {
+        "name": "Houten vloer leggen (40m²)",
+        "items": {
+          "0": "Eiken parket (click)",
+          "1": "Ondervloer",
+          "2": "Plinten eiken",
+          "3": "Arbeid timmerman"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "m¹",
+          "3": "uur"
+        },
+        "desc": "Eiken parketvloer inclusief ondervloer en plinten",
+        "duration": "1.5 dagen"
+      },
+      "qt-carpentry-2": {
+        "name": "Dakkapel plaatsen",
+        "items": {
+          "0": "Prefab dakkapel 3m",
+          "1": "Zinken bekleding",
+          "2": "Isolatie + dampscherm",
+          "3": "Arbeid timmerman",
+          "4": "Kraan huur (half dag)"
+        },
+        "units": {
+          "0": "stuk",
+          "1": "m²",
+          "2": "m²",
+          "3": "uur",
+          "4": "stuk"
+        },
+        "desc": "Prefab dakkapel plaatsen inclusief timmering en afwerking",
+        "duration": "2-3 dagen"
+      },
+      "qt-tiling-2": {
+        "name": "Terrastegels leggen (30m²)",
+        "items": {
+          "0": "Keramische terrastegels 60x60",
+          "1": "Drainagemortel + zandbed",
+          "2": "Randafwerking",
+          "3": "Arbeid tegelzetter"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "m¹",
+          "3": "uur"
+        },
+        "desc": "Buitentegels op gestabiliseerd zandbed",
+        "duration": "2 dagen"
+      },
+      "qt-insulation-2": {
+        "name": "Dakisolatie binnenzijde (PIR)",
+        "items": {
+          "0": "PIR platen 120mm",
+          "1": "Dampscherm + tape",
+          "2": "Rachels + bevestiging",
+          "3": "Arbeid isolatiemonteur"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m²",
+          "2": "m¹",
+          "3": "uur"
+        },
+        "desc": "PIR isolatie aan binnenzijde schuin dak (Rc 6.0)",
+        "duration": "2 dagen"
+      },
+      "qt-solar-2": {
+        "name": "Zonnepanelen + thuisbatterij",
+        "items": {
+          "0": "Zonnepanelen 420Wp",
+          "1": "Hybride omvormer",
+          "2": "Thuisbatterij 10kWh",
+          "3": "Montagesysteem",
+          "4": "Bekabeling + aansluitwerk",
+          "5": "Installatie arbeid"
+        },
+        "units": {
+          "0": "stuk",
+          "1": "stuk",
+          "2": "stuk",
+          "3": "set",
+          "4": "set",
+          "5": "uur"
+        },
+        "desc": "16 panelen met 10kWh thuisbatterij voor maximale zelfconsumptie",
+        "duration": "2 dagen"
+      },
+      "qt-landscaping-2": {
+        "name": "Schutting plaatsen (15m)",
+        "items": {
+          "0": "Betonpoeren",
+          "1": "Palen (geïmpregneerd)",
+          "2": "Schuttingplanken 180cm",
+          "3": "Betonnen tussenliggers",
+          "4": "Arbeid hovenier"
+        },
+        "units": {
+          "0": "stuk",
+          "1": "stuk",
+          "2": "stuk",
+          "3": "stuk",
+          "4": "uur"
+        },
+        "desc": "Houten schutting op betonpoeren inclusief palen en planken",
+        "duration": "1 dag"
+      },
+      "qt-gas-1": {
+        "name": "Vloerverwarming aanleggen (50m²)",
+        "items": {
+          "0": "Noppenplaat systeem",
+          "1": "PE-RT buis 16mm",
+          "2": "Verdeler 6-groeps",
+          "3": "Regelautomaat + thermostaat",
+          "4": "Arbeid installateur"
+        },
+        "units": {
+          "0": "m²",
+          "1": "m¹",
+          "2": "stuk",
+          "3": "set",
+          "4": "uur"
+        },
+        "desc": "Vloerverwarming op bestaande vloer met noppenplaat systeem",
+        "duration": "2 dagen"
+      }
+    }
   },
   "decisions": {
     "title": "Klant Keuzes",
@@ -2929,5 +3424,25 @@
   "aiChat": {
     "welcome": "Hallo! Ik ben je kantoorhulp. Vraag me om een klant te factureren, een klus in te plannen of cijfers te checken.",
     "parseError": "Sorry — ik kon dat niet begrijpen. Probeer het anders te formuleren."
+  },
+  "share": {
+    "shareWithCustomer": "Deel met klant",
+    "shareTitle": "Deel keuzeformulier",
+    "accessCode": "Toegangscode",
+    "accessCodeTitle": "Toegangscode",
+    "copy": "Kopieer",
+    "copied": "Gekopieerd",
+    "codeHelp": "De klant kan deze code invullen op admin.vascobuild.com/customer",
+    "orShareLink": "Of deel de link",
+    "linkTitle": "Deel link",
+    "sendVia": "Verstuur via",
+    "email": "E-mail",
+    "more": "Meer",
+    "couldNotOpenWhatsApp": "Kon WhatsApp niet openen",
+    "couldNotOpenSMS": "Kon SMS niet openen",
+    "couldNotOpenEmail": "Kon e-mail niet openen",
+    "noAccountNeeded": "De klant kan direct keuzes doorgeven zonder account. U ontvangt een melding bij elke keuze.",
+    "message": "Hallo {{name}},\n\nHierbij de link om uw keuzes voor {{project}} door te geven:\n\n{{url}}\n\nOf gebruik code: {{code}}\n\nGraag zo snel mogelijk invullen om vertraging te voorkomen.\n\nMet vriendelijke groet,\nUw aannemer",
+    "submitChoices": "Keuzes doorgeven"
   }
 }

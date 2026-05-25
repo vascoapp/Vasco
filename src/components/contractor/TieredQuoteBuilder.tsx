@@ -42,7 +42,7 @@ import {
 } from '../../services/seasonalityMoatService';
 import { useTimeOfDayHint, dayPart, classifyNow } from '../../services/timeOfDayAcceptanceService';
 import { getCurrentUserId } from '../../lib/currentUser';
-import { useQuoteTemplates, type QuoteTemplate, TEMPLATE_CATEGORIES } from '../../services/quoteTemplateService';
+import { useQuoteTemplates, localizeTemplate, type QuoteTemplate, TEMPLATE_CATEGORIES } from '../../services/quoteTemplateService';
 import { hapticSuccess } from '../../utils/haptics';
 import { useTranslation } from 'react-i18next';
 // R62: SOW (scope-of-work) generator. Three-paragraph narrative
@@ -462,8 +462,12 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
 
   const loadTemplate = (template: QuoteTemplate) => {
     useTemplate(template.id);
-    const mapped = template.items.map((item, idx) => ({
-      item: { id: `tpl-${template.id}-${idx}`, contractorId: '', name: item.description, description: `${template.name}`, category: item.type === 'labour' ? 'labour' : 'materials', pricingType: 'fixed', basePrice: item.unitPrice, unit: item.unit } as unknown as PricebookItem,
+    // R187: surface localized item descriptions in the quote so e.g. a French
+    // contractor loading the "boiler maintenance" template gets French line
+    // items, not the Dutch seed strings.
+    const localized = localizeTemplate(template, t);
+    const mapped = localized.displayItems.map((item, idx) => ({
+      item: { id: `tpl-${template.id}-${idx}`, contractorId: '', name: item.description, description: `${localized.displayName}`, category: item.type === 'labour' ? 'labour' : 'materials', pricingType: 'fixed', basePrice: item.unitPrice, unit: item.unit } as unknown as PricebookItem,
       quantity: item.quantity, unit: item.unit,
     }));
     setSelectedServices(mapped);
@@ -955,13 +959,16 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
                 {templates.length > 0 && (
                   <View style={{ gap: 8 }}>
                     <Text style={s.templateLabel}>{t('quotes.orFromTemplate', 'Or start from template:')}</Text>
-                    {templates.slice(0, 3).map(tpl => (
-                      <Pressable key={tpl.id} style={s.templateRow} onPress={() => loadTemplate(tpl)}>
-                        <Ionicons name="copy-outline" size={16} color={Palette.hermesOrange} />
-                        <Text style={s.templateName}>{tpl.name}</Text>
-                        <Text style={s.templateMeta}>{t('quotes.lineCount', '{{count}} lines', { count: tpl.items.length })}</Text>
-                      </Pressable>
-                    ))}
+                    {templates.slice(0, 3).map(tpl => {
+                      const ltpl = localizeTemplate(tpl, t);
+                      return (
+                        <Pressable key={tpl.id} style={s.templateRow} onPress={() => loadTemplate(tpl)}>
+                          <Ionicons name="copy-outline" size={16} color={Palette.hermesOrange} />
+                          <Text style={s.templateName}>{ltpl.displayName}</Text>
+                          <Text style={s.templateMeta}>{t('quotes.lineCount', '{{count}} lines', { count: tpl.items.length })}</Text>
+                        </Pressable>
+                      );
+                    })}
                   </View>
                 )}
                 <Pressable style={s.emptyBox} onPress={() => setShowPricebook(true)}>

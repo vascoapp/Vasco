@@ -197,10 +197,11 @@ export async function createTrackerWithBE(input: CreateTrackerInput): Promise<Cr
 
 // ---------------------------------------------------------------------------
 // Customer-side portal lookup — BE-primary via the SECURITY DEFINER RPC.
-// Returns one of three states:
-//   - { kind: 'ok', data }       → real portal payload
-//   - { kind: 'expired' }        → access code exists but past expires_at
-//   - { kind: 'not_found' }      → access code unknown or BE unreachable
+// Returns one of FOUR states (R191 added network_error):
+//   - { kind: 'ok', data }         → real portal payload
+//   - { kind: 'expired' }          → access code exists but past expires_at
+//   - { kind: 'not_found' }        → access code unknown
+//   - { kind: 'network_error' }    → BE unreachable; ask customer to retry
 // Callers fall back to mock data only when DEMO_MODE is enabled AND
 // kind is 'not_found'.
 // ---------------------------------------------------------------------------
@@ -208,10 +209,17 @@ export async function createTrackerWithBE(input: CreateTrackerInput): Promise<Cr
 export type PortalLookupResult =
   | { kind: 'ok'; data: CustomerPortalData }
   | { kind: 'expired' }
-  | { kind: 'not_found' };
+  | { kind: 'not_found' }
+  | { kind: 'network_error' };
 
 export async function fetchPortalByAccessCode(accessCode: string): Promise<PortalLookupResult> {
-  const raw = await getPortalByAccessCode(accessCode);
+  const result = await getPortalByAccessCode(accessCode);
+  if (!result.ok) {
+    // R191: surface network failures separately so UI can show "check your
+    // connection" instead of "code not found".
+    return { kind: result.reason === 'network' ? 'network_error' : 'not_found' };
+  }
+  const raw = result.data;
   if (!raw || typeof raw !== 'object') return { kind: 'not_found' };
 
   // R66r58: RPC now returns `{expired: true}` when the row exists but is

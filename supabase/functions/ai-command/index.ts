@@ -2,37 +2,53 @@
 // AI-COMMAND — Natural-language office-manager (R87 US Phase 5)
 // =============================================================================
 // Contractor types a sentence ("invoice Joe for $500", "what did I make
-// last month", "show overdue"). This fn calls Claude Haiku with a tight
-// system prompt that returns a JSON-shaped intent + human response.
-// Client (app/contractor/ai-chat.tsx) renders the response + dispatches
-// the intent to AppState mutators.
+// last month", "show overdue"). This fn classifies the intent across THREE
+// TIERS and returns a JSON-shaped result the client can dispatch.
 //
-// Lite scope: 10 intents (R95 expanded from 6).
-//   - create_invoice
-//   - schedule_job
-//   - query_revenue
-//   - list_overdue
-//   - send_reminder
-//   - cancel_job
-//   - query_job_status
-//   - find_customer
-//   - weekly_summary
-//   - unknown    (chat-only fallback)
+//   Tier 1 — deterministic (R193):
+//     Pure JS regex/keyword match. Handles ~70-80% of common patterns
+//     (revenue/overdue/weekly read-only queries + invoice/reminder/cancel
+//     with name+amount slots). $0 cost, < 1ms latency.
 //
-// All intents return a humanResponse for chat display. Actionable ones
-// also return `action: { type, params }` that the client switches on.
+//   Tier 2 — OpenRouter free models (R193):
+//     google/gemma-2-9b-it:free → meta-llama/llama-3.1-8b-instruct:free.
+//     Multi-language support out of the box. $0 cost on free tier; falls
+//     back to next model on 5xx/timeout.
 //
-// JWT-gated like analyze-photo (R66r49). Bills Anthropic ~$0.0005/call
-// at Haiku rates — bots-running-up-bills is the same risk as photo
-// analysis.
+//   Tier 3 — Claude Haiku (last resort):
+//     Original Anthropic path. System prompt now ephemerally cached at
+//     90% discount on hits. Only fires when Tier 1+2 both miss.
+//
+// 10 intents (R95 expanded from 6):
+//   - create_invoice, schedule_job, query_revenue, list_overdue,
+//     send_reminder, cancel_job, query_job_status, find_customer,
+//     weekly_summary, unknown (chat-only fallback)
+//
+// JWT-gated like analyze-photo (R66r49). R192 added per-user rolling-60s
+// rate limit at 30 req/min as a runaway-defense backstop (real cost
+// defense is the tier router above).
 // =============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { classifyDeterministic, type Intent, type IntentResult, type ClassifyContext } from '../_shared/aiIntentRouter.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const RATE_LIMIT_MAX = 30;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+
+// R193 OpenRouter model chain. Free-tier models try in order; each one
+// gets ~5s timeout before falling through. Anthropic Haiku via OpenRouter
+// would also work but we keep the direct path (Tier 3) since we already
+// have ANTHROPIC_API_KEY in env + prompt caching.
+const OPENROUTER_MODELS = [
+  'google/gemma-2-9b-it:free',
+  'meta-llama/llama-3.1-8b-instruct:free',
+];
+const OPENROUTER_TIMEOUT_MS = 5_000;
 
 interface AiCommandRequest {
   message: string;
@@ -52,22 +68,16 @@ interface AiCommandRequest {
 }
 
 interface AiCommandResponse {
-  intent:
-    | 'create_invoice'
-    | 'schedule_job'
-    | 'query_revenue'
-    | 'list_overdue'
-    | 'send_reminder'
-    | 'cancel_job'
-    | 'query_job_status'
-    | 'find_customer'
-    | 'weekly_summary'
-    | 'unknown';
+  intent: Intent;
   humanResponse: string;
   action?: {
     type: string;
     params: Record<string, unknown>;
   };
+  // R193: tells the client which tier handled the request — primarily
+  // for cost observability (filter ai_tier='claude' to see what's
+  // actually escalating). Optional so older clients don't break.
+  ai_tier?: 'deterministic' | 'openrouter' | 'claude' | 'fallback';
 }
 
 const SYSTEM_PROMPT = `You are Vasco's office-manager assistant for contractors. Parse the contractor's natural-language command and return a JSON object with this exact shape:
@@ -114,6 +124,40 @@ Deno.serve(async (req) => {
   const { data: { user }, error: userErr } = await supabase.auth.getUser();
   if (userErr || !user) return jsonError('unauthenticated', 401);
 
+  // ── R192 rate limit: rolling 60s, 30 req max per user ──
+  // Service-role client bypasses RLS so the upsert can run regardless of
+  // the calling user's policies. Falls open (allows the call) if the rate-
+  // limit table is unreachable — better to overspend by a single call than
+  // to hard-fail the contractor's AI chat on a transient DB blip.
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (serviceRoleKey) {
+    try {
+      const admin = createClient(supabaseUrl, serviceRoleKey);
+      const now = new Date();
+      const { data: row } = await admin
+        .from('ai_rate_limit')
+        .select('window_start, count')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      const windowStartMs = row?.window_start ? new Date(row.window_start).getTime() : 0;
+      const inWindow = now.getTime() - windowStartMs < RATE_LIMIT_WINDOW_MS;
+      if (inWindow && (row?.count ?? 0) >= RATE_LIMIT_MAX) {
+        const retryAfterMs = Math.max(0, RATE_LIMIT_WINDOW_MS - (now.getTime() - windowStartMs));
+        return new Response(
+          JSON.stringify({ error: 'rate_limited', retry_after_ms: retryAfterMs }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(Math.ceil(retryAfterMs / 1000)) } },
+        );
+      }
+      const nextCount = inWindow ? (row?.count ?? 0) + 1 : 1;
+      const nextWindowStart = inWindow ? row!.window_start : now.toISOString();
+      await admin
+        .from('ai_rate_limit')
+        .upsert({ user_id: user.id, window_start: nextWindowStart, count: nextCount, updated_at: now.toISOString() });
+    } catch (e) {
+      console.error('ai-command rate-limit check failed (failing open):', e);
+    }
+  }
+
   // ── Claude API key ──
   const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
   if (!anthropicKey) return jsonError('claude_not_configured', 503);
@@ -127,6 +171,27 @@ Deno.serve(async (req) => {
   }
   if (!payload.message || payload.message.length === 0) return jsonError('missing_message', 400);
   if (payload.message.length > 1000) return jsonError('message_too_long', 400);
+
+  // ── R193 Tier 1: deterministic classification ──
+  // Pure JS pattern match. Returns a synthesized response for the common
+  // read-only queries + action-with-clean-slots cases. No network call.
+  const ctx: ClassifyContext = {
+    customers: payload.context?.customers,
+    recentInvoiceTotal: payload.context?.recentInvoiceTotal,
+    overdueCount: payload.context?.overdueCount,
+    activeJobs: payload.context?.activeJobs,
+    weeklyRevenue: payload.context?.weeklyRevenue,
+    weeklyJobsCompleted: payload.context?.weeklyJobsCompleted,
+    weeklyQuotesSent: payload.context?.weeklyQuotesSent,
+    locale: payload.context?.locale,
+  };
+  const deterministic = classifyDeterministic(payload.message, ctx);
+  if (deterministic) {
+    return new Response(
+      JSON.stringify(deterministic satisfies AiCommandResponse),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+  }
 
   // ── Build user prompt with context ──
   const contextLines: string[] = [];
@@ -152,7 +217,27 @@ Deno.serve(async (req) => {
     ? `${contextLines.join('\n')}\n\nCommand: ${payload.message}`
     : `Command: ${payload.message}`;
 
-  // ── Call Claude Haiku ──
+  // ── R193 Tier 2: OpenRouter free-model chain ──
+  // OpenAI-compatible API. Try each model in order; on 5xx/timeout/parse
+  // error, fall to next. If all fail, escalate to Tier 3 (Claude).
+  const openrouterKey = Deno.env.get('OPENROUTER_API_KEY');
+  if (openrouterKey) {
+    for (const model of OPENROUTER_MODELS) {
+      const tierResult = await callOpenRouter(openrouterKey, model, userMessage);
+      if (tierResult) {
+        return new Response(
+          JSON.stringify({ ...tierResult, ai_tier: 'openrouter' as const } satisfies AiCommandResponse),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        );
+      }
+    }
+  }
+
+  // ── R193 Tier 3: Claude Haiku with prompt caching ──
+  // R193 adds cache_control: 'ephemeral' on the system prompt block —
+  // Anthropic 5-min cache, ~90% discount on the cached portion across
+  // hits. Static system prompt = nearly free input tokens on rapid
+  // back-to-back calls.
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -164,7 +249,13 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 400,
-        system: SYSTEM_PROMPT,
+        system: [
+          {
+            type: 'text',
+            text: SYSTEM_PROMPT,
+            cache_control: { type: 'ephemeral' },
+          },
+        ],
         messages: [{ role: 'user', content: userMessage }],
       }),
     });
@@ -186,6 +277,7 @@ Deno.serve(async (req) => {
       // shows the AI's reply.
       parsed = { intent: 'unknown', humanResponse: text || 'Sorry, I didn\'t catch that.' };
     }
+    parsed.ai_tier = 'claude';
     return new Response(
       JSON.stringify(parsed),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
@@ -195,6 +287,57 @@ Deno.serve(async (req) => {
     return jsonError('network', 502);
   }
 });
+
+// -----------------------------------------------------------------------------
+// R193: OpenRouter call (OpenAI-compatible chat-completions API)
+// -----------------------------------------------------------------------------
+// Returns parsed result on success, null on any failure (timeout, non-2xx,
+// JSON-parse error). Caller falls through to next model / Tier 3.
+async function callOpenRouter(
+  apiKey: string,
+  model: string,
+  userMessage: string,
+): Promise<AiCommandResponse | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), OPENROUTER_TIMEOUT_MS);
+  try {
+    const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        // OpenRouter asks for these for attribution + rate-limit perks.
+        'HTTP-Referer': 'https://admin.vascobuild.com',
+        'X-Title': 'Vasco AI Office',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: userMessage },
+        ],
+        max_tokens: 400,
+        temperature: 0.3,
+        response_format: { type: 'json_object' },
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!resp.ok) {
+      console.warn(`OpenRouter ${model} non-ok ${resp.status}`);
+      return null;
+    }
+    const data = await resp.json() as { choices?: Array<{ message?: { content?: string } }> };
+    const text = data.choices?.[0]?.message?.content ?? '';
+    if (!text) return null;
+    const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+    return JSON.parse(cleaned) as AiCommandResponse;
+  } catch (e) {
+    clearTimeout(timer);
+    console.warn(`OpenRouter ${model} failed:`, (e as Error)?.message ?? e);
+    return null;
+  }
+}
 
 function jsonError(code: string, status: number) {
   return new Response(

@@ -44,6 +44,12 @@ export default function SignupScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
+  // R188: when Supabase rejects with "User already registered" we surface a
+  // prominent action card with a "Sign in instead" CTA instead of burying
+  // the message in the small error toast. Pre-launch we hit this ourselves
+  // every time we re-signed-up with the same email and concluded "emails
+  // stopped firing" — real prospects will do the same on day one.
+  const [emailExists, setEmailExists] = useState(false);
   // R230: referral code (from ?ref=CODE deep-link or AsyncStorage).
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const searchParams = useLocalSearchParams<{ ref?: string | string[] }>();
@@ -61,6 +67,7 @@ export default function SignupScreen() {
 
   const handleSignup = async () => {
     setError('');
+    setEmailExists(false);
     const trimmedEmail = email.trim().toLowerCase();
     if (!trimmedEmail) {
       setError(t('signup.emailRequired', 'Email is required.'));
@@ -111,8 +118,9 @@ export default function SignupScreen() {
       return;
     }
     const msg = (result.error ?? '').toLowerCase();
-    if (/already registered|already exists/i.test(msg)) {
-      setError(t('signup.alreadyExists', 'An account with this email already exists. Try signing in.'));
+    if (/already registered|already exists|user_already/i.test(msg)) {
+      // Don't set `error` — the dedicated `emailExists` card replaces it.
+      setEmailExists(true);
     } else if (/fetch|network|timeout/.test(msg)) {
       setError(t('auth.networkError', 'Cannot reach server. Check your internet and try again.'));
     } else {
@@ -182,7 +190,7 @@ export default function SignupScreen() {
                 placeholder={t('auth.emailPlaceholder', 'Email address')}
                 placeholderTextColor={SemanticColors.textTertiary}
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(v) => { setEmail(v); if (emailExists) setEmailExists(false); }}
                 autoCapitalize="none"
                 keyboardType="email-address"
                 autoComplete="email"
@@ -221,18 +229,44 @@ export default function SignupScreen() {
                 </Text>
               </Pressable>
 
-              {error !== '' && (
+              {emailExists ? (
+                <View style={styles.existsCard}>
+                  <Ionicons name="information-circle" size={20} color={Palette.hermesOrange} />
+                  <View style={styles.existsTextWrap}>
+                    <Text style={styles.existsTitle}>{t('signup.emailExistsTitle', 'You already have an account')}</Text>
+                    <Text style={styles.existsBody}>
+                      {t('signup.emailExistsBody', '{{email}} is already registered. Sign in instead, or reset your password if you forgot it.', { email: email.trim().toLowerCase() })}
+                    </Text>
+                    <View style={styles.existsCtaRow}>
+                      <Pressable
+                        onPress={() => router.replace(`/login?email=${encodeURIComponent(email.trim().toLowerCase())}` as any)}
+                        style={styles.existsCtaPrimary}
+                        accessibilityRole="button"
+                      >
+                        <Text style={styles.existsCtaPrimaryText}>{t('signup.signInInstead', 'Sign in')}</Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={() => router.push(`/forgot-password?email=${encodeURIComponent(email.trim().toLowerCase())}` as any)}
+                        style={styles.existsCtaSecondary}
+                        accessibilityRole="button"
+                      >
+                        <Text style={styles.existsCtaSecondaryText}>{t('signup.resetPasswordCta', 'Reset password')}</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                </View>
+              ) : error !== '' ? (
                 <View style={styles.errorCard}>
                   <Ionicons name="alert-circle" size={16} color={SemanticColors.feedbackError} />
                   <Text style={styles.errorText}>{error}</Text>
                 </View>
-              )}
+              ) : null}
 
               <GradientButton
                 label={submitting ? t('signup.creating', 'Creating account…') : t('signup.create', 'Create account')}
                 onPress={handleSignup}
                 loading={submitting}
-                disabled={submitting}
+                disabled={submitting || emailExists}
                 icon="arrow-forward"
               />
 
@@ -313,6 +347,29 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md, padding: Spacing.sm,
   },
   errorText: { flex: 1, fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.feedbackError },
+  // R188 — "account already exists" action card. Amber-tinted (not red), so
+  // it reads as "here's where to go" rather than "you broke something".
+  existsCard: {
+    flexDirection: 'row', gap: GRID.sm,
+    backgroundColor: Palette.hermesOrange + '14',
+    borderWidth: 1, borderColor: Palette.hermesOrange + '40',
+    borderRadius: RADIUS.md, padding: Spacing.md,
+  },
+  existsTextWrap: { flex: 1, gap: 4 },
+  existsTitle: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  existsBody: { fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary, lineHeight: 18 },
+  existsCtaRow: { flexDirection: 'row', gap: GRID.sm, marginTop: GRID.sm, flexWrap: 'wrap' },
+  existsCtaPrimary: {
+    backgroundColor: Palette.hermesOrange,
+    borderRadius: RADIUS.md, paddingHorizontal: Spacing.md, paddingVertical: GRID.sm,
+  },
+  existsCtaPrimaryText: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.white },
+  existsCtaSecondary: {
+    backgroundColor: 'transparent',
+    borderWidth: 1, borderColor: Palette.hermesOrange + '60',
+    borderRadius: RADIUS.md, paddingHorizontal: Spacing.md, paddingVertical: GRID.sm,
+  },
+  existsCtaSecondaryText: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange },
   loginLink: { alignSelf: 'center', paddingVertical: Spacing.sm },
   loginLinkText: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary },
   loginLinkAccent: { fontFamily: TYPE.titleFamily, color: Palette.hermesOrange },

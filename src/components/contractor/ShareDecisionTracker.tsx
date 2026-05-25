@@ -36,22 +36,28 @@ export function ShareDecisionTracker({ tracker, onClose }: ShareDecisionTrackerP
   const { t } = useTranslation();
   const [accessCode] = useState(() => generateAccessCode());
   const [copied, setCopied] = useState(false);
+  // R191: separate flag for the link-copy state so both surfaces give
+  // the same checkmark feedback without sharing the same timer.
+  const [linkCopied, setLinkCopied] = useState(false);
 
-  const shareUrl = `https://vascobuild.com/c/${accessCode}`;
+  // R191: was https://vascobuild.com/c/{code} — neither the host nor path
+  // was deployed; every share link was a DNS error. Universal-link landing
+  // lives at admin.vascobuild.com/customer/[code] (R190).
+  const shareUrl = `https://admin.vascobuild.com/customer/${accessCode}`;
   const appUrl = `/customer/${accessCode}`;
 
-  const shareMessage = `Hallo ${tracker.customerName.split(' ')[0]},
-
-Hierbij de link om uw keuzes voor ${tracker.templateName} door te geven:
-
-${shareUrl}
-
-Of gebruik code: ${accessCode}
-
-Graag zo snel mogelijk invullen om vertraging te voorkomen.
-
-Met vriendelijke groet,
-${tracker.customerName ? 'Uw aannemer' : ''}`;
+  // R191: was hardcoded Dutch — DE/FR/ES/IT contractors saw a Dutch
+  // share message regardless of their own locale. Now built from i18n
+  // with the customer's first name + project interpolated.
+  const customerFirstName = tracker.customerName.split(' ')[0];
+  const shareMessage = t('share.message', {
+    defaultValue:
+      'Hello {{name}},\n\nHere is the link to submit your choices for {{project}}:\n\n{{url}}\n\nOr use code: {{code}}\n\nPlease fill it out as soon as possible to avoid delays.\n\nBest regards,\nYour contractor',
+    name: customerFirstName,
+    project: tracker.templateName,
+    url: shareUrl,
+    code: accessCode,
+  });
 
   const handleCopyCode = useCallback(async () => {
     try {
@@ -79,6 +85,8 @@ ${tracker.customerName ? 'Uw aannemer' : ''}`;
         shareUrl,
       );
     }
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
   }, [shareUrl, t]);
 
   const handleShareWhatsApp = () => {
@@ -115,7 +123,7 @@ ${tracker.customerName ? 'Uw aannemer' : ''}`;
     try {
       await Share.share({
         message: shareMessage,
-        title: 'Deel keuzeformulier',
+        title: t('share.shareTitle', 'Share decision form'),
       });
     } catch (error) {
       logInfo('ShareDecisionTracker', `Share error: ${error}`);
@@ -129,7 +137,7 @@ ${tracker.customerName ? 'Uw aannemer' : ''}`;
         <Pressable onPress={onClose} style={styles.closeButton}>
           <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
-        <Text style={styles.title}>Deel met klant</Text>
+        <Text style={styles.title}>{t('share.shareWithCustomer', 'Share with customer')}</Text>
         <View style={{ width: 32 }} />
       </View>
 
@@ -148,7 +156,7 @@ ${tracker.customerName ? 'Uw aannemer' : ''}`;
 
       {/* Access Code */}
       <View style={styles.codeSection}>
-        <Text style={styles.sectionLabel}>Toegangscode</Text>
+        <Text style={styles.sectionLabel}>{t('share.accessCode', 'Access code')}</Text>
         <View style={styles.codeCard}>
           <Text style={styles.codeText}>{accessCode}</Text>
           <Pressable style={styles.copyButton} onPress={handleCopyCode}>
@@ -163,30 +171,34 @@ ${tracker.customerName ? 'Uw aannemer' : ''}`;
                 { color: copied ? SemanticColors.feedbackSuccess : SemanticColors.actionPrimary },
               ]}
             >
-              {copied ? 'Gekopieerd' : 'Kopieer'}
+              {copied ? t('share.copied', 'Copied') : t('share.copy', 'Copy')}
             </Text>
           </Pressable>
         </View>
         <Text style={styles.codeHelp}>
-          De klant kan deze code invullen op vascobuild.com/c
+          {t('share.codeHelp', 'Your customer can enter this code at admin.vascobuild.com/customer')}
         </Text>
       </View>
 
       {/* Share Link */}
       <View style={styles.linkSection}>
-        <Text style={styles.sectionLabel}>Of deel de link</Text>
+        <Text style={styles.sectionLabel}>{t('share.orShareLink', 'Or share the link')}</Text>
         <Pressable style={styles.linkCard} onPress={handleCopyLink}>
           <Ionicons name="link" size={20} color={SemanticColors.textSecondary} />
           <Text style={styles.linkText} numberOfLines={1}>
             {shareUrl}
           </Text>
-          <Ionicons name="copy-outline" size={18} color={SemanticColors.actionPrimary} />
+          <Ionicons
+            name={linkCopied ? 'checkmark' : 'copy-outline'}
+            size={18}
+            color={linkCopied ? SemanticColors.feedbackSuccess : SemanticColors.actionPrimary}
+          />
         </Pressable>
       </View>
 
       {/* Share Options */}
       <View style={styles.shareSection}>
-        <Text style={styles.sectionLabel}>Verstuur via</Text>
+        <Text style={styles.sectionLabel}>{t('share.sendVia', 'Send via')}</Text>
 
         <View style={styles.shareGrid}>
           <ShareOption
@@ -203,13 +215,13 @@ ${tracker.customerName ? 'Uw aannemer' : ''}`;
           />
           <ShareOption
             icon="mail"
-            label="E-mail"
+            label={t('share.email', 'Email')}
             color={SemanticColors.textSecondary}
             onPress={handleShareEmail}
           />
           <ShareOption
             icon="share-social"
-            label="Meer..."
+            label={t('share.more', 'More')}
             color={Palette.hermesOrange}
             onPress={handleNativeShare}
           />
@@ -220,7 +232,7 @@ ${tracker.customerName ? 'Uw aannemer' : ''}`;
       <View style={styles.infoFooter}>
         <Ionicons name="information-circle" size={18} color={SemanticColors.textTertiary} />
         <Text style={styles.infoText}>
-          De klant kan direct keuzes doorgeven zonder account. U ontvangt een melding bij elke keuze.
+          {t('share.noAccountNeeded', 'Your customer can submit choices without an account. You will be notified of each decision.')}
         </Text>
       </View>
     </View>

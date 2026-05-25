@@ -1457,12 +1457,35 @@ function CompletedItemCard({ item, accentColor }: CompletedItemCardProps) {
 interface AccessCodeEntryProps {
   onSubmit: (code: string) => void;
   error?: string;
+  // R191: errorKind drives contextual recovery UI. Pre-R191 every error
+  // collapsed into a single small toast and the customer had no path
+  // forward.
+  errorKind?: 'invalid' | 'expired' | 'rateLimited' | 'network' | 'notFound' | null;
+  rateLimitUntil?: number; // epoch ms; if rateLimited, button stays disabled until this passes
+  onRetry?: () => void;
   isLoading?: boolean;
 }
 
-export function AccessCodeEntry({ onSubmit, error, isLoading }: AccessCodeEntryProps) {
+export function AccessCodeEntry({ onSubmit, error, errorKind, rateLimitUntil, onRetry, isLoading }: AccessCodeEntryProps) {
   const { t } = useTranslation();
   const [code, setCode] = useState('');
+  // R191: live countdown for rate-limit error
+  const [secondsLeft, setSecondsLeft] = useState<number>(0);
+  useEffect(() => {
+    if (errorKind !== 'rateLimited' || !rateLimitUntil) {
+      setSecondsLeft(0);
+      return;
+    }
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((rateLimitUntil - Date.now()) / 1000));
+      setSecondsLeft(remaining);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [errorKind, rateLimitUntil]);
+
+  const isRateLimited = errorKind === 'rateLimited' && secondsLeft > 0;
 
   return (
     <View style={styles.accessContainer}>
@@ -1489,14 +1512,21 @@ export function AccessCodeEntry({ onSubmit, error, isLoading }: AccessCodeEntryP
         {error && (
           <View style={styles.accessError}>
             <Ionicons name="alert-circle" size={16} color={SemanticColors.feedbackError} />
-            <Text style={styles.accessErrorText}>{error}</Text>
+            <Text style={styles.accessErrorText}>
+              {isRateLimited
+                ? t('decisionPortal.tryAgainIn', 'Try again in {{seconds}}s', { seconds: secondsLeft })
+                : error}
+            </Text>
           </View>
         )}
 
         <Pressable
-          style={[styles.accessButton, code.length < 6 && styles.accessButtonDisabled]}
+          style={[
+            styles.accessButton,
+            (code.length < 6 || isRateLimited) && styles.accessButtonDisabled,
+          ]}
           onPress={() => onSubmit(code)}
-          disabled={code.length < 6 || isLoading}
+          disabled={code.length < 6 || isLoading || isRateLimited}
         >
           {isLoading ? (
             <Text style={styles.accessButtonText}>{t('decisionPortal.loading', 'Loading...')}</Text>
@@ -1505,9 +1535,22 @@ export function AccessCodeEntry({ onSubmit, error, isLoading }: AccessCodeEntryP
           )}
         </Pressable>
 
-        <Text style={styles.accessHelp}>
-          {t('decisionPortal.accessHelp', 'No code? Ask your contractor for an access link.')}
-        </Text>
+        {/* R191: contextual recovery CTAs. Replaces the static "No code?" hint
+            with action-oriented copy + buttons based on what went wrong. */}
+        {errorKind === 'expired' || errorKind === 'invalid' || errorKind === 'notFound' ? (
+          <Text style={styles.accessHelp}>
+            {t('decisionPortal.askForNew', 'Ask your contractor to send you a new link via WhatsApp or SMS.')}
+          </Text>
+        ) : errorKind === 'network' && onRetry ? (
+          <Pressable style={styles.retryBtn} onPress={onRetry} accessibilityRole="button">
+            <Ionicons name="refresh" size={16} color={Palette.hermesOrange} />
+            <Text style={styles.retryBtnText}>{t('decisionPortal.retry', 'Try again')}</Text>
+          </Pressable>
+        ) : (
+          <Text style={styles.accessHelp}>
+            {t('decisionPortal.accessHelp', 'No code? Ask your contractor for an access link.')}
+          </Text>
+        )}
       </View>
     </View>
   );
@@ -2321,6 +2364,26 @@ const styles = StyleSheet.create({
     fontSize: TYPE.captionSize,
     color: SemanticColors.textTertiary,
     textAlign: 'center',
+  },
+  // R191 — retry button for network-error recovery state
+  retryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: Palette.hermesOrange + '55',
+    backgroundColor: Palette.hermesOrange + '0E',
+    alignSelf: 'center',
+    marginTop: 4,
+  },
+  retryBtnText: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
+    color: Palette.hermesOrange,
   },
 
   // Payment Section

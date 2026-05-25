@@ -49,20 +49,26 @@ function isValidAccessCodeFormat(code: string): boolean {
   return ACCESS_CODE_REGEX.test(code);
 }
 
-async function isAccessRateLimited(): Promise<boolean> {
+// R191: returns { limited, retryAfterMs } so UI can show a live countdown
+// instead of a static "Try again in a minute" hint.
+async function isAccessRateLimited(): Promise<{ limited: boolean; retryAfterMs: number }> {
   try {
     const raw = await AsyncStorage.getItem(ACCESS_RATE_LIMIT_KEY);
     const timestamps: number[] = raw ? JSON.parse(raw) : [];
     const now = Date.now();
     const recent = timestamps.filter((t) => t > now - ACCESS_RATE_LIMIT_WINDOW_MS);
     if (recent.length >= ACCESS_RATE_LIMIT_MAX) {
-      return true;
+      // The oldest entry in `recent` falls outside the window first → that's
+      // when the next attempt unlocks.
+      const oldest = Math.min(...recent);
+      const retryAfterMs = Math.max(0, oldest + ACCESS_RATE_LIMIT_WINDOW_MS - now);
+      return { limited: true, retryAfterMs };
     }
     recent.push(now);
     await AsyncStorage.setItem(ACCESS_RATE_LIMIT_KEY, JSON.stringify(recent));
-    return false;
+    return { limited: false, retryAfterMs: 0 };
   } catch {
-    return false;
+    return { limited: false, retryAfterMs: 0 };
   }
 }
 
@@ -72,6 +78,15 @@ export default function CustomerPortalScreen() {
 
   const [portalData, setPortalData] = useState<CustomerPortalData | null>(null);
   const [error, setError] = useState<string | undefined>();
+  // R191: error kind drives the recovery CTA shown below the message.
+  // 'invalid' → "Ask your contractor for a new code" hint
+  // 'expired' → same hint, different copy
+  // 'rateLimited' → live countdown, button disabled
+  // 'network' → "Check your connection, then retry"
+  // 'notFound' → same as invalid for now
+  type ErrorKind = 'invalid' | 'expired' | 'rateLimited' | 'network' | 'notFound' | null;
+  const [errorKind, setErrorKind] = useState<ErrorKind>(null);
+  const [rateLimitUntil, setRateLimitUntil] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
 
   // Track session start time for timing analytics
@@ -94,20 +109,24 @@ export default function CustomerPortalScreen() {
   const handleAccessCode = async (accessCode: string) => {
     setIsLoading(true);
     setError(undefined);
+    setErrorKind(null);
 
     // Validate format
     if (!isValidAccessCodeFormat(accessCode)) {
       logWarn('CustomerPortal', `Invalid access code format: ${accessCode.slice(0, 5)}...`);
       setError(t('customerPortal.codeInvalidOrExpired', 'Code is invalid or expired. Ask your contractor for a new one.'));
+      setErrorKind('invalid');
       setIsLoading(false);
       return;
     }
 
     // Rate limiting
-    const limited = await isAccessRateLimited();
-    if (limited) {
+    const rate = await isAccessRateLimited();
+    if (rate.limited) {
       logWarn('CustomerPortal', 'Rate limit exceeded for access code validation');
       setError(t('customerPortal.rateLimited', 'Too many attempts. Try again in a minute.'));
+      setErrorKind('rateLimited');
+      setRateLimitUntil(Date.now() + rate.retryAfterMs);
       setIsLoading(false);
       return;
     }
@@ -127,6 +146,13 @@ export default function CustomerPortalScreen() {
       data = result.data;
     } else if (result.kind === 'expired') {
       setError(t('customerPortal.linkExpired', 'This link has expired. Please ask your contractor for a new one.'));
+      setErrorKind('expired');
+      setIsLoading(false);
+      return;
+    } else if (result.kind === 'network_error') {
+      // R191: distinguish "no connection" from "code not found".
+      setError(t('customerPortal.networkError', "Can't reach the server. Check your internet and try again."));
+      setErrorKind('network');
       setIsLoading(false);
       return;
     } else if (DEMO_MODE && validateMockAccessCode(accessCode)) {
@@ -167,6 +193,7 @@ export default function CustomerPortalScreen() {
       ).catch(() => {});
     } else {
       setError(t('customerPortal.projectNotFound', 'Project not found. Check the code and try again.'));
+      setErrorKind('notFound');
     }
 
     setIsLoading(false);
@@ -357,6 +384,9 @@ export default function CustomerPortalScreen() {
         <AccessCodeEntry
           onSubmit={handleAccessCode}
           error={error}
+          errorKind={errorKind}
+          rateLimitUntil={rateLimitUntil}
+          onRetry={code && code !== 'access' ? () => handleAccessCode(code) : undefined}
           isLoading={isLoading}
         />
       </SafeAreaView>
