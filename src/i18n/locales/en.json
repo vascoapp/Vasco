@@ -1533,7 +1533,10 @@
     "upgradeError": "Could not start upgrade",
     "upgradeErrorDesc": "Please try again or contact support.",
     "demoUpgradeBlocked": "Upgrades are disabled in demo mode. Sign up for a real account to subscribe.",
-    "deviceCalendar": "Device calendar"
+    "deviceCalendar": "Device calendar",
+    "manageSubscription": "Manage subscription",
+    "manageSubDesc": "Update card, change plan, or cancel",
+    "manageSubError": "Could not open billing portal"
   },
   "search": {
     "job": "Job",

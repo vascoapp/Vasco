@@ -16,6 +16,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -113,6 +114,26 @@ export default function AiChatScreen() {
     const text = (override ?? input).trim();
     if (!text || sending) return;
 
+    try {
+      const {
+        loadSubscription,
+        canUseAiInsight,
+      } = await import('../../src/services/subscriptionService');
+      const sub = await loadSubscription();
+      const gate = canUseAiInsight(sub);
+      if (!gate.allowed) {
+        Alert.alert(
+          t('billing.upgradeRequired', 'Upgrade required'),
+          gate.reason,
+          [
+            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+            { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+          ],
+        );
+        return;
+      }
+    } catch {}
+
     const userMsg: ChatMessage = { id: `m-${Date.now()}`, role: 'user', text };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
@@ -146,6 +167,12 @@ export default function AiChatScreen() {
       },
     ]);
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
+
+    try {
+      const { loadSubscription, recordAiInsightUsage } = await import('../../src/services/subscriptionService');
+      const sub = await loadSubscription();
+      await recordAiInsightUsage(sub);
+    } catch {}
   };
 
   return (

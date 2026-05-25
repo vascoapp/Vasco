@@ -1533,7 +1533,10 @@
     "upgradeError": "Impossibile avviare l'upgrade",
     "upgradeErrorDesc": "Riprova o contatta il supporto.",
     "demoUpgradeBlocked": "Gli upgrade sono disabilitati in modalità demo. Crea un account reale per abbonarti.",
-    "deviceCalendar": "Calendario del dispositivo"
+    "deviceCalendar": "Calendario del dispositivo",
+    "manageSubscription": "Gestisci abbonamento",
+    "manageSubDesc": "Aggiorna carta, cambia piano o annulla",
+    "manageSubError": "Impossibile aprire il portale di fatturazione"
   },
   "search": {
     "job": "Lavoro",

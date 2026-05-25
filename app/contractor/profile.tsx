@@ -22,7 +22,7 @@ import {
   type SubscriptionTier,
   type BillingCycle,
 } from '../../src/services/subscriptionService';
-import { startSubscriptionCheckout } from '../../src/services/billingService';
+import { startBillingPortal, startSubscriptionCheckout } from '../../src/services/billingService';
 import { useCreditsSummary } from '../../src/services/subscriptionCreditsService';
 import {
   loadQuoteTonePreset,
@@ -113,6 +113,32 @@ export default function ProfileScreen() {
       }
     } finally {
       setCheckoutLoading(null);
+    }
+  };
+
+  // Opens the Stripe Customer Portal so the contractor can change plan, update
+  // card, cancel, or download past invoices. Single autonomous reach to the
+  // service; surface errors as Alert.
+  const [portalLoading, setPortalLoading] = useState(false);
+  const handleManageSubscription = async () => {
+    if (isDemoMode) {
+      Alert.alert(
+        t('profile.demoMode', 'Demo mode'),
+        t('profile.demoUpgradeBlocked', 'Upgrades are disabled in demo mode. Sign up for a real account to subscribe.'),
+      );
+      return;
+    }
+    setPortalLoading(true);
+    try {
+      const result = await startBillingPortal();
+      if (!result.ok) {
+        Alert.alert(
+          t('profile.manageSubError', 'Could not open billing portal'),
+          result.error ?? t('profile.upgradeErrorDesc', 'Please try again or contact support.'),
+        );
+      }
+    } finally {
+      setPortalLoading(false);
     }
   };
 
@@ -386,6 +412,31 @@ export default function ProfileScreen() {
                   </View>
                 )}
               </View>
+
+              {subscription.tier !== 'free' && (
+                <Pressable
+                  style={styles.manageSubRow}
+                  onPress={handleManageSubscription}
+                  disabled={portalLoading}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('profile.manageSubscription', 'Manage subscription')}
+                >
+                  <View style={styles.rowIcon}>
+                    <Ionicons name="card" size={18} color={Palette.hermesOrange} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.rowLabel}>
+                      {portalLoading
+                        ? t('profile.opening', 'Opening checkout…')
+                        : t('profile.manageSubscription', 'Manage subscription')}
+                    </Text>
+                    <Text style={styles.planTagline}>
+                      {t('profile.manageSubDesc', 'Update card, change plan, or cancel')}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={SemanticColors.textTertiary} />
+                </Pressable>
+              )}
 
               {subscription.tier !== 'contractor' && (
                 <View style={styles.planUpgradeBlock}>
@@ -792,6 +843,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
     gap: GRID.sm + 4,
+  },
+  manageSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: GRID.sm + 4,
+    gap: GRID.sm + 4,
+    borderTopWidth: 1,
+    borderTopColor: SemanticColors.borderDefault,
   },
   planTagline: {
     fontSize: TYPE.tinySize,

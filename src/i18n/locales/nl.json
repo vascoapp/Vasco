@@ -1533,7 +1533,10 @@
     "upgradeError": "Upgrade kon niet starten",
     "upgradeErrorDesc": "Probeer het opnieuw of neem contact op met support.",
     "demoUpgradeBlocked": "Upgrades zijn uitgeschakeld in demo-modus. Maak een echt account aan om te abonneren.",
-    "deviceCalendar": "Apparaat agenda"
+    "deviceCalendar": "Apparaat agenda",
+    "manageSubscription": "Abonnement beheren",
+    "manageSubDesc": "Kaart wijzigen, abonnement aanpassen of opzeggen",
+    "manageSubError": "Kan klantportaal niet openen"
   },
   "search": {
     "job": "Klus",

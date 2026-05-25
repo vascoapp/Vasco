@@ -327,6 +327,65 @@ Deno.serve(async (req) => {
     }
 
     // -------------------------------------------------------------------------
+    // 2a-bis. Dunning: invoice.payment_failed → mark past_due. Stripe's Smart
+    // Retries (Dashboard → Settings → Subscriptions) handles the actual retry
+    // schedule + customer emails. When retries exhaust, Stripe fires
+    // customer.subscription.deleted which the 2a block above downgrades to
+    // canceled. We just sync the past_due state so the in-app UI can show a
+    // "card declined" banner during the retry window.
+    // -------------------------------------------------------------------------
+    if (event.type === 'invoice.payment_failed') {
+      if (!supabaseUrl0 || !supabaseServiceKey0) {
+        return new Response(JSON.stringify({ received: true, error: 'DB not configured' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const invoice = event.data.object;
+      const subId: string | null = invoice?.subscription ?? null;
+      if (!subId) {
+        return new Response(JSON.stringify({ received: true, status: 'no_subscription' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      // Look up the subscription to recover user_id from metadata. We don't
+      // trust invoice.metadata for that — checkout writes user_id on the
+      // subscription, not on individual invoices.
+      const subResp = await fetch(`https://api.stripe.com/v1/subscriptions/${subId}`, {
+        headers: { Authorization: `Bearer ${stripeApiKey}` },
+      });
+      if (!subResp.ok) {
+        console.error(`payment_failed: subscription fetch ${subResp.status}`);
+        return new Response(JSON.stringify({ received: true, status: 'sub_fetch_failed' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const sub = await subResp.json();
+      const userId: string | null = sub?.metadata?.user_id ?? null;
+      if (!userId) {
+        console.warn('payment_failed: subscription missing user_id metadata');
+        return new Response(JSON.stringify({ received: true, status: 'no_user_id' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const adminClient = createClient(supabaseUrl0, supabaseServiceKey0);
+      const { error: upErr } = await adminClient
+        .from('subscriptions')
+        .upsert({
+          user_id: userId,
+          status: 'past_due',
+          external_id: subId,
+          external_provider: 'stripe',
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+      if (upErr) console.error('past_due upsert failed:', upErr.message);
+      else console.log(`Subscription past_due: user=${userId} sub=${subId} attempt=${invoice?.attempt_count ?? 0}`);
+
+      return new Response(JSON.stringify({ received: true, status: 'past_due_synced' }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // -------------------------------------------------------------------------
     // 2b. Only remaining handled event: payment_intent.succeeded (invoice paid)
     // -------------------------------------------------------------------------
     if (event.type !== 'payment_intent.succeeded') {

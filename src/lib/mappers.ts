@@ -44,6 +44,10 @@ export function documentRowToInvoice(row: DocumentRow): Invoice {
     // deleted post-invoice). Stored as a date string in BE; surface as
     // ISO so callers can `new Date(...)` it.
     deliveryDate: row.delivery_date ?? undefined,
+    // Hydrate paid_at — was written by AppState.markInvoicePaid but never
+    // read back. Cold-start would lose the actual paid-on date, breaking
+    // ageing analytics and customer ledger views. Rule #8 violation.
+    paidAt: row.paid_at ?? undefined,
   };
 }
 

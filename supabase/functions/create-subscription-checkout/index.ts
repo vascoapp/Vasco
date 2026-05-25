@@ -90,6 +90,20 @@ Deno.serve(async (req) => {
     form.set('subscription_data[metadata][user_id]', user.id);
     form.set('subscription_data[metadata][tier]', tier);
 
+    // EU VAT compliance. EU SaaS to consumers needs VAT MOSS / OSS — Stripe
+    // Tax (enabled in Dashboard → Settings → Tax) computes and remits it. The
+    // checkout collects billing address (required to determine VAT
+    // jurisdiction) and an optional VAT ID for B2B reverse-charge.
+    form.set('automatic_tax[enabled]', 'true');
+    form.set('billing_address_collection', 'required');
+    form.set('customer_update[address]', 'auto');
+    form.set('customer_update[name]', 'auto');
+    form.set('tax_id_collection[enabled]', 'true');
+    // 14-day trial mirrors the in-app `startTrial` (subscriptionService).
+    form.set('subscription_data[trial_period_days]', '14');
+    // Allow promotion codes (referral credits, launch promos).
+    form.set('allow_promotion_codes', 'true');
+
     const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
       headers: {

@@ -68,6 +68,22 @@ export default function CrewScreen() {
     if (original) {
       await updateWorker(original.id, data);
     } else {
+      try {
+        const { loadSubscription, canAddTeamMember } = await import('../../src/services/subscriptionService');
+        const sub = await loadSubscription();
+        const gate = canAddTeamMember(sub, workers.length);
+        if (!gate.allowed) {
+          Alert.alert(
+            t('billing.upgradeRequired', 'Upgrade required'),
+            gate.reason,
+            [
+              { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+              { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+            ],
+          );
+          return;
+        }
+      } catch {}
       await addWorker(data);
     }
     setEditing(null);

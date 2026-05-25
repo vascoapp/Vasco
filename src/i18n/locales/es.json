@@ -1533,7 +1533,10 @@
     "upgradeError": "No se pudo iniciar la actualización",
     "upgradeErrorDesc": "Vuelve a intentarlo o contacta con soporte.",
     "demoUpgradeBlocked": "Las actualizaciones están desactivadas en modo demo. Crea una cuenta real para suscribirte.",
-    "deviceCalendar": "Calendario del dispositivo"
+    "deviceCalendar": "Calendario del dispositivo",
+    "manageSubscription": "Gestionar suscripción",
+    "manageSubDesc": "Cambiar tarjeta, cambiar plan o cancelar",
+    "manageSubError": "No se pudo abrir el portal de facturación"
   },
   "search": {
     "job": "Trabajo",

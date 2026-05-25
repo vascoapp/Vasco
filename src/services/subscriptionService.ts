@@ -393,10 +393,11 @@ export function canAddClient(state: SubscriptionState, liveCount?: number): Gate
   return { allowed: true };
 }
 
-export function canAddTeamMember(state: SubscriptionState): GateResult {
+export function canAddTeamMember(state: SubscriptionState, liveCount?: number): GateResult {
   const limits = getTierLimits(state.tier);
   const totalSeats = limits.maxTeamSeats + state.seatsPurchased;
-  if (state.seatsUsed >= totalSeats) {
+  const used = liveCount ?? state.seatsUsed;
+  if (used >= totalSeats) {
     return { allowed: false, reason: i18n.t('tierGate.seatsInUse', { count: totalSeats }), upgradeFeature: 'More team seats', requiredTier: 'contractor' };
   }
   return { allowed: true };

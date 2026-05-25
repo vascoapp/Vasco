@@ -1533,7 +1533,10 @@
     "upgradeError": "Impossible de démarrer la mise à niveau",
     "upgradeErrorDesc": "Veuillez réessayer ou contacter le support.",
     "demoUpgradeBlocked": "Les mises à niveau sont désactivées en mode démo. Créez un vrai compte pour vous abonner.",
-    "deviceCalendar": "Calendrier de l'appareil"
+    "deviceCalendar": "Calendrier de l'appareil",
+    "manageSubscription": "Gérer l'abonnement",
+    "manageSubDesc": "Modifier la carte, changer d'offre ou annuler",
+    "manageSubError": "Impossible d'ouvrir le portail de facturation"
   },
   "search": {
     "job": "Chantier",

@@ -1533,7 +1533,10 @@
     "upgradeError": "Upgrade konnte nicht gestartet werden",
     "upgradeErrorDesc": "Bitte erneut versuchen oder Support kontaktieren.",
     "demoUpgradeBlocked": "Upgrades sind im Demo-Modus deaktiviert. Erstellen Sie ein echtes Konto, um zu abonnieren.",
-    "deviceCalendar": "Gerätekalender"
+    "deviceCalendar": "Gerätekalender",
+    "manageSubscription": "Abo verwalten",
+    "manageSubDesc": "Karte ändern, Tarif wechseln oder kündigen",
+    "manageSubError": "Kundenportal konnte nicht geöffnet werden"
   },
   "search": {
     "job": "Auftrag",
