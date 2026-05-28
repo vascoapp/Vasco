@@ -7,7 +7,7 @@ import { useCashFlow } from '../../services/cashFlowService';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { isAboveThreshold, detectAnomaly, getSeasonalMultiplier } from '../adaptiveThresholds';
 import { logPrediction } from '../calibration';
-import { gt } from '../generatorTranslations';
+import { gt, gtMoney } from '../generatorTranslations';
 import { MS_PER_DAY } from '../../utils/timeConstants';
 
 export const overdueInvoiceGenerator: InsightGenerator = {
@@ -39,7 +39,7 @@ export function useOverdueInvoiceInsight(ctx: GeneratorContext): ScoredInsight |
   logPrediction({
     generatorId: 'overdue-invoice',
     predictedAt: new Date().toISOString(),
-    prediction: `Openstaand bedrag: €${totalOverdue.toLocaleString('nl-NL')} (${overdueInvoices.length} facturen)`,
+    prediction: `Outstanding amount: ${gtMoney(totalOverdue, ctx.country)} (${overdueInvoices.length} invoices)`,
     predictedValue: totalOverdue,
   });
 
@@ -51,7 +51,7 @@ export function useOverdueInvoiceInsight(ctx: GeneratorContext): ScoredInsight |
 
   // Seasonal context
   const seasonMult = getSeasonalMultiplier('overdueAmount');
-  const seasonNote = seasonMult > 1.05 ? ' Hogere openstaande bedragen zijn normaal in het laagseizoen.' : '';
+  const seasonNote = seasonMult > 1.05 ? ` ${gt('overdue_season_note', ctx.language)}` : '';
   const priority = anomaly.severity === 'severe' ? 'critical'
     : anomaly.severity === 'moderate' ? 'high'
     : overdueInvoices.length >= 3 || isSignificant ? 'high' : 'medium';
@@ -60,9 +60,9 @@ export function useOverdueInvoiceInsight(ctx: GeneratorContext): ScoredInsight |
   const trend = getTrend(ctx.profile, 'overdueAmount', 4);
   const trendText = trend
     ? trend.direction === 'declining'
-      ? ` Openstaand bedrag daalt (€${Math.round(trend.previousValue).toLocaleString('nl-NL')} → €${Math.round(trend.currentValue).toLocaleString('nl-NL')}).`
+      ? ` ${gt('overdue_trend_down', ctx.language, { from: gtMoney(trend.previousValue, ctx.country), to: gtMoney(trend.currentValue, ctx.country) })}`
       : trend.direction === 'improving'
-        ? ` Openstaand bedrag stijgt (€${Math.round(trend.previousValue).toLocaleString('nl-NL')} → €${Math.round(trend.currentValue).toLocaleString('nl-NL')}).`
+        ? ` ${gt('overdue_trend_up', ctx.language, { from: gtMoney(trend.previousValue, ctx.country), to: gtMoney(trend.currentValue, ctx.country) })}`
         : ''
     : '';
 
@@ -71,21 +71,23 @@ export function useOverdueInvoiceInsight(ctx: GeneratorContext): ScoredInsight |
     generatorId: 'overdue-invoice',
     category: 'financial',
     priority,
-    title: `${overdueInvoices.length} verlopen ${overdueInvoices.length === 1 ? 'factuur' : 'facturen'}`,
-    message: `€${totalOverdue.toLocaleString('nl-NL')} staat nog open. Stuur een herinnering om sneller betaald te worden.${ctx.profile.invoicePatterns.onTimeRate > 0 ? ` Je on-time betaalratio is ${Math.round(ctx.profile.invoicePatterns.onTimeRate * 100)}%.` : ''}`,
-    detail: `Gemiddeld ${Math.round(avgDaysOverdue)} dagen over de betaaltermijn. Automatische herinneringen verhogen de incasso met 35%.${trendText}${anomaly.isAnomaly ? ` ${anomaly.description}` : ''}`,
+    title: overdueInvoices.length === 1
+      ? gt('overdue_title_single', ctx.language)
+      : gt('overdue_title_multi', ctx.language, { count: overdueInvoices.length }),
+    message: `${gt('overdue_message', ctx.language, { amount: gtMoney(totalOverdue, ctx.country) })}${ctx.profile.invoicePatterns.onTimeRate > 0 ? ` ${gt('overdue_ontime_rate', ctx.language, { pct: Math.round(ctx.profile.invoicePatterns.onTimeRate * 100) })}` : ''}`,
+    detail: `${gt('overdue_detail', ctx.language, { days: Math.round(avgDaysOverdue) })}${trendText}${anomaly.isAnomaly ? ` ${anomaly.description}` : ''}`,
     icon: 'receipt',
-    actionLabel: 'Herinneringen sturen',
+    actionLabel: gt('overdue_action_send_reminders', ctx.language),
     actionRoute: '/(contractor)/facturen',
     source: gt('source_billing', ctx.language),
-    metric: { label: 'Openstaand', value: `€${totalOverdue.toLocaleString('nl-NL')}`, trend: 'down' },
+    metric: { label: gt('overdue_metric_outstanding', ctx.language), value: gtMoney(totalOverdue, ctx.country), trend: 'down' },
 
     rootCauseTags: ['cashflow', 'overdue'],
     rawScore: 0,
     reasoning: {
-      observation: `${overdueInvoices.length} facturen zijn over de betaaltermijn`,
-      evidence: `Op basis van ${invoices.length} facturen${trend ? `, trend: ${trend.direction}` : ''}${anomaly.isAnomaly ? ` — anomalie gedetecteerd (${anomaly.zScore.toFixed(1)}σ)` : ''}`,
-      implication: `€${totalOverdue.toLocaleString('nl-NL')} werkkapitaal geblokkeerd${trendText}${seasonNote}`,
+      observation: gt('overdue_observation', ctx.language, { count: overdueInvoices.length }),
+      evidence: `${gt('overdue_evidence', ctx.language, { count: invoices.length })}${trend ? `, ${gt('overdue_evidence_trend', ctx.language, { direction: trend.direction })}` : ''}${anomaly.isAnomaly ? ` — ${gt('overdue_evidence_anomaly', ctx.language, { z: anomaly.zScore.toFixed(1) })}` : ''}`,
+      implication: `${gt('overdue_implication', ctx.language, { amount: gtMoney(totalOverdue, ctx.country) })}${trendText}${seasonNote}`,
       suggestion: avgDaysOverdue > 14
         ? gt('overdue_suggestion_phone', ctx.language)
         : gt('overdue_suggestion_email', ctx.language),
@@ -98,7 +100,7 @@ export function useOverdueInvoiceInsight(ctx: GeneratorContext): ScoredInsight |
       label: gt('action_send_reminder', ctx.language),
       params: { invoiceCount: overdueInvoices.length, totalAmount: totalOverdue },
       requiresApproval: false,
-      estimatedImpact: `${gt('overdue_impact_faster', ctx.language)} — €${totalOverdue.toLocaleString('nl-NL')}`,
+      estimatedImpact: `${gt('overdue_impact_faster', ctx.language)} — ${gtMoney(totalOverdue, ctx.country)}`,
     },
     enqueueHint: {
       type: 'draft_reminder',

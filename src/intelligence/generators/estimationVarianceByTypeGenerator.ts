@@ -7,7 +7,7 @@
 
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import { logPrediction } from '../calibration';
-import { gt } from '../generatorTranslations';
+import { gt, gtMoney } from '../generatorTranslations';
 
 export const estimationVarianceByTypeGenerator: InsightGenerator = {
   id: 'estimation-variance-type',
@@ -33,7 +33,7 @@ export function useEstimationVarianceByTypeInsight(ctx: GeneratorContext): Score
   // Group by job type
   const byType = new Map<string, TypeVariance>();
   for (const job of jobs) {
-    const type = job.jobType || 'onbekend';
+    const type = job.jobType || gt('job_type_unknown', ctx.language);
     const existing = byType.get(type) || {
       jobType: type,
       count: 0,
@@ -77,7 +77,7 @@ export function useEstimationVarianceByTypeInsight(ctx: GeneratorContext): Score
   logPrediction({
     generatorId: 'estimation-variance-type',
     predictedAt: new Date().toISOString(),
-    prediction: `${worst.jobType}-klussen overschrijden budget met ${Math.round((worst.avgCostRatio - 1) * 100)}%`,
+    prediction: `${worst.jobType} jobs exceed budget by ${Math.round((worst.avgCostRatio - 1) * 100)}%`,
     predictedValue: worst.avgCostRatio,
   });
 
@@ -89,17 +89,17 @@ export function useEstimationVarianceByTypeInsight(ctx: GeneratorContext): Score
     generatorId: 'estimation-variance-type',
     category: 'tip',
     priority: overrunPct > 25 ? 'high' : overrunPct > 15 ? 'medium' : 'low',
-    title: `"${worst.jobType}"-klussen lopen ${overrunPct}% over budget`,
-    message: `Je schattingen voor ${worst.jobType}-klussen wijken structureel af. Pas je offertemodel aan voor dit type.`,
+    title: gt('est_variance_type_title', ctx.language, { type: worst.jobType, pct: overrunPct }),
+    message: gt('est_variance_type_message', ctx.language, { type: worst.jobType }),
     detail: hoursOverrunPct > 5
-      ? `Uren wijken gemiddeld ${hoursOverrunPct}% af. Totale overschrijding: €${worst.totalOverrun.toLocaleString('nl-NL')} over ${worst.count} klussen.`
-      : `Totale overschrijding: €${worst.totalOverrun.toLocaleString('nl-NL')} over ${worst.count} klussen.`,
+      ? gt('est_variance_type_detail_hours', ctx.language, { hoursPct: hoursOverrunPct, amount: gtMoney(worst.totalOverrun, ctx.country), count: worst.count })
+      : gt('est_variance_type_detail', ctx.language, { amount: gtMoney(worst.totalOverrun, ctx.country), count: worst.count }),
     icon: 'bar-chart',
-    actionLabel: 'Bekijk kalibratie',
+    actionLabel: gt('est_variance_type_action', ctx.language),
     actionRoute: '/(contractor)/besparen',
     source: gt('source_estimation', ctx.language),
     metric: {
-      label: 'Overschrijding',
+      label: gt('est_variance_type_metric_label', ctx.language),
       value: `+${overrunPct}%`,
       trend: 'down',
     },
@@ -107,12 +107,12 @@ export function useEstimationVarianceByTypeInsight(ctx: GeneratorContext): Score
     rootCauseTags: ['estimation', 'cost-variance'],
     rawScore: 0,
     reasoning: {
-      observation: `${worst.jobType}-klussen overschrijden het budget met gemiddeld ${overrunPct}%`,
-      evidence: `Op basis van ${worst.count} afgeronde ${worst.jobType}-klussen uit je geschiedenis`,
-      implication: `€${worst.totalOverrun.toLocaleString('nl-NL')} marge verloren aan dit klustype`,
+      observation: gt('est_variance_type_observation', ctx.language, { type: worst.jobType, pct: overrunPct }),
+      evidence: gt('est_variance_type_evidence', ctx.language, { count: worst.count, type: worst.jobType }),
+      implication: gt('est_variance_type_implication', ctx.language, { amount: gtMoney(worst.totalOverrun, ctx.country) }),
       suggestion: worst.avgHoursRatio > 1.15
-        ? `Verhoog je uurschatting voor ${worst.jobType}-klussen met ~${hoursOverrunPct}%`
-        : `Controleer materiaalkosten voor ${worst.jobType}-klussen — uren kloppen redelijk`,
+        ? gt('est_variance_type_suggestion_hours', ctx.language, { type: worst.jobType, hoursPct: hoursOverrunPct })
+        : gt('est_variance_type_suggestion_materials', ctx.language, { type: worst.jobType }),
     },
     dataPoints: worst.count,
     confidence: Math.min(0.9, 0.6 + worst.count * 0.05),

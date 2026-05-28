@@ -11,6 +11,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { buildForecast, type ForecastSummary } from '../../services/cashFlowForecastService';
+import { getCountryConfig, type Country } from '../../i18n/formatting';
 import type { Invoice, Quote } from '../../domain/documents';
 import type { Job } from '../../types/contractor';
 
@@ -19,10 +20,33 @@ interface Props {
   quotes: Quote[];
   jobs: Job[];
   startingBalance?: number;
+  /** Drives currency symbol + grouping. Defaults to NL (EUR). UK→£, US→$. */
+  country?: Country;
   onPress?: () => void;
 }
 
-export function CashFlowForecastCard({ invoices, quotes, jobs, startingBalance, onPress }: Props) {
+// Whole-currency formatter — keeps the card's existing no-decimal display but
+// emits the right symbol + locale grouping (€1.234 for NL, £1,234 for UK,
+// $1,234 for US). Symbol-only via currencyDisplay:'narrowSymbol'.
+function formatMoney0(amount: number, country: Country): string {
+  const { currency, locale } = getCountryConfig(country);
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency,
+      currencyDisplay: 'narrowSymbol',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    // narrowSymbol unsupported on some RN/Hermes Intl builds — fall back.
+    return new Intl.NumberFormat(locale, {
+      style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 0,
+    }).format(amount);
+  }
+}
+
+export function CashFlowForecastCard({ invoices, quotes, jobs, startingBalance, country = 'NL', onPress }: Props) {
   const [forecast, setForecast] = useState<ForecastSummary | null>(null);
 
   useEffect(() => {
@@ -37,8 +61,8 @@ export function CashFlowForecastCard({ invoices, quotes, jobs, startingBalance, 
     if (!forecast) return null;
     const net = forecast.netChange;
     const sign = net >= 0 ? '+' : '−';
-    return `${sign}€${Math.abs(Math.round(net)).toLocaleString()}`;
-  }, [forecast]);
+    return `${sign}${formatMoney0(Math.abs(Math.round(net)), country)}`;
+  }, [forecast, country]);
 
   if (!forecast) return null;
   const isNegative = forecast.minCashDay.cumulative < 0;
@@ -60,15 +84,15 @@ export function CashFlowForecastCard({ invoices, quotes, jobs, startingBalance, 
       </Text>
 
       <View style={s.row}>
-        <Meta label="Inflow" value={`€${Math.round(forecast.totalInflow).toLocaleString()}`} color={SemanticColors.feedbackSuccess} />
-        <Meta label="Outflow" value={`€${Math.round(forecast.totalOutflow).toLocaleString()}`} color={SemanticColors.feedbackError} />
+        <Meta label="Inflow" value={formatMoney0(Math.round(forecast.totalInflow), country)} color={SemanticColors.feedbackSuccess} />
+        <Meta label="Outflow" value={formatMoney0(Math.round(forecast.totalOutflow), country)} color={SemanticColors.feedbackError} />
       </View>
 
       {isNegative ? (
         <View style={s.warning}>
           <Ionicons name="warning" size={14} color={SemanticColors.feedbackWarning} />
           <Text style={s.warningText}>
-            Low cash on {forecast.minCashDay.date} (€{forecast.minCashDay.cumulative.toLocaleString()}) — chase open invoices.
+            Low cash on {forecast.minCashDay.date} ({formatMoney0(Math.round(forecast.minCashDay.cumulative), country)}) — chase open invoices.
           </Text>
         </View>
       ) : null}

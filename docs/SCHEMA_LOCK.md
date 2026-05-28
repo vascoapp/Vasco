@@ -1,6 +1,6 @@
 # SCHEMA LOCK — VascoApp BE↔FE Contract
 
-**Version:** 1.6 — updated 2026-05-11 (R66r54-r57)
+**Version:** 1.8 — updated 2026-05-27 (intelligence retrofit Stage 5)
 **Owner:** changes require explicit version bump + sign-off from BE + FE leads
 **Scope:** the contract between mobile app (`src/`, `app/`) and Supabase (`supabase/`). Anything below is locked unless this doc is updated.
 
@@ -669,6 +669,7 @@ updated_at  timestamptz NOT NULL default now()
 ```
 RLS: read/write where `user_id IS NULL OR user_id = auth.uid()`
 Idx: (item_type), (user_id), HNSW on embedding (vector_cosine_ops)
+*Widened by `20260527000001` (v1.7) — `item_type` CHECK now accepts `'lead'`/`'worker'` in addition to `'material'`/`'job'`/`'regulation'`. Lead/worker rows are written owner-scoped (`user_id = auth.uid()`); cohort sharing intentionally not enabled for those types.*
 
 ### `projects` (NEW — see P1-6)
 *Added in v1.0 to back the aannemer multi-job grouping currently held in AsyncStorage.*
@@ -784,6 +785,20 @@ write_signature_via_portal(
    salt. Raises 'invalid_or_expired_access_code' or 'invalid_signer_role' on
    bad input. Returns the new signatures.id.
 
+-- Intelligence retrofit Stage 5 (v1.8)
+get_lead_source_stats(p_source text, p_trade text DEFAULT NULL, p_country text DEFAULT NULL, p_months int DEFAULT 6)
+  → { conversion_rate real, sample_size bigint, contractor_count bigint, avg_hours_to_convert real }
+  -- Reads business_events where entity_type='lead' AND event_type='lead_converted'.
+  -- K-anonymity: returns nulls when contractor_count < 5 OR sample_size < 20.
+  -- FE consumer: leadSourceStatsService.fetchCohortLeadSourceStats.
+get_crew_utilization_stats(p_trade text DEFAULT NULL, p_country text DEFAULT NULL, p_months int DEFAULT 3)
+  → { avg_jobs_per_worker real, p25_jobs_per_worker real, median_jobs_per_worker real,
+      p75_jobs_per_worker real, sample_size bigint, contractor_count bigint }
+  -- Per-contractor active jobs ÷ active workers, aggregated across cohort.
+  -- Solo contractors (workers < 2 or no active jobs) filtered out of the base.
+  -- K-anonymity: returns nulls when contractor_count < 5.
+  -- FE consumer: cohortBenchmarkService.getCrewUtilizationCohort → workerCapacityGenerator.
+
 get_cron_health()  -- SECURITY DEFINER
   → [{ jobname text, schedule text, active boolean, last_status text,
        last_start timestamptz, last_end timestamptz, last_runs bigint }]
@@ -891,6 +906,20 @@ train-extra-models  (cron, service_role)
 ---
 
 ## CHANGELOG
+
+- **1.8 (2026-05-27)** — Intelligence retrofit Stage 5 — cohort benchmarks for leads + crew:
+  - 2 new RPCs in migration `20260527000002_cohort_lead_source_and_crew.sql`. Both SECURITY DEFINER, both K-anonymity gated (≥5 contractors; lead RPC also requires ≥20 sample size).
+    - `get_lead_source_stats(p_source, p_trade, p_country, p_months)` — aggregates `business_events` for cross-contractor lead source conversion rates. Backs `leadSourceStatsService.fetchCohortLeadSourceStats` (FE stub shipped in Stage 2 now has a live RPC).
+    - `get_crew_utilization_stats(p_trade, p_country, p_months)` — per-contractor active jobs ÷ active workers, then cohort percentiles. Backs new `cohortBenchmarkService.getCrewUtilizationCohort` → wired into `workerCapacityGenerator` for "median in your trade: 3.2 jobs/worker, you're at 5" copy.
+  - Schema unchanged (no new tables, no column changes). Both RPCs read from existing locked tables (`business_events`, `workers`, `jobs`, `business_settings`).
+  - No new Edge functions, no FE write-mapper changes.
+
+- **1.7 (2026-05-27)** — Intelligence retrofit Stage 4 — semantic embeddings for leads + workers:
+  - `embeddings.item_type` CHECK widened to accept `'lead'` and `'worker'` (additive — drop + recreate, no data loss). Migration `20260527000001_embeddings_lead_worker.sql`.
+  - `match_similar_items` RPC unchanged — takes a free-text `match_type` arg so the new types are queryable immediately. No RLS change.
+  - New FE helpers `embedLead` / `embedWorker` / `findSimilarLeads` / `findSimilarWorkers` in `src/services/embeddingService.ts`. Two-step flow: `generate-embedding` → upsert into `public.embeddings` with id-prefix (`lead:`/`worker:`).
+  - AppState `addLead` + `addWorker` fire-and-forget the embed call on create. ID-remap listener deletes stale temp-prefixed rows on persist; next user edit re-embeds under the real uuid.
+  - No new ML training data shape — Stage 1 already widened `business_events.entity_type` (text col, no migration needed there).
 
 - **1.6 (2026-05-11)** — Rounds R66r54–r57 — production hardening + audit-trail:
   - **R66r54** new table `public.app_config` (public-read, service-write, jsonb value, key='version_config' seeded). `versionCheckService.fetchRemoteConfig` now real (6h-throttled). Migration `20260511000001_app_config.sql`. Edge fn `draft-customer-reply` deleted (FE wrapper gone in R66r52).

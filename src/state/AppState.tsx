@@ -22,6 +22,11 @@ import type { BudgetExtractionResult } from '../ingestion/budgetExtractor';
 // Services / intelligence
 import { upsertEntity, addRelation, propagateJobCompletion, propagatePayment } from '../intelligence/ontology';
 import {
+  attributeLeadFollowupOutcome,
+  attributeCrewCapacityOutcome,
+  attributeLicenseRenewalOutcome,
+} from '../intelligence/generatorOutcomeAttributor';
+import {
   emitQuoteCreated,
   emitQuoteAccepted,
   emitInvoiceSent,
@@ -32,6 +37,12 @@ import {
   recordPricingData,
   emitQuoteRejected,
   recordPricingOutcome,
+  emitLeadCreated,
+  emitLeadStatusChanged,
+  emitLeadConverted,
+  emitWorkerAdded,
+  emitLicenseAdded,
+  emitLicenseRenewed,
 } from '../intelligence/dataCollector';
 import { validateQuoteBeforeSend, validateInvoiceBeforeCreate, validateJobStatusChange } from '../services/workflowValidatorService';
 import { schedulePaymentReminder, scheduleQuoteFollowUp } from '../services/pushNotificationService';
@@ -787,6 +798,46 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // R95 breadcrumb. Sentry no-ops when DSN unset; once activated
         // we get session traces showing the lead-flow through.
         trackEvent('lead_created', { source: input.source, hasValue: input.estimatedValue ? 1 : 0 }).catch(() => {});
+        // Intelligence loop: register entity + emit business event so
+        // generators (leadFollowup, source-acceptance cohort) + ML
+        // (quote-win predictor) can read this. ID-remap to real BE uuid
+        // happens via R54 idRemapBus (TABLE_TO_ENTITY_TYPE.leads='lead').
+        upsertEntity({
+          id: tempId,
+          type: 'lead',
+          name: newLead.customerName || newLead.jobDescription || 'New lead',
+          attributes: {
+            source: newLead.source,
+            status: newLead.status,
+            estimatedValue: newLead.estimatedValue,
+            customerId: newLead.customerId,
+          },
+          scores: { reliability: 50, quality: 50, value: newLead.estimatedValue ?? 0, frequency: 1 },
+          lastUpdated: now,
+        }).catch(() => {});
+        emitLeadCreated(getCurrentUserId(), tempId, {
+          source: newLead.source,
+          estimatedValue: newLead.estimatedValue,
+          customerId: newLead.customerId,
+          hasJobDescription: !!newLead.jobDescription,
+        }).catch(() => {});
+        // Stage 4 semantic embedding: index the lead's text so future
+        // "similar past leads" lookups can surface it. Fire-and-forget;
+        // failures are silent (semantic search degrades, business state
+        // unaffected).
+        const leadEmbedText = [newLead.customerName, newLead.jobDescription, newLead.notes]
+          .filter(Boolean)
+          .join(' — ')
+          .trim();
+        if (leadEmbedText.length >= 3) {
+          import('../services/embeddingService').then(({ embedLead }) =>
+            embedLead({
+              leadId: tempId,
+              text: leadEmbedText,
+              metadata: { source: newLead.source, status: newLead.status, estimatedValue: newLead.estimatedValue },
+            }),
+          ).catch(() => {});
+        }
         if (isSupabaseConfigured) {
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue('leads', 'insert', async () => {
@@ -828,9 +879,65 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
       updateLead: async (id, updates) => {
         const now = new Date().toISOString();
-        setLeads((prev) =>
-          prev.map((l) => (l.id === id ? { ...l, ...updates, updatedAt: now } : l))
-        );
+        // Snapshot previous state BEFORE the optimistic update so we can
+        // emit status-transition events with from/to and elapsed-time
+        // metadata for the quote-win ML predictor.
+        const prevLead = leads.find((l) => l.id === id);
+        // R301 audit fix: capture the post-mutation snapshot via the
+        // setLeads callback (which sees the current `prev` regardless of
+        // closure freshness) so Stage 6 attribution grades the generator
+        // against the actual post-mutation state, not a stale-closure
+        // reconstruction.
+        let updatedLeadsSnapshot: Lead[] = leads;
+        setLeads((prev) => {
+          const next = prev.map((l) => (l.id === id ? { ...l, ...updates, updatedAt: now } : l));
+          updatedLeadsSnapshot = next;
+          return next;
+        });
+        if (prevLead && updates.status && updates.status !== prevLead.status) {
+          // Stage 6 attribution: grade the lead-followup generator against
+          // the freshly-mutated leads array (status transition is the
+          // outcome signal). Best-effort, never blocks.
+          attributeLeadFollowupOutcome(updatedLeadsSnapshot);
+          const hoursInPrev = Math.round(
+            (Date.now() - new Date(prevLead.updatedAt ?? prevLead.createdAt).getTime()) / 3_600_000,
+          );
+          emitLeadStatusChanged(getCurrentUserId(), id, {
+            fromStatus: prevLead.status,
+            toStatus: updates.status,
+            source: prevLead.source,
+            estimatedValue: updates.estimatedValue ?? prevLead.estimatedValue,
+            hoursInPreviousStatus: hoursInPrev,
+            sourceQuoteId: updates.sourceQuoteId ?? prevLead.sourceQuoteId,
+          }).catch(() => {});
+          if (updates.status === 'won' || updates.status === 'lost') {
+            const hoursTotal = Math.round(
+              (Date.now() - new Date(prevLead.createdAt).getTime()) / 3_600_000,
+            );
+            emitLeadConverted(getCurrentUserId(), id, {
+              source: prevLead.source,
+              outcome: updates.status,
+              estimatedValue: prevLead.estimatedValue,
+              actualQuoteAmount: updates.estimatedValue,
+              sourceQuoteId: updates.sourceQuoteId ?? prevLead.sourceQuoteId,
+              hoursFromCreatedToConverted: hoursTotal,
+            }).catch(() => {});
+            // If won and a customerId got linked, materialize the
+            // lead→customer "converted_from" edge so the ontology can
+            // attribute lifetime value back to the lead source.
+            const linkedCustomerId = updates.customerId ?? prevLead.customerId;
+            if (updates.status === 'won' && linkedCustomerId) {
+              addRelation({
+                fromId: linkedCustomerId,
+                fromType: 'customer',
+                toId: id,
+                toType: 'lead',
+                relationType: 'converted_from',
+                metadata: { source: prevLead.source, value: prevLead.estimatedValue },
+              }).catch(() => {});
+            }
+          }
+        }
         if (isSupabaseConfigured) {
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue('leads', 'update', async () => {
@@ -872,6 +979,45 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const newWorker: Worker = { ...input, id: tempId, createdAt: now, updatedAt: now };
         setWorkers((prev) => [newWorker, ...prev]);
         trackEvent('worker_added', { role: input.role }).catch(() => {});
+        // Intelligence loop: register worker as an ontology entity so the
+        // worked_on / certified_by edges from job-completion and licenses
+        // can attach. ID-remap on persist is handled by the idRemapBus
+        // (TABLE_TO_ENTITY_TYPE.workers='worker').
+        upsertEntity({
+          id: tempId,
+          type: 'worker',
+          name: newWorker.name,
+          attributes: {
+            role: newWorker.role,
+            trade: newWorker.trade,
+            hourlyCost: newWorker.hourlyCost,
+            isActive: newWorker.isActive,
+          },
+          scores: { reliability: 50, quality: 50, value: 0, frequency: 0 },
+          lastUpdated: now,
+        }).catch(() => {});
+        emitWorkerAdded(getCurrentUserId(), tempId, {
+          role: newWorker.role,
+          trade: newWorker.trade,
+          hourlyCost: newWorker.hourlyCost,
+        }).catch(() => {});
+        // Stage 4 semantic embedding: skill-profile text that future
+        // worker-matching lookups can search. "Bas, lead_tech, plumbing"
+        // becomes searchable so "who handles plumbing leak repairs" can
+        // be answered with cosine similarity.
+        const workerEmbedText = [newWorker.name, newWorker.role, newWorker.trade]
+          .filter(Boolean)
+          .join(' — ')
+          .trim();
+        if (workerEmbedText.length >= 3) {
+          import('../services/embeddingService').then(({ embedWorker }) =>
+            embedWorker({
+              workerId: tempId,
+              text: workerEmbedText,
+              metadata: { role: newWorker.role, trade: newWorker.trade, hourlyCost: newWorker.hourlyCost },
+            }),
+          ).catch(() => {});
+        }
         if (isSupabaseConfigured) {
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue('workers', 'insert', async () => {
@@ -907,9 +1053,18 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
       updateWorker: async (id, updates) => {
         const now = new Date().toISOString();
-        setWorkers((prev) =>
-          prev.map((w) => (w.id === id ? { ...w, ...updates, updatedAt: now } : w))
-        );
+        // R301 audit fix: capture post-mutation snapshot via setWorkers
+        // callback for Stage 6 attribution — see updateLead for rationale.
+        let updatedWorkersSnapshot: Worker[] = workers;
+        setWorkers((prev) => {
+          const next = prev.map((w) => (w.id === id ? { ...w, ...updates, updatedAt: now } : w));
+          updatedWorkersSnapshot = next;
+          return next;
+        });
+        // Stage 6: re-score worker-capacity generator with the post-update
+        // crew state. Active flag flips + role changes both affect the
+        // problem count, so resolve on any worker mutation.
+        attributeCrewCapacityOutcome(updatedWorkersSnapshot, jobs as any);
         if (isSupabaseConfigured) {
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             persistOrQueue('workers', 'update', async () => {
@@ -930,8 +1085,17 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }
       },
       removeWorker: async (id) => {
-        setWorkers((prev) => prev.filter((w) => w.id !== id));
+        // R301 audit fix: post-mutation snapshot via setWorkers callback.
+        let remainingWorkersSnapshot: Worker[] = workers;
+        setWorkers((prev) => {
+          const next = prev.filter((w) => w.id !== id);
+          remainingWorkersSnapshot = next;
+          return next;
+        });
         trackEvent('worker_removed', {}).catch(() => {});
+        // Stage 6: shrinking the crew changes the per-worker job load —
+        // grade worker-capacity against the post-removal state.
+        attributeCrewCapacityOutcome(remainingWorkersSnapshot, jobs as any);
         // Also unassign any jobs that pointed at this worker (FK cascade
         // does this on the server; do it client-side too so the optimistic
         // state stays consistent).
@@ -1796,6 +1960,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }
       },
       updateBusinessProfile: async (updates) => {
+        // Snapshot the previous licenses array BEFORE the optimistic update
+        // so we can diff and emit per-license business events
+        // (license_added / license_renewed). The synthesized entityId is
+        // `${type}_${state||country}_${number}` so the same license has a
+        // stable identity across renewals and devices.
+        const prevLicenses = businessProfile.licenses ?? [];
+        const nextLicenses = updates.licenses;
         setBusinessProfile((prev) => ({
           ...prev,
           ...updates,
@@ -1810,6 +1981,44 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             return !!(merged.businessName && merged.kvkNumber && merged.vatNumber && merged.address && merged.email && merged.phone);
           })(),
         }));
+        // Intelligence loop: diff licenses to emit license_added /
+        // license_renewed. Stable entityId lets renewal events attribute
+        // back to the original add. Skipped when `updates.licenses` is
+        // undefined (this update isn't touching licenses).
+        if (nextLicenses !== undefined) {
+          const licenseKey = (l: { type: string; state?: string; number: string }) =>
+            `${l.type}_${l.state ?? (updates.country ?? businessProfile.country ?? 'XX')}_${l.number}`;
+          const prevByKey = new Map(prevLicenses.map((l) => [licenseKey(l), l]));
+          for (const l of nextLicenses) {
+            const key = licenseKey(l);
+            const prior = prevByKey.get(key);
+            const userId = getCurrentUserId();
+            if (!prior) {
+              emitLicenseAdded(userId, key, {
+                type: l.type,
+                state: l.state,
+                number: l.number,
+                expiryDate: l.expiryDate,
+                issuingAuthority: l.issuingAuthority,
+              }).catch(() => {});
+            } else if (prior.expiryDate !== l.expiryDate) {
+              const daysBeforeOld =
+                (new Date(prior.expiryDate).getTime() - Date.now()) / 86_400_000;
+              emitLicenseRenewed(userId, key, {
+                type: l.type,
+                state: l.state,
+                oldExpiryDate: prior.expiryDate,
+                newExpiryDate: l.expiryDate,
+                daysBeforeOldExpiry: Math.round(daysBeforeOld),
+              }).catch(() => {});
+            }
+          }
+          // Stage 6: grade license-renewal-action against the post-update
+          // license set. If a previously-flagged license got its expiryDate
+          // moved forward (i.e. renewed), the count of "expiring within 30d"
+          // drops and the generator earns confidence weight.
+          attributeLicenseRenewalOutcome(nextLicenses);
+        }
         // R282: if the profile edit changes country or trade, sync the
         // module-level currentUser ref so subsequent emit paths read the
         // new specialty/market without waiting for a re-login. Without
@@ -2514,6 +2723,44 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             acceptedPrice: quote.amount,
             timeToDecisionHours: ttdHoursUp,
           }).catch(() => {});
+          // Stage 2 bridge: if a lead was the upstream source of this quote
+          // (lead.sourceQuoteId === id), auto-transition it to 'won' so the
+          // pipeline view reflects reality and the source-conversion training
+          // signal lands in business_events. Single-shot — skips if the lead
+          // is already 'won' (idempotent on retries).
+          const sourceLeadAccept = leads.find((l) => l.sourceQuoteId === id && l.status !== 'won');
+          if (sourceLeadAccept) {
+            const hoursTotalA = Math.round(
+              (Date.now() - new Date(sourceLeadAccept.createdAt).getTime()) / 3_600_000,
+            );
+            setLeads((prev) =>
+              prev.map((l) =>
+                l.id === sourceLeadAccept.id
+                  ? { ...l, status: 'won', convertedAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+                  : l,
+              ),
+            );
+            emitLeadConverted(getCurrentUserId(), sourceLeadAccept.id, {
+              source: sourceLeadAccept.source,
+              outcome: 'won',
+              estimatedValue: sourceLeadAccept.estimatedValue,
+              actualQuoteAmount: quote.amount,
+              sourceQuoteId: id,
+              hoursFromCreatedToConverted: hoursTotalA,
+            }).catch(() => {});
+            // Persist the status flip so the win sticks across cold-start.
+            if (isSupabaseConfigured) {
+              import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+                persistOrQueue('leads', 'update', async () => {
+                  const { supabase } = await import('../lib/supabase');
+                  const { error } = await (supabase.from('leads') as any)
+                    .update({ status: 'won' })
+                    .eq('id', sourceLeadAccept.id);
+                  if (error) throw error;
+                }, { rowId: sourceLeadAccept.id }),
+              ).catch(() => {});
+            }
+          }
           if (isSupabaseConfigured) {
             // R66 round 18: same uuid guard — see updateQuote acceptance path.
             dbCreateJob({
@@ -2552,6 +2799,44 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             m.resolveOutcomesFromQuoteOutcome(false, timeToDecisionHours !== undefined ? Math.round(timeToDecisionHours / 24) : undefined),
           ).catch(() => {});
 
+          // Stage 2 bridge: if a lead already pointed at this quote
+          // (lead.sourceQuoteId === id), don't double-create — flip the
+          // existing lead to 'lost' and emit lead_converted with the
+          // decline reason. Only if no such lead exists do we fall
+          // through to the auto-create-from-rejection path (below).
+          const sourceLeadReject = leads.find((l) => l.sourceQuoteId === id && l.status !== 'lost');
+          if (sourceLeadReject) {
+            const hoursTotalR = Math.round(
+              (Date.now() - new Date(sourceLeadReject.createdAt).getTime()) / 3_600_000,
+            );
+            setLeads((prev) =>
+              prev.map((l) =>
+                l.id === sourceLeadReject.id
+                  ? { ...l, status: 'lost', convertedAt: new Date().toISOString(), updatedAt: new Date().toISOString(), notes: declineReason ? `${l.notes ?? ''}\nLost: ${declineReason}`.trim() : l.notes }
+                  : l,
+              ),
+            );
+            emitLeadConverted(getCurrentUserId(), sourceLeadReject.id, {
+              source: sourceLeadReject.source,
+              outcome: 'lost',
+              estimatedValue: sourceLeadReject.estimatedValue,
+              actualQuoteAmount: quote.amount,
+              sourceQuoteId: id,
+              hoursFromCreatedToConverted: hoursTotalR,
+            }).catch(() => {});
+            if (isSupabaseConfigured) {
+              import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+                persistOrQueue('leads', 'update', async () => {
+                  const { supabase } = await import('../lib/supabase');
+                  const { error } = await (supabase.from('leads') as any)
+                    .update({ status: 'lost' })
+                    .eq('id', sourceLeadReject.id);
+                  if (error) throw error;
+                }, { rowId: sourceLeadReject.id }),
+              ).catch(() => {});
+            }
+          }
+
           // R81 US Phase 4: auto-create a 'lost' lead so the rejected
           // quote surfaces in the pipeline for re-engagement. Customer
           // name resolved via the customers lookup (quote.customer is
@@ -2563,7 +2848,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // the auto-created lead disappeared on cold-start (rule #8
           // violation). Now mirrors the full addLead path — optimistic
           // insert + BE persist via offlineWriteQueue + temp-id remap.
-          const customer = customers.find((c) => c.id === quote.customer);
+          // Stage 2: skip the auto-create when an existing lead was
+          // already flipped above — avoids duplicate pipeline rows.
+          const customer = !sourceLeadReject ? customers.find((c) => c.id === quote.customer) : null;
           if (customer) {
             const tempId = `lead-rej-${Date.now()}`;
             const now = new Date().toISOString();
@@ -2585,6 +2872,32 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             };
             setLeads((prev) => [newLead, ...prev]);
             trackEvent('lead_created', { source: 'rejected_estimate', hasValue: newLead.estimatedValue ? 1 : 0 }).catch(() => {});
+            // Intelligence loop: same emit path as manual addLead so the
+            // auto-rejected lead lands in business_events + ontology +
+            // is immediately a `lead_converted` (outcome='lost') for the
+            // source-conversion-rate trainer.
+            upsertEntity({
+              id: tempId,
+              type: 'lead',
+              name: newLead.customerName,
+              attributes: { source: newLead.source, status: newLead.status, estimatedValue: newLead.estimatedValue, customerId: newLead.customerId },
+              scores: { reliability: 50, quality: 50, value: newLead.estimatedValue ?? 0, frequency: 1 },
+              lastUpdated: now,
+            }).catch(() => {});
+            emitLeadCreated(getCurrentUserId(), tempId, {
+              source: newLead.source,
+              estimatedValue: newLead.estimatedValue,
+              customerId: newLead.customerId,
+              hasJobDescription: !!newLead.jobDescription,
+            }).catch(() => {});
+            emitLeadConverted(getCurrentUserId(), tempId, {
+              source: newLead.source,
+              outcome: 'lost',
+              estimatedValue: newLead.estimatedValue,
+              actualQuoteAmount: quote.amount,
+              sourceQuoteId: id,
+              hoursFromCreatedToConverted: 0,
+            }).catch(() => {});
             if (isSupabaseConfigured) {
               import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
                 persistOrQueue('leads', 'insert', async () => {

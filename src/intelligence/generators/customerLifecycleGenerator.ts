@@ -10,7 +10,7 @@ import type { ScoredInsight, GeneratorContext } from './types';
 import { useTopCustomers, useAtRiskCustomers } from '../../services/projectProfitabilityService';
 import { useCollectionsAgent } from '../../services/collectionsAgentService';
 import { logPrediction } from '../calibration';
-import { gt } from '../generatorTranslations';
+import { gt, gtMoney } from '../generatorTranslations';
 
 export function useCustomerLifecycleInsight(ctx: GeneratorContext): ScoredInsight | null {
   const topCustomers = useTopCustomers(5);
@@ -37,7 +37,7 @@ export function useCustomerLifecycleInsight(ctx: GeneratorContext): ScoredInsigh
     logPrediction({
       generatorId: 'customer-lifecycle',
       predictedAt: new Date().toISOString(),
-      prediction: `${atRiskWithOverdue.length} at-risk klanten, CLV €${totalAtRiskCLV}`,
+      prediction: `${atRiskWithOverdue.length} at-risk customers, CLV ${gtMoney(totalAtRiskCLV, ctx.country)}`,
       predictedValue: totalAtRiskCLV,
     });
   }
@@ -53,35 +53,35 @@ export function useCustomerLifecycleInsight(ctx: GeneratorContext): ScoredInsigh
       generatorId: 'customer-lifecycle',
       category: 'financial',
       priority: worst.predictedClv > 5000 ? 'high' : 'medium',
-      title: `${atRiskWithOverdue.length} waardevolle klant${atRiskWithOverdue.length > 1 ? 'en' : ''} at-risk`,
-      message: `${worst.customerName} (CLV €${worst.predictedClv.toLocaleString('nl-NL')}) heeft ${relatedSeq?.daysOverdue || 0} dagen achterstand. Persoonlijke opvolging aanbevolen.`,
+      title: gt(atRiskWithOverdue.length > 1 ? 'clv_risk_title_multi' : 'clv_risk_title_single', ctx.language, { count: atRiskWithOverdue.length }),
+      message: gt('clv_risk_message', ctx.language, { name: worst.customerName, clv: gtMoney(worst.predictedClv, ctx.country), days: relatedSeq?.daysOverdue || 0 }),
       detail: atRiskWithOverdue.length > 1
-        ? `Totaal at-risk CLV: €${totalAtRiskCLV.toLocaleString('nl-NL')} over ${atRiskWithOverdue.length} klanten`
-        : `Retentiekans: ${Math.round(worst.retentionProbability * 100)}% — ${worst.jobCount} eerdere klussen`,
+        ? gt('clv_risk_detail_multi', ctx.language, { amount: gtMoney(totalAtRiskCLV, ctx.country), count: atRiskWithOverdue.length })
+        : gt('clv_risk_detail_single', ctx.language, { pct: Math.round(worst.retentionProbability * 100), count: worst.jobCount }),
       icon: 'people',
-      actionLabel: 'Klant bekijken',
+      actionLabel: gt('clv_action_view_customer', ctx.language),
       actionRoute: '/(contractor)/facturen',
       source: gt('source_customer', ctx.language),
       metric: {
-        label: 'At-risk CLV',
-        value: `€${totalAtRiskCLV.toLocaleString('nl-NL')}`,
+        label: gt('clv_risk_metric_label', ctx.language),
+        value: `${gtMoney(totalAtRiskCLV, ctx.country)}`,
         trend: 'down',
       },
 
       rootCauseTags: ['customer', 'cashflow'],
       rawScore: 0,
       reasoning: {
-        observation: `${atRiskWithOverdue.length} klant${atRiskWithOverdue.length > 1 ? 'en' : ''} met hoge levensduurwaarde hebben betalingsachterstand`,
-        evidence: `CLV-analyse + incasso-data: ${worst.customerName} segment '${worst.segment}', ${worst.jobCount} klussen, retentie ${Math.round(worst.retentionProbability * 100)}%`,
-        implication: `€${totalAtRiskCLV.toLocaleString('nl-NL')} aan toekomstige omzet loopt risico als de relatie verslechtert`,
-        suggestion: 'Bel deze klant persoonlijk — hoge-CLV klanten vereisen een andere benadering dan standaard dunning',
+        observation: gt(atRiskWithOverdue.length > 1 ? 'clv_risk_observation_multi' : 'clv_risk_observation_single', ctx.language, { count: atRiskWithOverdue.length }),
+        evidence: gt('clv_risk_evidence', ctx.language, { name: worst.customerName, segment: worst.segment, count: worst.jobCount, pct: Math.round(worst.retentionProbability * 100) }),
+        implication: gt('clv_risk_implication', ctx.language, { amount: gtMoney(totalAtRiskCLV, ctx.country) }),
+        suggestion: gt('clv_risk_suggestion', ctx.language),
       },
       dataPoints: topCustomers.length + sequences.length,
       confidence: 0.78,
       freshness: 4,
       action: {
         type: 'send_followup',
-        label: 'Klant opvolgen',
+        label: gt('clv_action_followup', ctx.language),
         params: {},
         requiresApproval: false,
       },
@@ -98,30 +98,30 @@ export function useCustomerLifecycleInsight(ctx: GeneratorContext): ScoredInsigh
       generatorId: 'customer-lifecycle',
       category: 'tip',
       priority: 'low',
-      title: `${loyalTopCustomers.length} trouwe topklant${loyalTopCustomers.length > 1 ? 'en' : ''} — upsell kans`,
-      message: `${best.customerName} (${best.jobCount} klussen, gem. €${best.avgJobValue.toLocaleString('nl-NL')}) betaalt altijd op tijd. Overweeg een onderhoudscontract.`,
+      title: gt(loyalTopCustomers.length > 1 ? 'clv_upsell_title_multi' : 'clv_upsell_title_single', ctx.language, { count: loyalTopCustomers.length }),
+      message: gt('clv_upsell_message', ctx.language, { name: best.customerName, count: best.jobCount, avg: gtMoney(best.avgJobValue, ctx.country) }),
       icon: 'star',
       source: gt('source_customer', ctx.language),
       metric: {
-        label: 'Upsell potentieel',
-        value: `€${Math.round(oppValue).toLocaleString('nl-NL')}`,
+        label: gt('clv_upsell_metric_label', ctx.language),
+        value: `${gtMoney(oppValue, ctx.country)}`,
         trend: 'up',
       },
 
       rootCauseTags: ['customer', 'upsell'],
       rawScore: 0,
       reasoning: {
-        observation: `${loyalTopCustomers.length} topklanten betalen consistent op tijd`,
-        evidence: `CLV-analyse: ${best.customerName} segment '${best.segment}', CLV €${best.predictedClv.toLocaleString('nl-NL')}`,
-        implication: `Geschat upsell-potentieel: €${Math.round(oppValue).toLocaleString('nl-NL')}`,
-        suggestion: 'Stuur een persoonlijke aanbieding voor een onderhoudscontract of seizoensgebonden dienst',
+        observation: gt('clv_upsell_observation', ctx.language, { count: loyalTopCustomers.length }),
+        evidence: gt('clv_upsell_evidence', ctx.language, { name: best.customerName, segment: best.segment, clv: gtMoney(best.predictedClv, ctx.country) }),
+        implication: gt('clv_upsell_implication', ctx.language, { amount: gtMoney(oppValue, ctx.country) }),
+        suggestion: gt('clv_upsell_suggestion', ctx.language),
       },
       dataPoints: topCustomers.length,
       confidence: 0.65,
       freshness: 24,
       action: {
         type: 'send_followup',
-        label: 'Klant opvolgen',
+        label: gt('clv_action_followup', ctx.language),
         params: {},
         requiresApproval: false,
       },

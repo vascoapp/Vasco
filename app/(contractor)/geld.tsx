@@ -256,7 +256,7 @@ export default function GeldScreen() {
         {/* ─── CASHFLOW FORECAST (embedded self-styled component) ─── */}
         {/* R300: ML cashflow-gap prediction banner — hidden when low confidence or small gap */}
         <CashflowGapPredictionCard />
-        <CashFlowForecastCard invoices={invoices as any} quotes={quotes as any} jobs={[] as any} />
+        <CashFlowForecastCard invoices={invoices as any} quotes={quotes as any} jobs={[] as any} country={(businessProfile?.country as any) ?? 'NL'} />
 
         {/* ─── FINANCIAL AI QUEUE (was VascoCard) ─── */}
         {(financialQueue.length > 0 || topInsight) && (

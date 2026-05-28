@@ -13,6 +13,7 @@
 
 import { useMemo, useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, StatusBar, Alert, RefreshControl } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -21,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { DK } from '../../src/theme/draftkings';
 import { useAppState } from '../../src/state/AppState';
+import { useAuth } from '../../src/context/AuthContext';
 import { useDaySchedule, type ScheduledJob } from '../../src/services/smartSchedulerService';
 import { useAIQueue, type QueueItem } from '../../src/services/aiActionQueueService';
 import { executeApprovedQueueItem } from '../../src/services/queueItemExecutor';
@@ -53,7 +55,10 @@ function getGreeting(t: TFunction): string {
 export default function VandaagDK() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const { invoices, quotes, jobs, customers, businessProfile, updateQuote } = useAppState();
+  const { invoices, quotes, jobs, customers, businessProfile, updateQuote, projects } = useAppState();
+  const { user } = useAuth();
+  const isAannemer = !!user?.isAannemer;
+  const activeProjectCount = projects?.filter((p) => p.status === 'active').length ?? 0;
   const today = new Date().toISOString().split('T')[0];
 
   const daySchedule = useDaySchedule(today);
@@ -101,6 +106,21 @@ export default function VandaagDK() {
   const pendingQueue = aiQueue.items.filter((i) => i.status === 'pending' && !i.snoozedUntil);
   const heroAction = pendingQueue[0];
   const inlineQueue = pendingQueue.slice(1, 4);
+
+  // First-login state: contractor just completed onboarding and hasn't
+  // touched anything yet. Drives a simplified Vandaag (just the activation
+  // checklist + the existing Vasco Analyst hero) instead of the noisy full
+  // dashboard. Flag is set by onboarding completion and remains true until
+  // the contractor's 5-milestone activation checklist is finished — that
+  // hand-off is owned by ActivationChecklist itself (R225), which clears
+  // the key on its final-milestone hook. Not auto-cleared on entity count
+  // here, because demo seed data would defeat the gate immediately.
+  const [isFirstTime, setIsFirstTime] = useState(false);
+  useEffect(() => {
+    AsyncStorage.getItem('@vasco_first_login_pending')
+      .then((v) => setIsFirstTime(v === 'true'))
+      .catch(() => {});
+  }, []);
 
   // R43: pull-to-refresh on Vandaag (most-visited tab) — was missing the
   // RefreshControl while every other contractor tab has one. Bumps the
@@ -170,9 +190,16 @@ export default function VandaagDK() {
           </View>
         ) : null}
 
-        {/* 2b. ACTIVATION CHECKLIST (R225) — auto-hides when all 5 milestones met */}
+        {/* FIRST-LOGIN HERO — short-circuits the normal dashboard when the
+            contractor has zero jobs/quotes/invoices/customers. Big orange
+            "Aan de slag" CTA followed by a black Vasco Analyst card pointing
+            to the new-quote builder. Everything below this block is gated
+            behind !isFirstTime so the screen stays uncluttered. */}
+        {/* 2b. ACTIVATION CHECKLIST (R225) — auto-hides when all 5 milestones met.
+            On first-login we WANT this — it's the step-by-step guide. */}
         <ActivationChecklist />
 
+        {!isFirstTime ? <>
         {/* 3. KPI ROW ─── 2 stats (Earned removed per R267 — duplicate of Geld tab) */}
         <View style={styles.kpiRow}>
           <KpiTile label={t('dk.pill.appointments', 'Appointments').toUpperCase()} value={String(todayJobs.length)} tone={DK.colors.text} onPress={() => router.push('/contractor/drag-schedule' as any)} />
@@ -192,8 +219,12 @@ export default function VandaagDK() {
 
         {/* R255: route-optimization weekly savings — auto-hides until first applied */}
         <OptimizationStatsWidget />
+        </> : null}
 
-        {/* 4. VASCOCARD EQUIVALENT ─── hero AI action + inline queue items */}
+        {/* 4. VASCOCARD EQUIVALENT ─── hero AI action + inline queue items.
+            Renders on first-login too — its empty-state copy ("Start with
+            your first quote" + photo CTA) is exactly the analyst-guidance
+            we want; no need for a parallel custom hero. */}
         <View style={styles.vascoCardWrap}>
           <LinearGradient
             colors={[DK.colors.primaryDark, DK.colors.primary, '#7C2D12']}
@@ -241,25 +272,35 @@ export default function VandaagDK() {
             ) : (
               <>
                 <Text style={styles.heroTitle}>
-                  {todayJobs.length > 0
-                    ? t('dk.hero.guideToday', "Today's focus: {{job}}", { job: (todayJobs[0] as any).title || (todayJobs[0] as any).projectName || t('dk.empty.firstJob', 'first job') })
-                    : activeQuotes > 0
-                      ? t('dk.hero.guideFollowup', 'Follow up on {{count}} open quote(s)', { count: activeQuotes })
-                      : t('dk.hero.guideStart', 'Start with your first quote')}
+                  {isAannemer && activeProjectCount > 0
+                    ? t('dk.hero.guideAannemerProjects', '{{count}} project(s) running today', { count: activeProjectCount })
+                    : todayJobs.length > 0
+                      ? t('dk.hero.guideToday', "Today's focus: {{job}}", { job: (todayJobs[0] as any).title || (todayJobs[0] as any).projectName || t('dk.empty.firstJob', 'first job') })
+                      : activeQuotes > 0
+                        ? t('dk.hero.guideFollowup', 'Follow up on {{count}} open quote(s)', { count: activeQuotes })
+                        : isAannemer
+                          ? t('dk.hero.guideAannemerStart', 'Start your first multi-trade project')
+                          : t('dk.hero.guideStart', 'Start with your first quote')}
                 </Text>
                 <Text style={styles.heroBody}>
-                  {todayJobs.length > 0
-                    ? t('dk.hero.guideTodayDesc', 'Open the job to clock in, log materials, and finish on time.')
-                    : activeQuotes > 0
-                      ? t('dk.hero.guideFollowupDesc', 'Customers who reply within 48h convert ~3x more often.')
-                      : t('dk.hero.guideStartDesc', 'Take a photo of the work and Vasco will draft the quote.')}
+                  {isAannemer && activeProjectCount > 0
+                    ? t('dk.hero.guideAannemerProjectsDesc', 'Open a project to coordinate trades, track sub-quotes, and keep the schedule aligned.')
+                    : todayJobs.length > 0
+                      ? t('dk.hero.guideTodayDesc', 'Open the job to clock in, log materials, and finish on time.')
+                      : activeQuotes > 0
+                        ? t('dk.hero.guideFollowupDesc', 'Customers who reply within 48h convert ~3x more often.')
+                        : isAannemer
+                          ? t('dk.hero.guideAannemerStartDesc', 'Add the trades you coordinate and Vasco builds the cross-trade quote.')
+                          : t('dk.hero.guideStartDesc', 'Take a photo of the work and Vasco will draft the quote.')}
                 </Text>
                 <Pressable
                   style={({ pressed }) => [styles.heroCTA, pressed && { opacity: 0.9 }]}
                   onPress={() => {
-                    if (todayJobs.length > 0) router.push(`/contractor/job/${(todayJobs[0] as any).id}` as any);
+                    if (isAannemer && activeProjectCount > 0) router.push('/contractor/projects' as any);
+                    else if (todayJobs.length > 0) router.push(`/contractor/job/${(todayJobs[0] as any).id}` as any);
                     // R66 round 16: was /contractor/quote-list (404).
                     else if (activeQuotes > 0) router.push('/(contractor)/geld' as any);
+                    else if (isAannemer) router.push('/contractor/projects' as any);
                     else router.push('/contractor/tiered-quote' as any);
                   }}
                 >
@@ -273,18 +314,27 @@ export default function VandaagDK() {
                   <Text
                     style={styles.heroCTAText}
                     accessibilityLabel={
-                      todayJobs.length > 0
-                        ? t('dk.actions.openJob', 'Open job')
-                        : activeQuotes > 0
-                          ? t('dk.actions.viewQuotes', 'View quotes')
-                          : t('dk.actions.newQuote', 'New quote')
+                      isAannemer && activeProjectCount > 0
+                        ? t('dk.actions.openProject', 'Open project')
+                        : todayJobs.length > 0
+                          ? t('dk.actions.openJob', 'Open job')
+                          : activeQuotes > 0
+                            ? t('dk.actions.viewQuotes', 'View quotes')
+                            : isAannemer
+                              ? t('dk.actions.newProject', 'New project')
+                              : t('dk.actions.newQuote', 'New quote')
                     }
                   >
-                    {(todayJobs.length > 0
-                      ? t('dk.actions.openJob', 'Open job')
-                      : activeQuotes > 0
-                        ? t('dk.actions.viewQuotes', 'View quotes')
-                        : t('dk.actions.newQuote', 'New quote')
+                    {(
+                      isAannemer && activeProjectCount > 0
+                        ? t('dk.actions.openProject', 'Open project')
+                        : todayJobs.length > 0
+                          ? t('dk.actions.openJob', 'Open job')
+                          : activeQuotes > 0
+                            ? t('dk.actions.viewQuotes', 'View quotes')
+                            : isAannemer
+                              ? t('dk.actions.newProject', 'New project')
+                              : t('dk.actions.newQuote', 'New quote')
                     ).toUpperCase()}
                   </Text>
                 </Pressable>
@@ -302,6 +352,7 @@ export default function VandaagDK() {
           ) : null}
         </View>
 
+        {!isFirstTime ? <>
         {/* R80 + R91: license expiry warning. Now open to all countries
             — EU contractors using the licenses screen for Gas Safe /
             Meisterbrief / RGE Qualibat etc. get the same 30-day
@@ -361,6 +412,8 @@ export default function VandaagDK() {
             ))
           )}
         </View>
+
+        </> : null}
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -443,6 +496,118 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: DK.colors.bg },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 120 },
+
+  // ─── First-login simplified hero ──────────────────────────────────
+  firstTimeHero: {
+    marginTop: 16,
+    borderRadius: DK.radius.card,
+    shadowColor: DK.colors.accent,
+    shadowOpacity: 0.32,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 10,
+    overflow: 'hidden',
+  },
+  firstTimeHeroFill: {
+    paddingVertical: 22,
+    paddingHorizontal: 22,
+    gap: 10,
+  },
+  firstTimeHeroChipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  firstTimeHeroChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0,0,0,0.22)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  firstTimeHeroDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: DK.colors.text,
+  },
+  firstTimeHeroChipText: {
+    fontFamily: DK.type.display800,
+    fontSize: 10,
+    letterSpacing: 1.4,
+    color: DK.colors.text,
+  },
+  firstTimeHeroTitle: {
+    fontFamily: DK.type.display900,
+    fontSize: 26,
+    color: DK.colors.text,
+    letterSpacing: 0.2,
+    marginTop: 4,
+  },
+  firstTimeHeroSub: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 14,
+    lineHeight: 20,
+    color: 'rgba(255,255,255,0.86)',
+    maxWidth: '90%',
+  },
+  firstTimePill: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    marginTop: 8,
+  },
+  firstTimePillText: {
+    fontFamily: DK.type.display800,
+    fontSize: 12,
+    letterSpacing: 1.2,
+    color: DK.colors.text,
+    textTransform: 'uppercase',
+  },
+  firstTimeAnalyst: {
+    marginTop: 20,
+    backgroundColor: '#000000',
+    borderRadius: DK.radius.card,
+    borderWidth: 1,
+    borderColor: DK.colors.border,
+    padding: 20,
+    gap: 10,
+  },
+  firstTimeAnalystHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  firstTimeAnalystDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: DK.colors.accent,
+  },
+  firstTimeAnalystChip: {
+    fontFamily: DK.type.display800,
+    fontSize: 11,
+    color: DK.colors.textMuted,
+    letterSpacing: 1.4,
+  },
+  firstTimeAnalystTitle: {
+    fontFamily: DK.type.display900,
+    fontSize: 22,
+    color: DK.colors.text,
+    letterSpacing: 0.4,
+  },
+  firstTimeAnalystBody: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 14,
+    lineHeight: 20,
+    color: DK.colors.textMuted,
+  },
 
   topBar: {
     flexDirection: 'row',

@@ -81,7 +81,9 @@
       "quotes": "Quotes",
       "drafts": "Drafts",
       "refresh": "Refresh",
-      "newQuote": "New quote"
+      "newQuote": "New quote",
+      "openProject": "Open project",
+      "newProject": "New project"
     },
     "invoices": {
       "invoices": "Invoices",
@@ -223,6 +225,12 @@
     "aiDemoNote": "You get 5 free AI insights every month on the free plan",
     "choosePlan": "Choose your plan",
     "choosePlanDesc": "Start free, upgrade anytime",
+    "recommendedForYou": "RECOMMENDED FOR YOU",
+    "bestForAannemers": "BEST FOR RENOVATION GCS",
+    "contractorTierAannemer": "Renovation GC",
+    "featAannemerProjects": "Multi-trade project boards",
+    "featAannemerSubs": "Subcontractor coordination + seats",
+    "featAannemerQuote": "Cross-trade quote builder",
     "monthly": "Monthly",
     "annual": "Annual",
     "planFree": "Free",
@@ -1881,7 +1889,11 @@
       "guideFollowup": "Follow up on {{count}} open quote(s)",
       "guideFollowupDesc": "Customers who reply within 48h convert ~3x more often.",
       "guideStart": "Start with your first quote",
-      "guideStartDesc": "Take a photo of the work and Vasco will draft the quote."
+      "guideStartDesc": "Take a photo of the work and Vasco will draft the quote.",
+      "guideAannemerProjects": "{{count}} project(s) running today",
+      "guideAannemerProjectsDesc": "Open a project to coordinate trades, track sub-quotes, and keep the schedule aligned.",
+      "guideAannemerStart": "Start your first multi-trade project",
+      "guideAannemerStartDesc": "Add the trades you coordinate and Vasco builds the cross-trade quote."
     },
     "pill": {
       "decided": "Decided",

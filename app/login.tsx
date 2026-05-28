@@ -320,6 +320,15 @@ export default function LoginScreen() {
                     await AsyncStorage.removeItem('@vasco_quotes').catch(() => {});
                     await AsyncStorage.removeItem('@vasco_customers').catch(() => {});
                     await AsyncStorage.removeItem('@vasco_projects').catch(() => {});
+                    // Auto-login as the fresh-state demo account so onboarding
+                    // completion has an authenticated user to flip onboardingComplete
+                    // on — otherwise updateUser() is a noop and _layout bounces
+                    // back to /login after the final step.
+                    const result = await login('new@vasco.dev', 'demo');
+                    if (!result.ok) {
+                      setError(t('auth.demoDisabled', 'Demo accounts are disabled in production.'));
+                      return;
+                    }
                     router.push('/onboarding' as any);
                   }}
                 >

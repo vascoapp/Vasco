@@ -21,8 +21,22 @@ const BATCH_SIZE = 50;
 // ---------------------------------------------------------------------------
 
 export interface BusinessEvent {
+  // Note: `business_events.entity_type` is a plain `text` column on the DB
+  // (no CHECK constraint per SCHEMA_LOCK v1.6 Tier 2). Widening this FE
+  // union is migration-free; the moat just gets new entity rows.
   eventType: string;
-  entityType: 'quote' | 'job' | 'invoice' | 'customer' | 'material' | 'payment' | 'user' | 'workflow_pack';
+  entityType:
+    | 'quote'
+    | 'job'
+    | 'invoice'
+    | 'customer'
+    | 'material'
+    | 'payment'
+    | 'user'
+    | 'workflow_pack'
+    | 'lead'      // R81 pipeline — new→qualified→won/lost transitions feed quote-win ML
+    | 'worker'    // R86 crew — assignment + utilization feed duration ML + cohort benchmarks
+    | 'license';  // R80 compliance — expiry events power renewal action queue
   entityId: string;
   payload: Record<string, any>;
   trade?: string;
@@ -223,6 +237,145 @@ export async function emitOnboardingCompleted(userId: string, data: {
     entityId: userId,
     payload: data,
     trade: data.trade,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Lead pipeline emitters (R81 + intelligence retrofit)
+// Lead transitions feed the quote-win predictor: new→contacted→estimate_sent
+// → won/lost. Source matters too (google_lsa vs referral have very different
+// acceptance rates). All emits cohort-attributed via trade/country defaults.
+// ---------------------------------------------------------------------------
+
+export async function emitLeadCreated(userId: string, leadId: string, data: {
+  source: string;
+  estimatedValue?: number;
+  customerId?: string;
+  hasJobDescription: boolean;
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'lead_created',
+    entityType: 'lead',
+    entityId: leadId,
+    payload: data,
+  });
+}
+
+export async function emitLeadStatusChanged(userId: string, leadId: string, data: {
+  fromStatus: string;
+  toStatus: string;
+  source: string;
+  estimatedValue?: number;
+  hoursInPreviousStatus?: number;
+  sourceQuoteId?: string;
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'lead_status_changed',
+    entityType: 'lead',
+    entityId: leadId,
+    payload: data,
+  });
+}
+
+export async function emitLeadConverted(userId: string, leadId: string, data: {
+  source: string;
+  outcome: 'won' | 'lost';
+  estimatedValue?: number;
+  actualQuoteAmount?: number;
+  sourceQuoteId?: string;
+  hoursFromCreatedToConverted: number;
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'lead_converted',
+    entityType: 'lead',
+    entityId: leadId,
+    payload: data,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Worker / crew emitters (R86 + intelligence retrofit)
+// Worker assignment + job actual duration train the per-worker duration
+// predictor ("Bas always takes 20% longer on tile work"). Solo contractors
+// never emit these.
+// ---------------------------------------------------------------------------
+
+export async function emitWorkerAdded(userId: string, workerId: string, data: {
+  role: string;
+  trade?: string;
+  hourlyCost?: number;
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'worker_added',
+    entityType: 'worker',
+    entityId: workerId,
+    payload: data,
+    trade: data.trade,
+  });
+}
+
+export async function emitWorkerAssigned(userId: string, workerId: string, data: {
+  jobId: string;
+  trade?: string;
+  estimatedHours?: number;
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'worker_assigned',
+    entityType: 'worker',
+    entityId: workerId,
+    payload: data,
+    trade: data.trade,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// License / compliance emitters (R80 + intelligence retrofit)
+// Licenses live as JSONB on business_settings, not their own table. We synth
+// a stable `entityId` from `${type}_${state||country}_${number}` so renewal
+// outcomes can be reattributed deterministically.
+// ---------------------------------------------------------------------------
+
+export async function emitLicenseAdded(userId: string, licenseEntityId: string, data: {
+  type: string;
+  state?: string;
+  number: string;
+  expiryDate: string;
+  issuingAuthority?: string;
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'license_added',
+    entityType: 'license',
+    entityId: licenseEntityId,
+    payload: data,
+  });
+}
+
+export async function emitLicenseExpiringSoon(userId: string, licenseEntityId: string, data: {
+  type: string;
+  state?: string;
+  expiryDate: string;
+  daysUntilExpiry: number;
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'license_expiring_soon',
+    entityType: 'license',
+    entityId: licenseEntityId,
+    payload: data,
+  });
+}
+
+export async function emitLicenseRenewed(userId: string, licenseEntityId: string, data: {
+  type: string;
+  state?: string;
+  oldExpiryDate: string;
+  newExpiryDate: string;
+  daysBeforeOldExpiry: number;  // negative if renewed after expiry
+}): Promise<void> {
+  await emitBusinessEvent(userId, {
+    eventType: 'license_renewed',
+    entityType: 'license',
+    entityId: licenseEntityId,
+    payload: data,
   });
 }
 

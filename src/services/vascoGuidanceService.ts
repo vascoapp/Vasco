@@ -47,7 +47,7 @@ export function useVascoGuidance(role: UserRole, screen: ScreenContext): ScoredI
   }, []);
 
   // Compute data counts for generator thresholds (suppress noise on low data)
-  const { jobs, invoices, quotes } = useAppState();
+  const { jobs, invoices, quotes, businessProfile } = useAppState();
   const dataCounts = useMemo<DataCounts>(() => ({
     jobCount: jobs?.length ?? 0,
     invoiceCount: invoices?.length ?? 0,
@@ -61,7 +61,8 @@ export function useVascoGuidance(role: UserRole, screen: ScreenContext): ScoredI
     profile,
     now,
     language: currentLanguage,
-  }), [role, screen, profile, now, currentLanguage]);
+    country: (businessProfile?.country as any) ?? 'NL',
+  }), [role, screen, profile, now, currentLanguage, businessProfile?.country]);
 
   // Run all generators (each is a hook internally), with data threshold filtering
   const rawInsights = useAllGenerators(ctx, dataCounts);

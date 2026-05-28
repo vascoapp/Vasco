@@ -7,7 +7,7 @@ import { useJobCostSummary } from '../../services/jobCostTrackingService';
 import { logPrediction } from '../calibration';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { detectAnomaly, getSeasonalMultiplier } from '../adaptiveThresholds';
-import { gt } from '../generatorTranslations';
+import { gt, gtMoney } from '../generatorTranslations';
 import { useAppState } from '../../state/AppState';
 import { useMarginDrift } from '../../services/marginDriftService';
 
@@ -39,7 +39,7 @@ export function useMarginDriftInsight(ctx: GeneratorContext): ScoredInsight | nu
   logPrediction({
     generatorId: 'margin-drift',
     predictedAt: new Date().toISOString(),
-    prediction: `Marge-lek deze maand: €${costSummary.totalMarginLeakage}`,
+    prediction: `Margin leakage this month: ${gtMoney(costSummary.totalMarginLeakage, ctx.country)}`,
     predictedValue: costSummary.totalMarginLeakage,
   });
 
@@ -52,7 +52,7 @@ export function useMarginDriftInsight(ctx: GeneratorContext): ScoredInsight | nu
 
   // Seasonal context
   const seasonMult = getSeasonalMultiplier('marginLeakage');
-  const seasonNote = seasonMult > 1.05 ? ' Marge-druk is hoger in het laagseizoen.' : '';
+  const seasonNote = seasonMult > 1.05 ? ' ' + gt('margin_season_note', ctx.language) : '';
   const priority = anomaly.severity === 'severe' ? 'critical'
     : anomaly.severity === 'moderate' ? 'high'
     : amount > 1000 ? 'high' : 'medium';
@@ -63,21 +63,21 @@ export function useMarginDriftInsight(ctx: GeneratorContext): ScoredInsight | nu
     category: isNegative ? 'alert' : 'opportunity',
     priority,
     title: isNegative
-      ? gt('margin_title_erosion', ctx.language, { amount: amount.toLocaleString('nl-NL') })
-      : gt('margin_title_above', ctx.language, { amount: amount.toLocaleString('nl-NL') }),
+      ? gt('margin_title_erosion2', ctx.language, { amount: gtMoney(amount, ctx.country) })
+      : gt('margin_title_above2', ctx.language, { amount: gtMoney(amount, ctx.country) }),
     message: isNegative
       ? gt('margin_message_below', ctx.language) + seasonNote
       : gt('margin_message_above', ctx.language),
     detail: isNegative
-      ? `De grootste afwijkingen zitten waarschijnlijk in materiaalkosten en extra uren. Bekijk de details per klus.${anomaly.isAnomaly ? ` ${anomaly.description}` : ''}`
-      : `Blijf je huidige werkwijze handhaven — je kostenbeheersing is sterk.`,
+      ? gt('margin_detail_below', ctx.language) + (anomaly.isAnomaly ? ` ${anomaly.description}` : '')
+      : gt('margin_detail_above', ctx.language),
     icon: isNegative ? 'trending-down' : 'trending-up',
-    actionLabel: isNegative ? 'Kostenvariaties bekijken' : undefined,
+    actionLabel: isNegative ? gt('margin_action_view', ctx.language) : undefined,
     actionRoute: isNegative ? '/(contractor)/besparen' : undefined,
     source: gt('source_margin', ctx.language),
     metric: {
-      label: 'Marge impact',
-      value: `${isNegative ? '-' : '+'}€${amount.toLocaleString('nl-NL')}`,
+      label: gt('margin_metric_impact', ctx.language),
+      value: `${isNegative ? '-' : '+'}${gtMoney(amount, ctx.country)}`,
       trend: isNegative ? 'down' : 'up',
     },
 
@@ -85,22 +85,25 @@ export function useMarginDriftInsight(ctx: GeneratorContext): ScoredInsight | nu
     rawScore: 0,
     reasoning: {
       observation: isNegative
-        ? `Marges lopen €${amount.toLocaleString('nl-NL')} achter op begroting`
-        : `Marges lopen €${amount.toLocaleString('nl-NL')} voor op begroting`,
-      evidence: `Op basis van ${jobCount} actieve klussen deze maand${anomaly.isAnomaly ? ` — anomalie gedetecteerd (${anomaly.zScore.toFixed(1)}σ)` : ''}${(() => { const t = getTrend(ctx.profile, 'marginLeakage', 4); return t && t.slope !== 0 ? ` — marge-trend: ${t.direction}` : ''; })()}${cohortDrift && Math.abs(cohortDrift.driftPp) >= 2 ? `. Cohort margedrift: ${cohortDrift.driftPp >= 0 ? '+' : ''}${cohortDrift.driftPp.toFixed(1)}pp (${cohortDrift.recentContractorCount} vakmannen).` : ''}`,
+        ? gt('margin_obs_below', ctx.language, { amount: gtMoney(amount, ctx.country) })
+        : gt('margin_obs_above', ctx.language, { amount: gtMoney(amount, ctx.country) }),
+      evidence: gt('margin_evidence', ctx.language, { count: jobCount })
+        + (anomaly.isAnomaly ? gt('margin_evidence_anomaly', ctx.language, { z: anomaly.zScore.toFixed(1) }) : '')
+        + (() => { const t = getTrend(ctx.profile, 'marginLeakage', 4); return t && t.slope !== 0 ? gt('margin_evidence_trend', ctx.language, { direction: t.direction }) : ''; })()
+        + (cohortDrift && Math.abs(cohortDrift.driftPp) >= 2 ? gt('margin_evidence_cohort', ctx.language, { sign: cohortDrift.driftPp >= 0 ? '+' : '', pp: cohortDrift.driftPp.toFixed(1), count: cohortDrift.recentContractorCount }) : ''),
       implication: isNegative
-        ? `Bij gelijkblijvend tempo verlies je €${(amount * 12).toLocaleString('nl-NL')}/jaar`
-        : `Op jaarbasis is dit +€${(amount * 12).toLocaleString('nl-NL')} extra winst`,
+        ? gt('margin_impl_below', ctx.language, { amount: gtMoney(amount * 12, ctx.country) })
+        : gt('margin_impl_above', ctx.language, { amount: gtMoney(amount * 12, ctx.country) }),
       suggestion: isNegative
-        ? 'Analyseer de top-3 klussen met de grootste kostenafwijking'
-        : 'Documenteer je huidige werkwijze als best practice',
+        ? gt('margin_sugg_below', ctx.language)
+        : gt('margin_sugg_above', ctx.language),
     },
     dataPoints: jobCount,
     confidence: anomaly.isAnomaly ? Math.min(0.95, 0.85 + 0.05) : 0.85,
     freshness: 2,
     action: {
       type: 'adjust_quote',
-      label: 'Prijzen aanpassen',
+      label: gt('margin_action_adjust', ctx.language),
       params: {},
       requiresApproval: true,
     },

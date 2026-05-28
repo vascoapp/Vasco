@@ -81,7 +81,9 @@
       "quotes": "Devis",
       "drafts": "Brouillons",
       "refresh": "Actualiser",
-      "newQuote": "Nouveau devis"
+      "newQuote": "Nouveau devis",
+      "openProject": "Ouvrir le projet",
+      "newProject": "Nouveau projet"
     },
     "invoices": {
       "invoices": "Factures",
@@ -223,6 +225,12 @@
     "aiDemoNote": "Vous obtenez 5 analyses IA gratuites par mois sur le plan gratuit",
     "choosePlan": "Choisissez votre plan",
     "choosePlanDesc": "Commencez gratuitement, passez a un plan superieur quand vous voulez",
+    "recommendedForYou": "RECOMMANDÉ POUR VOUS",
+    "bestForAannemers": "IDÉAL POUR LES ENTREPRISES GÉNÉRALES",
+    "contractorTierAannemer": "Entreprise générale",
+    "featAannemerProjects": "Tableaux de projet multi-corps d'état",
+    "featAannemerSubs": "Coordination des sous-traitants + sièges",
+    "featAannemerQuote": "Générateur de devis multi-corps d'état",
     "monthly": "Mensuel",
     "annual": "Annuel",
     "planFree": "Gratuit",
@@ -1881,7 +1889,11 @@
       "guideFollowup": "Relancer {{count}} devis ouvert(s)",
       "guideFollowupDesc": "Les clients qui répondent en 48h convertissent ~3x plus.",
       "guideStart": "Commencez par votre premier devis",
-      "guideStartDesc": "Prenez une photo — Vasco rédige le devis."
+      "guideStartDesc": "Prenez une photo — Vasco rédige le devis.",
+      "guideAannemerProjects": "{{count}} projet(s) en cours aujourd'hui",
+      "guideAannemerProjectsDesc": "Ouvrez un projet pour coordonner les corps de métier, suivre les sous-devis et tenir le planning.",
+      "guideAannemerStart": "Démarrez votre premier projet multi-corps d'état",
+      "guideAannemerStartDesc": "Ajoutez les corps de métier que vous coordonnez — Vasco rédige le devis multi-corps."
     },
     "pill": {
       "decided": "Décidé",

@@ -81,6 +81,22 @@ const TEAM_SIZES = [
   { key: 'large', icon: 'business' },
 ] as const;
 
+// solo / small (1-5) get Pro as the right-sized tier; medium / large (6+) need
+// the Contractor tier for crew seats + team features. Used at the plan step to
+// pre-select the recommended tier and move the "RECOMMENDED FOR YOU" badge so
+// a 10-person crew lead isn't shown Free's 5-job limit as the headline option.
+// Aannemers (multi-trade renovation GCs, selectedTrades.length >= 2) always
+// need the Contractor tier even when team size says "solo" — project
+// coordination + subcontractor seats are the value drivers, not headcount.
+const recommendedTierForTeam = (
+  size: string | null,
+  tradeCount = 1,
+): SubscriptionTier => {
+  if (tradeCount >= 2) return 'contractor';
+  if (size === 'medium' || size === 'large') return 'contractor';
+  return 'pro';
+};
+
 const BUSINESS_TYPES: Record<Country, { key: string; label: string }[]> = {
   NL: [
     { key: 'eenmanszaak', label: 'Eenmanszaak' },
@@ -285,6 +301,10 @@ export default function OnboardingScreen() {
   const [postcode, setPostcode] = useState('');
   const [radius, setRadius] = useState(25);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionTier>('free');
+  // Tracks whether the user has manually picked a tier on step 13. We only
+  // auto-set the recommendation while this is still false — once they choose,
+  // we never overwrite their explicit selection on re-entry.
+  const [planManuallyPicked, setPlanManuallyPicked] = useState(false);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const [submitting, setSubmitting] = useState(false);
 
@@ -309,11 +329,23 @@ export default function OnboardingScreen() {
         if (saved.certs) setSelectedCerts(saved.certs);
         if (saved.postcode) setPostcode(saved.postcode);
         if (typeof saved.radius === 'number') setRadius(saved.radius);
-        if (saved.plan) setSelectedPlan(saved.plan);
+        if (saved.plan) {
+          setSelectedPlan(saved.plan);
+          setPlanManuallyPicked(true);
+        }
         if (saved.billingCycle) setBillingCycle(saved.billingCycle);
       } catch {}
     })();
   }, []);
+
+  // Pre-select the right-sized tier when the user lands on step 13 — unless
+  // they've already manually picked one. Solo/small default to Pro; medium/large
+  // default to Contractor. Replaces the old static 'free' default which was
+  // wrong for every team larger than one.
+  useEffect(() => {
+    if (step !== 13 || planManuallyPicked) return;
+    setSelectedPlan(recommendedTierForTeam(teamSize));
+  }, [step, teamSize, planManuallyPicked]);
 
   // Persist progress on every step change so backgrounding never loses work
   useEffect(() => {
@@ -598,6 +630,10 @@ export default function OnboardingScreen() {
       ];
       await AsyncStorage.setItem('@vasco_jobs', JSON.stringify(seedJobs)).catch(() => {});
       await AsyncStorage.setItem('@vasco_customers', JSON.stringify(seedCustomers)).catch(() => {});
+      // Tell the Vandaag screen this contractor has not interacted with the
+      // app yet — drives the simplified first-login hero. Cleared automatically
+      // when they create their first quote / invoice / customer.
+      await AsyncStorage.setItem('@vasco_first_login_pending', 'true').catch(() => {});
 
       // Analytics event: funnel — signup → onboarding completed → first quote → first invoice → first paid
       try {
@@ -1145,6 +1181,15 @@ export default function OnboardingScreen() {
         const freeTier = TIERS.free;
         const proTier = TIERS.pro;
         const contractorTier = TIERS.contractor;
+        // Badge follows the teamSize-derived recommendation so a 10-person
+        // crew lead sees "RECOMMENDED FOR YOU" on Contractor, not Pro.
+        // Aannemer = 2+ trades selected → renovation GC → Contractor tier
+        // is the right recommendation regardless of team size.
+        const recommendedTier = recommendedTierForTeam(teamSize, selectedTrades.length);
+        const isAannemerOnboarding = selectedTrades.length >= 2;
+        const recommendedBadge = isAannemerOnboarding
+          ? t('onboarding.bestForAannemers', 'BEST FOR AANNEMERS')
+          : t('onboarding.recommendedForYou', 'RECOMMENDED FOR YOU');
 
         const plans: { id: SubscriptionTier; name: string; price: number; annualPrice: number; badge?: string; commission: string; features: { text: string; highlight?: boolean }[] }[] = [
           {
@@ -1152,6 +1197,7 @@ export default function OnboardingScreen() {
             name: 'Free',
             price: 0,
             annualPrice: 0,
+            badge: recommendedTier === 'free' ? recommendedBadge : undefined,
             commission: '3.5%',
             features: [
               { text: `${freeTier.limits.maxActiveJobs} ${t('common.jobs', 'jobs')}` },
@@ -1164,7 +1210,7 @@ export default function OnboardingScreen() {
             name: 'Pro',
             price: proTier.monthlyPrice,
             annualPrice: proTier.annualMonthlyPrice,
-            badge: 'BEST VALUE',
+            badge: recommendedTier === 'pro' ? recommendedBadge : undefined,
             commission: '2%',
             features: [
               { text: t('common.unlimited', 'Unlimited') + ' ' + t('common.jobs', 'jobs'), highlight: true },
@@ -1175,16 +1221,24 @@ export default function OnboardingScreen() {
           },
           {
             id: 'contractor',
-            name: 'Contractor',
+            name: isAannemerOnboarding ? t('onboarding.contractorTierAannemer', 'Aannemer') : 'Contractor',
             price: contractorTier.monthlyPrice,
             annualPrice: contractorTier.annualMonthlyPrice,
+            badge: recommendedTier === 'contractor' ? recommendedBadge : undefined,
             commission: '1%',
-            features: [
-              { text: t('common.teamFeatures', 'Team features'), highlight: true },
-              { text: `${contractorTier.limits.maxTeamSeats} ${t('common.seats', 'seats')}`, highlight: true },
-              { text: t('common.apiWhiteLabel', 'API + white-label'), highlight: true },
-              { text: '1% ' + t('common.perInvoice', 'per paid invoice'), highlight: true },
-            ],
+            features: isAannemerOnboarding
+              ? [
+                  { text: t('onboarding.featAannemerProjects', 'Multi-trade project boards'), highlight: true },
+                  { text: t('onboarding.featAannemerSubs', 'Subcontractor coordination + seats'), highlight: true },
+                  { text: t('onboarding.featAannemerQuote', 'Cross-trade quote builder'), highlight: true },
+                  { text: '1% ' + t('common.perInvoice', 'per paid invoice'), highlight: true },
+                ]
+              : [
+                  { text: t('common.teamFeatures', 'Team features'), highlight: true },
+                  { text: `${contractorTier.limits.maxTeamSeats} ${t('common.seats', 'seats')}`, highlight: true },
+                  { text: t('common.apiWhiteLabel', 'API + white-label'), highlight: true },
+                  { text: '1% ' + t('common.perInvoice', 'per paid invoice'), highlight: true },
+                ],
           },
         ];
 
@@ -1228,7 +1282,10 @@ export default function OnboardingScreen() {
                 <Pressable
                   key={plan.id}
                   style={[styles.planCard, hasBadge && styles.planCardPro, isSelected && styles.planCardSelected]}
-                  onPress={() => setSelectedPlan(plan.id)}
+                  onPress={() => {
+                    setSelectedPlan(plan.id);
+                    setPlanManuallyPicked(true);
+                  }}
                   accessibilityRole="button"
                 >
                   {hasBadge && (

@@ -114,6 +114,174 @@ function initCustomerRemapListener(): void {
 
 initCustomerRemapListener();
 
+// ---------------------------------------------------------------------------
+// Lead + Worker embeddings (intelligence retrofit Stage 4)
+// ---------------------------------------------------------------------------
+// These write to the generic `public.embeddings` table (item_type='lead' /
+// 'worker') rather than dedicated per-feature tables. The CHECK on
+// item_type was widened by migration 20260527000001.
+//
+// Two-step flow (mirrors semanticSearch.indexItem):
+//   1. Call `generate-embedding` to get the 1536-d vector for the text
+//   2. Upsert into `embeddings` with the entity's id + owner scope
+//
+// Fire-and-forget: callers .catch(()=>{}) — never block UI on the network.
+// ---------------------------------------------------------------------------
+
+async function generateEmbeddingVector(text: string): Promise<number[] | null> {
+  if (!isSupabaseConfigured) return null;
+  try {
+    const { data, error } = await supabase.functions.invoke('generate-embedding', { body: { text } });
+    if (error || !data?.embedding) return null;
+    return data.embedding as number[];
+  } catch {
+    return null;
+  }
+}
+
+export async function embedLead(input: {
+  leadId: string;
+  text: string;          // concatenated customerName + jobDescription + notes
+  metadata?: Record<string, unknown>;
+}): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  const userId = getAuthedUserId();
+  if (!userId || !input.leadId || !input.text || input.text.length < 3) return;
+  const embedding = await generateEmbeddingVector(input.text);
+  if (!embedding) return;
+  try {
+    await (supabase.from('embeddings') as any).upsert({
+      id: `lead:${input.leadId}`,
+      item_type: 'lead',
+      title: input.text.slice(0, 200),
+      description: '',
+      embedding,
+      // R301 audit fix: stash the source text in metadata so the idRemap
+      // listener can re-upsert the embedding under the real uuid without
+      // round-tripping through generate-embedding (no extra OpenAI call).
+      metadata: { ...(input.metadata ?? {}), embedded_text: input.text },
+      // Leads are owner-scoped — RLS already enforces this, but we set
+      // user_id explicitly so the row never accidentally cohort-shares.
+      user_id: userId,
+    });
+  } catch {
+    // best-effort
+  }
+}
+
+export async function embedWorker(input: {
+  workerId: string;
+  text: string;          // concatenated name + role + trade + skills
+  metadata?: Record<string, unknown>;
+}): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  const userId = getAuthedUserId();
+  if (!userId || !input.workerId || !input.text || input.text.length < 3) return;
+  const embedding = await generateEmbeddingVector(input.text);
+  if (!embedding) return;
+  try {
+    await (supabase.from('embeddings') as any).upsert({
+      id: `worker:${input.workerId}`,
+      item_type: 'worker',
+      title: input.text.slice(0, 200),
+      description: '',
+      embedding,
+      // R301 audit fix: same source-text stash as embedLead so remap can
+      // re-upsert under the real uuid without a fresh embedding call.
+      metadata: { ...(input.metadata ?? {}), embedded_text: input.text },
+      user_id: userId,
+    });
+  } catch {
+    // best-effort
+  }
+}
+
+// Search helpers — call match_similar_items with the new item_types.
+// The RPC accepts a free-text match_type so no migration is needed for the
+// query side. Both helpers are scoped to the caller's own rows via RLS.
+
+export async function findSimilarLeads(queryText: string, limit = 5): Promise<Array<{ leadId: string; similarity: number; title: string }>> {
+  if (!isSupabaseConfigured || !queryText) return [];
+  const embedding = await generateEmbeddingVector(queryText);
+  if (!embedding) return [];
+  try {
+    const { data, error } = await (supabase.rpc as any)('match_similar_items', {
+      query_embedding: embedding,
+      match_type: 'lead',
+      match_count: limit,
+    });
+    if (error || !Array.isArray(data)) return [];
+    return (data as any[]).map((r) => ({
+      leadId: String(r.id).replace(/^lead:/, ''),
+      similarity: Number(r.similarity),
+      title: String(r.title ?? ''),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function findSimilarWorkers(queryText: string, limit = 5): Promise<Array<{ workerId: string; similarity: number; title: string }>> {
+  if (!isSupabaseConfigured || !queryText) return [];
+  const embedding = await generateEmbeddingVector(queryText);
+  if (!embedding) return [];
+  try {
+    const { data, error } = await (supabase.rpc as any)('match_similar_items', {
+      query_embedding: embedding,
+      match_type: 'worker',
+      match_count: limit,
+    });
+    if (error || !Array.isArray(data)) return [];
+    return (data as any[]).map((r) => ({
+      workerId: String(r.id).replace(/^worker:/, ''),
+      similarity: Number(r.similarity),
+      title: String(r.title ?? ''),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+// ID-remap listener: when a temp lead/worker id swaps for the real BE uuid,
+// re-key the embedding row so the search results map back to real entities.
+// R301 audit fix: previously this just deleted the temp row, leaving a
+// search-coverage gap until the next user edit re-embedded. Now we
+// SELECT the temp row, insert a copy under the new id (carrying the same
+// vector + metadata), then delete the temp — single round-trip to OpenAI
+// was already paid on the original embed, no need to re-generate.
+function initLeadWorkerRemapListener() {
+  subscribeIdRemap(async (e: IdRemapEvent) => {
+    if (e.table !== 'leads' && e.table !== 'workers') return;
+    if (!isSupabaseConfigured) return;
+    const prefix = e.table === 'leads' ? 'lead' : 'worker';
+    const oldId = `${prefix}:${e.tempId}`;
+    const newId = `${prefix}:${e.realId}`;
+    try {
+      const { data: row } = await (supabase.from('embeddings') as any)
+        .select('item_type, title, description, embedding, metadata, user_id')
+        .eq('id', oldId)
+        .maybeSingle();
+      if (row && row.embedding) {
+        await (supabase.from('embeddings') as any).upsert({
+          id: newId,
+          item_type: row.item_type,
+          title: row.title,
+          description: row.description ?? '',
+          embedding: row.embedding,
+          metadata: row.metadata ?? {},
+          user_id: row.user_id,
+        });
+      }
+      await (supabase.from('embeddings') as any).delete().eq('id', oldId);
+    } catch {
+      // best-effort — search coverage degrades briefly on failure, never
+      // breaks the user flow.
+    }
+  });
+}
+
+initLeadWorkerRemapListener();
+
 export async function findSimilarCustomersByText(text: string, limit = 5): Promise<Array<{ customerId: string; similarity: number }>> {
   if (!isSupabaseConfigured) return [];
   const userId = getAuthedUserId();

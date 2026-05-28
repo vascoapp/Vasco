@@ -27,6 +27,7 @@ import {
   type DailyMetricPoint,
 } from '../../services/intelligenceCaptureService';
 import { useAuth } from '../../context/AuthContext';
+import { formatCurrency0, type Country } from '../../i18n/formatting';
 
 interface Props {
   trade?: string;
@@ -153,7 +154,7 @@ function MoatInsightsCardImpl({ trade, country }: Props) {
           </View>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Ontvangen</Text>
-            <Text style={styles.rowValue}>€{totals30d.paidEur.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
+            <Text style={styles.rowValue}>{formatCurrency0(totals30d.paidEur, effectiveCountry as Country)}</Text>
           </View>
         </>
       )}

@@ -8,7 +8,7 @@
 import type { ScoredInsight, GeneratorContext } from './types';
 import { useAppState } from '../../state/AppState';
 import { logPrediction } from '../calibration';
-import { gt } from '../generatorTranslations';
+import { gt, gtMoney } from '../generatorTranslations';
 
 export function useSimilarJobComparisonInsight(ctx: GeneratorContext): ScoredInsight | null {
   const { jobs, quotes } = useAppState();
@@ -84,23 +84,23 @@ export function useSimilarJobComparisonInsight(ctx: GeneratorContext): ScoredIns
   if (durationDiff !== undefined && durationDiff !== 0) {
     const absDiff = Math.abs(durationDiff);
     comparisonNote = durationDiff > 0
-      ? `Vergelijkbare klus "${pastJob.title}" duurde ${absDiff}u langer dan geschat.`
-      : `Vergelijkbare klus "${pastJob.title}" was ${absDiff}u sneller dan geschat.`;
+      ? gt('similar_dur_longer', ctx.language, { title: pastJob.title, hours: absDiff })
+      : gt('similar_dur_faster', ctx.language, { title: pastJob.title, hours: absDiff });
   }
   if (marginDiff !== undefined && marginDiff !== 0) {
     const pastQuoted = pastJob.agreedAmount ?? pastJob.quotedAmount ?? 0;
-    comparisonNote += ` Offerte was €${pastQuoted.toLocaleString('nl-NL')}.`;
+    comparisonNote += ' ' + gt('similar_quote_was', ctx.language, { amount: gtMoney(pastQuoted, ctx.country) });
   }
 
   if (!comparisonNote) {
-    comparisonNote = `Vergelijkbare klus "${pastJob.title}" is eerder uitgevoerd.`;
+    comparisonNote = gt('similar_done_before', ctx.language, { title: pastJob.title });
   }
 
   // Log prediction
   logPrediction({
     generatorId: 'similar-job-comparison',
     predictedAt: new Date().toISOString(),
-    prediction: `Vergelijkbare klus gevonden: "${pastJob.title}" (similarity: ${Math.round(bestMatch.similarity * 100)}%)`,
+    prediction: `Similar job found: "${pastJob.title}" (similarity: ${Math.round(bestMatch.similarity * 100)}%)`,
     predictedValue: bestMatch.similarity,
   });
 
@@ -109,25 +109,26 @@ export function useSimilarJobComparisonInsight(ctx: GeneratorContext): ScoredIns
     generatorId: 'similar-job-comparison',
     category: 'operational',
     priority: 'medium',
-    title: `Vergelijkbaar: ${pastJob.title}`,
+    title: gt('similar_title', ctx.language, { title: pastJob.title }),
     message: comparisonNote,
-    detail: `Klus "${activeJob.title}" lijkt op eerdere klus "${pastJob.title}". Gebruik eerdere ervaring om beter te plannen en te prijzen.`,
+    detail: gt('similar_detail', ctx.language, { active: activeJob.title, past: pastJob.title }),
     icon: 'git-compare',
-    actionLabel: 'Bekijk details',
+    actionLabel: gt('similar_action_view', ctx.language),
     source: gt('source_job_comparison', ctx.language),
     metric: pastJob.agreedAmount
-      ? { label: 'Vorige offerte', value: `€${pastJob.agreedAmount.toLocaleString('nl-NL')}`, trend: 'neutral' }
+      ? { label: gt('similar_metric_prev', ctx.language), value: gtMoney(pastJob.agreedAmount, ctx.country), trend: 'neutral' }
       : undefined,
 
     rootCauseTags: ['planning', 'estimation'],
     rawScore: 0,
     reasoning: {
-      observation: `Klus "${activeJob.title}" heeft een vergelijkbare eerdere klus`,
-      evidence: `"${pastJob.title}" — ${Math.round(bestMatch.similarity * 100)}% overeenkomst${pastJob.trade ? `, vak: ${pastJob.trade}` : ''}`,
-      implication: 'Gebruik historische data om realistische schattingen te maken',
+      observation: gt('similar_obs', ctx.language, { title: activeJob.title }),
+      evidence: gt('similar_evidence', ctx.language, { title: pastJob.title, pct: Math.round(bestMatch.similarity * 100) })
+        + (pastJob.trade ? gt('similar_evidence_trade', ctx.language, { trade: pastJob.trade }) : ''),
+      implication: gt('similar_impl', ctx.language),
       suggestion: durationDiff && durationDiff > 0
-        ? 'Plan extra tijd in — vergelijkbare klussen duurden langer dan geschat'
-        : 'Gebruik de offerte van de vorige klus als referentie',
+        ? gt('similar_sugg_time', ctx.language)
+        : gt('similar_sugg_ref', ctx.language),
     },
     dataPoints: completedJobs.length,
     confidence: Math.min(0.85, bestMatch.similarity + 0.3),

@@ -4,6 +4,7 @@
 
 import type { VascoInsight, InsightPriority } from '../../components/shared/VascoInsightCard';
 import type { ContractorLearningProfile } from '../learningStorage';
+import type { Country } from '../../i18n/formatting';
 
 export type UserRole = 'contractor' | 'sitelead' | 'coo' | 'cfo' | 'director';
 export type ScreenContext =
@@ -26,6 +27,9 @@ export interface GeneratorContext {
   profile: ContractorLearningProfile;
   now: Date;
   language: GeneratorLanguage;
+  /** Contractor's country — drives currency symbol + number grouping in
+   *  gtMoney(). Optional for back-compat; defaults to 'NL' (EUR) when absent. */
+  country?: Country;
 }
 
 export interface ReasoningChain {

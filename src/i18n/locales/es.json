@@ -81,7 +81,9 @@
       "quotes": "Presupuestos",
       "drafts": "Borradores",
       "refresh": "Actualizar",
-      "newQuote": "Nuevo presupuesto"
+      "newQuote": "Nuevo presupuesto",
+      "openProject": "Abrir proyecto",
+      "newProject": "Nuevo proyecto"
     },
     "invoices": {
       "invoices": "Facturas",
@@ -223,6 +225,12 @@
     "aiDemoNote": "Recibes 5 analisis IA gratis al mes en el plan gratuito",
     "choosePlan": "Elige tu plan",
     "choosePlanDesc": "Empieza gratis, mejora cuando quieras",
+    "recommendedForYou": "RECOMENDADO PARA TI",
+    "bestForAannemers": "MEJOR PARA CONTRATISTAS GENERALES",
+    "contractorTierAannemer": "Contratista General",
+    "featAannemerProjects": "Tableros de proyecto multi-oficio",
+    "featAannemerSubs": "Coordinación de subcontratistas + plazas",
+    "featAannemerQuote": "Generador de presupuestos multi-oficio",
     "monthly": "Mensual",
     "annual": "Anual",
     "planFree": "Gratis",
@@ -1881,7 +1889,11 @@
       "guideFollowup": "Sigue {{count}} presupuesto(s) abierto(s)",
       "guideFollowupDesc": "Clientes que responden en 48h convierten ~3x más.",
       "guideStart": "Empieza con tu primer presupuesto",
-      "guideStartDesc": "Toma una foto — Vasco redacta el presupuesto."
+      "guideStartDesc": "Toma una foto — Vasco redacta el presupuesto.",
+      "guideAannemerProjects": "{{count}} proyecto(s) en marcha hoy",
+      "guideAannemerProjectsDesc": "Abre un proyecto para coordinar oficios, seguir sub-presupuestos y mantener el calendario.",
+      "guideAannemerStart": "Comienza tu primer proyecto multi-oficio",
+      "guideAannemerStartDesc": "Añade los oficios que coordinas — Vasco crea el presupuesto multi-oficio."
     },
     "pill": {
       "decided": "Decidido",

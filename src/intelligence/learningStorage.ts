@@ -472,6 +472,41 @@ export async function resolveOutcomesFromQuoteOutcome(
 }
 
 /**
+ * Stage 6 — generator outcome attribution.
+ *
+ * Each of the 3 intelligence-retrofit generators logs a `predictedValue`
+ * representing the count of problem entities it found (stale leads,
+ * over/idle workers, expiring licenses). The same metric measured later
+ * is the `actualValue`: if the contractor acted on the suggestion, the
+ * count dropped → prediction was accurate → generator earns confidence
+ * weight; if the count stayed flat or grew, the suggestion didn't move
+ * the needle → generator gets down-weighted next time.
+ *
+ * Tolerance 50% is intentionally loose. These are noisy human-process
+ * outcomes; we want the calibration signal to track "did things get
+ * meaningfully better" not "did we predict 4.0000 leads exactly".
+ *
+ * Called from AppState mutators (updateLead, updateWorker/removeWorker,
+ * updateBusinessProfile when licenses change) so resolution is event-
+ * driven, not polled on every render.
+ */
+export async function resolveOutcomesFromLeadStateChange(currentStaleCount: number): Promise<void> {
+  const { resolveByGenerator } = await import('./calibration');
+  await resolveByGenerator('lead-followup', currentStaleCount, 50, 14 * MS_PER_DAY);
+}
+
+export async function resolveOutcomesFromCrewStateChange(currentProblemCount: number): Promise<void> {
+  const { resolveByGenerator } = await import('./calibration');
+  // Sum of (overbooked + idle) workers — generator logged this as predictedValue.
+  await resolveByGenerator('worker-capacity', currentProblemCount, 50, 14 * MS_PER_DAY);
+}
+
+export async function resolveOutcomesFromLicenseStateChange(currentExpiringCount: number): Promise<void> {
+  const { resolveByGenerator } = await import('./calibration');
+  await resolveByGenerator('license-renewal-action', currentExpiringCount, 30, 60 * MS_PER_DAY);
+}
+
+/**
  * Resolve material/supplier predictions. Called when a material purchase
  * lands. actualPrice is what the contractor paid per unit.
  */

@@ -9,7 +9,7 @@ import type { ScoredInsight, GeneratorContext } from './types';
 import { useAppState } from '../../state/AppState';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { logPrediction } from '../calibration';
-import { gt } from '../generatorTranslations';
+import { gt, gtMoney } from '../generatorTranslations';
 import { useCohortAcceptLag } from '../../services/quoteResponseLagMoatService';
 
 export function useQuoteBenchmarkInsight(ctx: GeneratorContext): ScoredInsight | null {
@@ -66,7 +66,7 @@ export function useQuoteBenchmarkInsight(ctx: GeneratorContext): ScoredInsight |
   logPrediction({
     generatorId: 'quote-benchmark',
     predictedAt: new Date().toISOString(),
-    prediction: `Mediaan offerte voor "${bestJobType}": €${median.toLocaleString('nl-NL')}`,
+    prediction: `Median quote for "${bestJobType}": ${gtMoney(median, ctx.country)}`,
     predictedValue: median,
   });
 
@@ -74,9 +74,9 @@ export function useQuoteBenchmarkInsight(ctx: GeneratorContext): ScoredInsight |
   const trend = getTrend(ctx.profile, 'quoteMedian', 4);
   const trendText = trend
     ? trend.direction === 'improving'
-      ? ` Offertewaarde stijgt.`
+      ? ' ' + gt('qb_trend_up', ctx.language)
       : trend.direction === 'declining'
-        ? ` Offertewaarde daalt.`
+        ? ' ' + gt('qb_trend_down', ctx.language)
         : ''
     : '';
 
@@ -85,25 +85,25 @@ export function useQuoteBenchmarkInsight(ctx: GeneratorContext): ScoredInsight |
     generatorId: 'quote-benchmark',
     category: 'financial',
     priority: 'medium',
-    title: `Benchmark: ${bestJobType}`,
-    message: `Je mediaan offerte voor dit type klus is €${median.toLocaleString('nl-NL')}. Acceptatieratio: ${acceptanceRate}%.`,
-    detail: `Op basis van ${bestAmounts.length} offertes. Prijsrange: €${sorted[0].toLocaleString('nl-NL')} – €${sorted[sorted.length - 1].toLocaleString('nl-NL')}.${trendText}`,
+    title: gt('qb_title', ctx.language, { type: bestJobType }),
+    message: gt('qb_message', ctx.language, { median: gtMoney(median, ctx.country), rate: acceptanceRate }),
+    detail: gt('qb_detail', ctx.language, { count: bestAmounts.length, min: gtMoney(sorted[0], ctx.country), max: gtMoney(sorted[sorted.length - 1], ctx.country) }) + trendText,
     icon: 'analytics',
-    actionLabel: 'Pas prijs aan',
+    actionLabel: gt('qb_action', ctx.language),
     source: gt('source_quote_benchmark', ctx.language),
-    metric: { label: 'Mediaan', value: `€${median.toLocaleString('nl-NL')}`, trend: 'neutral' },
+    metric: { label: gt('qb_metric_median', ctx.language), value: gtMoney(median, ctx.country), trend: 'neutral' },
 
     rootCauseTags: ['pricing', 'quotes'],
     rawScore: 0,
     reasoning: {
-      observation: `${bestAmounts.length} offertes gevonden voor "${bestJobType}"`,
+      observation: gt('qb_obs', ctx.language, { count: bestAmounts.length, type: bestJobType }),
       evidence: acceptLag && acceptLag.medianHours !== null && acceptLag.contractorCount >= 5
-        ? `Mediaan: €${median.toLocaleString('nl-NL')}, acceptatieratio: ${acceptanceRate}%. Cohort accepteert doorgaans binnen ${Math.round(acceptLag.medianHours / 24)}d (p75: ${Math.round(acceptLag.p75Hours! / 24)}d).`
-        : `Mediaan: €${median.toLocaleString('nl-NL')}, acceptatieratio: ${acceptanceRate}%`,
-      implication: `Gebruik deze benchmark om je prijsstelling te optimaliseren`,
+        ? gt('qb_evidence_cohort', ctx.language, { median: gtMoney(median, ctx.country), rate: acceptanceRate, days: Math.round(acceptLag.medianHours / 24), p75: Math.round(acceptLag.p75Hours! / 24) })
+        : gt('qb_evidence', ctx.language, { median: gtMoney(median, ctx.country), rate: acceptanceRate }),
+      implication: gt('qb_impl', ctx.language),
       suggestion: acceptanceRate < 50
-        ? 'Overweeg je prijzen te verlagen — de acceptatieratio is onder 50%'
-        : 'Je prijsstelling zit goed — blijf bij je huidige niveau',
+        ? gt('qb_sugg_lower', ctx.language)
+        : gt('qb_sugg_keep', ctx.language),
     },
     dataPoints: bestAmounts.length,
     confidence: Math.min(0.9, 0.5 + bestAmounts.length * 0.1),

@@ -88,6 +88,11 @@ export async function predictQuoteWin(params: {
   customerId?: string;
   customerType?: string;
   jobType?: string;
+  // Stage 2: when the quote was drafted from a lead, threading the source
+  // here lets us apply a soft cohort lift (e.g. google_lsa leads convert
+  // 20% above market baseline → 1.2× lift on probability). Skipped when
+  // the cohort RPC hasn't shipped or k-anonymity gate fails.
+  sourceLeadSource?: string;
 }): Promise<QuoteWinPrediction> {
   const profile = await loadProfile();
   const learned = await getLearnedCoefficients();
@@ -152,8 +157,27 @@ export async function predictQuoteWin(params: {
   // them. Instead: if trained.confidence > 0.5 use it outright; below that
   // threshold fall back to the heuristic.
   const useTrained = trainedProbability !== null && trainedProbability.confidence >= 0.5;
-  const probability = useTrained ? trainedProbability!.probability : heuristicProbability;
+  let probability = useTrained ? trainedProbability!.probability : heuristicProbability;
   const confidence = useTrained ? trainedProbability!.confidence : heuristicConfidence;
+
+  // Stage 2 lead-source lift — a soft multiplier (0.75…1.35) applied AFTER
+  // the base prediction. No-op (returns 1.0) until the cohort RPC ships
+  // AND k-anonymity gate passes, so this is safe to enable before any
+  // server-side work lands.
+  if (params.sourceLeadSource) {
+    try {
+      const { getLeadSourceLift } = await import('../services/leadSourceStatsService');
+      const { getCurrentUserId } = await import('../lib/currentUser');
+      const lift = await getLeadSourceLift(getCurrentUserId(), {
+        source: params.sourceLeadSource as any,
+        trade: params.trade,
+        country: params.country,
+      });
+      probability = Math.max(0.05, Math.min(0.97, probability * lift));
+    } catch {
+      // No-op; never let the lift path break a prediction.
+    }
+  }
 
   // Suggested price range for optimal acceptance
   const optimalLow = Math.round(avgAmount * 0.85);

@@ -9,7 +9,7 @@ import type { ScoredInsight, GeneratorContext } from './types';
 import { useAppState } from '../../state/AppState';
 import { recordMetricSnapshot } from '../learningStorage';
 import { logPrediction } from '../calibration';
-import { gt } from '../generatorTranslations';
+import { gt, gtMoney } from '../generatorTranslations';
 import { useCohortOverdueRate } from '../../services/customerRiskMoatService';
 
 export function useCustomerPaymentHistoryInsight(ctx: GeneratorContext): ScoredInsight | null {
@@ -68,7 +68,7 @@ export function useCustomerPaymentHistoryInsight(ctx: GeneratorContext): ScoredI
   logPrediction({
     generatorId: 'customer-payment-history',
     predictedAt: new Date().toISOString(),
-    prediction: `${slowestPayer.customerName} heeft ${slowestPayer.overdueCount} verlopen facturen van ${slowestPayer.totalInvoices} totaal`,
+    prediction: `${slowestPayer.customerName} has ${slowestPayer.overdueCount} overdue invoices out of ${slowestPayer.totalInvoices} total`,
     predictedValue: slowestPayer.overdueCount,
   });
 
@@ -80,27 +80,28 @@ export function useCustomerPaymentHistoryInsight(ctx: GeneratorContext): ScoredI
     generatorId: 'customer-payment-history',
     category: 'financial',
     priority: isSevere ? 'high' : 'medium',
-    title: `Betalingsgedrag: ${slowestPayer.customerName}`,
-    message: `${slowestPayer.customerName} heeft ${slowestPayer.overdueCount} verlopen facturen (${overdueRate}% van totaal). ${isSevere ? 'Overweeg vooruitbetaling of een betaalkorting.' : 'Stuur facturen snel na oplevering.'}`,
-    detail: `${slowestPayer.totalInvoices} facturen, totaal €${slowestPayer.totalAmount.toLocaleString('nl-NL')}. Gemiddelde betaaltermijn: ~${slowestPayer.avgDaysToPayEstimate} dagen.`,
+    title: gt('cph_title', ctx.language, { name: slowestPayer.customerName }),
+    message: gt('cph_message', ctx.language, { name: slowestPayer.customerName, count: slowestPayer.overdueCount, rate: overdueRate })
+      + ' ' + (isSevere ? gt('cph_message_severe', ctx.language) : gt('cph_message_mild', ctx.language)),
+    detail: gt('cph_detail', ctx.language, { count: slowestPayer.totalInvoices, amount: gtMoney(slowestPayer.totalAmount, ctx.country), days: slowestPayer.avgDaysToPayEstimate }),
     icon: 'person',
-    actionLabel: isSevere ? 'Betaalkorting aanbieden' : 'Stuur herinnering',
+    actionLabel: isSevere ? gt('cph_action_discount', ctx.language) : gt('cph_action_reminder', ctx.language),
     source: gt('source_customer', ctx.language),
-    metric: { label: 'Verlopen', value: `${overdueRate}%`, trend: isSevere ? 'down' : 'neutral' },
+    metric: { label: gt('cph_metric_overdue', ctx.language), value: `${overdueRate}%`, trend: isSevere ? 'down' : 'neutral' },
 
     rootCauseTags: ['cashflow', 'customer-risk'],
     rawScore: 0,
     reasoning: {
-      observation: `${slowestPayer.customerName} betaalt regelmatig te laat`,
+      observation: gt('cph_obs', ctx.language, { name: slowestPayer.customerName }),
       evidence: cohortRisk && cohortRisk.overdueRate !== null && cohortRisk.contractorCount >= 5
-        ? `${slowestPayer.overdueCount} van ${slowestPayer.totalInvoices} facturen waren verlopen (${overdueRate}%). Cohort in jouw land: ${Math.round((cohortRisk.overdueRate ?? 0) * 100)}%.`
-        : `${slowestPayer.overdueCount} van ${slowestPayer.totalInvoices} facturen waren verlopen`,
+        ? gt('cph_evidence_cohort', ctx.language, { count: slowestPayer.overdueCount, total: slowestPayer.totalInvoices, rate: overdueRate, cohort: Math.round((cohortRisk.overdueRate ?? 0) * 100) })
+        : gt('cph_evidence', ctx.language, { count: slowestPayer.overdueCount, total: slowestPayer.totalInvoices }),
       implication: cohortRisk && cohortRisk.overdueRate !== null && overdueRate > (cohortRisk.overdueRate * 100 + 10)
-        ? `Dit is ${Math.round(overdueRate - (cohortRisk.overdueRate * 100))}pp boven het cohort — serieuze risico, niet gewoon slechte gewoonte.`
-        : `Dit verhoogt je DSO en blokkeert werkkapitaal`,
+        ? gt('cph_impl_cohort', ctx.language, { pp: Math.round(overdueRate - (cohortRisk.overdueRate * 100)) })
+        : gt('cph_impl', ctx.language),
       suggestion: isSevere
-        ? 'Bied 2% korting bij betaling binnen 7 dagen, of vraag een aanbetaling'
-        : 'Stuur facturen direct na oplevering en plan automatische herinneringen',
+        ? gt('cph_sugg_severe', ctx.language)
+        : gt('cph_sugg_mild', ctx.language),
     },
     dataPoints: slowestPayer.totalInvoices,
     confidence: Math.min(0.9, 0.6 + slowestPayer.totalInvoices * 0.05),

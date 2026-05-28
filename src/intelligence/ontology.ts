@@ -19,17 +19,31 @@ const ONTOLOGY_KEY = '@vasco_ontology';
 // Types
 // ---------------------------------------------------------------------------
 
-export type EntityType = 'customer' | 'job' | 'quote' | 'invoice' | 'supplier' | 'material' | 'worker' | 'project' | 'certification';
+export type EntityType =
+  | 'customer'
+  | 'job'
+  | 'quote'
+  | 'invoice'
+  | 'supplier'
+  | 'material'
+  | 'worker'
+  | 'project'
+  | 'certification'
+  | 'lead'           // R81 pipeline — converts into a customer + quote on win
+  | 'license';       // R80 compliance — contractor-level, gates quote sends in some countries
 export type RelationType =
-  | 'owns'          // customer → job
-  | 'quoted_for'    // quote → job
-  | 'invoiced_for'  // invoice → job
-  | 'supplied_by'   // material → supplier
-  | 'used_in'       // material → job
-  | 'worked_on'     // worker → job
-  | 'part_of'       // job → project
+  | 'owns'           // customer → job
+  | 'quoted_for'     // quote → job
+  | 'invoiced_for'   // invoice → job
+  | 'supplied_by'    // material → supplier
+  | 'used_in'        // material → job
+  | 'worked_on'      // worker → job
+  | 'part_of'        // job → project
   | 'certified_by'  // worker → certification
-  | 'paid_for';     // invoice → payment
+  | 'paid_for'       // invoice → payment
+  | 'converted_from' // customer → lead     (won lead becomes a customer)
+  | 'sourced_quote'  // quote → lead         (quote drafted off a lead)
+  | 'authorizes';    // license → job       (covers a regulated job type)
 
 export interface OntologyEntity {
   id: string;
@@ -165,6 +179,8 @@ const TABLE_TO_ENTITY_TYPE: Record<string, EntityType> = {
   projects: 'project',
   documents: 'invoice', // ambiguous (quote|invoice); the entity stays under
                        // its original type — only id is rewritten.
+  leads: 'lead',       // R81 pipeline
+  workers: 'worker',   // R86 crew
 };
 
 /** Rewrite an entity id and all relations that reference it. Idempotent. */

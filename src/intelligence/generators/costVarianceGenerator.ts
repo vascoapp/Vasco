@@ -7,7 +7,7 @@
 // =============================================================================
 
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
-import { gt } from '../generatorTranslations';
+import { gt, gtMoney } from '../generatorTranslations';
 import { useAppState } from '../../state/AppState';
 import { useCohortCostVariance } from '../../services/costVarianceMoatService';
 
@@ -56,12 +56,12 @@ export function useCostVarianceInsight(ctx: GeneratorContext): ScoredInsight | n
     category: 'financial',
     priority: overrunPct > 40 ? 'high' : 'medium',
     title: `${worst.j.title}: ${overrunPct}% over budget`,
-    message: `Actual cost €${Math.round(worst.actual)} vs quoted €${Math.round(worst.quoted)} — €${diff} over.${problem.length > 1 ? ` ${problem.length - 1} more jobs show similar drift.` : ''}`,
+    message: `Actual cost ${gtMoney(worst.actual, ctx.country)} vs quoted ${gtMoney(worst.quoted, ctx.country)} — ${gtMoney(diff, ctx.country)} over.${problem.length > 1 ? ` ${problem.length - 1} more jobs show similar drift.` : ''}`,
     icon: 'trending-up',
     actionLabel: 'Review costs',
     actionRoute: `/contractor/job/${worst.j.id}`,
     source: gt('source_cost_tracking', ctx.language),
-    metric: { label: 'Overrun', value: `+€${diff.toLocaleString('nl-NL')}`, trend: 'down' as const },
+    metric: { label: 'Overrun', value: `+${gtMoney(diff, ctx.country)}`, trend: 'down' as const },
 
     rootCauseTags: ['margin', 'cost-variance'],
     rawScore: 0,
@@ -72,7 +72,7 @@ export function useCostVarianceInsight(ctx: GeneratorContext): ScoredInsight | n
         : `Materials + labour summed against quotedAmount`,
       implication: cohortBaseline && cohortBaseline.medianRatio !== null && cohortBaseline.medianRatio < 1 + (worst.overrun)
         ? `Your overrun is worse than the cohort median — not just the quote error, also ~${Math.round((worst.overrun - (cohortBaseline.medianRatio - 1)) * 100)}pp above typical.`
-        : `If this pattern repeats across 5 similar jobs you'd lose €${diff * 5} next quarter`,
+        : `If this pattern repeats across 5 similar jobs you'd lose ${gtMoney(diff * 5, ctx.country)} next quarter`,
       suggestion: 'Bump your quote template for this trade by 10-15% or add a contingency line',
     },
     dataPoints: problem.length,
@@ -83,7 +83,7 @@ export function useCostVarianceInsight(ctx: GeneratorContext): ScoredInsight | n
       label: 'Adjust future quotes',
       params: { trade: worst.j.trade, overrunPct },
       requiresApproval: true,
-      estimatedImpact: `Prevents ~€${diff} loss per similar job`,
+      estimatedImpact: `Prevents ~${gtMoney(diff, ctx.country)} loss per similar job`,
     },
     enqueueHint: {
       type: 'general' as const,

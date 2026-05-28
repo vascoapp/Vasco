@@ -394,6 +394,7 @@ function RootLayoutNav() {
       <Stack.Screen name="login" />
       <Stack.Screen name="forgot-password" />
       <Stack.Screen name="onboarding" />
+      <Stack.Screen name="reset-onboarding" />
       <Stack.Screen name="(contractor)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="contractor" />

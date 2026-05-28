@@ -385,6 +385,54 @@ export async function getLineEditDistribution(
 }
 
 // ---------------------------------------------------------------------------
+// Crew utilization cohort stats (intelligence retrofit Stage 5)
+// ---------------------------------------------------------------------------
+// "Contractors in your trade run avg N active jobs per worker — you're at M
+// on Bas, X.Xσ above cohort". RPC enforces k-anonymity ≥5 contractors.
+// Returns null when gate fails so consumers can render their fallback path.
+
+export interface CrewUtilizationCohort {
+  avgJobsPerWorker: number | null;
+  p25JobsPerWorker: number | null;
+  medianJobsPerWorker: number | null;
+  p75JobsPerWorker: number | null;
+  sampleSize: number;
+  contractorCount: number;
+  kAnonymityPassed: boolean;
+}
+
+export async function getCrewUtilizationCohort(params: {
+  trade?: string;
+  country?: string;
+  months?: number;
+}): Promise<CrewUtilizationCohort | null> {
+  if (!isSupabaseConfigured) return null;
+  try {
+    const { data, error } = await (supabase.rpc as any)('get_crew_utilization_stats', {
+      p_trade: params.trade ?? null,
+      p_country: params.country ?? null,
+      p_months: params.months ?? 3,
+    });
+    if (error) return null;
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) return null;
+    const contractorCount = Number(row.contractor_count ?? 0);
+    const passed = contractorCount >= 5 && row.median_jobs_per_worker != null;
+    return {
+      avgJobsPerWorker: passed ? Number(row.avg_jobs_per_worker ?? 0) : null,
+      p25JobsPerWorker: passed ? Number(row.p25_jobs_per_worker ?? 0) : null,
+      medianJobsPerWorker: passed ? Number(row.median_jobs_per_worker ?? 0) : null,
+      p75JobsPerWorker: passed ? Number(row.p75_jobs_per_worker ?? 0) : null,
+      sampleSize: Number(row.sample_size ?? 0),
+      contractorCount,
+      kAnonymityPassed: passed,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Trade baselines — pre-populated benchmarks for immediate value on signup
 // ---------------------------------------------------------------------------
 // Covers ALL 6 trades × 6 countries so new users see market data from day one.

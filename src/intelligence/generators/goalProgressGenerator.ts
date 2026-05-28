@@ -6,7 +6,7 @@ import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types'
 import { useSavingsAggregation } from '../../services/savingsAggregatorService';
 import { logPrediction } from '../calibration';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
-import { gt } from '../generatorTranslations';
+import { gt, gtMoney } from '../generatorTranslations';
 
 export const goalProgressGenerator: InsightGenerator = {
   id: 'goal-progress',
@@ -32,12 +32,12 @@ export function useGoalProgressInsight(ctx: GeneratorContext): ScoredInsight | n
   logPrediction({
     generatorId: 'goal-progress',
     predictedAt: new Date().toISOString(),
-    prediction: `Besparingsdoel: ${progressPercent}% van €${monthlyGoal}`,
+    prediction: `Savings goal: ${progressPercent}% of ${gtMoney(monthlyGoal, ctx.country)}`,
     predictedValue: savings.totalSavedThisMonth,
   });
   const isOnTrack = progressPercent >= 75;
   const streak = ctx.profile.savingsProfile.savingsStreak;
-  const streakText = streak >= 2 ? ` ${streak} maanden op rij bespaard!` : '';
+  const streakText = streak >= 2 ? ` ${gt('goal_progress_streak', ctx.language, { count: streak })}` : '';
   const topCat = ctx.profile.savingsProfile.topSavingsCategory;
 
   return {
@@ -46,17 +46,17 @@ export function useGoalProgressInsight(ctx: GeneratorContext): ScoredInsight | n
     category: isOnTrack ? 'opportunity' : 'tip',
     priority: 'low',
     title: isOnTrack
-      ? `${progressPercent}% van je maanddoel bereikt!`
-      : `Besparingsdoel: ${progressPercent}% bereikt`,
+      ? gt('goal_progress_title_ontrack', ctx.language, { pct: progressPercent })
+      : gt('goal_progress_title', ctx.language, { pct: progressPercent }),
     message: isOnTrack
-      ? `Je hebt €${savings.totalSavedThisMonth.toLocaleString('nl-NL')} bespaard deze maand. Je bent goed op weg!${streakText}`
-      : `€${savings.totalSavedThisMonth.toLocaleString('nl-NL')} van €${monthlyGoal.toLocaleString('nl-NL')} bespaard. Er zijn nog kansen om je doel te halen.`,
+      ? `${gt('goal_progress_message_ontrack', ctx.language, { amount: gtMoney(savings.totalSavedThisMonth, ctx.country) })}${streakText}`
+      : gt('goal_progress_message', ctx.language, { current: gtMoney(savings.totalSavedThisMonth, ctx.country), target: gtMoney(monthlyGoal, ctx.country) }),
     icon: isOnTrack ? 'trophy' : 'flag',
-    actionLabel: isOnTrack ? undefined : 'Bekijk kansen',
+    actionLabel: isOnTrack ? undefined : gt('goal_progress_action', ctx.language),
     actionRoute: isOnTrack ? undefined : '/(contractor)/besparen',
     source: gt('source_savings', ctx.language),
     metric: {
-      label: 'Voortgang',
+      label: gt('goal_progress_metric_label', ctx.language),
       value: `${progressPercent}%`,
       trend: isOnTrack ? 'up' : 'neutral',
     },
@@ -64,14 +64,14 @@ export function useGoalProgressInsight(ctx: GeneratorContext): ScoredInsight | n
     rootCauseTags: ['savings', 'goal'],
     rawScore: 0,
     reasoning: {
-      observation: `€${savings.totalSavedThisMonth.toLocaleString('nl-NL')} bespaard van €${monthlyGoal.toLocaleString('nl-NL')} maanddoel`,
-      evidence: `Op basis van ${savings.breakdown.length} besparingscategorieën${(() => { const t = getTrend(ctx.profile, 'savingsTotal'); return t && t.slope !== 0 ? ` (trend: ${t.direction})` : ''; })()}`,
+      observation: gt('goal_progress_observation', ctx.language, { current: gtMoney(savings.totalSavedThisMonth, ctx.country), target: gtMoney(monthlyGoal, ctx.country) }),
+      evidence: `${gt('goal_progress_evidence', ctx.language, { count: savings.breakdown.length })}${(() => { const t = getTrend(ctx.profile, 'savingsTotal'); return t && t.slope !== 0 ? ` ${gt('goal_progress_evidence_trend', ctx.language, { direction: gt(`trend_dir_${t.direction}`, ctx.language) })}` : ''; })()}`,
       implication: isOnTrack
-        ? `Op jaarbasis is dit €${(savings.totalSavedThisMonth * 12).toLocaleString('nl-NL')} besparing`
-        : `Je mist nog €${(monthlyGoal - savings.totalSavedThisMonth).toLocaleString('nl-NL')} om je doel te halen`,
+        ? gt('goal_progress_implication_ontrack', ctx.language, { amount: gtMoney(savings.totalSavedThisMonth * 12, ctx.country) })
+        : gt('goal_progress_implication', ctx.language, { amount: gtMoney(monthlyGoal - savings.totalSavedThisMonth, ctx.country) }),
       suggestion: isOnTrack
-        ? 'Verhoog je maanddoel om meer te besparen'
-        : topCat ? `Focus op "${topCat}" — je beste besparingscategorie` : 'Focus op leveranciersvergelijking — daar zitten de snelste besparingen',
+        ? gt('goal_progress_suggestion_ontrack', ctx.language)
+        : topCat ? gt('goal_progress_suggestion_cat', ctx.language, { category: topCat }) : gt('goal_progress_suggestion', ctx.language),
     },
     dataPoints: savings.breakdown.length,
     confidence: 0.7,

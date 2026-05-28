@@ -11,7 +11,7 @@ import { useProjectProfitability } from '../../services/projectProfitabilityServ
 import { logPrediction } from '../calibration';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { isAboveThreshold } from '../adaptiveThresholds';
-import { gt } from '../generatorTranslations';
+import { gt, gtMoney } from '../generatorTranslations';
 
 export const profitabilityGenerator: InsightGenerator = {
   id: 'profitability',
@@ -36,7 +36,7 @@ export function useProfitabilityInsight(ctx: GeneratorContext): ScoredInsight | 
   logPrediction({
     generatorId: 'profitability',
     predictedAt: new Date().toISOString(),
-    prediction: `Winstgevendheid impact: €${totalImpactForLog} (${warnings.length} risico's, ${opportunities.length} kansen)`,
+    prediction: `Profitability impact: ${gtMoney(totalImpactForLog, ctx.country)} (${warnings.length} risks, ${opportunities.length} opportunities)`,
     predictedValue: totalImpactForLog,
   });
 
@@ -51,10 +51,10 @@ export function useProfitabilityInsight(ctx: GeneratorContext): ScoredInsight | 
   // Build composite message
   const parts: string[] = [];
   if (warnings.length > 0) {
-    parts.push(`${warnings.length} risico${warnings.length > 1 ? '\'s' : ''} (€${warningImpact.toLocaleString('nl-NL')} impact)`);
+    parts.push(gt(warnings.length > 1 ? 'profitability_risks_multi' : 'profitability_risks_single', ctx.language, { count: warnings.length, amount: gtMoney(warningImpact, ctx.country) }));
   }
   if (opportunities.length > 0) {
-    parts.push(`${opportunities.length} kans${opportunities.length > 1 ? 'en' : ''} (€${oppImpact.toLocaleString('nl-NL')} potentieel)`);
+    parts.push(gt(opportunities.length > 1 ? 'profitability_opps_multi' : 'profitability_opps_single', ctx.language, { count: opportunities.length, amount: gtMoney(oppImpact, ctx.country) }));
   }
 
   // Use adaptive threshold for margin leakage to determine priority
@@ -65,7 +65,7 @@ export function useProfitabilityInsight(ctx: GeneratorContext): ScoredInsight | 
   // Detail: list top 3 insights
   const detailLines = actionable.map((i, idx) => {
     const emoji = i.type === 'warning' ? '⚠' : '✦';
-    return `${emoji} ${i.title}: €${Math.abs(i.impact).toLocaleString('nl-NL')}`;
+    return `${emoji} ${i.title}: ${gtMoney(Math.abs(i.impact), ctx.country)}`;
   });
 
   return {
@@ -73,23 +73,23 @@ export function useProfitabilityInsight(ctx: GeneratorContext): ScoredInsight | 
     generatorId: 'profitability',
     category: 'alert',
     priority,
-    title: `Winstgevendheid: €${totalImpact.toLocaleString('nl-NL')} in beeld`,
+    title: gt('profitability_title', ctx.language, { amount: gtMoney(totalImpact, ctx.country) }),
     message: parts.join(' + '),
     detail: detailLines.join('\n'),
     icon: topInsight.icon as VascoInsight['icon'],
     source: gt('source_profitability', ctx.language),
     metric: {
-      label: 'Totale impact',
-      value: `€${totalImpact.toLocaleString('nl-NL')}`,
+      label: gt('profitability_metric_label', ctx.language),
+      value: `${gtMoney(totalImpact, ctx.country)}`,
       trend: warnings.length > opportunities.length ? 'down' : 'up',
     },
 
     rootCauseTags: ['margin', 'profitability'],
     rawScore: 0,
     reasoning: {
-      observation: `${actionable.length} winstgevendheid-inzichten gedetecteerd`,
-      evidence: `Op basis van ${profitability.insights.length} projectanalyses — marge ${profitability.overallMargin}%, trend: ${profitability.profitTrend}${(() => { const t = getTrend(ctx.profile, 'marginLeakage', 4); return t && t.slope !== 0 ? ` — historische trend: ${t.direction}` : ''; })()}`,
-      implication: `Totale geschatte impact: €${totalImpact.toLocaleString('nl-NL')} (${warnings.length} risico's, ${opportunities.length} kansen)`,
+      observation: gt('profitability_observation', ctx.language, { count: actionable.length }),
+      evidence: gt('profitability_evidence', ctx.language, { count: profitability.insights.length, margin: profitability.overallMargin, trend: profitability.profitTrend }) + (() => { const t = getTrend(ctx.profile, 'marginLeakage', 4); return t && t.slope !== 0 ? gt('profitability_evidence_trend', ctx.language, { direction: t.direction }) : ''; })(),
+      implication: gt('profitability_implication', ctx.language, { amount: gtMoney(totalImpact, ctx.country), risks: warnings.length, opps: opportunities.length }),
       suggestion: topInsight.description,
     },
     dataPoints: profitability.insights.length,

@@ -81,7 +81,9 @@
       "quotes": "Preventivi",
       "drafts": "Bozze",
       "refresh": "Aggiorna",
-      "newQuote": "Nuovo preventivo"
+      "newQuote": "Nuovo preventivo",
+      "openProject": "Apri progetto",
+      "newProject": "Nuovo progetto"
     },
     "invoices": {
       "invoices": "Fatture",
@@ -223,6 +225,12 @@
     "aiDemoNote": "Ricevi 5 analisi IA gratuite al mese con il piano gratuito",
     "choosePlan": "Scegli il tuo piano",
     "choosePlanDesc": "Inizia gratis, fai l'upgrade quando vuoi",
+    "recommendedForYou": "CONSIGLIATO PER TE",
+    "bestForAannemers": "IL MIGLIORE PER GENERAL CONTRACTOR",
+    "contractorTierAannemer": "General Contractor",
+    "featAannemerProjects": "Bacheche progetti multi-mestiere",
+    "featAannemerSubs": "Coordinamento subappaltatori + posti",
+    "featAannemerQuote": "Generatore di preventivi multi-mestiere",
     "monthly": "Mensile",
     "annual": "Annuale",
     "planFree": "Gratuito",
@@ -1881,7 +1889,11 @@
       "guideFollowup": "Segui {{count}} preventivo/i aperto/i",
       "guideFollowupDesc": "I clienti che rispondono in 48h convertono ~3x in più.",
       "guideStart": "Inizia con il tuo primo preventivo",
-      "guideStartDesc": "Scatta una foto — Vasco redige il preventivo."
+      "guideStartDesc": "Scatta una foto — Vasco redige il preventivo.",
+      "guideAannemerProjects": "{{count}} progetto/i attivo/i oggi",
+      "guideAannemerProjectsDesc": "Apri un progetto per coordinare i mestieri, seguire i sub-preventivi e mantenere la pianificazione.",
+      "guideAannemerStart": "Avvia il tuo primo progetto multi-mestiere",
+      "guideAannemerStartDesc": "Aggiungi i mestieri che coordini — Vasco crea il preventivo multi-mestiere."
     },
     "pill": {
       "decided": "Deciso",

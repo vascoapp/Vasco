@@ -81,7 +81,9 @@
       "quotes": "Angebote",
       "drafts": "Entwürfe",
       "refresh": "Aktualisieren",
-      "newQuote": "Neues Angebot"
+      "newQuote": "Neues Angebot",
+      "openProject": "Projekt öffnen",
+      "newProject": "Neues Projekt"
     },
     "invoices": {
       "invoices": "Rechnungen",
@@ -223,6 +225,12 @@
     "aiDemoNote": "Du bekommst 5 kostenlose KI-Einblicke pro Monat im Gratis-Plan",
     "choosePlan": "Wahle deinen Plan",
     "choosePlanDesc": "Starte kostenlos, upgrade jederzeit",
+    "recommendedForYou": "FÜR DICH EMPFOHLEN",
+    "bestForAannemers": "AM BESTEN FÜR GENERALUNTERNEHMER",
+    "contractorTierAannemer": "Generalunternehmer",
+    "featAannemerProjects": "Multi-Gewerk-Projektboards",
+    "featAannemerSubs": "Subunternehmer + Sitzplätze koordinieren",
+    "featAannemerQuote": "Gewerkübergreifender Angebots-Builder",
     "monthly": "Monatlich",
     "annual": "Jahrlich",
     "planFree": "Kostenlos",
@@ -1881,7 +1889,11 @@
       "guideFollowup": "{{count}} offene Angebot(e) nachfassen",
       "guideFollowupDesc": "Kunden, die innerhalb 48h antworten, konvertieren ~3x häufiger.",
       "guideStart": "Beginne mit deinem ersten Angebot",
-      "guideStartDesc": "Foto von der Arbeit — Vasco entwirft das Angebot."
+      "guideStartDesc": "Foto von der Arbeit — Vasco entwirft das Angebot.",
+      "guideAannemerProjects": "{{count}} Projekt(e) laufen heute",
+      "guideAannemerProjectsDesc": "Öffne ein Projekt, koordiniere Gewerke, verfolge Sub-Angebote und halte den Zeitplan ein.",
+      "guideAannemerStart": "Starte dein erstes Multi-Gewerk-Projekt",
+      "guideAannemerStartDesc": "Füge die Gewerke hinzu, die du koordinierst — Vasco erstellt das gewerkübergreifende Angebot."
     },
     "pill": {
       "decided": "Entschieden",

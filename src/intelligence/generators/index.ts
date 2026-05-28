@@ -73,6 +73,11 @@ import { useIncidentTrendInsight } from './incidentTrendGenerator';
 import { useDefectClusterInsight } from './defectClusterGenerator';
 import { useCertRenewalPlannerInsight } from './certRenewalPlannerGenerator';
 
+// Stage 3 intelligence retrofit — lead pipeline, crew capacity, license renewal
+import { useLeadFollowupInsight } from './leadFollowupGenerator';
+import { useWorkerCapacityInsight } from './workerCapacityGenerator';
+import { useLicenseRenewalActionInsight } from './licenseRenewalActionGenerator';
+
 // Static generators (no hooks needed)
 import { weatherScheduleGenerator } from './weatherScheduleGenerator';
 import { staticTipGenerator } from './staticTipGenerator';
@@ -198,6 +203,18 @@ export const GENERATOR_REGISTRY: GeneratorRegistration[] = [
   { id: 'incident-trend', screens: ['today', 'safety', 'overview'], roles: ['sitelead', 'coo', 'contractor'] },
   { id: 'defect-cluster', screens: ['today', 'quality', 'overview', 'issues'], roles: ['sitelead', 'coo', 'contractor'] },
   { id: 'cert-renewal-planner', screens: ['today', 'safety', 'compliance', 'overview'], roles: ['sitelead', 'contractor'] },
+  // Stage 3 intelligence retrofit
+  // lead-followup: stale-lead nudges. Fires only for contractors with leads.
+  { id: 'lead-followup', screens: ['today', 'werk', 'jobs-list'], roles: ['contractor'] },
+  // worker-capacity: only fires for contractors with >= 2 workers, so the
+  // generator silently returns null for solo contractors regardless of
+  // screen wiring. Same screens as 'capacity' (the trade-level forecast)
+  // so they share the planning surface.
+  { id: 'worker-capacity', screens: ['today', 'decisions', 'dispatch', 'efficiency'], roles: ['contractor', 'sitelead', 'coo'] },
+  // license-renewal-action: contractor-level (R80) license renewal queue.
+  // Distinct from cert-renewal-planner (worker certs) — same screens for
+  // shared compliance surface.
+  { id: 'license-renewal-action', screens: ['today', 'meer', 'compliance', 'safety'], roles: ['contractor'] },
   // Director generators
   { id: 'handover-bottleneck', screens: ['portfolio', 'approvals'], roles: ['director', 'cfo'] },
   { id: 'portfolio-health', screens: ['portfolio', 'performance'], roles: ['director'] },
@@ -271,6 +288,11 @@ export function useAllGenerators(ctx: GeneratorContext, dataCounts?: DataCounts)
   const defectCluster = useDefectClusterInsight(ctx);
   const certRenewalPlanner = useCertRenewalPlannerInsight(ctx);
 
+  // Stage 3 intelligence retrofit
+  const leadFollowup = useLeadFollowupInsight(ctx);
+  const workerCapacity = useWorkerCapacityInsight(ctx);
+  const licenseRenewalAction = useLicenseRenewalActionInsight(ctx);
+
   // Director generators
   const handoverBottleneck = useHandoverBottleneckInsight(ctx);
   const portfolioHealth = usePortfolioHealthInsight(ctx);
@@ -332,6 +354,9 @@ export function useAllGenerators(ctx: GeneratorContext, dataCounts?: DataCounts)
       { id: 'incident-trend', insight: incidentTrend },
       { id: 'defect-cluster', insight: defectCluster },
       { id: 'cert-renewal-planner', insight: certRenewalPlanner },
+      { id: 'lead-followup', insight: leadFollowup },
+      { id: 'worker-capacity', insight: workerCapacity },
+      { id: 'license-renewal-action', insight: licenseRenewalAction },
     ];
 
     // Filter: only include generators relevant for current role + screen + data threshold
@@ -362,6 +387,7 @@ export function useAllGenerators(ctx: GeneratorContext, dataCounts?: DataCounts)
     scheduleFragility, supplierRisk, permitDelay, changeOrderVelocity,
     handoverBottleneck, portfolioHealth, valueDelivery, crossProjectRisk,
     crewPerformance, incidentTrend, defectCluster, certRenewalPlanner,
+    leadFollowup, workerCapacity, licenseRenewalAction,
     ctx.role, ctx.screen, dataCounts,
   ]);
 }

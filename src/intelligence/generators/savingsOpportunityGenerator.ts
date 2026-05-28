@@ -7,7 +7,7 @@ import type { VascoInsight } from '../../components/shared/VascoInsightCard';
 import { usePredictiveSavingsSummary } from '../../services/predictiveSavingsService';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { logPrediction } from '../calibration';
-import { gt } from '../generatorTranslations';
+import { gt, gtMoney } from '../generatorTranslations';
 
 export const savingsOpportunityGenerator: InsightGenerator = {
   id: 'savings-opportunity',
@@ -33,7 +33,7 @@ export function useSavingsOpportunityInsight(ctx: GeneratorContext): ScoredInsig
   logPrediction({
     generatorId: 'savings-opportunity',
     predictedAt: new Date().toISOString(),
-    prediction: `Besparingspotentieel: €${totalPotential} (${urgentOpps.length} urgent)`,
+    prediction: `Savings potential: ${gtMoney(totalPotential, ctx.country)} (${urgentOpps.length} urgent)`,
     predictedValue: totalPotential,
   });
 
@@ -50,15 +50,15 @@ export function useSavingsOpportunityInsight(ctx: GeneratorContext): ScoredInsig
     actionLabel: top.actionLabel,
     actionRoute: '/(contractor)/besparen',
     source: gt('source_savings', ctx.language),
-    metric: { label: 'Potentieel', value: `€${top.potentialSaving}`, trend: 'up' },
+    metric: { label: gt('savings_opportunity_metric_label', ctx.language), value: gtMoney(top.potentialSaving, ctx.country), trend: 'up' },
 
     rootCauseTags: ['savings', 'procurement'],
     rawScore: 0,
     reasoning: {
-      observation: `${urgentOpps.length} urgente besparingskansen gedetecteerd`,
-      evidence: `Op basis van ${predictive.opportunities.length} geanalyseerde mogelijkheden${(() => { const t = getTrend(ctx.profile, 'savingsTotal', 4); return t && t.slope !== 0 ? ` — besparingstrend: ${t.slope > 0 ? 'stijgend' : 'dalend'}` : ''; })()}`,
-      implication: `Totaal besparingspotentieel: €${totalPotential.toLocaleString('nl-NL')}`,
-      suggestion: top.actionLabel || 'Bekijk de besparingsdetails en neem actie',
+      observation: gt('savings_opportunity_observation', ctx.language, { count: urgentOpps.length }),
+      evidence: `${gt('savings_opportunity_evidence', ctx.language, { count: predictive.opportunities.length })}${(() => { const t = getTrend(ctx.profile, 'savingsTotal', 4); return t && t.slope !== 0 ? ` ${gt(t.slope > 0 ? 'savings_opportunity_evidence_trend_up' : 'savings_opportunity_evidence_trend_down', ctx.language)}` : ''; })()}`,
+      implication: gt('savings_opportunity_implication', ctx.language, { amount: gtMoney(totalPotential, ctx.country) }),
+      suggestion: top.actionLabel || gt('savings_opportunity_suggestion', ctx.language),
     },
     dataPoints: predictive.opportunities.length,
     confidence: 0.75,

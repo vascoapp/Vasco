@@ -81,7 +81,9 @@
       "quotes": "Offertes",
       "drafts": "Concepten",
       "refresh": "Vernieuwen",
-      "newQuote": "Nieuwe offerte"
+      "newQuote": "Nieuwe offerte",
+      "openProject": "Project openen",
+      "newProject": "Nieuw project"
     },
     "invoices": {
       "invoices": "Facturen",
@@ -223,6 +225,12 @@
     "aiDemoNote": "Je krijgt 5 gratis AI-inzichten per maand op het gratis plan",
     "choosePlan": "Kies je plan",
     "choosePlanDesc": "Start gratis, upgrade wanneer je wilt",
+    "recommendedForYou": "AANBEVOLEN VOOR JOU",
+    "bestForAannemers": "BESTE VOOR AANNEMERS",
+    "contractorTierAannemer": "Aannemer",
+    "featAannemerProjects": "Multi-trade projectborden",
+    "featAannemerSubs": "Onderaannemers + seats coördineren",
+    "featAannemerQuote": "Cross-trade offerte-bouwer",
     "monthly": "Maandelijks",
     "annual": "Jaarlijks",
     "planFree": "Gratis",
@@ -1881,7 +1889,11 @@
       "guideFollowup": "Volg {{count}} open offerte(s) op",
       "guideFollowupDesc": "Klanten die binnen 48u reageren, accepteren ~3x vaker.",
       "guideStart": "Begin met je eerste offerte",
-      "guideStartDesc": "Maak een foto van het werk — Vasco maakt de offerte."
+      "guideStartDesc": "Maak een foto van het werk — Vasco maakt de offerte.",
+      "guideAannemerProjects": "{{count}} project(en) lopen vandaag",
+      "guideAannemerProjectsDesc": "Open een project om vakmensen te coördineren, sub-offertes te volgen en de planning op koers te houden.",
+      "guideAannemerStart": "Start je eerste multi-vak project",
+      "guideAannemerStartDesc": "Voeg de vakken toe die je coördineert — Vasco bouwt de cross-trade offerte."
     },
     "pill": {
       "decided": "Beslist",

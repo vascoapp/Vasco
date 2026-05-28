@@ -5,7 +5,7 @@
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import { useFinancialAuditStats } from '../../services/financialAuditorService';
 import { logPrediction } from '../calibration';
-import { gt } from '../generatorTranslations';
+import { gt, gtMoney } from '../generatorTranslations';
 
 export const financialAuditGenerator: InsightGenerator = {
   id: 'financial-audit',
@@ -27,7 +27,7 @@ export function useFinancialAuditInsight(ctx: GeneratorContext): ScoredInsight |
   logPrediction({
     generatorId: 'financial-audit',
     predictedAt: new Date().toISOString(),
-    prediction: `Financiële bevindingen: ${totalFindings} (${stats.criticalFindings} kritiek)`,
+    prediction: `Financial findings: ${totalFindings} (${stats.criticalFindings} critical)`,
     predictedValue: totalFindings,
   });
   const priority = stats.criticalFindings > 0 ? 'critical' : 'high';
@@ -37,30 +37,30 @@ export function useFinancialAuditInsight(ctx: GeneratorContext): ScoredInsight |
     generatorId: 'financial-audit',
     category: 'financial',
     priority,
-    title: 'Financiële controle bevinding',
-    message: `${totalFindings} bevindingen die aandacht vereisen.${stats.criticalFindings > 0 ? ` ${stats.criticalFindings} kritiek.` : ''}`,
-    detail: `${stats.invoicesVerified} facturen gecontroleerd.${stats.potentialSavings > 0 ? ` Potentiële besparing: €${stats.potentialSavings.toLocaleString('nl-NL')}.` : ''}`,
+    title: gt('financial_audit_title', ctx.language),
+    message: `${gt('financial_audit_message', ctx.language, { count: totalFindings })}${stats.criticalFindings > 0 ? ` ${gt('financial_audit_message_critical', ctx.language, { count: stats.criticalFindings })}` : ''}`,
+    detail: `${gt('financial_audit_detail', ctx.language, { count: stats.invoicesVerified })}${stats.potentialSavings > 0 ? ` ${gt('financial_audit_detail_savings', ctx.language, { amount: gtMoney(stats.potentialSavings, ctx.country) })}` : ''}`,
     icon: 'alert-circle',
-    actionLabel: 'Bekijk bevindingen',
+    actionLabel: gt('financial_audit_action', ctx.language),
     actionRoute: ctx.role === 'contractor' ? '/(contractor)/facturen' : undefined,
     source: gt('source_financial', ctx.language),
     metric: stats.potentialSavings > 0 ? {
-      label: 'Potentiële besparing',
-      value: `€${stats.potentialSavings.toLocaleString('nl-NL')}`,
+      label: gt('financial_audit_metric_label', ctx.language),
+      value: gtMoney(stats.potentialSavings, ctx.country),
       trend: 'up',
     } : undefined,
 
     rootCauseTags: ['financial', 'audit'],
     rawScore: 0,
     reasoning: {
-      observation: `${totalFindings} financiële bevindingen gedetecteerd`,
-      evidence: `Op basis van ${stats.invoicesVerified} gecontroleerde facturen`,
+      observation: gt('financial_audit_observation', ctx.language, { count: totalFindings }),
+      evidence: gt('financial_audit_evidence', ctx.language, { count: stats.invoicesVerified }),
       implication: stats.potentialSavings > 0
-        ? `Potentiële besparing: €${stats.potentialSavings.toLocaleString('nl-NL')}`
-        : 'Bevindingen vereisen handmatige controle',
+        ? gt('financial_audit_implication', ctx.language, { amount: gtMoney(stats.potentialSavings, ctx.country) })
+        : gt('financial_audit_implication_manual', ctx.language),
       suggestion: stats.criticalFindings > 0
-        ? 'Controleer kritieke bevindingen direct — deze kunnen financieel risico opleveren'
-        : 'Plan een moment om de bevindingen door te nemen',
+        ? gt('financial_audit_suggestion_critical', ctx.language)
+        : gt('financial_audit_suggestion', ctx.language),
     },
     dataPoints: stats.invoicesVerified,
     confidence: 0.9,

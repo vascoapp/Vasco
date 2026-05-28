@@ -45,6 +45,24 @@ export function formatNumber(n: number, country: Country = 'NL'): string {
   return new Intl.NumberFormat(locale).format(n);
 }
 
+/** Whole-currency formatter (0 decimals) — right symbol + locale grouping.
+ *  NL €1.234 · UK £1,234 · US $1,234. Use for compact amount displays that
+ *  shouldn't show cents. narrowSymbol with a fallback for older Intl builds. */
+export function formatCurrency0(amount: number, country: Country = 'NL'): string {
+  const { currency, locale } = COUNTRY_CONFIG[country];
+  const rounded = Math.round(amount);
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency', currency, currencyDisplay: 'narrowSymbol',
+      minimumFractionDigits: 0, maximumFractionDigits: 0,
+    }).format(rounded);
+  } catch {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 0,
+    }).format(rounded);
+  }
+}
+
 export function getCountryConfig(country: Country) {
   return COUNTRY_CONFIG[country];
 }

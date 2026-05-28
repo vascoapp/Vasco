@@ -9,7 +9,7 @@ import type { ScoredInsight, GeneratorContext } from './types';
 import { useAppState } from '../../state/AppState';
 import { recordMetricSnapshot } from '../learningStorage';
 import { logPrediction } from '../calibration';
-import { gt } from '../generatorTranslations';
+import { gt, gtMoney } from '../generatorTranslations';
 import { useMarginDrift } from '../../services/marginDriftService';
 
 export function useMarginWarningInsight(ctx: GeneratorContext): ScoredInsight | null {
@@ -65,7 +65,7 @@ export function useMarginWarningInsight(ctx: GeneratorContext): ScoredInsight | 
   logPrediction({
     generatorId: 'margin-warning',
     predictedAt: new Date().toISOString(),
-    prediction: `Klus "${worstJob.title}" heeft een marge van ${marginPct}%`,
+    prediction: `Job "${worstJob.title}" has a margin of ${marginPct}%`,
     predictedValue: worstMargin,
   });
 
@@ -78,31 +78,33 @@ export function useMarginWarningInsight(ctx: GeneratorContext): ScoredInsight | 
     generatorId: 'margin-warning',
     category: 'financial',
     priority: isNegative ? 'critical' : worstMargin < 0.05 ? 'high' : 'medium',
-    title: isNegative ? `Verlies op: ${worstJob.title}` : `Lage marge: ${worstJob.title}`,
+    title: isNegative
+      ? gt('margin_warning_title_loss', ctx.language, { job: worstJob.title })
+      : gt('margin_warning_title_low', ctx.language, { job: worstJob.title }),
     message: isNegative
-      ? `Deze klus draait verlies (${marginPct}%). Materiaalkosten €${worstMaterialCost.toLocaleString('nl-NL')} + geschatte arbeid overschrijden de offerte van €${worstQuoted.toLocaleString('nl-NL')}.`
-      : `Marge is slechts ${marginPct}% op "${worstJob.title}". Materiaalkosten: €${worstMaterialCost.toLocaleString('nl-NL')}.`,
-    detail: `Offerte: €${worstQuoted.toLocaleString('nl-NL')}. Materialen: €${worstMaterialCost.toLocaleString('nl-NL')}. Geschatte arbeid: €${Math.round(estimatedLabor).toLocaleString('nl-NL')}. Totale kosten: €${Math.round(totalCost).toLocaleString('nl-NL')}.`,
+      ? gt('margin_warning_message_loss', ctx.language, { pct: marginPct, materials: gtMoney(worstMaterialCost, ctx.country), quoted: gtMoney(worstQuoted, ctx.country) })
+      : gt('margin_warning_message_low', ctx.language, { pct: marginPct, job: worstJob.title, materials: gtMoney(worstMaterialCost, ctx.country) }),
+    detail: gt('margin_warning_detail', ctx.language, { quoted: gtMoney(worstQuoted, ctx.country), materials: gtMoney(worstMaterialCost, ctx.country), labor: gtMoney(estimatedLabor, ctx.country), total: gtMoney(totalCost, ctx.country) }),
     icon: 'warning',
-    actionLabel: 'Bekijk kostenoverzicht',
+    actionLabel: gt('margin_warning_action_label', ctx.language),
     source: gt('source_margin', ctx.language),
-    metric: { label: 'Marge', value: `${marginPct}%`, trend: isNegative ? 'down' : 'neutral' },
+    metric: { label: gt('margin_warning_metric_label', ctx.language), value: `${marginPct}%`, trend: isNegative ? 'down' : 'neutral' },
 
     rootCauseTags: ['margin', 'cost-variance'],
     rawScore: 0,
     reasoning: {
-      observation: `Klus "${worstJob.title}" heeft een projectmarge van ${marginPct}%`,
+      observation: gt('margin_warning_observation', ctx.language, { job: worstJob.title, pct: marginPct }),
       evidence: marginDrift && marginDrift.driftPp < -2
-        ? `Materiaalkosten: €${worstMaterialCost.toLocaleString('nl-NL')}, offerte: €${worstQuoted.toLocaleString('nl-NL')}. Cohort marge zakte ${marginDrift.driftPp.toFixed(1)}pp recent (${marginDrift.recentContractorCount} vakmannen) — markt comprimeert.`
-        : `Materiaalkosten: €${worstMaterialCost.toLocaleString('nl-NL')}, offerte: €${worstQuoted.toLocaleString('nl-NL')}`,
+        ? gt('margin_warning_evidence_cohort', ctx.language, { materials: gtMoney(worstMaterialCost, ctx.country), quoted: gtMoney(worstQuoted, ctx.country), drift: marginDrift.driftPp.toFixed(1), count: marginDrift.recentContractorCount })
+        : gt('margin_warning_evidence', ctx.language, { materials: gtMoney(worstMaterialCost, ctx.country), quoted: gtMoney(worstQuoted, ctx.country) }),
       implication: isNegative
-        ? 'Deze klus kost meer dan de offerte — directe actie nodig'
+        ? gt('margin_warning_implication_loss', ctx.language)
         : marginDrift && marginDrift.driftPp < -2
-          ? 'Bij onverwachte kosten draait deze klus verlies. Cohort comprimeert ook — trade-wide patroon, niet alleen deze klus.'
-          : 'Bij onverwachte kosten draait deze klus verlies',
+          ? gt('margin_warning_implication_cohort', ctx.language)
+          : gt('margin_warning_implication_risk', ctx.language),
       suggestion: isNegative
-        ? 'Bespreek meerwerk met de klant of zoek goedkopere materialen'
-        : 'Houd materiaalkosten scherp in de gaten en voorkom scope creep',
+        ? gt('margin_warning_suggestion_loss', ctx.language)
+        : gt('margin_warning_suggestion_low', ctx.language),
     },
     dataPoints: jobsWithCosts.length,
     confidence: 0.85,

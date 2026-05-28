@@ -14,7 +14,7 @@ import { useEstimationAccuracy } from '../../services/estimationFeedbackService'
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { logPrediction } from '../calibration';
 import { isAboveThreshold, getAdaptiveThreshold } from '../adaptiveThresholds';
-import { gt } from '../generatorTranslations';
+import { gt, gtMoney } from '../generatorTranslations';
 import { useAppState } from '../../state/AppState';
 import { useMarginDrift } from '../../services/marginDriftService';
 
@@ -38,7 +38,7 @@ export function useMarginRootCauseInsight(ctx: GeneratorContext): ScoredInsight 
   logPrediction({
     generatorId: 'margin-root-cause',
     predictedAt: new Date().toISOString(),
-    prediction: `Marge-lek root cause: €${costSummary.totalMarginLeakage}`,
+    prediction: `Margin leak root cause: ${gtMoney(costSummary.totalMarginLeakage, ctx.country)}`,
     predictedValue: costSummary.totalMarginLeakage,
   });
 
@@ -60,9 +60,14 @@ export function useMarginRootCauseInsight(ctx: GeneratorContext): ScoredInsight 
     const estImpact = costSummary.totalMarginLeakage * (1 - estimation.overallScore / 100);
     causes.push({
       id: 'estimation',
-      label: 'Schatfouten',
+      label: gt('margin_rc_label_estimation', ctx.language),
       amount: Math.round(estImpact),
-      explanation: `Schattingsnauwkeurigheid ${estimation.overallScore}% — uren afwijking ${estimation.averageHoursDeviation > 0 ? '+' : ''}${estimation.averageHoursDeviation.toFixed(1)}%, materiaal hoeveelheid ${estimation.averageMaterialQuantityDeviation > 0 ? '+' : ''}${estimation.averageMaterialQuantityDeviation.toFixed(1)}%, materiaal prijs ${estimation.averageMaterialPriceDeviation > 0 ? '+' : ''}${estimation.averageMaterialPriceDeviation.toFixed(1)}%`,
+      explanation: gt('margin_rc_expl_estimation', ctx.language, {
+        score: estimation.overallScore,
+        hours: `${estimation.averageHoursDeviation > 0 ? '+' : ''}${estimation.averageHoursDeviation.toFixed(1)}`,
+        qty: `${estimation.averageMaterialQuantityDeviation > 0 ? '+' : ''}${estimation.averageMaterialQuantityDeviation.toFixed(1)}`,
+        price: `${estimation.averageMaterialPriceDeviation > 0 ? '+' : ''}${estimation.averageMaterialPriceDeviation.toFixed(1)}`,
+      }),
     });
   }
 
@@ -70,24 +75,25 @@ export function useMarginRootCauseInsight(ctx: GeneratorContext): ScoredInsight 
   if (isAboveThreshold(ctx.profile, 'idlePercent', labor.idleTime.idlePercent)) {
     causes.push({
       id: 'idle',
-      label: 'Leegloop',
+      label: gt('margin_rc_label_idle', ctx.language),
       amount: labor.idleTime.idleCost,
-      explanation: `${labor.idleTime.idlePercent}% leegloop = €${labor.idleTime.idleCost} verlies`,
+      explanation: gt('margin_rc_expl_idle', ctx.language, { pct: labor.idleTime.idlePercent, cost: gtMoney(labor.idleTime.idleCost, ctx.country) }),
     });
   }
 
   // 3. Variance by category from job cost tracking
   for (const reason of costSummary.topVarianceReasons) {
     if (reason.amount > 100) {
+      const categoryLabel = reason.category === 'uren' ? gt('margin_rc_label_hours', ctx.language)
+        : reason.category === 'materiaal' ? gt('margin_rc_label_materials', ctx.language)
+        : reason.category === 'reistijd' ? gt('margin_rc_label_travel', ctx.language)
+        : reason.category === 'herwerk' ? gt('margin_rc_label_rework', ctx.language)
+        : gt('margin_rc_label_unforeseen', ctx.language);
       causes.push({
         id: reason.category,
-        label: reason.category === 'uren' ? 'Uren-overschrijding'
-          : reason.category === 'materiaal' ? 'Materiaaloverschrijding'
-          : reason.category === 'reistijd' ? 'Reistijd'
-          : reason.category === 'herwerk' ? 'Herwerk'
-          : 'Onvoorzien',
+        label: categoryLabel,
         amount: reason.amount,
-        explanation: `${reason.count} klussen met ${reason.category}-afwijking: €${reason.amount.toLocaleString('nl-NL')}`,
+        explanation: gt('margin_rc_expl_variance', ctx.language, { count: reason.count, category: categoryLabel.toLowerCase(), amount: gtMoney(reason.amount, ctx.country) }),
       });
     }
   }
@@ -100,37 +106,37 @@ export function useMarginRootCauseInsight(ctx: GeneratorContext): ScoredInsight 
   const totalIdentified = causes.reduce((sum, c) => sum + c.amount, 0);
 
   // Build chain reasoning
-  const chainSteps = causes.slice(0, 3).map(c => `${c.label}: €${c.amount.toLocaleString('nl-NL')}`);
+  const chainSteps = causes.slice(0, 3).map(c => `${c.label}: ${gtMoney(c.amount, ctx.country)}`);
 
   return {
     id: 'margin-root-cause',
     generatorId: 'margin-root-cause',
     category: 'financial',
     priority: costSummary.totalMarginLeakage > 1000 ? 'high' : 'medium',
-    title: `Marge-lek: ${primaryCause.label} is hoofdoorzaak`,
-    message: `€${costSummary.totalMarginLeakage.toLocaleString('nl-NL')} totaal marge-verlies. Primaire oorzaak: ${primaryCause.label} (€${primaryCause.amount.toLocaleString('nl-NL')}).`,
-    detail: `Oorzakenanalyse:\n${chainSteps.join('\n')}`,
+    title: gt('margin_rc_title', ctx.language, { cause: primaryCause.label }),
+    message: gt('margin_rc_message', ctx.language, { total: gtMoney(costSummary.totalMarginLeakage, ctx.country), cause: primaryCause.label, amount: gtMoney(primaryCause.amount, ctx.country) }),
+    detail: `${gt('margin_rc_detail_header', ctx.language)}\n${chainSteps.join('\n')}`,
     icon: 'git-branch',
-    actionLabel: 'Analyseer',
+    actionLabel: gt('margin_rc_action_label', ctx.language),
     actionRoute: '/(contractor)/decisions',
     source: gt('source_cross_service', ctx.language),
     metric: {
-      label: 'Marge-lek',
-      value: `€${costSummary.totalMarginLeakage.toLocaleString('nl-NL')}`,
+      label: gt('margin_rc_metric_label', ctx.language),
+      value: gtMoney(costSummary.totalMarginLeakage, ctx.country),
       trend: 'down',
     },
 
     rootCauseTags: ['margin', primaryCause.id],
     rawScore: 0,
     reasoning: {
-      observation: `€${costSummary.totalMarginLeakage.toLocaleString('nl-NL')} marge-lek over recente klussen`,
-      evidence: `Oorzakenanalyse uit ${causes.length} bronnen: kostentracking, arbeidsanalyse, schattingsfeedback${(() => { const t = getTrend(ctx.profile, 'marginLeakage', 4); return t && t.slope !== 0 ? ` — trend: ${t.slope > 0 ? 'stijgend' : 'dalend'} (${t.direction})` : ''; })()}${marginDrift && marginDrift.driftPp < -2 ? ` — cohort marge zakte ${marginDrift.driftPp.toFixed(1)}pp (markt comprimeert).` : ''}`,
-      implication: `${primaryCause.explanation}. Totaal verklaard: €${totalIdentified.toLocaleString('nl-NL')} van €${costSummary.totalMarginLeakage.toLocaleString('nl-NL')}${marginDrift && marginDrift.driftPp < -2 ? `. Cohort margedrift van ${marginDrift.driftPp.toFixed(1)}pp is een 5e oorzaak — marktdruk, niet alleen intern.` : ''}`,
+      observation: gt('margin_rc_observation', ctx.language, { total: gtMoney(costSummary.totalMarginLeakage, ctx.country) }),
+      evidence: `${gt('margin_rc_evidence', ctx.language, { count: causes.length })}${(() => { const t = getTrend(ctx.profile, 'marginLeakage', 4); return t && t.slope !== 0 ? ` — ${gt('margin_rc_evidence_trend', ctx.language, { trend: t.slope > 0 ? gt('margin_rc_trend_rising', ctx.language) : gt('margin_rc_trend_falling', ctx.language), direction: t.direction })}` : ''; })()}${marginDrift && marginDrift.driftPp < -2 ? ` — ${gt('margin_rc_evidence_cohort', ctx.language, { drift: marginDrift.driftPp.toFixed(1) })}` : ''}`,
+      implication: `${primaryCause.explanation}. ${gt('margin_rc_implication', ctx.language, { explained: gtMoney(totalIdentified, ctx.country), total: gtMoney(costSummary.totalMarginLeakage, ctx.country) })}${marginDrift && marginDrift.driftPp < -2 ? ` ${gt('margin_rc_implication_cohort', ctx.language, { drift: marginDrift.driftPp.toFixed(1) })}` : ''}`,
       suggestion: primaryCause.id === 'estimation'
-        ? 'Kalibreer je uurschattingen per klustype — de feedback-loop toont waar je consistent te laag schat'
+        ? gt('margin_rc_suggestion_estimation', ctx.language)
         : primaryCause.id === 'idle'
-          ? 'Optimaliseer planning om reistijd en wachttijden te reduceren'
-          : `Focus op ${primaryCause.label.toLowerCase()} — dit is de grootste bron van marge-verlies`,
+          ? gt('margin_rc_suggestion_idle', ctx.language)
+          : gt('margin_rc_suggestion_default', ctx.language, { cause: primaryCause.label.toLowerCase() }),
     },
     dataPoints: costSummary.topVarianceReasons.reduce((sum, r) => sum + r.count, 0),
     confidence: 0.82,
