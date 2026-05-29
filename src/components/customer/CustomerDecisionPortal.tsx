@@ -5,9 +5,9 @@
 // Simple, clean UI focused on ease of use for non-technical users
 // =============================================================================
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
-  Alert,
+  Animated,
   Image,
   KeyboardAvoidingView,
   Linking,
@@ -30,7 +30,12 @@ import { DK } from '../../theme/draftkings';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { hapticSuccess } from '../../utils/haptics';
-import { formatCurrency } from '../../i18n/formatting';
+import { formatCurrency, getCountryConfig } from '../../i18n/formatting';
+import { CustomerLanguageSwitcher } from './CustomerLanguageSwitcher';
+import { CUSTOMER_GLOSSARY } from '../../data/customerGlossary';
+import type { SubmitResult } from '../../services/decisionSyncService';
+
+type ToastKind = 'success' | 'pending' | 'info';
 import type {
   CustomerPortalData,
   CustomerPortalCategory,
@@ -48,9 +53,134 @@ type IconName = keyof typeof Ionicons.glyphMap;
 // MAIN PORTAL COMPONENT
 // ============================================
 
+// Non-blocking toast — replaces Alert.alert so confirmations don't interrupt
+// the customer mid-flow (and don't fall back to the ugly browser alert on web).
+function PortalToast({ toast }: { toast: { kind: ToastKind; text: string } | null }) {
+  const anim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(anim, {
+      toValue: toast ? 1 : 0,
+      duration: 220,
+      useNativeDriver: true,
+    }).start();
+  }, [toast, anim]);
+  if (!toast) return null;
+  const accent =
+    toast.kind === 'success' ? DK.colors.success
+    : toast.kind === 'pending' ? DK.colors.highlight
+    : DK.colors.accent;
+  const icon =
+    toast.kind === 'success' ? 'checkmark-circle'
+    : toast.kind === 'pending' ? 'cloud-offline-outline'
+    : 'information-circle';
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.toast,
+        { borderColor: accent + '55', opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] },
+      ]}
+      accessibilityLiveRegion="polite"
+      accessibilityRole="alert"
+    >
+      <Ionicons name={icon as IconName} size={18} color={accent} />
+      <Text style={styles.toastText}>{toast.text}</Text>
+    </Animated.View>
+  );
+}
+
+// #7: plain-language project timeline so a non-expert customer can see
+// "where are we" at a glance. Phases come from ProjectPhase; labels are
+// friendly (not trade jargon). Current phase highlighted; past phases checked.
+const PHASE_ORDER = ['planning', 'demolition', 'rough_in', 'installation', 'finishing', 'final'] as const;
+
+function ProjectTimeline({ currentPhase, accentColor }: { currentPhase: string; accentColor: string }) {
+  const { t } = useTranslation();
+  const currentIdx = Math.max(0, PHASE_ORDER.indexOf(currentPhase as typeof PHASE_ORDER[number]));
+  const labels: Record<string, string> = {
+    planning: t('decisionPortal.phasePlanning', 'Planning'),
+    demolition: t('decisionPortal.phaseDemolition', 'Strip-out'),
+    rough_in: t('decisionPortal.phaseRoughIn', 'First fix'),
+    installation: t('decisionPortal.phaseInstallation', 'Installation'),
+    finishing: t('decisionPortal.phaseFinishing', 'Finishing'),
+    final: t('decisionPortal.phaseFinal', 'Handover'),
+  };
+  return (
+    <View style={styles.timeline} accessibilityLabel={t('decisionPortal.timelineLabel', 'Project progress')}>
+      <Text style={styles.timelineTitle}>{t('decisionPortal.timelineTitle', 'Where we are')}</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.timelineRow}>
+        {PHASE_ORDER.map((phase, i) => {
+          const done = i < currentIdx;
+          const active = i === currentIdx;
+          return (
+            <View key={phase} style={styles.timelineStep}>
+              <View
+                style={[
+                  styles.timelineDot,
+                  done && { backgroundColor: DK.colors.success, borderColor: DK.colors.success },
+                  active && { backgroundColor: accentColor + '22', borderColor: accentColor },
+                ]}
+              >
+                {done
+                  ? <Ionicons name="checkmark" size={12} color="#fff" />
+                  : <Text style={[styles.timelineDotNum, active && { color: accentColor }]}>{i + 1}</Text>}
+              </View>
+              <Text style={[styles.timelineStepText, active && { color: DK.colors.text, fontFamily: DK.type.display800 }]} numberOfLines={1}>
+                {labels[phase]}
+              </Text>
+              {i < PHASE_ORDER.length - 1 && <View style={[styles.timelineBar, done && { backgroundColor: DK.colors.success }]} />}
+            </View>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
+
+// Tap-to-enlarge photo viewer. Critical for a *visual* decision portal — a
+// customer choosing tiles/paint/fixtures needs to see the option full-size,
+// not a 64px thumbnail. Used for option photos + customer-uploaded photos.
+function PhotoLightbox({ uri, onClose }: { uri: string | null; onClose: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <Modal visible={!!uri} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={styles.lightboxRoot} onPress={onClose} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
+        {uri && <Image source={{ uri }} style={styles.lightboxImage} resizeMode="contain" />}
+        <View style={styles.lightboxClose}>
+          <Ionicons name="close" size={26} color="#fff" />
+        </View>
+      </Pressable>
+    </Modal>
+  );
+}
+
+// Deadline urgency: turns a bare date into "Due in 3 days" / "Due today" /
+// "X days overdue" with color so non-experts can prioritize what's time-sensitive.
+function DeadlinePill({ dueDate, overdue, accentColor }: { dueDate: string; overdue?: boolean; accentColor: string }) {
+  const { t } = useTranslation();
+  const MS_DAY = 86_400_000;
+  const days = Math.ceil((new Date(dueDate).getTime() - Date.now()) / MS_DAY);
+  const isOverdue = overdue || days < 0;
+  const soon = !isOverdue && days <= 3;
+  const color = isOverdue ? DK.colors.danger : soon ? DK.colors.highlight : DK.colors.textMuted;
+  const label = isOverdue
+    ? t('decisionPortal.dueOverdue', '{{count}} days overdue', { count: Math.abs(days) })
+    : days === 0
+      ? t('decisionPortal.dueToday', 'Due today')
+      : days === 1
+        ? t('decisionPortal.dueTomorrow', 'Due tomorrow')
+        : t('decisionPortal.dueInDays', 'Due in {{count}} days', { count: days });
+  return (
+    <View style={[styles.deadlinePill, { backgroundColor: color + '18' }]}>
+      <Ionicons name={isOverdue ? 'alert-circle' : 'time-outline'} size={12} color={color} />
+      <Text style={[styles.deadlinePillText, { color }]}>{label}</Text>
+    </View>
+  );
+}
+
 interface CustomerDecisionPortalProps {
   portalData: CustomerPortalData;
-  onSubmitDecision: (submission: CustomerDecisionSubmission) => void;
+  onSubmitDecision: (submission: CustomerDecisionSubmission) => void | Promise<SubmitResult | void>;
   onActivityLog?: (action: string, metadata?: Record<string, unknown>) => void;
   // R303: pass region + trade so DecisionItemCard can fetch
   // getRegionalPreferences and surface "67% of customers chose X" hints
@@ -66,19 +196,49 @@ export function CustomerDecisionPortal({
   region,
   trade,
 }: CustomerDecisionPortalProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
+  // Phase 2: first-time orientation for customers who don't know construction.
+  // Shown until the customer dismisses it or has already made a choice.
+  const [showHowTo, setShowHowTo] = useState(true);
+  // Glossary modal — plain-language construction terms for non-expert customers.
+  const [glossaryOpen, setGlossaryOpen] = useState(false);
+  // Toast — replaces blocking Alert.alert popups for non-interrupting feedback.
+  const [toast, setToast] = useState<{ kind: ToastKind; text: string } | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = (kind: ToastKind, text: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ kind, text });
+    toastTimer.current = setTimeout(() => setToast(null), 3600);
+  };
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
-  const completionPercent = Math.round(
-    (portalData.completedDecisions / portalData.totalDecisions) * 100
-  );
+  const completionPercent = portalData.totalDecisions > 0
+    ? Math.round((portalData.completedDecisions / portalData.totalDecisions) * 100)
+    : 0;
+
+  // Running cost summary: sum the price impact of every chosen option across all
+  // categories, so the customer sees how their selections add up vs the base quote.
+  const upgradeTotal = useMemo(() => {
+    let total = 0;
+    for (const cat of portalData.categories) {
+      for (const item of cat.items) {
+        if (item.status !== 'decided' || !item.options) continue;
+        const chosen = item.options.find((o) => o.value === item.value);
+        if (chosen?.priceImpact) total += chosen.priceImpact;
+      }
+    }
+    return total;
+  }, [portalData.categories]);
 
   useEffect(() => {
     onActivityLog?.('portal_accessed');
   }, []);
 
   const accentColor = portalData.accentColor || Palette.hermesOrange;
+  // Localize project dates to the contractor's country (was device-locale).
+  const dateLocale = getCountryConfig((portalData.contractorCountry ?? 'NL') as any).locale;
 
   if (activeCategory) {
     const category = portalData.categories.find((c) => c.id === activeCategory);
@@ -101,7 +261,14 @@ export function CustomerDecisionPortal({
   }
 
   return (
+    <View style={{ flex: 1 }}>
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      {/* Language switcher — lets a customer who doesn't read the contractor's
+          language use the portal in their own (fully localized in 6 languages). */}
+      <View style={styles.langBar}>
+        <CustomerLanguageSwitcher />
+      </View>
+
       {/* R66 round 49: payment-success hero. Pre-R49 the customer returned
           from Mollie checkout to a portal that looked identical to before —
           the success state was buried below the categories list as a small
@@ -162,8 +329,10 @@ export function CustomerDecisionPortal({
           </View>
           {portalData.contractorPhone && (
             <Pressable
-              style={styles.contactButton}
+              style={({ pressed }) => [styles.contactButton, pressed && styles.pressed]}
               onPress={() => Linking.openURL(`tel:${portalData.contractorPhone}`)}
+              accessibilityRole="button"
+              accessibilityLabel={t('decisionPortal.callContractor', 'Call {{name}}', { name: portalData.contractorName })}
             >
               <Ionicons name="call" size={20} color={DK.colors.success} />
             </Pressable>
@@ -176,7 +345,7 @@ export function CustomerDecisionPortal({
           <View style={styles.dateItem}>
             <Ionicons name="calendar-outline" size={14} color={DK.colors.textMuted} />
             <Text style={styles.dateText}>
-              Start: {new Date(portalData.projectStartDate).toLocaleDateString(undefined, {
+              {t('decisionPortal.startLabel', 'Start')}: {new Date(portalData.projectStartDate).toLocaleDateString(dateLocale, {
                 day: 'numeric',
                 month: 'long',
               })}
@@ -186,7 +355,7 @@ export function CustomerDecisionPortal({
             <View style={styles.dateItem}>
               <Ionicons name="flag-outline" size={14} color={DK.colors.textMuted} />
               <Text style={styles.dateText}>
-                Klaar: {new Date(portalData.estimatedCompletionDate).toLocaleDateString(undefined, {
+                {t('decisionPortal.doneLabel', 'Done')}: {new Date(portalData.estimatedCompletionDate).toLocaleDateString(dateLocale, {
                   day: 'numeric',
                   month: 'long',
                 })}
@@ -236,10 +405,54 @@ export function CustomerDecisionPortal({
         </View>
       </View>
 
+      {/* #7: plain-language project timeline */}
+      {portalData.currentPhase && (
+        <ProjectTimeline currentPhase={portalData.currentPhase} accentColor={accentColor} />
+      )}
+
+      {/* Phase 2: "How this works" orientation — for customers who don't know
+          construction. Plain-language 3-step explainer + reassurance that no
+          question is too small. Auto-hides once they've made a choice, and is
+          dismissible. */}
+      {showHowTo && portalData.completedDecisions === 0 && (
+        <View style={styles.howToCard}>
+          <View style={styles.howToHeader}>
+            <View style={styles.howToHeaderIcon}>
+              <Ionicons name="hand-left-outline" size={18} color={accentColor} />
+            </View>
+            <Text style={styles.howToTitle}>{t('decisionPortal.howToTitle', "New here? Here's how it works")}</Text>
+            <Pressable
+              onPress={() => setShowHowTo(false)}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={t('decisionPortal.howToDismiss', 'Got it')}
+              style={({ pressed }) => pressed && styles.pressed}
+            >
+              <Ionicons name="close" size={18} color={DK.colors.textMuted} />
+            </Pressable>
+          </View>
+          {[
+            { icon: 'list-outline' as IconName, text: t('decisionPortal.howToStep1', 'Tap a category below to see the choices {{name}} needs from you.', { name: portalData.contractorName }) },
+            { icon: 'bulb-outline' as IconName, text: t('decisionPortal.howToStep2', 'Each choice explains what it means and why it matters — just pick what you like best.') },
+            { icon: 'chatbubble-ellipses-outline' as IconName, text: t('decisionPortal.howToStep3', 'Not sure about something? You can ask {{name}} a question at the bottom of any category — no question is too small.', { name: portalData.contractorName }) },
+          ].map((step, i) => (
+            <View key={i} style={styles.howToStep}>
+              <View style={styles.howToStepNum}>
+                <Text style={[styles.howToStepNumText, { color: accentColor }]}>{i + 1}</Text>
+              </View>
+              <Ionicons name={step.icon} size={16} color={DK.colors.textMuted} style={{ marginTop: 1 }} />
+              <Text style={styles.howToStepText}>{step.text}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
       {/* Urgent Items Banner */}
       {portalData.overdueDecisions > 0 && (
         <Pressable
-          style={styles.urgentBanner}
+          style={({ pressed }) => [styles.urgentBanner, pressed && styles.pressed]}
+          accessibilityRole="button"
+          accessibilityLabel={t('decisionPortal.urgentTitle', 'Action required')}
           onPress={() => {
             const overdueCategory = portalData.categories.find((c) =>
               c.items.some((i) => i.isOverdue && i.status === 'pending')
@@ -260,6 +473,24 @@ export function CustomerDecisionPortal({
         </Pressable>
       )}
 
+      {/* #5: all-done celebration before payment — closes the loop so the
+          customer knows nothing more is needed from them. */}
+      {portalData.totalDecisions > 0 && portalData.completedDecisions >= portalData.totalDecisions && (
+        <View style={styles.allDoneBanner}>
+          <View style={styles.allDoneIcon}>
+            <Ionicons name="sparkles" size={22} color={DK.colors.success} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.allDoneTitle}>{t('decisionPortal.allDoneTitle', 'All your choices are in! 🎉')}</Text>
+            <Text style={styles.allDoneText}>
+              {portalData.paymentLink && portalData.paymentStatus !== 'paid'
+                ? t('decisionPortal.allDoneBodyPay', '{{name}} has everything needed. The last step is your payment below.', { name: portalData.contractorName })
+                : t('decisionPortal.allDoneBody', '{{name}} has everything needed and will take it from here.', { name: portalData.contractorName })}
+            </Text>
+          </View>
+        </View>
+      )}
+
       {/* Categories */}
       <View style={styles.categoriesSection}>
         <Text style={styles.sectionTitle}>{t('decisionPortal.categories', 'Categories')}</Text>
@@ -268,6 +499,7 @@ export function CustomerDecisionPortal({
             key={category.id}
             category={category}
             accentColor={accentColor}
+            dateLocale={dateLocale}
             onPress={() => {
               setActiveCategory(category.id);
               onActivityLog?.('category_viewed', { categoryId: category.id });
@@ -276,12 +508,41 @@ export function CustomerDecisionPortal({
         ))}
       </View>
 
+      {/* Running cost summary — shows how the customer's choices add up vs the
+          base quote, so budget-conscious non-experts can see the impact. */}
+      {portalData.completedDecisions > 0 && (
+        <View style={styles.selectionSummary}>
+          <View style={styles.selectionSummaryRow}>
+            <Ionicons name="pricetags-outline" size={16} color={DK.colors.textMuted} />
+            <Text style={styles.selectionSummaryLabel}>
+              {t('decisionPortal.selectionsSoFar', 'Your choices so far')}
+            </Text>
+            <Text
+              style={[
+                styles.selectionSummaryValue,
+                { color: upgradeTotal > 0 ? DK.colors.text : DK.colors.success },
+              ]}
+            >
+              {upgradeTotal === 0
+                ? t('decisionPortal.noUpgrades', 'No extra cost')
+                : `${upgradeTotal > 0 ? '+' : ''}${formatCurrency(upgradeTotal, (portalData.contractorCountry ?? 'NL') as Country)}`}
+            </Text>
+          </View>
+          <Text style={styles.selectionSummaryHint}>
+            {upgradeTotal === 0
+              ? t('decisionPortal.summaryBaseHint', "You're on the original quoted price.")
+              : t('decisionPortal.summaryUpgradeHint', 'Versus the base quote, from your upgrade choices.')}
+          </Text>
+        </View>
+      )}
+
       {/* Payment Section — informational badges + Pay now button */}
       {portalData.paymentLink && portalData.paymentStatus !== 'paid' && (
         <PaymentSection
           portalData={portalData}
           accentColor={accentColor}
           onActivityLog={onActivityLog}
+          onToast={showToast}
         />
       )}
 
@@ -313,8 +574,54 @@ export function CustomerDecisionPortal({
         </Text>
       </View>
 
+      {/* Glossary link — plain-language terms for customers new to building. */}
+      <Pressable
+        style={({ pressed }) => [styles.glossaryLink, pressed && styles.pressed]}
+        onPress={() => { setGlossaryOpen(true); onActivityLog?.('glossary_opened'); }}
+        accessibilityRole="button"
+        accessibilityLabel={t('decisionPortal.glossaryCta', 'What do these words mean?')}
+      >
+        <Ionicons name="book-outline" size={16} color={accentColor} />
+        <Text style={[styles.glossaryLinkText, { color: accentColor }]}>
+          {t('decisionPortal.glossaryCta', 'What do these words mean?')}
+        </Text>
+      </Pressable>
+
       <View style={{ height: 40 }} />
+
+      {/* Glossary modal */}
+      <Modal visible={glossaryOpen} animationType="slide" transparent onRequestClose={() => setGlossaryOpen(false)}>
+        <View style={styles.glossaryModalRoot}>
+          <View style={styles.glossaryModalCard}>
+            <View style={styles.glossaryModalHeader}>
+              <Text style={styles.glossaryModalTitle}>{t('decisionPortal.glossaryTitle', 'Building terms, explained')}</Text>
+              <Pressable
+                onPress={() => setGlossaryOpen(false)}
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel={t('common.close', 'Close')}
+                style={({ pressed }) => pressed && styles.pressed}
+              >
+                <Ionicons name="close" size={22} color={DK.colors.textMuted} />
+              </Pressable>
+            </View>
+            <ScrollView contentContainerStyle={{ gap: Spacing.md, paddingBottom: Spacing.lg }}>
+              {CUSTOMER_GLOSSARY.map((entry) => {
+                const lang = ((i18n.language || 'en').slice(0, 2)) as keyof typeof entry.term;
+                return (
+                  <View key={entry.id} style={styles.glossaryEntry}>
+                    <Text style={styles.glossaryTerm}>{entry.term[lang] ?? entry.term.en}</Text>
+                    <Text style={styles.glossaryDef}>{entry.def[lang] ?? entry.def.en}</Text>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
+    <PortalToast toast={toast} />
+    </View>
   );
 }
 
@@ -326,9 +633,10 @@ interface PaymentSectionProps {
   portalData: CustomerPortalData;
   accentColor: string;
   onActivityLog?: (action: string, metadata?: Record<string, unknown>) => void;
+  onToast?: (kind: ToastKind, text: string) => void;
 }
 
-function PaymentSection({ portalData, accentColor, onActivityLog }: PaymentSectionProps) {
+function PaymentSection({ portalData, accentColor, onActivityLog, onToast }: PaymentSectionProps) {
   const { t } = useTranslation();
   const isPartial = portalData.paymentStatus === 'partial';
   const allDecisionsComplete =
@@ -346,10 +654,7 @@ function PaymentSection({ portalData, accentColor, onActivityLog }: PaymentSecti
     if (signing) return;
     const trimmedName = signerName.trim();
     if (!trimmedName) {
-      Alert.alert(
-        t('decisionPortal.signNameRequiredTitle', 'Name required'),
-        t('decisionPortal.signNameRequiredDesc', 'Please type your name before signing.'),
-      );
+      onToast?.('info', t('decisionPortal.signNameRequiredDesc', 'Please type your name before signing.'));
       return;
     }
     setSigning(true);
@@ -368,16 +673,10 @@ function PaymentSection({ portalData, accentColor, onActivityLog }: PaymentSecti
         onActivityLog?.('signature_recorded', { signatureId: id });
         hapticSuccess();
       } else {
-        Alert.alert(
-          t('decisionPortal.signFailedTitle', 'Could not sign'),
-          t('decisionPortal.signFailedDesc', 'Please try again. If the problem persists, contact your contractor.'),
-        );
+        onToast?.('info', t('decisionPortal.signFailedDesc', 'Please try again. If the problem persists, contact your contractor.'));
       }
     } catch {
-      Alert.alert(
-        t('decisionPortal.signFailedTitle', 'Could not sign'),
-        t('decisionPortal.signFailedDesc', 'Please try again. If the problem persists, contact your contractor.'),
-      );
+      onToast?.('info', t('decisionPortal.signFailedDesc', 'Please try again. If the problem persists, contact your contractor.'));
     } finally {
       setSigning(false);
     }
@@ -401,10 +700,7 @@ function PaymentSection({ portalData, accentColor, onActivityLog }: PaymentSecti
     // (which 404s in the browser). In live mode the contractor's
     // real Mollie checkout opens.
     if (portalData.paymentLink.includes('example-session-id')) {
-      Alert.alert(
-        t('decisionPortal.demoPaymentTitle', 'Demo mode'),
-        t('decisionPortal.demoPaymentBody', 'In live mode this opens your contractor\'s Mollie checkout with the configured payment methods (iDEAL, card, Apple Pay, etc.).'),
-      );
+      onToast?.('info', t('decisionPortal.demoPaymentBody', 'In live mode this opens your contractor\'s Mollie checkout with the configured payment methods (iDEAL, card, Apple Pay, etc.).'));
       return;
     }
     onActivityLog?.('payment_started', {
@@ -491,7 +787,7 @@ function PaymentSection({ portalData, accentColor, onActivityLog }: PaymentSecti
           contractor's own job-handover signature. Hidden once signed. */}
       {allDecisionsComplete && !signedAt && (
         <Pressable
-          style={styles.signAckButton}
+          style={({ pressed }) => [styles.signAckButton, pressed && styles.pressed]}
           onPress={() => setSignModalOpen(true)}
           accessibilityRole="button"
           accessibilityLabel={t('decisionPortal.signAckCta', 'Sign to confirm your choices')}
@@ -561,7 +857,7 @@ function PaymentSection({ portalData, accentColor, onActivityLog }: PaymentSecti
           customer's first interaction with the contractor's brand. */}
       {portalData.paymentLink && (
         <Pressable
-          style={styles.payNowButton}
+          style={({ pressed }) => [styles.payNowButton, pressed && styles.pressed]}
           onPress={handlePayNow}
           accessibilityLabel={hasDeposit ? `Pay deposit ${depositLabel}` : `Pay now ${totalLabel}`}
           accessibilityRole="button"
@@ -575,8 +871,8 @@ function PaymentSection({ portalData, accentColor, onActivityLog }: PaymentSecti
           <Ionicons name="lock-closed" size={18} color="#fff" />
           <Text style={styles.payNowButtonText}>
             {(hasDeposit
-              ? `Aanbetaling doen — ${depositLabel}`
-              : `Nu betalen — ${totalLabel}`).toUpperCase()}
+              ? t('decisionPortal.payDepositCta', 'Pay deposit — {{amount}}', { amount: depositLabel })
+              : t('decisionPortal.payNowCta', 'Pay now — {{amount}}', { amount: totalLabel })).toUpperCase()}
           </Text>
         </Pressable>
       )}
@@ -622,7 +918,7 @@ function PaymentSection({ portalData, accentColor, onActivityLog }: PaymentSecti
       <View style={styles.securityBadge}>
         <Ionicons name="shield-checkmark" size={14} color={SemanticColors.feedbackSuccess} />
         <Text style={styles.securityBadgeText}>
-          Secure payment via {portalData.contractorCountry === 'UK' ? 'Stripe' : 'Mollie'}
+          {t('decisionPortal.securePaymentVia', 'Secure payment via {{provider}}', { provider: portalData.contractorCountry === 'UK' ? 'Stripe' : 'Mollie' })}
         </Text>
       </View>
     </View>
@@ -637,11 +933,14 @@ interface CategoryCardProps {
   category: CustomerPortalCategory;
   accentColor: string;
   onPress: () => void;
+  dateLocale?: string;
 }
 
-function CategoryCard({ category, accentColor, onPress }: CategoryCardProps) {
+function CategoryCard({ category, accentColor, onPress, dateLocale }: CategoryCardProps) {
   const { t } = useTranslation();
-  const progressPercent = Math.round((category.completedCount / category.totalCount) * 100);
+  const progressPercent = category.totalCount > 0
+    ? Math.round((category.completedCount / category.totalCount) * 100)
+    : 0;
   const hasOverdue = category.items.some((i) => i.isOverdue && i.status === 'pending');
 
   const getIcon = (): IconName => {
@@ -657,8 +956,10 @@ function CategoryCard({ category, accentColor, onPress }: CategoryCardProps) {
 
   return (
     <Pressable
-      style={[styles.categoryCard, hasOverdue && styles.categoryCardOverdue]}
+      style={({ pressed }) => [styles.categoryCard, hasOverdue && styles.categoryCardOverdue, pressed && styles.pressed]}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${category.name}, ${category.completedCount}/${category.totalCount}`}
     >
       <View style={[styles.categoryIcon, { backgroundColor: accentColor + '15' }]}>
         <Ionicons name={getIcon()} size={24} color={accentColor} />
@@ -685,12 +986,14 @@ function CategoryCard({ category, accentColor, onPress }: CategoryCardProps) {
             {category.completedCount}/{category.totalCount}
           </Text>
         </View>
-        <Text style={styles.categoryDue}>
-          {t('decisionPortal.deadline', 'Deadline')}: {new Date(category.dueDate).toLocaleDateString(undefined, {
-            day: 'numeric',
-            month: 'short',
-          })}
-        </Text>
+        <View style={styles.categoryDueRow}>
+          <Text style={styles.categoryDue}>
+            {new Date(category.dueDate).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' })}
+          </Text>
+          {category.completedCount < category.totalCount && (
+            <DeadlinePill dueDate={category.dueDate} overdue={hasOverdue} accentColor={accentColor} />
+          )}
+        </View>
       </View>
       <Ionicons name="chevron-forward" size={20} color={SemanticColors.textTertiary} />
     </Pressable>
@@ -707,7 +1010,7 @@ interface CategoryDetailViewProps {
   expandedItem: string | null;
   onExpandItem: (itemId: string | null) => void;
   onBack: () => void;
-  onSubmitDecision: (submission: CustomerDecisionSubmission) => void;
+  onSubmitDecision: (submission: CustomerDecisionSubmission) => void | Promise<SubmitResult | void>;
   onActivityLog?: (action: string, metadata?: Record<string, unknown>) => void;
   accentColor: string;
   // R303
@@ -730,6 +1033,66 @@ function CategoryDetailView({
   const { t } = useTranslation();
   const pendingItems = category.items.filter((i) => i.status === 'pending');
   const completedItems = category.items.filter((i) => i.status === 'decided');
+  const dateLocale = getCountryConfig((portalData.contractorCountry ?? 'NL') as any).locale;
+  // #2: a decided item the customer chose to change (re-render as editable).
+  const [editingId, setEditingId] = useState<string | null>(null);
+  // #4: pre-filled question seeded by a per-item "Ask about this" tap.
+  const [askPrefill, setAskPrefill] = useState('');
+  const scrollRef = useRef<ScrollView>(null);
+  // Local toast (this view is a separate render branch from the overview).
+  const [toast, setToast] = useState<{ kind: ToastKind; text: string } | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = (kind: ToastKind, text: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ kind, text });
+    toastTimer.current = setTimeout(() => setToast(null), 3600);
+  };
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
+
+  const submitDecision = async (
+    item: CustomerPortalItem,
+    value: string | number | boolean,
+    notes?: string,
+    linkedProduct?: CustomerDecisionSubmission['linkedProduct'],
+    photoUrls?: string[],
+    isEdit?: boolean,
+  ) => {
+    const result = await Promise.resolve(onSubmitDecision({
+      itemId: item.id,
+      trackerId: portalData.accessToken,
+      customerId: 'customer',
+      value,
+      notes,
+      photoUrls,
+      deviceType: Platform.OS === 'ios' || Platform.OS === 'android' ? 'mobile' : 'desktop',
+      linkedProduct,
+      submittedAt: new Date().toISOString(),
+    }));
+    hapticSuccess();
+    onExpandItem(null);
+    setEditingId(null);
+    onActivityLog?.(isEdit ? 'decision_changed' : 'decision_made', { itemId: item.id, value });
+    // 'local' = saved on device but not yet confirmed to the contractor.
+    if (result === 'local') {
+      showToast('pending', t('decisionPortal.savedOffline', 'Saved on your device — we’ll send it to your contractor when you’re back online.'));
+    } else if (isEdit) {
+      showToast('success', t('decisionPortal.choiceUpdatedBody', 'Your contractor will see your updated choice.'));
+    } else {
+      const remaining = pendingItems.length - 1;
+      showToast('success',
+        remaining > 0
+          ? t('decisionPortal.choiceSavedRemaining', '{{count}} choice(s) left.', { count: remaining })
+          : t('decisionPortal.allChoicesMade', 'All choices made! Your contractor will be notified.'),
+      );
+    }
+  };
+
+  // #4: seed the question composer with the item's name and scroll to it.
+  const handleAskAbout = (itemName: string) => {
+    setAskPrefill(t('decisionPortal.askAboutPrefill', 'About "{{name}}": ', { name: itemName }));
+    onActivityLog?.('ask_about_item', { itemName });
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 120);
+  };
 
   return (
     <KeyboardAvoidingView
@@ -738,7 +1101,7 @@ function CategoryDetailView({
     >
       {/* Header */}
       <View style={styles.categoryDetailHeader}>
-        <Pressable style={styles.backButton} onPress={onBack}>
+        <Pressable style={({ pressed }) => [styles.backButton, pressed && styles.pressed]} onPress={onBack} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={styles.categoryDetailTitle}>
@@ -749,7 +1112,7 @@ function CategoryDetailView({
         </View>
       </View>
 
-      <ScrollView style={styles.categoryDetailContent}>
+      <ScrollView style={styles.categoryDetailContent} ref={scrollRef}>
         {/* Pending Items */}
         {pendingItems.length > 0 && (
           <View style={styles.itemsSection}>
@@ -767,31 +1130,9 @@ function CategoryDetailView({
                     onActivityLog?.('item_viewed', { itemId: item.id });
                   }
                 }}
-                onSubmit={(value, notes, linkedProduct, photoUrls) => {
-                  onSubmitDecision({
-                    itemId: item.id,
-                    trackerId: portalData.accessToken,
-                    customerId: 'customer',
-                    value,
-                    notes,
-                    photoUrls,
-                    deviceType: Platform.OS === 'ios' || Platform.OS === 'android' ? 'mobile' : 'desktop',
-                    linkedProduct,
-                    submittedAt: new Date().toISOString(),
-                  });
-                  hapticSuccess();
-                  onExpandItem(null);
-                  onActivityLog?.('decision_made', { itemId: item.id, value });
-
-                  // Show confirmation toast
-                  const remaining = pendingItems.length - 1;
-                  Alert.alert(
-                    t('decisionPortal.choiceSavedTitle', 'Choice saved'),
-                    remaining > 0
-                      ? t('decisionPortal.choiceSavedRemaining', '{{count}} choice(s) left.', { count: remaining })
-                      : t('decisionPortal.allChoicesMade', 'All choices made! Your contractor will be notified.'),
-                  );
-                }}
+                onSubmit={(value, notes, linkedProduct, photoUrls) =>
+                  submitDecision(item, value, notes, linkedProduct, photoUrls, false)}
+                onAskAbout={handleAskAbout}
                 accentColor={accentColor}
                 contractorCountry={portalData.contractorCountry}
                 accessToken={portalData.accessToken}
@@ -800,13 +1141,36 @@ function CategoryDetailView({
           </View>
         )}
 
-        {/* Completed Items */}
+        {/* Completed Items — tappable "Change" reopens them as editable (#2). */}
         {completedItems.length > 0 && (
           <View style={styles.itemsSection}>
             <Text style={styles.itemsSectionTitle}>{t('decisionPortal.alreadyChosen', 'Already chosen')}</Text>
-            {completedItems.map((item) => (
-              <CompletedItemCard key={item.id} item={item} accentColor={accentColor} />
-            ))}
+            {completedItems.map((item) =>
+              editingId === item.id ? (
+                <DecisionItemCard
+                  key={item.id}
+                  item={item}
+                  region={region}
+                  trade={trade}
+                  isExpanded
+                  onToggle={() => { setEditingId(null); onExpandItem(null); }}
+                  onSubmit={(value, notes, linkedProduct, photoUrls) =>
+                    submitDecision(item, value, notes, linkedProduct, photoUrls, true)}
+                  onAskAbout={handleAskAbout}
+                  accentColor={accentColor}
+                  contractorCountry={portalData.contractorCountry}
+                  accessToken={portalData.accessToken}
+                />
+              ) : (
+                <CompletedItemCard
+                  key={item.id}
+                  item={item}
+                  accentColor={accentColor}
+                  dateLocale={dateLocale}
+                  onChange={() => { setEditingId(item.id); onExpandItem(item.id); }}
+                />
+              )
+            )}
           </View>
         )}
 
@@ -817,10 +1181,12 @@ function CategoryDetailView({
           trackerAccessToken={portalData.accessToken}
           contractorCountry={portalData.contractorCountry}
           portalData={portalData}
+          initialQuestion={askPrefill}
         />
 
         <View style={{ height: 100 }} />
       </ScrollView>
+      <PortalToast toast={toast} />
     </KeyboardAvoidingView>
   );
 }
@@ -834,18 +1200,28 @@ function AskAQuestionCard({
   trackerAccessToken,
   contractorCountry,
   portalData,
+  initialQuestion,
 }: {
   accentColor: string;
   trackerAccessToken: string;
   contractorCountry?: string;
   portalData: CustomerPortalData;
+  initialQuestion?: string;
 }) {
   const { t } = useTranslation();
   const [question, setQuestion] = useState('');
+
+  // #4: when a per-item "Ask about this" seeds a prefill, drop it into the
+  // composer (only when non-empty + the customer hasn't started typing).
+  useEffect(() => {
+    if (initialQuestion) setQuestion(initialQuestion);
+  }, [initialQuestion]);
   const [submitting, setSubmitting] = useState(false);
-  const [reply, setReply] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // #6: session Q&A thread — the customer can see what they asked + the
+  // answer (instant AI reply, or "awaiting contractor"). Persists for the
+  // session so re-reading earlier answers doesn't require re-asking.
+  const [history, setHistory] = useState<{ q: string; a: string | null; pending: boolean }[]>([]);
 
   const lang = (
     contractorCountry === 'DE' ? 'de'
@@ -889,22 +1265,14 @@ function AskAQuestionCard({
         setError(result.error ?? t('decisionPortal.questionSendFailed', 'Could not send question'));
         return;
       }
-      if (result.autoReply) {
-        setReply(result.autoReply);
-      } else {
-        setPending(true);
-      }
+      setHistory((prev) => [
+        ...prev,
+        { q: text, a: result.autoReply ?? null, pending: !result.autoReply },
+      ]);
       setQuestion('');
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const reset = () => {
-    setReply(null);
-    setPending(false);
-    setError(null);
-    setQuestion('');
   };
 
   return (
@@ -917,21 +1285,28 @@ function AskAQuestionCard({
         {t('decisionPortal.askSubtitle', 'Ask about scheduling, location or work — get an instant reply or quick contractor confirmation.')}
       </Text>
 
-      {reply && (
-        <View style={styles.askReplyCard}>
-          <Ionicons name="sparkles" size={14} color={accentColor} />
-          <Text style={styles.askReplyText}>{reply}</Text>
+      {/* #6: session Q&A thread — your earlier questions + their answers. */}
+      {history.map((h, i) => (
+        <View key={i} style={styles.qaThreadItem}>
+          <View style={styles.qaQuestionRow}>
+            <Ionicons name="person-circle-outline" size={15} color={DK.colors.textMuted} />
+            <Text style={styles.qaQuestionText}>{h.q}</Text>
+          </View>
+          {h.a ? (
+            <View style={styles.askReplyCard}>
+              <Ionicons name="sparkles" size={14} color={accentColor} />
+              <Text style={styles.askReplyText}>{h.a}</Text>
+            </View>
+          ) : (
+            <View style={[styles.askReplyCard, { backgroundColor: SemanticColors.feedbackInfo + '10' }]}>
+              <Ionicons name="time-outline" size={14} color={SemanticColors.feedbackInfo} />
+              <Text style={[styles.askReplyText, { color: SemanticColors.feedbackInfo }]}>
+                {t('decisionPortal.questionPending', 'Question sent. The contractor will reply shortly.')}
+              </Text>
+            </View>
+          )}
         </View>
-      )}
-
-      {pending && (
-        <View style={[styles.askReplyCard, { backgroundColor: SemanticColors.feedbackInfo + '10' }]}>
-          <Ionicons name="time-outline" size={14} color={SemanticColors.feedbackInfo} />
-          <Text style={[styles.askReplyText, { color: SemanticColors.feedbackInfo }]}>
-            {t('decisionPortal.questionPending', 'Question sent. The contractor will reply shortly.')}
-          </Text>
-        </View>
-      )}
+      ))}
 
       {error && (
         <View style={[styles.askReplyCard, { backgroundColor: SemanticColors.feedbackError + '10' }]}>
@@ -940,37 +1315,29 @@ function AskAQuestionCard({
         </View>
       )}
 
-      {!reply && !pending && (
-        <>
-          <TextInput
-            style={[styles.textInput, { minHeight: 80 }]}
-            placeholder={t('decisionPortal.questionPlaceholder', 'Type your question…')}
-            placeholderTextColor={SemanticColors.textTertiary}
-            value={question}
-            onChangeText={setQuestion}
-            multiline
-            editable={!submitting}
-            maxLength={1000}
-          />
-          <Pressable
-            style={[styles.submitButton, { backgroundColor: accentColor }, (!question.trim() || submitting) && styles.submitButtonDisabled]}
-            onPress={submit}
-            disabled={!question.trim() || submitting}
-          >
-            <Text style={styles.submitButtonText}>
-              {submitting ? t('decisionPortal.sending', 'Sending…') : t('decisionPortal.askButton', 'Ask question')}
-            </Text>
-          </Pressable>
-        </>
-      )}
-
-      {(reply || pending) && (
-        <Pressable onPress={reset} style={{ alignSelf: 'center', paddingVertical: GRID.sm }}>
-          <Text style={{ fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: accentColor }}>
-            {t('decisionPortal.askAnother', 'Ask another')}
-          </Text>
-        </Pressable>
-      )}
+      <TextInput
+        style={[styles.textInput, { minHeight: 80 }]}
+        placeholder={history.length > 0
+          ? t('decisionPortal.questionPlaceholderMore', 'Ask another question…')
+          : t('decisionPortal.questionPlaceholder', 'Type your question…')}
+        placeholderTextColor={SemanticColors.textTertiary}
+        value={question}
+        onChangeText={setQuestion}
+        multiline
+        editable={!submitting}
+        maxLength={1000}
+      />
+      <Pressable
+        style={[styles.submitButton, { backgroundColor: accentColor }, (!question.trim() || submitting) && styles.submitButtonDisabled]}
+        onPress={submit}
+        disabled={!question.trim() || submitting}
+        accessibilityRole="button"
+        accessibilityLabel={t('decisionPortal.askButton', 'Ask question')}
+      >
+        <Text style={styles.submitButtonText}>
+          {submitting ? t('decisionPortal.sending', 'Sending…') : t('decisionPortal.askButton', 'Ask question')}
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -995,6 +1362,8 @@ interface DecisionItemCardProps {
   // R303
   region?: string;
   trade?: string;
+  // #4: per-item "Ask about this" — seeds the category's question composer.
+  onAskAbout?: (itemName: string) => void;
 }
 
 function DecisionItemCard({
@@ -1007,11 +1376,14 @@ function DecisionItemCard({
   accessToken,
   region,
   trade,
+  onAskAbout,
 }: DecisionItemCardProps) {
   const { t } = useTranslation();
   const [textValue, setTextValue] = useState('');
   const [customerPhotos, setCustomerPhotos] = useState<Array<{ uri: string; base64?: string }>>([]);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  // Tap-to-enlarge: which photo (option or uploaded) is open full-screen.
+  const [lightboxUri, setLightboxUri] = useState<string | null>(null);
   const MAX_CUSTOMER_PHOTOS = 5;
   // Display-only view model
   const photoUris = customerPhotos.map((p) => p.uri);
@@ -1074,7 +1446,7 @@ function DecisionItemCard({
 
   return (
     <View style={[styles.itemCard, item.isOverdue && styles.itemCardOverdue]}>
-      <Pressable style={styles.itemHeader} onPress={onToggle}>
+      <Pressable style={({ pressed }) => [styles.itemHeader, pressed && styles.pressed]} onPress={onToggle} accessibilityRole="button" accessibilityLabel={item.name}>
         <View style={styles.itemTitleRow}>
           <Text style={styles.itemName}>{item.name}</Text>
           <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor() + '15' }]}>
@@ -1130,6 +1502,21 @@ function DecisionItemCard({
             </View>
           )}
 
+          {/* #4: per-item escape hatch for non-experts who feel stuck. */}
+          {onAskAbout && (
+            <Pressable
+              style={({ pressed }) => [styles.askAboutBtn, pressed && styles.pressed]}
+              onPress={() => onAskAbout(item.name)}
+              accessibilityRole="button"
+              accessibilityLabel={t('decisionPortal.askAboutThis', 'Not sure? Ask about this')}
+            >
+              <Ionicons name="help-buoy-outline" size={15} color={accentColor} />
+              <Text style={[styles.askAboutBtnText, { color: accentColor }]}>
+                {t('decisionPortal.askAboutThis', 'Not sure? Ask about this')}
+              </Text>
+            </Pressable>
+          )}
+
           {/* Input Based on Type */}
           {item.inputType === 'select' && item.options && (
             <View style={styles.optionsGrid}>
@@ -1138,6 +1525,7 @@ function DecisionItemCard({
                   key={option.value}
                   option={option}
                   onSelect={() => onSubmit(option.value, notes)}
+                  onViewPhoto={setLightboxUri}
                   accentColor={accentColor}
                 />
               ))}
@@ -1147,8 +1535,10 @@ function DecisionItemCard({
           {item.inputType === 'boolean' && (
             <View style={styles.booleanOptions}>
               <Pressable
-                style={[styles.booleanBtn, styles.booleanYes]}
+                style={({ pressed }) => [styles.booleanBtn, styles.booleanYes, pressed && styles.pressed]}
                 onPress={() => onSubmit(true, notes)}
+                accessibilityRole="button"
+                accessibilityLabel={t('decisionPortal.yes', 'Yes')}
               >
                 <Ionicons name="checkmark-circle" size={28} color={SemanticColors.feedbackSuccess} />
                 <Text style={[styles.booleanText, { color: SemanticColors.feedbackSuccess }]}>
@@ -1156,8 +1546,10 @@ function DecisionItemCard({
                 </Text>
               </Pressable>
               <Pressable
-                style={[styles.booleanBtn, styles.booleanNo]}
+                style={({ pressed }) => [styles.booleanBtn, styles.booleanNo, pressed && styles.pressed]}
                 onPress={() => onSubmit(false, notes)}
+                accessibilityRole="button"
+                accessibilityLabel={t('decisionPortal.no', 'No')}
               >
                 <Ionicons name="close-circle" size={28} color={SemanticColors.feedbackError} />
                 <Text style={[styles.booleanText, { color: SemanticColors.feedbackError }]}>
@@ -1194,6 +1586,8 @@ function DecisionItemCard({
                   }
                 }}
                 disabled={!textValue.trim()}
+                accessibilityRole="button"
+                accessibilityLabel={t('decisionPortal.confirm', 'Confirm')}
               >
                 <Text style={styles.submitButtonText}>{t('decisionPortal.confirm', 'Confirm')}</Text>
               </Pressable>
@@ -1211,7 +1605,9 @@ function DecisionItemCard({
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: GRID.sm, paddingVertical: GRID.xs }}>
                   {photoUris.map((uri, i) => (
                     <View key={uri + i} style={{ position: 'relative' }}>
-                      <Image source={{ uri }} style={{ width: 84, height: 84, borderRadius: RADIUS.md, backgroundColor: SemanticColors.surfaceSecondary }} />
+                      <Pressable onPress={() => setLightboxUri(uri)} accessibilityRole="imagebutton" accessibilityLabel={t('decisionPortal.viewPhoto', 'View photo')}>
+                        <Image source={{ uri }} style={{ width: 84, height: 84, borderRadius: RADIUS.md, backgroundColor: SemanticColors.surfaceSecondary }} />
+                      </Pressable>
                       <Pressable
                         onPress={() => removeCustomerPhoto(i)}
                         style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: 11, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' }}
@@ -1232,6 +1628,8 @@ function DecisionItemCard({
                     <Pressable
                       style={[styles.submitButton, { flex: 1, backgroundColor: SemanticColors.surfaceSecondary, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center' }]}
                       onPress={takeCustomerPhoto}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('decisionPortal.takePhoto', 'Take photo')}
                     >
                       <Ionicons name="camera" size={16} color={SemanticColors.textPrimary} />
                       <Text style={[styles.submitButtonText, { color: SemanticColors.textPrimary }]}>{t('decisionPortal.takePhoto', 'Take photo')}</Text>
@@ -1239,6 +1637,8 @@ function DecisionItemCard({
                     <Pressable
                       style={[styles.submitButton, { flex: 1, backgroundColor: SemanticColors.surfaceSecondary, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center' }]}
                       onPress={pickCustomerPhotos}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('decisionPortal.fromGallery', 'From gallery')}
                     >
                       <Ionicons name="images-outline" size={16} color={SemanticColors.textPrimary} />
                       <Text style={[styles.submitButtonText, { color: SemanticColors.textPrimary }]}>{t('decisionPortal.fromGallery', 'From gallery')}</Text>
@@ -1292,6 +1692,8 @@ function DecisionItemCard({
                   }
                 }}
                 disabled={(customerPhotos.length === 0 && !textValue.trim()) || uploadingPhotos}
+                accessibilityRole="button"
+                accessibilityLabel={t('decisionPortal.send', 'Send')}
               >
                 <Text style={styles.submitButtonText}>{uploadingPhotos ? t('decisionPortal.uploading', 'Uploading…') : t('decisionPortal.send', 'Send')}</Text>
               </Pressable>
@@ -1302,8 +1704,10 @@ function DecisionItemCard({
 
           {/* Add Notes Toggle */}
           <Pressable
-            style={styles.addNotesToggle}
+            style={({ pressed }) => [styles.addNotesToggle, pressed && styles.pressed]}
             onPress={() => setShowNotes(!showNotes)}
+            accessibilityRole="button"
+            accessibilityLabel={showNotes ? t('decisionPortal.hideNote', 'Hide note') : t('decisionPortal.addNote', 'Add note')}
           >
             <Ionicons
               name={showNotes ? 'chatbubble' : 'chatbubble-outline'}
@@ -1327,6 +1731,7 @@ function DecisionItemCard({
           )}
         </View>
       )}
+      <PhotoLightbox uri={lightboxUri} onClose={() => setLightboxUri(null)} />
     </View>
   );
 }
@@ -1342,9 +1747,10 @@ interface OptionButtonProps {
   option: DecisionOption;
   onSelect: () => void;
   accentColor: string;
+  onViewPhoto?: (uri: string) => void;
 }
 
-function OptionButton({ option, onSelect, accentColor }: OptionButtonProps) {
+function OptionButton({ option, onSelect, accentColor, onViewPhoto }: OptionButtonProps) {
   const { t } = useTranslation();
   // R66 round 45: surface price context on every option (pre-R45 only
   // priceImpact != 0 rendered, so "standard" options showed nothing →
@@ -1379,12 +1785,32 @@ function OptionButton({ option, onSelect, accentColor }: OptionButtonProps) {
     ? t('decisionPortal.leadTime', '{{days}} day delivery', { days: option.leadTimeDays })
     : null;
   return (
-    <Pressable style={styles.optionButton} onPress={onSelect}>
-      {option.imageUrl && (
-        <View style={styles.optionImage}>
-          <Ionicons name="image" size={32} color={SemanticColors.textTertiary} />
-        </View>
-      )}
+    <Pressable
+      style={({ pressed }) => [styles.optionButton, pressed && styles.pressed]}
+      onPress={onSelect}
+      accessibilityRole="button"
+      accessibilityLabel={`${option.label}${option.description ? ', ' + option.description : ''}`}
+    >
+      {option.imageUrl ? (
+        // #5: render the real product photo (was a placeholder icon) so
+        // non-expert customers can actually see what they're choosing.
+        // Tapping the photo opens it full-screen (nested Pressable captures
+        // the touch, so it doesn't also trigger the option's onSelect).
+        <Pressable
+          onPress={onViewPhoto ? () => onViewPhoto(option.imageUrl!) : undefined}
+          accessibilityRole="imagebutton"
+          accessibilityLabel={t('decisionPortal.viewPhotoOf', 'View photo of {{label}}', { label: option.label })}
+        >
+          <Image
+            source={{ uri: option.imageUrl }}
+            style={styles.optionImageReal}
+            resizeMode="cover"
+          />
+          <View style={styles.optionImageZoom}>
+            <Ionicons name="expand" size={12} color="#fff" />
+          </View>
+        </Pressable>
+      ) : null}
       <View style={styles.optionContent}>
         <Text style={styles.optionLabel}>{option.label}</Text>
         {option.description && (
@@ -1417,9 +1843,12 @@ function OptionButton({ option, onSelect, accentColor }: OptionButtonProps) {
 interface CompletedItemCardProps {
   item: CustomerPortalItem;
   accentColor: string;
+  // #2: reopen this decided item as editable so the customer can change it.
+  onChange?: () => void;
+  dateLocale?: string;
 }
 
-function CompletedItemCard({ item, accentColor }: CompletedItemCardProps) {
+function CompletedItemCard({ item, accentColor, onChange, dateLocale }: CompletedItemCardProps) {
   const { t } = useTranslation();
   const getDisplayValue = () => {
     if (typeof item.value === 'boolean') {
@@ -1442,10 +1871,22 @@ function CompletedItemCard({ item, accentColor }: CompletedItemCardProps) {
         <Text style={[styles.completedValue, { color: accentColor }]}>{getDisplayValue()}</Text>
         {item.decidedAt && (
           <Text style={styles.completedDate}>
-            {t('decisionPortal.chosenOn', 'Chosen on {{date}}', { date: new Date(item.decidedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'long' }) })}
+            {t('decisionPortal.chosenOn', 'Chosen on {{date}}', { date: new Date(item.decidedAt).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long' }) })}
           </Text>
         )}
       </View>
+      {onChange && (
+        <Pressable
+          onPress={onChange}
+          hitSlop={8}
+          style={({ pressed }) => [styles.changeBtn, pressed && styles.pressed]}
+          accessibilityRole="button"
+          accessibilityLabel={t('decisionPortal.changeChoice', 'Change')}
+        >
+          <Ionicons name="pencil" size={13} color={SemanticColors.textSecondary} />
+          <Text style={styles.changeBtnText}>{t('decisionPortal.changeChoice', 'Change')}</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -1542,7 +1983,7 @@ export function AccessCodeEntry({ onSubmit, error, errorKind, rateLimitUntil, on
             {t('decisionPortal.askForNew', 'Ask your contractor to send you a new link via WhatsApp or SMS.')}
           </Text>
         ) : errorKind === 'network' && onRetry ? (
-          <Pressable style={styles.retryBtn} onPress={onRetry} accessibilityRole="button">
+          <Pressable style={({ pressed }) => [styles.retryBtn, pressed && styles.pressed]} onPress={onRetry} accessibilityRole="button">
             <Ionicons name="refresh" size={16} color={Palette.hermesOrange} />
             <Text style={styles.retryBtnText}>{t('decisionPortal.retry', 'Try again')}</Text>
           </Pressable>
@@ -1569,6 +2010,261 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: Spacing.lg,
   },
+  // Shared tactile press feedback — applied to interactive Pressables so the
+  // customer portal feels responsive on every tap (was 0/21 before).
+  pressed: {
+    opacity: 0.82,
+  },
+
+  // Phase 2: "How this works" orientation card for non-expert customers.
+  howToCard: {
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1,
+    borderColor: DK.colors.border,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
+  },
+  howToHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  howToHeaderIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: DK.colors.panel2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  howToTitle: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: DK.type.display800,
+    color: DK.colors.text,
+    letterSpacing: 0.2,
+  },
+  howToStep: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+  },
+  howToStepNum: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: DK.colors.panel2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  howToStepNumText: {
+    fontSize: 11,
+    fontFamily: DK.type.display900,
+  },
+  howToStepText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 19,
+    fontFamily: DK.type.body500,
+    color: DK.colors.textMuted,
+  },
+
+  // Language switcher bar (top of portal)
+  langBar: { alignItems: 'flex-end', marginBottom: Spacing.sm },
+
+  // #3 running cost summary
+  selectionSummary: {
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1,
+    borderColor: DK.colors.border,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    gap: 4,
+  },
+  selectionSummaryRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  selectionSummaryLabel: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: DK.type.display800,
+    color: DK.colors.text,
+  },
+  selectionSummaryValue: { fontSize: 16, fontFamily: DK.type.display900, letterSpacing: -0.3 },
+  selectionSummaryHint: { fontSize: 11, fontFamily: DK.type.body500, color: DK.colors.textMuted, marginLeft: 24 },
+
+  // #6 glossary link + modal
+  glossaryLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: Spacing.sm,
+  },
+  glossaryLinkText: { fontSize: 13, fontFamily: DK.type.display800, letterSpacing: 0.2 },
+  glossaryModalRoot: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
+  glossaryModalCard: {
+    backgroundColor: DK.colors.bg,
+    borderTopLeftRadius: DK.radius.card,
+    borderTopRightRadius: DK.radius.card,
+    padding: Spacing.lg,
+    maxHeight: '82%',
+    borderTopWidth: 1,
+    borderColor: DK.colors.border,
+  },
+  glossaryModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.md,
+  },
+  glossaryModalTitle: { fontSize: 18, fontFamily: DK.type.display900, color: DK.colors.text, letterSpacing: -0.3 },
+  glossaryEntry: {
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1,
+    borderColor: DK.colors.border,
+    padding: Spacing.md,
+    gap: 4,
+  },
+  glossaryTerm: { fontSize: 14, fontFamily: DK.type.display800, color: DK.colors.text },
+  glossaryDef: { fontSize: 13, lineHeight: 19, fontFamily: DK.type.body500, color: DK.colors.textMuted },
+
+  // #4 per-item "Ask about this"
+  askAboutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: DK.colors.panel2,
+    marginBottom: Spacing.sm,
+  },
+  askAboutBtnText: { fontSize: 12, fontFamily: DK.type.display800, letterSpacing: 0.2 },
+
+  // #2 change a completed choice
+  changeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: DK.colors.border,
+    alignSelf: 'center',
+  },
+  changeBtnText: { fontSize: 12, fontFamily: DK.type.body600, color: SemanticColors.textSecondary },
+
+  // #5 real option photo
+  optionImageReal: {
+    width: 64,
+    height: 64,
+    borderRadius: RADIUS.md,
+    backgroundColor: DK.colors.panel2,
+    marginRight: Spacing.sm,
+  },
+
+  // Toast (#3)
+  toast: {
+    position: 'absolute',
+    left: Spacing.lg,
+    right: Spacing.lg,
+    bottom: Spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: DK.colors.panel2,
+    borderWidth: 1,
+    borderRadius: DK.radius.card,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  toastText: { flex: 1, fontSize: 13, lineHeight: 18, fontFamily: DK.type.body600, color: DK.colors.text },
+
+  // Project timeline (#7)
+  timeline: {
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1,
+    borderColor: DK.colors.border,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
+  },
+  timelineTitle: { fontSize: 11, fontFamily: DK.type.display800, color: DK.colors.textMuted, letterSpacing: 1.4 },
+  timelineRow: { flexDirection: 'row', alignItems: 'flex-start', paddingRight: Spacing.md },
+  timelineStep: { alignItems: 'center', width: 70, position: 'relative' },
+  timelineDot: {
+    width: 26, height: 26, borderRadius: 13,
+    borderWidth: 2, borderColor: DK.colors.border,
+    backgroundColor: DK.colors.panel2,
+    alignItems: 'center', justifyContent: 'center',
+    zIndex: 2,
+  },
+  timelineDotNum: { fontSize: 11, fontFamily: DK.type.display800, color: DK.colors.textMuted },
+  timelineStepText: { fontSize: 10, fontFamily: DK.type.body500, color: DK.colors.textMuted, marginTop: 5, textAlign: 'center' },
+  timelineBar: {
+    position: 'absolute', top: 12, left: '50%', right: -35, height: 2,
+    backgroundColor: DK.colors.border, zIndex: 1,
+  },
+
+  // All-done banner (#5)
+  allDoneBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    backgroundColor: DK.colors.success + '12',
+    borderWidth: 1,
+    borderColor: DK.colors.success + '40',
+    borderRadius: DK.radius.card,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  allDoneIcon: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: DK.colors.success + '1F',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  allDoneTitle: { fontSize: 15, fontFamily: DK.type.display800, color: DK.colors.text },
+  allDoneText: { fontSize: 13, lineHeight: 18, fontFamily: DK.type.body500, color: DK.colors.textMuted, marginTop: 2 },
+
+  // Q&A thread (#6)
+  qaThreadItem: { gap: 6, marginBottom: Spacing.sm },
+  qaQuestionRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
+  qaQuestionText: { flex: 1, fontSize: 13, fontFamily: DK.type.body600, color: DK.colors.text },
+
+  // Photo lightbox
+  lightboxRoot: { flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', alignItems: 'center', justifyContent: 'center' },
+  lightboxImage: { width: '100%', height: '80%' },
+  lightboxClose: {
+    position: 'absolute', top: 48, right: 20,
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  optionImageZoom: {
+    position: 'absolute', bottom: 4, right: Spacing.sm + 4,
+    width: 20, height: 20, borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+
+  // Deadline urgency pill
+  categoryDueRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, flexWrap: 'wrap' },
+  deadlinePill: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
+  },
+  deadlinePillText: { fontSize: 11, fontFamily: DK.type.display800, letterSpacing: 0.2 },
 
   // R66 round 49: payment-success celebration hero. Full-bleed gradient
   // (success-green ramp) + glow + big Archivo display amount.

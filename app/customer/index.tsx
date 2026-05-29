@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { DK } from '../../src/theme/draftkings';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 import { DEMO_MODE } from '../../src/config/demo';
+import { CustomerLanguageSwitcher } from '../../src/components/customer/CustomerLanguageSwitcher';
 
 export default function CustomerLandingScreen() {
   const { t } = useTranslation();
@@ -38,9 +39,12 @@ export default function CustomerLandingScreen() {
   return (
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
       <KeyboardAvoidingView style={s.inner} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <Pressable style={s.backBtn} onPress={() => router.back()} hitSlop={8}>
-          <Ionicons name="chevron-back" size={22} color={DK.colors.text} />
-        </Pressable>
+        <View style={s.topRow}>
+          <Pressable style={s.backBtn} onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+            <Ionicons name="chevron-back" size={22} color={DK.colors.text} />
+          </Pressable>
+          <CustomerLanguageSwitcher compact />
+        </View>
 
         {/* R92: official VascoBuild logo */}
         <View style={s.hero}>
@@ -131,12 +135,17 @@ export default function CustomerLandingScreen() {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: DK.colors.bg },
   inner: { flex: 1, paddingHorizontal: 24 },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
   backBtn: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: DK.colors.panel,
     borderWidth: 1, borderColor: DK.colors.border,
     alignItems: 'center', justifyContent: 'center',
-    marginTop: 8,
   },
 
   hero: { alignItems: 'center', marginTop: 24, gap: 10 },

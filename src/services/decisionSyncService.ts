@@ -29,7 +29,14 @@ export interface DecisionSubmission {
   linkedProductUrl?: string;
   timeToDecideSeconds?: number;
   submittedAt: string;
+  // Local-only flag: false once saved to device but not yet confirmed on the
+  // backend (offline / BE error). flushUnsyncedSubmissions() retries these.
+  synced?: boolean;
 }
+
+/** Result of a submit attempt so the UI can tell the customer the truth:
+ *  'synced' = the contractor has it; 'local' = saved on device, will retry. */
+export type SubmitResult = 'synced' | 'local';
 
 export interface TrackerStatus {
   trackerId: string;
@@ -43,12 +50,9 @@ export interface TrackerStatus {
 // Submit a decision (called from customer portal)
 // ---------------------------------------------------------------------------
 
-export async function submitDecision(submission: DecisionSubmission): Promise<boolean> {
-  // Always save locally first
-  await saveLocalSubmission(submission);
-
-  if (!isSupabaseConfigured) return true;
-
+// Internal: push one submission to Supabase. Returns true on confirmed write.
+async function pushToBackend(submission: DecisionSubmission): Promise<boolean> {
+  if (!isSupabaseConfigured) return false;
   try {
     const { error } = await (supabase.from as any)('decision_submissions').upsert({
       tracker_id: submission.trackerId,
@@ -77,6 +81,48 @@ export async function submitDecision(submission: DecisionSubmission): Promise<bo
     return true;
   } catch {
     return false;
+  }
+}
+
+export async function submitDecision(submission: DecisionSubmission): Promise<SubmitResult> {
+  // Always save locally first (synced=false until BE confirms).
+  await saveLocalSubmission({ ...submission, synced: false });
+
+  // No BE configured → local is the source of truth; treat as done.
+  if (!isSupabaseConfigured) {
+    await markSynced(submission);
+    return 'synced';
+  }
+
+  const ok = await pushToBackend(submission);
+  if (ok) {
+    await markSynced(submission);
+    return 'synced';
+  }
+  // Stays locally with synced=false → flushUnsyncedSubmissions retries later.
+  return 'local';
+}
+
+/**
+ * Retry any device-saved customer submissions that never confirmed to the
+ * backend (offline / earlier BE error). Called on portal load. Returns the
+ * number successfully flushed. Best-effort — silent on failure.
+ */
+export async function flushUnsyncedSubmissions(trackerId: string): Promise<number> {
+  if (!isSupabaseConfigured) return 0;
+  try {
+    const all = await getLocalSubmissions(trackerId);
+    const pending = all.filter((s) => s.synced === false);
+    let flushed = 0;
+    for (const s of pending) {
+      if (await pushToBackend(s)) {
+        await markSynced(s);
+        flushed++;
+      }
+    }
+    return flushed;
+  } catch {
+    return 0;
   }
 }
 
@@ -384,5 +430,22 @@ async function getLocalSubmissions(trackerId: string): Promise<DecisionSubmissio
     return all.filter(s => s.trackerId === trackerId);
   } catch {
     return [];
+  }
+}
+
+// Flip a locally-saved submission to synced=true once the backend confirms it.
+async function markSynced(submission: DecisionSubmission): Promise<void> {
+  try {
+    const raw = await AsyncStorage.getItem(LOCAL_KEY);
+    const all: DecisionSubmission[] = raw ? JSON.parse(raw) : [];
+    const idx = all.findIndex(
+      (s) => s.trackerId === submission.trackerId && s.itemId === submission.itemId && s.submittedBy === submission.submittedBy,
+    );
+    if (idx >= 0) {
+      all[idx] = { ...all[idx], synced: true };
+      await AsyncStorage.setItem(LOCAL_KEY, JSON.stringify(all));
+    }
+  } catch {
+    // Silent
   }
 }

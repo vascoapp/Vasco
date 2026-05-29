@@ -27,6 +27,8 @@ import { decisionIntelligence } from '../../src/intelligence/decisionIntelligenc
 import {
   submitDecision as syncSubmitDecision,
   logActivity as syncLogActivity,
+  flushUnsyncedSubmissions,
+  type SubmitResult,
 } from '../../src/services/decisionSyncService';
 import { logWarn } from '../../src/utils/errorHandler';
 import { hapticSuccess } from '../../src/utils/haptics';
@@ -163,6 +165,12 @@ export default function CustomerPortalScreen() {
       hapticSuccess();
       sessionStartRef.current = Date.now();
 
+      // Retry any decisions saved on-device but not yet confirmed to the
+      // backend (e.g. submitted earlier while offline). Best-effort.
+      flushUnsyncedSubmissions(data.accessToken)
+        .then((n) => { if (n > 0 && __DEV__) console.log(`Flushed ${n} pending decisions`); })
+        .catch(() => {});
+
       // Track portal access for intelligence
       logActivity('portal_accessed', {
         accessCode,
@@ -254,9 +262,13 @@ export default function CustomerPortalScreen() {
       if (__DEV__) console.error('Failed to process decision intelligence:', err);
     }
 
-    // Persist decision via sync service (local + Supabase when configured)
+    // Persist decision via sync service (local-first + Supabase when configured).
+    // syncResult tells us whether the contractor actually received it ('synced')
+    // or it's only saved on the device pending retry ('local') — surfaced to the
+    // customer so a network failure never masquerades as a confirmed save.
+    let syncResult: SubmitResult = 'local';
     try {
-      await syncSubmitDecision({
+      syncResult = await syncSubmitDecision({
         trackerId: portalData.accessToken,
         itemId: submission.itemId,
         submittedBy: 'customer',
@@ -318,6 +330,8 @@ export default function CustomerPortalScreen() {
         0
       ),
     });
+
+    return syncResult;
   };
 
   const logActivity = (action: string, metadata?: Record<string, unknown>) => {

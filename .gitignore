@@ -58,3 +58,8 @@ admin/.next/
 # Remotion render outputs (regenerable from compositions)
 video/out/
 video/.remotion-cache/
+
+# Claude Code local settings
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+.claude/*.lock
