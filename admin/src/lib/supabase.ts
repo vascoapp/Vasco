@@ -1,7 +1,11 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL: string = "REPLACE_WITH_SUPABASE_URL";
-const SUPABASE_ANON_KEY: string = "REPLACE_WITH_SUPABASE_ANON_KEY";
+// Prefer build-time env vars (set NEXT_PUBLIC_SUPABASE_URL / _ANON_KEY in Vercel
+// project settings). Falls back to the placeholders so isSupabaseConfigured()
+// still reports false when neither is set — e.g. the customer portal then
+// degrades to the app-redirect landing instead of erroring.
+const SUPABASE_URL: string = process.env.NEXT_PUBLIC_SUPABASE_URL || "REPLACE_WITH_SUPABASE_URL";
+const SUPABASE_ANON_KEY: string = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "REPLACE_WITH_SUPABASE_ANON_KEY";
 
 let _client: SupabaseClient | null = null;
 
