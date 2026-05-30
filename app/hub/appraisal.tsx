@@ -1,5 +1,6 @@
 // Hub: Appraisal - Development appraisal overview
 import { useState } from 'react';
+import { DEMO_MODE } from '../../src/config/demo';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
@@ -49,13 +50,16 @@ export default function AppraisalScreen() {
   const inlineTip = useInlineInsight('cfo', 'cfo-appraisal', 'overview');
   const topInsight = insights[0] ?? null;
 
-  const totals = MOCK_APPRAISALS.reduce((acc, p) => ({
+  const appraisals = DEMO_MODE ? MOCK_APPRAISALS : [];
+  const totals = appraisals.reduce((acc, p) => ({
     gdv: acc.gdv + p.gdv,
     cost: acc.cost + p.totalCost,
     profit: acc.profit + p.profit,
   }), { gdv: 0, cost: 0, profit: 0 });
 
-  const avgIrr = MOCK_APPRAISALS.reduce((s, p) => s + p.irr, 0) / MOCK_APPRAISALS.length;
+  const avgIrr = appraisals.length
+    ? appraisals.reduce((s, p) => s + p.irr, 0) / appraisals.length
+    : 0;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -76,7 +80,7 @@ export default function AppraisalScreen() {
             <Text style={styles.summaryLabel}>Gem. IRR</Text>
           </View>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryValue}>{MOCK_APPRAISALS.length}</Text>
+            <Text style={styles.summaryValue}>{appraisals.length}</Text>
             <Text style={styles.summaryLabel}>Projecten</Text>
           </View>
         </View>
@@ -86,7 +90,7 @@ export default function AppraisalScreen() {
       {topInsight && <VascoInsightCard insight={topInsight} compact />}
 
       {/* Project Appraisals */}
-      {MOCK_APPRAISALS.map(project => (
+      {appraisals.map(project => (
         <Pressable
           key={project.id}
           style={[styles.projectCard, selectedId === project.id && styles.projectCardSelected]}

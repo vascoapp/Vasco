@@ -1,5 +1,6 @@
 // Hub: Approvals - Full approval queue with actionable items
 import { useState, useCallback } from 'react';
+import { DEMO_MODE } from '../../src/config/demo';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
@@ -62,7 +63,7 @@ function getPriorityColor(priority: string): string {
 export default function ApprovalsScreen() {
   const { user } = useAuth();
   const { t } = useTranslation();
-  const [approvals, setApprovals] = useState(MOCK_APPROVALS);
+  const [approvals, setApprovals] = useState(DEMO_MODE ? MOCK_APPROVALS : []);
   const cfoInsights = useVascoGuidance('cfo', 'cfo-approvals');
   const inlineTip = useInlineInsight('cfo', 'cfo-approvals', 'overview');
   const topInsight = cfoInsights[0] ?? null;

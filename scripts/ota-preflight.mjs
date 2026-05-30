@@ -231,10 +231,102 @@ function flattenJson(obj, prefix = '', out = {}) {
   return out;
 }
 
-// Match: t('foo.bar', '...', { count: x, name: y })
-// Extracts the object keys (count, name, etc.).
-const T_CALL_WITH_OPTS_RE = /\bt\(\s*['"]([a-z][a-zA-Z0-9_.]*)['"]\s*,\s*[^,)]*,\s*\{\s*([^}]*)\}\s*\)/g;
-const OPT_KEY_RE = /([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g;
+// Parse t(...) calls with a brace/paren/string-aware scanner. The old regex
+// (`{ ([^}]*) }` + `ident:` only) false-flagged every ES6 shorthand opts
+// (`{ count }`), every nested object literal (`t('k', { d: f(x, { a }) })`),
+// and spreads. We now tokenize the real argument list instead.
+const T_CALL_START_RE = /\bt\(/g;
+
+// Parse a JS string literal at the opening quote. Returns {value,end} or null
+// (templates containing ${...} return null — can't be read statically).
+function parseStringLiteral(text, i) {
+  const q = text[i];
+  if (q !== "'" && q !== '"' && q !== '`') return null;
+  let s = '';
+  for (let j = i + 1; j < text.length; j++) {
+    const c = text[j];
+    if (c === '\\') { const map = { n: '\n', t: '\t', r: '\r' }; const n = text[j + 1]; s += map[n] !== undefined ? map[n] : n; j++; continue; }
+    if (c === q) return { value: s, end: j };
+    if (q === '`' && c === '$' && text[j + 1] === '{') return null;
+    s += c;
+  }
+  return null;
+}
+
+// Return the index of the closing quote/backtick of the literal starting at i,
+// correctly skipping over ${ ... } interpolations (which may nest braces,
+// parens and further literals). Depth-safe — used by the scanners below so a
+// template literal inside an opts object can't corrupt brace counting.
+function skipLiteralEnd(text, i) {
+  const q = text[i];
+  let j = i + 1;
+  while (j < text.length) {
+    const c = text[j];
+    if (c === '\\') { j += 2; continue; }
+    if (q === '`' && c === '$' && text[j + 1] === '{') {
+      j += 2; let d = 1;
+      while (j < text.length && d > 0) {
+        const cc = text[j];
+        if (cc === '\\') { j += 2; continue; }
+        if (cc === "'" || cc === '"' || cc === '`') { j = skipLiteralEnd(text, j) + 1; continue; }
+        if (cc === '{') d++;
+        else if (cc === '}') d--;
+        j++;
+      }
+      continue;
+    }
+    if (c === q) return j;
+    j++;
+  }
+  return text.length - 1;
+}
+
+// Split a call's argument list (starting just after '(') into top-level arg
+// source strings, respecting nested (), {}, [] and string/template literals.
+function parseCallArgs(text, openParen) {
+  const args = [];
+  let depth = 0, cur = '';
+  for (let j = openParen + 1; j < text.length; j++) {
+    const c = text[j];
+    if (c === "'" || c === '"' || c === '`') {
+      const end = skipLiteralEnd(text, j);
+      cur += text.slice(j, end + 1); j = end; continue;
+    }
+    if (c === '(' || c === '{' || c === '[') { depth++; cur += c; continue; }
+    if (c === ')' || c === '}' || c === ']') {
+      if (c === ')' && depth === 0) { if (cur.trim()) args.push(cur.trim()); return { args, end: j }; }
+      depth--; cur += c; continue;
+    }
+    if (c === ',' && depth === 0) { args.push(cur.trim()); cur = ''; continue; }
+    cur += c;
+  }
+  return { args, end: -1 };
+}
+
+// Top-level property names from an object-literal source '{ a: 1, b, ...c }'.
+// Handles long-form, shorthand, spread and computed keys (latter two => skip).
+function objectKeys(src) {
+  const inner = src.slice(src.indexOf('{') + 1, src.lastIndexOf('}'));
+  const keys = new Set();
+  let hasSpreadOrComputed = false, depth = 0, tokenStart = 0;
+  const parts = [];
+  for (let j = 0; j < inner.length; j++) {
+    const c = inner[j];
+    if (c === "'" || c === '"' || c === '`') { j = skipLiteralEnd(inner, j); continue; }
+    if (c === '(' || c === '{' || c === '[') depth++;
+    else if (c === ')' || c === '}' || c === ']') depth--;
+    else if (c === ',' && depth === 0) { parts.push(inner.slice(tokenStart, j)); tokenStart = j + 1; }
+  }
+  parts.push(inner.slice(tokenStart));
+  for (let p of parts) {
+    p = p.trim();
+    if (!p) continue;
+    if (p.startsWith('...') || p.startsWith('[')) { hasSpreadOrComputed = true; continue; }
+    const m = p.match(/^([a-zA-Z_$][\w$]*)/);
+    if (m) keys.add(m[1]);
+  }
+  return { keys, hasSpreadOrComputed };
+}
 
 async function checkInterpolationMismatch() {
   process.stdout.write('5. {{var}} interpolation matches call sites ... ');
@@ -244,16 +336,28 @@ async function checkInterpolationMismatch() {
   for (const dir of SCAN_DIRS) {
     for await (const file of walkFiles(dir)) {
       const text = await readFile(file, 'utf8');
-      T_CALL_WITH_OPTS_RE.lastIndex = 0;
-      for (const m of text.matchAll(T_CALL_WITH_OPTS_RE)) {
-        const key = m[1];
-        const optsBody = m[2];
+      T_CALL_START_RE.lastIndex = 0;
+      for (const m of text.matchAll(T_CALL_START_RE)) {
+        const open = m.index + m[0].length - 1; // index of '('
+        const { args } = parseCallArgs(text, open);
+        if (args.length < 2) continue;
+        if (!/^['"]/.test(args[0])) continue; // dynamic key — can't check
+        const keyParsed = parseStringLiteral(args[0], 0);
+        if (!keyParsed) continue;
+        const key = keyParsed.value;
+        if (!/^[a-z][a-zA-Z0-9_.]*$/.test(key)) continue;
         const value = flat[key];
-        if (!value) continue; // covered by check 3
+        if (!value) continue; // missing key — covered by check 3
         const placeholders = [...value.matchAll(/\{\{([a-zA-Z_][a-zA-Z0-9_]*)\}\}/g)].map(p => p[1]);
         if (placeholders.length === 0) continue;
-        const callerKeys = new Set([...optsBody.matchAll(OPT_KEY_RE)].map(o => o[1]));
-        // 'defaultValue' is a reserved i18next option, ignore it
+        // Only verify calls that actually pass an opts object — matches the
+        // original check's scope. (Calls whose value has {{x}} but pass no opts
+        // are a separate, pre-existing class not gated here.)
+        const last = args[args.length - 1];
+        if (!last.startsWith('{')) continue;
+        const parsed = objectKeys(last);
+        if (parsed.hasSpreadOrComputed) continue; // can't statically verify
+        const callerKeys = parsed.keys;
         callerKeys.delete('defaultValue');
         for (const ph of placeholders) {
           if (!callerKeys.has(ph)) {

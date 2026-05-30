@@ -1,5 +1,6 @@
 // Hub: Schedule - Project timelines and fragility analysis
 import { useState } from 'react';
+import { DEMO_MODE } from '../../src/config/demo';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
@@ -100,7 +101,7 @@ function getFragilityColor(score: number): string {
 }
 
 export default function ScheduleScreen() {
-  const [projects] = useState(MOCK_PROJECTS);
+  const [projects] = useState(DEMO_MODE ? MOCK_PROJECTS : []);
   const insights = useVascoGuidance('coo', 'coo-schedule');
   const inlineTip = useInlineInsight('coo', 'coo-schedule', 'overview');
   const topInsight = insights[0] ?? null;

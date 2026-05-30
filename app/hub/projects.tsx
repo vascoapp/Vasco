@@ -1,5 +1,6 @@
 // Hub: Projects - Portfolio overview with project cards and status tracking
 import { useState } from 'react';
+import { DEMO_MODE } from '../../src/config/demo';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
@@ -136,7 +137,7 @@ const PORTFOLIO_STATS = [
 // -----------------------------------------------------------------------------
 
 export default function ProjectsScreen() {
-  const [projects] = useState(MOCK_PROJECTS);
+  const [projects] = useState(DEMO_MODE ? MOCK_PROJECTS : []);
   const insights = useVascoGuidance('cfo', 'cfo-projects');
   const inlineTip = useInlineInsight('cfo', 'cfo-projects', 'overview');
   const topInsight = insights[0] ?? null;

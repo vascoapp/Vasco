@@ -1,5 +1,6 @@
 // Hub: Risks - Risk register with portfolio risk overview
 import { useState } from 'react';
+import { DEMO_MODE } from '../../src/config/demo';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
@@ -73,14 +74,15 @@ export default function RisksScreen() {
   const inlineTip = useInlineInsight('cfo', 'cfo-risks', 'overview');
   const topInsight = insights[0] ?? null;
 
-  const filteredRisks = MOCK_RISKS.filter(r => {
+  const riskItems = DEMO_MODE ? MOCK_RISKS : [];
+  const filteredRisks = riskItems.filter(r => {
     if (filter === 'critical') return r.score >= 15;
     if (filter === 'open') return r.status === 'open';
     return true;
   });
 
-  const highRisks = MOCK_RISKS.filter(r => r.score >= 15).length;
-  const openRisks = MOCK_RISKS.filter(r => r.status === 'open').length;
+  const highRisks = riskItems.filter(r => r.score >= 15).length;
+  const openRisks = riskItems.filter(r => r.status === 'open').length;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -95,7 +97,7 @@ export default function RisksScreen() {
           <Text style={styles.statLabel}>Open</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{MOCK_RISKS.length}</Text>
+          <Text style={styles.statValue}>{riskItems.length}</Text>
           <Text style={styles.statLabel}>Totaal</Text>
         </View>
       </View>
