@@ -18,7 +18,7 @@
 // (migration 20260507000009), the only public-facing read surface.
 // =============================================================================
 
-import { createDecisionTracker, createDecisionItems, getPortalByAccessCode } from '../lib/dataProvider';
+import { createDecisionTracker, createDecisionItems, getPortalByAccessCode, updateTrackerPayment } from '../lib/dataProvider';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { logWarn } from '../utils/errorHandler';
 import { isUuid } from '../lib/idShape';
@@ -284,6 +284,30 @@ function mapRpcResponseToPortalData(raw: Record<string, unknown>): CustomerPorta
     paymentLink: raw.paymentLink ? String(raw.paymentLink) : undefined,
     paymentStatus: (raw.paymentStatus as CustomerPortalData['paymentStatus']) ?? undefined,
   };
+}
+
+/**
+ * R309: store a payment link + status on the tracker (keyed by access_code so it
+ * lands on the exact row the customer portal reads). Returns true on a confirmed
+ * BE write. Only the provided amount fields are touched (no clobbering).
+ */
+export async function setTrackerPayment(args: {
+  accessCode: string;
+  paymentLink: string;
+  paymentStatus?: 'pending' | 'paid' | 'partial';
+  depositAmount?: number;
+  quoteAmount?: number;
+}): Promise<boolean> {
+  if (!isSupabaseConfigured) return false;
+  const updates: {
+    payment_link: string;
+    payment_status: 'pending' | 'paid' | 'partial';
+    deposit_amount?: number;
+    quote_amount?: number;
+  } = { payment_link: args.paymentLink, payment_status: args.paymentStatus ?? 'pending' };
+  if (args.depositAmount != null) updates.deposit_amount = args.depositAmount;
+  if (args.quoteAmount != null) updates.quote_amount = args.quoteAmount;
+  return updateTrackerPayment(args.accessCode, updates);
 }
 
 // Defensive uuid check — kept as a public helper since contractor-create

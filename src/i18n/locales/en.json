@@ -4194,7 +4194,17 @@
     "couldNotOpenEmail": "Could not open email",
     "noAccountNeeded": "Your customer can submit choices without an account. You will be notified of each decision.",
     "message": "Hello {{name}},\n\nHere is the link to submit your choices for {{project}}:\n\n{{url}}\n\nOr use code: {{code}}\n\nPlease fill it out as soon as possible to avoid delays.\n\nBest regards,\nYour contractor",
-    "submitChoices": "Submit choices"
+    "submitChoices": "Submit choices",
+    "requestDeposit": "Request a deposit",
+    "depositAmount": "Amount",
+    "createLink": "Create link",
+    "depositHelp": "Creates a secure checkout link the customer pays from their portal.",
+    "depositActive": "Payment link is active — your customer can pay from their portal.",
+    "invalidAmount": "Enter a valid amount",
+    "invalidAmountBody": "Please enter the deposit amount you want to request.",
+    "depositRequested": "Payment link added",
+    "depositRequestedBody": "Your customer will now see a Pay button in their portal.",
+    "depositFailed": "Could not create the payment link."
   },
   "photos": {
     "cameraAccess": "Camera access required",

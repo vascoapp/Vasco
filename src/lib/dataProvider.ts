@@ -1005,6 +1005,28 @@ export async function createDecisionItems(rows: Array<{
   return (data ?? []) as DecisionItemRow[];
 }
 
+// R309: contractor stores a payment link on the tracker (keyed by access_code,
+// the same code the customer portal reads). Owner-scoped via the
+// "Users own trackers" FOR ALL RLS policy. Surfaces the pay CTA in the portal
+// once get_portal_by_access_code returns payment_link/payment_status (R308).
+export async function updateTrackerPayment(accessCode: string, updates: {
+  payment_link?: string | null;
+  payment_status?: 'pending' | 'paid' | 'partial' | null;
+  quote_amount?: number | null;
+  deposit_amount?: number | null;
+}): Promise<boolean> {
+  if (!isSupabaseConfigured) return false;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from('decision_trackers') as any)
+    .update(updates)
+    .eq('access_code', accessCode);
+  if (error) {
+    logWarn('dataProvider', `updateTrackerPayment failed: ${error.message}`);
+    return false;
+  }
+  return true;
+}
+
 // R191: return type tagged so the caller can distinguish "no row" from
 // "network error". Pre-R191 both collapsed to null and the customer saw
 // "Project not found" even when the actual issue was a dropped wifi

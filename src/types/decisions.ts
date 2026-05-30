@@ -182,6 +182,12 @@ export interface CustomerDecisionTracker {
   // and stored on decision_trackers.access_code. Optional because legacy
   // local-only trackers from pre-R30 don't have one.
   accessCode?: string;
+  // R309: contractor-set deposit/payment. paymentLink populates the portal
+  // pay CTA; paymentStatus tracks pending→paid (Mollie/Stripe webhook updates).
+  paymentLink?: string;
+  paymentStatus?: 'pending' | 'paid' | 'partial';
+  depositAmount?: number;
+  quoteAmount?: number;
   createdAt: string;
   updatedAt: string;
 }

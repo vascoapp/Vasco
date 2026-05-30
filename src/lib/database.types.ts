@@ -373,6 +373,10 @@ export type DecisionTrackerRow = {
   project_start_date: string | null;
   quote_amount: number | null;
   deposit_amount: number | null;
+  // R308 migration 20260530000001 — contractor-set checkout link + status,
+  // surfaced to the portal pay CTA by get_portal_by_access_code.
+  payment_link: string | null;
+  payment_status: 'pending' | 'paid' | 'partial' | null;
   expires_at: string | null;
   created_at: string;
   updated_at: string;

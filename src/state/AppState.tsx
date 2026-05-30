@@ -202,6 +202,10 @@ type AppState = {
   disconnectMollie: () => Promise<void>;
   disconnectStripe: () => Promise<void>;
   createPaymentLink: (invoiceId: string, amount: number) => Promise<void>;
+  // R309: mint a deposit/payment checkout link for a decision tracker and store
+  // it on the tracker (by access_code) so the customer portal shows the pay CTA.
+  // Returns the checkout URL. Throws on provider failure (caller shows an error).
+  requestTrackerDeposit: (accessCode: string, amount: number) => Promise<string>;
   addInvoiceFromJob: (jobId: string) => Promise<string>;
   convertQuoteToJob: (quoteId: string) => Promise<string>;
   updateQuote: (id: string, updates: Partial<Quote>) => void;
@@ -3119,6 +3123,34 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           throw new Error(result.error ?? 'Mollie payment link creation failed');
         }
         setLastMolliePayment((prev) => ({ ...prev, [invoiceId]: result.paymentId }));
+      },
+      // R309: deposit/payment link for a decision tracker. Same country routing
+      // as createPaymentLink, but returns the checkout URL and persists it onto
+      // the tracker row (keyed by access_code) via setTrackerPayment so the
+      // customer portal's pay CTA lights up. Contractor-initiated (EVE-safe).
+      requestTrackerDeposit: async (accessCode, amount) => {
+        const country = getCurrentCountry();
+        let checkoutUrl = '';
+        if (country === 'UK' || country === 'US') {
+          const { createStripePayment } = await import('../integrations/stripe');
+          const r = await createStripePayment(accessCode, amount, country);
+          if (!r.success || !r.checkoutUrl) {
+            throw new Error(r.error ?? 'Stripe payment link creation failed');
+          }
+          checkoutUrl = r.checkoutUrl;
+        } else {
+          const r = await createMolliePayment(accessCode, amount);
+          if (!r.success || !r.checkoutUrl) {
+            throw new Error(r.error ?? 'Mollie payment link creation failed');
+          }
+          checkoutUrl = r.checkoutUrl;
+        }
+        const { setTrackerPayment } = await import('../services/decisionTrackerService');
+        const stored = await setTrackerPayment({ accessCode, paymentLink: checkoutUrl, paymentStatus: 'pending', depositAmount: amount });
+        if (!stored) {
+          throw new Error('Payment link created but could not be saved to the tracker. Try again.');
+        }
+        return checkoutUrl;
       },
     }),
     [

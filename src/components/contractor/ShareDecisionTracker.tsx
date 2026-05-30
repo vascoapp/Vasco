@@ -7,6 +7,7 @@
 
 import { useState, useCallback } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Linking,
   Platform,
@@ -14,6 +15,7 @@ import {
   Share,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +25,7 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import type { CustomerDecisionTracker } from '../../types/decisions';
 import { generateAccessCode } from '../../data/mockCustomerPortal';
+import { useAppState } from '../../state/AppState';
 import { logInfo } from '../../utils/errorHandler';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -34,11 +37,48 @@ interface ShareDecisionTrackerProps {
 
 export function ShareDecisionTracker({ tracker, onClose }: ShareDecisionTrackerProps) {
   const { t } = useTranslation();
-  const [accessCode] = useState(() => generateAccessCode());
+  const { requestTrackerDeposit, mollieConnected, stripeConnected } = useAppState();
+  const paymentConnected = mollieConnected || stripeConnected;
+  // R309: prefer the tracker's persisted access_code (the row the customer
+  // portal actually reads). Only fall back to a fresh code for legacy
+  // local-only trackers that never got a BE access_code. Pre-R309 this always
+  // minted a NEW code, so the shared link pointed at a non-existent row.
+  const [accessCode] = useState(() => tracker.accessCode ?? generateAccessCode());
   const [copied, setCopied] = useState(false);
   // R191: separate flag for the link-copy state so both surfaces give
   // the same checkmark feedback without sharing the same timer.
   const [linkCopied, setLinkCopied] = useState(false);
+  // R309: deposit/payment-link request state.
+  const [depositInput, setDepositInput] = useState('');
+  const [creatingLink, setCreatingLink] = useState(false);
+  const [createdLink, setCreatedLink] = useState<string | null>(tracker.paymentLink ?? null);
+
+  const handleRequestDeposit = useCallback(async () => {
+    const amount = parseFloat(depositInput.replace(',', '.'));
+    if (!amount || amount <= 0) {
+      Alert.alert(
+        t('share.invalidAmount', 'Enter a valid amount'),
+        t('share.invalidAmountBody', 'Please enter the deposit amount you want to request.'),
+      );
+      return;
+    }
+    setCreatingLink(true);
+    try {
+      const url = await requestTrackerDeposit(accessCode, amount);
+      setCreatedLink(url);
+      Alert.alert(
+        t('share.depositRequested', 'Payment link added'),
+        t('share.depositRequestedBody', 'Your customer will now see a Pay button in their portal.'),
+      );
+    } catch (e) {
+      Alert.alert(
+        t('common.error', 'Error'),
+        e instanceof Error ? e.message : t('share.depositFailed', 'Could not create the payment link.'),
+      );
+    } finally {
+      setCreatingLink(false);
+    }
+  }, [depositInput, accessCode, requestTrackerDeposit, t]);
 
   // R191: was https://vascobuild.com/c/{code} — neither the host nor path
   // was deployed; every share link was a DNS error. Universal-link landing
@@ -228,6 +268,46 @@ export function ShareDecisionTracker({ tracker, onClose }: ShareDecisionTrackerP
         </View>
       </View>
 
+      {/* Request a deposit (R309) — only when a payment provider is connected */}
+      {paymentConnected && (
+        <View style={styles.depositSection}>
+          <Text style={styles.sectionLabel}>{t('share.requestDeposit', 'Request a deposit')}</Text>
+          {createdLink ? (
+            <View style={styles.depositDone}>
+              <Ionicons name="checkmark-circle" size={20} color={SemanticColors.feedbackSuccess} />
+              <Text style={styles.depositDoneText}>
+                {t('share.depositActive', 'Payment link is active — your customer can pay from their portal.')}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.depositRow}>
+              <TextInput
+                style={styles.depositInput}
+                value={depositInput}
+                onChangeText={setDepositInput}
+                keyboardType="decimal-pad"
+                placeholder={t('share.depositAmount', 'Amount')}
+                placeholderTextColor={SemanticColors.textTertiary}
+                accessibilityLabel={t('share.depositAmount', 'Amount')}
+              />
+              <Pressable
+                style={[styles.depositButton, creatingLink && { opacity: 0.6 }]}
+                disabled={creatingLink}
+                onPress={handleRequestDeposit}
+                accessibilityRole="button"
+              >
+                {creatingLink
+                  ? <ActivityIndicator color="#fff" size="small" />
+                  : <Text style={styles.depositButtonText}>{t('share.createLink', 'Create link')}</Text>}
+              </Pressable>
+            </View>
+          )}
+          <Text style={styles.codeHelp}>
+            {t('share.depositHelp', 'Creates a secure checkout link the customer pays from their portal.')}
+          </Text>
+        </View>
+      )}
+
       {/* Info Footer */}
       <View style={styles.infoFooter}>
         <Ionicons name="information-circle" size={18} color={SemanticColors.textTertiary} />
@@ -403,6 +483,52 @@ const styles = StyleSheet.create({
     fontSize: TYPE.labelSize,
     color: SemanticColors.textSecondary,
     fontFamily: TYPE.labelFamily,
+  },
+  depositSection: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.lg,
+  },
+  depositRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    alignItems: 'center',
+  },
+  depositInput: {
+    flex: 1,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    padding: Spacing.md,
+    fontSize: TYPE.bodySize,
+    color: SemanticColors.textPrimary,
+  },
+  depositButton: {
+    backgroundColor: Palette.hermesOrange,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 110,
+  },
+  depositButtonText: {
+    color: '#fff',
+    fontFamily: TYPE.titleFamily,
+    fontSize: TYPE.bodySize,
+  },
+  depositDone: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: SemanticColors.feedbackSuccess + '12',
+    borderRadius: RADIUS.md,
+    padding: Spacing.md,
+  },
+  depositDoneText: {
+    flex: 1,
+    fontSize: TYPE.bodySize - 1,
+    color: SemanticColors.textPrimary,
   },
   infoFooter: {
     flexDirection: 'row',
