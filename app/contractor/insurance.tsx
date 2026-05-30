@@ -172,7 +172,7 @@ export default function InsuranceScreen() {
                 <View style={styles.policyDetail}>
                   <Ionicons name="calendar-outline" size={13} color="#999" />
                   <Text style={styles.policyDetailText}>
-                    {daysLeft > 0 ? t('insurance.daysRemaining', `Nog ${daysLeft} dagen`) : t('insurance.daysExpired', `${Math.abs(daysLeft)} dagen verlopen`)}
+                    {daysLeft > 0 ? t('insurance.daysRemaining', { defaultValue: '{{days}} days remaining', days: daysLeft }) : t('insurance.daysExpired', { defaultValue: '{{days}} days expired', days: Math.abs(daysLeft) })}
                   </Text>
                 </View>
                 {policy.coverage && (

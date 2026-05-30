@@ -391,7 +391,7 @@ export default function DragScheduleScreen() {
                   accessibilityLabel={`${t('schedule.schedule', 'Schedule')} ${job.title}`}
                   onPress={() => {
                     const slots = HOURS.filter(h => h + job.estimatedHours <= 19).slice(0, 5);
-                    Alert.alert(t('schedule.chooseSlot', 'Tijdslot kiezen'), `${t('schedule.whenSchedule', 'Wanneer wil je')} "${job.title}" ${t('schedule.schedule', 'inplannen')}?`, [
+                    Alert.alert(t('schedule.chooseSlot', 'Tijdslot kiezen'), t('schedule.whenSchedule', { defaultValue: 'When do you want to schedule {{job}}?', job: `"${job.title}"` }), [
                       ...slots.map(h => ({ text: `${h}:00`, onPress: () => handleDropOnSlot(h, job) })),
                       { text: t('schedule.cancel', 'Annuleren'), style: 'cancel' as const },
                     ]);

@@ -143,7 +143,7 @@ export default function ProfileScreen() {
           </View>
           <View style={[styles.field, styles.fieldBorder]}>
             <Text style={styles.fieldLabel}>{t('tabs.profile.projects', 'Projects')}</Text>
-            <Text style={styles.fieldValue}>{user?.projects.length} {t('tabs.profile.active', 'active')}</Text>
+            <Text style={styles.fieldValue}>{t('tabs.profile.active', { defaultValue: '{{count}} active', count: user?.projects.length ?? 0 })}</Text>
           </View>
           <View style={[styles.field, styles.fieldBorder]}>
             <Text style={styles.fieldLabel}>{t('tabs.profile.userId', 'User ID')}</Text>
@@ -166,7 +166,7 @@ export default function ProfileScreen() {
               <View>
                 <Text style={styles.menuItemText}>{t('tabs.profile.businessDetails', 'Business details')}</Text>
                 <Text style={{ color: SemanticColors.textSecondary, fontSize: 12 }}>
-                  {businessProfile.completenessPercent}% {t('tabs.profile.complete', 'complete')}
+                  {t('tabs.profile.complete', { defaultValue: '{{count}}% complete', count: businessProfile.completenessPercent })}
                 </Text>
               </View>
             </View>
@@ -181,7 +181,7 @@ export default function ProfileScreen() {
               <View>
                 <Text style={styles.menuItemText}>{t('tabs.profile.customers', 'Customers')}</Text>
                 <Text style={{ color: SemanticColors.textSecondary, fontSize: 12 }}>
-                  {customers.length} {t('tabs.profile.customersCount', 'customers')}
+                  {t('tabs.profile.customersCount', { defaultValue: '{{count}} customers', count: customers.length })}
                 </Text>
               </View>
             </View>

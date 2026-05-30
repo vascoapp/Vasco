@@ -45,7 +45,7 @@ export default function WorkScreen() {
           </View>
           <View style={styles.statsBadge}>
             <Text style={styles.statsText}>
-              {formatCurrency(totalOutstanding)} {t('tabs.work.outstanding', 'outstanding')}
+              {t('tabs.work.outstanding', { defaultValue: '{{amount}} outstanding', amount: formatCurrency(totalOutstanding) })}
             </Text>
           </View>
         </View>

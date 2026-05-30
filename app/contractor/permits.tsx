@@ -187,7 +187,7 @@ export default function PermitsScreen() {
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>{t('permits.title', 'Vergunningen')}</Text>
           <Text style={styles.headerSubtitle}>
-            {t('permits.headerStats', `${approved} goedgekeurd · ${pending} in behandeling · ${notSubmitted} concept`)}
+            {t('permits.headerStats', { defaultValue: '{{approved}} approved · {{pending}} under review · {{notSubmitted}} draft', approved, pending, notSubmitted })}
           </Text>
         </View>
       </View>

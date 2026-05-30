@@ -220,7 +220,7 @@ export function VascoCard({
                 </Pressable>
               ))}
               {findingsCount > 2 && !showAllFindings && (
-                <Pressable onPress={() => setShowAllFindings(true)} style={s.showMoreBtn} accessibilityRole="button" accessibilityLabel={t('vasco.seeMore', 'See more')}>
+                <Pressable onPress={() => setShowAllFindings(true)} style={s.showMoreBtn} accessibilityRole="button" accessibilityLabel={t('vasco.seeMore', { defaultValue: 'See {{count}} more', count: findingsCount - 2 })}>
                   <Text style={s.showMoreText}>{t('vasco.seeMore', { defaultValue: 'See {{count}} more', count: findingsCount - 2 })}</Text>
                   <Ionicons name="chevron-down" size={12} color={Palette.hermesOrange} />
                 </Pressable>

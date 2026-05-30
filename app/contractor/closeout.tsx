@@ -98,19 +98,19 @@ export default function CloseoutScreen() {
   const handleFinalize = (job: typeof closeoutJobs[0]) => {
     const progress = getProgress(job.jobId);
     if (progress.requiredDone < progress.requiredTotal) {
-      Alert.alert(t('closeout.requiredSteps', 'Verplichte stappen'), t('closeout.requiredStepsRemaining', `Nog ${progress.requiredTotal - progress.requiredDone} verplichte stap(pen) niet afgerond.`));
+      Alert.alert(t('closeout.requiredSteps', 'Verplichte stappen'), t('closeout.requiredStepsRemaining', { defaultValue: '{{count}} required step(s) not yet completed.', count: progress.requiredTotal - progress.requiredDone }));
       return;
     }
     Alert.alert(
       t('closeout.closeJob', 'Klus afsluiten'),
-      t('closeout.closeJobConfirm', `"${job.title}" definitief afsluiten? Dit markeert de klus als volledig afgerond.`),
+      t('closeout.closeJobConfirm', { defaultValue: 'Close "{{title}}" permanently? This marks the job as fully completed.', title: job.title }),
       [
         { text: t('closeout.cancel', 'Annuleren'), style: 'cancel' },
         {
           text: t('closeout.close', 'Afsluiten'),
           onPress: () => {
             hapticSuccess();
-            setToastMessage(t('closeout.closed', 'Afgesloten') + ' — ' + t('closeout.closedSuccess', `"${job.title}" is succesvol afgesloten. Goed werk!`));
+            setToastMessage(t('closeout.closed', 'Afgesloten') + ' — ' + t('closeout.closedSuccess', { defaultValue: '"{{title}}" has been successfully closed. Well done!', title: job.title }));
             setShowToast(true);
           },
         },
@@ -126,7 +126,7 @@ export default function CloseoutScreen() {
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>{t('closeout.title', 'Klus Afsluiting')}</Text>
-          <Text style={styles.headerSubtitle}>{t('closeout.subtitle', `${closeoutJobs.length} klussen af te sluiten`)}</Text>
+          <Text style={styles.headerSubtitle}>{t('closeout.subtitle', { defaultValue: '{{count}} jobs to close out', count: closeoutJobs.length })}</Text>
         </View>
       </View>
 
@@ -164,7 +164,7 @@ export default function CloseoutScreen() {
                   <View style={[styles.progressFill, { width: `${progress.percentage}%` }]} />
                 </View>
                 <Text style={styles.progressLabel}>
-                  {t('closeout.stepsCompleted', `${progress.done}/${progress.total} stappen afgerond`)}
+                  {t('closeout.stepsCompleted', { defaultValue: '{{done}}/{{total}} steps completed', done: progress.done, total: progress.total })}
                 </Text>
 
                 {/* Checklist */}
