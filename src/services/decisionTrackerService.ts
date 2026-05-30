@@ -279,6 +279,10 @@ function mapRpcResponseToPortalData(raw: Record<string, unknown>): CustomerPorta
     overdueDecisions: Number(raw.overdueDecisions ?? 0),
     quoteAmount: raw.quoteAmount != null ? Number(raw.quoteAmount) : undefined,
     depositAmount: raw.depositAmount != null ? Number(raw.depositAmount) : undefined,
+    // R308: RPC now surfaces the contractor's payment link + status so the
+    // portal pay CTA can render (was dead on both platforms before).
+    paymentLink: raw.paymentLink ? String(raw.paymentLink) : undefined,
+    paymentStatus: (raw.paymentStatus as CustomerPortalData['paymentStatus']) ?? undefined,
   };
 }
 

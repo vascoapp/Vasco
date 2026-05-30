@@ -1,6 +1,8 @@
 # SCHEMA LOCK — VascoApp BE↔FE Contract
 
-**Version:** 1.8 — updated 2026-05-27 (intelligence retrofit Stage 5)
+**Version:** 1.9 — updated 2026-05-30 (R308 portal payment fields + Q&A realtime)
+<!-- v1.9 (migration 20260530000001): decision_trackers += payment_link TEXT, payment_status TEXT CHECK(NULL|pending|paid|partial). get_portal_by_access_code now also returns paymentLink + paymentStatus. customer_questions added to the supabase_realtime publication + REPLICA IDENTITY FULL so the customer portal Q&A thread receives approved_reply/ai_reply_draft/auto_sent/status live (web + mobile). Contractor side must still populate decision_trackers.payment_link when it mints a Mollie/Stripe checkout. Prev: v1.8 — 2026-05-27 (intelligence retrofit Stage 5). -->
+
 **Owner:** changes require explicit version bump + sign-off from BE + FE leads
 **Scope:** the contract between mobile app (`src/`, `app/`) and Supabase (`supabase/`). Anything below is locked unless this doc is updated.
 
