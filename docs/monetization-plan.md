@@ -1,6 +1,22 @@
 # VascoApp Monetization & Pricing Strategy
 ## Competitive Research + Freemium Plan Proposal
 
+> ⚠️ **STATUS — this is the ORIGINAL strategy proposal, not the shipped pricing.**
+> PART 3 below proposes a **4-tier** plan (Gratis / Vakman / Meester / Aannemer).
+> The **implemented** system is **3-tier** — source of truth is
+> [`src/services/subscriptionService.ts`](../src/services/subscriptionService.ts):
+>
+> | Tier | Price | Commission | Notes |
+> |------|-------|-----------|-------|
+> | **Free** | €0 | — | 5 jobs, 10 quotes, 5 AI insights, 1 country |
+> | **Pro** | €39/mo (€29 annual) | 2% | Full EVE AI + ML + benchmarking + purchasing agent |
+> | **Contractor** | €69/mo (€49 annual) | 1% | 15 seats, API, white-label, subcontractor portal, support |
+>
+> The `'advanced'` tier and the NL-named tiers (Vakman/Meester/Aannemer) were
+> dropped during implementation. Legacy `'gratis'` values auto-migrate to
+> `'free'`. Keep this doc for the competitive research (PART 1–2) and the
+> strategic rationale; treat the tier/price tables in PART 3 as historical.
+
 ---
 
 ## PART 1: COMPETITIVE LANDSCAPE
