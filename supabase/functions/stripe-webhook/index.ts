@@ -399,8 +399,39 @@ Deno.serve(async (req) => {
     const paymentIntent = event.data.object;
     const paymentId = paymentIntent.id;
     const invoiceId = paymentIntent.metadata?.invoiceId;
+    const trackerAccessCode = paymentIntent.metadata?.trackerAccessCode;
 
-    console.log(`PaymentIntent ${paymentId}: status=${paymentIntent.status}, invoiceId=${invoiceId}`);
+    console.log(
+      `PaymentIntent ${paymentId}: status=${paymentIntent.status}, invoiceId=${invoiceId}, trackerAccessCode=${trackerAccessCode}`,
+    );
+
+    // Decision-tracker deposit? Flip the tracker payment_status so the customer
+    // portal stops showing the Pay button. R311: these ALSO carry invoiceId
+    // ('deposit-<code>') because requestTrackerDeposit mints via the payment
+    // link, so trackerAccessCode (not the absence of invoiceId) is the
+    // discriminator — check it first so we don't fall through to the invoice
+    // branch (which would 0-match documents + fire bogus side-effects).
+    // Idempotent UPDATE.
+    if (trackerAccessCode) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      if (supabaseUrl && supabaseServiceKey) {
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+        const { error: trackerErr } = await supabase
+          .from('decision_trackers')
+          .update({ payment_status: 'paid', updated_at: new Date().toISOString() })
+          .eq('access_code', trackerAccessCode);
+        if (trackerErr) {
+          console.error('Failed to mark tracker paid:', trackerErr.message);
+        } else {
+          console.log(`Tracker ${trackerAccessCode} marked as paid via Stripe (${paymentId})`);
+        }
+      }
+      return new Response(
+        JSON.stringify({ received: true, status: 'tracker_paid', trackerAccessCode }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
 
     if (!invoiceId) {
       console.error('No invoiceId in payment metadata');

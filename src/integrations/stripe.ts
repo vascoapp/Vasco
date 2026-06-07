@@ -267,7 +267,20 @@ export async function createPaymentLink(request: StripePaymentRequest): Promise<
   // stripeConfig and threads it through. Disclosure already shipped in
   // mollie.tsx connect modal (R66r49 #14) so this is non-surprising.
 
-  // Stripe Payment Links require a Price object inline via line_items
+  // Stripe Payment Links require a Price object inline via line_items.
+  // R311: link-level `metadata` lives on the PaymentLink object only — it is
+  // NOT copied to the PaymentIntent that stripe-webhook (payment_intent.
+  // succeeded) reads. `payment_intent_data[metadata]` IS, so we set both:
+  // link-level for dashboard visibility + payment_intent_data for the webhook.
+  const linkMetadata: Record<string, string> = {
+    invoiceId: request.invoiceId,
+    ...(request.customerEmail ? { customerEmail: request.customerEmail } : {}),
+    ...(request.metadata ?? {}),
+  };
+  const piMetadata: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(linkMetadata)) {
+    piMetadata[`payment_intent_data[metadata][${k}]`] = v;
+  }
   const result = await apiCall<StripePaymentLink>('payment_links', {
     method: 'POST',
     formData: {
@@ -275,11 +288,8 @@ export async function createPaymentLink(request: StripePaymentRequest): Promise<
       'line_items[0][price_data][product_data][name]': request.description,
       'line_items[0][price_data][unit_amount]': amountInCents,
       'line_items[0][quantity]': 1,
-      metadata: {
-        invoiceId: request.invoiceId,
-        ...(request.customerEmail ? { customerEmail: request.customerEmail } : {}),
-        ...(request.metadata ?? {}),
-      },
+      metadata: linkMetadata,
+      ...piMetadata,
       payment_method_types: request.paymentMethods ?? SUPPORTED_METHODS.UK,
     },
   });

@@ -3131,19 +3131,33 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       requestTrackerDeposit: async (accessCode, amount) => {
         const country = getCurrentCountry();
         let checkoutUrl = '';
+        // R311: must use createPaymentLink (returns a shareable URL) — NOT the
+        // legacy createStripePayment/createMolliePayment stubs. Stripe's stub
+        // mints a PaymentIntent which has NO checkout URL (returned ''), so
+        // UK/US deposits always failed. Both links carry trackerAccessCode
+        // metadata so the webhook can flip decision_trackers.payment_status.
         if (country === 'UK' || country === 'US') {
-          const { createStripePayment } = await import('../integrations/stripe');
-          const r = await createStripePayment(accessCode, amount, country);
-          if (!r.success || !r.checkoutUrl) {
-            throw new Error(r.error ?? 'Stripe payment link creation failed');
-          }
-          checkoutUrl = r.checkoutUrl;
+          const { createPaymentLink } = await import('../integrations/stripe');
+          const res = await createPaymentLink({
+            invoiceId: `deposit-${accessCode}`,
+            amount,
+            description: `Aanbetaling — ${accessCode}`,
+            currency: country === 'US' ? 'USD' : 'GBP',
+            metadata: { trackerAccessCode: accessCode },
+          });
+          if (!res?.url) throw new Error('Stripe payment link creation failed');
+          checkoutUrl = res.url;
         } else {
-          const r = await createMolliePayment(accessCode, amount);
-          if (!r.success || !r.checkoutUrl) {
-            throw new Error(r.error ?? 'Mollie payment link creation failed');
-          }
-          checkoutUrl = r.checkoutUrl;
+          const { createPaymentLink } = await import('../integrations/mollie');
+          const res = await createPaymentLink({
+            invoiceId: `deposit-${accessCode}`,
+            amount,
+            description: `Aanbetaling — ${accessCode}`,
+            customerCountry: country,
+            metadata: { trackerAccessCode: accessCode },
+          });
+          if (!res?.url) throw new Error('Mollie payment link creation failed');
+          checkoutUrl = res.url;
         }
         const { setTrackerPayment } = await import('../services/decisionTrackerService');
         const stored = await setTrackerPayment({ accessCode, paymentLink: checkoutUrl, paymentStatus: 'pending', depositAmount: amount });

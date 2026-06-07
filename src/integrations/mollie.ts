@@ -260,6 +260,10 @@ export async function createPaymentLink(req: {
   expiresAt?: string;
   method?: string[]; // Country-specific Mollie methods (e.g. ['ideal', 'creditcard', 'paypal'])
   customerCountry?: string; // R250: when set, default methods auto-pick if `method` omitted
+  // R311: arbitrary metadata copied onto the payment link → Mollie copies it
+  // onto every payment created from the link, so the webhook can route it
+  // (e.g. { trackerAccessCode } for decision-tracker deposits).
+  metadata?: Record<string, string>;
 }): Promise<{ url: string; id: string } | null> {
   const connected = await isConnected();
   if (!connected) {
@@ -271,12 +275,15 @@ export async function createPaymentLink(req: {
 
   const resolvedMethods = req.method
     ?? (req.customerCountry ? defaultPaymentMethodsForCountry(req.customerCountry) : undefined);
+  // Always carry invoiceId in metadata; merge any caller-supplied keys on top.
+  const metadata = { invoiceId: req.invoiceId, ...(req.metadata ?? {}) };
   const result = await apiCall<{ id: string; _links: { paymentLink: { href: string } } }>('payment-links', {
     method: 'POST',
     body: JSON.stringify({
       amount: { currency: 'EUR', value: req.amount.toFixed(2) },
       description: req.description,
       expiresAt: req.expiresAt,
+      metadata,
       ...(resolvedMethods ? { method: resolvedMethods } : {}),
     }),
   });

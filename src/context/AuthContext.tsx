@@ -199,6 +199,22 @@ const MOCK_USERS: Record<string, User> = {
   },
 };
 
+/**
+ * R314: a demo-account Supabase session must never survive into a build
+ * where DEMO_MODE is off. TestFlight/store updates preserve AsyncStorage,
+ * so a session created on an older DEMO_MODE=true build (preview/dev
+ * profiles) would otherwise be silently restored by getSession() /
+ * onAuthStateChange on the first cold start of a production build —
+ * auto-logging the tester into demo data with no login screen. The
+ * `login()` path already blocks demo accounts when !DEMO_MODE; this
+ * closes the same hole on the session-restore path. Real user accounts
+ * are unaffected — staying signed in across app updates is by design.
+ */
+function isBlockedDemoSession(email: string | null | undefined): boolean {
+  if (DEMO_MODE || !email) return false;
+  return !!MOCK_USERS[email.toLowerCase().trim()];
+}
+
 // ============================================
 // ROLE CONFIGURATION
 // ============================================
@@ -405,6 +421,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check existing session on mount
     supabase.auth.getSession()
       .then(({ data: { session: s } }) => {
+        // R314: don't restore demo-account sessions in prod builds — sign
+        // out instead so the tester lands on the login screen.
+        if (s?.user && isBlockedDemoSession(s.user.email)) {
+          logWarn('Auth', `Demo session restore rejected — DEMO_MODE is disabled: ${s.user.email}`);
+          void supabase.auth.signOut().catch(() => {});
+          return;
+        }
         setSession(s);
         if (s?.user) {
           // R108: mirror the onAuthStateChange handler — derive
@@ -463,6 +486,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (log.length > 20) log = log.slice(-20);
         return AsyncStorage.setItem('@vasco_auth_event_log', JSON.stringify(log));
       }).catch(() => {});
+      // R314: mirror the getSession guard — a demo-account session must not
+      // be (re)established in a prod build via INITIAL_SESSION/TOKEN_REFRESHED.
+      // signOut() emits SIGNED_OUT which re-enters this handler and clears
+      // user/session through the normal branch below.
+      if (s?.user && isBlockedDemoSession(s.user.email)) {
+        logWarn('Auth', `Demo session event rejected — DEMO_MODE is disabled: ${s.user.email}`);
+        void supabase.auth.signOut().catch(() => {});
+        return;
+      }
       setSession(s);
       if (s?.user) {
         // R102: preserve fields that come from local context (onboardingComplete,

@@ -2,7 +2,7 @@
 // BILLING — client wrapper to start Stripe Checkout for tier upgrades
 // =============================================================================
 
-import { Linking } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
 export type PaidTier = 'pro' | 'contractor';
@@ -12,6 +12,33 @@ export interface CheckoutResult {
   ok: boolean;
   url?: string;
   error?: string;
+}
+
+// WEB-ONLY BILLING / iOS LINK-OUT (App Store guideline 3.1.1).
+// On iOS, subscription checkout must NOT be a raw `Linking.openURL` — Apple
+// requires the StoreKit External Purchase Link API (a system disclosure sheet
+// shown before leaving the app), gated behind the
+// `com.apple.developer.storekit.external-purchase-link` entitlement +
+// `SKExternalPurchaseLink` Info.plist keys (both declared in app.json).
+//
+// That API needs a native module that ships only in a custom dev/production
+// build (it is absent in Expo Go and in builds made before the entitlement is
+// granted). The future native module registers itself on this global; until
+// then — and always on Android — we fall back to opening the URL directly,
+// which is fully compliant on Android and acceptable for internal/TestFlight
+// iOS builds prior to the entitlement landing.
+type ExternalPurchaseLinkModule = { open(url: string): Promise<void> };
+
+async function openCheckoutUrl(url: string): Promise<void> {
+  if (Platform.OS === 'ios') {
+    const native = (globalThis as { __VascoExternalPurchaseLink?: ExternalPurchaseLinkModule })
+      .__VascoExternalPurchaseLink;
+    if (native?.open) {
+      await native.open(url);
+      return;
+    }
+  }
+  await Linking.openURL(url);
 }
 
 export async function startSubscriptionCheckout(
@@ -30,7 +57,7 @@ export async function startSubscriptionCheckout(
     if (!payload?.ok || !payload.url) {
       return { ok: false, error: payload?.error ?? 'No checkout URL returned' };
     }
-    await Linking.openURL(payload.url);
+    await openCheckoutUrl(payload.url);
     return payload;
   } catch (err) {
     return { ok: false, error: String(err) };
@@ -53,7 +80,7 @@ export async function startBillingPortal(): Promise<CheckoutResult> {
     if (!payload?.ok || !payload.url) {
       return { ok: false, error: payload?.error ?? 'No portal URL returned' };
     }
-    await Linking.openURL(payload.url);
+    await openCheckoutUrl(payload.url);
     return payload;
   } catch (err) {
     return { ok: false, error: String(err) };

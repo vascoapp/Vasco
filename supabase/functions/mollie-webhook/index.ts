@@ -120,13 +120,21 @@ Deno.serve(async (req) => {
     }
 
     const invoiceId = payment.metadata?.invoiceId;
+    const trackerAccessCode = payment.metadata?.trackerAccessCode;
 
-    console.log(`Payment ${paymentId}: status=${payment.status}, invoiceId=${invoiceId}`);
+    console.log(
+      `Payment ${paymentId}: status=${payment.status}, invoiceId=${invoiceId}, trackerAccessCode=${trackerAccessCode}`,
+    );
 
     // -------------------------------------------------------------------------
     // 3. If paid, update the invoice in Supabase
     // -------------------------------------------------------------------------
-    if (payment.status === 'paid' && invoiceId) {
+    // R311: tracker deposits also carry invoiceId ('deposit-<code>') so the
+    // payment link mints, but they have NO matching documents row. Skip the
+    // invoice branch when trackerAccessCode is present so we don't fire bogus
+    // receipt-email side-effects against a non-existent invoice — the tracker
+    // branch below handles them.
+    if (payment.status === 'paid' && invoiceId && !trackerAccessCode) {
       const supabaseUrl = Deno.env.get('SUPABASE_URL');
       const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -185,6 +193,30 @@ Deno.serve(async (req) => {
         );
       } else {
         console.log(`Mollie payment ${paymentId} replay — side effects skipped`);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 3-tracker. Decision-tracker deposit paid? Flip the tracker's
+    // payment_status so the customer portal stops showing the Pay button.
+    // Tracker deposits carry metadata.trackerAccessCode and no invoiceId
+    // (requestTrackerDeposit in AppState). The UPDATE is idempotent, so no
+    // separate replay gate is needed (unlike invoice side-effects above).
+    // -------------------------------------------------------------------------
+    if (payment.status === 'paid' && trackerAccessCode) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      if (supabaseUrl && supabaseServiceKey) {
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+        const { error: trackerErr } = await supabase
+          .from('decision_trackers')
+          .update({ payment_status: 'paid', updated_at: new Date().toISOString() })
+          .eq('access_code', trackerAccessCode);
+        if (trackerErr) {
+          console.error('Failed to mark tracker paid:', trackerErr.message);
+        } else {
+          console.log(`Tracker ${trackerAccessCode} marked as paid (${paymentId})`);
+        }
       }
     }
 
