@@ -73,11 +73,33 @@ Build the web pages the URLs point at (success / cancel / billing landing / `/bi
    for your regions (EU + US). Apple reviews/approves per region.
 3. Once granted, regenerate provisioning profiles so the entitlement is in the profile.
 
-Already done in code (`app.json`):
-- `ios.entitlements["com.apple.developer.storekit.external-purchase-link"] = true`
-- `ios.infoPlist.SKExternalPurchaseLink` → per-country `vascobuild.com/billing/upgrade?country=…`
-  (nl/de/fr/es/it/us — **UK omitted**: not covered by DMA, link-out is still against
-  guidelines there; sell UK on web only, keep iOS UK on free tier or silent).
+⚠️ **NOT yet in `app.json`** (the entitlement block claimed here previously was lost
+and is currently absent — verified 2026-06-08). **Do NOT add it before the program is
+approved** — signing a build with an unapproved entitlement fails at signing / gets
+rejected at App Store Connect upload. Add the block below ONLY after steps 1–3 above are
+done AND the §4 native module exists. Until then the `Linking.openURL` fallback handles
+iOS link-out for TestFlight internal testing.
+
+When approved, add to `app.json` → `expo.ios`:
+```jsonc
+"entitlements": {
+  "com.apple.developer.storekit.external-purchase-link": true
+},
+"infoPlist": {
+  // …existing keys…
+  "SKExternalPurchaseLink": {
+    "nl": "https://vascobuild.com/billing/upgrade?country=nl",
+    "de": "https://vascobuild.com/billing/upgrade?country=de",
+    "fr": "https://vascobuild.com/billing/upgrade?country=fr",
+    "es": "https://vascobuild.com/billing/upgrade?country=es",
+    "it": "https://vascobuild.com/billing/upgrade?country=it",
+    "us": "https://vascobuild.com/billing/upgrade?country=us"
+  }
+}
+```
+**UK omitted**: not covered by DMA, link-out is still against guidelines there; sell UK on
+web only, keep iOS UK on free tier or silent. Adding the entitlement is a **native build**
+(not OTA).
 
 ---
 

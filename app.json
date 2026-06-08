@@ -29,8 +29,19 @@
         "applinks:pay.vascobuild.com",
         "applinks:admin.vascobuild.com"
       ],
+      "entitlements": {
+        "com.apple.developer.storekit.external-purchase-link": true
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
+        "SKExternalPurchaseLink": {
+          "nl": "https://vascobuild.com/billing/upgrade?country=nl",
+          "de": "https://vascobuild.com/billing/upgrade?country=de",
+          "fr": "https://vascobuild.com/billing/upgrade?country=fr",
+          "es": "https://vascobuild.com/billing/upgrade?country=es",
+          "it": "https://vascobuild.com/billing/upgrade?country=it",
+          "us": "https://vascobuild.com/billing/upgrade?country=us"
+        },
         "NSCameraUsageDescription": "Vasco uses the camera to scan invoices, receipts, and take job site photos.",
         "NSPhotoLibraryUsageDescription": "Vasco uses your photo library to attach photos to jobs, quotes, and invoices.",
         "NSPhotoLibraryAddUsageDescription": "Vasco saves generated quotes, invoices, and reports to your photo library when you export them.",
