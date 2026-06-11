@@ -8,7 +8,23 @@ the Gmail / Apple Mail / Outlook rendering constraints.
 Copy is **NL-primary with an EN secondary line** (primary market is NL; the signup
 email fires before we know the user's language).
 
-## How to install (operator — Supabase Dashboard)
+## How to install
+
+### Option A — one command (recommended)
+
+`scripts/configure-auth-emails.mjs` pushes all 6 templates + subjects (and, if you
+pass `SMTP_*`, the custom SMTP config + raised rate limit) to the project via the
+Supabase Management API — no manual paste:
+
+```bash
+node scripts/configure-auth-emails.mjs --dry-run                     # preview payload
+SUPABASE_ACCESS_TOKEN=sbp_… node scripts/configure-auth-emails.mjs   # templates only
+```
+
+To also fix deliverability in the same run, supply `SMTP_*` — see
+[`dns-records.md`](./dns-records.md) for the full step-by-step (provider + DNS + SMTP).
+
+### Option B — manual (Supabase Dashboard)
 
 Dashboard → **Authentication → Emails → Templates** (hosted projects have no
 config-file path for this — it's paste-in-dashboard).
