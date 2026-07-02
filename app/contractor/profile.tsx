@@ -3,7 +3,7 @@
 // =============================================================================
 
 import { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Share } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Share, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
@@ -413,7 +413,7 @@ export default function ProfileScreen() {
                 )}
               </View>
 
-              {subscription.tier !== 'free' && (
+              {subscription.tier !== 'free' && Platform.OS !== 'ios' && (
                 <Pressable
                   style={styles.manageSubRow}
                   onPress={handleManageSubscription}
@@ -438,7 +438,21 @@ export default function ProfileScreen() {
                 </Pressable>
               )}
 
-              {subscription.tier !== 'contractor' && (
+              {/* iOS: no in-app purchase or external-checkout link-out (App Store
+                  guideline 3.1.1). Subscriptions are sold on the web; show a
+                  non-interactive note instead of a tappable purchase link. */}
+                {Platform.OS === 'ios' && (
+                <View style={styles.iosBillingNote}>
+                  <Ionicons name="globe-outline" size={16} color={SemanticColors.textTertiary} />
+                  <Text style={styles.iosBillingNoteText}>
+                    {subscription.tier === 'free'
+                      ? t('profile.iosBillingNoteFree', 'Manage your plan and upgrade at vascobuild.com')
+                      : t('profile.iosBillingNotePaid', 'Manage or cancel your subscription at vascobuild.com')}
+                  </Text>
+                </View>
+              )}
+
+              {subscription.tier !== 'contractor' && Platform.OS !== 'ios' && (
                 <View style={styles.planUpgradeBlock}>
                   {/* R18.1: credits banner — visible when the contractor has
                       earned R8.3 referral credits. The actual offset happens
@@ -908,6 +922,23 @@ const styles = StyleSheet.create({
     gap: GRID.sm + 4,
     borderTopWidth: 1,
     borderTopColor: SemanticColors.borderDefault,
+  },
+  iosBillingNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GRID.sm,
+    paddingHorizontal: 14,
+    paddingBottom: 14,
+    paddingTop: GRID.sm,
+    borderTopWidth: 1,
+    borderTopColor: SemanticColors.borderDefault,
+  },
+  iosBillingNoteText: {
+    flex: 1,
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textTertiary,
+    lineHeight: 18,
   },
   cycleToggle: {
     flexDirection: 'row',

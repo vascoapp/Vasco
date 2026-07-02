@@ -2021,6 +2021,8 @@
     "deviceCalendar": "Calendario del dispositivo",
     "manageSubscription": "Gestionar suscripción",
     "manageSubDesc": "Cambiar tarjeta, cambiar plan o cancelar",
+    "iosBillingNoteFree": "Gestiona tu plan y mejóralo en vascobuild.com",
+    "iosBillingNotePaid": "Gestiona o cancela tu suscripción en vascobuild.com",
     "manageSubError": "No se pudo abrir el portal de facturación",
     "demoMode": "Modo demo",
     "contractor": "Profesional",

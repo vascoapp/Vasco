@@ -2021,6 +2021,8 @@
     "deviceCalendar": "Device calendar",
     "manageSubscription": "Manage subscription",
     "manageSubDesc": "Update card, change plan, or cancel",
+    "iosBillingNoteFree": "Manage your plan and upgrade at vascobuild.com",
+    "iosBillingNotePaid": "Manage or cancel your subscription at vascobuild.com",
     "manageSubError": "Could not open billing portal",
     "demoMode": "Demo mode",
     "contractor": "Contractor",

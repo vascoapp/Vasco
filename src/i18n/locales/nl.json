@@ -2005,6 +2005,8 @@
     "deviceCalendar": "Apparaat agenda",
     "manageSubscription": "Abonnement beheren",
     "manageSubDesc": "Kaart wijzigen, abonnement aanpassen of opzeggen",
+    "iosBillingNoteFree": "Beheer je abonnement en upgrade op vascobuild.com",
+    "iosBillingNotePaid": "Beheer of zeg je abonnement op via vascobuild.com",
     "manageSubError": "Kan klantportaal niet openen",
     "demoMode": "Demomodus",
     "contractor": "Vakman",

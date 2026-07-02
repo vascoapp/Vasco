@@ -2021,6 +2021,8 @@
     "deviceCalendar": "Gerätekalender",
     "manageSubscription": "Abo verwalten",
     "manageSubDesc": "Karte ändern, Tarif wechseln oder kündigen",
+    "iosBillingNoteFree": "Verwalte deinen Tarif und upgrade auf vascobuild.com",
+    "iosBillingNotePaid": "Abonnement verwalten oder kündigen auf vascobuild.com",
     "manageSubError": "Kundenportal konnte nicht geöffnet werden",
     "demoMode": "Demo-Modus",
     "contractor": "Handwerker",

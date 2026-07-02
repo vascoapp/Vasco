@@ -63,3 +63,6 @@ video/.remotion-cache/
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 .claude/*.lock
+
+# Local build artifacts
+*.ipa
