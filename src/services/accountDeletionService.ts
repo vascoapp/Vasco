@@ -139,9 +139,11 @@ async function requestServerDeletion(userId: string): Promise<boolean> {
       });
 
     if (error) {
-      // Table may not exist yet — fall back to edge function
-      logWarn('AccountDeletion', `Table insert failed, trying edge function: ${error.message}`);
-      return await requestDeletionViaEdgeFunction(userId);
+      // Surface as failure so the UI tells the user to retry. There is no
+      // edge-function fallback — the previously-referenced `request-account-
+      // deletion` fn never existed (the drain worker consumes this table).
+      logWarn('AccountDeletion', `Deletion request insert failed: ${error.message}`);
+      return false;
     }
 
     // R66 round 41: fire-and-forget the drain function immediately after
@@ -159,28 +161,6 @@ async function requestServerDeletion(userId: string): Promise<boolean> {
     return true;
   } catch (error) {
     logWarn('AccountDeletion', `Server deletion request failed: ${error}`);
-    return false;
-  }
-}
-
-/** Fallback: call a Supabase Edge Function for deletion */
-async function requestDeletionViaEdgeFunction(userId: string): Promise<boolean> {
-  try {
-    const { error } = await supabase.functions.invoke('request-account-deletion', {
-      body: {
-        userId,
-        requestedAt: new Date().toISOString(),
-        platform: Platform.OS,
-      },
-    });
-
-    if (error) {
-      logWarn('AccountDeletion', `Edge function failed: ${error.message}`);
-      return false;
-    }
-
-    return true;
-  } catch {
     return false;
   }
 }

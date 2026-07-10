@@ -141,7 +141,10 @@ export async function persistPhotoAnalysis(input: PhotoAnalysisRow): Promise<voi
       trade: input.trade ?? null,
       detected_rooms: input.detectedRooms ?? null,
       detected_materials: input.detectedMaterials ?? null,
-      estimated_complexity: input.estimatedComplexity ?? null,
+      // Normalize the FE 'medium' → DB 'moderate' (CHECK is simple/moderate/
+      // complex). Without this, an AI 'medium' would 23514 and drop the ENTIRE
+      // moat row. Centralized here so no caller has to remember (R66r35 class).
+      estimated_complexity: (input.estimatedComplexity as string) === 'medium' ? 'moderate' : (input.estimatedComplexity ?? null),
       estimated_duration_hours: input.estimatedDurationHours ?? null,
       estimated_cost_eur: input.estimatedCostEur ?? null,
       raw_response: input.rawResponse ?? null,
