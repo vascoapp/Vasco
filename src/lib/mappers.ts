@@ -22,6 +22,11 @@ export function documentRowToQuote(row: DocumentRow): Quote {
     // PDF generator at app/quotes/[id].tsx can render it. Without this,
     // the SOW lives only in BE — never reaches the customer.
     description: row.scope_text ?? undefined,
+    // Rule #8: sent_at/created_at were written (markQuoteSent) but never read
+    // back → undefined on cold start, silently disabling the stale-quote /
+    // follow-up automation (staleQuoteService skips `if (!q.sentAt)`).
+    sentAt: row.sent_at ?? undefined,
+    createdAt: row.created_at,
   };
 }
 
@@ -48,6 +53,13 @@ export function documentRowToInvoice(row: DocumentRow): Invoice {
     // read back. Cold-start would lose the actual paid-on date, breaking
     // ageing analytics and customer ledger views. Rule #8 violation.
     paidAt: row.paid_at ?? undefined,
+    // Rule #8: these three were written but never read back → undefined on cold
+    // start. sentAt/createdAt drive DSO/aging/cashflow (fall back to a
+    // non-parseable relative string → NaN); dueDate is the exportable due date
+    // in every e-invoice format (rendered empty without this).
+    sentAt: row.sent_at ?? undefined,
+    dueDate: row.due_date ?? undefined,
+    createdAt: row.created_at,
   };
 }
 
