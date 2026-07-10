@@ -74,7 +74,11 @@ function pickLanguage(): Lang {
   if (l.startsWith('it')) return 'it';
   return 'en';
 }
-function normalizeCode(raw: string): string { return (raw || '').trim().toUpperCase().slice(0, 12); }
+// Real access codes are 32-char lowercase hex (generateAccessCode) and the RPC
+// lookup is case-sensitive + exact. Do NOT uppercase or truncate — that only
+// suited the 6-char demo code (VDB24A) and made every real link 404. Allow up
+// to 64 chars to match the mobile ACCESS_CODE_REGEX {4,64} + RPC length guard.
+function normalizeCode(raw: string): string { return (raw || '').trim().slice(0, 64); }
 
 function moneyFmt(country: string | undefined, lang: Lang) {
   const map: Record<string, { cur: string; loc: string }> = {
@@ -130,7 +134,18 @@ export default function CustomerPortal({ params }: PageProps) {
       if (error) { setPhase('app_only'); return; }
       if (!raw || typeof raw !== 'object') { setPhase('not_found'); return; }
       if ((raw as Record<string, unknown>).expired === true) { setPhase('expired'); return; }
-      setData(raw as unknown as PortalData);
+      // The RPC nests contractor identity under `business` (mirrors the mobile
+      // mapper). The component reads these flat (data.contractorName /
+      // .contractorCountry), so lift them up — otherwise the header name is
+      // blank and moneyFmt falls back to EUR for UK/US customers.
+      const rawObj = raw as Record<string, unknown>;
+      const business = (rawObj.business ?? {}) as Record<string, unknown>;
+      setData({
+        ...rawObj,
+        contractorName: rawObj.contractorName ?? business.contractorName,
+        contractorCompany: rawObj.contractorCompany ?? business.contractorCompany,
+        contractorCountry: rawObj.contractorCountry ?? business.contractorCountry,
+      } as unknown as PortalData);
       setPhase('ready');
     } catch { setPhase('app_only'); }
   }, [code]);
