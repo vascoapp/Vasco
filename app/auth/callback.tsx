@@ -10,7 +10,7 @@
 // expo-linking and parse the fragment manually.
 // =============================================================================
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -52,19 +52,33 @@ export default function AuthCallbackScreen() {
   const queryParams = useLocalSearchParams<{ type?: string; access_token?: string; refresh_token?: string; error_description?: string }>();
   const [status, setStatus] = useState<'processing' | 'done' | 'error'>('processing');
   const [message, setMessage] = useState('');
+  // Live deep link — updates for both cold launch and warm-start 'url' events.
+  const linkedUrl = Linking.useURL();
+  const handledRef = useRef(false);
 
   useEffect(() => {
+    if (handledRef.current) return;
+    let cancelled = false;
     (async () => {
-      // Get the raw URL the app was opened with — the only way to access
-      // the fragment portion in React Native (Expo Router strips it).
-      const initialUrl = await Linking.getInitialURL().catch(() => null);
-      const hashParams = parseHashParams(initialUrl);
+      // Prefer the LIVE linked URL. A confirm/recovery link tapped while the app
+      // is already running is delivered via the OS 'url' event (captured by
+      // Linking.useURL()), NOT getInitialURL() — reading only the cold-launch URL
+      // dropped the token fragment on warm starts, so password reset then failed
+      // with "Auth session missing". Fall back to getInitialURL for cold start.
+      const url = linkedUrl ?? (await Linking.getInitialURL().catch(() => null));
+      const hashParams = parseHashParams(url);
 
       // Hash params take precedence; query is fallback.
       const access_token = hashParams.access_token ?? (queryParams.access_token ? String(queryParams.access_token) : undefined);
       const refresh_token = hashParams.refresh_token ?? (queryParams.refresh_token ? String(queryParams.refresh_token) : undefined);
       const type = hashParams.type ?? (queryParams.type ? String(queryParams.type) : undefined);
       const error_description = hashParams.error_description ?? (queryParams.error_description ? String(queryParams.error_description) : undefined);
+
+      // Nothing to act on yet (no url, no query token) — wait for a later
+      // linkedUrl update rather than prematurely redirecting unauthenticated.
+      if (!url && !access_token && !error_description) return;
+      if (cancelled) return;
+      handledRef.current = true;
 
       if (error_description) {
         setStatus('error');
@@ -88,9 +102,11 @@ export default function AuthCallbackScreen() {
         else router.replace('/');
       }, 400);
     })();
-    // Run once on mount — URL is read from Linking.getInitialURL().
+    return () => { cancelled = true; };
+    // Re-runs when the linked URL arrives (warm start); handledRef guards against
+    // double-processing. queryParams is navigation-stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [linkedUrl]);
 
   return (
     <SafeAreaView style={styles.container}>
