@@ -729,7 +729,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               await queueWrite({
                 table: 'customers',
                 op: 'insert',
-                payload: { id: tempId, name, email, phone, address },
+                payload: { id: tempId, user_id: getCurrentUserId(), name, email, phone, address },
               });
             } catch {}
           }
@@ -1757,7 +1757,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               // (per-line) which has its own write path below — no data loss for
               // training. Customer-facing portal lines re-upsert next time the
               // user opens the quote online.
-              await queueWrite({ table: 'documents', op: 'insert', payload: docPayload });
+              await queueWrite({ table: 'documents', op: 'insert', payload: { ...docPayload, user_id: getCurrentUserId() } });
             } catch {}
           }
         }
@@ -1899,6 +1899,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 table: 'documents',
                 op: 'insert',
                 payload: {
+                  user_id: getCurrentUserId(),
                   doc_type: 'invoice',
                   status: 'draft',
                   document_number: docNumber,
@@ -2197,7 +2198,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             logWarn('AppState', `addMaterial persist failed: ${err}`);
             try {
               const { queueWrite } = await import('../services/offlineWriteQueue');
-              await queueWrite({ table: 'materials', op: 'insert', payload: { id: tempId, ...payload } });
+              await queueWrite({ table: 'material_catalog', op: 'insert', payload: { id: tempId, user_id: getCurrentUserId(), ...payload } });
             } catch {}
           }
         }
@@ -2242,7 +2243,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             logWarn('AppState', `addSupplier persist failed: ${err}`);
             try {
               const { queueWrite } = await import('../services/offlineWriteQueue');
-              await queueWrite({ table: 'suppliers', op: 'insert', payload: { id: tempId, ...payload } });
+              await queueWrite({ table: 'suppliers', op: 'insert', payload: { id: tempId, user_id: getCurrentUserId(), ...payload } });
             } catch {}
           }
         }
@@ -2308,6 +2309,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 op: 'insert',
                 payload: {
                   id: tempId,
+                  user_id: getCurrentUserId(),
                   job_id: jm.jobId,
                   material_id: jm.materialId,
                   quantity: jm.quantity,
@@ -2512,7 +2514,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             logWarn('AppState', `addInvoiceFromJob persist failed, queueing: ${err}`);
             try {
               const { queueWrite } = await import('../services/offlineWriteQueue');
-              await queueWrite({ table: 'documents', op: 'insert', payload: invPayload });
+              await queueWrite({ table: 'documents', op: 'insert', payload: { ...invPayload, user_id: getCurrentUserId() } });
             } catch {}
           }
         }
@@ -2657,7 +2659,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             logWarn('AppState', `convertQuoteToJob persist failed, queueing: ${err}`);
             try {
               const { queueWrite } = await import('../services/offlineWriteQueue');
-              await queueWrite({ table: 'jobs', op: 'insert', payload: { id: tempId, ...jobPayload } });
+              await queueWrite({ table: 'jobs', op: 'insert', payload: { id: tempId, user_id: getCurrentUserId(), ...jobPayload } });
               await queueWrite({ table: 'documents', op: 'update', rowId: quoteId, payload: { status: 'accepted' } });
             } catch {}
           }
@@ -2992,9 +2994,29 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                     setLeads((prev) =>
                       prev.map((l) => (l.id === tempId ? { ...l, id: data.id as string } : l))
                     );
+                    const { emitIdRemap } = await import('../services/idRemapBus');
+                    emitIdRemap({ table: 'leads', tempId, realId: data.id as string, payload: { name: newLead.customerName } });
                   }
                   return data;
-                }, { rowId: tempId }),
+                }, {
+                  rowId: tempId,
+                  // Full row so an OFFLINE auto-lead (quote rejected without signal)
+                  // actually persists on flush — was `{ rowId: tempId }` → lead lost.
+                  payload: {
+                    id: tempId,
+                    user_id: getCurrentUserId(),
+                    status: newLead.status,
+                    source: newLead.source,
+                    customer_name: newLead.customerName,
+                    customer_phone: newLead.customerPhone,
+                    customer_email: newLead.customerEmail,
+                    customer_id: newLead.customerId,
+                    job_description: newLead.jobDescription,
+                    estimated_value: newLead.estimatedValue,
+                    notes: newLead.notes,
+                    source_quote_id: newLead.sourceQuoteId,
+                  },
+                }),
               ).catch((err) => logWarn('AppState', `auto-lead-on-reject persist failed: ${err}`));
             }
           }
@@ -3046,6 +3068,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                   op: 'insert',
                   payload: {
                     id: tempId,
+                    user_id: getCurrentUserId(),
                     name: project.title,
                     description: project.description,
                     customer_id: project.customerId || null,
