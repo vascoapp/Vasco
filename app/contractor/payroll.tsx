@@ -10,6 +10,7 @@ import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG } from '../../src/theme/tabStyles';
+import { EmptyState } from '../../src/components/shared/EmptyState';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useTeamMembers, useTimeTracking } from '../../src/services/teamManagementService';
 import { useAuth } from '../../src/context/AuthContext';
@@ -165,6 +166,13 @@ export default function PayrollScreen() {
 
       {/* Per-member breakdown */}
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {payrollData.lines.length === 0 && (
+          <EmptyState
+            icon="people-outline"
+            title="Nog geen teamleden"
+            description="Voeg teamleden toe om hun uren en verloning hier te zien."
+          />
+        )}
         {payrollData.lines.map(line => (
           <View key={line.memberId} style={styles.memberCard}>
             <View style={styles.memberHeader}>

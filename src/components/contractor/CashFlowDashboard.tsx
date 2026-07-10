@@ -17,6 +17,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG } from '../../theme/tabStyles';
 import { TYPE, RADIUS } from '../../theme/tabStyles';
+import { EmptyState } from '../shared/EmptyState';
 import { useTranslation } from 'react-i18next';
 import {
   useCashFlow,
@@ -240,6 +241,18 @@ export function CashFlowDashboard() {
     const unpaid = invoices.filter((i) => i.status !== 'paid' && i.status !== 'cancelled');
     const paid = invoices.filter((i) => i.status === 'paid');
 
+    if (unpaid.length === 0 && paid.length === 0) {
+      return (
+        <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+          <EmptyState
+            icon="cash-outline"
+            title="Nog geen facturen"
+            description="Markeer een klus als afgerond om je eerste factuur op te stellen."
+          />
+        </ScrollView>
+      );
+    }
+
     return (
       <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionTitle}>Openstaand ({unpaid.length})</Text>
@@ -409,6 +422,9 @@ export function CashFlowDashboard() {
         {/* Recent Expenses */}
         <View style={styles.recentExpenses}>
           <Text style={styles.sectionTitle}>Recente uitgaven</Text>
+          {expenses.length === 0 && (
+            <Text style={styles.emptyHint}>Nog geen uitgaven geregistreerd.</Text>
+          )}
           {expenses.slice(0, 10).map((expense) => {
             const style = getCategoryStyle(expense.category);
             return (
@@ -594,6 +610,12 @@ const styles = StyleSheet.create({
     color: SemanticColors.textPrimary,
     letterSpacing: -0.5,
     marginBottom: 12,
+  },
+  emptyHint: {
+    fontSize: TYPE.captionSize,
+    fontFamily: 'Inter_400Regular',
+    color: SemanticColors.textTertiary,
+    paddingVertical: 12,
   },
 
   // Health Card

@@ -25,6 +25,7 @@ import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { getCurrentTrade, getCurrentCountry, getCurrentVatScheme } from '../../lib/currentUser';
 import { getEffectiveVatRate, type VatScheme, type BusinessProfile } from '../../domain/business';
 import { hapticSuccess, hapticWarning } from '../../utils/haptics';
+import { withTimeout } from '../../utils/withTimeout';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -199,15 +200,23 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
     try {
       const trade = getCurrentTrade() || 'general';
       const country = getCurrentCountry() || 'NL';
-      const { data, error: fnError } = await supabase.functions.invoke('analyze-photo', {
-        body: {
-          // New multi-photo path — Edge Function also falls back to legacy single imageBase64.
-          imagesBase64: batch,
-          imageBase64: batch[0],
-          trade,
-          country,
-        },
-      });
+      // 45s hard ceiling: multi-photo AI vision can be slow, and a hung invoke
+      // would leave the "analyzing" spinner stuck forever (the finally only runs
+      // if the await resolves/rejects). On timeout this throws → the catch below
+      // falls back to demo results and the finally clears `analyzing`.
+      const { data, error: fnError } = await withTimeout(
+        supabase.functions.invoke('analyze-photo', {
+          body: {
+            // New multi-photo path — Edge Function also falls back to legacy single imageBase64.
+            imagesBase64: batch,
+            imageBase64: batch[0],
+            trade,
+            country,
+          },
+        }),
+        45000,
+        'analyze-photo',
+      );
 
       if (fnError || !data) {
         // Fallback to mock on error

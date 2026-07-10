@@ -16,6 +16,7 @@ import { SemanticColors, Palette } from '../../../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../../../src/theme/tabStyles';
 import { listJobPhotos, uploadJobPhoto, deleteJobPhoto, type JobPhotoRecord, type PhotoKind } from '../../../../src/services/jobPhotoService';
 import { hapticSuccess } from '../../../../src/utils/haptics';
+import { withTimeout } from '../../../../src/utils/withTimeout';
 
 const KINDS: PhotoKind[] = ['before', 'during', 'after', 'defect', 'handover'];
 
@@ -81,7 +82,25 @@ export default function JobPhotosScreen() {
     });
     if (result.canceled || !result.assets?.[0]?.base64) return;
     setUploading(true);
-    const upload = await uploadJobPhoto({ jobId: String(id), imageBase64: result.assets[0].base64, kind });
+    // 30s backstop: a large photo upload on flaky signal can hang, which would
+    // leave the uploading spinner stuck. On timeout we treat it like the
+    // offline-queued path — the photo syncs when the connection recovers.
+    let upload: Awaited<ReturnType<typeof uploadJobPhoto>> | null = null;
+    try {
+      upload = await withTimeout(
+        uploadJobPhoto({ jobId: String(id), imageBase64: result.assets[0].base64, kind }),
+        30000,
+        'uploadJobPhoto',
+      );
+    } catch {
+      setUploading(false);
+      Alert.alert(
+        t('jobs.photos.queuedTitle', 'Photo saved offline'),
+        t('jobs.photos.queuedDesc', 'It will upload to the cloud as soon as you reconnect or the parent job syncs.'),
+      );
+      await refresh();
+      return;
+    }
     setUploading(false);
     if (upload) {
       hapticSuccess();
