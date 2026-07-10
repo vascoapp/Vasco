@@ -195,7 +195,7 @@ async function collectFromBackend(): Promise<BackendDataset | null> {
       jobs: () => supabase.from('jobs').select('*').eq('user_id', user.id),
       job_materials: () => supabase.from('job_materials').select('*').eq('user_id', user.id),
       line_items: () => supabase.from('line_items').select('*').eq('user_id', user.id),
-      materials: () => supabase.from('materials').select('*').eq('user_id', user.id),
+      materials: () => supabase.from('material_catalog').select('*').eq('user_id', user.id),
       suppliers: () => supabase.from('suppliers').select('*').eq('user_id', user.id),
       business_settings: () => supabase.from('business_settings').select('*').eq('user_id', user.id),
       // typegen drift on tables added post-1.0

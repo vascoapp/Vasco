@@ -57,11 +57,16 @@ export async function fetchRevenueSnapshot(): Promise<RevenueSnapshot> {
     const [{ data: subs }, { data: invoices }, { data: profiles }, { data: clicks }] = await Promise.all([
       supabase.from("subscriptions").select("tier, status, billing_cycle"),
       supabase
-        .from("invoices")
-        .select("total, currency, paid_at, status")
+        // Invoices live in `documents` (doc_type='invoice'); there is no
+        // `invoices` table, so this silently returned €0 revenue. `total` →
+        // `total_amount`; documents has no `currency` column.
+        .from("documents")
+        .select("total_amount, paid_at, status")
+        .eq("doc_type", "invoice")
         .eq("status", "paid")
         .gte("paid_at", since30d),
-      supabase.from("business_profiles").select("country"),
+      // Contractor country lives in `business_settings` (no `business_profiles`).
+      supabase.from("business_settings").select("country"),
       supabase
         .from("affiliate_clicks")
         .select("converted, commission, estimated_commission, clicked_at")
@@ -88,8 +93,8 @@ export async function fetchRevenueSnapshot(): Promise<RevenueSnapshot> {
     snap.paidUsers = paidUsers;
 
     let invRev = 0;
-    for (const inv of (invoices ?? []) as Array<{ total?: number }>) {
-      invRev += inv.total ?? 0;
+    for (const inv of (invoices ?? []) as Array<{ total_amount?: number }>) {
+      invRev += inv.total_amount ?? 0;
     }
     snap.paidInvoicesLast30d = invoices?.length ?? 0;
     snap.paidInvoiceRevenueLast30d = invRev;

@@ -271,7 +271,10 @@ Deno.serve(async (req) => {
         .select('total_amount')
         .eq('user_id', userId)
         .eq('doc_type', 'invoice')
-        .eq('status', 'overdue'),
+        // 'overdue' is a COMPUTED state, never stored — filtering status='overdue'
+        // returned zero rows. Overdue = sent (not paid) with a past due_date.
+        .eq('status', 'sent')
+        .lt('due_date', new Date().toISOString().slice(0, 10)),
       admin.from('ai_queue_items')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', userId)
@@ -285,8 +288,9 @@ Deno.serve(async (req) => {
       admin.from('jobs')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', userId)
-        .gte('scheduled_at', tomorrowStart.toISOString())
-        .lt('scheduled_at', tomorrowEnd.toISOString()),
+        // jobs has no `scheduled_at` — the column is `scheduled_date` (a date).
+        .gte('scheduled_date', tomorrowStart.toISOString().slice(0, 10))
+        .lt('scheduled_date', tomorrowEnd.toISOString().slice(0, 10)),
     ]);
 
     const overdueRows = (overdue.data ?? []) as Array<{ total_amount: number | null }>;
