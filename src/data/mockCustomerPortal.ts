@@ -40,6 +40,8 @@ export const MOCK_ACCESS_TOKENS: CustomerAccessToken[] = [
 
 export const MOCK_CUSTOMER_PORTAL: CustomerPortalData = {
   accessToken: 'VDB24A',
+  // Demo never hits the BE; the code doubles as the tracker id here.
+  trackerId: 'VDB24A',
 
   // Project info
   projectName: 'Badkamer Renovatie',

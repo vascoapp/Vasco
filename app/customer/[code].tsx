@@ -167,7 +167,7 @@ export default function CustomerPortalScreen() {
 
       // Retry any decisions saved on-device but not yet confirmed to the
       // backend (e.g. submitted earlier while offline). Best-effort.
-      flushUnsyncedSubmissions(data.accessToken)
+      flushUnsyncedSubmissions(data.trackerId)
         .then((n) => { if (n > 0 && __DEV__) console.log(`Flushed ${n} pending decisions`); })
         .catch(() => {});
 
@@ -269,7 +269,9 @@ export default function CustomerPortalScreen() {
     let syncResult: SubmitResult = 'local';
     try {
       syncResult = await syncSubmitDecision({
-        trackerId: portalData.accessToken,
+        // Tracker UUID (NOT the access_code) — decision_submissions.tracker_id
+        // is a UUID FK. Passing the code here failed every real submission.
+        trackerId: portalData.trackerId,
         itemId: submission.itemId,
         submittedBy: 'customer',
         value: String(submission.value),

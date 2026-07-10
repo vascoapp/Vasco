@@ -48,6 +48,11 @@ export interface CustomerAccessToken {
 export interface CustomerPortalData {
   // Access info
   accessToken: string;
+  // The tracker's UUID (decision_trackers.id). REQUIRED for writing
+  // decision_submissions, whose tracker_id is a UUID FK — the access_code
+  // (accessToken) is NOT a valid value there. Falls back to accessToken in the
+  // mapper until the RPC ships it (migration 20260709000001).
+  trackerId: string;
 
   // Project info (customer sees)
   projectName: string;

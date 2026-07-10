@@ -238,6 +238,10 @@ function mapRpcResponseToPortalData(raw: Record<string, unknown>): CustomerPorta
 
   return {
     accessToken: String(raw.accessToken ?? ''),
+    // UUID for decision_submissions FK. Fall back to accessToken when the RPC
+    // hasn't shipped trackerId yet (pre-migration 20260709000001) — same broken
+    // behaviour as before, no regression; once deployed, submissions sync.
+    trackerId: String(raw.trackerId ?? raw.accessToken ?? ''),
     projectName: String(raw.projectName ?? ''),
     contractorName: String(business.contractorName ?? ''),
     contractorCompany: business.contractorCompany ? String(business.contractorCompany) : undefined,

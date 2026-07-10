@@ -51,7 +51,7 @@ interface PortalItem {
 }
 interface PortalCategory { id: string; name: string; items: PortalItem[]; completedCount: number; totalCount: number }
 interface PortalData {
-  accessToken: string; projectName: string; contractorName: string;
+  accessToken: string; trackerId: string; projectName: string; contractorName: string;
   contractorPhone?: string; contractorCountry?: string;
   categories: PortalCategory[]; totalDecisions: number; completedDecisions: number;
   quoteAmount?: number; depositAmount?: number;
@@ -142,6 +142,9 @@ export default function CustomerPortal({ params }: PageProps) {
       const business = (rawObj.business ?? {}) as Record<string, unknown>;
       setData({
         ...rawObj,
+        // Tracker UUID for decision_submissions FK; fall back to the access_code
+        // until the RPC ships trackerId (migration 20260709000001).
+        trackerId: (rawObj.trackerId ?? rawObj.accessToken) as string,
         contractorName: rawObj.contractorName ?? business.contractorName,
         contractorCompany: rawObj.contractorCompany ?? business.contractorCompany,
         contractorCountry: rawObj.contractorCountry ?? business.contractorCountry,
@@ -172,10 +175,10 @@ export default function CustomerPortal({ params }: PageProps) {
     let ok = false;
     if (sb) {
       try {
-        const row: Record<string, unknown> = { tracker_id: data.accessToken, item_id: item.id, submitted_by: 'customer', value, submitted_at: new Date().toISOString() };
+        const row: Record<string, unknown> = { tracker_id: data.trackerId, item_id: item.id, submitted_by: 'customer', value, submitted_at: new Date().toISOString() };
         if (photos && photos.length) row.photos = photos;
         const { error } = await sb.from('decision_submissions').upsert(row, { onConflict: 'tracker_id,item_id,submitted_by' });
-        if (!error) { ok = true; try { await sb.rpc('update_tracker_progress', { p_tracker_id: data.accessToken }); } catch { /* non-critical */ } }
+        if (!error) { ok = true; try { await sb.rpc('update_tracker_progress', { p_tracker_id: data.trackerId }); } catch { /* non-critical */ } }
       } catch { /* local */ }
     }
     setPendingItem(null);
