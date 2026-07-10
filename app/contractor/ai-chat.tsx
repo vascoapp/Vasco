@@ -33,6 +33,7 @@ import { useTranslation } from 'react-i18next';
 import { useAppState } from '../../src/state/AppState';
 import { sendAiCommand } from '../../src/services/aiCommandService';
 import { routeForIntent } from '../../src/services/aiCommandRouter';
+import { withTimeout } from '../../src/utils/withTimeout';
 import { SemanticColors } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { DK } from '../../src/theme/draftkings';
@@ -140,7 +141,23 @@ export default function AiChatScreen() {
     setSending(true);
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
 
-    const resp = await sendAiCommand(text, aiContext);
+    // Hard 30s deadline: the ai-command edge fn can hang on flaky signal, which
+    // would leave `sending` true forever (input locked, spinner stuck).
+    let resp: Awaited<ReturnType<typeof sendAiCommand>>;
+    try {
+      resp = await withTimeout(sendAiCommand(text, aiContext), 30000, 'sendAiCommand');
+    } catch {
+      setSending(false);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `m-${Date.now()}-timeout`,
+          role: 'assistant',
+          text: t('aiChat.timeout', 'That took too long — check your connection and try again.'),
+        },
+      ]);
+      return;
+    }
     setSending(false);
 
     if (!resp.ok) {

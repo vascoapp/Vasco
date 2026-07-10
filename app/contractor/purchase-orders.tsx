@@ -15,6 +15,7 @@ import { usePurchaseOrders, usePOStats, type PurchaseOrder, type POStatus } from
 import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
+import { EmptyState } from '../../src/components/shared/EmptyState';
 import { useTranslation } from 'react-i18next';
 import { useProcurementAgent, type MaterialNeed } from '../../src/services/procurementAgentService';
 
@@ -146,6 +147,13 @@ export default function PurchaseOrdersScreen() {
 
       {/* Orders List */}
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />}>
+        {sortedOrders.length === 0 && (
+          <EmptyState
+            icon="cart-outline"
+            title={t('purchaseOrders.emptyTitle', 'No purchase orders yet')}
+            description={t('purchaseOrders.emptyDesc', 'Create your first order, or let Vasco suggest materials from your planned jobs.')}
+          />
+        )}
         {sortedOrders.map(order => {
           const config = STATUS_CONFIG[order.status];
           const isExpanded = expandedId === order.id;

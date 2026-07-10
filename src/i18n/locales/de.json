@@ -1527,7 +1527,9 @@
     "noJobsWithMaterials": "Keine Aufträge mit Materialien gefunden. Fügen Sie zuerst Materialien zu einem Auftrag hinzu.",
     "selectJob": "Wählen Sie einen Auftrag, um aus dessen Materialliste eine Bestellung zu erstellen",
     "poCreated": "Bestellung erstellt",
-    "poCreatedDesc": "Bestellung für \"{{title}}\" mit {{count}} Materialien erstellt"
+    "poCreatedDesc": "Bestellung für \"{{title}}\" mit {{count}} Materialien erstellt",
+    "emptyTitle": "Noch keine Bestellungen",
+    "emptyDesc": "Erstelle deine erste Bestellung oder lass Vasco Materialien aus deinen geplanten Aufträgen vorschlagen."
   },
   "workerCerts": {
     "title": "Mitarbeiterzertifikate",
@@ -4176,7 +4178,8 @@
     "welcome": "Hi! Ich bin Ihre Büroassistenz. Bitten Sie mich, eine Rechnung zu erstellen, einen Auftrag zu planen oder Zahlen zu prüfen.",
     "parseError": "Entschuldigung — ich konnte das nicht verarbeiten. Bitte umformulieren.",
     "title": "Büromanager",
-    "placeholder": "Frag mich alles…"
+    "placeholder": "Frag mich alles…",
+    "timeout": "Das hat zu lange gedauert — prüfe deine Verbindung und versuche es erneut."
   },
   "share": {
     "shareWithCustomer": "Mit Kunden teilen",

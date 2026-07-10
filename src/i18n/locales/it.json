@@ -1527,7 +1527,9 @@
     "noJobsWithMaterials": "Nessun lavoro con materiali trovato. Aggiungi prima i materiali a un lavoro.",
     "selectJob": "Seleziona un lavoro per creare un ordine d'acquisto dal suo elenco materiali",
     "poCreated": "Ordine creato",
-    "poCreatedDesc": "Ordine creato per \"{{title}}\" con {{count}} materiali"
+    "poCreatedDesc": "Ordine creato per \"{{title}}\" con {{count}} materiali",
+    "emptyTitle": "Nessun ordine ancora",
+    "emptyDesc": "Crea il tuo primo ordine, o lascia che Vasco suggerisca materiali dai lavori pianificati."
   },
   "workerCerts": {
     "title": "Certificati dei lavoratori",
@@ -4176,7 +4178,8 @@
     "welcome": "Ciao! Sono il tuo assistente d'ufficio. Chiedimi di fatturare un cliente, pianificare un lavoro o controllare i tuoi numeri.",
     "parseError": "Mi spiace, non sono riuscito a interpretarlo. Prova a riformulare.",
     "title": "Assistente d'ufficio",
-    "placeholder": "Chiedi qualsiasi cosa…"
+    "placeholder": "Chiedi qualsiasi cosa…",
+    "timeout": "Ci è voluto troppo tempo — controlla la connessione e riprova."
   },
   "share": {
     "shareWithCustomer": "Condividi con il cliente",

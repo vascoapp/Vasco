@@ -6,6 +6,7 @@ import { startEventFlushing, stopEventFlushing } from '../intelligence/dataColle
 import { trackEvent, initSession, setUserContext, clearUserContext, flushEvents } from '../services/eventTrackingService';
 import { DEMO_MODE } from '../config/demo';
 import { logWarn } from '../utils/errorHandler';
+import { withTimeout } from '../utils/withTimeout';
 import { setCurrentUser } from '../lib/currentUser';
 import { addBreadcrumb } from '../lib/errorReporting';
 import type { Session } from '@supabase/supabase-js';
@@ -659,7 +660,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // If Supabase is configured, try real auth first
       if (isSupabaseConfigured) {
-        const { error, data: authData } = await supabase.auth.signInWithPassword({ email, password });
+        // 15s deadline — if the network hangs, fall through to the offline
+        // demo-password check rather than stalling the demo login forever.
+        let error: unknown = null;
+        let authData: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>['data'] | null = null;
+        try {
+          const res = await withTimeout(
+            supabase.auth.signInWithPassword({ email, password }),
+            15000,
+            'signInWithPassword(demo)',
+          );
+          error = res.error;
+          authData = res.data;
+        } catch {
+          error = new Error('timeout'); // fall through to demo-password check below
+        }
         if (!error) {
           await clearLockout(normalizedEmail);
           setIsLoading(false);
@@ -702,7 +717,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // --- Real Supabase auth for non-demo accounts ---
     if (isSupabaseConfigured) {
-      const { error, data: realAuthData } = await supabase.auth.signInWithPassword({ email, password });
+      // Hard 15s deadline: on flaky signal signInWithPassword can hang forever,
+      // which would leave isLoading=true and the login button spinning with no
+      // way out. On timeout we surface it as a network failure.
+      let error: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>['error'] = null;
+      let realAuthData: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>['data'] | null = null;
+      try {
+        const res = await withTimeout(
+          supabase.auth.signInWithPassword({ email, password }),
+          15000,
+          'signInWithPassword',
+        );
+        error = res.error;
+        realAuthData = res.data;
+      } catch {
+        setIsLoading(false);
+        await checkAndRecordFailedAttempt(normalizedEmail);
+        return { ok: false, reason: 'network' };
+      }
       setIsLoading(false);
       if (!error && realAuthData?.user) {
         await clearLockout(normalizedEmail);

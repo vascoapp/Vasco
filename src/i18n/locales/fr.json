@@ -1527,7 +1527,9 @@
     "noJobsWithMaterials": "Aucun chantier avec matériaux trouvé. Ajoutez d'abord des matériaux à un chantier.",
     "selectJob": "Sélectionnez un chantier pour créer un bon de commande à partir de sa liste de matériaux",
     "poCreated": "Bon de commande créé",
-    "poCreatedDesc": "Bon de commande créé pour « {{title}} » avec {{count}} matériaux"
+    "poCreatedDesc": "Bon de commande créé pour « {{title}} » avec {{count}} matériaux",
+    "emptyTitle": "Aucune commande pour le moment",
+    "emptyDesc": "Créez votre première commande, ou laissez Vasco suggérer des matériaux à partir de vos chantiers planifiés."
   },
   "workerCerts": {
     "title": "Certificats des ouvriers",
@@ -4176,7 +4178,8 @@
     "welcome": "Bonjour ! Je suis votre assistant bureau. Demandez-moi de facturer un client, planifier un chantier ou vérifier vos chiffres.",
     "parseError": "Désolé — je n'ai pas réussi à analyser cela. Reformulez s'il vous plaît.",
     "title": "Assistant de bureau",
-    "placeholder": "Posez votre question…"
+    "placeholder": "Posez votre question…",
+    "timeout": "Cela a pris trop de temps — vérifiez votre connexion et réessayez."
   },
   "share": {
     "shareWithCustomer": "Partager avec le client",

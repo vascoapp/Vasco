@@ -1527,7 +1527,9 @@
     "noJobsWithMaterials": "No se encontraron trabajos con materiales. Añade materiales a un trabajo primero.",
     "selectJob": "Selecciona un trabajo para crear un pedido de compra con su lista de materiales",
     "poCreated": "Pedido creado",
-    "poCreatedDesc": "Pedido creado para \"{{title}}\" con {{count}} materiales"
+    "poCreatedDesc": "Pedido creado para \"{{title}}\" con {{count}} materiales",
+    "emptyTitle": "Aún no hay pedidos",
+    "emptyDesc": "Crea tu primer pedido, o deja que Vasco sugiera materiales a partir de tus trabajos planificados."
   },
   "workerCerts": {
     "title": "Certificados de trabajadores",
@@ -4176,7 +4178,8 @@
     "welcome": "¡Hola! Soy tu asistente de oficina. Pídeme que facture a un cliente, programe un trabajo o revise tus números.",
     "parseError": "Lo siento, no pude interpretar eso. Intenta reformular.",
     "title": "Gestor de oficina",
-    "placeholder": "Pregunta lo que quieras…"
+    "placeholder": "Pregunta lo que quieras…",
+    "timeout": "Tardó demasiado — comprueba tu conexión e inténtalo de nuevo."
   },
   "share": {
     "shareWithCustomer": "Compartir con cliente",

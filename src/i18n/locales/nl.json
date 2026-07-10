@@ -1305,7 +1305,9 @@
     "noJobsWithMaterials": "Geen klussen met materialen gevonden. Voeg eerst materialen toe aan een klus.",
     "selectJob": "Selecteer een klus om een inkooporder aan te maken op basis van de materialenlijst",
     "poCreated": "Inkooporder aangemaakt",
-    "poCreatedDesc": "Inkooporder aangemaakt voor \"{{title}}\" met {{count}} materialen"
+    "poCreatedDesc": "Inkooporder aangemaakt voor \"{{title}}\" met {{count}} materialen",
+    "emptyTitle": "Nog geen inkooporders",
+    "emptyDesc": "Maak je eerste inkooporder, of laat Vasco materialen voorstellen op basis van je geplande klussen."
   },
   "workerCerts": {
     "title": "Certificaten Medewerkers",
@@ -4160,7 +4162,8 @@
     "welcome": "Hallo! Ik ben je kantoorhulp. Vraag me om een klant te factureren, een klus in te plannen of cijfers te checken.",
     "parseError": "Sorry — ik kon dat niet begrijpen. Probeer het anders te formuleren.",
     "title": "Office manager",
-    "placeholder": "Stel je vraag…"
+    "placeholder": "Stel je vraag…",
+    "timeout": "Dat duurde te lang — controleer je verbinding en probeer opnieuw."
   },
   "share": {
     "shareWithCustomer": "Deel met klant",

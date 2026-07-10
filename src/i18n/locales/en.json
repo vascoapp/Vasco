@@ -1527,7 +1527,9 @@
     "noJobsWithMaterials": "No jobs with materials found. Add materials to a job first.",
     "selectJob": "Select a job to create a purchase order from its materials list",
     "poCreated": "PO Created",
-    "poCreatedDesc": "PO created for \"{{title}}\" with {{count}} materials"
+    "poCreatedDesc": "PO created for \"{{title}}\" with {{count}} materials",
+    "emptyTitle": "No purchase orders yet",
+    "emptyDesc": "Create your first order, or let Vasco suggest materials from your planned jobs."
   },
   "workerCerts": {
     "title": "Worker Certificates",
@@ -4176,7 +4178,8 @@
     "welcome": "Hi! I'm your office manager. Ask me to invoice a customer, schedule a job, or check your numbers.",
     "parseError": "Sorry — I had trouble parsing that. Try rephrasing.",
     "title": "Office manager",
-    "placeholder": "Ask anything…"
+    "placeholder": "Ask anything…",
+    "timeout": "That took too long — check your connection and try again."
   },
   "share": {
     "shareWithCustomer": "Share with customer",
