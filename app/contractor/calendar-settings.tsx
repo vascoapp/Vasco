@@ -13,6 +13,7 @@ import { SafeArea } from '../../src/theme/spacing';
 import { useCalendarSync } from '../../src/services/calendarSyncService';
 import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
+import { withTimeout } from '../../src/utils/withTimeout';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -49,7 +50,18 @@ export default function CalendarSettingsScreen() {
 
   const handleSyncNow = async () => {
     hapticSuccess();
-    const result = await syncAll(jobs);
+    // 20s backstop: device/external calendar writes can hang, leaving the tap
+    // with no feedback at all. On timeout, tell the user instead of silence.
+    let result: Awaited<ReturnType<typeof syncAll>>;
+    try {
+      result = await withTimeout(syncAll(jobs), 20000, 'syncAll');
+    } catch {
+      Alert.alert(
+        t('calendar.syncFailed', 'Sync failed'),
+        t('calendar.syncFailedDesc', 'Could not reach the calendar. Please try again.'),
+      );
+      return;
+    }
     Alert.alert(
       t('calendar.syncComplete', 'Sync complete'),
       t('calendar.syncResult', {

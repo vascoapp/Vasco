@@ -4491,7 +4491,9 @@
     "syncNow": "Nu synchroniseren",
     "syncing": "Bezig met synchroniseren...",
     "howItWorks": "Hoe het werkt",
-    "howItWorksDesc": "Wanneer je een klus aanmaakt of bijwerkt met een ingeplande datum, maakt of wijzigt Vasco automatisch een agenda-afspraak op je apparaat. Geannuleerde klussen worden uit je agenda verwijderd."
+    "howItWorksDesc": "Wanneer je een klus aanmaakt of bijwerkt met een ingeplande datum, maakt of wijzigt Vasco automatisch een agenda-afspraak op je apparaat. Geannuleerde klussen worden uit je agenda verwijderd.",
+    "syncFailed": "Synchronisatie mislukt",
+    "syncFailedDesc": "Kon de agenda niet bereiken. Probeer het opnieuw."
   },
   "approval": {
     "shareMessage": "Hoi {{customer}},\n\nHier is je offerte voor {{job}} — €{{amount}}.\n\nOnline accepteren: {{url}}\n\n30 dagen geldig.\n\nMet vriendelijke groet",

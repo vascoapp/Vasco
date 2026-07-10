@@ -4507,7 +4507,9 @@
     "syncNow": "Sincronizza ora",
     "syncing": "Sincronizzazione...",
     "howItWorks": "Come funziona",
-    "howItWorksDesc": "Quando crei o aggiorni un lavoro con una data pianificata, Vasco crea o aggiorna automaticamente un evento nel calendario del dispositivo. I lavori annullati vengono rimossi dal calendario."
+    "howItWorksDesc": "Quando crei o aggiorni un lavoro con una data pianificata, Vasco crea o aggiorna automaticamente un evento nel calendario del dispositivo. I lavori annullati vengono rimossi dal calendario.",
+    "syncFailed": "Sincronizzazione non riuscita",
+    "syncFailedDesc": "Impossibile raggiungere il calendario. Riprova."
   },
   "approval": {
     "shareMessage": "Ciao {{customer}},\n\nEcco il tuo preventivo per {{job}} — €{{amount}}.\n\nAccettalo online: {{url}}\n\nValido per 30 giorni.\n\nCordiali saluti",

@@ -4507,7 +4507,9 @@
     "syncNow": "Synchroniser maintenant",
     "syncing": "Synchronisation...",
     "howItWorks": "Comment ça marche",
-    "howItWorksDesc": "Lorsque vous créez ou mettez à jour un chantier avec une date planifiée, Vasco crée ou met à jour automatiquement un événement dans le calendrier de votre appareil. Les chantiers annulés sont retirés de votre calendrier."
+    "howItWorksDesc": "Lorsque vous créez ou mettez à jour un chantier avec une date planifiée, Vasco crée ou met à jour automatiquement un événement dans le calendrier de votre appareil. Les chantiers annulés sont retirés de votre calendrier.",
+    "syncFailed": "Échec de la synchronisation",
+    "syncFailedDesc": "Impossible de joindre l’agenda. Veuillez réessayer."
   },
   "approval": {
     "shareMessage": "Bonjour {{customer}},\n\nVoici votre devis pour {{job}} — {{amount}} €.\n\nAcceptez en ligne : {{url}}\n\nValable 30 jours.\n\nCordialement",

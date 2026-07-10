@@ -4507,7 +4507,9 @@
     "syncNow": "Jetzt synchronisieren",
     "syncing": "Synchronisiere...",
     "howItWorks": "So funktioniert's",
-    "howItWorksDesc": "Wenn Sie einen Auftrag mit geplantem Datum erstellen oder aktualisieren, erstellt oder aktualisiert Vasco automatisch einen Kalendereintrag auf Ihrem Gerät. Stornierte Aufträge werden aus Ihrem Kalender entfernt."
+    "howItWorksDesc": "Wenn Sie einen Auftrag mit geplantem Datum erstellen oder aktualisieren, erstellt oder aktualisiert Vasco automatisch einen Kalendereintrag auf Ihrem Gerät. Stornierte Aufträge werden aus Ihrem Kalender entfernt.",
+    "syncFailed": "Synchronisierung fehlgeschlagen",
+    "syncFailedDesc": "Kalender nicht erreichbar. Bitte versuche es erneut."
   },
   "approval": {
     "shareMessage": "Hallo {{customer}},\n\nhier ist Ihr Angebot für {{job}} — €{{amount}}.\n\nOnline annehmen: {{url}}\n\n30 Tage gültig.\n\nMit freundlichen Grüßen",

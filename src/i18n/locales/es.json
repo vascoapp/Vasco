@@ -4507,7 +4507,9 @@
     "syncNow": "Sincronizar ahora",
     "syncing": "Sincronizando...",
     "howItWorks": "Cómo funciona",
-    "howItWorksDesc": "Cuando creas o actualizas una obra con fecha programada, Vasco crea o actualiza automáticamente un evento en el calendario de tu dispositivo. Las obras canceladas se eliminan de tu calendario."
+    "howItWorksDesc": "Cuando creas o actualizas una obra con fecha programada, Vasco crea o actualiza automáticamente un evento en el calendario de tu dispositivo. Las obras canceladas se eliminan de tu calendario.",
+    "syncFailed": "Error de sincronización",
+    "syncFailedDesc": "No se pudo acceder al calendario. Inténtalo de nuevo."
   },
   "approval": {
     "shareMessage": "Hola {{customer}}:\n\nAquí tienes tu presupuesto para {{job}} — €{{amount}}.\n\nAceptar en línea: {{url}}\n\nVálido durante 30 días.\n\nUn cordial saludo",

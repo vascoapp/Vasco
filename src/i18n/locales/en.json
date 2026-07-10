@@ -4507,7 +4507,9 @@
     "syncNow": "Sync now",
     "syncing": "Syncing...",
     "howItWorks": "How it works",
-    "howItWorksDesc": "When you create or update a job with a scheduled date, Vasco automatically creates or updates a calendar event on your device. Cancelled jobs are removed from your calendar."
+    "howItWorksDesc": "When you create or update a job with a scheduled date, Vasco automatically creates or updates a calendar event on your device. Cancelled jobs are removed from your calendar.",
+    "syncFailed": "Sync failed",
+    "syncFailedDesc": "Could not reach the calendar. Please try again."
   },
   "approval": {
     "shareMessage": "Hi {{customer}},\n\nHere is your quote for {{job}} — €{{amount}}.\n\nAccept online: {{url}}\n\nValid for 30 days.\n\nKind regards",
