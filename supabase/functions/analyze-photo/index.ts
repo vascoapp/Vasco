@@ -264,6 +264,20 @@ Guidelines for pricing (${countryContext} market rates):
       );
     }
 
+    // Alias the AI's raw keys to the shape the app + pricing moat actually read.
+    // AIQuoteFromPhoto / persistPhotoAnalysis expect estimatedComplexity /
+    // estimatedDurationHours / estimatedTotal / detectedRooms, but the prompt
+    // emits complexity / estimatedHours / total / rooms — so the moat captured
+    // null complexity/duration/cost from every photo. Non-destructive: keeps the
+    // originals, adds aliases only when the source key exists.
+    if (analysisResult && typeof analysisResult === 'object') {
+      const r = analysisResult as Record<string, unknown>;
+      if (r.estimatedComplexity === undefined && r.complexity !== undefined) r.estimatedComplexity = r.complexity;
+      if (r.estimatedDurationHours === undefined && r.estimatedHours !== undefined) r.estimatedDurationHours = r.estimatedHours;
+      if (r.estimatedTotal === undefined && r.total !== undefined) r.estimatedTotal = r.total;
+      if (r.detectedRooms === undefined && r.rooms !== undefined) r.detectedRooms = r.rooms;
+    }
+
     return new Response(
       JSON.stringify(analysisResult),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
