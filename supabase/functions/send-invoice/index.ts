@@ -127,10 +127,14 @@ Deno.serve(async (req) => {
 
     // Fetch invoice + issuer business profile via service role (user_id scoped)
     const admin = createClient(supabaseUrl, serviceKey);
+    // Canonical store is `documents` (doc_type='invoice') — there is no
+    // `invoices` table, so this fn previously 404'd on every send. Only
+    // id/user_id/document_number are actually used below.
     const { data: invoice, error: invErr } = await admin
-      .from('invoices')
-      .select('id, reference, total, currency, user_id')
+      .from('documents')
+      .select('id, document_number, user_id')
       .eq('id', invoiceId)
+      .eq('doc_type', 'invoice')
       .single();
     if (invErr || !invoice) {
       return new Response(JSON.stringify({ ok: false, error: 'Invoice not found' }), {
@@ -144,13 +148,13 @@ Deno.serve(async (req) => {
     }
 
     const { data: profile } = await admin
-      .from('business_profiles')
+      .from('business_settings')
       .select('business_name')
       .eq('user_id', user.id)
       .maybeSingle();
     const businessName = (profile as any)?.business_name ?? 'Vasco';
 
-    const ref = (invoice as any).reference ?? invoice.id;
+    const ref = (invoice as any).document_number ?? invoice.id;
     const subject = body.subject ?? (SUBJECT_BY_LOCALE[locale] ?? SUBJECT_BY_LOCALE.en)(ref);
     // bodyOverride (plain text with \n) → simple HTML paragraphs so the Resend
     // email renders the cadence copy + disclosure properly.
@@ -208,9 +212,10 @@ Deno.serve(async (req) => {
 
     // Mark invoice as sent
     await admin
-      .from('invoices')
+      .from('documents')
       .update({ status: 'sent', sent_at: new Date().toISOString() })
-      .eq('id', invoiceId);
+      .eq('id', invoiceId)
+      .eq('doc_type', 'invoice');
 
     return new Response(JSON.stringify({ ok: true, messageId: resendJson?.id ?? null }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
