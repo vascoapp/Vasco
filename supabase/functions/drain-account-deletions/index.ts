@@ -124,18 +124,43 @@ Deno.serve(async (req) => {
       if (error) errors.push(`${table}(anon): ${error.message}`);
     }
 
-    // Step 4 — empty storage buckets (best-effort; list + delete per prefix).
-    for (const bucket of STORAGE_BUCKETS_TO_EMPTY) {
-      try {
-        const { data: files } = await admin.storage.from(bucket).list(row.user_id, { limit: 1000 });
-        if (files && files.length > 0) {
-          const paths = files.map(f => `${row.user_id}/${f.name}`);
-          const { error: rmErr } = await admin.storage.from(bucket).remove(paths);
-          if (rmErr) errors.push(`storage(${bucket}): ${rmErr.message}`);
-        }
-      } catch (e) {
-        errors.push(`storage(${bucket}): ${(e as Error).message}`);
+    // Step 4 — empty storage buckets (best-effort). The old flat
+    // list(user_id)+remove(`${user_id}/${name}`) matched NOTHING for either
+    // bucket (GDPR Art. 17 violation — PII persisted after deletion):
+    //   • job-photos keys are NESTED: <user_id>/<job_id>/<file> — list(user_id)
+    //     returns the <job_id> folders, and remove() of a folder prefix is a
+    //     silent no-op. Recurse one level.
+    //   • customer-uploads keys are <tracker_access_code>/<file> — NOT keyed by
+    //     user_id at all. Resolve the user's tracker codes first.
+    try {
+      const { data: jobFolders } = await admin.storage.from('job-photos').list(row.user_id, { limit: 1000 });
+      const keys: string[] = [];
+      for (const folder of jobFolders ?? []) {
+        const { data: files } = await admin.storage.from('job-photos').list(`${row.user_id}/${folder.name}`, { limit: 1000 });
+        for (const f of files ?? []) keys.push(`${row.user_id}/${folder.name}/${f.name}`);
       }
+      if (keys.length > 0) {
+        const { error: rmErr } = await admin.storage.from('job-photos').remove(keys);
+        if (rmErr) errors.push(`storage(job-photos): ${rmErr.message}`);
+      }
+    } catch (e) {
+      errors.push(`storage(job-photos): ${(e as Error).message}`);
+    }
+    try {
+      // decision_trackers is NOT hard-deleted before this step, so it's still
+      // queryable to resolve the customer-uploads prefixes.
+      const { data: trackers } = await admin.from('decision_trackers').select('access_code').eq('user_id', row.user_id);
+      for (const tr of (trackers ?? []) as Array<{ access_code: string | null }>) {
+        if (!tr.access_code) continue;
+        const { data: files } = await admin.storage.from('customer-uploads').list(tr.access_code, { limit: 1000 });
+        const keys = (files ?? []).map(f => `${tr.access_code}/${f.name}`);
+        if (keys.length > 0) {
+          const { error: rmErr } = await admin.storage.from('customer-uploads').remove(keys);
+          if (rmErr) errors.push(`storage(customer-uploads): ${rmErr.message}`);
+        }
+      }
+    } catch (e) {
+      errors.push(`storage(customer-uploads): ${(e as Error).message}`);
     }
 
     // Step 5 — delete the auth user last. ON DELETE CASCADE handles
