@@ -539,7 +539,9 @@ export async function generateMorningBriefing(context: {
     allJobs: context.jobs,
     allInvoices: context.invoices,
     allQuotes: context.quotes,
-    customers: context.customers,
+    // (customers not in generateMorningBriefing's context — the main daily
+    // populateQueue call at getContext() below forwards them; here the queue
+    // items just render without a customer name, still produced.)
     country: context.country,
   });
 
