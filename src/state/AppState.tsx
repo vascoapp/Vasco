@@ -874,9 +874,34 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 setLeads((prev) =>
                   prev.map((l) => (l.id === tempId ? { ...l, id: data.id as string } : l))
                 );
+                // Online path: rekey any tempId-keyed housekeeping (ontology /
+                // embeddings / events). Offline path gets this automatically via
+                // the insert→select→mapping in flushQueue.
+                const { emitIdRemap } = await import('../services/idRemapBus');
+                emitIdRemap({ table: 'leads', tempId, realId: data.id as string, payload: { name: newLead.customerName } });
               }
               return data;
-            }, { rowId: tempId }),
+            }, {
+              rowId: tempId,
+              // Carry the full row so an OFFLINE insert actually persists — was
+              // `{ rowId: tempId }` with no payload, so a lead created without
+              // signal flushed as `insert(undefined)` and was lost. id:tempId
+              // makes flush emit the temp→real idRemap.
+              payload: {
+                id: tempId,
+                user_id: getCurrentUserId(),
+                status: newLead.status,
+                source: newLead.source,
+                customer_name: newLead.customerName,
+                customer_phone: newLead.customerPhone,
+                customer_email: newLead.customerEmail,
+                customer_id: newLead.customerId,
+                job_description: newLead.jobDescription,
+                estimated_value: newLead.estimatedValue,
+                notes: newLead.notes,
+                source_quote_id: newLead.sourceQuoteId,
+              },
+            }),
           ).catch((err) => logWarn('AppState', `addLead persist failed: ${err}`));
         }
         return tempId;
@@ -1048,9 +1073,27 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 setWorkers((prev) =>
                   prev.map((w) => (w.id === tempId ? { ...w, id: data.id as string } : w))
                 );
+                const { emitIdRemap } = await import('../services/idRemapBus');
+                emitIdRemap({ table: 'workers', tempId, realId: data.id as string, payload: { name: newWorker.name } });
               }
               return data;
-            }, { rowId: tempId }),
+            }, {
+              rowId: tempId,
+              // Full row so an OFFLINE-created worker actually persists on flush
+              // (was `{ rowId: tempId }` → insert(undefined) → worker lost).
+              payload: {
+                id: tempId,
+                user_id: getCurrentUserId(),
+                name: newWorker.name,
+                role: newWorker.role,
+                email: newWorker.email,
+                phone: newWorker.phone,
+                trade: newWorker.trade,
+                hourly_cost: newWorker.hourlyCost,
+                is_active: newWorker.isActive,
+                color: newWorker.color,
+              },
+            }),
           ).catch((err) => logWarn('AppState', `addWorker persist failed: ${err}`));
         }
         return tempId;
@@ -1218,7 +1261,29 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             );
             finalId = row.id;
           } catch (err) {
-            logWarn('AppState', `addJob persist failed or timed out: ${err}`);
+            // Was log-only — an offline / timed-out job was NEVER queued, so it
+            // stayed a temp row in local storage and never reached the backend
+            // (invisible cross-device + on reinstall). Queue it like every other
+            // creator. user_id is REQUIRED (jobs.user_id NOT NULL; createJob
+            // injects it on the online path, the raw queued insert must too).
+            // Housekeeping keyed on tempId gets rekeyed by the idRemap emitted
+            // when this insert flushes.
+            logWarn('AppState', `addJob persist failed or timed out, queueing: ${err}`);
+            try {
+              const { queueWrite } = await import('../services/offlineWriteQueue');
+              await queueWrite({
+                table: 'jobs',
+                op: 'insert',
+                payload: {
+                  id: tempId,
+                  user_id: getCurrentUserId(),
+                  title,
+                  customer_id: customerId ?? null,
+                  description: description ?? null,
+                  ...extra,
+                },
+              });
+            } catch {}
           }
         }
 
