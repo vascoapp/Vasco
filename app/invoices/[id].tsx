@@ -30,6 +30,7 @@ import { generateXRechnungXML, generateZUGFeRDXML, type EInvoiceData } from '../
 import { Share as RNShare } from 'react-native';
 import { File, Paths } from 'expo-file-system';
 import { checkInvoiceReadiness } from '../../src/utils/businessProfileValidation';
+import { getEffectiveVatRate } from '../../src/domain/business';
 import { useCohortDso } from '../../src/services/paymentTimingMoatService';
 import { predictPaymentTiming } from '../../src/intelligence/mlModels';
 import { useTimeOfDayPaymentHint, dayPart as paymentDayPart, classifyPaymentNow } from '../../src/services/timeOfDayPaymentService';
@@ -88,6 +89,10 @@ export default function InvoiceDetailScreen() {
   const { user } = useAuth();
   const invoice = invoices.find((item) => item.id === id);
   const country = user?.country ?? 'NL';
+  // Country/scheme-aware VAT rate (honors DE 19%, FR 20%, KOR/Kleinunternehmer
+  // 0%, etc.). Falls back to the NL VAT_RATE only when no profile is loaded.
+  // Was hardcoded 21% everywhere — wrong tax on every non-NL invoice + export.
+  const effectiveRate = businessProfile ? getEffectiveVatRate(businessProfile) / 100 : VAT_RATE;
   const paymentMethods = getPaymentDisplayForCountry(country);
   // R214: cohort-backed payment timing for the invoice detail caption.
   // Hook unconditionally; consumer below is null-safe.
@@ -165,7 +170,7 @@ export default function InvoiceDetailScreen() {
 
   // Calculations
   const subtotal = localItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-  const vatAmount = subtotal * VAT_RATE;
+  const vatAmount = subtotal * effectiveRate;
   const total = subtotal + vatAmount;
 
   // R66 round 13: handleSaveCustomer removed. The flow wrote the
@@ -463,31 +468,31 @@ export default function InvoiceDetailScreen() {
         return;
       }
     } catch {}
-    const currency = country === 'UK' ? 'GBP' : 'EUR';
-    const vatAmount = total * VAT_RATE;
+    const currency = country === 'UK' ? 'GBP' : country === 'US' ? 'USD' : 'EUR';
+    const vatAmount = subtotal * effectiveRate;
     const data: EInvoiceData = {
       sellerName: (businessProfile as any)?.businessName ?? 'Vasco',
       sellerAddress: (businessProfile as any)?.address ?? '',
-      sellerVatId: (businessProfile as any)?.vatId ?? '',
+      sellerVatId: businessProfile?.vatNumber ?? '',
       buyerName: invoice.customer ?? '',
       buyerAddress: (invoice as any).customerAddress ?? '',
       buyerVatId: (invoice as any).customerVatId,
       invoiceNumber: (invoice as any).reference ?? invoice.id,
-      invoiceDate: (invoice as any).issuedAt?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
-      dueDate: new Date(Date.now() + (invoice.dueInDays || 14) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      invoiceDate: (invoice.sentAt ?? invoice.createdAt ?? invoice.deliveryDate ?? new Date().toISOString()).slice(0, 10),
+      dueDate: (invoice.dueDate ?? new Date(Date.now() + (invoice.dueInDays || 14) * 24 * 60 * 60 * 1000).toISOString()).slice(0, 10),
       currency,
       lineItems: localItems.map((li: EditableLineItem) => ({
         description: li.description,
         quantity: li.quantity,
         unitCode: 'piece',
         unitPrice: li.unitPrice,
-        vatRate: VAT_RATE * 100,
-        vatAmount: li.quantity * li.unitPrice * VAT_RATE,
+        vatRate: effectiveRate * 100,
+        vatAmount: li.quantity * li.unitPrice * effectiveRate,
         lineTotal: li.quantity * li.unitPrice,
       })),
-      totalNet: total,
+      totalNet: subtotal,
       totalVat: vatAmount,
-      totalGross: total + vatAmount,
+      totalGross: total,
       iban: (businessProfile as any)?.iban,
       bic: (businessProfile as any)?.bic,
       paymentReference: (invoice as any).reference ?? invoice.id,
@@ -530,12 +535,12 @@ export default function InvoiceDetailScreen() {
       }
     } catch {}
     const { generateFacturaeXml } = await import('../../src/integrations/einvoice-es');
-    const vatAmount = total * VAT_RATE;
+    const vatAmount = subtotal * effectiveRate;
     const invoiceNumber = (invoice as any).reference ?? invoice.id;
     const data = {
       schemaVersion: '3.2.2' as const,
       sellerName: (businessProfile as any)?.businessName ?? 'Vasco',
-      sellerNif: (businessProfile as any)?.vatId ?? (businessProfile as any)?.nifNumber ?? '',
+      sellerNif: businessProfile?.vatNumber ?? '',
       sellerAddress: (businessProfile as any)?.address ?? '',
       sellerCity: (businessProfile as any)?.city ?? '',
       sellerPostalCode: (businessProfile as any)?.postcode ?? '',
@@ -552,21 +557,21 @@ export default function InvoiceDetailScreen() {
       buyerCountry: 'ESP',
       buyerPersonType: 'J' as const,
       invoiceNumber,
-      invoiceDate: (invoice as any).issuedAt?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
-      dueDate: new Date(Date.now() + (invoice.dueInDays || 14) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      invoiceDate: (invoice.sentAt ?? invoice.createdAt ?? invoice.deliveryDate ?? new Date().toISOString()).slice(0, 10),
+      dueDate: (invoice.dueDate ?? new Date(Date.now() + (invoice.dueInDays || 14) * 24 * 60 * 60 * 1000).toISOString()).slice(0, 10),
       currency: 'EUR',
       lineItems: localItems.map((li: EditableLineItem) => ({
         description: li.description,
         quantity: li.quantity,
         unitPrice: li.unitPrice,
         lineTotal: li.quantity * li.unitPrice,
-        ivaRate: VAT_RATE * 100,
+        ivaRate: effectiveRate * 100,
         ivaAmount: li.quantity * li.unitPrice * VAT_RATE,
       })),
-      totalNet: total,
+      totalNet: subtotal,
       totalVat: vatAmount,
       totalIrpf: 0,
-      totalGross: total + vatAmount,
+      totalGross: total,
       iban: (businessProfile as any)?.iban,
       bic: (businessProfile as any)?.bic,
       paymentMethod: '04', // bank transfer
@@ -604,12 +609,12 @@ export default function InvoiceDetailScreen() {
       }
     } catch {}
     const { generateFatturaPAXml } = await import('../../src/integrations/einvoice-it');
-    const vatAmount = total * VAT_RATE;
+    const vatAmount = subtotal * effectiveRate;
     const invoiceNumber = (invoice as any).reference ?? invoice.id;
     const data: any = {
       sellerName: (businessProfile as any)?.businessName ?? 'Vasco',
-      sellerVatId: (businessProfile as any)?.vatId ?? '',
-      sellerCodiceFiscale: (businessProfile as any)?.codiceFiscale ?? (businessProfile as any)?.vatId ?? '',
+      sellerVatId: businessProfile?.vatNumber ?? '',
+      sellerCodiceFiscale: businessProfile?.vatNumber ?? '',
       sellerAddress: (businessProfile as any)?.address ?? '',
       sellerCity: (businessProfile as any)?.city ?? '',
       sellerPostalCode: (businessProfile as any)?.postcode ?? '',
@@ -624,20 +629,20 @@ export default function InvoiceDetailScreen() {
       buyerProvince: '',
       buyerCountry: 'IT',
       invoiceNumber,
-      invoiceDate: (invoice as any).issuedAt?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
-      dueDate: new Date(Date.now() + (invoice.dueInDays || 14) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      invoiceDate: (invoice.sentAt ?? invoice.createdAt ?? invoice.deliveryDate ?? new Date().toISOString()).slice(0, 10),
+      dueDate: (invoice.dueDate ?? new Date(Date.now() + (invoice.dueInDays || 14) * 24 * 60 * 60 * 1000).toISOString()).slice(0, 10),
       currency: 'EUR',
       lineItems: localItems.map((li: EditableLineItem) => ({
         description: li.description,
         quantity: li.quantity,
         unitPrice: li.unitPrice,
         lineTotal: li.quantity * li.unitPrice,
-        ivaRate: VAT_RATE * 100,
+        ivaRate: effectiveRate * 100,
         ivaAmount: li.quantity * li.unitPrice * VAT_RATE,
       })),
-      totalNet: total,
+      totalNet: subtotal,
       totalVat: vatAmount,
-      totalGross: total + vatAmount,
+      totalGross: total,
       iban: (businessProfile as any)?.iban,
       paymentMethod: 'MP05', // SDI code for bank transfer
     };
