@@ -25,7 +25,7 @@ import { emitIdRemap } from './idRemapBus';
 import { emitDocNumberRemap } from './docNumberRemapBus';
 // R59: temp-id helpers moved to src/lib/idShape.ts so other modules
 // (moat emit gates, AppState refresh, etc.) share one source of truth.
-import { isTempId } from '../lib/idShape';
+import { isTempId, isUuid } from '../lib/idShape';
 import { isOfflineMintedDocNumber } from '../lib/dataProvider';
 
 const QUEUE_KEY = '@vasco_offline_writes';
@@ -77,6 +77,18 @@ export async function queueWrite(entry: Omit<QueuedWrite, 'id' | 'createdAt' | '
 // updates. They must NEVER be sent to BE — Postgres rejects them as
 // non-uuid. Strip on flush so the BE generates a fresh uuid via the column
 // default. Pattern definitions live in `src/lib/idShape.ts` (R59 hoist).
+
+// Which column a queued update/delete matches on. AppState queues `documents`
+// update/deletes keyed by document_number (markInvoicePaid/markQuoteSent/…),
+// NOT the uuid id. The flush previously hardcoded `.eq('id', rowId)`, so those
+// matched 0 rows, returned no error → treated as "processed" and DROPPED — an
+// offline mark-paid silently reverted on next cold start. Mirror
+// dataProvider.documentMatchColumn: documents match by document_number unless
+// rowId is a uuid; all other tables match by id.
+function matchColumn(table: string, rowId: string): string {
+  if (table === 'documents' && !isUuid(rowId)) return 'document_number';
+  return 'id';
+}
 
 function stripTempId<T extends Record<string, any> | unknown>(payload: T): T {
   if (!payload || typeof payload !== 'object') return payload;
@@ -211,14 +223,14 @@ async function applyWrite(entry: QueuedWrite, idMap: Map<string, string>): Promi
     }
     if (remapped.op === 'update') {
       let q = table.update(stripTempId(remapped.payload));
-      if (remapped.rowId) q = q.eq('id', remapped.rowId);
+      if (remapped.rowId) q = q.eq(matchColumn(remapped.table, remapped.rowId), remapped.rowId);
       if (remapped.match) for (const [k, v] of Object.entries(remapped.match)) q = q.eq(k, v);
       const { error } = await q;
       return { ok: !error };
     }
     if (remapped.op === 'delete') {
       let q = table.delete();
-      if (remapped.rowId) q = q.eq('id', remapped.rowId);
+      if (remapped.rowId) q = q.eq(matchColumn(remapped.table, remapped.rowId), remapped.rowId);
       if (remapped.match) for (const [k, v] of Object.entries(remapped.match)) q = q.eq(k, v);
       const { error } = await q;
       return { ok: !error };
