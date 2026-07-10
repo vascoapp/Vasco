@@ -532,6 +532,15 @@ export async function generateMorningBriefing(context: {
     overdueInvoices: context.invoices.filter(i => i.status === 'overdue'),
     sentQuotes: context.quotes.filter(q => q.status === 'sent'),
     expiringCerts: [],
+    // Forward the full context — without these, ~7 proactive queue types
+    // (progress_note, reorder_materials, satisfaction_survey, permit_check,
+    // supplier_comparison, schedule_suggestion, annual maintenance_due) read
+    // `context.allJobs ?? []` = empty and could never be produced.
+    allJobs: context.jobs,
+    allInvoices: context.invoices,
+    allQuotes: context.quotes,
+    customers: context.customers,
+    country: context.country,
   });
 
   // ── Build personalSummary ──
@@ -707,6 +716,11 @@ async function runScheduledTick(
           overdueInvoices: context.invoices.filter((i: any) => i.status === 'overdue'),
           sentQuotes: context.quotes.filter((q: any) => q.status === 'sent'),
           expiringCerts: [],
+          allJobs: context.jobs,
+          allInvoices: context.invoices,
+          allQuotes: context.quotes,
+          customers: context.customers,
+          country: context.country,
         });
         // Evaluate workflow pack triggers against real data
         await evaluateTriggers({
