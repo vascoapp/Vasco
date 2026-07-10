@@ -96,8 +96,11 @@ Deno.serve(async (req) => {
     // jurisdiction) and an optional VAT ID for B2B reverse-charge.
     form.set('automatic_tax[enabled]', 'true');
     form.set('billing_address_collection', 'required');
-    form.set('customer_update[address]', 'auto');
-    form.set('customer_update[name]', 'auto');
+    // NOTE: no `customer_update[*]` here. Stripe rejects customer_update unless
+    // an existing `customer` id is passed, but this session uses `customer_email`
+    // (Checkout creates a NEW customer), so customer_update[address|name]=auto
+    // returned a 400 and NO ONE could subscribe. billing_address_collection +
+    // automatic_tax already capture the address for the new customer.
     form.set('tax_id_collection[enabled]', 'true');
     // 14-day trial mirrors the in-app `startTrial` (subscriptionService).
     form.set('subscription_data[trial_period_days]', '14');

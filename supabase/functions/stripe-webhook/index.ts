@@ -132,6 +132,11 @@ Deno.serve(async (req) => {
 
     const supabaseUrl0 = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey0 = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    // Hoisted to function scope: the invoice.upcoming (coupon) branch AND the
+    // invoice.payment_failed (dunning) branch both need it. Previously declared
+    // only inside the invoice.upcoming block, so payment_failed threw
+    // ReferenceError → subscriptions never marked past_due (dunning banner dead).
+    const stripeApiKey = Deno.env.get('STRIPE_API_KEY');
 
     // -------------------------------------------------------------------------
     // 2.0 invoice.upcoming → Option A: apply referral credits as a Stripe Coupon
@@ -141,7 +146,6 @@ Deno.serve(async (req) => {
     // -------------------------------------------------------------------------
     if (event.type === 'invoice.upcoming') {
       const couponFlag = Deno.env.get('STRIPE_COUPON_REDEMPTION') === 'true';
-      const stripeApiKey = Deno.env.get('STRIPE_API_KEY');
       if (!couponFlag || !stripeApiKey || !supabaseUrl0 || !supabaseServiceKey0) {
         return new Response(JSON.stringify({ received: true, status: 'invoice.upcoming ignored' }), {
           status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
